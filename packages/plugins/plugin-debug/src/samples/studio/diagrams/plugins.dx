@@ -4,25 +4,43 @@ group contributions-section rows="224 428" gap=76 alignContent=center {
   group plugin-row autoCols=480 justifyContent=center {
     node plugin "Plugin" kind=card body="modules load lazily on activation events, in the browser, Node, desktop (Tauri) or at the EDGE (workerd)." footer="106 plugins in dxos/dxos" icon=puzzle-piece iconTone=accent
   }
-  group contributions-body cols=5 gap=76 {
+  group contributions-body cols=5 gap=32 {
     group contributions-col-0 rows="256 96" gap=76 {
-      node types "Types" kind=card body="Effect Schema types, registered with ECHO." footer="schema · 66" icon=brackets-curly iconTone=accent
+      node types "Types" kind=card footer="schema · 66" icon=brackets-curly iconTone=accent {
+        item "Effect Schema types"
+        item "Registered with ECHO"
+      }
       node use-types "ECHO" kind=card icon=database iconTone=accent
     }
     group contributions-col-3 rows="256 96" gap=76 {
-      node operations "Operations" kind=card body="Typed operations with input and output schemas." footer="operationHandler · 81" icon=function iconTone=sheet
+      node operations "Operations" kind=card footer="operationHandler · 81" icon=function iconTone=sheet {
+        item "Typed operations"
+        item "Input schema"
+        item "Output schema"
+      }
       node use-operations "UI + MCP" kind=card icon=plugs-connected iconTone=sheet
     }
     group contributions-col-4 rows="256 96" gap=76 {
-      node services "Services" kind=card body="Effect services that run at the EDGE (workerd)." footer="layerSpec · 11" icon=cloud iconTone=teal
+      node services "Services" kind=card footer="layerSpec · 11" icon=cloud iconTone=teal {
+        item "Effect services"
+        item "Run at the EDGE"
+        item "workerd runtime"
+      }
       node use-services "EDGE" kind=card icon=cloud iconTone=teal
     }
     group contributions-col-1 rows="256 96" gap=76 {
-      node skills "Skills" kind=card body="Operations offered to agents as tools." footer="skillDefinition · 41" icon=robot iconTone=message
+      node skills "Skills" kind=card footer="skillDefinition · 41" icon=robot iconTone=message {
+        item "Operations as tools"
+        item "Offered to agents"
+      }
       node use-skills "Agents" kind=card icon=sparkle iconTone=message
     }
     group contributions-col-2 rows="256 96" gap=76 {
-      node components "Components" kind=card body="React surfaces bound to roles: article, card, section." footer="surface · 88" icon=squares-four iconTone=violet
+      node components "Components" kind=card footer="surface · 88" icon=squares-four iconTone=violet {
+        item "React surfaces"
+        item "Bound to roles"
+        item "Article, card, section"
+      }
       node use-components "Surface" kind=card icon=app-window iconTone=violet
     }
   }
