@@ -35,7 +35,7 @@ import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import { translations } from '#translations';
 
-import { STUDIO_DIAGRAMS, STUDIO_SLIDES, diagramTitle } from './deck.ts';
+import { DIAGRAMS, SLIDES, diagramTitle } from './deck.ts';
 import { STUDIO_KINDS } from './kinds/registry.ts';
 import * as StudioSpace from './StudioSpace.ts';
 
@@ -113,7 +113,7 @@ export const Deck: Story = {
     const timeout = 30_000;
     await canvas.findByTestId('presenter.slide-gallery.0', undefined, { timeout });
     const tiles = await canvas.findAllByTestId(/^presenter\.slide-gallery\.\d+$/, undefined, { timeout });
-    await expect(tiles.length).toBe(STUDIO_SLIDES.length);
+    await expect(tiles.length).toBe(SLIDES.length);
   },
 };
 
@@ -121,18 +121,18 @@ export const Deck: Story = {
 const slide = (id: string): Story => ({
   decorators: decorators(id),
   play: async ({ canvasElement }) => {
-    const source = STUDIO_DIAGRAMS.find((diagram) => diagram.id === id)?.source ?? '';
+    const source = DIAGRAMS.find((diagram) => diagram.id === id)?.source ?? '';
     const [first] = source.split('\n');
     const editor = await within(canvasElement).findByTestId('canvas-dsl.editor', undefined, { timeout: 30_000 });
     await waitFor(() => expect(editor.textContent).toContain(first), { timeout: 30_000 });
   },
 });
 
-export const Hyperspace = slide('hyperspace');
-export const Echo = slide('echo');
-export const Plugins = slide('plugins');
-export const Composer = slide('composer');
-export const Architecture = slide('architecture');
 export const ReAct = slide('react');
 export const Agents = slide('agents');
 export const Superagent = slide('superagent');
+export const Echo = slide('echo');
+export const Hyperspace = slide('hyperspace');
+export const App = slide('app');
+export const Plugins = slide('plugins');
+export const Architecture = slide('architecture');

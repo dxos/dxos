@@ -10,7 +10,7 @@ export * as PipelineSpace from './crm/PipelineSpace.ts';
 export * as ReviewSpace from './review/ReviewSpace.ts';
 export * as RideCheckSpace from './ride-check/RideCheckSpace.ts';
 export * as StockfishSpace from './stockfish/StockfishSpace.ts';
-export * as StudioSpace from './studio/StudioSpace.ts';
+export * as StudioSpace from './cloudflare/StudioSpace.ts';
 export * as TidepoolSpace from './tidepool/TidepoolSpace.ts';
 export * as TimelineSpace from './timeline/TimelineSpace.ts';
 export * as TriageSpace from './triage/TriageSpace.ts';

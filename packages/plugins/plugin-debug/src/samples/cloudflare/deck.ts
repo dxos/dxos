@@ -9,75 +9,76 @@ import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 
 import agentsDiagram from './diagrams/agents.dx?raw';
+import appDiagram from './diagrams/app.dx?raw';
 import architectureDiagram from './diagrams/architecture.dx?raw';
-import composerDiagram from './diagrams/composer.dx?raw';
 import echoDiagram from './diagrams/echo.dx?raw';
 import hyperspaceDiagram from './diagrams/hyperspace.dx?raw';
-// import ontologyDiagram from './diagrams/ontology.dx?raw';
 import pluginsDiagram from './diagrams/plugins.dx?raw';
 import reactDiagram from './diagrams/react.dx?raw';
 import superagentDiagram from './diagrams/superagent.dx?raw';
 import agents from './slides/agents.md?raw';
+import app from './slides/app.md?raw';
 import architecture from './slides/architecture.md?raw';
-import composer from './slides/composer.md?raw';
 import cover from './slides/cover.md?raw';
 import demo from './slides/demo.md?raw';
 import echo from './slides/echo.md?raw';
 import evolution from './slides/evolution.md?raw';
 import hyperspace from './slides/hyperspace.md?raw';
 import next from './slides/next.md?raw';
-// import ontology from './slides/ontology.md?raw';
+import opportunity from './slides/opportunity.md?raw';
 import plugins from './slides/plugins.md?raw';
+import problem from './slides/problem.md?raw';
 import react from './slides/react.md?raw';
 import stack from './slides/stack.md?raw';
 import superagent from './slides/superagent.md?raw';
 
 /** A diagram the deck draws: its text, written as intent (`diagram kind=grid`), and the id a slide embeds it by. */
-export type StudioDiagram = { id: string; source: string };
+export type Diagram = { id: string; source: string };
 
 /** A slide of the deck: a markdown file in the presenter's dialect, titled by its frontmatter or its first heading. */
-export type StudioSlide = { id: string; markdown: string };
+export type Slide = { id: string; markdown: string };
 
-/** The diagrams, each drawn once; a slide embeds one by naming it (`<Surface ref="{{echo}}" />`). */
-export const STUDIO_DIAGRAMS: readonly StudioDiagram[] = [
+/** The diagrams, each drawn once and listed in the order the slides show them; a slide embeds one by naming it (`<Surface ref="{{echo}}" />`). */
+export const DIAGRAMS: readonly Diagram[] = [
+  { id: 'react', source: reactDiagram },
+  { id: 'agents', source: agentsDiagram },
+  { id: 'superagent', source: superagentDiagram },
   { id: 'echo', source: echoDiagram },
   { id: 'hyperspace', source: hyperspaceDiagram },
-  // { id: 'ontology', source: ontologyDiagram },
+  { id: 'app', source: appDiagram },
   { id: 'plugins', source: pluginsDiagram },
-  { id: 'composer', source: composerDiagram },
   { id: 'architecture', source: architectureDiagram },
-  { id: 'agents', source: agentsDiagram },
-  { id: 'react', source: reactDiagram },
-  { id: 'superagent', source: superagentDiagram },
 ];
 
 /** The slides in the order they are presented; `slides/<id>.md` is where a title or a note is changed. */
-export const STUDIO_SLIDES: readonly StudioSlide[] = [
+export const SLIDES: readonly Slide[] = [
   { id: 'cover', markdown: cover },
   { id: 'stack', markdown: stack },
+  { id: 'opportunity', markdown: opportunity },
   { id: 'evolution', markdown: evolution },
-  { id: 'echo', markdown: echo },
-  { id: 'hyperspace', markdown: hyperspace },
-  // { id: 'ontology', markdown: ontology },
-  { id: 'plugins', markdown: plugins },
-  { id: 'composer', markdown: composer },
-  { id: 'architecture', markdown: architecture },
   { id: 'react', markdown: react },
   { id: 'agents', markdown: agents },
   { id: 'superagent', markdown: superagent },
+  { id: 'problem', markdown: problem },
+  { id: 'echo', markdown: echo },
+  { id: 'hyperspace', markdown: hyperspace },
+  { id: 'app', markdown: app },
+  { id: 'plugins', markdown: plugins },
+  { id: 'architecture', markdown: architecture },
   { id: 'demo', markdown: demo },
   { id: 'next', markdown: next },
+  { id: 'cover', markdown: cover },
 ];
 
 /** Where a slide embeds a diagram: the diagram's id in braces, replaced with a reference to its drawing. */
 const PLACEHOLDER = /\{\{([a-z-]+)\}\}/g;
 
 /** A slide's title, as the presenter labels it: its frontmatter's `title`, else its first heading, else its id. */
-export const slideTitle = ({ id, markdown }: StudioSlide): string => Presentation.contentTitle(markdown) ?? id;
+export const slideTitle = ({ id, markdown }: Slide): string => Presentation.contentTitle(markdown) ?? id;
 
 /** The name a diagram's drawing takes: the title of the slide that embeds it, or its id where none does. */
 export const diagramTitle = (diagram: string): string => {
-  const slide = STUDIO_SLIDES.find(({ markdown }) => markdown.includes(`{{${diagram}}}`));
+  const slide = SLIDES.find(({ markdown }) => markdown.includes(`{{${diagram}}}`));
   return slide ? slideTitle(slide) : diagram;
 };
 
@@ -101,7 +102,7 @@ export const STUDIO_CANVAS: Partial<Canvas.CanvasSettings> = {
 };
 
 /** The commands a diagram's text draws; one that does not parse is a broken bundled file, so it throws. */
-export const diagramCommands = ({ id, source }: StudioDiagram) => {
+export const diagramCommands = ({ id, source }: Diagram) => {
   const { commands, problems } = DSL.parse(source);
   const errors = problems.filter(({ severity }) => severity === 'error');
   if (errors.length > 0) {
@@ -115,7 +116,7 @@ const DESCRIPTION =
   'the architecture, agents and their feeds, a chat and an agent at work.';
 
 /**
- * The presentation: a slide per file of {@link STUDIO_SLIDES}, each `{{id}}` replaced with that diagram's drawing as
+ * The presentation: a slide per file of {@link SLIDES}, each `{{id}}` replaced with that diagram's drawing as
  * a space-relative reference, so the embed resolves in whatever space the template seeds.
  */
 export const makeStudioDeck = (drawings: ReadonlyMap<string, Drawing.Drawing>): Presentation.Presentation =>
@@ -123,7 +124,7 @@ export const makeStudioDeck = (drawings: ReadonlyMap<string, Drawing.Drawing>): 
     name: 'DXOS',
     description: DESCRIPTION,
     theme: { accent: '#2d6fff', font: 'space-grotesk', monoFont: 'fira' },
-    slides: STUDIO_SLIDES.map(({ id, markdown }) =>
+    slides: SLIDES.map(({ id, markdown }) =>
       markdown.replaceAll(PLACEHOLDER, (placeholder, diagram: string) => {
         const drawing = drawings.get(diagram);
         if (!drawing) {

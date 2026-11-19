@@ -130,8 +130,8 @@
       "import": "./dist/lib/StockfishSpace.mjs"
     },
     "./StudioSpace": {
-      "source": "./src/samples/studio/StudioSpace.ts",
-      "types": "./dist/types/src/samples/studio/StudioSpace.d.ts",
+      "source": "./src/samples/cloudflare/StudioSpace.ts",
+      "types": "./dist/types/src/samples/cloudflare/StudioSpace.d.ts",
       "import": "./dist/lib/StudioSpace.mjs"
     },
     "./TidepoolSpace": {

@@ -150,9 +150,9 @@ feat Wireframe
 feat DeckTemplate
   desc: |
     The DXOS Deck space template: one presentation whose slides are the markdown files of
-    `src/samples/studio/slides`, in the order `deck.ts` lists them. A slide embeds a diagram by naming
+    `src/samples/cloudflare/slides`, in the order `deck.ts` lists them. A slide embeds a diagram by naming
     it (`<Surface ref="{{echo}}" />`); each diagram is a canvas drawing built from its `.dx` text in
-    `src/samples/studio/diagrams`, named after the slide that shows it. The plugin contributes the
+    `src/samples/cloudflare/diagrams`, named after the slide that shows it. The plugin contributes the
     element kinds the drawings are drawn by (card, feed card, chip, heading, plank, app frame and its parts) to
     the canvas; the graph kind is plugin-canvas's own.
 ```

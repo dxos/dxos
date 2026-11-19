@@ -7,18 +7,18 @@ import { describe, test } from 'vitest';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { STUDIO_DIAGRAMS, STUDIO_SLIDES, diagramTitle } from './deck.ts';
+import { DIAGRAMS, SLIDES, diagramTitle } from './deck.ts';
 import * as StudioSpace from './StudioSpace.ts';
 
 describe('DXOS Deck template', () => {
   test('builds a drawing per diagram and a deck whose slides embed them', { timeout: 120_000 }, async ({ expect }) => {
     const { result, json } = await EffectEx.runPromise(buildArchive(StudioSpace.make()));
     const { deck, drawings } = result.studio;
-    expect([...drawings.keys()]).toEqual(STUDIO_DIAGRAMS.map(({ id }) => id));
+    expect([...drawings.keys()]).toEqual(DIAGRAMS.map(({ id }) => id));
     expect([...drawings].map(([id, drawing]) => [id, drawing.name])).toEqual(
-      STUDIO_DIAGRAMS.map(({ id }) => [id, diagramTitle(id)]),
+      DIAGRAMS.map(({ id }) => [id, diagramTitle(id)]),
     );
-    expect(deck.slides).toHaveLength(STUDIO_SLIDES.length);
+    expect(deck.slides).toHaveLength(SLIDES.length);
 
     const archive: { objects: Array<{ content?: unknown }> } = JSON.parse(json);
     const texts = archive.objects.flatMap(({ content }) => (typeof content === 'string' ? [content] : []));

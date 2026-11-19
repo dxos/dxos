@@ -10,7 +10,7 @@ import * as Architecture from '@dxos/plugin-canvas/Architecture';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 
-import { STUDIO_CANVAS, STUDIO_DIAGRAMS, diagramCommands, diagramTitle, makeStudioDeck } from './deck.ts';
+import { DIAGRAMS, STUDIO_CANVAS, diagramCommands, diagramTitle, makeStudioDeck } from './deck.ts';
 
 export type Provides = {
   /** The presentation: a slide per markdown file, the diagram slides embedding their drawings. */
@@ -27,7 +27,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('studi
       const { db } = yield* Database.Service;
       // Read-only: a slide is looked at, and an editable canvas brings a rail that takes a corner of every one.
       const drawings = new Map(
-        STUDIO_DIAGRAMS.map((diagram) => [
+        DIAGRAMS.map((diagram) => [
           diagram.id,
           Architecture.addCanvasDrawing(db, {
             name: diagramTitle(diagram.id),

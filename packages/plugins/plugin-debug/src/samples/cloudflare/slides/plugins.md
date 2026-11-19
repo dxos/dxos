@@ -1,9 +1,9 @@
 ---
-title: 'Plugins'
+title: 'PLEX (Plugins)'
 layout: 'default'
 ---
 
-# Plugins
+# Extensibility
 
 <Surface ref="{{plugins}}" />
 

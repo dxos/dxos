@@ -6,35 +6,42 @@ import { describe, test } from 'vitest';
 
 import { DSL, GridEngine } from '@dxos/diagram';
 
-import { STUDIO_DIAGRAMS, STUDIO_PAGE, STUDIO_SLIDES, diagramCommands, diagramTitle, slideTitle } from './deck.ts';
+import { DIAGRAMS, SLIDES, STUDIO_PAGE, diagramCommands, diagramTitle, slideTitle } from './deck.ts';
 
 describe('the studio deck', () => {
-  test('names each slide and each diagram once', ({ expect }) => {
-    for (const ids of [STUDIO_SLIDES.map(({ id }) => id), STUDIO_DIAGRAMS.map(({ id }) => id)]) {
-      expect(ids.length).toBeGreaterThan(0);
-      expect(new Set(ids).size).toBe(ids.length);
-    }
+  test('names each diagram once, and each slide once but the cover', ({ expect }) => {
+    const diagrams = DIAGRAMS.map(({ id }) => id);
+    expect(diagrams.length).toBeGreaterThan(0);
+    expect(new Set(diagrams).size).toBe(diagrams.length);
+
+    // The cover opens the deck and closes it; no other slide is shown twice.
+    const slides = SLIDES.map(({ id }) => id);
+    expect(slides.at(0)).toBe('cover');
+    expect(slides.at(-1)).toBe('cover');
+    const between = slides.slice(1, -1);
+    expect(between).not.toContain('cover');
+    expect(new Set(between).size).toBe(between.length);
   });
 
   test('embeds every diagram on one slide, and no diagram it does not have', ({ expect }) => {
-    const embedded = STUDIO_SLIDES.flatMap(({ markdown }) =>
+    const embedded = SLIDES.flatMap(({ markdown }) =>
       [...markdown.matchAll(/\{\{([a-z-]+)\}\}/g)].map(([, diagram]) => diagram),
     );
-    expect([...embedded].sort()).toEqual(STUDIO_DIAGRAMS.map(({ id }) => id).sort());
+    expect([...embedded].sort()).toEqual(DIAGRAMS.map(({ id }) => id).sort());
   });
 
   test('gives every slide a title, and a drawing the title of the slide that shows it', ({ expect }) => {
-    for (const slide of STUDIO_SLIDES) {
+    for (const slide of SLIDES) {
       expect(slideTitle(slide).length).toBeGreaterThan(0);
       expect(slideTitle(slide)).not.toBe(slide.id);
     }
-    for (const { id } of STUDIO_DIAGRAMS) {
-      const slide = STUDIO_SLIDES.find(({ markdown }) => markdown.includes(`{{${id}}}`));
+    for (const { id } of DIAGRAMS) {
+      const slide = SLIDES.find(({ markdown }) => markdown.includes(`{{${id}}}`));
       expect(diagramTitle(id)).toBe(slide && slideTitle(slide));
     }
   });
 
-  describe.each(STUDIO_DIAGRAMS)('$id', (diagram) => {
+  describe.each(DIAGRAMS)('$id', (diagram) => {
     const scene = () => DSL.toScene(diagramCommands(diagram));
 
     test('draws one object whose connectors all end on something drawn', ({ expect }) => {
