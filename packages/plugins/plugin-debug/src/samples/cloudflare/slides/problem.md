@@ -6,17 +6,32 @@ title: 'Problems'
 
 ## Rethinking the Future of Enterprise Software
 
-<List variant="steps">
+<Grid cols="3">
 
-1. Shared Memory
-   - Beyond silos
-2. Access and Authorization
-   - Delegation
-   - Policy and auditing
-3. Coordination and Collaboration
-   - Rethinking the User Interface
+<Card>
 
-</List>
+### Shared Memory
+
+- Beyond silos
+
+</Card>
+<Card>
+
+### Access and Authorization
+
+- Delegation
+- Policy and auditing
+
+</Card>
+<Card>
+
+### Coordination and Collaboration
+
+- Rethinking the User Interface
+
+</Card>
+
+</Grid>
 
 <!--
 - What is the future of software?
