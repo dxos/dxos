@@ -286,7 +286,8 @@ const PluginManagerHost = ({
     EffectEx.runDetached(activateDemandGatedModules(manager));
 
     return () => {
-      void EffectEx.runAndForwardErrors(manager.shutdown());
+      // Detached: a story unmounting mid-activation can end shutdown interrupt-only, which is not a failure.
+      EffectEx.runDetached(manager.shutdown());
     };
   }, [manager]);
 
