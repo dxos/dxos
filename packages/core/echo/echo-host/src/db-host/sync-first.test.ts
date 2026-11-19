@@ -162,10 +162,47 @@ describe('EchoHost.syncFirst', () => {
       announced,
       createObjectDoc,
       everything,
-      shownFirst: ids(root.url, shownUrl, referencedUrl),
+      rootUrl: root.url,
+      // Stored documents stay named while the request holds: only those still to arrive wait.
+      stored: ids(root.url, shownUrl, unrelatedUrl),
+      shownFirst: ids(root.url, shownUrl, referencedUrl, unrelatedUrl),
       referencedDocumentId: interpretAsDocumentId(referencedUrl),
     };
   };
+
+  test('an object the directory does not name yet holds what has not arrived until a root update names it', async ({
+    expect,
+  }) => {
+    const { host, spaceId, announced, createObjectDoc, everything, rootUrl, stored } = await setup();
+    // Created by a peer since this one last synced: the root update naming it and its document are still to arrive.
+    const newcomer = EntityId.random();
+    const newcomerUrl = generateAutomergeUrl();
+
+    const storedOnly = announced(stored);
+    host.syncFirst(spaceId, newcomer);
+    await storedOnly;
+
+    const named = announced([...stored, interpretAsDocumentId(newcomerUrl)].sort());
+    {
+      using rootLease = await host['_automergeHost'].loadDoc<DatabaseDirectory>(
+        Context.default(),
+        interpretAsDocumentId(rootUrl),
+      );
+      expect(rootLease).toBeTruthy();
+      rootLease?.change((draft: DatabaseDirectory) => {
+        if (draft.links) {
+          draft.links[newcomer] = new A.RawString(newcomerUrl);
+        }
+      });
+    }
+    await host.flush(Context.default());
+    await named;
+
+    const rest = announced([...everything, interpretAsDocumentId(newcomerUrl)].sort());
+    await createObjectDoc(newcomer, {}, interpretAsDocumentId(newcomerUrl));
+    await host.flush(Context.default());
+    await rest;
+  });
 
   test('names the object and what it references, then the whole space once the reference arrives', async () => {
     const {

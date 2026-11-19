@@ -1601,18 +1601,23 @@ export class EchoHost extends Resource {
           entry.expanded = true;
         }
       }
-      const first = selectSyncFirstDocuments(announced, directory, entry.objectIds);
+      const first = new Set(selectSyncFirstDocuments(announced, directory, entry.objectIds));
       // Pending while heads are read, so a document that arrives meanwhile schedules another announcement.
-      entry.pending = new Set(first);
-      const heads = await this._automergeHost.getHeads(first);
+      entry.pending = first;
+      const heads = await this._automergeHost.getHeads(announced);
       // Replaced or timed out meanwhile, which scheduled another announcement.
       if (this.#syncFirst.get(spaceId) !== entry) {
         return;
       }
-      const pending = first.filter((_, index) => !heads[index]?.length);
-      if (pending.length > 0) {
+      const stored = new Set(announced.filter((_, index) => heads[index]?.length));
+      const pending = [...first].filter((documentId) => !stored.has(documentId));
+      // An object created since this peer last synced is not in its directory yet, but a root update will name it.
+      const named =
+        directory.objects?.[entry.objectId] !== undefined || directory.links?.[entry.objectId] !== undefined;
+      if (pending.length > 0 || !named) {
         entry.pending = new Set(pending);
-        announced = first;
+        // Only documents still to arrive wait: stored ones stay named, so their updates and the root's keep flowing.
+        announced = announced.filter((documentId) => first.has(documentId) || stored.has(documentId));
       } else {
         this.#syncFirst.delete(spaceId);
       }
