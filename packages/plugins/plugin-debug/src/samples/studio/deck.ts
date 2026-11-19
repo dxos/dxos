@@ -62,9 +62,9 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   { id: 'plugins', markdown: plugins },
   { id: 'composer', markdown: composer },
   { id: 'architecture', markdown: architecture },
-  { id: 'agents', markdown: agents },
   { id: 'chat', markdown: chat },
   { id: 'agent', markdown: agent },
+  { id: 'agents', markdown: agents },
   { id: 'demo', markdown: demo },
   { id: 'next', markdown: next },
 ];

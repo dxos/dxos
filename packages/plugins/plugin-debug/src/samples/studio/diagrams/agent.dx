@@ -1,67 +1,73 @@
-diagram kind=grid size=1600x880 gap=32 padding=48 autoCols=1120 justifyContent=center
+diagram kind=grid size=1600x880 gap=32 padding=48 autoCols=1376 justifyContent=center
 
-group layer-ui-section "UI / Control" cols=3 gap=64 padding=16 border=true {
-  group layer-ui-col-0 gap=32 {
-    node goal "Goal" kind=card icon=target
-    node project "Project" kind=card icon=folder
-  }
-  group layer-ui-col-1 gap=32 {
-    group ui-centre-0 { }
-    group ui-centre-1 { }
-  }
-  group layer-ui-col-2 gap=32 {
-    node outcome "Outcome" kind=card icon=trophy
-    node task "Task" kind=card icon=check-square
+group layer-ui-section padding=16 border=true {
+  group layer-ui-section-inner "Control" cols=3 gap=192 {
+    group layer-ui-col-0 gap=48 {
+      node goal "Goal" kind=card icon=target
+      node project "Project" kind=card icon=folder
+    }
+    group layer-ui-col-1 gap=48 {
+      group ui-centre-0 { }
+      group ui-centre-1 { }
+    }
+    group layer-ui-col-2 gap=48 {
+      node outcome "Outcome" kind=card icon=trophy
+      node task "Task" kind=card icon=check-square
+    }
   }
 }
 
-group layer-activity-section "Activity" cols=3 gap=64 padding=16 border=true {
-  group layer-activity-col-0 gap=32 {
-    node feed "Feed" kind=card icon=queue
-    node scheduler "Scheduler" kind=card icon=alarm
-  }
-  group layer-activity-col-1 gap=32 {
-    node session "Session" kind=card icon=play-circle
-    node tool "Tool" kind=card icon=wrench
-  }
-  group layer-activity-col-2 gap=32 {
-    node model "Model" kind=card icon=cpu
-    node plan "Plan" kind=card icon=list-numbers
-  }
-}
-
-group layer-knowledge-section "Knowledge" cols=3 gap=64 padding=16 border=true {
-  group layer-knowledge-col-0 gap=32 {
-    node memory "Memory" kind=card icon=brain
-    node schema "Schema" kind=card icon=brackets-curly
-  }
-  group layer-knowledge-col-1 gap=32 {
-    node graph "Graph" kind=card icon=graph
-    node artifact "Artifact" kind=card icon=cube
-  }
-  group layer-knowledge-col-2 gap=32 {
-    node skill "Skill" kind=card icon=graduation-cap
-    node spec "Specification" kind=card icon=clipboard-text
+group layer-activity-section padding=16 border=true {
+  group layer-activity-section-inner "Execution" cols=3 gap=192 {
+    group layer-activity-col-0 gap=48 {
+      node feed "Feed" kind=card icon=queue
+      node scheduler "Scheduler" kind=card icon=alarm
+    }
+    group layer-activity-col-1 gap=48 {
+      node session "Session" kind=card icon=play-circle
+      node tool "Tool" kind=card icon=wrench
+    }
+    group layer-activity-col-2 gap=48 {
+      node model "Model" kind=card icon=cpu
+      node plan "Plan" kind=card icon=list-numbers
+    }
   }
 }
 
-edge project -> goal "serves" head=triangle
-edge outcome -> goal "achieves" head=triangle
-edge task -> project "in" head=triangle
-edge task -> outcome "produces" head=triangle
-edge task -> spec "implements" head=triangle
-edge plan -> spec "follows" head=triangle
-edge session -> task "works on" head=triangle
-edge session -> model "run by" head=triangle
-edge session -> tool "uses" head=triangle
-edge session -> feed "writes" head=triangle
-edge scheduler -> session "starts" head=triangle
-edge scheduler -> feed "watches" head=triangle
-edge feed -> graph "updates" head=triangle
-edge memory -> feed "learns from" head=triangle
-edge memory -> graph "part of" head=triangle
-edge tool -> graph "acts on" head=triangle
-edge tool -> artifact "makes" head=triangle
-edge skill -> tool "defines" head=triangle
-edge graph -> schema "typed by" head=triangle
-edge artifact -> graph "stored in" head=triangle
+group layer-knowledge-section padding=16 border=true {
+  group layer-knowledge-section-inner "Knowledge" cols=3 gap=192 {
+    group layer-knowledge-col-0 gap=48 {
+      node memory "Memory" kind=card icon=brain
+      node schema "Schema" kind=card icon=brackets-curly
+    }
+    group layer-knowledge-col-1 gap=48 {
+      node graph "Graph" kind=card icon=graph
+      node artifact "Artifact" kind=card icon=cube
+    }
+    group layer-knowledge-col-2 gap=48 {
+      node skill "Skill" kind=card icon=graduation-cap
+      node spec "Specification" kind=card icon=clipboard-text
+    }
+  }
+}
+
+edge project -> goal "serves" head=triangle path=ortho
+edge outcome -> goal "achieves" head=triangle path=ortho
+edge task -> project "in" head=triangle path=ortho
+edge task -> outcome "produces" head=triangle path=ortho
+edge task -> spec "implements" head=triangle path=ortho
+edge plan -> spec "follows" head=triangle path=ortho
+edge session -> task "works on" head=triangle path=ortho
+edge session -> model "run by" head=triangle path=ortho
+edge session -> tool "uses" head=triangle path=ortho
+edge session -> feed "writes" head=triangle path=ortho
+edge scheduler -> session "starts" head=triangle path=ortho
+edge scheduler -> feed "watches" head=triangle path=ortho
+edge feed -> graph "updates" head=triangle path=ortho
+edge memory -> feed "learns from" head=triangle path=ortho
+edge memory -> graph "part of" head=triangle path=ortho
+edge tool -> graph "acts on" head=triangle path=ortho
+edge tool -> artifact "makes" head=triangle path=ortho
+edge skill -> tool "defines" head=triangle path=ortho
+edge graph -> schema "typed by" head=triangle path=ortho
+edge artifact -> graph "stored in" head=triangle path=ortho
