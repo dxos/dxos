@@ -1,7 +1,8 @@
-diagram kind=grid size=1600x880 gap=32 padding=48 autoCols=1376 justifyContent=center
+diagram kind=grid size=1600x880 gap=32 padding=48 autoCols=1504
 
-group layer-ui-section padding=16 border=true {
-  group layer-ui-section-inner "Control" cols=3 gap=192 {
+group layer-ui-section cols="176 1fr" gap=24 {
+  node layer-ui-label "Control" fill=none border=false
+  group layer-ui-body cols=3 gap=160 padding=16 border=true {
     group layer-ui-col-0 gap=48 {
       node goal "Goal" kind=card icon=target
       node project "Project" kind=card icon=folder
@@ -17,8 +18,9 @@ group layer-ui-section padding=16 border=true {
   }
 }
 
-group layer-activity-section padding=16 border=true {
-  group layer-activity-section-inner "Execution" cols=3 gap=192 {
+group layer-activity-section cols="176 1fr" gap=24 {
+  node layer-activity-label "Execution" fill=none border=false
+  group layer-activity-body cols=3 gap=160 padding=16 border=true {
     group layer-activity-col-0 gap=48 {
       node feed "Feed" kind=card icon=queue
       node scheduler "Scheduler" kind=card icon=alarm
@@ -34,8 +36,9 @@ group layer-activity-section padding=16 border=true {
   }
 }
 
-group layer-knowledge-section padding=16 border=true {
-  group layer-knowledge-section-inner "Knowledge" cols=3 gap=192 {
+group layer-knowledge-section cols="176 1fr" gap=24 {
+  node layer-knowledge-label "Knowledge" fill=none border=false
+  group layer-knowledge-body cols=3 gap=160 padding=16 border=true {
     group layer-knowledge-col-0 gap=48 {
       node memory "Memory" kind=card icon=brain
       node schema "Schema" kind=card icon=brackets-curly
@@ -48,7 +51,6 @@ group layer-knowledge-section padding=16 border=true {
       node skill "Skill" kind=card icon=graduation-cap
       node spec "Specification" kind=card icon=clipboard-text
     }
-
   }
 }
 
