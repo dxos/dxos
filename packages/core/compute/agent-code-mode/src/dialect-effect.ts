@@ -101,7 +101,8 @@ export const EffectDialect: Dialect = {
     \`import\` or \`require\` — the modules below are already in scope.
 
     Prefer one \`eval\` call that does the whole job — resolve, query, change, print — over a call
-    per step. Print the specific values you need to reason about, not long lists of whole objects.
+    per step. Each call is a fresh program: nothing defined in an earlier call exists in the next,
+    so load again what you need. Print the specific values you need to reason about, not long lists of whole objects.
     Stay on the objects the request names or the conversation is attached to: reading or changing
     others the request did not ask about spends calls and risks unasked-for writes.
 

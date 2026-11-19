@@ -16,6 +16,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Agent from '@dxos/assistant/Agent';
 import * as AgentService from '@dxos/compute/AgentService';
+import type * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { MemoryService } from '@dxos/echo-memory';
@@ -24,6 +25,7 @@ import { Space } from '@dxos/halo';
 import { IdentityDid } from '@dxos/keys';
 import { type FactStoreApi, FactStoreMemory } from '@dxos/pipeline-rdf';
 
+import { BrainSkill } from '#skills';
 import { AgentOperation, BrainService } from '#types';
 
 import { TriggerRegistry } from '../triggers.ts';
@@ -36,6 +38,12 @@ export const freshMemory: Effect.Effect<MemoryService.Service, never, Scope.Scop
 
 /** A wake for brain tests that never wake an agent, so a brain that tried fails loudly. */
 export const UNUSED_WAKE: BrainService.Service['wake'] = () => Effect.die('wake is not used by these tests');
+
+/**
+ * The Brain skill's hooks, run inline: these tests read what a turn recorded and relayed once it settles, and a
+ * background hook would still be running then. When the hook runs is agent-runtime's to test.
+ */
+export const inlineBrainHooks: Hook.Declaration[] = BrainSkill.hooks.map((hook) => ({ ...hook, async: false }));
 
 export type TestBrainOptions = {
   /**
