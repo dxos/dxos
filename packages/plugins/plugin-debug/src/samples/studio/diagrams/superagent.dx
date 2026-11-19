@@ -17,10 +17,10 @@ group agents-body gap=24 {
 
 group subagents-body gap=24 {
   group subagents-col-0 gap=16 autoRows=176 alignContent=center {
-    node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=magnifying-glass
-    node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=pencil-simple-line
-    node calendar "Email" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=calendar-blank
-    node travel "Travel" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=airplane-tilt
+    node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot
+    node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot
+    node calendar "Email" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot
+    node travel "Travel" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot
   }
 }
 
