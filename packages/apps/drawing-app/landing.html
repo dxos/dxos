@@ -654,24 +654,6 @@
       .cta.secondary:hover {
         background: var(--sheet);
       }
-      .start {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12px 20px;
-        margin: 0 0 32px;
-      }
-      .start .cta {
-        margin-top: 0;
-      }
-      .start span {
-        color: var(--muted);
-      }
-      .label {
-        margin: 0 0 12px;
-        color: var(--muted);
-        font-size: 15px;
-      }
       footer {
         border-top: 1px solid var(--grid);
         padding: 28px 0 48px;
@@ -738,11 +720,6 @@
             places the boxes, routes every arrow around them and hands back an SVG with zero crossings. Try it below:
             edit the .dx text, or switch to Mermaid to paste a flowchart, which drawing converts to .dx and draws.
           </p>
-          <div class="start">
-            <a class="cta" href="https://app.drawing.sh/" data-app-link>Open the app</a>
-            <span>Runs in your browser. Nothing to install.</span>
-          </div>
-          <p class="label">Or teach your agent:</p>
           <div class="install">
             <code id="install-command">npx skills add dxos/dxos --skill drawing</code>
             <button type="button" id="copy" data-state="idle" aria-live="polite">

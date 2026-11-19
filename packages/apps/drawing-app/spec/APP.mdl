@@ -161,7 +161,7 @@ feat F-13: Landing page and hosts
   req F-13.3: On a landing host, `/` is the landing page and `/api/*` is the Worker's API. Any other address without a file extension, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
   req F-13.4: The landing editor's "Open in app" button posts the source to its own host's share API and opens the link it returns, which names the app host.
   req F-13.5: The landing page loads only its own script: no client, identity, plugins or telemetry.
-  req F-13.6: The landing page offers the app first: an "Open app" button in its header and "Open the app" as the hero's first action, before the agent skill's install command. Each opens the app host of the environment the page is served from.
+  req F-13.6: The landing page's header has an "Open app" button, and the file section has "Open the app". Each opens the app host of the environment the page is served from. The hero has no app button: it is the heading, the lede and the agent skill's install command.
   req F-13.7: The landing page points to Composer as a second place to use the same editor: a Composer section says the diagram editor is a plugin in Composer that works with Composer's other plugins and agents, that Composer is in early access, and that the drawing.sh app can be used now. It links to Composer's early-access request. The page never calls drawing the engine behind Composer.
   req F-13.8: The landing editor's tabs are the source languages it accepts, not a comparison of renderers: `.dx` is drawing's own language, and Mermaid is converted to `.dx` and drawn by drawing. A hint beside the tabs names what the selected one does. The drawing sits in a box of fixed size, the hero's 16:9, which switching tabs or editing the source never resizes; a drawing of another shape is scaled to fit inside it.
 ```
@@ -1980,4 +1980,23 @@ decision D-156: The tabs are labelled `.dx` and Mermaid, with a hint beside them
   rejected:
     - Sizing the box to each drawing: a converted Mermaid drawing is a different shape, so the page jumps on every switch.
     - Laying converted Mermaid out at 16:9: the converter prints placed commands, so the page has no aspect to give it.
+```
+
+```mdl
+decision D-157: The hero drops its "Open the app" button, the line beside it and the "Or teach your agent" label. The header's Open app button and the heading are enough.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-13.6]
+  supersedes: D-154
+```
+
+```mdl
+decision D-158: The header carries an "Open app" button and the file section's button is "Open the app". The editor's button is renamed "Open in app", since it opens the drawing.sh app. A Composer section after the file section links to the early-access request on dxos.org/composer. The app links are built in the page's script from the host it is served on. Restates the parts of [D-154] that [D-157] keeps.
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.4, F-13.6, F-13.7]
+  why: One page build serves every environment, so a link fixed at build time would name the wrong app host everywhere but one; the markup keeps production's link for a page read without its script.
+  rejected:
+    - Keeping "Open in Composer" on the editor's button: it opens the drawing.sh app, not Composer.
 ```
