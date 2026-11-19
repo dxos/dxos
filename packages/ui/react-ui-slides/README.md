@@ -11,7 +11,7 @@ CodeMirror extensions that highlight and complete it.
 
 | Tag | Attributes |
 | --- | --- |
-| `<Grid>` | `cols`, `rows`: the tracks it lays down, 1 to 12 |
+| `<Grid>` | `cols`, `rows`: the tracks it lays down, 1 to 12; `align` (`stretch`, `start`, `center`, `end`) |
 | `<Cell>` | `colSpan`, `rowSpan`: the tracks it covers |
 | `<Card>` | `variant` (`default`, `outline`, `plain`), `tone`, `icon`, `colSpan`, `rowSpan` |
 | `<List>` | `variant` (`default`, `cards`, `steps`, `outline`, `flow`), `tone`, `active` |
@@ -22,13 +22,19 @@ CodeMirror extensions that highlight and complete it.
 A `tone` (`accent`, `info`, `success`, `warning`, `error`, `neutral`) repaints the accent for the block and what it
 holds.
 
+A `<Grid>` fills the space the slide leaves it (`align="stretch"`, the default). With `align="start"`, `"center"` or
+`"end"` it takes the height of what it holds and stands at the top, the middle or the bottom of that space. Either way
+the cards of a row share one height.
+
 A `<Card>` holds art or an icon, a title, and a line or a few bullets. `icon` names a
 [Phosphor](https://phosphoricons.com) glyph, bare (`icon="shield-check"`) or as a whole symbol
 (`icon="ph--shield-check--duotone"`). It stands with the card's first heading as one header, in the card's tone. A list
-in a card is sized for the card and kept inside its padding, two levels deep, with its markers under the icon.
+in a card is sized for the card and kept inside its padding, two levels deep, with its markers under the icon. In a
+grid, the icon cards of a row share one header height, so a title that wraps does not put its card's bullets lower
+than its neighbours'.
 
 ```md
-<Grid cols="3">
+<Grid cols="3" align="center">
 
 <Card icon="brain" tone="warning">
 

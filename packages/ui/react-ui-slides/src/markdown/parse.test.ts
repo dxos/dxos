@@ -259,6 +259,26 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([]);
   });
 
+  test('<Grid align> says where the grid stands, and the default says nothing', () => {
+    for (const align of ['start', 'center', 'end']) {
+      const slide = parseSlide(`<Grid cols="3" align="${align}">\n\nCells\n\n</Grid>`);
+      expect(elements(slide.slots.default, 'slide-grid')[0].properties.align).toBe(align);
+      expect(slide.issues).toEqual([]);
+    }
+    // `stretch` is the default written out, so it travels as no alignment at all.
+    for (const tag of ['<Grid cols="3">', '<Grid cols="3" align="stretch">']) {
+      const slide = parseSlide(`${tag}\n\nCells\n\n</Grid>`);
+      expect(elements(slide.slots.default, 'slide-grid')[0].properties.align).toBeUndefined();
+      expect(slide.issues).toEqual([]);
+    }
+  });
+
+  test('a <Grid align> the grid does not know falls back to filling, with an issue', () => {
+    const slide = parseSlide('<Grid align="middle">\n\nCells\n\n</Grid>');
+    expect(elements(slide.slots.default, 'slide-grid')[0].properties.align).toBeUndefined();
+    expect(slide.issues).toEqual([{ kind: 'html', message: 'Invalid <Grid> align "middle"; using "stretch".' }]);
+  });
+
   test('<Cell> and <Card> carry the tracks they span', () => {
     const slide = parseSlide(
       '<Grid cols="3">\n\n<Cell colSpan="2">\n\nWide\n\n</Cell>\n\n<Card rowSpan="2">\n\nTall\n\n</Card>\n\n</Grid>',

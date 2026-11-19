@@ -203,16 +203,40 @@ describe('MarkdownSlide', () => {
     expect(markup.match(/<svg /g)).toHaveLength(1);
   });
 
+  test('an icon card is a header over a body, and nothing else', ({ expect }) => {
+    const markup = render('<Card icon="brain">\n\nLead\n\n### Title\n\n- one\n\n</Card>');
+    // What is written ahead of the title joins the body, so the header is the card's first row in every card.
+    expect(markup).toMatch(
+      /<article [^>]*><header [^>]*>.*?<\/header><div class="[^"]*\[grid-row:2\/-1\][^"]*"><p [^>]*>Lead<\/p>\s*<ul [^>]*>.*?<\/ul><\/div><\/article>/s,
+    );
+    // The card lays the two out on rows of its own, which a grid replaces with its own (see the grid's classes).
+    expect(markup).toMatch(/<article [^>]*class="[^"]*\[&amp;\[data-icon\]\]:grid /);
+  });
+
+  test('a grid publishes its alignment, and its rows hold a header track where it holds icon cards', ({ expect }) => {
+    const centred = render('<Grid cols="3" align="center">\n\n<Card icon="brain">\n\n### A\n\n</Card>\n\n</Grid>');
+    expect(centred).toMatch(/<div [^>]*data-variant="default"[^>]*data-align="center"/);
+    const classes = centred.match(/<div [^>]*data-variant="default"[^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('data-[align]:grow-0');
+    expect(classes).toContain('data-[align=center]:my-auto');
+    expect(classes).toContain('[&amp;:has(&gt;[data-icon])]:[grid-auto-rows:auto_minmax(0,1fr)]');
+    expect(classes).toContain('[&amp;&gt;article[data-icon]]:grid-rows-subgrid');
+    // A grid that asks for nothing fills the space it is given, as it always has.
+    expect(render('<Grid cols="3">\n\nCells\n\n</Grid>')).not.toContain('data-align');
+  });
+
   test('a card with no title still shows its icon', ({ expect }) => {
     const markup = render('<Card icon="brain">\n\nJust text\n\n</Card>');
-    expect(markup).toMatch(/<article [^>]*><header [^>]*><svg [^>]*>.*?<\/svg><\/header>\s*<p /);
+    expect(markup).toMatch(/<article [^>]*><header [^>]*><svg [^>]*>.*?<\/svg><\/header><div [^>]*><p /);
   });
 
   test('a card with no icon renders no header, and its parts keep their classes', ({ expect }) => {
     const markup = render('<Card>\n\n![art](./a.png)\n\n### Title\n\nText\n\n</Card>');
     expect(markup).not.toContain('<header');
     expect(markup).not.toContain('<svg');
-    expect(markup).not.toContain('data-icon');
+    // No body wrapper either: the card's children are its own, as they always were.
+    expect(markup).toMatch(/<article [^>]*><p [^>]*><img [^>]*><\/p>\s*<h3 /);
+    expect(markup).not.toContain('data-icon="');
     expect(markup).toMatch(
       /<h3 [^>]*class="px-10 pt-8 text-\[56px\] leading-tight font-\(family-name:--slide-font-heading\) text-balance"/,
     );

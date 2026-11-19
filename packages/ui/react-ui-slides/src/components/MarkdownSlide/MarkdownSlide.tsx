@@ -334,6 +334,7 @@ const BLOCK_TAGS = new Set([
   'slide-grid',
   'slide-cell',
   'slide-card',
+  'slide-body',
 ]);
 
 const NODE_CLASSES: Record<string, string> = theme.nodes;
@@ -362,6 +363,7 @@ const VARIANT_PARTS: Record<string, string> = {
   'slide-cell': 'cell',
   'slide-card': 'card',
   'slide-icon': 'icon',
+  'slide-body': 'body',
 };
 
 const variantPart = (tagName: string): string => VARIANT_PARTS[tagName] ?? tagName;
@@ -380,15 +382,18 @@ const TRACK_PROPERTIES: Record<string, Record<string, string>> = {
 const TITLE_TAGS = new Set(['h1', 'h2', 'h3']);
 
 /**
- * A card's children with its icon and its title joined as one header, which the card's variant lays out as a row.
- * A card with no title still shows its icon, as a header of its own ahead of everything else.
+ * An icon card's children as a header over a body: the icon and the title are the header, which the card's variant
+ * lays out as a row, and everything else is the body under it. The two are the card's only children, so the cards of
+ * a grid row can share one header track and start their bodies level. A card with no title still shows its icon.
  */
 const withIconHeader = (children: ElementContent[], icon: string): ElementContent[] => {
   const glyph: Element = { type: 'element', tagName: 'slide-icon', properties: { icon }, children: [] };
   const index = children.findIndex((child) => child.type === 'element' && TITLE_TAGS.has(child.tagName));
   const title = index < 0 ? [] : [children[index]];
+  const rest = index < 0 ? children : [...children.slice(0, index), ...children.slice(index + 1)];
   const header: Element = { type: 'element', tagName: 'header', properties: {}, children: [glyph, ...title] };
-  return index < 0 ? [header, ...children] : [...children.slice(0, index), header, ...children.slice(index + 1)];
+  const body: Element = { type: 'element', tagName: 'slide-body', properties: {}, children: rest };
+  return [header, body];
 };
 
 /** A variant in force: the kind of block that set it and the name it carries. */
@@ -432,7 +437,12 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName = element.children.some((child) => child.type === 'element' && BLOCK_TAGS.has(child.tagName))
       ? 'div'
       : 'span';
-  } else if (tagName === 'slide-box' || tagName === 'slide-grid' || tagName === 'slide-cell') {
+  } else if (
+    tagName === 'slide-box' ||
+    tagName === 'slide-grid' ||
+    tagName === 'slide-cell' ||
+    tagName === 'slide-body'
+  ) {
     tagName = 'div';
   } else if (tagName === 'slide-card') {
     // An article: a card is a titled, self-contained piece, which is what the element means.
@@ -494,6 +504,15 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   }
   if (declarations.length > 0) {
     properties.style = declarations.join('; ');
+  }
+
+  // Where a grid stands in the space left to it, which its classes read.
+  const align = element.tagName === 'slide-grid' ? asVariant(properties.align) : undefined;
+  if (element.tagName === 'slide-grid') {
+    delete properties.align;
+  }
+  if (align) {
+    properties.dataAlign = align;
   }
 
   // A card's icon joins its title; the card says it has one, so its variant can set the bullets under it.
