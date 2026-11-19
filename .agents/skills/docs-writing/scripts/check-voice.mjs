@@ -19,6 +19,13 @@ const DOCS_ROOT = 'docs/src/content/docs';
 const CODE = '@@CODE@@';
 const MAX_SENTENCE_WORDS = 30;
 const MAX_PARAGRAPH_SENTENCES = 4;
+/** How often one connective or one opener may recur on a page before it reads as a formula. */
+const MAX_THIS_MEANS = 2;
+
+/** British spellings; the docs use the American ones. */
+const BRITISH =
+  /\b(colou?red|colours?|centred?|centres|labelled|behaviours?|favou?rites?|organis(?:e|ed|es|ation)|grey)\b/gi;
+const isBritish = (word) => /our|tre|lled|ise|isat|grey/i.test(word);
 
 /** Words the house style replaces with a plainer one. */
 const PADDING = [
@@ -98,6 +105,7 @@ const parse = (text) => {
   const fences = [];
   const imports = [];
   const headings = [];
+  const headingLines = new Set();
   const tableRows = [];
   const proseLines = [];
   const blockTags = [];
@@ -143,6 +151,7 @@ const parse = (text) => {
       imports.push(line.trim());
     } else if (/^#{1,6} /.test(line)) {
       firstHeadingLine ??= proseLines.length;
+      headingLines.add(proseLines.length);
       headings.push(line.trim());
       proseLines.push('');
     } else if (/^\s*\|/.test(line)) {
@@ -154,6 +163,46 @@ const parse = (text) => {
   }
 
   const prose = proseLines.join('\n');
+  const tableText = tableRows.join('\n');
+  const untitledAsides = [
+    ...[...prose.matchAll(/<Aside\b[^>]*>/g), ...blockTags.filter((blockTag) => blockTag.startsWith('<Aside'))]
+      .map((match) => (typeof match === 'string' ? match : match[0]))
+      .filter((asideTag) => !/\btitle=/.test(asideTag)),
+    ...[...prose.matchAll(/^:::(note|tip|caution|danger)\s*$/gm)].map((match) => match[0]),
+  ];
+
+  // The first words of the prose that follows each sample.
+  const openers = [];
+  proseLines.forEach((line, index) => {
+    const endsSample = /<Snippet\b/.test(line) || (line === CODE && proseLines[index + 1] !== CODE);
+    if (!endsSample) {
+      return;
+    }
+    // The explanation is the prose straight after the sample: another sample or a heading ends the passage.
+    let next;
+    for (let following = index + 1; following < proseLines.length; following++) {
+      const candidate = proseLines[following];
+      if (headingLines.has(following) || candidate === CODE || /<Snippet\b/.test(candidate)) {
+        return;
+      }
+      if (candidate.trim() && !/^\s*<\/?[A-Za-z][^>]*>\s*$/.test(candidate)) {
+        next = candidate;
+        break;
+      }
+    }
+    if (next === undefined || /^\s*(\*\*Example\*\*|[-*] |\d+\. |:::)/.test(next)) {
+      return;
+    }
+    // A name from the code is an opener of its own; a word before one is judged alone.
+    const [first = '', second = ''] = next.trim().split(/\s+/);
+    const words = first.startsWith('`') || second.startsWith('`') ? [first] : [first, second];
+    openers.push(
+      words
+        .join(' ')
+        .toLowerCase()
+        .replace(/[.,:]+$/, ''),
+    );
+  });
   const components = [
     ...[...prose.matchAll(/<([A-Z][A-Za-z]*)\b[^>]*>/g)]
       .filter((match) => match[1] !== 'Aside')
@@ -161,7 +210,9 @@ const parse = (text) => {
     ...blockTags.filter((blockTag) => !blockTag.startsWith('<Aside')),
   ];
   const links = new Set([...prose.matchAll(/\]\(([^)\s]+)\)/g)].map((match) => match[1]));
-  const codeSpans = new Set([...prose.matchAll(/`[^`\n]+`/g)].map((match) => match[0]));
+  // Facts sit in table cells as well as in sentences.
+  const codeSpans = new Set([...`${prose}\n${tableText}`.matchAll(/`[^`\n]+`/g)].map((match) => match[0]));
+  const tableKeys = tableRows.map((row) => row.split('|')[1]?.trim() ?? '');
 
   // Text a reader sees as sentences: no tags, link targets, code spans or list markers.
   const text_ = prose
@@ -169,7 +220,7 @@ const parse = (text) => {
     .replace(/\]\([^)]*\)/g, ']')
     .replace(/`[^`\n]+`/g, 'Code')
     .replace(/^:::.*$/gm, '');
-  const numbers = new Set(text_.match(/\b\d+(?:[.,]\d+)*\b/g) ?? []);
+  const numbers = new Set(`${text_}\n${tableText.replace(/`[^`\n]+`/g, 'Code')}`.match(/\b\d+(?:[.,]\d+)*\b/g) ?? []);
 
   return {
     frontmatter,
@@ -177,6 +228,10 @@ const parse = (text) => {
     fences,
     headings,
     tableRows,
+    tableKeys,
+    tableText,
+    untitledAsides,
+    openers,
     components,
     links,
     codeSpans,
@@ -259,6 +314,33 @@ const checkVoice = (page, isTutorial) => {
     }
   }
 
+  for (const heading of page.headings) {
+    if (/[;\u2014\u2013]/.test(heading)) {
+      warnings.push(`Semicolon or dash in a heading: ${heading}`);
+    }
+  }
+  const cells = page.tableText.replace(/`[^`\n]+`/g, 'Code');
+  const joinedCells = (cells.match(/[^|\n]*[;\u2014][^|\n]*/g) ?? []).length;
+  if (joinedCells > 0) {
+    warnings.push(`${joinedCells} table cell(s) join two facts with a semicolon or a dash. Make them two sentences.`);
+  }
+  for (const aside of page.untitledAsides) {
+    warnings.push(`Aside with no title: ${aside}`);
+  }
+  const british = [...new Set((`${page.text}\n${cells}`.match(BRITISH) ?? []).filter(isBritish))];
+  if (british.length > 0) {
+    warnings.push(`British spelling: ${british.join(', ')}`);
+  }
+  const thisMeans = (page.text.match(/\bThis means\b/g) ?? []).length;
+  if (thisMeans > MAX_THIS_MEANS) {
+    warnings.push(`"This means" ${thisMeans} times. Let the order of the sentences carry the logic.`);
+  }
+  for (const [opener, total] of count(page.openers)) {
+    if (total > 1) {
+      warnings.push(`${total} sample explanations open with "${opener}". Start each from a name in its sample.`);
+    }
+  }
+
   let wordCount = 0;
   let sentenceCount = 0;
   for (const paragraph of paragraphs(page.text)) {
@@ -327,7 +409,8 @@ const checkFixed = (before, after) => {
   for (const [label, key] of [
     ['Code blocks', 'fences'],
     ['Components', 'components'],
-    ['Table rows', 'tableRows'],
+    // A row is known by its first cell. The wording of the other cells may change.
+    ['Table rows', 'tableKeys'],
   ]) {
     const diff = diffCounts(before[key], after[key]);
     if (diff.length > 0) {
