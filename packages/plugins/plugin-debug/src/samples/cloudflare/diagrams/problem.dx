@@ -9,17 +9,7 @@ node access "Access and Authorization" kind=card icon=shield-check iconTone=acce
   item "Policy and auditing"
   item "Delegation"
 }
-node coordination "Coordination and Collaboration" kind=card icon=users-three iconTone=teal titleLines=2 {
+node coordination "Program and Control" kind=card icon=users-three iconTone=teal titleLines=2 {
   item "Rethinking the User Interface"
-  item "Program and Control"
+  item "Coordination and Collaboration"
 }
-
-
-<!--
-In the context of AI agents, “Program and Control” usually means using software to define what an agent can do and govern how it runs.
-- Program means defining the workflow, available tools, and rules.
-- Control means deciding when to run each step, checking results, enforcing limits, and stopping or asking for approval when needed.
-For example, an AI agent might decide that it needs to send an email. The surrounding program gives it the ability to draft one, and the control logic requires your approval before it sends.
-
-ReAct describes how an agent uses observations to decide what to do next. Program and Control describes how the surrounding software directs and constrains what can happen. The exact meaning can vary depending on where you saw the phrase.
--->
