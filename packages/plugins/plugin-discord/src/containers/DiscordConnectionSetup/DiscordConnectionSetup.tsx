@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -204,25 +205,24 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
     [configure, backIndex],
   );
 
-  // One run here and now, with the input the trigger runs; the schedule is untouched.
+  // Fires the trigger once, so the run happens where the trigger runs (EDGE for a remote trigger); the schedule is untouched.
+  const invokeTrigger = Hooks.useSpaceCallback(spaceId, [Trigger.ManagerService], (trigger: Trigger.Trigger) =>
+    Effect.gen(function* () {
+      const manager = yield* Trigger.ManagerService;
+      yield* manager.invokeTrigger({ trigger, event: { tick: Date.now() } });
+    }),
+  );
+
   const handleCheckNow = useCallback(async () => {
-    if (!spaceId || !applicationId || !backIndex || !crawlState) {
+    if (!backIndex) {
       return;
     }
     setBusy(true);
-    const { error } = await invokePromise(
-      DiscordOperation.CrawlDiscordChannels,
-      {
-        applicationId,
-        channels: [...backIndex.channels],
-        ...(maxDays !== undefined ? { maxDays } : {}),
-        state: Ref.make(crawlState),
-      },
-      { spaceId },
+    await invokeTrigger(backIndex.trigger).catch((cause: unknown) =>
+      notifyFailure({ message: cause instanceof Error ? cause.message : String(cause) }),
     );
-    notifyFailure(error);
     setBusy(false);
-  }, [invokePromise, spaceId, applicationId, backIndex, crawlState, maxDays, notifyFailure]);
+  }, [invokeTrigger, backIndex, notifyFailure]);
 
   // Forgets the frontier, cursors and source hashes, so the next run re-reads the history window and re-extracts it.
   const handleRestart = useCallback(async () => {
@@ -411,7 +411,7 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
             <Button.Root
               icon='ph--arrows-clockwise--regular'
               label={t('discord-index-check-now.label')}
-              disabled={busy || indexedChannels.size === 0 || !crawlState}
+              disabled={busy || indexedChannels.size === 0 || !crawlState || !triggerView?.enabled}
               onClick={() => void handleCheckNow()}
             />
             <Button.Root
