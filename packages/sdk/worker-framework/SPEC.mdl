@@ -206,6 +206,29 @@ feat F-1: Leader election
     then: it stops stealing the lock back, so the other tab keeps a working worker, and
           escalates once with `WorkerLeaderContentionError`; a port from a peer's worker
           resets the count
+
+  req F-1.10:
+    when: a follower would steal the leader lock from an unresponsive leader (F-1.3) and the
+          app passed `onTakeoverRequired`
+    then: it calls `onTakeoverRequired` once with a `takeover` function and steals only when
+          the app calls it; without the callback it steals as in F-1.3
+
+  req F-1.11:
+    when: another tab steals this tab's leader lock and the app passed `onLockStolen`
+    then: the connection stops instead of re-entering election, and calls `onLockStolen`
+
+  req F-1.12:
+    when: the app passed `generation` and `onSuperseded`, and a tab on a newer generation
+          opens on the same origin (whichever opened first)
+    then: the older tab calls `onSuperseded` with the newer generation and stops, before
+          `open()` resolves if it is still booting (`open()` then rejects with
+          `WorkerStoppedError`); generations travel on an origin-wide BroadcastChannel,
+          because tabs on different builds do not share a coordinator
+
+  req F-1.13:
+    when: the app opens a connection with `takeover: true`
+    then: its first election steals the leader lock from whichever tab holds it instead of
+          queueing
 ```
 
 ```mdl
@@ -410,6 +433,13 @@ decision D-1: A tab whose leader lock is taken repeatedly by a tab it cannot hea
   date: 2026-11-18
   by: user:dmaretskyi
   affects: [F-1.9]
+```
+
+```mdl
+decision D-2: Tabs never take the worker from each other without the user. A tab that would steal from an unresponsive leader asks the app first (`onTakeoverRequired`); a tab whose lock is stolen stops (`onLockStolen`); a tab on an older build stops when a newer build opens (`onSuperseded`). The framework holds no UX opinion: it takes these callbacks and the build's `generation`, and the app decides what a stopped tab shows.
+  date: 2026-11-19
+  by: user:dmaretskyi
+  affects: [F-1.10, F-1.11, F-1.12, F-1.13]
 ```
 
 ## Appendix: Extension Definitions

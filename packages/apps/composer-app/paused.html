@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Composer</title>
+    <meta name="description" content="Composer is open in another tab" />
+
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="theme-color" content="#ffffff" />
+    <!-- Mirrors the boot loader (app-framework boot-loader.css): same surface, mark and button. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        padding: 16px;
+        box-sizing: border-box;
+        background: #fafafa;
+        color: #0a0a0a;
+        font-size: 14px;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #0a0a0a;
+          color: #f0f0f0;
+        }
+      }
+      .mark {
+        width: min(160px, 40vmin);
+        height: min(160px, 40vmin);
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+        text-align: center;
+      }
+      button {
+        padding: 8px 20px;
+        border: 1px solid currentColor;
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        opacity: 0.85;
+      }
+      button:hover,
+      button:focus-visible {
+        opacity: 1;
+      }
+      details {
+        max-width: 420px;
+        opacity: 0.6;
+        font-size: 13px;
+      }
+      summary {
+        cursor: pointer;
+        text-align: center;
+      }
+      details p {
+        margin: 8px 0 0;
+        line-height: 1.5;
+      }
+      details pre {
+        margin: 8px 0 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <img class="mark" src="/icon.svg" alt="" />
+    <h1>Another instance of the app is open</h1>
+    <button id="continue" type="button" autofocus>Continue here</button>
+    <details>
+      <summary>Details</summary>
+      <p id="reason"></p>
+      <pre id="detail" hidden></pre>
+    </details>
+    <script type="module" src="/src/pages/paused.ts"></script>
+  </body>
+</html>

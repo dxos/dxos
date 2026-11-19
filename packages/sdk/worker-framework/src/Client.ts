@@ -9,7 +9,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MaybePromise, markMilestone } from '@dxos/util';
 
-import { WorkerLeaderContentionError, WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
+import {
+  WorkerLeaderContentionError,
+  WorkerNotTerminableError,
+  WorkerStoppedError,
+  WorkerTerminationError,
+} from './errors.ts';
 import { DisplaceChannel, type TerminateRequest } from './internal/displace-channel.ts';
 import {
   LOCK_OR_RPC_WAIT_TIMEOUT,
@@ -104,6 +109,14 @@ export interface LeaderTimeouts {
   workerProbeTimeout?: number;
 }
 
+/** Identifies the build of the app running in a tab; the later `time` is the newer build. */
+export type Generation = {
+  id: string;
+  time: number;
+};
+
+type GenerationMessage = { type: 'generation'; generation: Generation };
+
 export type Handle = {
   close(): Promise<void>;
 };
@@ -135,6 +148,31 @@ export type Options = {
    *  (so the next connect spawns fresh code), and stale tabs are told to reload.
    */
   onPersistentFailure?: (error: unknown) => void;
+  /**
+   * The build of the app running in this tab. Tabs on different builds cannot share a worker (each
+   * build has its own coordinator), so with {@link Options.onSuperseded} the older build stops.
+   */
+  generation?: Generation;
+  /**
+   * Called when a tab on a newer {@link Options.generation} opens. The connection has already
+   * stopped; the app decides what the tab shows.
+   */
+  onSuperseded?: (newer: Generation) => void;
+  /**
+   * Called instead of stealing the leader lock from a tab that stopped responding. The app asks the
+   * user and calls `takeover` to steal. Without it, the lock is stolen automatically.
+   */
+  onTakeoverRequired?: (takeover: () => void) => void;
+  /**
+   * Called when another tab steals this tab's leader lock. The connection has already stopped
+   * instead of re-entering election. Without it, the tab re-enters election.
+   */
+  onLockStolen?: () => void;
+  /**
+   * Steal the leader lock from whichever tab holds it when the connection opens; set it when the
+   * user chose to continue in this tab.
+   */
+  takeover?: boolean;
   onConnect: (args: {
     clientToWorker: MessagePort;
     workerToClient: MessagePort;
@@ -191,6 +229,15 @@ export class Connection extends Resource {
   readonly #workerProbeTimeout: number;
   readonly #maxLeaderFailures: number;
   readonly #onPersistentFailure: ((error: unknown) => void) | undefined;
+  readonly #generation: Generation | undefined;
+  readonly #onSuperseded: Options['onSuperseded'];
+  readonly #onTakeoverRequired: Options['onTakeoverRequired'];
+  readonly #onLockStolen: Options['onLockStolen'];
+  // Consumed by the first election, which steals instead of queueing.
+  #takeoverPending: boolean;
+  // Whether `onTakeoverRequired` was called and its `takeover` not used yet, so it is asked once.
+  #takeoverRequested = false;
+  #generationChannel: BroadcastChannel | undefined;
 
   #connectionHandle: Handle | undefined;
   #leaderSession: LeaderSession | undefined;
@@ -275,6 +322,11 @@ export class Connection extends Resource {
       'maxLeaderFailures must be a positive integer',
     );
     this.#onPersistentFailure = options.onPersistentFailure;
+    this.#generation = options.generation;
+    this.#onSuperseded = options.onSuperseded;
+    this.#onTakeoverRequired = options.onTakeoverRequired;
+    this.#onLockStolen = options.onLockStolen;
+    this.#takeoverPending = options.takeover ?? false;
   }
 
   onReconnect = (callback: () => Promise<void>) => {
@@ -307,6 +359,7 @@ export class Connection extends Resource {
         void this.#failInitialConnection(error);
       }
     });
+    this.#watchGenerations();
     this.#watchLeader(this._ctx);
     this.#connectTask.open();
     // The connect task retries on its own, so its first run completing is not the readiness signal —
@@ -392,8 +445,64 @@ export class Connection extends Resource {
     }
   }
 
+  /**
+   * Announces this tab's build on an origin-wide channel, which unlike the coordinator reaches tabs on
+   * other builds. An older tab that hears a newer build stops; a newer tab answers an older one, so a
+   * tab that opens after the newer build still learns of it.
+   */
+  #watchGenerations(): void {
+    const generation = this.#generation;
+    if (!generation || !this.#onSuperseded || typeof BroadcastChannel === 'undefined') {
+      return;
+    }
+    const channel = new BroadcastChannel(`${this.#leaderLockKey}/generation`);
+    this.#generationChannel = channel;
+    const announce = () => channel.postMessage({ type: 'generation', generation } satisfies GenerationMessage);
+    channel.onmessage = (event: MessageEvent<GenerationMessage>) => {
+      const other = event.data?.type === 'generation' ? event.data.generation : undefined;
+      if (!other || other.id === generation.id) {
+        return;
+      }
+      if (other.time > generation.time) {
+        log.warn('worker-connection: superseded by a newer build', { generation, newer: other });
+        void this.#stop(() => this.#onSuperseded?.(other));
+      } else {
+        announce();
+      }
+    };
+    announce();
+  }
+
+  /**
+   * Tells the app, then stops the connection; the app owns what the tab shows next. Notifying first
+   * lets it leave before a still-booting `open()` rejects, since `close()` is a no-op while opening.
+   */
+  async #stop(notify: () => void): Promise<void> {
+    try {
+      notify();
+    } catch (err) {
+      log.catch(err);
+    }
+    this.#generationChannel?.close();
+    this.#generationChannel = undefined;
+    if (this.#isInitialConnection) {
+      await this.#failInitialConnection(new WorkerStoppedError());
+    } else {
+      await this.close().catch((err) => log.catch(err));
+    }
+  }
+
+  // A steal is granted at once and cannot be combined with an abort signal, so it takes none.
+  #requestLeaderLock(ctx: Context, steal: boolean, callback: () => Promise<void>): Promise<void> {
+    return steal
+      ? navigator.locks.request(this.#leaderLockKey, { steal: true }, callback)
+      : requestExclusiveLock(this.#leaderLockKey, ctx.signal, callback);
+  }
+
   override async _close(): Promise<void> {
     log('worker-connection: closing');
+    this.#generationChannel?.close();
+    this.#generationChannel = undefined;
     await this.#connectTask.close();
     await this.#connectionHandle?.close();
     await this.#leaderSession?.close();
@@ -411,7 +520,12 @@ export class Connection extends Resource {
       try {
         log('worker-connection: requesting leader lock', { clientId: this.#clientId });
         this.#leaderPhase = 'awaiting-lock';
-        await requestExclusiveLock(this.#leaderLockKey, ctx.signal, async () => {
+        const steal = this.#takeoverPending;
+        this.#takeoverPending = false;
+        if (steal) {
+          log.warn('worker-connection: taking over the leader lock', { clientId: this.#clientId });
+        }
+        await this.#requestLeaderLock(ctx, steal, async () => {
           log('worker-connection: leader lock acquired (this tab is leader)', { clientId: this.#clientId });
           this.#leaderPhase = 'lock-held';
           this.#holdsLeaderLock = true;
@@ -509,6 +623,11 @@ export class Connection extends Resource {
           // Our exclusive lock was stolen by another tab that judged this leader stale. The lock
           // callback keeps running per spec, so tear down our leader session and re-enter election.
           this.#lockLossCount++;
+          if (this.#onLockStolen) {
+            log.warn('worker-connection: leader lock stolen, stopping', { clientId: this.#clientId });
+            void this.#stop(() => this.#onLockStolen?.());
+            return;
+          }
           log.warn('worker-connection: leader lock stolen, tearing down and re-watching', {
             clientId: this.#clientId,
             lockLossCount: this.#lockLossCount,
@@ -886,6 +1005,22 @@ export class Connection extends Resource {
       log('worker-connection: steal on cooldown, awaiting re-election');
       return;
     }
+    if (this.#onTakeoverRequired) {
+      if (!this.#takeoverRequested) {
+        this.#takeoverRequested = true;
+        log.warn('worker-connection: leader unresponsive, asking before taking over', { sinceHeartbeat });
+        this.#onTakeoverRequired(() => {
+          this.#takeoverRequested = false;
+          void this.#stealLeaderLock(sinceHeartbeat);
+        });
+      }
+      return;
+    }
+
+    await this.#stealLeaderLock(sinceHeartbeat);
+  }
+
+  async #stealLeaderLock(sinceHeartbeat: number): Promise<void> {
     this.#lastStealAttempt = Date.now();
     this.#stealCount++;
 
