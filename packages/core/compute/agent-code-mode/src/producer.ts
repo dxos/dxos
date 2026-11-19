@@ -23,7 +23,7 @@ import {
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -366,11 +366,21 @@ export const projectOperations = Effect.fnUntraced(function* (
         _tag: 'toolCall',
         toolCallId: `code-mode-${name}`,
         name,
-        input: JSON.stringify(input ?? {}),
+        input: toToolInput(input),
         providerExecuted: false,
       }).pipe(Effect.map(toolResultValue), Effect.orDie),
   }));
 });
+
+/**
+ * An operation's input as its tool takes it. A `ref(obj)` the code passes becomes the object's URI: a tool's reference
+ * field decodes a URI string, and a ref would otherwise serialize to `{"/": uri}`, which it rejects.
+ */
+export const toToolInput = (input: unknown): string =>
+  JSON.stringify(input ?? {}, function (this: { readonly [key: string]: unknown }, key: string, value: unknown) {
+    const original = this[key];
+    return Ref.isRef(original) ? String(original.uri) : value;
+  });
 
 /** What an operation call resolves to: the operation's result, or a throw carrying its error. */
 const toolResultValue = (result: ContentBlock.ToolResult): unknown => {
