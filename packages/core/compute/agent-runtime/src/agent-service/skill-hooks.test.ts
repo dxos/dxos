@@ -191,6 +191,40 @@ describe('end-request hooks', () => {
   );
 
   it.effect(
+    'a background hook still running when the next request ends runs once more after it, never twice at once',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession({ skills: [HookSkill] });
+        yield* session.submitPrompt('Hello.');
+        yield* session.waitForCompletion();
+        expect(hookLog.events).toEqual(['inline', 'background:start']);
+
+        // The next prompt's turn runs while the first request's background hook is still blocked.
+        yield* session.submitPrompt('Again.');
+        yield* session.waitForCompletion();
+        expect(hookLog.events).toEqual(['inline', 'background:start', 'inline']);
+
+        // Released, the running copy ends and the run the second request is owed starts after it.
+        hookLog.release();
+        const handle = yield* agentProcess(session);
+        yield* Effect.promise(async () => {
+          await expect.poll(() => handle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
+        });
+        expect(hookLog.events).toEqual([
+          'inline',
+          'background:start',
+          'inline',
+          'background:end',
+          'background:start',
+          'background:end',
+        ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     "a hook's follow-up is queued as the next prompt and continues the request",
     Effect.fnUntraced(
       function* (_) {

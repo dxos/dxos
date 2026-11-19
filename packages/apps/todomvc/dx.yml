@@ -6,6 +6,9 @@ runtime:
       persistent: true
     edgeFeatures:
       signaling: true
+      subductionReplicator: true
+      feedReplicator: true
+      agents: true
 
   services:
     edge:
