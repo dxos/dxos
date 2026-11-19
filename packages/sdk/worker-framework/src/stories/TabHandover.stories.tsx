@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import type * as Client from '@dxos/worker-framework/Client';
 
@@ -82,7 +83,7 @@ const useTab = (spec: TabSpec, instance: Instance) => {
     setCount(undefined);
     let unsubscribe: (() => Promise<void>) | undefined;
     const startCounter = () => {
-      void unsubscribe?.();
+      void unsubscribe?.().catch((err) => log.catch(err));
       unsubscribe = connection.subscribe((value) => {
         if (!cancelled) {
           setCount(value);
@@ -116,8 +117,8 @@ const useTab = (spec: TabSpec, instance: Instance) => {
       cancelled = true;
       offSession();
       offReconnect();
-      void unsubscribe?.();
-      void connection.close();
+      void unsubscribe?.().catch((err) => log.catch(err));
+      void connection.close().catch((err) => log.catch(err));
     };
   }, [connection]);
 
