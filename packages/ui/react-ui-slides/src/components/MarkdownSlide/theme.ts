@@ -9,6 +9,11 @@ const span =
   '[--slide-col-span:1] [--slide-row-span:1] ' +
   '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]';
 
+// A heading takes the color the deck's theme sets for its level, else the accent as it stands at the heading, so a
+// tone or a slide's own accent still reaches a heading whose color the deck left unset.
+const headingColor = 'text-[color:var(--slide-heading,var(--slide-accent))]';
+const subheadingColor = 'text-[color:var(--slide-subheading,var(--slide-accent))]';
+
 /** Classes for the 2560×1440 slide canvas (`SlideFrame` scales it to fit); colors and fonts come from `--slide-*` variables. */
 export const theme = {
   root: 'leading-relaxed',
@@ -17,9 +22,9 @@ export const theme = {
 
   nodes: {
     // Headings set tight, so a title that wraps takes two short lines rather than the body's relaxed spacing.
-    h1: 'text-[80px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
-    h2: 'text-[60px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
-    h3: 'text-[48px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) text-balance',
+    h1: `text-[80px] leading-tight ${headingColor} font-(family-name:--slide-font-heading) text-balance`,
+    h2: `text-[60px] leading-tight ${subheadingColor} font-(family-name:--slide-font-heading) text-balance`,
+    h3: `text-[48px] leading-tight ${subheadingColor} font-(family-name:--slide-font-heading) text-balance`,
     h4: 'text-[40px] leading-tight uppercase font-(family-name:--slide-font-heading) text-balance',
 
     p: 'text-[48px]',
