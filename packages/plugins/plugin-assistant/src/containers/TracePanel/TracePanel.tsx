@@ -179,4 +179,5 @@ const useTraceDumpHatch: (space: TracePanelProps['space']) => void = import.meta
     }
   : () => {};
 
-const withoutDxnPrefix = (key: string): string => key.replace(/^dxn:/, '');
+/** An operation key without its `dxn:` prefix or `:version` suffix, which trace events and definitions spell differently. */
+const withoutDxnPrefix = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');

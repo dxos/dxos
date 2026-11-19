@@ -94,7 +94,7 @@ export const BACK_INDEX_PAGE_SIZE = 25;
  * Crawl steps (a page each) one invocation runs by default: EDGE bounds an invocation to a minute, and each page may
  * cost a model request.
  */
-export const DEFAULT_BACK_INDEX_STEPS = 2;
+export const DEFAULT_BACK_INDEX_STEPS = 4;
 
 /** How often the back-index trigger runs by default: every two minutes. */
 export const DEFAULT_BACK_INDEX_CRON = '*/2 * * * *';
