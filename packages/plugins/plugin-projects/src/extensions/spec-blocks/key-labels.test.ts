@@ -141,6 +141,30 @@ describe('keyLabels', () => {
     expect(edit(reference + 5, reference + 5, ', ').toString()).toContain('depends: [k7q2x, ]');
   });
 
+  test('a dotted id a reference names is labelled and guarded whole', ({ expect }) => {
+    const doc = TEXT.replace('req a2b3c:', 'req F-9.7:').replace('depends: [k7q2x]', 'depends: [F-9.7]');
+    const state = create(doc);
+    const reference = doc.indexOf('[F-9.7]') + 1;
+    expect(keyLabels(state).find(({ from }) => from === reference)).toMatchObject({
+      to: reference + 5,
+      label: 'F-1.1',
+    });
+    const type = (at: number, insert: string) =>
+      state.update({ changes: { from: at, insert }, userEvent: 'input.type' }).state.doc;
+    expect(type(reference + 5, '.2')).toBe(state.doc);
+  });
+
+  test("a header's id with no colon after it takes only a colon or a line break at its end", ({ expect }) => {
+    const doc = TEXT.replace('feat m4n5p: Folder rules', 'feat m4n5p');
+    const state = create(doc);
+    const end = after(doc, 'feat m4n5p');
+    const type = (insert: string) =>
+      state.update({ changes: { from: end, insert }, userEvent: 'input.type' }).state.doc;
+    expect(type('x')).toBe(state.doc);
+    expect(type(' x')).toBe(state.doc);
+    expect(type(': Folder rules').toString()).toBe(TEXT);
+  });
+
   test('Enter after spaces at the end of a requirement starts the next one', ({ expect }) => {
     const doc = TEXT.replace('its folder.\n', 'its folder.  \n');
     const state = create(doc, after(doc, 'its folder.  '));

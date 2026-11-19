@@ -32,9 +32,10 @@ export type Guard = Span & {
   item?: SpecItem;
 };
 
-const TOKEN = /[A-Za-z0-9][\w-]*/g;
-const TOKEN_END = /[\w-]$/;
-const TOKEN_START = /^[\w-]/;
+/** A key or id as a reference names it: `k7q2x`, `F-3`, `F-3.2`; a dot ends it unless more of it follows. */
+const TOKEN = /[A-Za-z0-9](?:[\w-]|\.(?=[\w-]))*/g;
+const TOKEN_END = /[\w.-]$/;
+const TOKEN_START = /^[\w.-]/;
 /** Where a value's note starts: a `#` at the line's start or after a space. */
 const NOTE = /(^|[ \t])#/;
 
@@ -133,7 +134,7 @@ export const guards = (state: EditorState): Guard[] => {
 
 /**
  * Whether a change breaks a guard without removing all of what it keeps: it edits inside the guard, writes on a keyed
- * line's start or joins that line to the one above, or extends a referenced key at either end.
+ * line's start or joins that line to the one above, or writes onto a key's bare end.
  */
 const breaks = (state: EditorState, guard: Guard, from: number, to: number, inserted: string) => {
   const inside = from === to ? from > guard.from && from < guard.to : from < guard.to && to > guard.from;
@@ -142,9 +143,14 @@ const breaks = (state: EditorState, guard: Guard, from: number, to: number, inse
     inserted.endsWith('\n') || (inserted === '' && (from === 0 || state.doc.sliceString(from - 1, from) === '\n'));
   const atLineStart =
     guard.item?.entry !== undefined && to === guard.from && (from < to || inserted !== '') && !keepsBreak;
+  // Writes onto a key's bare end: a reference's either end, or a header's id with no colon after it, where only the
+  // colon that starts a title or a line break may follow.
+  const bare = guard.to === guard.key.to;
   const extended =
-    guard.item === undefined &&
-    ((to === guard.from && TOKEN_END.test(inserted)) || (from === guard.to && TOKEN_START.test(inserted)));
+    (to === guard.from && guard.from === guard.key.from && TOKEN_END.test(inserted)) ||
+    (from === guard.to &&
+      bare &&
+      (guard.item ? inserted !== '' && !/^[:\n]/.test(inserted) : TOKEN_START.test(inserted)));
   if (!inside && !atLineStart && !extended) {
     return false;
   }
@@ -175,10 +181,13 @@ const keyedLineAt = (state: EditorState) => {
   if (!head.empty) {
     return undefined;
   }
-  const guard = guards(state).find(
-    ({ item, to }) => item?.entry && head.head >= to && head.head <= state.doc.lineAt(Math.max(item.entry.to, to)).to,
-  );
-  return guard && { guard, entry: guard.item!.entry!, textFrom: guard.to };
+  for (const guard of guards(state)) {
+    const entry = guard.item?.entry;
+    if (entry && head.head >= guard.to && head.head <= state.doc.lineAt(Math.max(entry.to, guard.to)).to) {
+      return { guard, entry, textFrom: guard.to };
+    }
+  }
+  return undefined;
 };
 
 /**
