@@ -6,6 +6,7 @@ title: 'Problems'
 
 ## Rethinking the Future of Enterprise Software
 
+<Box variant="fill">
 <Grid cols="3">
 
 <Card icon="brain" tone="error">
@@ -17,6 +18,7 @@ title: 'Problems'
 - Knowledge management
 
 </Card>
+
 <Card icon="shield-check">
 
 ### Access and Authorization
@@ -25,6 +27,7 @@ title: 'Problems'
 - Delegation
 
 </Card>
+
 <Card icon="users-three" tone="success">
 
 ### Program and Control
@@ -35,6 +38,7 @@ title: 'Problems'
 </Card>
 
 </Grid>
+</Box>
 
 <!--
 - What is the future of software?
