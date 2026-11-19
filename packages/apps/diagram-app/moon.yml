@@ -9,6 +9,8 @@ tasks:
   # `@dxos/*` resolve from source (vite-plugin-import-source), so only dist consumed at runtime or by the
   # config itself is built first; the `vite` tag's `^:build` would build the whole plugin graph.
   bundle:
+    inputs:
+      - public/**/*
     options:
       mergeDeps: replace
     deps:
