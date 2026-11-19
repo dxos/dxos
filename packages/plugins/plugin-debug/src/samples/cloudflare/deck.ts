@@ -14,7 +14,6 @@ import architectureDiagram from './diagrams/architecture.dx?raw';
 import echoDiagram from './diagrams/echo.dx?raw';
 import hyperspaceDiagram from './diagrams/hyperspace.dx?raw';
 import pluginsDiagram from './diagrams/plugins.dx?raw';
-import problemDiagram from './diagrams/problem.dx?raw';
 import reactDiagram from './diagrams/react.dx?raw';
 import superagentDiagram from './diagrams/superagent.dx?raw';
 import agents from './slides/agents.md?raw';
@@ -44,7 +43,6 @@ export const DIAGRAMS: readonly Diagram[] = [
   { id: 'react', source: reactDiagram },
   { id: 'agents', source: agentsDiagram },
   { id: 'superagent', source: superagentDiagram },
-  { id: 'problem', source: problemDiagram },
   { id: 'echo', source: echoDiagram },
   { id: 'hyperspace', source: hyperspaceDiagram },
   { id: 'app', source: appDiagram },

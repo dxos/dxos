@@ -9,4 +9,5 @@ layout: 'default'
 
 <!--
 Notes.
+- Show how we manage long running agents; multi-user collaboration (like Multica)
 -->

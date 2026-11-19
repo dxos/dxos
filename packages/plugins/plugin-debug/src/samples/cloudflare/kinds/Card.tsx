@@ -47,9 +47,6 @@ export const CardItem = Schema.Struct({
 });
 export type CardItem = Schema.Schema.Type<typeof CardItem>;
 
-/** The most lines a card's title may keep: past three a title is a paragraph, and the card has no room under it. */
-const TITLE_LINES_MAX = 3;
-
 /** What this kind adds to the core card, kept under `data`. */
 export const CardData = Schema.Struct({
   /** An accent, drawn as the card's outline. A name, not a colour: {@link toneValue} resolves only these. */
@@ -65,13 +62,6 @@ export const CardData = Schema.Struct({
   chips: Schema.optional(Schema.Union([ChipList, Schema.String]).annotate({ title: 'Chips' })),
   /** The rows the card lists under its title, which the text form writes in braces after the node. */
   items: Schema.optional(Schema.Array(CardItem).annotate({ title: 'Rows' })),
-  /** The lines the title's block keeps, so cards in a row whose titles differ in length start their rows on one line. */
-  titleLines: Schema.optional(
-    Schema.Number.pipe(
-      Schema.check(Schema.isInt()),
-      Schema.check(Schema.isBetween({ minimum: 1, maximum: TITLE_LINES_MAX })),
-    ).annotate({ title: 'Title lines' }),
-  ),
 });
 
 /**
@@ -123,7 +113,6 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
   // A variable rather than a literal in the prop: a style that sets custom properties is not a fresh `CSSProperties`.
   const style: Styled = glyph ? { '--sd-tone': glyph } : {};
   const rows = data.items?.length ? data.items : undefined;
-  const titleLines: Styled = data.titleLines ? { '--sd-card-title-lines': String(data.titleLines) } : {};
 
   // The deck's `.d-card.simple`: one row of icon and title, with the footer and any rows under the title and no rule
   // over them.
@@ -166,7 +155,7 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
         className='studio-card dx-cover rounded-xl overflow-hidden'
         data-testid='card-node'
         data-tone={tone ? true : undefined}
-        style={{ padding: '9px 18px', ...style, ...titleLines }}
+        style={{ padding: '9px 18px', ...style }}
       >
         <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
           {chipsOf(data.chips) ? <Chips {...chipsOf(data.chips)!} /> : null}

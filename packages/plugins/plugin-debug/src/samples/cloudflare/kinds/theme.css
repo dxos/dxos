@@ -118,12 +118,10 @@
 }
 
 /* The title stands a little further from what is under it than the parts under it stand from each other. The glyph
-   sits on the title's first line rather than the middle of its block, and the block keeps the lines a card asks
-   for (`titleLines`), so a one-line title beside a two-line one leaves its rows on the same line. */
+   sits on the title's first line rather than the middle of its block. */
 .studio-card-frame [data-part='card-header'] {
   margin-block-end: 6px;
   align-items: flex-start;
-  min-block-size: calc(var(--sd-card-title-lines, 1) * 28px);
 }
 
 /* The glyph is 26px on the title's 28px line. */
