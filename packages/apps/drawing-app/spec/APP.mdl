@@ -163,6 +163,7 @@ feat F-13: Landing page and hosts
   req F-13.5: The landing page loads only its own script: no client, identity, plugins or telemetry.
   req F-13.6: The landing page offers the app first: an "Open app" button in its header and "Open the app" as the hero's first action, before the agent skill's install command. Each opens the app host of the environment the page is served from.
   req F-13.7: The landing page points to Composer as a second place to use the same editor: a Composer section says the diagram editor is a plugin in Composer that works with Composer's other plugins and agents, that Composer is in early access, and that the drawing.sh app can be used now. It links to Composer's early-access request. The page never calls drawing the engine behind Composer.
+  req F-13.8: The landing editor's tabs are the source languages it accepts, not a comparison of renderers: `.dx` is drawing's own language, and Mermaid is converted to `.dx` and drawn by drawing. A hint beside the tabs names what the selected one does. The drawing sits in a box of fixed size, the hero's 16:9, which switching tabs or editing the source never resizes; a drawing of another shape is scaled to fit inside it.
 ```
 
 ## Running against EDGE without an account
@@ -1960,4 +1961,23 @@ decision D-154: The header carries an "Open app" button and the hero leads with 
   rejected:
     - Linking the hero to Composer: Composer is waitlisted, so a visitor could not draw anything today.
     - Keeping "Open in Composer" on the editor's button: it opens the drawing.sh app, not Composer.
+```
+
+```mdl
+decision D-155: The landing editor makes clear what its two tabs show, and switching tabs does not change the size of the drawing.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-13.8]
+```
+
+```mdl
+decision D-156: The tabs are labelled `.dx` and Mermaid, with a hint beside them ("drawing's language", "converted to .dx"), and the hero text says Mermaid is converted to `.dx` and drawn. The drawing's box is fixed at 16:9 and the grid pitch fits the drawing's columns and rows inside it. Fills in [D-155].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.8]
+  why: Both tabs feed the same engine, so there is no second renderer to compare; the tabs only looked like a comparison. 16:9 is the hero drawing's own aspect, so the first paint is unchanged.
+  rejected:
+    - Sizing the box to each drawing: a converted Mermaid drawing is a different shape, so the page jumps on every switch.
+    - Laying converted Mermaid out at 16:9: the converter prints placed commands, so the page has no aspect to give it.
 ```

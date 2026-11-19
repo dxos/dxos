@@ -73,6 +73,9 @@ const loadLanguage = async (language: Language): Promise<Extension> => {
 
 const EXTENSION: Record<Language, string> = { dx: 'dx', mermaid: 'mmd' };
 
+/** Both tabs are inputs to the same layout engine; Mermaid is converted to `.dx` first, not drawn by Mermaid. */
+const HINT: Record<Language, string> = { dx: "drawing's language", mermaid: 'converted to .dx' };
+
 type SourceEditorProps = {
   readonly language: Language;
   readonly initialValue: string;
@@ -245,8 +248,12 @@ export const mount = (playground: HTMLElement) => {
   elements.appButton.disabled = false;
   elements.appButton.addEventListener('click', () => openInApp(elements, current, texts[current]));
   const root = createRoot(elements.editor);
+  const hint = playground.querySelector<HTMLElement>('#language-hint');
   const show = (language: Language) => {
     current = language;
+    if (hint) {
+      hint.textContent = HINT[language];
+    }
     for (const tab of elements.tabs) {
       tab.setAttribute('aria-selected', String(tab.dataset.language === language));
       tab.disabled = false;

@@ -248,6 +248,9 @@
         color: var(--ink);
         font-weight: 500;
       }
+      .hint {
+        white-space: nowrap;
+      }
       .tabs {
         display: flex;
         gap: 4px;
@@ -423,22 +426,28 @@
        * the drawing's --cols cells fit, the build snaps the drawing to an odd number of cells, and centring both
        * the grid and the drawing then lines them up.
        */
+      /* A fixed box, the hero's own 16:9, so a drawing of another shape or size fits inside it, not resizes it. */
       .canvas {
-        flex: 1;
-        container-type: inline-size;
+        flex: none;
+        aspect-ratio: 16 / 9;
+        container-type: size;
         display: flex;
-        overflow-x: auto;
+        overflow: auto;
         background: var(--sheet);
       }
       .stage {
         --pitch: 20px;
-        --pitch: clamp(12px, round(down, calc(100cqw / (var(--cols) + 2)), 1px), 28px);
+        --pitch: clamp(
+          6px,
+          round(down, min(calc(100cqw / (var(--cols) + 2)), calc(100cqh / (var(--rows) + 2))), 1px),
+          28px
+        );
         flex: 1 0 auto;
         width: max(100%, calc((var(--cols) + 2) * var(--pitch)));
+        min-height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--pitch) 0;
         background-image:
           linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
         background-size: var(--pitch) var(--pitch);
@@ -727,7 +736,7 @@
           <p class="lede">
             Draw a diagram in your browser, or ask your agent for one. Your agent writes a few lines of text; drawing
             places the boxes, routes every arrow around them and hands back an SVG with zero crossings. Try it below:
-            edit the text and the drawing follows.
+            edit the .dx text, or switch to Mermaid to paste a flowchart, which drawing converts to .dx and draws.
           </p>
           <div class="start">
             <a class="cta" href="https://app.drawing.sh/" data-app-link>Open the app</a>
@@ -751,9 +760,10 @@
           <div class="source">
             <div class="tab">
               <span class="tabs" role="tablist" aria-label="Source language">
-                <button type="button" role="tab" data-language="dx" aria-selected="true">DX</button>
+                <button type="button" role="tab" data-language="dx" aria-selected="true">.dx</button>
                 <button type="button" role="tab" data-language="mermaid" aria-selected="false" disabled>Mermaid</button>
               </span>
+              <span class="hint" id="language-hint">drawing's language</span>
             </div>
             <div class="editor" id="editor"><pre class="fallback">{{SOURCE}}</pre></div>
           </div>
