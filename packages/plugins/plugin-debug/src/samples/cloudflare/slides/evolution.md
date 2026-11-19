@@ -4,15 +4,11 @@ title: 'Evolution'
 
 # The application layer is being absorbed
 
-<br>
-<br>
-<br>
-
 <Grid cols="4" align="center" variant="flow">
 
 <v-clicks>
 
-<Card icon="chat-circle">
+<Card icon="chat-circle" tone="info">
 
 ### Chat
 
@@ -20,7 +16,7 @@ title: 'Evolution'
 
 </Card>
 
-<Card icon="magic-wand">
+<Card icon="magic-wand" tone="success">
 
 ### Copilot
 
@@ -29,7 +25,7 @@ title: 'Evolution'
 
 </Card>
 
-<Card icon="plugs-connected">
+<Card icon="plugs-connected" tone="warning">
 
 ### Cowork
 
@@ -38,7 +34,7 @@ title: 'Evolution'
 
 </Card>
 
-<Card icon="robot">
+<Card icon="robot" tone="error">
 
 ### SuperAgents
 
