@@ -3,7 +3,7 @@ diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
 group left-body gap=24 {
   group left-col-0 rows="100 136 92 136 12 136" gap=0 {
     group left-gap-0 { }
-    node navtree "Navtree" kind=card body="The space tree in the sidebar, built from the app graph." footer=plugin-navtree icon=tree-view tone=accent
+    node navtree "Navtree" kind=card body="The sidebar tree, built from the app graph." footer=plugin-navtree icon=tree-view tone=accent
     group left-gap-1 { }
     node document "Document" kind=card body="Collaborative markdown; the text lives in ECHO." footer=plugin-markdown icon=file-text tone=message
     group left-gap-2 { }
