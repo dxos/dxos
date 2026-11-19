@@ -224,14 +224,14 @@ export const theme = {
       // The name takes the slide's own foreground, which leaves the accent free for the links.
       title: {
         box: 'absolute start-[53px] top-[541px] flex flex-col gap-[209px]',
-        // The size is the one at which the deck's display face (Poiret One) draws the name to the width the Figma
-        // title covers, and `top` puts its baseline where that slide's is; both would need remeasuring under a
-        // different heading font.
+        // The name is set in the brand's display face (Poiret One) whatever font the deck picked: the size is the one
+        // at which that face draws the name to the width the Figma title covers, and `top` puts its baseline where
+        // that slide's is, so under the deck's own heading font both would be wrong.
         //
         // Important: `cover` and the other emphasis layouts size their headings with a `[&_h1]` descendant rule,
         // which outranks a class on the heading itself, so a variant can only set its own size by overriding it.
         h1:
-          'text-[244px]! leading-none! font-(family-name:--slide-font-heading) text-(color:--slide-foreground) ' +
+          "text-[244px]! leading-none! font-['Poiret_One',ui-sans-serif,sans-serif] text-(color:--slide-foreground) " +
           'text-balance',
         p: 'text-[37px] leading-[1.4]',
         a: 'text-(color:--slide-accent) no-underline',
