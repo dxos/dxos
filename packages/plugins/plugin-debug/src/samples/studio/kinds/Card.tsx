@@ -112,8 +112,10 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
   const symbol = iconSymbol(iconOf(node) ?? {});
   // A variable rather than a literal in the prop: a style that sets custom properties is not a fresh `CSSProperties`.
   const style: Styled = glyph ? { '--sd-tone': glyph } : {};
+  const rows = data.items?.length ? data.items : undefined;
 
-  // The deck's `.d-card.simple`: one row of icon and title, with the footer under the title and no rule over it.
+  // The deck's `.d-card.simple`: one row of icon and title, with the footer and any rows under the title and no rule
+  // over them.
   if (data.variant === 'simple') {
     return (
       <div
@@ -140,13 +142,13 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
             {footer}
           </TextPart>
         )}
+        {rows ? <CardRows items={rows} /> : null}
       </div>
     );
   }
 
   // Anything the card holds beyond its title draws through the core card's frame, which makes each region a part;
   // the chips and the rows are what this kind adds between the header and the body.
-  const rows = data.items?.length ? data.items : undefined;
   if (data.chips !== undefined || rows !== undefined || body !== undefined || footer !== undefined) {
     return (
       <div

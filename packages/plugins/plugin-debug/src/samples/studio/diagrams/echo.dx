@@ -4,34 +4,64 @@ group layers-section rows="224 544" gap=16 {
   group types-section padding=16 border=true {
     group types-section-inner "ECHO Core" cols=3 gap=24 {
       group types-col-0 gap=16 {
-        node typescript "TypeScript" kind=card footer="Effect API" icon=file-ts variant=simple
-        node json-schema "Effect/JSON Schema" kind=card footer="Strong and weak types" icon=brackets-angle variant=simple
+        node typescript "TypeScript" kind=card icon=file-ts variant=simple {
+          item "Effect API"
+        }
+        node json-schema "Effect/JSON Schema" kind=card icon=brackets-angle variant=simple {
+          item "Strong and weak types"
+        }
       }
       group types-col-1 gap=16 {
-        node versioning "Versioning" kind=card footer="Schema migration" icon=git-branch variant=simple
-        node uri "URI" kind=card footer="dxn:type:org.dxos/Task" icon=link variant=simple
+        node versioning "Versioning" kind=card icon=git-branch variant=simple {
+          item "Schema migration"
+        }
+        node uri "URI" kind=card icon=link variant=simple {
+          item "dxn:type:org.dxos/Task"
+        }
       }
       group types-col-2 gap=16 {
-        node validation "Validation" kind=card footer="every write" icon=shield-check variant=simple
-        node migration "Schema migration" kind=card footer=lenses icon=arrows-clockwise variant=simple
+        node validation "Validation" kind=card icon=shield-check variant=simple {
+          item "every write"
+        }
+        node migration "Schema migration" kind=card icon=arrows-clockwise variant=simple {
+          item "lenses"
+        }
       }
     }
   }
   group layers-body cols=3 gap=24 padding=16 border=true {
     group layers-col-0 gap=16 autoRows=160 {
-      node graph "Graph" kind=card body="Typed objects and relations: a property graph per space." footer="one Automerge doc per object" icon=graph iconTone=accent
-      node crdt "CRDT" kind=card body="Automerge: concurrent edits from people and agents merge deterministically." footer="no locks · no primary" icon=git-merge iconTone=message
-      node pipeline "Pipeline" kind=card body="Triggers on queries, feeds, cron, webhooks and email run functions on each change." footer="EDGE: Scheduler DO · alarms" icon=flow-arrow iconTone=event
+      node graph "Graph" kind=card icon=graph iconTone=accent {
+        item "Typed objects and relations: a property graph per space."
+      }
+      node crdt "CRDT" kind=card icon=git-merge iconTone=message {
+        item "Automerge: concurrent edits from people and agents merge deterministically."
+      }
+      node pipeline "Pipeline" kind=card icon=flow-arrow iconTone=event {
+        item "Triggers on queries, feeds, cron, webhooks and email run functions on each change."
+      }
     }
     group layers-col-1 gap=16 autoRows=160 {
-      node feeds "Feeds" kind=card body="Append-only logs: chat, transcripts, agent trajectories." footer="EDGE: FeedSpace DO" icon=queue iconTone=file
-      node sync "Sync" kind=card body="Subduction exchanges compacted history fragments by fingerprint." footer="EDGE: replicator DO" icon=arrows-clockwise iconTone=teal
-      node index "Index" kind=card body="SQLite everywhere: typed queries, full-text search, reverse references." footer="EDGE: Indexer DO · vectors planned" icon=list-magnifying-glass iconTone=sheet
+      node feeds "Feeds" kind=card icon=queue iconTone=file {
+        item "Append-only logs: chat, transcripts, agent trajectories."
+      }
+      node sync "Sync" kind=card icon=arrows-clockwise iconTone=teal {
+        item "Subduction exchanges compacted history fragments by fingerprint."
+      }
+      node index "Index" kind=card icon=list-magnifying-glass iconTone=sheet {
+        item "SQLite everywhere: typed queries, full-text search, reverse references."
+      }
     }
     group layers-col-2 gap=16 autoRows=160 {
-      node blobs "Blobs" kind=card body="Files and binary content, referenced from objects." footer="EDGE: R2" icon=files iconTone=violet
-      node cache "Cache" kind=card body="A full replica on every device; reads never wait on the network." footer="OPFS · KV fast path" icon=lightning iconTone=lime
-      node memory "Memory" kind=card body="Shared memory for people and agents: branches, provenance, facts and rules." footer="EDGE: Agent DO · BrainObject" icon=brain iconTone=rose
+      node blobs "Blobs" kind=card icon=files iconTone=violet {
+        item "Files and binary content, referenced from objects."
+      }
+      node cache "Cache" kind=card icon=lightning iconTone=lime {
+        item "A full replica on every device; reads never wait on the network."
+      }
+      node memory "Memory" kind=card icon=brain iconTone=rose {
+        item "Shared memory for people and agents: branches, provenance, facts and rules."
+      }
     }
   }
 }

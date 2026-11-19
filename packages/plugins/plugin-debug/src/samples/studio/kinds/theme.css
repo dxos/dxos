@@ -141,6 +141,19 @@
   color: var(--sd-tone, var(--sd-card-footer-fg));
 }
 
+/* The one-line card's rows: the bullet under its glyph and the text under its title, at its note's size. */
+.studio-card-simple .studio-card-row {
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 12.8px;
+  font-size: var(--sd-card-simple-note);
+  line-height: 21px;
+  color: var(--sd-card-footer-fg);
+}
+
+.studio-card-simple .studio-card-bullet {
+  block-size: 21px;
+}
+
 /* The footer's block is 22px, what the canvas's own footer took, so a larger footer costs the body no line. It is
    set in the body's face: in mono at this size the longest footers no longer fit their cards. */
 .studio-card-frame [data-part$='footer'] {
