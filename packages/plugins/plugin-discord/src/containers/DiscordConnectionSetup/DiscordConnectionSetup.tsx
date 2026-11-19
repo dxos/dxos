@@ -5,6 +5,7 @@
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as CrawlState from '@dxos/crawler/CrawlState';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -59,6 +60,19 @@ export type DiscordConnectionSetupProps = {
 export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupProps) => {
   const { t } = UiHooks.useTranslation(DiscordNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
+  // An action's failure is an outcome, so it is a toast; a failed load stays inline as the view's state.
+  const notifyFailure = useCallback(
+    (failure: { message: string } | undefined) => {
+      if (failure) {
+        void invokePromise(LayoutOperation.AddToast, {
+          id: 'discord.back-index.failed',
+          title: t('discord-index-error.label', { error: failure.message }),
+          icon: 'ph--warning--regular',
+        });
+      }
+    },
+    [invokePromise, t],
+  );
   const db = Obj.getDatabase(connection);
   const spaceId = db?.spaceId;
   const config = useConfig();
@@ -147,9 +161,9 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
         },
         { spaceId },
       );
-      setError(error?.message);
+      notifyFailure(error);
     },
-    [invokePromise, spaceId, applicationId, backIndex, connection, t],
+    [invokePromise, spaceId, applicationId, backIndex, connection, t, notifyFailure],
   );
 
   const handleIndexServer = useCallback(
@@ -163,7 +177,7 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
         { applicationId, guildId: guild.id, indexed, connection: Ref.make(connection) },
         { spaceId },
       );
-      setError(error?.message);
+      notifyFailure(error);
       if (data) {
         setIndexedGuilds(data.guildIds);
         if (indexed) {
@@ -178,7 +192,7 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
       }
       setBusy(false);
     },
-    [invokePromise, spaceId, applicationId, connection, backIndex],
+    [invokePromise, spaceId, applicationId, connection, backIndex, notifyFailure],
   );
 
   const handleIndexChannel = useCallback(
@@ -206,9 +220,9 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
       },
       { spaceId },
     );
-    setError(error?.message);
+    notifyFailure(error);
     setBusy(false);
-  }, [invokePromise, spaceId, applicationId, backIndex, crawlState, maxDays]);
+  }, [invokePromise, spaceId, applicationId, backIndex, crawlState, maxDays, notifyFailure]);
 
   // Forgets the frontier, cursors and source hashes, so the next run re-reads the history window and re-extracts it.
   const handleRestart = useCallback(async () => {
