@@ -225,7 +225,7 @@ export const tag = (tag: string): Any => {
 };
 
 /**
- * Filter by an annotation set on the entity with `Annotation.set`.
+ * Filter by an annotation set on the entity with `Annotation.set`. Keyed annotations are not queryable.
  *
  * @performance O(1); builds a filter AST node without matching anything.
  */
@@ -235,6 +235,7 @@ export const annotation: {
   /** Matches entities whose value equals `value`; only scalar values can be compared. */
   <T extends string | number | boolean>(annotation: Annotation.Annotation<T>, value: T): Any;
 } = (annotation: Annotation.Annotation<unknown>, value?: string | number | boolean): Any => {
+  assertArgument(!annotation.keyed, 'annotation', `Keyed annotation ${annotation.key} is not queryable.`);
   return new FilterClass({
     type: 'annotation',
     key: annotation.key,

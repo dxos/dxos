@@ -82,6 +82,12 @@ export interface Annotation<T> {
   readonly schema: Schema.Codec<T, unknown, never>;
 
   /**
+   * Whether an entity stores each entry of this record-valued annotation under its own meta key,
+   * so peers that concurrently write different entries merge instead of one whole record winning.
+   */
+  readonly keyed: boolean;
+
+  /**
    * Get the annotation value from an Effect schema.
    *
    * Only accepts `Schema.Top` — to read an annotation off a `Type.Type`
@@ -113,11 +119,25 @@ export interface Annotation<T> {
 export const Key = internalAnnotations.Key;
 export type Key = Schema.Schema.Type<typeof Key>;
 
+/** True when `T` is a record with open-ended string keys (not a struct, scalar, or array). */
+type IsStringRecord<T> = T extends object
+  ? T extends readonly unknown[]
+    ? false
+    : string extends keyof T
+      ? true
+      : false
+  : false;
+
 interface MakeProps<T> {
   id: string;
   schema: Schema.Codec<T, any, never>;
   /** Skips the FQN id-format check, for a pre-existing id that may already be embedded in persisted schemas. */
   legacyId?: boolean;
+  /**
+   * Stores each entry under its own meta key (`<id>/<entry key>`); only for `Schema.Record(Schema.String, …)`.
+   * A value written by a non-keyed annotation with the same id is still read, and loses to a keyed entry.
+   */
+  keyed?: IsStringRecord<T> extends true ? boolean : never;
 }
 
 /**

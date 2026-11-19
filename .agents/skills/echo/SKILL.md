@@ -193,6 +193,20 @@ parent; call `Obj.setParent(child, undefined)` for that.
 Reverse edges (child holds the ref) and ref-in-annotation edges (e.g. `Chat.CompanionChatAnnotation`)
 still need `Obj.setParent`.
 
+## Records that several peers write
+
+Automerge merges edits inside a map or list that both peers already have. It cannot merge two maps
+or lists that two peers each create at the same key: one survives and the other's contents are lost.
+So never let the first writer create a shared container.
+
+- **A record field in object data**: make it required and create it empty in `Obj.make`, or in the
+  migration that adds the field. A migration runs on every peer, so two peers that migrate and write
+  before syncing can still lose an entry.
+- **A record-valued annotation**: pass `keyed: true` to `Annotation.make`. Each entry is stored under
+  its own key in `meta.annotations`, which the object's creator makes, and the same
+  `get` / `set` / `update` / `atomProperty` calls work. Only `Schema.Record(Schema.String, …)` can be
+  keyed, and `Filter.annotation` rejects it.
+
 ## Related docs in-repo
 
 - Effect runtime patterns: [.cursor/skills/effect/SKILL.md](../effect/SKILL.md).

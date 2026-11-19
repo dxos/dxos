@@ -288,7 +288,7 @@ module Format
 module Annotation
   desc: Attach metadata (icons, colors, formats) to schema.
   api:
-    make: (props) => Annotation        # define an annotation.
+    make: (props) => Annotation        # define an annotation; `keyed` stores a record per entry.
     get / set / update: (...) => ...   # read / write an annotation on schema.
     getFromAst: (ast) => value         # read from a schema AST.
     atom / atomProperty: ...           # atom-level annotation helpers.
@@ -524,6 +524,42 @@ feat F-7: Feed options
     then: it fails with a schema error and the object is unchanged
 ```
 
+```mdl
+feat F-8: Keyed annotations
+  uses: [Annotation, Filter]
+
+  desc: |
+    Automerge cannot merge two maps that two peers each create at the same key: one is kept and the
+    other is lost. A record-valued annotation stored as one map loses an entry whenever two peers write
+    its first entries before syncing. A keyed annotation stores each entry under its own key in the
+    entity's `meta.annotations` map, which the entity's creator makes, so no write creates a container.
+
+  req F-8.1:
+    when: two peers write different entries of a keyed annotation before syncing, the first entries
+          included
+    then: both entries survive the merge
+
+  req F-8.2:
+    when: `Annotation.make` is called with `keyed: true`
+    then: the schema must be a record with string keys (`Schema.Record(Schema.String, ...)`); any other
+          schema is a type error, and `make` throws at runtime
+
+  req F-8.3:
+    when: a keyed annotation is read with `Annotation.get` or its atoms
+    then: entries stored under `<id>/<key>` are combined with a record stored under the bare `<id>`;
+          a keyed entry wins over the bare-key record's, and no entries reads as `None`
+
+  req F-8.4:
+    when: a keyed annotation is written with `Annotation.set` or `Annotation.update`
+    then: each added or replaced entry is written under its own key and each removed entry is deleted,
+          from the bare-key record too; the bare-key record itself is never deleted, and `update`
+          runs the mutator on an empty record when there are no entries
+
+  req F-8.5:
+    when: `Filter.annotation` is called with a keyed annotation
+    then: it throws; keyed annotations are not queryable
+```
+
 ## Acceptance
 
 ```mdl
@@ -664,6 +700,56 @@ decision D-10: The Feed module's api lists maxAge as milliseconds, matching F-7.
   for: user:dmaretskyi
   affects: [Feed]
   why: The api still listed maxAge as a Duration after D-9 stored it as milliseconds, so the spec contradicted itself.
+```
+
+```mdl
+decision D-11: A record-valued annotation can be keyed: each entry is stored under its own meta key, so peers that write different entries concurrently merge, the first entries included. Keyed storage is for annotations only.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [Annotation, F-8]
+```
+
+```mdl
+decision D-12: A keyed annotation still reads a record stored under its bare key. A keyed entry wins over the stored record's, removing an entry also removes it from the stored record, and the stored record is never deleted, because clients that have not upgraded may still write it. Removing the stored records is left to a later migration.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-8.3, F-8.4]
+```
+
+```mdl
+decision D-13: A record field in object data that peers write concurrently is created empty when the object is created or migrated, rather than by its first writer.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-3]
+```
+
+```mdl
+decision D-14: Keyed storage is a `keyed` flag on `Annotation.make`; `get`, `set`, `update`, `atom` and `atomProperty` keep their signatures. `set` replaces the entries, and `update` with no entries runs on an empty record. Fills in [D-11].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Annotation, F-8.4]
+  why: Callers such as `Subscription` keep their code, and the old "update is a no-op when absent" rule is what made the first write a whole-record assignment.
+  rejected:
+    - A separate `makeKeyed` returning a `KeyedAnnotation` type: callers would need new functions for the same reads and writes.
+```
+
+```mdl
+decision D-15: Only a record with open string keys can be keyed: a type error (`string extends keyof T`) and a runtime check in `make` reject structs, scalars, arrays, and literal-key records. Entries are stored at `<id>/<key>`; annotation ids cannot contain `/`. Fills in [D-11].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.2, F-8.3]
+  why: Keyed storage splits a value by its keys, so it needs a value with keys; a struct's fields already merge once the struct exists, and no annotation needs per-field first writes.
+```
+
+```mdl
+decision D-16: Keyed annotations are not queryable in v1; `Filter.annotation` throws for one. Fills in [D-11].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.5]
+  why: A filter matches one exact meta key, so it would silently miss keyed entries; nothing queries a keyed annotation yet.
 ```
 
 ---
