@@ -4,7 +4,7 @@ title: 'Problems'
 
 # Problems
 
-## Enterprise Software in the age of AI
+## Rethinking the Future of Enterprise Software
 
 <Surface ref="{{problem}}" />
 
