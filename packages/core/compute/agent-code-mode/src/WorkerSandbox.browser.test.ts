@@ -145,6 +145,11 @@ describe('worker sandbox in a Web Worker', () => {
       .toEqual([['Write the docs', 'filed']]);
   }, 60_000);
 
+  test('console output reaches the model as print does', async () => {
+    const { run } = await setup();
+    expect(await run("console.log('one'); yield* print('two'); console.error('three');")).toEqual('one\ntwo\nthree');
+  }, 60_000);
+
   test('kills a worker whose code never finishes', async () => {
     const { run } = await setup();
     expect(await run('while (true) {}', '2 seconds')).toContain('the worker was killed');

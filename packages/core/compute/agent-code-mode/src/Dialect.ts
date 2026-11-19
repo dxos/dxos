@@ -131,5 +131,18 @@ export const renderOperation = (
     input: ${input}
 `;
 
+/**
+ * The `console` bound in the code's scope: its output methods print into the call's output, since the model writes
+ * `console.log` by habit and the host's console is a channel it never reads. Its other methods stay the host's.
+ */
+export const printingConsole = (print: (...values: unknown[]) => void): Console => ({
+  ...console,
+  log: print,
+  info: print,
+  warn: print,
+  error: print,
+  debug: print,
+});
+
 /** Shown in place of the operations section when the conversation binds no skills. */
 export const NO_OPERATIONS = '### Operations\n\nNo operations are bound to this conversation.';

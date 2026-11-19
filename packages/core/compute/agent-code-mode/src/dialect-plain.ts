@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { DXN } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { type HintSyntax, makeDescriber } from './describe.ts';
@@ -17,6 +18,7 @@ import {
   type InstructionsContext,
   NO_OPERATIONS,
   type SandboxOperation,
+  printingConsole,
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
@@ -57,9 +59,17 @@ export const PlainDialect: Dialect = {
       Query.select(Filter.id(typeof target === 'string' ? target : target.id));
     return {
       print,
+      console: printingConsole(print),
 
       /** The object's card with what only a query can tell: its relations, children and referrers. */
-      describe: (value: unknown) => run(describe(value)),
+      describe: (value: unknown) =>
+        run(
+          Effect.gen(function* () {
+            const id = Obj.isObject(value) || Relation.isRelation(value) ? undefined : wrappedId(value);
+            const stored = id === undefined ? undefined : yield* findById(id);
+            return yield* describe(stored ?? value);
+          }),
+        ),
 
       /** Relations whose source (`out`) or target (`in`) is the object, optionally of one relation type. */
       relations: (target: Obj.Unknown | string, direction: 'out' | 'in' = 'out', type?: string) =>
@@ -200,6 +210,32 @@ const PLAIN_HINTS: HintSyntax = {
   children: (id) => `await children('${id}')`,
   referrers: (id, type, field) => `await referrers('${id}', '${type}'${field === undefined ? '' : `, '${field}'`})`,
 };
+
+/**
+ * The id of the object a value stands for: an operation answers with its objects' JSON, often wrapped (`{ object }`),
+ * and a card of that JSON counts none of the object's relations. Undefined for a value that names no single object.
+ */
+const wrappedId = (value: unknown): string | undefined => {
+  if (!Predicate.isObject(value)) {
+    return undefined;
+  }
+  if (Predicate.isString(value.id)) {
+    return value.id;
+  }
+  const ids = Object.values(value).flatMap((field) =>
+    Predicate.isObject(field) && Predicate.isString(field.id) ? [field.id] : [],
+  );
+  return ids.length === 1 ? ids[0] : undefined;
+};
+
+/** The stored object with `id`, or undefined when the id is not an object id or the database has no such object. */
+const findById = (id: string): Effect.Effect<Entity.Unknown | undefined, never, Database.Service> =>
+  EntityId.isValid(id)
+    ? Database.query(Filter.id(id)).run.pipe(
+        Effect.map(([found]) => found),
+        Effect.orElseSucceed(() => undefined),
+      )
+    : Effect.succeed(undefined);
 
 /** Whether `object`'s `field` holds a ref (directly or in an array) to the object `id`. */
 const referencesVia = (object: object, field: string, id: string): boolean => {

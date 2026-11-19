@@ -19,6 +19,7 @@ import {
   type InstructionsContext,
   NO_OPERATIONS,
   type SandboxOperation,
+  printingConsole,
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
@@ -77,6 +78,7 @@ export const EffectDialect: Dialect = {
           Effect.map((lines) => print(...lines)),
           Effect.provideContext(runtime),
         ),
+      console: printingConsole(print),
 
       /** Supplied by `wrap`, not by the model: the static half of `DOCS`. */
       loadDocs,

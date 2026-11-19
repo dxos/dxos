@@ -654,3 +654,43 @@ describe('code mode types', () => {
     ),
   );
 });
+
+// No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
+describe('code mode output', () => {
+  it.effect(
+    'console output reaches the model as print does, on both dialects',
+    Effect.fnUntraced(
+      function* (_) {
+        expect(
+          yield* runEval(
+            "console.log('one', 1); print('two'); console.info('three'); console.warn('four'); console.error({ five: 5 });",
+          ),
+        ).toEqual('one 1\ntwo\nthree\nfour\n{\n  "five": 5\n}');
+        expect(
+          yield* runEval("console.log('one'); yield* print('two'); console.debug('three');", EffectDialect),
+        ).toEqual('one\ntwo\nthree');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a program that printed and returned nothing says it ran',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('const score = await ops.score({ title: "abc" });');
+        expect(ok).toBe(true);
+        expect(output).toEqual(
+          'No output: the code ran without error but printed nothing. Print the values you need to see.',
+        );
+        expect(yield* runEval('return null;')).toEqual('null');
+        expect(yield* runEval("print('hello');", EffectDialect)).toMatch(
+          /^No output: .* `print` is an effect: write `yield\* print\(\.\.\.\)`\.$/,
+        );
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
