@@ -1,0 +1,39 @@
+---
+title: Introduction
+description: What drawing.sh is, and the three ways to use it.
+---
+
+drawing.sh draws diagrams from a few lines of text. You say which boxes exist and how they relate; drawing places
+the boxes on a grid, routes every arrow around them, and writes an SVG. You never give a coordinate.
+
+```dx
+node Browser "Browser"
+node Api "API server"
+node Db "Postgres"
+edge Browser -> Api "HTTPS"
+edge Api -> Db "reads, writes"
+```
+
+The text is the `.dx` language. The picture is a `.dx.svg`: an ordinary SVG that also carries its `.dx` source, so
+it can be edited as text again later.
+
+## Three ways in
+
+| Way                                      | For                                                                                 |
+| ---------------------------------------- | ----------------------------------------------------------------------------------- |
+| [The app](/docs/app/)                    | Drawing in the browser, alone or with others. No sign-up and nothing to install.    |
+| [The agent skill](/docs/agent-skill/)    | Asking your coding agent for a diagram of your code. The agent writes the `.dx`.    |
+| [The CLI](/docs/cli/)                    | Rendering `.dx` files yourself, in a script or in CI.                               |
+
+They share one file format. A diagram rendered by the CLI or an agent opens in the app as an editable canvas, and a
+diagram exported from the app opens in Composer.
+
+## Try it now
+
+The [home page](/) has a live editor: change the `.dx` text and the drawing updates as you type. **Open in app**
+copies your drawing into the app.
+
+## Next
+
+- [Nodes, groups and edges](/docs/language/) teaches the language.
+- [The .dx.svg file](/docs/files/) explains what the file holds and where it opens.

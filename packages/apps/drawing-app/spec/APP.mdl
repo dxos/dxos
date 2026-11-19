@@ -11,7 +11,7 @@ shared with a link. The data and the link format are Composer's, so a space shar
 one shared from here opens in Composer, with the same diagrams in both.
 
 The app is drawing.sh ([D-144]). Each environment serves it at `app.` of its host, with the drawing.sh landing
-page at the host itself (F-13).
+site, its home page and its docs, at the host itself (F-13).
 
 ## Dependencies
 
@@ -155,15 +155,17 @@ feat F-12: Share API
 ```
 
 ```mdl
-feat F-13: Landing page and hosts
+feat F-13: Landing site and hosts
   req F-13.1: Each environment serves the landing page at its own host and the app at `app.` of that host: production at drawing.sh (and www.drawing.sh) and app.drawing.sh, dev at dev.drawing.sh and app.dev.drawing.sh, preview at preview.drawing.sh and app.preview.drawing.sh. Staging serves only the app, on its `workers.dev` host.
-  req F-13.2: The landing page is the agent-diagram DSL site: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript.
-  req F-13.3: On a landing host, `/` is the landing page and `/api/*` is the Worker's API. Any other address without a file extension, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
+  req F-13.2: The landing site is an Astro Starlight site: a home page at `/` and the docs under `/docs/` (F-13.9). The home page is the agent-diagram DSL page: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript. Until one is chosen, a second home page built from Starlight's splash template is served at `/splash/` for comparison.
+  req F-13.3: On a landing host, `/api/*` is the Worker's API, and `/`, `/docs/` and the pages under it, `/splash/`, the site's build files and any address with a file extension are served from the site's build. Any other address, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
   req F-13.4: The landing editor's "Open in app" button posts the source to its own host's share API and opens the link it returns, which names the app host.
-  req F-13.5: The landing page loads only its own script: no client, identity, plugins or telemetry.
+  req F-13.5: The site's pages load only the site's own scripts: no client, identity, plugins or telemetry.
   req F-13.6: The landing page's header has an "Open app" button, and the file section has "Open the app". Each opens the app host of the environment the page is served from. The hero has no app button: it is the heading, the lede and the agent skill's install command.
   req F-13.7: The landing page points to Composer as a second place to use the same editor: a Composer section says the diagram editor is a plugin in Composer that works with Composer's other plugins and agents, that Composer is in early access, and that the drawing.sh app can be used now. It links to Composer's early-access request. The page never calls drawing the engine behind Composer.
   req F-13.8: The landing editor's tabs are the source languages it accepts, not a comparison of renderers: `.dx` is drawing's own language, and Mermaid is converted to `.dx` and drawn by drawing. A hint beside the tabs names what the selected one does. The drawing sits in a box of fixed size, the hero's 16:9, which switching tabs or editing the source never resizes; a drawing of another shape is scaled to fit inside it.
+  req F-13.9: The docs have three sections. Getting started covers the drawing.sh app, the agent skill and the `drawing` CLI. Language reference covers the `.dx` language: diagrams, nodes, groups, edges, relations and layout hints. Files and sharing covers the `.dx.svg` file, import and export in the app, the `?src=` and `?d=` links and the share API.
+  req F-13.10: Both home pages and every docs page link to the app host (F-13.6) and to the docs.
 ```
 
 ## Running against EDGE without an account
@@ -519,7 +521,7 @@ test QA-9: Export and import
 test QA-10: Landing page and share links
   desc: The landing page hands a diagram to the app through a share link, and app links on the landing host reach the app.
   actors: human
-  covers: [F-11.4, F-11.5, F-12.1, F-12.2, F-13.3, F-13.4, F-13.6]
+  covers: [F-11.4, F-11.5, F-12.1, F-12.2, F-13.3, F-13.4, F-13.6, F-13.9, F-13.10]
   status: unverified
   given:
     - a deployed environment with both hosts, such as dev.drawing.sh and app.dev.drawing.sh
@@ -536,6 +538,12 @@ test QA-10: Landing page and share links
     - name: Open app
       do: On the landing page, press Open app in the header.
       expect: the app host of the same environment opens, such as app.dev.drawing.sh from dev.drawing.sh
+    - name: Docs
+      do: On the landing host, open `/docs` and pick Layout hints in the sidebar.
+      expect: the docs page opens on the landing host at `/docs/language/hints/`, with Open app in its header
+    - name: Missing docs page
+      do: Open `/docs/missing/` on the landing host.
+      expect: the site's 404 page, with a 404 status, not the app
 ```
 
 ## Changelog
@@ -1999,4 +2007,24 @@ decision D-158: The header carries an "Open app" button and the file section's b
   why: One page build serves every environment, so a link fixed at build time would name the wrong app host everywhere but one; the markup keeps production's link for a page read without its script.
   rejected:
     - Keeping "Open in Composer" on the editor's button: it opens the drawing.sh app, not Composer.
+```
+
+```mdl
+decision D-159: The landing page becomes an Astro Starlight site in drawing-app, with docs at drawing.sh/docs: Getting started, Language reference, and Files and sharing. Build both a custom home page and a Starlight splash home page, to compare them.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-13.2, F-13.9]
+```
+
+```mdl
+decision D-160: Astro builds the site into a `site/` folder of the app's build output, after the app's Vite build, in the same bundle task. On a landing host the Worker serves the site's pages and files from that folder, under their own paths. The custom home page is at `/`, built from the old landing page's markup, styles and scripts. The splash page is at `/splash/`, with the same editor embedded. The docs sidebar and both home pages link to the app and the docs. Fills in [D-159].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.2, F-13.3, F-13.5, F-13.10]
+  why: One bundle and one deploy keep the site on the app's version, as [D-149] wanted for the landing page. A folder of its own keeps Astro's `index.html` from replacing the app's. Serving both home pages from one build lets the two be compared side by side on the same host.
+  rejected:
+    - Astro's output at the build root: its `index.html` and `404.html` would replace the app's.
+    - A separate Worker for the site: a second deploy for one product, which [D-149] rejected for the landing page.
+    - Moving the app under a path such as `/app/`: app links and invitation links name the app host's root.
 ```

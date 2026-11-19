@@ -1,0 +1,82 @@
+---
+title: The CLI
+description: Render .dx files to SVG, check layouts, recover the source of a .dx.svg, and open a diagram in the app.
+---
+
+The `drawing` command renders `.dx` files. Run it with `npx`:
+
+```bash
+npx -y @dxos/drawing render arch.dx
+```
+
+Or install it, which puts `drawing` on your `PATH`:
+
+```bash
+npm i -g @dxos/drawing
+```
+
+## render
+
+```bash
+drawing render arch.dx
+```
+
+Lays out each `.dx` file and writes `<name>.dx.svg` beside it, then prints a report: how many nodes and connectors,
+and how many crossings and bends. Fewer is better; warnings name the boxes involved.
+
+| Option            | Does                                                               |
+| ----------------- | ------------------------------------------------------------------ |
+| `-o <path>`       | Writes the SVG there instead (one input only). `-o -` writes to stdout. |
+| `--plain`         | Writes a bare `.svg` without the embedded source.                 |
+| `--json`          | Prints the report as JSON.                                         |
+
+`-` as the input reads the `.dx` from stdin, and needs `-o`:
+
+```bash
+drawing render - -o docs/arch.dx.svg < arch.dx
+```
+
+## check
+
+```bash
+drawing check arch.dx --json
+```
+
+Lays out each file and prints the report, writing nothing.
+
+## source
+
+```bash
+drawing source docs/arch.dx.svg -o arch.dx
+```
+
+Prints the `.dx` source a `.dx.svg` carries, or with `-o` writes it to a file. Edit it and render it over the same
+`.dx.svg` to revise a diagram. A file written with `--plain` has no source to recover.
+
+## open
+
+```bash
+drawing open docs/arch.dx.svg
+```
+
+Uploads the diagram's `.dx` source to the app's [share API](/docs/sharing/#the-share-api), prints a link, and opens
+it in the browser, where the diagram is an editable canvas. It takes a `.dx` or a `.dx.svg`. `--print` prints the
+link without opening the browser.
+
+Anyone with the link can open the diagram, and the link expires 30 days after it was last opened. Only `open`
+uploads anything; `render`, `check` and `source` work offline.
+
+`DRAWING_APP_URL` points `open` at another drawing app, such as one you run locally.
+
+## Exit codes
+
+`drawing` exits with 1 when a source has an error or a layout has a defect, such as an overlap or an arrow through a
+box, so a script or CI step can fail on it.
+
+## From code
+
+```ts
+import { render } from '@dxos/drawing';
+
+const { svg, report } = await render(source, { name: 'arch' });
+```

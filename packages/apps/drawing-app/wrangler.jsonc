@@ -1,7 +1,7 @@
 {
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
   // Local dev: `moon run drawing-app:bundle && wrangler dev` (local R2 and rate limiter; no landing host).
-  // Each env's Worker serves the landing page on its landing hosts and the app on `app.` (spec F-13), the share API
+  // Each env's Worker serves the site (home page and docs) on its landing hosts and the app on `app.` (spec F-13), the share API
   // on both, and OTLP. Bindings, vars and routes are not inherited, so each env repeats them.
   "name": "drawing-app",
   "main": "./src/functions/worker.ts",
@@ -14,7 +14,7 @@
     "directory": "./out/drawing-app",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // Page addresses go through the Worker, which picks the landing page or the app by host; hashed assets do not.
+    // Page addresses go through the Worker, which picks the site or the app by host; hashed assets do not.
     "run_worker_first": ["/*", "!/assets/*"],
   },
   // Each share's `.dx` source under its id. A lifecycle rule deletes an object 30 days after its last write, and the

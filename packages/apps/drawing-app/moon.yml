@@ -8,9 +8,13 @@ tags:
 tasks:
   # `@dxos/*` resolve from source (vite-plugin-import-source), so only dist consumed at runtime or by the
   # config itself is built first; the `vite` tag's `^:build` would build the whole plugin graph.
+  # The app, then the site (Astro) into the app's output, whose `site/` the Worker serves on a landing host.
   bundle:
+    script: pnpm exec vite build && pnpm exec astro build
     inputs:
       - public/**/*
+      - site/**/*
+      - astro.config.ts
     options:
       mergeDeps: replace
     deps:
@@ -29,6 +33,20 @@ tasks:
       # The plugins' generated capability barrels, which their sources import.
       - '^:#prebuild'
       # The landing page's prerender, which the config runs in Node.
+      - 'drawing:build'
+  # The site's dev server. Its app links and "Open in app" go to the app's dev server (`serve`) at
+  # VITE_DRAWING_APP_URL.
+  serve-site:
+    command: pnpm exec astro dev
+    env:
+      VITE_DRAWING_APP_URL: http://localhost:5173
+    preset: server
+    options:
+      mergeDeps: replace
+    deps:
+      - '#dist-runtime:build'
+      - '#vite-plugin:build'
+      - '^:#prebuild'
       - 'drawing:build'
   # The bundle Playwright serves; see composer-app's `bundle-e2e` for why this is a target of its own.
   bundle-e2e:

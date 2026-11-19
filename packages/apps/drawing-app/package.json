@@ -60,6 +60,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@astrojs/starlight": "catalog:",
     "@dxos/test-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
@@ -68,7 +69,9 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "astro": "catalog:",
     "oxc-resolver": "catalog:",
+    "sharp": "catalog:",
     "vite": "catalog:",
     "vite-plugin-wasm": "catalog:",
     "vitest": "catalog:"

@@ -40,17 +40,36 @@ const renderOrThrow = async (directory: string, name: string) => {
 };
 
 export type Prerendered = {
-  /** Placeholder to the HTML that replaces it. */
-  readonly slots: Readonly<Record<string, string>>;
+  /** The hero's `.dx` source, highlighted, shown until the editor loads. */
+  readonly source: string;
+  /** The hero render's report. */
+  readonly report: string;
+  /** The hero drawing on its stage. */
+  readonly hero: string;
+  /** The relation examples. */
+  readonly relations: string;
   /** The hero drawing as a `.dx.svg`, served so the download works before the editor loads. */
   readonly file: { readonly fileName: string; readonly svg: string };
 };
 
 /**
  * Renders every diagram on the page with this package's own `render`, so each picture is real engine output and
- * the page shows a drawing on first paint and without JavaScript.
+ * the page shows a drawing on first paint and without JavaScript. Memoized, since every page that shows the editor
+ * asks for it.
  */
-export const prerender = async (directory: string): Promise<Prerendered> => {
+export const prerender = (directory: string): Promise<Prerendered> => {
+  const cached = prerendered.get(directory);
+  if (cached) {
+    return cached;
+  }
+  const result = renderPage(directory);
+  prerendered.set(directory, result);
+  return result;
+};
+
+const prerendered = new Map<string, Promise<Prerendered>>();
+
+const renderPage = async (directory: string): Promise<Prerendered> => {
   const hero = await renderOrThrow(directory, HERO);
   const { markup, cols, rows } = inline(hero.svg, { prefix: 'h', label: `${HERO} diagram`, className: 'hero-diagram' });
   const rendered = await Promise.all(RELATIONS.map(([key]) => renderOrThrow(directory, `rel-${key}`)));
@@ -63,12 +82,10 @@ export const prerender = async (directory: string): Promise<Prerendered> => {
   });
 
   return {
-    slots: {
-      '{{SOURCE}}': highlight(hero.source),
-      '{{REPORT}}': reportHtml(HERO, hero.report),
-      '{{HERO}}': stageHtml(markup, cols, rows),
-      '{{RELATIONS}}': relations.join(''),
-    },
+    source: highlight(hero.source),
+    report: reportHtml(HERO, hero.report),
+    hero: stageHtml(markup, cols, rows),
+    relations: relations.join(''),
     file: { fileName: fileName(HERO), svg: hero.svg },
   };
 };

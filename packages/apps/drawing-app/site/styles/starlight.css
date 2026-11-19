@@ -1,0 +1,41 @@
+/* Starlight in drawing.sh's palette and type. Starlight's default theme is dark; `data-theme='light'` is light. */
+
+:root {
+  --sl-font: var(--sans);
+  --sl-font-mono: var(--mono);
+  --sl-color-accent-low: #161d4d;
+  --sl-color-accent: #4a5fff;
+  --sl-color-accent-high: #b8c1ff;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #e4e8ee;
+  --sl-color-gray-2: #c4cbd5;
+  --sl-color-gray-3: #98a2b0;
+  --sl-color-gray-4: #5e6875;
+  --sl-color-gray-5: #343c48;
+  --sl-color-gray-6: #141920;
+  --sl-color-black: #0d1015;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d9e0ff;
+  --sl-color-accent: #2f4bff;
+  --sl-color-accent-high: #1a2bb0;
+  --sl-color-white: #18202b;
+  --sl-color-gray-1: #252d38;
+  --sl-color-gray-2: #3a4350;
+  --sl-color-gray-3: #5e6875;
+  --sl-color-gray-4: #8b96a6;
+  --sl-color-gray-5: #c4cbd5;
+  --sl-color-gray-6: #eef1f5;
+  --sl-color-gray-7: #f7f8fa;
+  --sl-color-black: #ffffff;
+}
+
+/* The splash page holds the editor, which needs more width than prose. */
+[data-has-hero] {
+  --sl-content-width: 72rem;
+}
+
+.dx-play {
+  margin-block: 2rem;
+}

@@ -1,0 +1,269 @@
+/* The custom home page: everything around the editor. */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--route);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* Header. */
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 28px 0;
+}
+
+.mark {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 17px;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.mark span {
+  color: var(--route);
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  gap: 28px;
+}
+
+nav {
+  display: flex;
+  gap: 28px;
+  font-size: 15px;
+}
+
+.open-app {
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.open-app:hover {
+  background: var(--accent-hover);
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--muted);
+}
+
+nav a:hover {
+  color: var(--ink);
+}
+
+/* Hero. */
+.hero {
+  padding: 48px 0 40px;
+  max-width: 760px;
+}
+
+h1 {
+  font-size: clamp(40px, 6vw, 68px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  margin: 0 0 24px;
+}
+
+.lede {
+  font-size: 20px;
+  color: var(--muted);
+  max-width: 60ch;
+  margin: 0 0 32px;
+}
+
+.alt {
+  margin: 14px 0 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.alt code,
+.file li code {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+/* Sections. */
+section {
+  padding: 0 0 96px;
+}
+
+h2 {
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin: 0 0 14px;
+  max-width: 22ch;
+}
+
+.intro {
+  color: var(--muted);
+  max-width: 62ch;
+  margin: 0 0 40px;
+  font-size: 18px;
+}
+
+ol.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  counter-reset: step;
+}
+
+ol.steps li {
+  counter-increment: step;
+  border-top: 2px solid var(--ink);
+  padding-top: 18px;
+}
+
+ol.steps li::before {
+  content: counter(step);
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--route);
+  margin-bottom: 10px;
+}
+
+ol.steps h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+
+ol.steps p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.file {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.file ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file li {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.file li:first-child {
+  border-top: 1px solid var(--grid);
+}
+
+.file li b {
+  display: block;
+  font-weight: 600;
+}
+
+.file li span {
+  color: var(--muted);
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 28px;
+  padding: 13px 22px;
+  background: var(--accent);
+  color: var(--on-accent);
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.cta:hover {
+  background: var(--accent-hover);
+}
+
+.cta.secondary {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--grid);
+}
+
+.cta.secondary:hover {
+  background: var(--sheet);
+}
+
+footer {
+  border-top: 1px solid var(--grid);
+  padding: 28px 0 48px;
+  color: var(--muted);
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+footer .links {
+  display: flex;
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .wrap {
+    padding: 0 16px;
+  }
+
+  nav {
+    display: none;
+  }
+
+  .file {
+    grid-template-columns: 1fr;
+  }
+
+  ol.steps {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,6 +1,6 @@
 # @dxos/drawing-app
 
-drawing.sh: the landing page for the agent-diagram DSL, and a diagramming app that is one full-screen canvas. The app
+drawing.sh: the site for the agent-diagram DSL (a home page and docs), and a diagramming app that is one full-screen canvas. The app
 makes an anonymous identity on first run, keeps diagrams in spaces, and shares a space with a link. Spaces, diagrams
 and links are Composer's, so a link from either app opens in the other. The spec is `spec/APP.mdl`.
 
@@ -13,9 +13,11 @@ and links are Composer's, so a link from either app opens in the other. The spec
   and diagram, answers the layout operations other plugins call, and renders everything on screen.
 - `src/shared/` is what the boot shell and the layout plugin both use: the pill, the route, local state, default
   names, and the shell state through which the plugin dismisses the shell's parts.
-- `landing.html` and `src/landing/` are the landing page, a second page of the same build. Its diagrams
-  (`src/landing/diagrams/`) are rendered with `@dxos/drawing` when the page is built.
-- `src/functions/` is the Worker: the landing page or the app by host, the share API, and the OTLP proxy.
+- `site/` and `astro.config.ts` are the site, an Astro Starlight site: the custom home page (`site/pages/index.astro`),
+  the Starlight splash home page under comparison (`/splash/`), and the docs (`site/content/docs/docs/`).
+- `src/landing/` is the home page's editor and scripts. Its diagrams (`src/landing/diagrams/`) are rendered with
+  `@dxos/drawing` when the site is built.
+- `src/functions/` is the Worker: the site or the app by host, the share API, and the OTLP proxy.
 
 ## Run
 
@@ -23,16 +25,24 @@ and links are Composer's, so a link from either app opens in the other. The spec
 moon run drawing-app:serve
 ```
 
-The app is at `/`, the landing page at `/landing.html`. The dev server answers the share API from a bucket held in
-memory, so the landing page's "Open in app" and `?d=` links work until it restarts.
+```bash
+moon run drawing-app:serve-site
+```
+
+`serve` is the app at http://localhost:5173. It also answers the share API from a bucket held in memory, so `?d=`
+links work until it restarts. `serve-site` is the site at http://localhost:4321; its "Open app" links and the
+editor's "Open in app" go to the app's dev server.
+
+`moon run drawing-app:bundle` builds the app into `out/drawing-app` and the site into `out/drawing-app/site`.
 
 ## Hosts
 
 Each environment's Worker (`drawing-app` in production, `drawing-app-<env>` otherwise) serves both hosts. On a
-landing host, `/` is the landing page and every other page address redirects to the app host; `LANDING_HOSTS` and
+landing host, `/`, `/docs/` and the site's files come from `out/drawing-app/site`, and every other page address
+redirects to the app host; `LANDING_HOSTS` and
 `APP_ORIGIN` in `wrangler.jsonc` name them.
 
-| Environment | Landing page                | App                    | Shares bucket               |
+| Environment | Site                        | App                    | Shares bucket               |
 | ----------- | --------------------------- | ---------------------- | --------------------------- |
 | production  | drawing.sh, www.drawing.sh  | app.drawing.sh         | `drawing-sh-shares`         |
 | preview     | preview.drawing.sh          | app.preview.drawing.sh | `drawing-sh-shares-preview` |
@@ -41,7 +51,7 @@ landing host, `/` is the landing page and every other page address redirects to 
 
 ## Share API
 
-`drawing open` and the landing page's "Open in app" post a diagram's `.dx` source here; `?d=<id>` opens it in the
+`drawing open` and the home page's "Open in app" post a diagram's `.dx` source here; `?d=<id>` opens it in the
 app as a new diagram.
 
 | Route                 | What                                                                                                                                                  |

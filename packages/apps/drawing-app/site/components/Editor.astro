@@ -1,0 +1,43 @@
+---
+// The live editor (spec F-13.2): the hero's source and drawing as rendered at build time, made editable by the
+// page script once it loads.
+import { prerendered } from '../util/prerendered.ts';
+
+const { source, report, hero, file } = await prerendered();
+---
+
+<div class="sheet" id="playground" aria-label="A diagram source and the drawing it produces">
+  <div class="source">
+    <div class="tab">
+      <span class="tabs" role="tablist" aria-label="Source language">
+        <button type="button" role="tab" data-language="dx" aria-selected="true">.dx</button>
+        <button type="button" role="tab" data-language="mermaid" aria-selected="false" disabled>Mermaid</button>
+      </span>
+      <span class="hint" id="language-hint">drawing's language</span>
+    </div>
+    <div class="editor" id="editor"><pre class="fallback" set:html={source} /></div>
+  </div>
+  <div class="output" id="output">
+    <div class="tab">
+      <span><b>{file.fileName}</b></span>
+      <span class="actions">
+        <button
+          type="button"
+          class="action"
+          id="open-in-app"
+          title="Open this drawing on an editable canvas in the drawing.sh app"
+          disabled
+        >
+          Open in app
+        </button>
+        <a class="action primary" id="download" href={`/${file.fileName}`} download={file.fileName}>Download</a>
+      </span>
+    </div>
+    <div class="canvas" set:html={hero} />
+    <div class="run" id="report" aria-live="polite" set:html={report} />
+  </div>
+</div>
+
+<script>
+  import '../../src/landing/main.ts';
+</script>

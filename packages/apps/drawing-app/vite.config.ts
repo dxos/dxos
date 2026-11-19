@@ -17,8 +17,6 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 import { type ShareBucket, type ShareObject, handleShare, isSharePath } from './src/functions/share.ts';
-import { HERO, fileName } from './src/landing/markup.ts';
-import { type Prerendered, prerender } from './src/landing/prerender.ts';
 
 const dirname = import.meta.dirname;
 const rootDir = searchForWorkspaceRoot(process.cwd());
@@ -64,8 +62,9 @@ const slimWasm = (): PluginOption => {
 };
 
 /**
- * The Worker's share API (spec F-12) on the dev server, over a bucket held in memory, so the landing editor's
- * "Open in app" and the app's `?d=` import work locally. Shares last until the server restarts.
+ * The Worker's share API (spec F-12) on the dev server, over a bucket held in memory, so the site editor's
+ * "Open in app" (`moon run drawing-app:serve-site`) and the app's `?d=` import work locally. Shares last until the
+ * server restarts.
  */
 const devShareApi = (): PluginOption => ({
   name: 'drawing-app:dev-share-api',
@@ -107,53 +106,6 @@ const devShareApi = (): PluginOption => ({
   },
 });
 
-/** The landing page (spec F-13.2), beside the app's `index.html`. */
-const LANDING_PAGE = 'landing.html';
-
-/** Fills the landing page's `{{…}}` slots with engine output and serves the hero's `.dx.svg` beside it. */
-const landingPrerender = (): PluginOption => {
-  let prerendered: Promise<Prerendered> | undefined;
-  const load = () => (prerendered ??= prerender(path.join(dirname, 'src/landing/diagrams')));
-  return {
-    name: 'drawing-app:landing-prerender',
-    transformIndexHtml: {
-      order: 'pre',
-      handler: async (html, { path: page }) => {
-        if (!page.endsWith(`/${LANDING_PAGE}`)) {
-          return html;
-        }
-        const { slots } = await load();
-        return Object.entries(slots).reduce((markup, [slot, value]) => markup.replace(slot, value), html);
-      },
-    },
-    configureServer: (server) => {
-      server.middlewares.use(async (request, response, next) => {
-        if (request.url !== `/${fileName(HERO)}`) {
-          return next();
-        }
-        try {
-          const { file } = await load();
-          response.setHeader('Content-Type', 'image/svg+xml');
-          response.end(file.svg);
-        } catch (error) {
-          // Connect drops a rejected async middleware, so the request would hang; retry the prerender next time.
-          prerendered = undefined;
-          next(error);
-        }
-      });
-    },
-    handleHotUpdate: ({ file }) => {
-      if (file.endsWith('.dx')) {
-        prerendered = undefined;
-      }
-    },
-    generateBundle: async function () {
-      const { file } = await load();
-      this.emitFile({ type: 'asset', fileName: file.fileName, source: file.svg });
-    },
-  };
-};
-
 /** Shared by the page and the client workers, which resolve the same `@dxos/*` sources. */
 const sharedPlugins = (): PluginOption[] => [
   importSource({ include: ['@dxos/**', '#*'] }),
@@ -177,7 +129,6 @@ export default defineConfig({
     sourcemap: true,
     target: [...browserTargets],
     rolldownOptions: {
-      input: { index: path.join(dirname, 'index.html'), landing: path.join(dirname, LANDING_PAGE) },
       experimental: { chunkOptimization: false },
     },
   },
@@ -204,7 +155,6 @@ export default defineConfig({
   plugins: [
     // Replaces each plugin's `dx.config.ts` with its manifest, so the app loads only data plus the bodies it activates.
     pluginConfigPlugin(),
-    landingPrerender(),
     devShareApi(),
     ...sharedPlugins(),
     react({ include: /\.[jt]sx$/, exclude: [/\/node_modules\//] }),

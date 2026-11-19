@@ -1,0 +1,8 @@
+---
+// One drawing per relation word, rendered at build time.
+import { prerendered } from '../util/prerendered.ts';
+
+const { relations } = await prerendered();
+---
+
+<div class="relations" set:html={relations} />

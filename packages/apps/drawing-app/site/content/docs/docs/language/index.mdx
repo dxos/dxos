@@ -1,0 +1,93 @@
+---
+title: Nodes, groups and edges
+description: The .dx language - boxes, frames around them, and the arrows between them.
+---
+
+A `.dx` file has four kinds of statement: `diagram`, `node`, `group` and `edge`. Each takes one line, except a
+group, which wraps its members in braces. A `#` starts a comment that runs to the end of the line.
+
+```dx
+diagram flow=down                     # optional
+group web "Web app" {
+  node Browser "Browser"
+  node Api "API server"
+}
+group data "Storage" {
+  node Db "Postgres"
+  node Cache "Redis"
+}
+node Queue "Queue"
+node Worker "Job worker"
+edge Browser -> Api "HTTPS"
+edge Api -> Db "reads, writes"
+edge Api -> Cache
+edge Api -> Queue "enqueue"
+edge Queue -> Worker
+edge Worker -> Db
+```
+
+## diagram
+
+```dx
+diagram flow=right aspect=16:9
+```
+
+Optional, and first when present. `flow` is the direction most arrows run: `down` (the default), `up`, `right` or
+`left`. `aspect` asks for a picture of that shape, such as `16:9` for a slide.
+
+## node
+
+```dx
+node Api "API server" shape=rect ref="services/api/src/server.ts"
+```
+
+`node <id> ["label"] [placement…] [ref="path"] [shape=…]` draws one box.
+
+- **The id** is a bare word of letters, digits, `_` and `-`. Edges refer to it.
+- **The label** defaults to the id. It is drawn on one line in a fixed-width box, so keep it to about 17
+  characters; the id can be as long as you like.
+- **`shape`** is `rect` (the default), `ellipse`, `diamond` or `triangle`.
+- **`ref`** names the file the box stands for, so the diagram can be checked against the code.
+- **Placement** words, such as `below Api`, are [layout hints](/docs/language/hints/).
+
+Declare every box with `node` before an edge uses it. An edge to an undeclared id is an error.
+
+## group
+
+```dx
+group data "Storage" {
+  node Db "Postgres"
+  node Cache "Redis"
+}
+```
+
+`group <id> ["label"] [placement] [compact] [max-width=N] { … }` draws a dashed frame around its members.
+
+A node is in a group only if its `node` line is inside that group's braces. Each id and each group is declared
+once: to move a box into a group, move its `node` line inside the braces. Edges refer to ids, so they stay where
+they are.
+
+Groups do not nest, and each needs at least one member. Three or fewer keep a diagram readable.
+
+## edge
+
+```dx
+edge Browser -> Api "HTTPS"
+edge Api <-> Cache
+edge Api -- Logger
+edge Api -> Db, Cache
+```
+
+`edge <from> -> <to> ["label"]` draws an arrow.
+
+- `->` has one arrowhead, `<->` two and `--` none.
+- `edge A -> B, C` draws one arrow from A to each of B and C.
+- Label only the edges that say something, in a few words.
+
+In place of the arrow, a word such as `extends` or `depends-on` says what the edge means and picks the arrowhead;
+see [Relations](/docs/language/relations/).
+
+## Reserved words
+
+`diagram`, `group`, `node`, `edge`, `cell`, `via`, `bus` and `compact` are reserved. Quote one to use it as an id:
+`node "bus" "Event bus"`.
