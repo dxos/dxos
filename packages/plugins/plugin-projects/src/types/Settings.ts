@@ -17,9 +17,9 @@ export const SpecView = Schema.Literals(['preview', 'readonly', 'source']).pipe(
     [PropertyMetaAnnotationId]: {
       singleSelect: {
         options: [
-          { id: 'preview', title: 'Markdown' },
+          { id: 'preview', title: 'Preview' },
           { id: 'readonly', title: 'Read only' },
-          { id: 'source', title: 'Plain text' },
+          { id: 'source', title: 'Source' },
         ],
       },
     },

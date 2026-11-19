@@ -630,6 +630,41 @@ export const QaDialect = dialectStory(DialectSamples.samples.qa);
 export const ReviewDialect = dialectStory(DialectSamples.samples.review);
 export const SqlDialect = dialectStory(DialectSamples.samples.sql);
 
+/**
+ * A feature reads by its label in the plain text as in its form, and its keys cannot be edited there. Enter in a
+ * requirement starts the next one, with a fresh key, ready for its text.
+ */
+export const SpecKeyLabels: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+    await showTab(canvas, 'spec');
+    await waitFor(() => expect(canvas.getAllByTestId('spec-block.label')[0]).toHaveTextContent('F-1'), {
+      timeout: 30_000,
+    });
+
+    await userEvent.click(canvas.getByTestId('editor.toolbar.viewMode'));
+    await userEvent.click(await screen.findByText('Source'));
+    const document = () => canvas.getByTestId('projectsPlugin.spec.document');
+    const labels = () =>
+      [...document().querySelectorAll('[data-testid="spec-block.key-label"]')].map((element) => element.textContent);
+    await waitFor(() => expect(labels()).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-2', 'F-2.1']), { timeout: 10_000 });
+    await expect(document().textContent).not.toContain('k7q2x');
+
+    const view = EditorView.findFromDOM(document().querySelector<HTMLElement>('.cm-content')!)!;
+    const text = () => project.specs[0]?.target?.content.target?.content ?? '';
+    const end = view.state.doc.toString().indexOf('stays in the inbox.') + 'stays in the inbox.'.length;
+    view.focus();
+    view.dispatch({ selection: { anchor: end } });
+    await userEvent.keyboard('{Enter}A muted sender is archived.');
+    await waitFor(() => expect(text()).toMatch(/\n {2}req [a-z][a-z2-9]{4}: A muted sender is archived\.\n/), {
+      timeout: 5_000,
+    });
+    await waitFor(() => expect(labels()).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-1.3', 'F-2', 'F-2.1']));
+  },
+};
+
 /** Each tab's tools follow the tabs: the agent and the chart on Tasks; the Overview adds artifacts in their section. */
 export const ToolbarByTab: Story = {
   ...Default,

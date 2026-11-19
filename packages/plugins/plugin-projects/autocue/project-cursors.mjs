@@ -257,7 +257,7 @@ const usePackage = async (page, label) => {
 };
 
 /**
- * Picks the Specs tab's view: `Plain text` is the spec's text, `Markdown` a form per block. A narrow toolbar folds the
+ * Picks the Specs tab's view: `Source` is the spec's text, `Preview` a form per block. A narrow toolbar folds the
  * view menu into its overflow menu as a submenu.
  */
 const setView = async (peer, label) => {
@@ -269,7 +269,7 @@ const setView = async (peer, label) => {
     await peer.click(peer.page.locator('[role="menu"] [data-testid="editor.toolbar.viewMode"]'));
   }
   await peer.click(peer.page.locator(`[role="menu"] >> [role^="menuitem"]:has-text("${label}")`).first());
-  await featureForm(peer.page).waitFor({ state: label === 'Plain text' ? 'detached' : 'visible', timeout: 10_000 });
+  await featureForm(peer.page).waitFor({ state: label === 'Source' ? 'detached' : 'visible', timeout: 10_000 });
 };
 
 const openAgent = async (peer) => {
@@ -505,10 +505,10 @@ export const steps = [
     },
   },
   {
-    name: "Plain text and the form: Bob in the spec's text, Alice in the feature's form",
+    name: "Source and the form: Bob in the spec's text, Alice in the feature's form",
     subtitle: 'plugin-projects QA-10 step 7',
     run: async ({ peers: { alice, bob } }) => {
-      await setView(bob, 'Plain text');
+      await setView(bob, 'Source');
       await alice.click(editable(featureField(alice.page, '_prose')).locator('.cm-line').first(), { force: true });
       await alice.page.keyboard.press('ControlOrMeta+End');
       await alice.type(FORM_ADDITION);
@@ -554,7 +554,7 @@ export const steps = [
       await expectComment(featureField(alice.page, 'req[0].text'), footer, "Alice's requirement");
       await hold(alice);
 
-      await setView(bob, 'Markdown');
+      await setView(bob, 'Preview');
       await expectComment(featureField(bob.page, '_prose'), dark, "Bob's feature description");
       await expectComment(featureField(bob.page, 'req[0].text'), footer, "Bob's requirement");
       await hold(alice);

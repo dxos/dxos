@@ -234,7 +234,7 @@ const setView = async (peer, label) => {
   for (let attempt = 0; attempt < 3 && (await page.locator('[role="menu"]').count()) > 0; attempt++) {
     await page.keyboard.press('Escape');
   }
-  if (label === 'Plain text') {
+  if (label === 'Source') {
     plainText.add(peer);
   } else {
     plainText.delete(peer);
@@ -653,7 +653,7 @@ export const steps = [
     },
   },
   {
-    name: 'Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab, checks Software in Extensions and sets the view to Plain text.',
+    name: 'Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab, checks Software in Extensions and sets the view to Source.',
     subtitle: 'QA-12 step 1',
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
@@ -688,7 +688,7 @@ export const steps = [
       for (let attempt = 0; attempt < 3 && (await page.locator('[role="menu"]').count()) > 0; attempt++) {
         await page.keyboard.press('Escape');
       }
-      await setView(alice, 'Plain text');
+      await setView(alice, 'Source');
       await setNavigation(alice, 'collapsed');
       await specText(page).waitFor({ timeout: TIMEOUT });
     },
