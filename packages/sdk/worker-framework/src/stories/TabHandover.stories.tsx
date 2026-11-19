@@ -140,8 +140,8 @@ const TabCard = ({ spec, onClose }: { spec: TabSpec; onClose: () => void }) => {
 
   const testId = `tab-${spec.id}`;
   return (
-    <div data-testid={testId} className='flex w-72 flex-col gap-3 rounded-lg border border-separator p-4'>
-      <div className='flex items-center justify-between text-sm'>
+    <div data-testid={testId} className='flex min-h-72 w-80 flex-col gap-4 rounded-lg border border-separator p-5'>
+      <div className='flex items-center justify-between text-base'>
         <span className='font-medium'>Tab {spec.id}</span>
         <span className='text-fg-subtle'>
           build {instance.build}
@@ -151,16 +151,16 @@ const TabCard = ({ spec, onClose }: { spec: TabSpec; onClose: () => void }) => {
 
       {state.kind === 'paused' ? (
         <div data-testid={`${testId}-paused`} className='flex flex-col items-center gap-3 py-2 text-center'>
-          <div className='text-base font-medium'>Another instance of the app is open</div>
+          <div className='text-lg font-medium'>Another instance of the app is open</div>
           <button
             type='button'
             data-testid={`${testId}-continue`}
-            className='rounded-md border border-separator px-4 py-1.5 text-sm'
+            className='rounded-md border border-separator px-4 py-2'
             onClick={continueHere}
           >
             Continue here
           </button>
-          <details className='w-full text-left text-xs text-fg-subtle'>
+          <details className='w-full text-left text-sm text-fg-subtle'>
             <summary className='cursor-pointer'>Details</summary>
             <dl className='mt-1 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1'>
               <dt>Reason</dt>
@@ -178,18 +178,18 @@ const TabCard = ({ spec, onClose }: { spec: TabSpec; onClose: () => void }) => {
         </div>
       ) : (
         <>
-          <div data-testid={`${testId}-status`} className='text-sm'>
+          <div data-testid={`${testId}-status`}>
             {state.kind === 'connecting' && 'Connecting…'}
             {state.kind === 'connected' && (state.isOwner ? 'Leader: runs the worker' : 'Follower: uses the leader')}
             {state.kind === 'error' && <span className='text-error-text'>{state.message}</span>}
           </div>
-          <div data-testid={`${testId}-count`} className='text-3xl font-semibold tabular-nums'>
+          <div data-testid={`${testId}-count`} className='text-5xl font-semibold tabular-nums'>
             {count ?? '…'}
           </div>
           <button
             type='button'
             data-testid={`${testId}-increment`}
-            className='rounded-md bg-accent-bg px-3 py-1.5 text-sm font-medium text-accent-fg disabled:opacity-50'
+            className='rounded-md bg-accent-bg px-3 py-2 font-medium text-accent-fg disabled:opacity-50'
             disabled={state.kind !== 'connected'}
             onClick={increment}
           >
@@ -198,7 +198,7 @@ const TabCard = ({ spec, onClose }: { spec: TabSpec; onClose: () => void }) => {
         </>
       )}
 
-      <button type='button' className='self-end text-xs text-fg-subtle' onClick={onClose}>
+      <button type='button' className='mt-auto self-end text-sm text-fg-subtle' onClick={onClose}>
         Close tab
       </button>
     </div>
@@ -221,17 +221,17 @@ const TabHandoverStory = ({ initial }: { initial: Omit<TabSpec, 'id'>[] }) => {
   };
 
   return (
-    <div className='flex flex-col gap-4 p-6'>
-      <p className='max-w-2xl text-sm text-fg-subtle'>
+    <div className='flex flex-col items-center gap-6 p-8'>
+      <p className='max-w-3xl text-center text-fg-subtle'>
         Each card is a browser tab. One tab leads and runs the worker; the others use it. Tabs never take the worker
         from each other on their own: a tab on an older build pauses when a newer build opens, a tab that cannot reach
         the leader asks before taking over, and a tab whose worker was taken pauses until you continue there.
       </p>
-      <div className='flex flex-wrap gap-2'>
+      <div className='flex flex-wrap justify-center gap-2'>
         <button
           type='button'
           data-testid='open-tab'
-          className='rounded-md border border-separator px-3 py-1.5 text-sm'
+          className='rounded-md border border-separator px-3 py-2 disabled:opacity-50'
           onClick={() => open({ build: latestBuild, unreachable: false })}
         >
           Open tab
@@ -239,7 +239,7 @@ const TabHandoverStory = ({ initial }: { initial: Omit<TabSpec, 'id'>[] }) => {
         <button
           type='button'
           data-testid='open-newer-tab'
-          className='rounded-md border border-separator px-3 py-1.5 text-sm'
+          className='rounded-md border border-separator px-3 py-2 disabled:opacity-50'
           disabled={latestBuild === 'v2'}
           onClick={() => {
             setLatestBuild('v2');
@@ -251,13 +251,13 @@ const TabHandoverStory = ({ initial }: { initial: Omit<TabSpec, 'id'>[] }) => {
         <button
           type='button'
           data-testid='open-unreachable-tab'
-          className='rounded-md border border-separator px-3 py-1.5 text-sm'
+          className='rounded-md border border-separator px-3 py-2 disabled:opacity-50'
           onClick={() => open({ build: latestBuild, unreachable: true })}
         >
           Open tab that cannot reach the leader
         </button>
       </div>
-      <div className='flex flex-wrap gap-4'>
+      <div className='flex flex-wrap justify-center gap-4'>
         {tabs.map((spec) => (
           <TabCard
             key={spec.id}
