@@ -7,9 +7,10 @@ import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
 import net from 'node:net';
 
-import { Trigger, sleep, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { LocalClientServices } from '@dxos/client/local';
 import { Context } from '@dxos/context';
@@ -81,6 +82,22 @@ const ACCOUNT_VISIBILITY_TIMEOUT = 90_000;
 const INVITATION_TIMEOUT = 60_000;
 const SPACE_READY_TIMEOUT = 60_000;
 const DOCUMENT_READY_TIMEOUT = 60_000;
+
+/**
+ * Bounded `waitUntilReady`: it has no deadline of its own, so a space that never initializes would
+ * hold the whole run open instead of failing the command that needed it.
+ */
+const awaitSpaceReady = async (space: Space): Promise<void> => {
+  try {
+    await asyncTimeout(space.waitUntilReady(), SPACE_READY_TIMEOUT);
+  } catch (err) {
+    throw new Error(
+      `space ${space.id} not ready after ${SPACE_READY_TIMEOUT}ms: ` +
+        `${SpaceState[space.state.get()]} with ${space.members.get().length} members`,
+      { cause: err },
+    );
+  }
+};
 
 /**
  * One real `@dxos/client` peer, driven entirely over RPC by the `edgeStress` plan.
@@ -318,7 +335,13 @@ export class ClientReplicant {
   @trace.span()
   async createSpace({ label }: { label: string }): Promise<{ spaceId: string }> {
     const space = await this.#getClient().spaces.create({ name: label });
-    await space.waitUntilReady();
+    try {
+      await awaitSpaceReady(space);
+    } catch (err) {
+      // The caller never learns this id, so the run's own cleanup cannot reach the space.
+      await this.#deleteViaSelfServe([{ path: `/data/space/${space.id}`, label: space.id }]);
+      throw err;
+    }
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
     return { spaceId: space.id };
   }
@@ -385,7 +408,7 @@ export class ClientReplicant {
       error: new Error(`joined space never appeared: ${spaceKey.truncate()}`),
     });
     invariant(space, 'joined space never appeared');
-    await space.waitUntilReady();
+    await awaitSpaceReady(space);
     const spaceReadyMs = Date.now() - began - admittedMs;
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
     return { spaceId: space.id, admittedMs, spaceReadyMs };
@@ -498,27 +521,43 @@ export class ClientReplicant {
    */
   @trace.span()
   async deleteOwnData({ spaceIds }: { spaceIds: string[] }): Promise<{ accepted: string[]; refused: string[] }> {
+    const identity = this.#getClient().halo.identity.get();
+    invariant(identity, 'no identity to delete');
+    return this.#deleteViaSelfServe([
+      ...spaceIds.map((spaceId) => ({ path: `/data/space/${spaceId}`, label: spaceId })),
+      { path: `/data/identity/${identity.did}`, label: identity.did },
+    ]);
+  }
+
+  /** Issues each self-serve DELETE with a presentation this identity signs; never throws. */
+  async #deleteViaSelfServe(
+    targets: { path: string; label: string }[],
+  ): Promise<{ accepted: string[]; refused: string[] }> {
     invariant(this.#config, 'never initialized');
     const edgeUrl = this.#config.edgeUrl;
     const client = this.#getClient();
-    const identity = client.halo.identity.get();
-    invariant(identity, 'no identity to delete');
 
     const accepted: string[] = [];
     const refused: string[] = [];
-    const authentication = await authenticateViaChallengeEndpoint(edgeUrl, createEdgeIdentity(client));
+    let authentication: Awaited<ReturnType<typeof authenticateViaChallengeEndpoint>>;
+    try {
+      authentication = await authenticateViaChallengeEndpoint(edgeUrl, createEdgeIdentity(client));
+    } catch (err) {
+      log.warn('cleanup: authentication threw', { edgeUrl, err });
+      return { accepted, refused: targets.map(({ label }) => label) };
+    }
     if (!authentication) {
       log.warn('cleanup: edge issued no auth challenge', { edgeUrl });
-      return { accepted, refused: [...spaceIds, identity.did] };
+      return { accepted, refused: targets.map(({ label }) => label) };
     }
     const authorization = encodeAuthHeader(authentication.presentation);
 
-    const remove = async (path: string, label: string): Promise<void> => {
+    for (const { path, label } of targets) {
       try {
         const response = await fetch(new URL(path, edgeUrl), { method: 'DELETE', headers: { authorization } });
         if (response.ok) {
           accepted.push(label);
-          return;
+          continue;
         }
         refused.push(label);
         log.warn('cleanup request refused', { path, status: response.status });
@@ -526,12 +565,7 @@ export class ClientReplicant {
         refused.push(label);
         log.warn('cleanup request threw', { path, err });
       }
-    };
-
-    for (const spaceId of spaceIds) {
-      await remove(`/data/space/${spaceId}`, spaceId);
     }
-    await remove(`/data/identity/${identity.did}`, identity.did);
     return { accepted, refused };
   }
 
@@ -660,7 +694,7 @@ export class ClientReplicant {
     });
     // It only resolves on a truthy value, but its return type keeps the predicate's `undefined`.
     invariant(space, `space not found: ${spaceId}`);
-    await space.waitUntilReady();
+    await awaitSpaceReady(space);
     return space;
   }
 
