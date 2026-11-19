@@ -366,12 +366,15 @@ export const IconCardsBesideBox: Story = {
   },
 };
 
-/** Four icon cards of a progression, whose titles wrap differently: one line, two, one, two. */
+/**
+ * Four icon cards of a progression, whose titles wrap differently, the last a single word too long for a quarter of
+ * the slide at a plain card's title size.
+ */
 const FLOW_CARDS = [
   iconCard('icon="chat-circle"', 'Chat', 'Search', 'A model in a separate window'),
   iconCard('icon="code"', 'Vibe coding with agents', 'Describe it and the model builds it'),
   iconCard('icon="users-three" tone="success"', 'Cowork', 'Claude inside your existing apps'),
-  iconCard('icon="rocket-launch" tone="warning"', 'Replacing the apps', 'The assistant becomes the app'),
+  iconCard('icon="rocket-launch" tone="warning"', 'SuperAgents', 'The assistant becomes the app'),
 ];
 
 /** The cards of a flow grid's one row are one size on one line, with their headers and first bullets level. */
@@ -435,6 +438,30 @@ export const FlowGrid: Story = {
     // 3. The arrow into the first card would stand outside the grid, which cuts it off.
     await expect(getComputedStyle(grid).overflowX).toBe('clip');
     await expect(cards[0].getBoundingClientRect().left).toBeCloseTo(grid.getBoundingClientRect().left, 0);
+
+    // 4. A flow's cards are narrow, so their titles are a step under a plain card's, all four at one size, and a
+    // long single word stays inside its header's padding. The icon is still one title line tall, on its first line.
+    for (const card of cards) {
+      const header = await query(card, 'header');
+      const title = await query(card, 'header h3');
+      const icon = await query(card, 'header svg');
+      const box = card.getBoundingClientRect();
+      const scale = box.width / card.offsetWidth;
+      await expect(getComputedStyle(title).fontSize).toBe('48px');
+      await expect(getComputedStyle(icon).height).toBe(getComputedStyle(title).lineHeight);
+      await expect(icon.getBoundingClientRect().top).toBeCloseTo(title.getBoundingClientRect().top, 0);
+      // Measured against the card, not the header: a header whose title does not fit grows past the card with it.
+      await expect(header.getBoundingClientRect().right).toBeCloseTo(box.right, 0);
+      await expect(title.getBoundingClientRect().right).toBeLessThanOrEqual(
+        box.right - parseFloat(getComputedStyle(header).paddingRight) * scale,
+      );
+      // The bullets' markers stay under the icon, and their text under the title.
+      const item = await query(card, 'li');
+      await expect(item.getBoundingClientRect().left).toBeCloseTo(icon.getBoundingClientRect().left, 0);
+      await expect(
+        item.getBoundingClientRect().left + parseFloat(getComputedStyle(item).paddingLeft) * scale,
+      ).toBeCloseTo(title.getBoundingClientRect().left, 0);
+    }
   },
 };
 
