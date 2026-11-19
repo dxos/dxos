@@ -8,7 +8,9 @@ title: 'Evolution'
 <br>
 <br>
 
-<Grid cols="4" align="center">
+<Grid cols="4" align="center" variant="flow">
+
+<v-clicks>
 
 <Card icon="chat-circle">
 
@@ -44,6 +46,8 @@ title: 'Evolution'
 - Multi-player (Multica, Buzz)
 
 </Card>
+
+</v-clicks>
 
 </Grid>
 

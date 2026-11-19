@@ -1,5 +1,5 @@
 ---
-# multiple-changesets: slide-icon-grid-row-span.md is the entry of PR #14623, merged in here
+# multiple-changesets: slide-grid-flow.md is the entry of PR #14623, merged in here
 '@dxos/plugin-debug': patch
 '@dxos/react-ui-slides': patch
 ---
