@@ -601,6 +601,53 @@ describe('Connection multi-client', () => {
     await asyncTimeout(followerOpen, 10_000);
   }, 30_000);
 
+  test('a takeover approved after its connection stopped steals nothing', async () => {
+    const keys = uniqueKeys();
+    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+    const leader = makeConnection(createHub(), keys, timeouts, {
+      connection: { onLockStolen: () => expect.unreachable() },
+    });
+    await asyncTimeout(leader.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+
+    const takeovers: Array<() => void> = [];
+    const asked = new Trigger();
+    const superseded = new Trigger();
+    const follower = makeConnection(createHub(), keys, timeouts, {
+      connection: {
+        generation: { id: 'a', time: 1 },
+        onSuperseded: () => superseded.wake(),
+        onTakeoverRequired: (takeover) => {
+          takeovers.push(takeover);
+          asked.wake();
+        },
+      },
+    });
+    const followerOpen = follower.connection.open();
+    onTestFinished(async () => {
+      await follower.connection.close();
+    });
+    await asyncTimeout(asked.wait(), 10_000);
+
+    // A newer build stops the follower while the user is still deciding.
+    const newer = makeConnection(createHub(), keys, timeouts, {
+      connection: { generation: { id: 'b', time: 2 }, onSuperseded: () => {}, onTakeoverRequired: () => {} },
+    });
+    void newer.connection.open().catch(() => {});
+    onTestFinished(async () => {
+      await newer.connection.close();
+    });
+    await asyncTimeout(superseded.wait(), 10_000);
+    await expect(followerOpen).rejects.toSatisfy((error) => WorkerStoppedError.is(error));
+
+    takeovers[0]();
+    await sleep(timeouts.portTimeout * 3);
+    expect(leader.connection.isOpen).toBe(true);
+  }, 30_000);
+
   test('a tab opened with takeover steals the lock at once, and the previous leader stops', async () => {
     const hub = createHub();
     const keys = uniqueKeys();

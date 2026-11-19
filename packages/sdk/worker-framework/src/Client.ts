@@ -804,7 +804,8 @@ export class Connection extends Resource {
         this.#connectPhase = 'port-timeout';
         this.#portTimeoutCount++;
         log.warn('worker-connection: timed out waiting for provide-port', { clientId: this.#clientId });
-        await this.#maybeStealStaleLeader();
+        // The connection's context, not this attempt's: a re-armed election outlives the attempt.
+        await this.#maybeStealStaleLeader(this._ctx);
         this.#scheduleConnect();
         return;
       }
@@ -943,7 +944,7 @@ export class Connection extends Resource {
     this.#scheduleConnect();
   }
 
-  async #maybeStealStaleLeader(): Promise<void> {
+  async #maybeStealStaleLeader(ctx: Context): Promise<void> {
     // Checked before the generic budget so the app learns the cause it can act on: a reload.
     if (this.#lockLossCount >= LEADER_CONTENTION_LIMIT) {
       // Yielding lets the other tab keep a working worker; this tab stays without one until reloaded.
@@ -1011,7 +1012,6 @@ export class Connection extends Resource {
         this.#takeoverRequested = true;
         log.warn('worker-connection: leader unresponsive, asking before taking over', { sinceHeartbeat });
         // A steal evicts whoever holds the lock now, so a stale or repeated approval must not reach it.
-        const ctx = this._ctx;
         let used = false;
         this.#onTakeoverRequired(() => {
           if (used || ctx.disposed) {
@@ -1019,16 +1019,17 @@ export class Connection extends Resource {
           }
           used = true;
           this.#takeoverRequested = false;
-          void this.#stealLeaderLock(sinceHeartbeat);
+          void this.#stealLeaderLock(ctx, sinceHeartbeat);
         });
       }
       return;
     }
 
-    await this.#stealLeaderLock(sinceHeartbeat);
+    await this.#stealLeaderLock(ctx, sinceHeartbeat);
   }
 
-  async #stealLeaderLock(sinceHeartbeat: number): Promise<void> {
+  // Bound to the context that decided to steal: a close during the steal swaps `_ctx` for a fresh one.
+  async #stealLeaderLock(ctx: Context, sinceHeartbeat: number): Promise<void> {
     this.#lastStealAttempt = Date.now();
     this.#stealCount++;
 
@@ -1046,7 +1047,9 @@ export class Connection extends Resource {
 
     // The steal only evicts — the lock is released the moment the callback above returns — so without
     // re-arming, a tab whose chain has ended takes the lock and hands it straight back.
-    this.#watchLeader(this._ctx);
+    if (!ctx.disposed) {
+      this.#watchLeader(ctx);
+    }
   }
 
   async #isLeaderLockHeld(): Promise<boolean> {
