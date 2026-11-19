@@ -36,10 +36,6 @@
   --sl-content-width: 72rem;
 }
 
-.dx-play {
-  margin-block: 2rem;
-}
-
 /*
  * The home page hero is tight, with the install command in place of buttons, so the top of
  * the editor shows without scrolling on a laptop.
@@ -50,6 +46,11 @@
 
 [data-has-hero] .hero .stack {
   gap: 1rem;
+}
+
+/* Starlight's `Card` takes the corner its `LinkCard` and the page's own panels have. */
+.card {
+  border-radius: 0.5rem;
 }
 
 /* A grid of three or six cards is rows of three where they fit, and one column where they do not; never two and one. */
@@ -64,13 +65,13 @@
 }
 
 .dx-play .alt {
-  margin: 14px 0 0;
-  font-size: 15px;
+  margin: 0.75rem 0 0;
+  font-size: var(--sl-text-sm);
   color: var(--muted);
 }
 
 .dx-play .alt code {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: var(--sl-text-xs);
   color: var(--ink);
 }

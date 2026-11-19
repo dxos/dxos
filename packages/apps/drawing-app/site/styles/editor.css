@@ -1,14 +1,20 @@
 /* The live editor, its drawing and the relation examples, for any page that wraps them in `.dx-play`. */
 
+/* Starlight's border colour and the corner of its `LinkCard`, so these panels sit with Starlight's own. */
+.dx-play {
+  --line: var(--sl-color-gray-5);
+  --radius: 0.5rem;
+}
+
 .dx-play .install {
   display: flex;
   align-items: stretch;
   max-width: 560px;
   background: var(--console);
   color: #fff;
-  border-radius: 10px;
+  border-radius: var(--radius);
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: var(--sl-text-sm);
 }
 
 .dx-play .install code {
@@ -24,11 +30,11 @@
 }
 
 .dx-play .install button {
-  font: 500 14px var(--sans);
+  font: 500 var(--sl-text-sm) var(--sans);
   color: var(--on-accent);
   background: var(--accent);
   border: 0;
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
   padding: 0 20px;
   cursor: pointer;
 }
@@ -59,10 +65,9 @@
   display: grid;
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   background: var(--sheet);
-  border: 1px solid var(--grid);
-  border-radius: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   overflow: hidden;
-  margin: 8px 0 96px;
 }
 
 .dx-play .source,
@@ -73,7 +78,7 @@
 }
 
 .dx-play .source {
-  border-right: 1px solid var(--grid);
+  border-right: 1px solid var(--line);
 }
 
 .dx-play .tab {
@@ -83,10 +88,10 @@
   gap: 12px;
   min-height: 48px;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--sl-text-xs);
   color: var(--muted);
   padding: 8px 12px 8px 20px;
-  border-bottom: 1px solid var(--grid);
+  border-bottom: 1px solid var(--line);
 }
 
 .dx-play .tab b {
@@ -96,7 +101,7 @@
 
 /* A caption in the sans face, so it does not read as a third tab. */
 .dx-play .hint {
-  font: italic 13px var(--sans);
+  font: italic var(--sl-text-xs) var(--sans);
   white-space: nowrap;
 }
 
@@ -107,16 +112,16 @@
   margin-left: -8px;
   padding: 2px;
   background: var(--paper);
-  border: 1px solid var(--grid);
-  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 
 .dx-play .tabs button {
-  font: 500 12px var(--mono);
+  font: 500 var(--sl-text-xs) var(--mono);
   color: var(--muted);
   background: none;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: calc(var(--radius) - 2px);
   padding: 4px 9px;
   cursor: pointer;
 }
@@ -128,7 +133,7 @@
 .dx-play .tabs button[aria-selected='true'] {
   color: var(--ink);
   background: var(--sheet);
-  border-color: var(--grid);
+  border-color: var(--line);
 }
 
 /* Disabled until the editor loads, since only the live editor can switch languages. */
@@ -142,11 +147,11 @@
 }
 
 .dx-play .action {
-  font: 500 13px var(--sans);
+  font: 500 var(--sl-text-sm) var(--sans);
   color: var(--ink);
   text-decoration: none;
-  border: 1px solid var(--grid);
-  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   padding: 6px 12px;
   background: var(--sheet);
   white-space: nowrap;
@@ -280,7 +285,7 @@
 }
 
 .dx-play .run {
-  border-top: 1px solid var(--grid);
+  border-top: 1px solid var(--line);
   padding: 14px 20px 18px;
   font-family: var(--mono);
   font-size: 12px;
@@ -433,10 +438,10 @@
 .dx-play .relations {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--grid);
-  border-radius: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   overflow: hidden;
-  background: var(--grid);
+  background: var(--line);
   gap: 1px;
 }
 
@@ -444,18 +449,18 @@
   display: flex;
   flex-direction: column;
   background: var(--sheet);
-  padding: 20px 22px 14px;
+  padding: 1.25rem;
 }
 
 .dx-play .relation code {
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: var(--sl-text-xs);
 }
 
 .dx-play .relation p {
-  margin: 6px 0 4px;
+  margin: 0.25rem 0 0.5rem;
   color: var(--muted);
-  font-size: 15px;
+  font-size: var(--sl-text-sm);
 }
 
 /* Pinned to the bottom so drawings line up across a row whatever the caption length. */
@@ -474,7 +479,7 @@
 
   .dx-play .source {
     border-right: 0;
-    border-bottom: 1px solid var(--grid);
+    border-bottom: 1px solid var(--line);
   }
 
   .dx-play .editor {
