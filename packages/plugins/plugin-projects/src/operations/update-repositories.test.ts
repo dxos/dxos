@@ -41,4 +41,30 @@ describe('update-repositories', () => {
       expect(ids(read.repositories)).toEqual([dxos.id, docs.id]);
     }).pipe(Effect.provide(testLayer())),
   );
+
+  it.effect('sets, replaces and clears the setup script, leaving the repositories alone', () =>
+    Effect.gen(function* () {
+      const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos' }));
+      const project = yield* Database.add(Project.make({ name: 'Composer' }));
+      yield* updateRepositories.handler({ project: Ref.make(project), add: [Ref.make(dxos)] });
+
+      const set = yield* updateRepositories.handler({ project: Ref.make(project), setupScript: 'proto install\n' });
+      expect(set.setupScript).toBe('proto install\n');
+      expect(Repo.getSetupScript(project)).toBe('proto install\n');
+      expect(set.repositories).toHaveLength(1);
+
+      // Without `setupScript` the script is read, not changed.
+      expect((yield* updateRepositories.handler({ project: Ref.make(project) })).setupScript).toBe('proto install\n');
+      expect(
+        (yield* updateRepositories.handler({ project: Ref.make(project), add: [Ref.make(dxos)] })).setupScript,
+      ).toBe('proto install\n');
+
+      const replaced = yield* updateRepositories.handler({ project: Ref.make(project), setupScript: 'echo two' });
+      expect(replaced.setupScript).toBe('echo two');
+
+      const cleared = yield* updateRepositories.handler({ project: Ref.make(project), setupScript: '  \n' });
+      expect(cleared.setupScript).toBeUndefined();
+      expect(Repo.getSetupScript(project)).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
 });

@@ -450,6 +450,43 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
+  it.live("sends the project's setup script with the spawn, beside its repositories", () =>
+    Effect.gen(function* () {
+      const { chat, feed, edge, options } = yield* setup((turnId) => [
+        { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
+      ]);
+      const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos' }));
+      const project = yield* Database.add(Project.make());
+      Repo.setRepositories(project, [Ref.make(dxos)]);
+      Repo.setSetupScript(project, 'proto install\n');
+      Obj.setParent(chat, project);
+      yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'build it' });
+
+      expect(edge.spawned[0]).toMatchObject({
+        annotations: { [EdgeProtocol.Annotation.setupScript]: 'proto install\n' },
+      });
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('sends no setup script when the project has none, or the chat has no repositories', () =>
+    Effect.gen(function* () {
+      const first = yield* setup((turnId) => [{ _tag: 'turn-end', turnId, stopReason: 'end_turn' }]);
+      const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos' }));
+      const project = yield* Database.add(Project.make());
+      Repo.setRepositories(project, [Ref.make(dxos)]);
+      Obj.setParent(first.chat, project);
+      yield* EdgeAgent.runTurn(first.options, { chat: first.chat, feed: first.feed }, { prompt: 'build it' });
+      expect(first.edge.spawned[0].annotations).not.toHaveProperty(EdgeProtocol.Annotation.setupScript);
+
+      const second = yield* setup((turnId) => [{ _tag: 'turn-end', turnId, stopReason: 'end_turn' }]);
+      const scripted = yield* Database.add(Project.make());
+      Repo.setSetupScript(scripted, 'proto install\n');
+      Obj.setParent(second.chat, scripted);
+      yield* EdgeAgent.runTurn(second.options, { chat: second.chat, feed: second.feed }, { prompt: 'build it' });
+      expect(second.edge.spawned[0].annotations).not.toHaveProperty(EdgeProtocol.Annotation.setupScript);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
   it.live('checks out the repositories bound to a chat outside a project, leaving EDGE-hosted ones out', () =>
     Effect.gen(function* () {
       const { feed, chat, edge, options } = yield* setup((turnId) => [

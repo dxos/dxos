@@ -21,6 +21,7 @@ export const Annotation = {
   mode: 'org.dxos.coding-agent.mode',
   unattended: 'org.dxos.coding-agent.unattended',
   repositories: 'org.dxos.coding-agent.repositories',
+  setupScript: 'org.dxos.coding-agent.setup-script',
   meta: 'org.dxos.coding-agent.meta',
 } as const;
 

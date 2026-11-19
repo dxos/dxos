@@ -244,7 +244,10 @@ export const ArtifactList = Operation.make({
   services: [Database.Service],
 }).pipe(Operation.mutation('none'));
 
-/** Edits the project's `Repo.RepositoriesAnnotation`, which no generic object write reaches. */
+/**
+ * Edits the project's `Repo.RepositoriesAnnotation` and its setup script, which no generic object write reaches.
+ * The script is kept with the repositories since it prepares exactly those checkouts.
+ */
 export const UpdateRepositories = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.updateRepositories'),
@@ -252,8 +255,11 @@ export const UpdateRepositories = Operation.make({
     icon: 'ph--git-branch--regular',
     description: trim`
       Add repositories to a project's repositories or remove them, and return the list. A cloud coding agent
-      checks the list out and works in the first. With neither \`add\` nor \`remove\`, returns the list unchanged.
-      A repository must already be an org.dxos.type.repo object in the space.
+      checks the list out and works in the first. With neither \`add\` nor \`remove\` nor \`setupScript\`, returns
+      the list unchanged. A repository must already be an org.dxos.type.repo object in the space.
+      \`setupScript\` is a bash script a cloud coding agent's sandbox runs once, as root, after the repositories are
+      checked out and before the agent starts, from the first repository's directory (for example to install the
+      toolchain the repositories pin); a blank string clears it, and it replaces the previous script whole.
     `,
   },
   input: Schema.Struct({
@@ -264,9 +270,17 @@ export const UpdateRepositories = Operation.make({
       }),
     ),
     remove: Schema.optional(Schema.Array(Ref.Ref(Repo.Repo)).annotate({ description: 'Repositories to remove.' })),
+    setupScript: Schema.optional(
+      Schema.String.annotate({
+        description: 'The sandbox setup script (bash) to set, replacing the current one; blank clears it.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     repositories: Schema.Array(Ref.Ref(Repo.Repo)).annotate({ description: "The project's repositories, in order." }),
+    setupScript: Schema.optional(Schema.String).annotate({
+      description: "The project's setup script, when it has one.",
+    }),
   }),
   services: [Database.Service],
 }).pipe(Operation.mutation('write'));

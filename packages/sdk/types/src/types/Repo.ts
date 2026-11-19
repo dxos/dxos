@@ -117,3 +117,30 @@ export const setRepositories = (object: Obj.Unknown, repositories: readonly Ref.
     });
   }
 };
+
+/**
+ * A bash script that prepares a sandbox to build the object's repositories (installing their toolchain, say).
+ * It rides with the repositories: it is only meaningful for the checkouts that sit beside it.
+ */
+export const SetupScriptAnnotation = Annotation.make({
+  id: 'org.dxos.annotation.repositories.setup-script',
+  schema: Schema.String,
+});
+
+/** The setup script, or `undefined` when none is set or it is blank. */
+export const getSetupScript = (object: Entity.Unknown | Entity.Snapshot): string | undefined =>
+  Annotation.get(object, SetupScriptAnnotation).pipe(
+    Option.filter((script) => script.trim() !== ''),
+    Option.getOrUndefined,
+  );
+
+/** Sets the setup script; a blank one clears it. */
+export const setSetupScript = (object: Obj.Unknown, script: string): void => {
+  const next = script.trim() === '' ? '' : script;
+  if (next === '' && getSetupScript(object) === undefined) {
+    return;
+  }
+  Obj.update(object, (object) => {
+    Annotation.set(object, SetupScriptAnnotation, next);
+  });
+};
