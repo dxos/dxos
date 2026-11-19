@@ -1,12 +1,12 @@
 ---
-// The splash home page's header has a Docs link where Starlight puts search; the docs pages keep search.
+// The home page's header has a Docs link where Starlight puts search; the docs pages keep search.
 import Default from '@astrojs/starlight/components/Search.astro';
 
-const isSplash = Astro.locals.starlightRoute.entry.data.template === 'splash';
+const isHome = Astro.locals.starlightRoute.entry.data.template === 'splash';
 ---
 
 {
-  isSplash ? (
+  isHome ? (
     <nav class="links" aria-label="Site">
       <a href="/docs/">Docs</a>
     </nav>

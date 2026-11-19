@@ -9,11 +9,8 @@ export const SITE_DIR = '/site';
 export const isFile = (pathname: string) => /\.[^/]+$/.test(pathname);
 
 /**
- * Whether a landing host serves this path from the site (spec F-13.3): the home pages, the docs, the site's build
+ * Whether a landing host serves this path from the site (spec F-13.3): the home page, the docs, the site's build
  * files and search index, and any file.
  */
 export const isSitePath = (pathname: string) =>
-  pathname === '/' ||
-  /^\/(docs|splash)(\/|$)/.test(pathname) ||
-  /^\/(_astro|pagefind)\//.test(pathname) ||
-  isFile(pathname);
+  pathname === '/' || /^\/docs(\/|$)/.test(pathname) || /^\/(_astro|pagefind)\//.test(pathname) || isFile(pathname);

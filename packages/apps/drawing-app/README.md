@@ -13,8 +13,8 @@ and links are Composer's, so a link from either app opens in the other. The spec
   and diagram, answers the layout operations other plugins call, and renders everything on screen.
 - `src/shared/` is what the boot shell and the layout plugin both use: the pill, the route, local state, default
   names, and the shell state through which the plugin dismisses the shell's parts.
-- `site/` and `astro.config.ts` are the site, an Astro Starlight site: the custom home page (`site/pages/index.astro`),
-  the Starlight splash home page under comparison (`/splash/`), and the docs (`site/content/docs/docs/`).
+- `site/` and `astro.config.ts` are the site, an Astro Starlight site: the home page (`site/content/docs/index.mdx`,
+  Starlight's splash template) and the docs (`site/content/docs/docs/`).
 - `src/landing/` is the home page's editor and scripts. Its diagrams (`src/landing/diagrams/`) are rendered with
   `@dxos/drawing` when the site is built.
 - `src/functions/` is the Worker: the site or the app by host, the share API, and the OTLP proxy.

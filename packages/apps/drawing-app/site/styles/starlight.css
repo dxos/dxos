@@ -31,7 +31,7 @@
   --sl-color-black: #ffffff;
 }
 
-/* The splash page holds the editor, which needs more width than prose. */
+/* The home page holds the editor, which needs more width than prose. */
 [data-has-hero] {
   --sl-content-width: 72rem;
 }
@@ -41,7 +41,7 @@
 }
 
 /*
- * The splash hero is as tight as the custom home page's, with the install command in place of buttons, so the top of
+ * The home page hero is tight, with the install command in place of buttons, so the top of
  * the editor shows without scrolling on a laptop.
  */
 [data-has-hero] .hero {
