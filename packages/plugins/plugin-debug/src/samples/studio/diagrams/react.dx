@@ -20,11 +20,11 @@ group artifact-row autoCols=320 justifyContent=center {
   node artifact "Artifact" kind=card icon=cube iconTone=rose
 }
 
-edge operator#s3 -> feed#n3 "writes" head=triangle path=ortho
-edge operator#w3 -> skill#n3 head=triangle path=ortho
-edge operator#e3 -> model-box#n3 head=triangle path=ortho
-edge session#n3 -> feed#s3 "writes" head=triangle path=ortho
-edge session#e3 -> model-box#w3 "run by" head=triangle path=ortho
-edge session#s3 -> tool#n3 "uses" head=triangle path=ortho
-edge skill#e3 -> tool#w3 "defines" head=triangle path=ortho
-edge tool#s3 -> artifact#n3 "makes" head=triangle path=ortho
+edge operator#s3  -> feed#n3 "writes" head=triangle path=ortho
+edge operator#w3  -> skill#n3 head=triangle path=ortho
+edge operator#e3  -> model-box#n3 head=triangle path=ortho
+edge session#n3   -> feed#s3 "writes" head=triangle path=ortho
+edge session#e3   -> model-box#w3 head=triangle path=ortho
+edge session#s3   -> tool#n3 "uses" head=triangle path=ortho
+edge skill#e3     -> tool#w3 head=triangle path=ortho
+edge tool#s3      -> artifact#n3 "makes" head=triangle path=ortho

@@ -10,12 +10,12 @@ import * as Presentation from '@dxos/plugin-presenter/Presentation';
 
 import agentsDiagram from './diagrams/agents.dx?raw';
 import architectureDiagram from './diagrams/architecture.dx?raw';
-import chatDiagram from './diagrams/chat.dx?raw';
 import composerDiagram from './diagrams/composer.dx?raw';
 import echoDiagram from './diagrams/echo.dx?raw';
 import hyperspaceDiagram from './diagrams/hyperspace.dx?raw';
 // import ontologyDiagram from './diagrams/ontology.dx?raw';
 import pluginsDiagram from './diagrams/plugins.dx?raw';
+import reactDiagram from './diagrams/react.dx?raw';
 import superagentDiagram from './diagrams/superagent.dx?raw';
 import agents from './slides/agents.md?raw';
 import architecture from './slides/architecture.md?raw';
@@ -47,7 +47,7 @@ export const STUDIO_DIAGRAMS: readonly StudioDiagram[] = [
   { id: 'composer', source: composerDiagram },
   { id: 'architecture', source: architectureDiagram },
   { id: 'agents', source: agentsDiagram },
-  { id: 'chat', source: chatDiagram },
+  { id: 'react', source: reactDiagram },
   { id: 'superagent', source: superagentDiagram },
 ];
 

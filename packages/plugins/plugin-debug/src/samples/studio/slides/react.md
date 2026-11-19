@@ -5,7 +5,7 @@ layout: 'default'
 
 # ReAct
 
-<Surface ref="{{chat}}" />
+<Surface ref="{{react}}" />
 
 <!--
 Notes.
