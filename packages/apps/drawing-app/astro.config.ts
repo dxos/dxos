@@ -106,7 +106,11 @@ export default defineConfig({
     // Apart from the app's dev server, which shares this package: one optimizer cache would invalidate the other's.
     cacheDir: 'node_modules/.vite-site',
     // As in the app's config: the editor's dependencies reach Automerge, whose wasm the optimizer must not bundle.
-    optimizeDeps: { exclude: ['@automerge/automerge', '@automerge/automerge-subduction'] },
+    optimizeDeps: {
+      exclude: ['@automerge/automerge', '@automerge/automerge-subduction'],
+      // Reached only through a lazy import, so the optimizer would find it mid-session and fail that import with a 504.
+      include: ['@dxos/diagram > @dagrejs/dagre'],
+    },
     plugins: [
       importSource({ include: ['@dxos/**', '#*'] }),
       browserNodeStd(),

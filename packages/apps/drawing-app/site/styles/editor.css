@@ -94,14 +94,21 @@
   font-weight: 500;
 }
 
+/* A caption in the sans face, so it does not read as a third tab. */
 .dx-play .hint {
+  font: italic 13px var(--sans);
   white-space: nowrap;
 }
 
+/* A segmented control: the tabs sit in a track, and the selected one is raised on it. */
 .dx-play .tabs {
   display: flex;
-  gap: 4px;
-  margin-left: -10px;
+  gap: 2px;
+  margin-left: -8px;
+  padding: 2px;
+  background: var(--paper);
+  border: 1px solid var(--grid);
+  border-radius: 8px;
 }
 
 .dx-play .tabs button {
@@ -120,6 +127,7 @@
 
 .dx-play .tabs button[aria-selected='true'] {
   color: var(--ink);
+  background: var(--sheet);
   border-color: var(--grid);
 }
 

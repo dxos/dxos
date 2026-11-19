@@ -11,9 +11,9 @@ const { source, report, hero, file } = await prerendered();
     <div class="tab">
       <span class="tabs" role="tablist" aria-label="Source language">
         <button type="button" role="tab" data-language="dx" aria-selected="true">.dx</button>
-        <button type="button" role="tab" data-language="mermaid" aria-selected="false" disabled>Mermaid</button>
+        <button type="button" role="tab" data-language="mermaid" aria-selected="false" disabled>From Mermaid</button>
       </span>
-      <span class="hint" id="language-hint">drawing's language</span>
+      <span class="hint">edit the source</span>
     </div>
     <div class="editor" id="editor"><pre class="fallback" set:html={source} /></div>
   </div>
