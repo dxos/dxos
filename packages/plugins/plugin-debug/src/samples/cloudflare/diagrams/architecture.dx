@@ -1,44 +1,79 @@
-diagram kind=grid size=1600x880 cols="2fr 1fr 5fr" gap=48 padding=48
+diagram kind=grid size=1600x880 cols="506 241 755" gap=32 padding=16 autoRows=744 alignContent=center
 
-group client-section cols=2 gap=16 {
-  group client-col rows="1fr 3fr" gap=8 {
-    node client "Client" kind=card icon=browser
+group client-section cols=2 gap=8 padding=8 border=true {
+  group client-col rows=3 gap=16 {
+    node client "Client" kind=card icon=browser {
+      item "Composer app tab"
+      item "Plugins and surfaces"
+    }
     group client-rest { }
   }
-  group worker-col rows="1fr 3fr" gap=8 {
-    node worker "Worker" kind=card icon=cpu
+  group worker-col rows=3 gap=16 {
+    node worker "Worker" kind=card icon=cpu {
+      item "Shared by every tab"
+      item "Local replica in SQLite"
+    }
     group worker-rest { }
   }
 }
 
-group router-section rows="1fr 3fr" gap=8 {
-  node router "Router" kind=card icon=arrows-left-right tone=ink
-  group router-rest { }
+group router-section rows="8 1fr 8" {
+  group router-above { }
+  group router-col rows=3 gap=16 {
+    node router "Router" kind=card icon=arrows-left-right {
+      item "Routes clients"
+      item "Routes spaces"
+    }
+    group router-rest { }
+  }
+  group router-below { }
 }
 
-group edge-section cols="1fr 2fr" gap=16 {
-  group registry-col rows="1fr 3fr" gap=8 {
-    node registry "ServiceRegistry" kind=card icon=plugs-connected
+group edge-section cols="241 1fr" gap=8 padding=8 border=true {
+  group registry-col rows=3 gap=16 {
+    node registry "ServiceRegistry" kind=card icon=plugs-connected {
+      item "Resolves services by tag"
+      item "ECHO, AI, identity, blobs"
+    }
     group registry-rest { }
   }
-  group services-col {
-    group services-row cols=2 gap=16 {
-      group echo-col rows="1fr 3fr" gap=8 {
-        node echo "ECHO" kind=card icon=database tone=accent
-        group echo-parts gap=8 {
-          node graph "Graph" kind=card icon=graph iconTone=accent
-          node feeds "Feeds" kind=card icon=queue iconTone=accent
-          node blobs "Blobs" kind=card icon=files iconTone=accent
-        }
+  group services-col gap=16 {
+    group echo-block cols=2 gap=8 {
+      node echo "ECHO" kind=card icon=database iconTone=accent {
+        item "Realtime graph database"
+        item "Durable Objects per space"
       }
-      group compute-col rows="1fr 3fr" gap=8 {
-        node compute "Compute" kind=card icon=lightning tone=teal
-        group compute-parts gap=8 {
-          node scheduler "Scheduler" kind=card icon=clock iconTone=teal
-          node process-manager "Process Manager" kind=card icon=tree-structure iconTone=teal
-          node pipeline "Pipeline" kind=card icon=flow-arrow iconTone=teal
-        }
+      group echo-parts gap=16 {
+        node graph "Graph" kind=card icon=graph iconTone=accent
+        node feeds "Feeds" kind=card icon=queue iconTone=accent
+        node blobs "Blobs" kind=card icon=files iconTone=accent
+      }
+    }
+    group compute-block cols=2 gap=8 {
+      node compute "Compute" kind=card icon=lightning iconTone=teal {
+        item "Runs next to the data"
+        item "Workers and bindings"
+      }
+      group compute-parts gap=16 {
+        node scheduler "Scheduler" kind=card icon=clock iconTone=teal
+        node agents "Agents" kind=card icon=robot iconTone=teal
+        node pipeline "Pipeline" kind=card icon=flow-arrow iconTone=teal
+      }
+    }
+    group plugins-block cols=2 gap=8 {
+      node plugins "Plugins" kind=card icon=puzzle-piece iconTone=violet {
+        item "Client and EDGE halves"
+        item "Loaded per space"
+      }
+      group plugins-parts gap=16 {
+        node inbox "Inbox" kind=card icon=envelope iconTone=violet
+        node github "GitHub" kind=card icon=github-logo iconTone=violet
+        node discord "Discord" kind=card icon=discord-logo iconTone=violet
       }
     }
   }
 }
+
+edge client -- worker
+edge worker -- router
+edge router -- registry
