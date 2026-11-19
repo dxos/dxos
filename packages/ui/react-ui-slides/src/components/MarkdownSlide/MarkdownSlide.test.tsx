@@ -221,6 +221,8 @@ describe('MarkdownSlide', () => {
     expect(classes).toContain('data-[align=center]:my-auto');
     expect(classes).toContain('[&amp;:has(&gt;[data-icon])]:[grid-auto-rows:auto_minmax(0,1fr)]');
     expect(classes).toContain('[&amp;&gt;article[data-icon]]:grid-rows-subgrid');
+    // Every child covers both tracks of a row, not only the cards and cells that carry a span of their own.
+    expect(classes).toContain('[&amp;:has(&gt;[data-icon])&gt;*]:[grid-row:span_calc(var(--slide-row-span,1)*2)]');
     // A grid that asks for nothing fills the space it is given, as it always has.
     expect(render('<Grid cols="3">\n\nCells\n\n</Grid>')).not.toContain('data-align');
   });

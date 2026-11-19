@@ -46,6 +46,16 @@ export type PingMeasurement = {
   readonly at: number;
 };
 
+/** How a story wires one simulated tab; every field defaults to the shared-counter setup. */
+export type CounterConnectionOptions = Pick<
+  Client.Options,
+  'leaderTimeouts' | 'generation' | 'onSuperseded' | 'onTakeoverRequired' | 'onLockStolen' | 'takeover'
+> & {
+  /** A tab on another build gets its own coordinator; one with a broken link also cannot reach the others. */
+  coordinatorName?: string;
+  leaderLockKey?: string;
+};
+
 /**
  * Client-side connection to the shared counter worker via {@link Client.Connection}.
  */
@@ -59,19 +69,20 @@ export class CounterConnection extends Resource {
   readonly sessionChanged = new Event<CounterSessionInfo>();
   readonly pingUpdated = new Event<PingMeasurement>();
 
-  constructor() {
+  constructor({ coordinatorName, leaderLockKey, ...connectionOptions }: CounterConnectionOptions = {}) {
     super();
     this.#connection = new Client.Connection({
+      ...connectionOptions,
       createWorker: () => new Worker(new URL('./counter-worker.ts', import.meta.url), { type: 'module' }),
       createCoordinator: () =>
         new Coordinator.SharedWorker({
           createWorker: () =>
             new SharedWorker(new URL('./coordinator-worker.ts', import.meta.url), {
               type: 'module',
-              name: 'worker-framework-counter-coordinator',
+              name: coordinatorName ?? 'worker-framework-counter-coordinator',
             }),
         }),
-      leaderLockKey: COUNTER_LEADER_LOCK_KEY,
+      leaderLockKey: leaderLockKey ?? COUNTER_LEADER_LOCK_KEY,
       onConnect: async ({ clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner }) => {
         invariant(this.#scope, 'counter rpc scope not initialized');
         this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner, workerId: livenessLockKey };

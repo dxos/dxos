@@ -83,6 +83,11 @@
       "types": "./dist/types/src/types/DiscordOperation.d.ts",
       "import": "./dist/lib/DiscordOperation.mjs"
     },
+    "./DiscordService": {
+      "source": "./src/types/DiscordService.ts",
+      "types": "./dist/types/src/types/DiscordService.d.ts",
+      "import": "./dist/lib/DiscordService.mjs"
+    },
     "./DiscordPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
@@ -127,6 +132,9 @@
       ],
       "DiscordOperation": [
         "dist/types/src/types/DiscordOperation.d.ts"
+      ],
+      "DiscordService": [
+        "dist/types/src/types/DiscordService.d.ts"
       ],
       "DiscordTargetOptions": [
         "dist/types/src/types/DiscordTargetOptions.d.ts"

@@ -1,5 +1,5 @@
 ---
-# multiple-changesets: slide-heading-colors.md and slide-card-icon.md are the entries of PRs #14612 and #14613, merged in here
+# multiple-changesets: slide-icon-grid-row-span.md is the entry of PR #14623, merged in here
 '@dxos/plugin-debug': patch
 '@dxos/react-ui-slides': patch
 ---

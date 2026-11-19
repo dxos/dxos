@@ -122,7 +122,7 @@ export const EnableSkills = Operation.make({
   input: Schema.Struct({
     keys: Schema.Array(Schema.String).annotate({
       description: 'The keys of the skills to enable.',
-      examples: [['org.dxos.skill.memory', 'org.dxos.skill.database']],
+      examples: [['org.dxos.skill.planning', 'org.dxos.skill.database']],
     }),
   }),
   output: Schema.Struct({

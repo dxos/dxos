@@ -9,12 +9,11 @@ import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { Fact, Graph, Hash } from '@dxos/echo-memory';
 import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
 import { Person } from '@dxos/types';
 
 import { DISCORD_SOURCE } from '../constants.ts';
 import { StoreError } from '../errors.ts';
-import { ExtractedQuestionStore } from '../stores/index.ts';
 
 export type ExtractQuestionsOptions = {
   /** ECHO database: when provided, each asker is find-or-created as a `Person` (by foreign key). */
@@ -152,12 +151,7 @@ const upsertAsker = (
  */
 export const extractQuestionsStage = (
   options: ExtractQuestionsOptions = {},
-): Stage.Stage<
-  Type.Event,
-  Type.Event,
-  StateError,
-  ExtractedQuestionStore.ExtractedQuestionStore | AgentRegistry.AgentRegistry | FactStore | StateStore.StateStore
-> => {
+): Stage.Stage<Type.Event, Type.Event, StateError, AgentRegistry.AgentRegistry | FactStore | StateStore.StateStore> => {
   const namespace = options.sourceNamespace ?? 'discord';
   return tapStage('extract-questions', ['Message'], (event) =>
     event._tag !== 'Message'
@@ -167,30 +161,14 @@ export const extractQuestionsStage = (
           if (questions.length === 0) {
             return;
           }
-          yield* Effect.forEach(
-            questions,
-            (question) =>
-              ExtractedQuestionStore.put({
-                authorId: event.message.author.id,
-                ...(event.message.author.displayName ? { authorLabel: event.message.author.displayName } : {}),
-                targetId: event.target.id,
-                messageId: event.message.id,
-                question,
-                ...(event.message.createdAt ? { askedAt: event.message.createdAt } : {}),
-              }).pipe(
-                Effect.tap(() =>
-                  Effect.sync(() =>
-                    log.info('question', {
-                      author: event.message.author.displayName ?? event.message.author.id,
-                      target: event.target.id,
-                      message: event.message.id,
-                      question,
-                    }),
-                  ),
-                ),
-              ),
-            { discard: true },
-          );
+          for (const question of questions) {
+            log.info('question', {
+              author: event.message.author.displayName ?? event.message.author.id,
+              target: event.target.id,
+              message: event.message.id,
+              question,
+            });
+          }
           const { text, author } = event.message;
           const agent = yield* AgentRegistry.resolve(
             AgentRegistry.identifiersForUser(author),
@@ -217,3 +195,37 @@ export const extractQuestionsStage = (
         }),
   );
 };
+
+/** A question someone asked, as {@link extractQuestionsStage} recorded it in the fact store. */
+export type RecordedQuestion = {
+  readonly question: string;
+  /** The asker's IRI. */
+  readonly agent?: string;
+  readonly agentLabel?: string;
+  /** The message it was asked in, e.g. `discord:<message id>`. */
+  readonly source: string;
+  readonly askedAt: string;
+};
+
+/** Every question {@link extractQuestionsStage} recorded, read back from the fact store's `asked` facts. */
+export const listQuestions: () => Effect.Effect<RecordedQuestion[], SemanticIndexError, FactStore> = Effect.fnUntraced(
+  function* () {
+    const store = yield* FactStore;
+    const facts = yield* store.query({ predicate: 'asked' });
+    return facts.flatMap((fact): RecordedQuestion[] => {
+      const object = fact.assertion.object;
+      if (fact.extractor.id !== 'extract-questions' || object.kind !== 'entity' || !object.label) {
+        return [];
+      }
+      return [
+        {
+          question: object.label,
+          ...(fact.attribution.agent ? { agent: fact.attribution.agent } : {}),
+          ...(fact.attribution.agentLabel ? { agentLabel: fact.attribution.agentLabel } : {}),
+          source: fact.attribution.source,
+          askedAt: fact.attribution.generatedAtTime,
+        },
+      ];
+    });
+  },
+);

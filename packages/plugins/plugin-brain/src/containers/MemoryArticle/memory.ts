@@ -38,6 +38,15 @@ export const exportTrig = (store: FactStoreApi): Promise<{ trig: string } | { er
     ),
   );
 
+/** Removes every fact, entity and cursor from the store; the seed vocabulary is restored. */
+export const clearStore = (store: FactStoreApi): Promise<{ ok: true } | { error: string }> =>
+  EffectEx.runPromise(
+    store.clear().pipe(
+      Effect.as({ ok: true as const }),
+      Effect.catch((error) => Effect.succeed({ error: error.message })),
+    ),
+  );
+
 /** Runs a SELECT for the memory view; its result reaches the view through the query log, so it is not returned. */
 export const runQuery = (store: FactStoreApi, sparql: string): Promise<void> =>
   EffectEx.runPromise(store.rows(sparql).pipe(Effect.asVoid, Effect.ignore));
