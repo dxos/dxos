@@ -91,6 +91,7 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
+        DebugSurface.ObjectPanel,
         DebugSurface.Page,
         DebugSurface.Stats,
         AppSurface.Article,

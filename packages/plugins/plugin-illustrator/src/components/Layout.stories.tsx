@@ -8,7 +8,7 @@ import { mermaid as mermaidLanguage } from 'codemirror-lang-mermaid';
 import Mermaid from 'mermaid';
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
-import { Diagnostics, Dsl, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
+import { Diagnostics, DSL, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
 import { diagram as diagramLanguage } from '@dxos/diagram/extension';
 import { BASIC } from '@dxos/diagram/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -165,7 +165,7 @@ const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: S
       .then((layout) => {
         if (!cancelled) {
           setObjects(objectsOf(layout.commands));
-          setDsl(Dsl.printCommands(layout.commands));
+          setDsl(DSL.printCommands(layout.commands));
           setResult(layout);
           setFailure(undefined);
         }
@@ -184,9 +184,9 @@ const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: S
 
   // Editing the DSL drives the layout panel directly; a half-typed line keeps the last good scene.
   const handleDsl = useCallback((text: string) => {
-    const { commands, problems } = Dsl.parse(text);
+    const { commands, problems } = DSL.parse(text);
     if (!problems.some(({ severity }) => severity === 'error')) {
-      setObjects([...Dsl.toScene(commands).objects]);
+      setObjects([...DSL.toScene(commands).objects]);
     }
   }, []);
 

@@ -8,7 +8,7 @@ import type * as SqlClient from 'effect/sql/SqlClient';
 import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
-import { ExtractedQuestionStore, MessageStore, QuestionStore } from '../stores/index.ts';
+import { MessageStore, QuestionStore } from '../stores/index.ts';
 
 export { type Fixture, THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer } from '@dxos/crawler/testing';
 
@@ -24,14 +24,10 @@ export const storesLayer = <E>(
   | AgentRegistry.AgentRegistry
   | FactStore
   | MessageStore.MessageStore
-  | QuestionStore.QuestionStore
-  | ExtractedQuestionStore.ExtractedQuestionStore,
+  | QuestionStore.QuestionStore,
   E
 > =>
-  Layer.mergeAll(
-    StateStore.layerSql,
-    AgentRegistry.layerSql,
-    MessageStore.layerSql,
-    QuestionStore.layerSql,
-    ExtractedQuestionStore.layerSql,
-  ).pipe(Layer.provideMerge(client), Layer.merge(factStore));
+  Layer.mergeAll(StateStore.layerSql, AgentRegistry.layerSql, MessageStore.layerSql, QuestionStore.layerSql).pipe(
+    Layer.provideMerge(client),
+    Layer.merge(factStore),
+  );

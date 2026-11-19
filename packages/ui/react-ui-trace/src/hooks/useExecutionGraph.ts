@@ -12,7 +12,7 @@ import * as Process from '@dxos/compute/Process';
 import { type Space } from '@dxos/react-client/echo';
 
 import { filterProcessesBySelection, filterTraceMessages } from '../components/TracePanel/trace-filter.ts';
-import { type ExecutionGraph, buildExecutionGraph } from '../execution-graph/index.ts';
+import { type ExecutionGraph, type OperationResolver, buildExecutionGraph } from '../execution-graph/index.ts';
 import { getTraceMessagesAtom } from './useTraceMessages.ts';
 
 // Stable refs.
@@ -34,6 +34,8 @@ export type UseExecutionGraphOptions = {
   eventLimit?: number;
   /** Pids to narrow the graph to (with their descendants); empty shows everything. */
   selectedPids?: readonly string[];
+  /** Names and icons for operations whose trace events carry only a key; keep it stable across renders. */
+  resolveOperation?: OperationResolver;
 };
 
 /**
@@ -44,7 +46,7 @@ export type UseExecutionGraphOptions = {
 export const useExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Process[]> | undefined,
-  { collapseCompletedSpans, eventLimit, selectedPids = NO_PIDS }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans, eventLimit, selectedPids = NO_PIDS, resolveOperation }: UseExecutionGraphOptions = {},
 ): ExecutionGraph => {
   // Ticks periodically so spans that are still open purely because no new trace event has
   // arrived (e.g. the runtime crashed before writing its `operationEnd`) eventually get
@@ -58,8 +60,14 @@ export const useExecutionGraph = (
 
   const atom = useMemo(
     () =>
-      getExecutionGraph(space, processesAtom ?? atomEmpty, { collapseCompletedSpans, eventLimit, selectedPids, now }),
-    [space, processesAtom, collapseCompletedSpans, eventLimit, selectedPids, now],
+      getExecutionGraph(space, processesAtom ?? atomEmpty, {
+        collapseCompletedSpans,
+        eventLimit,
+        selectedPids,
+        now,
+        resolveOperation,
+      }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit, selectedPids, now, resolveOperation],
   );
 
   return useAtomValue(atom);
@@ -78,6 +86,7 @@ const getExecutionGraph = (
     eventLimit = 100,
     selectedPids = NO_PIDS,
     now,
+    resolveOperation,
   }: UseExecutionGraphOptions & { now: number },
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space).pipe(
@@ -105,6 +114,7 @@ const getExecutionGraph = (
       collapseCompletedSpans,
       eventLimit,
       now,
+      resolveOperation,
     }),
   );
 };

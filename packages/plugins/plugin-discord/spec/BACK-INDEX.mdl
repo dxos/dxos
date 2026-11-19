@@ -1,0 +1,528 @@
+---
+id: org.dxos.plugin.discord.back-index
+name: Discord back-index
+version: 0.1.0
+---
+
+Extracts a Discord server's history into a space's memory, with no agent involved. On the page of their Discord connection
+(Space settings › Connections) a person who manages the server installs Composer's Discord bot (Kai) there, lets the
+space index the server, and marks channels to index; a remote timer trigger then crawls those
+channels on EDGE, a bounded slice per run, through the same pipeline the Discord facts CLI runs, and puts the facts
+it extracts into the space's memory.
+
+Three parties hold three things, and nothing crosses between them that the next one does not need:
+
+- **The space** holds the back-index as ECHO objects, the trigger and its `CrawlState`, and its memory, which the
+  facts go into. It holds no token for Kai; for a bot that is not Kai it holds the bot's `AccessToken`, which only
+  EDGE reads.
+- **compute-service** runs the crawl operation as plugin-discord's bundle in a Dynamic Worker. The bundle reads
+  Discord only through `DiscordService`, whose calls answer channels and messages, never a token and never an
+  arbitrary API response, and writes facts only through `MemoryService`.
+- **The bot host** (discord-service) holds Kai's token and the space's index grants, checks that the channel is in a
+  server the space was granted, and calls Discord. A grant is apart from the bot's agent bindings: it never claims the
+  bot's owner, starts its gateway or routes a message.
+
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.discord: The bot this back-index reads through, and its sign-in.
+```
+
+```mdl
+uses org.dxos.plugin.brain: The space's memory, which the extracted facts are for.
+```
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
+| `question`  | `org.dxos.mdl.question@1.0`    |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+
+## Diagram
+
+A plugin-illustrator render. The `diagram` block is the source; regenerate the image with
+`moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/back-index.dx`.
+
+![The Discord connection's page grants the space a server on the bot host and calls ConfigureBackIndex, which writes the trigger and CrawlState into the space; the trigger runs the crawl in compute-service, which fetches messages from Kai's bot host through DiscordService; the host signs with Kai's token and reads Discord; the crawl writes cursors and topics to the space and puts facts into the space's memory.](diagrams/back-index.dx.svg)
+
+```diagram
+diagram flow=down
+group app "Composer (client)" {
+  node Companion "Discord connection" ref="packages/plugins/plugin-discord/src/containers/DiscordConnectionSetup/DiscordConnectionSetup.tsx"
+  node Configure "ConfigureBackIndex" ref="packages/plugins/plugin-discord/src/operations/configure-back-index.ts"
+}
+group space "ECHO space" {
+  node Trigger "Trigger (timer)" ref="packages/core/compute/compute/src/types/Trigger.ts"
+  node State "CrawlState" ref="packages/core/compute/crawler/src/CrawlState.ts"
+  node Memory "Space memory" ref="packages/core/echo/echo-memory/src/MemoryService.ts"
+  node Topics "Topics, Persons" ref="packages/core/compute/pipeline-discord/src/types/Topic.ts"
+}
+group cloud "EDGE" {
+  node Compute "compute-service"
+  node Host "Kai bot host"
+  node Token "Kai token secret"
+}
+node Discord "Discord API"
+edge Companion -> Configure "Index toggle"
+edge Companion -> Host "grant server"
+edge Configure -> Trigger "creates"
+edge Configure -> State
+edge Trigger -> Compute "runs crawl"
+edge Compute -> Host "fetchMessages"
+edge Token -> Host "signs"
+edge Host -> Discord "GET as Kai"
+edge Compute -> State "cursors"
+edge Compute -> Memory "put facts"
+edge Compute -> Topics "topics"
+```
+
+## Types
+
+The back-index is one remote timer `Trigger` per bot in a space, whose input names everything a run needs.
+
+```mdl
+type BackIndexInput
+  desc: The trigger's input; ConfigureBackIndex writes it and CrawlDiscordChannels reads it.
+  fields:
+    applicationId: string             # the Discord app (bot) installed in the server
+    channels: string[]                # top-level Discord channel ids to crawl
+    descendThreads?: boolean          # default true
+    maxDays?: number                  # lookback for a channel crawled for the first time
+    maxDepth?: number
+    maxSteps?: number                 # pages one run reads; default 2
+    state: Ref<CrawlState>
+```
+
+The bot host answers messages in Discord's own field names, trimmed to what the crawl maps; nothing else of the API
+response crosses.
+
+```mdl
+type DiscordMessage
+  fields:
+    id: string
+    type: number
+    content: string
+    timestamp: string
+    author: { id: string, username: string, global_name?: string }
+    mentions: { id: string, username: string, global_name?: string }[]
+    referenced_message?: { id: string }
+    message_reference?: { message_id: string }
+    thread?: { id: string, name: string }
+```
+
+```mdl
+type DiscordSourceChannel
+  fields:
+    id: string
+    name: string
+    guildId: string
+    guildName: string
+```
+
+## Services
+
+```mdl
+service DiscordService
+  desc: |
+    The crawl's only dependency on Discord: the two source calls it reads through, and nothing else of the bot. The
+    app reaches it over EDGE's `/discord/bots/:applicationId` routes, signed with the user's identity; a plugin bundle
+    on EDGE reaches it through compute-service's invocation scope. Both end at the bot host, which signs the Discord
+    call with the bot's token.
+  ops:
+    listChannels(bot: { applicationId: string, spaceId: string }) → DiscordSourceChannel[]
+    fetchMessages(bot: { applicationId: string, spaceId: string }, channelId: string, after: string, limit: number) → DiscordMessage[]
+  errors:
+    DiscordBotError: the bot does not serve the space, is not running, or the channel is outside the servers the space connected
+```
+
+The crawl writes facts with `MemoryService.put` (`@dxos/echo-memory`), one call per extracted page, the same
+service brain and agent memory write through; a repeated put is idempotent, so a page read again is harmless.
+
+## Runtime
+
+The trigger runs CrawlDiscordChannels on EDGE, where compute-service's `plugins` routing loads plugin-discord's
+bundle as a Dynamic Worker through the worker loader. A bundle gets services only through its invocation scope, by
+service key, so the crawl's services must each have a key there:
+
+| Service            | How the bundle gets it                                                    |
+|--------------------|---------------------------------------------------------------------------|
+| `AiService`        | the bundle's `FUNCTIONS_AI_SERVICE` binding                               |
+| `Database.Service` | the bundle's `DATA_SERVICE` binding                                       |
+| `DiscordService`   | an invocation-scope key, dispatched to discord-service's agent entrypoint |
+| `MemoryService`    | an invocation-scope key, dispatched to the space's memory on EDGE         |
+
+## Operations
+
+```mdl
+op ConfigureBackIndex
+  key: org.dxos.operation.discord.configureBackIndex
+  desc: Creates or updates the space's back-index for a bot: its CrawlState and the remote timer trigger.
+  input:
+    applicationId: string
+    channels: string[]
+    trigger?: Ref<Trigger>        # the back-index to reconfigure; a new one when absent
+    name?: string
+    cron?: string                 # default every two minutes
+    enabled?: boolean
+  output: { trigger: Ref<Trigger>, state: Ref<CrawlState> }
+  effects: [echo:read, echo:write]
+```
+
+```mdl
+op CrawlDiscordChannels
+  key: org.dxos.operation.discord.crawlChannels
+  desc: One bounded run of the back-index, as the trigger invokes it.
+  services: [AiService, Database.Service, DiscordService, MemoryService]
+  input: BackIndexInput
+  output: { done: boolean, errored: number, steps: number, messages: number, error?: string }
+  effects: [echo:read, echo:write, memory:write, ai]
+```
+
+## Features
+
+```mdl
+feat F-1: Setup on the Discord connection's page
+
+  req F-1.1: plugin-connector's connection page has a connector section, a surface each connector can fill for its own connections; plugin-discord fills it for the Discord sign-in connection, so setting up the space's back-index needs no agent.
+
+  req F-1.2: The section lists the servers the connection's account manages, with installing the bot where it is missing and indexing it where it is installed. Indexing asks the bot host for an index grant (F-8); only then are the server's text and announcement channels listed, each with a toggle that adds it to or removes it from the back-index.
+
+  req F-1.3: Each toggle applies at once: the first creates the back-index with ConfigureBackIndex, later ones update its channels in place, so a space has one back-index per bot. No channel is indexed until it is picked.
+
+  req F-1.4: Removing the last channel, or no longer indexing the server, disables the trigger and keeps its CrawlState and the memory it filled.
+
+  req F-1.5: Each indexed channel shows its crawl status (waiting, crawling, up to date, or the error), and the section shows the messages read, the last run, the history and interval settings, and Pause or Resume.
+
+  req F-1.6: Setup asks for no token when the bot is Kai. The connection is the person's sign-in, which the grant check reads; a pasted bot token connection gets no section, since it cannot show who manages a server. The agent's Discord companion keeps routing channels to the agent and shows which are indexed, but does not index.
+```
+
+```mdl
+feat F-2: Pipeline
+
+  req F-2.1: A run is DiscordPipeline's assembly, with the same stages as the Discord facts CLI: persist message, agent profile, extract questions, extract facts, topics, answer questions.
+
+  req F-2.2: Only the stores differ from the CLI: the frontier and cursors live in the CrawlState ECHO object, facts are put into the space's memory with MemoryService.put, and Topics and Persons are written to the space.
+
+  req F-2.3: The crawl writes no fact feed; MemoryService is the only place its facts go.
+
+  req F-2.4: A run reads at most maxSteps pages and resumes from the CrawlState on the next trigger, so a message read again unchanged costs no model call.
+```
+
+```mdl
+feat F-3: Reading as the bot
+  uses: [DiscordService, DiscordMessage, DiscordSourceChannel]
+
+  req F-3.1: The crawl's Discord source is built only on DiscordService.listChannels and fetchMessages, its one Discord dependency; no Discord API request, path or header crosses from a plugin to the bot host.
+
+  req F-3.2: The bot host answers listChannels with the text and announcement channels of the servers the space was granted, and of its agents' servers while it owns the bot, and nothing for any other server the bot is in.
+
+  req F-3.3: The bot host answers fetchMessages only for a channel or thread in one of those servers, with at most `limit` messages after `after`, oldest first.
+
+  req F-3.4: The bot host refuses both calls for a space with no grant that does not own the bot; reads need no running gateway.
+
+  req F-3.5: compute-service refuses a call whose bot names a space other than the invocation's own.
+```
+
+```mdl
+feat F-4: Token custody
+
+  req F-4.1: Kai's token never leaves the bot host: not to compute-service, not to a plugin bundle, not to the app, and not into the space.
+
+  req F-4.2: The back-index names only the bot. The bot host signs every read with the token the bot runs on: Kai's, which EDGE holds, or, for a bot that is not Kai, the AccessToken the space gave when it connected the bot.
+
+  req F-4.3: No answer of the bot host carries a token, an authorization header or a raw Discord API response.
+```
+
+```mdl
+feat F-5: Failures
+
+  req F-5.1: A run never fails its invocation: its error and outcome are written to the CrawlState, so they outlive the run.
+
+  req F-5.2: A source call the bot host refuses marks the channel as errored in the CrawlState with the host's reason, and the run carries on with the other channels.
+```
+
+```mdl
+feat F-6: Pipeline panel
+
+  req F-6.1: Brain's Pipeline panel reads the back-index's state from its ECHO objects (the CrawlState and the trigger), not from a file the CLI wrote.
+```
+
+```mdl
+feat F-8: Index grants
+
+  req F-8.1: A space reads a server only under an index grant, which the bot host gives when a person who owns the server or holds Manage Server there asks, as their own Discord sign-in shows.
+
+  req F-8.2: A grant is kept apart from agent bindings: granting or revoking never claims or releases the bot's owner, starts or stops its gateway, or changes how a message is routed.
+
+  req F-8.3: Several spaces can hold grants for one bot, each reading only its own granted servers.
+
+  req F-8.4: Revoking a grant, or deleting the space, removes it; the space's next read of that server is refused.
+```
+
+```mdl
+feat F-7: Runtime
+
+  req F-7.1: CrawlDiscordChannels runs on EDGE as plugin-discord's bundle in a Dynamic Worker loaded by compute-service's worker loader, not on operation-service.
+
+  req F-7.2: compute-service's invocation scope offers DiscordService and MemoryService to the bundle by service key, each pinned to the invocation's space.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Index a channel with Kai
+  given: a space with no agent and a Discord connection; Kai installed in the DXOS server; the person manages it
+  when: on the Discord connection's page the person indexes the DXOS server and picks #general
+  then:
+    - one Trigger and CrawlState exist, the trigger's input naming Kai's application id and #general, and no AccessToken
+    - the next run puts facts into the space's memory and writes Topics to the space
+```
+
+```mdl
+scenario T-2: A server the space was not granted
+  given: Kai is in the DXOS server and another server; the space was granted the DXOS server only
+  when: a crawl asks fetchMessages for a channel of the other server
+  then:
+    - the bot host refuses it and Discord is not called
+    - the channel is marked errored in the CrawlState with the host's reason
+```
+
+```mdl
+scenario T-3: Another space names the bot
+  given: Kai's bot host owned by space A
+  when: a crawl in space B calls fetchMessages naming space A
+  then:
+    - compute-service refuses the call before it reaches the bot host
+```
+
+```mdl
+scenario T-5: A person who does not manage the server
+  given: Kai is in a server where the signed-in person is a member without Manage Server
+  when: they ask to index it
+  then:
+    - EDGE refuses the grant and the server's channels are not listed
+```
+
+```mdl
+scenario T-4: Stop indexing
+  given: a back-index with one channel
+  when: the person toggles Index off on that channel
+  then:
+    - the trigger is disabled, with no channels
+    - the CrawlState is kept
+```
+
+## QA
+
+```mdl
+test QA-1: Index the DXOS server, query its memory, and have the agent report on it
+  desc: End to end on local Composer and EDGE — from a space holding only its Discord connection, the person indexes DXOS channels, the crawl runs on EDGE, the facts are queried in Brain's Memory view, and the agent turns them into sheets with charts, a deck and a summary.
+  actors: human, agent
+  status: unverified
+  given:
+    - a space whose only Discord data is the Discord sign-in connection and its token, with the space memory cleared
+    - Kai installed in the DXOS server, and the space granted it (DXOS shows as indexed)
+    - the Discord, Brain, Sheet, Presenter and Markdown plugins enabled, with a live model
+  steps:
+    - name: Pick the channels
+      do: On the Discord connection's page, select DXOS and turn on general, announcements, sdk, composer, help and interesting.
+      expect: each channel shows as indexed, and the back-index settings appear with "Not run yet."
+    - name: Crawl back a year
+      do: Set Crawl back to 365 days.
+      expect: the trigger's input carries a 365-day window
+    - name: Run the crawl on EDGE
+      do: Click Check now and wait for the runs to finish.
+      expect: the trace shows "Crawl Discord channels" running on EDGE, and the totals line counts the messages read
+    - name: Query the memory
+      do: Open Brain's Memory view and run a SPARQL query over the facts.
+      expect: the statement count is above the seed vocabulary, and the query returns rows from the crawl
+    - name: Ask for findings
+      do: In a new chat, ask the agent to find the five most interesting things in its memory of the DXOS server and build a sheet with a chart for each, a deck of the charts and a markdown summary.
+      expect: the agent queries the memory, then creates five sheets with charts, a presentation and a document
+    - name: Open the deck and a finding
+      do: Open the presentation, then one of the sheets.
+      expect: a cover slide and one slide per chart; the sheet holds the rows the agent queried, with its chart
+  note: What the findings are, and their titles and charts, are the model's, so they differ from take to take.
+```
+
+## Changelog
+
+```mdl
+decision D-1: The plugin's back-index runs pipeline-discord's DiscordPipeline with the same stages as the CLI, with different dependencies injected. Its crawl state is an ECHO object, and it will eventually write into the space's memory service.
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-2]
+```
+
+```mdl
+decision D-2: The Pipeline panel takes the back-index's state from its ECHO objects.
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-6]
+```
+
+```mdl
+decision D-3: Extraction is set up the way agents are: install Composer's Discord bot (Kai) in the server from the Discord companion. The crawl and ConfigureBackIndex take the bot's application id and, for a bot that is not Kai, its access token, as BindChannel does, in place of a Connection. The crawl reads Discord through discord-service, which adds Kai's token. The companion gets a per-channel choice to index that calls ConfigureBackIndex.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1, F-3, F-4, BackIndexInput, ConfigureBackIndex, CrawlDiscordChannels]
+  why: A space then holds no token for Kai, and indexing is one more choice next to connecting a channel to the agent.
+  rejected: A bot token pasted into a Connection, which puts a bot token in every space that indexes.
+```
+
+```mdl
+decision D-4: Approve [D-3].
+  date: 2026-11-18
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-5: Kai's token is not exposed to operations; discord-service exposes a semantic source for the pipeline rather than a passthrough of Discord API requests.
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-3, F-4, DiscordBotService]
+```
+
+```mdl
+decision D-6: The source is two calls, listChannels and fetchMessages, answering Discord's message fields trimmed to what the crawl maps, and scoped to the servers in which the space has connected a channel. Fills in [D-5].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1, F-3.2, F-3.3, F-4.3, DiscordMessage, DiscordSourceChannel]
+  why: These are the only two Discord reads the crawler's Source makes. Scoping by connected servers stops an owning space from reading every server the shared Kai app is in.
+  rejected: A GET-only passthrough checked against the space, which lets the owning space read any guild, member list or user Kai can see.
+```
+
+```mdl
+decision D-7: compute-service refuses a source call whose bot names a space other than the invocation's. Fills in [D-5].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5]
+  why: The space in the call is the caller's to write; without the check a bundle in one space reads as another space's bot.
+```
+
+```mdl
+decision D-8: A refused source call marks the channel as errored with the host's reason, and removing the last indexed channel disables the trigger rather than deleting the back-index. Fills in [D-3].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3, F-5.2]
+  why: The crawler isolates a failed target so the others continue; keeping the CrawlState lets re-indexing resume from its cursors.
+```
+
+```mdl
+question Q-1: Kai's bot host serves one owner space per EDGE environment. How do other spaces index through Kai?
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.4, F-1.4]
+  options:
+    - Owner only: one space per environment indexes through Kai; others bring their own bot and token.
+    - Per-guild owners: the bot host keys ownership by server, so each server belongs to the space that connected it.
+```
+
+```mdl
+decision D-9: The crawl's only Discord dependency is DiscordService, and it depends on MemoryService: it writes facts with MemoryService.put instead of to a fact feed.
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-2.2, F-2.3, F-3.1, DiscordService, CrawlDiscordChannels, ConfigureBackIndex, BackIndexInput]
+```
+
+```mdl
+decision D-10: DiscordService is a service of its own carrying only listChannels and fetchMessages, apart from the bot's act and findMembers; the back-index keeps no fact feed, so ConfigureBackIndex creates only the trigger and CrawlState. Fills in [D-9].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [DiscordService, F-1.3, F-6.1, ConfigureBackIndex]
+  why: A crawl that can only read channels and messages cannot post or message people even through a bug; a feed nobody reads would only duplicate the memory.
+  rejected: Adding the source calls to DiscordBotService, which hands the crawl the bot's write calls too.
+```
+
+```mdl
+decision D-11: The crawl runs as plugin-discord's bundle under compute-service's worker loader, which gains invocation-scope keys for DiscordService and MemoryService, each pinned to the invocation's space. Fills in [D-9].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.1, F-7.2]
+  why: plugin-discord is routed to bundles, not held on operation-service, and a bundle gets a service only by its key in the invocation scope, which offers no MemoryService today.
+```
+
+```mdl
+decision D-12: The back-index names only the bot's application id, with no access token, and DiscordMessage keeps Discord's own field names (`referenced_message`, `message_reference`). Fills in [D-9].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [BackIndexInput, ConfigureBackIndex, DiscordMessage, F-4.2]
+  why: The bot host already signs with the token its owner space bound it with, so a token reference in the trigger would go unused; Discord's field names let the plugin map a message the same way whether it came from the REST API or the bot host.
+  rejected: Carrying the access token id in every read, which the host would only compare with the one it holds.
+```
+
+```mdl
+decision D-13: The back-index is the space's extraction pipeline: the memory service is the space's, and setting it up needs no agent.
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-1, F-3.2, F-3.4]
+```
+
+```mdl
+decision D-14: A space reads a server under an index grant held on the bot host apart from agent bindings, given only to a person who owns the server or holds Manage Server there, checked against their own Discord sign-in. Reads use the bot's token without the owner or a running gateway. Fills in [D-13].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.2, F-3.4, F-8]
+  why: Holding the read right apart from bindings leaves agent routing untouched and lets several spaces index through the one shared Kai app; checking Manage Server stops a space member from granting their space a server that is not theirs.
+  rejected: Claiming the bot's owner by indexing, which ties extraction to routing and lets only one space index through Kai; a grant per channel, which adds a row and a check for every channel.
+```
+
+```mdl
+decision D-15: Setup lives in a Discord section of space settings, applies each channel toggle at once, and indexes no channel until it is picked. The agent companion keeps routing only. Fills in [D-13].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+  why: The back-index is the space's, so its setup sits with the space; one place to index keeps the agent companion about routing.
+  rejected: A deck companion beside Memory and Pipeline; a batched Apply button; every public channel picked by default.
+```
+
+```mdl
+decision D-16: Approve [D-14] and [D-15].
+  date: 2026-11-18
+  by: user:dmaretskyi
+  answers: Q-1
+```
+
+```mdl
+decision D-17: Discord indexing lives on the Discord connection's page, through a connector section that plugin-connector's connection page offers every connector. Supersedes the setup's place in [D-15].
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-1.1, F-1.2]
+  supersedes: D-15
+```
+
+```mdl
+decision D-18: Only the Discord sign-in connection gets the section; the pasted bot token connection does not. The rest of [D-15] stands: toggles apply at once, no channel is indexed until picked, and the agent companion keeps routing only. Fills in [D-17].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.6]
+  why: The grant check reads the person's own sign-in to see that they manage the server; a bot token cannot show that.
+```
+
+```mdl
+decision D-19: An end-to-end QA test covers the back-index from a space holding only its Discord connection: index DXOS channels, run the crawl, query the memory in Composer, and have the agent turn the DXOS server's memory into artifacts as it did for the Cloudflare Developers Discord.
+  date: 2026-11-19
+  by: user:dmaretskyi
+  affects: [QA-1]
+```

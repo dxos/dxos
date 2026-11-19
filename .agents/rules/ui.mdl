@@ -426,6 +426,33 @@ rule layout-only-wrapper-invisible-to-a11y: A wrapper that exists only for layou
   severity: warn
 ```
 
+```mdl
+rule confirm-in-dialog-notify-in-toast: Confirm with an `AlertDialog` and report outcomes with a toast, never inline
+  Composer has one surface for each: a destructive or irreversible action asks
+  in `AlertDialog` (from `@dxos/react-ui/AlertDialog`, the confirm as an
+  `AlertDialog.Action variant='destructive'`), and the outcome of an action
+  (done, failed, imported N) is a toast through
+  `invokePromise(LayoutOperation.AddToast, { id, title, icon })`. Hand-rolled
+  substitutes break the layout and read differently in every plugin: a button
+  whose label changes to "Are you sure?" on the first click (it widens and pushes
+  the toolbar), a status string rendered into a toolbar or panel, or the
+  browser's `window.confirm`/`alert`. Flag a click handler that arms a confirm
+  state and acts on the second click, a `useState` holding a status or result
+  message rendered as text next to the controls, and any `window.confirm` or
+  `alert` call. Do not flag a persistent status that describes the object's
+  current state (e.g. "75 messages read · last run 11:36") rather than the
+  outcome of a just-taken action, or a validation message beside the field it
+  validates.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  unit: file
+  system-one: on
+  severity: warn
+  question: Does this file confirm an action with an armed button, a label swap, or window.confirm instead of AlertDialog, or show an action's outcome as inline status text instead of a LayoutOperation.AddToast toast?
+```
+
 ## Appendix
 
 ```mdl

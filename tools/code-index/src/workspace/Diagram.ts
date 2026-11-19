@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
-import { Dsl, type Semantic } from '@dxos/diagram';
+import { DSL, type Semantic } from '@dxos/diagram';
 
 /**
  * What a `display.diagram` panel carries: plugin-illustrator's semantic diagram DSL (`.dx`) — the
@@ -38,7 +38,7 @@ const position = (text: string, offset: number): string => {
  * engine had to relax — still draw, so they pass.
  */
 export const check = (source: string): Result.Result<string, Problem> => {
-  const { diagram, problems } = Dsl.read(source);
+  const { diagram, problems } = DSL.read(source);
   const errors = problems.filter((entry) => entry.severity === 'error');
   if (errors.length > 0) {
     return problem(
@@ -59,14 +59,14 @@ export const check = (source: string): Result.Result<string, Problem> => {
 
 /** Every box's `ref`, in declaration order: the IRIs and paths the diagram says it depicts. */
 export const refs = (source: string): string[] =>
-  (Dsl.read(source).diagram?.nodes ?? []).flatMap((node) => (node.ref ? [node.ref] : []));
+  (DSL.read(source).diagram?.nodes ?? []).flatMap((node) => (node.ref ? [node.ref] : []));
 
 /** An edge between two boxes that both name what they depict, by those refs. */
 export type RefEdge = { readonly from: string; readonly to: string; readonly text: string };
 
 /** The edges whose two ends both carry a `ref`, which is what lets an edge be checked against the index. */
 export const refEdges = (source: string): RefEdge[] => {
-  const diagram = Dsl.read(source).diagram;
+  const diagram = DSL.read(source).diagram;
   const refOf = new Map((diagram?.nodes ?? []).flatMap((node) => (node.ref ? [[node.id, node.ref]] : [])));
   return (diagram?.edges ?? []).flatMap((edge) => {
     const from = refOf.get(edge.from.node);
@@ -151,9 +151,9 @@ export const print = ({
   const nodes: Node[] = [...declared, ...implied.map((id) => ({ id }))];
   const node = (entry: Node, indent: string) =>
     [
-      `${indent}node ${Dsl.formatId(entry.id)}`,
-      ...(entry.label !== undefined && entry.label !== entry.id ? [Dsl.formatString(oneLine(entry.label))] : []),
-      ...(entry.ref ? [`ref=${Dsl.formatString(entry.ref)}`] : []),
+      `${indent}node ${DSL.formatId(entry.id)}`,
+      ...(entry.label !== undefined && entry.label !== entry.id ? [DSL.formatString(oneLine(entry.label))] : []),
+      ...(entry.ref ? [`ref=${DSL.formatString(entry.ref)}`] : []),
     ].join(' ');
   // Groups and boxes share one id namespace; a group named like a box is renamed rather than rejected.
   const boxes = new Set(nodes.map((entry) => entry.id));
@@ -169,13 +169,13 @@ export const print = ({
     if (members.length === 0) {
       continue;
     }
-    const label = group.label !== undefined ? ` ${Dsl.formatString(oneLine(group.label))}` : '';
-    lines.push(`group ${Dsl.formatId(group.as)}${label} {`, ...members.map((entry) => node(entry, '  ')), '}');
+    const label = group.label !== undefined ? ` ${DSL.formatString(oneLine(group.label))}` : '';
+    lines.push(`group ${DSL.formatId(group.as)}${label} {`, ...members.map((entry) => node(entry, '  ')), '}');
   }
   lines.push(...nodes.filter((entry) => !entry.group || !grouped.has(entry.group)).map((entry) => node(entry, '')));
   for (const edge of edges) {
-    const label = edge.label ? ` ${Dsl.formatString(oneLine(edge.label))}` : '';
-    lines.push(`edge ${Dsl.formatId(edge.from)} ${edge.relation ?? '->'} ${Dsl.formatId(edge.to)}${label}`);
+    const label = edge.label ? ` ${DSL.formatString(oneLine(edge.label))}` : '';
+    lines.push(`edge ${DSL.formatId(edge.from)} ${edge.relation ?? '->'} ${DSL.formatId(edge.to)}${label}`);
   }
   return lines.join('\n');
 };

@@ -24,7 +24,6 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { AiContext } from '@dxos/assistant';
-import * as MemorySkill from '@dxos/assistant-toolkit/MemorySkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
@@ -314,7 +313,7 @@ const meta = {
                   yield* Effect.promise(() =>
                     binder.use((binder: AiContext.Binder) =>
                       binder.bind({
-                        skills: [Ref.fromURI(Skill.registryURI(workspace ? MemorySkill.key : PlanningSkill.key))],
+                        skills: [Ref.fromURI(Skill.registryURI(PlanningSkill.key))],
                         objects: [Ref.make(chat), ...mentioned.map((object) => Ref.make(object))],
                       }),
                     ),

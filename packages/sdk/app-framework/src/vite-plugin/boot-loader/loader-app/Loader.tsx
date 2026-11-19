@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Component, For, Index, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { type Component, For, Index, Show, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 
 import { type LoaderStore } from './store.ts';
 
@@ -147,6 +147,7 @@ export const Loader: Component<LoaderProps> = (props) => {
 
   // Once host-driven, the brand mark eases grayscale → colour and stays there.
   const isHostDriven = () => props.store.phase() !== 'creep';
+  const isPaused = () => props.store.paused() !== undefined;
 
   return (
     <>
@@ -155,6 +156,7 @@ export const Loader: Component<LoaderProps> = (props) => {
       <div
         id='boot-loader-disc'
         data-host-driven={isHostDriven() ? '' : undefined}
+        data-paused={isPaused() ? '' : undefined}
         style={{ '--boot-loader-mark-filter': props.markFilter }}
       >
         <svg
@@ -163,18 +165,19 @@ export const Loader: Component<LoaderProps> = (props) => {
           aria-hidden='true'
           style={{ '--boot-loader-arc': String(shown()) }}
         >
-          {shown() > 0 ? <path class='boot-loader-ring-progress' d={arc().d} /> : null}
+          {shown() > 0 && !isPaused() ? <path class='boot-loader-ring-progress' d={arc().d} /> : null}
         </svg>
         {/* Leading-edge dot in its own unmasked layer (see `arc()`), so the ring's fade mask
             never clips it. Stacked over `#boot-loader-ring` via the disc grid. */}
-        {shown() > 0 ? (
+        {/* Paused: no progress to show, so the ring goes at once rather than easing back to zero. */}
+        {shown() > 0 && !isPaused() ? (
           <svg id='boot-loader-ring-head' viewBox='0 0 100 100' aria-hidden='true'>
             <circle class='boot-loader-ring-marker' cx={arc().headX} cy={arc().headY} r={MARKER_RADIUS} />
           </svg>
         ) : null}
         {props.markSvg ? <div id='boot-loader-mark' innerHTML={props.markSvg} /> : null}
       </div>
-      <div id='boot-loader-status'>
+      <div id='boot-loader-status' hidden={isPaused()}>
         <div id='boot-loader-status-fade' />
         <div id='boot-loader-status-track' ref={trackRef}>
           <For each={props.store.lines()}>{(line) => <div class='boot-loader-status-line'>{line.text}</div>}</For>
@@ -185,7 +188,7 @@ export const Loader: Component<LoaderProps> = (props) => {
           row needs it. */}
       <svg id='boot-loader-sprite' aria-hidden='true' innerHTML={props.store.sprite()} />
       {/* Activation row: one icon per plugin as it activates, appended monochrome and fading in. */}
-      <div id='boot-loader-plugins' aria-hidden='true'>
+      <div id='boot-loader-plugins' aria-hidden='true' hidden={isPaused()}>
         {/* Inner track: the flex row, translated as one group to keep its centre on the row's; the
             outer element keeps its vertical placement transform and clips. `--n` is the eased count
             the offset is computed from: a new icon lands one gap past the row's end and the row
@@ -214,11 +217,46 @@ export const Loader: Component<LoaderProps> = (props) => {
           <p id='boot-loader-stalled-text'>Still starting after {props.store.elapsedSeconds()}s.</p>
           {/* `on:click`, not `onClick`: Solid delegates `onClick` to a document listener that outlives
               the loader, and its handler pins the app's first click event, and that event's view. */}
-          <button id='boot-loader-stalled-abort' type='button' on:click={() => props.store.onAbort()?.()}>
+          <button
+            id='boot-loader-stalled-abort'
+            class='boot-loader-action'
+            type='button'
+            on:click={() => props.store.onAbort()?.()}
+          >
             Abort and show diagnostics
           </button>
         </div>
       ) : null}
+      {/* Where the status log sat: the loader has stopped, so the message takes the log's place under
+          the disc, and the one action uses the same button as the stalled offer. */}
+      <Show when={props.store.paused()}>
+        {(paused) => (
+          <div id='boot-loader-paused' role='alert'>
+            <p id='boot-loader-paused-title'>{paused().title}</p>
+            <button class='boot-loader-action' type='button' autofocus on:click={() => paused().action.onClick()}>
+              {paused().action.label}
+            </button>
+            <Show when={paused().details?.some((row) => row.value) || paused().note}>
+              <details id='boot-loader-paused-details'>
+                <summary>Details</summary>
+                <dl>
+                  <For each={paused().details?.filter((row) => row.value)}>
+                    {(row) => (
+                      <>
+                        <dt>{row.term}</dt>
+                        <dd>{row.value}</dd>
+                      </>
+                    )}
+                  </For>
+                </dl>
+                <Show when={paused().note}>
+                  <p>{paused().note}</p>
+                </Show>
+              </details>
+            </Show>
+          </div>
+        )}
+      </Show>
     </>
   );
 };

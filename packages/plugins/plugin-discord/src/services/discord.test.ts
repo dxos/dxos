@@ -4,6 +4,7 @@
 
 import { DiscordREST } from 'dfx';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
@@ -44,6 +45,26 @@ describe('DiscordHttp', () => {
         return yield* rest.listMessages('c1', { limit: 5 });
       }).pipe(Effect.provide(makeDiscordUserLayerFromToken('user-token').pipe(Layer.provide(http.layer)))),
     );
+    expect(http.requests[0].headers.authorization).toBe('Bearer user-token');
+  });
+
+  test("a caller's own fetch does not replace the Discord transport", async ({ expect }) => {
+    const http = recordingHttp([]);
+    const callerFetches: string[] = [];
+    const callerFetch: typeof globalThis.fetch = async (input) => {
+      callerFetches.push(String(input));
+      return new Response('{"message": "401: Unauthorized", "code": 0}', { status: 401 });
+    };
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const rest = yield* DiscordREST;
+        return yield* rest.listMessages('c1', { limit: 5 });
+      }).pipe(
+        Effect.provide(makeDiscordUserLayerFromToken('user-token').pipe(Layer.provide(http.layer))),
+        Effect.provideService(FetchHttpClient.Fetch, callerFetch),
+      ),
+    );
+    expect(callerFetches).toEqual([]);
     expect(http.requests[0].headers.authorization).toBe('Bearer user-token');
   });
 });

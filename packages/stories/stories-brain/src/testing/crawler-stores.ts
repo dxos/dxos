@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { AgentRegistry, StateStore } from '@dxos/crawler';
 import { DXN } from '@dxos/keys';
-import { ExtractedQuestionStore, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
+import { MessageStore, QuestionStore } from '@dxos/pipeline-discord';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 /**
@@ -22,18 +22,13 @@ export type CrawlerStoreServices =
   | StateStore.StateStore
   | AgentRegistry.AgentRegistry
   | MessageStore.MessageStore
-  | QuestionStore.QuestionStore
-  | ExtractedQuestionStore.ExtractedQuestionStore;
+  | QuestionStore.QuestionStore;
 
 /** All crawler stores (minus `FactStore`) over one shared in-memory wasm SQLite client. */
 const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>
-  Layer.mergeAll(
-    StateStore.layerSql,
-    AgentRegistry.layerSql,
-    MessageStore.layerSql,
-    QuestionStore.layerSql,
-    ExtractedQuestionStore.layerSql,
-  ).pipe(Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)));
+  Layer.mergeAll(StateStore.layerSql, AgentRegistry.layerSql, MessageStore.layerSql, QuestionStore.layerSql).pipe(
+    Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)),
+  );
 
 /**
  * A long-lived runtime over the crawler stores. Modules run a crawl program through it after

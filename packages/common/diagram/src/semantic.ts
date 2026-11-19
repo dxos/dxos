@@ -44,10 +44,11 @@ export type Pin = ({ kind: 'point'; x: number; y: number } | { kind: 'cell'; col
 /**
  * What a diagram depicts, which picks its layout: `structure` places boxes on the grid, `sequence`
  * draws participants as columns and messages as rows in source order, `dataflow` places processes,
- * stores and external entities on the grid like `structure`.
+ * stores and external entities on the grid like `structure`, and `grid` places nothing by search: every group
+ * is a grid of tracks and each member takes the next cell, so the source order is the layout.
  */
-export type DiagramKind = 'structure' | 'sequence' | 'dataflow';
-export const DIAGRAM_KINDS: readonly DiagramKind[] = ['structure', 'sequence', 'dataflow'];
+export type DiagramKind = 'structure' | 'sequence' | 'dataflow' | 'grid';
+export const DIAGRAM_KINDS: readonly DiagramKind[] = ['structure', 'sequence', 'dataflow', 'grid'];
 
 /** What a node stands for: `actor` in a sequence diagram; `process`, `store` or `external` in a data-flow diagram. */
 export type Role = 'actor' | 'process' | 'store' | 'external';
@@ -58,7 +59,39 @@ export const ROLES_BY_KIND: Readonly<Record<DiagramKind, readonly Role[]>> = {
   structure: [],
   sequence: ['actor'],
   dataflow: ['process', 'store', 'external'],
+  grid: [],
 };
+
+/** A track list as a grid states it: a count (`3`) or a list of shares, content sizes and extents (`"1fr auto 2fr"`). */
+export type Tracks = number | string;
+
+/** The rule a grid diagram's container places its members by; an axis with no tracks takes one per member. */
+export type GridRule = {
+  cols?: Tracks;
+  rows?: Tracks;
+  gap?: number;
+  padding?: number;
+  /** The size of every track an axis does not state, so a run of members comes out one size. */
+  autoCols?: Tracks;
+  autoRows?: Tracks;
+  /** Where the tracks sit when they leave space over. */
+  justifyContent?: Shape.Place;
+  alignContent?: Shape.Place;
+  /** `pack` places the members as circles packed into the frame, where the tracks say nothing. */
+  layout?: Shape.Layout;
+  packSeed?: number;
+  packMin?: number;
+  packMax?: number;
+};
+
+/** A scalar a component's own field may hold, which is all the text form spells. */
+export type Scalar = string | number | boolean;
+
+/**
+ * A row of a component's content, in the order written: its text and the row's own fields (`icon=database`). A row
+ * is the component's to draw and is not a node: nothing places it, and it has no id.
+ */
+export type Item = { text: string; data?: Record<string, Scalar> };
 
 export type Node = {
   id: string;
@@ -72,12 +105,49 @@ export type Node = {
   color?: Shape.Color;
   fill?: Shape.Fill;
   stroke?: Shape.Stroke;
+  /** Whether the box draws its border. Only a grid diagram reads it: the other kinds draw every node's. */
+  border?: boolean;
+  /**
+   * The size the node keeps in the cell its group gives it, in scene units; an axis left out fills the cell. In a
+   * packed group the larger is the diameter of its circle. Only a grid diagram reads them.
+   */
+  width?: number;
+  height?: number;
+  /** The component the node places (`kind=card`), which a host that knows it draws instead of a plain box. */
+  type?: string;
+  /** That component's own fields. */
+  data?: Record<string, Scalar>;
+  /** The rows the component lists, written in braces after the node. Only a grid diagram reads them. */
+  items?: readonly Item[];
+  /** Whether the source wrote a label; a component with none draws no text, where a plain box falls back to its id. */
+  labelled?: boolean;
   range: Range;
 };
 
 export type Group = {
   id: string;
   label: string;
+  /** The label as written; a grid diagram draws a heading over the group only when there is one. */
+  heading?: string;
+  /** The group this one is written inside. Only a grid diagram nests; the other kinds report it. */
+  parent?: string;
+  /** Column and row tracks and the padding inside the frame; `gap` is the space between two cells there. */
+  cols?: Tracks;
+  rows?: Tracks;
+  padding?: number;
+  autoCols?: Tracks;
+  autoRows?: Tracks;
+  justifyContent?: Shape.Place;
+  alignContent?: Shape.Place;
+  /** `pack` places the members as circles packed into the frame, where the tracks say nothing. */
+  layout?: Shape.Layout;
+  packSeed?: number;
+  packMin?: number;
+  packMax?: number;
+  /** The frame a grid diagram draws round the members; the other kinds colour a group from their palette. */
+  fill?: Shape.Fill;
+  stroke?: Shape.Stroke;
+  border?: boolean;
   relations: Relation[];
   /** Extra clear space, in scene units, between this group and the groups it is placed relative to. */
   gap?: number;
@@ -92,8 +162,11 @@ export type Group = {
 /** One coordinate or both; `cell` units are grid cells, where `n.5` is the channel after cell `n`. */
 export type Waypoint = { x?: number; y?: number; unit: 'scene' | 'cell'; range: Range };
 
-/** One end of an edge; `soft` makes its sides a preference the router weighs instead of a rule. */
-export type End = { node: string; sides?: readonly Side[]; soft?: boolean; range: Range };
+/**
+ * One end of an edge; `soft` makes its sides a preference the router weighs instead of a rule. `part` is what the
+ * source wrote after the node's id (`/region` or `#port`), which names a place on a component only its host knows.
+ */
+export type End = { node: string; part?: string; sides?: readonly Side[]; soft?: boolean; range: Range };
 
 /**
  * Relationship words an edge may use in place of `->`, each naming the scene relation it draws.
@@ -139,6 +212,8 @@ export type EdgeStyle = {
   relation?: Shape.Relation;
   head?: Shape.ArrowHead;
   tail?: Shape.ArrowTail;
+  /** How the connector runs between its ends. Only a grid diagram reads it: the other kinds route their own. */
+  path?: Shape.Path;
   stroke?: Shape.Stroke;
   color?: Shape.Color;
 };
@@ -222,6 +297,15 @@ export type Diagram = {
   box?: Size;
   /** Preferred width over height of the whole drawing. */
   aspect?: number;
+  /** A grid diagram's frame, which its outermost tracks divide. */
+  size?: Size;
+  /** A grid diagram's outermost rule. */
+  rule?: GridRule;
+  /**
+   * The nodes and groups each container holds, in source order, keyed by group id with `ROOT` for the diagram. A
+   * grid fills its cells in this order, which the separate `nodes` and `groups` lists cannot give back.
+   */
+  members?: Map<string, string[]>;
   nodes: Node[];
   groups: Group[];
   edges: Edge[];
@@ -233,6 +317,9 @@ export type Diagram = {
   timeline: Step[];
 };
 
+/** The key of the diagram's own members in {@link Diagram.members}; no id can be empty. */
+export const ROOT = '';
+
 export const empty = (): Diagram => ({
   kind: 'structure',
   flow: 'down',
@@ -243,6 +330,7 @@ export const empty = (): Diagram => ({
   busLabels: new Map(),
   hinted: false,
   timeline: [],
+  members: new Map(),
 });
 
 /** The key edges share a trunk under. */

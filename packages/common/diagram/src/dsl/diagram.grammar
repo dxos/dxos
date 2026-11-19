@@ -103,7 +103,11 @@ Compact { kw<"compact"> }
 GroupBody { "{" (NodeDecl | EdgeDecl | GroupDecl)* "}" }
 
 // node <id> ["label"] [@ x,y | @cell(c,r)] [~]<relation> <node> … [ref=…] [color=…] [shape=…]
-NodeDecl { kw<"node"> Id Label? (Pin | Relation | Attribute)* }
+// A node may end in braces holding the rows its component lists: `node types kind=card { item "Effect Schema" }`.
+// A row is content, not a node: it has a label and its own attributes, and no id.
+NodeDecl { kw<"node"> Id Label? (Pin | Relation | Attribute)* ItemBody? }
+ItemBody { "{" ItemDecl* "}" }
+ItemDecl { ckw<"item"> Label Attribute* }
 
 // `@ x,y` is exact, in scene units; `@cell(c,r)` names a grid cell.
 Pin { "@" (Point | CellRef) }
@@ -150,6 +154,8 @@ Body { "{" Element* "}" }
 
 Element {
   BoxElement |
+  CustomElement |
+  GridElement |
   CircleElement |
   PathElement |
   ArcElement |
@@ -158,12 +164,25 @@ Element {
   PortalElement
 }
 
-BoxElement    { BoxKind Id Point Size Label? Attribute* }
+// The origin and the size are optional: inside a grid they are the grid's to decide, and stating them there
+// would be noise that the next solve overwrites. Absent, they are 0 — which a track reads as "share what is left".
+BoxElement    { BoxKind Id Point? Size? Label? Attribute* }
+// A box a contributed component draws (`custom s0 kind=graph`): the keyword says the box is not one of the shapes,
+// and `kind=` names what draws it. Contextual, as `grid` is, so an id may still be called `custom`.
+CustomElement { ckw<"custom"> Id Point? Size? Label? Attribute* ItemBody? }
+// A grid holds what it places, in braces. Containment is then structural: there is no naming a parent that does
+// not exist, no cycle to detect, and the cell a child lands in is the order it is written in — all three of which
+// a `parent=` attribute leaves representable and needing code to catch.
+GridElement   { ckw<"grid"> Id Point? Size? Label? Attribute* GridBody? }
+GridBody      { "{" Element* "}" }
 CircleElement { kw<"circle"> Id Point Number Label? Attribute* }
 PathElement   { PathKind Id Point Point+ Attribute* }
 ArcElement    { kw<"arc"> Id Point Number Range Attribute* }
 TextElement   { kw<"text"> Id Point Label Attribute* }
-ArrowElement  { kw<"arrow"> Id Connection Label? Attribute* }
+// `via` gives the arrow its own bends, in scene units, the way a semantic edge states waypoints. A connector a
+// person or a layout routed by hand had no spelling at all before: the route lived on the record and was lost
+// the moment the drawing was written down.
+ArrowElement  { kw<"arrow"> Id Connection Label? (Via | Attribute)* }
 PortalElement { kw<"portal"> Id Point Size Label? Attribute* }
 
 BoxKind  { kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> }

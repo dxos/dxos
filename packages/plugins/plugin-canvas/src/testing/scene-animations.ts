@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { type ExemplarName, EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj, Ref } from '@dxos/echo';
 import * as Animation from '@dxos/plugin-animator/Animation';
@@ -52,7 +52,7 @@ const SCRIPTS: Record<ExemplarName, Animation.Beat[]> = {
 
 /** One shot over an exemplar scene stored as ECHO objects, scripted by `SCRIPTS`. */
 export const makeExemplarAnimation = (name: ExemplarName): Animation.Animation => {
-  const { root } = toEcho(Dsl.readScenes(EXEMPLARS[name]).document);
+  const { root } = toEcho(DSL.readScenes(EXEMPLARS[name]).document);
   const shot: Animation.Shot = { ...Animation.makeShot(Ref.make(root), DURATION), script: SCRIPTS[name] };
   return Obj.make(Animation.Animation, { name, fps: 30, shots: [shot] });
 };

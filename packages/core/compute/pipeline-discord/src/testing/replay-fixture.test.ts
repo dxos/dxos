@@ -29,8 +29,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 
 import { replayStream } from '../replay.ts';
-import { extractQuestionsStage } from '../stages/index.ts';
-import { ExtractedQuestionStore, MessageStore } from '../stores/index.ts';
+import { extractQuestionsStage, listQuestions } from '../stages/index.ts';
+import { MessageStore } from '../stores/index.ts';
 import { storesLayer } from './index.ts';
 
 const fixturePath =
@@ -41,7 +41,7 @@ describe('replay over the crawled SQLite fixture', () => {
   test.skipIf(!enabled)(
     'extracts user-question tuples from the stored working set, idempotently',
     async ({ expect, onTestFinished }) => {
-      // Work on a copy: the replay writes extracted_question rows and the fixture must stay pristine.
+      // Work on a copy: the replay writes to the working set and the fixture must stay pristine.
       const workingCopy = join(tmpdir(), `dxos-crawl-fixture-${process.pid}-${Date.now()}.db`);
       copyFileSync(fixturePath, workingCopy);
       onTestFinished(() => rmSync(workingCopy, { force: true }));
@@ -61,11 +61,11 @@ describe('replay over the crawled SQLite fixture', () => {
 
           const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
           yield* replay;
-          const questions = yield* ExtractedQuestionStore.list();
+          const questions = yield* listQuestions();
 
           // Idempotency: a second full replay adds nothing.
           yield* replay;
-          const again = yield* ExtractedQuestionStore.list();
+          const again = yield* listQuestions();
 
           return { stored, targets, agents, asked, questions, again };
         }).pipe(Effect.provide(layer)),
@@ -81,7 +81,7 @@ describe('replay over the crawled SQLite fixture', () => {
       const clip = (text: string) => (text.length > 80 ? `${text.slice(0, 77)}…` : text);
       for (const question of result.questions) {
         console.log(
-          `  (${question.authorLabel ?? question.authorId} × ${question.targetId} × ${question.messageId})\n    ${clip(question.question)}`,
+          `  (${question.agentLabel ?? question.agent} × ${question.source})\n    ${clip(question.question)}`,
         );
       }
 
@@ -95,9 +95,8 @@ describe('replay over the crawled SQLite fixture', () => {
       // fixture needs a DISCORD_TOKEN, which a checkout does not have.
       expect(result.questions.length).toBeGreaterThanOrEqual(result.asked > 0 ? 1 : 0);
       for (const question of result.questions) {
-        expect(question.authorId.length).toBeGreaterThan(0);
-        expect(question.targetId.length).toBeGreaterThan(0);
-        expect(question.messageId.length).toBeGreaterThan(0);
+        expect(question.agent?.length).toBeGreaterThan(0);
+        expect(question.source.length).toBeGreaterThan(0);
         expect(question.question.endsWith('?')).toBe(true);
       }
       expect(result.again.length).toBe(result.questions.length);

@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { Dsl, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
+import { DSL, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
 import { Collection, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -185,7 +185,7 @@ describe('convert', () => {
 
   test('binds each laid-out arrow end to the box it touches', async ({ expect }) => {
     const { commands } = await EffectEx.runPromise(
-      Dsl.compile('group g {\n  node A\n  node B\n}\nnode C\nedge A -> B\nedge B -> C\n'),
+      DSL.compile('group g {\n  node A\n  node B\n}\nnode C\nedge A -> B\nedge B -> C\n'),
     );
     const objects = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
     const arrows = bindArrowEnds(objects).flatMap(({ elements }) =>
