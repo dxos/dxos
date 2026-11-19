@@ -48,7 +48,9 @@ describe('SpaceOperation.QueryTypes', () => {
         expect(result.notFound).toEqual(['org.dxos.type.document']);
         expect(result.hint).toContain("Skill Manager's queryTypes");
 
-        const found = yield* Operation.invoke(SpaceOperation.QueryTypes, { typenames: ['com.example.type.testObject'] });
+        const found = yield* Operation.invoke(SpaceOperation.QueryTypes, {
+          typenames: ['com.example.type.testObject'],
+        });
         expect(found.notFound).toBeUndefined();
       },
       Effect.provide(TestLayer),

@@ -5,8 +5,8 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
-import { ABRIDGED_UNION, type FieldDescription, type TypeDescription, renderFields } from '@dxos/assistant/Describe';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
+import { ABRIDGED_UNION, type FieldDescription, type TypeDescription, renderFields } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
