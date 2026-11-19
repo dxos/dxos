@@ -1,15 +1,15 @@
-diagram kind=grid size=1600x880 cols="506 241 755" gap=32 padding=16 autoRows=744 alignContent=center
+diagram kind=grid size=1600x880 cols="498 237 767" gap=32 padding=16 autoRows=744 alignContent=center
 
 group client-section cols=2 gap=8 padding=8 border=true {
   group client-col rows=3 gap=16 {
-    node client "Client" kind=card icon=browser {
+    node client "Client" kind=card icon=browser iconTone=teal {
       item "Composer app tab"
       item "Plugins and surfaces"
     }
     group client-rest { }
   }
   group worker-col rows=3 gap=16 {
-    node worker "Worker" kind=card icon=cpu {
+    node worker "Worker" kind=card icon=cpu iconTone=teal {
       item "Shared by every tab"
       item "Local replica in SQLite"
     }
@@ -20,7 +20,7 @@ group client-section cols=2 gap=8 padding=8 border=true {
 group router-section rows="8 1fr 8" {
   group router-above { }
   group router-col rows=3 gap=16 {
-    node router "Router" kind=card icon=arrows-left-right {
+    node router "Router" kind=card icon=arrows-left-right iconTone=rose {
       item "Routes clients"
       item "Routes spaces"
     }
@@ -29,9 +29,9 @@ group router-section rows="8 1fr 8" {
   group router-below { }
 }
 
-group edge-section cols="241 1fr" gap=8 padding=8 border=true {
+group edge-section cols="237 1fr" gap=32 padding=8 border=true {
   group registry-col rows=3 gap=16 {
-    node registry "ServiceRegistry" kind=card icon=plugs-connected {
+    node registry "ServiceRegistry" kind=card icon=plugs-connected iconTone=sheet {
       item "Resolves services by tag"
       item "ECHO, AI, identity, blobs"
     }
