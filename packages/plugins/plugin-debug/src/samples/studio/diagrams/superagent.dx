@@ -10,18 +10,18 @@ group inbound-body gap=24 {
 
 group agents-body gap=24 {
   group agents-col-0 gap=16 autoRows=176 alignContent=center {
-    node triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=ink
-    node planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=ink
+    node triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=violet
+    node planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=sheet
   }
 }
 
 group subagents-body gap=24 {
   group subagents-col-0 gap=16 autoRows=144 alignContent=center {
-    node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot
-    node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot
-    node summary "Summarize" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot
-    node calendar "Email" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot
-    node travel "Travel" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot
+    node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=violet
+    node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=violet
+    node summary "Summarize" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=violet
+    node calendar "Email" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot tone=sheet
+    node travel "Travel" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot tone=sheet
   }
 }
 
