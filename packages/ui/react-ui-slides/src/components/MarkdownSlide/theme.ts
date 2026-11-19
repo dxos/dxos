@@ -2,6 +2,28 @@
 // Copyright 2026 DXOS.org
 //
 
+// A card's icon and title share one row. The icon is one title line tall (56px at `leading-tight`), so it stands on
+// the first line of a title that wraps, and the title gives its own padding up to the row.
+const cardHeader = 'flex items-start gap-6 [&>:is(h1,h2,h3)]:p-0 [&>:is(h1,h2,h3)]:min-w-0';
+const cardIcon = 'shrink-0 size-[70px] text-(color:--slide-accent)';
+
+// A card's bullets, in the card's own text. Each marker is drawn in a column of its own rather than hung outside
+// the list, so it stays inside the card's padding: at the title's start edge, or centred under the icon, where the
+// text then starts under the title (the icon's 70px and the row's 24px gap).
+const cardList =
+  'flex flex-col gap-2 list-none text-[32px] leading-snug opacity-80 [counter-reset:slide-card-item] ' +
+  '[--slide-card-indent:38px] [--slide-card-marker:38px] [--slide-card-marker-align:start] ' +
+  '[[data-icon]>&]:[--slide-card-indent:94px] [[data-icon]>&]:[--slide-card-marker:70px] ' +
+  '[[data-icon]>&]:[--slide-card-marker-align:center]';
+const cardItem =
+  'relative ps-(--slide-card-indent) [counter-increment:slide-card-item] ' +
+  'before:absolute before:start-0 before:w-(--slide-card-marker) ' +
+  'before:[text-align:var(--slide-card-marker-align)] ' +
+  "[ul>&]:before:content-['•'] [ol>&]:before:content-[counter(slide-card-item)_'.'] " +
+  // A list or a paragraph inside an item is already indented by it, so it drops the padding and the dimming the
+  // card gives the same tag at its top level.
+  '[&>:is(ul,ol)]:p-0! [&>:is(ul,ol)]:mt-2 [&>:is(ul,ol)]:opacity-100 [&>p]:p-0! [&>p]:opacity-100';
+
 // The tracks a grid child covers. The counts are reset on the child itself rather than left to the `var()`
 // fallbacks: a custom property inherits, so a child inside a child would otherwise cover the tracks of the one
 // around it. An inline `colSpan`/`rowSpan` outranks the reset.
@@ -185,9 +207,9 @@ export const theme = {
       },
     },
 
-    // A card is a filled surface holding art, a title and a line or two: the brand's own card. The art fills the box:
-    // its scale stays even across cards of different widths because each card crop (`brand/backgrounds/cards/`) carries
-    // a window of the same height, not because of anything the card does.
+    // A card is a filled surface holding art or an icon, a title, and a line or a few bullets: the brand's own card.
+    // The art fills the box: its scale stays even across cards of different widths because each card crop
+    // (`brand/backgrounds/cards/`) carries a window of the same height, not because of anything the card does.
     card: {
       default: {
         card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ${span}`,
@@ -196,6 +218,10 @@ export const theme = {
         h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
+        header: `px-10 pt-8 ${cardHeader}`,
+        icon: cardIcon,
+        list: `px-10 pb-8 pt-4 last:pb-10 ${cardList}`,
+        li: cardItem,
       },
       outline: {
         card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ${span}`,
@@ -210,6 +236,10 @@ export const theme = {
           'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
           'text-balance',
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
+        header: `px-10 pt-8 ${cardHeader}`,
+        icon: cardIcon,
+        list: `px-10 pb-8 pt-4 last:pb-10 ${cardList}`,
+        li: cardItem,
       },
       // No surface of its own: the art and the text sit straight on the slide, for a grid that is all pictures.
       plain: {
@@ -219,6 +249,10 @@ export const theme = {
         h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         h3: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         p: 'pt-4 text-[32px] leading-snug opacity-80 [&:has(>img)]:contents',
+        header: `pt-8 ${cardHeader}`,
+        icon: cardIcon,
+        list: `pt-4 ${cardList}`,
+        li: cardItem,
       },
     },
     table: {

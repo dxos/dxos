@@ -158,6 +158,105 @@ export const CardVariants: Story = {
   },
 };
 
+/** One icon card: a Phosphor glyph named by `icon`, a title, and the bullets under it. */
+const iconCard = (attributes: string, title: string, ...bullets: string[]) =>
+  [`<Card ${attributes}>`, '', `### ${title}`, '', ...bullets.map((bullet) => `- ${bullet}`), '', '</Card>'].join('\n');
+
+/**
+ * A row of cards with an icon in place of art: `icon` names a Phosphor glyph, which stands with the title as one
+ * header and takes the card's `tone`, and the bullets are set in the card's own text under the title. The deck's font
+ * here is Space Grotesk, whose widths are not the default mono's.
+ */
+export const IconCards: Story = {
+  render: (props: MarkdownSlideProps) => (
+    <SlideThemeProvider settings={{ font: 'space-grotesk' }}>
+      <TestContainer {...props} />
+    </SlideThemeProvider>
+  ),
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# Problems',
+      '',
+      '<Grid cols="3">',
+      '',
+      iconCard('icon="brain" tone="warning"', 'Shared Memory', 'Beyond silos', 'One graph for people and agents'),
+      iconCard('icon="shield-check"', 'Access and Authorization', 'Delegation', 'Policy and auditing'),
+      iconCard(
+        'icon="users-three" tone="success"',
+        'Coordination and Collaboration',
+        'Rethinking the User Interface',
+        'Agents as peers',
+        'Shared context',
+      ),
+      '',
+      '</Grid>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, 'article[data-icon] header svg');
+    const cards = [...canvasElement.querySelectorAll('article')];
+    const rects = cards.map((card) => card.getBoundingClientRect());
+
+    // 1. Three cards of one size, whatever each holds: the third has a longer title and a bullet more.
+    await expect(cards).toHaveLength(3);
+    for (const rect of rects.slice(1)) {
+      await expect(rect.width).toBeCloseTo(rects[0].width, 0);
+      await expect(rect.height).toBeCloseTo(rects[0].height, 0);
+      await expect(rect.top).toBeCloseTo(rects[0].top, 0);
+    }
+
+    // 2. Each card's icon and title are one header: the glyph the card names, then the title beside it.
+    const headers = await Promise.all(
+      cards.map(async (card) => ({
+        card,
+        icon: await query(card, 'header svg'),
+        title: await query(card, 'header h3'),
+      })),
+    );
+    await expect(headers.map(({ icon }) => icon.getAttribute('data-icon'))).toEqual([
+      'ph--brain--regular',
+      'ph--shield-check--regular',
+      'ph--users-three--regular',
+    ]);
+    for (const { icon, title } of headers) {
+      // The icon is one title line tall and stands on the title's first line, at the card's padding.
+      await expect(getComputedStyle(title).fontSize).toBe('56px');
+      await expect(getComputedStyle(icon).height).toBe(getComputedStyle(title).lineHeight);
+      await expect(icon.getBoundingClientRect().top).toBeCloseTo(title.getBoundingClientRect().top, 0);
+      await expect(icon.getBoundingClientRect().right).toBeLessThan(title.getBoundingClientRect().left);
+    }
+
+    // 3. The icon takes the card's tone; a card with none keeps the deck's accent.
+    await expect(cards.map((card) => card.dataset.tone)).toEqual(['warning', undefined, 'success']);
+    await expect(new Set(headers.map(({ icon }) => getComputedStyle(icon).color)).size).toBe(3);
+
+    // 4. The bullets are the card's own: its text size rather than the slide's, each marker drawn inside the card
+    // under the icon, and the text starting where the title does.
+    for (const { card, icon, title } of headers) {
+      const items = [...card.querySelectorAll('li')];
+      await expect(items.length).toBeGreaterThanOrEqual(2);
+      for (const item of items) {
+        const style = getComputedStyle(item);
+        const marker = getComputedStyle(item, '::before');
+        const box = item.getBoundingClientRect();
+        // The slide is scaled to fit the story, so a computed length is converted to the screen's pixels.
+        const scale = box.width / item.offsetWidth;
+        await expect(style.fontSize).toBe('32px');
+        await expect(marker.content).toBe('"•"');
+        await expect(marker.textAlign).toBe('center');
+        await expect(box.left).toBeCloseTo(icon.getBoundingClientRect().left, 0);
+        await expect(parseFloat(marker.width) * scale).toBeCloseTo(icon.getBoundingClientRect().width, 0);
+        await expect(box.left + parseFloat(style.paddingLeft) * scale).toBeCloseTo(
+          title.getBoundingClientRect().left,
+          0,
+        );
+        await expect(box.right).toBeLessThanOrEqual(card.getBoundingClientRect().right);
+      }
+    }
+  },
+};
+
 /** `<List variant>` styles a markdown list without changing what it is: numbered cards beside outlined claims. */
 export const ListVariants: Story = {
   args: {
