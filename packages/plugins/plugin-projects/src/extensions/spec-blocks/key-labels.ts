@@ -135,11 +135,13 @@ export const guards = (state: EditorState): Guard[] => {
  * Whether a change breaks a guard without removing all of what it keeps: it edits inside the guard, writes on a keyed
  * line's start or joins that line to the one above, or extends a referenced key at either end.
  */
-const breaks = (guard: Guard, from: number, to: number, inserted: string) => {
+const breaks = (state: EditorState, guard: Guard, from: number, to: number, inserted: string) => {
   const inside = from === to ? from > guard.from && from < guard.to : from < guard.to && to > guard.from;
   // Ends at a keyed line's start without leaving a line break there: text before the line, or a join with the one above.
+  const keepsBreak =
+    inserted.endsWith('\n') || (inserted === '' && (from === 0 || state.doc.sliceString(from - 1, from) === '\n'));
   const atLineStart =
-    guard.item?.entry !== undefined && to === guard.from && (from < to || inserted !== '') && !inserted.endsWith('\n');
+    guard.item?.entry !== undefined && to === guard.from && (from < to || inserted !== '') && !keepsBreak;
   const extended =
     guard.item === undefined &&
     ((to === guard.from && TOKEN_END.test(inserted)) || (from === guard.to && TOKEN_START.test(inserted)));
@@ -162,7 +164,7 @@ const keepKeys = EditorState.transactionFilter.of((transaction: Transaction) => 
   const kept = guards(startState);
   let broken = false;
   transaction.changes.iterChanges((from, to, _fromB, _toB, inserted) => {
-    broken ||= kept.some((guard) => breaks(guard, from, to, inserted.toString()));
+    broken ||= kept.some((guard) => breaks(startState, guard, from, to, inserted.toString()));
   });
   return broken ? [] : transaction;
 });

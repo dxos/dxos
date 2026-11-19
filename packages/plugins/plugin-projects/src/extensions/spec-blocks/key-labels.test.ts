@@ -107,6 +107,13 @@ describe('keyLabels', () => {
     expect(type(line.from, line.from, 'x')).toBe(state.doc);
     expect(type(line.from, line.from, '\n').toString()).toContain('Sorted inbox\n\n  req a2b3c');
     expect(type(line.from - 3, line.from, '!\n').toString()).toContain('Sorted inb!\n  req a2b3c');
+
+    // Deleting a blank line above a requirement keeps the requirement on its own line.
+    const spaced = create(TEXT.replace('Sorted inbox\n', 'Sorted inbox\n\n'));
+    const blank = spaced.doc.toString().indexOf('\n\n  req a2b3c') + 1;
+    expect(
+      spaced.update({ changes: { from: blank, to: blank + 1 }, userEvent: 'delete.backward' }).state.doc.toString(),
+    ).toBe(TEXT);
   });
 
   test('a key written with spaces before its colon is guarded through the colon', ({ expect }) => {
