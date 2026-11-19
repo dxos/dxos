@@ -16,20 +16,22 @@ group agents-body gap=24 {
 }
 
 group subagents-body gap=24 {
-  group subagents-col-0 gap=16 autoRows=176 alignContent=center {
+  group subagents-col-0 gap=16 autoRows=144 alignContent=center {
     node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot
     node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot
+    node summary "Summarize" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot
     node calendar "Email" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot
     node travel "Travel" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot
   }
 }
 
 group space-body gap=24 {
-  group space-col-0 gap=16 autoRows=176 alignContent=center {
-    node research-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=3 size=24 width=176 height=176
-    node reply-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=4 size=24 width=176 height=176
-    node calendar-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=5 size=24 width=176 height=176
-    node travel-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=6 size=24 width=176 height=176
+  group space-col-0 gap=16 autoRows=144 alignContent=center {
+    node research-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=3 size=24 width=144 height=144
+    node reply-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=4 size=24 width=144 height=144
+    node summary-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=7 size=24 width=144 height=144
+    node calendar-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=5 size=24 width=144 height=144
+    node travel-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=6 size=24 width=144 height=144
   }
 }
 
@@ -38,9 +40,11 @@ edge discord  -> triage head=triangle
 edge chat     -> planner head=triangle
 edge triage   -> research head=triangle
 edge triage   -> reply head=triangle
+edge triage   -> summary head=triangle
 edge planner  -> calendar head=triangle
 edge planner  -> travel head=triangle
 edge research -> research-space head=triangle
 edge reply    -> reply-space head=triangle
+edge summary  -> summary-space head=triangle
 edge calendar -> calendar-space head=triangle
 edge travel   -> travel-space head=triangle
