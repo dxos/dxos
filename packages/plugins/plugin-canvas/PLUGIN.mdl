@@ -620,7 +620,7 @@ decision D-41: The space graph's element kind is named `graph`; it was `space-gr
 ```
 
 ```mdl
-decision D-42: The studio deck's diagrams, stories and element kinds leave this plugin for plugin-debug's DXOS Deck template; the Grids story moves from `experimental` to `src/dsl`.
+decision D-42: The studio deck's diagrams, stories and element kinds leave this plugin; the Grids story moves from `experimental` to `src/dsl`. The deck is a presentation, and is added back as a sample of its own in a separate change.
   date: 2026-11-18
   by: user:richburdon
   affects: [CanvasPlugin]

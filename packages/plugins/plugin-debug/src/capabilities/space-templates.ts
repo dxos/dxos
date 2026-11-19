@@ -13,7 +13,6 @@ import {
   ReviewSpace,
   RideCheckSpace,
   StockfishSpace,
-  StudioSpace,
   TidepoolSpace,
   TimelineSpace,
   TriageSpace,
@@ -33,7 +32,6 @@ export default [
   FieldstoneSpace.makeTemplate(),
   DemoSpace.makeTemplate(),
   PresenterSpace.makeTemplate(),
-  StudioSpace.makeTemplate(),
   TimelineSpace.makeTemplate(),
   TriageSpace.makeTemplate(),
 ] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;

@@ -26,3 +26,5 @@ The box form stays as the view of what intent became and as the text of a drawin
 4. A box carrying a component is written `custom <id> kind=<name>` in the box form; intent keeps `node`.
 5. A node states its own size with `width=` and `height=`, since `size` is a component's own field.
 6. #14583 lands first; #14595 stays stacked on it.
+7. The deck (renamed `samples/cloudflare`), its kinds and its space template leave this PR for one of their own,
+   stacked on it; their last commit here is `ff69e85fdfd`.

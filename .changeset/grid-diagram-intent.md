@@ -25,8 +25,7 @@ error. The space graph's element kind is named `graph`, and a node stored as `sp
 
 Breaking: the language's namespace is exported as `DSL` (`import { DSL } from '@dxos/diagram'`); `Dsl` is gone.
 
-plugin-debug gains the DXOS Deck space template: DXOS in nine diagrams, each a canvas drawing built from one
-`.dx` file, and the presentation that embeds them. plugin-canvas's `experimental` folder is removed.
+plugin-canvas's `experimental` folder, which held the studio deck's diagrams, is removed.
 
 Fixes: diagnostics measure a box a grid places in the frame the grid gives it; they used to report every label in
 a grid as not fitting. A packed group places every member; it used to leave some at the origin. A connector with

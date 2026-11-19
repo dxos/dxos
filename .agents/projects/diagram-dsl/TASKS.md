@@ -1,6 +1,6 @@
 # Diagram DSL — Tasks
 
-_Resume: land #14583, then mark #14595 ready (`moon run :lint :build :test-types`, `gh pr ready`). Uncommitted: none. Last: the `custom` keyword, a node's stated size, the `graph` rename, and the deck as plugin-debug's DXOS Deck template._
+_Resume: land #14583, then mark #14595 ready (`moon run :lint :build :test-types`, `gh pr ready`). Uncommitted: none. Last: the deck left this PR on 2026-11-18; its files are at `ff69e85fdfd` under `packages/plugins/plugin-debug/src/samples/cloudflare` and go to a PR of their own, stacked on this one._
 
 ## Phase 1: A drawing as intent
 
@@ -23,15 +23,15 @@ The nine slides exist in four generations and live in `plugin-canvas/src/experim
 
 ### Tasks
 
-- [x] **Presentation story from the nine `.dx` files** — `plugins/plugin-debug/samples/Studio` › Deck.
+- [x] **Presentation story from the nine `.dx` files** — moved out with the deck.
 - [x] **Rename the `space-graph` kind to `graph`** — a stored node under the old name reads as `graph` where a stored
       layout is read (`@dxos/scene` D-105); the stored name changes when the element is next written.
 - [x] **`.dx` is the only slide source** — delete the deck export (`.diagram`, `.json`), the `SlideSpec` layout
       (`*.spec.ts`, `spec.ts`, `studio.ts`, `studio.test.ts`), the grid boxes (`.grid.diagram`) and their stories.
 - [x] **Give the Architecture slide's cards room for a second body line** — 136 tall, 8 apart.
 - [x] **Move the Grids story out of `experimental`** into `src/dsl/`, with its source column.
-- [x] **The deck as a space template in plugin-debug**, beside "DXOS Architecture", with the slide kinds (card, feed
-      card, chip, plank, app frame, substrate); `graph` stays in plugin-canvas.
+- [x] **The deck as a space template in plugin-debug** — built here, then moved out of this PR (decision 8); `graph`
+      stays in plugin-canvas.
 - [x] **A node states its own size** — `width=` / `height=`; a diameter in a packed group, kept in the middle of its
       cell on tracks. Stored apart from the frame (`extent` on a node). Groups do not take them yet.
 - [x] **`custom <id> kind=<name>` in the box form**, replacing `rect … kind=`, which is now an error.
