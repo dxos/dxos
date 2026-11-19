@@ -366,6 +366,128 @@ export const IconCardsBesideBox: Story = {
   },
 };
 
+/** Four icon cards of a progression, whose titles wrap differently: one line, two, one, two. */
+const FLOW_CARDS = [
+  iconCard('icon="chat-circle"', 'Chat', 'Search', 'A model in a separate window'),
+  iconCard('icon="code"', 'Vibe coding with agents', 'Describe it and the model builds it'),
+  iconCard('icon="users-three" tone="success"', 'Cowork', 'Claude inside your existing apps'),
+  iconCard('icon="rocket-launch" tone="warning"', 'Replacing the apps', 'The assistant becomes the app'),
+];
+
+/** The cards of a flow grid's one row are one size on one line, with their headers and first bullets level. */
+const expectLevelRow = async (cards: HTMLElement[]) => {
+  const rects = cards.map((card) => card.getBoundingClientRect());
+  const headers = await Promise.all(cards.map((card) => query(card, 'header')));
+  const first = await Promise.all(cards.map((card) => query(card, 'li')));
+  for (const index of cards.keys()) {
+    await expect(rects[index].width).toBeCloseTo(rects[0].width, 0);
+    await expect(rects[index].height).toBeCloseTo(rects[0].height, 0);
+    await expect(rects[index].top).toBeCloseTo(rects[0].top, 0);
+    await expect(headers[index].getBoundingClientRect().height).toBeCloseTo(
+      headers[0].getBoundingClientRect().height,
+      0,
+    );
+    await expect(first[index].getBoundingClientRect().top).toBeCloseTo(first[0].getBoundingClientRect().top, 0);
+  }
+};
+
+/**
+ * `<Grid variant="flow">` is the grid with an arrow in each gap between the children of a row, for a progression of
+ * cards that are still the grid's: one size, with the icon cards' headers level, and placed by `align`.
+ */
+export const FlowGrid: Story = {
+  render: IconCards.render,
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# How we got here',
+      '',
+      '<Grid cols="4" align="center" variant="flow">',
+      '',
+      ...FLOW_CARDS,
+      '',
+      '</Grid>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const grid = await query(canvasElement, '[data-variant="flow"]');
+    await query(canvasElement, 'article[data-icon] header svg');
+    const cards = [...grid.querySelectorAll<HTMLElement>(':scope > article')];
+    await expect(cards).toHaveLength(4);
+
+    // 1. Four cards of one size on one row, headers and first bullets level, as in a grid with no arrows.
+    await expectLevelRow(cards);
+
+    // 2. An arrow after every card but the last, in a box that is the gap between two cards: it starts at the
+    // card's edge and is as wide as the gap, so the glyph is centred between them.
+    const gap = parseFloat(getComputedStyle(grid).columnGap);
+    await expect(gap).toBe(96);
+    for (const card of cards.slice(0, -1)) {
+      const arrow = getComputedStyle(card, '::after');
+      await expect(arrow.content).toBe('"→"');
+      await expect(parseFloat(arrow.width)).toBe(gap);
+      await expect(parseFloat(arrow.left)).toBeCloseTo(card.offsetWidth, 0);
+      await expect(arrow.textAlign).toBe('center');
+      // The card lets the arrow out of its own box.
+      await expect(getComputedStyle(card).overflowX).toBe('visible');
+    }
+    await expect(getComputedStyle(cards[3], '::after').content).toBe('none');
+  },
+};
+
+/**
+ * `<v-clicks>` straight inside a grid reveals the grid's children one per click. Each is still the grid's own child,
+ * so a card yet to come holds its place and the row never shifts, and an arrow waits for the card it points at.
+ */
+export const FlowGridBuild: Story = {
+  render: IconCards.render,
+  args: {
+    step: 2,
+    content: slide(
+      { layout: 'default' },
+      '# How we got here',
+      '',
+      '<Grid cols="4" align="center" variant="flow">',
+      '',
+      '<v-clicks>',
+      '',
+      ...FLOW_CARDS,
+      '',
+      '</v-clicks>',
+      '',
+      '</Grid>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const grid = await query(canvasElement, '[data-variant="flow"]');
+    await query(canvasElement, 'article[data-icon] header svg');
+
+    // 1. The four cards are the grid's only children: the click tag leaves no box between them and the grid.
+    await expect([...grid.children].map((child) => child.tagName)).toEqual([
+      'ARTICLE',
+      'ARTICLE',
+      'ARTICLE',
+      'ARTICLE',
+    ]);
+    const cards = [...grid.querySelectorAll<HTMLElement>(':scope > article')];
+
+    // 2. Two cards are out; the two to come hold their place, so the row is laid out as it will be when it is whole.
+    await expect(cards.map((card) => card.classList.contains('invisible'))).toEqual([false, false, true, true]);
+    await expectLevelRow(cards);
+
+    // 3. The arrow between the two revealed cards is drawn; the one that would point at a card to come is not.
+    await expect(getComputedStyle(cards[0], '::after').content).toBe('"→"');
+    await expect(getComputedStyle(cards[1], '::after').content).toBe('none');
+
+    // 4. Clicking the slide runs the build on: the third card appears, and with it the arrow that was waiting.
+    await userEvent.click(cards[0]);
+    await waitFor(() => expect(cards[2].classList.contains('invisible')).toBe(false));
+    await expect(getComputedStyle(cards[1], '::after').content).toBe('"→"');
+    await expect(getComputedStyle(cards[2], '::after').content).toBe('none');
+    await expectLevelRow(cards);
+  },
+};
+
 /** `<List variant>` styles a markdown list without changing what it is: numbered cards beside outlined claims. */
 export const ListVariants: Story = {
   args: {
@@ -724,5 +846,50 @@ export const FlowBuild: Story = {
     await userEvent.click(items[0]);
     await waitFor(() => expect(items[2].classList.contains('invisible')).toBe(false));
     await expect(getComputedStyle(items[1], '::after').content).toBe('"→"');
+  },
+};
+
+/** A list nested in a flow card is the card's: set at the card's size, with its markers inside the card. */
+export const FlowNestedList: Story = {
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# How we got here',
+      '',
+      '<List variant="flow">',
+      '',
+      '1. **Chat** A model in a separate window',
+      '   - Search',
+      '   - Summaries of long documents',
+      '2. **Vibe coding** Describe it and the model builds it',
+      '   - Prototypes',
+      '3. **Cowork** Claude working inside your existing apps',
+      '   - Delegation',
+      '   - Review',
+      '4. **Replacing apps** The assistant becomes the app',
+      '   - Generated interfaces',
+      '',
+      '</List>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const flow = await query(canvasElement, 'ol[data-variant="flow"]');
+    const cards = [...flow.querySelectorAll<HTMLElement>(':scope > li')];
+    await expect(cards).toHaveLength(4);
+    for (const card of cards) {
+      const list = await query(card, 'ul');
+      const box = card.getBoundingClientRect();
+      // The nested list stays inside the card, with room at its start for the markers.
+      await expect(list.getBoundingClientRect().left).toBeGreaterThan(box.left);
+      await expect(list.getBoundingClientRect().right).toBeLessThanOrEqual(box.right);
+      for (const item of list.querySelectorAll('li')) {
+        // No line of an item runs past the card: the text wraps inside it.
+        await expect(item.scrollWidth).toBeLessThanOrEqual(item.clientWidth);
+        // The card's own size, where a plain nested list would take the slide's 48px.
+        await expect(getComputedStyle(item).fontSize).toBe(getComputedStyle(card).fontSize);
+        await expect(getComputedStyle(item, '::after').content).toBe('none');
+      }
+    }
+    await expect(getComputedStyle(cards[0]).fontSize).toBe('32px');
   },
 };

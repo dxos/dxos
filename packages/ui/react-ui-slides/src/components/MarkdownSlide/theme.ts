@@ -39,6 +39,45 @@ const span =
   '[--slide-col-span:1] [--slide-row-span:1] ' +
   '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]';
 
+// A grid lays down equal tracks from the counts `<Grid cols rows>` set; `minmax(0,1fr)` keeps a long word in one cell
+// from widening the track it sits in. Rows are auto by default, so a grid grows to hold what it is given.
+const grid =
+  // The counts are reset here rather than left to the `var()` fallbacks: a custom property inherits, so a
+  // grid inside a grid would otherwise lay down the tracks of the one around it.
+  'grid grow min-h-0 gap-8 my-[16px] [--slide-grid-cols:1] [--slide-grid-rows:1] ' +
+  '[grid-template-columns:repeat(var(--slide-grid-cols,1),minmax(0,1fr))] ' +
+  // The explicit rows `rows` asks for, and any further row an overflowing grid opens, are all one fraction,
+  // so the rows stay even however many there turn out to be.
+  '[grid-template-rows:repeat(var(--slide-grid-rows,1),minmax(0,1fr))] [grid-auto-rows:minmax(0,1fr)] ' +
+  // `align` gives the grid the height of what it holds, where its rows are still even, and an auto margin
+  // takes the space left over: after the grid, around it, or before it.
+  'data-[align]:grow-0 data-[align=start]:mb-auto data-[align=center]:my-auto data-[align=end]:mt-auto ' +
+  // A grid holding icon cards makes each row two tracks, a header as tall as the row's tallest title and
+  // a body, and its icon cards take their own two rows from those. The titles of a row then end on one
+  // line however each wraps, so the bodies start level.
+  '[&:has(>[data-icon])]:[grid-template-rows:repeat(var(--slide-grid-rows,1),auto_minmax(0,1fr))] ' +
+  '[&:has(>[data-icon])]:[grid-auto-rows:auto_minmax(0,1fr)] ' +
+  '[&>article[data-icon]]:grid-rows-subgrid ' +
+  // Every child of such a grid covers both tracks of each row it spans, whatever it is: one left on a
+  // single track would start the next card's header on a body track. The span is reset here for a child
+  // that sets none of its own, which would otherwise inherit the span of a cell around the grid.
+  '[--slide-row-span:1] [&:has(>[data-icon])>*]:[grid-row:span_calc(var(--slide-row-span,1)*2)]';
+
+// A flow puts an arrow in each gap between the children of a row; the column gap is the arrow's own box (`w-24` for
+// `gap-x-24`), so the glyph is centred between two children.
+const gridFlow =
+  'gap-x-24 [&>*]:relative ' +
+  "[&>*]:after:content-['→'] [&>*]:after:absolute [&>*]:after:start-full [&>*]:after:top-1/2 [&>*]:after:w-24 " +
+  '[&>*]:after:-translate-y-1/2 [&>*]:after:text-center [&>*]:after:text-[88px] [&>*]:after:leading-none ' +
+  '[&>*]:after:opacity-70 ' +
+  // The arrow after a row's last child stands outside the grid, which cuts it off; the last child of all draws none.
+  '[&>*:last-child]:after:content-none overflow-x-clip ' +
+  // During a build the arrow waits for the child it points at, which is laid out but not yet revealed.
+  '[&>*:has(+.invisible)]:after:content-none ' +
+  // A card's own clipping would hide its arrow, so its art is rounded at the card's corners instead.
+  '[&>article]:overflow-visible [&>article>p:first-child>img]:rounded-t-[24px] ' +
+  '[&>article>p:last-child>img]:rounded-b-[24px] [&>article>div>p:last-child>img]:rounded-b-[24px]';
+
 // A heading takes the color the deck's theme sets for its level, else the accent as it stands at the heading, so a
 // tone or a slide's own accent still reaches a heading whose color the deck left unset.
 const headingColor = 'text-[color:var(--slide-heading,var(--slide-accent))]';
@@ -121,7 +160,9 @@ export const theme = {
           '[&_strong]:font-(family-name:--slide-font-heading) ' +
           '[&[data-active]]:border-4 [&[data-active]]:border-(--slide-accent) ' +
           '[&[data-active]]:before:text-(color:--slide-accent) [&[data-active]]:before:opacity-100 ' +
-          '[&[data-active]_em]:text-(color:--slide-accent) [&[data-active]_em]:opacity-100',
+          '[&[data-active]_em]:text-(color:--slide-accent) [&[data-active]_em]:opacity-100 ' +
+          // A nested list would otherwise take the slide's body size and margin, and run past the card.
+          '[&_:is(ul,ol)]:my-2 [&_:is(ul,ol)]:ml-10 [&_li]:pl-2 [&_li]:text-[length:inherit] [&_li]:leading-snug',
         // A loose item wraps its content in a paragraph, which would otherwise take the slide's body size and
         // undo the card's.
         p: 'text-[32px] leading-normal',
@@ -198,32 +239,9 @@ export const theme = {
       },
     },
 
-    // A grid lays down equal tracks from the counts `<Grid cols rows>` set; `minmax(0,1fr)` keeps a long word in one
-    // cell from widening the track it sits in. Rows are auto by default, so a grid grows to hold what it is given.
     grid: {
-      default: {
-        grid:
-          // The counts are reset here rather than left to the `var()` fallbacks: a custom property inherits, so a
-          // grid inside a grid would otherwise lay down the tracks of the one around it.
-          'grid grow min-h-0 gap-8 my-[16px] [--slide-grid-cols:1] [--slide-grid-rows:1] ' +
-          '[grid-template-columns:repeat(var(--slide-grid-cols,1),minmax(0,1fr))] ' +
-          // The explicit rows `rows` asks for, and any further row an overflowing grid opens, are all one fraction,
-          // so the rows stay even however many there turn out to be.
-          '[grid-template-rows:repeat(var(--slide-grid-rows,1),minmax(0,1fr))] [grid-auto-rows:minmax(0,1fr)] ' +
-          // `align` gives the grid the height of what it holds, where its rows are still even, and an auto margin
-          // takes the space left over: after the grid, around it, or before it.
-          'data-[align]:grow-0 data-[align=start]:mb-auto data-[align=center]:my-auto data-[align=end]:mt-auto ' +
-          // A grid holding icon cards makes each row two tracks, a header as tall as the row's tallest title and
-          // a body, and its icon cards take their own two rows from those. The titles of a row then end on one
-          // line however each wraps, so the bodies start level.
-          '[&:has(>[data-icon])]:[grid-template-rows:repeat(var(--slide-grid-rows,1),auto_minmax(0,1fr))] ' +
-          '[&:has(>[data-icon])]:[grid-auto-rows:auto_minmax(0,1fr)] ' +
-          '[&>article[data-icon]]:grid-rows-subgrid ' +
-          // Every child of such a grid covers both tracks of each row it spans, whatever it is: one left on a
-          // single track would start the next card's header on a body track. The span is reset here for a child
-          // that sets none of its own, which would otherwise inherit the span of a cell around the grid.
-          '[--slide-row-span:1] [&:has(>[data-icon])>*]:[grid-row:span_calc(var(--slide-row-span,1)*2)]',
-      },
+      default: { grid },
+      flow: { grid: `${grid} ${gridFlow}` },
     },
 
     // A cell spans the tracks `cols`/`rows` ask for; with neither it is one cell, as any grid child is.

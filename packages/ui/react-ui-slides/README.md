@@ -11,7 +11,7 @@ CodeMirror extensions that highlight and complete it.
 
 | Tag | Attributes |
 | --- | --- |
-| `<Grid>` | `cols`, `rows`: the tracks it lays down, 1 to 12; `align` (`stretch`, `start`, `center`, `end`) |
+| `<Grid>` | `cols`, `rows`: the tracks it lays down, 1 to 12; `align` (`stretch`, `start`, `center`, `end`); `variant` (`default`, `flow`) |
 | `<Cell>` | `colSpan`, `rowSpan`: the tracks it covers |
 | `<Card>` | `variant` (`default`, `outline`, `plain`), `tone`, `icon`, `colSpan`, `rowSpan` |
 | `<List>` | `variant` (`default`, `cards`, `steps`, `outline`, `flow`), `tone`, `active` |
@@ -25,6 +25,39 @@ holds.
 A `<Grid>` fills the space the slide leaves it (`align="stretch"`, the default). With `align="start"`, `"center"` or
 `"end"` it takes the height of what it holds and stands at the top, the middle or the bottom of that space. Either way
 the cards of a row share one height.
+
+`<Grid variant="flow">` draws an arrow in each gap between the children of a row, for a progression: none after the
+last child, and none at the end of a row. It is otherwise the grid, so its cards are one size and `align` places it.
+A card in a flow grid does not clip what it holds, since its arrow stands outside it.
+
+A click tag (`<v-clicks>`, `<v-click>`, `<v-after>`) written straight inside a `<Grid>` is no box of its own: what it
+reveals stays the grid's children, so a card still to come holds its place and the row does not shift. In a flow
+grid an arrow waits for the card it points at.
+
+```md
+<Grid cols="4" align="center" variant="flow">
+
+<v-clicks>
+
+<Card icon="chat-circle">
+
+### Chat
+
+- Search
+
+</Card>
+<Card icon="code">
+
+### Vibe coding
+
+- Describe it and the model builds it
+
+</Card>
+
+</v-clicks>
+
+</Grid>
+```
 
 A `<Card>` holds art or an icon, a title, and a line or a few bullets. `icon` names a
 [Phosphor](https://phosphoricons.com) glyph, bare (`icon="shield-check"`) or as a whole symbol
