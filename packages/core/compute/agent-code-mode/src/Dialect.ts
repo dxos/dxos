@@ -66,6 +66,9 @@ export interface Dialect {
   /** The API reference rendered into the system prompt, ahead of the skills' own instructions. */
   readonly instructions: (context: InstructionsContext) => string;
 
+  /** The entries `instructions` lists for these operations, to announce ones bound after the system prompt was written. */
+  readonly operations: (operations: readonly SandboxOperation[]) => string;
+
   /** Wraps the model's code into the body the sandbox evaluates. */
   readonly wrap: (code: string) => string;
 

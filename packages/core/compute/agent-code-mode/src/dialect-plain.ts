@@ -48,6 +48,8 @@ export const PlainDialect: Dialect = {
 
   wrap: (code) => code,
 
+  operations: (operations) => renderPlainOperationList(operations),
+
   bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
     const run = RuntimeProvider.runPromise(Effect.succeed(runtime));
     const describe = makeDescriber({ syntax: PLAIN_HINTS, skills });
@@ -196,10 +198,13 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
   operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
   so they are indexed rather than dotted.
 
-  ${operations
-    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
-    .join('\n')}
+  ${renderPlainOperationList(operations)}
 `;
+
+const renderPlainOperationList = (operations: readonly SandboxOperation[]): string =>
+  operations
+    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
+    .join('\n');
 
 /** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
 export const camelCase = (name: string): string =>

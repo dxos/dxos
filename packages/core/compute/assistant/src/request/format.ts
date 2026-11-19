@@ -83,23 +83,7 @@ export const formatSystemPrompt = ({
       Effect.map((defs) => (defs.length > 0 ? ['## Instructions', ...defs].join('\n\n') : undefined)),
     );
 
-    const objectDefs = yield* Function.pipe(
-      objects,
-      Effect.forEach((object) => {
-        // Carry the label so the model only tool-loads an object when it needs the contents,
-        // not just to learn what the reference is.
-        const label = Obj.getLabel(object);
-        return Effect.succeed(
-          trim`
-            <object>
-              <dxn>${Obj.getURI(object)}</dxn>
-              <typename>${Obj.getTypename(object)}</typename>${label ? `\n  <label>${label}</label>` : ''}
-            </object>
-          `,
-        );
-      }),
-      Effect.map((objects) => (objects.length > 0 ? ['## Context Objects', ...objects].join('\n\n') : undefined)),
-    );
+    const objectDefs = formatObjects(objects);
 
     return yield* Function.pipe(
       Effect.succeed(
@@ -108,6 +92,53 @@ export const formatSystemPrompt = ({
       Effect.map((parts) => parts.join('\n\n')),
     );
   }).pipe(Effect.withSpan('formatSystemPrompt'));
+
+/**
+ * The context objects as the system prompt carries them, under `## Context Objects`; `undefined` for none.
+ */
+export const formatObjects = (objects: readonly Obj.Unknown[]): string | undefined => {
+  const defs = objects.map((object) => {
+    // Carry the label so the model only tool-loads an object when it needs the contents,
+    // not just to learn what the reference is.
+    const label = Obj.getLabel(object);
+    return trim`
+      <object>
+        <dxn>${Obj.getURI(object)}</dxn>
+        <typename>${Obj.getTypename(object)}</typename>${label ? `\n  <label>${label}</label>` : ''}
+      </object>
+    `;
+  });
+  return defs.length > 0 ? ['## Context Objects', ...defs].join('\n\n') : undefined;
+};
+
+/** The skills and objects bound to a conversation at some point of a turn. */
+export type TurnBindings = {
+  readonly skills: readonly Skill.Skill[];
+  readonly objects: readonly Obj.Unknown[];
+};
+
+/**
+ * What changed in the bindings since the turn's system prompt was written, as the parts of a notice: a turn keeps the
+ * system prompt it started with, since a changed one discards the whole prompt cache, so the conversation carries the
+ * change instead. The next turn's system prompt includes it as usual. Empty when nothing changed.
+ */
+export const formatBindingChanges = (before: TurnBindings, after: TurnBindings) =>
+  Effect.gen(function* () {
+    const skillIds = new Set(before.skills.map((skill) => skill.id));
+    const currentSkillIds = new Set(after.skills.map((skill) => skill.id));
+    const objectIds = new Set(before.objects.map((object) => object.id));
+    const enabled = yield* formatSkills(after.skills.filter((skill) => !skillIds.has(skill.id)));
+    const disabled = before.skills.filter((skill) => !currentSkillIds.has(skill.id));
+    const added = formatObjects(after.objects.filter((object) => !objectIds.has(object.id)));
+    return [
+      enabled && `Skills enabled in this turn, in addition to those above:\n\n${enabled}`,
+      disabled.length > 0 &&
+        `Skills disabled in this turn; their instructions above no longer apply: ${disabled
+          .map((skill) => Obj.getLabel(skill) ?? Obj.getMeta(skill).key ?? skill.id)
+          .join(', ')}.`,
+      added && `Objects added to the context in this turn, in addition to those above:\n\n${added}`,
+    ].filter((part): part is string => typeof part === 'string');
+  });
 
 /**
  * Formats the user prompt.

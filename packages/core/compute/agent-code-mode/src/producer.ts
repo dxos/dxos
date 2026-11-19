@@ -14,7 +14,9 @@ import {
   AiRequest,
   AiSession,
   TrajectoryStore,
+  type TurnBindings,
   createToolkit,
+  formatBindingChanges,
   formatSystemPrompt,
   getOperationFromTool,
 } from '@dxos/assistant';
@@ -147,6 +149,11 @@ const runCodeModeTurn = ({
             system: params.system,
           });
 
+          // The system prompt the turn started with, kept for every model call of the turn: a skill, operation or
+          // object bound mid-turn is announced in the conversation instead, since a changed system prompt discards the
+          // whole prompt cache. The next turn's system prompt includes it as usual.
+          let turnSystem: (TurnBindings & { operations: ReadonlySet<string>; text: string }) | undefined;
+
           const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
           // Each iteration is scoped so the MCP connections it opens close before the next opens its own.
           const runIteration = (turn: number) =>
@@ -191,17 +198,38 @@ const runCodeModeTurn = ({
                     }
                   : {}),
               });
-              const system = yield* formatSystemPrompt({
-                system: [dialect.instructions({ operations }), options.system, params.system]
-                  .filter(isPresent)
-                  .join('\n\n'),
-                skills: [lookups, ...enabled],
-                objects: session.context.getObjects(),
-                instructions,
-              }).pipe(Effect.orDie);
+              const objects = session.context.getObjects();
+              const operationNames = new Set(operations.map((operation) => operation.name));
+              if (turnSystem === undefined) {
+                const text = yield* formatSystemPrompt({
+                  system: [dialect.instructions({ operations }), options.system, params.system]
+                    .filter(isPresent)
+                    .join('\n\n'),
+                  skills: [lookups, ...enabled],
+                  objects,
+                  instructions,
+                }).pipe(Effect.orDie);
+                turnSystem = { skills: enabled, objects, operations: operationNames, text };
+              } else {
+                // The lookups are made afresh each iteration, so only the enabled skills are compared.
+                const changes = yield* formatBindingChanges(turnSystem, { skills: enabled, objects }).pipe(
+                  Effect.orDie,
+                );
+                const known = turnSystem.operations;
+                const added = operations.filter((operation) => !known.has(operation.name));
+                if (added.length > 0) {
+                  changes.push(
+                    `Operations available in this turn, in addition to those above:\n\n${dialect.operations(added)}`,
+                  );
+                }
+                if (changes.length > 0) {
+                  yield* request.submitNotice(changes.join('\n\n'));
+                }
+                turnSystem = { skills: enabled, objects, operations: operationNames, text: turnSystem.text };
+              }
 
               const { done, finishReason } = yield* request.runAgentTurn({
-                system,
+                system: turnSystem.text,
                 toolkit,
               });
               if (done) {

@@ -75,7 +75,8 @@ export const make = (): Skill.Skill =>
         It searches every fact recorded in this space — from every conversation, document and seeded source, and
         the facts you recorded yourself — with your goals. A query matches facts containing all of its words; when it matches
         nothing you get everything about the subject instead, marked \`queryMatched: false\`. Called without a
-        subject it returns every fact and goal, which is what to read when asked what you know. Someone not
+        subject it returns your current facts and live goals (not superseded, retracted or expired facts, nor
+        dropped goals), up to any \`limit\` you pass, which is what to read when asked what you know. Someone not
         found under one name may be under another they go by: their handle, nickname or full name.
 
         A message starting with "${WAKE_HEADER}" is not from the person you are talking to: you sent it to

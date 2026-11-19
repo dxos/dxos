@@ -18,6 +18,7 @@ import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { bufferToArray, safeParseJson } from '@dxos/util';
@@ -829,11 +830,16 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
 /** The internals of a turn: how it reached its answer, which only the turns still in progress or just past need. */
 const TURN_INTERNALS: ReadonlySet<ContentBlock.Any['_tag']> = new Set(['toolCall', 'toolResult', 'reasoning', 'stats']);
 
-/** Whether a message starts a turn: someone's prompt. A hook's synthetic follow-up continues the turn it follows. */
+/**
+ * Whether a message starts a turn: someone's prompt, in text or not (an image alone is a prompt). A synthetic message
+ * (a hook's follow-up, a notice, a snapshot of other threads) continues the turn it is in.
+ */
 const startsTurn = (message: Message.Message): boolean =>
   message.sender.role === 'user' &&
-  message.blocks.some(
-    (block) => block._tag === 'text' && block.disposition !== 'synthetic' && block.text.trim() !== '',
+  message.blocks.some((block) =>
+    block._tag === 'text'
+      ? block.disposition !== 'synthetic' && block.text.trim() !== ''
+      : !TURN_INTERNALS.has(block._tag),
   );
 
 /**
@@ -848,11 +854,12 @@ const startsTurn = (message: Message.Message): boolean =>
 const compactEarlierTurns =
   (fullTurns: number) =>
   (messages: readonly Message.Message[]): readonly Message.Message[] => {
+    invariant(Number.isInteger(fullTurns) && fullTurns >= 0, 'fullTurns must be a non-negative integer');
     const starts = messages.flatMap((message, index) => (startsTurn(message) ? [index] : []));
     if (starts.length <= fullTurns) {
       return messages;
     }
-    const keepFrom = starts[starts.length - fullTurns];
+    const keepFrom = fullTurns === 0 ? messages.length : starts[starts.length - fullTurns];
     const earlier = messages.slice(0, keepFrom).flatMap((message) => {
       const blocks = message.blocks.filter((block) => !TURN_INTERNALS.has(block._tag));
       if (blocks.length === message.blocks.length) {
@@ -933,7 +940,11 @@ const capRetired = (text: string): string =>
 const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = Function.flow(
   (messages) =>
     Array.isReadonlyArrayNonEmpty(messages)
-      ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
+      ? Array.groupWith(
+          // Prompts from different people stay apart: a merged message keeps only its first sender's name.
+          (a: Message.Message, b: Message.Message) =>
+            a.sender.role === b.sender.role && (a.sender.role !== 'user' || a.sender.name === b.sender.name),
+        )(messages)
       : [],
   Array.map(mergeMessages),
 );

@@ -901,6 +901,56 @@ describe('AiPreprocessor.preprocessPrompt with full turns', () => {
       expect(parts.filter(({ part }) => part.type === 'tool-call')).toHaveLength(3);
     }),
   );
+
+  it.effect(
+    'no full turns keeps only what was said, once',
+    Effect.fn(function* ({ expect }) {
+      const parts = partsOf(yield* AiPreprocessor.preprocessPrompt(turn(1), { fullTurns: 0 }));
+      expect(parts.filter(({ part }) => part.type === 'tool-call')).toHaveLength(0);
+      const texts = parts.flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
+      expect(texts).toEqual(['Request 1.', 'Reply 1.']);
+    }),
+  );
+
+  it.effect(
+    'a prompt that is only an image starts a turn, a synthetic notice does not',
+    Effect.fn(function* ({ expect }) {
+      const image = makeMessage('user', [
+        { _tag: 'image', source: { type: 'http', url: 'https://example.com/a.png' } },
+      ]);
+      const notice = makeMessage('user', [
+        { _tag: 'text', text: 'Threads running beside this one.', disposition: 'synthetic' },
+      ]);
+      // Counted as a turn, the notice would push turn 2 out of the last two.
+      const parts = partsOf(
+        yield* AiPreprocessor.preprocessPrompt([...turn(1), ...turn(2), notice, image, ...turn(3).slice(1)], {
+          fullTurns: 2,
+        }),
+      );
+      const callIds = parts.flatMap(({ part }) => (part.type === 'tool-call' ? [part.id] : []));
+      expect(callIds).toEqual(['call-2', 'call-3']);
+    }),
+  );
+
+  it.effect(
+    'prompts from two people left next to each other by compaction keep their own names',
+    Effect.fn(function* ({ expect }) {
+      const from = (name: string, text: string) =>
+        Obj.make(Message.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'user', name },
+          blocks: [{ _tag: 'text', text }],
+        });
+      // Alice's turn has no reply, so compacting its call and result leaves her prompt next to Bob's.
+      const [, call, result] = turn(1);
+      const prompt = yield* AiPreprocessor.preprocessPrompt(
+        [from('Alice', 'Alice asks.'), call, result, from('Bob', 'Bob asks.'), ...turn(3).slice(1)],
+        { fullTurns: 1 },
+      );
+      const texts = partsOf(prompt).flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
+      expect(texts.slice(0, 4)).toEqual(['[From: Alice]', 'Alice asks.', '[From: Bob]', 'Bob asks.']);
+    }),
+  );
 });
 
 describe('AiPreprocessor.estimateTokens', () => {
