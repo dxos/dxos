@@ -33,7 +33,7 @@ A card in a flow grid does not clip what it holds, since its arrow stands outsid
 
 A click tag (`<v-clicks>`, `<v-click>`, `<v-after>`) written straight inside a `<Grid>` is no box of its own: what it
 reveals stays the grid's children, so a card still to come holds its place and the row does not shift. In a flow
-grid an arrow waits for the card it points at.
+grid an arrow appears with the card it points at, so reveal a card after the one beside it.
 
 ```md
 <Grid cols="4" align="center" variant="flow">

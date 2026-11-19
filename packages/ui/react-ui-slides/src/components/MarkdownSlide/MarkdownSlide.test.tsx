@@ -269,8 +269,8 @@ describe('MarkdownSlide', () => {
     // The arrow into a row's first child falls outside the grid, which cuts it, so nothing here counts columns.
     expect(classes).toContain('overflow-x-clip');
     expect(markup).not.toContain('data-row-end');
-    // During a build an arrow waits for the child it points from.
-    expect(classes).toContain('[&amp;&gt;.invisible+*]:before:content-none');
+    // An arrow belongs to the child it points at and to nothing else, so no rule reads a sibling's visibility.
+    expect(classes).not.toContain('.invisible');
     // A plain grid draws none.
     expect(render('<Grid cols="4">\n\nCells\n\n</Grid>')).not.toContain('before:content-');
   });
