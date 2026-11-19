@@ -63,17 +63,18 @@ const grid =
   // that sets none of its own, which would otherwise inherit the span of a cell around the grid.
   '[--slide-row-span:1] [&:has(>[data-icon])>*]:[grid-row:span_calc(var(--slide-row-span,1)*2)]';
 
-// A flow puts an arrow in each gap between the children of a row; the column gap is the arrow's own box (`w-24` for
-// `gap-x-24`), so the glyph is centred between two children.
+// A flow draws an arrow into each child from the one beside it; the column gap is the arrow's own box (`w-24` for
+// `gap-x-24`), so the glyph is centred between the two.
 const gridFlow =
   'gap-x-24 [&>*]:relative ' +
-  "[&>*]:after:content-['→'] [&>*]:after:absolute [&>*]:after:start-full [&>*]:after:top-1/2 [&>*]:after:w-24 " +
-  '[&>*]:after:-translate-y-1/2 [&>*]:after:text-center [&>*]:after:text-[88px] [&>*]:after:leading-none ' +
-  '[&>*]:after:opacity-70 ' +
-  // The renderer marks the last child of each row, which has no child to point at.
-  '[&>[data-row-end]]:after:content-none ' +
-  // During a build the arrow waits for the child it points at, which is laid out but not yet revealed.
-  '[&>*:has(+.invisible)]:after:content-none ' +
+  "[&>*]:before:content-['→'] [&>*]:before:absolute [&>*]:before:end-full [&>*]:before:top-1/2 [&>*]:before:w-24 " +
+  '[&>*]:before:-translate-y-1/2 [&>*]:before:text-center [&>*]:before:text-[88px] [&>*]:before:leading-none ' +
+  '[&>*]:before:opacity-70 ' +
+  // The arrow into a row's first child stands outside the grid, which cuts it off: the layout alone decides where a
+  // row starts, whatever its children span.
+  'overflow-x-clip ' +
+  // An arrow is hidden with its own child during a build; it also waits for the child it points from.
+  '[&>.invisible+*]:before:content-none ' +
   // A card's own clipping would hide its arrow, so its art is rounded at the card's corners instead.
   '[&>article]:overflow-visible [&>article>p:first-child>img]:rounded-t-[24px] ' +
   '[&>article>p:last-child>img]:rounded-b-[24px] [&>article>div>p:last-child>img]:rounded-b-[24px]';
