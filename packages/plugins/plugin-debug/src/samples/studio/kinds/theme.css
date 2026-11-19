@@ -116,7 +116,8 @@
   color: var(--sd-card-body-fg);
 }
 
-/* A card's rows, under its title: the bullet takes the glyph's column and the text the title's, on the body's line. */
+/* A card's rows, under its title: the bullet takes the glyph's column and the text the title's, on the body's line.
+   A row's text wraps in its column, and the bullet stays on its first line. */
 .studio-card-rows {
   display: flex;
   flex-direction: column;
@@ -126,7 +127,7 @@
   display: grid;
   grid-template-columns: var(--dx-card-glyph) minmax(0, 1fr);
   column-gap: var(--dx-card-gap);
-  align-items: center;
+  align-items: start;
   font-size: var(--sd-card-body);
   line-height: 24px;
   color: var(--sd-card-body-fg);
@@ -134,7 +135,9 @@
 
 .studio-card-bullet {
   display: flex;
+  align-items: center;
   justify-content: center;
+  block-size: 24px;
   color: var(--sd-tone, var(--sd-card-footer-fg));
 }
 

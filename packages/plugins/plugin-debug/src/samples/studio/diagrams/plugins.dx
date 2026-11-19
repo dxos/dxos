@@ -2,7 +2,11 @@ diagram kind=grid size=1600x880 gap=64 padding=48
 
 group contributions-section rows="224 428" gap=76 alignContent=center {
   group plugin-row autoCols=480 justifyContent=center {
-    node plugin "Plugin" kind=card body="modules load lazily on activation events, in the browser, Node, desktop (Tauri) or at the EDGE (workerd)." footer="106 plugins in dxos/dxos" icon=puzzle-piece iconTone=accent
+    node plugin "Plugin" kind=card footer="106 plugins in dxos/dxos" icon=puzzle-piece iconTone=accent {
+      item "Global registry"
+      item "Lazy loading on activation events"
+      item "Browser, desktop (Tauri), Node, or at the EDGE (workerd)."
+    }
   }
   group contributions-body cols=5 gap=32 {
     group contributions-col-0 rows="256 96" gap=76 {

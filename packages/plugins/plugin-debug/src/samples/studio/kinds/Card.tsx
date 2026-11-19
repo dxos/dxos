@@ -79,7 +79,7 @@ const CardRows = ({ items }: { items: readonly CardItem[] }) => (
           <span className='studio-card-bullet' aria-hidden='true'>
             {symbol ? <Icon.Icon icon={symbol} style={{ width: 18, height: 18 }} /> : '•'}
           </span>
-          <span className='truncate'>{text}</span>
+          <span className='min-w-0'>{text}</span>
         </li>
       );
     })}
