@@ -1,0 +1,94 @@
+/*
+ * The demo on the `/v2/` home page in Starlight's own shapes and colours: a square panel on Starlight's card border,
+ * tabs underlined as Starlight's `Tabs` are, and pill buttons as `LinkButton` draws them.
+ */
+
+.dx-play.sl {
+  --sheet: var(--sl-color-black);
+  --ink: var(--sl-color-white);
+  --muted: var(--sl-color-gray-3);
+  --accent: var(--sl-color-text-accent);
+  --accent-hover: var(--sl-color-text-accent);
+  --on-accent: var(--sl-color-black);
+  margin-block: 0;
+}
+
+.dx-play.sl .sheet {
+  border-radius: 0;
+  border-color: var(--sl-color-gray-5);
+  margin: 2rem 0 0;
+}
+
+.dx-play.sl .source,
+.dx-play.sl .tab,
+.dx-play.sl .run {
+  border-color: var(--sl-color-gray-5);
+}
+
+.dx-play.sl .tab {
+  font-family: var(--sl-font);
+  font-size: var(--sl-text-sm);
+  padding-block: 0;
+  padding-left: 1rem;
+}
+
+.dx-play.sl .source .tab {
+  align-items: stretch;
+}
+
+.dx-play.sl .tab b {
+  font-family: var(--sl-font-mono);
+  font-weight: 600;
+}
+
+.dx-play.sl .tabs {
+  gap: 0;
+  margin-left: -1rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.dx-play.sl .tabs button {
+  font: var(--sl-text-sm) var(--sl-font);
+  color: var(--sl-color-gray-3);
+  border: 0;
+  border-radius: 0;
+  padding: 0 1rem;
+}
+
+.dx-play.sl .tabs button[aria-selected='true'] {
+  font-weight: 600;
+  color: var(--sl-color-white);
+  background: none;
+  box-shadow: inset 0 -2px 0 var(--sl-color-text-accent);
+}
+
+.dx-play.sl .hint {
+  align-self: center;
+  font: italic var(--sl-text-xs) var(--sl-font);
+}
+
+.dx-play.sl .action {
+  font: var(--sl-text-sm) / 1.1875 var(--sl-font);
+  border-radius: 999rem;
+  padding: 0.4375rem 1.125rem;
+  border-color: currentColor;
+}
+
+.dx-play.sl .action.primary {
+  border-color: var(--sl-color-text-accent);
+}
+
+/* A relation's drawing in the body of a Starlight `Card`. */
+.dx-play.dx-drawing {
+  --sheet: var(--sl-color-black);
+  margin: 0;
+}
+
+.dx-play.dx-drawing svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}

@@ -37,6 +37,7 @@ describe('worker', () => {
     for (const [path, body] of [
       ['/', 'home'],
       ['/docs/', 'docs'],
+      ['/v2/', 'home v2'],
       ['/arch.dx.svg', 'drawing'],
     ]) {
       const response = await worker.fetch(new Request(`${LANDING}${path}`), landingEnv());
@@ -78,6 +79,7 @@ const landingEnv = () =>
 const SITE: Record<string, string> = {
   '/site/': 'home',
   '/site/docs/': 'docs',
+  '/site/v2/': 'home v2',
   '/site/arch.dx.svg': 'drawing',
   '/site/404.html': 'not found',
 };

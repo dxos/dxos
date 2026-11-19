@@ -52,10 +52,10 @@
   gap: 1rem;
 }
 
-/* A grid of three cards is one row of three where it fits, and one column where it does not; never two and one. */
+/* A grid of three or six cards is rows of three where they fit, and one column where they do not; never two and one. */
 @media (min-width: 50rem) {
-  .card-grid:has(> :nth-child(3):last-child) {
-    grid-template-columns: repeat(3, 1fr);
+  .card-grid:has(> :nth-child(3n):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

@@ -39,6 +39,8 @@ const renderOrThrow = async (directory: string, name: string) => {
   return { source, ...result };
 };
 
+export type Relation = { readonly key: string; readonly code: string; readonly text: string; readonly svg: string };
+
 export type Prerendered = {
   /** The hero's `.dx` source, highlighted, shown until the editor loads. */
   readonly source: string;
@@ -46,8 +48,8 @@ export type Prerendered = {
   readonly report: string;
   /** The hero drawing on its stage. */
   readonly hero: string;
-  /** The relation examples. */
-  readonly relations: string;
+  /** The relation examples: the statement, what it means, and its drawing. */
+  readonly relations: readonly Relation[];
   /** The hero drawing as a `.dx.svg`, served so the download works before the editor loads. */
   readonly file: { readonly fileName: string; readonly svg: string };
 };
@@ -78,14 +80,14 @@ const renderPage = async (directory: string): Promise<Prerendered> => {
   const minRows = Math.max(...sizes.map(({ rows }) => rows));
   const relations = RELATIONS.map(([key, code, text], index) => {
     const relation = inline(rendered[index].svg, { prefix: `r${index}`, label: `${key} relation`, minCols, minRows });
-    return `<div class="relation"><code>${escapeHtml(code)}</code><p>${escapeHtml(text)}</p>${relation.markup}</div>`;
+    return { key, code, text, svg: relation.markup };
   });
 
   return {
     source: highlight(hero.source),
     report: reportHtml(HERO, hero.report),
     hero: stageHtml(markup, cols, rows),
-    relations: relations.join(''),
+    relations,
     file: { fileName: fileName(HERO), svg: hero.svg },
   };
 };

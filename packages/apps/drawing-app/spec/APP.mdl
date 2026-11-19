@@ -157,8 +157,8 @@ feat F-12: Share API
 ```mdl
 feat F-13: Landing site and hosts
   req F-13.1: Each environment serves the landing page at its own host and the app at `app.` of that host: production at drawing.sh (and www.drawing.sh) and app.drawing.sh, dev at dev.drawing.sh and app.dev.drawing.sh, preview at preview.drawing.sh and app.preview.drawing.sh. Staging serves only the app, on its `workers.dev` host.
-  req F-13.2: The landing site is an Astro Starlight site: a home page at `/` and the docs under `/docs/` (F-13.9). The home page is built from Starlight's splash template and is the agent-diagram DSL page: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript. Its hero is the heading, the lede and the agent skill's install command, with no buttons, and is tight enough that the top of the editor shows without scrolling on a 14-inch MacBook Pro. Every Starlight page's header shows the drawing.sh logotype; the home page's header has a Docs link where the docs pages have search.
-  req F-13.3: On a landing host, `/api/*` is the Worker's API, and `/`, `/docs/` and the pages under it, the site's build files and any address with a file extension are served from the site's build. Any other address, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
+  req F-13.2: The landing site is an Astro Starlight site: a home page at `/` and the docs under `/docs/` (F-13.9). The home page is built from Starlight's splash template and is the agent-diagram DSL page: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript. Its hero is the heading, the lede and the agent skill's install command, with no buttons, and is tight enough that the top of the editor shows without scrolling on a 14-inch MacBook Pro. Every Starlight page's header shows the drawing.sh logotype; the home page's header has a Docs link where the docs pages have search. Until one is chosen, a variant of the home page is served at `/v2/` for comparison. It uses only Starlight's and Astro's components (its hero, `Code`, `Card`, `CardGrid` and `LinkCard`), with the live editor as the one exception, drawn in Starlight's shapes and colours: square panels on Starlight's card border, tabs underlined as Starlight's `Tabs`, and pill buttons as `LinkButton`. Each relation example is a `Card` holding its statement and its drawing.
+  req F-13.3: On a landing host, `/api/*` is the Worker's API, and `/`, `/v2/`, `/docs/` and the pages under it, the site's build files and any address with a file extension are served from the site's build. Any other address, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
   req F-13.4: The landing editor's "Open in app" button posts the source to its own host's share API and opens the link it returns, which names the app host.
   req F-13.5: The site's pages load only the site's own scripts: no client, identity, plugins or telemetry.
   req F-13.6: The landing page's header has an "Open app" button, and the file section has "Open the app". Each opens the app host of the environment the page is served from. The hero has no app button: it is the heading, the lede and the agent skill's install command.
@@ -2101,4 +2101,23 @@ decision D-168: The "edit the source" hint is the same for both tabs. Fills in [
   why: The hint tells a reader the text is editable, which holds for either tab; the tab label already says Mermaid is converted.
   rejected:
     - The hint on the `.dx` tab only: the Mermaid source is just as editable.
+```
+
+```mdl
+decision D-169: Make a second version of the home page that uses only the building blocks Starlight and Astro provide, with small exceptions for the embedded demo, which is aligned with Starlight as much as possible.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-13.2]
+```
+
+```mdl
+decision D-170: The second version is served at `/v2/` beside the home page, and the Worker serves it on landing hosts, so the two can be compared on a deploy. The install command is a Starlight `Code` block, which brings its own copy button. The relation examples are a `CardGrid` of six `Card`s, each holding a `Code` block of the statement, its meaning and the drawing. The editor keeps its markup and script; a stylesheet scoped to it maps its colours to Starlight's and redraws its panel, tabs and buttons in Starlight's shapes. `/v2/` is left out of the search index. Fills in [D-169].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.2, F-13.3]
+  why: Starlight has no editor component, so the demo stays custom; restyling it from Starlight's tokens and component shapes keeps the custom part to colours and corners. Serving the variant beside the home page, as the splash page was before [D-163], lets both be judged on the same host. Leaving it out of search keeps the docs search from listing the home page twice.
+  rejected:
+    - Replacing the editor's tabs with Starlight's `Tabs` component: its panels are static content, and the editor switches one live editor between languages.
+    - Relation drawings as image files: an `<img>` cannot take the page's colours, so the drawings would not follow dark mode.
 ```

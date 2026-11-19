@@ -1,0 +1,16 @@
+---
+// One relation's statement and drawing, rendered at build time, for the body of a Starlight `Card`.
+import { Code } from '@astrojs/starlight/components';
+
+import { prerendered } from '../util/prerendered.ts';
+
+const { relations } = await prerendered();
+const relation = relations.find(({ key }) => key === Astro.props.name);
+if (!relation) {
+  throw new Error(`Unknown relation: ${Astro.props.name}`);
+}
+---
+
+<Code code={relation.code} lang="dx" wrap />
+<p>{relation.text}</p>
+<div class="not-content dx-play dx-drawing" set:html={relation.svg} />
