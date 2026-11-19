@@ -31,6 +31,7 @@ The following extension dialects are used in this document.
 | `feat`   | `org.dxos.mdl.feat@1.0`      |
 | `scenario` | `org.dxos.mdl.scenario@1.0`  |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+| `test`     | `org.dxos.mdl.test@1.0`       |
 
 ## Modules
 
@@ -425,6 +426,40 @@ scenario T-3: Duplicate sessions are de-duplicated
 ```
 
 ---
+
+## QA
+
+Executable tests, run against the `sdk/worker-framework/TabHandover` story, where each card is one
+browser tab with its own `Client.Connection`. Report failures by test and step number.
+
+```mdl
+test QA-1: Tabs hand the worker over only with consent
+  desc: The hand-over rules end to end, in the browser — sharing on one build, an older build
+        pausing for a newer one, and asking before taking over from an unreachable leader.
+  actors: human
+  covers: [F-1.10, F-1.11, F-1.12, F-1.13]
+  given:
+    - the TabHandover story is open in isolation, with one tab on build v1
+  steps:
+    - name: Share the worker on one build
+      do: Click "Open tab", then click Increment in each tab.
+      expect: one tab reads "Leader", the other "Follower", and both show the same count
+    - name: Open a newer build
+      do: Click "Open tab on a newer build".
+      expect: both v1 tabs show "Another instance of the app is open", with Details reading
+              "Different versions open"; the v2 tab leads and counts
+    - name: Continue on the older tab
+      do: Click "Continue here" on the first tab.
+      expect: it reloads onto build v2 and leads; the tab it took over from pauses with
+              "Taken over by another tab"
+    - name: Open a tab that cannot reach the leader
+      do: Click "Open tab that cannot reach the leader".
+      expect: after a few seconds it pauses with "Take over from an unresponsive tab" and does not
+              take the worker on its own; the leader keeps counting
+    - name: Take over from it
+      do: Click "Continue here" on that tab.
+      expect: it leads and counts; the former leader pauses with "Taken over by another tab"
+```
 
 ## Changelog
 
