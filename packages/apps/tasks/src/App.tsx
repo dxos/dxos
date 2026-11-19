@@ -121,7 +121,7 @@ const createServices = (config?: Config) =>
   );
 
 const createFirstSpace = async (client: Client, searchProps: URLSearchParams) => {
-  if (client.halo.identity.get() && client.spaces.get().length === 0 && !searchProps.has('spaceInvitationCode')) {
+  if (client.halo.identity.get() && client.spaces.get().length === 0 && !searchProps.get('spaceInvitationCode')) {
     const space = await client.spaces.create();
     await space.waitUntilReady();
   }
