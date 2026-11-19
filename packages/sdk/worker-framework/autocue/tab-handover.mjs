@@ -57,7 +57,7 @@ export const steps = [
       await demo.click({ selector: tab(1, 'increment'), label: 'Increment' });
       await demo.click({ selector: tab(2, 'increment'), label: 'Increment' });
       await page.waitForFunction(() => document.querySelector('[data-testid="tab-2-count"]')?.textContent === '2');
-      await demo.sleep({ ms: 1500 });
+      await demo.sleep({ ms: 4000 });
     },
   },
   {
@@ -69,7 +69,7 @@ export const steps = [
       await waitForTab(page, 1, 'Different versions open');
       await waitForTab(page, 3, 'Leader');
       await showDetails(page, 1);
-      await demo.sleep({ ms: 2500 });
+      await demo.sleep({ ms: 4500 });
     },
   },
   {
@@ -81,7 +81,7 @@ export const steps = [
       await waitForTab(page, 1, 'Leader');
       await waitForTab(page, 3, 'Taken over by another tab');
       await showDetails(page, 3);
-      await demo.sleep({ ms: 2500 });
+      await demo.sleep({ ms: 4500 });
     },
   },
   {
@@ -93,7 +93,7 @@ export const steps = [
       await waitForTab(page, 4, 'Take over from an unresponsive tab');
       await showDetails(page, 4);
       await demo.click({ selector: tab(1, 'increment'), label: 'Increment' });
-      await demo.sleep({ ms: 2000 });
+      await demo.sleep({ ms: 4500 });
     },
   },
   {
@@ -105,6 +105,7 @@ export const steps = [
       await waitForTab(page, 4, 'Leader');
       await waitForTab(page, 1, 'Taken over by another tab');
       await showDetails(page, 1);
+      await demo.sleep({ ms: 3000 });
     },
   },
   {
@@ -112,7 +113,7 @@ export const steps = [
     narration:
       'Exactly one tab runs the worker at any moment, so local data is written by one owner while the others wait, with nothing lost between them.',
     run: async ({ demo }) => {
-      await demo.caption({ value: 'One tab owns the worker; every hand-over is your choice', subtitle: SUBTITLE });
+      await demo.caption({ value: 'One tab owns the worker; you choose every hand-over', subtitle: SUBTITLE });
       await demo.sleep({ ms: 10_000 });
     },
   },

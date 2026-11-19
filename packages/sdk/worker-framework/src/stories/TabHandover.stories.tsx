@@ -140,7 +140,7 @@ const TabCard = ({ spec, onClose }: { spec: TabSpec; onClose: () => void }) => {
 
   const testId = `tab-${spec.id}`;
   return (
-    <div data-testid={testId} className='flex min-h-72 w-80 flex-col gap-4 rounded-lg border border-separator p-5'>
+    <div data-testid={testId} className='flex min-h-72 w-64 flex-col gap-4 rounded-lg border border-separator p-4'>
       <div className='flex items-center justify-between text-base'>
         <span className='font-medium'>Tab {spec.id}</span>
         <span className='text-fg-subtle'>
