@@ -63,6 +63,7 @@ edge session -> task "works on" head=triangle path=ortho
 edge session -> model "run by" head=triangle path=ortho
 edge session -> tool "uses" head=triangle path=ortho
 edge session -> feed "writes" head=triangle path=ortho
+edge session -> plan "writes" head=triangle path=ortho
 edge scheduler -> session "starts" head=triangle path=ortho
 edge scheduler -> feed "watches" head=triangle path=ortho
 edge feed -> graph "updates" head=triangle path=ortho

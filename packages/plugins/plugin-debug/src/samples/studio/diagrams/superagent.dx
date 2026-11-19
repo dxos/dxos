@@ -25,7 +25,12 @@ group subagents-body gap=24 {
 }
 
 group space-body gap=24 {
-  node space kind=graph extra=0.45 data-fill=0.6 hue=neutral pitch=26 seed=7 size=24
+  group space-col-0 gap=16 autoRows=176 alignContent=center {
+    node research-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=3 size=24 width=176 height=176
+    node reply-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=4 size=24 width=176 height=176
+    node calendar-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=5 size=24 width=176 height=176
+    node travel-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=6 size=24 width=176 height=176
+  }
 }
 
 edge email    -> triage head=triangle
@@ -35,7 +40,7 @@ edge triage   -> research head=triangle
 edge triage   -> reply head=triangle
 edge planner  -> calendar head=triangle
 edge planner  -> travel head=triangle
-edge research -> space head=triangle
-edge reply    -> space head=triangle
-edge calendar -> space head=triangle
-edge travel   -> space head=triangle
+edge research -> research-space head=triangle
+edge reply    -> reply-space head=triangle
+edge calendar -> calendar-space head=triangle
+edge travel   -> travel-space head=triangle
