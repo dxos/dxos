@@ -3,8 +3,13 @@ title: Introduction
 description: What drawing.sh is, and the three ways to use it.
 ---
 
-drawing.sh draws diagrams from a few lines of text. You say which boxes exist and how they relate; drawing places
-the boxes on a grid, routes every arrow around them, and writes an SVG. You never give a coordinate.
+drawing.sh draws diagrams from a few lines of text. You say which boxes exist and how they relate. drawing.sh places
+the boxes on a grid, routes every arrow around them, and writes an SVG.
+
+In a drawing tool, adding one box means moving its neighbors and dragging their arrows again. Here you never give a
+coordinate, so a new box is one more line.
+
+**Example** (Describing a three-box system)
 
 ```dx
 node Browser "Browser"
@@ -14,24 +19,26 @@ edge Browser -> Api "HTTPS"
 edge Api -> Db "reads, writes"
 ```
 
-The text is the `.dx` language. The picture is a `.dx.svg`: an ordinary SVG that also carries its `.dx` source, so
-it can be edited as text again later.
+Each `edge` line becomes one arrow, labeled with its quoted text.
+
+The text is the `.dx` language. The picture is a `.dx.svg`, an ordinary SVG that also carries its `.dx` source. You
+can edit it as text again later.
 
 ## Three ways in
 
-| Way                                      | For                                                                                 |
-| ---------------------------------------- | ----------------------------------------------------------------------------------- |
-| [The app](/docs/app/)                    | Drawing in the browser, alone or with others. No sign-up and nothing to install.    |
-| [The agent skill](/docs/agent-skill/)    | Asking your coding agent for a diagram of your code. The agent writes the `.dx`.    |
-| [The CLI](/docs/cli/)                    | Rendering `.dx` files yourself, in a script or in CI.                               |
+| Way                                   | For                                                                              |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| [The app](/docs/app/)                 | Drawing in the browser, alone or with others. No sign-up and nothing to install. |
+| [The agent skill](/docs/agent-skill/) | Asking your coding agent for a diagram of your code. The agent writes the `.dx`. |
+| [The CLI](/docs/cli/)                 | Rendering `.dx` files yourself, in a script or in CI.                            |
 
-They share one file format. A diagram rendered by the CLI or an agent opens in the app as an editable canvas, and a
+They share one file format. A diagram rendered by the CLI or an agent opens in the app as an editable canvas. A
 diagram exported from the app opens in Composer.
 
 ## Try it now
 
-The [home page](/) has a live editor: change the `.dx` text and the drawing updates as you type. **Open in app**
-copies your drawing into the app.
+The [home page](/) has a live editor. Change the `.dx` text and the diagram updates as you type. **Open in app**
+copies your diagram into the app.
 
 ## Next
 

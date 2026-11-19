@@ -3,8 +3,10 @@ title: The DX CLI
 description: Render diagrams with dx, and list, export and import the diagrams in a space from a terminal.
 ---
 
-`dx` is the DXOS command line. Its `drawing` commands render `.dx` files like the [`drawing` CLI](/docs/cli/), and
+`dx` is the DXOS command line. Its `drawing` commands render `.dx` files like the [`drawing` CLI](/docs/cli/). They
 also read and write the diagrams in a space: one you made in the app, or one shared from Composer.
+
+Install it from npm:
 
 ```bash
 npm install -g @dxos/cli@next
@@ -15,6 +17,8 @@ npm install -g @dxos/cli@next
 ## Render without an identity
 
 `dx drawing render` lays out a `.dx` file and writes `<name>.dx.svg` beside it. It needs no identity and no space.
+
+**Example** (Rendering beside the source and to a path)
 
 ```bash
 dx drawing render arch.dx
@@ -45,19 +49,19 @@ dx space join 'https://app.drawing.sh/?spaceInvitationCode=…'
 
 It prints the space's id. `dx space list` lists every space this identity can see.
 
-The app syncs peer to peer only, so keep it open while `dx` joins: the invitation is redeemed by a member's device
-that is online, and the space's diagrams reach the CLI from the browser.
+The app syncs peer to peer only, so keep it open while `dx` joins. A member's device that is online redeems the
+invitation, and the space's diagrams reach the CLI from the browser.
 [drawing.sh and DXOS](/docs/dxos/#peer-to-peer-only-without-a-composer-account) explains why.
 
 ## Diagrams in a space
 
 Each command takes `--space-id <id>`. Without it, `dx` uses your default space.
 
-| Command                                 | Does                                                               |
-| --------------------------------------- | ------------------------------------------------------------------ |
-| `dx drawing list`                       | Lists the space's diagrams with their ids.                         |
-| `dx drawing export <id> [-o <path>]`    | Writes the diagram to `<name>.dx.svg`, or to `<path>`.             |
-| `dx drawing import <file.dx.svg>`       | Adds the drawing in a `.dx.svg` to the space as a new diagram.     |
+| Command                              | Does                                                           |
+| ------------------------------------ | -------------------------------------------------------------- |
+| `dx drawing list`                    | Lists the space's diagrams with their ids.                     |
+| `dx drawing export <id> [-o <path>]` | Writes the diagram to `<name>.dx.svg`, or to `<path>`.         |
+| `dx drawing import <file.dx.svg>`    | Adds the drawing in a `.dx.svg` to the space as a new diagram. |
 
 For example, render a diagram from your repository and add it to a shared space:
 
@@ -71,6 +75,8 @@ gets it while the app is open at the same time as a device that has it.
 
 ## Agents
 
-`dx mcp serve` makes your spaces available to an MCP client such as Claude Code, with the Drawing skill among its
-tools: the agent can draw a diagram straight into a space. It runs as your identity and reads and writes every space
-you can see, so connect only a client you trust with that.
+`dx mcp serve` makes your spaces available to an MCP client such as Claude Code. The Drawing skill is among its
+tools, so the agent can draw a diagram straight into a space.
+
+`dx mcp serve` runs as your identity and reads and writes every space you can see. Connect only a client you trust
+with that.

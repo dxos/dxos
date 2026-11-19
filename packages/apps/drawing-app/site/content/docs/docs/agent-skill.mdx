@@ -8,12 +8,14 @@ for diagrams in plain words.
 
 ## Install
 
+Run this in your project:
+
 ```bash
 npx skills add dxos/dxos --skill drawing
 ```
 
-It works with Claude Code, Cursor, Codex and any agent that reads `SKILL.md`. The command adds the skill to your
-project; commit it, or ignore it, as you would any other agent configuration.
+`npx skills add` adds the skill to your project. Commit it, or ignore it, as you would any other agent configuration.
+It works with Claude Code, Cursor, Codex and any agent that reads `SKILL.md`.
 
 ## Ask for a diagram
 
@@ -37,7 +39,7 @@ same text.
 ## Open it on a canvas
 
 Ask the agent to open the diagram in the app. It runs [`drawing open`](/docs/cli/#open), which prints a link that
-opens the diagram on an editable canvas. Anyone with the link can open it; it expires 30 days after it was last
+opens the diagram on an editable canvas. Anyone with the link can open it. The link expires 30 days after it was last
 opened.
 
 ## The CLI without installing
