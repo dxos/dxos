@@ -155,7 +155,7 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
         className='studio-card dx-cover rounded-xl overflow-hidden'
         data-testid='card-node'
         data-tone={tone ? true : undefined}
-        style={{ padding: '12px 18px', ...style }}
+        style={{ padding: '9px 18px', ...style }}
       >
         <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
           {chipsOf(data.chips) ? <Chips {...chipsOf(data.chips)!} /> : null}

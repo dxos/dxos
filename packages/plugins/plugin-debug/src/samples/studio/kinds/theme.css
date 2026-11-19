@@ -100,6 +100,11 @@
   --dx-card-gap: 9px;
 }
 
+/* The title stands a little further from what is under it than the parts under it stand from each other. */
+.studio-card-frame [data-part='card-header'] {
+  margin-block-end: 6px;
+}
+
 /* Each part's line is set through `--dx-line`: the frame's own line height is `!important` and reads that variable,
    so a `line-height` here would lose to it and the part would keep the canvas's lines under the deck's type. */
 .studio-card-frame [data-part='label'] {
