@@ -6,12 +6,11 @@ title: 'Problems'
 
 ## Rethinking the Future of Enterprise Software
 
-<Box variant="fill">
-<Grid cols="3">
+<Grid cols="3" align="center">
 
 <Card icon="brain" tone="error">
 
-### Shared<br>Memory
+### Shared Memory
 
 - Beyond silos
 - Semantic indexing
@@ -38,7 +37,6 @@ title: 'Problems'
 </Card>
 
 </Grid>
-</Box>
 
 <!--
 - What is the future of software?
