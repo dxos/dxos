@@ -20,8 +20,17 @@ grid diagram cannot say the drawing, and it checks its own answer by lowering it
 Canvas drawing has a DSL companion beside its article that shows this text, lets it be edited, and rebuilds the
 drawing from it; where the host is read-only the text can be read but not edited.
 
-In the box form, a box a component draws is written `custom <id> kind=<name>`; a shape word with `kind=` is an
-error. The space graph's element kind is named `graph`, and a node stored as `space-graph` reads as it.
+A drawing that uses contributed element kinds, or connectors someone routed, survives being written as text and
+read back. A box a component draws is written `custom <id> kind=<name>` and carries the kind's own fields
+(`tone=event variant=simple`); a field whose name an element attribute already claims is written `data-fill=0.55`,
+and a shape word with `kind=` is an error. A link keeps its markers and line style, an arrow states its bends
+(`arrow link a -> b via 10,20 30,20`), and a box keeps its style (`border`, `align`, `valign`, `fontSize`). A `grid`
+box places the boxes inside its braces, modelled on CSS grid (`cols`, `rows`, `gap`, `padding`, `autoCols`,
+`autoRows`, `justifyContent`, `alignContent`), or packs them as circles (`layout=pack` with `packSeed`, `packMin`,
+`packMax`). Rebuilding a drawing from its text clears the records the text manages first, and a read-only canvas
+draws no grid.
+
+The space graph's element kind is named `graph`, and a node stored as `space-graph` reads as it.
 
 Breaking: the language's namespace is exported as `DSL` (`import { DSL } from '@dxos/diagram'`); `Dsl` is gone.
 

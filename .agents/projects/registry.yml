@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/diagram-dsl/TASKS.md
     design: .agents/projects/diagram-dsl/DESIGN.md
     prs: [14583, 14595]
-    resume: "Phase 2 is built and pushed on #14595 (stacked on #14583). NEXT: land #14583, then mark #14595 ready. Open: groups do not take width/height yet; the agent's Read operation still returns box text, not intent."
+    resume: "Phase 2 is built and pushed on #14595, based on main and including #14583 (closed). The deck left for a PR of its own. NEXT: mark #14595 ready. Open: groups do not take width/height yet; the agent's Read operation still returns box text, not intent."
   - name: echo-cloudflare-demo
     status: active
     user: burdon

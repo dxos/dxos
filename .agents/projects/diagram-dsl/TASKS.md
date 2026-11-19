@@ -1,6 +1,6 @@
 # Diagram DSL — Tasks
 
-_Resume: land #14583, then mark #14595 ready (`moon run :lint :build :test-types`, `gh pr ready`). Uncommitted: none. Last: the deck left this PR on 2026-11-18; its files are at `ff69e85fdfd` under `packages/plugins/plugin-debug/src/samples/cloudflare` and go to a PR of their own, stacked on this one._
+_Resume: mark #14595 ready (`moon run :lint :build :test-types`, `gh pr ready`); it is based on `main` and includes #14583, which was closed on 2026-11-18. Uncommitted: none. Last: the deck left this PR on 2026-11-18; its files are at `ff69e85fdfd` under `packages/plugins/plugin-debug/src/samples/cloudflare` and go to a PR of their own, stacked on this one._
 
 ## Phase 1: A drawing as intent
 
