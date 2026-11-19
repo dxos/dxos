@@ -148,9 +148,6 @@
       "path": "packages/common/diagram/tsconfig.json"
     },
     {
-      "path": "packages/apps/diagram-app/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
@@ -164,9 +161,6 @@
     },
     {
       "path": "packages/apps/drawing-app/tsconfig.json"
-    },
-    {
-      "path": "packages/devtools/drawing/site/tsconfig.json"
     },
     {
       "path": "tools/dx-tools/tsconfig.json"

@@ -1,6 +1,7 @@
 layer: application
 language: typescript
 tags:
+  - e2e
   - typecheck
   - ts-test
   - vite
@@ -8,6 +9,8 @@ tasks:
   # `@dxos/*` resolve from source (vite-plugin-import-source), so only dist consumed at runtime or by the
   # config itself is built first; the `vite` tag's `^:build` would build the whole plugin graph.
   bundle:
+    inputs:
+      - public/**/*
     options:
       mergeDeps: replace
     deps:
@@ -15,6 +18,8 @@ tasks:
       - '#vite-plugin:build'
       # The plugins' generated capability barrels, which their sources import.
       - '^:#prebuild'
+      # The landing page's prerender, which the config runs in Node.
+      - 'drawing:build'
   serve:
     options:
       mergeDeps: replace
@@ -23,3 +28,20 @@ tasks:
       - '#vite-plugin:build'
       # The plugins' generated capability barrels, which their sources import.
       - '^:#prebuild'
+      # The landing page's prerender, which the config runs in Node.
+      - 'drawing:build'
+  # The bundle Playwright serves; see composer-app's `bundle-e2e` for why this is a target of its own.
+  bundle-e2e:
+    extends: bundle
+    env:
+      DX_EDGE_BASE_URL: 'https://preview.dxos.network'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: 'false'
+  # As for `bundle`: the template's `^:build` would build the whole plugin graph.
+  e2e:
+    options:
+      mergeDeps: replace
+    deps:
+      - test-utils:build
+      - vite-plugin-icons:build
+      - bundle-e2e
