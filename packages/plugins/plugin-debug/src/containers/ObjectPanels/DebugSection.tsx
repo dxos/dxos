@@ -5,6 +5,7 @@
 import React, { type PropsWithChildren } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 
 export type DebugSectionProps = PropsWithChildren<{
@@ -15,21 +16,25 @@ export type DebugSectionProps = PropsWithChildren<{
 
 /** One contributed panel in the Debug companion: a title, an optional refresh, and its rows. */
 export const DebugSection = ({ title, onRefresh, refreshLabel, children }: DebugSectionProps) => (
-  <section className='flex flex-col gap-1 p-2'>
-    <div className='flex items-center justify-between'>
-      <Typography.Text classNames='font-medium'>{title}</Typography.Text>
-      {onRefresh && (
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--arrows-clockwise--regular'
-          label={refreshLabel}
-          onClick={onRefresh}
-        />
-      )}
-    </div>
-    <dl className='grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-3 gap-y-1 text-sm'>{children}</dl>
-  </section>
+  <Layout.Flex column gap='xs' classNames='p-2' asChild>
+    <section>
+      <Layout.Flex align='center' justify='between'>
+        <Typography.Text classNames='font-medium'>{title}</Typography.Text>
+        {onRefresh && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--arrows-clockwise--regular'
+            label={refreshLabel}
+            onClick={onRefresh}
+          />
+        )}
+      </Layout.Flex>
+      <Layout.Grid cols={['min', 'fill']} gap='sm' classNames='text-sm' asChild>
+        <dl>{children}</dl>
+      </Layout.Grid>
+    </section>
+  </Layout.Flex>
 );
 
 /** One label and value in a {@link DebugSection}. */

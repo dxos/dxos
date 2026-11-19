@@ -16,7 +16,9 @@ import { useConfig } from '@dxos/react-client';
 import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
+import * as Status from '@dxos/react-ui/Status';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { DiscordSetup } from '#components';
@@ -263,7 +265,7 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
 
       <Form.FieldSet label={t('discord-index-servers.label')}>
         {managed.length === 0 ? (
-          <Typography.Text tone='muted'>{t('discord-setup-servers-empty.label')}</Typography.Text>
+          <Status.Empty>{t('discord-setup-servers-empty.label')}</Status.Empty>
         ) : (
           <DiscordSetup.List
             ids={managed.map(({ id }) => id)}
@@ -392,7 +394,7 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
               </Select.Content>
             </Select.Root>
           </Form.Field>
-          <div className='flex flex-wrap items-center gap-2'>
+          <Layout.Flex align='center' gap='sm' classNames='flex-wrap'>
             <Typography.Text tone='muted' classNames='grow'>
               {state?.lastRun
                 ? t('discord-index-totals.label', {
@@ -420,7 +422,7 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
               disabled={busy || indexedChannels.size === 0 || !crawlState}
               onClick={() => void handleRestart()}
             />
-          </div>
+          </Layout.Flex>
         </Form.FieldSet>
       )}
     </>
