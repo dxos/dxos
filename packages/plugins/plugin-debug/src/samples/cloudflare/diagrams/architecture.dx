@@ -77,3 +77,6 @@ group edge-section cols="237 1fr" gap=32 padding=8 border=true {
 edge client -- worker
 edge worker -- router
 edge router -- registry
+edge registry#e3 -- echo#w3
+edge registry#e3 -- compute#w3 path=ortho
+edge registry#e3 -- plugins#w3 path=ortho
