@@ -64,7 +64,7 @@
 /* The cards' type scale, in one place: a card's title, its body and its footer, and the one-line card's two. */
 .studio-card {
   --sd-card-title: 26px;
-  --sd-card-body: 18px;
+  --sd-card-body: 20px;
   --sd-card-footer: 14px;
   --sd-card-simple-title: 24px;
   --sd-card-simple-note: 15px;

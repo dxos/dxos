@@ -2,7 +2,7 @@ diagram kind=grid size=1600x880 cols="1096 344" gap=64 padding=48
 
 group layers-section rows="224 544" gap=16 {
   group types-section padding=16 border=true {
-    group types-section-inner "ECHO Core" cols=3 gap=64 {
+    group types-section-inner "ECHO Core" cols=3 gap=24 {
       group types-col-0 gap=16 {
         node typescript "TypeScript" kind=card footer="Effect API" icon=file-ts variant=simple
         node json-schema "Effect/JSON Schema" kind=card footer="Strong and weak types" icon=brackets-angle variant=simple
@@ -17,7 +17,7 @@ group layers-section rows="224 544" gap=16 {
       }
     }
   }
-  group layers-body cols=3 gap=64 padding=16 border=true {
+  group layers-body cols=3 gap=24 padding=16 border=true {
     group layers-col-0 gap=16 autoRows=160 {
       node graph "Graph" kind=card body="Typed objects and relations: a property graph per space." footer="one Automerge doc per object" icon=graph iconTone=accent
       node crdt "CRDT" kind=card body="Automerge: concurrent edits from people and agents merge deterministically." footer="no locks · no primary" icon=git-merge iconTone=message
