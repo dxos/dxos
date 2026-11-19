@@ -1722,6 +1722,14 @@ decision D-104: Left and right skip a slide's click steps and land on the neighb
   why: A speaker steps through the builds once, forward; for the rest of a talk, such as Q&A, they jump between slides and do not want to replay them.
 ```
 
+```mdl
+decision D-105: A slide's label reads the `title` its frontmatter states before its first heading, in the gallery and in the navtree. Refines [D-15].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-5]
+  why: A slide's first heading is not always its name: a cover's is the product, and a slide of cards has only the cards' captions.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
@@ -1788,12 +1796,3 @@ ext op
     requires?: ServiceList
     note?: Prose
 ```
-
-```mdl
-decision D-105: A slide's label reads the `title` its frontmatter states before its first heading, in the gallery and in the navtree. Refines [D-15].
-  date: 2026-11-18
-  by: user:richburdon
-  affects: [F-5]
-  why: A slide's first heading is not always its name: a cover's is the product, and a slide of cards has only the cards' captions.
-```
-
