@@ -1,20 +1,29 @@
-diagram kind=grid size=1600x880 cols="498 237 767" gap=32 padding=16 autoRows=744 alignContent=center
+diagram kind=grid size=1944x880 cols="592 284 908" gap=64 padding=16 autoRows=744 alignContent=center
 
-group client-section cols=2 gap=8 padding=8 border=true {
-  group client-col rows=3 gap=16 {
-    node client "Client" kind=card icon=browser iconTone=teal {
-      item "Composer app tab"
-      item "Plugins and surfaces"
+group client-cell rows="496 1fr" {
+  group client-section cols=2 gap=8 padding=8 border=true {
+    group client-col rows=2 gap=16 {
+      node client "Client" kind=card icon=browser iconTone=teal {
+        item "Composer app tab"
+        item "Plugins and surfaces"
+      }
+      group client-parts rows=3 gap=16 {
+        node cache "Cache" kind=card icon=lightning iconTone=teal
+      }
     }
-    group client-rest { }
-  }
-  group worker-col rows=3 gap=16 {
-    node worker "Worker" kind=card icon=cpu iconTone=teal {
-      item "Shared by every tab"
-      item "Local replica in SQLite"
+    group worker-col rows=2 gap=16 {
+      node worker "Worker" kind=card icon=cpu iconTone=teal {
+        item "Shared by every tab"
+        item "Local replica in SQLite"
+      }
+      group worker-parts gap=16 {
+        node service-registry "Service Registry" kind=card icon=plugs-connected iconTone=teal
+        node plugin-registry "Plugin Registry" kind=card icon=puzzle-piece iconTone=teal
+        node vault "Vault" kind=card icon=vault iconTone=teal
+      }
     }
-    group worker-rest { }
   }
+  group client-below { }
 }
 
 group router-section rows="8 1fr 8" {
@@ -29,7 +38,7 @@ group router-section rows="8 1fr 8" {
   group router-below { }
 }
 
-group edge-section cols="237 1fr" gap=32 padding=8 border=true {
+group edge-section cols="284 1fr" gap=32 padding=8 border=true {
   group registry-col rows=3 gap=16 {
     node registry "ServiceRegistry" kind=card icon=plugs-connected iconTone=sheet {
       item "Resolves services by tag"
@@ -61,7 +70,7 @@ group edge-section cols="237 1fr" gap=32 padding=8 border=true {
       }
     }
     group plugins-block cols=2 gap=8 {
-      node plugins "Plugins" kind=card icon=puzzle-piece iconTone=violet {
+      node plugins "Plugin Registry" kind=card icon=puzzle-piece iconTone=violet {
         item "Client and EDGE halves"
         item "Loaded per space"
       }
@@ -74,9 +83,9 @@ group edge-section cols="237 1fr" gap=32 padding=8 border=true {
   }
 }
 
-edge client -- worker
-edge worker -- router
-edge router -- registry
+edge client#e3 -- worker#w3
+edge worker#e3 -- router#w3
+edge router#e3 -- registry#w3
 edge registry#e3 -- echo#w3
 edge registry#e3 -- compute#w3 path=ortho
 edge registry#e3 -- plugins#w3 path=ortho

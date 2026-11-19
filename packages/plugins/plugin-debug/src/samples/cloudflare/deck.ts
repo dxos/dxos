@@ -82,24 +82,30 @@ export const diagramTitle = (diagram: string): string => {
   return slide ? slideTitle(slide) : diagram;
 };
 
-/** The frame every slide's diagram states: one page, so a card on one slide is the size of a card on another. */
+/** The page a diagram states unless it needs more width; a slide fits it by height, so cards are one size across slides. */
 export const STUDIO_PAGE = { x: 0, y: 0, width: 1600, height: 880 } as const;
+
+/** The frame a diagram's slide fits: the size its own text states, since a slide has room either side of the page. */
+export const diagramPage = ({ source }: Diagram) => {
+  const [, width, height] = source.match(/\bsize=(\d+)x(\d+)\b/) ?? [];
+  return width && height ? { x: 0, y: 0, width: Number(width), height: Number(height) } : STUDIO_PAGE;
+};
 
 /** How far a slide may magnify the page. A fit stops at 1:1 by default, and a slide is wider than the page. */
 const FIT_ZOOM = 4;
 
 /**
- * The canvas a slide is drawn on: the deck's look, its 8px pitch, and the page as what a fit frames. The Neu ground
- * draws no grid of its own, so `backgroundGrid` gives the drawing something to place against.
+ * The canvas a slide is drawn on: the deck's look, its 8px pitch, and the diagram's page as what a fit frames. The
+ * Neu ground draws no grid of its own, so `backgroundGrid` gives the drawing something to place against.
  */
-export const STUDIO_CANVAS: Partial<Canvas.CanvasSettings> = {
+export const studioCanvas = (diagram: Diagram): Partial<Canvas.CanvasSettings> => ({
   styleSet: 'neu',
   background: 'neu',
   grid: 8,
   backgroundGrid: 'dots',
-  fitFrame: STUDIO_PAGE,
+  fitFrame: diagramPage(diagram),
   fitZoom: FIT_ZOOM,
-};
+});
 
 /** The commands a diagram's text draws; one that does not parse is a broken bundled file, so it throws. */
 export const diagramCommands = ({ id, source }: Diagram) => {

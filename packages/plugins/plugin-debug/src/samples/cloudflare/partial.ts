@@ -10,7 +10,7 @@ import * as Architecture from '@dxos/plugin-canvas/Architecture';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 
-import { DIAGRAMS, STUDIO_CANVAS, diagramCommands, diagramTitle, makeStudioDeck } from './deck.ts';
+import { DIAGRAMS, diagramCommands, diagramTitle, makeStudioDeck, studioCanvas } from './deck.ts';
 
 export type Provides = {
   /** The presentation: a slide per markdown file, the diagram slides embedding their drawings. */
@@ -33,7 +33,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('studi
             name: diagramTitle(diagram.id),
             commands: diagramCommands(diagram),
             readonly: true,
-            settings: STUDIO_CANVAS,
+            settings: studioCanvas(diagram),
           }),
         ]),
       );
