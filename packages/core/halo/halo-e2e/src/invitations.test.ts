@@ -26,13 +26,18 @@ describe('Invitations', () => {
       const [hostTerminal, guestTerminal] = yield* Effect.all([awaitTerminal(hostFlow), awaitTerminal(guestFlow)], {
         concurrency: 'unbounded',
       });
-      expect(hostTerminal._tag).toEqual('success');
-      expect(guestTerminal._tag).toEqual('success');
-
       // The guest joined the host's identity.
       const guestIdentity = yield* currentOf(Identity.identity).pipe(Effect.provide(guest));
       const hostIdentity = yield* currentOf(Identity.identity).pipe(Effect.provide(host));
       expect(Option.getOrThrow(guestIdentity).did).toEqual(Option.getOrThrow(hostIdentity).did);
+
+      // The host's flow names nothing, since the guest joined the host's own identity.
+      expect(hostTerminal).toEqual({ _tag: 'success', result: {} });
+      // The guest's flow reports the identity it joined.
+      expect(guestTerminal).toEqual({
+        _tag: 'success',
+        result: { identityDid: Option.getOrThrow(hostIdentity).did },
+      });
 
       // The host now sees two devices.
       yield* pollUntil(currentOf(Identity.devices).pipe(Effect.provide(host)), (devices) => devices.length === 2);
@@ -57,8 +62,9 @@ describe('Invitations', () => {
       const [hostTerminal, guestTerminal] = yield* Effect.all([awaitTerminal(hostFlow), awaitTerminal(guestFlow)], {
         concurrency: 'unbounded',
       });
-      expect(hostTerminal._tag).toEqual('success');
-      expect(guestTerminal._tag).toEqual('success');
+      // Both flows report the space the guest joined.
+      expect(hostTerminal).toEqual({ _tag: 'success', result: { spaceId: space.id } });
+      expect(guestTerminal).toEqual({ _tag: 'success', result: { spaceId: space.id } });
 
       // The host space now has two members.
       yield* pollUntil(

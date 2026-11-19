@@ -40,6 +40,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../credentials"
+    },
+    {
       "path": "../halo"
     }
   ]

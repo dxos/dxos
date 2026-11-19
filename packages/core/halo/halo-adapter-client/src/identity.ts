@@ -16,7 +16,6 @@ import { createEdgeIdentity } from '@dxos/client/edge';
 import { getDeviceLabel } from '@dxos/client/halo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
@@ -223,16 +222,6 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
         ),
       catch: (error) => new IdentityError({ context: { error } }),
     }),
-
-  personalSpaceId: Effect.tryPromise({
-    try: async () => {
-      // Same pre-initialization contract as `getSnapshot`: none means "unknown", not "absent".
-      const spaceKey = client.initialized ? client.halo.identity.get()?.spaceKey : undefined;
-      const key = toPublicKey(spaceKey);
-      return key ? Option.some(await createIdFromSpaceKey(key)) : Option.none();
-    },
-    catch: (error) => new IdentityError({ context: { error } }),
-  }),
 
   recover: (args) =>
     Effect.tryPromise({

@@ -2354,6 +2354,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../packages/core/compute/operation
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-client
       '@dxos/plugin-inspector':
         specifier: workspace:*
         version: link:../packages/plugins/plugin-inspector
@@ -7595,6 +7598,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../credentials
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../echo/echo-protocol

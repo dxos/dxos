@@ -11,16 +11,17 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as Main from '@dxos/react-ui/Main';
 ```
 
-The sidebars open and close, and a drawer can open along the bottom. The content reflows around them.
+`Main` is the app shell. It puts the content between a navigation sidebar and a complementary sidebar. The sidebars
+open and close, and a drawer can open along the bottom. The content reflows around them.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Main.Root` | Holds the state of the sidebars and the drawer |
+| `Main.Root` | The root, which holds the state of the sidebars and the drawer |
 | `Main.NavigationSidebar` | The sidebar at the start |
 | `Main.ComplementarySidebar` | The sidebar at the end |
 | `Main.Content` | The main area |
 | `Main.Drawer` | A drawer across the bottom of the main area |
-| `Main.Overlay` | Covers the content while a sidebar is open over it |
-| `Main.useMainSidebars` | The sidebars' state and setters |
+| `Main.Overlay` | The layer that covers the content while a sidebar is open over it |
+| `Main.useMainSidebars` | A hook that returns the sidebars' state and setters |

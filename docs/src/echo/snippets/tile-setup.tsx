@@ -25,7 +25,7 @@ createRoot(document.getElementById('root')!).render(<App />);
 // #endregion
 
 // #region dark
-// react-ui's dark styles apply under a `dark` class on the root element.
+// The dark values apply under a `dark` class on the root element.
 const media = window.matchMedia('(prefers-color-scheme: dark)');
 const sync = () =>
   document.documentElement.classList.toggle('dark', media.matches);

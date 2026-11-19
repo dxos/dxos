@@ -5,8 +5,8 @@ description: Have Claude Code, Codex or Cursor build a small ECHO app in a folde
 
 import AgentPrompt from '../../../../components/AgentPrompt.astro';
 
-A coding agent can build a small app on ECHO in a folder of yours. Open an empty folder in your agent, then describe the
-app you want in the prompt below, or pick an example, and open it in your agent.
+A coding agent can build a small app on ECHO in a folder of yours. To start, open an empty folder in your agent. Then
+describe the app you want in the prompt below, or pick an example, and open the prompt in your agent.
 
 export const examples = [
   {
@@ -39,14 +39,20 @@ export const context = [
 
 ## What the agent reads
 
-The prompt has the agent read `/echo/llms-full.txt` first. It holds every ECHO page as Markdown, code samples
-included, so the agent has the whole section in one fetch. The agent then sets the project up from the learning path's
-package.json and Vite config, which pin each `@dxos` package to a build of main until the next npm release. [llms.txt](/docs/echo/resources/llms-txt/) lists the other files for agents.
+The prompt has the agent read `/echo/llms-full.txt` first. This file holds every ECHO page as Markdown, code samples
+included, so the agent has the whole section in one fetch.
+
+The agent then sets the project up from the learning path's package.json, Vite config, tsconfig and index.html. The
+package.json pins each `@dxos` package to a build of main until the next npm release.
+
+See [llms.txt](/docs/echo/resources/llms-txt/) for the other files for agents.
 
 ## While it works
 
-The agent sets up the project, writes the app and tells you how to run it. Run it when it says so and try what you
-asked for. To try a shared app, open it in a second browser or a private window, so the second copy has an identity of
-its own, and join with the code the first one gives you.
+The agent sets up the project, writes the app and tells you how to run it. Run the app when the agent says so, and try
+what you asked for.
+
+To try a shared app, open it in a second browser or a private window, so the second copy has an identity of its own.
+Then join with the code the first copy gives you.
 
 To build the learning path's app yourself instead, start with [The ECHO object](/docs/echo/learn/the-echo-object/).
