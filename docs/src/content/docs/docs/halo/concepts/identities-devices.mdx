@@ -50,9 +50,13 @@ off every device. A new device that signs EDGE's challenge with it joins the ide
 access to hold a key for it, and EDGE, DXOS's always-online peer, provides this as a service.
 
 When an identity makes the grant, EDGE runs an **agent device** for it. The agent device is one of the identity's
-devices, of kind `agent-managed`, and EDGE holds its key. Like any device, it can act for the identity, and that
-includes the spaces the identity belongs to. [Spaces and membership](/docs/halo/concepts/spaces-membership/) says what
-that gives EDGE in a space.
+devices, of kind `agent-managed`, and EDGE holds its key. Like any device, it can sign for the identity. It keeps its
+key apart from the identity's data, runs no logic of its own, and signs only when another EDGE service asks. EDGE asks
+it in two cases:
+
+- When the user recovers the identity, it signs the credential that admits the new device.
+- When a member's device needs a credential written into a space and no other member is online to write it, it
+  writes the credential to the space for them. A new device's feed is admitted this way.
 
 `@dxos/halo` has no function that makes the grant. Composer makes it when the identity is linked to a DXOS account.
 [Recovery and credentials](/docs/halo/concepts/recovery-credentials/) describes EDGE's part in a recovery.

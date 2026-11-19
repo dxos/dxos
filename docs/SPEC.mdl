@@ -112,7 +112,7 @@ template concept: A core concept
   purpose: Describe one idea completely, for a reader who has finished the learning path.
   parts:
     - Title and a definition in one sentence
-    - Model: the idea, with a diagram where the shape matters
+    - Model: the idea, with a diagram where the shape matters; a Model with more topics than four bold leads carry splits them under H3s [D-364]
     - Behavior: what is guaranteed, with spec citations
     - Limits: what is not guaranteed, and known divergences
 ```
@@ -943,6 +943,7 @@ page halo-identities-devices: Identities and devices
     - Each device is a member key, added by a delegation and removed by a revocation, with a kind and presence
     - Limits: when every device is lost and the identity has no DXOS account to recover through
     - Key holding: no server holds a key for the identity by default; the identity can grant one, and EDGE provides this as an agent device whose key it holds
+    - What the agent device does: it signs only when another EDGE service asks, to admit a recovered device and to write credentials into a space when no member is online [D-366]
 ```
 ```mdl
 page halo-spaces-membership: Spaces and membership
@@ -957,7 +958,8 @@ page halo-spaces-membership: Spaces and membership
     - The membership policy: invite or locked
     - Membership is signed delegations and revocations that converge with no server; a member revokes only those it has causal seniority over, an admin anyone
     - The group key, which members with read or more hold, which changes with membership and which pull members relay without reading [D-357]
-    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-245]; an agent device gives EDGE its identity's access level in that identity's spaces [D-357]
+    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-245]; an agent device writes credentials into the identity's spaces and does not read their data [D-366]
+    - A caution on what runs today: spaces replicate through EDGE without end-to-end encryption, `pull` cannot be granted yet, and only an admin changes membership [D-365]
     - Links to ECHO's Spaces and databases for data and replication
 ```
 ```mdl
@@ -992,6 +994,7 @@ page halo-recovery-credentials: Recovery and credentials
     - The recovery key is a member of the identity's group
     - The recovery challenge, and what a recovered identity gets back
     - The credentials stream, service access and API tokens
+    - The identity's agent device signs the credential that admits a recovered device, so an identity without one cannot be recovered [D-366]
     - Limits: what a lost recovery credential means
 ```
 
@@ -7076,6 +7079,31 @@ decision D-363: Recover an identity says its last step does not run in the embed
   affects: [halo-recover-identity]
   supersedes: D-172
   why: [D-173] says recovery needs an account, and the tutorial project has no account or agent code.
+```
+
+```mdl
+decision D-364: Approve the recommendations on five open questions. Spaces and membership keeps describing Keyhive and gains one titled note on what today's implementation does. The docs home says an agent works in that same data through typed operations, and SAGE's tagline is left for user:richburdon. TILE's tutorial keeps no dark-mode step and installs from pkg.pr.new until the next npm release, while the component pages keep their npm install lines until then. The two EDGE questions are settled by reading the EDGE repository. TILE's learning-path pages use `## Background` and `## Steps`, TILE's component pages share one order, and a concept page's Model section may hold H3 subheadings.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [halo-spaces-membership, docs-home, tile-learn-installation, tile-learn-echo]
+```
+
+```mdl
+decision D-365: The note on Spaces and membership is a caution titled "What runs today". It says the implementation under HALO has not moved to Keyhive yet, so spaces replicate through EDGE without end-to-end encryption and EDGE can read every space it replicates, `pull` cannot be granted, and only an admin can change membership. TILE's component pages open with the live preview or story, then the import line, then the opening sentence, then the sample. Fills in [D-364].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-spaces-membership]
+  why: The legacy layer maps `pull` to no role and the observability code states that every space replicates through EDGE in plaintext. The order is the one 32 of the 43 core component pages already used.
+```
+
+```mdl
+decision D-366: EDGE's agent device is a store that signs credentials when another EDGE service asks, and runs no logic of its own. It signs the credential that admits a recovered device, so recovery needs an agent device, and it writes credentials into the identity's spaces when no member's device is online, such as a new device's feed admission. It does not read space data. Answers what [D-357] left open. Fills in [D-364].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-recovery-credentials, halo-identities-devices, halo-spaces-membership, edge-identity-services]
+  why: In the EDGE repository, the db-service recovery handler admits the device through the identity service's `authorizeDevice`, which signs with the agent key, and fails with "Agent key not found" for an identity without one. Notarization writes credentials through the agent's feed. The identity service's README describes an agent as a passive Durable Object that stores keys and signs credentials on request.
 ```
 
 ## Appendix: Extension Definitions

@@ -14,7 +14,9 @@ or an event.
 An HTTP endpoint has a path, a request body and a response body. An operation has the same three parts: a key, an input
 schema and an output schema.
 
-**Definition.** `Operation.make` builds a **definition** from metadata and two schemas:
+### Definition
+
+A **definition** is the value that `Operation.make` builds from metadata and two schemas:
 
 - The metadata, `meta`, holds the key, a name, a description and an icon. The **key** is a DXN, such as
   `com.example.operation.stashedLink.markRead`, and it names the operation everywhere it runs. The description is
@@ -30,8 +32,10 @@ schema and an output schema.
 `MarkRead` has no handler yet. Its one input field, `link`, is a reference to the link, not the link itself, and its
 output is `Schema.Void`, so a caller gets nothing back.
 
-**Handler.** A **handler** takes the input and returns an Effect that produces the output. `Operation.withHandler`
-attaches one to a definition.
+### Handler
+
+A **handler** takes the input and returns an Effect that produces the output. `Operation.withHandler` attaches one to a
+definition.
 
 **Example** (Attaching a handler)
 
@@ -49,17 +53,23 @@ call.
 A **handler set** is a group of handlers that a runtime loads together. A PLEX plugin contributes one through a
 capability. See PLEX's [Operations](/docs/plex/concepts/operations/).
 
-**The invoker.** The **invoker** runs an operation for a caller. It does four things in order:
+### Invoker
+
+The **invoker** runs an operation for a caller. It does four things in order:
 
 1. It finds the handler by the definition's key.
 2. It checks the input against the input schema.
 3. It runs the handler with the services it declared.
 4. It checks the output.
 
+### Registry
+
 The **operation registry** holds each definition as an ECHO object, so agents and the MCP server can search the
 operations a space offers. A definition whose metadata sets `skipRegistry` is left out of it.
 
-**Annotations.** A definition carries hints for its callers:
+### Annotations
+
+A definition carries hints for its callers:
 
 | Annotation | Says |
 | ---------- | ---- |

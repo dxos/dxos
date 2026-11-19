@@ -10,7 +10,7 @@ By the end of this page the contacts are objects in [ECHO](/docs/echo/overview/)
 the device, and they sync to your other devices and to anyone you share the space with. The edit dialog is a form
 built from their schema.
 
-## Before you start
+## Background
 
 So far the contacts live in React state, which a reload resets and no other device sees. To move them into ECHO, we
 change three things from the last page:
@@ -24,6 +24,8 @@ change three things from the last page:
 We take the type from ECHO's own learning path. Its `Person` has a name, an email and an employer, and no role. The
 role select, the role's tooltip and the `role.*` strings from the earlier pages therefore have no place on this
 screen.
+
+## Steps
 
 <Steps>
 

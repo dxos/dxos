@@ -6,6 +6,8 @@ description: The container shell, with a header, a body and a footer.
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
+<TilePreview id="panel" height="20rem" />
+
 ```ts
 import * as Panel from '@dxos/react-ui/Panel';
 ```
@@ -14,8 +16,6 @@ A panel is the shell of a pane: a header row, a body that takes the rest of the 
 [Layout](/docs/tile/concepts/layout/) explains how it scrolls.
 
 <Snippet file="tile-components" region="panel" lang="tsx" />
-
-<TilePreview id="panel" height="20rem" />
 
 ## Parts
 

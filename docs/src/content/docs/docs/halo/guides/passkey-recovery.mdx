@@ -50,7 +50,8 @@ Recovery runs on the new device, before any identity exists, in three calls:
 1. `Identity.requestRecoveryChallenge` gets a challenge from EDGE for this device.
 2. `navigator.credentials.get` asks the user to sign it with the passkey.
 3. `Identity.recover` sends the signature, the challenge and the lookup key from the user handle. EDGE checks them against
-   the identity's recovery credentials and returns the credential that admits the device.
+   the identity's recovery credentials. The identity's agent device signs the credential that admits the device, and
+   EDGE returns it.
 
 **Example** (Recovering an identity with a passkey)
 

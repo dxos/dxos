@@ -11,8 +11,10 @@ value, so one change to the theme reaches every component and every plugin.
 A CSS variable lets you name a value once and use it in many rules. A token goes one step further. Its name says what
 the value is for, such as a card's surface, not what the value is.
 
-**Tiers.** Color tokens come in three tiers. The table starts with the raw values, and each tier is built from the
-tiers above it in the table:
+### Tiers
+
+Color tokens come in three tiers. The table starts with the raw values, and each tier is built from the tiers above it
+in the table:
 
 | Tier     | Example                                                          | Use                                                     |
 | -------- | ---------------------------------------------------------------- | ------------------------------------------------------- |
@@ -23,8 +25,10 @@ tiers above it in the table:
 You use a token through a class. Every `--color-<name>` token yields the Tailwind utilities `bg-<name>`, `text-<name>`
 and `border-<name>`. For example, `--color-card-surface` gives `bg-card-surface`.
 
-**Names.** A color token is named `{name}-{kind}[-{state}]`. The name says what the token is for, such as `card`,
-`accent` or `error`. The kind says what the color paints, and it is one of five words:
+### Names
+
+A color token is named `{name}-{kind}[-{state}]`. The name says what the token is for, such as `card`, `accent` or
+`error`. The kind says what the color paints, and it is one of five words:
 
 - `surface` is a background.
 - `fg` is text on that surface.
@@ -35,17 +39,23 @@ and `border-<name>`. For example, `--color-card-surface` gives `bg-card-surface`
 A state such as `hover` comes last. For example, `accent-bg-hover` is the fill of a primary button while the pointer
 is over it.
 
+### Light and dark
+
 A semantic token holds its light value and its dark value together, with CSS `light-dark()`. The theme sets
 `color-scheme: dark` under the `dark` class, so the browser picks the dark value there.
+
+### Status colors
 
 Four names are status colors, and each is an alias of a hue: `info` is sky, `success` is emerald, `warning` is amber
 and `error` is rose. Each has all five kinds, so `text-error-text` and `bg-warning-surface` both exist. A **valence**
 is the status a component shows. A component's `valence` prop takes one of these four, or `neutral`, which carries no
 status and uses the neutral hue.
 
-**Surfaces.** A **surface** is a background that content sits on. Surfaces form a ladder of six **levels**, from
-`sunken` up through `chrome`, `base`, `raised` and `overlay` to `popup`. A higher surface is lighter in dark mode, so
-a menu reads as sitting above a card, which sits above the page.
+### Surface levels
+
+A **surface** is a background that content sits on. Surfaces form a ladder of six **levels**, from `sunken` up through
+`chrome`, `base`, `raised` and `overlay` to `popup`. A higher surface is lighter in dark mode, so a menu reads as
+sitting above a card, which sits above the page.
 
 | Level     | Named surfaces                                       |
 | --------- | ---------------------------------------------------- |
@@ -60,15 +70,19 @@ The levels `overlay` and `popup` name backgrounds. An overlay, by contrast, is a
 page, such as a dialog or a menu, and it need not sit at the `overlay` level. A dialog draws on `modal-surface`, at
 the `raised` level.
 
-**Layers.** The theme puts its rules in named cascade layers, in this order: `properties`, `theme`, `dx-tokens`,
-`user-tokens`, `base`, `tw-base`, `dx-base`, `components`, `tw-components`, `dx-components` and `utilities`. Your app's
-own styles outside any layer win over all of them.
+### Cascade layers
+
+The theme puts its rules in named cascade layers, in this order: `properties`, `theme`, `dx-tokens`, `user-tokens`,
+`base`, `tw-base`, `dx-base`, `components`, `tw-components`, `dx-components` and `utilities`. Your app's own styles
+outside any layer win over all of them.
 
 The theme declares its tokens in `theme`. In `dx-tokens` it sets its line widths and gutters, and the values that
 change with a surface or with a density, which is how compact a region's controls are.
 
 `user-tokens` comes after both, so a token value you set in that layer replaces the default.
 [Custom themes and dark mode](/docs/tile/guides/custom-themes/) sets an accent color this way.
+
+### Generated CSS
 
 `ThemePlugin` generates the CSS when your app builds. It runs Tailwind over your sources and the components'
 stylesheets, and a class that no scanned file names is not in the CSS. A class built from a string at run time, such

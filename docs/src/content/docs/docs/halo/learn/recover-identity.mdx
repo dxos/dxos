@@ -29,7 +29,8 @@ key**, a public value that names it. We make a code in step 1, and revoke one by
 
 Recovery goes through [EDGE](/docs/edge/concepts/identity-services/), DXOS's always-online peer. In step 4, the new
 device asks EDGE for a challenge and signs it with the recovery key. EDGE checks the signature against the identity's
-recovery credentials, and returns the signed credential that admits the device.
+recovery credentials. The identity's agent device, whose key EDGE holds, then signs the credential that admits the new
+device, and EDGE returns it.
 
 The new device is a new member of the same identity, with the same DID. It syncs its spaces from EDGE and from anyone
 online.

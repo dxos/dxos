@@ -6,8 +6,6 @@ description: "A notice that something happened, which goes away by itself."
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
-<Snippet file="tile-components" region="toast" lang="tsx" />
-
 <TilePreview id="toast" />
 
 ```ts
@@ -15,6 +13,8 @@ import * as Toast from '@dxos/react-ui/Toast';
 ```
 
 A toast is a notice that something happened, and it goes away by itself.
+
+<Snippet file="tile-components" region="toast" lang="tsx" />
 
 `Toast.Provider` goes once near the app's root, and `Toast.Toaster` is where toasts appear.
 
@@ -29,3 +29,4 @@ A `Toast.Root` holds these parts:
 - `Toast.Footer`
 - `Toast.ActionTrigger`, for a button that acts
 - `Toast.CloseTrigger`
+

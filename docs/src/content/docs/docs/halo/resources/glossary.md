@@ -12,7 +12,7 @@ it. The API calls it the member's `role`. See [Spaces and membership](/docs/halo
 ### Agent device
 
 An agent device is a [device](#device) of an identity whose key [EDGE](#edge) holds. Its kind is `agent-managed`. An
-identity has one only if it grants EDGE that access. See
+identity has one only if it grants EDGE that access. It signs the credential that admits a recovered device. See
 [Identities and devices](/docs/halo/concepts/identities-devices/).
 
 ### Auth method

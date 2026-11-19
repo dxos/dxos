@@ -10,7 +10,7 @@ import TilePreview from '../../../../../components/TilePreview.astro';
 By the end of this page the screen's own strings come from a translation resource, and the count says "1 contact" or
 "3 contacts" as it should. Icons mark the email and the role, and an Add button creates a contact.
 
-## Before you start
+## Background
 
 Our first toolbar wrote its count as `{contacts.length} contacts`, which says "1 contacts" when one is left. A
 translation resource holds both forms of the string and picks one from the number:
@@ -26,6 +26,8 @@ puts those icons in the sprite, the one file of icons it builds.
 
 [Translations and icons](/docs/tile/concepts/translations-and-icons/) explains how resources merge, and what happens
 to an icon whose name the build did not see.
+
+## Steps
 
 <Steps>
 

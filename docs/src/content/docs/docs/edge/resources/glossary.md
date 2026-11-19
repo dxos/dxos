@@ -8,7 +8,7 @@ MESH's terms, such as swarm, signaling and TURN, are in MESH's [glossary](/docs/
 ### Agent device
 
 An agent device is a device of an identity, of kind `agent-managed`, whose key EDGE holds. An identity has one only
-if it grants EDGE that access. It is not a SAGE agent. See
+if it grants EDGE that access. It signs credentials when another EDGE service asks, and it is not a SAGE agent. See
 [Identity services](/docs/edge/concepts/identity-services/).
 
 ### Always-online peer

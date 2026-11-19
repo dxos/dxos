@@ -15,13 +15,17 @@ for each run of an operation.
 The **process manager** spawns processes and keeps their tree. A process that starts other work spawns it as a child,
 linked to itself.
 
+### Lifetime
+
 How long a process lives depends on its operation:
 
 - A short operation becomes a process that takes one input, runs the handler and exits.
 - A durable operation, such as an agent, is a process that takes input many times, is idle between inputs and resumes
   where it left off.
 
-**States.** A process is in one of these states:
+### States
+
+A process is in one of these states:
 
 | State       | Means                                                                     |
 | ----------- | ------------------------------------------------------------------------- |
@@ -36,9 +40,11 @@ How long a process lives depends on its operation:
 
 These pages say a process **hibernates** when it waits on a child or an alarm, and is idle when it waits for input.
 
-**Layer stack.** A **layer** is a recipe that builds one or more services, and the **layer stack** is the set of layers
-a process gets its services from. Each layer has an **affinity**, which says how widely one instance is shared: across
-the whole application, per space, or per process. The services include:
+### Layer stack
+
+A **layer** is a recipe that builds one or more services, and the **layer stack** is the set of layers a process gets
+its services from. Each layer has an **affinity**, which says how widely one instance is shared: across the whole
+application, per space, or per process. The services include:
 
 - The space's ECHO database. The process reads and writes objects through it like a device.
 - Storage of its own. This is a key-value store scoped to the process, and it survives hibernation.
@@ -47,20 +53,27 @@ the whole application, per space, or per process. The services include:
 
 A service the runtime cannot provide is left out, and a layer that needs a missing service is not built.
 
-**Local and remote.** The same operation can run in the app, in a browser worker or on EDGE. The app spawns a process
-on EDGE by naming the operation's key, or its deployment id when it was deployed.
+### Local and remote
+
+The same operation can run in the app, in a browser worker or on EDGE. The app spawns a process on EDGE by naming the
+operation's key, or its deployment id when it was deployed.
 
 The process list merges the local tree with the one EDGE reports. Each control, such as cancel, goes to the runtime
 that holds the process.
 
-**Deployed operations.** You can keep operation code as an ECHO object in the space and deploy it to EDGE. EDGE builds
-it and gives it a deployment id. The deployed operation runs with the space's secrets. EDGE can hold a secret on the
-space's behalf, so the secret is not replicated to every device.
+### Deployed operations
 
-An operation that works through a long source, such as a mailbox or a chat history, can stream it with
-`@dxos/pipeline`. A **pipeline** is a chain of stages over an Effect stream, with back pressure. It saves a cursor to
-the process's storage as it goes, so a process that is stopped and run again resumes where it left off. A pipeline
-runs inside one process and is not a separate kind of compute.
+You can keep operation code as an ECHO object in the space and deploy it to EDGE. EDGE builds it and gives it a
+deployment id. The deployed operation runs with the space's secrets. EDGE can hold a secret on the space's behalf, so
+the secret is not replicated to every device.
+
+### Pipelines
+
+A **pipeline** is a chain of stages over an Effect stream, with back pressure. An operation that works through a long
+source, such as a mailbox or a chat history, can stream it with `@dxos/pipeline`.
+
+A pipeline saves a cursor to the process's storage as it goes, so a process that is stopped and run again resumes
+where it left off. It runs inside one process and is not a separate kind of compute.
 
 ## Behavior
 

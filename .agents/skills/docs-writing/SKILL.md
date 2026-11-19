@@ -115,7 +115,7 @@ A reader goes down the sidebar, so they meet a page after its neighbors.
    screen, such as the **Dev Server** section. The other is the run-in lead that names a paragraph's topic and
    ends in a period: "**Encryption.**" A lead is a signpost, so the term under it still gets
    its defining sentence. Where that sentence would come straight after a lead of the same word, drop the lead. A
-   section holds four leads at most. Report a section that needs more, since it needs headings. A term borrowed
+   section holds four leads at most. A section that needs more splits its topics under H3 subheadings. A term borrowed
    from another library or another section, such as Effect's layer or HALO's guest, gets a gloss or a link and no
    bold.
 

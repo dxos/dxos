@@ -20,8 +20,10 @@ SAGE runs the loop as a process, and keeps the agent and its chats as objects in
 A chat with no agent is a plain chat, such as one with Composer's assistant. The assistant is the chat panel in
 Composer, where a person works with a model directly.
 
-**Process and turns.** A chat runs as an agent [process](/docs/edge/concepts/processes/). A message is input to the
-process, and the process then runs a **turn**. In a turn, it calls the model, invokes the
+### Turns
+
+A chat runs as an agent [process](/docs/edge/concepts/processes/), and a message is input to that process. A **turn**
+is what the process runs for that message. In a turn, it calls the model, invokes the
 [operations](/docs/sage/concepts/tools/) the model asks for, feeds the results back, and repeats until the model
 answers.
 
@@ -32,9 +34,11 @@ call:
 
 <Diagram name="sage-turn" alt="A person writes in a chat; the agent process calls the model, the model asks for an operation, the process invokes it on the space's ECHO objects, returns the result, and the model answers in the chat." />
 
-**Identity.** An agent can have a HALO identity of its own, named by a DID. EDGE creates the identity, and the agent
-object records the DID. Composer asks for one when it creates an agent only while its "Create identities for agents"
-setting is on, and the setting is off by default.
+### Identity
+
+An agent can have a HALO identity of its own, named by a DID. EDGE creates the identity, and the agent object records
+the DID. Composer asks for one when it creates an agent only while its "Create identities for agents" setting is on,
+and the setting is off by default.
 
 With an identity, the agent owns a space of its own, and an admin can admit it to a shared space as a member, as
 they would a person. The DID lets content name the agent as its author, apart from the person who asked and from
@@ -43,13 +47,17 @@ other agents. See HALO's [Identities and devices](/docs/halo/concepts/identities
 An agent's identity is not an agent device. An agent device is a device of a person's identity, of kind
 `agent-managed`, whose key EDGE holds. See EDGE's [Identity services](/docs/edge/concepts/identity-services/).
 
-**Delegation.** **Delegation** is an agent handing tasks in its plan to sub-agents. Each sub-agent runs as a child
-process, and the parent's turn ends when its own reply is done. When a child finishes, the parent wakes, reads the
-child's result, updates the task and posts what it found.
+### Delegation
 
-**Outside agent loops.** An agent loop from elsewhere, such as the Claude Agent SDK, can run in a **host**, which is
-a local Node process on a device. It brings its own tools and loop, and DXOS keeps its output as messages in the chat's
-feed, like any other agent's.
+**Delegation** is an agent handing tasks in its plan to sub-agents. Each sub-agent runs as a child process, and the
+parent's turn ends when its own reply is done. When a child finishes, the parent wakes, reads the child's result,
+updates the task and posts what it found.
+
+### Outside loops
+
+An agent loop from elsewhere, such as the Claude Agent SDK, can run in a **host**, which is a local Node process on a
+device. It brings its own tools and loop, and DXOS keeps its output as messages in the chat's feed, like any other
+agent's.
 
 ## Behavior
 

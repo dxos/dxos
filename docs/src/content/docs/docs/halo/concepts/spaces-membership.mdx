@@ -3,6 +3,8 @@ title: Spaces and membership
 description: Who may enter a space, and what each member may do.
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 A space's membership is a Keyhive group. It holds the identities that may replicate the space, each with an access
 level.
 
@@ -61,8 +63,15 @@ the data needs both. EDGE brings the two together while an operation works on th
 using EDGE's indexing, compute and other services.
 
 An [agent device](/docs/halo/concepts/identities-devices/) is a separate grant, made by one identity. The agent
-device is one of that identity's devices, and EDGE holds its key. Through it, EDGE has that identity's access level
-in the spaces the identity belongs to, whatever level the space gave EDGE itself.
+device is one of that identity's devices, and EDGE holds its key. Its feed is admitted to the identity's spaces, and
+EDGE uses it to write credentials there when no member's device is online, such as the one that admits a new device's
+feed. It signs credentials and does not read the space's data.
+
+<Aside type="caution" title="What runs today">
+HALO's API describes Keyhive, and the implementation under it has not moved to Keyhive yet. Until it does, spaces
+replicate through EDGE without end-to-end encryption, so EDGE can read every space it replicates. `pull` cannot be
+granted yet, and only an admin can change a space's membership.
+</Aside>
 
 ## Behavior
 

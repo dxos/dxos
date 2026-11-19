@@ -107,8 +107,8 @@ the identity.
 - `Identity.createRecoveryCredential` with no options makes a recovery key and returns it as a recovery code. Pass
   `externalKey` to register a passkey instead.
 - `Identity.recover` gets the identity back on a new device. It takes a recovery code, a passkey assertion, the token
-  from a DXOS account's sign-in email, or the proof from an OAuth sign-in. EDGE checks it and returns the credential
-  that admits the device.
+  from a DXOS account's sign-in email, or the proof from an OAuth sign-in. EDGE checks it, and the identity's agent
+  device signs the credential that admits the device.
 - `Identity.revokeRecoveryCredential` revokes a recovery credential by its lookup key, the public value that names
   it. HALO refuses to revoke the last active one.
 

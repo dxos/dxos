@@ -15,19 +15,21 @@ A user loses every device. Who can let a new one in? The answer starts with whic
 hold one, and EDGE provides this as a service.
 
 When an identity makes the grant, EDGE runs an **agent device** for it. The agent device is one of the identity's
-devices, of kind `agent-managed`, and EDGE holds its key. Like any of the identity's devices, it can act for the
-identity. See HALO's [Identities and devices](/docs/halo/concepts/identities-devices/).
+devices, of kind `agent-managed`, and EDGE holds its key. Like any of the identity's devices, it can sign for the
+identity. It runs no logic of its own. It keeps its key in its own store and signs a credential when another EDGE
+service asks. EDGE asks when a user recovers the identity, and when a member's device needs a credential written into
+a space while no other member is online. See HALO's [Identities and devices](/docs/halo/concepts/identities-devices/).
 
 **Recovery.** While they still have a device, a user sets up a **recovery credential**. It is a signed record that
 names a recovery key, and the key comes from a recovery code or a passkey. The record is part of the identity's own
 data, which replicates to EDGE.
 
 To recover, a new device asks EDGE for a challenge and signs it with the recovery key. EDGE checks the signature
-against the identity's recovery credentials. If it matches, EDGE answers with a credential that admits the new device
-to the identity.
+against the identity's recovery credentials. If it matches, the identity's agent device signs a credential that admits
+the new device to the identity, and EDGE answers with it.
 
 Recovery needs EDGE because, with every device lost, the user has no device left to admit the new one. EDGE can admit
-it for an identity that granted it a key. See
+it only for an identity that has an agent device. See
 [Recovery and credentials](/docs/halo/concepts/recovery-credentials/).
 
 **Accounts.** The **Hub** is the EDGE service that keeps DXOS accounts. An identity linked to an account can use EDGE.

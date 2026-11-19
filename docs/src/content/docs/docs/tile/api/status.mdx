@@ -6,6 +6,8 @@ description: Progress, skeletons, empty states, errors and deferred fallbacks.
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
+<TilePreview id="status" />
+
 ```ts
 import * as Status from '@dxos/react-ui/Status';
 ```
@@ -13,8 +15,6 @@ import * as Status from '@dxos/react-ui/Status';
 `Status` covers the states around content: loading, empty, failed and in progress.
 
 <Snippet file="tile-components" region="status" lang="tsx" />
-
-<TilePreview id="status" />
 
 ## Which to use
 

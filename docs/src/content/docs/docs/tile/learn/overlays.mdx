@@ -10,7 +10,7 @@ import TilePreview from '../../../../../components/TilePreview.astro';
 By the end of this page the detail column shows the contact's fields as text again. The toolbar has Edit, which opens
 the editor in a dialog, and Delete, which asks first. A toast says when a contact is saved.
 
-## Before you start
+## Background
 
 Our screen needs four things to appear above the page: an editor, a question, a hint and a notice. Which component
 draws each one? An **overlay** is a component that TILE draws above the page, and we use four of them:
@@ -33,6 +33,8 @@ A toast has neither. It is open while `open` on its `Toast.Root` is true.
 [Toast](/docs/tile/api/toast/) list the parts of each. TILE has more overlays than these four, such as
 [Menu](/docs/tile/api/menu/) for a list of actions and [AlertDialog](/docs/tile/api/alert-dialog/) for a question the
 user must answer.
+
+## Steps
 
 <Steps>
 

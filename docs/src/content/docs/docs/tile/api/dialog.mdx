@@ -6,8 +6,6 @@ description: "A modal window for a task the user finishes or cancels before goin
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
-<Snippet file="tile-components" region="dialog" lang="tsx" />
-
 <TilePreview id="dialog" />
 
 ```ts
@@ -17,6 +15,8 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 A dialog is a modal window for a task the user finishes or cancels before going on. It opens above the page, in a
 portal, and the page behind it is inert until it closes.
 
+<Snippet file="tile-components" region="dialog" lang="tsx" />
+
 The parts are `Dialog.Root`, `Dialog.Trigger`, `Dialog.Content`, `Dialog.Header`, `Dialog.Title`,
 `Dialog.Description`, `Dialog.Body`, `Dialog.Footer` and `Dialog.CloseTrigger`.
 
@@ -25,3 +25,4 @@ The parts are `Dialog.Root`, `Dialog.Trigger`, `Dialog.Content`, `Dialog.Header`
 - Use `size` on `Dialog.Content` to set the dialog's size, from `'xs'` to `'xl'`. Without it, the dialog takes the
   size set around its trigger, or `'md'`.
 - `Dialog.Body` scrolls when the content is taller than the screen.
+
