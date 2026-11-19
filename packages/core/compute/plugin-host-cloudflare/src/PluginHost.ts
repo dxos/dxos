@@ -303,17 +303,14 @@ const registryEntities = async (
   const skills = activation.skills.map((definition) => definition.make());
   const operations = activation.operationHandlers.flatMap(operationRecord);
   const published = await SkillSource.fromRegistry(skillRegistry, {
-    skills: new Set(skills.flatMap((skill) => keyOf(skill))),
-    operations: new Set(operations.flatMap((record) => keyOf(record))),
+    skills: new Set(skills.flatMap((skill) => keyOf(Obj.getMeta(skill).key))),
+    operations: new Set(operations.flatMap((record) => keyOf(Operation.getKey(record)))),
   });
   return [...skills, ...operations, ...published];
 };
 
-/** An entity's registry key without the `dxn:` prefix, or none. */
-const keyOf = (entity: Entity.Unknown): string[] => {
-  const key = Obj.getMeta(entity).key;
-  return key === undefined ? [] : [SkillSource.bareKey(key)];
-};
+/** A registry key without the `dxn:` prefix, or none. */
+const keyOf = (key: string | undefined): string[] => (key === undefined ? [] : [SkillSource.bareKey(key)]);
 
 /**
  * An operation's registry record, as `registry-sync` publishes it: none for a `skipRegistry` operation, which is hidden
