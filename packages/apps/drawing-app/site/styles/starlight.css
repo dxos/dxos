@@ -37,15 +37,32 @@
 }
 
 /*
- * The home page hero is tight, with the install command in place of buttons, so the top of
- * the editor shows without scrolling on a laptop.
+ * The home page hero is one centred column at every width. Starlight keeps a 4fr image column beside the
+ * text from 50rem up even with no image, which leaves a blank strip and wraps the heading. The install
+ * command stands in for buttons, and the hero stays short enough that the top of the editor shows on a laptop.
  */
 [data-has-hero] .hero {
-  padding-block: 1.5rem 0;
+  grid-template-columns: 100%;
+  padding-block: 2.5rem 0;
 }
 
 [data-has-hero] .hero .stack {
   gap: 1rem;
+  text-align: center;
+}
+
+[data-has-hero] .hero .copy {
+  align-items: center;
+  gap: 1.5rem;
+}
+
+[data-has-hero] .hero .copy > * {
+  max-width: none;
+}
+
+[data-has-hero] .hero .tagline {
+  max-width: 58ch;
+  line-height: 1.6;
 }
 
 /* "agent can draw." never breaks, and its words carry the route colour as an underline. */
@@ -77,8 +94,19 @@
   }
 }
 
+/* The install command and the line under it are centred under the hero. */
 .dx-play.install-row {
   margin-block: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* The box is centred; the command inside it reads from the left, as a shell line does. */
+.dx-play.install-row .install {
+  max-width: min(560px, 100%);
+  text-align: start;
 }
 
 .dx-play .alt {

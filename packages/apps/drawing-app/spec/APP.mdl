@@ -157,7 +157,7 @@ feat F-12: Share API
 ```mdl
 feat F-13: Landing site and hosts
   req F-13.1: Each environment serves the landing page at its own host and the app at `app.` of that host: production at drawing.sh (and www.drawing.sh) and app.drawing.sh, dev at dev.drawing.sh and app.dev.drawing.sh, preview at preview.drawing.sh and app.preview.drawing.sh. Staging serves only the app, on its `workers.dev` host.
-  req F-13.2: The landing site is an Astro Starlight site: a home page at `/` and the docs under `/docs/` (F-13.9). The home page is built from Starlight's splash template and is the agent-diagram DSL page: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript. Its hero is the heading, the lede and the agent skill's install command, with no buttons, and is tight enough that the top of the editor shows without scrolling on a 14-inch MacBook Pro. Every Starlight page's header shows the drawing.sh logotype; the home page's header has a Docs link where the docs pages have search.
+  req F-13.2: The landing site is an Astro Starlight site: a home page at `/` and the docs under `/docs/` (F-13.9). The home page is built from Starlight's splash template and is the agent-diagram DSL page: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript. Its hero is one centred column of the heading, the lede and the agent skill's install command, with no buttons and no image column. It is short enough that the top of the editor shows without scrolling on a 14-inch MacBook Pro. Every Starlight page's header shows the drawing.sh logotype; the home page's header has a Docs link where the docs pages have search.
   req F-13.3: On a landing host, `/api/*` is the Worker's API, and `/`, `/docs/` and the pages under it, the site's build files and any address with a file extension are served from the site's build. Any other address, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
   req F-13.4: The landing editor's "Open in app" button posts the source to its own host's share API and opens the link it returns, which names the app host.
   req F-13.5: The site's pages load only the site's own scripts: no client, identity, plugins or telemetry.
@@ -2135,4 +2135,22 @@ decision D-172: When the reader switches the landing editor's tab, the box aroun
   date: 2026-11-19
   by: user:wittjosiah
   affects: [F-13.8]
+```
+
+```mdl
+decision D-173: The home page hero is centred in one column: the heading, the lede and the install command. The heading had wrapped beside a blank strip on the right, and the lede sat too close under it.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-13.2]
+```
+
+```mdl
+decision D-174: The hero drops Starlight's image column at every width, so the heading fits on one line from 768px up. The lede is capped at 58 characters a line with 1.5rem above it, the hero gets 2.5rem of top padding, and the install command and the "Works with…" line are centred under it while the command reads from the left inside its box. Fills in [D-173].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.2]
+  why: Starlight's hero keeps a 4fr image column from 50rem up even without an image, which is the blank strip. A lede the full width of the heading runs past 90 characters a line, too long to read. With the extra space the editor still starts at 515px in a 1512×860 window.
+  rejected:
+    - Filling the empty column with a drawing: the editor right below already shows one.
 ```
