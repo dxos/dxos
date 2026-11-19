@@ -84,10 +84,10 @@ export const diagramTitle = (diagram: string): string => {
   return slide ? slideTitle(slide) : diagram;
 };
 
-/** The page a diagram states unless it needs more width; a slide fits it by height, so cards are one size across slides. */
+/** The page a diagram states unless it needs another: a slide fits the page whole, so one page is one card size across slides. */
 export const STUDIO_PAGE = { x: 0, y: 0, width: 1600, height: 880 } as const;
 
-/** The frame a diagram's slide fits: the size its own text states, since a slide has room either side of the page. */
+/** The frame a diagram's slide fits, as its own text states it: a wider page uses the slide's width, a smaller one draws larger. */
 export const diagramPage = ({ source }: Diagram) => {
   const [, width, height] = source.match(/\bsize=(\d+)x(\d+)\b/) ?? [];
   return width && height ? { x: 0, y: 0, width: Number(width), height: Number(height) } : STUDIO_PAGE;

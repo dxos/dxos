@@ -127,6 +127,8 @@
 .studio-card-frame [data-part='label'] {
   --dx-line: 28px;
   font-size: var(--sd-card-title);
+  /* A title too long for its card takes a second line: the frame would cut it, and a slide's card shows its name. */
+  white-space: normal;
 }
 
 /* `$=`, since a kind keeps its text in its own bag and the part is then `data.body`: matching `body` alone left the

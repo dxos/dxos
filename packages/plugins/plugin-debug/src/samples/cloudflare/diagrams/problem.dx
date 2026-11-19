@@ -1,4 +1,4 @@
-diagram kind=grid size=1600x880 cols=3 gap=32 padding=48 autoRows=240 alignContent=start
+diagram kind=grid size=960x510 cols=3 gap=20 padding=24 autoRows=180 alignContent=center
 
 node memory "Shared Memory" kind=card icon=brain iconTone=rose {
   item "Beyond silos"

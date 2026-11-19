@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { DSL, GridEngine } from '@dxos/diagram';
 
-import { DIAGRAMS, SLIDES, STUDIO_PAGE, diagramCommands, diagramPage, diagramTitle, slideTitle } from './deck.ts';
+import { DIAGRAMS, SLIDES, diagramCommands, diagramPage, diagramTitle, slideTitle } from './deck.ts';
 
 describe('the studio deck', () => {
   test('names each diagram once, and each slide once but the cover', ({ expect }) => {
@@ -66,12 +66,10 @@ describe('the studio deck', () => {
       expect(GridEngine.drawn(DSL.toScene(commands).objects[0])).toEqual(GridEngine.drawn(object));
     });
 
-    test("states no geometry but its page, which is the deck's height and at least its width", ({ expect }) => {
+    test('states no geometry but its page', ({ expect }) => {
       const page = diagramPage(diagram);
       expect(diagram.source.match(/\d+,\d+/g) ?? []).toEqual([]);
       expect(diagram.source.match(/\b\d+x\d+\b/g)).toEqual([`${page.width}x${page.height}`]);
-      expect(page.height).toBe(STUDIO_PAGE.height);
-      expect(page.width).toBeGreaterThanOrEqual(STUDIO_PAGE.width);
     });
   });
 });
