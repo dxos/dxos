@@ -148,6 +148,12 @@ const NEW_HEADER = 'New messages:';
 
 const renderSegment = ({ text, speaker, at }: Segment): string => `[${at}] ${speaker}: ${text}`;
 
+/** Extraction rules for a chat read: the default rules drop an unresolved "we", which is how people state decisions. */
+const CHAT_RULES: readonly string[] = [
+  'Each line is "[time] Speaker: text". Attribute a first-person statement ("I am working on…", "we decided…", "we will ship…") to that line\'s speaker as subject, so a decision or commitment stated with "we" is kept, not omitted.',
+  'A decision is predicate "decided" with what was decided as the object: "we decided to ship offline mode" => subject the speaker, predicate "decided", object "ship offline mode".',
+];
+
 /**
  * The chat's messages after `after` (a message URI) in append order, each as a `[time] speaker: text`
  * line, preceded by up to {@link CONTEXT_MESSAGES} earlier ones as context; `through` is the last
@@ -336,7 +342,7 @@ export const readSource: (
     if (through === undefined || through === cursor) {
       return NOTHING_READ;
     }
-    const facts = yield* extract(agent, members, yield* loadEntities, read, uri);
+    const facts = yield* extract(agent, members, yield* loadEntities, read, uri, CHAT_RULES);
     const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
     return {
       facts: fresh,
@@ -366,6 +372,7 @@ const extract = (
   entities: EntityIndex,
   body: Pick<SourceText, 'text' | 'segments'>,
   uri: string,
+  rules?: readonly string[],
 ) =>
   body.segments.length === 0 && body.text.trim().length === 0
     ? Effect.succeed([])
@@ -374,6 +381,7 @@ const extract = (
         {
           ontology: Ontology.DEFAULT.withNamespace(Vocab.brainNamespace(AgentPresence.brainId(agent))),
           entities: knownEntities(members, entities),
+          ...(rules ? { rules } : {}),
         },
       ).pipe(
         Effect.map((facts) =>

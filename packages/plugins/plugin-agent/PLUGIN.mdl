@@ -1347,6 +1347,18 @@ decision D-16: ConversationSkill contributes op:resolveEntity, op:recordFacts an
   why: The skill already binds them; the spec listed only the agent operations.
 ```
 
+```mdl
+decision D-17: Reading a chat into the brain, the extractor attributes a first-person statement, "we" included, to the speaker of its line, and records a decision as `decided` with what was decided as the object. Fills in [D-15].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [ConversationSkill]
+  why: pipeline-rdf's default rules omit a proposition whose subject is an unresolved "we", so "we decided to ship offline mode" was lost once the agent stopped recording decisions itself. The rules are the chat read's own, as pipeline-email's are for mail, so other sources keep the default.
+  rejected:
+    - Keep in-turn recording for decisions stated with "we": the most common way to state a decision would cost the extra model calls D-15 removes.
+    - Change pipeline-rdf's default rule: every source would attribute "we" to an author, including documents with no speaker.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using the core `ext` primitive. `op`,

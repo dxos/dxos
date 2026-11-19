@@ -16,6 +16,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed } from '@dxos/echo';
+import { type Fact } from '@dxos/echo-memory';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -26,7 +27,7 @@ import { BrainSkill, ConversationSkill } from '#skills';
 import { AgentOperation, ChatParticipant, Goal, MemoryOperation, Mode, Relay } from '#types';
 
 import { AgentNamespace } from '../namespace.ts';
-import { createLocalAgent, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
+import { createLocalAgent, inlineBrainHooks, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -61,7 +62,7 @@ const LiveTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), BrainSkill.make()],
-      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, BrainSkill.hooks) },
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, inlineBrainHooks) },
       aiServicePreset: 'direct',
     }),
   ),
@@ -86,6 +87,10 @@ const say = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string | Conte
   yield* session.submitPrompt(prompt, { sender: { name: BOB.name } });
   yield* session.waitForCompletion();
 });
+
+/** A fact's predicate and object as lower-case text, e.g. "works on background sync". */
+const statement = ({ assertion: { predicate, object } }: Fact.Fact): string =>
+  `${predicate} ${object.kind === 'entity' ? (object.label ?? object.entity) : object.literal}`.toLowerCase();
 
 /** The names of the tools the agent called in the chat. */
 const toolCalls = Effect.fnUntraced(function* (chat: Chat.Chat) {
@@ -113,8 +118,9 @@ describe('conversation facts (live model)', { tags: ['model-fixture'] }, () => {
 
         expect((yield* toolCalls(chat)).filter((name) => RECORDING_TOOLS.includes(name))).toEqual([]);
         // Bob is a member, so the hook's extraction resolves his name to his DID.
-        const facts = yield* brain.facts(agent.id).query({ subjectEntity: BOB.did });
-        expect(facts.map(({ assertion }) => assertion.predicate)).toContain('works on');
+        const statements = (yield* brain.facts(agent.id).query({ subjectEntity: BOB.did })).map(statement);
+        expect(statements).toContainEqual(expect.stringMatching(/^works on .*background sync/));
+        expect(statements).toContainEqual(expect.stringMatching(/^decided .*offline mode/));
       },
       Effect.provide(LiveTestLayer),
       TestHelpers.provideTestContext,
@@ -126,7 +132,7 @@ describe('conversation facts (live model)', { tags: ['model-fixture'] }, () => {
     'a decision in messages shown as context is recorded by the turn',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const { chat } = yield* setup();
+        const { agent, chat } = yield* setup();
 
         yield* say(chat, [
           {
@@ -142,6 +148,9 @@ describe('conversation facts (live model)', { tags: ['model-fixture'] }, () => {
         ]);
 
         expect(yield* toolCalls(chat)).toContain(Operation.toolName(MemoryOperation.Remember));
+        const statements = (yield* brain.facts(agent.id).query({})).map(statement);
+        expect(statements).toContainEqual(expect.stringContaining('$12 per seat'));
+        expect(statements).toContainEqual(expect.stringMatching(/^works on .*launch announcement/));
       },
       Effect.provide(LiveTestLayer),
       TestHelpers.provideTestContext,
