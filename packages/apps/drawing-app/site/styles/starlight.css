@@ -48,6 +48,16 @@
   gap: 1rem;
 }
 
+/* The title's second half never breaks, and carries the route colour as an underline. */
+.hero-agent {
+  white-space: nowrap;
+  text-decoration: underline var(--route);
+  text-decoration-thickness: 0.08em;
+  /* Below the descenders, so the line runs unbroken instead of skipping round the y and g. */
+  text-decoration-skip-ink: none;
+  text-underline-offset: 0.28em;
+}
+
 /*
  * Starlight's `Card` takes the corner its `LinkCard` and the page's own panels have, and at most 1.5rem of padding
  * in place of Starlight's 2.5rem, which leaves little room for text in a row of three.
