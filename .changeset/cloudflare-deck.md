@@ -1,5 +1,5 @@
 ---
-# multiple-changesets: slide-heading-colors.md is PR #14612's own entry, merged in here until it lands on main
+# multiple-changesets: slide-heading-colors.md and slide-card-icon.md are the entries of PRs #14612 and #14613, merged in here
 '@dxos/plugin-debug': patch
 '@dxos/react-ui-slides': patch
 ---
