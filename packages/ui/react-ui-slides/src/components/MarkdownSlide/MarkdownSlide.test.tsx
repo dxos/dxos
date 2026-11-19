@@ -267,12 +267,28 @@ describe('MarkdownSlide', () => {
     expect(classes).toContain('[&amp;&gt;*]:after:w-24');
     expect(classes).toContain('[&amp;&gt;*]:after:content-[&#x27;→&#x27;]');
     expect(classes).toContain('[&amp;&gt;article]:overflow-visible');
-    expect(classes).toContain('[&amp;&gt;*:last-child]:after:content-none');
+    expect(classes).toContain('[&amp;&gt;[data-row-end]]:after:content-none');
     expect(classes).toContain('[&amp;&gt;*:has(+.invisible)]:after:content-none');
-    // The arrow after the last card of a row falls outside the grid, which cuts it.
-    expect(classes).toContain('overflow-x-clip');
     // A plain grid draws none.
     expect(render('<Grid cols="4">\n\nCells\n\n</Grid>')).not.toContain('after:content-');
+  });
+
+  test('a flow grid marks the last child of each row, counting the columns each child covers', ({ expect }) => {
+    const card = (title: string, attributes = '') => `<Card${attributes}>\n\n### ${title}\n\n</Card>`;
+    const rowEnds = (markup: string) =>
+      [...markup.matchAll(/<article [^>]*>/g)].map(([tag]) => tag.includes('data-row-end'));
+    const flow = (cols: number, ...cards: string[]) =>
+      render([`<Grid cols="${cols}" variant="flow">`, ...cards, '</Grid>'].join('\n\n'));
+
+    // One full row: only the last card ends it.
+    expect(rowEnds(flow(4, card('A'), card('B'), card('C'), card('D')))).toEqual([false, false, false, true]);
+    // Three columns: A covers two and B does not fit beside it, so A ends a row that stops short of the grid's edge.
+    const wide = ' colSpan="2"';
+    expect(rowEnds(flow(3, card('A', wide), card('B', wide), card('C'), card('D')))).toEqual([true, false, true, true]);
+    // Revealed by clicks, the cards are still counted as the grid's children.
+    expect(rowEnds(flow(2, '<v-clicks>', card('A'), card('B'), card('C'), '</v-clicks>'))).toEqual([false, true, true]);
+    // A plain grid marks nothing.
+    expect(render(`<Grid cols="2">\n\n${card('A')}\n\n${card('B')}\n\n</Grid>`)).not.toContain('data-row-end');
   });
 
   test('a list nested in a flow item takes the card\u2019s size, not the slide\u2019s', ({ expect }) => {

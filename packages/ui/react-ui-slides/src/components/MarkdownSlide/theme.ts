@@ -70,8 +70,8 @@ const gridFlow =
   "[&>*]:after:content-['→'] [&>*]:after:absolute [&>*]:after:start-full [&>*]:after:top-1/2 [&>*]:after:w-24 " +
   '[&>*]:after:-translate-y-1/2 [&>*]:after:text-center [&>*]:after:text-[88px] [&>*]:after:leading-none ' +
   '[&>*]:after:opacity-70 ' +
-  // The arrow after a row's last child stands outside the grid, which cuts it off; the last child of all draws none.
-  '[&>*:last-child]:after:content-none overflow-x-clip ' +
+  // The renderer marks the last child of each row, which has no child to point at.
+  '[&>[data-row-end]]:after:content-none ' +
   // During a build the arrow waits for the child it points at, which is laid out but not yet revealed.
   '[&>*:has(+.invisible)]:after:content-none ' +
   // A card's own clipping would hide its arrow, so its art is rounded at the card's corners instead.
