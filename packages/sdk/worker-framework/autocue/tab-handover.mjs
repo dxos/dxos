@@ -35,6 +35,17 @@ const exists = (page, selector) =>
     .count()
     .then((count) => count > 0);
 
+/** Whether the shared counter, as tab 2 shows it, has reached `value`; read-only, for `done`. */
+const countAtLeast = (page, value) =>
+  page.evaluate((value) => Number(document.querySelector('[data-testid="tab-2-count"]')?.textContent) >= value, value);
+
+/** Waits until the shared counter, as tab 2 shows it, reaches `value`. */
+const waitForCount = (page, value) =>
+  page.waitForFunction(
+    (value) => Number(document.querySelector('[data-testid="tab-2-count"]')?.textContent) >= value,
+    value,
+  );
+
 /** Opens a paused tab's Details, so the reason is on screen. */
 const showDetails = async (page, id) => {
   await page.evaluate((id) => {
@@ -62,9 +73,24 @@ export const steps = [
       await demo.caption({ value: 'Step 1 — Open a second tab on the same build', subtitle: SUBTITLE });
       await demo.click({ selector: '[data-testid="open-tab"]', label: 'Open tab' });
       await waitForTab(page, 2, 'Follower');
+    },
+  },
+  {
+    name: 'Increment from the leader',
+    // Past it once tab 3 opens, which pauses tab 2 and hides its count.
+    done: async ({ page }) => (await countAtLeast(page, 1)) || exists(page, tab(3)),
+    run: async ({ demo, page }) => {
       await demo.click({ selector: tab(1, 'increment'), label: 'Increment' });
+      await waitForCount(page, 1);
+    },
+  },
+  {
+    name: 'Increment from the follower',
+    // Past it once tab 3 opens, which pauses tab 2 and hides its count.
+    done: async ({ page }) => (await countAtLeast(page, 2)) || exists(page, tab(3)),
+    run: async ({ demo, page }) => {
       await demo.click({ selector: tab(2, 'increment'), label: 'Increment' });
-      await page.waitForFunction(() => document.querySelector('[data-testid="tab-2-count"]')?.textContent === '2');
+      await waitForCount(page, 2);
       await demo.sleep({ ms: 4000 });
     },
   },
