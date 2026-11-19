@@ -84,6 +84,15 @@ const objectsOfType = (page, typename) =>
     return objects.filter((object) => globalThis.dxos.Obj.getTypename(object) === type).map((object) => object.name);
   }, typename);
 
+/** The back-index trigger's input (channels, maxDays), or undefined before one exists. */
+const backIndexInput = (page) =>
+  page.evaluate(async () => {
+    const space = globalThis.dxos.client.spaces.get()[0];
+    const objects = await space.db.query(globalThis.dxos.Filter.everything()).run();
+    const trigger = objects.find((object) => globalThis.dxos.Obj.getTypename(object) === 'org.dxos.type.trigger');
+    return trigger ? JSON.parse(JSON.stringify(trigger.input ?? {})) : undefined;
+  });
+
 const channelOption = (name) => `[role="option"]:has(p:text-matches("┆?${name}$"))`;
 
 export const steps = [
@@ -100,6 +109,7 @@ export const steps = [
   },
   {
     name: 'Pick the channels',
+    done: async ({ page }) => ((await backIndexInput(page))?.channels?.length ?? 0) >= CHANNELS.length,
     narration: 'On the Discord connection, the DXOS server is already granted; pick the channels to index.',
     run: async ({ demo, page }) => {
       await demo.title({ value: 'Back-index the DXOS Discord', subtitle: 'local Composer · local EDGE', hold: 3600 });
@@ -124,6 +134,7 @@ export const steps = [
   },
   {
     name: 'Crawl back a year',
+    done: async ({ page }) => (await backIndexInput(page))?.maxDays === 365,
     narration: 'Read the last year of each channel.',
     run: async ({ demo, page }) => {
       await demo.caption({
@@ -171,6 +182,7 @@ export const steps = [
   },
   {
     name: 'Ask for findings',
+    done: async ({ page }) => ((await objectsOfType(page, 'org.dxos.type.sheet')) ?? []).length > 0,
     narration: 'The agent is asked what is interesting in the memory, and to report it as artifacts.',
     run: async ({ demo, page }) => {
       await demo.caption({
@@ -199,8 +211,14 @@ export const steps = [
     name: 'Open the deck and a finding',
     narration: 'The deck the agent made of its charts, one of its sheets, and its summary.',
     run: async ({ demo, page }) => {
-      // A type's navtree entry opens a plank of cards; a card opens the object.
-      const open = async (group, name) => {
+      // A type's navtree entry opens a plank of cards; a card opens the object. The agent picks the titles, so the
+      // object is found by type: the newest of it, other than the space's own README.
+      const open = async (group, typename) => {
+        const names = (await objectsOfType(page, typename)).filter((name) => name && name !== 'README');
+        const name = names.at(-1);
+        if (!name) {
+          throw new Error(`The agent made no ${typename}.`);
+        }
         await demo.click({ selector: `[role="treeitem"]:has-text(${JSON.stringify(group)})`, label: group });
         const card = `${PLANK} :text-is(${JSON.stringify(name)})`;
         await page.locator(card).first().waitFor({ timeout: 30_000 });
@@ -213,11 +231,11 @@ export const steps = [
         await demo.sleep({ ms: 4_000 });
       };
       await demo.caption({ value: 'The deck it made of its charts', subtitle: 'presenter skill' });
-      await open('Presentations', 'Discord Community Findings');
+      await open('Presentations', 'org.dxos.type.presentation');
       await demo.caption({ value: 'A finding: its data and its chart', subtitle: 'sheet skill' });
-      await open('Sheets', 'Discord Findings: Activity Timeline');
+      await open('Sheets', 'org.dxos.type.sheet');
       await demo.caption({ value: 'And a summary of all five', subtitle: 'markdown skill' });
-      await open('Documents', 'Discord Community Findings — Summary');
+      await open('Documents', 'org.dxos.type.document');
     },
   },
 ];

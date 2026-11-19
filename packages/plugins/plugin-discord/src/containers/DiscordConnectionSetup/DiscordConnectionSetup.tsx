@@ -151,13 +151,16 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
         return;
       }
       const next = [...(changes.channels ?? backIndex?.channels ?? [])];
+      // The operation replaces the trigger's input and timer, so the settings this change leaves alone are sent too.
+      const nextMaxDays = changes.maxDays ?? maxDays;
+      const nextCron = changes.cron ?? (triggerView?.spec?.kind === 'timer' ? triggerView.spec.cron : undefined);
       const { error } = await invokePromise(
         DiscordOperation.ConfigureBackIndex,
         {
           applicationId,
           channels: next,
-          ...(changes.maxDays !== undefined ? { maxDays: changes.maxDays } : {}),
-          ...(changes.cron !== undefined ? { cron: changes.cron } : {}),
+          ...(nextMaxDays !== undefined ? { maxDays: nextMaxDays } : {}),
+          ...(nextCron !== undefined ? { cron: nextCron } : {}),
           ...(backIndex ? { trigger: Ref.make(backIndex.trigger) } : { name: t('discord-setup-index-name.label') }),
           connection: Ref.make(connection),
           enabled: next.length > 0,
@@ -166,7 +169,7 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
       );
       notifyFailure(error);
     },
-    [invokePromise, spaceId, applicationId, backIndex, connection, t, notifyFailure],
+    [invokePromise, spaceId, applicationId, backIndex, connection, t, notifyFailure, maxDays, triggerView],
   );
 
   const handleIndexServer = useCallback(

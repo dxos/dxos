@@ -37,8 +37,11 @@ export type SourceOptions = {
   readonly pageLimit?: number;
 };
 
-const byId = (left: { readonly id: string }, right: { readonly id: string }) =>
-  left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+/** Snowflakes compare as numbers: as strings, an id with fewer digits sorts after a newer, longer one. */
+const byId = (left: { readonly id: string }, right: { readonly id: string }) => {
+  const [a, b] = [BigInt(left.id), BigInt(right.id)];
+  return a < b ? -1 : a > b ? 1 : 0;
+};
 
 /** Construct the Source API over an ambient DiscordREST (transport bound by the caller's layer). */
 const makeSource = (options: SourceOptions = {}): Effect.Effect<SourceApi, never, DiscordREST> =>

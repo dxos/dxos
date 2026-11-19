@@ -215,6 +215,31 @@ describe('Crawler', () => {
   );
 
   it.effect(
+    'a page whose messages were all filtered out moves the cursor instead of ending the target',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      // The first page held only system messages: nothing to extract, but a cursor to move to.
+      const pages: Source.Page[] = [
+        { messages: [], threads: [], cursor: '5' },
+        { messages: [], threads: [] },
+      ];
+      const source = Layer.succeed(Source.Source, {
+        listChannels: () => Effect.succeed([]),
+        fetchMessages: (request: Source.Fetch) =>
+          Effect.sync(() => {
+            fetches.push(request);
+            return pages.shift() ?? { messages: [], threads: [] };
+          }),
+      });
+      const summary = yield* runCrawl({ channels: ['chan-1'], descendThreads: false }).pipe(Effect.provide(source));
+      expect(fetches.map((fetch) => fetch.cursor)).toEqual([undefined, '5']);
+      expect(summary.done).toBe(true);
+      const [target] = yield* StateStore.listTargets();
+      expect(target.cursor).toBe('5');
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
     'a channel added to the config joins an existing crawl',
     Effect.fnUntraced(function* () {
       const fetches: Source.Fetch[] = [];

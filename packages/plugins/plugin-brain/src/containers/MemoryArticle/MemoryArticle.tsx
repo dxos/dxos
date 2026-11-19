@@ -35,7 +35,7 @@ GROUP BY ?p ORDER BY DESC(?n) LIMIT 20`;
 export const MemoryArticle = () => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const space = ToolkitHooks.useActiveSpace();
-  return space ? <MemoryPanel registry={registry} spaceId={space.id} /> : null;
+  return space ? <MemoryPanel key={space.id} registry={registry} spaceId={space.id} /> : null;
 };
 
 MemoryArticle.displayName = 'MemoryArticle';

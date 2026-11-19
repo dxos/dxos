@@ -159,9 +159,15 @@ const advance = (
       );
     }
 
-    const drained = page.messages.length === 0;
-    if (!drained && page.cursor) {
+    // Only an empty fetch ends the target: a page whose messages the source filtered out still moves the cursor.
+    const drained = page.messages.length === 0 && page.cursor === undefined;
+    if (page.cursor) {
       volatile.cursors.set(target.id, page.cursor);
+      if (page.messages.length === 0) {
+        // No message will reach the commit sink, and nothing in the page needs extracting, so the durable cursor
+        // moves now; otherwise every run would refetch the same filtered page.
+        yield* StateStore.setCursor(target.id, page.cursor);
+      }
     }
     if (drained) {
       volatile.done.add(target.id);

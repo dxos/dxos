@@ -134,9 +134,10 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
   const db = space?.db;
   const { invokePromise } = AppHooks.useOperationInvoker();
   const config = useConfig();
-  const kaiId = DiscordChannel.kaiApplicationId(config.values.runtime?.services?.edge?.url);
-
   const channelConfigs = useQuery(db, Filter.type(DiscordChannel.DiscordChannel));
+  // A custom EDGE (a story's fake) has no Kai app of its own; the bot bound in the space reads instead.
+  const kaiId =
+    DiscordChannel.kaiApplicationId(config.values.runtime?.services?.edge?.url) ?? channelConfigs[0]?.applicationId;
   // A back-index is a trigger whose input names a crawl state; its input is set when it is created.
   const trigger = useQuery(db, Filter.type(Trigger.Trigger)).find((candidate) => Ref.isRef(candidate.input?.state));
   const [triggerView] = useObject(trigger);
