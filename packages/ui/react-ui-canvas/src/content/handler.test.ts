@@ -229,6 +229,31 @@ describe('SceneHandler', () => {
     expect(Reflect.get(box('b'), 'width')).toBeUndefined();
   });
 
+  test('a component keeps the rows it lists, beside its fields', ({ expect }) => {
+    const rows = [{ text: 'Effect Schema types' }, { text: 'Registered with ECHO', icon: 'database' }];
+    const object = {
+      id: 'listed',
+      origin: { x: 0, y: 0 },
+      elements: [
+        {
+          kind: 'rect' as const,
+          id: 'types',
+          x: 0,
+          y: 0,
+          w: 256,
+          h: 128,
+          text: 'Types',
+          type: 'card',
+          data: { icon: 'brackets-curly', items: rows },
+        },
+      ],
+    };
+    const content: ContentMap = {};
+    applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
+    const [read] = SceneHandler.read(content).scene.objects;
+    expect(Reflect.get(read.elements[0], 'data')).toEqual({ icon: 'brackets-curly', items: rows });
+  });
+
   test('moves and removes objects; edits by the canvas keep the identity', ({ expect }) => {
     const content: ContentMap = {};
     applyCommands(content, [{ op: 'upsert-object', object: face }], SceneHandler);

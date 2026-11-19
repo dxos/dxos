@@ -11,6 +11,7 @@
 
 import { Shape, solveGrids } from '@dxos/scene';
 
+import { ITEMS_FIELD, itemRecord, itemsOf } from './items.ts';
 import type * as Scene from './scene.ts';
 import * as Semantic from './semantic.ts';
 
@@ -130,7 +131,8 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
         parent,
         ...present({
           type: node.type,
-          data: node.data,
+          // The rows ride in the component's own bag, as the list its fields cannot say.
+          data: node.items?.length ? { ...node.data, [ITEMS_FIELD]: node.items.map(itemRecord) } : node.data,
           color: node.color,
           fill: node.fill,
           stroke: node.stroke,
@@ -344,6 +346,7 @@ export const infer = (object: Scene.WorldObject): Semantic.Diagram | undefined =
           shape: box.kind === 'rect' ? undefined : box.kind,
           type: box.type,
           data: scalarsOf(box.data),
+          items: itemsOf(box.data),
           color: box.color,
           fill: box.fill,
           stroke: box.stroke,

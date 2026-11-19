@@ -150,6 +150,12 @@ describe('dsl round trip', () => {
       '  grid root 0,0 400x200 cols=2 {',
       '    custom s0 kind=graph width=120 seed=7',
       '    rect custom "Plain"',
+      // A component's rows follow it in braces; `item` is still an id anywhere else.
+      '    custom types "Types" kind=card {',
+      '      item "Effect Schema types"',
+      '      item "Registered with ECHO" icon=database',
+      '    }',
+      '    rect item "Also plain"',
       '  }',
       '}',
       '',
@@ -162,7 +168,12 @@ describe('dsl round trip', () => {
       ['grid', 'root', undefined],
       ['rect', 's0', 'graph'],
       ['rect', 'custom', undefined],
+      ['rect', 'types', 'card'],
+      ['rect', 'item', undefined],
     ]);
+    expect(Reflect.get(elements[3], 'data')).toEqual({
+      items: [{ text: 'Effect Schema types' }, { text: 'Registered with ECHO', icon: 'database' }],
+    });
     expect(roundTrip(source)).toEqual(source);
 
     const messages = (text: string) => parse(text).problems.map(({ message }) => message);

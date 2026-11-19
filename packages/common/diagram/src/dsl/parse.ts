@@ -14,6 +14,7 @@ import type { SyntaxNode } from '@lezer/common';
 import { Shape } from '@dxos/scene';
 
 import * as GridEngine from '../grid-engine.ts';
+import { ITEMS_FIELD, itemRecord } from '../items.ts';
 import * as Scene from '../scene.ts';
 import * as SemanticEngine from '../semantic-engine.ts';
 import * as Semantic from '../semantic.ts';
@@ -336,6 +337,29 @@ export const read = (text: string): Reading => {
       }),
     );
 
+  /**
+   * The rows a statement's braces list (`{ item "…" icon=x }`), each with its text and its own fields; every
+   * attribute of a row is the row's, since a row has none the language defines.
+   */
+  const readItems = (owner: SyntaxNode): Semantic.Item[] => {
+    const body = owner.getChild('ItemBody');
+    return childrenOf(body ?? owner)
+      .filter((child) => body !== null && child.name === 'ItemDecl')
+      .flatMap((decl) => {
+        const label = decl.getChild('Label');
+        if (!label) {
+          return [];
+        }
+        const nodes = childrenOf(decl).filter((child) => child.name === 'Attribute');
+        const specs = nodes.flatMap((node) => {
+          const name = node.getChild('AttrName');
+          return name ? [{ name: slice(name), type: 'scalar' as const }] : [];
+        });
+        const fields = readData(readAttrs(nodes, specs, 'item'), specs);
+        return [{ text: unquote(slice(label)), ...(Object.keys(fields).length ? { data: fields } : {}) }];
+      });
+  };
+
   /** The style fields every element shares. */
   const readStyle = (attrs: Map<string, Attr>) => ({
     ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
@@ -402,7 +426,12 @@ export const read = (text: string): Reading => {
     const attributeNodes = parts.filter((part) => part.name === 'Attribute');
     const extra = ownAttrs(attributeNodes, ELEMENT_ATTRS[kind]);
     const attrs = readAttrs(attributeNodes, [...ELEMENT_ATTRS[kind], ...extra], `${kind} "${id}"`);
-    const data = readData(attrs, extra);
+    const items = readItems(shape);
+    // A component's rows ride in its own bag, beside its fields, as the list they are.
+    const data: Record<string, unknown> = {
+      ...readData(attrs, extra),
+      ...(items.length > 0 ? { [ITEMS_FIELD]: items.map(itemRecord) } : {}),
+    };
     const style = readStyle(attrs);
     // One spelling for a box a component draws: the shape words draw shapes, and `custom` names a component.
     const custom = shape.name === 'CustomElement';
@@ -741,6 +770,15 @@ export const read = (text: string): Reading => {
     diagram.hinted ||= pin !== undefined || relations.length > 0;
     const data = readData(attrs, own);
     gridAttrs(attrs, [KIND_ATTR, 'border', 'width', 'height']);
+    const items = readItems(statement);
+    const body = statement.getChild('ItemBody');
+    if (body) {
+      gridOnly.push({ range: rangeOf(body), what: 'A row (`item`)' });
+      // A plain box has nothing that draws a row; a component does.
+      if (items.length > 0 && !attrs.has(KIND_ATTR)) {
+        report(body, `Rows are drawn by a component; add \`${KIND_ATTR}=<name>\` to node "${id}".`);
+      }
+    }
     // A component draws itself, so the shape of the box under it is not seen and has no spelling in the box form.
     if (attrs.has(KIND_ATTR) && attrs.has('shape')) {
       report(statement, `"shape" says nothing on a node a component draws; drop it or \`${KIND_ATTR}\`.`);
@@ -754,6 +792,7 @@ export const read = (text: string): Reading => {
       ...(label ? { labelled: true } : {}),
       ...optional('type', nameAttr(attrs, KIND_ATTR)),
       ...(Object.keys(data).length ? { data } : {}),
+      ...(items.length > 0 ? { items } : {}),
       ...optional('group', group),
       ...optional('pin', pin),
       ...optional('ref', stringAttr(attrs, 'ref')),

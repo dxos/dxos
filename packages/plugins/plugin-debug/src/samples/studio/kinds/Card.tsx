@@ -36,6 +36,17 @@ import { type Styled, TONES, toneValue } from './FeedCard.tsx';
 // coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's fill level.
 //
 
+/**
+ * A row a card lists: its text, and a glyph of its own in place of the bullet. `tone` is a name rather than one of
+ * {@link TONES}, so a row naming a tone the deck does not have still draws, in the card's own colour.
+ */
+export const CardItem = Schema.Struct({
+  text: Schema.String,
+  icon: Schema.optional(Schema.String),
+  tone: Schema.optional(Schema.String),
+});
+export type CardItem = Schema.Schema.Type<typeof CardItem>;
+
 /** What this kind adds to the core card, kept under `data`. */
 export const CardData = Schema.Struct({
   /** An accent, drawn as the card's outline. A name, not a colour: {@link toneValue} resolves only these. */
@@ -49,7 +60,31 @@ export const CardData = Schema.Struct({
   variant: Schema.optional(Schema.Literals(['full', 'compact', 'simple']).annotate({ title: 'Variant' })),
   /** A row or grid of chips in the card's body: what the layer holds, or which services it runs. */
   chips: Schema.optional(Schema.Union([ChipList, Schema.String]).annotate({ title: 'Chips' })),
+  /** The rows the card lists under its title, which the text form writes in braces after the node. */
+  items: Schema.optional(Schema.Array(CardItem).annotate({ title: 'Rows' })),
 });
+
+/**
+ * A card's rows: each a bullet in the glyph's gutter and its text in the title's column, so a list reads down the
+ * same two columns as the header above it.
+ */
+const CardRows = ({ items }: { items: readonly CardItem[] }) => (
+  <ul className='studio-card-rows min-w-0 shrink-0' data-testid='card-rows'>
+    {items.map(({ text, icon, tone }, index) => {
+      const symbol = icon ? iconSymbol({ type: icon }) : undefined;
+      const colour = toneValue(tone);
+      const style: Styled = colour ? { '--sd-tone': colour } : {};
+      return (
+        <li key={index} className='studio-card-row' style={style}>
+          <span className='studio-card-bullet' aria-hidden='true'>
+            {symbol ? <Icon.Icon icon={symbol} style={{ width: 18, height: 18 }} /> : '•'}
+          </span>
+          <span className='truncate'>{text}</span>
+        </li>
+      );
+    })}
+  </ul>
+);
 
 export const CardNode = Schema.Struct({
   ...Scene.Element2D.fields,
@@ -110,8 +145,9 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
   }
 
   // Anything the card holds beyond its title draws through the core card's frame, which makes each region a part;
-  // the chips are what this kind adds between the header and the body.
-  if (data.chips !== undefined || body !== undefined || footer !== undefined) {
+  // the chips and the rows are what this kind adds between the header and the body.
+  const rows = data.items?.length ? data.items : undefined;
+  if (data.chips !== undefined || rows !== undefined || body !== undefined || footer !== undefined) {
     return (
       <div
         className='studio-card dx-cover rounded-xl overflow-hidden'
@@ -121,6 +157,7 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
       >
         <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
           {chipsOf(data.chips) ? <Chips {...chipsOf(data.chips)!} /> : null}
+          {rows ? <CardRows items={rows} /> : null}
         </CardFrame>
       </div>
     );

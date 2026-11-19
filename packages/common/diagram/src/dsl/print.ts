@@ -10,6 +10,7 @@
 
 import { Shape } from '@dxos/scene';
 
+import { itemsOf } from '../items.ts';
 import type * as Scene from '../scene.ts';
 import * as Semantic from '../semantic.ts';
 import {
@@ -108,6 +109,15 @@ const formatSpecs = (specs: readonly AttrSpec[], values: Partial<Record<string, 
  */
 const formatData = (kind: keyof typeof ELEMENT_ATTRS, data: Readonly<Record<string, unknown>> | undefined): string[] =>
   formatFields(ELEMENT_ATTRS[kind], data);
+
+/** A component's rows, one to a line inside the braces that follow it, and the closing brace; nothing for none. */
+const formatItems = (items: readonly Semantic.Item[] | undefined, pad: string): string[] =>
+  items?.length
+    ? [
+        ...items.map(({ text, data }) => [`${pad}  item`, formatString(text), ...formatFields([], data)].join(' ')),
+        `${pad}}`,
+      ]
+    : [];
 
 /** A kind's own fields beside the attributes `specs` already claims, whose names are written escaped. */
 const formatFields = (specs: readonly AttrSpec[], data: Readonly<Record<string, unknown>> | undefined): string[] => {
@@ -282,7 +292,9 @@ const block = (header: string, elements: readonly Shape.Element[]): string => {
     const children = childrenOf.get(element.id);
     const text = formatElement(element, { nested: placed.has(element.id) });
     if (!children?.length) {
-      return [`${indent}${text}`];
+      // A component's rows follow it in braces, as a grid's children follow the grid.
+      const items = 'data' in element ? itemsOf(element.data) : undefined;
+      return [`${indent}${text}${items ? ' {' : ''}`, ...formatItems(items, indent)];
     }
     return [`${indent}${text} {`, ...children.flatMap((child) => lines(child, depth + 1)), `${indent}}`];
   };
@@ -368,7 +380,7 @@ export const formatGridDiagram = (diagram: Semantic.Diagram): string => {
         }),
         ...formatFields(NODE_ATTRS, node.data),
       ];
-      return [`${pad}${words.join(' ')}`];
+      return [`${pad}${words.join(' ')}${node.items?.length ? ' {' : ''}`, ...formatItems(node.items, pad)];
     }
     const group = groups.get(id);
     if (!group) {

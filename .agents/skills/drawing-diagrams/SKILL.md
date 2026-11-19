@@ -167,6 +167,8 @@ edge calendar -- field stroke=dashed
   (`group port { }`) draws nothing and holds its cell.
 - `node a width=240 height=48` keeps that size in the middle of its cell; an axis left out fills the cell. In a
   packed group (`layout=pack`) the larger is the diameter of the node's circle.
+- A component that lists things takes its rows in braces: `node types "Types" kind=card { item "Effect Schema" }`,
+  one `item` to a line. Rows are the component's content, not nodes, so an edge does not end on one.
 - `edge a -- b path=line` says how the connector runs (`line`, `ortho`, `curve`, `smart`).
 - `kind=<component>` places a component the host contributes; its other attributes are the component's fields.
 - State no coordinates and no placement hints: both are ignored here with a warning.

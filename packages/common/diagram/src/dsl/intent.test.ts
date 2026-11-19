@@ -76,6 +76,14 @@ const SOURCES: Record<string, string> = {
       node other kind=graph
     }
   `,
+  'a component that lists rows': `
+    diagram kind=grid size=800x600 cols=2
+    node types "Types" kind=card footer="schema · 66" icon=brackets-curly {
+      item "Effect Schema types"
+      item "Registered with ECHO" icon=database tone=accent
+    }
+    node plain "Plain"
+  `,
   'edges': `
     diagram kind=grid size=800x600 cols="1fr 0"
     group side { node a }
@@ -120,6 +128,21 @@ describe('printIntent', () => {
         'edge a -- frame/nav path=line stroke=dashed',
         'edge frame#left extends side',
         'edge a -> port tail=circle color=green',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  test('rows are written in braces after their node, one to a line', ({ expect }) => {
+    expect(intentOf(objectOf(SOURCES['a component that lists rows'])).text).toBe(
+      [
+        'diagram kind=grid size=800x600 cols=2',
+        '',
+        'node types "Types" kind=card footer="schema · 66" icon=brackets-curly {',
+        '  item "Effect Schema types"',
+        '  item "Registered with ECHO" icon=database tone=accent',
+        '}',
+        'node plain "Plain"',
         '',
       ].join('\n'),
     );

@@ -103,7 +103,11 @@ Compact { kw<"compact"> }
 GroupBody { "{" (NodeDecl | EdgeDecl | GroupDecl)* "}" }
 
 // node <id> ["label"] [@ x,y | @cell(c,r)] [~]<relation> <node> … [ref=…] [color=…] [shape=…]
-NodeDecl { kw<"node"> Id Label? (Pin | Relation | Attribute)* }
+// A node may end in braces holding the rows its component lists: `node types kind=card { item "Effect Schema" }`.
+// A row is content, not a node: it has a label and its own attributes, and no id.
+NodeDecl { kw<"node"> Id Label? (Pin | Relation | Attribute)* ItemBody? }
+ItemBody { "{" ItemDecl* "}" }
+ItemDecl { ckw<"item"> Label Attribute* }
 
 // `@ x,y` is exact, in scene units; `@cell(c,r)` names a grid cell.
 Pin { "@" (Point | CellRef) }
@@ -165,7 +169,7 @@ Element {
 BoxElement    { BoxKind Id Point? Size? Label? Attribute* }
 // A box a contributed component draws (`custom s0 kind=graph`): the keyword says the box is not one of the shapes,
 // and `kind=` names what draws it. Contextual, as `grid` is, so an id may still be called `custom`.
-CustomElement { ckw<"custom"> Id Point? Size? Label? Attribute* }
+CustomElement { ckw<"custom"> Id Point? Size? Label? Attribute* ItemBody? }
 // A grid holds what it places, in braces. Containment is then structural: there is no naming a parent that does
 // not exist, no cycle to detect, and the cell a child lands in is the order it is written in — all three of which
 // a `parent=` attribute leaves representable and needing code to catch.

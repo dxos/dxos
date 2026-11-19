@@ -9,7 +9,8 @@ member takes the next cell in the order written. A group can size its unstated t
 they sit (`alignContent=center`), draw a frame (`border=true`) or pack its members as circles (`layout=pack`); an
 empty group holds a cell. A `node` can name a contributed component and carry its fields
 (`node calendar "Calendar" kind=card icon=calendar-blank`), and state the size it keeps in its cell
-(`width=240 height=48`). An `edge` can end on a group or on a place of a component (`frame/nav`) and say how it
+(`width=240 height=48`), and list a component's rows in braces
+(`node types kind=card { item "Effect Schema" }`). An `edge` can end on a group or on a place of a component (`frame/nav`) and say how it
 runs (`path=line`). No coordinate is written and none is stored.
 
 `Dsl.printIntent` reads that text back out of a drawing made of grid boxes. It returns the text or the reasons a

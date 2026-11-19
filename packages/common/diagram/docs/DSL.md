@@ -79,6 +79,8 @@ Attributes, all optional unless noted: `color` `fill` `stroke` `weight` on every
 `rotation` and `corners` on the box kinds; `w` (wrap width) on `text`; `closed` on `line`; `head`
 and `tail` on `arrow`; `ref` on `portal`, where the schema requires it.
 
+A `custom` box may be followed by braces holding the component's rows (`{ item "…" }`), as a node may.
+
 `custom <id> kind=<name>` is a box a contributed component draws (`custom s0 kind=graph seed=7`): `kind` is
 required and names the component, and every attribute the box does not define is the component's own field. A
 shape word never takes `kind`, so a component has one spelling. Inside a `grid` a box states no geometry, and
@@ -179,6 +181,9 @@ edge calendar -- field stroke=dashed
 - An empty group (`group port { }`) draws nothing and holds its cell: a spacer, or a place for an edge to end.
 - `node … kind=card` places a component. Every attribute the node does not define itself is the component's own
   field; one whose name the node does define is written escaped (`data-fill=0.55`).
+- A node that names a component may list the component's rows in braces, one `item "…"` to a line, each with
+  attributes of its own (`item "Registered with ECHO" icon=database`). A row is the component's content: it has no
+  id, nothing places it, and it is stored on the node's own record. A node without `kind=` takes none.
 - `border=true|false` on a node says whether its box draws a border.
 - `width=240` and `height=48` on a node are the size it keeps in its cell, centred there; an axis left out fills
   the cell. In a packed group the larger is the diameter of its circle. They are the only way a node states a

@@ -965,10 +965,16 @@ const dataOf = (node: Node): Record<string, unknown> | undefined => {
   if (typeof bag !== 'object' || bag === null || Array.isArray(bag)) {
     return undefined;
   }
-  const scalars = Object.entries(bag).filter(
-    ([, value]) => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean',
-  );
-  return scalars.length ? Object.fromEntries(scalars) : undefined;
+  const isScalar = (value: unknown) =>
+    typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+  // A list of flat rows is the one thing beside a scalar the text form says: the rows in a component's braces.
+  const isRows = (value: unknown) =>
+    Array.isArray(value) &&
+    value.every(
+      (row) => typeof row === 'object' && row !== null && !Array.isArray(row) && Object.values(row).every(isScalar),
+    );
+  const fields = Object.entries(bag).filter(([, value]) => isScalar(value) || isRows(value));
+  return fields.length ? Object.fromEntries(fields) : undefined;
 };
 
 /** The DSL ref of the node a link end names, relative to `object`. */

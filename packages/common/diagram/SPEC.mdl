@@ -677,3 +677,14 @@ decision D-29: A box a contributed component draws is written `custom <id> kind=
     - The component's name as the statement (`graph s0`): the set of statement words would be open, so a misspelt component would read as an unknown statement and not as a box.
 ```
 
+```mdl
+decision D-30: A node that names a component may end in braces listing the component's rows (`item "…"` with attributes of its own). The rows are the component's content: they are stored as one list on the node's record (`data.items`), have no ids, and are not placed by anything. The box form writes them the same way after a `custom` box.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: A list inside a component had no spelling but a string the component parsed for itself (`chips="a~b | c~d"`), and prose that wraps (`body=`) has a height no solver can know; rows of one line each are a list the text says and a height that can be counted.
+  rejected:
+    - Rows as child nodes the card places: a `group` places things and a `node` is a leaf, and a card that placed nodes would be a group drawn by a component.
+    - The word `text` for a row: it is already an element, with an id and a position.
+```
+

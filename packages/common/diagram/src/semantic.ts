@@ -87,6 +87,12 @@ export type GridRule = {
 /** A scalar a component's own field may hold, which is all the text form spells. */
 export type Scalar = string | number | boolean;
 
+/**
+ * A row of a component's content, in the order written: its text and the row's own fields (`icon=database`). A row
+ * is the component's to draw and is not a node: nothing places it, and it has no id.
+ */
+export type Item = { text: string; data?: Record<string, Scalar> };
+
 export type Node = {
   id: string;
   label: string;
@@ -111,6 +117,8 @@ export type Node = {
   type?: string;
   /** That component's own fields. */
   data?: Record<string, Scalar>;
+  /** The rows the component lists, written in braces after the node. Only a grid diagram reads them. */
+  items?: readonly Item[];
   /** Whether the source wrote a label; a component with none draws no text, where a plain box falls back to its id. */
   labelled?: boolean;
   range: Range;

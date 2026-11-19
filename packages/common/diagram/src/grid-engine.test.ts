@@ -250,6 +250,40 @@ describe('grid diagrams', () => {
     expect(solveGrids(boxesOf(text)).get('port')).toEqual({ x: 800, y: 0, w: 0, h: 600 });
   });
 
+  test("a node lists its component's rows in braces; they ride in its data and are not boxes", ({ expect }) => {
+    const text = `
+      diagram kind=grid size=400x200
+      node types "Types" kind=card icon=brackets-curly {
+        item "Effect Schema types"
+        item "Registered with ECHO" icon=database
+      }
+    `;
+    expect(messagesOf(text)).toEqual([]);
+    expect(boxesOf(text).slice(1)).toEqual([
+      {
+        kind: 'rect',
+        id: 'types',
+        ...placed,
+        text: 'Types',
+        parent: OBJECT,
+        type: 'card',
+        data: {
+          icon: 'brackets-curly',
+          items: [{ text: 'Effect Schema types' }, { text: 'Registered with ECHO', icon: 'database' }],
+        },
+      },
+    ]);
+  });
+
+  test('rows need a component to draw them, and empty braces list none', ({ expect }) => {
+    expect(messagesOf('diagram kind=grid size=400x200\nnode a "A" { item "One" }')).toEqual([
+      'error: Rows are drawn by a component; add `kind=<name>` to node "a".',
+    ]);
+    const empty = 'diagram kind=grid size=400x200\nnode a "A" kind=card { }';
+    expect(messagesOf(empty)).toEqual([]);
+    expect(boxesOf(empty)[1].data).toBeUndefined();
+  });
+
   test('a node a component draws states no shape', ({ expect }) => {
     expect(messagesOf('diagram kind=grid size=400x200\nnode a kind=card shape=ellipse')).toEqual([
       'error: "shape" says nothing on a node a component draws; drop it or `kind`.',
@@ -298,11 +332,18 @@ describe('the other kinds', () => {
       diagram size=800x600 cols=2
       group g rows=3 padding=4 autoRows=88 alignContent=center border=true { node a kind=card icon=x }
       node b width=120 height=40
+      node c kind=card { item "One" }
       edge a -> b path=line
     `;
     expect(messagesOf(text).sort()).toEqual(
-      ['size', 'cols', 'rows', 'padding', 'autoRows', 'alignContent', 'border', 'kind', 'width', 'height', 'path']
-        .map((name) => `error: "${name}" belongs in a grid diagram; declare \`diagram kind=grid\`.`)
+      [
+        ...['size', 'cols', 'rows', 'padding', 'autoRows', 'alignContent', 'border', 'kind', 'width', 'height', 'path']
+          // `kind` is stated twice, on `a` and on `c`.
+          .flatMap((name) => (name === 'kind' ? [name, name] : [name]))
+          .map((name) => `"${name}"`),
+        'A row (`item`)',
+      ]
+        .map((what) => `error: ${what} belongs in a grid diagram; declare \`diagram kind=grid\`.`)
         .sort(),
     );
   });

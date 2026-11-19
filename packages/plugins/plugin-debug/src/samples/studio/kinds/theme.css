@@ -116,6 +116,28 @@
   color: var(--sd-card-body-fg);
 }
 
+/* A card's rows, under its title: the bullet takes the glyph's column and the text the title's, on the body's line. */
+.studio-card-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.studio-card-row {
+  display: grid;
+  grid-template-columns: var(--dx-card-glyph) minmax(0, 1fr);
+  column-gap: var(--dx-card-gap);
+  align-items: center;
+  font-size: var(--sd-card-body);
+  line-height: 24px;
+  color: var(--sd-card-body-fg);
+}
+
+.studio-card-bullet {
+  display: flex;
+  justify-content: center;
+  color: var(--sd-tone, var(--sd-card-footer-fg));
+}
+
 /* The footer's block is 22px, what the canvas's own footer took, so a larger footer costs the body no line. It is
    set in the body's face: in mono at this size the longest footers no longer fit their cards. */
 .studio-card-frame [data-part$='footer'] {
