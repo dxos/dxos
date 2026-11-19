@@ -17,7 +17,7 @@ where. The engine (`SemanticEngine` in `@dxos/diagram`) puts the boxes on a grid
 through the gutters with the fewest bends, spreads the ports and places the labels. Do not write a
 script that generates the DSL; write the `.dx` text yourself.
 
-The pipeline is: `.dx` source → `Dsl.compile` → `SceneSvg` → `<name>.dx.svg` + `<name>.png` + a
+The pipeline is: `.dx` source → `DSL.compile` → `SceneSvg` → `<name>.dx.svg` + `<name>.png` + a
 layout report. One moon task runs it: `plugin-illustrator:render-diagrams`
 (`packages/plugins/plugin-illustrator/scripts/render-diagrams.tsx`).
 
@@ -143,6 +143,35 @@ a plain message. `note A`, `note A:left`, `note A, B`, and `fragment alt|opt|loo
 default, a bubble), `store` (a box with its D-number) or `external` (a shaded box). Label every edge
 with the data that flows. The report warns about data moving without a process, a process with no
 inputs or no outputs, and a store nobody reads.
+
+### Grid diagrams
+
+`diagram kind=grid size=WxH` lays a slide out by rule instead of by search. Use it when the drawing is rows and
+columns of components (cards, panels) rather than a graph to untangle.
+
+```
+diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
+group services "EDGE Services" gap=12 {
+  node calendar "Calendar" kind=card icon=calendar-blank
+  node email "Email" kind=card icon=envelope
+}
+node field kind=substrate seed=29
+edge calendar -- field stroke=dashed
+```
+
+- Every `group` is a grid and groups nest. Members fill the cells in the order written; `cols`/`rows` are a
+  count or a track list (`"48 1fr"`), and an axis with none takes one track per member.
+- `autoRows=88` (or `autoCols`) gives every unstated track one size; `alignContent`/`justifyContent`
+  (`start`, `center`, `end`) place the tracks when they leave space over.
+- A group's label is drawn as a heading over its members. `border=true` frames the members; an empty group
+  (`group port { }`) draws nothing and holds its cell.
+- `node a width=240 height=48` keeps that size in the middle of its cell; an axis left out fills the cell. In a
+  packed group (`layout=pack`) the larger is the diameter of the node's circle.
+- A component that lists things takes its rows in braces: `node types "Types" kind=card { item "Effect Schema" }`,
+  one `item` to a line. Rows are the component's content, not nodes, so an edge does not end on one.
+- `edge a -- b path=line` says how the connector runs (`line`, `ortho`, `curve`, `smart`).
+- `kind=<component>` places a component the host contributes; its other attributes are the component's fields.
+- State no coordinates and no placement hints: both are ignored here with a warning.
 
 The full reference the in-app agent reads is the `uml` skill text in
 `packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts`. The Storybook bench, which shows the

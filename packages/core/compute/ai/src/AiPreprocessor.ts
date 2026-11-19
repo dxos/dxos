@@ -18,6 +18,7 @@ import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { bufferToArray, safeParseJson } from '@dxos/util';
@@ -47,14 +48,20 @@ export const preprocessPrompt: (
      * (see {@link retireUnofferedToolCalls}); absent, every call is kept as a call.
      */
     tools?: readonly string[];
+    /**
+     * How many turns, counted back from the last and including it, keep their tool calls, tool results and reasoning;
+     * older turns keep only what was said (see {@link compactEarlierTurns}). Absent, every turn is kept whole.
+     */
+    fullTurns?: number;
   },
 ) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
   messages,
-  { system, cacheControl = 'no-cache', tools } = {},
+  { system, cacheControl = 'no-cache', tools, fullTurns } = {},
 ) {
   return yield* Function.pipe(
     messages,
     applySummaryTrimming,
+    Effect.map(fullTurns === undefined ? Function.identity : compactEarlierTurns(fullTurns)),
     Effect.map(tools === undefined ? Function.identity : retireUnofferedToolCalls(new Set(tools))),
     Effect.map(groupAssistantMessages),
     Effect.flatMap(
@@ -820,6 +827,57 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
   return Prompt.fromMessages(result);
 };
 
+/** The internals of a turn: how it reached its answer, which only the turns still in progress or just past need. */
+const TURN_INTERNALS: ReadonlySet<ContentBlock.Any['_tag']> = new Set(['toolCall', 'toolResult', 'reasoning', 'stats']);
+
+/**
+ * Whether a message starts a turn: someone's prompt, in text or not (an image alone is a prompt). A synthetic message
+ * (a hook's follow-up, a notice, a snapshot of other threads) continues the turn it is in.
+ */
+const startsTurn = (message: Message.Message): boolean =>
+  message.sender.role === 'user' &&
+  message.blocks.some((block) =>
+    block._tag === 'text'
+      ? block.disposition !== 'synthetic' && block.text.trim() !== ''
+      : !TURN_INTERNALS.has(block._tag),
+  );
+
+/**
+ * Compacts every turn before the last `fullTurns`: its tool results, reasoning and stats are dropped, and each tool call
+ * becomes a note of what was called and with what input, so the prompts, the replies and everything the agent did
+ * stay.
+ *
+ * A long conversation otherwise resends every earlier turn's tool output with every model call: a Discord thread four
+ * days old added 11-15k input tokens to each call of a new turn, most of it results. The calls themselves stay because an
+ * agent may speak only through them: the Discord agent's replies are `post` and `dm` calls (or an `eval` that makes
+ * them), never its own text. A call kept as text has no result to pair with, so the history stays a valid tool-use
+ * sequence.
+ */
+const compactEarlierTurns =
+  (fullTurns: number) =>
+  (messages: readonly Message.Message[]): readonly Message.Message[] => {
+    invariant(Number.isInteger(fullTurns) && fullTurns >= 0, 'fullTurns must be a non-negative integer');
+    const starts = messages.flatMap((message, index) => (startsTurn(message) ? [index] : []));
+    if (starts.length <= fullTurns) {
+      return messages;
+    }
+    const keepFrom = fullTurns === 0 ? messages.length : starts[starts.length - fullTurns];
+    const earlier = messages.slice(0, keepFrom).flatMap((message) => {
+      if (!message.blocks.some((block) => TURN_INTERNALS.has(block._tag))) {
+        return [message];
+      }
+      const blocks = message.blocks.flatMap((block): ContentBlock.Any[] =>
+        block._tag === 'toolCall'
+          ? [{ _tag: 'text', text: `[Called \`${block.name}\`. Input: ${capRetired(block.input || '{}')}]` }]
+          : TURN_INTERNALS.has(block._tag)
+            ? []
+            : [block],
+      );
+      return blocks.length > 0 ? [Message.make({ sender: message.sender, blocks })] : [];
+    });
+    return [...earlier, ...messages.slice(keepFrom)];
+  };
+
 /** Characters of a retired call's input or result kept in its text form; the head is what the model acts on. */
 const MAX_RETIRED_RESULT = 2_000;
 
@@ -890,7 +948,11 @@ const capRetired = (text: string): string =>
 const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = Function.flow(
   (messages) =>
     Array.isReadonlyArrayNonEmpty(messages)
-      ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
+      ? Array.groupWith(
+          // Prompts from different people stay apart: a merged message keeps only its first sender's name.
+          (a: Message.Message, b: Message.Message) =>
+            a.sender.role === b.sender.role && (a.sender.role !== 'user' || a.sender.name === b.sender.name),
+        )(messages)
       : [],
   Array.map(mergeMessages),
 );

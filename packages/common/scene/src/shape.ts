@@ -42,11 +42,92 @@ export const Point = Schema.Struct({
 export type Point = Schema.Schema.Type<typeof Point>;
 
 /** Style props shared by all elements; every field is optional with sensible defaults. */
+/** Where a shape's text sits across it, and down it. */
+export const Align = Schema.Literals(['left', 'center', 'right']);
+export type Align = Schema.Schema.Type<typeof Align>;
+export const VerticalAlign = Schema.Literals(['top', 'middle', 'bottom']);
+export type VerticalAlign = Schema.Schema.Type<typeof VerticalAlign>;
+
+/** How a box places what names it: on tracks, as CSS grid does, or by packing circles into its frame. */
+export const Layout = Schema.Literals(['tracks', 'pack']);
+export type Layout = Schema.Schema.Type<typeof Layout>;
+
+/** Where a grid's tracks sit along one axis when they leave space over, as CSS's `*-content` properties say it. */
+export const Place = Schema.Literals(['start', 'center', 'end']);
+export type Place = Schema.Schema.Type<typeof Place>;
+
 const styleFields = {
   color: Schema.optional(Color).annotate({ description: 'Stroke/text color.' }),
   fill: Schema.optional(Fill).annotate({ description: 'Interior fill of closed shapes.' }),
   stroke: Schema.optional(Stroke).annotate({ description: 'Stroke rendering; sketchy is hand-drawn.' }),
   weight: Schema.optional(Weight).annotate({ description: 'Stroke weight / text size.' }),
+  /**
+   * Whether a closed shape draws its outline. Unset is the host's own default, which is to draw one, so a shape
+   * that draws none has to say so: without it a borderless label reads back as a bordered box — which is what a
+   * slide's column headings turned into on every trip through the text.
+   */
+  border: Schema.optional(Schema.Boolean).annotate({ description: 'Whether a closed shape draws its outline.' }),
+  align: Schema.optional(Align).annotate({ description: "Where the shape's text sits across it." }),
+  valign: Schema.optional(VerticalAlign).annotate({ description: "Where the shape's text sits down it." }),
+  /** Text size in scene units. `weight` names a size by role; this one states it. */
+  fontSize: Schema.optional(Schema.Number).annotate({ description: 'Text size in scene units.' }),
+};
+
+/**
+ * What a `grid` box places with, modelled on CSS grid. The rule is what is stored and what the text carries; the
+ * children's coordinates are a cached projection of it, re-solved whenever the drawing is rendered — which is what
+ * keeps a run evenly spaced when a member is added or the grid is resized.
+ */
+const gridFields = {
+  /** Column tracks: a count (`3`), or a list (`"1fr auto 2fr"`) of shares, content sizes and fixed extents. */
+  cols: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({ description: 'Column tracks.' }),
+  /** Row tracks, in the same spelling. */
+  rows: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({ description: 'Row tracks.' }),
+  /** Space between two cells, in scene units. */
+  gap: Schema.optional(Schema.Number).annotate({ description: 'Space between two cells.' }),
+  /** Space between the grid's frame and its cells, in scene units. */
+  padding: Schema.optional(Schema.Number).annotate({ description: "Space inside the grid's frame." }),
+  /**
+   * The size every implicit column takes, in the track spelling (CSS's `grid-auto-columns`). Unset is one share
+   * each, so an axis that states no count fills the frame; `136` instead gives every cell that extent, which is
+   * how a run of cards comes out one size whatever its neighbour holds.
+   */
+  autoCols: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({
+    description: 'Size of each implicit column track.',
+  }),
+  /** The size every implicit row takes, in the same spelling. */
+  autoRows: Schema.optional(Schema.Union([Schema.Number, Schema.String])).annotate({
+    description: 'Size of each implicit row track.',
+  }),
+  /** Where the columns sit when they do not fill the frame (CSS's `justify-content`). */
+  justifyContent: Schema.optional(Place).annotate({ description: 'Where the columns sit across the frame.' }),
+  /** Where the rows sit when they do not fill the frame (CSS's `align-content`). */
+  alignContent: Schema.optional(Place).annotate({ description: 'Where the rows sit down the frame.' }),
+  /**
+   * How the box places what names it: on tracks (the default) or by packing circles into its frame, where `seed`,
+   * `rmin` and `rmax` are the packing's and `cols`/`rows` say nothing.
+   */
+  layout: Schema.optional(Layout).annotate({ description: 'How the box places its children.' }),
+  /**
+   * The seed a packing is laid out from; the same seed always gives the same field. Named apart from a kind's own
+   * `seed`, which a box carrying a kind keeps in its `data`.
+   */
+  packSeed: Schema.optional(Schema.Number).annotate({ description: "A packing's seed." }),
+  /** The smallest and largest a packed child may be, in scene units. */
+  packMin: Schema.optional(Schema.Number).annotate({ description: 'Smallest packed child.' }),
+  packMax: Schema.optional(Schema.Number).annotate({ description: 'Largest packed child.' }),
+  /**
+   * The grid that places this box. Its own `x`/`y` and size are then the grid's to decide; the size it states is
+   * what an `auto` track measures, so a label can keep its own height while the body beside it takes the rest.
+   */
+  parent: Schema.optional(Schema.String).annotate({ description: 'The grid that places this box.' }),
+  /**
+   * The size the box keeps in the cell its grid gives it, centred there; an axis left out fills the cell. Stated
+   * apart from `w` and `h`, which for a placed box are the grid's result and are written over each time it is
+   * solved. In a packed grid the larger of the two is the diameter of the box's circle.
+   */
+  width: Schema.optional(Schema.Number).annotate({ description: 'Width the box keeps inside its grid cell.' }),
+  height: Schema.optional(Schema.Number).annotate({ description: 'Height the box keeps inside its grid cell.' }),
 };
 
 const id = Schema.String.annotate({
@@ -54,7 +135,7 @@ const id = Schema.String.annotate({
 });
 
 /** The closed-shape kinds {@link Box} covers. */
-export const BoxKind = Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle']);
+export const BoxKind = Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle', 'grid']);
 export type BoxKind = Schema.Schema.Type<typeof BoxKind>;
 
 /** Which corners a rect rounds. */
@@ -74,6 +155,17 @@ export const Box = Schema.Struct({
   corners: Schema.optional(Corners).annotate({
     description: 'Rects only: round just these corners (default all); backends without corner control ignore it.',
   }),
+  /**
+   * The contributed element kind this box really is (`card`, `plank`, a composite's type). The geometry stays on the
+   * box, so a host that does not know the kind still draws a box; a host that does draws the kind. Without it a
+   * drawing that uses a kind cannot be written down: every one flattens to a rect on the way through the DSL.
+   */
+  type: Schema.optional(Schema.String).annotate({ description: "A contributed element kind's name." }),
+  /** The kind's own fields, as its schema declares them. */
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
+    description: "A contributed kind's own fields.",
+  }),
+  ...gridFields,
   ...styleFields,
 });
 export type Box = Schema.Schema.Type<typeof Box>;
@@ -143,6 +235,14 @@ export const Text = Schema.Struct({
 export type Text = Schema.Schema.Type<typeof Text>;
 
 /** UML-style end markers: the head sits at the target, the tail at the source. */
+/**
+ * How a connector runs between its ends, as the canvas's link variants name it: `smart` (the default) leaves each
+ * port along its normal and joins the two, `ortho` turns at right angles, `line` runs straight and `curve` bends.
+ * `spline` is left out: its shape is its control points, which an arrow has no spelling for.
+ */
+export const Path = Schema.Literals(['smart', 'ortho', 'line', 'curve']);
+export type Path = Schema.Schema.Type<typeof Path>;
+
 export const ArrowHead = Schema.Literals(['arrow', 'triangle', 'crowsfoot', 'none']);
 export type ArrowHead = Schema.Schema.Type<typeof ArrowHead>;
 export const ArrowTail = Schema.Literals(['none', 'circle', 'arrow']);
@@ -215,6 +315,17 @@ export const Arrow = Schema.Struct({
   }),
   tail: Schema.optional(ArrowTail).annotate({
     description: 'Marker at the source end (default none): circle for containment, arrow for a two-way connector.',
+  }),
+  /**
+   * The whole route the connector runs, in scene units: where it leaves its source, every bend, and where it meets
+   * its target. The ends are written down too, rather than left to be re-derived, because they are attachment
+   * points on each shape's outline — re-deriving them is the canvas routing the connector itself, which is what a
+   * stored route exists to override. Without this a connector routed by hand or by a layout lost its bends the
+   * moment the drawing was written down and snapped back to a straight run.
+   */
+  route: Schema.optional(Schema.Array(Point)).annotate({ description: "The connector's route, ends included." }),
+  path: Schema.optional(Path).annotate({
+    description: 'How the connector runs between its ends (default `smart`).',
   }),
   relation: Schema.optional(Relation).annotate({
     description:

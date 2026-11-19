@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { type Fact } from '@dxos/echo-memory';
 import { log } from '@dxos/log';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import {
@@ -41,7 +41,7 @@ describe.skipIf(!fixtureExists())('extract facts to fact store (multi-model)', (
       const messages = loadFixtureMessages();
       const variants = selectVariants();
       const rows: Record<string, unknown>[] = [];
-      const factsByModel = new Map<string, readonly RDF.Fact[]>();
+      const factsByModel = new Map<string, readonly Fact.Fact[]>();
 
       for (const variant of variants) {
         const builder = await new EchoTestBuilder().open();

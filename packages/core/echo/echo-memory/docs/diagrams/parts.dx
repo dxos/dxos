@@ -1,0 +1,21 @@
+diagram kind=dataflow
+node Agent "agent / UI" role=external
+node Mem "RdfMemory" role=process
+node Store "QuadStore" role=process
+node Sync "feed sync" role=process
+node Shared "shared part" role=store
+node Local "local part" role=store
+node Log "facts feed" role=store
+node Other "other devices" role=external
+edge Agent -> Mem "put, query"
+edge Mem -> Agent "facts, events"
+edge Mem -> Store "batches, SPARQL"
+edge Store -> Mem "rows"
+edge Store -> Log "batch, first"
+edge Log -> Store "batches in order"
+edge Store -> Shared "facts, cursors"
+edge Shared -> Store "quads"
+edge Store -> Local "subs, outboxes"
+edge Local -> Store "records"
+edge Log -> Sync "blocks"
+edge Sync -> Other "replicate"

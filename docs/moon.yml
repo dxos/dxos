@@ -11,6 +11,9 @@ tasks:
     outputs: []
   bundle:
     command: pnpm exec astro build
+    # Twoslash type-checks every snippet in one process; the default ~4 GB heap runs out.
+    env:
+      NODE_OPTIONS: --max-old-space-size=8192
     deps:
       - ^:build
       - build

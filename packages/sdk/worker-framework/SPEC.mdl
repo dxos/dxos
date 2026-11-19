@@ -30,6 +30,7 @@ The following extension dialects are used in this document.
 | `module` | `org.dxos.mdl.module@1.0`    |
 | `feat`   | `org.dxos.mdl.feat@1.0`      |
 | `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Modules
 
@@ -197,6 +198,14 @@ feat F-1: Leader election
     then: open() rejects with that failure at once instead of at the end of its budget, and
           the connection releases its lock, worker and timers (`close()` is a no-op on a
           resource that never opened)
+
+  req F-1.9:
+    when: another tab steals this tab's leader lock twice in a row without this tab
+          receiving a port from a peer's worker in between (the thief is on another
+          coordinator, e.g. a tab running a different app build)
+    then: it stops stealing the lock back, so the other tab keeps a working worker, and
+          escalates once with `WorkerLeaderContentionError`; a port from a peer's worker
+          resets the count
 ```
 
 ```mdl
@@ -393,6 +402,15 @@ scenario T-3: Duplicate sessions are de-duplicated
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: A tab whose leader lock is taken repeatedly by a tab it cannot hear over its coordinator yields instead of stealing back, and escalates with `WorkerLeaderContentionError` so the app can reload every tab onto one build. Two tabs on different builds each have their own SharedWorker coordinator but share the origin's leader lock, and stealing back made them kill each other's worker every port timeout, indefinitely.
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-1.9]
+```
 
 ## Appendix: Extension Definitions
 

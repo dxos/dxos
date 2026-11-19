@@ -153,7 +153,7 @@ const ObjectThumbnail = ({ id }: { id: ViewId }) => {
  */
 export type Canvas2DHostProps = Pick<
   CanvasRootProps,
-  'drift' | 'onViewChange' | 'refitKey' | 'refitDuration' | 'fitZoom'
+  'drift' | 'onViewChange' | 'refitKey' | 'refitDuration' | 'frame' | 'fitZoom'
 >;
 
 const Canvas2DHostContext = createContext<Canvas2DHostProps>({});

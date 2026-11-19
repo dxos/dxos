@@ -35,6 +35,8 @@ import * as Position from '@dxos/util/Position';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate$ from '../app/AppUpdate.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as LinkAction$ from '../app/LinkAction.ts';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations.ts';
 import type * as AppSettings from '../types/AppSettings.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -183,6 +185,14 @@ export type StatsPanelStore = Readonly<{
  * @category Capability
  */
 export const StatsPanel = Capability$.makeSingleton<StatsPanelStore>()('org.dxos.app-toolkit.capability.statsPanel');
+
+/**
+ * Present when the whole app is read-only, as in the published-space viewer: plugins show content
+ * and drop every control that writes. The host contributes it at startup, so read it when rendering
+ * or expanding the graph, never while a module activates.
+ * @category Capability
+ */
+export const ReadOnly = Capability$.makeSingleton<true>()('org.dxos.app-toolkit.capability.readOnly');
 
 /**
  * The graph builder instance. Its `graph` is the reactive node tree; the builder also carries the
@@ -566,6 +576,8 @@ export type NavigationTarget = {
    * position rather than path sniffing by the caller.
    */
   position?: Position.Position;
+  /** View state to set before `path` opens, so it opens on the part the target is about (a project on one of its specs). */
+  viewState?: readonly ViewState.Patch[];
 };
 
 export type NavigationQuery = {
@@ -645,6 +657,12 @@ export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 export const NavigationHandler = Capability$.make<NavigationHandler>()(
   'org.dxos.app-toolkit.capability.navigationHandler',
 );
+
+/**
+ * An action a link can run on the object it opens (see {@link LinkAction$}).
+ * @category Capability
+ */
+export const LinkAction = Capability$.make<LinkAction$.LinkAction>()('org.dxos.app-toolkit.capability.linkAction');
 
 /** A transient progress monitor handle — the update side of one registry entry. */
 export type ProgressMonitor = Progress.TaskHandle;

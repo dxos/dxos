@@ -16,28 +16,18 @@ import { Pipeline } from '@dxos/pipeline';
 
 import { DiscordOperation } from '#types';
 
-import { discordSourceLayerFromConnection, factFeedStoreLayer } from '../services/index.ts';
+import { discordSourceLayerFromConnection, memoryFactStoreLayer } from '../services/index.ts';
 
 /**
  * Runs one bounded slice of the crawl with every store taken from ECHO for this invocation: the frontier and fact
- * hashes in the `CrawlState`, facts appended to the fact feed. Authors resolve in a per-run registry: an author's
+ * hashes in the `CrawlState`, facts put into the space's memory. Authors resolve in a per-run registry: an author's
  * canonical id is their Discord user id, so it is the same in every run without a store.
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannels> =
   DiscordOperation.CrawlDiscordChannels.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({
-        connection,
-        channels,
-        descendThreads,
-        maxDays,
-        maxDepth,
-        maxSteps,
-        state: stateRef,
-        facts: factsRef,
-      }) {
+      Effect.fn(function* ({ connection, channels, descendThreads, maxDays, maxDepth, maxSteps, state: stateRef }) {
         const state = yield* Database.load(stateRef);
-        const feed = yield* Database.load(factsRef);
         Obj.update(state, (state) => {
           CrawlState.reconcileChannels(state, channels);
           CrawlState.setRunStatus(state, 'running');
@@ -73,7 +63,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
               discordSourceLayerFromConnection(connection, { pageLimit: DiscordOperation.BACK_INDEX_PAGE_SIZE }),
               StateStore.layerEcho(state),
               AgentRegistry.layerMemory,
-              factFeedStoreLayer({ feed, state }),
+              memoryFactStoreLayer({ state }),
             ),
           ),
         );

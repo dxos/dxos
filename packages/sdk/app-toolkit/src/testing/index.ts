@@ -33,4 +33,5 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
   );
 
 export * from './SampleSpaceBuilder.ts';
+export * from './graph-builder-host.ts';
 export * from './headless-plugins.ts';

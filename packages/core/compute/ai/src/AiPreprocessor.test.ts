@@ -859,6 +859,136 @@ describe('AiPreprocessor.preprocessPrompt with offered tools', () => {
   );
 });
 
+describe('AiPreprocessor.preprocessPrompt with full turns', () => {
+  /** One turn: a prompt, an `eval` call with its reasoning, its result, and the reply. */
+  const turn = (index: number) => [
+    makeMessage('user', [{ _tag: 'text', text: `Request ${index}.` }]),
+    makeMessage('assistant', [
+      { _tag: 'reasoning', reasoningText: `Thinking about ${index}.` },
+      { _tag: 'toolCall', toolCallId: `call-${index}`, name: 'eval', input: '{"code":"1"}', providerExecuted: false },
+    ]),
+    makeMessage('tool', [
+      { _tag: 'toolResult', toolCallId: `call-${index}`, name: 'eval', result: `"${index}"`, providerExecuted: false },
+    ]),
+    makeMessage('assistant', [{ _tag: 'text', text: `Reply ${index}.` }]),
+  ];
+
+  const partsOf = (prompt: Prompt.Prompt) =>
+    prompt.content.flatMap((message) =>
+      typeof message.content === 'string' ? [] : message.content.map((part) => ({ role: message.role, part })),
+    );
+
+  it.effect(
+    'an earlier turn keeps what was said, and only the last turns keep their calls and results',
+    Effect.fn(function* ({ expect }) {
+      const parts = partsOf(
+        yield* AiPreprocessor.preprocessPrompt([...turn(1), ...turn(2), ...turn(3)], { fullTurns: 2 }),
+      );
+      const callIds = parts.flatMap(({ part }) => (part.type === 'tool-call' ? [part.id] : []));
+      expect(callIds).toEqual(['call-2', 'call-3']);
+      const resultIds = parts.flatMap(({ part }) => (part.type === 'tool-result' ? [part.id] : []));
+      expect(resultIds).toEqual(['call-2', 'call-3']);
+      const texts = parts.flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
+      expect(texts).toEqual(
+        expect.arrayContaining([
+          'Request 1.',
+          '[Called `eval`. Input: {"code":"1"}]',
+          'Reply 1.',
+          'Request 3.',
+          'Reply 3.',
+        ]),
+      );
+      expect(texts.some((text) => text.includes('"1"') && !text.includes('code'))).toBe(false);
+      expect(parts.some(({ part }) => part.type === 'reasoning' && part.text.includes('1.'))).toBe(false);
+    }),
+  );
+
+  it.effect(
+    'an earlier turn whose only reply was a tool call keeps what the call sent',
+    Effect.fn(function* ({ expect }) {
+      // The Discord agent speaks only through calls like this one; its own text is never posted.
+      const posted = [
+        makeMessage('user', [{ _tag: 'text', text: 'Request 1.' }]),
+        makeMessage('assistant', [
+          {
+            _tag: 'toolCall',
+            toolCallId: 'post-1',
+            name: 'post',
+            input: '{"text":"The migration moved to Friday."}',
+            providerExecuted: false,
+          },
+        ]),
+        makeMessage('tool', [
+          { _tag: 'toolResult', toolCallId: 'post-1', name: 'post', result: '"sent"', providerExecuted: false },
+        ]),
+      ];
+      const parts = partsOf(yield* AiPreprocessor.preprocessPrompt([...posted, ...turn(2)], { fullTurns: 1 }));
+      const texts = parts.flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
+      expect(texts.some((text) => text.includes('The migration moved to Friday.'))).toBe(true);
+      expect(parts.some(({ part }) => part.type === 'tool-call' && part.id === 'post-1')).toBe(false);
+      expect(parts.some(({ part }) => part.type === 'tool-result' && part.id === 'post-1')).toBe(false);
+    }),
+  );
+
+  it.effect(
+    'without full turns every turn is kept whole',
+    Effect.fn(function* ({ expect }) {
+      const parts = partsOf(yield* AiPreprocessor.preprocessPrompt([...turn(1), ...turn(2), ...turn(3)]));
+      expect(parts.filter(({ part }) => part.type === 'tool-call')).toHaveLength(3);
+    }),
+  );
+
+  it.effect(
+    'no full turns keeps only what was said, once',
+    Effect.fn(function* ({ expect }) {
+      const parts = partsOf(yield* AiPreprocessor.preprocessPrompt(turn(1), { fullTurns: 0 }));
+      expect(parts.filter(({ part }) => part.type === 'tool-call')).toHaveLength(0);
+      const texts = parts.flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
+      expect(texts).toEqual(['Request 1.', '[Called `eval`. Input: {"code":"1"}]', 'Reply 1.']);
+    }),
+  );
+
+  it.effect(
+    'a prompt that is only an image starts a turn, a synthetic notice does not',
+    Effect.fn(function* ({ expect }) {
+      const image = makeMessage('user', [
+        { _tag: 'image', source: { type: 'http', url: 'https://example.com/a.png' } },
+      ]);
+      const notice = makeMessage('user', [
+        { _tag: 'text', text: 'Threads running beside this one.', disposition: 'synthetic' },
+      ]);
+      // Counted as a turn, the notice would push turn 2 out of the last two.
+      const parts = partsOf(
+        yield* AiPreprocessor.preprocessPrompt([...turn(1), ...turn(2), notice, image, ...turn(3).slice(1)], {
+          fullTurns: 2,
+        }),
+      );
+      const callIds = parts.flatMap(({ part }) => (part.type === 'tool-call' ? [part.id] : []));
+      expect(callIds).toEqual(['call-2', 'call-3']);
+    }),
+  );
+
+  it.effect(
+    'prompts from two people next to each other keep their own names',
+    Effect.fn(function* ({ expect }) {
+      const from = (name: string, text: string) =>
+        Obj.make(Message.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'user', name },
+          blocks: [{ _tag: 'text', text }],
+        });
+      // Bob's message arrives before the agent answers Alice's, so the two are adjacent.
+      const prompt = yield* AiPreprocessor.preprocessPrompt([
+        from('Alice', 'Alice asks.'),
+        from('Bob', 'Bob asks.'),
+        ...turn(3).slice(1),
+      ]);
+      const texts = partsOf(prompt).flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
+      expect(texts.slice(0, 4)).toEqual(['[From: Alice]', 'Alice asks.', '[From: Bob]', 'Bob asks.']);
+    }),
+  );
+});
+
 describe('AiPreprocessor.estimateTokens', () => {
   it.effect(
     'should estimate tokens for a simple user message with text',

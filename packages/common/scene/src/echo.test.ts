@@ -48,6 +48,26 @@ describe('echo', () => {
     expect(fromEcho(toEcho(cyclic).root)).toEqual(cyclic);
   });
 
+  test('an element stored under a retired type name reads as its current type', () => {
+    const stored: Scene.SceneDocument = {
+      scenes: [scene2D('s', 'old')],
+      layouts: [
+        layout2D('old', [
+          { id: 'space', type: 'space-graph', center: { x: 0, y: 0 }, size: { width: 384, height: 384 } },
+          { id: 'window', type: 'frame', center: { x: 512, y: 0 }, size: { width: 256, height: 256 } },
+          { id: 'box', type: 'rect', center: { x: 0, y: 512 }, size: { width: 128, height: 128 } },
+        ]),
+      ],
+      models: [],
+    };
+    const [layout] = fromEcho(toEcho(stored).root).layouts;
+    expect(Object.values(layout.elements).map(({ id, type }) => `${id}:${type}`)).toEqual([
+      'space:graph',
+      'window:view',
+      'box:rect',
+    ]);
+  });
+
   test('stores layouts no scene reaches', () => {
     const doc: Scene.SceneDocument = { ...document, layouts: [...document.layouts, layout2D('loose', [])] };
     expect(toEcho(doc).layouts.has('loose')).toBe(true);

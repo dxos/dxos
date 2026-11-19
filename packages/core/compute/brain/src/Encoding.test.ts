@@ -4,12 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import * as Encoding from './Encoding.ts';
 import * as Vocabulary from './Vocabulary.ts';
 
-const REFUSAL: RDF.Fact = {
+const REFUSAL = Fact.make({
   id: 'fact-1',
   assertion: {
     subject: { kind: 'entity', entity: 'dima', label: 'Dima' },
@@ -32,9 +32,9 @@ const REFUSAL: RDF.Fact = {
   extractor: { id: 'default', model: 'test', version: '1' },
   sourceHash: 'abc',
   pass: 'pass-1',
-};
+});
 
-const MINIMAL: RDF.Fact = {
+const MINIMAL = Fact.make({
   id: 'fact-2',
   assertion: {
     subject: { kind: 'entity', entity: 'release' },
@@ -46,21 +46,21 @@ const MINIMAL: RDF.Fact = {
   recordedAt: '2027-01-07T16:00:01.000Z',
   extractor: { id: 'default', model: 'test', version: '1' },
   sourceHash: 'def',
-};
+});
 
 const byRelation = (entries: ReadonlyArray<{ relation: string; tuple: ReadonlyArray<unknown> }>) =>
   Object.fromEntries(entries.map(({ relation, tuple }) => [relation, tuple]));
 
 describe('Encoding', () => {
   test('encodes the graph, a memory kind, and the graphs it replaces', ({ expect }) => {
-    const remembered: RDF.Fact = {
+    const remembered = Fact.make({
       ...MINIMAL,
       id: 'graph-2#abc',
       graph: 'graph-2',
       kind: 'preference',
       supersedes: ['graph-1'],
       assertion: { ...MINIMAL.assertion, predicate: 'is on the team as' },
-    };
+    });
     const entries = Encoding.encode(remembered, Vocabulary.make(Vocabulary.DEFAULT_ENTRIES));
     const relations = byRelation(entries);
     expect(relations.graph).toEqual(['graph-2#abc', 'graph-2']);

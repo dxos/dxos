@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import { AgentPresence, BrainService, Trigger } from '#types';
 
@@ -78,7 +78,7 @@ export const make = (wire: Capabilities.HostServiceProxy): BrainService.Service 
     tick: (agent) => decoded(Schema.Number, 'tick', agent),
     nextDueAt: (agent) => decoded(OptionalString, 'nextDueAt', agent),
     query: (agent, query) =>
-      decoded(Schema.Array(RDF.Fact), 'query', agent, query).pipe(Effect.map((facts) => [...facts])),
+      decoded(Schema.Array(Fact.Fact), 'query', agent, query).pipe(Effect.map((facts) => [...facts])),
     readThrough: (agent, source) => decoded(OptionalString, 'readThrough', agent, source),
     reset: (agent) => send('reset', agent).pipe(Effect.asVoid),
     // The brain evaluates rules only; a trigger without them gets its pattern translated here.

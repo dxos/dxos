@@ -12,6 +12,7 @@ export default defineConfig({
     // would otherwise load into every plugin bundle.
     'protocol': 'src/protocol.ts',
     'remote-process': 'src/remote-process.ts',
+    'script-runner': 'src/ScriptRunner.ts',
     'testing': 'src/testing/index.ts',
   },
   test: { node: true },

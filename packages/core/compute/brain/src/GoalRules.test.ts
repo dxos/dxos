@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
 
 import * as GoalRules from './GoalRules.ts';
 import { REFERENCE, SCENARIOS, WRONG, simulate, toFact } from './testing/index.ts';
@@ -98,7 +98,7 @@ describe('GoalRules', () => {
 
   describe('working memory', () => {
     const DAY = 86_400_000;
-    const said = (id: string, object: string, day: number, validTo?: string): RDF.Fact => {
+    const said = (id: string, object: string, day: number, validTo?: string): Fact.Fact => {
       const fact = toFact(
         {
           id,

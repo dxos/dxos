@@ -36,6 +36,7 @@ export const KanbanArticle = (props: KanbanArticleProps) => {
 
 const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   const registry = useContext(RegistryContext);
+  const readonly = ToolkitHooks.useReadOnly();
   const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
   const db = Obj.getDatabase(object);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -99,6 +100,7 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
         projection={projection}
         items={items}
         change={change}
+        readonly={readonly}
         onCardAdd={handleCardAdd}
         onCardRemove={handleCardRemove}
       >
@@ -113,6 +115,7 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
 type ItemsKanbanArticleProps = Omit<KanbanArticleProps, 'subject'> & { subject: Kanban.KanbanItems };
 
 const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) => {
+  const readonly = ToolkitHooks.useReadOnly();
   const db = Obj.getDatabase(object);
   const projection = useItemsProjection(object);
   const change = useEchoChangeCallback(object);
@@ -151,6 +154,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
         projection={projection}
         items={itemsAtom}
         change={change}
+        readonly={readonly}
         onCardRemove={handleCardRemove}
       >
         <Panel.Body asChild>

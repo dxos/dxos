@@ -37,3 +37,14 @@ export class WorkerNotTerminableError extends BaseError.extend(
   'WorkerNotTerminableError',
   'Wedged worker could not be terminated: its handle cannot be terminated',
 ) {}
+
+/**
+ * Another tab keeps taking the leader lock while staying silent on this tab's coordinator, so the two
+ * cannot hand each other a port and each steal only kills the other's worker. The usual cause is two
+ * tabs running different app builds: each build's SharedWorker coordinator is a separate instance,
+ * while the leader lock is shared by origin. Reloading every tab onto one build is the remedy.
+ */
+export class WorkerLeaderContentionError extends BaseError.extend(
+  'WorkerLeaderContentionError',
+  'Another tab keeps taking the worker leader lock but cannot be reached; reload every tab',
+) {}

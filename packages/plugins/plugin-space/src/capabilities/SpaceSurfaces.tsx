@@ -43,15 +43,25 @@ export type SpaceHomeSectionProps = {
   space: Space;
 };
 
+const READ_ONLY_STATS = ['objects', 'types', 'collections'] as const;
+
 /** Home sections are individually dismissible per space, which is durable UI state. */
 export const SpaceHomeRecentSurface = ({ space }: SpaceHomeSectionProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeRecent');
+  if (readOnly) {
+    return <SpaceHomeRecent space={space} />;
+  }
 
   return visible ? <SpaceHomeRecent space={space} onClose={hide} /> : null;
 };
 
 export const SpaceHomeDashboardSurface = ({ space }: SpaceHomeSectionProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeDashboard');
+  if (readOnly) {
+    return <SpaceHomeDashboard space={space} stats={READ_ONLY_STATS} activity={false} />;
+  }
 
   return visible ? <SpaceHomeDashboard space={space} onClose={hide} /> : null;
 };

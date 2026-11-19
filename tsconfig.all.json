@@ -193,6 +193,15 @@
       "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-memory/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-memory-sqlite/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-native/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-panproto/tsconfig.json"
     },
     {
@@ -212,9 +221,6 @@
     },
     {
       "path": "packages/apps/echo-sqlite-demo/tsconfig.json"
-    },
-    {
-      "path": "packages/core/echo/echo-sqlite-sync/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-sync-worker/tsconfig.json"

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -15,9 +15,9 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Ontology } from '@dxos/echo-memory';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person, ProfileOf, Task, TaskSet } from '@dxos/types';
@@ -73,6 +73,9 @@ const SKILLS = [
 ];
 
 const brain = makeTestBrain();
+
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
 
 const TestLayer = AssistantTestLayer({
   extraServices: Layer.merge(testSpaceLayer, brain.layer),
@@ -245,7 +248,7 @@ describe('Modes', () => {
         const store = brain.facts((yield* Database.load(agent)).id);
         const stored = store ? yield* store.query({}) : [];
         const fact = stored.find((fact) => fact.graph === owner);
-        expect(fact?.assertion.predicateIri).toBe(RDF.Ontology.DEFAULT.resolve('works on').iri);
+        expect(fact?.assertion.predicateIri).toBe(Ontology.DEFAULT.resolve('works on').iri);
         expect(fact?.attribution.agentLabel).toBe('Kai');
         expect(fact?.kind).toBeUndefined();
       },

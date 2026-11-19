@@ -13,6 +13,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -33,6 +34,7 @@ import { ASSISTANT_COMPANION_VARIANT } from '../constants.ts';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
     const operationInvoker = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
     const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
@@ -93,6 +95,10 @@ export default Capability.makeModule(
      * so the caller can tear down the connection subscription.
      */
     const provisionForPlank = (plankId: string, companionVariant: string | undefined): boolean => {
+      if (ReadOnly.isActive(manager)) {
+        return false;
+      }
+
       const node: AppGraphNode.Node | null = AppGraph.getNode(graph, plankId).pipe(Option.getOrNull);
       if (!node || !Obj.isObject(node.data) || Obj.instanceOf(Chat.Chat, node.data)) {
         return false;

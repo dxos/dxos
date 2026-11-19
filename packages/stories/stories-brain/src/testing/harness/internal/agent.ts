@@ -14,10 +14,10 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { TrajectoryStore } from '@dxos/assistant';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import { Database, Feed } from '@dxos/echo';
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
-import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainOperationHandlerSet from '@dxos/plugin-brain/BrainOperationHandlerSet';
 import * as BrainSkill from '@dxos/plugin-brain/BrainSkill';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
@@ -46,7 +46,7 @@ export type AgentEvalConfig = {
   readonly variant: ModelVariant;
   readonly mode: SkillMode;
   /** Facts injected into a `FactStore` for the Brain skill (used only when mode = 'facts'). */
-  readonly facts: readonly RDF.Fact[];
+  readonly facts: readonly Fact.Fact[];
   /** Messages seeded onto the feed (Database skill) and embedded into the vector index (RAG skill). */
   readonly messages: readonly Message.Message[];
   readonly prompt: string;

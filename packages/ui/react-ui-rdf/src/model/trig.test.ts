@@ -5,24 +5,25 @@
 import { Parser } from 'n3';
 import { describe, test } from 'vitest';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import { TRIG_PREFIXES, formatNamedGraphs, formatRawFact } from './trig.ts';
 
-const fact = (id: string, predicate: string, object: string, quote: string): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: 'rich-burdon', label: 'Rich Burdon' },
-    predicate,
-    object: { kind: 'entity', entity: object, label: object.toUpperCase() },
-    quote,
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'https://dxos.org/team', generatedAtTime: '2026-10-13T07:30:00Z' },
-  recordedAt: '2026-10-13T07:30:05Z',
-  extractor: { id: 'default', model: 'model', version: '1' },
-  sourceHash: 'abc',
-});
+const fact = (id: string, predicate: string, object: string, quote: string): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: 'rich-burdon', label: 'Rich Burdon' },
+      predicate,
+      object: { kind: 'entity', entity: object, label: object.toUpperCase() },
+      quote,
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'https://dxos.org/team', generatedAtTime: '2026-10-13T07:30:00Z' },
+    recordedAt: '2026-10-13T07:30:05Z',
+    extractor: { id: 'default', model: 'model', version: '1' },
+    sourceHash: 'abc',
+  });
 
 const ROLE = fact('f1', 'is a', 'founder', 'Rich is a founder of DXOS');
 const MEMBER = fact('f2', 'is member of', 'dxos', 'Rich is a founder of DXOS');
@@ -59,7 +60,7 @@ describe('formatNamedGraphs', () => {
   });
 });
 
-const STORED_FACT: RDF.Fact = {
+const STORED_FACT = Fact.make({
   id: 'f1',
   assertion: {
     subject: { kind: 'entity', entity: 'rich-burdon', label: 'Rich Burdon' },
@@ -71,7 +72,7 @@ const STORED_FACT: RDF.Fact = {
   recordedAt: '2026-10-13T07:30:05Z',
   extractor: { id: 'doc', model: 'model', version: '1' },
   sourceHash: 'abc',
-};
+});
 
 describe('formatRawFact', () => {
   test('writes the statement as a triple inside its graph, with an ontology predicate', ({ expect }) => {

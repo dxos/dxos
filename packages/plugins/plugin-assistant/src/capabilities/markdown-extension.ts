@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Obj } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
@@ -18,7 +19,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, viewMode }) => {
-        if (viewMode === 'source') {
+        if (viewMode === 'source' || ReadOnly.isActive(capabilities)) {
           return undefined;
         }
 

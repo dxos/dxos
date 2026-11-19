@@ -14,20 +14,23 @@ import {
   AiRequest,
   AiSession,
   TrajectoryStore,
+  type TurnBindings,
   createToolkit,
+  formatBindingChanges,
   formatSystemPrompt,
   getOperationFromTool,
 } from '@dxos/assistant';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
+import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -146,6 +149,11 @@ const runCodeModeTurn = ({
             system: params.system,
           });
 
+          // The system prompt the turn started with, kept for every model call of the turn: a skill, operation or
+          // object bound mid-turn is announced in the conversation instead, since a changed system prompt discards the
+          // whole prompt cache. The next turn's system prompt includes it as usual.
+          let turnSystem: (TurnBindings & { operations: ReadonlySet<string>; text: string }) | undefined;
+
           const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
           // Each iteration is scoped so the MCP connections it opens close before the next opens its own.
           const runIteration = (turn: number) =>
@@ -166,7 +174,7 @@ const runCodeModeTurn = ({
               );
               const operations = yield* projectOperations([lookups, ...skills], mcps);
               labelCall = labelEvalCall(operations);
-              const toolkit = makeEvalToolkit({
+              const evalOptions = {
                 dialect,
                 sandbox,
                 runtime,
@@ -175,18 +183,60 @@ const runCodeModeTurn = ({
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
                 onEvaluated: evaluations.add,
+              };
+              // Through the script API rather than straight into the sandbox: the turn states what to
+              // run and the runner says where, which is what lets a deployment move code mode off
+              // this thread without touching the turn loop. The turn's own dialect is registered under
+              // its name, since a producer may hand the model a variant of it (extra bindings) and the
+              // runner must evaluate THAT one, not the canonical entry.
+              const toolkit = makeEvalToolkit({
+                ...evalOptions,
+                ...(Operation.isScriptDialect(dialect.name)
+                  ? {
+                      runner: ({ toolCallId }: { readonly toolCallId?: string }) =>
+                        Runner.make({ ...evalOptions, dialects: { [dialect.name]: dialect }, toolCallId }),
+                    }
+                  : {}),
               });
-              const system = yield* formatSystemPrompt({
-                system: [dialect.instructions({ operations }), options.system, params.system]
-                  .filter(isPresent)
-                  .join('\n\n'),
-                skills: [lookups, ...enabled],
-                objects: session.context.getObjects(),
-                instructions,
-              }).pipe(Effect.orDie);
+              const objects = session.context.getObjects();
+              const operationNames = new Set(operations.map((operation) => operation.name));
+              if (turnSystem === undefined) {
+                const text = yield* formatSystemPrompt({
+                  system: [dialect.instructions({ operations }), options.system, params.system]
+                    .filter(isPresent)
+                    .join('\n\n'),
+                  skills: [lookups, ...enabled],
+                  objects,
+                  instructions,
+                }).pipe(Effect.orDie);
+                turnSystem = { skills: enabled, objects, operations: operationNames, text };
+              } else {
+                // The lookups are made afresh each iteration, so only the enabled skills are compared.
+                const changes = yield* formatBindingChanges(turnSystem, { skills: enabled, objects }).pipe(
+                  Effect.orDie,
+                );
+                const known = turnSystem.operations;
+                const added = operations.filter((operation) => !known.has(operation.name));
+                if (added.length > 0) {
+                  changes.push(
+                    `Operations available in this turn, in addition to those above:\n\n${dialect.operations(added)}`,
+                  );
+                }
+                // E.g. an MCP server that failed to load on this iteration: its tools are no longer bound.
+                const removed = [...known].filter((name) => !operationNames.has(name));
+                if (removed.length > 0) {
+                  changes.push(
+                    `Operations no longer available in this turn; do not call them: ${removed.map((name) => `\`${name}\``).join(', ')}.`,
+                  );
+                }
+                if (changes.length > 0) {
+                  yield* request.submitNotice(changes.join('\n\n'));
+                }
+                turnSystem = { skills: enabled, objects, operations: operationNames, text: turnSystem.text };
+              }
 
               const { done, finishReason } = yield* request.runAgentTurn({
-                system,
+                system: turnSystem.text,
                 toolkit,
               });
               if (done) {
@@ -316,11 +366,21 @@ export const projectOperations = Effect.fnUntraced(function* (
         _tag: 'toolCall',
         toolCallId: `code-mode-${name}`,
         name,
-        input: JSON.stringify(input ?? {}),
+        input: toToolInput(input),
         providerExecuted: false,
       }).pipe(Effect.map(toolResultValue), Effect.orDie),
   }));
 });
+
+/**
+ * An operation's input as its tool takes it. A `ref(obj)` the code passes becomes the object's URI: a tool's reference
+ * field decodes a URI string, and a ref would otherwise serialize to `{"/": uri}`, which it rejects.
+ */
+export const toToolInput = (input: unknown): string =>
+  JSON.stringify(input ?? {}, function (this: { readonly [key: string]: unknown }, key: string, value: unknown) {
+    const original = this[key];
+    return Ref.isRef(original) ? String(original.uri) : value;
+  });
 
 /** What an operation call resolves to: the operation's result, or a throw carrying its error. */
 const toolResultValue = (result: ContentBlock.ToolResult): unknown => {

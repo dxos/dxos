@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { FactStore, RDF, type SemanticIndexError, hashText } from '@dxos/pipeline-rdf';
+import { Fact, Hash, Ontology, Vocab } from '@dxos/echo-memory';
+import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
 
 import { lexiconSentiment } from '../pipeline/sentiment-lexicon.ts';
 import { ANNOTATIONS, FIN, MARKET } from '../pipeline/vocabulary.ts';
@@ -30,7 +31,7 @@ export const withinDays = (items: readonly TextItem[], days: number, now = Date.
 /** A stable sample of `size` items, ordered by a hash of the key so it spreads over feeds and days. */
 export const sample = (items: readonly TextItem[], size: number): TextItem[] =>
   [...items]
-    .map((item) => [hashText(itemSource(item)), item] as const)
+    .map((item) => [Hash.text(itemSource(item)), item] as const)
     .sort(([left], [right]) => left.localeCompare(right))
     .slice(0, size)
     .map(([, item]) => item);
@@ -59,20 +60,20 @@ export type FactMetrics = {
 };
 
 const FINANCE_SCHEMA_TERMS = new Set(
-  ['tickerSymbol', 'legalName', 'brand', 'numberOfEmployees', 'competitor'].map((name) => `${RDF.Vocab.SCHEMA}${name}`),
+  ['tickerSymbol', 'legalName', 'brand', 'numberOfEmployees', 'competitor'].map((name) => `${Vocab.SCHEMA}${name}`),
 );
 
-const isAnnotation = (fact: RDF.Fact): boolean => fact.extractor.id.startsWith('finance-');
+const isAnnotation = (fact: Fact.Fact): boolean => fact.extractor.id.startsWith('finance-');
 
 /** Counts the store's facts: extracted against annotation, by predicate and vocabulary. */
-export const factMetrics = (facts: readonly RDF.Fact[], top = 12): FactMetrics => {
+export const factMetrics = (facts: readonly Fact.Fact[], top = 12): FactMetrics => {
   const extracted = facts.filter((fact) => !isAnnotation(fact));
   const byPredicate = new Map<string, number>();
   for (const fact of extracted) {
     const iri = fact.assertion.predicateIri ?? fact.assertion.predicate;
     byPredicate.set(iri, (byPredicate.get(iri) ?? 0) + 1);
   }
-  const isMinted = (iri: string) => iri.startsWith(RDF.Vocab.LOCAL_BRAIN);
+  const isMinted = (iri: string) => iri.startsWith(Vocab.LOCAL_BRAIN);
   const isFinance = (iri: string) => iri.startsWith(FIN) || FINANCE_SCHEMA_TERMS.has(iri);
   const count = (test: (iri: string) => boolean) =>
     [...byPredicate.entries()].filter(([iri]) => test(iri)).reduce((sum, [, value]) => sum + value, 0);
@@ -86,14 +87,14 @@ export const factMetrics = (facts: readonly RDF.Fact[], top = 12): FactMetrics =
     top: [...byPredicate.entries()]
       .sort((left, right) => right[1] - left[1])
       .slice(0, top)
-      .map(([iri, value]) => [RDF.Ontology.labelFromIri(iri), value]),
+      .map(([iri, value]) => [Ontology.labelFromIri(iri), value]),
   };
 };
 
 /** How often the model's article sentiment agrees with the lexicon baseline, over the items it rated. */
 export const sentimentAgreement = (
   items: readonly TextItem[],
-  facts: readonly RDF.Fact[],
+  facts: readonly Fact.Fact[],
 ): { rated: number; agree: number; distribution: Record<string, number> } => {
   const bySource = new Map(items.map((item) => [itemSource(item), item]));
   let rated = 0;
@@ -152,7 +153,7 @@ export const crossSourceReport = (
     const trades = yield* store.rows(`
       SELECT ?date ?name ?code ?shares ?price WHERE {
         GRAPH ?g { ?row <${MARKET.about.iri}> <${company}> . ?row <${MARKET.observedOn.iri}> ?date . ?row <${MARKET.transactionCode.iri}> ?code .
-          ?row <${MARKET.shares.iri}> ?shares . ?row <${MARKET.insider.iri}> ?insider . ?insider <${RDF.Vocab.RDFS_LABEL}> ?name .
+          ?row <${MARKET.shares.iri}> ?shares . ?row <${MARKET.insider.iri}> ?insider . ?insider <${Vocab.RDFS_LABEL}> ?name .
           OPTIONAL { ?row <${MARKET.pricePerShare.iri}> ?price } }
       }`);
 

@@ -7,7 +7,7 @@
 import type * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
 
-import { Aesthetics, Architecture, Diagnostics, Dsl, Objective, type Scene, Score, View } from '@dxos/diagram';
+import { Aesthetics, Architecture, Diagnostics, DSL, Objective, type Scene, Score, View } from '@dxos/diagram';
 
 import * as Compact from './Compact.ts';
 
@@ -33,7 +33,7 @@ const objectsOf = (commands: readonly Scene.Command[]) =>
 
 /** What the diagram says, for the architecture judge: its groups, boxes and labelled edges. */
 const contentOf = (dsl: string, layout: string): Architecture.Content => {
-  const diagram = Dsl.read(dsl).diagram;
+  const diagram = DSL.read(dsl).diagram;
   return {
     layout,
     groups: (diagram?.groups ?? []).map(({ id, label }) => ({ id, label })),
@@ -68,7 +68,7 @@ export const judge = (
   { runs = 1, judges = true }: { runs?: number; judges?: boolean } = {},
 ): Effect.Effect<Judged, never, DecisionModel.DecisionModel> =>
   Effect.gen(function* () {
-    const objects = objectsOf((yield* Dsl.compile(dsl)).commands);
+    const objects = objectsOf((yield* DSL.compile(dsl)).commands);
     const layout = `${View.ascii(objects)}\n\n${View.rows(objects)}`;
     const subject = {
       objects,

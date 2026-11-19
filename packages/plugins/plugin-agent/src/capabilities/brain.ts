@@ -3,12 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as MemoryService from '@dxos/echo-memory/MemoryService';
 
 import { BrainService } from '#types';
 
@@ -23,19 +23,14 @@ import { triggerRegistry } from '../triggers.ts';
 //
 
 // One state for the app, so every build of the layer sees the same facts, rules and outboxes.
-const state = BrainMemory.makeState({ triggers: triggerRegistry });
-
+/** A space's brain over its memory; the triggers it holds are mirrored into the registry the UI lists. */
 const BrainLayerSpec = LayerSpec.make(
   {
-    affinity: 'application',
-    requires: [AgentService.AgentService],
+    affinity: 'space',
+    requires: [AgentService.AgentService, MemoryService.MemoryService],
     provides: [BrainService.BrainService],
   },
-  () =>
-    Layer.effect(
-      BrainService.BrainService,
-      AgentService.AgentService.pipe(Effect.map((agents) => BrainMemory.make(agents, { state }).service)),
-    ),
+  () => BrainMemory.layer({ triggers: triggerRegistry }),
 );
 
 export default Capability.makeModule(() =>

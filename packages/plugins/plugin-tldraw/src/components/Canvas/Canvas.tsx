@@ -42,6 +42,7 @@ const gridComponents: Record<Settings.GridType, FC<TLGridProps>> = {
 export type CanvasProps = {
   canvas: Drawing.Canvas;
   readonly?: boolean;
+  locked?: boolean;
   autoCenter?: boolean;
   hideUi?: boolean;
   focusContainer?: boolean;
@@ -90,6 +91,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
     {
       canvas,
       readonly = false,
+      locked = false,
       autoCenter = true,
       hideUi = false,
       focusContainer = true,
@@ -223,7 +225,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
         return;
       }
 
-      const isLocked = readonly || hideUi;
+      const isLocked = locked || hideUi;
 
       // Unlock to allow programmatic camera positioning.
       editor.setCameraOptions({ isLocked: false });
@@ -259,7 +261,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
         clearTimeout(timer);
         subscription?.();
       };
-    }, [editor, adapter, width, height, autoCenter, readonly, hideUi]);
+    }, [editor, adapter, width, height, autoCenter, locked, hideUi]);
 
     // Camera, editor → host, including the fit's moves; a pan reports at most once per interval.
     const onCameraChangeRef = useRef(onCameraChange);
@@ -360,7 +362,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
         DebugPanel: null,
         Grid: gridComponents[settings?.gridType ?? 'mesh'],
         HelpMenu: null,
-        MenuPanel: CustomMenu,
+        MenuPanel: readonly ? null : CustomMenu,
         NavigationPanel: null,
         StylePanel: CustomStylePanel,
         TopPanel: null,
@@ -371,7 +373,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
           </DefaultToolbar>
         ),
       }),
-      [settings],
+      [readonly, settings],
     );
 
     if (!adapter.store) {

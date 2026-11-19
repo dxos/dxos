@@ -8,7 +8,7 @@ import { translationKey } from '#translations';
 
 /** Add image upload action to the builder. */
 export const addImageUpload =
-  (onImageUpload: () => void): ActionGroupBuilderFn =>
+  (onImageUpload: () => void, disabled = false): ActionGroupBuilderFn =>
   (builder) => {
     builder.action(
       'image',
@@ -16,6 +16,7 @@ export const addImageUpload =
         label: ['image.label', { ns: translationKey }],
         testId: 'editor.toolbar.image',
         icon: 'ph--image-square--regular',
+        disabled,
       },
       onImageUpload,
     );
