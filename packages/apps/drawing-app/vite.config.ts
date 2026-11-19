@@ -16,6 +16,7 @@ import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
+import { type ShareBucket, type ShareObject, handleShare, isSharePath } from './src/functions/share.ts';
 import { HERO, fileName } from './src/landing/markup.ts';
 import { type Prerendered, prerender } from './src/landing/prerender.ts';
 
@@ -61,6 +62,50 @@ const slimWasm = (): PluginOption => {
     },
   };
 };
+
+/**
+ * The Worker's share API (spec F-12) on the dev server, over a bucket held in memory, so the landing editor's
+ * "Open in app" and the app's `?d=` import work locally. Shares last until the server restarts.
+ */
+const devShareApi = (): PluginOption => ({
+  name: 'drawing-app:dev-share-api',
+  apply: 'serve',
+  configureServer: (server) => {
+    const objects = new Map<string, ShareObject>();
+    const bucket: ShareBucket = {
+      get: async (key) => objects.get(key) ?? null,
+      put: async (key, value, options) => {
+        objects.set(key, { uploaded: new Date(), customMetadata: options?.customMetadata, text: async () => value });
+      },
+    };
+    server.middlewares.use(async (request, response, next) => {
+      const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`);
+      if (!isSharePath(url.pathname)) {
+        return next();
+      }
+      try {
+        const chunks: Buffer[] = [];
+        for await (const chunk of request) {
+          chunks.push(Buffer.from(chunk));
+        }
+        const headers = new Headers();
+        for (const [name, value] of Object.entries(request.headers)) {
+          if (typeof value === 'string') {
+            headers.set(name, value);
+          }
+        }
+        const method = request.method ?? 'GET';
+        const body = method === 'GET' || method === 'HEAD' ? undefined : Buffer.concat(chunks);
+        const reply = await handleShare(new Request(url, { method, headers, body }), { SHARES: bucket });
+        response.statusCode = reply.status;
+        reply.headers.forEach((value, name) => response.setHeader(name, value));
+        response.end(Buffer.from(await reply.arrayBuffer()));
+      } catch (error) {
+        next(error);
+      }
+    });
+  },
+});
 
 /** The landing page (spec F-13.2), beside the app's `index.html`. */
 const LANDING_PAGE = 'landing.html';
@@ -160,6 +205,7 @@ export default defineConfig({
     // Replaces each plugin's `dx.config.ts` with its manifest, so the app loads only data plus the bodies it activates.
     pluginConfigPlugin(),
     landingPrerender(),
+    devShareApi(),
     ...sharedPlugins(),
     react({ include: /\.[jt]sx$/, exclude: [/\/node_modules\//] }),
     ConfigPlugin({ root: dirname }),

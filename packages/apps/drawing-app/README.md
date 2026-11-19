@@ -23,8 +23,8 @@ and links are Composer's, so a link from either app opens in the other. The spec
 moon run drawing-app:serve
 ```
 
-The app is at `/`, the landing page at `/landing.html`. The dev server has no Worker, so the landing page's "Open in
-Composer" needs `VITE_DRAWING_APP_URL` pointed at a `wrangler dev` (below).
+The app is at `/`, the landing page at `/landing.html`. The dev server answers the share API from a bucket held in
+memory, so the landing page's "Open in app" and `?d=` links work until it restarts.
 
 ## Hosts
 
@@ -41,7 +41,7 @@ landing host, `/` is the landing page and every other page address redirects to 
 
 ## Share API
 
-`drawing open` and the landing page's "Open in Composer" post a diagram's `.dx` source here; `?d=<id>` opens it in the
+`drawing open` and the landing page's "Open in app" post a diagram's `.dx` source here; `?d=<id>` opens it in the
 app as a new diagram.
 
 | Route                 | What                                                                                                                                                  |
