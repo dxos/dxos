@@ -36,6 +36,7 @@ import {
   Inspect,
   InspectEvent,
   Nest,
+  OtherSkill,
   RecordThenDelegate,
   ResolveRegistry,
   TEST_PLUGIN_KEY,
@@ -228,6 +229,41 @@ describe('PluginHost', () => {
         expect(operations).not.toContain(String(Hidden.meta.key));
       },
     );
+
+    test(
+      "holds every enabled plugin's skills that EDGE's skill registry lists",
+      { timeout: 20_000 },
+      async ({ expect }) => {
+        const spaceId = SpaceId.random();
+        const skillRegistry: PluginProtocol.SkillRegistry = {
+          listSkills: async () => ({
+            skills: [
+              { key: OtherSkill.key, name: 'Other plugin', mcpPrompt: false, tools: [] },
+              // The primary's own definition wins over EDGE's record of the same key.
+              { key: TestSkill.key, name: 'Stale copy', mcpPrompt: false, tools: [] },
+            ],
+            operations: [],
+          }),
+        };
+        const result = await makeHost().invoke(
+          { operationKey: String(ResolveRegistry.meta.key), spaceId, input: {} },
+          { ...makeSpaceEnv(spaceId), SKILL_REGISTRY: skillRegistry },
+        );
+        expect(result).toMatchObject({ ok: true, output: { own: TestSkill.key, other: OtherSkill.key } });
+      },
+    );
+
+    test('a skill registry that cannot be read costs only its skills', { timeout: 20_000 }, async ({ expect }) => {
+      const spaceId = SpaceId.random();
+      const result = await makeHost().invoke(
+        { operationKey: String(ResolveRegistry.meta.key), spaceId, input: {} },
+        {
+          ...makeSpaceEnv(spaceId),
+          SKILL_REGISTRY: { listSkills: () => Promise.reject(new Error('registry down')) },
+        },
+      );
+      expect(result).toMatchObject({ ok: true, output: { own: TestSkill.key, other: null } });
+    });
 
     // A pending `waitForCancel` pins the invocation until its stub is disposed.
     test('a skill that fails to make leaves no cancellation wait pending', { timeout: 20_000 }, async ({ expect }) => {

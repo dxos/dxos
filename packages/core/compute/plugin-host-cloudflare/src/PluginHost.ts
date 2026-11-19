@@ -17,7 +17,7 @@ import * as PluginManifest from '@dxos/app-framework/PluginManifest';
 import { wrapFunctionHandler } from '@dxos/compute-runtime/protocol';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { type Entity } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, messageOf } from '@dxos/errors';
 import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
@@ -31,6 +31,7 @@ import * as Output from './Output.ts';
 import * as PluginActivation from './PluginActivation.ts';
 import * as PluginCatalog from './PluginCatalog.ts';
 import * as RequestContext from './RequestContext.ts';
+import * as SkillSource from './SkillSource.ts';
 import * as TypeSource from './TypeSource.ts';
 
 /**
@@ -112,7 +113,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     }
 
     // Built before the seed and the cancel listener: these ids are not the handler's, and a throw here holds nothing.
-    const registry = spaceId === undefined ? undefined : registryEntities(activation);
+    const registry = spaceId === undefined ? undefined : await registryEntities(activation, env.SKILL_REGISTRY);
 
     // TEST-ONLY: the seed is a static of the shared `EntityId`, so concurrent invocations on one isolate race; only
     // trusted test harnesses set it.
@@ -290,14 +291,29 @@ const makeContext = async (
 };
 
 /**
- * The primary's skills, which a skill bound by registry URI resolves only through, and its operation records, which
- * the tool resolver projects a skill's tools from; no other plugin's, since a bundle reads none of theirs (D-88).
+ * The registry an invocation resolves skills and tools through: the primary's skills and operation records, then every
+ * other enabled plugin's skills and records from EDGE's registry, so a skill bound by registry URI resolves whichever
+ * plugin contributes it. The primary's win for a key both hold.
  */
-const registryEntities = (activation: PluginActivation.Activation): Entity.Unknown[] => [
+const registryEntities = async (
+  activation: PluginActivation.Activation,
+  skillRegistry: PluginProtocol.SkillRegistry | undefined,
+): Promise<Entity.Unknown[]> => {
   // Made per invocation: `make()` mints ids, which workerd allows only inside a request.
-  ...activation.skills.map((definition) => definition.make()),
-  ...activation.operationHandlers.flatMap(operationRecord),
-];
+  const skills = activation.skills.map((definition) => definition.make());
+  const operations = activation.operationHandlers.flatMap(operationRecord);
+  const published = await SkillSource.fromRegistry(skillRegistry, {
+    skills: new Set(skills.flatMap((skill) => keyOf(skill))),
+    operations: new Set(operations.flatMap((record) => keyOf(record))),
+  });
+  return [...skills, ...operations, ...published];
+};
+
+/** An entity's registry key without the `dxn:` prefix, or none. */
+const keyOf = (entity: Entity.Unknown): string[] => {
+  const key = Obj.getMeta(entity).key;
+  return key === undefined ? [] : [SkillSource.bareKey(key)];
+};
 
 /**
  * An operation's registry record, as `registry-sync` publishes it: none for a `skipRegistry` operation, which is hidden

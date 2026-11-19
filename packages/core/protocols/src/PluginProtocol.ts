@@ -41,6 +41,11 @@ export type Env = Partial<Pick<EdgeFunctionEnv.Env, 'DATA_SERVICE' | 'QUEUE_SERV
   /** EDGE's registry of the types every published plugin contributes; resolves a type the bundle does not hold. */
   readonly TYPE_REGISTRY?: TypeRegistry;
   /**
+   * EDGE's registry of the skills its enabled plugins publish; the host adds them to each invocation's registry, so a
+   * skill bound by registry URI resolves whichever plugin contributes it.
+   */
+  readonly SKILL_REGISTRY?: SkillRegistry;
+  /**
    * EDGE's hosted blob store, the default file storage of every bundle: the host registers it as the `edge` blob
    * backend and offers it as a file backend, so no plugin contributes one on EDGE. Without it a bundle stores inline.
    */
@@ -63,6 +68,18 @@ export interface TypeRegistry {
    */
   resolveType(typename: string, version?: string): Promise<TypeRecord | undefined>;
 }
+
+/** EDGE's registry of the skills its enabled plugins publish. */
+export interface SkillRegistry {
+  /** Every enabled plugin's skills, with the operation records their tools name. */
+  listSkills(): Promise<SkillCatalog>;
+}
+
+/** The skills of EDGE's enabled plugins and the operation records (`Obj.toJSON`) their tools resolve against. */
+export type SkillCatalog = {
+  readonly skills: readonly SkillRecord[];
+  readonly operations: readonly object[];
+};
 
 /** One invocation of an operation the bundle's primary plugin handles. */
 export type InvokeRequest = {
