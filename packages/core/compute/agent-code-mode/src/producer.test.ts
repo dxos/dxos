@@ -191,8 +191,9 @@ const SCENARIOS = [
 
 describe("code mode states the enabled skills and the Skill Manager's lookups", () => {
   describe.each(SCENARIOS)('$name dialect', ({ dialect, steps, querySkillsCall }) => {
-    /** The system prompt of every model call. */
+    /** The system prompt, and the conversation's text, of every model call. */
     const systems: string[] = [];
+    const conversations: string[] = [];
     const { scored, noted, handlers } = makeHandlers();
 
     it.effect(
@@ -204,22 +205,31 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           yield* session.waitForCompletion();
 
           expect(systems).toHaveLength(steps.length + 1);
-          // The Notes skill is enabled by the second eval, so it is stated from the call after it.
+          // One system prompt for the whole turn, so the prompt cache holds across its calls.
+          expect(new Set(systems).size).toBe(1);
+          const [system] = systems;
+          expect(system).toContain('The skills enabled in this conversation are stated in this prompt');
+          expect(system).toContain(querySkillsCall);
+          expect(system).toContain("find them, and their fields, with the Skill Manager's `queryTypes`");
+          // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
+          expect(system).toContain('Score titles before ranking them');
+          expect(system).toContain('Scores a title for urgency');
+          expect(system).not.toContain('Write notes in lower case');
+          // No types, and no skill that is not enabled.
+          expect(system).not.toContain('com.example.type.ticket');
+
+          // The Notes skill is enabled by the second eval, so a notice states it, and its operation, from the call
+          // after it.
           const enabledAt = 2;
-          systems.forEach((system, index) => {
-            expect(system).toContain('The skills enabled in this conversation are stated in this prompt');
-            expect(system).toContain(querySkillsCall);
-            expect(system).toContain("find them, and their fields, with the Skill Manager's `queryTypes`");
-            // The enabled Scoring skill's rules and operation are stated; the Notes skill's only once it is enabled.
-            expect(system).toContain('Score titles before ranking them');
-            expect(system).toContain('Scores a title for urgency');
+          conversations.forEach((conversation, index) => {
             if (index < enabledAt) {
-              expect(system).not.toContain('Write notes in lower case');
+              expect(conversation).not.toContain('Write notes in lower case');
             } else {
-              expect(system).toContain('Write notes in lower case');
+              expect(conversation).toContain('Skills enabled in this turn');
+              expect(conversation).toContain('Write notes in lower case');
+              expect(conversation).toContain('Operations available in this turn');
+              expect(conversation).toContain('Adds a note to the notebook');
             }
-            // No types, and no skill that is not enabled.
-            expect(system).not.toContain('com.example.type.ticket');
           });
 
           const messages = yield* TrajectoryStore.history(session.feed);
@@ -242,6 +252,7 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
             agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect }) },
             aiService: scriptedAiService((request, index) => {
               systems.push(request.system);
+              conversations.push(request.text);
               const code = steps[index];
               return code === undefined
                 ? { parts: [text('Scored and noted.')] }
