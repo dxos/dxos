@@ -1,0 +1,77 @@
+diagram kind=grid size=1600x880 cols="1096 344" gap=64 padding=48
+
+group layers-section rows="251 517" gap=16 {
+  group types-section padding=16 border=true {
+    group types-section-inner "Core" cols=3 gap=24 {
+      group types-col-0 gap=16 {
+        node typescript "TypeScript" kind=card icon=file-ts {
+          item "Effect API"
+        }
+      }
+      group types-col-1 gap=16 {
+        node json-schema "JSON Schema" kind=card icon=brackets-angle {
+          item "Strong and weak types"
+          item "Schema migration"
+          item "dxn:type:org.dxos/Task"
+        }
+      }
+    }
+  }
+  group layers-body cols=3 gap=24 padding=16 border=true {
+    group layers-col-0 gap=10 autoRows=155 {
+      node graph "Graph" kind=card icon=graph iconTone=accent {
+        item "Globally addressable."
+        item "Typed objects and relations."
+      }
+      node crdt "CRDT" kind=card icon=git-merge iconTone=message {
+        item "Automerge: concurrent edits from people and agents merge deterministically."
+      }
+      node pipeline "Pipeline" kind=card icon=flow-arrow iconTone=event {
+        item "Triggers on queries, feeds, cron, webhooks and email run functions on each change."
+      }
+    }
+    group layers-col-1 gap=10 autoRows=155 {
+      node feeds "Feeds" kind=card icon=queue iconTone=file {
+        item "Append-only logs: chat, transcripts, agent trajectories."
+      }
+      node sync "Sync" kind=card icon=arrows-clockwise iconTone=teal {
+        item "Subduction exchanges compacted history fragments by fingerprint."
+      }
+      node index "Index" kind=card icon=list-magnifying-glass iconTone=sheet {
+        item "SQLite everywhere: typed queries, full-text search, reverse references."
+      }
+    }
+    group layers-col-2 gap=10 autoRows=155 {
+      node blobs "Blobs" kind=card icon=files iconTone=violet {
+        item "Files and binary content, referenced from objects."
+      }
+      node cache "Cache" kind=card icon=lightning iconTone=lime {
+        item "A full replica on every device"
+        item "Reads never wait on the network."
+      }
+      node memory "Memory" kind=card icon=brain iconTone=rose {
+        item "Shared memory for people and agents"
+        item "Branches, provenance, facts and rules."
+      }
+    }
+  }
+}
+
+group runtime-section padding=16 border=true {
+  group runtime-section-inner "Runtime" gap=10 autoRows=155 alignContent=end {
+    node browser "Browser" kind=card icon=browser {
+      item "Full replica in the tab."
+      item "Offline and mobile."
+      item "wa-sqlite on OPFS"
+    }
+    node node-box "Node" kind=card icon=terminal-window {
+      item "Agents, CLIs and servers."
+      item "Native SQLite."
+    }
+    node worker "Worker" kind=card icon=cloud {
+      item "Always-on peer."
+      item "Sync hub and index per space."
+      item "DO SQLite."
+    }
+  }
+}

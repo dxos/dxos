@@ -1,0 +1,30 @@
+diagram kind=grid size=1600x880 rows="96 480 96" gap=56 padding=48 autoCols=1152 justifyContent=center alignContent=center
+
+group operator-row autoCols=320 justifyContent=center {
+  node operator "Operator" kind=card icon=user iconTone=accent
+}
+
+group agent-box cols=3 rows=3 gap=64 padding=32 border=true {
+  group cell-nw { }
+  node feed "Feed" kind=card icon=queue iconTone=file
+  group cell-ne { }
+  group cell-w { }
+  node session "Session" kind=card icon=play-circle iconTone=message
+  node model-box "Model" kind=card icon=cpu iconTone=teal
+  node skill "Skill" kind=card icon=graduation-cap iconTone=violet
+  node tool "Tool" kind=card icon=wrench iconTone=sheet
+  group cell-se { }
+}
+
+group artifact-row autoCols=320 justifyContent=center {
+  node artifact "Artifact" kind=card icon=cube iconTone=rose
+}
+
+edge operator#s3  -> feed#n3 "writes" head=triangle path=ortho
+edge operator#w3  -> skill#n3 head=triangle path=ortho
+edge operator#e3  -> model-box#n3 head=triangle path=ortho
+edge session#n3   -> feed#s3 "writes" head=triangle path=ortho
+edge session#e3   -> model-box#w3 head=triangle path=ortho
+edge session#s3   -> tool#n3 "uses" head=triangle path=ortho
+edge skill#e3     -> tool#w3 head=triangle path=ortho
+edge tool#s3      -> artifact#n3 "makes" head=triangle path=ortho

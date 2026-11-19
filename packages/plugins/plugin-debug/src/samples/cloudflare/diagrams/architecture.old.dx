@@ -1,0 +1,38 @@
+diagram kind=grid size=1600x880 cols=3 gap=64 padding=48
+
+group client-section "Client · app tab + shared worker" gap=24 {
+  group client-col-0 gap=8 autoRows=136 alignContent=center {
+    node c-plugins "Plugins" kind=card body="Surfaces, operations and skills in each app tab." footer="navtree · markdown · assistant · +100" icon=puzzle-piece variant="compact"
+    node c-halo "HALO Vault" kind=card body="Keys and credentials for this device and its agents." footer="keyring · identity" icon=vault tone=accent variant="compact"
+    node c-runtime "Runtime" kind=card body="Effect service layers, shared by every tab." footer=WorkerRuntime icon=cpu variant="compact"
+    node c-services "Client services" kind=card chips="database~ECHO~~accent | sparkle~AI~~accent | user-circle~Identity~~accent | files~Blobs~~accent | robot~Agents~~accent | video-camera~Calls | waveform~Transcription | cube~Sandbox" footer="client-protocol · RPC from every tab" icon=stack variant="compact"
+    node c-spaces "Spaces" kind=card body="A local replica of every space, in SQLite on OPFS." footer="EchoHost · SpaceManager" icon=cube variant="compact"
+  }
+}
+
+group router-section rows="48 1fr" gap=16 {
+  group router-spacer { }
+  group router-body gap=24 autoRows=136 alignContent=center {
+    node router "Router" kind=card footer="RouterObject DO" icon=arrows-left-right tone=ink variant="compact"
+  }
+}
+
+group edge-section "EDGE · Workers + Durable Objects" gap=24 {
+  group edge-col-0 gap=8 autoRows=136 alignContent=center {
+    node e-plugins "Plugins" kind=card body="Plugin services that run next to the data." footer="layerSpec · workerd" icon=puzzle-piece variant="compact"
+    node e-halo "HALO" kind=card body="Credential chains and membership, checked on every request." footer="identity · kms · state machine" icon=shield-check tone=accent variant="compact"
+    node e-runtime "Plugin Manager" kind=card body="Loads plugin services and runs them per space." footer="Workers · service bindings" icon=plugs-connected variant="compact"
+    node e-services "EDGE services" kind=card chips="database~ECHO~~accent | sparkle~AI~~accent | user-circle~Identity~~accent | files~Blobs~~accent | robot~Agents~~accent | video-camera~Calls | waveform~Transcription | cube~Sandbox" footer="db · ai · calls · transcription · sandbox" icon=stack variant="compact"
+    node e-spaces "Space" kind=card body="One Durable Object group per space." footer="replicator · indexer · feeds · scheduler" icon=cube variant="compact"
+  }
+}
+
+edge c-plugins -> e-plugins "one plugin, two halves" head=triangle
+edge c-halo -> router "credentials" head=triangle
+edge router -> e-halo head=triangle
+edge c-runtime -> router "activation" head=triangle
+edge router -> e-runtime head=triangle
+edge c-services -> router "RPC" head=triangle
+edge router -> e-services head=triangle
+edge c-spaces -> router "sync" head=triangle
+edge router -> e-spaces head=triangle

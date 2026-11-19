@@ -1,0 +1,44 @@
+diagram kind=grid size=1600x880 cols="2fr 1fr 5fr" gap=48 padding=48
+
+group client-section cols=2 gap=16 {
+  group client-col rows="1fr 3fr" gap=8 {
+    node client "Client" kind=card icon=browser
+    group client-rest { }
+  }
+  group worker-col rows="1fr 3fr" gap=8 {
+    node worker "Worker" kind=card icon=cpu
+    group worker-rest { }
+  }
+}
+
+group router-section rows="1fr 3fr" gap=8 {
+  node router "Router" kind=card icon=arrows-left-right tone=ink
+  group router-rest { }
+}
+
+group edge-section cols="1fr 2fr" gap=16 {
+  group registry-col rows="1fr 3fr" gap=8 {
+    node registry "ServiceRegistry" kind=card icon=plugs-connected
+    group registry-rest { }
+  }
+  group services-col {
+    group services-row cols=2 gap=16 {
+      group echo-col rows="1fr 3fr" gap=8 {
+        node echo "ECHO" kind=card icon=database tone=accent
+        group echo-parts gap=8 {
+          node graph "Graph" kind=card icon=graph iconTone=accent
+          node feeds "Feeds" kind=card icon=queue iconTone=accent
+          node blobs "Blobs" kind=card icon=files iconTone=accent
+        }
+      }
+      group compute-col rows="1fr 3fr" gap=8 {
+        node compute "Compute" kind=card icon=lightning tone=teal
+        group compute-parts gap=8 {
+          node scheduler "Scheduler" kind=card icon=clock iconTone=teal
+          node process-manager "Process Manager" kind=card icon=tree-structure iconTone=teal
+          node pipeline "Pipeline" kind=card icon=flow-arrow iconTone=teal
+        }
+      }
+    }
+  }
+}
