@@ -35,10 +35,10 @@ A decision is an entry in a spec's changelog that says what is now true, and who
 
 Delegation is an agent handing a task to a sub-agent, which runs as a child process and reports back when it finishes.
 
-### Fact
+### [Fact](/docs/sage/concepts/memory/)
 
 A fact is a statement extracted from text in the space, such as who said what and when. It is kept with the source it
-came from. See [Memory](/docs/sage/concepts/memory/).
+came from.
 
 ### Goal
 
@@ -55,19 +55,19 @@ output into a chat.
 Instructions are the text that tells a model how to behave. A turn carries the agent's own and those of each enabled
 skill.
 
-### MCP
+### [MCP](/docs/sage/concepts/mcp/)
 
 MCP is the Model Context Protocol. DXOS serves a space's operations and skills over it, and agents use outside
-servers' tools through it. See [MCP](/docs/sage/concepts/mcp/).
+servers' tools through it.
 
 ### Memory
 
 Memory is what an agent keeps between turns, as ECHO objects: its chats, the memories it writes, and facts.
 
-### Model
+### [Model](/docs/sage/concepts/models/)
 
 A model is the AI system a turn calls, such as a language model. It is named by an id that several providers may
-serve. See [Models](/docs/sage/concepts/models/).
+serve.
 
 ### Provider
 
@@ -83,15 +83,15 @@ passes it to the next.
 A review is a judgement of how far the code at one commit meets each item of a spec, with the code as evidence. See
 [Specs](/docs/sage/concepts/specs/).
 
-### Skill
+### [Skill](/docs/sage/concepts/skills/)
 
 A skill is a set of instructions with the operations a kind of work needs. A chat enables it when the task calls for
-it. See [Skills](/docs/sage/concepts/skills/).
+it.
 
-### Spec
+### [Spec](/docs/sage/concepts/specs/)
 
 A spec is a `.mdl` document that says what software should do, for people and agents both. It carries its decisions,
-reviews and tests. See [Specs](/docs/sage/concepts/specs/).
+reviews and tests.
 
 ### Tool
 

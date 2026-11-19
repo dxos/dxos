@@ -1,6 +1,6 @@
 # Before and after
 
-One rewritten passage for each page template, with the rules from [`SKILL.md`](SKILL.md) that each one uses. The
+One rewritten passage for each of four page templates, with the rules from [`SKILL.md`](SKILL.md) that each one uses. The
 full pages are the ones named in each heading.
 
 ## Concept: `echo/concepts/queries.mdx`
@@ -238,7 +238,7 @@ After:
 
 The list of members became parallel bullets (rule 7), and the citation stayed on the sentence it cites.
 
-## Reference: `tile/api/button.mdx`
+## Component: `tile/api/button.mdx`
 
 Before:
 

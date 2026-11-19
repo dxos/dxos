@@ -11,15 +11,15 @@ An agent device is a device of an identity, of kind `agent-managed`, whose key E
 if it grants EDGE that access. It signs credentials when another EDGE service asks, and it is not a SAGE agent. See
 [Identity services](/docs/edge/concepts/identity-services/).
 
-### Always-online peer
+### [Always-online peer](/docs/edge/why-edge/)
 
 An always-online peer is a server that devices sync a space with, as they sync with each other. EDGE is the
-always-online peer for every space that replicates through it. See [Why EDGE?](/docs/edge/why-edge/).
+always-online peer for every space that replicates through it.
 
-### Durable Object
+### [Durable Object](/docs/edge/concepts/architecture/)
 
 A Durable Object is a small Cloudflare server with its own storage, named by a key and created on first use. EDGE
-keeps one or more per space, per identity and per agent. See [Architecture](/docs/edge/concepts/architecture/).
+keeps one or more per space, per identity and per agent.
 
 ### Environment
 
@@ -30,10 +30,10 @@ An environment is one deployment of EDGE: production, preview or dev, each at it
 A guard is a check a [process](#process) is spawned with. It admits or refuses the operations the process invokes
 that declare requirements. A child process inherits its parent's guard.
 
-### Handler
+### [Handler](/docs/edge/concepts/operations/)
 
 A handler is the code that does an operation's work. It takes the input and returns an Effect that produces the
-output. A handler set groups the handlers a runtime loads together. See [Operations](/docs/edge/concepts/operations/).
+output. A handler set groups the handlers a runtime loads together.
 
 ### Hibernation
 
@@ -44,10 +44,10 @@ can be written to storage and dropped from memory. A process that waits for inpu
 
 Hub is the EDGE service that keeps DXOS accounts, email verification and the invitations that bring people to DXOS.
 
-### Index
+### [Index](/docs/edge/concepts/indexing/)
 
 An index is a lookup from a type, a property or a relation to the objects that have it. EDGE keeps one for each space
-it can read, and queries read it beside the device's own. See [Indexing and queries](/docs/edge/concepts/indexing/).
+it can read, and queries read it beside the device's own.
 
 ### Invoker
 
@@ -59,10 +59,10 @@ A layer stack is the set of layers that give a process its services. A layer bui
 affinity says whether one instance serves the application, a space or one process. See
 [Processes](/docs/edge/concepts/processes/).
 
-### Operation
+### [Operation](/docs/edge/concepts/operations/)
 
 An operation is a typed action over ECHO objects, with a key, an input schema and an output schema. People, agents
-and triggers run it the same way. See [Operations](/docs/edge/concepts/operations/).
+and triggers run it the same way.
 
 ### Operation registry
 
@@ -84,10 +84,10 @@ The plugin registry is the EDGE service that indexes published plugins and hosts
 A process is one run of an operation, with its own services, state and trace, in the app or on EDGE. See
 [Processes](/docs/edge/concepts/processes/).
 
-### Replicator
+### [Replicator](/docs/edge/concepts/replication/)
 
 A replicator is a Durable Object that keeps EDGE's copy of one space's data in sync with devices. A space has one for
-Automerge documents and one for feeds. See [Replication and backup](/docs/edge/concepts/replication/).
+Automerge documents and one for feeds.
 
 ### Router
 
@@ -104,10 +104,10 @@ service, and EDGE can hold one so that it is not replicated to every device.
 
 Service access is a credential that lets an identity use an EDGE or Hub service, written with `Identity.grantServiceAccess`.
 
-### Trace
+### [Trace](/docs/edge/concepts/traces/)
 
 A trace is the set of events a process records. Durable events go to the space's trace feed, and live events go to
-the devices watching. See [Traces](/docs/edge/concepts/traces/).
+the devices watching.
 
 ### Trigger
 

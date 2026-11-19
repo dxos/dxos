@@ -70,8 +70,8 @@ uses org.dxos.app.composer: The app that the PLEX section uses as its host, and 
 
 ## Templates
 
-Each page uses exactly one template. The template fixes the order of the page's parts, so a reader
-always knows where to look.
+Each page uses exactly one template. The template fixes the page's parts and their order, so a reader always knows
+where to look, and says how each part is written [D-367].
 
 ```mdl
 template landing: The front door
@@ -86,64 +86,108 @@ template landing: The front door
 ```
 
 ```mdl
-template narrative: An argument
-  purpose: Explain why, in the order of the Effect page "Why Effect?".
+template home: The docs home
+  purpose: Show every section at once and route the reader into one.
   parts:
-    - Title and one-paragraph answer that pitches the section on its own [D-280]
-    - The pattern: the idea in brief, with the smallest complete example and an anatomy strip of its key signature where the section has an API a reader calls
-    - Comparison: the same task against the strongest alternative, side by side [D-280]
-    - Practical problems: one H3 per problem, each with its mechanism, and a spec citation where a spec states the claim
-    - Closing: where to go next
-```
-
-```mdl
-template tutorial: A learning path step
-  purpose: Teach one skill. The reader ends with code that runs, and sees the piece of the tutorial app it builds.
-  parts:
-    - Title and a one-sentence outcome
-    - Background: the facts the steps rely on, with a link to the concept page for the rest; prose only, no code to write [D-194]
-    - Steps: under their own heading, numbered, each one action, one snippet and one observable result; a snippet from the tutorial app is titled with the file it goes in [D-195], numbered as that file is [D-197]
-    - Try it: the tutorial app as it stands after this page, live [F-15.1]
-    - What you can do now: what the reader can now do [D-194]
-```
-
-```mdl
-template concept: A core concept
-  purpose: Describe one idea completely, for a reader who has finished the learning path.
-  parts:
-    - Title and a definition in one sentence
-    - Model: the idea, with a diagram where the shape matters; a Model with more topics than four bold leads carry splits them under H3s [D-364]
-    - Behavior: what is guaranteed, with spec citations
-    - Limits: what is not guaranteed, and known divergences
+    - Title and a short, neutral paragraph on DXOS as a whole, not a list of its sections, with ECHO named as the usual start
+    - Grid: one card per section, four columns with ECHO two wide, falling to two columns and then one; each card is the section's hero art with its mark and name, and links to the section's Overview [D-272]
 ```
 
 ```mdl
 template overview: A section's front page
-  purpose: Say what the section is, and route the reader into it.
+  purpose: Say what the section is, and route the reader into it. The guarantees belong to the section's concept pages.
   parts:
     - Title and a definition in one paragraph, which pitches the section on its own
-    - The section in brief: its model or its parts, without the guarantees its concept pages state
+    - The section in brief: its model or its parts, introducing the DXOS names the section uses, such as Composer and EDGE [D-368]
     - Where the section fits with the rest of DXOS
     - How the section's pages are organized, or where to go next
 ```
 
 ```mdl
-template reference: One module
-  purpose: Answer a lookup in one glance. No narrative.
+template narrative: An argument
+  purpose: Explain why, in the order of the Effect page "Why Effect?". The page owns the section's contrast with the usual way, which the overview gives in one sentence, and it may say "we" [D-368].
   parts:
-    - Title, import line and a one-sentence summary
-    - Members table: strict columns of member, signature, summary
-    - One H3 per member family: signature, parameters, a compiled example
+    - Title and one-paragraph answer that pitches the section on its own [D-280]
+    - The pattern: the idea in brief, with the smallest complete example and an anatomy strip of its key signature where the section has an API a reader calls
+    - Comparison: the same task against the strongest alternative, side by side [D-280]
+    - Practical problems: one H3 per problem, which starts from the problem and names the mechanism that removes it, shows the problem in code where the section has an API a reader calls, and carries a spec citation where a spec states the claim
+    - Closing: where to go next
+```
+
+```mdl
+template opener: The first page of a learning path
+  purpose: Show what the learning path builds before the reader builds it. The page has no steps [D-368].
+  parts:
+    - Title and a paragraph on what the path builds
+    - What the path's subject is, such as "What an object is": the idea, and the terms the path's pages lean on
+    - The finished app, plugin or screen: what the path ends with, shown as the reader will see it
+```
+
+```mdl
+template tutorial: A learning path step
+  purpose: Teach one skill. The reader ends with code that runs, and sees the piece of the tutorial app it builds. The page says "we" for the reader and the writer working through it together [D-368].
+  parts:
+    - Title and a one-sentence outcome: what the app gains on this page
+    - Background: the facts the steps rely on, each tied to the step that uses it, with a link to the concept page for the rest; prose only, no code to write [D-194]
+    - Steps: under their own heading, numbered, each one action, one snippet and one observable result; each step's bold lead is an instruction, and the sentence after its snippet covers the line a reader would get wrong, or there is none; a snippet from the tutorial app is titled with the file it goes in [D-195], numbered as that file is [D-197]
+    - Try it: the tutorial app as it stands after this page, live, on a page that changes an app the docs run in the page [F-15.1]
+    - What you can do now: what the reader can now do [D-194]
+```
+
+```mdl
+template concept: A core concept
+  purpose: Describe one idea completely, for a reader who has finished the learning path. The page says what the reader sees, or on a page about the machinery, what the system does [D-368].
+  parts:
+    - Title and a definition in one sentence, then what the reader uses the idea for
+    - Model: the idea, with its samples and a diagram where the shape matters; a Model with more topics than four bold leads carry splits them under H3s [D-364]
+    - Behavior: what is guaranteed, one claim to a bullet, with the spec citation of each claim a spec states
+    - Limits: what is not guaranteed, and known divergences, one to a bullet
 ```
 
 ```mdl
 template namespace: One API namespace
-  purpose: Teach one namespace in a page a reader can read top to bottom, between the learning path and the generated API reference.
+  purpose: Teach one namespace in a page a reader can read top to bottom, between the learning path and the generated API reference. A sample that a concept page also shows is explained here for the call, and there for the idea [D-368].
   parts:
     - Title, import line and a one-paragraph summary of what the namespace is for
-    - Common tasks: one H3 per task, each with a compiled example
+    - Tasks: one H2 per task, each saying what the task does and when to do it, then a compiled example, then what it does not do [F-22.5]
     - Members at a glance: a short table of the members a reader uses most, each linking to the API reference
+    - Errors, on a HALO page: the error classes the namespace fails with [D-166]
     - Related: the concept pages and learning-path steps that use the namespace
+```
+
+```mdl
+template component: One TILE component
+  purpose: Show one component and its parts, so a reader can pick it and use it [D-369].
+  parts:
+    - Title, then the component's live story or preview where it has one [D-365]
+    - Import line, then one sentence that says what the component is, with its common noun as the subject where it has one, such as "An accordion is a stack of sections", then the sample, if any
+    - Parts: a table of the parts, or one H2 per part with its props table; a part with a heading of its own gets what it is and when to use it, and a part that sits only in the table gets no sentence that repeats its row
+```
+
+```mdl
+template guide: A task across APIs
+  purpose: Show how to get one result, for a reader who knows the APIs it uses [D-369].
+  parts:
+    - Title and an opening on what the reader has at the end, or the definition when the guide is about one thing
+    - Tasks: one H2 per task, written as a namespace page's tasks are
+    - Limits, where the guide has any: what the pattern does not do
+    - A close, where the guide has one: Members at a glance or Related, where its APIs have their own pages, or a checklist
+```
+
+```mdl
+template glossary: A section's terms
+  purpose: Define every term the section's pages put in bold [D-369].
+  parts:
+    - Title, and a line naming the glossaries that hold the terms this one leaves out
+    - Terms: one H3 per term, in alphabetical order, that links to the page that explains it; the entry is a full sentence with the term as its subject, "A swarm is the set of …", then any further facts, each in its own sentence
+```
+
+```mdl
+template resource: A list for lookup
+  purpose: List files, links or settings a reader looks up, with no narrative [D-369].
+  parts:
+    - Title and an opening on what the page lists and what the reader does with it
+    - The list or table, under a heading per group where it has groups
 ```
 
 ```mdl
@@ -152,14 +196,6 @@ template stub: A planned page
   parts:
     - Title, a planned badge and the page's summary
     - The page's `covers:` list
-```
-
-```mdl
-template home: The docs home
-  purpose: Show every section at once and route the reader into one.
-  parts:
-    - Title and a short, neutral paragraph on DXOS as a whole, not a list of its sections, with ECHO named as the usual start
-    - Grid: one card per section, four columns with ECHO two wide, falling to two columns and then one; each card is the section's hero art with its mark and name, and links to the section's Overview [D-272]
 ```
 
 ## Site map
@@ -243,7 +279,7 @@ page the-echo-object: The ECHO object
   section: ECHO
   route: /docs/echo/learn/the-echo-object/
   group: Learning path
-  template: tutorial
+  template: opener
   status: spike
   covers:
     - What a live object is: typed, reactive, replicated
@@ -443,7 +479,7 @@ page guide-effect: Effect
   section: ECHO
   route: /docs/echo/guides/effect/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Get the database as `Database.Service`, and provide it with a layer
@@ -456,7 +492,7 @@ page guide-testing: Testing
   section: ECHO
   route: /docs/echo/guides/testing/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Build a database with `EchoTestBuilder` from `@dxos/echo-client` testing
@@ -482,7 +518,7 @@ page guide-configuration: Configuration
   section: ECHO
   route: /docs/echo/guides/configuration/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - `Config` and its sources from `@dxos/config`: `Defaults`, `Local` and `Envs`, and their precedence
@@ -658,7 +694,7 @@ page api-reference: API reference
   section: ECHO
   route: /docs/additional-resources/api-reference/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to the generated reference for `@dxos/echo`, `@dxos/echo-react`, `@dxos/echo-solid`, `@dxos/client` and `@dxos/react-client`
@@ -669,7 +705,7 @@ page glossary: Glossary
   section: ECHO
   route: /docs/additional-resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Every ECHO term, defined once: space, object, relation, entity, reference, URI, DXN, epoch, Hypergraph, registry, scope, source, replica, branch, migration, content version and the rest [D-354]
@@ -681,7 +717,7 @@ page examples: Examples
   section: ECHO
   route: /docs/additional-resources/samples/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Composer first, as the flagship app built on ECHO
@@ -693,7 +729,7 @@ page echo-llms-txt: llms.txt
   section: ECHO
   route: /docs/echo/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/echo/llms.txt`, each ECHO page with its summary and a link to its Markdown
@@ -721,7 +757,7 @@ page guide-solid: Solid
   section: ECHO
   route: /docs/echo/guides/solid/
   group: Guides
-  template: tutorial
+  template: guide
   status: later
   covers:
     - The Solid.js bindings
@@ -732,7 +768,7 @@ page guide-foreign-records: Foreign records
   section: ECHO
   route: /docs/echo/guides/foreign-records/
   group: Guides
-  template: tutorial
+  template: guide
   status: later
   covers:
     - Map records from another system onto ECHO types with panproto lenses
@@ -833,7 +869,7 @@ page halo-the-halo-identity: The HALO identity
   section: HALO
   route: /docs/halo/learn/the-halo-identity/
   group: Learning path
-  template: tutorial
+  template: opener
   status: spike
   covers:
     - What an identity is, in a paragraph: a Keyhive group named by a DID, with a profile, whose members are its devices and recovery keys, and which joins spaces as a member [D-175]
@@ -1008,7 +1044,7 @@ page halo-guide-passkey-recovery: Passkey recovery
   section: HALO
   route: /docs/halo/guides/passkey-recovery/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
@@ -1023,7 +1059,7 @@ page halo-react: React
   section: HALO
   route: /docs/halo/guides/react/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Set up `HaloProvider` from `@dxos/halo-react`
@@ -1093,7 +1129,7 @@ page halo-api-reference: API reference
   section: HALO
   route: /docs/halo/resources/api-reference/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to the generated reference for `@dxos/halo` and `@dxos/halo-react`; `@dxos/halo-adapter-client` gets none
@@ -1104,7 +1140,7 @@ page halo-glossary: Glossary
   section: HALO
   route: /docs/halo/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, access and space key
@@ -1117,7 +1153,7 @@ page halo-llms-txt: llms.txt
   section: HALO
   route: /docs/halo/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/halo/llms.txt`, each HALO page with its summary and a link to its Markdown
@@ -1216,7 +1252,7 @@ page mesh-transports: Transports
   covers:
     - MESH multiplexes transports: the same replication runs over a direct link and over EDGE, and a device uses whichever reaches the peer [D-227]
     - WebRTC in the browser, TCP in Node, memory in tests, and the EDGE WebSocket
-    - Iroh, a QUIC transport for presence and gossip, in one paragraph marked planned [D-229]
+    - Iroh, a QUIC transport for presence and gossip, in one Limits bullet marked planned [D-229, D-370]
 ```
 ```mdl
 page mesh-teleport: Teleport
@@ -1252,7 +1288,7 @@ page mesh-glossary: Glossary
   section: MESH
   route: /docs/mesh/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Swarm, topic, topology, MMST, signaling, transport, Teleport, extension, ICE, TURN, presence and network status
@@ -1265,7 +1301,7 @@ page mesh-llms-txt: llms.txt
   section: MESH
   route: /docs/mesh/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/mesh/llms.txt`, each MESH page with its summary and a link to its Markdown
@@ -1462,7 +1498,7 @@ page edge-configuration: Configuration
   section: EDGE
   route: /docs/edge/resources/configuration/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - `runtime.services.edge.url`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures`, with defaults [D-236]
@@ -1474,7 +1510,7 @@ page edge-glossary: Glossary
   section: EDGE
   route: /docs/edge/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Durable Object, environment, hub, index, replicator, router, service access, worker, operation, handler, invoker, process, layer stack, trigger, pipeline and trace
@@ -1486,7 +1522,7 @@ page edge-llms-txt: llms.txt
   section: EDGE
   route: /docs/edge/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/edge/llms.txt`, each EDGE page with its summary and a link to its Markdown
@@ -1638,7 +1674,7 @@ page sage-glossary: Glossary
   section: SAGE
   route: /docs/sage/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Agent, turn, model, provider, tool, skill, instructions, code mode, memory, fact, goal, MCP, spec, decision and review
@@ -1650,7 +1686,7 @@ page sage-llms-txt: llms.txt
   section: SAGE
   route: /docs/sage/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/sage/llms.txt`, each SAGE page with its summary and a link to its Markdown
@@ -1721,7 +1757,7 @@ page plex-the-plex-plugin: The PLEX plugin
   section: PLEX
   route: /docs/plex/learn/the-plex-plugin/
   group: Learning path
-  template: tutorial
+  template: opener
   status: spike
   covers:
     - What a plugin is, in a paragraph: metadata and modules that contribute capabilities
@@ -1826,7 +1862,7 @@ page app-framework-publishing: Publishing a plugin
   section: PLEX
   route: /docs/plex/publishing-plugins/
   group: Learning path
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - How the private registry works, in a paragraph: hosted by DXOS, owned by your identity, no AT Protocol
@@ -1931,7 +1967,7 @@ page plex-guide-effect: Effect
   section: PLEX
   route: /docs/plex/guides/effect/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Read a capability as an Effect service with `Capability.Service`
@@ -1945,7 +1981,7 @@ page plex-guide-testing: Testing
   section: PLEX
   route: /docs/plex/guides/testing/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Start a headless app with the plugin under test, with `Harness.createComposerTestApp` from `@dxos/plugin-testing`
@@ -1959,7 +1995,7 @@ page plex-guide-debugging: Debugging
   section: PLEX
   route: /docs/plex/guides/debugging/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Load the plugin from its dev server into the docs inspector, and read each module's status and error [D-147]
@@ -1973,7 +2009,7 @@ page app-framework-guide-app-capabilities: App capabilities
   section: PLEX
   route: /docs/plex/guides/app-capabilities/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Why these are app capabilities, from `@dxos/app-toolkit`, and not part of the framework
@@ -1989,7 +2025,7 @@ page plex-guide-settings-and-state: Settings and state
   section: PLEX
   route: /docs/plex/guides/settings-and-state/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Contribute synced settings with a schema, and the settings form the app renders from it
@@ -2003,7 +2039,7 @@ page app-framework-guide-app-graph: App Graph
   section: PLEX
   route: /docs/plex/guides/app-graph/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - What a node is, how nodes connect, and a node's identity as a `GraphPath`
@@ -2020,7 +2056,7 @@ page app-framework-guide-react: React
   section: PLEX
   route: /docs/plex/guides/react/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Read capabilities from a component
@@ -2035,7 +2071,7 @@ page plex-guide-using-echo: ECHO
   section: PLEX
   route: /docs/plex/guides/using-echo/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Register ECHO types with the `Schema` capability
@@ -2146,7 +2182,7 @@ page app-framework-api-reference: API reference
   section: PLEX
   route: /docs/plex/resources/api-reference/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to the generated reference for `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/app-graph` and `@dxos/compute`
@@ -2158,7 +2194,7 @@ page app-framework-glossary: Glossary
   section: PLEX
   route: /docs/plex/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Action, activation event, annotation, App Graph, App Toolkit, builder extension, capability, filter, handler, module, node, operation, operation invoker, plugin, plugin manager, role, schema registration and surface
@@ -2171,7 +2207,7 @@ page plex-llms-txt: llms.txt
   section: PLEX
   route: /docs/plex/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/plex/llms.txt`, each PLEX page with its summary and a link to its Markdown
@@ -2203,7 +2239,7 @@ page app-framework-cli: The dx CLI
   section: PLEX
   route: /docs/plex/tools/cli/
   group: Guides
-  template: namespace
+  template: guide
   status: later
   covers:
     - Install the CLI and set up a profile
@@ -2273,7 +2309,7 @@ page tile-the-tile-component: The TILE component
   section: TILE
   route: /docs/tile/learn/the-tile-component/
   group: Learning path
-  template: tutorial
+  template: opener
   status: spike
   covers:
     - What a TILE component is: a namespace of parts, styled by the theme's stylesheets and adjusted with `classNames`; `Theme.Provider` supplies strings and icons [D-248] [D-362]
@@ -2441,7 +2477,7 @@ page tile-api-layout: Layout
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Each primitive's props, with the `gap` ramp
@@ -2454,7 +2490,7 @@ page tile-api-button: Button
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - `Button.Root` variants and props, `Button.Group` and `Button.Toggle`
@@ -2467,7 +2503,7 @@ page tile-api-input: Input
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - The `Input` parts [D-310]
@@ -2480,7 +2516,7 @@ page tile-api-status: Status
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - The `Status` parts and when each fits
@@ -2493,7 +2529,7 @@ page tile-api-panel: Panel
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - `Panel.Root`, `Panel.Header`, `Panel.Body` and `Panel.Footer` [D-310]
@@ -2506,7 +2542,7 @@ page tile-api-toolbar: Toolbar
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - The `Toolbar` parts
@@ -2519,7 +2555,7 @@ page tile-api-accordion: Accordion
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Accordion` under its own story [D-308]
@@ -2532,7 +2568,7 @@ page tile-api-alert-dialog: AlertDialog
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `AlertDialog` under its own story [D-308]
@@ -2545,7 +2581,7 @@ page tile-api-avatar: Avatar
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Avatar` under its own story [D-308]
@@ -2558,7 +2594,7 @@ page tile-api-badge: Badge
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Badge` under its own story [D-308]
@@ -2571,7 +2607,7 @@ page tile-api-banner: Banner
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Banner` under its own story [D-308]
@@ -2584,7 +2620,7 @@ page tile-api-breadcrumb: Breadcrumb
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Breadcrumb` under its own story [D-308]
@@ -2597,7 +2633,7 @@ page tile-api-card: Card
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Card` under its own story [D-308]
@@ -2610,7 +2646,7 @@ page tile-api-carousel: Carousel
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Carousel` under its own story [D-308]
@@ -2623,7 +2659,7 @@ page tile-api-collapsible: Collapsible
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Collapsible` under its own story [D-308]
@@ -2636,7 +2672,7 @@ page tile-api-color-picker: ColorPicker
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `ColorPicker` under its own story [D-308]
@@ -2649,7 +2685,7 @@ page tile-api-combobox: Combobox
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Combobox` under its own story [D-308]
@@ -2662,7 +2698,7 @@ page tile-api-drag-handle: DragHandle
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `DragHandle` under its own story [D-308]
@@ -2675,7 +2711,7 @@ page tile-api-editable: Editable
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Editable` under its own story [D-308]
@@ -2688,7 +2724,7 @@ page tile-api-fieldset: Fieldset
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Fieldset` under its own story [D-308]
@@ -2701,7 +2737,7 @@ page tile-api-floating-panel: FloatingPanel
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `FloatingPanel` under its own story [D-308]
@@ -2714,7 +2750,7 @@ page tile-api-focus: Focus
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Focus` under its own story [D-308]
@@ -2727,7 +2763,7 @@ page tile-api-listbox: Listbox
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Listbox` under its own story [D-308]
@@ -2740,7 +2776,7 @@ page tile-api-main: Main
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Main` under its own story [D-308]
@@ -2753,7 +2789,7 @@ page tile-api-media: Media
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Media` under its own story [D-308]
@@ -2766,7 +2802,7 @@ page tile-api-qr-code: QrCode
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `QrCode` under its own story [D-308]
@@ -2779,7 +2815,7 @@ page tile-api-scroll-container: ScrollContainer
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `ScrollContainer` under its own story [D-308]
@@ -2792,7 +2828,7 @@ page tile-api-splitter: Splitter
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Splitter` under its own story [D-308]
@@ -2805,7 +2841,7 @@ page tile-api-system-button: SystemButton
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `SystemButton` under its own story [D-308]
@@ -2818,7 +2854,7 @@ page tile-api-tabs: Tabs
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Tabs` under its own story [D-308]
@@ -2831,7 +2867,7 @@ page tile-api-tag: Tag
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Tag` under its own story [D-308]
@@ -2844,7 +2880,7 @@ page tile-api-toggle-group: ToggleGroup
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `ToggleGroup` under its own story [D-308]
@@ -2857,7 +2893,7 @@ page tile-api-tour: Tour
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Tour` under its own story [D-308]
@@ -2870,7 +2906,7 @@ page tile-api-typography: Typography
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Typography` under its own story [D-308]
@@ -2883,7 +2919,7 @@ page tile-api-dialog: Dialog
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Dialog` [D-310]
@@ -2896,7 +2932,7 @@ page tile-api-popover: Popover
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Popover` [D-310]
@@ -2909,7 +2945,7 @@ page tile-api-tooltip: Tooltip
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Tooltip` [D-310]
@@ -2922,7 +2958,7 @@ page tile-api-hover-card: HoverCard
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `HoverCard` [D-310]
@@ -2935,7 +2971,7 @@ page tile-api-toast: Toast
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Toast` [D-310]
@@ -2948,7 +2984,7 @@ page tile-api-field: Field
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Field` [D-310]
@@ -2961,7 +2997,7 @@ page tile-api-select: Select
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Select` [D-310]
@@ -2974,7 +3010,7 @@ page tile-api-scroll-area: ScrollArea
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `ScrollArea` [D-310]
@@ -2987,7 +3023,7 @@ page tile-api-menu: Menu
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - The `Menu` parts, and where `@dxos/react-ui-menu` takes over for menus built from actions
@@ -3000,7 +3036,7 @@ page tile-api-icon: Icon
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - `Icon.Icon` props
@@ -3014,7 +3050,7 @@ page tile-api-mosaic-board: Board
   group: API
   package: react-ui-mosaic
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3028,7 +3064,7 @@ page tile-api-list-listbox: Listbox (react-ui-list)
   group: API
   package: react-ui-list
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Listbox` story, live at the top [D-298]
@@ -3042,7 +3078,7 @@ page tile-api-masonry-masonry: Masonry
   group: API
   package: react-ui-masonry
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3056,7 +3092,7 @@ page tile-api-mosaic-mosaic: Mosaic
   group: API
   package: react-ui-mosaic
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Mosaic` story, live at the top [D-298]
@@ -3070,7 +3106,7 @@ page tile-api-list-ordered-list: OrderedList
   group: API
   package: react-ui-list
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `OrderedList` story, live at the top [D-298]
@@ -3084,7 +3120,7 @@ page tile-api-list-picker: Picker
   group: API
   package: react-ui-list
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Picker` story, live at the top [D-298]
@@ -3098,7 +3134,7 @@ page tile-api-list-tree: Tree
   group: API
   package: react-ui-list
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Tree` story, live at the top [D-298]
@@ -3112,7 +3148,7 @@ page tile-api-editor-editor: Editor
   group: API
   package: react-ui-editor
   family: Editing
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Editor` story, live at the top [D-298]
@@ -3126,7 +3162,7 @@ page tile-api-form-form: Form
   group: API
   package: react-ui-form
   family: Editing
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Form` story, live at the top [D-298]
@@ -3140,7 +3176,7 @@ page tile-api-grid-grid: Grid
   group: API
   package: react-ui-grid
   family: Editing
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3154,7 +3190,7 @@ page tile-api-menu-action-menu: ActionMenu
   group: API
   package: react-ui-menu
   family: Actions
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `ActionMenu` story, live at the top [D-298]
@@ -3168,7 +3204,7 @@ page tile-api-menu-action-toolbar: ActionToolbar
   group: API
   package: react-ui-menu
   family: Actions
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `ActionToolbar` story, live at the top [D-298]
@@ -3182,7 +3218,7 @@ page tile-api-calendar-calendar: Calendar
   group: API
   package: react-ui-calendar
   family: Time
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Calendar` story, live at the top [D-298]
@@ -3196,7 +3232,7 @@ page tile-api-plot-timeline: Timeline
   group: API
   package: react-ui-plot
   family: Time
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Timeline` story, live at the top [D-298]
@@ -3210,7 +3246,7 @@ page tile-api-plot-plot: Plot
   group: API
   package: react-ui-plot
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3224,7 +3260,7 @@ page tile-api-canvas-editor-canvas-editor: CanvasEditor
   group: API
   package: react-ui-canvas-editor
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one the Overview's Canvas card runs, live at the top [D-307] [D-362]
@@ -3238,7 +3274,7 @@ page tile-api-geo-globe: Globe
   group: API
   package: react-ui-geo
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3252,7 +3288,7 @@ page tile-api-graph-graph: Graph
   group: API
   package: react-ui-graph
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3266,7 +3302,7 @@ page tile-api-geo-map: Map
   group: API
   package: react-ui-geo
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Map` story, live at the top [D-298]
@@ -3280,7 +3316,7 @@ page tile-api-graph-svg: SVG
   group: API
   package: react-ui-graph
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `SVG` story, live at the top [D-298]
@@ -3295,7 +3331,7 @@ page tile-guide-custom-themes: Custom themes and dark mode
   section: TILE
   route: /docs/tile/guides/custom-themes/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Overriding `--dx-*` variables and color tokens in an app's own stylesheet
@@ -3307,7 +3343,7 @@ page tile-guide-plex: TILE in a PLEX plugin
   section: TILE
   route: /docs/tile/guides/tile-in-a-plex-plugin/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Components take props and never read capabilities; containers connect them, with a link to PLEX Surfaces
@@ -3319,7 +3355,7 @@ page tile-guide-testing: Testing and stories
   section: TILE
   route: /docs/tile/guides/testing-and-stories/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - A story with `withTheme` and the `translations` parameter
@@ -3333,7 +3369,7 @@ page tile-api-reference: API reference
   section: TILE
   route: /docs/tile/resources/api-reference/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Typedoc for `@dxos/react-ui` and `@dxos/ui-theme` [D-249]
@@ -3345,7 +3381,7 @@ page tile-glossary: Glossary
   section: TILE
   route: /docs/tile/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Each term with a link to the page that explains it
@@ -3356,7 +3392,7 @@ page tile-llms-txt: llms.txt
   section: TILE
   route: /docs/tile/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/tile/llms.txt`, each TILE page with its summary and a link to its Markdown
@@ -3854,8 +3890,9 @@ feat F-18: API by namespace
 
   req F-18.1:
     when: a section's API group is built
-    then: it has one page per core API namespace, written with the `namespace` template; the framework guides,
-          React among them, go in the Guides group
+    then: it has one page per core API namespace, written with the `namespace` template, or in TILE one page per
+          component, written with the `component` template [D-369]; the framework guides, React among them, go in
+          the Guides group
 
   req F-18.2:
     when: a reader wants every member of a namespace
@@ -7104,6 +7141,44 @@ decision D-366: EDGE's agent device is a store that signs credentials when anoth
   for: user:wittjosiah
   affects: [halo-recovery-credentials, halo-identities-devices, halo-spaces-membership, edge-identity-services]
   why: In the EDGE repository, the db-service recovery handler admits the device through the identity service's `authorizeDevice`, which signs with the agent key, and fails with "Agent key not found" for an identity without one. Notarization writes credentials through the agent's feed. The identity service's README describes an agent as a passive Durable Object that stores keys and signs credentials on request.
+```
+
+```mdl
+decision D-367: The spec's templates fit the docs as written. Every page's template matches the page, and each template says how its pages are written as well as which parts they have.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-17.2]
+```
+
+```mdl
+decision D-368: The overview, narrative, opener, tutorial, concept and namespace templates say how their parts are written. A namespace page gives each task its own H2, and a HALO namespace page has an Errors part. A tutorial step has Try it only where it changes an app that the docs run in the page. Fills in [D-367].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-17.2, F-18.1]
+  why: These are the pages as written. All 22 namespace pages give a task an H2, where the template asked for an H3 under a Common tasks heading that no page has. PLEX's steps and ECHO's Installation have no app to run in the page.
+  rejected:
+    - Keep the writing guidance per template in the docs-writing skill: it repeated the templates' parts and drifted from them.
+```
+
+```mdl
+decision D-369: Five templates join the spec, and `reference` leaves it. `opener` holds the four learning-path openers, `component` the 64 TILE API pages, and `guide` the 19 guide pages besides ECHO's React guide, plus Publishing a plugin. `glossary` holds the seven glossaries, and `resource` the 13 llms.txt, API reference, configuration and samples pages. ECHO's React guide keeps `tutorial`, since it has steps and a live app. TILE's API group is written with `component`. Fills in [D-367].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1, app-framework-publishing, mesh-glossary, edge-glossary, sage-glossary, halo-glossary, app-framework-glossary, tile-glossary, glossary]
+  why: Each page kept the template it was given when it was added. TILE's API then moved to one page per component [D-310], and no template was written for openers, guides, glossaries or resource lists. `reference` described a module page with a members table, which no page is.
+  rejected:
+    - Stretch `namespace` and `tutorial` to cover these pages: their parts would no longer say where to look.
+```
+
+```mdl
+decision D-370: A glossary lists its terms in alphabetical order, and each entry's heading links to the page that explains the term, with no "See" sentence. The six glossaries besides ECHO's move their links into their headings. MESH's Transports gives Iroh one Limits bullet, marked planned, in place of a section of its own. Fills in [D-369].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-transports, mesh-glossary, edge-glossary, sage-glossary, halo-glossary, app-framework-glossary, tile-glossary, glossary]
+  why: ECHO's glossary already linked its headings. A planned transport is a known divergence, which the concept template's Limits holds.
 ```
 
 ## Appendix: Extension Definitions

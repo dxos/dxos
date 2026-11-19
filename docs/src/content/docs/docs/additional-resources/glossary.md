@@ -88,19 +88,19 @@ A foreign key is the id an [entity](#entity) has in another system, stored in it
 and an `id`. A sync looks a record up by its foreign key, so the record does not enter the graph twice. See
 [Filter](/docs/echo/api/filter/#match-by-foreign-key).
 
-### Heads
+### [Heads](/docs/echo/concepts/changes/#history)
 
 Heads are the ids of the latest changes in a document. Together they name one version of the document, so
-`Obj.getVersion` takes them to read an object as it was. See [Changes and branches](/docs/echo/concepts/changes/#history).
+`Obj.getVersion` takes them to read an object as it was.
 
 ### Hypergraph
 
 The Hypergraph is every [space](#space) a device holds, as one graph. It queries across spaces, finds a space's database by id, and holds the [registry](#registry).
 
-### Live
+### [Live](/docs/echo/learn/the-echo-object/)
 
 A live object or query shows the latest state and notifies its subscribers when that state changes. A
-[snapshot](#snapshot) is the opposite. See [The ECHO object](/docs/echo/learn/the-echo-object/).
+[snapshot](#snapshot) is the opposite.
 
 ### [Managed field](/docs/echo/concepts/objects-relations/)
 
@@ -197,11 +197,11 @@ The signaling service introduces peers to each other so they can open direct con
 A snapshot is an immutable copy of an object as it is at one moment. `Obj.getSnapshot` returns one, and so does the
 `useObject` hook. A [live](#live) object changes after you read it, and a snapshot does not.
 
-### Source
+### [Source](/docs/echo/concepts/queries/)
 
 A source is one of the places a query's results come from. `from` names sources with a [scope](#scope). Inside a
 space, the objects the [client](#client) has loaded, the index and EDGE each answer as a source of their own, and
-`QueryResult.sources` lists them with their states. See [Queries](/docs/echo/concepts/queries/).
+`QueryResult.sources` lists them with their states.
 
 ### [Space](/docs/echo/concepts/spaces/)
 

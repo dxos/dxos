@@ -11,9 +11,10 @@ in `F-22`. The voice is ours, and it will change as we learn what helps a reader
 
 - For docs we like, read a few pages of the Effect documentation (effect.website/docs), such as Expected Errors and
   Running Effects. They define each thing first, say when to use it, and explain every example.
-- [`TEMPLATES.md`](TEMPLATES.md) says how the voice sits in each page template. Read your page's row before you
-  write.
-- [`EXAMPLES.md`](EXAMPLES.md) has a before and after for each template. Read the one for your page's template.
+- Your page's template, in the Templates section of `docs/SPEC.mdl`, fixes the page's parts and says how each is
+  written. Read it before you write.
+- [`EXAMPLES.md`](EXAMPLES.md) has a before and after for the concept, tutorial, namespace and component templates.
+  Read the one for your page's template, if it has one.
 
 ## What a change keeps
 
@@ -172,7 +173,8 @@ have. Where the heading only brings in a props table, "`Grid.Content` takes thes
 ## Rewriting a page
 
 1. **Find the page's contract.** Search `docs/SPEC.mdl` for the page's `route:`. Note its `template` and its
-   `covers:` list. Done when you can name the template and every point the page must cover.
+   `covers:` list, and read that template's block. Done when you can name the template's parts and every point the
+   page must cover.
 2. **Read the neighbors.** Read the section's glossary and overview, and the page before and the page after yours in
    the sidebar. The order of the `page` blocks in the spec is the sidebar's order. Done when you can name the
    foothold each neighbor used and the terms your page shares with them.
