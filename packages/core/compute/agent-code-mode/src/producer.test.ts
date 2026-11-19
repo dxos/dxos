@@ -210,7 +210,10 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           const [system] = systems;
           expect(system).toContain('The skills enabled in this conversation are stated in this prompt');
           expect(system).toContain(querySkillsCall);
-          expect(system).toContain("find them, and their fields, with the Skill Manager's `queryTypes`");
+          // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
+          expect(system).toContain(
+            "find them, and their fields, with the Skill Manager's `assistant-toolkit-query-types`, which searches every registered type",
+          );
           // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
           expect(system).toContain('Score titles before ranking them');
           expect(system).toContain('Scores a title for urgency');

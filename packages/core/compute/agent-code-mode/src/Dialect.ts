@@ -5,8 +5,9 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import { ABRIDGED_UNION, type FieldDescription, type TypeDescription, renderFields } from '@dxos/assistant/Describe';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -95,7 +96,7 @@ export const renderTypes = (
   name: (type: SandboxType) => string = ({ typename }) => typename,
 ): string =>
   types === undefined
-    ? "### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's `queryTypes`."
+    ? `### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's \`${Operation.toolName(SkillManagerSkill.Operations.QueryTypes)}\`, which searches every registered type.`
     : types.length === 0
       ? '### Types\n\nNo types are registered.'
       : trim`
