@@ -6,12 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 
-import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { Event, type ReadOnlyEvent, asyncTimeout } from '@dxos/async';
 import { type Database, Entity, type Filter, Query, type QueryResult, Registry, Type } from '@dxos/echo';
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { QueryResultCache } from '../query/index.ts';
 
@@ -47,6 +48,12 @@ export class RegistryImpl implements Registry.Registry {
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
   // serialized query against this registry.
   readonly #queryResultCache = new QueryResultCache();
+
+  #sources: Registry.Source[] = [];
+  // A reactive query and its one-shot run ask for the same entity at once; one request answers both.
+  readonly #resolving = new Map<string, Promise<Entity.Unknown | undefined>>();
+  // What an enumerating source answered stays registered, so each unkeyed query asks it once.
+  readonly #fetched = new Map<string, Promise<void>>();
 
   constructor(options: Registry.Options) {
     this.#upstream = options.upstream;
@@ -125,6 +132,93 @@ export class RegistryImpl implements Registry.Registry {
     return this.#entitiesByUri.get(normalizeURI(uri)) ?? this.#upstream?.getByURI(uri);
   }
 
+  addSource(source: Registry.Source): () => void {
+    this.#sources.push(source);
+    return () => {
+      this.#sources = this.#sources.filter((entry) => entry !== source);
+    };
+  }
+
+  resolve(uri: URI.URI): Promise<Entity.Unknown | undefined> {
+    const held = this.#held(uri);
+    if (held !== undefined || this.#sources.length === 0) {
+      return Promise.resolve(held);
+    }
+    const pending = this.#resolving.get(uri);
+    if (pending !== undefined) {
+      return pending;
+    }
+    const request = this.#askSources(uri).finally(() => this.#resolving.delete(uri));
+    this.#resolving.set(uri, request);
+    return request;
+  }
+
+  fetch(query: Query.Any): Promise<void> {
+    if (this.#sources.length === 0) {
+      return Promise.resolve();
+    }
+    const keys = queryKeys(query.ast);
+    if (keys.length > 0) {
+      return Promise.all(
+        keys.flatMap((key) => {
+          const dxn = DXN.tryMake(`dxn:${key}`);
+          return dxn === undefined ? [] : [this.resolve(dxn)];
+        }),
+      ).then(() => undefined);
+    }
+    const id = JSON.stringify(query.ast);
+    const pending = this.#fetched.get(id);
+    if (pending !== undefined) {
+      return pending;
+    }
+    const request = Promise.all(this.#sources.map((source) => this.#enumerate(source, query))).then(() => undefined);
+    this.#fetched.set(id, request);
+    return request;
+  }
+
+  /** What the registry holds under `uri`; a bare typename DXN matches the type registered under any version. */
+  #held(uri: URI.URI): Entity.Unknown | undefined {
+    const held = this.getByURI(uri);
+    if (held !== undefined || !DXN.isDXN(uri) || DXN.getVersion(uri) !== undefined) {
+      return held;
+    }
+    // The registry indexes a type only under its versioned DXN.
+    const typename = DXN.getName(uri);
+    return this.list().find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
+  }
+
+  async #askSources(uri: URI.URI): Promise<Entity.Unknown | undefined> {
+    if (!DXN.isDXN(uri)) {
+      return undefined;
+    }
+    for (const source of this.#sources) {
+      // A failing source reads as one that does not know the entity, so resolution reports it missing rather than throws.
+      const entity = await source.resolve(uri).catch((error) => {
+        log.warn('registry source failed', { uri, error });
+        return undefined;
+      });
+      if (entity !== undefined) {
+        this.add([entity]);
+        return entity;
+      }
+    }
+    return undefined;
+  }
+
+  async #enumerate(source: Registry.Source, query: Query.Any): Promise<void> {
+    if (source.query === undefined) {
+      return;
+    }
+    const entities = await source.query(query).catch((error) => {
+      log.warn('registry source query failed', { error });
+      return [];
+    });
+    const missing = entities.filter((entity) => this.get(getEntityId(entity)) === undefined);
+    if (missing.length > 0) {
+      this.add(missing);
+    }
+  }
+
   #put(entity: Entity.Unknown): void {
     this.#entitiesById.set(getEntityId(entity), entity);
 
@@ -134,6 +228,26 @@ export class RegistryImpl implements Registry.Registry {
     }
   }
 }
+
+/** The keys (`Filter.key`) a query names: a type's typename, a skill's or an operation's key. */
+export const queryKeys = (ast: QueryAST.Query): string[] => {
+  const keys = new Set<string>();
+  const collect = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach(collect);
+    } else if (node !== null && typeof node === 'object') {
+      for (const [field, value] of Object.entries(node)) {
+        if (field === 'metaKey' && typeof value === 'string') {
+          keys.add(value);
+        } else {
+          collect(value);
+        }
+      }
+    }
+  };
+  collect(ast);
+  return [...keys];
+};
 
 /**
  * Create a new {@link Registry.Registry}.
@@ -295,12 +409,22 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
     return [{ source: 'registry', state: 'answered', answers: 0 }];
   }
 
-  run(): Promise<T[]> {
-    return Promise.resolve(this.runSync());
+  async run(options?: QueryResult.RunOptions): Promise<T[]> {
+    await this.#fetch(options);
+    return this.runSync();
   }
 
-  runEntries(): Promise<QueryResult.Entry<T>[]> {
-    return Promise.resolve(this.runSyncEntries());
+  async runEntries(options?: QueryResult.RunOptions): Promise<QueryResult.Entry<T>[]> {
+    await this.#fetch(options);
+    return this.runSyncEntries();
+  }
+
+  /** Asks the registry's sources for what the query selects; a stalled source must not hold the query past its timeout. */
+  async #fetch(options: QueryResult.RunOptions | undefined): Promise<void> {
+    const fetched = this.#registry.fetch(this.#query);
+    await (options?.timeout === undefined ? fetched : asyncTimeout(fetched, Math.max(0, options.timeout))).catch(
+      (error) => log('registry sources did not answer; using what the registry holds', { error }),
+    );
   }
 
   runSync(): T[] {

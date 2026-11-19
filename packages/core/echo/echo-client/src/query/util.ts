@@ -344,37 +344,6 @@ export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQuerySc
 };
 
 /**
- * The typenames a query over the registry looks up: the keys (`Filter.key`) of a query that selects type entities
- * (`Filter.type(Type.Type)`). Empty for any other query, so no type source is asked for an operation's or skill's key.
- */
-export const getRegistryTypeKeys = (query: QueryAST.Query): string[] => {
-  if (!getRegistryScopeForQuery(query).included) {
-    return [];
-  }
-  const typeTypename = Type.getTypename(Type.Type);
-  const keys = new Set<string>();
-  let selectsTypes = false;
-  const collect = (node: unknown): void => {
-    if (Array.isArray(node)) {
-      node.forEach(collect);
-    } else if (node !== null && typeof node === 'object') {
-      for (const [field, value] of Object.entries(node)) {
-        if (field === 'metaKey' && typeof value === 'string') {
-          keys.add(value);
-        } else if (field === 'typename' && typeof value === 'string') {
-          const dxn = DXN.tryMake(value);
-          selectsTypes ||= dxn !== undefined && DXN.getName(dxn) === typeTypename;
-        } else {
-          collect(value);
-        }
-      }
-    }
-  };
-  collect(query);
-  return selectsTypes ? [...keys] : [];
-};
-
-/**
  * Finds the (last) `from` clause within a query AST.
  * Reading the closure-assigned result through a function return boundary preserves
  * the nullable type — a bare local would be narrowed to `null` by control-flow analysis,
