@@ -48,9 +48,12 @@
   gap: 1rem;
 }
 
-/* The title's second half never breaks, and carries the route colour as an underline. */
+/* "agent can draw." never breaks, and its words carry the route colour as an underline. */
 .hero-agent {
   white-space: nowrap;
+}
+
+.hero-agent u {
   text-decoration: underline var(--route);
   text-decoration-thickness: 0.08em;
   /* Below the descenders, so the line runs unbroken instead of skipping round the y and g. */
