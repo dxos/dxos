@@ -113,8 +113,8 @@ export const steps = [
     narration:
       'Exactly one tab runs the worker at any moment, so local data is written by one owner while the others wait, with nothing lost between them.',
     run: async ({ demo }) => {
-      await demo.caption({ value: 'One tab owns the worker; you choose every hand-over', subtitle: SUBTITLE });
-      await demo.sleep({ ms: 10_000 });
+      await demo.caption({ value: 'One tab owns the worker; you choose', subtitle: SUBTITLE });
+      await demo.sleep({ ms: 11_000 });
     },
   },
 ];
