@@ -1,11 +1,18 @@
 ---
-// The drawing.sh logotype in place of Starlight's site title.
+// The app's icon and the drawing.sh logotype in place of Starlight's site title.
+import icon from '../../public/icon.svg?raw';
 ---
 
-<a href="/" class="site-title" translate="no">drawing<span>.sh</span></a>
+<a href="/" class="site-title" translate="no">
+  <span class="icon" aria-hidden="true" set:html={icon} />
+  <span>drawing<span class="tld">.sh</span></span>
+</a>
 
 <style>
   .site-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     font-family: var(--mono);
     font-weight: 500;
     font-size: 17px;
@@ -14,7 +21,18 @@
     text-decoration: none;
     white-space: nowrap;
   }
-  .site-title span {
+  .tld {
     color: var(--route);
+  }
+  .icon {
+    display: flex;
+  }
+  .icon :global(svg) {
+    width: 28px;
+    height: 28px;
+  }
+  /* The favicon's heavier stroke, which reads at this size where the source's 6.5 is a hairline. */
+  .icon :global(g) {
+    stroke-width: 12;
   }
 </style>

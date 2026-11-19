@@ -48,7 +48,7 @@ export default defineConfig({
     starlight({
       title: 'drawing.sh',
       description: 'Diagrams your agent can draw: a few lines of text, laid out into an SVG.',
-      favicon: '/landing-icon.svg',
+      favicon: '/favicon.svg',
       head: [
         { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' } },
         { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true } },
