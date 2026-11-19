@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MaybePromise, markMilestone } from '@dxos/util';
 
-import { WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
+import { WorkerLeaderContentionError, WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
 import { DisplaceChannel, type TerminateRequest } from './internal/displace-channel.ts';
 import {
   LOCK_OR_RPC_WAIT_TIMEOUT,
@@ -162,6 +162,9 @@ const DEFAULT_MAX_LEADER_FAILURES = 4;
 // for a main-thread round trip, and small against the ~5s the escalating worker's own leader session
 // has left after its grace period, which is what the terminate still has to fit inside.
 const DEFAULT_WORKER_PROBE_TIMEOUT = 1_000;
+// Thefts by an unreachable tab before this tab stops stealing back: a reachable thief hands over its
+// port and resets the count, so two in a row already rule out a slow leader, and each cycle costs ~15s.
+const LEADER_CONTENTION_LIMIT = 2;
 
 /**
  * Manages leader election, coordinator port exchange, and worker lifecycle for dedicated workers.
@@ -215,6 +218,12 @@ export class Connection extends Resource {
   #lastWorkerShutdown: string | undefined;
   // Whether the wedged-tab escalation has already fired for the current steal streak.
   #stealEscalated = false;
+  // Times another tab stole our leader lock since we last got a port from a peer's worker. A thief we
+  // can reach hands us its port, so a streak means it is on another coordinator (another app build),
+  // and stealing back only restarts the war.
+  #lockLossCount = 0;
+  // Whether the contention escalation has already fired for the current loss streak.
+  #contentionEscalated = false;
   // True while a `#watchLeader` chain holds the leader lock or is queued for it; a tab whose chain
   // has ended is invisible to the wait queue and can never lead again.
   #electionActive = false;
@@ -499,7 +508,11 @@ export class Connection extends Resource {
         if (!startFailure && isAbortError(error)) {
           // Our exclusive lock was stolen by another tab that judged this leader stale. The lock
           // callback keeps running per spec, so tear down our leader session and re-enter election.
-          log.warn('worker-connection: leader lock stolen, tearing down and re-watching', { clientId: this.#clientId });
+          this.#lockLossCount++;
+          log.warn('worker-connection: leader lock stolen, tearing down and re-watching', {
+            clientId: this.#clientId,
+            lockLossCount: this.#lockLossCount,
+          });
           this.#watchLeader(ctx);
           return;
         }
@@ -683,6 +696,10 @@ export class Connection extends Resource {
       // rather than this tab.
       this.#stealCount = 0;
       this.#stealEscalated = false;
+      if (!isOwner) {
+        this.#lockLossCount = 0;
+        this.#contentionEscalated = false;
+      }
 
       queueMicrotask(async () => {
         try {
@@ -807,6 +824,20 @@ export class Connection extends Resource {
   }
 
   async #maybeStealStaleLeader(): Promise<void> {
+    // Checked before the generic budget so the app learns the cause it can act on: a reload.
+    if (this.#lockLossCount >= LEADER_CONTENTION_LIMIT) {
+      // Yielding lets the other tab keep a working worker; this tab stays without one until reloaded.
+      if (!this.#contentionEscalated) {
+        this.#contentionEscalated = true;
+        log.warn('worker-connection: leader lock taken repeatedly by an unreachable tab, not stealing', {
+          clientId: this.#clientId,
+          lockLossCount: this.#lockLossCount,
+        });
+        this.#escalate(new WorkerLeaderContentionError({ context: { lockLossCount: this.#lockLossCount } }));
+      }
+      return;
+    }
+
     // Every steal kills the incumbent's worker, so it has to pay for itself: past this many with no
     // port to show for it, what is broken is this tab's coordinator link, which the lock cannot fix.
     if (this.#stealCount >= this.#maxLeaderFailures) {
