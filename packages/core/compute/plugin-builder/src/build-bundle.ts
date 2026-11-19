@@ -36,9 +36,10 @@ const hostEntry = (): string => {
  * directory.
  */
 export const buildBundle = async (packageDir: string, outDir = join(packageDir, BUNDLE_DIR)): Promise<string> => {
-  const [{ build }, { composerPlugin }] = await Promise.all([
+  const [{ build }, { composerPlugin }, { default: PluginImportSource }] = await Promise.all([
     import('vite'),
     import('@dxos/app-framework/vite-plugin'),
+    import('@dxos/vite-plugin-import-source'),
   ]);
   // `composerPlugin` finds the plugin's `dx.config.ts` from the working directory.
   const cwd = process.cwd();
@@ -48,9 +49,13 @@ export const buildBundle = async (packageDir: string, outDir = join(packageDir, 
       root: packageDir,
       configFile: false,
       logLevel: 'warn',
-      plugins: composerPlugin({
-        vendor: { extra: [{ specifier: PluginLoader.HOST_SPECIFIER, importers: [], path: hostEntry() }] },
-      }),
+      plugins: [
+        // The package's own `#` imports read `src/`, so the bundle never mixes edited source with a stale `dist/lib`.
+        PluginImportSource({ include: ['#*'] }),
+        ...composerPlugin({
+          vendor: { extra: [{ specifier: PluginLoader.HOST_SPECIFIER, importers: [], path: hostEntry() }] },
+        }),
+      ],
       build: { outDir, emptyOutDir: true },
     });
   } finally {

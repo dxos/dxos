@@ -6549,6 +6549,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/vite-plugin-import-source':
+        specifier: workspace:*
+        version: link:../../../../tools/vite-plugin-import-source
       effect:
         specifier: 4.0.4
         version: 4.0.4

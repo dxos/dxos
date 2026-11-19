@@ -9,25 +9,17 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { buildBundle } from '../build-bundle.ts';
-import { checkStaleDist } from '../stale-dist.ts';
 import { verifyBundle } from '../verify-bundle.ts';
 
 /**
  * Checks that a plugin package can be published to EDGE: builds its one bundle as `dx registry publish` does and runs
  * `check-bundle` on it. The plugin runs alone on EDGE, so no other plugin's bundle is built beside it.
  *
- * Fails when the package's `dist/lib`, which the bundle reads, is older than its `src/`; `--allow-stale` skips that.
- *
- * Usage: `check-release [--package <dir>] [--allow-stale]`.
+ * Usage: `check-release [--package <dir>]`.
  */
 const main = async () => {
-  const { values } = parseArgs({ options: { 'package': { type: 'string' }, 'allow-stale': { type: 'boolean' } } });
+  const { values } = parseArgs({ options: { package: { type: 'string' } } });
   const packageDir = resolve(values.package ?? process.cwd());
-  const stale = checkStaleDist(packageDir, { allowStale: values['allow-stale'] });
-  if (stale) {
-    console.error(stale);
-    process.exit(1);
-  }
   const bundle = await buildBundle(packageDir);
   // `buildBundle` always vendors the host, so a bundle without it is a broken build, not one to skip.
   const { problems, summary } = await verifyBundle(bundle, { requireHost: true });
