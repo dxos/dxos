@@ -254,7 +254,13 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     }
   };
 
+  // Paused is terminal: startup calls still in flight must not restart the ring or offer an abort.
+  const isPaused = (): boolean => phase() === 'paused';
+
   const setProgress = (fraction?: number): void => {
+    if (isPaused()) {
+      return;
+    }
     setPhase('host');
     const pct = clampPercent(fraction);
     // The ring never regresses: hold the current value if the host reports lower.
@@ -284,7 +290,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   };
 
   const stalled = (handler: () => void): void => {
-    if (onAbort()) {
+    if (onAbort() || isPaused()) {
       return;
     }
     // Updater form, and the handler is the RETURN value: Solid would otherwise call a bare
@@ -296,6 +302,9 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   };
 
   const ready = (): void => {
+    if (isPaused()) {
+      return;
+    }
     stopCreep();
     setProgressPct(100);
     setPhase('dismissing');

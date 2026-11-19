@@ -665,7 +665,8 @@ describe('Connection multi-client', () => {
     });
 
     const superseded = new Trigger<Client.Generation>();
-    const older = makeConnection(hub, keys, undefined, {
+    // Its own hub, as real builds never share a coordinator: only the generation reply can stop it.
+    const older = makeConnection(createHub(), keys, undefined, {
       connection: { generation: { id: 'a', time: 1 }, onSuperseded: (other) => superseded.wake(other) },
     });
     const olderOpen = older.connection.open();

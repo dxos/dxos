@@ -28,6 +28,13 @@ const waitForTab = (page, id, text, timeout = 30_000) =>
     { timeout },
   );
 
+/** Whether the element `selector` is on the page; read-only, for each step's `done`. */
+const exists = (page, selector) =>
+  page
+    .locator(selector)
+    .count()
+    .then((count) => count > 0);
+
 /** Opens a paused tab's Details, so the reason is on screen. */
 const showDetails = async (page, id) => {
   await page.evaluate((id) => {
@@ -48,6 +55,7 @@ export const steps = [
   },
   {
     name: 'Share the worker on one build',
+    done: ({ page }) => exists(page, tab(2)),
     narration: 'Two tabs on one build share a single worker: one leads, the other uses it.',
     run: async ({ demo, page }) => {
       await demo.title({ value: 'Tab hand-over', subtitle: 'sdk/worker-framework', hold: 3600 });
@@ -62,6 +70,7 @@ export const steps = [
   },
   {
     name: 'Open a newer build',
+    done: ({ page }) => exists(page, tab(3)),
     narration: 'When a newer build opens, every tab on the older build pauses instead of fighting it.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Step 2 — Open a tab on a newer build', subtitle: SUBTITLE });
@@ -74,6 +83,7 @@ export const steps = [
   },
   {
     name: 'Continue on the older tab',
+    done: ({ page }) => exists(page, tab(3, 'paused')),
     narration: 'Continuing in the old tab loads the newer build there, and the tab it took over from pauses.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Step 3 — Continue here, on the first tab', subtitle: SUBTITLE });
@@ -86,6 +96,7 @@ export const steps = [
   },
   {
     name: 'Open a tab that cannot reach the leader',
+    done: ({ page }) => exists(page, tab(4)),
     narration: 'A tab that cannot reach the leader does not take the worker on its own. It asks first.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Step 4 — Open a tab that cannot reach the leader', subtitle: SUBTITLE });
@@ -98,6 +109,7 @@ export const steps = [
   },
   {
     name: 'Take over from it',
+    done: ({ page }) => exists(page, tab(1, 'paused')),
     narration: 'Choosing Continue here takes the worker over, and the former leader pauses until you return to it.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Step 5 — Continue here, on the unreachable tab', subtitle: SUBTITLE });

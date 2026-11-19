@@ -160,7 +160,9 @@ export type Options = {
   onSuperseded?: (newer: Generation) => void;
   /**
    * Called instead of stealing the leader lock from a tab that stopped responding. The app asks the
-   * user and calls `takeover` to steal. Without it, the lock is stolen automatically.
+   * user and calls `takeover` to steal; `takeover` acts once, and not after this connection stops.
+   * Without it, the lock is stolen automatically. An initial `open()` keeps its deadline while the
+   * user decides, so an app that asks during boot reopens with {@link Options.takeover} instead.
    */
   onTakeoverRequired?: (takeover: () => void) => void;
   /**
@@ -237,7 +239,6 @@ export class Connection extends Resource {
   #takeoverPending: boolean;
   // Whether `onTakeoverRequired` was called and its `takeover` not used yet, so it is asked once.
   #takeoverRequested = false;
-  #generationChannel: BroadcastChannel | undefined;
 
   #connectionHandle: Handle | undefined;
   #leaderSession: LeaderSession | undefined;
@@ -456,7 +457,8 @@ export class Connection extends Resource {
       return;
     }
     const channel = new BroadcastChannel(`${this.#leaderLockKey}/generation`);
-    this.#generationChannel = channel;
+    // On dispose, which a failed boot reaches although it never reaches `_close`.
+    this._ctx.onDispose(() => channel.close());
     const announce = () => channel.postMessage({ type: 'generation', generation } satisfies GenerationMessage);
     channel.onmessage = (event: MessageEvent<GenerationMessage>) => {
       const other = event.data?.type === 'generation' ? event.data.generation : undefined;
@@ -465,8 +467,11 @@ export class Connection extends Resource {
       }
       if (other.time > generation.time) {
         log.warn('worker-connection: superseded by a newer build', { generation, newer: other });
+        // Closed now, not at dispose, so a second announcement cannot stop the connection twice.
+        channel.close();
         void this.#stop(() => this.#onSuperseded?.(other));
-      } else {
+      } else if (other.time < generation.time) {
+        // Strictly older only: two builds with equal times would otherwise answer each other forever.
         announce();
       }
     };
@@ -483,8 +488,6 @@ export class Connection extends Resource {
     } catch (err) {
       log.catch(err);
     }
-    this.#generationChannel?.close();
-    this.#generationChannel = undefined;
     if (this.#isInitialConnection) {
       await this.#failInitialConnection(new WorkerStoppedError());
     } else {
@@ -501,8 +504,6 @@ export class Connection extends Resource {
 
   override async _close(): Promise<void> {
     log('worker-connection: closing');
-    this.#generationChannel?.close();
-    this.#generationChannel = undefined;
     await this.#connectTask.close();
     await this.#connectionHandle?.close();
     await this.#leaderSession?.close();
@@ -1009,7 +1010,14 @@ export class Connection extends Resource {
       if (!this.#takeoverRequested) {
         this.#takeoverRequested = true;
         log.warn('worker-connection: leader unresponsive, asking before taking over', { sinceHeartbeat });
+        // A steal evicts whoever holds the lock now, so a stale or repeated approval must not reach it.
+        const ctx = this._ctx;
+        let used = false;
         this.#onTakeoverRequired(() => {
+          if (used || ctx.disposed) {
+            return;
+          }
+          used = true;
           this.#takeoverRequested = false;
           void this.#stealLeaderLock(sinceHeartbeat);
         });
