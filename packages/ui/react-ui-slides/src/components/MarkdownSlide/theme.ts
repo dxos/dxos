@@ -34,11 +34,10 @@ const cardBody = 'flex flex-col min-w-0 min-h-0 [grid-row:2/-1]';
 
 // The tracks a grid child covers. The counts are reset on the child itself rather than left to the `var()`
 // fallbacks: a custom property inherits, so a child inside a child would otherwise cover the tracks of the one
-// around it. An inline `colSpan`/`rowSpan` outranks the reset. A row of the grid is `--slide-row-tracks` tracks
-// (see `grid`), so a row span is counted in rows whatever a row is made of.
+// around it. An inline `colSpan`/`rowSpan` outranks the reset.
 const span =
-  '[--slide-col-span:1] [--slide-row-span:1] [grid-column:span_var(--slide-col-span,1)] ' +
-  '[grid-row:span_calc(var(--slide-row-span,1)*var(--slide-row-tracks,1))]';
+  '[--slide-col-span:1] [--slide-row-span:1] ' +
+  '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]';
 
 /** Classes for the 2560×1440 slide canvas (`SlideFrame` scales it to fit); colors and fonts come from `--slide-*` variables. */
 export const theme = {
@@ -212,10 +211,13 @@ export const theme = {
           // A grid holding icon cards makes each row two tracks, a header as tall as the row's tallest title and
           // a body, and its icon cards take their own two rows from those. The titles of a row then end on one
           // line however each wraps, so the bodies start level.
-          '[--slide-row-tracks:1] [&:has(>[data-icon])]:[--slide-row-tracks:2] ' +
           '[&:has(>[data-icon])]:[grid-template-rows:repeat(var(--slide-grid-rows,1),auto_minmax(0,1fr))] ' +
           '[&:has(>[data-icon])]:[grid-auto-rows:auto_minmax(0,1fr)] ' +
-          '[&>article[data-icon]]:grid-rows-subgrid',
+          '[&>article[data-icon]]:grid-rows-subgrid ' +
+          // Every child of such a grid covers both tracks of each row it spans, whatever it is: one left on a
+          // single track would start the next card's header on a body track. The span is reset here for a child
+          // that sets none of its own, which would otherwise inherit the span of a cell around the grid.
+          '[--slide-row-span:1] [&:has(>[data-icon])>*]:[grid-row:span_calc(var(--slide-row-span,1)*2)]',
       },
     },
 

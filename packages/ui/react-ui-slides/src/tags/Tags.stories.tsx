@@ -324,6 +324,48 @@ export const GridAlign: Story = {
   },
 };
 
+/**
+ * Icon cards beside something that is not a card. Every child of the grid takes a whole row, so the box stands beside
+ * the first card at its height, and the two cards after it start a row of their own with their headers level.
+ */
+export const IconCardsBesideBox: Story = {
+  render: IconCards.render,
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '<Grid cols="2" align="center">',
+      '',
+      iconCard('icon="brain"', 'One', 'First'),
+      '<Box variant="card">',
+      '',
+      'A box, directly in the grid.',
+      '',
+      '</Box>',
+      iconCard('icon="shield-check"', 'Two', 'Second'),
+      iconCard('icon="users-three"', 'Three, with a title long enough to wrap onto a second line', 'Third'),
+      '',
+      '</Grid>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, 'article[data-icon] header svg');
+    const box = await query(canvasElement, 'div[data-variant="card"]');
+    const [one, two, three] = [...canvasElement.querySelectorAll('article')];
+
+    // 1. The box covers the whole of the first row, as the card beside it does.
+    await expect(box.getBoundingClientRect().top).toBeCloseTo(one.getBoundingClientRect().top, 0);
+    await expect(box.getBoundingClientRect().height).toBeCloseTo(one.getBoundingClientRect().height, 0);
+
+    // 2. The next two cards share the second row: one top, one header height, and bullets that start level.
+    await expect(two.getBoundingClientRect().top).toBeGreaterThan(one.getBoundingClientRect().bottom);
+    await expect(three.getBoundingClientRect().top).toBeCloseTo(two.getBoundingClientRect().top, 0);
+    const [short, long] = await Promise.all([query(two, 'header'), query(three, 'header')]);
+    await expect(short.getBoundingClientRect().height).toBeCloseTo(long.getBoundingClientRect().height, 0);
+    const [second, third] = await Promise.all([query(two, 'li'), query(three, 'li')]);
+    await expect(third.getBoundingClientRect().top).toBeCloseTo(second.getBoundingClientRect().top, 0);
+  },
+};
+
 /** `<List variant>` styles a markdown list without changing what it is: numbered cards beside outlined claims. */
 export const ListVariants: Story = {
   args: {
