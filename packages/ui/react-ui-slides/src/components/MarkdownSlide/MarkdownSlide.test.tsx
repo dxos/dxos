@@ -190,6 +190,86 @@ describe('MarkdownSlide', () => {
     );
     expect(markup).toContain('<i>slide:echo:///01J00000000000000000000000</i>');
   });
+
+  test('a card icon stands with the title as one header', ({ expect }) => {
+    const markup = render('<Card icon="brain" tone="info">\n\n### Shared Memory\n\n- Beyond silos\n\n</Card>');
+    // The card says it has an icon, and its tone rebinds the accent the icon is drawn in.
+    expect(markup).toMatch(/<article [^>]*data-tone="info"[^>]*data-icon="ph--brain--regular"/);
+    expect(markup).toMatch(/<article [^>]*style="--slide-accent: ?var\(--color-info-text\)"/);
+    // One row: the icon, then the title, which keeps the type it has in any card.
+    expect(markup).toMatch(
+      /<header class="[^"]*flex[^"]*"><svg [^>]*data-icon="ph--brain--regular"[^>]*class="[^"]*text-\(color:--slide-accent\)[^"]*"[^>]*>.*?<\/svg><h3 [^>]*class="[^"]*text-\[56px\][^"]*"[^>]*>Shared Memory<\/h3><\/header>/,
+    );
+    expect(markup.match(/<svg /g)).toHaveLength(1);
+  });
+
+  test('an icon card is a header over a body, and nothing else', ({ expect }) => {
+    const markup = render('<Card icon="brain">\n\nLead\n\n### Title\n\n- one\n\n</Card>');
+    // What is written ahead of the title joins the body, so the header is the card's first row in every card.
+    expect(markup).toMatch(
+      /<article [^>]*><header [^>]*>.*?<\/header><div class="[^"]*\[grid-row:2\/-1\][^"]*"><p [^>]*>Lead<\/p>\s*<ul [^>]*>.*?<\/ul><\/div><\/article>/s,
+    );
+    // The card lays the two out on rows of its own, which a grid replaces with its own (see the grid's classes).
+    expect(markup).toMatch(/<article [^>]*class="[^"]*\[&amp;\[data-icon\]\]:grid /);
+  });
+
+  test('a grid publishes its alignment, and its rows hold a header track where it holds icon cards', ({ expect }) => {
+    const centred = render('<Grid cols="3" align="center">\n\n<Card icon="brain">\n\n### A\n\n</Card>\n\n</Grid>');
+    expect(centred).toMatch(/<div [^>]*data-variant="default"[^>]*data-align="center"/);
+    const classes = centred.match(/<div [^>]*data-variant="default"[^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('data-[align]:grow-0');
+    expect(classes).toContain('data-[align=center]:my-auto');
+    expect(classes).toContain('[&amp;:has(&gt;[data-icon])]:[grid-auto-rows:auto_minmax(0,1fr)]');
+    expect(classes).toContain('[&amp;&gt;article[data-icon]]:grid-rows-subgrid');
+    // A grid that asks for nothing fills the space it is given, as it always has.
+    expect(render('<Grid cols="3">\n\nCells\n\n</Grid>')).not.toContain('data-align');
+  });
+
+  test('a card with no title still shows its icon', ({ expect }) => {
+    const markup = render('<Card icon="brain">\n\nJust text\n\n</Card>');
+    expect(markup).toMatch(/<article [^>]*><header [^>]*><svg [^>]*>.*?<\/svg><\/header><div [^>]*><p /);
+  });
+
+  test('a card with no icon renders no header, and its parts keep their classes', ({ expect }) => {
+    const markup = render('<Card>\n\n![art](./a.png)\n\n### Title\n\nText\n\n</Card>');
+    expect(markup).not.toContain('<header');
+    expect(markup).not.toContain('<svg');
+    // No body wrapper either: the card's children are its own, as they always were.
+    expect(markup).toMatch(/<article [^>]*><p [^>]*><img [^>]*><\/p>\s*<h3 /);
+    expect(markup).not.toContain('data-icon="');
+    expect(markup).toMatch(
+      /<h3 [^>]*class="px-10 pt-8 text-\[56px\] leading-tight font-\(family-name:--slide-font-heading\) text-balance"/,
+    );
+    expect(markup).toMatch(
+      /<p [^>]*class="px-10 pb-8 pt-4 text-\[32px\] leading-snug opacity-80 last:pb-10 \[&amp;:has\(&gt;img\)\]:contents"[^>]*>Text/,
+    );
+  });
+
+  test('a list in a card takes the card\u2019s list size and padding, two levels deep', ({ expect }) => {
+    const markup = render('<Card>\n\n### Title\n\n- one\n  - nested\n\n1. first\n\n</Card>');
+    const lists = markup.match(/<(?:ul|ol) [^>]*>/g) ?? [];
+    expect(lists).toHaveLength(3);
+    for (const list of lists) {
+      // The card's own list classes, not the slide's (`ml-12 list-disc`), whose markers hang outside the padding.
+      expect(list).toMatch(/class="px-10 [^"]*list-none[^"]*text-\[40px\]/);
+      expect(list).not.toContain('ml-12');
+      expect(list).not.toContain('data-variant');
+    }
+    const items = markup.match(/<li [^>]*>/g) ?? [];
+    expect(items).toHaveLength(3);
+    for (const item of items) {
+      expect(item).toContain('ps-(--slide-card-indent)');
+      expect(item).not.toContain('text-[48px]');
+    }
+  });
+
+  test('a list outside a card, or a styled list inside one, is not the card\u2019s', ({ expect }) => {
+    expect(render('- one')).toMatch(/<ul [^>]*class="[^"]*ml-12[^"]*list-disc/);
+    const markup = render('<Card>\n\n<List variant="steps">\n\n1. first\n   - nested\n\n</List>\n\n</Card>');
+    expect(markup).toMatch(/<ol [^>]*data-variant="steps"/);
+    // A list nested in a styled list still starts clean, as it does outside a card.
+    expect(markup).toMatch(/<ul [^>]*class="[^"]*ml-12[^"]*list-disc/);
+  });
 });
 
 describe('backgroundStyle', () => {

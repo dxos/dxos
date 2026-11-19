@@ -2,12 +2,43 @@
 // Copyright 2026 DXOS.org
 //
 
+// A card's icon and title share one row. The icon is one title line tall (56px at `leading-tight`), so it stands on
+// the first line of a title that wraps, and the title gives its own padding up to the row.
+const cardHeader = 'flex items-start gap-6 [&>:is(h1,h2,h3)]:p-0 [&>:is(h1,h2,h3)]:min-w-0';
+const cardIcon = 'shrink-0 size-[70px] text-(color:--slide-accent)';
+
+// A card's bullets, a step under its title and above its caption text, since they are the card's content rather than
+// a line under its art. Each marker is drawn in a column of its own rather than hung outside the list, so it stays
+// inside the card's padding: at the title's start edge, or centred under the icon, where the text then starts under
+// the title (the icon's 70px and the row's 24px gap).
+const cardList =
+  'flex flex-col gap-2 list-none text-[40px] leading-snug opacity-80 [counter-reset:slide-card-item] ' +
+  '[--slide-card-indent:1.2em] [--slide-card-marker:1.2em] [--slide-card-marker-align:start] ' +
+  '[[data-icon]>*>&]:[--slide-card-indent:94px] [[data-icon]>*>&]:[--slide-card-marker:70px] ' +
+  '[[data-icon]>*>&]:[--slide-card-marker-align:center]';
+const cardItem =
+  'relative ps-(--slide-card-indent) [counter-increment:slide-card-item] ' +
+  'before:absolute before:start-0 before:w-(--slide-card-marker) ' +
+  'before:[text-align:var(--slide-card-marker-align)] ' +
+  "[ul>&]:before:content-['•'] [ol>&]:before:content-[counter(slide-card-item)_'.'] " +
+  // A list or a paragraph inside an item is already indented by it, so it drops the padding and the dimming the
+  // card gives the same tag at its top level, and a loose item's paragraph keeps the item's size.
+  '[&>:is(ul,ol)]:p-0! [&>:is(ul,ol)]:mt-2 [&>:is(ul,ol)]:opacity-100 ' +
+  '[&>p]:p-0! [&>p]:opacity-100 [&>p]:[font-size:inherit]';
+
+// An icon card is a header over a body, on two rows of its own; in a grid it takes those rows from the grid instead
+// (see `grid`), so every card of a grid row has one header height.
+const cardRows = '[&[data-icon]]:grid [&[data-icon]]:[grid-template-rows:auto_minmax(0,1fr)] [&[data-icon]]:gap-y-0';
+// The body runs to the card's last row, which is further than the second when the card spans grid rows.
+const cardBody = 'flex flex-col min-w-0 min-h-0 [grid-row:2/-1]';
+
 // The tracks a grid child covers. The counts are reset on the child itself rather than left to the `var()`
 // fallbacks: a custom property inherits, so a child inside a child would otherwise cover the tracks of the one
-// around it. An inline `colSpan`/`rowSpan` outranks the reset.
+// around it. An inline `colSpan`/`rowSpan` outranks the reset. A row of the grid is `--slide-row-tracks` tracks
+// (see `grid`), so a row span is counted in rows whatever a row is made of.
 const span =
-  '[--slide-col-span:1] [--slide-row-span:1] ' +
-  '[grid-column:span_var(--slide-col-span,1)] [grid-row:span_var(--slide-row-span,1)]';
+  '[--slide-col-span:1] [--slide-row-span:1] [grid-column:span_var(--slide-col-span,1)] ' +
+  '[grid-row:span_calc(var(--slide-row-span,1)*var(--slide-row-tracks,1))]';
 
 // A heading takes the color the deck's theme sets for its level, else the accent as it stands at the heading, so a
 // tone or a slide's own accent still reaches a heading whose color the deck left unset.
@@ -179,7 +210,17 @@ export const theme = {
           '[grid-template-columns:repeat(var(--slide-grid-cols,1),minmax(0,1fr))] ' +
           // The explicit rows `rows` asks for, and any further row an overflowing grid opens, are all one fraction,
           // so the rows stay even however many there turn out to be.
-          '[grid-template-rows:repeat(var(--slide-grid-rows,1),minmax(0,1fr))] [grid-auto-rows:minmax(0,1fr)]',
+          '[grid-template-rows:repeat(var(--slide-grid-rows,1),minmax(0,1fr))] [grid-auto-rows:minmax(0,1fr)] ' +
+          // `align` gives the grid the height of what it holds, where its rows are still even, and an auto margin
+          // takes the space left over: after the grid, around it, or before it.
+          'data-[align]:grow-0 data-[align=start]:mb-auto data-[align=center]:my-auto data-[align=end]:mt-auto ' +
+          // A grid holding icon cards makes each row two tracks, a header as tall as the row's tallest title and
+          // a body, and its icon cards take their own two rows from those. The titles of a row then end on one
+          // line however each wraps, so the bodies start level.
+          '[--slide-row-tracks:1] [&:has(>[data-icon])]:[--slide-row-tracks:2] ' +
+          '[&:has(>[data-icon])]:[grid-template-rows:repeat(var(--slide-grid-rows,1),auto_minmax(0,1fr))] ' +
+          '[&:has(>[data-icon])]:[grid-auto-rows:auto_minmax(0,1fr)] ' +
+          '[&>article[data-icon]]:grid-rows-subgrid',
       },
     },
 
@@ -190,20 +231,25 @@ export const theme = {
       },
     },
 
-    // A card is a filled surface holding art, a title and a line or two: the brand's own card. The art fills the box:
-    // its scale stays even across cards of different widths because each card crop (`brand/backgrounds/cards/`) carries
-    // a window of the same height, not because of anything the card does.
+    // A card is a filled surface holding art or an icon, a title, and a line or a few bullets: the brand's own card.
+    // The art fills the box: its scale stays even across cards of different widths because each card crop
+    // (`brand/backgrounds/cards/`) carries a window of the same height, not because of anything the card does.
     card: {
       default: {
-        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ${span}`,
+        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ${span} ${cardRows}`,
         img: 'w-full grow min-h-0 object-cover',
         h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
+        header: `px-10 pt-8 ${cardHeader}`,
+        icon: cardIcon,
+        body: cardBody,
+        list: `px-10 pb-8 pt-4 last:pb-10 ${cardList}`,
+        li: cardItem,
       },
       outline: {
-        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ${span}`,
+        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ${span} ${cardRows}`,
         img: 'w-full grow min-h-0 object-cover',
         h1:
           'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
@@ -215,15 +261,25 @@ export const theme = {
           'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
           'text-balance',
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
+        header: `px-10 pt-8 ${cardHeader}`,
+        icon: cardIcon,
+        body: cardBody,
+        list: `px-10 pb-8 pt-4 last:pb-10 ${cardList}`,
+        li: cardItem,
       },
       // No surface of its own: the art and the text sit straight on the slide, for a grid that is all pictures.
       plain: {
-        card: `flex flex-col min-w-0 ${span}`,
+        card: `flex flex-col min-w-0 ${span} ${cardRows}`,
         img: 'w-full grow min-h-0 object-contain',
         h1: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         h3: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
         p: 'pt-4 text-[32px] leading-snug opacity-80 [&:has(>img)]:contents',
+        header: `pt-8 ${cardHeader}`,
+        icon: cardIcon,
+        body: cardBody,
+        list: `pt-4 ${cardList}`,
+        li: cardItem,
       },
     },
     table: {
