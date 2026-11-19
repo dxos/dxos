@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: slide-heading-colors.md is PR #14612's own entry, merged in here until it lands on main
 '@dxos/plugin-debug': patch
 '@dxos/react-ui-slides': patch
 ---
