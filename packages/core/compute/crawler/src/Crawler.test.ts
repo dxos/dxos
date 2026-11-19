@@ -267,6 +267,30 @@ describe('Crawler', () => {
   );
 
   it.effect(
+    'a page whose last messages were filtered out keeps the cursor past them across a resumed crawl',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      const message: Type.Message = { id: '3', text: 'hello there', author: { id: 'u1', source: 'discord' } };
+      // Message 3 was kept and a system message 5 after it filtered out, so the page's cursor is 5.
+      const pages: Source.Page[] = [{ messages: [message], threads: [], cursor: '5' }];
+      const source = Layer.succeed(Source.Source, {
+        listChannels: () => Effect.succeed([]),
+        fetchMessages: (request: Source.Fetch) =>
+          Effect.sync(() => {
+            fetches.push(request);
+            return pages.shift() ?? { messages: [], threads: [] };
+          }),
+      });
+      const config: Type.Config = { channels: ['chan-1'], descendThreads: false };
+      yield* runCrawl(config, { maxSteps: 1 }).pipe(Effect.provide(source));
+      const [target] = yield* StateStore.listTargets();
+      expect(target.cursor).toBe('5');
+      yield* runCrawl(config).pipe(Effect.provide(source));
+      expect(fetches.map((fetch) => fetch.cursor)).toEqual([undefined, '5']);
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
     'a channel added to the config joins an existing crawl',
     Effect.fnUntraced(function* () {
       const fetches: Source.Fetch[] = [];

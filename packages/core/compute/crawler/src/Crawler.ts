@@ -163,8 +163,9 @@ const advance = (
     const drained = page.messages.length === 0 && page.cursor === undefined;
     if (page.cursor) {
       volatile.cursors.set(target.id, page.cursor);
-      if (page.messages.length === 0) {
-        // No message carries this cursor to the commit sink, so an event does; otherwise every run would refetch the page.
+      // Messages the source filtered out after the last one kept (or a page of only those) move the cursor too, and no
+      // message carries it to the commit sink, so an event does; otherwise every run would refetch them.
+      if (page.cursor !== page.messages.at(-1)?.id) {
         events.push({ _tag: 'Skipped', target: current, cursor: page.cursor });
       }
     }
