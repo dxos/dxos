@@ -41,6 +41,28 @@ export const CARD_VARIANTS = ['default', 'outline', 'plain'] as const;
 
 export type CardVariant = (typeof CARD_VARIANTS)[number];
 
+/** The icon set a bare `<Card icon>` name belongs to, and the weight it is drawn at. */
+const ICON_SET = 'ph';
+const ICON_WEIGHT = 'regular';
+
+/** A glyph's bare name, as Phosphor writes it: `brain`, `shield-check`. */
+const ICON_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** A whole icon symbol (`set--name--weight`), as the icon registry resolves one. */
+const ICON_SYMBOL = /^[a-z0-9]+--[a-z0-9]+(?:-[a-z0-9]+)*--[a-z]+$/;
+
+/**
+ * The icon symbol a `<Card icon>` value names, or `undefined` when it names none: a bare Phosphor name (`brain`) is
+ * the regular glyph, and a whole symbol (`ph--brain--duotone`) is taken as written. Only the form is checked, since
+ * the host's icon registry is what knows which glyphs exist.
+ */
+export const iconSymbol = (value: string): string | undefined => {
+  if (ICON_NAME.test(value)) {
+    return `${ICON_SET}--${value}--${ICON_WEIGHT}`;
+  }
+  return ICON_SYMBOL.test(value) ? value : undefined;
+};
+
 /** The widest grid, and the furthest a cell may span: a slide holds no more legibly. */
 export const MAX_TRACKS = 12;
 
@@ -125,6 +147,18 @@ const toneName = (tag: ContainerTag, value: string | undefined, issues: SlideIss
     message: `Invalid ${tagLabel(tag)} tone "${value}"; using "${SlideTheme.TONES[0]}".`,
   });
   return SlideTheme.TONES[0];
+};
+
+/** The symbol of the icon a tag asks for, or none when it asks for none or for one that is not an icon's name. */
+const iconName = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): string | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const symbol = iconSymbol(value);
+  if (symbol === undefined) {
+    issues.push({ kind: 'html', message: `Invalid ${tagLabel(tag)} icon "${value}"; ignored.` });
+  }
+  return symbol;
 };
 
 /** A tag's name as it is written, for an issue message. */
@@ -594,7 +628,14 @@ const containerNodes = (
     const tone = toneName(open.tag, open.attributes.tone, issues);
     // A card is a grid child as often as not, so it takes a span of its own rather than needing a `<Cell>` around it.
     const tracks = open.tag === 'card' ? spanProperties(open.tag, open.attributes, issues) : {};
-    return [slideElement(CONTAINER_TAGS[open.tag], { variant, ...(tone && { tone }), ...tracks }, children)];
+    const icon = open.tag === 'card' ? iconName(open.tag, open.attributes.icon, issues) : undefined;
+    return [
+      slideElement(
+        CONTAINER_TAGS[open.tag],
+        { variant, ...(tone && { tone }), ...(icon && { icon }), ...tracks },
+        children,
+      ),
+    ];
   }
   if (isStyleTag(open.tag)) {
     return styleBlocks(open.tag, children, open.attributes, issues);

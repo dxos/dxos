@@ -285,6 +285,41 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([]);
   });
 
+  test('<Card icon> names a glyph, bare or as a whole symbol', () => {
+    const slide = parseSlide(
+      '<Card icon="shield-check" tone="info">\n\n### Title\n\n- a\n\n</Card>\n\n' +
+        '<Card icon="ph--brain--duotone">\n\n### Title\n\n</Card>',
+    );
+    const [bare, symbol] = elements(slide.slots.default, 'slide-card');
+    // A bare name is the regular Phosphor glyph; a whole symbol is taken as written.
+    expect(bare.properties.icon).toBe('ph--shield-check--regular');
+    expect(bare.properties.tone).toBe('info');
+    expect(symbol.properties.icon).toBe('ph--brain--duotone');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a <Card> with no icon carries none', () => {
+    const slide = parseSlide('<Card>\n\n### Title\n\nText\n\n</Card>');
+    const [card] = elements(slide.slots.default, 'slide-card');
+    expect(card.properties.icon).toBeUndefined();
+    expect(card.properties.variant).toBe('default');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a <Card icon> that is not a glyph name falls away with an issue', () => {
+    const slide = parseSlide('<Card icon="Shield Check">\n\n### Title\n\n</Card>');
+    const [card] = elements(slide.slots.default, 'slide-card');
+    expect(card.properties.icon).toBeUndefined();
+    expect(textOf(card)).toContain('Title');
+    expect(slide.issues).toEqual([{ kind: 'html', message: 'Invalid <Card> icon "Shield Check"; ignored.' }]);
+  });
+
+  test('only a <Card> takes an icon', () => {
+    const slide = parseSlide('<Box icon="brain">\n\nBoxed\n\n</Box>');
+    expect(elements(slide.slots.default, 'slide-box')[0].properties.icon).toBeUndefined();
+    expect(slide.issues).toEqual([]);
+  });
+
   test('<List tone> travels with the variant', () => {
     const slide = parseSlide('<List variant="outline" tone="warning">\n\n- a\n\n</List>');
     expect(elements(slide.slots.default, 'ul')[0].properties.tone).toBe('warning');
