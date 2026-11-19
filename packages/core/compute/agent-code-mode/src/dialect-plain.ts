@@ -213,29 +213,28 @@ const PLAIN_HINTS: HintSyntax = {
 
 /**
  * The id of the object a value stands for: an operation answers with its objects' JSON, often wrapped (`{ object }`),
- * and a card of that JSON counts none of the object's relations. Undefined for a value that names no single object.
+ * and a card of that JSON counts none of the object's relations. Only an object id counts, so a wrapper's own id
+ * (`{ id: 'result-1', object }`) does not hide the object it holds. Undefined for a value that names no single object.
  */
-const wrappedId = (value: unknown): string | undefined => {
+const wrappedId = (value: unknown): EntityId | undefined => {
   if (!Predicate.isObject(value)) {
     return undefined;
   }
-  if (Predicate.isString(value.id)) {
+  if (Predicate.isString(value.id) && EntityId.isValid(value.id)) {
     return value.id;
   }
   const ids = Object.values(value).flatMap((field) =>
-    Predicate.isObject(field) && Predicate.isString(field.id) ? [field.id] : [],
+    Predicate.isObject(field) && Predicate.isString(field.id) && EntityId.isValid(field.id) ? [field.id] : [],
   );
   return ids.length === 1 ? ids[0] : undefined;
 };
 
-/** The stored object with `id`, or undefined when the id is not an object id or the database has no such object. */
-const findById = (id: string): Effect.Effect<Entity.Unknown | undefined, never, Database.Service> =>
-  EntityId.isValid(id)
-    ? Database.query(Filter.id(id)).run.pipe(
-        Effect.map(([found]) => found),
-        Effect.orElseSucceed(() => undefined),
-      )
-    : Effect.succeed(undefined);
+/** The stored object with `id`, or undefined when the database has no such object. */
+const findById = (id: EntityId): Effect.Effect<Entity.Unknown | undefined, never, Database.Service> =>
+  Database.query(Filter.id(id)).run.pipe(
+    Effect.map(([found]) => found),
+    Effect.orElseSucceed(() => undefined),
+  );
 
 /** Whether `object`'s `field` holds a ref (directly or in an array) to the object `id`. */
 const referencesVia = (object: object, field: string, id: string): boolean => {

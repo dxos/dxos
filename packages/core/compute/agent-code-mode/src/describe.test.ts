@@ -401,13 +401,15 @@ describe('describe', () => {
           `const created = await ops.create({});
            print(await describe(created));
            print(await describe(created.object));
+           print(await describe({ id: 'result-1', object: created.object }));
            print(await describe({ count: 1 }));`,
           PlainDialect,
           [],
           [create],
         );
-        // Both are the stored object's card, with the counts only a query can tell.
-        expect(output.split(`await children('${feature.id}')  // 12 children`)).toHaveLength(3);
+        // Each is the stored object's card, with the counts only a query can tell: a wrapper's own id, which is not an
+        // object id, does not hide the object it holds.
+        expect(output.split(`await children('${feature.id}')  // 12 children`)).toHaveLength(4);
         // A value that names no object prints as `print` shows it.
         expect(output.endsWith('{\n  "count": 1\n}')).toBe(true);
       },
