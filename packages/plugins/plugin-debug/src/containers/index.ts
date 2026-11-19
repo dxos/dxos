@@ -12,6 +12,12 @@ export const DebugConsole: ComponentType<DebugConsoleProps> = lazy(() =>
   import('./DebugConsole/index.ts').then((module) => ({ default: module.DebugConsole })),
 );
 export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel/index.ts'));
+export const AccessTokenPanel: ComponentType<any> = lazy(() =>
+  import('./ObjectPanels/index.ts').then(({ AccessTokenPanel }) => ({ default: AccessTokenPanel })),
+);
+export const TriggerStatePanel: ComponentType<any> = lazy(() =>
+  import('./ObjectPanels/index.ts').then(({ TriggerStatePanel }) => ({ default: TriggerStatePanel })),
+);
 export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings/index.ts'));
 export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel/index.ts'));
 export const DebugPanelDrawer: ComponentType<DebugPanelDrawerProps> = lazy(() =>

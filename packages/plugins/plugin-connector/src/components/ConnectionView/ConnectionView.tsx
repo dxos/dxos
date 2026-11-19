@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo } from 'react';
+import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -75,6 +75,8 @@ export type ConnectionViewProps = {
   onTestConnection: () => void;
   onDelete: () => void;
   onRemoveBinding: (binding: Cursor.ExternalCursor) => void;
+  /** The connector's own section, below the generic settings. */
+  children?: ReactNode;
 };
 
 /**
@@ -111,6 +113,7 @@ export const ConnectionView = ({
   onTestConnection,
   onDelete,
   onRemoveBinding,
+  children,
 }: ConnectionViewProps) => {
   const { t } = Hooks.useTranslation(ConnectorNamespace.key);
 
@@ -251,6 +254,7 @@ export const ConnectionView = ({
                   )}
                 </Form.FieldSet>
               )}
+              {children}
             </Form.Content>
           </Form.Viewport>
         </Form.Root>

@@ -11,11 +11,6 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
-import extractedQuestionInit from './extracted-question/0001_init.sql?raw';
-import {
-  MIGRATIONS as EXTRACTED_QUESTION,
-  MIGRATIONS_TABLE as EXTRACTED_QUESTION_TABLE,
-} from './extracted-question/index.ts';
 import messageInit from './message/0001_init.sql?raw';
 import { MIGRATIONS as MESSAGE, MIGRATIONS_TABLE as MESSAGE_TABLE } from './message/index.ts';
 import questionInit from './question/0001_init.sql?raw';
@@ -24,12 +19,6 @@ import { MIGRATIONS as QUESTION, MIGRATIONS_TABLE as QUESTION_TABLE } from './qu
 const STORES = [
   { name: 'message', init: messageInit, manifest: MESSAGE, table: MESSAGE_TABLE },
   { name: 'question', init: questionInit, manifest: QUESTION, table: QUESTION_TABLE },
-  {
-    name: 'extracted-question',
-    init: extractedQuestionInit,
-    manifest: EXTRACTED_QUESTION,
-    table: EXTRACTED_QUESTION_TABLE,
-  },
 ];
 
 type Manifest = (typeof STORES)[number]['manifest'];

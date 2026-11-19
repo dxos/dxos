@@ -14,7 +14,7 @@ import { MemoryQuery, MemoryService } from '@dxos/echo-memory';
 import * as MemorySqlite from '@dxos/echo-memory-sqlite/MemorySqlite';
 import { indexFactsBatch } from '@dxos/pipeline-rdf';
 
-import { memoryFactStoreLayer } from './memory-fact-store.ts';
+import { spaceMemoryFactStoreLayer } from './space-memory-fact-store.ts';
 
 const TestLayer = Layer.merge(TestDatabaseLayer({ types: [CrawlState.CrawlState] }), MemorySqlite.layerMemory);
 
@@ -25,13 +25,13 @@ const DOCS = [
 
 const memoryFacts = MemoryService.MemoryService.use((memory) => memory.query(MemoryQuery.facts()));
 
-describe('memoryFactStoreLayer', () => {
+describe('spaceMemoryFactStoreLayer', () => {
   it.effect("puts facts into the space's memory and skips documents whose hash it already holds", () =>
     Effect.gen(function* () {
       const state = yield* Database.add(CrawlState.make());
       const prompts: string[] = [];
       const index = indexFactsBatch(DOCS).pipe(
-        Effect.provide(Layer.merge(memoryFactStoreLayer({ state }), deterministicAiService(prompts))),
+        Effect.provide(Layer.merge(spaceMemoryFactStoreLayer({ state }), deterministicAiService(prompts))),
       );
 
       const first = yield* index;
