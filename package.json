@@ -151,11 +151,13 @@
     "madge": "catalog:",
     "minimatch": "catalog:",
     "node-fetch": "catalog:",
+    "node-gyp": "catalog:",
     "nyc": "catalog:",
     "oxc-resolver": "catalog:",
     "oxfmt": "^0.63.0",
     "oxlint": "1.78.0",
     "oxlint-tsgolint": "catalog:",
+    "pkg-pr-new": "catalog:",
     "pkg-up": "catalog:",
     "prettier": "catalog:",
     "raf": "catalog:",
@@ -192,7 +194,7 @@
     "yargs": "catalog:",
     "zx": "catalog:"
   },
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@12.21.0",
   "engines": {
     "node": "^24.0.0"
   }

@@ -225,6 +225,7 @@ op ToggleTracePanelDebug
 
 ```mdl
 feat F-1: AI Chat
+  uses: [Chat]
 
   req F-1.1: User can create a new Chat object in any space.
   req F-1.2: User can type a message and receive a streamed AI response.
@@ -236,6 +237,7 @@ feat F-1: AI Chat
 
 ```mdl
 feat F-2: Companion Chat
+  uses: [Chat, EnsureCompanionChat]
 
   req F-2.1:
     when: user opens an object that supports companions
@@ -252,6 +254,7 @@ feat F-2: Companion Chat
 
 ```mdl
 feat F-3: Skill System
+  uses: [RunPromptInNewChat]
 
   req F-3.1: Skills define named AI configurations (instructions, tools, model).
   req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager.
@@ -263,6 +266,7 @@ feat F-3: Skill System
 
 ```mdl
 feat F-4: Multi-Provider LLM
+  uses: [Settings]
 
   req F-4.1: Supported providers: DXOS Edge (remote), Ollama (local), LM Studio (local).
   req F-4.2: User can configure the active provider and per-provider default model in Settings.
@@ -273,6 +277,7 @@ feat F-4: Multi-Provider LLM
 
 ```mdl
 feat F-5: Tool Execution
+  uses: [Settings]
 
   req F-5.1: The assistant skill exposes LayoutOperation.Open and NavigationOperation.ResolveNavigationTargets
              as tools. Both are owned elsewhere — the assistant contributes no navigation operation of its
@@ -291,6 +296,7 @@ feat F-5: Tool Execution
 
 ```mdl
 feat F-6: ECHO Integration
+  uses: [Chat, Message, OnCreateSpace]
 
   req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
   req F-6.2:
@@ -301,6 +307,7 @@ feat F-6: ECHO Integration
 
 ```mdl
 feat F-7: Execution Trace
+  uses: [ToggleTracePanelDebug, TracePanel]
 
   req F-7.1: Every AI operation produces a structured span tree captured in the TracePanel.
   req F-7.2: User can toggle between commit-graph and raw JSON views via op:ToggleTracePanelDebug.
@@ -308,6 +315,7 @@ feat F-7: Execution Trace
 
 ```mdl
 feat F-8: Agent Struggle Reports
+  uses: [AnalyzeTurn, Settings]
 
   req F-8.1: Reporting is opt-in via `Settings.reportStruggles`, off by default, and also requires telemetry to be enabled.
   req F-8.2:
@@ -323,6 +331,7 @@ feat F-8: Agent Struggle Reports
 
 ```mdl
 feat F-9: Token Labels
+  uses: [Settings]
 
   req F-9.1: Labels are opt-in via `Settings.showTokens`, off by default.
   req F-9.2:
@@ -330,6 +339,23 @@ feat F-9: Token Labels
     then: each block of the thread (a prompt, a paragraph of the answer, a tool run) shows its estimated token count in
           a gutter beside it, level with its first line
   req F-9.3: The count is an estimate (tokenx, the estimator the preprocessor budgets with), since per-request usage covers a whole turn and cannot be attributed to one block; status and stats blocks count zero.
+```
+
+```mdl
+feat F-10: Read-only Host
+  uses: [Chat, ChatPanel, EnsureCompanionChat]
+
+  req F-10.1:
+    when: the host contributes `ReadOnly`
+    then: a chat opens as its transcript, with no prompt, toolbar, rewind, fork or withdraw, and a question in it shows
+          without a way to answer
+  req F-10.2:
+    when: the host contributes `ReadOnly`
+    then: the navtree keeps the AI group and its chats, with no action to create or delete one, and nothing offers the
+          companion chat, the chat dialog, agents, slash commands or the trace panel
+  req F-10.3:
+    when: the host contributes `ReadOnly`
+    then: nothing sends an AI request to EDGE, runs or resumes an agent turn, or provisions a companion chat
 ```
 
 ## Acceptance
@@ -796,6 +822,89 @@ decision D-22: The thread can show the estimated token count of each block in a 
   date: 2026-11-04
   by: user:dmaretskyi
   affects: [F-9.1, F-9.2, F-9.3, QA-6]
+```
+
+```mdl
+decision D-23: plugin-assistant's operations must not require an atom registry; EDGE hosts do not provide one.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+```
+
+```mdl
+decision D-24: CreateChat, BindChatContext and RunPromptInNewChat pass the atom registry to the context binder only when one is contributed; without one the binder uses a registry of its own. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+  why: The registry only carries the binder's atoms to UI subscribers, and a headless host has none.
+  rejected:
+    - Contribute an atom registry on the EDGE hosts: the registry is a UI concept, and [D-23] keeps it off them.
+```
+
+```mdl
+decision D-25: GenerateHomeSuggestions reads and writes its suggestions cache only when both the atom registry and the cache are contributed; without them it generates prompts on every call. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The cache is per-client UI state, so a host without it has nothing to reuse.
+```
+
+```mdl
+decision D-26: RunPromptInNewChat binds context through the database it is given rather than looking the space up through the client. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RunPromptInNewChat]
+  why: EDGE hosts contribute no client either, and the handler already provides that database.
+```
+
+```mdl
+decision D-27: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-10]
+```
+
+```mdl
+decision D-28: In read-only mode chats can be opened and read, with no companion, no editing and no interaction with chat history.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-10]
+```
+
+```mdl
+decision D-29: plugin-assistant reads `ReadOnly` when the work runs, never when a module activates: surfaces through `useReadOnly`, app-graph extensions through the capability's atom, and background work through the capability manager. Every module still activates, and only the work it would do is gated. Fills in [D-27].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: The host may contribute the capability after the plugin activates, so a module that read it once would keep the wrong answer.
+  rejected:
+    - Make the gated modules require `ReadOnly`, or drop them from the module list: that only adds modules, it cannot remove the ones a writable host needs.
+```
+
+```mdl
+decision D-30: A read-only chat renders from its feed with the same thread component as a writable one, with no prompt or toolbar. Its chat model never adopts the agent process, the thread's event handlers drop rewind, fork, withdraw, respond and submit, and a question card shows the question and any answer with no way to answer. Fills in [D-28].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: The transcript then looks as it does in the app, forks included, and nothing a reader clicks can write to the feed.
+  rejected:
+    - A separate read-only transcript built on the feed alone: it would duplicate how the thread groups messages, lanes and forks.
+    - Hide question cards: the question and its answer are part of the conversation a reader came to see.
+```
+
+```mdl
+decision D-31: The navtree keeps the AI group and the Chats section with no create or delete action. Every surface that prompts, edits, configures or runs an agent renders nothing, agent articles included. The EDGE AI client refuses to start, and the agent hydrator, question resumer, companion provisioner, comment-agent runner, MCP server registry and the markdown Run button each do nothing. Fills in [D-28].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: A read-only host shows a space its reader cannot edit, and an agent turn or AI request would act in it.
+  rejected:
+    - Unregister the operations, skills and slash commands: nothing a read-only host shows can invoke them, and the EDGE client check stops any that would call a model.
 ```
 
 ---

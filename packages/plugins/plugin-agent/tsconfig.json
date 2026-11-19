@@ -76,6 +76,12 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-memory"
+    },
+    {
+      "path": "../../core/echo/echo-memory-sqlite"
+    },
+    {
       "path": "../../core/echo/echo-protocol"
     },
     {
@@ -134,6 +140,9 @@
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-rdf"
     },
     {
       "path": "../../ui/ui-editor"

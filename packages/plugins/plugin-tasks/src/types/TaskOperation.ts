@@ -125,11 +125,24 @@ export const UpdateTask = Operation.make({
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */
     parentTask: Schema.optional(Schema.NullOr(Ref.Ref(Task.Task))),
   }),
-  // JSON snapshot, not a live object: the handler may run on a remote host (edge
-  // operation-service) where only serializable values cross the wire — same contract as
-  // `database.objectCreate`.
+  // The delta, not the task: a full snapshot carries the whole history, which dwarfs the edit it
+  // reports and fills an agent's context. Read the task for anything else.
   output: Schema.Struct({
-    task: Type.getSchema(Task.Task),
+    task: Ref.Ref(Task.Task),
+    /** Only the fields this call changed, at their new value; a cleared field is `null`. */
+    changed: Schema.Struct({
+      title: Schema.optional(Schema.String),
+      description: Schema.optional(Schema.NullOr(Schema.String)),
+      status: Schema.optional(Task.Status),
+      priority: Schema.optional(Schema.NullOr(Task.Priority)),
+      estimate: Schema.optional(Schema.NullOr(Task.Estimate)),
+      assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
+      delegate: Schema.optional(Schema.NullOr(Actor.Actor)),
+      milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
+      parentTask: Schema.optional(Schema.NullOr(Ref.Ref(Task.Task))),
+    }),
+    /** The history entry this edit appended; absent when it recorded none. */
+    historyEntry: Schema.optional(Task.HistoryEntry),
   }),
 }).pipe(Operation.mutation('write'));
 
@@ -385,7 +398,8 @@ export const MoveTask = Operation.make({
   },
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
-    taskSet: Ref.Ref(TaskSet.TaskSet),
+    /** The set the task belongs to; omit to use the set holding the task's root. */
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
     /** Insert immediately before this sibling; omit to move to the end of the siblings. */
     before: Schema.optional(Ref.Ref(Task.Task)),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set (as `UpdateTask`). */

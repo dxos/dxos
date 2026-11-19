@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import { readFileSync } from 'node:fs';
 
+import { Fact, Ontology, Vocab } from '@dxos/echo-memory';
 import { Pipeline } from '@dxos/pipeline';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
@@ -24,7 +25,7 @@ import {
 } from './stages/index.ts';
 import { FactStore, FactStoreLive } from './store/index.ts';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing/index.ts';
-import { type ExtractDocument, type Fact, Ontology, Vocab } from './types/index.ts';
+import { type ExtractDocument } from './types/index.ts';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -213,7 +214,7 @@ describe('FactPipeline', () => {
           throw new Error(`unexpected predicate: ${role.assertion.predicate}`);
         }
         // A predicate the ontology does not know is minted in the brain's namespace, not the shared `dx:` one.
-        if (likes.assertion.predicateIri !== `${Vocab.LOCAL_BRAIN}like` || role.graph !== likes.graph) {
+        if (likes.assertion.predicateIri !== `${Vocab.LOCAL_BRAIN}likes` || role.graph !== likes.graph) {
           throw new Error('expected a minted predicate in the shared graph');
         }
       });
@@ -261,7 +262,7 @@ describe('FactPipeline', () => {
       );
       yield* Effect.sync(() => {
         const [[minted], [reused, typed]] = collected.map(({ facts }) => facts);
-        const studiesUnder = 'https://dxos.org/semantic/brain/agent-1/studyUnder';
+        const studiesUnder = 'https://dxos.org/semantic/brain/agent-1/studiesUnder';
         expect(minted.assertion.predicateIri).toBe(studiesUnder);
         expect(minted.assertion.predicateDescription).toBe('A teacher the subject learned from.');
         // A mention of a known entity is stored under its IRI; an unknown one stays a (graph-local) slug.
@@ -273,7 +274,7 @@ describe('FactPipeline', () => {
         });
         expect(minted.assertion.subject).toEqual({ kind: 'entity', entity: 'plato', label: 'Plato' });
         // The second document is shown the predicate the first minted, and uses it.
-        expect(String(prompts[1])).toContain('- study_under: "studies under" — A teacher the subject learned from.');
+        expect(String(prompts[1])).toContain('- studies_under: "studies under" — A teacher the subject learned from.');
         expect(String(prompts[0])).toContain('- Socrates (person)');
         expect(reused.assertion.predicateIri).toBe(studiesUnder);
         expect(typed.assertion.predicateIri).toBe(Vocab.RDF_TYPE);
@@ -569,16 +570,17 @@ describe('FactPipeline', () => {
 });
 
 /** Minimal grounded fact for stage-level tests; only the predicate varies. */
-const testFact = (predicate: string): Fact => ({
-  id: `test:doc#hash#${predicate}`,
-  assertion: {
-    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
-    predicate,
-    object: { kind: 'entity', entity: 'acme', label: 'Acme' },
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
-  recordedAt: '2026-01-01T00:00:00.000Z',
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: 'deadbeef',
-});
+const testFact = (predicate: string): Fact.Fact =>
+  Fact.make({
+    id: `test:doc#hash#${predicate}`,
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
+      predicate,
+      object: { kind: 'entity', entity: 'acme', label: 'Acme' },
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
+    recordedAt: '2026-01-01T00:00:00.000Z',
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: 'deadbeef',
+  });

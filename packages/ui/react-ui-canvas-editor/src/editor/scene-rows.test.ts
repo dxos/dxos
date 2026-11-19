@@ -4,9 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
-import { type Scene, applyIntent } from '@dxos/scene';
+import { type Scene, applyIntent, findLayout } from '@dxos/scene';
 
 import {
   duplicateObject,
@@ -17,10 +17,11 @@ import {
   movedLayers,
   objectEntries,
   restackIntent,
+  selectedElement,
   withoutHidden,
 } from './scene-rows.ts';
 
-const encapsulated = () => Dsl.readScenes(EXEMPLARS.encapsulated).document;
+const encapsulated = () => DSL.readScenes(EXEMPLARS.encapsulated).document;
 
 describe('scene rows', () => {
   test('the views tree is the scene layout: a portal is a View row with its full path, and a composite opens on its own', () => {
@@ -38,6 +39,21 @@ describe('scene rows', () => {
     for (const part of team?.children ?? []) {
       expect(part).toMatchObject({ readonly: true, object: { path: ['cluster/team'], isolate: 'cluster/team' } });
     }
+  });
+
+  test("a part of an Object edited in place is found in the Object's definition, where it is stored", () => {
+    const doc = encapsulated();
+    const cluster = findLayout(doc, 'cluster');
+    const parts = findLayout(doc, 'cluster/team');
+    const [part] = Object.keys(parts?.elements ?? {});
+    expect(part).toBeDefined();
+    // The part is drawn in `cluster`, which places the Object, but is not one of that layout's own elements.
+    expect(cluster?.elements[part]).toBeUndefined();
+    const selected = cluster && selectedElement(doc, cluster, part);
+    expect(selected && [selected.element.id, selected.layout]).toEqual([part, 'cluster/team']);
+    // An element of the layout itself, and an id nothing has.
+    expect(cluster && selectedElement(doc, cluster, 'team')?.layout).toBe('cluster');
+    expect(cluster && selectedElement(doc, cluster, 'none')).toBeUndefined();
   });
 
   test('objects list the model with how many elements place each', () => {
@@ -64,7 +80,7 @@ describe('scene rows', () => {
   });
 
   test('a document without its hidden layers drops their elements and the links bound to them', () => {
-    const doc = Dsl.readScenes(EXEMPLARS.links).document;
+    const doc = DSL.readScenes(EXEMPLARS.links).document;
     const layout = doc.layouts[0];
     if (layout?.dim !== '2d') {
       throw new Error('expected a 2D layout');

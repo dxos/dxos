@@ -73,6 +73,11 @@
       "types": "./dist/types/src/types/CanvasCapabilities.d.ts",
       "import": "./dist/lib/CanvasCapabilities.mjs"
     },
+    "./CanvasFrame": {
+      "source": "./src/CanvasFrame.ts",
+      "types": "./dist/types/src/CanvasFrame.d.ts",
+      "import": "./dist/lib/CanvasFrame.mjs"
+    },
     "./CanvasPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
@@ -121,6 +126,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@codemirror/lang-json": "catalog:",
     "@dxos/animation": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
@@ -145,6 +151,8 @@
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-slides": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -162,7 +170,9 @@
     "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/storybook-testing": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",

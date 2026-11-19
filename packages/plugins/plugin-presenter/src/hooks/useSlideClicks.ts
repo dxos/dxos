@@ -5,9 +5,9 @@
 import { useMemo } from 'react';
 
 import { useObject } from '@dxos/echo-react';
+import { parseSlide } from '@dxos/react-ui-slides';
 
 import { type SlideSource } from '#deck';
-import { parseSlide } from '#markdown';
 
 /** Click count of a slide, computed from its source so navigation never waits on the rendered slide. */
 export const useSlideClicks = (slide: SlideSource | undefined): number => {

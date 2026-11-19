@@ -42,7 +42,6 @@ import {
   type EchoDatabase,
   type ExportWorkingSetOptions,
   type SpaceSyncState,
-  type WorkingSetRow,
 } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -51,6 +50,7 @@ import { log } from '@dxos/log';
 import {
   type ListenHandle,
   RpcClosedError,
+  type WorkingSetRow,
   decodeError,
   runServiceCall,
   runServiceEffect,

@@ -43,6 +43,7 @@ The following extension dialects are used in this document.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -218,6 +219,7 @@ the same flow.
 
 ```mdl
 feat F-1: Ticket Lifecycle
+  uses: [markInProgress, resolveTicket, SupportArticle, Ticket]
 
   req F-1.1: User can create a Ticket from the AI assistant or directly via the navtree.
   req F-1.2:
@@ -237,6 +239,7 @@ feat F-1: Ticket Lifecycle
 
 ```mdl
 feat F-2: AI Support Assistant
+  uses: [createTicket, markInProgress, resolveTicket, searchDocs, Ticket]
 
   req F-2.1: A skill is registered with key org.dxos.skill.support.
   req F-2.2: Skill tools include createTicket, markInProgress, resolveTicket, searchDocs.
@@ -248,6 +251,7 @@ feat F-2: AI Support Assistant
 
 ```mdl
 feat F-3: Documentation Search
+  uses: [searchDocs]
 
   req F-3.1: searchDocs operation is defined with a query input.
   req F-3.2:
@@ -258,6 +262,7 @@ feat F-3: Documentation Search
 
 ```mdl
 feat F-4: One-shot Feedback
+  uses: [submitReport]
 
   req F-4.1: plugin-support contributes the deck `--help` companion surface; it renders a FeedbackForm.
   req F-4.2:
@@ -288,6 +293,12 @@ feat F-5: GitHub Issue Submission
     when: no GitHub AccessToken is present
     then: a prefilled `issues/new` URL is opened in a new tab; the user finishes the submission manually.
   req F-5.7: type maps to GitHub's Issue Type field via `?type=Bug` / `?type=Feature`; severity is emitted as a label whose name matches the literal (e.g. `High priority`); area, when set, adds an `area/<plugin-id>` label. A `Composer` source-anchor label is always included.
+```
+
+```mdl
+feat F-6: Read-only Host
+
+  req F-6.1: When the host contributes `ReadOnly`, the plugin offers only the per-object and home Help companions, without tours: no feedback companion, Discord, tickets or welcome tour.
 ```
 
 ## Acceptance
@@ -405,3 +416,38 @@ test QA-2: Send one-shot feedback via the help companion
   # No `after` — feedback goes straight to the observability backend; no ECHO object is created to remove.
 ```
 
+## Changelog
+
+```mdl
+decision D-1: Help is available in a read-only host.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-6.1]
+```
+
+```mdl
+decision D-2: A `readOnly` option keeps the Help companions, without their tour buttons, and drops feedback, Discord, tickets and the welcome tour. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.1]
+  why: Feedback, tickets and Discord act for a signed-in user, and a tour walks the reader through creating objects.
+```
+
+```mdl
+decision D-3: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-6.1]
+  supersedes: D-2
+```
+
+```mdl
+decision D-4: When the host contributes `ReadOnly`, the plugin keeps the Help companions, without their tour buttons, and offers no feedback, Discord, tickets or welcome tour. Fills in [D-3].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.1]
+  supersedes: D-2
+  why: Feedback, tickets and Discord act for a signed-in user, and a tour walks the reader through creating objects. The host contributes `ReadOnly` at startup with no ordering against other modules, so the graph, surfaces, ticket entry and tour auto-start read it when used rather than skipping their contribution.
+```

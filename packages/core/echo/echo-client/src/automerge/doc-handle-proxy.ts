@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { countWork, markWork } from '@dxos/util';
 
 import { DocumentUnavailableError } from '../errors.ts';
+import { stringifyAutomergeUrl } from './automerge-url.ts';
 import * as Doc from './Doc.ts';
 import { sameHeads } from './heads.ts';
 
@@ -672,6 +673,10 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
     if (A.equals(headsBefore, body.hostHeads)) {
       this.#hostHolds(body, A.getHeads(body.doc));
+    } else if (body.sending && A.equals(headsBefore, body.sending)) {
+      // Every local change is in flight, so its acknowledgement leaves the host holding the whole document, including a
+      // change the host made itself (EDGE's empty first change of a created document) that arrived mid-send.
+      body.sending = A.getHeads(body.doc);
     }
 
     this._wakeReady();

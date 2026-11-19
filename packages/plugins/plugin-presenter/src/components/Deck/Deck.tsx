@@ -19,20 +19,21 @@ import React, {
 import { createPortal, flushSync } from 'react-dom';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
+import { type SlideTheme } from '@dxos/react-ui-slides';
+import { SlideThemeProvider } from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
 import { type SlideSource } from '#deck';
 import { useDeckTheme, useSlideClicks } from '#hooks';
-import { type SlideTheme, SlideViewState } from '#types';
+import { SlideViewState } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
 import { ExitButton, PageNumber as PageNumberComponent, Pager as PagerComponent } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
 import { Slide } from '../Slide/index.ts';
-import { SlideGrid, type SlideGridProps } from '../SlideGrid/index.ts';
-import { SlideThemeProvider } from '../SlideTheme/index.ts';
+import { SlideGallery, type SlideGalleryProps } from '../SlideGallery/index.ts';
 import { countColumns, moveByRow } from './grid-rows.ts';
 
 // TODO(burdon): Factor the Deck and Slide families out to a react-ui-presenter package.
@@ -235,7 +236,7 @@ const DeckRoot = ({
         case 'ArrowLeft':
           return command || event.shiftKey ? go(0) : previousSlide();
         case 'ArrowRight':
-          return command || event.shiftKey ? go(count - 1) : nextSlide();
+          return command || event.shiftKey ? go(count - 1) : nextSlide(Number.POSITIVE_INFINITY);
         case 'ArrowUp':
           return backward();
         case 'ArrowDown':
@@ -408,12 +409,13 @@ const DeckViewport = Util.composable<HTMLDivElement>(({ children, ...props }, fo
     >
       <div className='dx-cover flex flex-col'>
         <SlideThemeProvider settings={themeSettings}>
+          {/* The frame outlives the slide: a new frame paints nothing until it has measured itself, which flashes. */}
           {slide && (
-            <Slide.Root key={slide.id} source={slide} attendableId={attendableId} step={step}>
-              <Slide.Frame inset={!fullscreen}>
+            <Slide.Frame inset={!fullscreen}>
+              <Slide.Root key={slide.id} source={slide} attendableId={attendableId} step={step}>
                 <Slide.Content />
-              </Slide.Frame>
-            </Slide.Root>
+              </Slide.Root>
+            </Slide.Frame>
           )}
         </SlideThemeProvider>
       </div>
@@ -487,7 +489,7 @@ const DeckExit = () => {
 
 type DeckGridProps = {
   /** Thumbnail size (default `small`). */
-  size?: SlideGridProps['size'];
+  size?: SlideGalleryProps['size'];
   /** Moves a slide; without it the thumbnails cannot be dragged. */
   onMove?: (from: number, to: number) => void;
   /** Opens a slide on double-click; without it a double-click presents from that slide. */
@@ -532,7 +534,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
         }}
       >
         <SlideThemeProvider settings={themeSettings}>
-          <SlideGrid
+          <SlideGallery
             slides={slides}
             index={index}
             size={size}

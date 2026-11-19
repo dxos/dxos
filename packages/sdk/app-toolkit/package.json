@@ -171,6 +171,11 @@
       "types": "./dist/types/src/operations/LayoutOperation.d.ts",
       "import": "./dist/lib/operations/LayoutOperation.mjs"
     },
+    "./LinkAction": {
+      "source": "./src/app/LinkAction.ts",
+      "types": "./dist/types/src/app/LinkAction.d.ts",
+      "import": "./dist/lib/app/LinkAction.mjs"
+    },
     "./NamePopover": {
       "source": "./src/ui/components/NamePopover/NamePopover.tsx",
       "types": "./dist/types/src/ui/components/NamePopover/NamePopover.d.ts",
@@ -242,6 +247,16 @@
       "types": "./dist/types/src/echo/Query.d.ts",
       "import": "./dist/lib/echo/Query.mjs"
     },
+    "./ReadOnly": {
+      "source": "./src/app-framework/ReadOnly.ts",
+      "types": "./dist/types/src/app-framework/ReadOnly.d.ts",
+      "import": "./dist/lib/app-framework/ReadOnly.mjs"
+    },
+    "./ResetDialog": {
+      "source": "./src/ui/components/ResetDialog/ResetDialog.tsx",
+      "types": "./dist/types/src/ui/components/ResetDialog/ResetDialog.d.ts",
+      "import": "./dist/lib/ResetDialog.mjs"
+    },
     "./SampleSpace": {
       "source": "./src/sample/SampleSpace.ts",
       "types": "./dist/types/src/sample/SampleSpace.d.ts",
@@ -303,6 +318,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@bufbuild/protobuf": "catalog:",
@@ -354,7 +372,8 @@
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
     "@effect/atom-react": "catalog:",

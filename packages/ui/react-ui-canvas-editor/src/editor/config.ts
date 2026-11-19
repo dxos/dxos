@@ -40,6 +40,8 @@ export type ToolDef = {
   group?: string;
   /** Adjacent tools of a group naming the same fold share one flyout button (e.g. the link types). */
   fold?: string;
+  /** The tool draws its element point by point or in a stroke, so it has no shape to drag onto the canvas. */
+  drawn?: boolean;
 };
 
 /** Moving, measuring and snapping elements, in the dimension's units. */
@@ -115,8 +117,17 @@ export type ClipboardCodec = {
 export type DimensionContext<C> = {
   registry: Registry.AtomRegistry;
   document: EditorDocument;
-  /** This viewer's camera as the host stores it, the scene's authored one, and where a settled camera is reported. */
-  camera: { host: Atom.Atom<C | undefined>; authored: Atom.Atom<C | undefined>; report: (camera: C) => void };
+  /**
+   * This viewer's camera as the host stores it, the scene's authored one, and where a moved camera is reported; and the
+   * view a peer follows (`sharedCamera`), with where this view's is shared.
+   */
+  camera: {
+    host: Atom.Atom<C | undefined>;
+    authored: Atom.Atom<C | undefined>;
+    report: (camera: C) => void;
+    shared: Atom.Atom<C | undefined>;
+    share: (camera: C) => void;
+  };
   /** Shows a gesture's edit without writing it; undefined drops it. */
   preview: (layout: string | undefined, intent?: LayoutIntent) => void;
   setMenu: (menu: MenuAnchor | undefined) => void;
@@ -204,6 +215,11 @@ export type Dimension = {
   edits?: Partial<Record<SceneMenuCommand, EngineEdit>>;
   /** The aids as the engine draws them; without them the display panel shows the host's display. */
   aids?: DimensionAids;
+  /**
+   * The dimension's own items for the part that was pressed (2D: a link end's marker), ahead of the shared commands;
+   * drawn inside `Root`, so it reads the dimension's engine.
+   */
+  MenuLead?: ComponentType<{ anchor: MenuAnchor }>;
   inspector?: DimensionInspector;
 };
 
@@ -230,6 +246,8 @@ export type DimensionConfig<C = unknown> = {
   /** Builds the dimension's aspects for one editor, once. */
   create: (context: DimensionContext<C>) => Dimension;
   tools: readonly ToolDef[];
+  /** Each element type's icon by type name, which the Views tree draws a row with; the rail's tools are the same icons. */
+  icons?: Readonly<Record<string, string>>;
   /** The host's library, offered as a tool at the end of the rail's create group while it holds any. */
   library?: readonly LibraryItem[];
   /** What dragging a rail tool onto the viewport drops (2D: a node of the tool's type); undefined, the tool does not drag. */

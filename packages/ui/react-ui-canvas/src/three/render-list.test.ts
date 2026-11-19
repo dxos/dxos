@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Scene } from '@dxos/scene';
 
@@ -83,7 +83,7 @@ describe('renderList', () => {
   });
 
   test("places a composite's parts inside its frame", () => {
-    const list = renderList(Dsl.readScenes(EXEMPLARS.encapsulated).document);
+    const list = renderList(DSL.readScenes(EXEMPLARS.encapsulated).document);
     const hub = list.items.find((item) => item.key === 'shell/hub');
     const s1 = list.items.find((item) => item.key === 'shell/team/s1');
     expect(hub?.center).toEqual({ x: 0, y: 0, z: 0 });
@@ -94,7 +94,7 @@ describe('renderList', () => {
   });
 
   test('leaves hidden elements out', () => {
-    const list = renderList(Dsl.readScenes(EXEMPLARS.solid).document);
+    const list = renderList(DSL.readScenes(EXEMPLARS.solid).document);
     expect(list.items.map((item) => item.id)).toEqual(['bracket']);
   });
 });

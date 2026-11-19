@@ -226,8 +226,8 @@ export const AddObject = Operation.make({
 // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
 export const RemoveObjectsOutput = Schema.Struct({
   objects: Schema.Array(Entity.Unknown).annotate({ description: 'The removed entities.' }),
-  parentCollection: Type.getSchema(Collection.Collection).annotate({
-    description: 'The collection removed from.',
+  parentCollection: Schema.optional(Type.getSchema(Collection.Collection)).annotate({
+    description: 'The collection removed from; absent when the space has no root collection.',
   }),
   indices: Schema.Array(Schema.Number).annotate({ description: 'The indices the objects were at.' }),
   wasActive: Schema.Array(Schema.String).annotate({
@@ -390,6 +390,19 @@ export const OpenCreateSpace = Operation.make({
   output: Schema.Void,
 });
 
+export const OpenDeleteSpace = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.openDelete'),
+    name: 'Open Delete Space Dialog',
+    description: 'Ask for confirmation before deleting a space.',
+    icon: 'ph--trash--regular',
+  },
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }),
+  output: Schema.Void,
+});
+
 export const OpenImportSpace = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.openImport'),
@@ -433,6 +446,60 @@ export const ExportSpace = Operation.make({
     format: SpacesService.SpaceArchiveFormat,
   }),
   output: Schema.Void,
+});
+
+/**
+ * Bakes the space into a JSON archive and uploads it as a read-only publication, replacing the
+ * space's previous publication if it has one. Copies the public link.
+ */
+export const PublishSpace = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.publish'),
+    name: 'Publish Space',
+    description: 'Publish a read-only copy of a space at a public link.',
+    icon: 'ph--globe--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }),
+  output: Schema.Struct({
+    publicId: Schema.String,
+    url: Schema.String,
+  }),
+});
+
+export const UnpublishSpace = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.removePublication'),
+    name: 'Unpublish Space',
+    description: 'Take down the public copy of a space.',
+    icon: 'ph--globe-x--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }),
+  output: Schema.Void,
+});
+
+/** Imports a publication as a new space the caller owns, and opens `path` in it. */
+export const ForkPublication = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.forkPublication'),
+    name: 'Fork Publication',
+    description: 'Copy a published space into a new space.',
+    icon: 'ph--git-fork--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    publicId: Schema.String,
+    /** Object path (`db/<typeSlug>+<objectId>`) to open once the fork lands. */
+    path: Schema.optional(Schema.String),
+  }),
+  output: Schema.Struct({
+    space: SpaceSchema,
+  }),
 });
 
 export const Migrate = Operation.make({
@@ -648,9 +715,14 @@ export const RestoreObjects = Operation.make({
     icon: 'ph--clock-counter-clockwise--regular',
   },
   input: Schema.Struct({
-    objects: Schema.Array(Entity.Unknown).annotate({ description: 'The entities to restore.' }),
-    parentCollection: Type.getSchema(Collection.Collection).annotate({
-      description: 'The collection to restore to.',
+    objects: Schema.optional(Schema.Array(Entity.Unknown)).annotate({ description: 'The entities to restore.' }),
+    // A removed entity no longer resolves as a live handle across a process boundary, so a remote
+    // caller names it by reference. Exactly one of the two is required.
+    refs: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))).annotate({
+      description: 'References to the removed entities, when the entities themselves are not held.',
+    }),
+    parentCollection: Schema.optional(Type.getSchema(Collection.Collection)).annotate({
+      description: 'The collection to restore to; omitted when they were in none.',
     }),
     indices: Schema.Array(Schema.Number).annotate({ description: 'The indices to restore at.' }),
     wasActive: Schema.Array(Schema.String).annotate({
@@ -822,7 +894,8 @@ export const QueryObjects = Operation.make({
     typename: Schema.optional(typenameParameter),
     text: Schema.optional(Schema.String).annotate({ description: 'Full-text search terms.' }),
     includeContent: Schema.optional(Schema.Boolean).annotate({
-      description: 'Return full object data (default false); false returns id/type/label only.',
+      description:
+        "Also return each object's fields in its result (default false). Every result has `dxn` and `typename`, and `label` when the object has one.",
     }),
     limit: Schema.optional(Schema.Number).annotate({
       description: 'Maximum number of results (default 10). A capped result sets `truncated`.',

@@ -444,8 +444,8 @@ layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layo
 - Tests: `pnpm --filter <pkg> exec vitest run --project=node <file>`; typecheck `npx tsc --noEmit -p tsconfig.json` in
   the package (rebuild a dependency with `moon run <pkg>:build` when a consumer reads stale dist); lint `npx oxlint`;
   format `npx oxfmt` before every commit; commit by pathspec.
-- Storybook on :9009 is shared and serves this worktree; never start a second one; restart it (by PID from
-  `lsof -ti :9009 -sTCP:LISTEN`, `moon run storybook-react:serve-nodeps`) after deleting or renaming story files.
+- Storybook: the session's own server on a free port (`AGENTS.md`, "Long-running servers"); restart it (by the PID
+  on that port, `moon run storybook-react:serve-nodeps -- --port=<port>`) after deleting or renaming story files.
 - Never touch `tools/autocue/showcase/echo3d/*`.
 
 ## Where the expectations don't hold
@@ -521,7 +521,7 @@ shared `Style` tokens → `overrides: Partial<Style3D>`, groups (`members`/`arra
 ## Diagram DSL mapping
 
 Only the output target changes. Grammar changes: **none** (the `.dx` text is unchanged; the scene-statement
-reader/printer map `kind`/`from`/`to`/groups onto `type`/`source`/`target`/composites). `Dsl.compile`'s result type
+reader/printer map `kind`/`from`/`to`/groups onto `type`/`source`/`target`/composites). `DSL.compile`'s result type
 changes (`ParseResult.commands` → `{ document, layout, intents }`).
 
 | `@dxos/diagram` (`scene.ts`)                                                         | → `@dxos/scene`                                                                                                                                                               |                 |
@@ -607,7 +607,7 @@ changes (`ParseResult.commands` → `{ document, layout, intents }`).
 The `.dx` semantic statements (`diagram`/`node`/`edge`/`group`) and the layout engines currently produce
 `@dxos/diagram` `Scene.Command`s (`UpsertObject`/`UpsertElements`/`RemoveElements`/`RemoveObject`/`MoveObject` over
 `WorldObject`s of `Box`/`Circle`/`Polyline`/`Curve`/`Arc`/`Text`/`Arrow`/`Portal`, `common/diagram/src/scene.ts`);
-`Dsl.compile` returns `ParseResult { commands, problems, ranges }` (`dsl/parse.ts`). Phase 0 makes every engine emit
+`DSL.compile` returns `ParseResult { commands, problems, ranges }` (`dsl/parse.ts`). Phase 0 makes every engine emit
 `@dxos/scene` `Layout2D` elements + model objects through one `LayoutIntent` batch, and moves every reader onto
 `Layout2D`.
 
@@ -1247,6 +1247,8 @@ the user 2026-10-31: in this PR. One commit per task, each with its failing test
   debug is the standalone 2D editor's alone, as its overlay is a sample and e2e aid, not something Composer shows. The
   e2e ids change to the shared bar's (`scene-action-delete`, `scene-action-layout`, `scene-actions`); `ActionToolbar`
   went with `CanvasActions`. Test: `CanvasEditor.test.tsx` (RED: no shared bar in `CanvasEditor`).
+- Ruling (user, 2026-11-13): the create menu goes from the shared bar, and `EditorTools.commands.create` with it. A
+  shape is made with its tool, or dragged from the tools panel; the bar holds what acts on a selection.
 
 ### Task I.2: The display panel
 

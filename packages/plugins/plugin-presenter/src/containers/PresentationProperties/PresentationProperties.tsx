@@ -13,17 +13,20 @@ import {
   type FormFieldOverride,
   type FormFieldRendererProps,
 } from '@dxos/react-ui-form';
+import { SlideTheme } from '@dxos/react-ui-slides';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { Presentation, SlideTheme } from '#types';
+import { Presentation } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
 
-/** Related settings side by side: the theme and its accent, the two colors, the two fonts. */
+/** Related settings side by side: the theme and its accent, the two heading colors, the two colors, the two fonts. */
 const TEMPLATE = `
   <grid cols="2">
     <field name="base"/>
     <field name="accent"/>
+    <field name="heading"/>
+    <field name="subheading"/>
     <field name="background"/>
     <field name="foreground"/>
     <field name="font"/>
@@ -43,7 +46,13 @@ const ColorRow = ({
   </Form.Field>
 );
 
-const FIELD_MAP: FormFieldMap = { accent: ColorRow, background: ColorRow, foreground: ColorRow };
+const FIELD_MAP: FormFieldMap = {
+  accent: ColorRow,
+  heading: ColorRow,
+  subheading: ColorRow,
+  background: ColorRow,
+  foreground: ColorRow,
+};
 
 export type PresentationPropertiesProps = { presentation: Presentation.Presentation };
 
@@ -62,6 +71,8 @@ export const PresentationProperties = ({ presentation }: PresentationPropertiesP
     return {
       base: { placeholder: 'default' },
       accent: color,
+      heading: color,
+      subheading: color,
       background: color,
       foreground: color,
       font: { placeholder: t('default-font.placeholder', { font: SlideTheme.defaultFont(base) }) },

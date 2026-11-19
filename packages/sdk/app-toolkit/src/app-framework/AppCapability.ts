@@ -170,6 +170,13 @@ export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetRe
   { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
+/** Module maker contributing a link action. On the startup pass, since the boot-time URL restore runs it. */
+export const linkAction: Maker<typeof AppCapabilities.LinkAction> = Capability$.moduleMaker(
+  'LinkAction',
+  AppCapabilities.LinkAction,
+  { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
+);
+
 /** Module maker contributing a navigation handler. On the startup pass for the same reason as
  * {@link navigationResolver} — the boot-time URL restore is what invokes it. */
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
@@ -236,6 +243,14 @@ export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capabi
   'CommentConfig',
   AppCapabilities.CommentConfig,
   { environments: ['browser', 'node', 'tauri', 'workerd'] },
+);
+
+/** Module maker contributing a locator, which reveals anchors in a type's views. */
+export const locator: Maker<typeof AppCapabilities.Locator> = Capability$.moduleMaker(
+  'Locator',
+  AppCapabilities.Locator,
+  // Browser-only: revealing scrolls and focuses a rendered view.
+  { environments: ['browser', 'tauri'] },
 );
 
 /** Module maker contributing an object exporter (print / save). */

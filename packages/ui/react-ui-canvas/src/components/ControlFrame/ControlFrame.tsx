@@ -23,10 +23,12 @@ import {
   endpointNode,
   isPointEndpoint,
   isPolylineNode,
+  isShapeNode,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import {
+  type BendHandle,
   type ControlPointRef,
   type Drag,
   type Editing,
@@ -47,9 +49,13 @@ import {
   nodeBounds,
   nodePorts,
   oppositeSide,
+  polylineBends,
   polylineMidpoints,
+  polylinePath,
   polylineVertices,
   portPoint,
+  shapeNodeHandles,
+  smoothBends,
   viewLinkGeometry,
 } from '../../utils/index.ts';
 
@@ -80,6 +86,8 @@ export type ControlFrameProps = {
   blocked?: boolean;
   /** The scene's lattice, so a selected smart link's handles sit on its gutter route. */
   lattice?: LatticeSpec;
+  /** The drawing's minor grid cell in scene px, which a link's elbows are sized by; unset, the default grid's. */
+  grid?: number;
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
@@ -87,11 +95,16 @@ export type ControlFrameProps = {
   /** `index` is where in the link's points a control point at `point` would be inserted. */
   onMidpointPointerDown?: (link: SplineLink, index: number, point: Point, event: React.PointerEvent) => void;
   onPointContextMenu?: (link: SplineLink, index: number, event: React.MouseEvent) => void;
+  onEndContextMenu?: (link: Link, end: LinkEnd, event: React.MouseEvent) => void;
   /** The node in vertex edit mode: its vertices are drawn to drag, and its resize handles are not. */
   vertexEditing?: Extract<Editing, { kind: 'vertices' }>;
   onVertexPointerDown?: (node: Node, index: number, event: React.PointerEvent) => void;
+  /** A press on an adjust handle of a parametric shape, which sets the parameter `param` names. */
+  onParamPointerDown?: (node: Node, param: string, event: React.PointerEvent) => void;
   /** `index` is where in the node's vertices one inserted at `point` would go. */
   onVertexMidpointPointerDown?: (node: Node, index: number, point: Point, event: React.PointerEvent) => void;
+  /** `segment` is the bent segment whose control was pressed, and `handle` which of its controls. */
+  onBendPointerDown?: (node: Node, segment: number, handle: BendHandle, event: React.PointerEvent) => void;
 };
 
 /** The midpoint of every span of a spline's polyline, each with the index a control point there takes. */
@@ -103,8 +116,22 @@ const midpoints = (source: Point, points: readonly Point[], target: Point) => {
   }));
 };
 
-/** A port's radius at 100%, in scene px. */
+/** A port's radius on screen, in px. */
 const PORT_RADIUS = 5;
+
+/** A resize handle's side on screen, in px. */
+const HANDLE_SIZE = 8;
+
+/** An adjust handle's radius in screen px: a dot, larger than a port, so it is not taken for one. */
+const SHAPE_HANDLE_RADIUS = 5.5;
+
+/**
+ * Whether a frame has room for its resize handles at `zoom`: three to a side, a handle's width apart. On a shape
+ * drawn smaller than that they touch or overlap, hide the shape and cannot be told apart to grab, so none is drawn;
+ * the shape still moves, and resizes once it is zoomed in on.
+ */
+export const handlesFit = (bounds: Bounds, zoom: number): boolean =>
+  Math.min(bounds.width, bounds.height) * zoom >= HANDLE_SIZE * 5;
 
 export const ControlFrame = memo(
   ({
@@ -122,21 +149,25 @@ export const ControlFrame = memo(
     landing,
     blocked,
     lattice,
+    grid,
     onHandlePointerDown,
     onPortPointerDown,
     onEndPointerDown,
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onEndContextMenu,
     vertexEditing,
     onVertexPointerDown,
+    onParamPointerDown,
     onVertexMidpointPointerDown,
+    onBendPointerDown,
   }: ControlFrameProps) => {
     const unit = 1 / Math.max(zoom, 0.05);
-    const handleSize = 8 * unit;
-    // A port is part of the node, so it scales with the zoom like the node does, but stays big enough to hit zoomed out.
-    const portRadius = Math.max(PORT_RADIUS, 3 * unit);
-    const portStroke = portRadius / PORT_RADIUS;
+    const handleSize = HANDLE_SIZE * unit;
+    // A port is a control, as a handle is: the same size on screen at any zoom, so it never covers a zoomed-in shape.
+    const portRadius = PORT_RADIUS * unit;
+    const portStroke = unit;
     const midpointRadius = 4 * unit;
     // A move in flight shows the shapes themselves: no outlines or handles, just where they will land.
     const chrome = isMoving(drag) ? [] : [...selection];
@@ -147,7 +178,7 @@ export const ControlFrame = memo(
     const lanes =
       lattice && (selectedLinks.length > 0 || linkUnder !== undefined)
         ? new Map(
-            viewLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
+            viewLinkGeometry(scene, registry, Object.values(scene.links), lattice, grid).map((geometry) => [
               geometry.link.id,
               geometry,
             ]),
@@ -200,7 +231,7 @@ export const ControlFrame = memo(
     const linkHandles = (link: Link, hoverOnly: boolean) => {
       // On a lattice the handles sit on the link's lane, which depends on the links around it.
       const geometry = capabilities.update
-        ? (lanes?.get(link.id) ?? linkGeometry(scene, registry, link, lattice))
+        ? (lanes?.get(link.id) ?? linkGeometry(scene, registry, link, lattice, grid))
         : undefined;
       if (!geometry) {
         return null;
@@ -225,6 +256,8 @@ export const ControlFrame = memo(
               )}
               strokeWidth={portStroke}
               onPointerDown={(event) => onEndPointerDown?.(link, end, event)}
+              onContextMenu={(event) => onEndContextMenu?.(link, end, event)}
+              data-link-end={end}
               onPointerEnter={hoverOnly ? () => onLinkHover?.(link.id) : undefined}
               onPointerLeave={hoverOnly ? () => onLinkHover?.(undefined) : undefined}
             />
@@ -313,7 +346,8 @@ export const ControlFrame = memo(
           single.id !== edited?.id &&
           capabilities.resize &&
           nodeDef(registry, single)?.resizable &&
-          !single.locked && (
+          !single.locked &&
+          handlesFit(nodeBounds(single), zoom) && (
             <g>
               {HANDLES.map((handle) => {
                 const point = handlePoint(nodeBounds(single), handle);
@@ -333,6 +367,27 @@ export const ControlFrame = memo(
               })}
             </g>
           )}
+        {/* A parametric shape's adjust handles, over its resize handles: a dot of another colour sets a parameter. */}
+        {single && isShapeNode(single) && capabilities.update && !single.locked && (
+          <g data-testid='shape-handles'>
+            {shapeNodeHandles(single).map(({ param, at }) => (
+              <circle
+                key={param}
+                data-testid='shape-handle'
+                data-param={param}
+                cx={at.x}
+                cy={at.y}
+                r={SHAPE_HANDLE_RADIUS * unit}
+                className={mx(
+                  'stroke-base-surface pointer-events-auto cursor-move hover:fill-rose-400',
+                  drag?.kind === 'param' && drag.param === param ? 'fill-rose-400' : 'fill-rose-500',
+                )}
+                strokeWidth={1.5 * unit}
+                onPointerDown={(event) => onParamPointerDown?.(single, param, event)}
+              />
+            ))}
+          </g>
+        )}
         {edited && hasVertices(edited) && (
           <VertexHandles
             node={edited}
@@ -341,6 +396,7 @@ export const ControlFrame = memo(
             unit={unit}
             onVertexPointerDown={onVertexPointerDown}
             onVertexMidpointPointerDown={onVertexMidpointPointerDown}
+            onBendPointerDown={onBendPointerDown}
           />
         )}
         {/* A link's end and control-point handles all move it, so they follow the `update` capability together. */}
@@ -364,7 +420,20 @@ export const ControlFrame = memo(
             strokeWidth={portStroke}
           />
         )}
-        {drag?.kind === 'vertices' && <VertexBand drag={drag} unit={unit} />}
+        {drag?.kind === 'vertices' && (
+          <VertexBand drag={drag} unit={unit} curved={registry[drag.type]?.curved === true} />
+        )}
+        {/* A stroke being drawn freehand: the pointer's path so far, which is the line that will land. */}
+        {drag?.kind === 'freehand' && (
+          <polyline
+            data-testid='freehand-stroke'
+            points={drag.points.map(({ x, y }) => `${x},${y}`).join(' ')}
+            className='fill-none stroke-focus pointer-events-none'
+            strokeWidth={2 * unit}
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        )}
         {marquee && (
           <rect
             x={marquee.x}
@@ -412,27 +481,50 @@ ControlFrame.displayName = 'ControlFrame';
  * A line being drawn vertex by vertex: the segments placed, the next one following the pointer, and a dot per vertex;
  * the first ringed while a press there would close the line.
  */
-const VertexBand = ({ drag, unit }: { drag: Extract<Drag, { kind: 'vertices' }>; unit: number }) => {
+const VertexBand = ({
+  drag,
+  unit,
+  curved,
+}: {
+  drag: Extract<Drag, { kind: 'vertices' }>;
+  unit: number;
+  /** The tool draws a curve through its points: the band is that curve, through the pointer too. */
+  curved?: boolean;
+}) => {
   const [first] = drag.points;
   const last = drag.points[drag.points.length - 1];
   const closing =
     drag.points.length >= 3 && Math.hypot(drag.to.x - first.x, drag.to.y - first.y) <= VERTEX_SNAP_PX * unit;
+  // The line as it would land were the next press here: closed on the first vertex, else through the pointer.
+  const through = closing || (drag.to.x === last.x && drag.to.y === last.y) ? drag.points : [...drag.points, drag.to];
   return (
     <g data-testid='vertex-band' className='pointer-events-none'>
-      <polyline
-        points={drag.points.map(({ x, y }) => `${x},${y}`).join(' ')}
-        className='fill-none stroke-focus'
-        strokeWidth={2 * unit}
-      />
-      <line
-        x1={last.x}
-        y1={last.y}
-        x2={closing ? first.x : drag.to.x}
-        y2={closing ? first.y : drag.to.y}
-        className='stroke-focus'
-        strokeWidth={2 * unit}
-        strokeDasharray={`${6 * unit} ${4 * unit}`}
-      />
+      {curved ? (
+        <path
+          data-testid='vertex-band-curve'
+          // A frame of one unit a side leaves the points where they are in the scene.
+          d={polylinePath({ width: 1, height: 1 }, through, { closed: closing, bends: smoothBends(through, closing) })}
+          className='fill-none stroke-focus'
+          strokeWidth={2 * unit}
+        />
+      ) : (
+        <>
+          <polyline
+            points={drag.points.map(({ x, y }) => `${x},${y}`).join(' ')}
+            className='fill-none stroke-focus'
+            strokeWidth={2 * unit}
+          />
+          <line
+            x1={last.x}
+            y1={last.y}
+            x2={closing ? first.x : drag.to.x}
+            y2={closing ? first.y : drag.to.y}
+            className='stroke-focus'
+            strokeWidth={2 * unit}
+            strokeDasharray={`${6 * unit} ${4 * unit}`}
+          />
+        </>
+      )}
       {drag.points.map(({ x, y }, index) => (
         <circle
           key={index}
@@ -447,7 +539,10 @@ const VertexBand = ({ drag, unit }: { drag: Extract<Drag, { kind: 'vertices' }>;
   );
 };
 
-type VertexHandlesProps = Pick<ControlFrameProps, 'onVertexPointerDown' | 'onVertexMidpointPointerDown'> & {
+type VertexHandlesProps = Pick<
+  ControlFrameProps,
+  'onVertexPointerDown' | 'onVertexMidpointPointerDown' | 'onBendPointerDown'
+> & {
   node: Node & VertexShape;
   closed: boolean;
   /** The vertex last pressed, which Delete removes. */
@@ -463,13 +558,54 @@ const VertexHandles = ({
   unit,
   onVertexPointerDown,
   onVertexMidpointPointerDown,
+  onBendPointerDown,
 }: VertexHandlesProps) => {
   const vertices = polylineVertices(node);
+  const bends = polylineBends(node);
   const size = 7 * unit;
   return (
     <g data-testid='vertex-handles'>
+      {/* Each bent segment's controls: a parabola's one is tied to both its ends, a cubic's two to an end each. */}
+      {bends.flatMap(({ segment, control, second }) => {
+        const [from, to] = [vertices[segment], vertices[(segment + 1) % vertices.length]];
+        const handles: { handle: BendHandle; at: Point; ends: (Point | undefined)[] }[] = second
+          ? [
+              { handle: 'control', at: control, ends: [from] },
+              { handle: 'second', at: second, ends: [to] },
+            ]
+          : [{ handle: 'control', at: control, ends: [from, to] }];
+        return handles.map(({ handle, at, ends }) => (
+          <g key={`bend-${segment}-${handle}`}>
+            {ends.map(
+              (end, index) =>
+                end && (
+                  <line
+                    key={index}
+                    x1={end.x}
+                    y1={end.y}
+                    x2={at.x}
+                    y2={at.y}
+                    className='stroke-focus/60 pointer-events-none'
+                    strokeWidth={unit}
+                  />
+                ),
+            )}
+            <circle
+              data-testid='bend-handle'
+              data-segment={segment}
+              data-handle={handle}
+              cx={at.x}
+              cy={at.y}
+              r={4 * unit}
+              className='fill-base-surface stroke-focus pointer-events-auto cursor-move hover:fill-focus'
+              strokeWidth={unit}
+              onPointerDown={(event) => onBendPointerDown?.(node, segment, handle, event)}
+            />
+          </g>
+        ));
+      })}
       {/* Midpoints first, so a vertex wins wherever the two land on each other. */}
-      {polylineMidpoints(vertices, closed).map(({ index, point }) => (
+      {polylineMidpoints(vertices, closed, bends).map(({ index, point }) => (
         <circle
           key={`midpoint-${index}`}
           data-testid='vertex-midpoint'

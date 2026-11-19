@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { type ContentMap, Dsl } from '@dxos/diagram';
+import { type ContentMap, DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -15,13 +15,15 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { random } from '@dxos/random';
 import { DEFAULT_CELL, fromRenderLists2D } from '@dxos/react-ui-canvas';
+import { linkKey, nodeKey } from '@dxos/react-ui-canvas/headless';
 import { createNestedDeepTree } from '@dxos/react-ui-canvas/testing';
 import { type Scene, toEcho } from '@dxos/scene';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
 import * as CanvasPlugin from '#meta';
-import { linkKey, nodeKey } from '#model';
 import { translations } from '#translations';
 import { Canvas } from '#types';
 
@@ -39,7 +41,7 @@ const withDrawing = (
   seed: Seed = () => {},
   role: typeof AppSurface.Article | typeof AppSurface.Slide = AppSurface.Article,
 ) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {
@@ -73,7 +75,7 @@ const addDocumentDrawing = (db: Database.Database, document: Scene.SceneDocument
 
 /** A canvas over a scene document, opened through the illustrator's article as the app opens it. */
 const withDocument = (document: Scene.SceneDocument) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
@@ -84,11 +86,11 @@ const withDocument = (document: Scene.SceneDocument) =>
   });
 
 /** A canvas over scenes written in `.dx`. */
-const withScenes = (text: string) => withDocument(Dsl.readScenes(text).document);
+const withScenes = (text: string) => withDocument(DSL.readScenes(text).document);
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'plugins/plugin-canvas/containers/CanvasArticle',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -340,11 +342,11 @@ export const Image: Story = {
 let describeEmbedTarget: (() => Promise<string>) | undefined;
 
 export const MarkdownEmbed: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {
-      const drawing = addDocumentDrawing(space.db, Dsl.readScenes(EXEMPLARS.subscene).document);
+      const drawing = addDocumentDrawing(space.db, DSL.readScenes(EXEMPLARS.subscene).document);
       describeEmbedTarget = async () => {
         const target = await space.db.makeRef(Obj.getURI(drawing)).tryLoad();
         return `the drawing ${target ? 'loads' : 'does not load'} by its URI; the page is ${globalThis.document.visibilityState} at ${innerWidth}x${innerHeight}`;

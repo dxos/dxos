@@ -4,50 +4,31 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { EID, parseId } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
+    Effect.fnUntraced(function* ({ meetingId }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const store = yield* Capability.get(MeetingCapabilities.State);
-      const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
+      // The id is the meeting's absolute URI (`SetActive`), which names the space as well as the object.
+      const uri = meetingId ? EID.tryParse(meetingId) : undefined;
+      const spaceId = uri && EID.getSpaceId(uri);
+      const objectId = uri && EID.getEntityId(uri);
       const space = spaceId && client.spaces.get(spaceId);
+      // A meeting that has not replicated here yet resolves to none, and its transcript is then not written.
       const meeting =
         objectId && space
-          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(objectId))).first())
+          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(objectId))).firstOrUndefined())
           : undefined;
       store.updateState((current) => ({
         ...current,
-        activeMeeting: meeting as Meeting.Meeting | undefined,
+        activeMeeting: meeting && Obj.instanceOf(Meeting.Meeting, meeting) ? meeting : undefined,
       }));
-
-      const enabled = !!transcriptionEnabled;
-      const { transcriptionManager } = store.state;
-      if (space && transcriptDxn && transcriptionManager) {
-        // Resolve the feed object from its queue/echo URI.
-        const echoUri = EID.tryParse(transcriptDxn);
-        const feedObjectId = echoUri ? EID.getEntityId(echoUri) : undefined;
-        const feed = feedObjectId
-          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())
-          : undefined;
-        if (feed && Obj.instanceOf(Feed.Feed, feed)) {
-          transcriptionManager.setFeed(space.db, feed);
-        }
-      }
-
-      if (transcriptionManager) {
-        // Transcription is optional (it needs a configured endpoint); a failure here must not take
-        // down the rest of the payload handling as a defect.
-        yield* Effect.promise(() => transcriptionManager.setEnabled(enabled)).pipe(
-          Effect.catchCause((cause) => Effect.sync(() => log.warn('failed to toggle transcription', { cause }))),
-        );
-      }
     }),
   ),
 );

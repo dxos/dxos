@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -16,7 +17,6 @@ import * as Template from '@dxos/compute/Template';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Text } from '@dxos/schema';
@@ -30,16 +30,15 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
     Operation.withHandler(
       Effect.fnUntraced(
         function* ({ db, instructions, objects, skills, background }) {
-          const registry = yield* Capability.get(Capabilities.AtomRegistry);
+          // Optional: EDGE hosts contribute no atom registry, and the binder then makes its own.
+          const registry = Option.getOrUndefined(yield* Capability.getOption(Capabilities.AtomRegistry));
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId: db.spaceId });
           yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
 
           if ((objects && objects.length > 0) || (skills && skills.length > 0)) {
             const feedTarget = yield* Database.load(chat.feed);
-            const client = yield* Capability.get(ClientCapabilities.Client);
-            const space = client.spaces.get(db.spaceId);
-            invariant(space, 'Space not found.');
-            const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+            // The handler already provides `db`, so no client is needed to reach it (EDGE has none).
+            const runtime = yield* Effect.context<Database.Service>();
             const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry });
             yield* Effect.promise(() =>
               binder.use(async (b: AiContext.Binder) => {

@@ -14,12 +14,12 @@ import React, {
 } from 'react';
 
 import { type Timeline } from '@dxos/animation';
-import { Dsl } from '@dxos/diagram';
-import { flattenLayout, liftLayout } from '@dxos/react-ui-canvas';
+import { DSL } from '@dxos/diagram';
+import { type NodeRegistry, flattenLayout, liftLayout } from '@dxos/react-ui-canvas';
 import { type VersionedSource, readPath, writePath } from '@dxos/react-ui-canvas/headless';
 import { type Layer, type LayoutIntent, type ModelIntent, Scene, applyIntent, applyModelIntent } from '@dxos/scene';
 
-import { CATALOGS_3D, config2d, config3d } from '../dimensions/index.ts';
+import { CATALOGS_3D, config2d, config3d, createConfig2D } from '../dimensions/index.ts';
 import {
   type ClipboardCodec,
   type DimensionConfig,
@@ -32,9 +32,9 @@ import {
 
 /** The `.dx` text a copy writes and a paste reads, as the canvas plugin's codec (without its model folding). */
 const codec: ClipboardCodec = {
-  write: (_document, _layout, fragment) => Dsl.printScenes({ scenes: [], layouts: [fragment], models: [] }),
+  write: (_document, _layout, fragment) => DSL.printScenes({ scenes: [], layouts: [fragment], models: [] }),
   read: (text, dim) => {
-    const layout = Dsl.readScenes(text).document.layouts[0];
+    const layout = DSL.readScenes(text).document.layouts[0];
     return layout && (dim === '3d' ? liftLayout(layout) : flattenLayout(layout));
   },
 };
@@ -48,7 +48,11 @@ const isLayoutRecord = Schema.is(Schema.Union([Scene.LayoutRecord2D, Scene.Layou
 const isDocument = (value: unknown): value is Scene.SceneDocument =>
   typeof value === 'object' && value !== null && 'layouts' in value && Array.isArray(value.layouts);
 
-/** Applies `intent` to layout `key`, making the layout (empty, in the scene's dimension) when it is new. */
+/**
+ * Applies `intent` to layout `key`, making the layout when it is new: empty, in the scene's dimension, and on the
+ * document's model of that dimension, as the app's own host makes one, so an Object placed in it (a hull's group
+ * inside another's) is found there.
+ */
 const applyLayout = (
   document: Scene.SceneDocument,
   key: string,
@@ -56,7 +60,13 @@ const applyLayout = (
   intent: LayoutIntent,
 ): Scene.SceneDocument => {
   const existing = document.layouts.find((layout) => layout.id === key);
-  const layout: Scene.LayoutRecord = existing ?? { id: key, dim, elements: {} };
+  const model = document.models.find((candidate) => candidate.dim === dim)?.id;
+  const layout: Scene.LayoutRecord = existing ?? {
+    id: key,
+    dim,
+    ...(model !== undefined ? { model } : {}),
+    elements: {},
+  };
   const next = applyIntent(layout, intent);
   return next === existing
     ? document
@@ -110,6 +120,11 @@ export type SceneEditorStoryProps = PropsWithChildren<{
   display?: Partial<EditorDisplay>;
   /** The Timeline panel shown from the start, rather than by the display panel's toggle. */
   timeline?: boolean;
+  /**
+   * The node types the editor knows, where a story shows a kind a plugin contributes (a UML class) rather than the
+   * engine's own: what the host builds from its `NodeType` contributions.
+   */
+  nodes?: NodeRegistry;
 }>;
 
 /**
@@ -117,7 +132,9 @@ export type SceneEditorStoryProps = PropsWithChildren<{
  * `CanvasArticle` does over ECHO (intents, model intents, undo, display and camera view state, shots), for
  * stories of the editor and its parts. The children are the editor's parts.
  */
-export const SceneEditorStory = ({ document: initial, ...props }: SceneEditorStoryProps) => {
+export const SceneEditorStory = ({ document: initial, nodes, ...props }: SceneEditorStoryProps) => {
+  // A host's own kinds make a config of their own; without them every story shares the engine's.
+  const config = useMemo(() => (nodes ? createConfig2D({ nodes }) : config2d), [nodes]);
   const scene = initial.scenes[0];
   if (!scene) {
     return null;
@@ -126,7 +143,7 @@ export const SceneEditorStory = ({ document: initial, ...props }: SceneEditorSto
     <Host config={config3d} document={initial} authored={scene.camera} theme={scene.theme ?? 'cad'} {...props} />
   ) : (
     <Host
-      config={config2d}
+      config={config}
       document={initial}
       authored={{ x: 0, y: 0, zoom: 1 }}
       theme={scene.theme ?? 'flat'}

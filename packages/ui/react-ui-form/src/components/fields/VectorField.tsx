@@ -34,7 +34,8 @@ export const VectorField: FormFieldRenderer = ({ type, jsonPath, label, readonly
   return (
     <Fieldset.Root compact data-testid={jsonPath === undefined ? undefined : `vector.${jsonPath}`}>
       {showLabel && label && <Fieldset.Legend>{label}</Fieldset.Legend>}
-      <Layout.Container layout='stack' gutter='inherit' gap='none'>
+      {/* The group is a plain fieldset, not a grid, so the stack has no gutter of a parent's to take. */}
+      <Layout.Container layout='stack' gutter='none' gap='none'>
         {axes.map((axis) => (
           <VectorAxisRow
             key={axis.name}

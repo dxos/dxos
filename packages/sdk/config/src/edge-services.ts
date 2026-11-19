@@ -11,7 +11,6 @@ import { type Config } from './config.ts';
 export const EdgeServiceName = Object.freeze({
   Calls: 'calls',
   Image: 'image',
-  Transcription: 'transcription',
   VideoTranscription: 'video-transcription',
   Discord: 'discord',
   CorsProxy: 'cors-proxy',
@@ -42,8 +41,6 @@ export const EDGE_URLS = Object.freeze({
  *
  * The entries that are not simply `/<name>`:
  *
- * - `transcription` is the ASR endpoint (`POST /transcribe`), which calls-service serves — the same
- *   worker `calls` reaches, which is why it has always been configured to the same host.
  * - `video-transcription` is the separate transcription-service (`GET /video`), whose prefix is the
  *   worker's own name.
  * - `introspect` carries the `/mcp` path because the value IS the MCP server URL a client connects to.
@@ -51,7 +48,6 @@ export const EDGE_URLS = Object.freeze({
 const EDGE_SERVICE_PATHS: Record<EdgeServiceName, string> = Object.freeze({
   [EdgeServiceName.Calls]: '/calls',
   [EdgeServiceName.Image]: '/image',
-  [EdgeServiceName.Transcription]: '/calls',
   [EdgeServiceName.VideoTranscription]: '/transcription',
   [EdgeServiceName.Discord]: '/discord',
   [EdgeServiceName.CorsProxy]: '/cors-proxy',

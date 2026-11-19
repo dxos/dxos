@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
 import { CommandConfig, FormBuilder, formatBytes, print } from '@dxos/cli-util';
-import { Diagnostics, Dsl, type Scene, SvgFile } from '@dxos/diagram';
+import { Diagnostics, DSL, type Scene, SvgFile } from '@dxos/diagram';
 
 import { DrawingFile } from '#model';
 
@@ -52,14 +52,14 @@ export const handler = Effect.fn(function* ({ file, out, plain }: RenderArgs) {
 
   const source = yield* fs.readFileString(file);
   const name = path.basename(file).replace(/\.dx$/, '');
-  const { commands, problems } = yield* Dsl.compile(source);
+  const { commands, problems } = yield* DSL.compile(source);
   if (problems.some(({ severity }) => severity === 'error')) {
     return yield* Effect.fail(
       new RenderError({ message: problems.map(({ severity, message }) => `${severity}: ${message}`).join('\n') }),
     );
   }
 
-  const objects = Dsl.toScene(commands).objects;
+  const objects = DSL.toScene(commands).objects;
   const report = Diagnostics.analyze(objects);
   const svg = plain ? SvgFile.toSvgFile(objects) : toDxSvg({ name, source, commands, objects });
   const target = Option.getOrElse(out, () => path.join(path.dirname(file), `${name}${plain ? '.svg' : '.dx.svg'}`));

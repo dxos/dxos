@@ -6,6 +6,12 @@ version: 0.1.0
 
 Spreadsheet plugin for `DXOS` Composer — a full-featured grid backed by ECHO for local-first, real-time collaborative data entry, formula evaluation, and structured data display.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.space: Following a peer reveals their place in a sheet without moving the focused cell.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -20,6 +26,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `decision`  | `org.dxos.mdl.decision@1.0`    |
+| `uses`      | `dxos.spec.core/uses`         |
 
 ## Types
 
@@ -154,11 +161,12 @@ op restoreAxis
 ```mdl
 op scrollToAnchor
   key: org.dxos.operation.sheet.scrollToAnchor
-  desc: Programmatically scrolls and highlights a cell range in an active grid instance.
+  desc: Programmatically scrolls and highlights a cell range in an active grid instance; it is the sheet's `Locator` reveal.
   input:
     subject: string              # attendable ID of the target sheet
-    cursor: string               # comment anchor (see [F-7.3])
-    ref?: any                    # active refs for highlight overlay
+    anchor: string               # cell-range anchor (see [F-7.3])
+    focus?: boolean              # default true; false scrolls the range's first cell to the top left and leaves the focused cell
+    thread?: any                 # active refs for highlight overlay
   output: void
   effects: [ui:scroll]
 ```
@@ -174,6 +182,23 @@ op create
     rows?: number                # default 50
     columns?: number             # default 26
   output: { id: string }         # DXN of the created sheet
+  effects: [echo:write]
+  requires: [Database.Service]
+```
+
+```mdl
+op addChart
+  key: org.dxos.operation.sheet.addChart
+  desc: Adds a chart of a range of a sheet; the chart is its own object, owned by the sheet, and shows in its Charts companion.
+  input:
+    sheet: Ref<Sheet>
+    range: string                 # A1 notation, e.g. "A1:C6"
+    type: string                  # a contributed chart type (see [D-5])
+    name?: string
+    header?: boolean              # the first row holds the series names
+    horizontal?: boolean
+    stacked?: boolean
+  output: { id: string }          # URI of the created chart
   effects: [echo:write]
   requires: [Database.Service]
 ```
@@ -206,6 +231,7 @@ op setRange
 
 ```mdl
 feat F-1: Sheet Object
+  uses: [Sheet]
 
   req F-1.1: A Sheet is an ECHO object with typename org.dxos.type.sheet persisted in the user's space.
   req F-1.2: Cells are stored in a sparse map keyed by internal row/column indices.
@@ -226,6 +252,7 @@ feat F-2: Formula Evaluation
 
 ```mdl
 feat F-3: Row and Column Management
+  uses: [dropAxis, insertAxis, restoreAxis]
 
   req F-3.1:
     when: op:insertAxis is called
@@ -240,6 +267,7 @@ feat F-3: Row and Column Management
 
 ```mdl
 feat F-4: Cell Formatting
+  uses: [RangeList]
 
   req F-4.1: Ranges support alignment values: start | center | end.
   req F-4.2: Ranges support comment annotations displayed as a visual overlay on the cell.
@@ -272,9 +300,10 @@ feat F-6: Markdown Integration
 
 ```mdl
 feat F-7: Anchor Navigation
+  uses: [scrollToAnchor, SheetArticle]
 
   req F-7.1:
-    when: op:scrollToAnchor is invoked with a sheet attendable ID and cursor
+    when: op:scrollToAnchor is invoked with a sheet attendable ID and anchor
     then: the corresponding SheetArticle scrolls to the target cell and applies the active-ref highlight
 
   req F-7.2: AnchorSort contributes a sort comparator so sheet anchors appear in canonical order in navigation menus: by the range's top-left cell, row first, with anchors that no longer resolve last.
@@ -289,6 +318,24 @@ feat F-7: Anchor Navigation
   req F-7.4:
     when: the reader moves the cell cursor into a commented range
     then: that range's thread becomes the current comment
+```
+
+```mdl
+feat F-8: Chart Types
+
+  req F-8.1: Every chart type the Charts companion draws is a `SheetCapabilities.ChartType` contribution: the type a chart stores, a label, an icon and a component that draws the chart's range. The sheet contributes bar, pie, XY, scatter, heatmap, radar, map and timeline this way, and another plugin adds one the same way [D-5].
+  req F-8.2:
+    when: the reader edits a chart
+    then: the chart-type select lists every contributed type by its label and icon
+  req F-8.3:
+    when: a chart's type is not contributed by any enabled plugin
+    then: the chart shows a message naming the type in place of the chart, and keeps its settings
+```
+
+```mdl
+feat F-9: Read-only Host
+
+  req F-9.1: When the host contributes `ReadOnly`, no cell can be edited, the toolbar shows with every action disabled, and the Charts companion shows each chart with no way to add, edit or remove one.
 ```
 
 ## Acceptance
@@ -517,6 +564,30 @@ test QA-5: See a collaborator's selection
       expect: the guest's outline disappears from the host's grid
 ```
 
+```mdl
+test QA-6: An agent turns what its memory says into sheets with charts, a deck and a summary
+  desc: The artifacts demo — an agent with a fact store of the Cloudflare Developers Discord and the brain, sheet, presenter and markdown skills finds five things worth reporting, and makes a sheet and a chart for each, a deck of the charts, and a summary.
+  actors: human, agent
+  status: unverified
+  given:
+    - a fact server over the Cloudflare 60-day crawl's facts DB (`moon run plugin-discord:fact-server`)
+    - the stories-assistant `Artifacts › From Memory` story pointed at it (`VITE_FACT_SERVER_URL`), with a live model
+  steps:
+    - name: Ask for findings from memory
+      do: In the chat, ask the agent to explore its memory of the community, find the five most interesting things, and build a sheet and chart for each, a deck of the charts and a summary document.
+      expect: the agent queries the fact store, then creates the sheets one by one, each appearing as a tab in the Artifacts panel
+    - name: Read the deck
+      do: Open the presentation's tab.
+      expect: a cover slide and one slide per chart, each slide drawing its chart
+    - name: Open a finding
+      do: Open a sheet's tab.
+      expect: the rows the agent queried, with its chart drawn below
+    - name: Read the summary
+      do: Open the summary document's tab.
+      expect: a short markdown summary of the five findings, naming no person
+  note: Nothing is given to the agent but the request; what the findings are, their titles and their chart types are the model's, so they differ from take to take.
+```
+
 ## Changelog
 
 ```mdl
@@ -565,7 +636,97 @@ decision D-4: The published selection is what the member's grid shows, kept by c
     - Rename the selection to the row now at its position when its row is gone: a filter makes that a record the member never chose.
 ```
 
+```mdl
+decision D-5: A chart's `type` is a string naming a `SheetCapabilities.ChartType` contribution, and the companion draws every chart through its type's component, which gets the chart's settings and its range as `PlotData` with the header row split off. The sheet's own types are contributions like any other plugin's; there is no built-in list. A new chart starts as the first contributed type. Contributed types add no settings of their own to the chart's form.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-8.1, F-8.2, F-8.3]
+  why: One path for every chart type, with no split between a fixed list the companion draws itself and the types plugins add.
+  rejected:
+    - Built-in types as a literal list beside contributed ones: two ways to name and draw a chart type.
+    - A Sankey panel of its own beside every sheet: it leaves the chart out of the companion's list and out of documents and slides, which embed `Sheet.Chart` objects.
+```
+
 ---
+
+```mdl
+decision D-6: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [op:scrollToAnchor, F-7.1]
+```
+
+```mdl
+decision D-7: The sheet publishes the anchor of its cell selection to the `ViewLocation` view-state aspect, and no viewport. Fills in [D-6].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: The selection anchor is the same form comments use, so the reveal needs no new case.
+```
+
+```mdl
+decision D-8: With `follow`, the reveal scrolls the anchor's first cell to the top left and leaves the focused cell and the comment highlight alone, for following a peer (org.dxos.plugin.space#F-8.20). Fills in [D-7].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: Following must not move the follower's focus, and the grid offers no scroll that keeps a cell merely in view.
+```
+
+```mdl
+decision D-9: The reveal's flag is `focus`, true by default; `focus: false` is what [D-8] called `follow`.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
+```
+
+```mdl
+decision D-10: The `addChart` operation takes the chart type as a string and names this plugin's types in its description, rather than a literal list in its schema. Follows [D-5].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [op:addChart]
+  why: A type another plugin contributes is as valid as the sheet's own, and the agent learns the common ones from the description and the skill.
+  rejected:
+    - A literal union of the sheet's types in the input schema: the built-in list D-5 rejected, and it refuses contributed types.
+```
+
+```mdl
+decision D-11: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-12: A `readOnly` option makes every cell read-only, disables the toolbar rather than hiding it, and withholds the chart editing controls. Fills in [D-11].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1]
+  why: A disabled toolbar keeps the article's layout the same as in Composer, as the markdown editor's does in a read-only host.
+  rejected: Hiding the toolbar; the article loses its toolbar row and readers cannot see what the sheet offers.
+```
+
+```mdl
+decision D-13: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-11
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-14: When the host contributes `ReadOnly`, every cell is read-only, the toolbar is disabled rather than hidden, and the chart editing controls are withheld. Fills in [D-13].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-12
+  affects: [F-9.1]
+  why: The sheet and chart containers read the capability when they render, so the behaviour [D-12] chose stays the same with no plugin option.
+```
 
 ## Appendix: Extension Definitions
 

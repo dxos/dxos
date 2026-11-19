@@ -10,12 +10,14 @@ import { mx } from '@dxos/ui-theme';
 
 import { type Channel, CHANNELS, channelMarkFilter } from '../../channels.ts';
 import { Composer } from './Composer.tsx';
-import { DXNS } from './DXNS.tsx';
 import { DXOS } from './DXOS.tsx';
 import { ECHO } from './ECHO.tsx';
+import { EDGE } from './EDGE.tsx';
 import { HALO } from './HALO.tsx';
-import { KUBE } from './KUBE.tsx';
 import { MESH } from './MESH.tsx';
+import { PLEX } from './PLEX.tsx';
+import { SAGE } from './SAGE.tsx';
+import { TILE } from './TILE.tsx';
 
 const Icon = () => null;
 
@@ -26,17 +28,16 @@ type StoryArgs = {
 
 const DefaultStory = (_: StoryArgs) => {
   return (
-    <div className='grid grid-cols-3 gap-16'>
-      <>
-        <ECHO className={mx('size-30 fill-sky-700')} />
-        <HALO className={mx('size-30 fill-violet-700')} />
-        <MESH className={mx('size-30 fill-green-700')} />
-      </>
-      <>
-        <DXNS className={mx('size-30 fill-neutral-700')} />
-        <DXOS className={mx('size-30 fill-neutral-700')} />
-        <KUBE className={mx('size-30 fill-neutral-700')} />
-      </>
+    // The suite in its own order, every mark at one size: the set is the point, not any one of them.
+    <div className='grid grid-cols-4 gap-16'>
+      <DXOS className={mx('size-30 fill-neutral-700')} />
+      <ECHO className={mx('size-30 fill-neutral-700')} />
+      <HALO className={mx('size-30 fill-neutral-700')} />
+      <MESH className={mx('size-30 fill-neutral-700')} />
+      <PLEX className={mx('size-30 fill-neutral-700')} />
+      <TILE className={mx('size-30 fill-neutral-700')} />
+      <EDGE className={mx('size-30 fill-neutral-700')} />
+      <SAGE className={mx('size-30 fill-neutral-700')} />
     </div>
   );
 };

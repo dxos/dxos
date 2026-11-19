@@ -230,6 +230,26 @@ describe('buildExecutionGraph (span-tree based)', () => {
     `);
   });
 
+  test('an operation traced with only its key takes its name and icon from resolveOperation', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'dxn:org.example.crawl' });
+          yield* Trace.write(Trace.OperationEnd, { key: 'dxn:org.example.crawl', outcome: 'success' });
+        }),
+      ),
+    );
+    const { commits } = buildExecutionGraph({
+      traceMessages: messages,
+      resolveOperation: (key) =>
+        key === 'dxn:org.example.crawl' ? { name: 'Crawl', icon: 'ph--robot--regular' } : undefined,
+    });
+    expect(commits).toHaveLength(1);
+    expect(commits[0].message).toBe('Crawl');
+    expect(commits[0].icon).toBe('ph--robot--regular');
+  });
+
   test('nested operation under an agent → collapsed to a single end commit', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {

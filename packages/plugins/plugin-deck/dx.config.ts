@@ -75,9 +75,32 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
             AppCapabilities.Layout,
             DeckCapabilities.Platform,
             DeckCapabilities.Projection,
+            DeckCapabilities.View,
           ],
         },
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
+        'LinkActionGate',
+        {
+          activatesOn: ActivationEvents.Startup,
+          requires: [Capabilities.AtomRegistry, DeckCapabilities.EphemeralState],
+          provides: [Capabilities.BootGate],
+        },
+        () => import('./src/capabilities/link-action-gate.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
+        'LayoutViewState',
+        {
+          requires: [
+            Capabilities.AtomRegistry,
+            AppCapabilities.Layout,
+            DeckCapabilities.View,
+            AttentionCapabilities.ViewState,
+          ],
+          provides: [],
+        },
+        () => import('./src/capabilities/layout-view-state.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'GraphRetention',
@@ -125,6 +148,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           activatesOn: ActivationEvents.Startup,
           requires: [
             Capabilities.OperationInvoker,
+            AppCapabilities.LinkAction,
             AppCapabilities.NavigationHandler,
             AppCapabilities.NavigationTargetLoader,
             Capabilities.AtomRegistry,

@@ -92,6 +92,7 @@ export const TaskSetArticle = ({
   onTaskCreated,
 }: TaskSetArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
@@ -148,7 +149,7 @@ export const TaskSetArticle = ({
   const arranged = sort.field !== 'manual' || !!groups;
   // A scoped list roots a branch at its first kept task, so a drop placed against the rows shown could detach that
   // task from a parent outside the scope.
-  const movable = !arranged && scope === undefined;
+  const movable = !readonly && !arranged && scope === undefined;
   // Row order as rendered, so the article's arrow keys walk the rows the reader sees.
   const rows = useMemo(() => (groups ? groups.flatMap((group) => group.tasks) : tasks), [groups, tasks]);
   const handleStatusesChange = useCallback(
@@ -157,7 +158,7 @@ export const TaskSetArticle = ({
     [setFilterText],
   );
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
-  const { checked, onTaskCheck } = useCheckedTasks(taskSet);
+  const { checked, onTaskCheck } = useCheckedTasks(taskSet, readonly);
 
   const handleUpdate = useTaskUpdate(spaceId);
   const showError = useTaskErrorToast();
@@ -347,12 +348,12 @@ export const TaskSetArticle = ({
       checked={checked}
       collapsed={collapsed}
       selected={currentId}
-      getTaskActions={getTaskActions}
-      getDelegateActions={getDelegateActions}
+      getTaskActions={readonly ? undefined : getTaskActions}
+      getDelegateActions={readonly ? undefined : getDelegateActions}
       onTaskCheck={onTaskCheck}
       onCollapsedChange={setCollapsed}
-      onTaskCreate={handleCreate}
-      onTaskUpdate={handleUpdate}
+      onTaskCreate={readonly ? undefined : handleCreate}
+      onTaskUpdate={readonly ? undefined : handleUpdate}
       onTaskMove={movable ? handleMove : undefined}
       onTaskSelect={handleOpen}
     >
@@ -366,17 +367,21 @@ export const TaskSetArticle = ({
             <TaskList.Content />
           </TaskList.Viewport>
         </Panel.Body>
-        {/* Framed as the chat prompt is: inset from the panel's edges, in a bordered box of its own surface. */}
-        <Panel.Footer classNames='p-2 dx-grow bg-base-surface'>
-          <TaskList.Editor
-            createOnly
-            showDescription
-            acceptFiles={!!attachFile}
-            descriptionExtensions={descriptionExtensions}
-            classNames='py-2 dx-group-surface border border-separator-subtle rounded-sm'
-            placeholder={t('task-create.placeholder')}
-          />
-        </Panel.Footer>
+        {/* Framed as the chat prompt is, in a box of its own surface. Padded on the block axis only, and ringed
+            rather than bordered, because either one on the inline axis would inset the pane's grid from the rows'
+            and its fields would no longer sit under the columns they edit. */}
+        {!readonly && (
+          <Panel.Footer classNames='py-2 dx-grow bg-base-surface'>
+            <TaskList.Editor
+              createOnly
+              showDescription
+              acceptFiles={!!attachFile}
+              descriptionExtensions={descriptionExtensions}
+              classNames='py-2 dx-group-surface ring-1 ring-inset ring-separator-subtle rounded-sm'
+              placeholder={t('task-create.placeholder')}
+            />
+          </Panel.Footer>
+        )}
       </Panel.Root>
     </TaskList.Root>
   );
@@ -454,14 +459,14 @@ const useFilterQuery = (
  * Offered only when a plugin contributes a {@link TasksCapabilities.TaskAction}: the checkbox marks
  * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
  */
-const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
+const useCheckedTasks = (taskSet: TaskSet.TaskSet, readonly: boolean) => {
   const actions = Hooks.useCapabilities(TasksCapabilities.TaskAction);
   const ids = useSelection(taskSet.id, 'multi');
   const { toggle } = useSelectionActions(taskSet.id);
   const checked = useMemo(() => new Set(ids), [ids]);
   const handleTaskCheck = useCallback((task: Task.Task) => toggle(task.id), [toggle]);
 
-  return actions.length > 0
+  return !readonly && actions.length > 0
     ? { checked, onTaskCheck: handleTaskCheck }
     : { checked: undefined, onTaskCheck: undefined };
 };

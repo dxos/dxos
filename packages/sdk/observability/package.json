@@ -74,6 +74,10 @@
       "types": "./dist/types/src/extensions/otel/OtelMetricsSink.d.ts",
       "import": "./dist/lib/extensions/otel/OtelMetricsSink.mjs"
     },
+    "./OtelProxy": {
+      "types": "./dist/types/src/extensions/otel/OtelProxy.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelProxy.mjs"
+    },
     "./OtelSpanSink": {
       "types": "./dist/types/src/extensions/otel/OtelSpanSink.d.ts",
       "import": "./dist/lib/extensions/otel/OtelSpanSink.mjs"

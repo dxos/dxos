@@ -23,10 +23,20 @@
       "types": "./dist/types/src/node-shell.d.ts",
       "import": "./dist/lib/node-shell.mjs"
     },
+    "./protocol": {
+      "source": "./src/protocol.ts",
+      "types": "./dist/types/src/protocol.d.ts",
+      "import": "./dist/lib/protocol.mjs"
+    },
     "./remote-process": {
       "source": "./src/remote-process.ts",
       "types": "./dist/types/src/remote-process.d.ts",
       "import": "./dist/lib/remote-process.mjs"
+    },
+    "./script-runner": {
+      "source": "./src/ScriptRunner.ts",
+      "types": "./dist/types/src/ScriptRunner.d.ts",
+      "import": "./dist/lib/script-runner.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",

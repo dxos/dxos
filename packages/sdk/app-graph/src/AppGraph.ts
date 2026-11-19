@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Function from 'effect/Function';
+import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Atom from 'effect/reactivity/Atom';
@@ -235,6 +236,14 @@ export class GraphImpl implements WritableGraph {
   pipe() {
     // eslint-disable-next-line prefer-rest-params
     return Pipeable.pipeArguments(this, arguments);
+  }
+
+  [Hash.symbol](): number {
+    return Hash.random(this);
+  }
+
+  [Equal.symbol](that: unknown): boolean {
+    return this === that;
   }
 
   readonly onNodeChanged = new Event<{
@@ -1007,7 +1016,13 @@ export const removeNode = <T extends WritableGraph>(graph: T, id: string, edges 
   const internal = getInternal(graph);
   internal._setNode(id, Option.none());
   graph.onNodeChanged.emit({ id, node: Option.none() });
-  // TODO(wittjosiah): Reset expanded and initialized flags?
+  // The builder drops the node's connectors with it, so its expansions wait to re-run when it comes back.
+  for (const key of internal._expanded) {
+    if (primaryParts(key)[0] === id) {
+      internal._expanded.delete(key);
+      internal._pendingExpands.add(key);
+    }
+  }
 
   if (edges) {
     const nodeEdges = internal._currentEdges(id);

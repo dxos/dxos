@@ -19,7 +19,7 @@ export type TriggerComponentProps = ComputeNodeViewProps<TriggerShape>;
 
 export const TriggerComponent = ({ node: shape }: TriggerComponentProps) => {
   const [space] = useSpaces();
-  const functionTrigger = useResolveRef(shape.functionTrigger);
+  const functionTrigger = useResolveRef(shape.data?.functionTrigger);
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {

@@ -20,6 +20,14 @@ moon run plugin-markdown:check-edge-release
 It builds the package's bundle into `dist/plugin` (the same build `dx registry publish` uploads) and runs the bundle
 check below on it. The plugin runs alone on EDGE, so no other plugin's bundle is built beside it.
 
+## Shipping the bundle in the package
+
+The same packages inherit `prepack-edge-release`, which runs `check-edge-release` and drops the bundle's source maps
+(`moon run plugin-markdown:check-edge-release --force` brings them back). The pkg.pr.new and npm publish workflows run
+it before packing, so each package's tarball carries `dist/plugin`, from which dxos/edge can seed its registry
+(`node_modules/@dxos/<plugin>/dist/plugin`). A plugin whose check fails publishes without one. No `exports` entry names
+it.
+
 ## Publishing a plugin to EDGE
 
 The same packages inherit `publish-edge-release` (all but `plugin-assistant`, which excludes it until its bundle
@@ -32,9 +40,12 @@ moon run plugin-markdown:publish-edge-release -- --dry-run
 ```
 
 It prints one line per plugin: `✓` published (or the same content was already there), `!` stale (the version already
-holds other content on EDGE, and only a version bump publishes it; a warning, not a failure), or `✗` failed. The
+holds other content on EDGE, and only a version bump publishes it; a warning, not a failure), or `✗` failed.
+
+`--build <id>` (or `DX_PLUGIN_BUILD`) publishes the bundle as `<version>+<id>`, rewriting its manifest to match. The
 nightly Deploy Apps run publishes every plugin that inherits it to preview with
-`moon exec --on-failure continue :publish-edge-release`.
+`DX_PLUGIN_BUILD=main.<sha> moon exec --on-failure continue :publish-edge-release`, so each snapshot of `main` gets a
+version of its own and becomes `latest`, where the bare release version would be `stale` after its first upload.
 
 ## Checking a plugin bundle
 

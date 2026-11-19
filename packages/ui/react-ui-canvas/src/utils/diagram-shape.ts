@@ -8,7 +8,7 @@
 // edit has moved a connector's end off the route the layout gave it does the canvas route it itself, in the same style.
 //
 
-import { Diagnostics, Scene as Dsl, SvgFile, UmlGrid } from '@dxos/diagram';
+import { Diagnostics, Scene as DSL, SvgFile, UmlGrid } from '@dxos/diagram';
 import {
   type Bounds,
   type DiagramConnector,
@@ -18,6 +18,7 @@ import {
   type Point,
   Shape,
   isDiagramNode,
+  isHullNode,
 } from '@dxos/scene';
 
 import { nodeBounds } from './shapes.ts';
@@ -83,7 +84,7 @@ export const diagramNodeElements = (node: DiagramNode, { hideLabel = false } = {
 
 /** The node as `SvgFile` draws its elements, in scene coordinates. */
 export const diagramNodeMarkup = (node: DiagramNode, options: { hideLabel?: boolean } = {}): SvgFile.Markup[] => {
-  const object: Dsl.WorldObject = { id: node.id, elements: diagramNodeElements(node, options) };
+  const object: DSL.WorldObject = { id: node.id, elements: diagramNodeElements(node, options) };
   return object.elements.flatMap(
     (element) => SvgFile.elementMarkup(object, element, new Map(), SvgFile.markerIds(node.id)) ?? [],
   );
@@ -112,7 +113,7 @@ export const diagramRoute = (
       ? { points: [...route], laid }
       : { points: UmlGrid.rerouteConnector(from, to, obstacles.map(rectOf)), laid };
   }
-  const object: Dsl.WorldObject = { id: 'connector', elements: [] };
+  const object: DSL.WorldObject = { id: 'connector', elements: [] };
   const targets = new Map([
     ['connector/source', from],
     ['connector/target', to],
@@ -184,13 +185,19 @@ export const diagramLinkMarkup = (
   route: DiagramRoute,
   markers: SvgFile.MarkerIds,
 ): SvgFile.Markup[] => {
-  const object: Dsl.WorldObject = { id: link.id, elements: diagramLinkElements(link, connector, route) };
+  const object: DSL.WorldObject = { id: link.id, elements: diagramLinkElements(link, connector, route) };
   return object.elements.flatMap((element) => SvgFile.elementMarkup(object, element, new Map(), markers) ?? []);
 };
 
 /** Whether a node is a diagram group's backdrop (a tinted box), which sits under the shapes it groups. */
 export const isDiagramBackdrop = (node: Node): boolean => isDiagramNode(node) && node.element.fill === 'tint';
 
-/** Whether a re-routed connector keeps clear of a node: a box does, a group's backdrop or a caption it may cross. */
+/**
+ * Whether a re-routed connector keeps clear of a node: a box does; a hull, a group's backdrop or a caption it may
+ * cross.
+ */
 export const isRouteObstacle = (node: Node): boolean =>
-  node.style?.guide !== true && !isDiagramBackdrop(node) && !(isDiagramNode(node) && node.element.kind === 'text');
+  node.style?.guide !== true &&
+  !isHullNode(node) &&
+  !isDiagramBackdrop(node) &&
+  !(isDiagramNode(node) && node.element.kind === 'text');

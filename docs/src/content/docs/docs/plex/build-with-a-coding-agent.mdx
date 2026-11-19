@@ -1,0 +1,61 @@
+---
+title: Build with a coding agent
+description: Have Claude Code, Codex or Cursor build a plugin and load it into your Composer, from a prompt you can edit first.
+---
+
+import AgentPrompt from '../../../../components/AgentPrompt.astro';
+
+A coding agent can build a plugin in a folder of yours and load it into Composer, in a few minutes. Before you start:
+
+1. Sign in to [Composer Preview](https://preview.composer.space) and keep it open. Only Composer Preview loads plugins
+   from a dev server; composer.space loads only the plugins it ships with.
+2. Open an empty folder in your agent. The plugin is its own project, and the agent sets it up there.
+
+Then describe the plugin you want in the prompt below, or pick an example, and open it in your agent.
+
+export const examples = [
+  {
+    label: 'World clock',
+    prompt:
+      "Create a Composer plugin called World Clock. For each space it should keep a list of timezones, shown as a map with a pin for each above a row of ticking clocks, so the team can see everyone's local time.",
+  },
+  {
+    label: 'Sankey chart',
+    prompt:
+      'Create a Composer plugin called Sankey. It should add a Sankey chart type to sheet charts: a chart of a range whose columns are from, to and amount draws the flows between them, so a budget shows how income flows into spending categories.',
+  },
+  {
+    label: 'Receipts filter',
+    prompt:
+      'Create a Composer plugin called Receipts. It should add a Find receipts action to the mailbox toolbar that tags every receipt or invoice in the mailbox and reads its total, and a Receipts page for each mailbox that lists them and charts spending per month.',
+  },
+  {
+    label: 'QR code canvas tool',
+    prompt:
+      'Create a Composer plugin called QR Code. It should add a QR code tool to the canvas palette: the element holds a URL or text, draws a QR code for it that a phone can scan, and redraws when the text changes.',
+  },
+  {
+    label: 'Tournament bracket',
+    prompt:
+      'Create a Composer plugin called Tournament Bracket. It should run a tournament for any game in Composer: given players and a game, it builds a bracket where each match is a game that opens and plays like any other. When a match ends, the winner moves to the next round.',
+  },
+];
+
+<AgentPrompt skill="composer-plugin-dev" examples={examples} prompt={examples[0].prompt} />
+
+The `composer-plugin-dev` skill tells the agent how to set up the project, which DXOS packages to use, and how to load
+the plugin into your Composer. The prompt installs it in the folder first, so you do not need to install anything.
+
+## When the agent hands off
+
+The agent builds the plugin and starts a dev server for it. Then it asks you to load it:
+
+1. In Composer Preview, open **Settings**, then **Plugins**.
+2. Click **Enable** under **Dev Server**.
+3. Allow the browser's prompt to reach devices on your local network.
+4. Work through the checklist the agent gives you, and tell it what you see.
+
+The plugin loads from the agent's dev server, so it is there only while the server runs. To keep it,
+[Publishing a plugin](/docs/plex/publishing-plugins/) puts it in your private registry.
+
+To build one yourself instead, start with [Create a plugin](/docs/plex/learn/create-plugin/).

@@ -14,7 +14,6 @@ import * as BrowserSkill from '@dxos/assistant-toolkit/BrowserSkill';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as DelegationStrategy from '@dxos/assistant-toolkit/DelegationStrategy';
-import * as MemorySkill from '@dxos/assistant-toolkit/MemorySkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
@@ -46,7 +45,6 @@ const skillDefinition = Effect.fnUntraced(function* () {
       WebSearchSkill,
       AgentSkill,
       PlanningSkill,
-      MemorySkill,
       AutomationSkill,
       SkillManagerSkill,
       DelegationSkill,

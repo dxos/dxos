@@ -30,7 +30,13 @@ describe('update-task', () => {
         priority: 'low',
       });
 
-      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 'm' });
+      const result = yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 'm' });
+
+      // Only the delta comes back, not the task and its history.
+      expect(result.task.uri).toBe(Ref.make(task).uri);
+      expect(result.changed).toEqual({ status: 'started', estimate: 'm' });
+      expect(result.historyEntry).toBeDefined();
+      expect(result).not.toHaveProperty('history');
 
       expect(task.title).toBe('Draft');
       expect(task.priority).toBe('low');
@@ -69,6 +75,35 @@ describe('update-task', () => {
       expect(task.delegate?.role).toBe('assistant');
       expect(Task.refEntityId(task.delegate?.subject)).toBe(sessions[0].id);
       expect(task.assignee?.identityDid).toBe(owner.identityDid);
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({
+            types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
+      ),
+    ),
+  );
+
+  it.effect('reports a session claim in an output its schema accepts, the delegate keeping its session ref', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+
+      const result = yield* updateTask.handler({
+        task: Ref.make(task),
+        assignee: owner,
+        remoteSession: { sessionId: 'session_output' },
+      });
+
+      // As the runtime checks it before the output leaves the process (compute-runtime `protocol.ts`).
+      expect(() =>
+        Schema.decodeUnknownSync(Schema.toType(updateTask.output), { onExcessProperty: 'error' })(result),
+      ).not.toThrow();
+      expect(Ref.isRef(result.changed.delegate?.subject)).toBe(true);
     }).pipe(
       Effect.provide(
         Layer.provideMerge(

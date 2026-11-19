@@ -83,8 +83,10 @@ export const make = () =>
   });
 
 /**
- * The skill as code mode states it: the same operations, called from code, and instructions that list nothing. Code
- * mode's prompt states no other skill, operation or type, so these are how the model finds them.
+ * The skill as code mode states it: the lookups and `enableSkills`, called from code, and instructions that list
+ * nothing. Code mode states the conversation's enabled skills beside it; these are how the model finds every other
+ * skill, operation and type. Its MCP connection operations are left out: they are an enabled skill's to give, as under
+ * tool calling, so a conversation that does not bind the Skill Manager cannot add or turn on an MCP server.
  */
 export const makeForCodeMode = () =>
   Skill.make({
@@ -93,28 +95,21 @@ export const makeForCodeMode = () =>
     description,
     instructions: Template.make({
       source: trim`
-        Nothing about this workspace is listed in this prompt. Its skills, their operations and its types
-        are found with the Skill Manager's operations, which the Operations section lists with the code
-        that calls each.
+        The skills enabled in this conversation are stated in this prompt, with their operations. Every other skill,
+        its operations and the workspace's types are found with the Skill Manager's operations, which the Operations
+        section lists with the code that calls each.
 
-        - Query skills lists the skills, each saying whether it is enabled here and whether you may
-          enable it. An enabled skill carries the rules for its part of the work, so at the start of a
-          request get each one the request touches in full by passing its key in \`keys\`, and follow its
-          instructions.
-        - Query operations searches the operations of the skills you can use by what they do
-          (\`query\`), or lists one skill's (\`skill\`). Look an operation up by passing its key in
-          \`keys\` before calling it: that gives its input. Call it the way the Operations section calls
-          the Skill Manager's own, by its \`key\` or its \`tool\` name.
-        - An operation whose skill is not enabled cannot be called yet. Enable the skill with Enable
-          skills (only one you may enable); its operations can be called from your next eval call.
+        - Query skills lists the skills, each saying whether it is enabled here and whether you may enable it;
+          passing keys in \`keys\` gives a skill's instructions and operations.
+        - Query operations searches the operations of the skills you can use by what they do (\`query\`), or lists
+          one skill's (\`skill\`). Look an operation up by passing its key in \`keys\` before calling it: that gives
+          its input. Call it the way the Operations section calls the stated ones, by its \`key\` or its \`tool\` name.
+        - An operation whose skill is not enabled cannot be called yet. Enable the skill with Enable skills (only one
+          you may enable); its instructions and operations are stated from your next eval call.
         - Query types searches the registered types (\`query\`); pass \`typenames\` to get their fields.
-        - A connection's MCP tools are on unless this conversation turned them off: Query MCP
-          connections lists them, and Set MCP connection turns one on from your next eval call.
-
-        Find what a request needs in one eval call that prints it, then do the work in the next.
       `,
     }),
-    tools,
+    tools: Skill.toolDefinitions({ operations: [QuerySkills, EnableSkills, QueryOperations, QueryTypes] }),
   });
 
 export { SkillManagerHandlers as Handlers } from './operations/index.ts';

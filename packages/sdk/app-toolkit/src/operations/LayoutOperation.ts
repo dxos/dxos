@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
-import { Selection } from '@dxos/react-ui-attention/types';
+import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 
 import { Translations } from '../app/index.ts';
 
@@ -321,7 +321,11 @@ export const Open = Operation.make({
         description: 'Navigation paths of the items to open.',
       }),
     ),
-    variant: Schema.optional(Schema.String.annotate({ description: 'The variant of the item to open.' })),
+    variant: Schema.optional(
+      Schema.String.annotate({
+        description: 'The variant of the item to open. A linked companion (`~comments`) opens beside it.',
+      }),
+    ),
     name: Schema.optional(
       Schema.String.annotate({
         description:
@@ -334,6 +338,11 @@ export const Open = Operation.make({
     ),
     workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to open the items in.' })),
     scrollIntoView: Schema.optional(Schema.Boolean.annotate({ description: 'Scroll the items into view.' })),
+    viewState: Schema.optional(
+      Schema.Array(ViewState.Patch).annotate({
+        description: "View state to set before the items open; pass a resolved navigation target's `viewState` as is.",
+      }),
+    ),
     focus: Schema.optional(
       Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({
         description:
@@ -400,6 +409,10 @@ export const Set = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.Array(Schema.String.annotate({ description: 'Ids of the items to set.' })),
+    workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to set the items in.' })),
+    focus: Schema.optional(
+      Schema.Literal(false).annotate({ description: 'Focus no item; by default the item attention falls to.' }),
+    ),
   }),
   output: Schema.Void,
 });
@@ -418,7 +431,6 @@ export const ScrollIntoView = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.optional(Schema.String.annotate({ description: 'The id of the item to scroll into view.' })),
-    cursor: Schema.optional(Schema.String.annotate({ description: 'A cursor to scroll to within the item.' })),
     ref: Schema.optional(Schema.String.annotate({ description: 'A reference id for the scroll target.' })),
     focus: Schema.optional(
       Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({

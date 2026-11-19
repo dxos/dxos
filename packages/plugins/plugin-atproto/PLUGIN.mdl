@@ -58,6 +58,7 @@ feat F-3: Publish / reconcile
 
 ```mdl
 feat F-4: PDS browser
+  uses: [AtprotoPublication]
   req F-4.1: A virtual "PDS" node appears in the navigation system section (below Database, above
     Devtools) only when the space holds an atproto connection.
   req F-4.2: The browser has an account selector (atproto connections); the first is selected by default.

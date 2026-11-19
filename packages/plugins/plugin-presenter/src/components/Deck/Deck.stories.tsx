@@ -246,6 +246,34 @@ export const Default: Story = {
   },
 };
 
+/** A slide stays on screen through every slide change; no commit leaves the frame empty, which would flash. */
+export const SlideChangeKeepsFrame: Story = {
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(deck.querySelector('[data-slide]')).not.toBeNull());
+    let emptyCommits = 0;
+    const observer = new MutationObserver(() => {
+      if (!deck.querySelector('[data-slide]')) {
+        emptyCommits++;
+      }
+    });
+    observer.observe(deck, { childList: true, subtree: true });
+    deck.focus();
+    for (const [key, page] of [
+      ['{ArrowRight}', '2 / 5'],
+      ['{ArrowRight}', '3 / 5'],
+      ['{ArrowLeft}', '2 / 5'],
+    ] as const) {
+      await userEvent.keyboard(key);
+      await expect(await canvas.findByText(page)).toBeVisible();
+    }
+    observer.disconnect();
+    await expect(emptyCommits).toBe(0);
+  },
+};
+
 export const Empty: Story = {
   decorators: [withEmptyPlugins],
   args: { count: 0 },
@@ -401,7 +429,9 @@ const gridColumns = (canvasElement: HTMLElement) =>
   });
 
 const expectSelected = (canvas: ReturnType<typeof within>, index: number) =>
-  waitFor(() => expect(canvas.getByTestId(`presenter.slide-grid.${index}`)).toHaveAttribute('aria-selected', 'true'));
+  waitFor(() =>
+    expect(canvas.getByTestId(`presenter.slide-gallery.${index}`)).toHaveAttribute('aria-selected', 'true'),
+  );
 
 /** In the grid Up and Down move between rows and stop at the first and last, and the keys survive presenting. */
 export const GridKeys: Story = {
@@ -410,7 +440,7 @@ export const GridKeys: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deck = await canvas.findByTestId('presenter.deck');
-    await canvas.findByTestId('presenter.slide-grid.9');
+    await canvas.findByTestId('presenter.slide-gallery.9');
     const columns = await gridColumns(canvasElement);
     deck.focus();
     await expectSelected(canvas, 0);
@@ -440,8 +470,8 @@ export const GridKeysOnTile: Story = {
   decorators: [withEmptyPlugins],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByTestId('presenter.slide-grid.0'));
-    await canvas.findByTestId('presenter.slide-grid.9');
+    await userEvent.click(await canvas.findByTestId('presenter.slide-gallery.0'));
+    await canvas.findByTestId('presenter.slide-gallery.9');
     const columns = await gridColumns(canvasElement);
     await expectSelected(canvas, 0);
     await userEvent.keyboard('{ArrowDown}');
@@ -466,15 +496,17 @@ export const GridSpaceOnTile: Story = {
   decorators: [withEmptyPlugins],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByTestId('presenter.slide-grid.1'));
-    await waitFor(() => expect(canvas.getByTestId('presenter.slide-grid.1')).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.click(await canvas.findByTestId('presenter.slide-gallery.1'));
+    await waitFor(() =>
+      expect(canvas.getByTestId('presenter.slide-gallery.1')).toHaveAttribute('aria-selected', 'true'),
+    );
     await userEvent.keyboard(' ');
     await expect(await canvas.findByRole('heading', { name: 'Plain' })).toBeInTheDocument();
-    await expect(canvas.queryByTestId('presenter.slide-grid.1')).toBeNull();
+    await expect(canvas.queryByTestId('presenter.slide-gallery.1')).toBeNull();
   },
 };
 
-/** Left, right and the brackets move whole slides past any build; Cmd or Ctrl with left or right jumps to the deck's ends. */
+/** Left, right and the brackets move whole slides past any build, landing fully built; Cmd or Ctrl with left or right jumps to the deck's ends. */
 export const SlideKeys: Story = {
   render: ClickStepsStory,
   decorators: [withEmptyPlugins],
@@ -517,24 +549,33 @@ export const SlideKeysAtEnd: Story = {
     const canvas = within(canvasElement);
     const deck = await canvas.findByTestId('presenter.deck');
     const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    // The list mounts after the page number, so a count of hidden items waits for the items.
+    const built = () =>
+      waitFor(async () => {
+        await expect(canvasElement.querySelectorAll('li')).toHaveLength(3);
+        await expect(hidden()).toBe(0);
+      });
     deck.focus();
     await userEvent.keyboard('{ArrowRight}');
     await expect(await canvas.findByText('2 / 2')).toBeVisible();
-    await waitFor(() => expect(hidden()).toBe(3));
-    await userEvent.keyboard('{ArrowDown}');
-    await waitFor(() => expect(hidden()).toBe(2));
+    await built();
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(hidden()).toBe(1));
     await userEvent.keyboard('{ArrowRight}');
     await expect(canvas.getByText('2 / 2')).toBeVisible();
-    await expect(hidden()).toBe(2);
+    await expect(hidden()).toBe(1);
 
-    // The brackets land on a slide fully built, and Right at its first step.
+    // Left and right, like the brackets, land on a slide fully built.
     await userEvent.keyboard('[[');
     await expect(await canvas.findByText('1 / 2')).toBeVisible();
     await userEvent.keyboard(']');
     await expect(await canvas.findByText('2 / 2')).toBeVisible();
-    await waitFor(() => expect(hidden()).toBe(0));
-    await userEvent.keyboard('{ArrowLeft}{ArrowRight}');
-    await waitFor(() => expect(hidden()).toBe(3));
+    await built();
+    await userEvent.keyboard('{ArrowUp}{ArrowLeft}');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await built();
   },
 };
 
@@ -573,7 +614,7 @@ export const ClickStepsEdited: Story = {
     await userEvent.keyboard('{ArrowDown}{ArrowDown}');
     await waitFor(() => expect(hidden()).toBe(1));
     await userEvent.click(canvas.getByTestId('replace-slide'));
-    // The replaced slide remounts under a fresh frame, which shows once its size is measured.
+    // The replaced slide remounts inside the frame and shows once its content has rendered.
     const after = await canvas.findByRole('heading', { name: 'After' });
     await waitFor(() => expect(after).toBeVisible());
     await waitFor(() => expect(hidden()).toBe(3));

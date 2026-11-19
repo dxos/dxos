@@ -5,6 +5,7 @@
 export * from './collection-path.ts';
 export * from './object-form.ts';
 export * from './presence.ts';
+export * from './restartable.ts';
 export * from './settings-space.ts';
 export * from './space-display.ts';
 export * from './space-template.ts';

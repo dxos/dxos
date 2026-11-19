@@ -160,6 +160,7 @@ component CommandBar
 
 ```mdl
 feat F-1: Read the index from the app
+  uses: [read]
   req F-1.1: A same-origin dev-server route answers read-only code-index tools by running `code-index mcp` as a child process.
   req F-1.2: The route accepts only loopback callers and JSON requests, so other pages and machines cannot read the source tree.
   req F-1.3: Without the route (a deployed build), every operation fails with an error that names the missing route.
@@ -167,6 +168,7 @@ feat F-1: Read the index from the app
 
 ```mdl
 feat F-2: The assistant shapes the graph
+  uses: [addFromQuery, addNeighbors, addNodes, CodeGraph, inspect, query, read, remove, setLayout]
   req F-2.1: The Code Graph skill offers query, inspect, read, addFromQuery, addNodes, addNeighbors, remove and setLayout, and the space's addObject to create a graph.
   req F-2.2: A chat about a CodeGraph object carries the skill (SkillsAnnotation).
   req F-2.3: Adding never duplicates a box or an arrow, and a box an arrow needs is added with it.

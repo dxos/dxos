@@ -48,6 +48,8 @@ export const PlainDialect: Dialect = {
 
   wrap: (code) => code,
 
+  operations: (operations) => renderPlainOperationList(operations),
+
   bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
     const run = RuntimeProvider.runPromise(Effect.succeed(runtime));
     const describe = makeDescriber({ syntax: PLAIN_HINTS, skills });
@@ -97,9 +99,29 @@ export const PlainDialect: Dialect = {
             // Matched on the typename rather than by URI: a registered type is indexed under its
             // VERSIONED DXN, and the model names a type the same way it does in a query —
             // unversioned. Objects only: a relation needs a source and target `make` cannot take.
-            const type = db.registry
-              .list()
-              .find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
+            const registered = () =>
+              db.registry.list().find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
+            // A type the registry lacks is asked of the graph's type sources: on EDGE an agent's database registers
+            // only its own types, and the rest are published by the plugin bundles that contribute them. A name that
+            // is not a valid unversioned typename, or a resolver that fails, is an unknown type, never a defect.
+            const resolved = (): Effect.Effect<unknown> =>
+              Schema.is(DXN.NameSchema)(typename)
+                ? Effect.tryPromise(
+                    () =>
+                      db.graph
+                        .createRefResolver({ context: { space: db.spaceId } })
+                        .resolveType?.(DXN.make(typename)) ?? Promise.resolve(undefined),
+                  ).pipe(Effect.orElseSucceed(() => undefined))
+                : Effect.succeed(undefined);
+            const type = registered() ?? (yield* resolved());
+            if (type !== undefined && Type.isType(type) && Type.isRelation(type)) {
+              return yield* Effect.fail(
+                new UnknownObjectTypeError({
+                  typename,
+                  message: `${typename} is a relation type; make creates objects only`,
+                }),
+              );
+            }
             if (type === undefined || !Type.isType(type) || !Type.isObject(type)) {
               return yield* Effect.fail(
                 new UnknownObjectTypeError({ typename, message: `Unknown object type: ${typename}` }),
@@ -121,10 +143,11 @@ export const PlainDialect: Dialect = {
           const invoke = (input: unknown = {}) => run(operation.invoke(input));
           // Bound under the tool name and its camelCase form: the derived names are kebab-case,
           // which is not an identifier, so `ops.researchOrg` would otherwise have to be bracketed.
-          return [
-            [operation.name, invoke],
-            [camelCase(operation.name), invoke],
-          ];
+          // Also under the operation's key, with and without `dxn:`, since the Skill Manager says an
+          // operation is called by its key or its tool name.
+          const key = operation.definition === undefined ? undefined : String(operation.definition.meta.key);
+          const keys = key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])];
+          return [operation.name, camelCase(operation.name), ...keys].map((name) => [name, invoke] as const);
         }),
       ),
     };
@@ -195,10 +218,13 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
   operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
   so they are indexed rather than dotted.
 
-  ${operations
-    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
-    .join('\n')}
+  ${renderPlainOperationList(operations)}
 `;
+
+const renderPlainOperationList = (operations: readonly SandboxOperation[]): string =>
+  operations
+    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
+    .join('\n');
 
 /** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
 export const camelCase = (name: string): string =>

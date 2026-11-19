@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj } from '@dxos/echo';
 import { type RenderList2D, type RenderLists2D, createNode, toRenderList2D } from '@dxos/react-ui-canvas/headless';
@@ -17,7 +17,7 @@ import { makeLayoutWriter } from './layout-writer.ts';
 
 /** A 2D exemplar in ECHO form, its root narrowed to the Scene2D it is. */
 const stored = (name: keyof typeof EXEMPLARS) => {
-  const document = toEcho(Dsl.readScenes(EXEMPLARS[name]).document);
+  const document = toEcho(DSL.readScenes(EXEMPLARS[name]).document);
   const root = document.root;
   if (!Obj.instanceOf(Scene.Scene2D, root)) {
     throw new Error(`${name} is not a 2D exemplar.`);

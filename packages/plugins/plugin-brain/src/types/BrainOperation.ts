@@ -10,8 +10,8 @@ import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Ref } from '@dxos/echo';
-import { FactStore } from '@dxos/pipeline-rdf/fact-store';
-import * as RDF from '@dxos/pipeline-rdf/types';
+import { Fact } from '@dxos/echo-memory';
+import * as MemoryService from '@dxos/echo-memory/MemoryService';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as ReplyGeneration from '@dxos/plugin-inbox/ReplyGeneration';
 
@@ -22,7 +22,7 @@ export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
  * Cursored fact extraction over a mailbox feed.
  *
  * Lives in plugin-brain rather than plugin-inbox because brain owns everything it needs — the
- * `FactStore` it writes to, the settings that parameterize it, and the surfaces that read the result.
+ * space memory it writes to, the settings that parameterize it, and the surfaces that read the result.
  * inbox owns the Mailbox and the feed cursor helpers, which this reaches through the plugin's public
  * API; nothing here inverts that.
  */
@@ -33,7 +33,7 @@ export const AnalyzeMailbox = Operation.make({
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore, Trace.TraceService],
+  services: [AiService.AiService, Database.Service, MemoryService.MemoryService, Trace.TraceService],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
       description: 'Mailbox whose feed messages are analyzed.',
@@ -68,7 +68,7 @@ export const CompactFact = Schema.Struct({
   subject: Schema.String,
   predicate: Schema.String,
   object: Schema.String,
-  factuality: RDF.FactualityValue,
+  factuality: Fact.FactualityValue,
   confidence: Schema.optional(Schema.Number),
   date: Schema.String,
   source: Schema.String,
@@ -86,14 +86,16 @@ export const QueryFacts = Operation.make({
       'Queries the space fact store (a semantic index of subject-predicate-object facts extracted from user content) with structured filters.',
     icon: 'ph--brain--regular',
   },
-  services: [FactStore],
+  services: [MemoryService.MemoryService],
   input: Schema.Struct({
     subjectEntity: Schema.optional(
-      Schema.String.annotate({ description: 'Entity slug the fact subject must match, e.g. "alice-smith".' }),
+      Schema.String.annotate({
+        description: 'Name, slug or IRI of the entity the fact subject must be, e.g. "Alice Smith" or "alice-smith".',
+      }),
     ),
     predicate: Schema.optional(Schema.String.annotate({ description: 'Exact predicate string, e.g. "works-at".' })),
     entity: Schema.optional(
-      Schema.String.annotate({ description: 'Entity slug appearing as either subject or object.' }),
+      Schema.String.annotate({ description: 'Name, slug or IRI of an entity appearing as either subject or object.' }),
     ),
     source: Schema.optional(Schema.String.annotate({ description: 'Source DXN the facts were extracted from.' })),
     minConfidence: Schema.optional(
@@ -103,12 +105,48 @@ export const QueryFacts = Operation.make({
     ),
     limit: Schema.optional(
       Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
-        description: 'Maximum facts returned (default 50).',
+        description: 'Maximum facts returned (default 50, at most 50 per call).',
+      }),
+    ),
+    offset: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Number of matching facts to skip, for reading the results in windows (default 0).',
       }),
     ),
   }),
   output: Schema.Struct({
     facts: Schema.Array(CompactFact),
+    /** Number of facts the query matched, of which `facts` is one window. */
+    total: Schema.Number,
+    /** Present when the output was cut; tells the model how to read the rest. */
+    note: Schema.optional(Schema.String),
+  }),
+}).pipe(Operation.visible);
+
+/** One SPARQL solution as the model reads it: each bound variable to its term (`<iri>`, `_:blank`, or literal text). */
+export const SparqlRow = Schema.Record(Schema.String, Schema.String);
+export type SparqlRow = Schema.Schema.Type<typeof SparqlRow>;
+
+export const QuerySparql = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.brain.querySparql'),
+    name: 'Query SPARQL',
+    description:
+      'Runs a raw SPARQL SELECT against the space memory (an RDF quad store of facts in named graphs) and returns its solutions. Anything but a SELECT is refused.',
+    icon: 'ph--brain--regular',
+  },
+  services: [MemoryService.MemoryService],
+  input: Schema.Struct({
+    sparql: Schema.String.annotate({
+      description: 'A SPARQL SELECT query. Always include LIMIT (at most 50) and page with OFFSET.',
+    }),
+  }),
+  output: Schema.Struct({
+    rows: Schema.Array(SparqlRow),
+    /** Number of solutions the query produced, of which `rows` is the part returned. */
+    total: Schema.Number,
+    /** Present when the output was cut; tells the model how to read the rest. */
+    note: Schema.optional(Schema.String),
   }),
 }).pipe(Operation.visible);
 
@@ -120,7 +158,7 @@ export const SummarizeSubject = Operation.make({
       'Composes a grounded summary of everything the space fact store knows about a subject (person, organization, topic), citing fact ids.',
     icon: 'ph--brain--regular',
   },
-  services: [FactStore, AiService.AiService],
+  services: [MemoryService.MemoryService, AiService.AiService],
   input: Schema.Struct({
     subject: Schema.String.annotate({
       description: 'Entity slug or label to summarize, e.g. "Alice Smith" or "acme-corp".',
@@ -146,7 +184,7 @@ export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
 /**
  * Drafts a reply grounded on the thread and the facts the space knows about its participants.
  *
- * Lives here rather than in plugin-inbox because it needs the `FactStore` brain owns. The surfaces
+ * Lives here rather than in plugin-inbox because it needs the space memory brain reads. The surfaces
  * that offer it are inbox's, so it reaches them through `InboxCapabilities.ReplyGenerator` — the
  * dependency runs brain → inbox and a direct call from the surface would invert it.
  */
@@ -158,7 +196,7 @@ export const GenerateReply = Operation.make({
       'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
     icon: 'ph--sparkle--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore],
+  services: [AiService.AiService, Database.Service, MemoryService.MemoryService],
   // The shared contract, so a surface can invoke whatever is contributed without naming this plugin.
   input: ReplyGeneration.Input,
   output: ReplyGeneration.Output,

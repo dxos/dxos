@@ -5,10 +5,25 @@
 // Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
 // esbuild cannot load.
+import * as OtelProxy from '@dxos/observability/OtelProxy';
+
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
-import { injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
+import { edgeUrl } from '../util/edge-url.ts';
+import { type LinkPreviewDetails, injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
+import { PUBLICATIONS_PATH } from '../util/publication-paths.ts';
+import { phosphorPath, renderCard } from './preview-image/index.ts';
+import { assets as previewAssets } from './preview-image/worker-assets.ts';
+import {
+  type RenderPreview,
+  cardOf,
+  handlePublicationRead,
+  objectIdOf,
+  previewImageUrl,
+  publicIdOf,
+  readManifest,
+} from './publications.ts';
 
 type Env = {
   ASSETS: Fetcher;
@@ -342,13 +357,19 @@ const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise
  * client-side route. A navigation always is, so a route containing a dot keeps the SPA.
  */
 const serveAsset = async (request: Request, env: Env): Promise<Response> => {
+  const url = new URL(request.url);
+  const isFile = isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') });
+  // The app's `index.html` at `/` would install its service worker on the viewer's origin.
+  if (isViewerHost(url.hostname) && !isFile) {
+    return serveViewer(request, url, env);
+  }
+
   const response = await env.ASSETS.fetch(request);
   if (response.status !== 404) {
     return response;
   }
 
-  const url = new URL(request.url);
-  if (isFileRequest({ pathname: url.pathname, secFetchMode: request.headers.get('Sec-Fetch-Mode') })) {
+  if (isFile) {
     const archived = await serveArchivedAsset(request, env, url);
     return (
       archived ??
@@ -363,121 +384,69 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
   return withLinkPreview(request, page, url);
 };
 
+const serveViewer = async (request: Request, url: URL, env: Env): Promise<Response> => {
+  // `/viewer`, not `/viewer.html`: the asset server answers the `.html` path with a redirect to it.
+  const page = await env.ASSETS.fetch(new Request(new URL('/viewer', url), request));
+  return withPublicationPreview(request, page, url, env);
+};
+
+export const isViewerHost = (hostname: string): boolean => hostname.startsWith('view.');
+
 /**
  * Name a client-side route's `index.html` after the `title` its URL carries, so a link pasted into a
  * messenger previews as the object it opens rather than as the bare app. Anything else passes through.
  */
 const withLinkPreview = async (request: Request, page: Response, url: URL): Promise<Response> => {
   const title = readLinkTitle(url);
-  if (
-    !title ||
-    request.method !== 'GET' ||
-    page.status !== 200 ||
-    !page.headers.get('Content-Type')?.includes('text/html')
-  ) {
+  return title && isPreviewable(request, page) ? rewritePreview(page, title) : page;
+};
+
+const withPublicationPreview = async (request: Request, page: Response, url: URL, env: Env): Promise<Response> => {
+  const publicId = publicIdOf(url);
+  const edge = edgeUrl();
+  if (!publicId || !edge || !isPreviewable(request, page)) {
     return page;
   }
+  const manifest = await readManifest(edge, publicId);
+  const objectId = objectIdOf(url);
+  const card = manifest && cardOf(manifest, objectId);
+  const object = card?.kind === 'object' ? card.title : readLinkTitle(url);
+  const space = manifest?.name;
+  const title = object ?? space;
+  if (!title) {
+    return page;
+  }
+  // A space card describes only a space link, never an object the manifest has no entry for.
+  const cardMatchesLink = card?.kind === 'object' || object === undefined;
+  return rewritePreview(page, title, {
+    description:
+      (cardMatchesLink ? card?.description : undefined) ??
+      (object && space ? `From ${space}, published from Composer.` : 'A space published from Composer.'),
+    image: card && previewImageUrl(url.origin, publicId, card.kind === 'object' ? objectId : undefined).toString(),
+  });
+};
 
+const previewRenderer =
+  (request: Request, env: Env): RenderPreview =>
+  (card) =>
+    renderCard(card, {
+      assets: previewAssets,
+      loadIcon: async (id) => {
+        const path = phosphorPath(id);
+        const response = path ? await env.ASSETS.fetch(new Request(new URL(path, request.url))) : undefined;
+        return response?.ok ? response.text() : undefined;
+      },
+    });
+
+const isPreviewable = (request: Request, page: Response): boolean =>
+  request.method === 'GET' && page.status === 200 && !!page.headers.get('Content-Type')?.includes('text/html');
+
+const rewritePreview = async (page: Response, title: string, details?: LinkPreviewDetails): Promise<Response> => {
   const headers = new Headers(page.headers);
   // The body changes, so the asset's length and validator no longer describe it.
   headers.delete('Content-Length');
   headers.delete('ETag');
-  return new Response(injectLinkPreview(await page.text(), title), { status: page.status, headers });
-};
-
-const OTEL_PREFIX = '/api/otel';
-const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
-
-/** Reverse-proxy OTel ingestion to PostHog, so every client posts same-origin to one endpoint. */
-const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
-  const origin = request.headers.get('Origin');
-  // Native builds export here cross-origin; their own asset server has no `/api` routes.
-  const allowed = nativeOrigins(env.ENVIRONMENT);
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  // Reject requests from disallowed origins server-side, not just via CORS headers.
-  if (!isAllowedOrigin(request.url, origin, allowed)) {
-    return new Response('Forbidden', { status: 403, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  if (!env.POSTHOG_OTLP_URL || !env.POSTHOG_PROJECT_TOKEN) {
-    return new Response('OTel proxy not configured', {
-      status: 503,
-      headers: corsHeaders(request.url, origin, allowed),
-    });
-  }
-
-  if (!request.body) {
-    return new Response('Empty body', { status: 400, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  const upstreamHeaders: Record<string, string> = {
-    'Content-Type': request.headers.get('Content-Type') ?? 'application/json',
-    'Authorization': `Bearer ${env.POSTHOG_PROJECT_TOKEN}`,
-  };
-  const contentEncoding = request.headers.get('Content-Encoding');
-  if (contentEncoding) {
-    upstreamHeaders['Content-Encoding'] = contentEncoding;
-  }
-  const contentLengthHeader = request.headers.get('Content-Length');
-  if (contentLengthHeader) {
-    upstreamHeaders['Content-Length'] = contentLengthHeader;
-  }
-
-  // Count bytes as they stream; abort and return 413 if OTEL_MAX_BODY_SIZE is exceeded.
-  // This guards against missing or falsified Content-Length headers.
-  let byteCount = 0;
-  let sizeExceeded = false;
-  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>({
-    transform(chunk, controller) {
-      byteCount += chunk.byteLength;
-      if (byteCount > OTEL_MAX_BODY_SIZE) {
-        sizeExceeded = true;
-        controller.error(new Error('Payload too large'));
-      } else {
-        controller.enqueue(chunk);
-      }
-    },
-  });
-
-  // Pipe incoming body through the size-checking transform concurrently with the upstream fetch.
-  const pipePromise = request.body.pipeTo(writable).catch(() => {});
-
-  const upstream = `${env.POSTHOG_OTLP_URL.replace(/\/$/, '')}${signal}`;
-  let upstreamResponse: Response | null = null;
-  try {
-    upstreamResponse = await fetch(upstream, {
-      method: 'POST',
-      headers: upstreamHeaders,
-      body: readable,
-    });
-  } catch {
-    // fetch throws when the readable stream is aborted (e.g. size limit exceeded).
-  }
-
-  await pipePromise;
-
-  if (sizeExceeded) {
-    return new Response('Payload too large', { status: 413, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  if (!upstreamResponse) {
-    return new Response('Bad gateway', { status: 502, headers: corsHeaders(request.url, origin, allowed) });
-  }
-
-  return new Response(upstreamResponse.body, {
-    status: upstreamResponse.status,
-    headers: {
-      'Content-Type': upstreamResponse.headers.get('Content-Type') ?? 'application/json',
-      ...corsHeaders(request.url, origin, allowed),
-    },
-  });
+  return new Response(injectLinkPreview(await page.text(), title, details), { status: page.status, headers });
 };
 
 /**
@@ -504,12 +473,18 @@ const handler: ExportedHandler<Env> = {
       return handleRssProxy(request);
     }
 
-    // OTel ingestion proxy.
-    if (url.pathname.startsWith(OTEL_PREFIX)) {
-      const signal = url.pathname.slice(OTEL_PREFIX.length);
-      if (OTEL_SIGNALS.has(signal)) {
-        return handleOtelProxy(request, env, signal);
-      }
+    if (isViewerHost(url.hostname) && url.pathname.startsWith(`${PUBLICATIONS_PATH}/`)) {
+      return handlePublicationRead(request, edgeUrl(), previewRenderer(request, env));
+    }
+
+    const otel = OtelProxy.handle(request, {
+      url: env.POSTHOG_OTLP_URL,
+      token: env.POSTHOG_PROJECT_TOKEN,
+      extraOrigins: nativeOrigins(env.ENVIRONMENT),
+      maxBodySize: OTEL_MAX_BODY_SIZE,
+    });
+    if (otel) {
+      return otel;
     }
 
     return serveAsset(request, env);

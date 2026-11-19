@@ -9,4 +9,7 @@ export * from '#types';
 export * as ProjectGraph from './ProjectGraph.ts';
 export * as ProjectHooks from './ProjectHooks.ts';
 export * as SpecCommands from './SpecCommands.ts';
+export * as SpecModel from './SpecModel.ts';
+export * as SpecSession from './SpecSession.ts';
+export * as SpecViews from './SpecViews.ts';
 export * as Templates from './Templates.ts';

@@ -92,6 +92,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

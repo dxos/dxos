@@ -6,8 +6,10 @@
 /**
  * Records two (or more) people using the app at once, each with their own identity, as one side-by-side video.
  *
- * Every peer is its own Playwright browser context, so each has separate storage (OPFS, IndexedDB,
- * localStorage) and therefore a separate HALO identity, while one Chromium process keeps the launch cheap.
+ * Every peer is its own persistent Chromium profile in a temporary directory, so each has separate storage (OPFS,
+ * IndexedDB, localStorage) and therefore a separate HALO identity. The profile is on disk, as a person's is: an
+ * incognito context drops a site's OPFS a few minutes after its last page goes, so a peer that left for longer would
+ * come back as someone new. The directories are deleted when the take ends, since they hold the peers' keys.
  * Each page is recorded by `recorder.mjs` (2x VP9 from the screencast) and carries `overlay.mjs`'s cursor and
  * ripple. The recorders share one clock: they are cut at the same instant once the off-camera setup steps
  * end, and whatever residual skew remains is written to `timeline.json` and corrected by `compose.mjs`,
@@ -16,19 +18,23 @@
  *   node pair.mjs --flow packages/apps/composer-app/autocue/two-peer-collaboration.mjs \
  *     --url http://127.0.0.1:4173 --out /tmp/pair [--peers Alice,Bob] [--scale 2] [--mp4 on]
  *
- * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, sleep })` gets each
+ * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, speed, sleep })` gets each
  * peer by its lowercased name (`peers.alice.page`, `peers.alice.click(locator)`). Steps run in order; a
- * step's `name` is its caption unless it sets `caption: false` or captions itself.
+ * step's `name` is its caption unless it sets `caption: false` or captions itself. A flow may also export
+ * `boot`, the lowercased names of the peers to boot before its steps; the others start on a blank page, for a
+ * person whose first visit is a step (opening an invitation link).
  */
 
 import { chromium } from '@playwright/test';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { composeSideBySide } from './compose.mjs';
+import { canCompose, composeSideBySide } from './compose.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { flowSource, recordingInfo } from './recording.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -74,15 +80,17 @@ const parseArgs = () => {
 };
 
 const options = parseArgs();
-if (!hasFullFfmpeg()) {
-  console.error('pair.mjs needs an ffmpeg with libvpx-vp9 on PATH (or FFMPEG_PATH): it records and composes with it');
+if (!hasFullFfmpeg() || !canCompose()) {
+  console.error(
+    "pair.mjs needs an ffmpeg with libvpx-vp9 and drawtext on PATH (or FFMPEG_PATH), such as Homebrew's ffmpeg-full: it records and composes with it",
+  );
   process.exit(1);
 }
 mkdirSync(options.out, { recursive: true });
 
 // The cloud sandbox needs the pinned executable, the egress proxy, and a TLS 1.2 cap (see the `cloud-sandbox` skill).
 const sandbox = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
-const browser = await chromium.launch({
+const launchOptions = {
   headless: true,
   executablePath: sandbox ? '/opt/pw-browsers/chromium' : undefined,
   args: [
@@ -97,7 +105,11 @@ const browser = await chromium.launch({
     // `deviceScaleFactor` alone leaves the screencast at CSS size; forcing it browser-wide makes the frames 2x.
     ...(options.scale !== 1 ? [`--force-device-scale-factor=${options.scale}`] : []),
   ],
-});
+};
+
+/** The peers' profile directories, deleted however the process ends. */
+const profiles = [];
+process.on('exit', () => profiles.forEach((profile) => rmSync(profile, { recursive: true, force: true })));
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -163,8 +175,15 @@ const bootPage = async (page, label) => {
  */
 const createPeer = async (name) => {
   const viewport = { width: options.width, height: options.height };
-  const context = await browser.newContext({ viewport, deviceScaleFactor: options.scale, colorScheme: options.theme });
-  const page = await context.newPage();
+  const profile = mkdtempSync(path.join(os.tmpdir(), `pair-${name.toLowerCase()}-`));
+  profiles.push(profile);
+  const context = await chromium.launchPersistentContext(profile, {
+    ...launchOptions,
+    viewport,
+    deviceScaleFactor: options.scale,
+    colorScheme: options.theme,
+  });
+  const page = context.pages()[0] ?? (await context.newPage());
   page.setDefaultTimeout(options['action-timeout']);
   const overlay = createOverlay(page, { enabled: true, feed: false });
   let lastPointer = { x: 0, y: 0 };
@@ -200,39 +219,40 @@ const createPeer = async (name) => {
   /** A selector string or a Locator. */
   const resolve = (target) => (typeof target === 'string' ? page.locator(target).first() : target);
 
+  /** Glides the real pointer and the overlay cursor together, so a peer sharing the pointer sees it where it is drawn. */
+  const glide = async (point, steps) => {
+    const from = lastPointer;
+    for (let step = 1; step <= steps; step++) {
+      const x = from.x + ((point.x - from.x) * step) / steps;
+      const y = from.y + ((point.y - from.y) * step) / steps;
+      await page.mouse.move(x, y);
+      await overlay.moveCursor({ x, y });
+    }
+    lastPointer = point;
+  };
+
   return {
     name,
     page,
     context,
     recorder,
-    /** Moves the overlay cursor to the target, rests on it, ripples, then clicks for real. */
+    /** Glides the cursor to the target, rests on it, ripples, then clicks for real. */
     click: async (target, clickOptions) => {
       const locator = resolve(target);
       await locator.waitFor({ state: 'visible' });
       const box = await locator.boundingBox();
       if (box) {
         const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-        await overlay.moveCursor(point);
-        lastPointer = point;
+        await glide(point, 12);
         await sleep(options.dwell);
         await overlay.click(point);
       }
       await locator.click(clickOptions);
     },
-    /**
-     * Glides the real pointer and the overlay cursor together to `point` in `steps` moves, for flows where the
-     * pointer's path is the subject (hover, live cursors) rather than a click.
-     */
-    move: async (point, { steps = 20 } = {}) => {
-      const from = lastPointer;
-      for (let step = 1; step <= steps; step++) {
-        const x = from.x + ((point.x - from.x) * step) / steps;
-        const y = from.y + ((point.y - from.y) * step) / steps;
-        await page.mouse.move(x, y);
-        await overlay.moveCursor({ x, y });
-      }
-      lastPointer = point;
-    },
+    /** Glides the cursor to `point` in `steps` moves, for flows where the pointer's path is the subject. */
+    move: (point, { steps = 20 } = {}) => glide(point, steps),
+    /** Moves the pointer a pixel in place, so a surface that a closed dialog uncovered learns where it is. */
+    nudge: () => glide({ x: lastPointer.x + 1, y: lastPointer.y }, 1),
     /** Types a character at a time so the text visibly arrives (and replicates) on camera. */
     type: async (text, { delay = 45 } = {}) => {
       await page.keyboard.type(text, { delay });
@@ -263,7 +283,17 @@ const names = options.peers.split(',').map((name) => name.trim());
 const peerList = await Promise.all(names.map(createPeer));
 const peers = Object.fromEntries(peerList.map((peer) => [peer.name.toLowerCase(), peer]));
 
-const flow = await import(pathToFileURL(path.resolve(options.flow)).href);
+const flowFile = path.resolve(options.flow);
+const flow = await import(pathToFileURL(flowFile).href);
+// A failed read leaves the source to be read again with the recording metadata, which tolerates failure.
+const source = (() => {
+  try {
+    return flowSource(flowFile);
+  } catch (error) {
+    console.error('could not read the flow source:', error);
+    return undefined;
+  }
+})();
 const steps = flow.steps ?? [];
 
 /** Caption timeline, in ms from the shared cut; empty until the take starts. */
@@ -275,6 +305,51 @@ const caption = (text, subtitle) => {
   }
 };
 
+const SPEED_ID = '__demo_speed__';
+/** `speed` changes in ms from the shared cut, for `trim-static.mjs` to play those stretches faster. */
+const speedChanges = [];
+
+/**
+ * Plays what follows at `factor` times speed in the cut (`1` returns to normal), for stretches that are motion
+ * without content, like an agent working. Every pane carries a badge meanwhile, so the jump is not a lie.
+ */
+const speed = async (requested = 1) => {
+  const rounded = Math.round(Number(requested));
+  const factor = Number.isFinite(rounded) ? Math.max(1, rounded) : 1;
+  if (takeStart !== undefined) {
+    speedChanges.push({ ms: Date.now() - takeStart, factor });
+  }
+  await Promise.all(
+    peerList.map((peer) =>
+      peer.page.evaluate(
+        ({ id, factor }) => {
+          document.getElementById(id)?.remove();
+          if (factor === 1) {
+            return;
+          }
+          const badge = document.createElement('div');
+          badge.id = id;
+          badge.style.cssText = [
+            'position:fixed',
+            'top:16px',
+            'right:16px',
+            'z-index:2147483647',
+            'padding:6px 12px',
+            'border-radius:999px',
+            'background:rgba(17,17,17,0.85)',
+            'color:#fff',
+            'font:600 15px/1.2 ui-sans-serif,system-ui,sans-serif',
+            'pointer-events:none',
+          ].join(';');
+          badge.textContent = `\u23e9 ${factor}\u00d7`;
+          document.body.appendChild(badge);
+        },
+        { id: SPEED_ID, factor },
+      ),
+    ),
+  );
+};
+
 const stepsDir = path.join(options.out, 'steps');
 mkdirSync(stepsDir, { recursive: true });
 
@@ -284,16 +359,18 @@ try {
   // Booting is never the subject: it is cut with the setup steps. A failed boot is reported like a failed step, so the panes recorded so far still show why.
   const boot = async () => {
     if (options.warm === 'on') {
+      const browser = await chromium.launch(launchOptions);
       const context = await browser.newContext({ viewport: { width: options.width, height: options.height } });
       // Only primes the server, so its own failure is not the take's.
       await bootPage(await context.newPage(), 'warm-up')
         .catch((error) => console.error(String(error?.message ?? error)))
-        .finally(() => context.close());
+        .finally(() => browser.close());
     }
+    const booted = flow.boot ? peerList.filter((peer) => flow.boot.includes(peer.name.toLowerCase())) : peerList;
     if (options.boot === 'parallel') {
-      await Promise.all(peerList.map((peer) => bootPage(peer.page, peer.name)));
+      await Promise.all(booted.map((peer) => bootPage(peer.page, peer.name)));
     } else {
-      for (const peer of peerList) {
+      for (const peer of booted) {
         await bootPage(peer.page, peer.name);
       }
     }
@@ -316,7 +393,7 @@ try {
     }
     const started = Date.now();
     try {
-      await step.run({ peers, caption, sleep });
+      await step.run({ peers, caption, speed, sleep });
       results.push({ step: index + 1, name: step.name, ok: true, ms: Date.now() - started });
     } catch (error) {
       failed = true;
@@ -340,8 +417,20 @@ try {
 } finally {
   // `stop` is what writes each pane's video, so it runs even after a failure: the take up to the failing step
   // is the evidence of where it went wrong.
+  // Read from a live page, so before the browser closes; `pack.mjs` needs it to bundle the take.
+  // A failed read must not skip the stops and the close below, which save the take.
+  const recording = await recordingInfo({
+    page: peerList[0].page,
+    flowFile,
+    source,
+    appUrl: options.url,
+    target: 'browser',
+  }).catch((error) => {
+    console.error('could not read the recording metadata:', error);
+    return undefined;
+  });
   const stopped = await Promise.all(peerList.map((peer) => peer.recorder.stop().catch((error) => ({ error }))));
-  await browser.close();
+  await Promise.all(peerList.map((peer) => peer.context.close().catch(() => {})));
 
   const base = takeStart ?? Math.min(...peerList.map((peer) => peer.recorder.started));
   // `steps` is `driver.mjs`'s caption shape, so `trim-static.mjs --timeline` can trim the composed video.
@@ -353,6 +442,9 @@ try {
       offsetMs: peer.recorder.started - base,
     })),
     steps: captions,
+    speed: speedChanges,
+    flow: recording?.flow,
+    recording,
     results,
   };
   writeFileSync(path.join(options.out, 'timeline.json'), JSON.stringify(timeline, null, 2));

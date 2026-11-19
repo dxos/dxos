@@ -71,6 +71,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@effect/atom-react": "catalog:",
     "d3": "catalog:",
+    "js-clipper": "catalog:",
     "manifold-3d": "catalog:"
   },
   "devDependencies": {
@@ -84,6 +85,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
+    "esbuild-wasm": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

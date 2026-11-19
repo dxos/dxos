@@ -4,24 +4,28 @@
 
 import { describe, test } from 'vitest';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import { canonicalKey, expandKeys, identityGroups } from './identity.ts';
 
 const PERSON = 'echo://BEE4HEXQOEZUHFWSVTV7EZK4SIWZL6ON7/01M4WYRD4ZJ2C5YR2JX4GWWSN3';
 
-const fact = (subject: string, predicate: string, object: RDF.Fact['assertion']['object']): RDF.Fact => ({
-  id: `${subject}-${predicate}`,
-  assertion: { subject: { kind: 'entity', entity: subject }, predicate, object },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'test', generatedAtTime: '2026-10-14T00:00:00Z' },
-  recordedAt: '2026-10-14T00:00:00Z',
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: 'hash',
-});
+const fact = (subject: string, predicate: string, object: Fact.Fact['assertion']['object']): Fact.Fact =>
+  Fact.make({
+    id: `${subject}-${predicate}`,
+    assertion: { subject: { kind: 'entity', entity: subject }, predicate, object },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'test', generatedAtTime: '2026-10-14T00:00:00Z' },
+    recordedAt: '2026-10-14T00:00:00Z',
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: 'hash',
+  });
 
-const entity = (key: string): RDF.Fact['assertion']['object'] => ({ kind: 'entity', entity: key });
-const literal = (value: string): RDF.Fact['assertion']['object'] => ({ kind: 'literal', literal: value });
+const entity = (key: string): Fact.Fact['assertion']['object'] => ({
+  kind: 'entity',
+  entity: Fact.EntityKey.make(key),
+});
+const literal = (value: string): Fact.Fact['assertion']['object'] => ({ kind: 'literal', literal: value });
 
 describe('identityGroups', () => {
   test('ties a roster person, their Discord account and their email address into one entity', ({ expect }) => {

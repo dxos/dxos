@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Fact } from '@dxos/echo-memory';
 import { BaseError } from '@dxos/errors';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
 import * as Builtins from './Builtins.ts';
@@ -126,21 +126,22 @@ export const parseReply = (text: string): Reply => {
 };
 
 /** A statement as the fact the extractor would record. */
-const toFact = (statement: Statement, id: string, saidAt: string): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: statement.subject },
-    predicate: statement.predicate,
-    object: { kind: 'entity', entity: statement.object },
-    quote: statement.quote,
-  },
-  factuality: { value: statement.polarity === '-' ? 'CT-' : 'CT+', polarity: statement.polarity ?? '+' },
-  illocution: { force: statement.force ?? 'assertive' },
-  attribution: { agent: statement.speaker, source: 'oracle', generatedAtTime: saidAt },
-  recordedAt: saidAt,
-  extractor: { id: 'oracle', model: 'none', version: '1' },
-  sourceHash: id,
-});
+const toFact = (statement: Statement, id: string, saidAt: string): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: statement.subject },
+      predicate: statement.predicate,
+      object: { kind: 'entity', entity: statement.object },
+      quote: statement.quote,
+    },
+    factuality: { value: statement.polarity === '-' ? 'CT-' : 'CT+', polarity: statement.polarity ?? '+' },
+    illocution: { force: statement.force ?? 'assertive' },
+    attribution: { agent: statement.speaker, source: 'oracle', generatedAtTime: saidAt },
+    recordedAt: saidAt,
+    extractor: { id: 'oracle', model: 'none', version: '1' },
+    sourceHash: id,
+  });
 
 export type Result = {
   readonly ok: boolean;

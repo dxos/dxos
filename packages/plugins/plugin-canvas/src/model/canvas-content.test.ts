@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { Dsl, MermaidEngine } from '@dxos/diagram';
+import { DSL, MermaidEngine } from '@dxos/diagram';
 import { Database, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -17,6 +17,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 import { TldrawBuilder } from '@dxos/plugin-tldraw/TldrawModel';
+import { readViews } from '@dxos/react-ui-canvas/headless';
 import { Scene } from '@dxos/scene';
 
 import { Canvas } from '#types';
@@ -27,7 +28,6 @@ import { frameWithChildren, groupAndRotation } from '../import/testing.ts';
 import { LegacyCanvasBuilder, makeLegacyCanvas } from '../testing/legacy-drawing.ts';
 import { CanvasLayoutBuilder, readCanvasContent } from './canvas-content.ts';
 import { addCanvas, openScene } from './canvas-document.ts';
-import { readViews } from './content.ts';
 import { makeLayoutWriter } from './layout-writer.ts';
 
 const FLOW = 'flowchart LR\n  A[Client] --> B[Server]';
@@ -121,7 +121,7 @@ describe('CanvasLayoutBuilder', () => {
 
   test("the Draw path: semantic .dx compiles onto the canvas's Layout2D, and recompiling an edit updates those elements", async () => {
     const source = 'diagram flow=right\nnode A "Alpha"\nnode B "Beta"\nedge A -> B "calls"';
-    const first = await EffectEx.runPromise(Dsl.compile(source));
+    const first = await EffectEx.runPromise(DSL.compile(source));
     expect(first.problems.filter(({ severity }) => severity === 'error')).toEqual([]);
     const canvas = await run(addCanvas());
     CanvasLayoutBuilder.apply(canvas, first.commands);
@@ -131,7 +131,7 @@ describe('CanvasLayoutBuilder', () => {
       .map((element) => element.id)
       .sort();
     expect(managed().map((element) => element.dsl?.object)).toEqual(expect.arrayContaining(['A', 'B']));
-    const second = await EffectEx.runPromise(Dsl.compile(source.replace('"Beta"', '"Gamma"')));
+    const second = await EffectEx.runPromise(DSL.compile(source.replace('"Beta"', '"Gamma"')));
     CanvasLayoutBuilder.apply(canvas, second.commands);
     expect(
       managed()

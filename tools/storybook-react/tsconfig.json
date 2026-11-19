@@ -24,6 +24,9 @@
       "path": "../../packages/core/compute/agent-claude"
     },
     {
+      "path": "../../packages/plugins/plugin-dev-shell"
+    },
+    {
       "path": "../../packages/sdk/client"
     },
     {

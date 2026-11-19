@@ -29,6 +29,7 @@ export default defineConfig({
     LegacyShowcase: 'src/types/LegacyShowcase.ts',
     LegacySpec: 'src/types/LegacySpec.ts',
     Showcase: 'src/types/Showcase.ts',
+    SpecItem: 'src/types/SpecItem.ts',
     SpecText: 'src/types/SpecText.ts',
     Settings: 'src/types/Settings.ts',
     SourceFile: 'src/types/SourceFile.ts',

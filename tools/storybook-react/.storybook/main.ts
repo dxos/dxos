@@ -323,6 +323,14 @@ const repairTopLevelAwait = async (code: string): Promise<string | null> => {
   return repaired;
 };
 
+export type CreateConfigOptions = {
+  /**
+   * Mount Dev Shell's shell route; only the full storybook opts in, since a package's or an e2e storybook does not
+   * build `@dxos/plugin-dev-shell` before `storybook dev` imports it.
+   */
+  devShell?: boolean;
+};
+
 /**
  * Storybook and Vite configuration.
  *
@@ -330,10 +338,10 @@ const repairTopLevelAwait = async (code: string): Promise<string | null> => {
  * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
-export const createConfig = ({
-  stories: baseStories,
-  ...baseConfig
-}: Partial<StorybookConfig> = {}): StorybookConfig => ({
+export const createConfig = (
+  { stories: baseStories, ...baseConfig }: Partial<StorybookConfig> = {},
+  { devShell = false }: CreateConfigOptions = {},
+): StorybookConfig => ({
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -610,6 +618,20 @@ export const createConfig = ({
             },
           },
 
+          // Dev Shell's shell route, so a story's agent runs bash and edits on this machine as composer-app's dev server
+          // lets it. Rooted at the Composer app, the directory the Composer Plugin template's commands start in. Dev only:
+          // it runs arbitrary scripts, so no build mounts it, nor a test run unless it opts into manual tests. Imported
+          // dynamically, as the package is ESM-only.
+          devShell &&
+            options.configType !== 'PRODUCTION' &&
+            (!isVitestRun || isTrue(process.env.DX_RUN_MANUAL_TESTS)) &&
+            import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => {
+              const root = resolve(rootDir, 'packages/apps/composer-app');
+              // A story's bash tool answers "not mounted" when this line is missing from the startup output.
+              console.log(`[storybook] Dev Shell mounted at /api/dev-shell/exec (scripts run in ${root})`);
+              return DevShellVitePlugin({ root, agentHost: false });
+            }),
+
           IconsPlugin({
             // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
             symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
@@ -645,7 +667,7 @@ export const createConfig = ({
   },
 });
 
-const config = createConfig();
+const config = createConfig({}, { devShell: true });
 
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ config }, null, 2));

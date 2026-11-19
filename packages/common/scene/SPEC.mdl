@@ -24,6 +24,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ## Types
 
+The ECHO objects below are parts of a drawing, not user types: none carries `Annotation.UserType`.
+
 ```mdl
 type Model
   desc: >
@@ -217,6 +219,7 @@ type Camera3D
 
 ```mdl
 feat F-1: One model for 2D and 3D
+  uses: [Model]
 
   req F-1.1: A drawing is a Model of objects, Layouts of elements and Scenes over layouts, each one ECHO object whose records live inside it; types are shared only where 2D and 3D share properties.
   req F-1.2: There is one record kind, Element, for shapes and links alike; a link's ends are endpoints on other elements of its layout, or free points.
@@ -1025,3 +1028,64 @@ decision D-102: react-ui-canvas-editor's `SceneEditor` edits the scene model and
   affects: [Scene]
   why: The scene UI split into a surface and an editor application, and this spec names where each lives.
 ```
+
+```mdl
+decision D-103: Scene's ECHO types are not user types, so their objects do not show up in a space's Database section or its Recent list.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [Model, Layout, Scene]
+```
+
+```mdl
+decision D-104: "Scene's ECHO types" is all seven: `Model2D`, `Model3D`, `Layout2D`, `Layout3D`, `Scene2D`, `Scene3D` and `StyleCatalog`. Fills in [D-103].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Model, Layout, Scene, StyleCatalog]
+  why: Each is reached only through the drawing that owns it; a style catalog is shared by drawings but never opened on its own.
+  rejected: Only the 2D types, which leaves the 3D ones to show up the same way once a 3D drawing is saved.
+```
+
+```mdl
+decision D-105: A node type stored under a retired name is read as its current name where a stored layout is read (`readDocument`), from one table (`LEGACY_NODE_TYPES`): `frame` reads as `view` and `space-graph` as `graph`. The stored name changes when the element is next written.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout]
+  why: Every reader of a stored drawing goes through that one read, so a renamed type needs no pass over each space's objects and two peers reading one drawing agree.
+  rejected:
+    - Contributing the kind under both names, which leaves two types in the palette and in every schema union.
+    - A migration that rewrites stored layouts, which has to run on every peer before a drawing with the old name is opened.
+```
+
+```mdl
+decision D-106: A box a grid places may state the size it keeps in its cell (`width`, `height` on `Shape.Box`; `extent` on a node), apart from its frame. An `auto` track measures the stated size where there is one.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout]
+  why: A placed box's frame is the grid's last answer and is written over on every solve, so a size the box asks for cannot be read from it once the drawing has been stored.
+```
+
+```mdl
+decision D-107: A packing places every member: where the sizes do not all fit, every circle is drawn smaller, stated sizes included, until they do.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout]
+  why: A member left out has no frame, so it was drawn at the origin and every connector to it ran there; a member smaller than asked is still where its connectors end.
+  rejected:
+    - Leaving a member out, as the deck's own packing did: there a circle was a picture, and here it is a box something connects to.
+```
+
+```mdl
+decision D-108: A packing whose sizes do not fit draws every circle at one factor of the size asked, the largest that fits, with the circles pushed up against each other; sizes that fit are scattered as they are. Asking for more than the frame holds is how a field is filled. Refines [D-107].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout]
+  why: Shrinking in steps and dropping each circle at a random place left a crowded field a quarter covered; pushing overlapping circles apart and searching for the largest factor covers about 60%.
+  rejected:
+    - Keeping stated sizes exact and shrinking only the rest: an author fills a field by over-asking, and exact sizes would then leave members out.
+```
+

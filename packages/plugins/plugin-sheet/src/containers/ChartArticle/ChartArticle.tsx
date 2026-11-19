@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -41,13 +42,16 @@ const ChartArticleInner = ({ role, chart, space }: { role?: string; chart: Sheet
   const [sheetRef] = useObject(chart, 'sheet');
   const sheet = useResolveRef(sheetRef);
   const graph = useComputeGraph(space);
-  const model = useSheetModel(graph, sheet);
+  const readonly = ToolkitHooks.useReadOnly();
+  const model = useSheetModel(graph, sheet, { readonly });
   return model ? <ChartContent role={role} chart={chart} model={model} /> : null;
 };
 
 const ChartContent = ({ role, chart: chartProp, model }: { role?: string; chart: Sheet.Chart; model: SheetModel }) => {
   const [chart] = useObject(chartProp);
   const getValues = useRangeValues(model);
+  const chartTypes = Hooks.useCapabilities(SheetCapabilities.ChartType);
+  const readonly = ToolkitHooks.useReadOnly();
   const handleUpdate = useCallback(
     (props: Partial<Sheet.ChartProperties>) => Sheet.updateChart(chartProp, props),
     [chartProp],
@@ -63,8 +67,9 @@ const ChartContent = ({ role, chart: chartProp, model }: { role?: string; chart:
         <ChartView
           chart={props}
           getValues={getValues}
-          onUpdate={handleUpdate}
+          onUpdate={readonly ? undefined : handleUpdate}
           chrome={role !== AppSurface.Slide.role}
+          chartTypes={chartTypes}
         />
       </Panel.Body>
     </Panel.Root>

@@ -20,12 +20,13 @@ export type GridSize = NonNullable<State['gridSize']>;
 
 export type State = Schema.Schema.Type<typeof State>;
 
-/** Per-user slide position, persisted locally so each viewer keeps their own place. */
+/** Per-user slide position, persisted locally so each viewer keeps their own place; a follower takes the leader's. */
 export const aspect: ViewState.Aspect<State> = ViewState.define<State>({
   key: 'presenter-slide',
   backend: 'local',
   schema: State,
   defaultValue: () => ({ index: 0 }),
+  follow: 'write',
 });
 
 /** Bounds an index to the valid slide range; an empty deck always yields zero. */

@@ -84,10 +84,10 @@ export default Capability.makeModule(() =>
       Capability.contribute(AppCapabilities.CommentConfig, {
         id: key,
         comments: 'anchored',
-        scrollToAnchor: ProjectOperation.ScrollToAnchor,
         // Anchors are field paths or text cursors the editors write, never a selection on a map or list.
         anchorFromSelection: () => undefined,
       }),
+      Capability.contribute(AppCapabilities.Locator, { id: key, reveal: ProjectOperation.ScrollToAnchor }),
       Capability.contribute(AppCapabilities.AnchorSort, {
         key,
         sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {

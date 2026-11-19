@@ -12,6 +12,7 @@ export {
   DeviceType,
   type Halo,
   type Identity,
+  getDeviceLabel,
 } from '@dxos/client/halo';
 
 export * from './useContacts.ts';

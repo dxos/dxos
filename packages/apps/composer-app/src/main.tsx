@@ -41,6 +41,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, markMilestone, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
+import { WorkerLeaderContentionError } from '@dxos/worker-framework';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
 import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
@@ -75,6 +76,7 @@ import {
   startupProfiler,
   translations,
 } from './util/index.ts';
+import { consumeTakeover, showPausedPage } from './util/paused.ts';
 import { watchWindowCorners } from './util/window-corners.ts';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
@@ -102,6 +104,8 @@ const verboseStatus =
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
+// Injected by the `define` block in vite.config.ts: when this build was made (or the dev server started).
+declare const __DX_BUILD_TIME__: number;
 
 // Session id for the agent debug port when the dev server was launched with the debug-port flag.
 // Always '' in production builds, so the port cannot be auto-started on a deployed origin.
@@ -204,15 +208,6 @@ const whenIdle = (timeout: number): Promise<void> =>
 
 /** Stands in for the prespawned worker when the worker is deferred, so nothing spawns at load. */
 const NOT_PRESPAWNED: PrespawnedWorker = { take: () => undefined, dispose: () => {} };
-
-// Cross-tab reload coordination for persistent worker failures (dev only — see
-// `onPersistentWorkerFailure` below). The sessionStorage guard makes each tab escalate at most
-// once per tab session, so a failure that reloads don't fix cannot loop the reloads.
-const DEV_RELOAD_CHANNEL = 'dxos-dev-worker-reload';
-const DEV_RELOAD_GUARD_KEY = 'dxos.composer.dev-worker-reload';
-if (import.meta.env?.DEV) {
-  new BroadcastChannel(DEV_RELOAD_CHANNEL).onmessage = () => window.location.reload();
-}
 
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
@@ -661,17 +656,22 @@ const main = async () => {
       }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    // Stale mixed-generation workers (tabs from before a dev-server restart) present as an endless
-    // boot spinner with only a console warning; in dev, force every same-origin tab through one
-    // coordinated reload so all generations converge. Production relies on the fatal dialog via the
-    // startup timeout (tagged for telemetry — see ResetDialog).
+    // Contention means another tab keeps taking the worker; other persistent failures rely on the
+    // fatal dialog via the startup timeout (see ResetDialog).
     onPersistentWorkerFailure: (error) => {
       log.error('worker connection failing persistently', { error });
-      if (import.meta.env?.DEV && !sessionStorage.getItem(DEV_RELOAD_GUARD_KEY)) {
-        sessionStorage.setItem(DEV_RELOAD_GUARD_KEY, '1');
-        new BroadcastChannel(DEV_RELOAD_CHANNEL).postMessage('reload');
-        window.location.reload();
+      if (WorkerLeaderContentionError.is(error)) {
+        showPausedPage('contention', { version: __DX_BUILD_TIME__ });
       }
+    },
+    // One tab owns the worker; every hand-over between tabs goes through the paused page, so the
+    // user decides which tab continues instead of tabs taking it from each other.
+    workerTakeover: {
+      generation: { id: String(__DX_BUILD_TIME__), time: __DX_BUILD_TIME__ },
+      takeover: consumeTakeover(),
+      onTakeoverRequired: () => showPausedPage('unresponsive', { version: __DX_BUILD_TIME__ }),
+      onLockStolen: () => showPausedPage('stolen', { version: __DX_BUILD_TIME__ }),
+      onSuperseded: (newer) => showPausedPage('superseded', { version: __DX_BUILD_TIME__, otherVersion: newer.time }),
     },
   });
 

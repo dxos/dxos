@@ -1311,7 +1311,7 @@ const refine = (
 
 /**
  * The chosen layout's scene commands; see {@link layout} for the candidates and verdicts.
- * @deprecated Mermaid input is deprecated; write the semantic DSL and use `Dsl.compile`, which still
+ * @deprecated Mermaid input is deprecated; write the semantic DSL and use `DSL.compile`, which still
  * searches this engine's placements internally.
  */
 export const compile = async (source: string, options: CompileOptions = {}): Promise<Scene.Command[]> =>

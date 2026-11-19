@@ -16,6 +16,16 @@ projects:
     design: .agents/projects/worker-plugins/DESIGN.md
     prs: [13538]
     resume: 'PR #13538 open: base worker (@dxos/app-framework/worker), plugin-client worker plugin, Composer switched (observability as a worker plugin). Dev boot verified; CI e2e runs the production bundle. NEXT: green CI, then the TASKS.md follow-ups.'
+  - name: diagram-dsl
+    status: active
+    user: burdon
+    host: burdon-mbp-2024
+    created: 2026-11-18
+    summary: "A drawing written without coordinates: the `diagram kind=grid` intent form of @dxos/diagram, read back out of a drawing by DSL.printIntent, shown in plugin-canvas's DSL companion; then one `.dx` source per studio slide. The deck itself left this PR for one of its own."
+    tasks: .agents/projects/diagram-dsl/TASKS.md
+    design: .agents/projects/diagram-dsl/DESIGN.md
+    prs: [14583, 14595]
+    resume: "Phase 2 is built and pushed on #14595, based on main and including #14583 (closed). The deck left for a PR of its own. NEXT: mark #14595 ready. Open: groups do not take width/height yet; the agent's Read operation still returns box text, not intent."
   - name: echo-cloudflare-demo
     status: active
     user: burdon

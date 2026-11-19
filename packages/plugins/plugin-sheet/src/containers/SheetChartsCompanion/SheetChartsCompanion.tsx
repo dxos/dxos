@@ -5,6 +5,7 @@
 import React from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, SheetCharts, useComputeGraph } from '#components';
@@ -36,6 +37,8 @@ SheetChartsCompanion.displayName = 'SheetChartsCompanion';
 
 const SheetChartsCompanionInner = ({ sheet, space }: { sheet: Sheet.Sheet; space: Space }) => {
   const graph = useComputeGraph(space);
-  const model = useSheetModel(graph, sheet);
-  return model ? <SheetCharts sheet={sheet} model={model} /> : null;
+  const readonly = ToolkitHooks.useReadOnly();
+  const model = useSheetModel(graph, sheet, { readonly });
+  const chartTypes = Hooks.useCapabilities(SheetCapabilities.ChartType);
+  return model ? <SheetCharts sheet={sheet} model={model} chartTypes={chartTypes} readonly={readonly} /> : null;
 };

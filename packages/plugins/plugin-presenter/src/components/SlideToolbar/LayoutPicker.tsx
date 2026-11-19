@@ -5,11 +5,10 @@
 import React, { type ReactElement, useMemo, useState } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
+import { type LayoutName, LAYOUTS } from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
-
-import { type LayoutName, LAYOUTS } from '#markdown';
 
 import { PresenterNamespace } from '../../namespace.ts';
 import { Slide } from '../Slide/index.ts';

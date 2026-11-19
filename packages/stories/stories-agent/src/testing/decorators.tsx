@@ -6,6 +6,7 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { type Database, type Type } from '@dxos/echo';
+import type * as MemoryService from '@dxos/echo-memory/MemoryService';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
@@ -25,7 +26,8 @@ import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { type Config } from '@dxos/react-client';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { type StoryDecoratorsProps, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
+import * as ModuleSurfacesPlugin from '@dxos/storybook-testing/ModuleSurfacesPlugin';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { moduleSurfaces } from '../modules/index.ts';
@@ -73,11 +75,13 @@ export type DecoratorsProps = {
   /** Types a story's objects need beyond the agent stack's. */
   types?: Type.AnyEntity[];
   /** Creates the story's objects during client init and returns the module layout that shows them. */
-  onInit?: StoryDecoratorsProps['onInit'];
+  onInit?: StoryHarness.Options['onInit'];
   /** Seeds the space through plugin operations once it is available; a returned function runs on teardown. */
   onReady: (props: {
     db: Database.Database;
     invoker: Capabilities.OperationInvoker;
+    /** The space's memory, which the client services host runs. */
+    memory: MemoryService.Service;
   }) => Promise<void | (() => Promise<void>)>;
 };
 
@@ -103,13 +107,13 @@ const makeDecoratorProps = ({ config, agents = true, plugins = [], types = [], o
   plugins: [
     ...(agents ? agentPlugins() : []),
     ...plugins,
-    makeModuleSurfacesPlugin('org.dxos.plugin.stories-agent.modules', moduleSurfaces),
+    ModuleSurfacesPlugin.make('org.dxos.plugin.stories-agent.modules', moduleSurfaces),
     StorySetupPlugin({ onReady }),
   ],
 });
 
 /** The agent stack on Discord: assistant, threads, agents, connectors (Discord sign-in) and Discord itself. */
 export const createDecorators = <Args,>(input: DecoratorsInput<Args>) =>
-  createStoryDecorators<Args>(
+  StoryHarness.decorators<Args>(
     typeof input === 'function' ? (context) => makeDecoratorProps(input(context)) : makeDecoratorProps(input),
   );

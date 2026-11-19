@@ -93,6 +93,35 @@ export type PluginBundleUpload = {
   channel?: string;
 };
 
+/** What loading a plugin bundle on EDGE cost when the registry described it. */
+export type PluginBundleLoad = {
+  /** Milliseconds from EDGE asking Worker Loader for the isolate to the catalog arriving: compilation and activation. */
+  describeMs: number;
+  /** UTF-8 bytes of the JavaScript modules EDGE loads, after pruning what the bundle's EDGE modules never import. */
+  jsBytes: number;
+  /** Bytes of the WebAssembly modules EDGE loads. */
+  wasmBytes: number;
+};
+
+/** The registry's answer to a plugin bundle upload. */
+export type PluginBundleUploadResult = {
+  moduleUrl: string;
+  /** What the EDGE index made of the bundle; absent for a bundle EDGE does not run, or a registry with no index. */
+  edge?: {
+    hash: string;
+    channels: string[];
+    operations: number;
+    /** Absent when the registry did not describe the bundle again: the same files were already uploaded. */
+    load?: PluginBundleLoad;
+  };
+};
+
+const MB = 1024 * 1024;
+
+/** One line for a CLI: `describe 3200 ms, js 11.5 MB, wasm 0.0 MB`. */
+export const formatPluginBundleLoad = ({ describeMs, jsBytes, wasmBytes }: PluginBundleLoad): string =>
+  `describe ${describeMs} ms, js ${(jsBytes / MB).toFixed(1)} MB, wasm ${(wasmBytes / MB).toFixed(1)} MB`;
+
 export type CreateApiTokenRequest = {
   label: string;
   /** Epoch milliseconds; the token never expires when omitted. */
@@ -163,10 +192,6 @@ export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
 /** What `finalize` reports back: the content-addressed key the bytes landed under, and their size. */
 export type FinalizedUpload = { key: string; size: number; contentType?: string };
-
-/** What EDGE answers every brain fact feed route with: the EIDs of the fact feeds the brain indexes. */
-export const BrainFactFeeds = Schema.Struct({ feeds: Schema.Array(Schema.String) });
-export type BrainFactFeeds = Schema.Schema.Type<typeof BrainFactFeeds>;
 
 /** What EDGE answers `GET /compute/brain/:agent` with, as far as clients read it. */
 export const BrainInfo = Schema.Struct({
@@ -909,60 +934,6 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   //
-  // Brain fact feeds
-  //
-
-  /**
-   * Has an agent's brain index a fact feed (its EID) from now on; answers the feeds it indexes. `agent` names the
-   * brain (see plugin-agent's `AgentPresence.brainId`); the caller must be a member of `spaceId`, a space it serves.
-   */
-  public async addBrainFactFeed(
-    ctx: Context,
-    spaceId: SpaceId,
-    agent: string,
-    feed: string,
-    args?: EdgeHttpCallArgs,
-  ): Promise<BrainFactFeeds> {
-    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'POST', body: { feed } });
-  }
-
-  /** Stops an agent's brain indexing a fact feed; the facts it read stay. Answers the feeds it still indexes. */
-  public async removeBrainFactFeed(
-    ctx: Context,
-    spaceId: SpaceId,
-    agent: string,
-    feed: string,
-    args?: EdgeHttpCallArgs,
-  ): Promise<BrainFactFeeds> {
-    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'DELETE' }, { feed });
-  }
-
-  /** The fact feeds an agent's brain indexes. */
-  public async listBrainFactFeeds(
-    ctx: Context,
-    spaceId: SpaceId,
-    agent: string,
-    args?: EdgeHttpCallArgs,
-  ): Promise<BrainFactFeeds> {
-    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'GET' });
-  }
-
-  async #factFeedsCall(
-    ctx: Context,
-    spaceId: SpaceId,
-    agent: string,
-    args: EdgeHttpCallArgs & { method: string; body?: unknown },
-    query: Record<string, string> = {},
-  ): Promise<BrainFactFeeds> {
-    const url = new URL(`/compute/brain/${spaceId}/${encodeURIComponent(agent)}/fact-feeds`, this.baseUrl);
-    for (const [key, value] of Object.entries(query)) {
-      url.searchParams.set(key, value);
-    }
-    const response = await this._call(ctx, url, { ...args, auth: true });
-    return Schema.decodeUnknownSync(BrainFactFeeds)(response);
-  }
-
-  //
   // Query
   //
 
@@ -1007,7 +978,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     ctx: Context,
     { slug, version, channel, files }: PluginBundleUpload,
     args?: EdgeHttpCallArgs,
-  ): Promise<{ moduleUrl: string }> {
+  ): Promise<PluginBundleUploadResult> {
     const url = new URL('/registry/upload/multipart', this.baseUrl);
     url.searchParams.set('slug', slug);
     url.searchParams.set('version', version);

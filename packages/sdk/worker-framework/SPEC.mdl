@@ -30,6 +30,8 @@ The following extension dialects are used in this document.
 | `module` | `org.dxos.mdl.module@1.0`    |
 | `feat`   | `org.dxos.mdl.feat@1.0`      |
 | `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `test`     | `org.dxos.mdl.test@1.0`       |
 
 ## Modules
 
@@ -152,6 +154,7 @@ module WorkerProtocol
 
 ```mdl
 feat F-1: Leader election
+  uses: [Client]
 
   req F-1.1:
     when: a tab opens a Client.Connection
@@ -196,6 +199,37 @@ feat F-1: Leader election
     then: open() rejects with that failure at once instead of at the end of its budget, and
           the connection releases its lock, worker and timers (`close()` is a no-op on a
           resource that never opened)
+
+  req F-1.9:
+    when: another tab steals this tab's leader lock twice in a row without this tab
+          receiving a port from a peer's worker in between (the thief is on another
+          coordinator, e.g. a tab running a different app build)
+    then: it stops stealing the lock back, so the other tab keeps a working worker, and
+          escalates once with `WorkerLeaderContentionError`; a port from a peer's worker
+          resets the count
+
+  req F-1.10:
+    when: a follower would steal the leader lock from an unresponsive leader (F-1.3) and the
+          app passed `onTakeoverRequired`
+    then: it calls `onTakeoverRequired` once with a `takeover` function and steals only when
+          the app calls it; without the callback it steals as in F-1.3
+
+  req F-1.11:
+    when: another tab steals this tab's leader lock and the app passed `onLockStolen`
+    then: the connection stops instead of re-entering election, and calls `onLockStolen`
+
+  req F-1.12:
+    when: the app passed `generation` and `onSuperseded`, and a tab on a newer generation
+          opens on the same origin (whichever opened first)
+    then: the older tab calls `onSuperseded` with the newer generation and stops, before
+          `open()` resolves if it is still booting (`open()` then rejects with
+          `WorkerStoppedError`); generations travel on an origin-wide BroadcastChannel,
+          because tabs on different builds do not share a coordinator
+
+  req F-1.13:
+    when: the app opens a connection with `takeover: true`
+    then: its first election steals the leader lock from whichever tab holds it instead of
+          queueing
 ```
 
 ```mdl
@@ -229,6 +263,7 @@ feat F-2: Session and port exchange
 
 ```mdl
 feat F-3: Worker lifecycle and displacement
+  uses: [Worker]
 
   req F-3.1:
     when: a worker starts
@@ -317,6 +352,7 @@ feat F-4: Reconnection
 
 ```mdl
 feat F-5: RPC transport
+  uses: [RpcTiming]
 
   req F-5.1:
     when: a client is built with Rpc.makeClient / Rpc.makeClientOverProtocol
@@ -332,6 +368,7 @@ feat F-5: RPC transport
 
 ```mdl
 feat F-6: Coordinator strategies
+  uses: [Coordinator]
 
   req F-6.1:
     when: multiple browser tabs share one worker
@@ -389,6 +426,56 @@ scenario T-3: Duplicate sessions are de-duplicated
 ```
 
 ---
+
+## QA
+
+Executable tests, run against the `sdk/worker-framework/TabHandover` story, where each card is one
+browser tab with its own `Client.Connection`. Report failures by test and step number.
+
+```mdl
+test QA-1: Tabs hand the worker over only with consent
+  desc: The hand-over rules end to end, in the browser — sharing on one build, an older build
+        pausing for a newer one, and asking before taking over from an unreachable leader.
+  actors: human
+  covers: [F-1.10, F-1.11, F-1.12, F-1.13]
+  given:
+    - the TabHandover story is open in isolation, with one tab on build v1
+  steps:
+    - name: Share the worker on one build
+      do: Click "Open tab", then click Increment in each tab.
+      expect: one tab reads "Leader", the other "Follower", and both show the same count
+    - name: Open a newer build
+      do: Click "Open tab on a newer build".
+      expect: both v1 tabs show "Another instance of the app is open", with Details reading
+              "Different versions open"; the v2 tab leads and counts
+    - name: Continue on the older tab
+      do: Click "Continue here" on the first tab.
+      expect: it reloads onto build v2 and leads; the tab it took over from pauses with
+              "Taken over by another tab"
+    - name: Open a tab that cannot reach the leader
+      do: Click "Open tab that cannot reach the leader".
+      expect: after a few seconds it pauses with "Take over from an unresponsive tab" and does not
+              take the worker on its own; the leader keeps counting
+    - name: Take over from it
+      do: Click "Continue here" on that tab.
+      expect: it leads and counts; the former leader pauses with "Taken over by another tab"
+```
+
+## Changelog
+
+```mdl
+decision D-1: A tab whose leader lock is taken repeatedly by a tab it cannot hear over its coordinator yields instead of stealing back, and escalates with `WorkerLeaderContentionError` so the app can reload every tab onto one build. Two tabs on different builds each have their own SharedWorker coordinator but share the origin's leader lock, and stealing back made them kill each other's worker every port timeout, indefinitely.
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-1.9]
+```
+
+```mdl
+decision D-2: Tabs never take the worker from each other without the user. A tab that would steal from an unresponsive leader asks the app first (`onTakeoverRequired`); a tab whose lock is stolen stops (`onLockStolen`); a tab on an older build stops when a newer build opens (`onSuperseded`). The framework holds no UX opinion: it takes these callbacks and the build's `generation`, and the app decides what a stopped tab shows.
+  date: 2026-11-19
+  by: user:dmaretskyi
+  affects: [F-1.10, F-1.11, F-1.12, F-1.13]
+```
 
 ## Appendix: Extension Definitions
 

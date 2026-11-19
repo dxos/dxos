@@ -63,9 +63,22 @@ export type Event =
   | { readonly _tag: 'Message'; readonly target: Target; readonly message: Message }
   | { readonly _tag: 'ThreadStart'; readonly target: Target; readonly parentMessageId?: string }
   | { readonly _tag: 'ThreadEnd'; readonly target: Target }
+  /**
+   * A page whose messages the source filtered out (e.g. system messages): nothing to extract, but the cursor moves past
+   * it. It travels the pipeline like a message so the commit sink moves the cursor in order, after earlier messages.
+   */
+  | { readonly _tag: 'Skipped'; readonly target: Target; readonly cursor: string }
   | { readonly _tag: 'ChannelEnd'; readonly target: Target };
 
 export type EventTag = Event['_tag'];
+
+/** How one top-level channel is crawled; its threads inherit it. Unset fields fall back to the crawl-wide setting. */
+export type ChannelSettings = {
+  /** Initial lookback in days when the channel has no cursor yet. */
+  readonly maxDays?: number;
+  /** Whether to descend into the channel's threads. */
+  readonly descendThreads?: boolean;
+};
 
 /** Crawl configuration: what to crawl and how. */
 export type Config = {
@@ -77,4 +90,6 @@ export type Config = {
   readonly maxDepth?: number;
   /** Initial lookback when a target has no cursor yet. */
   readonly seed?: { readonly maxDays?: number };
+  /** Per-channel overrides, keyed by top-level channel id. */
+  readonly channelSettings?: Readonly<Record<string, ChannelSettings>>;
 };

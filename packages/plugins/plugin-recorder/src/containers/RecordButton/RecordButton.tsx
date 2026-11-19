@@ -31,17 +31,20 @@ const RecordButtonInner = ({ subject, recorder }: RecordButtonProps & { recorder
   const { t } = UiHooks.useTranslation(RecorderNamespace.key);
   const state = useAtomValue(recorder.state);
   const busy = state.status !== 'idle';
+  const failed = !!state.error && !busy;
   const handleClick = useStartRecording(recorder, subject);
 
   return (
     <Button.Root
       data-testid='recorder.record'
-      icon={state.error && !busy ? 'ph--warning--regular' : 'ph--record--regular'}
+      icon={failed ? 'ph--warning--regular' : 'ph--record--regular'}
       iconOnly
       variant='ghost'
       disabled={busy}
-      label={state.error && !busy ? t('record-failed.label', { error: state.error }) : t('record.label')}
-      classNames='text-error-text'
+      label={failed ? t('record-failed.label', { error: state.error }) : t('record.label')}
+      // Red is what is happening, not what the button is for: while it is recording, and on the warning a failed
+      // attempt leaves. Idle, it is a toolbar button like its neighbours.
+      classNames={(state.status === 'recording' || failed) && 'text-error-text'}
       onClick={() => void handleClick()}
     />
   );

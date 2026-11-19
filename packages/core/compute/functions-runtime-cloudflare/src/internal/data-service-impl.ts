@@ -129,6 +129,13 @@ export class DataServiceImpl implements DataService.Handlers {
           }),
         );
 
+      // A held copy is not fetched now, but a refresh re-reads it like any other: a nested call may have changed it.
+      for (const { id, passive, heads } of request.add ?? []) {
+        if (passive && heads?.length) {
+          sub.workingSet.add(id);
+        }
+      }
+
       if (addIds.length === 0) {
         return;
       }

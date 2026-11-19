@@ -7,6 +7,8 @@ import React, { type PropsWithChildren, createContext, useContext, useEffect, us
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { MarkdownSlide, type SlideSurfaceRole } from '@dxos/react-ui-slides';
+import { SlideCanvas } from '@dxos/react-ui-slides';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Text } from '@dxos/schema';
@@ -14,8 +16,6 @@ import { Text } from '@dxos/schema';
 import { Presentation } from '#types';
 
 import { PresenterNamespace } from '../../namespace.ts';
-import { MarkdownSlide, type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
-import { SlideCanvas } from './canvas.tsx';
 import { ObjectSurface } from './ObjectSurface.tsx';
 
 export type EmbeddedSurfaceProps = {

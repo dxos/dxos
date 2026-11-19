@@ -1,0 +1,51 @@
+{
+  "name": "@dxos/echo-sync-worker",
+  "version": "0.16.0",
+  "private": true,
+  "description": "The echo-sqlite sync server: a Cloudflare Worker with one Durable Object per space, the authority that positions its feed blocks.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@dxos/echo-sqlite": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@effect/sql-sqlite-do": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@dxos/echo": "workspace:*",
+    "wrangler": "catalog:"
+  },
+  "cloudflare": {
+    "bindings": {
+      "SPACE": {
+        "description": "One Durable Object per space. It holds the space feeds and gives every block its position."
+      }
+    }
+  }
+}

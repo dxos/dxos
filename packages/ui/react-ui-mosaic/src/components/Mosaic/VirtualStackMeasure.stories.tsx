@@ -44,7 +44,10 @@ const MeasureTile: FC<MosaicTileProps<MeasureItem>> = ({ data, location, current
 
 const TARGET_ID = '6';
 
-const VirtualStackMeasureStory = () => {
+/** The viewport's own padding when it, rather than the stack, pads the content (`inset={false}`). */
+const VIEWPORT_PADDING = 8;
+
+const VirtualStackMeasureStory = ({ inset = true }: { inset?: boolean }) => {
   const items = useMemo<MeasureItem[]>(
     () =>
       Array.from({ length: NUM_ITEMS }, (_, index) => ({
@@ -74,7 +77,7 @@ const VirtualStackMeasureStory = () => {
             eventHandler={{ id: 'virtual-stack-measure', canDrop: () => false }}
           >
             <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport ref={setViewport} data-testid='measure-viewport'>
+              <ScrollArea.Viewport ref={setViewport} data-testid='measure-viewport' classNames={!inset && 'p-2'}>
                 <Mosaic.VirtualStack
                   Tile={MeasureTile}
                   items={items}
@@ -83,6 +86,7 @@ const VirtualStackMeasureStory = () => {
                   getScrollElement={() => viewport}
                   estimateSize={() => ESTIMATE}
                   gap={GAP}
+                  inset={inset}
                 />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
@@ -141,5 +145,38 @@ export const SmoothScrollMeasuresTiles: Story = {
     await waitFor(() => expect(getRowGaps(viewport).filter(({ gap }) => Math.abs(gap - GAP) > 1)).toEqual([]), {
       timeout: 5_000,
     });
+  },
+};
+
+/**
+ * With `inset={false}` the viewport pads its own content, and the virtualizer's offsets do not include that
+ * padding. A scroll to an item must land it exactly one padding below the viewport edge — backing off by
+ * `gap` as well leaves the tail of the preceding row showing above it.
+ */
+export const ScrollToItemClearsThePrecedingRow: Story = {
+  render: () => <VirtualStackMeasureStory inset={false} />,
+  play: async () => {
+    const body = within(document.body);
+    const viewport = await body.findByTestId('measure-viewport', undefined, { timeout: 30_000 });
+    await waitFor(() => expect(within(viewport).getAllByTestId('measure-tile').length).toBeGreaterThan(0));
+
+    await userEvent.click(await body.findByTestId('scroll-to-target'));
+
+    // Wait for the smooth scroll to land and the virtualizer's scrolling flag to reset.
+    await waitFor(() => expect(within(viewport).getByText(`Item #${TARGET_ID} (${TALL}px)`)).toBeVisible());
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+
+    await waitFor(
+      async () => {
+        const viewportTop = viewport.getBoundingClientRect().top;
+        const rows = Array.from(viewport.querySelectorAll<HTMLElement>('[data-index]'));
+        const target = rows.find((row) => Number(row.dataset.index) === Number(TARGET_ID));
+        const preceding = rows.find((row) => Number(row.dataset.index) === Number(TARGET_ID) - 1);
+        await expect(Math.round(target!.getBoundingClientRect().top - viewportTop)).toEqual(VIEWPORT_PADDING);
+        // The preceding row ends at or above the viewport edge: none of it shows.
+        await expect(Math.round(preceding!.getBoundingClientRect().bottom - viewportTop)).toBeLessThanOrEqual(0);
+      },
+      { timeout: 5_000 },
+    );
   },
 };

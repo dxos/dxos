@@ -14,12 +14,12 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
-import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Space } from '@dxos/halo';
 import { Text } from '@dxos/schema';
 import { Channel, Person } from '@dxos/types';
 
 import * as AgentEmail from './AgentEmail.ts';
+import * as AgentSession from './AgentSession.ts';
 import * as BrainService from './BrainService.ts';
 
 /**
@@ -103,6 +103,48 @@ export const EnsureChannelChat = Operation.make({
   output: Schema.Struct({
     chat: Ref.Ref(Chat.Chat),
     feed: Ref.Ref(Feed.Feed).annotate({ description: "The chat's message feed." }),
+  }),
+});
+
+/**
+ * Finds or creates an agent's chat for a session: a conversation with a caller that is not a channel, such as an MCP
+ * client (EDGE compute-service's `askAgent`). Idempotent on `(agent, kind, key)`: the chat carries
+ * `AgentSession.chatKey` as an `Obj.Meta` foreign key. A new chat binds the agent's context, its session skills and
+ * every channel's skills, so the agent can act in its channels from the session.
+ */
+export const EnsureSessionChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.ensureSessionChat'),
+    name: 'Ensure agent session chat',
+    description: "Finds or creates an agent's chat for a session (an MCP client's conversation with the agent).",
+  },
+  services: [Database.Service],
+  types: CHAT_TYPES,
+  input: Schema.Struct({
+    agent: Schema.optional(
+      Schema.String.annotate({ description: 'The agent: its URI or name; optional when the space has one agent.' }),
+    ),
+    kind: Schema.String.pipe(
+      Schema.check(
+        Schema.isPattern(AgentSession.KIND_PATTERN, {
+          toJsonSchema: () => ({ pattern: AgentSession.KIND_PATTERN.source }),
+        }),
+      ),
+    ).annotate({ description: 'The kind of caller, e.g. `mcp`; it contains no `:`.' }),
+    key: Schema.String.annotate({ description: "The caller's session id, unique within its kind." }),
+    title: Schema.optional(Schema.String.annotate({ description: 'Names a new chat.' })),
+    model: Schema.optional(
+      Schema.String.annotate({
+        description: "The model the session's chat runs on (a model NSID); kept for later turns of the session.",
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent),
+    agentName: Schema.optional(Schema.String),
+    chat: Ref.Ref(Chat.Chat),
+    feed: Ref.Ref(Feed.Feed),
+    created: Schema.Boolean,
   }),
 });
 
@@ -348,59 +390,4 @@ export const ReadSource = Operation.make({
     fired: Schema.Array(Schema.String).annotate({ description: 'The ids of the triggers that fired.' }),
     undelivered: Schema.Array(Schema.String).annotate({ description: 'Why a fired notification was not delivered.' }),
   }),
-});
-
-//
-// Fact feeds: an agent's brain on EDGE indexes the fact feeds registered with it (`/compute/brain/:spaceId/:agentId/fact-feeds`).
-//
-
-const FactFeeds = Schema.Struct({
-  feeds: Schema.Array(Schema.String).annotate({ description: 'EIDs of the fact feeds the brain indexes.' }),
-});
-
-/** Has the agent's brain index a fact feed from now on, from the start of the feed. */
-export const AddFactFeed = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.agent.addFactFeed'),
-    name: 'Add fact feed',
-    description: "Has the agent's brain on EDGE index a fact feed, reading it from where it left off.",
-    icon: 'ph--brain--regular',
-  },
-  services: [Database.Service, EdgeHttpClientService],
-  input: Schema.Struct({
-    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain is to index the fact feed.' }),
-    feed: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed to index.' }),
-  }),
-  output: FactFeeds,
-});
-
-/** Stops the agent's brain indexing a fact feed; the facts it already read stay. */
-export const RemoveFactFeed = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.agent.removeFactFeed'),
-    name: 'Remove fact feed',
-    description: "Stops the agent's brain on EDGE indexing a fact feed; what it read stays.",
-    icon: 'ph--brain--regular',
-  },
-  services: [Database.Service, EdgeHttpClientService],
-  input: Schema.Struct({
-    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain is to stop indexing the fact feed.' }),
-    feed: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed to stop indexing.' }),
-  }),
-  output: FactFeeds,
-});
-
-/** The fact feeds the agent's brain indexes. */
-export const ListFactFeeds = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.agent.listFactFeeds'),
-    name: 'List fact feeds',
-    description: "Lists the fact feeds the agent's brain on EDGE indexes.",
-    icon: 'ph--brain--regular',
-  },
-  services: [Database.Service, EdgeHttpClientService],
-  input: Schema.Struct({
-    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain indexes the fact feeds.' }),
-  }),
-  output: FactFeeds,
 });

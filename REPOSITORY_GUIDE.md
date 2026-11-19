@@ -186,9 +186,11 @@ bash tools/storybook-react/diagnose.sh --watch    # capture whenever it next wed
 ```
 
 **Do not restart before capturing** — that is the whole difficulty. And check for
-a second server first: an orphaned keeper daemon from a previous session was found
-restarting storybook on another port for five days, doubling the watcher and
-memory load against the same repo.
+an orphaned server first: each session runs its own storybook on its own port
+(`AGENTS.md`, "Long-running servers"), so several live ones are expected, but a
+keeper daemon left by a finished session was once found restarting storybook on
+another port for five days, adding a watcher and its memory to the same repo for
+nobody.
 
 ### Fast dev mode (`serve-fast`)
 
@@ -403,7 +405,7 @@ For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](h
 
 ## Dependencies
 
-Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
+Packages can be locked to a particular version as required by updating `overrides` in `pnpm-workspace.yaml` (pnpm 11+ no longer reads the `pnpm` field in `package.json`).
 
 Examples:
 
@@ -492,8 +494,8 @@ Run `pnpm lint:changed` to lint only what you've been working on using `pnpm cha
 ### Unused dependencies and dead code
 
 `pnpm knip` reports unused dependencies, dependencies that are imported without being declared, and
-source files nothing references. CI runs the same command in the **Check** workflow's `knip` job, so
-a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
+source files nothing references. CI runs the same command in the **Check** workflow's nightly run
+(not on PRs), so a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
 packages through their `source` export condition — so it needs no build and takes about 80 seconds.
 
 Most of what the config in `.config/knip.ts` does is teach knip the ways this repo reaches code
@@ -605,7 +607,7 @@ pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
+This project requires Node.js 24.x, pnpm 12.21.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
 
 ```bash
 export PROTO_HOME="$HOME/.proto"
@@ -630,6 +632,6 @@ See the [Run commands](#run-commands) section above for the full list.
   them with `tools/moon-cache/install-certs.sh --op` — once per machine, covering every worktree. In GitHub Actions it is stricter: any job
   using `.github/actions/setup` **fails** when the credentials are missing or the cache does not
   answer, unless it is a fork PR or the call passes `remote-cache: 'false'`.
-- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
+- The `allowBuilds` map in `pnpm-workspace.yaml` controls which dependency build scripts run. pnpm fails the install on any build script it lists neither as `true` nor `false`, so a new native dependency needs an entry. `node-gyp` is a root devDependency because the standalone pnpm binary that proto installs does not bundle one.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

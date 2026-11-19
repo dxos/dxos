@@ -41,6 +41,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -50,7 +53,7 @@
       "path": "../../core/echo/echo-sqlite"
     },
     {
-      "path": "../../core/echo/echo-worker"
+      "path": "../../core/echo/echo-sync-worker"
     },
     {
       "path": "../../ui/react-ui"

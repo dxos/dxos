@@ -16,7 +16,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Database, Feed, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';
@@ -26,7 +26,7 @@ import { type ContentBlock } from '@dxos/types';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import { EVAL_TOOL_NAME } from './eval-tool.ts';
-import { makeCodeModeTurnProducer } from './producer.ts';
+import { makeCodeModeTurnProducer, toToolInput } from './producer.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 
@@ -166,7 +166,8 @@ const SCENARIOS = [
     querySkillsCall: `await ops[${toolOf(QuerySkills)}](input)`,
     steps: [
       `print(await ops[${toolOf(QueryOperations)}]({ query: 'urgency' }));`,
-      `print(await ops[${toolOf(Score)}]({ title: 'Write the docs' }));\n` +
+      // By the operation's key, which the Skill Manager says works as well as its tool name.
+      `print(await ops[${JSON.stringify(keyOf(Score))}]({ title: 'Write the docs' }));\n` +
         `print(await ops[${toolOf(EnableSkills)}]({ keys: ['com.example.skill.notes'] }));`,
       `print(await ops[${toolOf(AddNote)}]({ text: 'remember the docs' }));`,
     ],
@@ -188,14 +189,15 @@ const SCENARIOS = [
   },
 ];
 
-describe('code mode states only the Skill Manager', () => {
+describe("code mode states the enabled skills and the Skill Manager's lookups", () => {
   describe.each(SCENARIOS)('$name dialect', ({ dialect, steps, querySkillsCall }) => {
-    /** The system prompt of every model call. */
+    /** The system prompt, and the conversation's text, of every model call. */
     const systems: string[] = [];
+    const conversations: string[] = [];
     const { scored, noted, handlers } = makeHandlers();
 
     it.effect(
-      'states only the Skill Manager, and the model finds, enables and calls the rest from code',
+      'states the enabled skills, and the model finds, enables and calls the rest from code',
       Effect.fnUntraced(
         function* (_) {
           const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
@@ -203,16 +205,32 @@ describe('code mode states only the Skill Manager', () => {
           yield* session.waitForCompletion();
 
           expect(systems).toHaveLength(steps.length + 1);
-          for (const system of systems) {
-            expect(system).toContain('Nothing about this workspace is listed in this prompt');
-            expect(system).toContain(querySkillsCall);
-            expect(system).toContain("find them, and their fields, with the Skill Manager's `queryTypes`");
-            // No other skill's instructions, no operation but the Skill Manager's, and no types.
-            expect(system).not.toContain('Score titles before ranking them');
-            expect(system).not.toContain('Write notes in lower case');
-            expect(system).not.toContain('Scores a title for urgency');
-            expect(system).not.toContain('com.example.type.ticket');
-          }
+          // One system prompt for the whole turn, so the prompt cache holds across its calls.
+          expect(new Set(systems).size).toBe(1);
+          const [system] = systems;
+          expect(system).toContain('The skills enabled in this conversation are stated in this prompt');
+          expect(system).toContain(querySkillsCall);
+          expect(system).toContain("find them, and their fields, with the Skill Manager's `queryTypes`");
+          // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
+          expect(system).toContain('Score titles before ranking them');
+          expect(system).toContain('Scores a title for urgency');
+          expect(system).not.toContain('Write notes in lower case');
+          // No types, and no skill that is not enabled.
+          expect(system).not.toContain('com.example.type.ticket');
+
+          // The Notes skill is enabled by the second eval, so a notice states it, and its operation, from the call
+          // after it.
+          const enabledAt = 2;
+          conversations.forEach((conversation, index) => {
+            if (index < enabledAt) {
+              expect(conversation).not.toContain('Write notes in lower case');
+            } else {
+              expect(conversation).toContain('Skills enabled in this turn');
+              expect(conversation).toContain('Write notes in lower case');
+              expect(conversation).toContain('Operations available in this turn');
+              expect(conversation).toContain('Adds a note to the notebook');
+            }
+          });
 
           const messages = yield* TrajectoryStore.history(session.feed);
           const results = messages
@@ -234,6 +252,7 @@ describe('code mode states only the Skill Manager', () => {
             agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect }) },
             aiService: scriptedAiService((request, index) => {
               systems.push(request.system);
+              conversations.push(request.text);
               const code = steps[index];
               return code === undefined
                 ? { parts: [text('Scored and noted.')] }
@@ -246,4 +265,21 @@ describe('code mode states only the Skill Manager', () => {
       { timeout: 30_000 },
     );
   });
+});
+
+describe('toToolInput', () => {
+  it.effect(
+    'passes a ref as the URI string a tool reference field decodes, at any depth',
+    Effect.fnUntraced(
+      function* (_) {
+        const ticket = yield* Database.add(Obj.make(Ticket, { title: 'Write the docs' }));
+        const uri = String(Ref.make(ticket).uri);
+        const input = JSON.parse(toToolInput({ target: Ref.make(ticket), files: [Ref.make(ticket)], note: 'x' }));
+        expect(input).toEqual({ target: uri, files: [uri], note: 'x' });
+        expect(toToolInput(undefined)).toEqual('{}');
+      },
+      Effect.provide(AssistantTestLayer({ types: [Ticket] })),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

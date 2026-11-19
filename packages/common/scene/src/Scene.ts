@@ -8,7 +8,7 @@ import { AnimatableAnnotation, Vec3 as AnimationVec3 } from '@dxos/animation';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { VectorAnnotationId } from '@dxos/ui-types';
 
-import { ElementEndpoint, Layer } from './element.ts';
+import { ElementEndpoint, Layer, PartLayout } from './element.ts';
 import { NamedStyle2D, NamedStyle3D, Style2D, Style3D, StyleCatalog } from './style.ts';
 
 /** A 3D vector (a position, scale or rotation); a form stacks one number input per axis. */
@@ -28,18 +28,29 @@ export const Dimension = Schema.Literals(['2d', '3d']);
 export type Dimension = Schema.Schema.Type<typeof Dimension>;
 
 /** Kinds every layout may hold; the dimension's own kinds are listed separately. */
-export const KINDS_SHARED: readonly string[] = ['link', 'label', 'group'];
+// `instance` is the kind of a placed composite Object, as `group` is of an anonymous one: the two differ in whether
+// the composite stands in the library, not in what either dimension can hold.
+export const KINDS_SHARED: readonly string[] = ['link', 'label', 'group', 'instance'];
 export const KINDS_2D: readonly string[] = [
   'rect',
   'ellipse',
   'cloud',
   'polygon',
+  // A shape a recipe draws from the frame and a few parameters (an arrow, a callout, a star).
+  'shape',
   'polyline',
+  'hull',
   'path',
   'note',
   'image',
   'generator',
   'diagram',
+  // The prototype-built types of the 2D editor, which a composite's parts are mostly made of.
+  'card',
+  'icon',
+  'view',
+  // A shape made of others, joined or cut: the kind 3D builds its solids with, drawn here as an outline.
+  'solid',
 ];
 export const KINDS_3D: readonly string[] = ['cube', 'sphere', 'cylinder', 'cone', 'pyramid', 'mesh', 'solid'];
 
@@ -152,9 +163,18 @@ export const BaseElement = Schema.Struct({
   target: Schema.optional(ElementEndpoint),
   /** Set when a person placed the element, so arranging its layout leaves it where it is. */
   pinned: Schema.optional(Schema.Boolean),
+  /** How the element follows its frame when it is a part of a composite and an instance is resized. */
+  constrain: Schema.optional(PartLayout),
+  /** The composite Object the element draws, where its type declares one (a UML class). */
+  composite: Schema.optional(Schema.String),
   /** The DSL statement that made the element, so compiling the source again updates it rather than adding a copy. */
   dsl: Schema.optional(DslIdentity),
-  /** Kind-specific fields, validated by the kind's registration. */
+  /**
+   * An extension kind's own fields, typed and validated by the kind's registration. They are kept apart from the
+   * element's own so a kind may name a field as the base names one (`size`), and two kinds never contend for a name.
+   */
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  /** Renderer-specific fields the base has no slot for (the 2D viewport's under `canvas`). */
   props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type BaseElement = Schema.Schema.Type<typeof BaseElement>;
@@ -374,7 +394,6 @@ export class Model2D extends Type.makeObject<Model2D>(DXN.make('org.dxos.type.sc
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -386,7 +405,6 @@ export class Model3D extends Type.makeObject<Model3D>(DXN.make('org.dxos.type.sc
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -399,7 +417,6 @@ export class Layout2D extends Type.makeObject<Layout2D>(DXN.make('org.dxos.type.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -411,7 +428,6 @@ export class Layout3D extends Type.makeObject<Layout3D>(DXN.make('org.dxos.type.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -420,7 +436,6 @@ export class Scene2D extends Type.makeObject<Scene2D>(DXN.make('org.dxos.type.sc
   Schema.Struct({ key: Schema.String, ...makeSceneSchema(Camera2D, Ref.Ref(Layout2D)).fields }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--square--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -429,7 +444,6 @@ export class Scene3D extends Type.makeObject<Scene3D>(DXN.make('org.dxos.type.sc
   Schema.Struct({ key: Schema.String, ...makeSceneSchema(Camera3D, Ref.Ref(Layout3D)).fields }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 

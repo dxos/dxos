@@ -1,0 +1,9 @@
+---
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+
+import WelcomeHero from './WelcomeHero.astro';
+
+const { welcome } = Astro.locals.starlightRoute.entry.data;
+---
+
+{welcome ? <WelcomeHero {...welcome} /> : <Default />}

@@ -10,10 +10,11 @@ import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
+import { Fact, Graph, Ontology, Vocab } from '@dxos/echo-memory';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Space } from '@dxos/halo';
 import { EID } from '@dxos/keys';
-import { RDF, type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
+import { type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -240,7 +241,7 @@ const readObject = Effect.fnUntraced(function* (
 const normalize = (text: string): string => text.replace(/\s+/g, ' ').trim().toLowerCase();
 
 /** Whether the fact quotes one of the segments; on an incremental read only facts from new messages are kept. */
-const quotesAny = (fact: RDF.Fact, segments: readonly Segment[]): boolean => {
+const quotesAny = (fact: Fact.Fact, segments: readonly Segment[]): boolean => {
   const quote = fact.assertion.quote ? normalize(fact.assertion.quote) : undefined;
   return quote !== undefined && segments.some(({ text }) => normalize(text).includes(quote));
 };
@@ -248,16 +249,20 @@ const quotesAny = (fact: RDF.Fact, segments: readonly Segment[]): boolean => {
 const FIRST_PERSON = new Set(['i', 'me', 'myself']);
 
 /** A first-person term the extractor left unresolved names the speaker of the utterance it quotes. */
-const selfTerm = (term: RDF.Term, segment: Segment): RDF.Term =>
+const selfTerm = (term: Fact.Term, segment: Segment): Fact.Term =>
   term.kind === 'entity' && segment.speakerId && FIRST_PERSON.has((term.label ?? term.entity).trim().toLowerCase())
-    ? { kind: 'entity', entity: segment.speakerId, ...(segment.speakerLabel ? { label: segment.speakerLabel } : {}) }
+    ? {
+        kind: 'entity',
+        entity: Fact.EntityKey.make(segment.speakerId),
+        ...(segment.speakerLabel ? { label: segment.speakerLabel } : {}),
+      }
     : term;
 
 /**
  * Attributes a fact to the utterance its quote comes from; the extractor sees the whole transcript
  * so pronouns resolve, and only knows the speaker of a fact through its quote.
  */
-const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
+const attribute = (fact: Fact.Fact, segments: readonly Segment[]): Fact.Fact => {
   const quote = fact.assertion.quote ? normalize(fact.assertion.quote) : undefined;
   const segment = quote ? segments.find(({ text }) => normalize(text).includes(quote)) : undefined;
   if (!segment) {
@@ -274,9 +279,11 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
     attribution: {
       ...fact.attribution,
       // Someone who is no member is attributed by the name they go by, which is what a watch on them names.
-      ...((segment.speakerId ?? segment.speakerLabel) ? { agent: segment.speakerId ?? segment.speakerLabel } : {}),
+      ...((segment.speakerId ?? segment.speakerLabel)
+        ? { agent: Fact.EntityKey.make(segment.speakerId ?? segment.speakerLabel ?? '') }
+        : {}),
       ...(segment.speakerLabel ? { agentLabel: segment.speakerLabel } : {}),
-      ...(segment.source ? { source: segment.source } : {}),
+      ...(segment.source ? { source: Fact.SourceUri.make(segment.source) } : {}),
       ...(segment.at ? { generatedAtTime: segment.at } : {}),
     },
   };
@@ -284,7 +291,7 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
 
 export type ReadSourceResult = {
   /** The facts pushed to the brain; none when a chat has no messages since the last read. */
-  facts: readonly RDF.Fact[];
+  facts: readonly Fact.Fact[];
   /** A chat's rendered window: the context lines before the new messages, then the new ones. */
   transcript?: string;
   /** The ids of the triggers the facts fired. */
@@ -365,12 +372,12 @@ const extract = (
     : extractDocFacts(
         { text: body.text, source: uri },
         {
-          ontology: RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(AgentPresence.brainId(agent))),
+          ontology: Ontology.DEFAULT.withNamespace(Vocab.brainNamespace(AgentPresence.brainId(agent))),
           entities: knownEntities(members, entities),
         },
       ).pipe(
         Effect.map((facts) =>
-          RDF.Graph.assign(
+          Graph.assign(
             distinct(facts.map((fact) => attribute(resolveTerms(members, fact, entities), body.segments))).map(
               ({ graph: _, ...fact }) => fact,
             ),
@@ -379,7 +386,7 @@ const extract = (
       );
 
 /** The statement a fact makes, whoever said it: what two facts must share to be the same piece of knowledge. */
-const statementKey = ({ assertion, factuality }: RDF.Fact): string =>
+const statementKey = ({ assertion, factuality }: Fact.Fact): string =>
   JSON.stringify([
     termKey(assertion.subject),
     normalize(assertion.predicate).replace(/[\s_-]+/g, ' '),
@@ -387,11 +394,11 @@ const statementKey = ({ assertion, factuality }: RDF.Fact): string =>
     factuality.polarity,
   ]);
 
-const termKey = (term: RDF.Term): string =>
+const termKey = (term: Fact.Term): string =>
   `${term.kind}:${term.kind === 'entity' ? term.entity : normalize(term.literal)}`;
 
 /** One fact per statement in a pass: an extractor reading a repeated sentence states it once per repetition. */
-const distinct = (facts: readonly RDF.Fact[]): RDF.Fact[] => {
+const distinct = (facts: readonly Fact.Fact[]): Fact.Fact[] => {
   const seen = new Set<string>();
   return facts.filter((fact) => {
     const key = statementKey(fact);

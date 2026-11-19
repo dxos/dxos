@@ -1,0 +1,54 @@
+---
+title: Board
+description: Columns of cards the user drags, like a kanban board.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+
+<ApiStory id="react-ui-mosaic/board" height="28rem" />
+
+```ts
+import { Board, Mosaic } from '@dxos/react-ui-mosaic';
+import { Dnd } from '@dxos/react-ui-dnd';
+```
+
+```sh
+npm install @dxos/react-ui-mosaic @dxos/react-ui-dnd
+```
+
+`Board` is a row of stacks, each a column of cards. Cards move within a column and across columns, and columns move
+by the handle in their header. The board reads a model of atoms, so it needs a `RegistryProvider` from
+`@effect/atom-react` above it.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Board.Root` | Reads a `BoardModel`: the columns, a column's items, and an id for each |
+| `Board.Content` | Draws a `Tile` for each column; its `eventHandler` takes columns |
+| `Board.Column.Root` | A column, draggable by the element passed as `dragHandle` |
+| `Board.Column.Header` | The column's header; its `dragHandleRef` is the column's handle |
+| `Board.Item` | The default card |
+| `Board.Placeholder` | The gap a dropped card would land in |
+
+## Model a board
+
+The columns and the cards are atoms, so a change redraws only the columns it touches. Here one atom holds the columns in
+order, each with its cards in order. `place` puts a dropped item where the drop landed: after the card it was dropped on,
+in the gap between two cards, or at the end:
+
+<Snippet file="tile-guide-mosaic" region="model" lang="tsx" />
+
+## Draw and drag
+
+A column's body draws a `Mosaic.Tile` for each card. Each column's `eventHandler` takes cards: `onDrop` places a card in
+the column, and `onTake` runs on the column a card leaves, so it can remove the card once the other column has it. A card
+dropped in its own column only gets `onDrop`, which reorders it. `Dnd.Root` tracks the drag across the board:
+
+<Snippet file="tile-guide-mosaic" region="board" lang="tsx" />
+
+The story at the top of this page runs this example.
+
+Composer's Kanban plugin uses `Board` over ECHO objects, where each column is a value of a field and a drop writes the
+field.

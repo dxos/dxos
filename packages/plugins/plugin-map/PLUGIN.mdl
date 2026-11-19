@@ -27,6 +27,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -205,6 +206,7 @@ op toggleMapView
 
 ```mdl
 feat F-1: Map Creation
+  uses: [Map]
 
   req F-1.1: User can create a Map object from the space or collection create menu.
   req F-1.2:
@@ -218,6 +220,7 @@ feat F-1: Map Creation
 
 ```mdl
 feat F-2: Geospatial Rendering
+  uses: [GeoPoint, Map, MapArticle, MapState]
 
   req F-2.1:
     when: a Map object is opened as article or section
@@ -235,6 +238,7 @@ feat F-2: Geospatial Rendering
 
 ```mdl
 feat F-3: View Toggle
+  uses: [MapState]
 
   req F-3.1:
     when: the toggle operation is invoked
@@ -244,6 +248,7 @@ feat F-3: View Toggle
 
 ```mdl
 feat F-4: Object Properties
+  uses: [Map, MapViewEditor]
 
   req F-4.1:
     when: Map object properties are opened
@@ -260,6 +265,7 @@ feat F-5: Skill
 
 ```mdl
 feat F-6: Pluggable marker providers & companion
+  uses: [Map, MarkerProvider]
 
   req F-6.1: MapPlugin registers a built-in MarkerProvider for Map objects (view rows → pins).
   req F-6.2: Other plugins can contribute a MarkerProvider for their own object types.
@@ -281,6 +287,13 @@ feat F-7: Tile providers via API keys
   req F-7.3:
     when: an API key for 'maptiler.com' is configured
     then: the map renders MapTiler tiles; otherwise OpenStreetMap is used
+```
+
+```mdl
+feat F-8: Read-only Host
+  uses: [MapArticle, MapViewEditor]
+
+  req F-8.1: When the host contributes `ReadOnly`, a map shows its markers and can be panned, zoomed and toggled between map and globe, and selecting a marker still selects its object, but the object properties have no MapViewEditor.
 ```
 
 ## Acceptance
@@ -416,6 +429,43 @@ test QA-2: Showcase clip
     - name: Spin the globe
       do: Click Toggle, then Start.
       expect: the globe shows and rotates
+```
+
+## Changelog
+
+```mdl
+decision D-1: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-2: A `readOnly` option drops the MapViewEditor properties row and keeps the rest of the map: pan, zoom, the map/globe toggle and marker selection. Fills in [D-1].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-8.1, MapViewEditor]
+  why: The view editor is the only part of the plugin that writes to the space; the viewport and the map/globe toggle live in device-local MapState, and selection writes layout state.
+  rejected: Showing MapViewEditor as a disabled form; the source view and location field already show in the map itself, and the generic properties are shown read-only by the space plugin.
+```
+
+```mdl
+decision D-3: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-1
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-4: When the host contributes `ReadOnly`, MapViewEditor renders nothing and the rest of the map stays: pan, zoom, the map/globe toggle and marker selection. Fills in [D-3].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-2
+  affects: [F-4.1, F-8.1, MapViewEditor]
+  why: The view editor is the only part of the plugin that writes to the space; the viewport and the map/globe toggle live in device-local MapState, and selection writes layout state.
 ```
 
 ---

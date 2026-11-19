@@ -27,8 +27,26 @@ export const TOOLS_GROUP = 'Tools';
 /** The group of the tools that make elements — the shapes, then the link — in both dimensions' rails. */
 export const CREATE_GROUP = 'Create';
 
+/** The group of the tools that hold other elements: a hull round shapes, a view onto a scene. */
+export const CONTAINERS_GROUP = 'Containers';
+
+/**
+ * The group of the tools beyond the plain shapes: the card, and the kinds a host's plugins contribute, which a host
+ * offers here unless a kind names a group of its own.
+ */
+export const EXTENSIONS_GROUP = 'Extensions';
+
 /** The fold the link types share, since a drawing mostly uses one of them. */
 export const LINK_FOLD = 'Link';
+
+/** The fold the parametric shapes share: each a recipe of its own, dragged out as a box is. */
+export const SHAPE_FOLD = 'Shape';
+
+/** The fold the tools that draw a line point by point share: its segments straight, or bent. */
+export const PATH_FOLD = 'Path';
+
+/** The fold the tools that draw in one stroke share: the line as drawn, and the shape read from it. */
+export const DRAW_FOLD = 'Draw';
 
 /**
  * A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room, and
@@ -43,7 +61,13 @@ const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
     const name = def.group ?? '';
     groups.set(name, [
       ...(groups.get(name) ?? []),
-      { tool: { kind: 'node' as const, type: def.type }, icon: def.icon, label: def.name, key: def.key },
+      {
+        tool: { kind: 'node' as const, type: def.type },
+        icon: def.icon,
+        label: def.name,
+        key: def.key,
+        ...(def.fold !== undefined ? { fold: def.fold } : {}),
+      },
     ]);
   }
   return [...groups.entries()].map(([name, entries]) => ({ name, entries, collapsible: entries.length > 1 }));
@@ -52,7 +76,8 @@ const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
 /**
  * Tool groups: the fixed tools, then the create group (the shapes and the link types), then the other node types by
  * group; a tool the scene does not allow (`create`, `link`) is left out rather than offered and silently dropped.
- * Groups fold into a flyout when the rail runs out of room.
+ * Groups fold into a flyout when the rail runs out of room. In the create group the link types lead the tools that
+ * draw a line of their own (a polyline, a stroke), so the lines sit together below the closed shapes.
  */
 export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolGroup[] => {
   const linkEntries: ToolEntry[] = capabilities.link
@@ -64,9 +89,17 @@ export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilitie
         fold: LINK_FOLD,
       }))
     : [];
-  // The first (unnamed) node group is the shapes: it becomes the create group, which the link tools end.
+  // The first (unnamed) node group is the shapes: it becomes the create group, which the link tools join.
   const [shapes, ...others] = capabilities.create ? nodeGroups(nodes) : [];
-  const create = [...(shapes?.name === '' ? shapes.entries : []), ...linkEntries];
+  const shapeEntries = shapes?.name === '' ? shapes.entries : [];
+  const lineTypes = new Set(
+    Object.values(nodes)
+      .filter((def) => def.createFromPoints !== undefined || def.freehand !== undefined)
+      .map((def) => def.type),
+  );
+  const firstLine = shapeEntries.findIndex((entry) => entry.tool.kind === 'node' && lineTypes.has(entry.tool.type));
+  const split = firstLine === -1 ? shapeEntries.length : firstLine;
+  const create = [...shapeEntries.slice(0, split), ...linkEntries, ...shapeEntries.slice(split)];
   return [
     { name: TOOLS_GROUP, entries: BASE, collapsible: false },
     { name: CREATE_GROUP, entries: create, collapsible: create.length > 1 },

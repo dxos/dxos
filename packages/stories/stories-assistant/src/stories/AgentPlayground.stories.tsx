@@ -17,12 +17,12 @@ import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
 import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {
   GOAL_FACTS,
-  ModuleContainer,
   PARTICIPANTS,
   PLAYGROUND_MODEL,
   type PlaygroundRefs,
@@ -40,9 +40,9 @@ import {
   submitPrompt,
 } from '../testing/index.ts';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/AgentPlayground',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   // A new story's setup starts after the previous one's refs and database are still in place, so each story
   // waits on its own setup rather than racing it.
   beforeEach: () => {

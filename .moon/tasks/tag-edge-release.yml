@@ -6,7 +6,9 @@ tasks:
     # a module does not import or activate, or it contributes no operations, skills or types.
     # See `@dxos/plugin-builder`.
     # TODO(dmaretskyi): Reorganize all plugin-related tasks under a single `dx-plugin` tag.
-    command: node $workspaceRoot/packages/core/compute/plugin-builder/dist/lib/bin/check-release.mjs --package .
+    # TODO(dmaretskyi): Drop `--allow-stale` once the stale-dist check compares content. It compares mtimes, and moon
+    #   restores a cached `dist` with the mtimes it was built with, so a fresh checkout's `src/` always reads as newer.
+    command: node $workspaceRoot/packages/core/compute/plugin-builder/dist/lib/bin/check-release.mjs --package . --allow-stale
     deps:
       # The bundle is built from source; dependencies' `dist` provide their types and the shared packages.
       - ^:build
@@ -25,6 +27,18 @@ tasks:
       - dist/plugin
     options:
       timeout: 900
+
+  prepack-edge-release:
+    # Readies the bundle `check-edge-release` built and checked to ship in the package tarball, from which dxos/edge can
+    # seed its registry (`node_modules/@dxos/<plugin>/dist/plugin`): drops the source maps, more than half the bundle,
+    # which EDGE reads only with `DX_PLUGIN_SOURCEMAPS=1`. The pkg.pr.new and npm publish workflows run it before
+    # packing. moon restores outputs only when they are missing, so `check-edge-release --force` brings the maps back.
+    script: find dist/plugin -name '*.map' -type f -delete
+    deps:
+      - check-edge-release
+    options:
+      # It edits `check-edge-release`'s outputs in place, which is nothing moon can cache.
+      cache: false
 
   publish-edge-release:
     # Uploads the bundle `check-edge-release` built and checked to the EDGE at `DX_EDGE_BASE_URL` as a first-party

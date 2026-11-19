@@ -16,6 +16,23 @@ import * as Provider from '../../Provider.ts';
 /** Developer authority of the model ids this resolver serves. */
 const ANTHROPIC_DEVELOPER = 'com.anthropic';
 
+/**
+ * The `thinking` request field for a model that does or does not think, given the caller's choice. A thinking model
+ * asked not to gets an explicit `disabled`, since newer models (Haiku 5.5) think when the field is omitted.
+ */
+export const thinkingConfig = (modelThinks: boolean, requested: boolean | undefined) => {
+  if (!modelThinks) {
+    return undefined;
+  }
+  return (requested ?? true)
+    ? ({
+        type: 'adaptive',
+        // The API default omits thinking blocks from the stream; summaries keep them visible.
+        display: 'summarized',
+      } as const)
+    : ({ type: 'disabled' } as const);
+};
+
 export const make = () =>
   AiModelResolver.resolver(
     {
@@ -37,15 +54,7 @@ export const make = () =>
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
         const max_tokens = info.characteristics?.maxTokens;
-        const thinking =
-          info.characteristics?.thinking && (options?.thinking ?? true)
-            ? // The Effect-AI Anthropic binding's `thinking.type` union predates Anthropic's `adaptive` mode.
-              ({
-                type: 'adaptive',
-                // The API default omits thinking blocks from the stream; summaries keep them visible.
-                display: 'summarized',
-              } as const)
-            : undefined;
+        const thinking = thinkingConfig(info.characteristics?.thinking ?? false, options?.thinking);
         return AnthropicLanguageModel.layer({ model: info.backend, config: { thinking, max_tokens } }).pipe(
           Layer.provide(clientLayer),
         );

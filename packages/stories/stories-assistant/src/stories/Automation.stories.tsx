@@ -15,13 +15,15 @@ import { Filter, Query, Ref } from '@dxos/echo';
 import * as ChessOperation from '@dxos/plugin-chess/ChessOperation';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { Text } from '@dxos/schema';
-import { Cell, addToRootCollection } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
-const meta: Meta<typeof ModuleContainer> = {
+import { createDecorators, storyParameters } from '../testing/index.ts';
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Automation',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -94,7 +96,7 @@ export const WithChessTrigger: Story = {
           }),
         }),
       );
-      addToRootCollection(space, [game]);
+      StoryHarness.addToRootCollection(space, [game]);
       space.db.add(
         Trigger.make({
           runnable: Ref.make(Operation.serialize(ChessOperation.Play)),

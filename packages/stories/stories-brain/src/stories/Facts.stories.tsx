@@ -6,15 +6,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
+import { translations as rdfTranslations } from '@dxos/react-ui-rdf/translations';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
-import { FactsStoryContext } from '../modules/index.ts';
+import { FactsStoryContext, type PredicateFilter, type QueryScope } from '../modules/index.ts';
 import { StoryRole } from '../modules/index.ts';
 import { CrawlerStoresPlugin } from '../testing/index.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
@@ -25,24 +27,26 @@ import { StoryModulesPlugin } from '../testing/modules.tsx';
  * consume the shared display state. Facts live in the `FactStoreRegistry`; crawler-only stores come
  * from the story-local {@link CrawlerStoresPlugin}.
  */
-const CRAWL_LAYOUT: ModuleLayout = [
+const CRAWL_LAYOUT: ModuleContainer.Layout = [
   [StoryRole.Crawl, StoryRole.Query, StoryRole.Questions],
   [StoryRole.Facts],
   [StoryRole.Entities],
 ];
 
 /** In-memory variant: just the viewer + entity nav over a seeded store. */
-const VIEWER_LAYOUT: ModuleLayout = [[StoryRole.Facts], [StoryRole.Entities]];
+const VIEWER_LAYOUT: ModuleContainer.Layout = [[StoryRole.Facts], [StoryRole.Entities]];
 
 /**
  * Owns the cross-module display state (current facts view + selected entity) and drives the layout.
  * `seed` pre-populates the space's `FactStore` (the no-crawl variant).
  */
-const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fact[] }) => {
+const FactsStoryRoot = ({ layout, seed }: { layout: ModuleContainer.Layout; seed?: Fact.Fact[] }) => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const [space] = useSpaces();
-  const [facts, setFacts] = useState<RDF.Fact[]>([]);
+  const [facts, setFacts] = useState<Fact.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
+  const [predicate, setPredicate] = useState<PredicateFilter | undefined>(undefined);
+  const [scope, setScope] = useState<QueryScope | undefined>(undefined);
 
   useEffect(() => {
     if (!seed || !space) {
@@ -52,8 +56,10 @@ const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fac
   }, [seed, space, registry]);
 
   return (
-    <FactsStoryContext.Provider value={{ facts, setFacts, selected, setSelected }}>
-      <ModuleContainer layout={layout} />
+    <FactsStoryContext.Provider
+      value={{ facts, setFacts, selected, setSelected, predicate, setPredicate, scope, setScope }}
+    >
+      <ModuleContainer.Root layout={layout} />
     </FactsStoryContext.Provider>
   );
 };
@@ -61,21 +67,22 @@ const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fac
 const DefaultStory = () => <FactsStoryRoot layout={CRAWL_LAYOUT} />;
 
 // A small hand-authored Alice/Bob corpus exercised by the in-memory variant.
-const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): RDF.Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
-    predicate,
-    object: { kind: 'entity', entity: object, label: object === 'dxos' ? 'DXOS' : object },
-  },
-  factuality: { value: 'CT+', polarity: '+', confidence },
-  attribution: { source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },
-  recordedAt: '2026-06-29T00:00:00.000Z',
-  extractor: { id: 'sample', model: 'sample', version: '1' },
-  sourceHash: id,
-});
+const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
+      predicate,
+      object: { kind: 'entity', entity: object, label: object === 'dxos' ? 'DXOS' : object },
+    },
+    factuality: { value: 'CT+', polarity: '+', confidence },
+    attribution: { source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },
+    recordedAt: '2026-06-29T00:00:00.000Z',
+    extractor: { id: 'sample', model: 'sample', version: '1' },
+    sourceHash: id,
+  });
 
-const SAMPLE_FACTS: RDF.Fact[] = [
+const SAMPLE_FACTS: Fact.Fact[] = [
   sampleFact('s1', 'alice', 'works at', 'dxos', 0.95),
   sampleFact('s2', 'alice', 'met', 'bob', 0.8),
   sampleFact('s3', 'bob', 'works at', 'dxos', 0.9),
@@ -88,12 +95,13 @@ const InMemoryStory = () => <FactsStoryRoot layout={VIEWER_LAYOUT} seed={SAMPLE_
 const meta = {
   title: 'stories/stories-brain/Facts',
   render: DefaultStory,
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     plugins: [SpacePlugin.make({}), BrainPlugin.make(), CrawlerStoresPlugin(), StoryModulesPlugin()],
   }),
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
+    translations: rdfTranslations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

@@ -14,18 +14,18 @@ import { FactStore } from '@dxos/pipeline-rdf';
 import * as AgentRegistry from './AgentRegistry.ts';
 import * as Crawler from './Crawler.ts';
 import { CrawlError, StageError } from './errors.ts';
-import { Source } from './Source.ts';
+import * as Source from './Source.ts';
 import { tapStage } from './Stage.ts';
 import { agentProfileStage } from './stages/agent-profile.ts';
 import { extractFactsStage } from './stages/extract-facts.ts';
 import { extractTopics } from './stages/topics.ts';
 import * as StateStore from './StateStore.ts';
-import { TestLayer, THREADED_FIXTURE, servicesLayer } from './testing/index.ts';
+import { TestLayer, THREADED_FIXTURE, fixtureSourceLayer, servicesLayer } from './testing/index.ts';
 import type * as Type from './types.ts';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 
-const ALL_TAGS: Type.EventTag[] = ['ChannelStart', 'Message', 'ThreadStart', 'ThreadEnd', 'ChannelEnd'];
+const ALL_TAGS: Type.EventTag[] = ['ChannelStart', 'Message', 'Skipped', 'ThreadStart', 'ThreadEnd', 'ChannelEnd'];
 
 /** Default assembly used by these tests: profile + extraction, committed via the sink. */
 const runCrawl = (config: Type.Config, options?: Crawler.StreamOptions) =>
@@ -39,16 +39,27 @@ const runCrawl = (config: Type.Config, options?: Crawler.StreamOptions) =>
   });
 
 /** A source whose fetch fails with a typed error — exercises per-target failure isolation. */
-const FAILING_SOURCE = Layer.succeed(Source, {
+const FAILING_SOURCE = Layer.succeed(Source.Source, {
   listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
   fetchMessages: () => Effect.fail(new CrawlError({ message: 'Missing Access' })),
 });
 
 /** A source whose fetch DIES (defect) — exercises defect isolation (dfx can surface a 403 this way). */
-const DYING_SOURCE = Layer.succeed(Source, {
+const DYING_SOURCE = Layer.succeed(Source.Source, {
   listChannels: () => Effect.succeed([{ id: 'chan-1' }]),
   fetchMessages: () => Effect.die(new Error('Missing Access')),
 });
+
+/** A source with no messages that records every fetch, to observe what the crawl asks for. */
+const recordingSource = (fetches: Source.Fetch[]) =>
+  Layer.succeed(Source.Source, {
+    listChannels: () => Effect.succeed([]),
+    fetchMessages: (request: Source.Fetch) =>
+      Effect.sync(() => {
+        fetches.push(request);
+        return { messages: [], threads: [] };
+      }),
+  });
 
 describe('Crawler', () => {
   it.effect(
@@ -170,6 +181,127 @@ describe('Crawler', () => {
       },
       Effect.provide(Layer.merge(FAILING_SOURCE, servicesLayer)),
     ),
+  );
+
+  it.effect(
+    'retries a target an earlier run marked errored',
+    Effect.fnUntraced(function* () {
+      const config: Type.Config = { channels: ['chan-1'], descendThreads: false };
+      const failed = yield* runCrawl(config).pipe(Effect.provide(FAILING_SOURCE));
+      expect(failed.errored).toBe(1);
+
+      const retried = yield* runCrawl(config).pipe(Effect.provide(fixtureSourceLayer(THREADED_FIXTURE)));
+      const targets = yield* StateStore.listTargets();
+      expect(retried.errored).toBe(0);
+      expect(retried.done).toBe(true);
+      expect(targets.find((target) => target.id === 'chan-1')?.status).toBe('done');
+      expect(targets.find((target) => target.id === 'chan-1')?.cursor).toBe('1001');
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
+    'applies per-channel lookback over the crawl-wide one',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      yield* runCrawl({
+        channels: ['chan-1', 'chan-2'],
+        descendThreads: false,
+        seed: { maxDays: 30 },
+        channelSettings: { 'chan-2': { maxDays: 180 } },
+      }).pipe(Effect.provide(recordingSource(fetches)));
+      expect(fetches.find((fetch) => fetch.channelId === 'chan-1')?.maxDays).toBe(30);
+      expect(fetches.find((fetch) => fetch.channelId === 'chan-2')?.maxDays).toBe(180);
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
+    'a page whose messages were all filtered out moves the cursor instead of ending the target',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      // The first page held only system messages: nothing to extract, but a cursor to move to.
+      const pages: Source.Page[] = [
+        { messages: [], threads: [], cursor: '5' },
+        { messages: [], threads: [] },
+      ];
+      const source = Layer.succeed(Source.Source, {
+        listChannels: () => Effect.succeed([]),
+        fetchMessages: (request: Source.Fetch) =>
+          Effect.sync(() => {
+            fetches.push(request);
+            return pages.shift() ?? { messages: [], threads: [] };
+          }),
+      });
+      const summary = yield* runCrawl({ channels: ['chan-1'], descendThreads: false }).pipe(Effect.provide(source));
+      expect(fetches.map((fetch) => fetch.cursor)).toEqual([undefined, '5']);
+      expect(summary.done).toBe(true);
+      const [target] = yield* StateStore.listTargets();
+      expect(target.cursor).toBe('5');
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
+    'a filtered page after a batched message keeps its cursor, and a resumed crawl starts past it',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      const message: Type.Message = { id: '3', text: 'hello there', author: { id: 'u1', source: 'discord' } };
+      // The message waits in extract-facts' batch while the next page, all system messages, moves the cursor to 5.
+      const pages: Source.Page[] = [
+        { messages: [message], threads: [], cursor: '3' },
+        { messages: [], threads: [], cursor: '5' },
+      ];
+      const source = Layer.succeed(Source.Source, {
+        listChannels: () => Effect.succeed([]),
+        fetchMessages: (request: Source.Fetch) =>
+          Effect.sync(() => {
+            fetches.push(request);
+            return pages.shift() ?? { messages: [], threads: [] };
+          }),
+      });
+      const config: Type.Config = { channels: ['chan-1'], descendThreads: false };
+      yield* runCrawl(config, { maxSteps: 2 }).pipe(Effect.provide(source));
+      const [target] = yield* StateStore.listTargets();
+      expect(target.cursor).toBe('5');
+      yield* runCrawl(config).pipe(Effect.provide(source));
+      expect(fetches.map((fetch) => fetch.cursor)).toEqual([undefined, '3', '5']);
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
+    'a page whose last messages were filtered out keeps the cursor past them across a resumed crawl',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      const message: Type.Message = { id: '3', text: 'hello there', author: { id: 'u1', source: 'discord' } };
+      // Message 3 was kept and a system message 5 after it filtered out, so the page's cursor is 5.
+      const pages: Source.Page[] = [{ messages: [message], threads: [], cursor: '5' }];
+      const source = Layer.succeed(Source.Source, {
+        listChannels: () => Effect.succeed([]),
+        fetchMessages: (request: Source.Fetch) =>
+          Effect.sync(() => {
+            fetches.push(request);
+            return pages.shift() ?? { messages: [], threads: [] };
+          }),
+      });
+      const config: Type.Config = { channels: ['chan-1'], descendThreads: false };
+      yield* runCrawl(config, { maxSteps: 1 }).pipe(Effect.provide(source));
+      const [target] = yield* StateStore.listTargets();
+      expect(target.cursor).toBe('5');
+      yield* runCrawl(config).pipe(Effect.provide(source));
+      expect(fetches.map((fetch) => fetch.cursor)).toEqual([undefined, '5']);
+    }, Effect.provide(servicesLayer)),
+  );
+
+  it.effect(
+    'a channel added to the config joins an existing crawl',
+    Effect.fnUntraced(function* () {
+      const fetches: Source.Fetch[] = [];
+      yield* runCrawl({ channels: ['chan-1'], descendThreads: false }).pipe(Effect.provide(recordingSource(fetches)));
+      yield* runCrawl({ channels: ['chan-1', 'chan-2'], descendThreads: false }).pipe(
+        Effect.provide(recordingSource(fetches)),
+      );
+      const targets = yield* StateStore.listTargets();
+      expect(targets.map((target) => target.id).sort()).toEqual(['chan-1', 'chan-2']);
+      expect(fetches.map((fetch) => fetch.channelId)).toContain('chan-2');
+    }, Effect.provide(servicesLayer)),
   );
 
   it.effect(

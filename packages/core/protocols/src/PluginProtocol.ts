@@ -3,6 +3,7 @@
 //
 
 import { type EdgeFunctionEnv, type SerializedError } from './edge/index.ts';
+import { type WorkingSetService } from './working-set.ts';
 
 //
 // Plugin protocol: the contract between EDGE and a plugin bundle's Dynamic Worker.
@@ -39,7 +40,20 @@ export const scopeFor = (version: number, scope: InvocationScope): InvocationSco
 export type Env = Partial<Pick<EdgeFunctionEnv.Env, 'DATA_SERVICE' | 'QUEUE_SERVICE' | 'FUNCTIONS_AI_SERVICE'>> & {
   /** EDGE's registry of the types every published plugin contributes; resolves a type the bundle does not hold. */
   readonly TYPE_REGISTRY?: TypeRegistry;
+  /**
+   * EDGE's hosted blob store, the default file storage of every bundle: the host registers it as the `edge` blob
+   * backend and offers it as a file backend, so no plugin contributes one on EDGE. Without it a bundle stores inline.
+   */
+  readonly BLOB_SERVICE?: BlobService;
 };
+
+/**
+ * The hosted blob store's HTTP routes, over a service binding: `/file/:key` (`GET`, `HEAD`, `POST`) and
+ * `/upload/:uploadId/finalize` (`POST`).
+ */
+export interface BlobService {
+  fetch(input: string, init?: RequestInit): Promise<Response>;
+}
 
 /** EDGE's registry of published types, keyed by DXN. */
 export interface TypeRegistry {
@@ -88,6 +102,8 @@ export type InvocationScope = {
   readonly services?: HostServices;
   /** Runs an operation the bundle does not handle, re-entering EDGE's router. Version 2. */
   readonly operations?: OperationHost;
+  /** The caller's working set, which the invocation's database opens from; a host built before it ignores it. */
+  readonly workingSet?: WorkingSetService;
 };
 
 /** An identity EDGE verified. */

@@ -4,13 +4,13 @@
 
 import { describe, it } from 'vitest';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import * as BrainService from './BrainService.ts';
 
 describe('BrainService', () => {
   it('a negated fact is marked "not:", so a denial is not recalled as the assertion it denies', ({ expect }) => {
-    const denial = {
+    const denial = Fact.make({
       id: 'fact-1',
       assertion: {
         subject: { kind: 'entity', entity: 'kai', label: 'Kai' },
@@ -22,25 +22,26 @@ describe('BrainService', () => {
       recordedAt: '2026-10-13T12:00:00Z',
       extractor: { id: 'test', model: 'none', version: '1' },
       sourceHash: 'fact-1',
-    } satisfies RDF.Fact;
+    });
     expect(BrainService.factText(denial)).toBe('not: Kai has spoken with Dima');
   });
 
   it('a fact expires at the instant its validTo names, whatever the offset or precision', ({ expect }) => {
-    const fact = (id: string, validTo?: string): RDF.Fact => ({
-      id,
-      assertion: {
-        subject: { kind: 'entity', entity: 'kai', label: 'Kai' },
-        predicate: 'works at',
-        object: { kind: 'entity', entity: 'acme', label: 'Acme' },
-        ...(validTo !== undefined ? { validTo } : {}),
-      },
-      factuality: { value: 'CT+', polarity: '+' },
-      attribution: { source: 'test', generatedAtTime: '2026-10-13T12:00:00Z' },
-      recordedAt: '2026-10-13T12:00:00Z',
-      extractor: { id: 'test', model: 'none', version: '1' },
-      sourceHash: id,
-    });
+    const fact = (id: string, validTo?: string): Fact.Fact =>
+      Fact.make({
+        id,
+        assertion: {
+          subject: { kind: 'entity', entity: 'kai', label: 'Kai' },
+          predicate: 'works at',
+          object: { kind: 'entity', entity: 'acme', label: 'Acme' },
+          ...(validTo !== undefined ? { validTo } : {}),
+        },
+        factuality: { value: 'CT+', polarity: '+' },
+        attribution: { source: 'test', generatedAtTime: '2026-10-13T12:00:00Z' },
+        recordedAt: '2026-10-13T12:00:00Z',
+        extractor: { id: 'test', model: 'none', version: '1' },
+        sourceHash: id,
+      });
     const now = '2026-10-16T12:00:00.000Z';
     const facts = [
       fact('open'),

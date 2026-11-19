@@ -260,6 +260,7 @@ type Ends = Pick<Link, 'source' | 'target'>;
 
 const LINKS: Record<LinkType, (ends: Ends) => LinkBody> = {
   line: (ends) => ({ type: 'line', ...ends }),
+  ortho: (ends) => ({ type: 'ortho', ...ends }),
   curve: (ends) => ({ type: 'curve', ...ends }),
   spline: (ends) => ({ type: 'spline', ...ends, points: [] }),
   smart: (ends) => ({ type: 'smart', ...ends }),

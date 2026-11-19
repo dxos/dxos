@@ -3,11 +3,11 @@ name: spec-review
 description: >-
   Review how far the code meets a `.mdl` spec (`PLUGIN.mdl`, `SPEC.mdl`) and write the result as a
   `<SPEC>.review.mdl` beside it: one `verdict` per feature requirement, type, op, component and
-  service, each with a status (done, untested, partial, diverged, missing), a note, and `github:`
-  evidence keys that point at the code. Composer's spec viewer reads the latest review and marks
-  each item in the margin and on the definition graph. Use when asked to review a spec against its
-  code, check spec compliance, find what a spec promises that the code does not do, or refresh a
-  spec's review. For rule-driven code review use `agentic-review`; to change the spec itself use `mdl`.
+  service, and per binding, actor, route, keyspace and table of a worker spec, each with a status
+  (done, untested, partial, diverged, missing), a note, and `github:` evidence keys that point at the
+  code. Composer's spec viewer reads the latest review and marks each item in the margin and on the
+  definition graph. Use when asked to review a spec against its code, check spec compliance, find
+  what a spec promises that the code does not do, or refresh a spec's review. For rule-driven code review use `agentic-review`; to change the spec itself use `mdl`.
 ---
 
 # Spec review
@@ -28,11 +28,23 @@ decides whether the code or the spec changes.
    pnpm deus review items <path/to/PLUGIN.mdl>
    ```
 
+   The first column is the id the verdict must use. A `binding`, `actor`, `route`, `keyspace` or
+   `table` (the worker and SQL dialects) is named `<kind>:<id>`, as the spec cites it
+   (`verdict binding:DATA_SERVICE`, `verdict table:feeds`), since a worker's tables and actors often
+   share names with its types.
+
 2. **Map the package.** Read the package's `src/` layout, its `index.ts` exports, capabilities,
    operations and containers before judging anything. Most items map to one or two files.
 
    For a `plugin` block, judge its `dependsOn` against `dx.config.ts`'s `plugin.dependsOn` beside the spec;
    a mismatch is `diverged`, and `deus review check` errors if the verdict says otherwise.
+
+   For a worker spec, judge each block against what declares it: a `binding` against the worker's
+   `Env` type and its wrangler configuration (`type`, `envs`, `reads`); an `actor` against its Durable
+   Object class (key, storage, alarm, and each `op` against the method's signature); a `route` against
+   the router (`method`, `path`, mount prefix, and the `auth` the handler actually applies); a
+   `keyspace` against the code that writes each key; a `table` against its migrations (column types,
+   nullability, defaults, keys and indexes). Cite the evidence in the same `github:` form.
 
 3. **Judge each item against the code, not against names.** Find where the behaviour lives and read
    it. A symbol with the right name that does something else is `diverged`, not `done`.

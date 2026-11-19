@@ -27,6 +27,7 @@ import * as Menu from '@dxos/react-ui/Menu';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
+import { PublishingSettings } from './PublishingSettings.tsx';
 
 const SpaceFormSchema = SpaceSchema.SpaceForm;
 
@@ -58,10 +59,13 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         void toggleEdgeReplication(newValues.edgeReplication ?? false);
       }
 
-      if (changed['name'] || changed['icon'] || changed['hue']) {
+      if (changed['name'] || changed['description'] || changed['icon'] || changed['hue']) {
         Obj.update(space.properties, (obj) => {
           if (changed['name'] && newValues.name !== undefined) {
             obj.name = newValues.name;
+          }
+          if (changed['description']) {
+            obj.description = newValues.description?.trim() ? newValues.description : undefined;
           }
           if (changed['icon']) {
             obj.icon = newValues.icon;
@@ -80,12 +84,20 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
   const defaultValues = useMemo(
     () => ({
       name: space.properties.name,
+      description: space.properties.description,
       icon: space.properties.icon,
       hue: space.properties.hue,
       private: isPrivate,
       edgeReplication,
     }),
-    [space.properties.name, space.properties.icon, space.properties.hue, isPrivate, edgeReplication],
+    [
+      space.properties.name,
+      space.properties.description,
+      space.properties.icon,
+      space.properties.hue,
+      isPrivate,
+      edgeReplication,
+    ],
   );
 
   // The default space is the fallback target for unscoped content, so it cannot be deleted until
@@ -105,6 +117,23 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
+              classNames='w-64 max-w-full min-w-0'
+            />
+          </Form.Field>
+        );
+      },
+      description: ({ type, label, getValue, onValueChange }) => {
+        const handleChange = useCallback(
+          ({ target: { value } }: ChangeEvent<HTMLTextAreaElement>) => onValueChange(type, value),
+          [onValueChange, type],
+        );
+        return (
+          <Form.Field label={label} description={t('space-description.description')}>
+            <Input.Textarea
+              value={getValue() ?? ''}
+              onChange={handleChange}
+              placeholder={t('space-description.placeholder')}
+              autoResize
               classNames='w-64 max-w-full min-w-0'
             />
           </Form.Field>
@@ -226,6 +255,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           >
             <Form.Fields />
           </Form.FieldSet>
+
+          <PublishingSettings space={space} />
 
           <Form.FieldSet label={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Field standalone label={t('space-id.title')} description={t('space-id.description')}>

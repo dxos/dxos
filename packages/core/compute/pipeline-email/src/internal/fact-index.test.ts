@@ -5,24 +5,26 @@
 import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import { buildEntityIndex, reconcileFactEntities } from './fact-index.ts';
 
-const fact = (subjectLabel: string, objectLabel: string): RDF.Fact => ({
-  id: 'f1',
-  assertion: {
-    subject: { kind: 'entity', entity: normalizeEntityId(subjectLabel), label: subjectLabel },
-    predicate: 'works at',
-    object: { kind: 'entity', entity: normalizeEntityId(objectLabel), label: objectLabel },
-  },
-  factuality: { value: 'CT+', polarity: '+' },
-  attribution: { source: 'dxn:queue:m1', generatedAtTime: '2001-05-14T10:00:00.000Z' },
-  recordedAt: '2001-05-14T10:00:00.000Z',
-  extractor: { id: 'default', model: 'test', version: '1' },
-  sourceHash: 'h1',
-});
+const fact = (subjectLabel: string, objectLabel: string): Fact.Fact =>
+  Fact.make({
+    id: 'f1',
+    assertion: {
+      subject: { kind: 'entity', entity: normalizeEntityId(subjectLabel), label: subjectLabel },
+      predicate: 'works at',
+      object: { kind: 'entity', entity: normalizeEntityId(objectLabel), label: objectLabel },
+    },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { source: 'dxn:queue:m1', generatedAtTime: '2001-05-14T10:00:00.000Z' },
+    recordedAt: '2001-05-14T10:00:00.000Z',
+    extractor: { id: 'default', model: 'test', version: '1' },
+    sourceHash: 'h1',
+  });
 
 describe('entity reconciliation', () => {
   test('buildEntityIndex maps normalized names/emails to object DXNs', ({ expect }) => {

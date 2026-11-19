@@ -94,10 +94,22 @@
       "path": "../../ui/react-ui-canvas-editor"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-slides"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"

@@ -426,6 +426,15 @@ const TESTING_ENTRY_ONLY: Record<string, string[]> = {
   'packages/ui/react-ui': ['@dxos/effect', '@effect/atom-react'],
 };
 
+/**
+ * Dependencies a package imports only from a worker file (`*-worker.ts`), which knip reaches as a
+ * non-production entry, so the production pass reads them as unused although the bundled worker ships.
+ */
+const WORKER_ONLY: Record<string, string[]> = {
+  // `src/client/opfs-worker.ts` runs the OPFS SQLite worker the app opens its database through.
+  'packages/apps/echo-sqlite-demo': ['@dxos/sql-sqlite'],
+};
+
 const BUNDLER_RESOLVED: Record<string, string[]> = {
   // The app's import map is built from its direct dependencies, and plugins loaded by URL import
   // these bare; nothing in the app imports them, but without the declaration they have no entry.
@@ -457,6 +466,32 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     'sharp',
     // Declared so `docs:typedoc`'s `^:typedoc` builds the API reference `collect-typedoc.sh` copies.
     '@dxos/app-framework',
+    '@dxos/halo-react',
+    // Read through `node_modules/@dxos/brand` paths for its fonts and logos, never imported.
+    '@dxos/brand',
+    // A peer of `expressive-code-twoslash`, which `ec.config.mjs` loads outside knip's graph.
+    'twoslash',
+    // Shared packages in the inspector page's import map, found by path in `docs/node_modules`, never imported.
+    '@dxos/client-protocol',
+    '@dxos/crypto',
+    '@dxos/debug',
+    '@dxos/display-name',
+    '@dxos/echo-protocol',
+    '@dxos/echo-query',
+    '@dxos/errors',
+    '@dxos/invariant',
+    '@dxos/operation',
+    '@dxos/random',
+    '@dxos/react-hooks',
+    '@dxos/react-ui-menu',
+    '@dxos/timeframe',
+    '@dxos/tracing',
+    '@dxos/ui',
+    '@dxos/ui-types',
+    '@dxos/util',
+    '@dxos/web-context',
+    '@dxos/web-context-react',
+    'decode-named-character-reference',
   ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
@@ -561,6 +596,7 @@ for (const manifest of globSync(
       ...bundledDependencies(dir),
       ...(DECLARED_IN_TYPES[dir] ?? []),
       ...(TESTING_ENTRY_ONLY[dir] ?? []),
+      ...(WORKER_ONLY[dir] ?? []),
       ...(BUNDLER_RESOLVED[dir] ?? []),
       ...(TRAVERSAL_MISSED[dir] ?? []),
       ...(SCRIPT_STORE_RESOLVED[dir] ?? []),
@@ -643,6 +679,8 @@ const config: KnipConfig = {
     /^watch$/,
     // Bundler resource queries (`?raw`, `?url`, `?worker`) are not part of the module path.
     /\?[a-z]+$/,
+    // The model's program in a `WorkerdSandbox` isolate, which the sandbox writes beside `workerd/main.mjs` at runtime.
+    /^\.\/program\.mjs$/,
   ],
   // These plugins execute the config files they discover, and those import workspace packages
   // through `exports` conditions that only resolve after a build. The config files are covered

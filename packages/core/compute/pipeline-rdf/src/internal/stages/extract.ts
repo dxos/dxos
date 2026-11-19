@@ -3,6 +3,7 @@
 //
 
 import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Prompt from 'effect/ai/Prompt';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -10,21 +11,16 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
-import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
+import { type AiModelNotAvailableError, AiService, AiUsage } from '@dxos/ai';
+import { Fact, Ontology, Vocabularies } from '@dxos/echo-memory';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { SemanticIndexError } from '../../errors.ts';
-import {
-  type ExtractDocument,
-  type ExtractOptions,
-  FactualityValue,
-  type KnownEntity,
-  Ontology,
-} from '../../types/index.ts';
+import { type ExtractDocument, type ExtractOptions, type KnownEntity } from '../../types/index.ts';
 
-export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-5-5.default';
 
 // Optional enrichment field: models routinely emit `null` (not omission) for "not present", so
 // accept null as absent. A plain `Schema.optional(String)` rejects null and would discard the whole
@@ -81,7 +77,7 @@ export const ExtractedFact = Schema.Struct({
   object: Schema.String,
   validFrom: OptionalString,
   validTo: OptionalString,
-  factuality: FactualityValue,
+  factuality: Fact.FactualityValue,
   polarity: Schema.Literals(['+', '-', '?']),
   confidence: nullableAsAbsent(Schema.Number),
   nature: Nature,
@@ -128,20 +124,40 @@ For each proposition output: subject, predicate (a listed predicate's shorthand,
  * typing, so the extractor reuses them rather than inventing variants. Deprecated (merged-away) predicates are left
  * out: their replacement is listed with their surface forms.
  */
-export const predicateSection = (ontology: Ontology.Ontology): string => {
+export const predicateSection = (
+  ontology: Ontology.Ontology,
+  { closed = false, learned = true }: { closed?: boolean; learned?: boolean } = {},
+): string => {
   const lines = ontology.entries
-    .filter((entry) => entry.replacedBy === undefined)
-    .map((entry) => {
-      const synonyms = entry.synonyms?.length ? ` (also: ${entry.synonyms.join(', ')})` : '';
-      const typing = [entry.domain, entry.range].some(Boolean)
-        ? ` [${Ontology.labelFromIri(entry.domain ?? 'any')} → ${Ontology.labelFromIri(entry.range ?? 'any')}]`
-        : '';
-      return `- ${entry.name}: "${entry.label}"${synonyms}${typing}${entry.description ? ` — ${entry.description}` : ''}`;
-    });
+    .filter((entry) => entry.replacedBy === undefined && (learned || !isLearned(entry)))
+    .map(predicateLine);
   return [
-    'Predicates. Use the shorthand of the one that fits the relation (or any of its forms). Only when none fits, write a new short verb phrase in timeless present form and set predicateDescription to one sentence saying what it relates:',
+    closed
+      ? 'Predicates. Use the shorthand of the one that fits the relation (or any of its forms). When none fits, omit the proposition: never write a predicate that is not listed:'
+      : 'Predicates. Use the shorthand of the one that fits the relation (or any of its forms). Only when none fits, write a new short verb phrase in timeless present form and set predicateDescription to one sentence saying what it relates:',
     ...lines,
   ].join('\n');
+};
+
+/** A predicate an extractor minted from earlier messages, as opposed to one the seed or a vocabulary pack defines. */
+const isLearned = (entry: Ontology.Entry): boolean => entry.creator !== undefined;
+
+const predicateLine = (entry: Ontology.Entry): string => {
+  const synonyms = entry.synonyms?.length ? ` (also: ${entry.synonyms.join(', ')})` : '';
+  const typing = [entry.domain, entry.range].some(Boolean)
+    ? ` [${Ontology.labelFromIri(entry.domain ?? 'any')} → ${Ontology.labelFromIri(entry.range ?? 'any')}]`
+    : '';
+  return `- ${entry.name}: "${entry.label}"${synonyms}${typing}${entry.description ? ` — ${entry.description}` : ''}`;
+};
+
+/** The predicates extractors minted from earlier messages, listed apart because they change as the store learns. */
+const learnedSection = (ontology: Ontology.Ontology): string | undefined => {
+  const lines = ontology.entries
+    .filter((entry) => entry.replacedBy === undefined && isLearned(entry))
+    .map(predicateLine);
+  return lines.length > 0
+    ? ['More predicates, minted from earlier messages; use them the same way as the ones above:', ...lines].join('\n')
+    : undefined;
 };
 
 /** The known entities as a prompt section, so a mention of one is spelled the way it resolves. */
@@ -179,16 +195,33 @@ export const TRANSCRIPT_RULE =
   'The input is a transcript of several messages, each wrapped in <message tag="..." author="..." date="...">. Read them as one conversation, so a reply, pronoun or "that" in one message resolves against the others, but emit each proposition once, from the message that states it: set "message" to that message\'s tag (e.g. "m3"), take the quote from that message, and treat its author as the speaker.';
 
 /**
- * Compose the system prompt from the base instruction, the (default + caller) rules, the vocabulary of predicates and
- * the known entities.
+ * The system prompt in two parts: `stable` (the base instruction, the rules and the seed and vocabulary predicates),
+ * which is the same for every request of a run, and `varying` (predicates learned from earlier messages and the known
+ * entities), which grows as the store does. Keeping them apart lets the stable part be cached.
  */
-export const buildExtractionPrompt = (options?: ExtractOptions): string => {
+export type ExtractionInstructions = { readonly stable: string; readonly varying?: string };
+
+/** {@link ExtractionInstructions} for the options. */
+export const buildExtractionInstructions = (options?: ExtractOptions): ExtractionInstructions => {
   const rules = [...DEFAULT_EXTRACTION_RULES, ...(options?.rules ?? [])];
-  return [
-    `${BASE_PROMPT}\nRules:\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`,
-    predicateSection(options?.ontology ?? Ontology.DEFAULT),
+  const ontology = options?.ontology ?? Vocabularies.DEFAULT;
+  const varying = [
+    learnedSection(ontology),
     ...(options?.entities?.length ? [entitySection(options.entities)] : []),
-  ].join('\n\n');
+  ].filter((section) => section !== undefined);
+  return {
+    stable: [
+      `${BASE_PROMPT}\nRules:\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`,
+      predicateSection(ontology, { closed: options?.closed, learned: false }),
+    ].join('\n\n'),
+    ...(varying.length > 0 ? { varying: varying.join('\n\n') } : {}),
+  };
+};
+
+/** The whole system prompt as one string. */
+export const buildExtractionPrompt = (options?: ExtractOptions): string => {
+  const { stable, varying } = buildExtractionInstructions(options);
+  return varying ? `${stable}\n\n${varying}` : stable;
 };
 
 const decodeFact = Schema.decodeUnknownOption(ExtractedFact);
@@ -262,15 +295,15 @@ export const extractChunk = (
   options?: ExtractOptions,
 ): Effect.Effect<ExtractPayload, SemanticIndexError, AiService.AiService> => {
   const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
-  const prompt = `${buildExtractionPrompt(options)}\n\n${context}`;
+  const system = buildExtractionInstructions(options);
   return generatePayload({
     source: doc.source,
-    strict: LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
+    strict: LanguageModel.generateObject({ schema: ExtractPayload, prompt: extractionPrompt(system, context) }).pipe(
       Effect.map((response) => response.value),
     ),
-    lenient: LanguageModel.generateText({ prompt: `${prompt}\n\n${LENIENT_SUFFIX}` }).pipe(
-      Effect.map((response) => parseExtractPayload(response.text)),
-    ),
+    lenient: LanguageModel.generateText({
+      prompt: extractionPrompt(system, `${context}\n\n${LENIENT_SUFFIX}`),
+    }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
     options,
   });
 };
@@ -285,26 +318,41 @@ export const extractTranscript = (
   options?: ExtractOptions,
 ): Effect.Effect<TranscriptPayload, SemanticIndexError, AiService.AiService> => {
   const rules = [...(options?.rules ?? []), TRANSCRIPT_RULE];
-  const prompt = `${buildExtractionPrompt({ ...options, rules })}\n\n${transcript}`;
+  const system = buildExtractionInstructions({ ...options, rules });
   return generatePayload({
     source: label,
-    strict: LanguageModel.generateObject({ schema: TranscriptPayload, prompt }).pipe(
-      Effect.map((response) => response.value),
-    ),
-    lenient: LanguageModel.generateText({ prompt: `${prompt}\n\n${LENIENT_SUFFIX}` }).pipe(
-      Effect.map((response) => parseTranscriptPayload(response.text)),
-    ),
+    strict: LanguageModel.generateObject({
+      schema: TranscriptPayload,
+      prompt: extractionPrompt(system, transcript),
+    }).pipe(Effect.map((response) => response.value)),
+    lenient: LanguageModel.generateText({
+      prompt: extractionPrompt(system, `${transcript}\n\n${LENIENT_SUFFIX}`),
+    }).pipe(Effect.map((response) => parseTranscriptPayload(response.text))),
     options,
   });
 };
+
+/**
+ * The stable instructions as a system message marked as a cache breakpoint, the varying ones as a second system
+ * message after it, then the input as the user message. The stable part repeats across every request of a run, so
+ * Anthropic bills it at the cache-read rate after the first, however the learned predicates change.
+ */
+export const extractionPrompt = (
+  { stable, varying }: ExtractionInstructions,
+  input: string,
+): ReadonlyArray<Prompt.MessageEncoded> => [
+  { role: 'system', content: stable, options: { anthropic: { cacheControl: { type: 'ephemeral' } } } },
+  ...(varying ? [{ role: 'system' as const, content: varying }] : []),
+  { role: 'user', content: input },
+];
 
 const LENIENT_SUFFIX = 'Respond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.';
 
 /** The strict-then-lenient generation both request shapes share; `source` labels its logs. */
 const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, StrictError, LenientError>({
   source,
-  strict: strictAttempt,
-  lenient: lenientAttempt,
+  strict: strictCall,
+  lenient: lenientCall,
   options,
 }: {
   readonly source: string;
@@ -313,7 +361,10 @@ const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, S
   readonly options?: ExtractOptions;
 }): Effect.Effect<P, SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
-    const lenient = Effect.timed(lenientAttempt);
+    // A caller's stage (the System One fallback) wins; the lenient retry is its own stage so its wasted spend shows.
+    const stage = (yield* AiUsage.Stage) ?? 'extract-facts';
+    const strictAttempt = strictCall.pipe(AiUsage.withStage(stage));
+    const lenient = Effect.timed(lenientCall.pipe(AiUsage.withStage(`${stage}:lenient`)));
 
     // Strong hosted models honor the schema; local providers (Ollama) reliably fail structured
     // output, so callers targeting them pass `strict: false` to skip the wasted strict pass.
@@ -355,14 +406,17 @@ const generatePayload = <P extends { readonly facts: ReadonlyArray<unknown> }, S
     Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to extract facts', cause })),
   );
 
-/** Resolve the `LanguageModel` layer for extraction, honoring a caller-supplied model/provider override. */
+/**
+ * Resolve the `LanguageModel` layer for extraction, honoring a caller-supplied model/provider override and
+ * {@link ExtractOptions.thinking} (on unless the caller turns it off).
+ */
 const modelLayer = (
   options?: ExtractOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
   if (!options?.provider) {
-    return AiService.languageModel(options?.model ?? DEFAULT_MODEL);
+    return AiService.languageModel(options?.model ?? DEFAULT_MODEL, { thinking: options?.thinking ?? true });
   }
   const provider = DXN.tryMake(options.provider);
   invariant(provider, `Invalid provider DXN: ${options.provider}`);
-  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider });
+  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider, thinking: options.thinking ?? true });
 };

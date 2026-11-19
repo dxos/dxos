@@ -18,7 +18,7 @@ Two fixed/lockstep groups plus deploy-only apps:
 
 - **Group A — Core/SDK** — core + common + sdk + ui + devtools + reflect on one shared line (currently `0.9.x`), published to npm. A few private members (e.g. the storybook helper libraries) are versioned on this line but not published (`tag: false`).
 - **Group B — Plugins + CLI** — every `@dxos/plugin-*` + `@dxos/cli` on a second line, published under it.
-- **Apps** — every `private` app (composer-app/crx/dxos-org, docs, todomvc, tasks, testbench, and the storybook apps `storybook-react`/`-lit`/`-solid`) deploys and never publishes. They are **not in Changesets** (`ignore`d): Composer is versioned by its deploy release (§5), the rest are unversioned.
+- **Apps** — every `private` app (composer-app/crx/dxos-org, diagram-app, docs, todomvc, tasks, testbench, and the storybook apps `storybook-react`/`-lit`/`-solid`) deploys and never publishes. They are **not in Changesets** (`ignore`d): Composer is versioned by its deploy release (§5), the rest are unversioned.
 
 **Independent numbers, coupled timing.** The groups carry independent version lines (a Group B-only changeset bumps B alone) but share **one** "Version Packages" PR — merging it drains all pending changesets. Independent release _cadence_ comes later, when plugins move to their own repo with their own trunk + Version PR (§6), not via per-group release branches.
 
@@ -98,11 +98,11 @@ Not yet implemented — relevant once `edge` integration or the repo split start
 
 A downstream repo (`edge` today; the future `composer` repo) consumes **unreleased** `dxos` core through three tiers:
 
-| Tier                 | Mechanism                                        | Use                                                        | Committed?                                  |
-| -------------------- | ------------------------------------------------ | ---------------------------------------------------------- | ------------------------------------------- |
-| **1 — Stable floor** | npm `@latest` (or deliberate `@next`)            | Default deps; what ships to users                          | yes (pinned range)                          |
-| **2 — Continuous**   | pkg.pr.new SHA-pinned URL                        | Land on `main` against an upstream change not yet released | yes (re-pin to a release later; perishable) |
-| **3 — Local dev**    | `link-packages.mjs` (tarball + `pnpm.overrides`) | Editing both repos at once on one machine                  | never (CI guard rejects `file:`)            |
+| Tier                 | Mechanism                                   | Use                                                        | Committed?                                  |
+| -------------------- | ------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------- |
+| **1 — Stable floor** | npm `@latest` (or deliberate `@next`)       | Default deps; what ships to users                          | yes (pinned range)                          |
+| **2 — Continuous**   | pkg.pr.new SHA-pinned URL                   | Land on `main` against an upstream change not yet released | yes (re-pin to a release later; perishable) |
+| **3 — Local dev**    | `link-packages.mjs` (tarball + `overrides`) | Editing both repos at once on one machine                  | never (CI guard rejects `file:`)            |
 
 Decision: editing two repos locally → Tier 3, unlink before committing; need `main` to build against an unreleased upstream change → Tier 2, re-pin to a real release when upstream releases (pkg.pr.new artifacts expire ~1–6 months); cutting/preparing a release → Tier 1. Enablement: generalize `link-packages.mjs` from `edge/scripts/` into `dxos` and forbid its `--commit` path in CI; add a Tier-2 bot that bumps SHA-pinned pkg.pr.new URLs; validate on `edge` (`edge-tests.yml`).
 

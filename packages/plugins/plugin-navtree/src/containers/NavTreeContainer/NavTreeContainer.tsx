@@ -96,6 +96,7 @@ export type NavTreeContainerProps = {
 
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId }, forwardedRef) => {
+    const rail = !ToolkitHooks.useReadOnly();
     const [isLg] = UiHooks.useMediaQuery('lg');
     const { invokePromise } = Hooks.useOperationInvoker();
     const runAction = GraphHooks.useActionRunner();
@@ -375,6 +376,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           tab={tab}
           unavailable={tabUnavailable}
           open={layout.sidebarOpen}
+          rail={rail}
           ref={forwardedRef}
         />
       </NavTreeContext.Provider>

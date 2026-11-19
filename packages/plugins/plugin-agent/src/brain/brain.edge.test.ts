@@ -26,9 +26,9 @@ import * as Trace from '@dxos/compute/Trace';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { EdgeProcessManager } from '@dxos/edge-compute';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { RDF } from '@dxos/pipeline-rdf';
 import { createBuf } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -226,11 +226,11 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
 
   /** What `GET /compute/brain/:spaceId/:agentId` answers; triggers arrive encoded (`BrainService.encodeTrigger`). */
   const BrainStateResponse = Schema.Struct({
-    facts: Schema.Array(RDF.Fact),
+    facts: Schema.Array(Fact.Fact),
     triggers: Schema.Array(Schema.Unknown),
   });
 
-  type BrainState = { facts: readonly RDF.Fact[]; triggers: readonly Trigger.Trigger[] };
+  type BrainState = { facts: readonly Fact.Fact[]; triggers: readonly Trigger.Trigger[] };
 
   const brainState = async (peer: Peer, agent: Agent.Agent): Promise<BrainState> => {
     const response = await peer.client.edge.http.request(

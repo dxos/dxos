@@ -431,6 +431,22 @@
     flex-direction: column;
     min-width: 0;
   }
+  .dx-field[data-tone='muted'] {
+    color: var(--color-fg-muted);
+  }
+  /* An inline field is one line: its label in the shared label column, its control taking the rest. */
+  .dx-field[data-layout='inline'] {
+    flex-direction: row;
+    align-items: baseline;
+    column-gap: var(--dx-gap-size);
+  }
+  .dx-field[data-layout='inline'] > .dx-field-header {
+    flex: none;
+    width: var(--dx-label-width);
+  }
+  .dx-field[data-layout='inline'] > :not(.dx-field-header) {
+    flex: 1 1 0;
+  }
   /* A control's own `center` would centre it across a stacked field; it starts under its label instead. */
   .dx-field > .dx-control {
     align-self: start;
@@ -618,6 +634,8 @@
   }
 
   .dx-checkbox {
+    /* Holds the visually hidden input, which is positioned; see `.dx-switch`. */
+    position: relative;
     display: inline-flex;
     align-items: center;
     /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
@@ -1022,6 +1040,7 @@
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),
+  .dx-toolbar > .dx-combobox > .dx-control:not([data-square]),
   .dx-toolbar > .dx-select > .dx-control,
   .dx-toolbar > .dx-tabs-list {
     margin-inline: var(--dx-control-inset);

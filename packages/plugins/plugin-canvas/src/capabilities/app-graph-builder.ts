@@ -9,13 +9,16 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Entity, Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { Canvas } from '#types';
 
+import { DSL_COMPANION } from '../constants.ts';
 import { canvasViewAspect } from '../containers/CanvasArticle/view-state.ts';
 import { CanvasNamespace } from '../namespace.ts';
 
@@ -23,9 +26,17 @@ import { CanvasNamespace } from '../namespace.ts';
 type LabelTuple = [string, { ns: string }];
 const LOCK_LABEL: LabelTuple = ['lock-drawing.label', { ns: CanvasNamespace.key }];
 const UNLOCK_LABEL: LabelTuple = ['unlock-drawing.label', { ns: CanvasNamespace.key }];
+const DSL_LABEL: LabelTuple = ['dsl.label', { ns: CanvasNamespace.key }];
+
+/** Whether the canvas variant draws the drawing: only its records have the text the DSL companion shows. */
+const drawsOnCanvas = (drawing: Drawing.Drawing): boolean => {
+  const canvas = drawing.canvas.target;
+  return Canvas.isCanvas(canvas) || (Drawing.isCanvas(canvas) && Canvas.isSceneSchema(canvas.schema));
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const readOnly = yield* ReadOnly.atom;
     // Read reactively, so the action appears once the capability lands.
     const viewStateCapabilityAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
 
@@ -35,10 +46,13 @@ export default Capability.makeModule(
         Option.filter(AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get), (drawing) => {
           // Read through the atom so the match follows the canvas; the live object is what is checked.
           get(Obj.atom(drawing.canvas));
-          const canvas = drawing.canvas.target;
-          return Canvas.isCanvas(canvas) || (Drawing.isCanvas(canvas) && Canvas.isSceneSchema(canvas.schema));
+          return drawsOnCanvas(drawing);
         }),
       actions: (drawing, get) => {
+        if (get(readOnly)) {
+          return Effect.succeed([]);
+        }
+
         // The mode is this viewer's, kept in the canvas's view state where the article reads it; the item flips it, so
         // it names the one it switches to.
         const [viewState] = get(viewStateCapabilityAtom);
@@ -80,6 +94,26 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension]);
+    // The drawing as text, beside its article.
+    const dslCompanion = yield* AppGraphBuilder.createExtension({
+      id: 'dslCompanion',
+      relation: AppNode.companion,
+      match: (node, get) =>
+        Option.filter(AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get), (drawing) => {
+          get(Obj.atom(drawing.canvas));
+          return drawsOnCanvas(drawing);
+        }),
+      connector: () =>
+        Effect.succeed([
+          AppNode.makeCompanion({
+            variant: DSL_COMPANION,
+            label: DSL_LABEL,
+            icon: 'ph--code--regular',
+            data: DSL_COMPANION,
+          }),
+        ]),
+    });
+
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension, dslCompanion]);
   }),
 );
