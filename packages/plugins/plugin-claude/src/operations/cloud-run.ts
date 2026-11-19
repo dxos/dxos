@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import * as GitHubOperation from '@dxos/plugin-github/GitHubOperation';
 import * as Delegation from '@dxos/plugin-projects/Delegation';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { type Message, type PullRequest } from '@dxos/types';
+import { type Message, PullRequest } from '@dxos/types';
 
 import { CloudRunOperation } from '#types';
 
@@ -71,6 +71,32 @@ export const pullRequestsIn = (messages: readonly Message.Message[]): string[] =
     .map((match) => match[0]);
   return [...new Set(urls)];
 };
+
+/**
+ * The run's pull request URLs, each with its imported object when one is already attached to a task of the run, so a
+ * step can read a status without importing anything.
+ */
+export const locatePullRequests = Effect.fnUntraced(function* (chat: Chat.Chat) {
+  const feed = yield* Database.load(chat.feed);
+  const urls = pullRequestsIn(yield* TrajectoryStore.messages(feed));
+  const attached: PullRequest.PullRequest[] = [];
+  for (const taskRef of chat.tasks) {
+    const task = yield* Database.load(taskRef).pipe(Effect.option);
+    for (const artifactRef of task._tag === 'Some' ? (task.value.artifacts ?? []) : []) {
+      const artifact = yield* Database.load(artifactRef).pipe(Effect.option);
+      if (artifact._tag === 'Some' && PullRequest.instanceOf(artifact.value)) {
+        attached.push(artifact.value);
+      }
+    }
+  }
+  return urls.map((url) => {
+    const found = attached.find(
+      ({ owner, repo, number }) =>
+        url.toLowerCase() === `https://github.com/${owner}/${repo}/pull/${number}`.toLowerCase(),
+    );
+    return { url, pullRequest: found && Ref.make(found) };
+  });
+});
 
 /**
  * Records each pull request on the run's tasks: imported into the space and refreshed from GitHub, attached to the

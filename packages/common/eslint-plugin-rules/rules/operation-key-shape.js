@@ -58,6 +58,7 @@ const VERBS = new Set([
   'deploy',
   'disable',
   'disconnect',
+  'drive',
   'download',
   'draft',
   'draw',
