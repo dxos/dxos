@@ -65,6 +65,20 @@
   line-height: 1.6;
 }
 
+/*
+ * On a phone the heading is two lines that fill the column, where Starlight's minimum size leaves it
+ * barely larger than the lede. "agent can draw.", the longer line, is 7.57em wide.
+ */
+@media (max-width: 30rem) {
+  [data-has-hero] .hero {
+    container-type: inline-size;
+  }
+
+  [data-has-hero] .hero h1 {
+    font-size: calc(100cqi / 7.65);
+  }
+}
+
 /* "agent can draw." never breaks, and its words carry the route colour as an underline. */
 .hero-agent {
   white-space: nowrap;
