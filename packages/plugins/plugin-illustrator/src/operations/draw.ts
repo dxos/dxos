@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Diagnostics, Dsl } from '@dxos/diagram';
+import { Diagnostics, DSL } from '@dxos/diagram';
 
 import { DrawingOperation } from '#types';
 
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Draw> = DrawingOper
     Effect.fn(function* ({ drawing, source }) {
       const { canvas, variant } = yield* resolveVariant(drawing);
       // Semantic statements (`node`, `edge`, `group`) are laid out here; scene statements pass through.
-      const { commands, problems } = yield* Dsl.compile(source);
+      const { commands, problems } = yield* DSL.compile(source);
       // Nothing is applied while an error stands. A partial apply would still replace the objects
       // the bad statements name — an element dropped for an invalid attribute would silently lose
       // that attribute on the canvas — while the result told the agent the statement was skipped.

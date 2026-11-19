@@ -20,7 +20,7 @@ import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { isNonNullable } from '@dxos/util';
 
-import { firstHeading, slideSourcesAtom } from '#deck';
+import { contentTitle, slideSourcesAtom } from '#deck';
 import { meta } from '#meta';
 import { Presentation, PresenterOperation, SlideEditorViewState } from '#types';
 
@@ -28,7 +28,7 @@ import { isPresenting } from '../paths.ts';
 
 /**
  * A Presentation is a folder of its sections (its node lists `sections` through the type's container
- * annotation); owned slides are labelled by name, else first heading, else position.
+ * annotation); owned slides are labelled by name, else the title their content gives, else position.
  */
 export const createSectionsExtension = () =>
   AppGraphBuilder.createExtension({
@@ -57,7 +57,7 @@ export const createSectionsExtension = () =>
             const label: Translations.Label = title ||
               (source.kind === 'text'
                 ? get(Obj.atomProperty(source.text, 'name')) ||
-                  firstHeading(get(Obj.atomProperty(source.text, 'content')))
+                  contentTitle(get(Obj.atomProperty(source.text, 'content')))
                 : Obj.getLabel(source.object)) || [
                 'slide-fallback.label',
                 { ns: meta.profile.key, count: position + 1 },

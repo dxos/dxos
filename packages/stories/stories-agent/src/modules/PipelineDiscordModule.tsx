@@ -15,7 +15,6 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { MemoryQuery } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type SpaceId } from '@dxos/keys';
-import { Connection } from '@dxos/link';
 import { LogEntry, LogLevel, log } from '@dxos/log';
 import * as DiscordAdminOperation from '@dxos/plugin-discord/DiscordAdminOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
@@ -50,7 +49,6 @@ const INTERVALS = [
 
 /** What the user changed in the form; every unset field falls back to the back-index's trigger input. */
 type Edits = {
-  connection?: string;
   channels?: string[];
   maxDays?: number;
   descendThreads?: boolean;
@@ -136,10 +134,10 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
   const db = space?.db;
   const { invokePromise } = AppHooks.useOperationInvoker();
   const config = useConfig();
-  const kaiId = DiscordChannel.kaiApplicationId(config.values.runtime?.services?.edge?.url);
-
-  const connections = useQuery(db, Filter.type(Connection.Connection)).filter(DiscordOperation.isDiscordConnection);
   const channelConfigs = useQuery(db, Filter.type(DiscordChannel.DiscordChannel));
+  // A custom EDGE (a story's fake) has no Kai app of its own; the bot bound in the space reads instead.
+  const kaiId =
+    DiscordChannel.kaiApplicationId(config.values.runtime?.services?.edge?.url) ?? channelConfigs[0]?.applicationId;
   // A back-index is a trigger whose input names a crawl state; its input is set when it is created.
   const trigger = useQuery(db, Filter.type(Trigger.Trigger)).find((candidate) => Ref.isRef(candidate.input?.state));
   const [triggerView] = useObject(trigger);
@@ -157,12 +155,12 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
 
   const enabled = triggerView?.enabled ?? false;
   const configuredChannels: string[] = Array.isArray(input?.channels) ? input.channels : [];
+  // Run now crawls with the bot the trigger was saved with, as the timer does, not whichever one is current.
+  const savedApplicationId = typeof input?.applicationId === 'string' ? input.applicationId : undefined;
   const channelOptions = useMemo(() => {
     const ids = new Set([...channelConfigs.flatMap((config) => [...config.channels]), ...configuredChannels]);
     return [...ids].map((id) => ({ value: id, label: `#${names[id] ?? id}` }));
   }, [channelConfigs, configuredChannels.join(','), names]);
-  const connectionId = edits.connection ?? connections[0]?.id;
-  const connection = connections.find(({ id }) => id === connectionId);
   const channels =
     edits.channels ?? (configuredChannels.length > 0 ? configuredChannels : channelOptions.map(({ value }) => value));
   const maxDays = edits.maxDays ?? numberOrUndefined(input?.maxDays);
@@ -229,14 +227,14 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
   }, []);
 
   const handleApply = useCallback(() => {
-    if (!space || !connection) {
+    if (!space || !kaiId) {
       return;
     }
     void run(async () => {
       const result = await invokePromise(
         DiscordOperation.ConfigureBackIndex,
         {
-          connection: Ref.make(connection),
+          applicationId: kaiId,
           channels,
           descendThreads,
           cron,
@@ -251,7 +249,7 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
       }
       return result;
     });
-  }, [space, connection, trigger, channels, descendThreads, cron, maxDays, maxDepth, invokePromise, run]);
+  }, [space, kaiId, trigger, channels, descendThreads, cron, maxDays, maxDepth, invokePromise, run]);
 
   const handleEnabled = useCallback(
     (next: boolean) => {
@@ -266,14 +264,14 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
 
   // One invocation here and now, as the trigger would run it; the trigger's schedule is untouched.
   const handleRunNow = useCallback(() => {
-    if (!space || !connection || !state) {
+    if (!space || !kaiId || !state) {
       return;
     }
     void run(() =>
       invokePromise(
         DiscordOperation.CrawlDiscordChannels,
         {
-          connection: Ref.make(connection),
+          applicationId: savedApplicationId ?? kaiId,
           channels: configuredChannels,
           descendThreads,
           ...(maxDays !== undefined ? { maxDays } : {}),
@@ -283,7 +281,18 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
         { spaceId: space.id },
       ),
     );
-  }, [space, connection, state, configuredChannels, descendThreads, maxDays, maxDepth, invokePromise, run]);
+  }, [
+    space,
+    kaiId,
+    savedApplicationId,
+    state,
+    configuredChannels,
+    descendThreads,
+    maxDays,
+    maxDepth,
+    invokePromise,
+    run,
+  ]);
 
   const handleReset = useCallback(
     (targets?: string[]) => {
@@ -296,11 +305,7 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
 
   const targets = stateView ? CrawlState.listTargets(stateView) : [];
   const runStatus: CrawlState.RunStatus = trigger && !enabled ? 'paused' : (stateView?.runStatus ?? 'idle');
-  const canApply = !busy && !!connection && channels.length > 0;
-  const connectionItems = connections.map((candidate) => ({
-    value: candidate.id,
-    label: candidate.name ?? `Discord (${candidate.connectorId ?? 'connection'})`,
-  }));
+  const canApply = !busy && !!kaiId && channels.length > 0;
   const targetItems = targets.map((target) => ({
     value: target.id,
     label: targetLabel(target, names),
@@ -338,7 +343,7 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
               <Button.Root
                 icon='ph--lightning--regular'
                 label='Run now'
-                disabled={busy || !state || !connection}
+                disabled={busy || !state || !kaiId}
                 onClick={handleRunNow}
               />
               <Button.Root
@@ -355,24 +360,8 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
                 <Form.Content>
                   <Form.FieldSet
                     label='Configure'
-                    description='A trigger runs the crawl on EDGE with the Discord token stored in the space.'
+                    description='A trigger runs the crawl on EDGE, reading as the Kai bot, whose token EDGE holds.'
                   >
-                    <Form.Field label='Connection' description='The Discord sign-in whose token reads the channels.'>
-                      <Select.Root
-                        items={connectionItems}
-                        value={connectionId ? [connectionId] : []}
-                        onValueChange={({ value: [value] }) =>
-                          value && setEdits((previous) => ({ ...previous, connection: value }))
-                        }
-                      >
-                        <Select.Trigger placeholder='Connect Discord first' />
-                        <Select.Content>
-                          {connectionItems.map((item) => (
-                            <Select.Item key={item.value} item={item} />
-                          ))}
-                        </Select.Content>
-                      </Select.Root>
-                    </Form.Field>
                     <Form.Field
                       standalone
                       label='Channels'

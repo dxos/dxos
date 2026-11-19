@@ -158,6 +158,43 @@ describe('createLoaderStore', () => {
     store.dispose();
   });
 
+  test('pause stops the creep, withdraws the stalled offer, and keeps the action callable', ({ expect }) => {
+    const store = createLoaderStore();
+    store.stalled(vi.fn());
+    vi.advanceTimersByTime(CREEP_TICK_MS * 10);
+
+    const onClick = vi.fn();
+    store.pause({ title: 'Another instance of the app is open', action: { label: 'Continue here', onClick } });
+    expect(store.phase()).toBe('paused');
+    expect(store.progress()).toBe(0);
+    expect(store.onAbort()).toBeUndefined();
+
+    // Stored, not invoked: Solid would call a bare function argument as an updater.
+    expect(onClick).not.toHaveBeenCalled();
+    store.paused()?.action.onClick();
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(CREEP_TICK_MS * 50);
+    expect(store.progress()).toBe(0);
+    store.dispose();
+  });
+
+  test('startup calls after pause leave the paused view in place', ({ expect }) => {
+    const store = createLoaderStore();
+    store.pause({ title: 'Another instance of the app is open', action: { label: 'Continue here', onClick: vi.fn() } });
+
+    store.setProgress(0.5);
+    store.stalled(vi.fn());
+    store.ready();
+    vi.advanceTimersByTime(CREEP_TICK_MS * 50);
+
+    expect(store.phase()).toBe('paused');
+    expect(store.progress()).toBe(0);
+    expect(store.onAbort()).toBeUndefined();
+    expect(store.elapsedSeconds()).toBe(0);
+    store.dispose();
+  });
+
   test('elapsed seconds tick only once stalled', ({ expect }) => {
     const store = createLoaderStore();
     // A healthy boot runs no second timer, so the count stays put.

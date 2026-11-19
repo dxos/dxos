@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Dsl, SvgFile } from '@dxos/diagram';
+import { DSL, SvgFile } from '@dxos/diagram';
 import { BaseError } from '@dxos/errors';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
@@ -26,7 +26,7 @@ export class CompileError extends BaseError.extend('CompileError', 'The DSL sour
 
 /** Compiles semantic DSL into an SVG drawing and its canvas, not yet added to a space. */
 export const compileDrawing = Effect.fn('compileDrawing')(function* (name: string, text: string) {
-  const { commands, problems } = yield* Dsl.compile(text);
+  const { commands, problems } = yield* DSL.compile(text);
   const errors = problems.filter(({ severity }) => severity === 'error');
   if (errors.length > 0) {
     return yield* Effect.fail(new CompileError({ message: errors.map(({ message }) => message).join('; ') }));
@@ -49,7 +49,7 @@ export const toDxSvg = ({
 }): string => {
   const { scene } = builder.read(canvas);
   const svg = SvgFile.toSvgFile(scene.objects);
-  const source = { language: 'dsl' as const, text: Dsl.print(scene) };
+  const source = { language: 'dsl' as const, text: DSL.print(scene) };
   return IllustratorModel.DrawingFile.toDxSvg(svg, IllustratorModel.DrawingFile.toPayload({ drawing, canvas, source }));
 };
 

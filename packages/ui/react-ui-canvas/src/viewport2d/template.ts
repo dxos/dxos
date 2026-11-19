@@ -8,7 +8,7 @@
 // contributes a shape by describing it, and the same text is what the editor would print back from the Object.
 //
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { type NodeType, type Scene, type ViewId } from '@dxos/scene';
 
 import { type NodeRegistry, type RenderList2D, nodeDef, templateCompositeId, templateType } from '../model/index.ts';
@@ -24,7 +24,7 @@ export const isCompiled = (result: CompiledTemplate): result is { composite: Ren
  * (`composite card { … }`); the id it is stored under is the tool's, so every instance of that tool finds it.
  */
 export const compileTemplate = (source: string, id: ViewId): CompiledTemplate => {
-  const { document, problems } = Dsl.readScenes(source);
+  const { document, problems } = DSL.readScenes(source);
   if (problems.length > 0) {
     return { problems: problems.map((problem) => problem.message) };
   }

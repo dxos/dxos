@@ -5,14 +5,14 @@
 import { describe, expect, test } from 'vitest';
 
 import { DEFAULT_SCRIPT_PROPERTIES, compileScript, trackValue } from '@dxos/animation';
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Scene } from '@dxos/scene';
 
 import { sceneTargets } from '../../model/scene-stage.ts';
 import { canvasStage2D, canvasStage3D } from './definition.ts';
 
-const read = (name: keyof typeof EXEMPLARS) => Dsl.readScenes(EXEMPLARS[name]).document;
+const read = (name: keyof typeof EXEMPLARS) => DSL.readScenes(EXEMPLARS[name]).document;
 
 const box = (id: string, x: number, opacity?: number): Scene.Element2D => ({
   id,

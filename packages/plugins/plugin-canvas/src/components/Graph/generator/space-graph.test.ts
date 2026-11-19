@@ -11,7 +11,7 @@
 import { describe, test } from 'vitest';
 
 import { golden } from './golden.ts';
-import { layout, pick, toward } from './space-graph.generator.ts';
+import { layout, pick, subgraph, toward } from './space-graph.generator.ts';
 
 const round = (value: number) => Math.round(value * 1000) / 1000;
 const pairs = (list: readonly { x: number; y: number }[]) => list.map((point) => [round(point.x), round(point.y)]);
@@ -40,4 +40,27 @@ describe('space-graph geometry against the deck', () => {
       expect(pick(result.nodes, golden.params.picks ?? 2, aim)).toEqual(reader.picks);
     },
   );
+});
+
+describe('the subgraph a field marks', () => {
+  // A line of five with a spur off the middle: 0-1-2-3-4, and 5 hanging off 2.
+  const links: [number, number][] = [
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 4],
+    [2, 5],
+  ];
+
+  test('reaches as far as the depth says, and no further', ({ expect }) => {
+    expect([...subgraph(links, 0, 0).nodes]).toEqual([0]);
+    expect([...subgraph(links, 0, 1).nodes].sort()).toEqual([0, 1]);
+    expect([...subgraph(links, 0, 2).nodes].sort()).toEqual([0, 1, 2]);
+    expect([...subgraph(links, 2, 1).nodes].sort()).toEqual([1, 2, 3, 5]);
+  });
+
+  test('keeps the links that are inside it', ({ expect }) => {
+    // The link on to 4 is left out: a link counts only where the walk reached BOTH of its ends.
+    expect([...subgraph(links, 0, 3).links].sort()).toEqual([0, 1, 2, 4]);
+  });
 });

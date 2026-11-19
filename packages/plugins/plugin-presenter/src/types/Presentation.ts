@@ -14,6 +14,8 @@ import { Text } from '@dxos/schema';
 
 import { PresenterNamespace } from '../namespace.ts';
 
+export { contentTitle } from '../deck/heading.ts';
+
 /** Key of the presenter skill, attached to the Presentation type. */
 export const SKILL_KEY = 'org.dxos.skill.presenter';
 
@@ -25,7 +27,7 @@ export class Slide extends Type.makeObject<Slide>(DXN.make('org.dxos.type.slide'
   Schema.Struct({
     /** An owned `Text` (parented to this slide) or a linked object, which keeps its own parent. */
     content: Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false)),
-    /** Overrides the label read from the content's first heading. */
+    /** Overrides the label read from the content: its frontmatter's `title`, else its first heading. */
     title: Schema.optional(Schema.String),
     /** Left out when the deck is presented; the grid still shows it. */
     hidden: Schema.optional(Schema.Boolean),

@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { type Timeline } from '@dxos/animation';
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { type NodeRegistry, flattenLayout, liftLayout } from '@dxos/react-ui-canvas';
 import { type VersionedSource, readPath, writePath } from '@dxos/react-ui-canvas/headless';
 import { type Layer, type LayoutIntent, type ModelIntent, Scene, applyIntent, applyModelIntent } from '@dxos/scene';
@@ -32,9 +32,9 @@ import {
 
 /** The `.dx` text a copy writes and a paste reads, as the canvas plugin's codec (without its model folding). */
 const codec: ClipboardCodec = {
-  write: (_document, _layout, fragment) => Dsl.printScenes({ scenes: [], layouts: [fragment], models: [] }),
+  write: (_document, _layout, fragment) => DSL.printScenes({ scenes: [], layouts: [fragment], models: [] }),
   read: (text, dim) => {
-    const layout = Dsl.readScenes(text).document.layouts[0];
+    const layout = DSL.readScenes(text).document.layouts[0];
     return layout && (dim === '3d' ? liftLayout(layout) : flattenLayout(layout));
   },
 };

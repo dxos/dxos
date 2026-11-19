@@ -10582,6 +10582,9 @@ importers:
 
   packages/plugins/plugin-canvas:
     dependencies:
+      '@codemirror/lang-json':
+        specifier: 'catalog:'
+        version: 6.0.2
       '@dxos/animation':
         specifier: workspace:*
         version: link:../../common/animation
@@ -10654,6 +10657,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-slides':
         specifier: workspace:*
         version: link:../../ui/react-ui-slides
@@ -12168,6 +12174,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools

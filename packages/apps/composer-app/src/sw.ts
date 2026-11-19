@@ -9,6 +9,8 @@ import { addPlugins, cleanupOutdatedCaches, createHandlerBoundToURL, precacheAnd
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 
+import { PausedParam } from './util/paused.ts';
+
 declare const self: ServiceWorkerGlobalScope;
 
 const precacheManifest = self.__WB_MANIFEST;
@@ -92,9 +94,10 @@ addPlugins([
 // `ignoreURLParametersMatching` lets the precache router serve `icons.svg?nocache=N`
 // (and any other cache-busting query the host adds at runtime) from the precached
 // `icons.svg` entry. Without this, query-bearing URLs miss the precache and fall
-// through to the network — a guaranteed offline failure for the icons sprite.
+// through to the network — a guaranteed offline failure for the icons sprite. The paused page's
+// parameters are listed too, or its navigation misses and the fallback below boots the app instead.
 precacheAndRoute(precacheManifest, {
-  ignoreURLParametersMatching: [/^nocache$/],
+  ignoreURLParametersMatching: [/^nocache$/, ...Object.values(PausedParam).map((name) => new RegExp(`^${name}$`))],
 });
 cleanupOutdatedCaches();
 

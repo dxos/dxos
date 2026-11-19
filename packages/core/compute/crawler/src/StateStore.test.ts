@@ -220,6 +220,20 @@ describe('StateStore', () => {
       ]);
     });
 
+    it('reconcileChannels puts reopened channels below unread ones, so the crawler reaches the unread first', ({
+      expect,
+    }) => {
+      const state = CrawlState.make();
+      Obj.update(state, (state) => {
+        CrawlState.pushTargets(state, [target('chan-1'), target('chan-2'), target('chan-3')]);
+        CrawlState.setStatus(state, 'chan-3', 'done');
+        CrawlState.setCursor(state, 'chan-3', '9', '2026-01-01T00:00:00.000Z');
+      });
+      Obj.update(state, (state) => CrawlState.reconcileChannels(state, ['chan-1', 'chan-2', 'chan-3']));
+      // The crawler takes the last target in this order first.
+      expect(CrawlState.listTargets(state).map(({ id }) => id)).toEqual(['chan-3', 'chan-1', 'chan-2']);
+    });
+
     it('keeps source hashes across a reset', ({ expect }) => {
       const state = CrawlState.make();
       Obj.update(state, (state) => {

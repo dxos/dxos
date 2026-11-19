@@ -208,6 +208,7 @@
     "@dxos/compute-hyperformula": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",

@@ -114,7 +114,12 @@ export interface BuildExecutionGraphParams {
    * is omitted.
    */
   now?: number;
+  /** Names and icons for operations whose trace events carry only a key (e.g. ones run on EDGE). */
+  resolveOperation?: OperationResolver;
 }
+
+/** An operation's display name and icon, looked up by its key. */
+export type OperationResolver = (key: string) => { name?: string; icon?: string } | undefined;
 
 /**
  * Builds a Timeline-compatible execution graph from trace messages and active processes.
@@ -144,9 +149,10 @@ export const buildExecutionGraph = ({
   eventLimit = 500,
   spanTimeoutMs,
   now,
+  resolveOperation,
 }: BuildExecutionGraphParams): ExecutionGraph => {
   const spanTree = buildSpanTree(traceMessages, { eventLimit, spanTimeoutMs, now });
-  const toolCallContext = buildToolCallContext(traceMessages);
+  const toolCallContext = buildToolCallContext(traceMessages, resolveOperation);
   const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext, collapseCompletedSpans);
   log('trace execution graph', {
     traceMessages: traceMessages.length,
@@ -165,9 +171,13 @@ export const buildExecutionGraph = ({
 interface ToolCallContext {
   callById: Map<string, ContentBlock.ToolCall>;
   resultByCallId: Map<string, ContentBlock.ToolResult>;
+  resolveOperation?: OperationResolver;
 }
 
-const buildToolCallContext = (messages: readonly Trace.Message[]): ToolCallContext => {
+const buildToolCallContext = (
+  messages: readonly Trace.Message[],
+  resolveOperation?: OperationResolver,
+): ToolCallContext => {
   const callById = new Map<string, ContentBlock.ToolCall>();
   const resultByCallId = new Map<string, ContentBlock.ToolResult>();
   for (const message of messages) {
@@ -187,7 +197,7 @@ const buildToolCallContext = (messages: readonly Trace.Message[]): ToolCallConte
       }
     }
   }
-  return { callById, resultByCallId };
+  return { callById, resultByCallId, resolveOperation };
 };
 
 /**
@@ -325,10 +335,12 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       log('invalid trace event', { type: event.type });
       return undefined;
     }
+    const resolved =
+      event.data.name && event.data.icon ? undefined : toolCallContext.resolveOperation?.(event.data.key);
     return {
-      icon: event.data.icon ?? ICONS.operationStart.icon,
+      icon: event.data.icon ?? resolved?.icon ?? ICONS.operationStart.icon,
       level: ICONS.operationStart.level,
-      message: event.data.name ?? event.data.key,
+      message: event.data.name ?? resolved?.name ?? event.data.key,
       idSuffix: `${event.data.key}:start`,
     };
   }
@@ -350,10 +362,12 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
               suffix: ' - Incomplete',
             }
           : { icon: ICONS.operationEndError.icon, level: ICONS.operationEndError.level, suffix: ' - Error' };
+    const resolved =
+      event.data.name && event.data.icon ? undefined : toolCallContext.resolveOperation?.(event.data.key);
     return {
-      icon: event.data.icon ?? presentation.icon,
+      icon: event.data.icon ?? resolved?.icon ?? presentation.icon,
       level: presentation.level,
-      message: `${event.data.name ?? event.data.key}${presentation.suffix}`,
+      message: `${event.data.name ?? resolved?.name ?? event.data.key}${presentation.suffix}`,
       idSuffix: `${event.data.key}:end`,
     };
   }

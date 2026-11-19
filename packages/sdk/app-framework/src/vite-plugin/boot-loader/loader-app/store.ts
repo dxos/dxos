@@ -4,7 +4,7 @@
 
 import { type Accessor, createSignal } from 'solid-js';
 
-import { type PluginEntry, type StatusPayload } from './types.ts';
+import { type PausedPayload, type PluginEntry, type StatusPayload } from './types.ts';
 
 //
 // Creep tuning. The ring auto-creeps toward a moving ceiling so a long
@@ -45,7 +45,7 @@ export const drainDelay = (): number =>
 export type PluginRow = PluginEntry;
 
 /** Loader lifecycle phase. */
-export type Phase = 'creep' | 'host' | 'dismissing';
+export type Phase = 'creep' | 'host' | 'paused' | 'dismissing';
 
 /** A single rendered status line; `id` keys the `<For>` and survives in-place range ticks. */
 export type StatusLine = {
@@ -94,6 +94,8 @@ export type LoaderStore = {
   onAbort: Accessor<(() => void) | undefined>;
   /** The icon sprite's symbols, as markup for an inline `<svg>`, once {@link LoaderStore.loadSprite} has landed. */
   sprite: Accessor<string | undefined>;
+  /** What the paused view shows, once {@link LoaderStore.pause} has been called. */
+  paused: Accessor<PausedPayload | undefined>;
   /** Whole seconds since the loader appeared. Ticks only while stalled — see {@link LoaderStore.stalled}. */
   elapsedSeconds: Accessor<number>;
   /** Apply a status update (append, or replace-in-place for range ticks). */
@@ -121,6 +123,8 @@ export type LoaderStore = {
   loadSprite: (url: string) => Promise<void>;
   /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
   stalled: (onAbort: () => void) => void;
+  /** Stop loading for good and show `payload` in place of the ring and status log. */
+  pause: (payload: PausedPayload) => void;
   /** Snap to 100%, stop the creep, and enter the dismissing phase. */
   ready: () => void;
   /** Stop the creep timer (call on teardown). */
@@ -141,6 +145,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
   // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
   const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
+  const [paused, setPaused] = createSignal<PausedPayload | undefined>(undefined);
   const [sprite, setSprite] = createSignal<string | undefined>(undefined);
   // Wall-clock from the moment the loader appeared, which is the number the user is actually asking
   // about ("how long has this been going?"). Only ticked once stalled: a healthy boot has no use for
@@ -249,7 +254,13 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     }
   };
 
+  // Paused is terminal: startup calls still in flight must not restart the ring or offer an abort.
+  const isPaused = (): boolean => phase() === 'paused';
+
   const setProgress = (fraction?: number): void => {
+    if (isPaused()) {
+      return;
+    }
     setPhase('host');
     const pct = clampPercent(fraction);
     // The ring never regresses: hold the current value if the host reports lower.
@@ -279,7 +290,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   };
 
   const stalled = (handler: () => void): void => {
-    if (onAbort()) {
+    if (onAbort() || isPaused()) {
       return;
     }
     // Updater form, and the handler is the RETURN value: Solid would otherwise call a bare
@@ -291,12 +302,25 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   };
 
   const ready = (): void => {
+    if (isPaused()) {
+      return;
+    }
     stopCreep();
     setProgressPct(100);
     setPhase('dismissing');
     // Startup got there in the end; the escape hatch is no longer an offer worth making.
     setOnAbort(undefined);
     stopElapsed();
+  };
+
+  const pause = (payload: PausedPayload): void => {
+    stopCreep();
+    stopElapsed();
+    setProgressPct(0);
+    setOnAbort(undefined);
+    setPhase('paused');
+    // Updater form, as in `stalled`: the payload carries a function Solid must not call.
+    setPaused(() => payload);
   };
 
   const dispose = (): void => {
@@ -313,6 +337,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     phase,
     plugins,
     onAbort,
+    paused,
     sprite,
     elapsedSeconds,
     pushStatus,
@@ -321,6 +346,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     activatePlugin,
     loadSprite,
     stalled,
+    pause,
     ready,
     dispose,
   };
