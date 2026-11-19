@@ -228,6 +228,9 @@ export const reconcileChannels = (state: Draft, channels: readonly string[]): vo
     // A failed channel is retried too: a fetch error (e.g. a missing permission) may have been fixed since.
     if (target.depth === 0 && (target.status === 'done' || target.status === 'error')) {
       setStatus(state, target.id, 'pending');
+      // The crawler takes the highest position first, so a reopened channel goes below every other target; otherwise
+      // a run with a small step budget spends it re-reading finished channels and never reaches the unread ones.
+      state.targets[target.id].position = Math.min(...Object.values(state.targets).map(({ position }) => position)) - 1;
     }
   }
 };
