@@ -166,11 +166,17 @@ const driveChat = Effect.fnUntraced(function* <R>(chat: Chat.Chat, runner: Runne
   // Recorded before sending: a lost follow-up is better than a repeated one, and the person can re-prompt.
   Obj.update(chat, (chat) => {
     for (const pullRequest of action.pullRequests) {
-      Obj.getMeta(chat).keys.push({ source: SENT_SOURCE, id: sentKey(pullRequest, action._tag) });
+      Obj.getMeta(chat).keys.push({
+        source: SENT_SOURCE,
+        id: sentKey(pullRequest, action._tag, action.attempts.get(pullRequest.url)),
+      });
     }
   });
   yield* Database.flush();
-  const prompt = action._tag === 'fix' ? fixPrompt(action.pullRequests) : landPrompt(action.pullRequests);
+  const prompt =
+    action._tag === 'fix'
+      ? fixPrompt(action.pullRequests, action.attempts)
+      : landPrompt(action.pullRequests, action.attempts);
   yield* runner.followUp(chat, prompt, DRIVE_WINDOW_MS);
   return step(action._tag);
 });

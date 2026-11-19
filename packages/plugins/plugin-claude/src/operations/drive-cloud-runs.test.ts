@@ -126,7 +126,7 @@ describe('driveRuns', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer));
   });
 
-  it.live('asks the agent to fix a failed check, naming it, and only once', () => {
+  it.live('asks the agent to fix a failed check, naming it, and again up to three times a commit', () => {
     const current = {
       status: status({
         runs: [{ name: 'build', outcome: 'failure', url: 'https://ci/1' }],
@@ -138,18 +138,21 @@ describe('driveRuns', () => {
       expect(folded).toHaveLength(1);
       expect(folded[0].prompt).toContain('build: https://ci/1');
 
-      // The timer fires again with nothing changed.
+      // The turn ended without a push: the timer re-prompts, twice, then stops.
+      expect((yield* driveRuns(runner)).runs.map(({ step }) => step)).toEqual(['fix']);
+      expect(folded[1].prompt).toContain('attempt 2 of 3');
+      expect((yield* driveRuns(runner)).runs.map(({ step }) => step)).toEqual(['fix']);
       expect((yield* driveRuns(runner)).runs.map(({ step }) => step)).toEqual(['idle']);
-      expect(folded).toHaveLength(1);
+      expect(folded).toHaveLength(3);
 
       // The agent pushed and CI failed again on the new commit.
       current.status = { ...current.status, commit: 'def' };
       expect((yield* driveRuns(runner)).runs.map(({ step }) => step)).toEqual(['fix']);
-      expect(folded).toHaveLength(2);
+      expect(folded).toHaveLength(4);
     }).pipe(Effect.scoped, Effect.provide(TestLayer));
   });
 
-  it.live('lands an approved pull request once, ignoring a failed Agentic Review', () => {
+  it.live('lands an approved pull request, bounded, ignoring a failed Agentic Review', () => {
     const current = {
       status: status({
         runs: [{ name: 'Agentic Review', outcome: 'failure' }],
@@ -160,8 +163,10 @@ describe('driveRuns', () => {
       const { runner, folded } = yield* setup(current, { running: false });
       expect((yield* driveRuns(runner)).runs.map(({ step }) => step)).toEqual(['land']);
       expect(folded[0].prompt).toContain('gh pr merge --auto --squash');
+      expect((yield* driveRuns(runner)).runs.map(({ step }) => step)).toEqual(['land']);
+      expect((yield* driveRuns(runner)).runs.map(({ step }) => step)).toEqual(['land']);
       expect((yield* driveRuns(runner)).runs.map(({ step }) => step)).toEqual(['idle']);
-      expect(folded).toHaveLength(1);
+      expect(folded).toHaveLength(3);
     }).pipe(Effect.scoped, Effect.provide(TestLayer));
   });
 
