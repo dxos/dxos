@@ -16,7 +16,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { Text } from '@dxos/schema';
 
-import { formatBindingChanges, formatSystemPrompt } from './format.ts';
+import { formatBindingChanges, formatSkills, formatSystemPrompt } from './format.ts';
 
 const testLayer = () =>
   Layer.mergeAll(
@@ -107,15 +107,19 @@ describe('formatBindingChanges', () => {
       const existing = yield* Database.add(Project.make({ name: 'Existing' }));
       const bound = yield* Database.add(Project.make({ name: 'Voyage' }));
 
+      const unbound = yield* Database.add(Project.make({ name: 'Unbound' }));
       const changes = yield* formatBindingChanges(
-        { skills: [kept, dropped], objects: [existing] },
+        { skills: [kept, dropped], objects: [existing, unbound] },
         { skills: [kept, added], objects: [existing, bound] },
       );
-      expect(changes).toHaveLength(3);
-      const [enabled, disabled, objects] = changes;
+      expect(changes).toHaveLength(4);
+      const [enabled, disabled, objects, removed] = changes;
+      expect(removed).toContain(Obj.getURI(unbound));
       expect(enabled).toContain('Added rules.');
       expect(enabled).not.toContain('Kept rules.');
-      expect(disabled).toContain('Dropped');
+      // Named as the definition it disables is.
+      expect(disabled).toContain('"Dropped"');
+      expect(yield* formatSkills([dropped])).toContain('<skill name="Dropped">');
       expect(objects).toContain('<label>Voyage</label>');
       expect(objects).not.toContain('Existing');
     }).pipe(Effect.provide(testLayer())),

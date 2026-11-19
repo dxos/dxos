@@ -843,13 +843,15 @@ const startsTurn = (message: Message.Message): boolean =>
   );
 
 /**
- * Drops the tool calls, tool results, reasoning and stats of every turn before the last `fullTurns`, keeping what was
- * said in them: the prompts and the agent's replies.
+ * Compacts every turn before the last `fullTurns`: its tool results, reasoning and stats are dropped, and each tool call
+ * becomes a note of what was called and with what input, so the prompts, the replies and everything the agent did
+ * stay.
  *
- * A long conversation otherwise resends every earlier turn's code and tool output with every model call: a Discord
- * thread four days old added 11-15k input tokens to each call of a new turn. What the agent needs to remember beyond
- * its last turns is in its replies and its memory, not in how it got there. A call and its result are dropped together,
- * so the history stays a valid tool-use sequence.
+ * A long conversation otherwise resends every earlier turn's tool output with every model call: a Discord thread four
+ * days old added 11-15k input tokens to each call of a new turn, most of it results. The calls themselves stay because an
+ * agent may speak only through them: the Discord agent's replies are `post` and `dm` calls (or an `eval` that makes
+ * them), never its own text. A call kept as text has no result to pair with, so the history stays a valid tool-use
+ * sequence.
  */
 const compactEarlierTurns =
   (fullTurns: number) =>
@@ -861,10 +863,16 @@ const compactEarlierTurns =
     }
     const keepFrom = fullTurns === 0 ? messages.length : starts[starts.length - fullTurns];
     const earlier = messages.slice(0, keepFrom).flatMap((message) => {
-      const blocks = message.blocks.filter((block) => !TURN_INTERNALS.has(block._tag));
-      if (blocks.length === message.blocks.length) {
+      if (!message.blocks.some((block) => TURN_INTERNALS.has(block._tag))) {
         return [message];
       }
+      const blocks = message.blocks.flatMap((block): ContentBlock.Any[] =>
+        block._tag === 'toolCall'
+          ? [{ _tag: 'text', text: `[Called \`${block.name}\`. Input: ${capRetired(block.input || '{}')}]` }]
+          : TURN_INTERNALS.has(block._tag)
+            ? []
+            : [block],
+      );
       return blocks.length > 0 ? [Message.make({ sender: message.sender, blocks })] : [];
     });
     return [...earlier, ...messages.slice(keepFrom)];

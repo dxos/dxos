@@ -37,7 +37,7 @@ describe('SpaceOperation.QueryObjects', () => {
           expect(results).toHaveLength(Math.min(limit, count));
         }
 
-        // `includeContent` adds each object's data under `content`, never changes which rows match or how one is named.
+        // `includeContent` adds each object's fields beside its names, never changes which rows match or how one is named.
         const { results } = yield* Operation.invoke(SpaceOperation.QueryObjects, {
           typename: Type.getTypename(TestObject),
           includeContent: true,
@@ -46,7 +46,8 @@ describe('SpaceOperation.QueryObjects', () => {
         expect(results).toHaveLength(count);
         for (const row of results) {
           expect(row).toMatchObject({ dxn: expect.stringMatching(/^echo:/), typename: Type.getTypename(TestObject) });
-          expect(row).toHaveProperty('content.id');
+          expect(row).toHaveProperty('id');
+          expect(row).toHaveProperty('name', expect.stringMatching(/^typed-/));
         }
 
         // A second registration of the same typename persisted in the space. Resolving the typename

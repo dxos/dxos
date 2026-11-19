@@ -895,7 +895,7 @@ export const QueryObjects = Operation.make({
     text: Schema.optional(Schema.String).annotate({ description: 'Full-text search terms.' }),
     includeContent: Schema.optional(Schema.Boolean).annotate({
       description:
-        "Also return each object's data, under `content` (default false). Every result has `dxn` and `typename`, and `label` when the object has one.",
+        "Also return each object's fields in its result (default false). Every result has `dxn` and `typename`, and `label` when the object has one.",
     }),
     limit: Schema.optional(Schema.Number).annotate({
       description: 'Maximum number of results (default 10). A capped result sets `truncated`.',

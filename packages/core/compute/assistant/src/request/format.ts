@@ -19,8 +19,12 @@ import { AiAssistantError } from '../util/index.ts';
 import type * as AiRequest from './AiRequest.ts';
 import { ArtifactDiffResolver } from './artifact-diff.ts';
 
+/** The name a skill goes by in its definition and in a notice that disables it. */
+const skillName = (skill: Skill.Skill): string => Obj.getLabel(skill) ?? Obj.getMeta(skill).key ?? skill.id;
+
 /**
  * The skills' instructions as the system prompt carries them, under `## Skills Definitions`; `undefined` for none.
+ * Each is named, so a notice that disables one can say which instructions no longer apply.
  */
 export const formatSkills = (skills: readonly Skill.Skill[]) =>
   Function.pipe(
@@ -28,7 +32,7 @@ export const formatSkills = (skills: readonly Skill.Skill[]) =>
     Effect.forEach((skill) =>
       Effect.gen(function* () {
         return trim`
-          <skill>
+          <skill name="${skillName(skill).replaceAll('"', '&quot;')}">
             ${yield* Template.processTemplate(skill.instructions)}
           </skill>
         `;
@@ -130,13 +134,17 @@ export const formatBindingChanges = (before: TurnBindings, after: TurnBindings) 
     const enabled = yield* formatSkills(after.skills.filter((skill) => !skillIds.has(skill.id)));
     const disabled = before.skills.filter((skill) => !currentSkillIds.has(skill.id));
     const added = formatObjects(after.objects.filter((object) => !objectIds.has(object.id)));
+    const currentObjectIds = new Set(after.objects.map((object) => object.id));
+    const removed = before.objects.filter((object) => !currentObjectIds.has(object.id));
     return [
       enabled && `Skills enabled in this turn, in addition to those above:\n\n${enabled}`,
       disabled.length > 0 &&
-        `Skills disabled in this turn; their instructions above no longer apply: ${disabled
-          .map((skill) => Obj.getLabel(skill) ?? Obj.getMeta(skill).key ?? skill.id)
+        `Skills disabled in this turn; the instructions above under these names no longer apply: ${disabled
+          .map((skill) => `"${skillName(skill)}"`)
           .join(', ')}.`,
       added && `Objects added to the context in this turn, in addition to those above:\n\n${added}`,
+      removed.length > 0 &&
+        `Objects removed from the context in this turn: ${removed.map((object) => Obj.getURI(object)).join(', ')}.`,
     ].filter((part): part is string => typeof part === 'string');
   });
 

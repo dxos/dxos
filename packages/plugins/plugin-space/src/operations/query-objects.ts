@@ -55,12 +55,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
       const truncated = matched.length > limit;
       const results = truncated ? matched.slice(0, limit) : matched;
       return {
-        // Every row names its object the same way; `includeContent` only adds the object's data under `content`.
+        // Every row names its object the same way; `includeContent` adds the object's own fields beside the names,
+        // where callers have always read them.
         results: results.map((object) => ({
+          ...(includeContent ? Obj.toJSON(object) : {}),
           dxn: Obj.getURI(object),
           typename: Obj.getTypename(object),
           label: Obj.getLabel(object),
-          ...(includeContent ? { content: object } : {}),
         })),
         truncated,
       };

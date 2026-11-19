@@ -889,8 +889,44 @@ describe('AiPreprocessor.preprocessPrompt with full turns', () => {
       const resultIds = parts.flatMap(({ part }) => (part.type === 'tool-result' ? [part.id] : []));
       expect(resultIds).toEqual(['call-2', 'call-3']);
       const texts = parts.flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
-      expect(texts).toEqual(expect.arrayContaining(['Request 1.', 'Reply 1.', 'Request 3.', 'Reply 3.']));
+      expect(texts).toEqual(
+        expect.arrayContaining([
+          'Request 1.',
+          '[Called `eval`. Input: {"code":"1"}]',
+          'Reply 1.',
+          'Request 3.',
+          'Reply 3.',
+        ]),
+      );
+      expect(texts.some((text) => text.includes('"1"') && !text.includes('code'))).toBe(false);
       expect(parts.some(({ part }) => part.type === 'reasoning' && part.text.includes('1.'))).toBe(false);
+    }),
+  );
+
+  it.effect(
+    'an earlier turn whose only reply was a tool call keeps what the call sent',
+    Effect.fn(function* ({ expect }) {
+      // The Discord agent speaks only through calls like this one; its own text is never posted.
+      const posted = [
+        makeMessage('user', [{ _tag: 'text', text: 'Request 1.' }]),
+        makeMessage('assistant', [
+          {
+            _tag: 'toolCall',
+            toolCallId: 'post-1',
+            name: 'post',
+            input: '{"text":"The migration moved to Friday."}',
+            providerExecuted: false,
+          },
+        ]),
+        makeMessage('tool', [
+          { _tag: 'toolResult', toolCallId: 'post-1', name: 'post', result: '"sent"', providerExecuted: false },
+        ]),
+      ];
+      const parts = partsOf(yield* AiPreprocessor.preprocessPrompt([...posted, ...turn(2)], { fullTurns: 1 }));
+      const texts = parts.flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
+      expect(texts.some((text) => text.includes('The migration moved to Friday.'))).toBe(true);
+      expect(parts.some(({ part }) => part.type === 'tool-call' && part.id === 'post-1')).toBe(false);
+      expect(parts.some(({ part }) => part.type === 'tool-result' && part.id === 'post-1')).toBe(false);
     }),
   );
 
@@ -908,7 +944,7 @@ describe('AiPreprocessor.preprocessPrompt with full turns', () => {
       const parts = partsOf(yield* AiPreprocessor.preprocessPrompt(turn(1), { fullTurns: 0 }));
       expect(parts.filter(({ part }) => part.type === 'tool-call')).toHaveLength(0);
       const texts = parts.flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
-      expect(texts).toEqual(['Request 1.', 'Reply 1.']);
+      expect(texts).toEqual(['Request 1.', '[Called `eval`. Input: {"code":"1"}]', 'Reply 1.']);
     }),
   );
 
@@ -933,7 +969,7 @@ describe('AiPreprocessor.preprocessPrompt with full turns', () => {
   );
 
   it.effect(
-    'prompts from two people left next to each other by compaction keep their own names',
+    'prompts from two people next to each other keep their own names',
     Effect.fn(function* ({ expect }) {
       const from = (name: string, text: string) =>
         Obj.make(Message.Message, {
@@ -941,12 +977,12 @@ describe('AiPreprocessor.preprocessPrompt with full turns', () => {
           sender: { role: 'user', name },
           blocks: [{ _tag: 'text', text }],
         });
-      // Alice's turn has no reply, so compacting its call and result leaves her prompt next to Bob's.
-      const [, call, result] = turn(1);
-      const prompt = yield* AiPreprocessor.preprocessPrompt(
-        [from('Alice', 'Alice asks.'), call, result, from('Bob', 'Bob asks.'), ...turn(3).slice(1)],
-        { fullTurns: 1 },
-      );
+      // Bob's message arrives before the agent answers Alice's, so the two are adjacent.
+      const prompt = yield* AiPreprocessor.preprocessPrompt([
+        from('Alice', 'Alice asks.'),
+        from('Bob', 'Bob asks.'),
+        ...turn(3).slice(1),
+      ]);
       const texts = partsOf(prompt).flatMap(({ part }) => (part.type === 'text' ? [part.text] : []));
       expect(texts.slice(0, 4)).toEqual(['[From: Alice]', 'Alice asks.', '[From: Bob]', 'Bob asks.']);
     }),

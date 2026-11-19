@@ -222,6 +222,13 @@ const runCodeModeTurn = ({
                     `Operations available in this turn, in addition to those above:\n\n${dialect.operations(added)}`,
                   );
                 }
+                // E.g. an MCP server that failed to load on this iteration: its tools are no longer bound.
+                const removed = [...known].filter((name) => !operationNames.has(name));
+                if (removed.length > 0) {
+                  changes.push(
+                    `Operations no longer available in this turn; do not call them: ${removed.map((name) => `\`${name}\``).join(', ')}.`,
+                  );
+                }
                 if (changes.length > 0) {
                   yield* request.submitNotice(changes.join('\n\n'));
                 }
