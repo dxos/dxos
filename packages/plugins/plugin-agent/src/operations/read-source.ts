@@ -14,7 +14,7 @@ import { Fact, Graph, Ontology, Vocab } from '@dxos/echo-memory';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Space } from '@dxos/halo';
 import { EID } from '@dxos/keys';
-import { type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
+import { type SemanticIndexError, extractDocFacts, normalizeEntityId } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -59,6 +59,16 @@ type SourceText = {
 const SPEAKER_LINE = /^\*\*([^*:]{1,40}):\*\*\s*/;
 
 type Speaker = Pick<Segment, 'speaker' | 'speakerId' | 'speakerLabel'>;
+
+/** The name an utterance appears under when nothing identifies who said it. */
+const UNKNOWN_SPEAKER = 'User';
+
+/**
+ * Whether a term is the placeholder speaker left unresolved: the chat rules make "I" and "we" the line's speaker, which
+ * would otherwise store a decision by a person called User.
+ */
+const isUnknownSpeaker = (term: Fact.Term): boolean =>
+  term.kind === 'entity' && term.entity === normalizeEntityId(UNKNOWN_SPEAKER);
 
 /**
  * A member speaks under the name they signed with, else their display name; one with neither appears under a
@@ -113,7 +123,7 @@ const speakerOf = Effect.fnUntraced(function* (
     return namedSpeaker(members, sender.name);
   }
   const participantDid = participant ? personDid(participant) : undefined;
-  return participantDid ? memberSpeaker(members, participantDid) : ({ speaker: 'User' } satisfies Speaker);
+  return participantDid ? memberSpeaker(members, participantDid) : ({ speaker: UNKNOWN_SPEAKER } satisfies Speaker);
 });
 
 /** What a message says aloud; synthetic text (a woken chat's relay, system notes) is not something anyone said. */
@@ -342,7 +352,9 @@ export const readSource: (
     if (through === undefined || through === cursor) {
       return NOTHING_READ;
     }
-    const facts = yield* extract(agent, members, yield* loadEntities, read, uri, CHAT_RULES);
+    const facts = (yield* extract(agent, members, yield* loadEntities, read, uri, CHAT_RULES)).filter(
+      ({ assertion }) => !isUnknownSpeaker(assertion.subject) && !isUnknownSpeaker(assertion.object),
+    );
     const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
     return {
       facts: fresh,

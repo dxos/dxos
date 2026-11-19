@@ -1359,6 +1359,17 @@ decision D-17: Reading a chat into the brain, the extractor attributes a first-p
     - Change pipeline-rdf's default rule: every source would attribute "we" to an author, including documents with no speaker.
 ```
 
+```mdl
+decision D-18: Reading a chat into the brain drops a fact whose subject or object is the placeholder for a speaker nothing identifies; the line's other facts are kept. Fills in [D-17].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [ConversationSkill]
+  why: A message with no identity, contact, name or chat participant is read under the placeholder name "User", and D-17's rules would make its "we decided" a decision by a person called User. Dropping it in code holds whatever the model emits.
+  rejected:
+    - Tell the extractor to omit first-person statements from such a line: a prompt rule the model can ignore, and it changes every chat read's recorded prompt.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using the core `ext` primitive. `op`,
