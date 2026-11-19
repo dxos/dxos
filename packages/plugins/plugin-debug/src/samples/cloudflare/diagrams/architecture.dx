@@ -66,8 +66,8 @@ group edge-section cols="241 1fr" gap=8 padding=8 border=true {
         item "Loaded per space"
       }
       group plugins-parts gap=16 {
-        node inbox "Inbox" kind=card icon=envelope iconTone=violet
-        node github "GitHub" kind=card icon=github-logo iconTone=violet
+        node calls "Calls" kind=card icon=video-camera iconTone=violet
+        node email "Email" kind=card icon=envelope iconTone=violet
         node discord "Discord" kind=card icon=discord-logo iconTone=violet
       }
     }
