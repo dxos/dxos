@@ -18,37 +18,85 @@ explains why the UI and agents share them.
 
 ## Define an operation with input and output schema
 
-`Operation.make` takes a key, metadata and two schemas. Annotations such as `Operation.mutation` describe the
-operation's effect, which tools show before running it.
+`Operation.make` defines an operation. It takes a key, metadata and two schemas, one for the input and one for the
+output.
+
+Annotations such as `Operation.mutation` describe the operation's effect, which tools show before running it.
+
+**Example** (Defining an operation)
 
 <Snippet file="app-framework-guide-operation" region="define" />
 
+In this example, `Slugify` takes a `title` and returns a `slug`. The pipe to `Operation.mutation('none')` adds the
+annotation.
+
 ## Implement handlers and group them
 
-`Operation.withHandler` attaches an Effect to a definition.
+`Operation.withHandler` attaches an Effect to a definition. The Effect takes the input and returns the output.
+
+**Example** (Implementing a handler)
 
 <Snippet file="app-framework-guide-operation" region="handler" />
 
-`OperationHandlerSet.make` groups handlers that are already loaded. `OperationHandlerSet.lazy` takes lazy handlers,
-whose modules load the first time each operation runs. Contribute the set through `Capabilities.OperationHandler`.
+Here, the handler receives `{ title }` and succeeds with `{ slug }`, which match the two schemas of `Slugify`.
+
+A handler set groups handlers, and you make one in two ways:
+
+- `OperationHandlerSet.make` groups handlers that are already loaded.
+- `OperationHandlerSet.lazy` takes lazy handlers, whose modules load the first time each operation runs.
+
+Contribute the set through `Capabilities.OperationHandler`.
+
+**Example** (Grouping handlers, loaded and lazy)
 
 <Snippet file="app-framework-guide-operation" region="set" />
 
+In this example, `TextHandlers` holds the loaded `SlugifyHandler`. `LazyTextHandlers` wraps `Slugify` with
+`Operation.lazyHandler`, whose loader returns the handler as its default export.
+
 ## Invoke an operation and handle its typed errors
 
-`Operation.invoke` returns an Effect that needs the operation service, which the framework provides to modules, handlers and
-graph actions. It fails with `NoHandlerError` when no plugin handles the operation.
+`Operation.invoke` takes a definition and an input, and returns an Effect. The Effect needs the operation service,
+which the framework provides to modules, handlers and graph actions. It fails with `NoHandlerError` when no plugin
+handles the operation.
+
+**Example** (Invoking an operation and catching a typed error)
 
 <Snippet file="app-framework-guide-operation" region="invoke" />
+
+In this example, `slugOf` invokes `Slugify` and maps the output to its `slug`. If no plugin handles the operation,
+`Effect.catchTag` catches the error and the Effect succeeds with the `title` unchanged.
 
 From React, use `useOperation` or `useOperationInvoker`. See [React](/docs/plex/guides/react/).
 
 ## The built-in layout operations
 
-`LayoutOperation` from `@dxos/app-toolkit` changes what is on screen. `Open` and `Close` take node paths; `Set`
-replaces the open items; `ScrollIntoView`, `UpdateSidebar`, `UpdateDialog` and `AddToast` do what their names say.
+`LayoutOperation` from `@dxos/app-toolkit` changes what is on screen.
+
+- `Open` and `Close` take node paths.
+- `Set` replaces the open items.
+- `ScrollIntoView`, `UpdateSidebar`, `UpdateDialog` and `AddToast` do what their names say.
+
+**Example** (Opening an object by its path)
 
 <Snippet file="app-framework-guide-operation" region="layout" />
+
+Here, `openObject` invokes `LayoutOperation.Open` with one path in `subject`.
+
+## Members at a glance
+
+| Member | Summary |
+| --- | --- |
+| `make` | Define an operation from a key, metadata and two schemas |
+| `withHandler` `lazyHandler` | Attach a handler, loaded now or on first use |
+| `invoke` `schedule` | Run an operation and wait for its output, or queue it as a follow-up |
+| `mutation` `idempotent` `visible` | Annotate an operation's effect |
+| `Service` | The operation service that `invoke` needs |
+| `NoHandlerError` | The error when no plugin handles an operation |
+| `OperationHandlerSet.make` `lazy` `merge` | Group handlers, loaded or lazy, and combine sets |
+| `LayoutOperation.Open` `Close` `Set` | Change which items are open |
+
+The full list is in the [API reference](/docs/plex/resources/api-reference/).
 
 ## Related
 

@@ -6,24 +6,32 @@ description: What a TILE component is, and the contacts screen the learning path
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
-The learning path builds one screen: a list of contacts beside the selected person's details, with a toolbar to add,
-edit and delete them. This page explains what a TILE component is, and shows the screen finished.
+In this learning path we build one screen: a list of contacts beside the selected person's details, with a toolbar to
+add, edit and delete them. This page explains what a TILE component is, and shows the screen finished.
 
 ## What a TILE component is
 
-A TILE component is a namespace of parts. A dialog is `Dialog.Root`, `Dialog.Trigger`, `Dialog.Content`,
-`Dialog.Title` and so on, each imported from its own entry point of `@dxos/react-ui`. `Root` holds the state, and each
-other part renders one element. You put the parts together in JSX, in the shape you want, and leave out the ones you
-don't need:
+In many component libraries, a dialog is one component, and you shape it with props. A TILE component is a
+**namespace of parts** instead. For example, a dialog is `Dialog.Root`, `Dialog.Trigger`, `Dialog.Content`,
+`Dialog.Title` and so on. Each component is imported from its own entry point of `@dxos/react-ui`, such as
+`@dxos/react-ui/Dialog`.
+
+`Root` holds the state, and each other part renders one element. You put the parts together in JSX, in the shape you
+want, and leave out the ones you don't need:
 
 <Snippet file="tile-components" region="dialog" lang="tsx" />
 
 <TilePreview id="dialog" />
 
+Here, `Dialog.Trigger` wraps the button that opens the dialog. Each button in the footer sits in a
+`Dialog.CloseTrigger`, so both close it.
+
 Every part takes its look from the theme, which `Theme.Provider` gives the whole app. The theme maps a part's props,
-such as `variant='primary'`, to classes built from tokens, so the same component follows light and dark and matches
-the rest of the app. To adjust one, pass `classNames`. The parts also handle the keyboard, focus and ARIA attributes,
-so a dialog traps focus and closes on Escape without code of yours.
+such as `variant='primary'`, to classes built from tokens. This means the same component follows light and dark and
+matches the rest of the app. To adjust one part, pass `classNames`.
+
+The parts also handle the keyboard, focus and ARIA attributes. A dialog traps focus and closes on Escape without code
+of yours.
 
 [Composite components](/docs/tile/concepts/composite-components/) and [Theme and tokens](/docs/tile/concepts/theme-and-tokens/)
 cover both in full.

@@ -14,44 +14,81 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 ```
 
 The plugin manager holds an app's plugins, decides which are enabled, and activates their modules as events fire. An
-app such as Composer creates one at boot; a plugin reaches it through `Capabilities.PluginManager` when it needs to
-turn other plugins on or off. [Activation](/docs/plex/concepts/activation/) explains the order it activates modules in.
+app such as Composer creates one at boot. Your plugin reaches it through `Capabilities.PluginManager` when it needs to
+turn other plugins on or off.
+
+See [Activation](/docs/plex/concepts/activation/) for the order it activates modules in.
 
 ## Create a plugin manager
 
-`PluginManager.make` takes the plugins the app knows about and the ones enabled at start. Plugins tagged `system`
-are always enabled. The `pluginLoader` turns an id the manager is later asked to add into a plugin.
+`PluginManager.make` creates a manager. It takes the plugins the app knows about and the ones enabled at start.
+Plugins tagged `system` are always enabled.
+
+The `pluginLoader` turns an id into a plugin when the manager is later asked to add one.
+
+**Example** (Creating a manager with one plugin)
 
 <Snippet file="plex-guide-plugin-manager" region="make" />
 
-`start` runs the startup pass: it activates the Startup modules and every module whose requirements they satisfy.
-An app fires `Idle` once it has painted. A React app renders `App.Root` from `@dxos/app-framework/App`, which does both.
+In this example, the manager knows one plugin, `stash`, and enables it by its key. `UrlLoader.make` gives the manager a
+loader for manifest URLs.
+
+`start` runs the startup pass. It activates the Startup modules and every module whose requirements they satisfy. An
+app fires `Idle` once it has painted.
+
+**Example** (Running startup, then firing the idle event)
 
 <Snippet file="plex-guide-plugin-manager" region="start" />
 
+A React app renders `App.Root` from `@dxos/app-framework/App`, which does both.
+
 ## Enable, disable and remove plugins
 
-`enable` turns on a plugin and the plugins it declares in `dependsOn`, then activates every module whose event has
-fired. `disable` deactivates a plugin's modules and, by default, the plugins that depend on it. `remove` disables a
-plugin and forgets it.
+You can change which plugins are on while the app runs.
+
+- `enable` turns on a plugin and the plugins it declares in `dependsOn`. It then activates every module whose event
+  has fired.
+- `disable` deactivates a plugin's modules and, by default, the plugins that depend on it.
+- `remove` disables a plugin and forgets it.
+
+**Example** (Toggling a plugin)
 
 <Snippet file="plex-guide-plugin-manager" region="runtime" />
 
+In this example, `toggle` reads `getEnabled` to see whether the plugin is on. It then calls `disable` or `enable` with
+the plugin's key.
+
 ## Load a plugin from a URL
 
-`add` hands an id to the plugin loader and registers the result without enabling it. `UrlLoader.make` loads a plugin
-from its manifest URL, which is how Composer's Load dev plugin and the docs' [inspector](/docs/plex/guides/debugging/)
-load a plugin from its dev server. The page needs an import map of the shared packages, so the plugin uses the page's
-copies.
+`add` hands an id to the plugin loader and registers the result without enabling it.
+
+`UrlLoader.make` makes a loader that loads a plugin from its manifest URL. This is how Composer's Load dev plugin and
+the docs' [inspector](/docs/plex/guides/debugging/) load a plugin from its dev server.
+
+The page needs an import map of the shared packages, so the plugin uses the page's copies.
+
+**Example** (Loading a plugin from its dev server)
 
 <Snippet file="plex-guide-plugin-manager" region="url" />
 
+In this example, `add` returns the plugin, and `enable` takes the key from the plugin's own metadata. That key may
+differ from the URL the plugin was loaded from.
+
 ## Read which plugins and modules are active
 
-Each piece of state has a getter for a one-off read and an atom for a component that should update. `getFailed`
-lists plugins that failed to load or activate, with the phase and the error.
+Each piece of state has a getter and an atom.
+
+- Use the getter for a one-off read.
+- Use the atom in a component that should update.
+
+`getFailed` lists the plugins that failed to load or activate, with the phase and the error.
+
+**Example** (Reading the manager's state)
 
 <Snippet file="plex-guide-plugin-manager" region="read" />
+
+Here, `report` reads the enabled plugins, the active modules and the failures once. `enabledAtom` holds the enabled
+plugins as an atom.
 
 ## Members at a glance
 

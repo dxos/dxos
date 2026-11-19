@@ -5,33 +5,50 @@ description: Typed contributions that modules provide and request, which is how 
 
 import Snippet from '../../../../../components/Snippet.astro';
 
-A capability is a typed slot that modules contribute values to and other modules read, so plugins extend each other
-without importing each other.
+A capability is a typed slot that modules contribute values to and other modules read. This means plugins extend
+each other without importing each other.
 
 ## Model
 
-A capability is a **tag**: an NSID plus the TypeScript type of its values. `Capability.make` declares a multi
-capability, which any number of modules contribute to. `Capability.makeSingleton` declares one with exactly one
-provider.
+In most apps, one feature uses another by importing it. A menu that lists every export format has to import each
+exporter, and you edit the menu each time you add one. With capabilities, the menu reads a slot, and each exporter
+contributes to it.
+
+A capability is a **tag**, which is an NSID plus the TypeScript type of its values. You declare one in two ways:
+
+- `Capability.make` declares a multi capability, which any number of modules contribute to.
+- `Capability.makeSingleton` declares one with exactly one provider.
+
+**Example** (Declaring a multi capability and a singleton)
 
 <Snippet file="app-framework-guide-capability" region="declare" />
 
-A module **contributes** by returning `Capability.contribute(tag, value)` from its body, and lists the tag in
-`provides`. A module **requests** with `yield*` on the tag, or with `Capability.getAll` for every contribution to a
-multi capability, and lists what it cannot run without in `requires`.
+In this example, any number of modules can contribute an `Exporter`, and exactly one module provides `Clock`.
+
+A module **contributes** by returning `Capability.contribute(tag, value)` from its body. It lists the tag in
+`provides`.
+
+A module **requests** with `yield*` on the tag, or with `Capability.getAll` for every contribution to a multi
+capability. It lists what it cannot run without in `requires`.
+
+**Example** (Requesting a singleton and every contribution)
 
 <Snippet file="app-framework-guide-capability" region="request" />
+
+In this example, `ExportMenuModule` requires `Clock`, so `yield* Clock` returns the one clock.
+`Capability.getAll(Exporter)` returns every exporter, and the module logs their formats.
 
 The capability manager holds every contribution. It is the `Capability.Service` in a module's Effect context, and the
 plugin manager owns it.
 
 ## Behavior
 
-- The compiler checks a module's body against its `provides`: a body that returns a contribution the module does not
-  list does not compile.
-- The plugin manager activates a module only after every capability in its `requires` has a contributor, so a module
-  can read them without waiting.
-- Four ways to read a capability suit different needs:
+- The compiler checks a module's body against its `provides`. If the body returns a contribution the module does not
+  list, it does not compile.
+- The plugin manager activates a module only after every singleton capability in its `requires` has a contributor.
+  This means a module can read them without waiting. A multi capability never holds a module back. The module reads
+  whatever has been contributed so far.
+- You can read a capability in four ways, and each suits a different need:
 
 | Call | Returns | When |
 | --- | --- | --- |
@@ -40,22 +57,32 @@ plugin manager owns it.
 | `Capability.waitFor` | The first contribution, once one arrives | It is contributed later than this module runs. |
 | `Capability.atom` | An atom of every contribution | Reactive code that should update as plugins come and go. |
 
+**Example** (Waiting for a capability that arrives later)
+
 <Snippet file="plex-concepts" region="wait" />
 
+In this example, `GraphReadyModule` activates on Startup. `Capability.waitFor` suspends it until a module contributes
+`AppCapabilities.AppGraph`, and `Capability.atom` gives it an atom of every `AppCapabilities.Schema` contribution.
+
 - One plugin extends another by contributing to a capability the other reads. Stash adds itself to the Space
-  plugin's create menu this way: the Space plugin declares `SpaceCapabilities.CreateObjectEntry` and lists every
+  plugin's create menu this way. The Space plugin declares `SpaceCapabilities.CreateObjectEntry` and lists every
   contribution in its menu, and Stash contributes one entry.
+
+**Example** (Contributing an entry to the create menu)
 
 <Snippet file="plex-tutorial/src/capabilities/create-object" region="create-object" />
 
+Here, the entry's `id` is the typename of `StashedLink`, and its `createObject` invokes `SpaceOperation.AddObject`
+with a new link.
+
 - Contributions change after startup, when a module activates late or a person turns a plugin on or off.
-  `Capability.contributions` and `Capability.atom` stay current; a value read once with `getAll` does not.
+  `Capability.contributions` and `Capability.atom` stay current. A value read once with `getAll` does not.
 - When a module deactivates, its contributions are removed and its finalizers run.
 
 ## Limits
 
 - A singleton capability with two providers is an error. Use a multi capability for anything more than one plugin
   might contribute.
-- The capability manager does not check a value against anything but its TypeScript type. Two plugins that build
-  against different versions of a capability's type are not caught at runtime.
+- The capability manager does not check a value against anything but its TypeScript type. This means two plugins
+  that build against different versions of a capability's type are not caught at runtime.
 - Capabilities are in-process. They do not cross from the app to a worker or another device.

@@ -14,14 +14,18 @@ dialog, and Delete, which asks first. A toast says when a contact is saved.
 
 TILE has four overlays, all drawn above the page:
 
-- A `Dialog` is modal: the page behind it is inert until it closes.
+- A `Dialog` is modal. The page behind it is inert until it closes.
 - A `Popover` opens beside its trigger and closes when you click elsewhere.
 - A `Tooltip` shows a short hint on hover or focus.
 - A `Toast` reports something that happened and goes away by itself.
 
-Each overlay has a `Trigger` that opens it and a `Content` that holds it. `asChild` on a trigger makes your button the
-trigger, rather than wrapping it in another button. See [Dialog](/docs/tile/api/dialog/), [Popover](/docs/tile/api/popover/),
-[Tooltip](/docs/tile/api/tooltip/) and [Toast](/docs/tile/api/toast/).
+A dialog, a popover and a tooltip each have a `Trigger` that opens it and a `Content` that holds it. `asChild` on a
+trigger makes your button the trigger, rather than wrapping it in another button.
+
+A toast has neither part. It is open while `open` on its `Toast.Root` is true.
+
+See [Dialog](/docs/tile/api/dialog/), [Popover](/docs/tile/api/popover/), [Tooltip](/docs/tile/api/tooltip/) and
+[Toast](/docs/tile/api/toast/).
 
 <Steps>
 
@@ -29,6 +33,8 @@ trigger, rather than wrapping it in another button. See [Dialog](/docs/tile/api/
    trigger is an icon-only button, which shows its label as a tooltip on its own. Add `src/overlays/ContactsScreen.tsx`:
 
    <Snippet file="tile-tutorial/overlays/ContactsScreen" region="edit" lang="tsx" />
+
+   Notice the `onSave` handler. It saves the contact, then calls `setOpen(false)` to close the dialog.
 
 2. **Ask before deleting.** A popover is lighter than a dialog for a yes-or-no question. `Popover.CloseTrigger`
    closes it without deleting:
@@ -40,9 +46,13 @@ trigger, rather than wrapping it in another button. See [Dialog](/docs/tile/api/
 
    <Snippet file="tile-tutorial/overlays/ContactsScreen" region="role" lang="tsx" />
 
+   The `<span>` has `tabIndex={0}`, so a keyboard user can open the tooltip too.
+
 4. **Put them on the screen.** Edit and Delete go in the toolbar, after the gap that pushes them to the end.
    `Toast.Provider` wraps the screen, and `Toast.Toaster` is where toasts appear. The toast is open while `saved`
-   holds a name. Add it to the same file, and render it from `src/main.tsx`:
+   holds a name.
+
+   Add the screen to the same file, and render it from `src/main.tsx`:
 
    <Snippet file="tile-tutorial/overlays/ContactsScreen" region="screen" lang="tsx" />
 

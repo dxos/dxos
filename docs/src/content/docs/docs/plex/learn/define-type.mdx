@@ -10,42 +10,53 @@ By the end of this page the plugin has a Stashed link type, and the inspector li
 
 ## Background
 
-A plugin's data is ECHO objects, and a type describes them. The app reads the type's annotations to name an object,
-pick its icon, and decide whether a person can create one. [Defining types](/docs/echo/learn/defining-types/) and the
-[Type](/docs/echo/api/type/) guide cover types in full; this page uses only what PLEX needs.
+A plugin's data is ECHO objects, and a type describes them. In a database, a table definition says which columns a
+row has. A type does the same for an object, and it also carries annotations.
+
+The app reads the type's annotations to name an object, pick its icon, and decide whether a person can create one. We
+set all three in step 1.
+
+[Defining types](/docs/echo/learn/defining-types/) and the [Type](/docs/echo/api/type/) guide cover types in full.
+This page uses only what PLEX needs.
 
 ## Steps
 
-1. **Declare the type.** `Type.makeObject` gives the schema a DXN and makes it an ECHO type. The annotations tell
-   the app which field is the object's label, which icon to show, and that the type is one a person creates
-   (`UserType`). The fields are optional because a new object starts empty.
+1. **Declare the type.** `Type.makeObject` gives the schema a DXN and makes it an ECHO type. The fields are optional
+   because a new object starts empty.
 
    <Snippet file="plex-tutorial/src/types/StashedLink" region="type" />
+
+   Notice the three annotations. They tell the app which field is the object's label, which icon to show, and that
+   the type is one a person creates. The last of these is `UserType`.
 
 2. **Add a factory.** `make` fills in defaults, so every caller creates a link the same way.
 
    <Snippet file="plex-tutorial/src/types/StashedLink" region="make" />
+
+   Here, a new link starts with an empty `note` and with `read` set to `false`.
 
 3. **Register the type with the app.** The schema module tells the app the type exists, so it can query, store and
    name objects of it.
 
    <Snippet file="plex-tutorial/src/capabilities/schema" region="schema" />
 
-4. **Name the type.** The app labels a type with strings from the type's own namespace, its typename. Add an entry
-   for it to the translations, after the plugin's own.
+4. **Name the type.** The app labels a type with strings from the type's own namespace, which is its typename. Add an
+   entry for it to the translations, after the plugin's own.
 
    <Snippet file="plex-tutorial/src/translations" region="type" />
+
+   In this entry, `Type.getTypename(StashedLink)` is the namespace.
 
 5. **Add the module to the manifest.**
 
    <Snippet file="plex-tutorial/dx.config" region="schema" />
 
 6. **See the type.** Click **Load dev plugin** below, or **Reload** if your plugin is loaded already, and select
-   **Schema**. It lists the Stashed link type with its fields.
+   **Schema**. The module lists the Stashed link type with its fields.
 
    <InspectorEmbed adds={['schema']} />
 
-   There is no way to create a link yet. Creating one runs an operation, and the next page adds operations.
+   We have no way to create a link yet. Creating one runs an operation, and the next page adds operations.
 
 ## What you can do now
 

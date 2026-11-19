@@ -15,7 +15,9 @@ import { CanvasEditor } from '@dxos/react-ui-canvas-editor';
 npm install @dxos/react-ui-canvas-editor
 ```
 
-`CanvasEditor` edits a drawing: shapes, the links between them, and views nested inside shapes that the user can open.
+`CanvasEditor` edits a drawing. A drawing holds shapes, the links between them, and views nested inside shapes that the
+user can open.
+
 The canvas pans and zooms, and the editor keeps its own undo, clipboard and context menu. Composer's canvas, code graph
 and UML plugins draw with it.
 
@@ -39,6 +41,9 @@ view, then go back up with the navigation bar.
 | `CanvasEditor.Objects` | The objects in the drawing |
 
 ## `CanvasEditor.Root`
+
+`CanvasEditor.Root` holds the drawing and the editor's state. When the user changes the drawing, `onIntent` gets the
+change, and you apply it to `document`.
 
 | Prop | Type | Effect |
 | --- | --- | --- |

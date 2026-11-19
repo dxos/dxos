@@ -16,7 +16,7 @@ import * as Button from '@dxos/react-ui/Button';
 
 ## `Button.Root`
 
-A button. It takes the props of a `<button>`, plus:
+`Button.Root` renders a button. It takes the props of a `<button>`, plus:
 
 | Prop          | Type                                                                      | Effect                                                         |
 | ------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -35,18 +35,22 @@ A button. It takes the props of a `<button>`, plus:
 | `align`       | `'center' \| 'start'`                                                     | Where the content sits in a wide button                        |
 | `size`        | `Size`                                                                    | Override the inherited size                                    |
 
-A button with `icon` and `label` needs no children. Pass children instead for any other content.
+A button with `icon` and `label` needs no children. For any other content, pass children instead.
 
 ## `Button.Toggle`
 
-A button that stays pressed. It takes `Button.Root`'s props, plus `pressed`, `defaultPressed` and `onPressedChange`,
-and `activeIcon` for the icon while pressed.
+`Button.Toggle` is a button that stays pressed. It takes `Button.Root`'s props, plus `pressed`, `defaultPressed` and
+`onPressedChange`. Use `activeIcon` to show a different icon while the button is pressed.
 
 ## `Button.Group`
 
-Buttons in a row with shared spacing. `justify` is `'start'`, `'end'` or `'between'`. `fill` shares the width equally,
-so a lone button stretches across the group. `compact` removes the gap, for a run of icon-only buttons.
+`Button.Group` puts buttons in a row with shared spacing.
+
+- `justify` is `'start'`, `'end'` or `'between'`.
+- `fill` shares the width equally, so a lone button stretches across the group.
+- `compact` removes the gap. Use it for a run of icon-only buttons.
 
 ## `Button.Menu`
 
-A button that opens a menu of `items`, for when composing a full [`Menu`](/docs/tile/api/menu/) is more than you need.
+`Button.Menu` is a button that opens a menu of `items`. Use it when composing a full [`Menu`](/docs/tile/api/menu/)
+is more than you need.

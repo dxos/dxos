@@ -14,6 +14,10 @@ import TilePreview from '../../../../../components/TilePreview.astro';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 ```
 
-Parts: `Root`, `Trigger` and `Content`. `Tooltip.Trigger` also takes `content` and `side` as a shorthand, with no
-`Content` part. `Tooltip.TextTooltip` shows a text's full value when it is cut off. An icon-only button shows its label
-as a tooltip without any of these.
+A tooltip is a short name or hint for a control, shown on hover or focus. `Tooltip` has the parts `Root`, `Trigger`
+and `Content`.
+
+- `Tooltip.Trigger` also takes `content` and `side`. Use them as a shorthand, with no `Content` part.
+- `Tooltip.TextTooltip` shows a text's full value when the text is cut off.
+
+An icon-only button shows its label as a tooltip without any of these.

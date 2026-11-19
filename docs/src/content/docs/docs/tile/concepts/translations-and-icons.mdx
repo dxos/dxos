@@ -11,11 +11,17 @@ and icons from a sprite that the build assembles.
 
 ## Model
 
-**Resources by namespace.** A translation resource maps a language to namespaces, and each namespace to keys. react-ui's
-own strings, such as the "No items" of an empty state, are in the `@dxos/react-ui` namespace of its `translations`
-export. An app or plugin adds its own namespace:
+In many React apps, you write a label straight into the JSX and import each icon as a component. With TILE, you name
+both instead. A string has a translation key, and an icon has a name.
+
+**Resources by namespace.** A translation resource maps a language to namespaces, and each namespace to keys.
+
+For example, react-ui's own strings, such as the "No items" of an empty state, are in the `@dxos/react-ui` namespace
+of its `translations` export. Your app or plugin adds its own namespace:
 
 <Snippet file="tile-guides" region="resource" lang="tsx" />
+
+Here, the namespace is `com.example.contacts`, and `count.label` has a `_one` form and an `_other` form.
 
 **The provider merges them.** `Theme.Provider` takes every resource in `resourceExtensions`, so pass react-ui's together
 with your own:
@@ -25,29 +31,40 @@ with your own:
 **`useTranslation` reads them.** It returns `t` for one namespace. Keys take [i18next](https://www.i18next.com)
 interpolation and plurals, so `count.label` with `{ count: 3 }` picks the `_other` form.
 
+**Example** (Reading a plural and a label)
+
 <Snippet file="tile-guides" region="use-translation" lang="tsx" />
 
-**Icon names.** An icon is named `ph--<name>--<weight>`, from the [Phosphor](https://phosphoricons.com) set:
-`ph--house--regular`, `ph--heart--fill`. The weights are `thin`, `light`, `regular`, `bold`, `fill` and `duotone`.
+In this example, the toolbar's text comes from `count.label`, and the button's label comes from `add.label`.
+
+**Icon names.** An icon is named `ph--<name>--<weight>`, from the [Phosphor](https://phosphoricons.com) set, such as
+`ph--house--regular` or `ph--heart--fill`. The weights are `thin`, `light`, `regular`, `bold`, `fill` and `duotone`.
 DXOS's own marks use `dx--<name>--regular`.
 
 **The sprite.** `IconsPlugin` finds every icon name in your sources and in the scanned packages, and writes their SVGs
 into one sprite, `/icons.svg`. `Theme.Provider` loads the sprite once into the page, and `Icon.Icon` draws a `<use>` of
 the symbol it names.
 
+**Example** (Drawing icons by name)
+
 <Snippet file="tile-components" region="icons" lang="tsx" />
 
 <TilePreview id="icons" />
+
+Here, each `Icon.Icon` names its icon in full. The `size`, `hue`, `valence` and `spin` props change how it is drawn.
 
 ## Behavior
 
 - A component that takes `icon` and `label` uses the label as the button's accessible name and, for an icon-only
   button, as its tooltip. Pass a translated string.
-- A name the build did not find, such as one built from a string at run time, is fetched on its own the first time it
-  is drawn, from the app's icon-set route (such as `/phosphor/regular/plus.svg`). Composer serves that route, so icons
-  from a plugin installed at run time still appear. An app that serves no such route shows a blank icon.
+- If the build did not find a name, such as one built from a string at run time, the icon is fetched on its own when
+  it is first drawn. The request goes to the app's icon-set route, such as `/phosphor/regular/plus.svg`.
+  - If the app serves that route, the icon appears. Composer does, so icons from a plugin installed at run time still
+    appear.
+  - If the app serves no such route, it shows a blank icon.
 
 ## Limits
 
-- A missing key renders as the key itself, such as `add.label`. Check that the resource is in `resourceExtensions`.
+- A missing key renders as the key itself, such as `add.label`. If you see one, check that the resource is in
+  `resourceExtensions`.
 - Name icons in full in your code, as with classes, so the build finds them and the sprite has them from the start.

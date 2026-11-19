@@ -11,32 +11,48 @@ By the end of this page a second peer will have joined the app's space, and each
 
 ## Background
 
-A space is shared by invitation. The host creates an invitation, and the guest uses its code to find the host and open a secure connection. An invitation can also ask the guest for an authentication code, which the host passes on by another channel, to prove the guest received the invitation from the host. The app leaves that out, so pasting the code is enough.
+In a client-server app, the server decides who may read a document, and you share it by adding someone to a list
+there. In ECHO, you share a space by invitation. The **host** creates an invitation, and the **guest** uses its code
+to find the host and open a secure connection.
 
-Once the guest is in, both peers hold a full replica of the space's database. Each peer reads and writes its own replica, and the replicas exchange changes whenever the peers can reach each other. A peer that goes offline keeps working, and catches up when it reconnects. [MESH](/docs/mesh/concepts/presence/) is what tells the peers who is online.
+An invitation can also ask the guest for an authentication code, which the host passes on by another channel. The
+authentication code proves that the guest received the invitation from the host. Our app leaves it out, so pasting
+the invitation's code is enough.
+
+Once the guest is in, both peers hold a full **replica** of the space's database. Each peer reads and writes its own
+replica, and the replicas exchange changes whenever the peers can reach each other.
+
+A peer that goes offline keeps working, and catches up when it reconnects. [MESH](/docs/mesh/concepts/presence/) is
+what tells the peers who is online.
 
 [Invitations](/docs/halo/concepts/invitations/) explains the handshake in detail.
 
-Both go in `Share.tsx`, which draws the toolbar's Invite and Join buttons.
+We write both steps in `Share.tsx`, which draws the toolbar's Invite and Join buttons.
 
 ## Steps
 
 <Steps>
 
-1. **Invite a peer.** `space.share` starts an invitation and reports each change to its state. Once it is connecting
-   to the network, its encoded form is the code to send. Opening the **Invite** popover runs this, and the app
-   copies the code.
+1. **Invite a peer.** `space.share` starts an invitation and reports each change to its state. Once the invitation is
+   connecting to the network, its encoded form is the code to send. Opening the **Invite** popover runs this, and the
+   app copies the code.
 
    <Snippet file="echo-tutorial/app/Share" region="invite" lang="tsx" />
 
-   Anyone with the code can join while the invitation is open. For a code that is not enough on its own, leave out
-   `authMethod` and send the authentication code the invitation then asks for over a different channel.
+   Here, `Invitation_AuthMethod.NONE` is what leaves out the authentication code. Anyone with the invitation's code
+   can join while the invitation is open.
+
+   If the code should not be enough on its own, leave out `authMethod`. The invitation then asks for an
+   authentication code, which you send over a different channel.
 
 2. **Join from the other peer.** The guest needs a client that knows the app's types and an identity of its own. It
-   decodes the code and joins; once the invitation succeeds, the space is among the guest's spaces, and both peers
+   decodes the code and joins. Once the invitation succeeds, the space is among the guest's spaces, and both peers
    replicate it. The **Join** button calls this.
 
    <Snippet file="echo-tutorial/app/Share" region="join" lang="tsx" />
+
+   In `joinSpace`, `wait` resolves with the space's id once the invitation succeeds. The space joins the client's list
+   a moment later, so the function waits for it there before it returns.
 
 </Steps>
 
@@ -46,7 +62,13 @@ after a join may be the guest's own empty space. To reopen the space a peer join
 
 ## Try it
 
-Two devices run the app side by side, each with a space of its own; Bob's is empty. On Alice's device, press **Invite** in the toolbar, which copies a code. On Bob's, press **Join**, paste the code and press **Join** again: Bob's app switches to Alice's space. Then edit a record on one device and watch the other follow. Switch a device offline, edit on both, then switch it back on: the replicas exchange what they missed.
+Two devices run the app side by side, each with a space of its own. Bob's space is empty.
+
+On Alice's device, press **Invite** in the toolbar, which copies a code. On Bob's device, press **Join**, paste the
+code and press **Join** again. Bob's app switches to Alice's space.
+
+Then edit a record on one device and watch the other follow. Switch a device offline, edit on both, then switch it
+back on. The replicas exchange what they missed.
 
 <TutorialEmbed stage="complete" peers={2} />
 

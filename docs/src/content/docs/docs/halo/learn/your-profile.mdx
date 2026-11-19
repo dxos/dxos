@@ -8,35 +8,41 @@ import HaloEmbed from '../../../../../components/HaloEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
 
-By the end of this page the contact book will create your identity with a profile the first time it runs, show your
-name from it in the corner, and let you change it.
+By the end of this page the contact book will create your identity with a profile the first time it runs. It will
+show your name from that profile in the corner, and let you change it.
 
-To write the code as you read, open the starter on StackBlitz. It is the finished app with the code from these pages taken
-out. It runs from the start, and when the app reaches code you have not written yet, a line at the top names the step and
-its file. Each sample on these pages is titled with the file it goes in, and numbered as that file is.
+To write the code as you read, open the starter on StackBlitz. It is the finished app with the code from these pages
+taken out.
+
+The starter runs before you write anything. When the app reaches code you have not written yet, a line at the top
+names the step and its file. Each sample on these pages is titled with the file it goes in, and numbered as that file is.
 
 <StackBlitzButton project="halo" kind="starter" label="Follow along in StackBlitz" file="src/app/App.tsx" />
 
 ## Background
 
-An identity stands for you. In Keyhive, which HALO is built on, it is a group named by a DID, such as
-`did:halo:BA25QRC2…`. Its members are your devices, and the first member is the device that creates it. No server issues
-the identity; the client makes it on the device, with no network needed.
+In most apps, you exist once a server has made you an account. In HALO, an **identity** stands for you, and no server
+issues it. The client makes it on the device, with no network needed.
 
-The identity also has a profile: a display name, and any other data the app wants, such as an avatar. Everyone you share a
-space with sees it.
+In Keyhive, which HALO is built on, the identity is a group named by a DID, such as `did:halo:BA25QRC2…`. Its members
+are your devices, and the first member is the device that creates it. We create the identity in step 4.
 
-The code is Effect. `@dxos/halo` describes each operation as an `Effect` or a `Stream` that needs `Identity.Service` or
-`Space.Service`. `@dxos/halo-adapter-client` makes both from a client, and `@dxos/halo-react` hands them to the
-components through React context, with hooks that follow the streams.
+The identity also has a **profile**, which is a display name and any other data the app wants, such as an avatar.
+Everyone you share a space with sees it. We set the name in step 4 and change it in step 6.
+
+The code is Effect. `@dxos/halo` describes each operation as an `Effect` or a `Stream` that needs `Identity.Service`
+or `Space.Service`. `@dxos/halo-adapter-client` makes both services from a client. `@dxos/halo-react` hands them to
+the components through React context, and its hooks follow the streams.
 
 ## Steps
 
 <Steps>
 
-1. **Install the packages.** `@dxos/client` holds the client, `@dxos/halo` the API these pages use,
-   `@dxos/halo-adapter-client` the services between them, and `@dxos/halo-react` the provider for React. Until the next npm release, install the build of main these pages
-   describe, from pkg.pr.new.
+1. **Install the packages.** We need four. `@dxos/client` holds the client, `@dxos/halo` holds the API these pages
+   use, `@dxos/halo-adapter-client` holds the services between them, and `@dxos/halo-react` holds the provider for
+   React.
+
+   Until the next npm release, install the build of main that these pages describe, from pkg.pr.new:
 
    <Tabs>
      <TabItem label="pnpm">
@@ -51,19 +57,30 @@ components through React context, with hooks that follow the streams.
      </TabItem>
    </Tabs>
 
-   The browser setup is the same as ECHO's; see [Installation](/docs/echo/learn/installation/) for the Vite config. The
-   StackBlitz project has it already.
+   The browser setup is the same as ECHO's. See [Installation](/docs/echo/learn/installation/) for the Vite config.
+   The StackBlitz project has it already.
 
-2. **Configure the client.** The client keeps the device's keys and data on the device, and reaches other devices through
-   EDGE, DXOS's network, which relays invitations and replicates spaces.
+2. **Configure the client.** The client keeps the device's keys and data on the device. It reaches other devices
+   through EDGE, DXOS's network, which relays invitations and replicates spaces.
 
    <Snippet file="halo-tutorial/app/App" region="config" lang="tsx" />
 
-3. **Start the client.** `openHalo` starts a client and returns it with the HALO services it backs. The app calls it
-   once, at startup, and puts the services in a `HaloProvider`. Below it, a component gets them with `useHaloServices()`
-   and runs each piece of HALO code with `Effect.provide(services)` and `Effect.runPromise`.
+   Notice the two halves of the config. `client` turns on persistent storage and the EDGE features, and `services`
+   gives the URL of EDGE.
+
+3. **Start the client.** `openHalo` starts a client and returns it with the HALO services it backs. We call it once,
+   at startup, and put the services in a `HaloProvider`.
+
+   A component below the provider gets the services with `useHaloServices()`. It runs each piece of HALO code with
+   `Effect.provide(services)` and `Effect.runPromise`.
 
    <Snippet file="halo-tutorial/app/App" region="client" lang="tsx" />
+
+   Notice the two `Context.add` lines. They make `Identity.Service` and `Space.Service` from the client, in the
+   `Context` that `HaloProvider` takes.
+
+   Code that runs outside React can use `layerClient(client)` from `@dxos/halo-adapter-client` instead. It provides
+   both services as one Effect layer. See [Identity](/docs/halo/api/identity/).
 
 4. **Create your identity.** `Identity.create` makes the identity, with this device as its first member, and gives its
    profile your name. **Start** on the welcome screen calls this.

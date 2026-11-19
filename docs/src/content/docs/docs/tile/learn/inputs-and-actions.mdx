@@ -7,24 +7,31 @@ import { Steps } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
-By the end of this page the detail column is a form: change a contact's name, email or role, then save or revert.
+By the end of this page the detail column is a form. You can change a contact's name, email or role, then save or
+revert.
 
 ## Before you start
 
-Each input sits in a `Field`, which ties its label to the control for screen readers and lines up labels, help text
-and errors. `Input.Root` is a text input, and `Select` is a list of options in a popup. Both work controlled, with a
-value and a change handler, the way React inputs do. See [Input](/docs/tile/api/input/) and
-[Button](/docs/tile/api/button/).
+We build the form from three parts:
+
+- A `Field` holds one input. It ties the label to the control for screen readers, and lines up labels, help text and
+  errors.
+- `Input.Root` is a text input.
+- `Select` is a list of options in a popup.
+
+`Input.Root` and `Select` both work controlled, with a value and a change handler, the way React inputs do. See
+[Input](/docs/tile/api/input/) and [Button](/docs/tile/api/button/).
 
 <Steps>
 
-1. **Write the editor.** It edits a copy of the contact, the draft, so nothing changes until Save. Save is disabled
-   until the draft differs from the contact, and while the name is empty. Add `src/inputs/ContactEditor.tsx`:
+1. **Write the editor.** The editor edits a copy of the contact, the **draft**, so nothing changes until Save. We
+   disable Save until the draft differs from the contact, and while the name is empty. Add
+   `src/inputs/ContactEditor.tsx`:
 
    <Snippet file="tile-tutorial/inputs/ContactEditor" region="editor" lang="tsx" />
 
-   `gap='form'` is the spacing the theme uses between fields. A `Select`'s value is a list, since a select can allow
-   several choices, so the handler takes its first item.
+   Notice two things in the editor. `gap='form'` is the spacing the theme uses between fields. A `Select`'s value is
+   a list, because a select can allow several choices, so the handler takes its first item.
 
 2. **Put the editor in the detail column.** The screen now holds the contacts with `setContacts`, and Save replaces
    the one that changed. `key={contact.id}` gives each contact its own editor, so choosing another contact starts a
@@ -37,7 +44,7 @@ value and a change handler, the way React inputs do. See [Input](/docs/tile/api/
 
 ## Try it
 
-Change Ada's name: Save and Revert become active. Save, and the list shows the new name.
+Change Ada's name, and Save and Revert become active. Save, and the list shows the new name.
 
 <TilePreview id="learn-inputs" height="26rem" />
 

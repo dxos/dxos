@@ -16,8 +16,10 @@ import { Masonry } from '@dxos/react-ui-masonry';
 npm install @dxos/react-ui-masonry
 ```
 
-`Masonry` packs tiles of different heights into columns, each tile in the shortest column, so the columns have no
-gaps. The number of columns follows the width it has. When the items change, the tiles that stay move to their new
+`Masonry` packs tiles of different heights into columns. It puts each tile in the shortest column, so the columns have
+no gaps.
+
+The number of columns follows the width the masonry has. When the items change, the tiles that stay move to their new
 places, and the masonry measures only the new ones.
 
 ## Parts
@@ -30,6 +32,8 @@ places, and the masonry measures only the new ones.
 
 ## `Masonry.Root`
 
+`Masonry.Root` takes the `Tile` that draws one item, and sets the column sizes.
+
 | Prop | Type | Effect |
 | --- | --- | --- |
 | `Tile` | `ComponentType<{ data }>` | Draws one item |
@@ -40,8 +44,13 @@ places, and the masonry measures only the new ones.
 
 ## Lay out tiles
 
-Build each tile from a `Card` from `@dxos/react-ui`, so the gallery matches the rest of the app:
+Build each tile from a `Card` from `@dxos/react-ui`, so the gallery matches the rest of the app.
+
+**Example** (Laying out a photo gallery)
 
 <Snippet file="tile-guide-masonry" region="gallery" lang="tsx" />
+
+In this example, `PhotoTile` draws one photo as a card, and `minColumnWidth` keeps each column at least 9rem wide.
+`Masonry.Viewport` takes the photos as `items` and reads each one's id with `getId`.
 
 The story at the top of this page runs this example.

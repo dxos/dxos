@@ -18,8 +18,12 @@ npm install @dxos/react-ui-mosaic @dxos/react-ui-dnd
 ```
 
 `Board` is a row of stacks, each a column of cards. Cards move within a column and across columns, and columns move
-by the handle in their header. The board reads a model of atoms, so it needs a `RegistryProvider` from
-`@effect/atom-react` above it.
+by the handle in their header.
+
+The board reads a model of atoms.
+
+Wrap your app in `RegistryProvider` from `@effect/atom-react`. This is best practice, because your app then controls
+the registry that the board reads. Without a provider, the board reads the library's default registry.
 
 ## Parts
 
@@ -29,24 +33,43 @@ by the handle in their header. The board reads a model of atoms, so it needs a `
 | `Board.Content` | Draws a `Tile` for each column; its `eventHandler` takes columns |
 | `Board.Column.Root` | A column, draggable by the element passed as `dragHandle` |
 | `Board.Column.Header` | The column's header; its `dragHandleRef` is the column's handle |
+| `Board.Column.Body` | Draws a `Tile` for each card of the column, in a scroll area; its `eventHandler` takes cards |
+| `Board.Column.Footer` | A toolbar under the column; it has an add button when it gets `onAdd` or the model has `onItemCreate` |
 | `Board.Item` | The default card |
 | `Board.Placeholder` | The gap a dropped card would land in |
+| `Board.Debug` | The state of the drag, for development |
 
 ## Model a board
 
-The columns and the cards are atoms, so a change redraws only the columns it touches. Here one atom holds the columns in
-order, each with its cards in order. `place` puts a dropped item where the drop landed: after the card it was dropped on,
-in the gap between two cards, or at the end:
+The columns and the cards are atoms, so a change redraws only the columns it touches.
+
+**Example** (Holding a board in one atom)
 
 <Snippet file="tile-guide-mosaic" region="model" lang="tsx" />
 
+In this example, one atom holds the columns in order, each with its cards in order. `place` puts a dropped item where
+the drop landed:
+
+- If the item was dropped on a card, it goes after that card.
+- If it was dropped on a placeholder, it goes in the gap between two cards.
+- If it was dropped on the container, it goes at the end.
+
 ## Draw and drag
 
-A column's body draws a `Mosaic.Tile` for each card. Each column's `eventHandler` takes cards: `onDrop` places a card in
-the column, and `onTake` runs on the column a card leaves, so it can remove the card once the other column has it. A card
-dropped in its own column only gets `onDrop`, which reorders it. `Dnd.Root` tracks the drag across the board:
+A column's body draws a `Mosaic.Tile` for each card. Each column's `eventHandler` takes cards:
+
+- `onDrop` places a card in the column.
+- `onTake` runs on the column a card leaves, so that column can remove the card once the other column has it.
+
+A card dropped in its own column only gets `onDrop`, which reorders it. `Dnd.Root` tracks the drag across the board.
+
+**Example** (Dragging cards and columns)
 
 <Snippet file="tile-guide-mosaic" region="board" lang="tsx" />
+
+In this example, `TaskColumn` gives its `eventHandler` to the column's body, and its `canDrop` takes only tasks.
+`Board.Content` gets `columnHandler`, which takes only columns. The header's `dragHandleRef` sets the handle that
+drags the column.
 
 The story at the top of this page runs this example.
 

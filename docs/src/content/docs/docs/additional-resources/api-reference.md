@@ -1,7 +1,9 @@
 ---
-title: API Reference
+title: API reference
 description: Typedoc generated api reference for DXOS packages
 ---
+
+Each link opens the generated Typedoc reference for one package.
 
 ## ECHO
 

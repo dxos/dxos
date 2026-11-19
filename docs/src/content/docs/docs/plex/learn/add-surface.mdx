@@ -11,10 +11,14 @@ they have read it.
 
 ## Background
 
-A surface is a named place in an app's UI, such as the main article area, a card or the status bar. Plugins fill
-surfaces by contributing a component and a filter that says which data the component can render. When Composer opens
-a link in the article area, it asks for every component that matches the article role and a link, and renders
-the best one. [Surfaces](/docs/plex/concepts/surfaces/) explains the matching.
+A **surface** is a named place in an app's UI, such as the main article area, a card or the status bar. In most React
+apps, the layout imports the component that fills each place. In a PLEX app, plugins fill surfaces by contributing a
+component and a **filter**, which says which data the component can render.
+
+When Composer opens a link in the article area, it asks for every component that matches the article role and a link,
+and renders the best one. [Surfaces](/docs/plex/concepts/surfaces/) explains the matching.
+
+We write the component in step 1 and its filter in step 2.
 
 ## Steps
 
@@ -24,25 +28,28 @@ the best one. [Surfaces](/docs/plex/concepts/surfaces/) explains the matching.
 
    <Snippet file="plex-tutorial/src/containers/StashedLinkArticle" region="article" lang="tsx" />
 
-   `Panel.Root` with the surface's `role` gives the view the standard article layout.
+   Notice that each input reads its value from the snapshot, `link`, and writes to `subject`. `Panel.Root` with the
+   surface's `role` gives the view the standard article layout.
 
 2. **Contribute the surface.** `AppSurface.object(AppSurface.Article, StashedLink)` matches the article role when the
-   subject is a link. `props` maps the surface's data onto the component's props, and is type-checked against the
-   filter.
+   subject is a link. `props` maps the surface's data onto the component's props, and the compiler checks it against
+   the filter.
 
    <Snippet file="plex-tutorial/src/capabilities/react-surface" region="surface" />
 
-3. **Add the module to the manifest.** The `roles` list lets the plugin manager load the module only when it first needs an
-   article surface.
+3. **Add the module to the manifest.** The `roles` list lets the plugin manager load the module only when it first
+   needs an article surface.
 
    <Snippet file="plex-tutorial/dx.config" region="surface" />
 
-4. **See the view.** Load or reload your plugin below, click **New** in the header to create a sample link, and select **Surface**. The inspector renders each of the module's surfaces whose filter accepts the sample: here, the article.
+4. **See the view.** Load or reload your plugin below, click **New** in the header to create a sample link, and
+   select **Surface**. The inspector renders each of the module's surfaces whose filter accepts the sample. Here, that
+   is the article.
 
    <InspectorEmbed adds={['surface']} />
 
-   Edit the title in the article's input, and the name in the header changes as you type. In Composer the same view fills
-   the main area when a person opens a link.
+   Edit the title in the article's input, and the name in the header changes as you type. In Composer, the same view
+   fills the main area when a person opens a link.
 
 ## What you can do now
 
@@ -50,5 +57,5 @@ the best one. [Surfaces](/docs/plex/concepts/surfaces/) explains the matching.
 - Contribute an article surface for a type.
 - Load a surface module only when its role is needed.
 
-[Run it in Composer](/docs/plex/learn/run-in-composer/) loads the plugin into Composer from your machine, and gives the
-assistant Mark as read.
+Next, [Run it in Composer](/docs/plex/learn/run-in-composer/) loads the plugin into Composer from your machine, and
+gives the assistant Mark as read.

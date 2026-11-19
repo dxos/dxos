@@ -3,10 +3,12 @@ title: Transports
 description: The links MESH carries its protocols over, and how it uses several at once.
 ---
 
-A transport moves bytes between two devices. MESH multiplexes transports: the same data reaches a peer over whichever
-link reaches it, and a space uses more than one at once.
+A transport moves bytes between two devices. MESH multiplexes transports. This means the same data reaches a peer over
+whichever link reaches it, and a space uses more than one at once.
 
 ## Model
+
+A web app usually has one way to move bytes, an HTTP request or a WebSocket to its server. MESH has four.
 
 | Transport      | Where                 | Notes                                                                                 |
 | -------------- | --------------------- | ------------------------------------------------------------------------------------- |
@@ -16,25 +18,30 @@ link reaches it, and a space uses more than one at once.
 | EDGE WebSocket | Everywhere            | The device's one connection to EDGE; carries signaling and replication to EDGE's copy |
 
 WebRTC, TCP and memory carry a [Teleport](/docs/mesh/concepts/teleport/) session between two devices. The EDGE WebSocket
-is different: it links a device to EDGE, not to another device, and it multiplexes its own channels, one per EDGE
+is different. It links a device to EDGE, not to another device, and it multiplexes its own channels, one per EDGE
 service. See [Connecting](/docs/edge/concepts/connecting/).
 
 ## Several transports at once
 
-A space's changes leave a device two ways. They go over each direct link in the space's
-[swarm](/docs/mesh/concepts/swarms/), and over the WebSocket to EDGE, which keeps a copy and passes them on to the
-devices it reaches. Another device may get the same change by both routes. CRDT merging applies it once.
+A space's changes leave a device two ways:
 
-So a device does not choose one transport per peer. A peer reachable directly gets changes quickly over the direct link.
-A peer that is offline, or behind a network no direct link crosses, gets them through EDGE.
+- They go over each direct link in the space's [swarm](/docs/mesh/concepts/swarms/).
+- They go over the WebSocket to EDGE, which keeps a copy and passes them on to the devices it reaches.
+
+Another device may get the same change by both routes. CRDT merging applies it once.
+
+This means a device does not choose one transport per peer:
+
+- If a peer is reachable directly, it gets changes quickly over the direct link.
+- If a peer is offline, or behind a network no direct link crosses, it gets them through EDGE.
 
 ## Behavior
 
 - In the browser, the client's services run in a worker, which cannot open WebRTC connections. The tab opens them and
   passes the bytes to the worker.
-- A dropped direct link does not lose data when the space replicates through EDGE: EDGE has every change that
-  reached it, and the next link catches up. With EDGE replication off, the changes wait on the device for the next
-  direct link.
+- A dropped direct link does not lose data when the space replicates through EDGE. EDGE has every change that reached
+  it, and the next link catches up. With EDGE replication off, the changes wait on the device for the next direct
+  link.
 
 ## Planned: Iroh
 

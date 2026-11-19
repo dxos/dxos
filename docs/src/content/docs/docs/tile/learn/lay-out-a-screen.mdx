@@ -12,7 +12,8 @@ details on the right.
 
 ## Before you start
 
-TILE lays out a screen with a few primitives that own their spacing, so you rarely write padding or flex classes:
+In plain CSS, you would build this screen from nested flex and grid containers, and set each one's padding and gap by
+hand. TILE lays out a screen with a few primitives that own their spacing, so you rarely write padding or flex classes:
 
 - `Panel` is a frame with a header, a body that takes the remaining height, and an optional footer.
 - `Toolbar` is a row of controls and text.
@@ -23,7 +24,7 @@ TILE lays out a screen with a few primitives that own their spacing, so you rare
 
 <Steps>
 
-1. **Add the data.** The contacts live in React state until the last page. Put their type and the starting list in
+1. **Add the data.** We keep the contacts in React state until the last page. Put their type and the starting list in
    `src/contacts.ts`:
 
    <Snippet file="tile-tutorial/contacts" region="contact" lang="ts" />

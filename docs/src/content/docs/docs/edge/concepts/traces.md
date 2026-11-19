@@ -8,8 +8,11 @@ trigger or an agent did while they were away. The live ones show progress on the
 
 ## Model
 
+On a server, you read the logs to learn what a job did. A trace is that record for a process, and its durable part is
+data in the space.
+
 **Events.** A trace event has a type, a timestamp and a payload, and it names the process that wrote it. An operation
-writes its own events with `Trace.write`; the runtime writes the rest. Some of the types:
+writes its own events with `Trace.write`. The runtime writes the rest. Some of the types:
 
 | Event                                 | Written when                                         | Kept    |
 | ------------------------------------- | ---------------------------------------------------- | ------- |
@@ -28,8 +31,8 @@ starts watching a running process gets the events buffered so far, then new ones
 
 ## Behavior
 
-- The app's process list and an agent's activity view both read the trace: the durable feed for history, the live
-  events for what is happening now.
+- The app's process list and an agent's activity view both read the trace. They read the durable feed for history
+  and the live events for what is happening now.
 - A process on EDGE writes to the same trace feed as one in the app, so the history does not depend on where it ran.
 - Operation inputs and outputs are live only, so the values an operation handled are not kept in the space's history.
 

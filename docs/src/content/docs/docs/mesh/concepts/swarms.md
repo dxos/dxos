@@ -8,29 +8,42 @@ to connect to.
 
 ## Model
 
-**One swarm per topic.** Each open space has a swarm, keyed by the space's topic. So does an identity's own HALO space,
-which is how its devices sync with each other, and each invitation in progress. A device in five spaces is in five
-swarms. Two devices that share several spaces have a separate connection in each.
+A client-server app keeps one connection, to its server. A device in MESH keeps a set of connections to other
+devices, and has to decide which ones to open.
 
-**Candidates and connections.** Signaling tells the swarm which peers are on the topic. Those are its candidates. The
-topology picks which candidates to connect to and when to drop a connection, and the swarm carries that out.
+**One swarm per topic.** Each open space has a swarm, keyed by the space's topic. So does an identity's own HALO space,
+which is how its devices sync with each other. So does each invitation in progress.
+
+This means that if your device is in five spaces, it is in five swarms. Two devices that share several spaces have a
+separate connection in each.
+
+**Candidates and connections.** Signaling tells the swarm which peers are on the topic. Those peers are its
+candidates. The topology picks which candidates to connect to and when to drop a connection, and the swarm carries
+that out.
 
 ## Topologies
 
 | Topology        | Rule                                                               | Used for     |
 | --------------- | ------------------------------------------------------------------ | ------------ |
-| MMST            | Connect a few peers, chosen so the whole swarm stays connected     | Space swarms |
+| MMST            | Connect a few peers, chosen so the swarm usually stays connected   | Space swarms |
 | Invitation      | The host dials one guest at a time; guests accept every connection | Invitations  |
 | Fully connected | Connect to every peer                                              | Tests        |
 | Star            | Every peer connects to one central peer                            | Tests        |
 
-**MMST** keeps the swarm reachable without connecting every pair. Each device opens connections until it has a minimum
-number, choosing from a random sample of candidates the ones nearest its own key by XOR distance. It refuses offers once
-it has its maximum. Because every device picks by the same distance, the connections usually link the whole swarm,
-and a change reaches every device through intermediaries. It is not guaranteed: two groups whose devices already
-have their minimum open no connection between them, and then only EDGE joins them. A space swarm opens up to 4 connections itself and accepts
-up to 10 in all, from a sample of 20. The topology makes at most one change every 10 seconds, so connections do not
-flap.
+**MMST** keeps the swarm reachable without connecting every pair. Each device follows the same rules:
+
+- It opens connections until it has a minimum number.
+- It chooses them from a random sample of candidates, taking the ones nearest its own key by XOR distance.
+- It refuses offers once it has its maximum.
+
+Because every device picks by the same distance, the connections usually link the whole swarm, and a change reaches
+every device through intermediaries.
+
+However, this is not guaranteed. Two groups whose devices already have their minimum open no connection between them,
+and then only EDGE joins them.
+
+A space swarm opens up to 4 connections itself and accepts up to 10 in all, from a sample of 20. The topology makes at
+most one change every 10 seconds, so connections do not flap.
 
 ## The connection limiter
 
@@ -46,4 +59,4 @@ together, so a limiter lets at most 50 be in the connecting state at a time. The
 
 - MMST guarantees neither the shortest route between two devices nor that a direct route exists. EDGE replication
   covers the gaps.
-- A swarm with one device online has no connections; that device syncs only with EDGE.
+- A swarm with one device online has no connections. That device syncs only with EDGE.

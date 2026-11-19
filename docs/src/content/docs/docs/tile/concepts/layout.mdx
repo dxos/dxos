@@ -11,21 +11,30 @@ pane, `ScrollArea` makes its body scroll, and `Flex`, `Grid` and `Container` arr
 
 ## Model
 
+In plain CSS, a pane with a fixed header and a scrolling body takes a flex column, a `min-height: 0` and an
+`overflow`, each on the right element. If you miss one, the whole page scrolls where the pane should. With TILE, you
+compose the pane from a panel and a scroll area instead.
+
 **A panel has three rows.** `Panel.Root` is a grid whose rows are `Panel.Header`, `Panel.Body` and `Panel.Footer`. The
 header and footer take the height of their content, and the body takes the rest. The panel fills its parent, so its
 parent needs a height.
 
 **The height chain.** For the body to scroll, every element between the panel and the scrolling content must pass the
 height down. `Panel.Body asChild` makes the `ScrollArea.Root` the body itself, and `ScrollArea.Viewport asChild` makes
-the content the viewport, so no extra element breaks the chain.
+the content the viewport. This way, no extra element breaks the chain.
+
+**Example** (Building a panel with a scrolling body)
 
 <Snippet file="tile-components" region="panel" lang="tsx" />
 
 <TilePreview id="panel" height="20rem" />
 
-**Layout primitives.** All of these are in the `Layout` namespace. `Flex`, `Grid` and `Container` take `asChild` to lay
-out a semantic element such as a `<header>` or `<ul>` without an extra wrapper; `Block`, `Columns` and `Separator` do
-not:
+In this example, the header and the footer each hold a toolbar, and the contacts scroll between them. The rows sit in a
+`Layout.Container` with `gutter='rail'`, and each row's icon sits in a `Layout.Block`.
+
+**Layout primitives.** All of these are in the `Layout` namespace. `Flex`, `Grid` and `Container` take `asChild`, so
+you can lay out a semantic element such as a `<header>` or `<ul>` without an extra wrapper. `Block`, `Columns` and
+`Separator` do not take it:
 
 | Primitive   | Arranges                                                                                       |
 | ----------- | ---------------------------------------------------------------------------------------------- |
@@ -37,19 +46,19 @@ not:
 | `Separator` | A rule between groups                                                                          |
 
 **`gap` takes steps, not numbers.** `Flex` and `Grid` take `gap='xs'` through `'2xl'`, plus `'form'` and
-`'form-section'` for the spacing between fields. Steps keep spacing consistent; a literal such as `gap-2` drifts.
+`'form-section'` for the spacing between fields. Steps keep spacing consistent. A literal such as `gap-2` drifts.
 
 ## Behavior
 
 - **Sizing is physical.** Use `w-*`, `h-*`, `min-w-*` and `max-h-*` for width and height.
 - **Spacing that depends on direction is logical.** Use `ps-*` and `pe-*` for padding, `ms-*` and `me-*` for margin,
   and `start-*` and `end-*` for insets. These flip in a right-to-left language.
-- `Flex` sets no `align` by default, so children stretch as plain CSS does.
+- By default, `Flex` sets no `align`, so children stretch as they do in plain CSS.
 - `grow` on a `Flex` or `Grid` makes it take the slack of its parent and clip what overflows. That is the link a
   scrolling child needs.
 
 ## Limits
 
-- A wrapper `<div>` between `Panel.Body` and the scrolling content breaks the height chain, and the content grows
-  instead of scrolling. Use `asChild`.
-- Components such as forms and lists own their spacing. Padding added around them doubles it.
+- If you put a wrapper `<div>` between `Panel.Body` and the scrolling content, it breaks the height chain, and the
+  content grows instead of scrolling. Use `asChild` instead.
+- Components such as forms and lists own their spacing. If you add padding around them, you double it.

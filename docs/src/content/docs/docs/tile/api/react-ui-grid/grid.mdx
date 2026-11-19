@@ -17,41 +17,67 @@ npm install @dxos/react-ui-grid
 ```
 
 `Grid` is the grid under Composer's sheets and tables. It draws only the cells in view, so it stays fast for large
-data, and it handles selection, keyboard movement and resizing. You give it cells; it asks for the ones it shows.
+data. It also handles selection, keyboard movement and resizing.
+
+You give it cells, and it asks for the ones it shows.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Grid.Root` | Holds which cell is being edited (`editing`, `onEditingChange`) |
+| `Grid.Root` | Takes the grid's `id`, which it requires, and holds which cell is being edited (`editing`, `onEditingChange`) |
 | `Grid.Content` | The grid itself; `getCells` gives it the cells in view |
 | `GridCellEditor` | An editor that opens over the cell being edited |
 
 ## `Grid.Content`
 
+`Grid.Content` is the grid itself. It calls `getCells` for the cells in view.
+
 | Prop | Type | Effect |
 | --- | --- | --- |
 | `getCells` | `(range, plane) => cells` | A plane's cells, keyed `col,row`, each with a `value` |
+| `initialCells` | `DxGridCells` | Cells by plane, keyed `col,row`, shown wherever `getCells` gives no cell; `{ grid: {} }` by default |
 | `frozen` | `DxGridFrozenAxes` | How many rows or columns each frozen edge plane has |
 | `columnDefault` | `per plane` | Default column sizes |
 | `rowDefault` | `per plane` | Default row sizes |
-| `limitColumns` | `number` | How far the grid scrolls across |
-| `limitRows` | `number` | How far the grid scrolls down |
-| `overscroll` | `'trap' | 'inline' | 'block'` | Which wheel scrolls stay in the grid at its edges |
+| `columns` | `DxGridAxisMeta` | The size of single columns, by plane and index |
+| `rows` | `DxGridAxisMeta` | The size of single rows, by plane and index |
+| `limitColumns` | `number` | How far the grid scrolls across; no limit by default |
+| `limitRows` | `number` | How far the grid scrolls down; no limit by default |
+| `overscroll` | `'trap' \| 'inline' \| 'block'` | Which wheel scrolls stay in the grid at its edges |
+| `focusIndicatorVariant` | `'sheet' \| 'stack'` | The width of the focus indicator: a hairline for `'sheet'`, the default, or a thick line for `'stack'` |
+| `activeRefs` | `string` | Refs, separated by spaces. The grid highlights each cell whose `dataRefs` holds one; empty by default |
+| `addressing` | `GridAddressing` | Names each cell by its row and column identity, so the grid can share the selection with collaborators |
+| `onSelect` | `(event) => void` | The user selected a range of cells |
+| `onAxisResize` | `(event) => void` | The user resized a row or a column |
 
 ## Cells and planes
 
-A grid has planes: the main `grid` plane, and frozen planes at its edges for headers that stay in place as it scrolls.
-A new `getCells` makes the grid ask again, so build it from your state. Here `limitColumns` and `limitRows` run past the
-data, so blank rows and columns wait to be filled in, and `overscroll='trap'` keeps wheel and trackpad scrolls in the
-grid, so the page neither scrolls nor swipes back.
+A grid has **planes**. The main plane is `grid`. Frozen planes sit at its edges, for headers that stay in place as the
+grid scrolls.
+
+A new `getCells` makes the grid ask again, so build it from your state.
+
+The example in the next section also sets these props:
+
+- `limitColumns` and `limitRows` run past the data, so blank rows and columns wait to be filled in.
+- `overscroll='trap'` keeps wheel and trackpad scrolls in the grid, so the page neither scrolls nor swipes back.
 
 ## Edit a cell
 
-`GridCellEditor` opens over the cell when the user double-clicks or types. `getCellContent` gives the editor its
-starting text, and `onBlur` hands back the new text. `editorKeys` closes the editor on Enter or Tab, and `refocus` moves
-the focus on, as a spreadsheet does:
+`GridCellEditor` opens over the cell when the user double-clicks or types.
+
+- `getCellContent` gives the editor its starting text.
+- `onBlur` hands back the new text.
+- `editorKeys` closes the editor on Enter or Tab.
+- `refocus` moves the focus on, as a spreadsheet does.
+
+**Example** (Editing a budget sheet)
 
 <Snippet file="tile-guide-grid" region="sheet" lang="tsx" />
+
+In this example, `toCells` returns the header row for the `frozenRowsStart` plane and the values for the `grid` plane.
+`handleBlur` writes the new text into `rows`. That makes a new `getCells`, so the grid asks again and the row's total
+follows.
 
 The story at the top of this page runs this example.

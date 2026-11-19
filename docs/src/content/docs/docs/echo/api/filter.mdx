@@ -12,13 +12,18 @@ import Snippet from '../../../../../components/Snippet.astro';
 import { Filter } from '@dxos/echo';
 ```
 
-Build a predicate, then pass it to `db.query` directly or through `Query.select`. Every builder is O(1): it creates an AST
-node and matches nothing until the query runs.
+A filter is a predicate that says which entities match. You build one, then pass it to `db.query` directly or through
+`Query.select`.
+
+Every builder is O(1). It creates an AST node and matches nothing until the query runs.
 
 | Member                                | Signature                               | Summary                               |
 | ------------------------------------- | --------------------------------------- | ------------------------------------- |
 | [`type`](#match-by-type)              | `(type, props?) => Filter<T>`           | Objects of a type, optionally by props |
 | [`props`](#match-by-type)             | `(props) => Filter<T>`                  | Objects whose fields match            |
+| [`id`](#match-by-id-tag-or-key)       | `(...ids) => Filter`                    | Entities with one of the ids          |
+| [`tag`](#match-by-id-tag-or-key)      | `(tag) => Filter`                       | Entities that carry a tag             |
+| [`key`](#match-by-id-tag-or-key)      | `(key, options?) => Filter`             | Entities made from a registry entry   |
 | [`eq` `neq`](#compare-a-field)        | `(value) => Filter<T>`                  | Equal, not equal                      |
 | [`gt` `gte` `lt` `lte`](#compare-a-field) | `(value) => Filter<T>`              | Ordered comparison                    |
 | [`between`](#compare-a-field)         | `(from, to) => Filter<T>`               | From inclusive, to exclusive          |
@@ -32,42 +37,107 @@ node and matches nothing until the query runs.
 
 ## Match by type
 
-`type` takes an ECHO type and an optional props shape, so field names and value types are checked. `props` matches on shape alone.
+`type` takes an ECHO type and an optional props shape, so field names and value types are checked. Use it when you
+know the type.
+
+`props` matches on shape alone. It does not look at the type.
+
+**Example** (Matching by type and by shape)
 
 <Snippet file="filter" region="type" />
 
+In this example, `adas` matches every `Person` named Ada. `untyped` matches any object whose `name` is Ada.
+
+## Match by id, tag or key
+
+These three filters match on what ECHO keeps about an entity, whatever its type.
+
+- `id` matches the entities with the ids you pass. Use it when you already know which entities you want.
+- `tag` matches the entities that carry a tag. It takes the tag's URI, which `Obj.getURI` returns.
+- `key` matches the entities whose metadata names a registry key. Pass `version` with a semver range when you want
+  only some versions. Without it, `key` matches any version.
+
+**Example** (Matching by id, by tag and by key)
+
+<Snippet file="filter" region="identity" />
+
+In this example, `byId` matches the one event. `speakers` matches every entity tagged `speaker`. `fromEntry` matches
+the entities whose key is `com.example.template.agenda` at a version from 1.0.0 up to 2.0.0.
+
 ## Compare a field
 
-Comparators go in the props shape, on the field they test.
+Comparators go in the props shape, on the field they test. A plain value there tests for equality.
+
+- `eq` and `neq` test for a value, or for any other value.
+- `gt`, `gte`, `lt` and `lte` test against one bound. `between` tests against two, and its upper bound is exclusive.
+- `in` matches a field that equals one of several values.
+- `contains` matches an array field that holds a value.
+
+**Example** (Comparing by value, by range, by set and by element)
 
 <Snippet file="filter" region="compare" />
 
+In this example, each comparator sits on the field it tests. `notAda` matches every person not named Ada, and
+`firstHalf` the people whose name sorts from A up to M. `atExample` matches the people whose email is one of the two
+addresses. `urgent` matches any object whose `labels` array holds `'urgent'`.
+
 ## Combine filters
+
+`and`, `or` and `not` are the boolean combinators. Use them to build one filter from several.
+
+**Example** (Matching every person except Ada)
 
 <Snippet file="filter" region="combine" />
 
+In this example, `peopleNotAda` matches every `Person` that `adas` does not match. `Query.select` wraps it, and
+`results` holds the matches once the query runs.
+
 ## Search text
 
-`options.type` selects `full-text` or `vector`.
+`text` matches by a search for the text you pass. `options.type` selects `full-text` or `vector`.
+
+**Example** (Searching the full text)
 
 <Snippet file="filter" region="text" />
 
+Here, `matches` is a full-text search for "product launch".
+
 ## Filter by time
 
-Both bounds accept a number of milliseconds or a `Date`. With both set, the filter is the AND of the two.
+`created` matches by creation time, and `updated` by update time. Each takes a range with an `after` bound, a `before`
+bound or both.
+
+Both bounds accept a number of milliseconds or a `Date`. If you set both, the filter is the AND of the two.
+
+**Example** (Matching what changed since a date)
 
 <Snippet file="filter" region="time" />
 
+Here, `recent` matches what was updated after 1 November 2026.
+
 ## Filter by parent
 
-`childOf` matches the children of one or more objects, and their children in turn unless `transitive` is false. It takes
-objects or references, and reads a reference's URI without loading the target.
+`childOf` matches the children of one or more objects. By default, it also matches their children in turn. Set
+`transitive` to false when you want the direct children only.
+
+`childOf` takes objects or references, and it reads a reference's URI without loading the target.
+
+**Example** (Matching every descendant, or direct children only)
 
 <Snippet file="filter" region="parent" />
 
+In this example, `owned` matches the children of `launch`, their children and so on. `direct` stops at the first
+level.
+
 ## Filter changes
 
-`changes` selects the changes to some objects, or to every object in the space, instead of the objects. Order them by
-`time`, or count them with an [aggregate](/docs/echo/api/query/#aggregate-results).
+`changes` selects the changes to some objects, or to every object in the space, instead of the objects. Use it when
+you show a history.
+
+You can order the changes by `time`, or count them with an [aggregate](/docs/echo/api/query/#aggregate-results).
+
+**Example** (Selecting the changes to one object)
 
 <Snippet file="filter" region="changes" />
+
+Here, `history` selects the changes to `launch` and keeps the first 50.

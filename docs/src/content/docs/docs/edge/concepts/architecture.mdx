@@ -13,7 +13,7 @@ per space, identity or other key.
 **Entry points.** Each device's WebSocket ends at the Router, a Durable Object per identity. HTTP requests go to the
 `edge` worker, which authenticates the caller and forwards each request to the service that owns its path.
 
-**Services.**
+**Services.** Each service has one job, and every service except the Router answers at a path:
 
 | Service   | Path         | Does                                                                                         |
 | --------- | ------------ | -------------------------------------------------------------------------------------------- |
@@ -50,17 +50,17 @@ EDGE keys them like this:
 | Preview     | `https://preview.dxos.network/`  | Testing the next release     |
 | Dev         | `https://dev.dxos.network/`      | DXOS's own development       |
 
-An app chooses one with `runtime.services.edge.url`. Every service answers under that one URL, at its path. See
+Your app chooses one with `runtime.services.edge.url`. Every service answers under that one URL, at its path. See
 [Configuration](/docs/edge/resources/configuration/).
 
 ## Behavior
 
-- A space's Durable Objects run in one place at a time, so all writes to a space's copy go through one server and need no
-  coordination between servers.
+- A space's Durable Objects run in one place at a time. This means all writes to a space's copy go through one server
+  and need no coordination between servers.
 - EDGE authenticates every request with the caller's HALO identity. See [Connecting](/docs/edge/concepts/connecting/).
 
 ## Limits
 
 - DXOS operates every environment. There is no self-hosted EDGE, and its source is not public.
-- EDGE serves only identities linked to a DXOS account. For now an account is created through
+- EDGE serves only identities linked to a DXOS account. For now, you create an account through
   [Composer](https://composer.space).

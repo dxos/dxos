@@ -6,14 +6,16 @@ description: How objects point at each other, and how a reference resolves.
 import Snippet from '../../../../../components/Snippet.astro';
 import SpecCite from '../../../../../components/SpecCite.astro';
 
-A reference is a field whose value names another entity, so that objects can form trees and graphs without copying each
-other.
+A reference is a field whose value names another entity. This means your objects can form trees and graphs without
+copying each other.
 
 ## Model
 
-A field declared with `Ref.Ref(Type)` holds a reference to an entity of that type. The stored value is the target's URI,
-not the target's data. Two objects that reference the same person both see the person's latest name, because neither
-holds a copy. [Ref](/docs/echo/api/ref/) shows how to declare and make one.
+In a relational database, a foreign key column holds the id of a row in another table. In ECHO, a field declared with
+`Ref.Ref(Type)` holds a reference to an entity of that type.
+
+The stored value is the target's URI, not the target's data. Two objects that reference the same person both see the
+person's latest name, because neither holds a copy. [Ref](/docs/echo/api/ref/) shows how to declare and make one.
 
 ECHO uses two kinds of name:
 
@@ -23,26 +25,38 @@ ECHO uses two kinds of name:
 - A **DXN** names a resource that is not an object, most often a type: `dxn:com.example.type.person:0.1.0`. A DXN can
   also carry an object mnemonic after `#` to tell apart objects that share a key.
 
+**Example** (Reading a type's DXN and making two EIDs)
+
 <Snippet file="concept-references" region="names" />
+
+In this example, `typeName` is the DXN of the `Person` type. `local` is the EID of `ada` in this space, and
+`qualified` names the space too.
 
 ## Behavior
 
 - A reference stores the target's URI and resolves to a target of the declared type only when read.
   <SpecCite item="org.dxos.echo#F-4.1" />
 - `ref.peek()` returns the target if it is in memory and never starts a load. `ref.load()` reads it from disk or the
-  network.
-- Serializing an object keeps its references as URIs, and reading it back restores them.
+  network. Use `peek` when the code cannot wait, and `load` when it needs the target.
+
+  To make a reference, pass the target to `Ref.make`. Then read the target back through the reference:
+
+  <Snippet file="concept-references" region="resolve" />
+
+  Here, `Ref.make` fills Grace's `employer` and the event's `attendees`. `inMemory` is the organization or
+  `undefined`, and `employer` waits for the same target. `Ref.loadAll` loads the attendees in one call.
+- When you serialize an object, it keeps its references as URIs, and reading it back restores them.
   <SpecCite item="org.dxos.echo#F-3.4" />
 - A query can follow references forwards with `reference` and backwards with `referencedBy`, so you do not need to load
   each target yourself. [Query](/docs/echo/api/query/) covers traversal.
 
-A reference can point into another space, which [Spaces and databases](/docs/echo/concepts/spaces/#the-hypergraph)
-covers.
+A reference can point into another space. See [Spaces and databases](/docs/echo/concepts/spaces/#the-hypergraph) for
+how it resolves.
 
 ## Limits
 
 - A reference can dangle. Nothing stops a target from being removed while references to it remain, and the field keeps
-  the URI. `load()` throws for a missing target; `tryLoad()` returns `undefined`.
+  the URI. For a missing target, `load()` throws and `tryLoad()` returns `undefined`.
 - By default a removed target counts as missing. `Ref.loadAll` leaves out missing and removed targets unless you pass
   `{ deleted: 'include' }`.
 - An array of references keeps every entry, dangling ones included. To list only the targets that exist, query them with

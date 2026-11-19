@@ -30,6 +30,8 @@ import * as Status from '@dxos/react-ui/Status';
 
 ## `Status.Progress`
 
+`Status.Progress` draws a bar for a task with a known fraction, an unknown one or a deadline.
+
 | Prop            | Type    | Effect                                                    |
 | --------------- | ------- | --------------------------------------------------------- |
 | `value`         | number  | How far through, from 0 to `max`                          |
@@ -42,18 +44,29 @@ import * as Status from '@dxos/react-ui/Status';
 
 ## `Status.Deferred`
 
-`pending` says whether to show the fallback. The fallback appears only once `pending` has held for `delay`
-milliseconds, and then stays for at least `minDuration`, so a fast load never flickers. `fallback` is a function, so an
-expensive fallback costs nothing when it never shows.
+`Status.Deferred` shows a fallback only if the wait lasts. Use it when content is loading and may arrive at once.
+
+- `pending` says whether to show the fallback.
+- `delay` is how many milliseconds `pending` has to hold before the fallback appears.
+- `minDuration` is the least time the fallback then stays.
+- `fallback` is a function, so an expensive fallback costs nothing when it never shows.
+
+With `delay` and `minDuration`, a fast load never flickers.
 
 ## `Status.Empty`
 
-Its children are the message, or the translated "No items" when there are none. `icon` adds an icon above it.
+`Status.Empty` is the message for a view with nothing to show. Its children are the message, or the translated "No
+items" when there are none. Use `icon` to add an icon above the message.
 
 ## `Status.Skeleton`
 
-A placeholder block. `variant` is `'default'`, `'circle'` or `'text'`.
+`Status.Skeleton` is a placeholder block. Use it when content is loading and its shape is known. `variant` is
+`'default'`, `'circle'` or `'text'`.
 
 ## `Status.Steps`
 
-`steps` is a count, or the stages themselves; `active` is the stage in flight; `fraction` is how far through it.
+`Status.Steps` shows progress through a task with named stages.
+
+- `steps` is a count, or the stages themselves.
+- `active` is the stage in flight.
+- `fraction` is how far through that stage the task is.

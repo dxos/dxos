@@ -20,6 +20,18 @@ const ada = db.add(Obj.make(Person, { name: 'Ada' }));
 db.remove(ada);
 // #endregion write
 
+// #region load
+const grace = db.add(Obj.make(Person, { name: 'Grace' }));
+const uri = Obj.getURI(grace);
+
+// By URI: a reference bound to the database reads its target from disk or
+// the network. `tryLoad` returns undefined when the target is missing.
+const loaded = await db.makeRef<Person>(uri).tryLoad();
+
+// By id: a query finds the object, and loads it if this tab does not hold it.
+const [found] = await db.query(Filter.id(grace.id)).run();
+// #endregion load
+
 // #region query
 const people = await db.query(Query.select(Filter.type(Person))).run();
 // #endregion query
@@ -61,4 +73,4 @@ const unsubscribe = db.subscribeToSyncState((state) => console.log(state));
 unsubscribe();
 // #endregion sync
 
-export { everyone, people, persisted, sameDb, state };
+export { everyone, found, loaded, people, persisted, sameDb, state };

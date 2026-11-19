@@ -10,13 +10,21 @@ to one of them. EDGE is the signaling server.
 
 ## Model
 
-**The signal manager.** Each device has one signal manager. With `runtime.client.edgeFeatures.signaling` on, it is
-the EDGE signal manager, which sends everything over the device's [WebSocket to EDGE](/docs/edge/concepts/connecting/).
-Without it, the client uses an in-memory signal manager that only reaches peers in the same process, which is what tests
-use.
+Two browsers cannot open a connection to each other unaided. Neither knows the other's address, and most sit behind a
+router that hides it. WebRTC needs a server that both can already reach to pass the first messages between them. That
+server is the signaling server.
 
-**Topics.** A swarm is named by a topic, a key. A space's topic is its space ID, the first 20 bytes of the SHA-256
-of its space key, so every member of the space, and EDGE, computes the same one. An invitation has a topic of its own, carried in the invitation code.
+**The signal manager.** Each device has one signal manager. The `runtime.client.edgeFeatures.signaling` flag decides
+which one:
+
+- If the flag is on, it is the EDGE signal manager, which sends everything over the device's
+  [WebSocket to EDGE](/docs/edge/concepts/connecting/).
+- If the flag is off, the client uses an in-memory signal manager that only reaches peers in the same process. Tests
+  use this one.
+
+**Topics.** A topic is the key that names a swarm. A space's topic is its space ID, which is the first 20 bytes of the
+SHA-256 of its space key. This means every member of the space, and EDGE, computes the same topic. An invitation has a
+topic of its own, carried in the invitation code.
 
 **Join, query and leave.** A device joins a topic to say it is there, queries the topic to list the peers on it, and
 leaves when it closes the space. EDGE tells each peer on the topic when another joins or leaves.
@@ -27,9 +35,11 @@ the direct link opens. From then on, nothing for that connection goes through si
 
 <Diagram name="mesh-signaling" alt="Both devices join a topic at EDGE, learn about each other, exchange an offer, an answer and ICE candidates through EDGE, then open a direct WebRTC link." />
 
-**ICE and TURN.** WebRTC finds a route between two devices from ICE candidates. Behind most home routers a direct
-route exists. Behind strict NATs and firewalls it does not, and the connection goes through a TURN server, which
-relays the encrypted bytes.
+**ICE and TURN.** WebRTC finds a route between two devices from ICE candidates.
+
+- Behind most home routers, a direct route exists.
+- Behind strict NATs and firewalls, it does not. The connection then goes through a TURN server, which relays the
+  encrypted bytes.
 
 ## Configuration
 
@@ -49,5 +59,5 @@ See EDGE's [Configuration](/docs/edge/resources/configuration/) for the rest.
 
 ## Limits
 
-- Without signaling, two devices only meet if they share a process. Turning it off is for tests.
+- Without signaling, two devices only meet if they share a process. Turn it off only for tests.
 - A TURN relay sees encrypted bytes only, but every byte of that connection goes through it.

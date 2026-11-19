@@ -3,15 +3,20 @@ title: Why SAGE?
 description: What sets SAGE's agents apart from other agent frameworks.
 ---
 
-Most agent frameworks give a model tools, a memory store and a loop that runs while a request is open. SAGE runs an agent
-as a durable process with an identity of its own. It sleeps between turns, wakes on events without asking a model, hands
-work to sub-agents and picks up when they report back, and every change it makes is signed as its own.
+Most agent frameworks give a model tools, a memory store and a loop that runs while a request is open. If you have
+called an LLM API with tools, you have written that loop yourself.
+
+SAGE runs an agent as a durable process with an identity of its own. The agent sleeps between turns and wakes on events
+without asking a model. It hands work to sub-agents and picks up when they report back. Every change it makes is signed
+as its own.
 
 ## The pattern
 
-Ask an agent to prepare next week's board meeting. It writes a plan, hands the research tasks to three sub-agents and
-ends its turn. The sub-agents run as child processes. When each one finishes, the agent wakes, reads the result, ticks
-off the task and posts what it found. Nobody kept a request open, and the agent did not poll a model to check on them.
+Suppose you ask an agent to prepare next week's board meeting. It writes a plan, hands the research tasks to three
+sub-agents and ends its turn. The sub-agents run as child processes.
+
+When each one finishes, the agent wakes, reads the result, ticks off the task and posts what it found. Nobody kept a
+request open, and the agent did not poll a model to check on them.
 
 ## An agent framework against SAGE
 
@@ -28,14 +33,17 @@ off the task and posts what it found. Nobody kept a request open, and the agent 
 
 ### Work that outlives a session
 
-An agent's work runs as a process. While it waits on a timer, a person or a sub-agent, the process is written to storage
-and dropped from memory, and it resumes where it left off. On a server that is always online, the agent keeps going
-after every device is closed. See [Agents](/docs/sage/concepts/agents/).
+A loop that runs inside a request ends when the request or the session closes. In SAGE, an agent's work runs as a
+process. While it waits on a timer, a person or a sub-agent, the process is written to storage and dropped from memory.
+It then resumes where it left off.
+
+On a server that is always online, the agent keeps going after every device is closed. See
+[Agents](/docs/sage/concepts/agents/).
 
 ### Knowing which agent changed what
 
 When several agents and people work on the same data, a change signed by "the user" says little. Each SAGE agent has its
-own identity, and everything it writes, including the writes of the tools it calls, is attributed to it.
+own identity. Everything it writes is attributed to that identity, including the writes of the tools it calls.
 
 ### Waking without polling a model
 
@@ -45,9 +53,10 @@ See [Memory](/docs/sage/concepts/memory/).
 
 ### One set of actions for people and agents
 
-When an agent needs its own API, every feature is built twice. In SAGE an agent's tools are the app's operations: the
-button, the command palette and the agent call the same key, and the schema that labels a form also tells the model what
-to pass. See [Operations as tools](/docs/sage/concepts/tools/).
+When an agent needs its own API, you build every feature twice. In SAGE, an agent's tools are the app's operations.
+
+The button, the command palette and the agent call the same key. The schema that labels a form also tells the model
+what to pass. See [Operations as tools](/docs/sage/concepts/tools/).
 
 ### Memory the user owns
 
@@ -57,24 +66,26 @@ delete them. See [Memory](/docs/sage/concepts/memory/).
 
 ### A plan that people and agents both hold
 
-A prompt says what to do once. A spec says what the software should do, in text a person reads and an agent acts on. Its
-changelog attributes every decision to the person or the agent that made it, a review records how far the code meets
-each item, and its tests are steps that a person can follow and an agent can run. See [Specs](/docs/sage/concepts/specs/).
+A prompt says what to do once. A spec says what the software should do, in text a person reads and an agent acts on.
+
+Its changelog attributes every decision to the person or the agent that made it. A review records how far the code
+meets each item. Its tests are steps that a person can follow and an agent can run. See
+[Specs](/docs/sage/concepts/specs/).
 
 ### A long task in a few model calls
 
-Calling one tool per step sends every result back through the model. In code mode the model writes one short program
-that queries, loops and calls operations, and only what the program prints comes back. See
-[Operations as tools](/docs/sage/concepts/tools/#model).
+Calling one tool per step sends every result back through the model. In code mode, the model writes one short program
+that queries, loops and calls operations. Only what the program prints comes back, or the value it returns when it
+prints nothing. See [Operations as tools](/docs/sage/concepts/tools/#model).
 
 ### Choosing the model
 
-A chat names the model it uses, and resolvers find a provider that serves it: a hosted provider, or a model running on
-the user's own device. See [Models](/docs/sage/concepts/models/).
+A chat names the model it uses, and resolvers find a provider that serves it. The provider can be hosted, or it can be
+a model running on the user's own device. See [Models](/docs/sage/concepts/models/).
 
 ## What SAGE does not do
 
-SAGE does not train or host models; it calls them. It does not run the work itself: each tool call is an operation, run
-as a [process](/docs/edge/concepts/processes/).
+SAGE does not train or host models. It calls them. It also does not run the work itself. Each tool call is an operation,
+run as a [process](/docs/edge/concepts/processes/).
 
 Start with [Agents](/docs/sage/concepts/agents/).

@@ -8,9 +8,12 @@ device are on the other end.
 
 ## Model
 
-**One WebSocket, many channels.** `@dxos/edge-client` opens the WebSocket when the client starts and multiplexes it: each
-service, such as signaling or a space's replication, gets its own channel with its own flow control, so a large sync
-does not hold up signaling.
+A web app usually sends each request on its own and proves who is calling with a session cookie or a token. A DXOS
+device holds one connection open and proves who it is with its keys.
+
+**One WebSocket, many channels.** `@dxos/edge-client` opens the WebSocket when the client starts and multiplexes it.
+Each service, such as signaling or a space's replication, gets its own channel with its own flow control. This means a
+large sync does not hold up signaling.
 
 **Authentication.** When the WebSocket opens, EDGE sends a challenge. The device signs it with its device key and sends
 the signature with the HALO credential chain that admits that device to its identity. EDGE checks the chain, so it knows
@@ -20,7 +23,7 @@ proof.
 **The router.** EDGE keeps a router per identity. It holds the WebSockets of the identity's online devices and delivers
 messages addressed to the identity or to one of its devices.
 
-**Feature flags.** `runtime.client.edgeFeatures` turns on what the device uses EDGE for:
+**Feature flags.** Use `runtime.client.edgeFeatures` to turn on what the device uses EDGE for:
 
 | Flag                   | Turns on                                                                |
 | ---------------------- | ----------------------------------------------------------------------- |
@@ -32,9 +35,9 @@ messages addressed to the identity or to one of its devices.
 ## Behavior
 
 - When the WebSocket drops, the client reconnects with backoff and authenticates again. Channels resume where they
-  left off; replication catches up from what each side has.
+  left off, and replication catches up from what each side has.
 - While the device is offline, everything local works: reads, writes and queries over loaded objects. Changes go to EDGE
-  when it reconnects.
+  when the device reconnects.
 - Swarms, signaling between peers and ICE/TURN are [MESH](/docs/mesh/concepts/signaling/)'s. This page covers only the link
   between a device and EDGE.
 

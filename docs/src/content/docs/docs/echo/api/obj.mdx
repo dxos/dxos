@@ -13,58 +13,109 @@ import SpecCite from '../../../../../components/SpecCite.astro';
 import { Obj } from '@dxos/echo';
 ```
 
-`Obj` makes objects and reads and writes them. Its functions take the object as the first argument and work whether or
-not the object is in a database yet, so a getter that needs the database returns `undefined` outside one instead of
-throwing. <SpecCite item="org.dxos.echo#F-3.3" />
+`Obj` makes objects and reads and writes them.
+
+Its functions take the object as the first argument, and they work whether or not the object is in a database yet.
+This means a getter that needs the database returns `undefined` outside one instead of throwing.
+<SpecCite item="org.dxos.echo#F-3.3" />
 
 ## Make an object
 
 `Obj.make` checks the props against the type and gives the object an id. Reserved fields such as `Obj.Meta` go in the
-same props. Here the meta records the object's key in an external system. <SpecCite item="org.dxos.echo#F-3.1" />
+same props. <SpecCite item="org.dxos.echo#F-3.1" />
+
+**Example** (Making a person with a foreign key)
 
 <Snippet file="guide-obj" region="make" />
 
+Here, the meta records the object's key in an external system, and `db.add` then stores the object.
+
+The props take three reserved fields beside the type's own:
+
+- `id` sets the object's id. Without it, `Obj.make` makes a new one.
+- `Obj.Meta` sets the metadata, such as keys and tags.
+- `Obj.Parent` sets the object's parent.
+
+`Obj.make` also takes options as a third argument. `skipValidation` leaves out the check of the props against the
+type. Use it only for props the compiler has already checked, when the check costs too much for large objects. With
+it, `Obj.make` does not reject invalid props.
+
+**Example** (Making an object without the runtime check)
+
+<Snippet file="guide-obj" region="make-options" />
+
+Here, the props are literals that the compiler checked against `Person`, so `Obj.make` skips its own check.
+
 ## Read and update an object
 
-Read a field like any property. Writes go inside `Obj.update`; a write outside it throws. All the writes in one callback
-reach subscribers as one change.
+You read a field like any property. Writes go inside `Obj.update`, and a write outside it throws. All the writes in
+one callback reach subscribers as one change.
 
-A live object always shows the latest state. `Obj.getSnapshot` returns a frozen copy that later updates do not touch, which
-is what you want to keep a before-and-after or hand data to code that must not write it.
+A live object always shows the latest state. `Obj.getSnapshot` returns a frozen copy that later updates do not touch.
+Use it when you want to keep a before-and-after, or when you hand data to code that must not write it.
+
+**Example** (Updating a person and keeping a snapshot)
 
 <Snippet file="guide-obj" region="update" />
 
+In this example, `before` is a snapshot taken between the two updates. The second update changes `ada.name`, and
+`before.name` is still `'Ada'`.
+
 ## Subscribe to one object
 
-The callback runs synchronously after each committed change. Query subscriptions over the object re-evaluate at the same
-time. <SpecCite item="org.dxos.echo#F-3.2" /> In React, use the hooks in the [React guide](/docs/echo/guides/react/)
-instead.
+`Obj.subscribe` takes an object and a callback. The callback runs synchronously after each committed change. Query
+subscriptions over the object re-evaluate at the same time. <SpecCite item="org.dxos.echo#F-3.2" />
+
+In React, use the hooks in the [React guide](/docs/echo/guides/react/) instead.
+
+**Example** (Logging each change to a person)
 
 <Snippet file="guide-obj" region="subscribe" />
 
+Here, the function that `Obj.subscribe` returns ends the subscription.
+
 ## Meta, tags, labels and parents
 
-Meta holds data about the object rather than in it, such as foreign keys and tags. Labels and descriptions are what lists
-and pickers show.
+Meta holds data about the object rather than in it, such as foreign keys and tags. Labels and descriptions are what
+lists and pickers show.
+
+**Example** (Reading a foreign key and adding a tag)
 
 <Snippet file="guide-obj" region="meta" />
+
+In this example, `Obj.getKeys` returns the keys that `ada` holds for `crm.example.com`. `Obj.addTag` writes to the
+object, so it runs inside `Obj.update`.
 
 A child object can name a parent with `Obj.setParent`. The parent must hold a reference to the child, and deleting the
 parent deletes the child.
 
 ## Read the history
 
-Each change to an object is a `Change` with the device that made it, the time, and the heads of the document after it.
-`Obj.getChanges` lists them, for the whole object or one field, where each carries the value before and after.
-`Obj.getVersion` reads the object at a change's heads. [Changes and branches](/docs/echo/concepts/changes/) explains the
-model.
+Each change to an object is a `Change`. It holds the device that made the change, the time, and the heads of the
+document after it.
+
+- `Obj.getChanges` lists the changes, for the whole object or for one field. For one field, each change carries the
+  value before and after.
+- `Obj.getVersion` reads the object at a change's heads. Use it when you need the object as it was, without touching
+  the live object.
+
+**Example** (Listing the changes to a name and reading an old version)
 
 <Snippet file="guide-obj" region="history" />
 
+In this example, `last` is the change that took `name` from `'Ada'` to `'Ada Lovelace'`. `then` is the object as it
+was after the first change to `name`.
+
+See [Changes and branches](/docs/echo/concepts/changes/) for the model.
+
 ## Clone and serialize
 
-`Obj.clone` makes a structural copy. `Obj.toJSON` and `Obj.fromJSON` round-trip an object's id, type, meta and references.
+`Obj.clone` makes a structural copy.
+
+`Obj.toJSON` and `Obj.fromJSON` round-trip an object's id, type, meta and references.
 <SpecCite item="org.dxos.echo#F-3.4" />
+
+**Example** (Copying an object and converting it to JSON)
 
 <Snippet file="guide-obj" region="json" />
 

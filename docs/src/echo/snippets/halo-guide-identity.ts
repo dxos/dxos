@@ -70,13 +70,6 @@ const me = await Effect.runPromise(signIn.pipe(Effect.provide(halo)));
 console.log(me.did, me.displayName);
 // #endregion create
 
-// #region personal-space
-const personalSpace = Effect.gen(function* () {
-  const id = yield* Identity.personalSpaceId;
-  return Option.getOrUndefined(id);
-});
-// #endregion personal-space
-
 // #region devices
 const listDevices = Effect.gen(function* () {
   const devices = yield* Identity.getDevicesSnapshot;
@@ -169,7 +162,6 @@ export {
   edgeIdentity,
   joinIdentity,
   listDevices,
-  personalSpace,
   restore,
   revoke,
   safeRename,

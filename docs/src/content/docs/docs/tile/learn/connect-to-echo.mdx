@@ -6,8 +6,8 @@ description: Replace the screen's React state with ECHO's Person type, a live qu
 import { Steps } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 
-By the end of this page the contacts are ECHO objects. They are stored on the device, sync to your other devices and to
-anyone you share the space with, and the edit dialog is a form built from their schema.
+By the end of this page the contacts are ECHO objects. They are stored on the device, and they sync to your other
+devices and to anyone you share the space with. The edit dialog is a form built from their schema.
 
 ## Before you start
 
@@ -19,11 +19,12 @@ Then install the React client and the form package:
 npm install @dxos/react-client @dxos/react-ui-form
 ```
 
-Three things change from the last page:
+So far the contacts live in React state, which a reload resets and no other device sees. To move them into ECHO, we
+change three things from the last page:
 
 - A **type** replaces the `Contact` type. ECHO checks and syncs objects of a type it knows.
-- `useQuery` replaces `useState` for the list. It returns the objects that match, and renders again when one is
-  added or removed, here or on another device.
+- `useQuery` replaces `useState` for the list. It returns the objects that match, and the component renders again
+  when one is added or removed, here or on another device.
 - `useObject` reads one object. A component that reads an object's fields this way renders again when that object
   changes.
 
@@ -49,30 +50,37 @@ Three things change from the last page:
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="detail" lang="tsx" />
 
 5. **Edit with a schema form.** `ObjectForm` builds its fields from `Person`'s schema: a text field for the name, an
-   email field, and a picker of organizations for the employer. It writes each change to the object as it is made, so
-   the dialog needs no Save button and the editor from [Inputs and actions](/docs/tile/learn/inputs-and-actions/) is
-   no longer needed. [Form](/docs/tile/api/react-ui-form/form/) covers the form in depth.
+   email field, and a picker of organizations for the employer. It writes each change to the object as it is made.
+   This means the dialog needs no Save button, and we no longer need the editor from
+   [Inputs and actions](/docs/tile/learn/inputs-and-actions/).
 
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="edit" lang="tsx" />
 
+   [Form](/docs/tile/api/react-ui-form/form/) covers the form in depth.
+
 6. **Write the screen.** Add puts a new object in the database with `db.add`, and Delete takes it out with
-   `db.remove`. Neither touches React state: the query sees the change and the list renders again.
+   `db.remove`. Neither touches React state. The query sees the change, and the list renders again.
 
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="screen" lang="tsx" />
 
 7. **Open a space.** A space is a database that its members share, and an identity owns the spaces it creates. The
    first time the app runs, `setUp` creates an identity and then a space. `Contacts` shows the screen once the space
-   is there. Add `src/echo/main.tsx`, starting with the same stylesheet imports as the first entry point,
+   is there.
+
+   Add `src/echo/main.tsx`, starting with the same stylesheet imports as the first entry point,
    `import '@dxos-theme';` and `import '@dxos/react-ui/theme.css';`:
 
    <Snippet file="tile-tutorial/echo/main" region="space" lang="tsx" />
 
 8. **Render it inside the client.** `ClientProvider` starts ECHO with the types the app uses, and runs `setUp`
-   once the client is ready. Its config is the one from ECHO's [Installation](/docs/echo/learn/installation/) page: it
-   keeps the data across reloads and reaches other devices through EDGE, which the next section needs. The theme provider goes inside it, and now also registers
-   `@dxos/react-ui-form`'s strings. Point `index.html` at `src/echo/main.tsx`:
+   once the client is ready. Its config is the one from ECHO's [Installation](/docs/echo/learn/installation/) page. It
+   keeps the data across reloads and reaches other devices through EDGE, which the next section needs.
+
+   The theme provider goes inside it, and now also registers `@dxos/react-ui-form`'s strings:
 
    <Snippet file="tile-tutorial/echo/main" region="provider" lang="tsx" />
+
+   Then point `index.html` at `src/echo/main.tsx`.
 
 </Steps>
 

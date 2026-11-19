@@ -10,17 +10,23 @@ welcome:
 import Diagram from '../../../../components/Diagram.astro';
 
 MESH is peer-to-peer networking for devices that share a topic. The devices on a topic find each other, prove they
-belong, and open direct links, then run any number of protocols side by side over each link. MESH treats every route as
-a transport: a direct WebRTC link and a WebSocket through a server are both ways to reach a peer, and it uses both at
-once.
+belong and open direct links, then run any number of protocols side by side over each link. MESH treats every route as
+a transport. A direct WebRTC link and a WebSocket through a server are both ways to reach a peer, and MESH uses both
+at once.
 
 ## How devices reach each other
 
+In most web apps, two devices talk through a server. Each device holds a connection to the server, and the server
+passes every message between them. MESH starts the same way, then adds a direct link.
+
 Every device keeps one WebSocket to a signaling server, which introduces the peers on a topic to each other. After the
-introduction, two devices open a direct WebRTC link and exchange data over it. When no direct link can be made, or the
-other device is offline, a server that is a peer on the topic can still carry the data. In DXOS that server is
-[EDGE](/docs/edge/overview/), which plays both parts: it introduces peers, and it holds a copy of each space that
-replicates through it.
+introduction, two devices open a direct WebRTC link and exchange data over it.
+
+When no direct link can be made, or the other device is offline, a server that is a peer on the topic can still carry
+the data. In DXOS, that server is [EDGE](/docs/edge/overview/), and it plays both parts:
+
+- It introduces peers.
+- It holds a copy of each space that replicates through it.
 
 <Diagram name="mesh-links" alt="Device A and Device B share a direct WebRTC link through Teleport, and each also holds a WebSocket to EDGE." />
 
@@ -36,8 +42,8 @@ replicates through it.
 
 ## How these pages are organized
 
-Apps rarely call MESH directly; the protocols that run over it do. These pages explain how it works, so there is no
-learning path, API group or guides.
+Your app rarely calls MESH directly. The protocols that run over it do. These pages explain how MESH works, so there
+is no learning path, API group or guides.
 
 - [Why MESH?](/docs/mesh/why-mesh/) argues for direct links between devices, with a server as one more route.
 - [Architecture](/docs/mesh/concepts/architecture/) shows the layers, from the transport up to the extensions ECHO and

@@ -13,67 +13,122 @@ import SpecCite from '../../../../../components/SpecCite.astro';
 import { Order, Query } from '@dxos/echo';
 ```
 
-A query selects a set of entities, then can step through the graph from that set: along reference fields, backwards to
-whatever references them, or across relations. Building a query does no work. It compiles to a query AST, and runs only
-when you pass it to `db.query` and read the result. <SpecCite item="org.dxos.echo#F-5.2" />
+A query selects a set of entities. From that set it can step through the graph: along reference fields, backwards to
+whatever references them, or across relations.
+
+Building a query does no work. It compiles to a query AST, and it runs only when you pass it to `db.query` and read
+the result. <SpecCite item="org.dxos.echo#F-5.2" />
 
 ## Select objects
 
-Most queries start from a type and a few field values. `Query.select` takes any filter; these three cover most uses, and
-[Filter](/docs/echo/api/filter/) has the rest.
+Most queries start from a type and a few field values. `Query.select` takes any filter, and `Query.type` is the short
+form for a filter on a type.
+
+**Example** (Selecting by type, by field and by text)
 
 <Snippet file="guide-query" region="common" />
 
+In this example, `people` matches every `Person`, `acme` matches the organizations named Acme, and `launches` matches
+objects by a text search for "launch". These three cover most uses, and [Filter](/docs/echo/api/filter/) has the
+rest.
+
 ## Combine queries
 
-`Query.all` is the union of several queries. `Query.without` removes the results of one query from another.
+`Query.all` returns the union of several queries. Use it when one list shows more than one kind of thing.
+
+`Query.without` removes the results of one query from another. Use it when you want everything except one set.
+
+**Example** (Taking a union and a difference)
 
 <Snippet file="guide-query" region="combine" />
 
+Here, `peopleOrOrgs` holds every person and every organization, and `withoutAda` holds every person except the ones
+named Ada.
+
 ## Traverse references and relations
 
-Each step returns a new query, so steps chain.
+In a relational database, you join two tables to get from a row to the rows that point at it. In ECHO, you add a step
+to the query. Each step returns a new query, so steps chain.
 
 - `reference(field)` follows a `Ref` field to its targets.
 - `referencedBy(Type, field)` goes the other way, to the objects whose field points at the selection.
 - `sourceOf(Relation)` and `targetOf(Relation)` select the relations that start or end at the selection.
 - `source()` and `target()` step from relations to their endpoints.
 
+**Example** (Following references and relations)
+
 <Snippet file="guide-query" region="traverse" />
+
+In this example, `employers` follows each person's `employer` field, and `staff` follows the same field backwards from
+Acme. `jobs` selects the `WorksAt` relations that end at Acme, and `workers` steps from those relations to the people
+at their other end.
 
 ## Order results
 
-`orderBy` takes one or more orders, applied in turn. <SpecCite item="org.dxos.echo#F-5.3" /> `Order.property` sorts by a
-field; `Order.created` and `Order.updated` sort by timestamp; `Order.natural` keeps insertion order.
+`orderBy` takes one or more orders and applies them in turn. <SpecCite item="org.dxos.echo#F-5.3" />
+
+- `Order.property` sorts by a field.
+- `Order.created` and `Order.updated` sort by timestamp.
+- `Order.natural` keeps insertion order.
+
+**Example** (Ordering by name, then by last update)
 
 <Snippet file="guide-query" region="order" />
 
+Here, people with the same name are ordered by when they were last updated, and `limit` keeps the first 20.
+
 ## Aggregate results
 
-`aggregate` turns the results into records of named values: `Aggregate.count`, `sum`, `min`, `max`, `group` by a field,
-`items` for the members of each group, and `created`, `updated` or `time` bucketed by a unit. It must be the last step that
-selects data; only `orderBy`, `limit`, `skip` and `from` may follow it.
+`aggregate` turns the results into records of named values. Use it when you need a number or a set of groups, and not
+the objects themselves.
+
+- `Aggregate.count`, `sum`, `min` and `max` compute one value.
+- `group` groups the results by a field, and `items` gives the members of each group.
+- `created`, `updated` and `time` bucket the results by a unit of time.
+
+`aggregate` must be the last step that selects data. Only `orderBy`, `limit`, `skip` and `from` may follow it.
+
+**Example** (Counting events)
 
 <Snippet file="guide-query" region="aggregate" />
 
+In this example, the query returns one record, and `count` holds the number of events.
+
 ## Choose sources
 
-Without `from`, a query reads the database it runs on. `from` names the sources instead, with `Scope`: `Scope.space()` for
-a space, `Scope.registry()` for the types and objects registered in code, and `Scope.feed()` for a
-[feed](/docs/echo/api/feed/). `from` also takes a database, a feed object, or `'all-accessible-spaces'`.
+By default, without `from`, a query reads the database it runs on. Use `from` when you want to name the sources
+yourself, with `Scope`:
+
+- `Scope.space()` reads a space.
+- `Scope.registry()` reads the types and objects registered in code.
+- `Scope.feed()` reads a [feed](/docs/echo/api/feed/).
+
+`from` also takes a database, a feed object, or `'all-accessible-spaces'`.
+
+**Example** (Reading types from the space and from code)
 
 <Snippet file="guide-query" region="scope" />
 
+Here, `from` names two sources, so `types` holds the types stored in the space and the types registered in code.
+
 ## Run once or subscribe
 
-`db.query` returns a `QueryResult`. `run()` resolves with the results once. `subscribe` calls back each time the results
-change, and `{ fire: true }` also calls it straight away with the current results. <SpecCite item="org.dxos.echo#F-5.1" />
+`db.query` returns a `QueryResult`, which you read in one of two ways. <SpecCite item="org.dxos.echo#F-5.1" />
 
-A query reads the objects on this device first and adds what the indexes and EDGE return. A subscriber can see results
-arrive in more than one step. `QueryResult.sources` lists each source with its state: pending, answered or failed.
-<SpecCite item="org.dxos.echo.query#F-5" />
+- `run()` resolves with the results once. Use it when you need an answer and no updates.
+- `subscribe` calls back each time the results change. Use it when the screen has to stay current. With
+  `{ fire: true }`, it also calls back straight away with the current results.
+
+A query reads the objects on this device first and adds what the indexes and EDGE return. This means a subscriber can
+see results arrive in more than one step. `QueryResult.sources` lists each source with its state: pending, answered or
+failed. <SpecCite item="org.dxos.echo.query#F-5" />
+
+**Example** (Running a query once, and subscribing to it)
 
 <Snippet file="guide-query" region="run" />
+
+In this example, `all` and `first` read the results once. `result.subscribe` logs the number of results each time it
+changes, and the function it returns ends the subscription.
 
 ## Members at a glance
 

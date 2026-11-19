@@ -7,15 +7,21 @@ import { Steps } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
-By the end of this page the contacts screen is a Vite app with TILE's theme, and shows its first two buttons in light
+By the end of this page the contacts screen is a Vite app with TILE's theme. It shows its first two buttons, in light
 or dark to match the system. TILE needs no ECHO or PLEX for this.
 
 ## Before you start
 
 You need Node 20 or later. Every page of the path is the same app, so keep the project when you go on to the next one.
 
-`@dxos/react-ui` holds the components. `@dxos/ui-theme`, its peer, holds the tokens and a Vite plugin that turns them
-into CSS. Until the next npm release, install `@dxos` packages the way [ECHO's Installation](/docs/echo/learn/installation/)
+Many component libraries ship a finished stylesheet. TILE generates its CSS when your app builds, so we install two
+packages:
+
+- `@dxos/react-ui` holds the components.
+- `@dxos/ui-theme`, its peer, holds the tokens and a Vite plugin that turns them into CSS. We set the plugin up in
+  step 2.
+
+Until the next npm release, install `@dxos` packages the way [ECHO's Installation](/docs/echo/learn/installation/)
 does.
 
 <Steps>
@@ -62,12 +68,19 @@ does.
    });
    ```
 
-3. **Render the app inside the theme.** Replace `src/main.tsx`. It imports two stylesheets before any component:
-   `@dxos-theme`, the virtual module `ThemePlugin` serves, and `@dxos/react-ui/theme.css`, the components' own rules.
+3. **Render the app inside the theme.** Replace `src/main.tsx`. The new file imports two stylesheets before any
+   component:
+
+   - `@dxos-theme` is the virtual module that `ThemePlugin` serves.
+   - `@dxos/react-ui/theme.css` holds the components' own rules.
+
    Then it renders the app inside `Theme.Provider`, which gives every component the theme and the strings its
    built-in labels read:
 
    <Snippet file="tile-tutorial/theme/main" region="main" lang="tsx" />
+
+   In the render, `tx={Theme.defaultTx}` is TILE's theme, and `resourceExtensions={translations}` passes react-ui's
+   own strings.
 
 4. **Follow the system's light or dark setting.** The dark values of every token apply under a `dark` class on the
    root element. Add this to the end of `src/main.tsx`. It sets the class before the page paints and keeps it in step

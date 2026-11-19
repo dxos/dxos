@@ -14,7 +14,18 @@ import TilePreview from '../../../../../components/TilePreview.astro';
 import * as Toast from '@dxos/react-ui/Toast';
 ```
 
-`Toast.Provider` goes once near the app's root, and `Toast.Toaster` is where toasts appear. Each `Toast.Root` is open
-while its `open` is true, and closes after its `duration` or when the user closes it, reporting through
-`onOpenChange`. Inside it: `Toast.Header` (with an `icon`), `Toast.Title`, `Toast.Description`, `Toast.Footer`,
-`Toast.ActionTrigger` for a button that acts, and `Toast.CloseTrigger`.
+A toast is a notice that something happened, and it goes away by itself.
+
+`Toast.Provider` goes once near the app's root, and `Toast.Toaster` is where toasts appear.
+
+Each `Toast.Root` is open while its `open` is true. It closes after its `duration` or when the user closes it, and it
+reports through `onOpenChange`.
+
+A `Toast.Root` holds these parts:
+
+- `Toast.Header`, with an `icon`
+- `Toast.Title`
+- `Toast.Description`
+- `Toast.Footer`
+- `Toast.ActionTrigger`, for a button that acts
+- `Toast.CloseTrigger`

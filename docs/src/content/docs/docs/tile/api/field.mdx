@@ -11,6 +11,8 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as Field from '@dxos/react-ui/Field';
 ```
 
+A field gives a control its label, help text and error.
+
 | Part                       | What it is                                         |
 | -------------------------- | -------------------------------------------------- |
 | `Field.Root`               | Holds one control and its texts                    |
@@ -20,7 +22,7 @@ import * as Field from '@dxos/react-ui/Field';
 | `Field.HelperText`         | A hint under the control                           |
 | `Field.ErrorText`          | The error, shown when the field is invalid         |
 
-`Field.Root` takes `validationValence` to color the field by status, `layout='row'` to put the label beside the control,
-and Ark's `invalid`, `required`, `disabled` and `readOnly`.
+`Field.Root` takes Ark's `invalid`, `required`, `disabled` and `readOnly`. Use `validationValence` to color the field by
+status, and `layout='row'` to put the label beside the control.
 
 Inside a `Field.Root`, a control takes the field's id, label and description, so it needs no `aria-label`.

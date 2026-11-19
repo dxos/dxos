@@ -3,16 +3,20 @@ title: Presence and network status
 description: Who is online, and how an app reads and changes its own connection.
 ---
 
-Presence is how a device learns which other members and devices are online. Network status is what an app reads to know
-whether its own device is connected, and the switch that takes it offline.
+Presence is how a device learns which other members and devices are online. Network status is what your app reads to
+know whether its own device is connected. It is also the switch that takes the device offline.
 
 ## Model
 
-**Gossip.** Every device in a swarm announces itself every 10 seconds over the gossip extension, and passes on the
-announcements it receives to its other connections. So an announcement reaches devices it has no direct link to.
+In a client-server app, the server knows who is online, because every client holds a connection to it. In a swarm,
+the devices tell each other.
 
-**Online and offline.** A peer whose announcement has not arrived for 20 seconds counts as offline. ECHO uses this for a
-space's members; HALO uses it for an identity's devices.
+**Gossip.** Every device in a swarm announces itself every 10 seconds over the gossip extension. It also passes on the
+announcements it receives to its other connections. This means an announcement reaches devices that its sender has no
+direct link to.
+
+**Online and offline.** A peer whose announcement has not arrived for 20 seconds counts as offline. ECHO uses this for
+a space's members, and HALO uses it for an identity's devices.
 
 **Network status.** `client.mesh.networkStatus` is an observable of the device's own state:
 
@@ -23,8 +27,10 @@ space's members; HALO uses it for an identity's devices.
 | `connectionInfo` | The swarms the device is in, and their connections                     |
 
 **Going offline.** `client.mesh.updateConfig(ConnectionState.OFFLINE)` makes the device leave every swarm.
-`ConnectionState.ONLINE` joins them again. The tutorials' offline switch calls it, so a reader can watch two windows
-diverge and merge.
+`ConnectionState.ONLINE` joins them again. The tutorials' offline switch calls it, so you can watch two windows diverge
+and merge.
+
+**Example** (Going offline and coming back)
 
 ```ts
 import { ConnectionState } from '@dxos/client/mesh';
@@ -35,10 +41,13 @@ await client.mesh.updateConfig(ConnectionState.ONLINE);
 // The swarm reconnects and the changes merge.
 ```
 
+In this example, the edits made between the two calls stay on the device. After the second call, the swarm reconnects
+and the edits merge with the other devices' changes.
+
 ## Behavior
 
 - Going offline does not close spaces or stop writes. Changes stay on the device and replicate when it is online again.
-- Presence follows swarms: a device is online in the spaces it has open, not in all of them.
+- Presence follows swarms. A device is online in the spaces it has open, not in all of them.
 
 ## Limits
 

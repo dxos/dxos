@@ -12,23 +12,32 @@ tells him.
 
 ## Background
 
-An invitation takes two codes, which travel by different routes. The invitation code is long and goes in a message or a
-link. The authorization code is six digits, which the host sees once the guest connects and passes on another way, such
-as reading it aloud. Someone who intercepts only the message cannot get in.
+On most sites, an invitation is a link, and whoever opens the link gets in. A HALO invitation takes two codes, which
+travel by different routes:
 
-When the guest enters the right code, the two sides exchange contact cards: each names its identity and carries the keys
-the other needs. Then the host writes a delegation, a statement signed by a member allowed to make it, that admits the
-guest. Every member checks that delegation for itself, so no server has to vouch for the guest.
+- The **invitation code** is long and goes in a message or a link.
+- The **authorization code** is six digits. The host sees it once the guest connects, and passes it on another way,
+  such as reading it aloud.
 
-An invitation is a `Flow`. Its events say where the handshake is: `connecting`, `connected`, `readyForAuthentication`,
-`authenticating`, then `success`, `cancelled` or `error`. [Invitations](/docs/halo/concepts/invitations/) covers the rest.
+This means someone who intercepts only the message cannot get in.
+
+When the guest enters the right code, in step 4, the two sides exchange **contact cards**. Each card names its sender's
+identity and carries the keys the other side needs.
+
+Then the host writes a **delegation** that admits the guest. A delegation is a statement signed by a member allowed to
+make it. Every member checks that delegation for itself, so no server has to vouch for the guest.
+
+In code, an invitation is a `Flow`. Its events say where the handshake is: `connecting`, `connected`,
+`readyForAuthentication`, `authenticating`, then `success`, `cancelled` or `error`. We follow them in step 3.
+[Invitations](/docs/halo/concepts/invitations/) covers the rest.
 
 ## Steps
 
 <Steps>
 
-1. **Invite someone.** `Space.share` starts the invitation on the host, and `Invitation.code` is the code to send.
-   `shared-secret` makes the guest enter the authorization code. **Invite** calls this and shows the code.
+1. **Invite someone.** `Space.share` starts the invitation on the host, and `Invitation.code` returns the code to
+   send. The `shared-secret` auth method makes the guest enter the authorization code. **Invite** calls this and shows
+   the code.
 
    <Snippet file="halo-tutorial/app/Invitations" region="invite" lang="tsx" />
 
@@ -37,8 +46,10 @@ An invitation is a `Flow`. Its events say where the handshake is: `connecting`, 
    <Snippet file="halo-tutorial/app/Invitations" region="join" lang="tsx" />
 
 3. **Follow the handshake.** `useInvitationFlow` returns the flow's latest event and re-renders on each one, until the
-   flow ends. Both sides follow their flow with it. On the host, `readyForAuthentication`
-   carries the authorization code to show; on the guest, it is the moment to ask for it.
+   flow ends. It follows `Invitation.events`, the stream of the flow's events. Both sides follow their flow with it.
+
+   On the host, `readyForAuthentication` carries the authorization code to show. On the guest, it is the moment to ask
+   for that code.
 
    <Snippet file="halo-tutorial/app/Invitations" region="events" lang="tsx" />
 
@@ -51,7 +62,7 @@ An invitation is a `Flow`. Its events say where the handshake is: `connecting`, 
 
 ## Try it
 
-Alice has Book club; Bob has nothing yet.
+Alice has Book club, and Bob has nothing yet.
 
 1. On Alice's device, press **Invite** and copy the code.
 2. On Bob's, press **Join**, paste it and press **Join**.

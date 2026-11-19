@@ -18,6 +18,11 @@ const ada = Obj.make(Person, {
 db.add(ada);
 // #endregion make
 
+// #region make-options
+// The compiler has already checked these props, so skip the check at runtime.
+const grace = Obj.make(Person, { name: 'Grace' }, { skipValidation: true });
+// #endregion make-options
+
 // #region update
 const name = ada.name; // read a field directly
 
@@ -64,4 +69,4 @@ const copy = Obj.clone(ada);
 const json = Obj.toJSON(ada);
 // #endregion json
 
-export { before, copy, crm, json, name, then };
+export { before, copy, crm, grace, json, name, then };

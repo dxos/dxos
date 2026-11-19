@@ -6,51 +6,81 @@ description: Filters, the shape of a query, traversal, and results that stay liv
 import Snippet from '../../../../../components/Snippet.astro';
 import SpecCite from '../../../../../components/SpecCite.astro';
 
-A query selects entities from one or more sources and keeps its results current as the data changes, so an app reads
-data the same way whether it was written here or by another peer.
+A query selects entities from one or more sources and keeps its results current as the data changes. This means your
+app reads data the same way whether it was written here or by another peer.
 
 ## Model
 
-A **filter** is a predicate: it says which entities match, by type, field values, text or time. A **query** is the shape
-around filters: which entities to start from, which references or relations to follow, and how to order, limit and
-group the results. [Learn to query](/docs/echo/learn/querying/) builds queries for the contacts app.
+In a client-server app, you fetch a list, and you fetch it again when you think it has changed. With ECHO, you
+describe the entities you want once, and the results follow the data.
+
+You build that description from two parts:
+
+- A **filter** is a predicate. It says which entities match, by type, field values, text or time.
+- A **query** is the shape around filters. It says which entities to start from, which references or relations to
+  follow, and how to order, limit and group the results.
+
+**Example** (Building a filter and two queries)
 
 <Snippet file="concept-queries" region="shape" />
 
-A query can follow references forwards with `reference` and backwards with `referencedBy`, and relations with
-`sourceOf` and `targetOf`. One query answers "the people who work at Acme" without loading each person to check.
+In this example, `adas` is a filter that matches every person named Ada. `employers` selects those people and follows
+each one's `employer` reference. `staff` goes the other way. It starts from Acme, follows `employer` backwards to the
+people who point at it, orders them by name and keeps the first 20.
 
-A query can also **aggregate**: count, sum, find the minimum or maximum, or group the results by a field.
+[Learn to query](/docs/echo/learn/querying/) builds queries like these for the contacts app.
+
+You can follow a reference forwards with `reference` and backwards with `referencedBy`. For relations, use `sourceOf`
+and `targetOf`. Because the traversal is part of the query, one query answers "the people who work at Acme" without
+loading each person to check.
+
+A query can also **aggregate**. It can count the results, sum a field, find the minimum or maximum, or group the
+results by a field.
+
+**Example** (Counting the people in a space)
 
 <Snippet file="concept-queries" region="aggregate" />
 
-A query reads from **sources**, chosen with `Scope`: this space, the code-shipped registry of types, or a
-[feed](/docs/echo/concepts/feeds/). Without `from`, a query reads the database it runs on.
+Here, the query returns one record in place of a list of people, and `people` holds the count.
+
+A query reads from **sources**, which you choose with `Scope`: this space, the code-shipped registry of types, or a
+[feed](/docs/echo/concepts/feeds/). By default, without `from`, a query reads the database it runs on.
+
+**Example** (Reading types from two sources)
 
 <Snippet file="concept-queries" region="scope" />
 
+In this example, `from` names two sources, so `allTypes` holds every type this space stores and every type registered
+in code.
+
 ## Behavior
 
-- A query is live. Its results change when matching data changes, here or on another peer, and subscribers are notified
+- A query is live. Its results change when matching data changes, here or on another peer. ECHO notifies subscribers
   only when the results change. <SpecCite item="org.dxos.echo.query#F-2.3" />
+
+  To follow the results, subscribe to the query:
 
   <Snippet file="concept-queries" region="live" />
 
-- A local write shows in the results, and reaches subscribers, before the writing call returns.
+  Here, `{ fire: true }` calls the subscriber straight away with the current results, and `result.sources` lists each
+  source of the answer with its state.
+
+- When you write locally, the write shows in the results, and reaches subscribers, before the writing call returns.
   <SpecCite item="org.dxos.echo.query#F-2.1" />
-- Results combine what this tab holds with answers from the index and from EDGE. Each source has its own state, pending
-  until it first answers, and the results grow as sources answer. A live query never ends: there is no point after which
-  its results stop changing. <SpecCite item="org.dxos.echo.query#F-3.3" />
-- A query without an order returns entities by id. <SpecCite item="org.dxos.echo.query#F-2.4" />
-- A traversal checks each step against the objects this tab holds, so a hit whose reference has since changed here is
-  dropped. <SpecCite item="org.dxos.echo.query#F-7.2" />
+- Results combine what this tab holds with answers from the index and from EDGE. Each source has its own state, which
+  is pending until it first answers, and the results grow as sources answer. A live query never ends. There is no
+  point after which its results stop changing. <SpecCite item="org.dxos.echo.query#F-3.3" />
+- If you give a query no order, it returns entities by id. <SpecCite item="org.dxos.echo.query#F-2.4" />
+- A traversal checks each step against the objects this tab holds. This means a hit whose reference has since changed
+  here is dropped. <SpecCite item="org.dxos.echo.query#F-7.2" />
 
 ## Limits
 
-- An entry from the index or EDGE is checked against the object only if this tab holds the object. Otherwise it is shown
-  on the source's word until the object loads. <SpecCite item="org.dxos.echo.query#F-5.2" />
-- A page read with `skip` is cut by the source that answers it. Local writes can drop entries from the page, but they do
-  not re-page it. A window with a property order and only a `limit` also admits local matches that sort inside it.
-  <SpecCite item="org.dxos.echo.query#F-9.2" /> <SpecCite item="org.dxos.echo.query#F-9.3" />
-- An aggregate from a remote source is adjusted for local changes, but a minimum or maximum that a local removal would
-  change is marked unverified until the source answers again. <SpecCite item="org.dxos.echo.query#F-8.3" />
+- An entry from the index or EDGE is checked against the object only if this tab holds the object. If it does not,
+  the entry is shown on the source's word until the object loads. <SpecCite item="org.dxos.echo.query#F-5.2" />
+- If you read a page with `skip`, the source that answers it cuts the page. Local writes can drop entries from the
+  page, but they do not re-page it. A window with a property order and only a `limit` also admits local matches that
+  sort inside it. <SpecCite item="org.dxos.echo.query#F-9.2" /> <SpecCite item="org.dxos.echo.query#F-9.3" />
+- An aggregate from a remote source is adjusted for local changes. However, a minimum or maximum that a local
+  removal would change is marked unverified until the source answers again.
+  <SpecCite item="org.dxos.echo.query#F-8.3" />

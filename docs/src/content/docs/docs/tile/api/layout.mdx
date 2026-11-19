@@ -12,7 +12,7 @@ how the primitives fit with `Panel` and `ScrollArea`. Every primitive takes `cla
 
 ## `Layout.Flex`
 
-One axis.
+`Layout.Flex` lays children out on one axis.
 
 | Prop      | Type                                                     | Effect                                                    |
 | --------- | -------------------------------------------------------- | --------------------------------------------------------- |
@@ -26,7 +26,7 @@ One axis.
 
 ## `Layout.Grid`
 
-Two axes.
+`Layout.Grid` lays children out on two axes.
 
 | Prop       | Type                                     | Effect                                                                     |
 | ---------- | ---------------------------------------- | -------------------------------------------------------------------------- |
@@ -38,17 +38,21 @@ Two axes.
 | `grow`     | boolean                                  | Fill and clip the parent                                                   |
 | `contents` | boolean                                  | Render as `display: contents`, so children join the parent grid            |
 
-A track in the list is `'fill'` (the rest of the space, able to shrink), a number (a share of the rest, so `[2, 1]` is
-two thirds and one third), `'min'`, `'max'` or `'auto'` (sized to the content), or a length such as `'12rem'`.
+A track in the list is one of these:
+
+- `'fill'` takes the rest of the space, and can shrink.
+- A number takes a share of the rest, so `[2, 1]` is two thirds and one third.
+- `'min'`, `'max'` and `'auto'` size the track to the content.
+- A length, such as `'12rem'`, gives the track that size.
 
 ## `Gap`
 
-`'none'`, `'xs'`, `'sm'`, `'md'`, `'lg'`, `'xl'`, `'2xl'`, and `'form'` and `'form-section'` for the spacing between
-fields and between groups of fields.
+A `Gap` is `'none'`, `'xs'`, `'sm'`, `'md'`, `'lg'`, `'xl'`, `'2xl'`, `'form'` or `'form-section'`. Use `'form'` for the
+spacing between fields, and `'form-section'` for the spacing between groups of fields.
 
 ## `Layout.Container`
 
-Content between two gutters, so rows line up with the panel's edges.
+`Layout.Container` puts content between two gutters, so rows line up with the panel's edges.
 
 | Prop      | Type                                                       | Effect                                                    |
 | --------- | ---------------------------------------------------------- | --------------------------------------------------------- |
@@ -58,12 +62,13 @@ Content between two gutters, so rows line up with the panel's edges.
 
 ## `Layout.Block`
 
-One slot in a container's rail, sized so a passive icon and an icon button line up. `rail='start'` or `rail='end'`.
+`Layout.Block` is one slot in a container's rail, sized so a passive icon and an icon button line up. It takes
+`rail='start'` or `rail='end'`.
 
 ## `Layout.Columns`
 
-A horizontal run of as many columns as fit, each an equal share of the width, which scrolls a column at a time when
-there are more.
+`Layout.Columns` is a horizontal run of as many columns as fit, each an equal share of the width. When there are more,
+it scrolls a column at a time.
 
 | Prop             | Type    | Effect                                         |
 | ---------------- | ------- | ---------------------------------------------- |
@@ -74,4 +79,4 @@ there are more.
 
 ## `Layout.Separator`
 
-A rule between groups of content.
+`Layout.Separator` is a rule between groups of content.

@@ -42,6 +42,8 @@ const Note = Type.makeObjectFromJsonSchema({
 // #region fields
 const note = await db.addType(Note);
 Type.addFields(note, { pinned: Schema.optional(Schema.Boolean) });
+// Replaces the declaration of a field the type already has.
+Type.updateFields(note, { pinned: Schema.optional(Schema.Number) });
 Type.removeFields(note, ['pinned']);
 // #endregion fields
 

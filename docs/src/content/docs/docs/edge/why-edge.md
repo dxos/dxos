@@ -4,10 +4,13 @@ description: Why a local-first system runs servers at all.
 ---
 
 A local-first app keeps its data on the user's devices and works offline. It still needs a peer that is always online,
-because the user's devices are rarely online together. EDGE is that peer: it holds a copy of each space that
-replicates through it, not the original, and every device can sync and recover through that copy. Devices can also
-query through it when EDGE can read the space. A space can
-turn this off with `Space.setEdgeReplication`; it then syncs only between devices online at the same time.
+because the user's devices are rarely online together.
+
+EDGE is that peer. It holds a copy of each space that replicates through it, not the original. Every device can sync
+and recover through that copy. Devices can also query through it when EDGE can read the space.
+
+You can turn this off for a space with `Space.setEdgeReplication`. The space then syncs only between devices online at
+the same time.
 
 ## The pattern
 
@@ -16,6 +19,9 @@ time, so no direct link could carry the change. The laptop sent it to EDGE befor
 EDGE when it wakes.
 
 ## An app server against an always-online peer
+
+In a client-server app, the app server owns the data, resolves conflicts and decides access. EDGE is a peer that holds
+a copy. The table sets the two side by side.
 
 |                           | App server                          | EDGE                                 |
 | ------------------------- | ----------------------------------- | ------------------------------------ |
@@ -36,9 +42,11 @@ syncs with it whenever it is online. See [Replication and backup](/docs/edge/con
 
 ### Queries over objects this device has not loaded
 
-A device loads only the documents it needs. When EDGE can read the space, a query that should match the whole space
-also asks EDGE, which has indexed all of it. A space that gives EDGE only `pull` access is relayed unread and not
-indexed. See [Indexing and queries](/docs/edge/concepts/indexing/).
+A device loads only the documents it needs, so a query that reads the device alone can miss objects it has not loaded.
+When EDGE can read the space, a query that should match the whole space also asks EDGE, which has indexed all of it.
+
+A space that gives EDGE only `pull` access is relayed unread and not indexed. See
+[Indexing and queries](/docs/edge/concepts/indexing/).
 
 ### Recovery when every device is lost
 
@@ -48,8 +56,11 @@ identity's recovery credentials and checks a recovery challenge against them. Se
 
 ### Work that runs while you are offline
 
-A trigger that fires on a schedule, an incoming email, or an agent that works through a task needs a computer that is on.
-EDGE runs functions and agents against the space. See [Compute](/docs/edge/concepts/compute/).
+On a server, you would write a cron job or a webhook handler for this kind of work, because the server is always on.
+A user's devices are not. A trigger that fires on a schedule, an incoming email, or an agent that works through a task
+needs a computer that is on.
+
+EDGE runs operations and agents against the space. See [Compute](/docs/edge/concepts/compute/).
 
 ## Next
 

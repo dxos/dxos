@@ -12,43 +12,89 @@ import Snippet from '../../../../../components/Snippet.astro';
 import { Invitation } from '@dxos/halo';
 ```
 
-An invitation lets a device into an identity, or a person into a space. You never make one with this namespace directly:
-`Identity.share`, `Identity.join`, `Space.share` and `Space.join` each return an `Invitation.Flow`, and `Invitation` drives
-that flow from either side. Its functions need no service, because they act on the flow handle itself.
+An invitation lets a device into an identity, or a person into a space. `Invitation` drives an invitation that is in
+progress, from either side.
+
+You never make an invitation with this namespace directly. `Identity.share`, `Identity.join`, `Space.share` and
+`Space.join` each return an `Invitation.Flow`, and you pass that flow to the functions here. They need no service,
+because they act on the flow handle itself.
 
 ## Choose how the invitation works
 
-`share` takes options that decide who can redeem the invitation and how:
+`share` takes options that decide who can redeem the invitation and how.
 
-- `authMethod`: `'shared-secret'` makes the guest enter the authorization code the host shows; `'none'` admits anyone with
-  the invitation code; `'known-public-key'` admits only a guest whose key the host names.
-- `type`: `'interactive'` needs host and guest online together; `'delegated'` can be redeemed while the host is offline;
-  `'multiuse'` admits more than one guest.
-- `target`: with `'known-public-key'`, the key or DID of the one guest it admits.
+`authMethod` is how the guest proves it is the intended guest:
+
+- `'shared-secret'` makes the guest enter the authorization code the host shows.
+- `'none'` admits anyone with the invitation code.
+- `'known-public-key'` admits only a guest whose key the host names.
+
+`type` says whether the host has to be online:
+
+- `'interactive'` needs host and guest online together.
+- `'delegated'` can be redeemed while the host is offline.
+- `'multiuse'` is deprecated. Set `multiUse` instead.
+
+`multiUse` says how many guests can redeem the invitation. By default it ends when the host admits the first guest.
+Set `multiUse` to `true` when more than one guest has to redeem the same code.
+
+`target` goes with `'known-public-key'`. It is the key or DID of the one guest the invitation admits.
+
+**Example** (Sharing a space with an open, delegated invitation)
 
 <Snippet file="halo-guide-invitation" region="options" />
 
+In this example, `open` starts a space invitation that anyone with the code can redeem while the host is offline. It
+sets `multiUse`, so more than one guest can redeem it.
+
 ## Read the code
 
-`Invitation.code` is the string to send to the guest, usually inside a link or a QR code.
+`Invitation.code` returns the string to send to the guest, usually inside a link or a QR code.
+
+**Example** (Putting the code in a link)
 
 <Snippet file="halo-guide-invitation" region="code" />
+
+Here, `showCode` builds a join link that carries the code as a query parameter.
 
 ## Follow a flow
 
 `Invitation.events` streams the flow's progress: `connecting`, `connected`, `readyForAuthentication`, `authenticating`,
-then one of `success`, `cancelled` or `error`. On the host, `readyForAuthentication` carries the authorization code to
-show. On the guest, it is the moment to call `Invitation.authenticate`.
+then one of `success`, `cancelled` or `error`. Use it when your UI has to show where the invitation stands.
+
+`readyForAuthentication` means something different on each side:
+
+- On the host, it carries the authorization code to show.
+- On the guest, it is the moment to call `Invitation.authenticate`.
+
+**Example** (Following a flow to its end)
 
 <Snippet file="halo-guide-invitation" region="events" />
 
+In this example, `follow` reads events until the flow ends in `success`, `error` or `cancelled`. The
+`readyForAuthentication` case reads `event.authCode`, which only the host's event carries. This means the same
+handler shows the code on the host and asks for it on the guest.
+
+The `result` of a `success` event is empty, so it does not name what the guest joined. On the guest, a joined space
+then appears in `Space.spaces`, and a joined identity in `Identity.identity`.
+
+**Example** (Authenticating as the guest)
+
 <Snippet file="halo-guide-invitation" region="authenticate" />
+
+Here, `join` accepts the invitation and waits for the first `readyForAuthentication` event. It then sends the
+authorization code with `Invitation.authenticate`.
 
 ## Cancel a flow
 
-Either side can cancel. The host can list its open flows with `Space.invitations` or `Identity.invitations`.
+`Invitation.cancel` ends a flow, and either side can call it. The host can list its open flows with
+`Space.invitations` or `Identity.invitations`.
+
+**Example** (Cancelling a flow and listing the open ones)
 
 <Snippet file="halo-guide-invitation" region="cancel" />
+
+Here, `stop` cancels one flow, and `pending` holds the flows this host has open for the space.
 
 ## Members at a glance
 
@@ -65,10 +111,20 @@ The full list is in the [API reference](/docs/halo/resources/api-reference/).
 
 ## Errors
 
-`code` and `authenticate` fail with `InvitationError`, for example when the guest sends a wrong authorization code. The
-flow also emits an `error` event, so a UI following `events` needs no separate handler.
+`code` and `authenticate` fail with `InvitationError`:
+
+- `code` fails when the flow ends before its code is ready to send.
+- `authenticate` fails when the flow takes no authorization code, as the host's flow does not.
+
+**Example** (Handling a flow that has no code to send)
 
 <Snippet file="halo-guide-invitation" region="errors" />
+
+Here, `safeCode` catches `InvitationError` by its tag and logs the message.
+
+A wrong authorization code does not fail `authenticate`. The guest's flow goes back to `readyForAuthentication`, and
+the guest can send another code. After three wrong codes the flow ends with an `error` event, so a UI following
+`events` needs no separate handler.
 
 `share` and `join` fail with the error of the namespace that started the flow: `IdentityError` for a device invitation and
 `SpaceError` for a space invitation.

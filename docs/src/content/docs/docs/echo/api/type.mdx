@@ -13,52 +13,87 @@ import { Type } from '@dxos/echo';
 ```
 
 A type names a kind of entity and fixes its fields. You declare one at module scope as a class, and that class is both
-the runtime schema and the TypeScript type of its instances. Every type carries a DXN with a typename and a version, so
-two peers agree on what an object is without sharing code.
+the runtime schema and the TypeScript type of its instances.
+
+Every type carries a DXN with a typename and a version. This means two peers agree on what an object is without
+sharing code.
 
 ## Declare an object type
 
-`makeObject` takes the DXN first, then the fields. The optional second argument pipes annotations onto the schema, here
-the field that labels an object in lists.
+`makeObject` takes the DXN first, then the fields. The optional second argument pipes annotations onto the schema.
+
+**Example** (Declaring a project type with a label)
 
 <Snippet file="guide-type" region="object" />
+
+Here, the annotation names `name` as the field that labels an object in lists.
 
 The last segment of the typename must be camelCase. A typename such as `com.example.type.works-at` fails to compile.
 
 ## Declare a relation type
 
-A relation type also names the types of its two endpoints. [Relation](/docs/echo/api/relation/) covers making
-instances.
+`makeRelation` declares a relation type. A relation type also names the types of its two endpoints.
+
+**Example** (Declaring a relation from a person to an organization)
 
 <Snippet file="works-at" region="relation" />
 
+In this example, `WorksAt` runs from a `Person` to an `Organization` and has one field of its own, `role`.
+
+See [Relation](/docs/echo/api/relation/) for making instances.
+
 ## Convert to and from JSON Schema
 
-The `JsonSchema` module converts a type's schema to JSON Schema and back. `Type.makeObjectFromJsonSchema` builds a type
-from JSON Schema, for a type that comes from a form, an agent or another system.
+The `JsonSchema` module converts a type's schema to JSON Schema and back.
+
+`Type.makeObjectFromJsonSchema` builds a type from JSON Schema. Use it when the type comes from a form, an agent or
+another system.
+
+**Example** (Converting a type to JSON Schema, and building one from it)
 
 <Snippet file="guide-type" region="json-schema" />
 
+In this example, `jsonSchema` is a JSON Schema document for `Organization`. `Note` goes the other way. It is a type
+built at runtime from a typename, a version and a JSON Schema with one `title` field.
+
 ## Change fields at runtime
 
-A type stored in a space with `db.addType` can gain and lose fields after it exists; the change replicates like any
-write. The functions throw for a type that is not stored. Objects already made from the type keep their data. Use a new
-version and a [migration](/docs/echo/concepts/types/#versions-and-migrations) instead when old objects need converting.
+A type stored in a space with `db.addType` can gain and lose fields after it exists, and a field can get a new
+declaration. The change replicates like any write.
+
+The functions throw for a type that is not stored. Objects already made from the type keep their data. When old
+objects need converting, use a new version and a [migration](/docs/echo/concepts/types/#versions-and-migrations)
+instead.
+
+**Example** (Adding a field to a stored type, changing it and removing it)
 
 <Snippet file="guide-type" region="fields" />
 
+In this example, `db.addType` stores `Note` first. `Type.addFields` then gives the stored type an optional `pinned`
+field. `Type.updateFields` declares the field again, as a number, and `Type.removeFields` takes it away.
+
 ## Inspect a type
 
-These read the identity and schema of a type, which is what an agent or a generic UI works from.
+`getTypename`, `getVersion`, `getURI` and `getSchema` read the identity and schema of a type. Use them in code that
+works from any type, such as an agent or a generic UI.
+
+**Example** (Reading the identity and schema of a type)
 
 <Snippet file="guide-type" region="inspect" />
 
+Here, `uri` joins the typename and the version of `Person` into one DXN string.
+
 ## Check the kind of a value
 
-`Type.isObject` and `Type.isRelation` test a type. To test an instance, use the predicates in [Obj](/docs/echo/api/obj/)
-and [Relation](/docs/echo/api/relation/).
+`Type.isObject` and `Type.isRelation` test a type. They do not test an instance. For that, use the predicates in
+[Obj](/docs/echo/api/obj/) and [Relation](/docs/echo/api/relation/).
+
+**Example** (Testing a type and an instance)
 
 <Snippet file="guide-type" region="kind" />
+
+In this example, the `Type` predicates take the classes `Person` and `WorksAt`. The `Obj` predicates take `ada`, an
+instance.
 
 ## Members at a glance
 

@@ -39,9 +39,14 @@ const follow = Invitation.events(flow).pipe(
     Effect.sync(() => {
       switch (event._tag) {
         case 'readyForAuthentication':
-          return console.log('auth code', event.authCode);
+          // Only the host's event carries the authorization code.
+          return event.authCode
+            ? console.log('tell the guest this code:', event.authCode)
+            : console.log('ask for the code the host shows');
         case 'success':
-          return console.log('joined space', event.result.spaceId);
+          return console.log('the guest is in');
+        case 'cancelled':
+          return console.log('cancelled');
         case 'error':
           return console.error(event.message);
       }
@@ -66,9 +71,9 @@ const join = Effect.gen(function* () {
 // #endregion authenticate
 
 // #region errors
-const retry = Invitation.authenticate(flow, authCode).pipe(
+const safeCode = Invitation.code(flow).pipe(
   Effect.catchTag('InvitationError', (error) =>
-    Effect.sync(() => console.error('Wrong code?', error.message)),
+    Effect.sync(() => console.error('No code to send:', error.message)),
   ),
 );
 // #endregion errors
@@ -79,4 +84,4 @@ const stop = Invitation.cancel(flow);
 const pending = Space.invitations(spaceId);
 // #endregion cancel
 
-export { follow, join, open, pending, retry, showCode, stop };
+export { follow, join, open, pending, safeCode, showCode, stop };

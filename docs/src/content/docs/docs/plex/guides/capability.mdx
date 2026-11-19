@@ -18,29 +18,53 @@ extend each other without importing each other.
 
 ## Declare a new capability type
 
-`Capability.make` declares a multi capability, which any number of modules contribute to. `Capability.makeSingleton`
-declares one with exactly one provider. Both take the value's type and an NSID.
+You declare a capability in one of two ways:
+
+- `Capability.make` declares a multi capability, which any number of modules contribute to.
+- `Capability.makeSingleton` declares a capability with exactly one provider.
+
+Both take the value's type and an NSID.
+
+**Example** (Declaring a multi capability and a singleton)
 
 <Snippet file="app-framework-guide-capability" region="declare" />
 
+In this example, `Exporter` is a multi capability whose values have a `format` and an `export` function. `Clock` is a
+singleton whose value is a function that returns a `Date`.
+
 `Plugin.namespace` derives the NSID from the plugin's key, so a plugin's capabilities share its prefix.
+
+**Example** (Declaring a capability in a plugin's namespace)
 
 <Snippet file="app-framework-guide-capability" region="namespace" />
 
+Here, `ExportNamespace.makeSingleton` takes only the name `'settings'`, and the namespace supplies the prefix.
+
 ## Contribute an implementation and request all implementations
 
-A module lists the capability in `provides` and returns `Capability.contribute(tag, value)`.
+To contribute, a module lists the capability in `provides` and returns `Capability.contribute(tag, value)`.
+
+**Example** (Contributing an exporter)
 
 <Snippet file="app-framework-guide-capability" region="contribute" />
 
-A module that lists a capability in `requires` activates only after it is contributed, and reads it with `yield*`.
+In this example, `TextExporterModule` lists `Exporter` in `provides` and contributes one exporter for `text/plain`.
+
+To request a capability, a module lists it in `requires` and reads it with `yield*`. If the capability is a
+singleton, the module activates only after it is contributed.
+
 `Capability.getAll` reads every contribution to a multi capability.
+
+**Example** (Requesting a singleton and every contribution)
 
 <Snippet file="app-framework-guide-capability" region="request" />
 
+In this example, `ExportMenuModule` requires `Clock`, so `yield* Clock` returns the one clock.
+`Capability.getAll(Exporter)` returns every exporter, and the module logs their formats.
+
 ## The built-in capabilities
 
-`Capabilities` holds the capabilities the framework itself defines. The ones most plugins touch:
+`Capabilities` holds the capabilities the framework itself defines. Most plugins touch these:
 
 | Capability | What a plugin does with it |
 | --- | --- |
@@ -50,18 +74,48 @@ A module that lists a capability in `requires` activates only after it is contri
 | `ReactContext`, `ReactRoot` | Wraps the app in a provider, or adds a root-level component. |
 | `AtomRegistry` | Reads and writes atoms outside React. |
 
-The App Toolkit's capabilities, such as settings and App Graph, are in [App capabilities](/docs/plex/guides/app-capabilities/).
+A built-in capability is a tag like any other, and you request it the same way.
+
+**Example** (Requesting a built-in singleton)
 
 <Snippet file="app-framework-guide-capability" region="builtin" />
 
+Here, `Capabilities.OperationInvoker` is a singleton, so `yield*` returns its one implementation.
+
+The App Toolkit's capabilities, such as settings and App Graph, are in
+[App capabilities](/docs/plex/guides/app-capabilities/).
+
 ## React to capabilities that arrive after startup
 
-Contributions change as people turn plugins on and off. `Capability.contributions` returns a live view with `get` and
-`subscribe`; `Capability.atom` returns the same as an atom for reactive code.
+Contributions change as people turn plugins on and off. You can follow them in two ways:
+
+- `Capability.contributions` returns a live view with `get` and `subscribe`.
+- `Capability.atom` returns the same as an atom. Use it in reactive code.
+
+**Example** (Subscribing to contributions from a module)
 
 <Snippet file="app-framework-guide-capability" region="later" />
 
+In this example, `ExportListModule` logs the formats each time the contributions change. The finalizer calls
+`unsubscribe` when the module deactivates.
+
 In React, `useCapabilities` re-renders on each change. See [React](/docs/plex/guides/react/).
+
+## Members at a glance
+
+| Member | Summary |
+| --- | --- |
+| `make` `makeSingleton` | Declare a multi capability or a singleton |
+| `contribute` `contributeAll` | Contribute one value, or several, from a module |
+| `get` `getAll` `getOption` | Read a capability once |
+| `waitFor` | Wait for the first contribution |
+| `contributions` `atom` | Follow contributions as they change |
+| `inlineModule` `lazyModule` `makeModule` | Declare a module and its body |
+| `Service` | The capability manager, as an Effect service in a module's body |
+| `Capabilities.ReactSurface` `OperationHandler` `OperationInvoker` | Built-in capabilities for surfaces and operations |
+| `Capabilities.ReactContext` `ReactRoot` `AtomRegistry` | Built-in capabilities for React and atoms |
+
+The full list is in the [API reference](/docs/plex/resources/api-reference/).
 
 ## Related
 

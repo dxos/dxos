@@ -27,7 +27,8 @@ The site is part of the dxos.org Astro build, with Starlight as the documentatio
 theme of every dxos.org docs page. The landing page is built on the dxos.org Webflow layout, like
 `/composer` and `/plugins`, and uses the theme's fonts and code colors inside it. Its look is flat and comes
 from the DXOS brand assets: logos, background art, fonts and palette. Its structure follows the Effect documentation: a short
-argument for the idea, then a learning path, core concepts, guides and a reference.
+argument for the idea, then a learning path, core concepts, guides and a reference. Its prose follows the docs
+voice [F-22].
 
 The site opens with why ECHO exists: it is the data model that plugins code against, the place agents keep
 their memory, a schema an agent can inspect, and the graph where data from external systems meets [F-14].
@@ -89,9 +90,9 @@ template narrative: An argument
   purpose: Explain why, in the order of the Effect page "Why Effect?".
   parts:
     - Title and one-paragraph answer that pitches the section on its own [D-280]
-    - The pattern: the smallest complete example and an anatomy strip of its key signature
+    - The pattern: the idea in brief, with the smallest complete example and an anatomy strip of its key signature where the section has an API a reader calls
     - Comparison: the same task against the strongest alternative, side by side [D-280]
-    - Practical problems: one H3 per problem, each with its mechanism and spec citation
+    - Practical problems: one H3 per problem, each with its mechanism, and a spec citation where a spec states the claim
     - Closing: where to go next
 ```
 
@@ -114,6 +115,16 @@ template concept: A core concept
     - Model: the idea, with a diagram where the shape matters
     - Behavior: what is guaranteed, with spec citations
     - Limits: what is not guaranteed, and known divergences
+```
+
+```mdl
+template overview: A section's front page
+  purpose: Say what the section is, and route the reader into it.
+  parts:
+    - Title and a definition in one paragraph, which pitches the section on its own
+    - The section in brief: its model or its parts, without the guarantees its concept pages state
+    - Where the section fits with the rest of DXOS
+    - How the section's pages are organized, or where to go next
 ```
 
 ```mdl
@@ -181,15 +192,15 @@ page welcome: Overview
   section: ECHO
   route: /docs/echo/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What ECHO is in one paragraph: a typed, local-first, peer-to-peer object graph for TypeScript
     - The model in four points: CRDT replication, peers that sync directly or through a server, concurrent writers, offline writes that merge [D-280]
     - What DXOS is, in two sentences, with ECHO as the lead
     - Spaces hold data and objects are its unit, with links to both concept pages
-    - How these docs are organized: the ECHO, HALO and PLEX sections, and in each the learning path, core
-      concepts, guides and resources
+    - How these docs are organized: ECHO's groups in sidebar order, the learning path, core concepts, guides,
+      API and resources; the other sections are listed under Where ECHO fits in DXOS
     - Where to go next: Why ECHO?, the learning path, and PLEX for building apps on ECHO
 ```
 ```mdl
@@ -248,9 +259,9 @@ page installation: Installation
   status: spike
   covers:
     - Install `@dxos/client` and the bundler setup the browser needs: `vite-plugin-wasm` in the page and its workers, `build.target: 'esnext'`, the WebAssembly packages excluded from pre-bundling, and the worker's CommonJS dependencies pre-bundled
-    - Create a client and an identity, linking to HALO's Create an identity for the details
+    - Create a client and an identity, linking to HALO's Your profile for the details
     - Create or open a space and get its database, in Node and in the browser
-    - The client's config written inline in `client.ts`; loading config from files is the Configuration guide's [D-196]
+    - The client's config written inline in `App.tsx`; loading config from files is the Configuration guide's [D-196]
     - Follow along in StackBlitz: the starter, with each page's code to write
 ```
 ```mdl
@@ -367,7 +378,7 @@ page feeds: Feeds
   covers:
     - A feed is an append log of ECHO objects, a tree of branches [FEEDS.mdl F-1.1, F-1.2]
     - Uses as examples, not kinds: AI chat, comments, messaging, event logs [F-3.1]
-    - Rewrite by id, logical removal, and rewind as a branch [F-1.3, F-1.4, F-1.5]
+    - Rewrite by id, and rewind as a fork [F-1.3, F-1.5]; logical removal of a branch is a limit, not built yet [F-1.4]
     - Cursors, forward and backward walks, and fork points [F-5]
     - Indexing on or off, partial sync, and retention per branch [F-2, F-4.4]
     - When a feed fits better than objects
@@ -400,9 +411,9 @@ page spaces: Spaces and databases
   status: spike
   covers:
     - A space is the unit of sharing and replication, with one database
-    - Storage: SQLite in a worker, browser file storage or disk; a space is never loaded into memory whole [echo-sqlite F-3]; indexing, and queries compiled to SQL [F-4]; writes and flush [F-6]
+    - Storage: SQLite in a worker, browser file storage or disk; objects load on demand, not with the space; indexing, and queries compiled to SQL with an in-memory fallback; writes and flush
     - Replication: each member holds a full copy, syncing over WebRTC or through EDGE
-    - The Hypergraph: every reachable space as one graph, qualified EIDs, references across spaces and unreachable spaces, the in-process registry a query searches without `from()`, and `db` versus Hypergraph
+    - The Hypergraph: every reachable space as one graph, qualified EIDs, references across spaces and unreachable spaces, the in-process registry a query reads only with `Scope.registry()` in `from()`, and `db` versus Hypergraph
     - Access in one paragraph: HALO controls members and roles, built on Keyhive, with a link [D-156]
 ```
 ```mdl
@@ -623,7 +634,7 @@ page guide-text: Text
   template: namespace
   status: spike
   covers:
-    - Declare a text field and make text
+    - Edit any string field with `Text`; a field needs no declaration
     - Read and edit text, and what merges character by character
 ```
 ```mdl
@@ -674,7 +685,7 @@ page examples: Examples
   status: spike
   covers:
     - Composer first, as the flagship app built on ECHO
-    - Tasks and TodoMVC, each with its code and a live link
+    - Tasks, TodoMVC, Contacts and Game Arena, each with its code and a live link
 ```
 ```mdl
 page echo-llms-txt: llms.txt
@@ -787,7 +798,7 @@ page halo-welcome: Overview
   section: HALO
   route: /docs/halo/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What HALO is: identity management for local-first apps, covering identities, devices, credentials and space membership
@@ -839,7 +850,7 @@ page halo-your-profile: Your profile
   template: tutorial
   status: spike
   covers:
-    - Set up the project and provide the services with `layerClient(client)`, with Follow along in StackBlitz
+    - Set up the project and provide the services to `HaloProvider` with `makeIdentityService` and `makeSpaceService`, naming `layerClient(client)` as the layer form, with Follow along in StackBlitz
     - Create an identity with `Identity.create`, with the name the first run asks for
     - Follow it with the `Identity.identity` stream and show it in the profile chip
     - Rename with `Identity.updateProfile`
@@ -868,7 +879,7 @@ page halo-invite-people: Invite people
   status: spike
   covers:
     - Start a space invitation with `Space.share` and read its code
-    - Join with `Space.join`, follow the flow with `Invitation.events`, and enter the authorization code with `Invitation.authenticate`
+    - Join with `Space.join`, follow the flow with `useInvitationFlow`, which follows `Invitation.events`, and enter the authorization code with `Invitation.authenticate`
     - In Keyhive terms: the two sides exchange contact cards and the host writes a delegation that admits the guest
 ```
 ```mdl
@@ -930,8 +941,8 @@ page halo-identities-devices: Identities and devices
   covers:
     - An identity is a Keyhive group named by a DID, with a profile
     - Each device is a member key, added by a delegation and removed by a revocation, with a kind and presence
-    - The personal space every identity has, and `Identity.personalSpaceId`
-    - Limits: when every device is lost and no recovery credential exists
+    - Limits: when every device is lost and the identity has no DXOS account to recover through
+    - Key holding: no server holds a key for the identity by default; the identity can grant one, and EDGE provides this as an agent device whose key it holds
 ```
 ```mdl
 page halo-spaces-membership: Spaces and membership
@@ -958,7 +969,7 @@ page halo-invitations: Invitations
   template: concept
   status: spike
   covers:
-    - The two kinds, device and space, and the three types, interactive, delegated and multiuse
+    - The two kinds, device and space, the types interactive and delegated, and the `multiUse` option; the `multiuse` type is deprecated
     - The auth methods: none, shared secret and known public key
     - The invitation flow, step by step, with its events [D-165]
     - Admission: a contact-card exchange and a delegation
@@ -999,7 +1010,7 @@ page halo-guide-passkey-recovery: Passkey recovery
     - Create the passkey with WebAuthn in the app, since `@dxos/halo` leaves the ceremony to the caller
     - Register it with `Identity.createRecoveryCredential({ externalKey })`
     - Recover: `Identity.requestRecoveryChallenge`, sign the challenge with the passkey, then `Identity.recover`
-    - Revoke it with `Identity.revokeRecoveryCredential`
+    - Replace it: register the new passkey, then revoke the old one with `Identity.revokeRecoveryCredential`
 ```
 ```mdl
 page halo-react: React
@@ -1031,7 +1042,7 @@ page halo-guide-identity: Identity
   covers:
     - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Get the `Identity.Service` with `layerClient`, and read the identity once, as a stream or as an atom
-    - Create an identity, update its profile, and get its personal space id
+    - Create an identity and update its profile
     - List devices, share the identity and join from a device
     - Create, revoke and use recovery credentials, and request a recovery challenge
     - Read credentials, grant service access, create API tokens and get the EDGE identity
@@ -1049,7 +1060,7 @@ page halo-guide-invitation: Invitation
     - The `Invitation.Flow` that `Identity.share`, `Identity.join`, `Space.share` and `Space.join` return
     - Read the code, authenticate with it and cancel a flow
     - Follow a flow with `Invitation.events`
-    - Share options: auth method, type and target
+    - Share options: auth method, type, multi-use and target
     - Errors: InvitationError
 ```
 ```mdl
@@ -1123,7 +1134,7 @@ page mesh-overview: Overview
   section: MESH
   route: /docs/mesh/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What MESH is in one paragraph, on its own: devices that share a topic find each other and run protocols over direct links, with several transports at once [D-227], [D-280]
@@ -1210,8 +1221,8 @@ page mesh-teleport: Teleport
   template: concept
   status: spike
   covers:
-    - One Teleport session per connection, with named streams multiplexed over it
-    - The extensions and who adds them: control, RPC, feed replication, Automerge replication, gossip, admission, notarization and HALO invitations
+    - One Teleport session per connection, with named channels multiplexed over it
+    - The extensions and who adds them: control, auth, feed replication, Automerge replication, gossip, admission, notarization and HALO invitations; `RpcExtension` as the base class RPC extensions build on
     - Links to ECHO's Spaces page for replication and to HALO's invitation pages
 ```
 ```mdl
@@ -1270,7 +1281,7 @@ page edge-overview: Overview
   section: EDGE
   route: /docs/edge/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers, with a Durable Object per identity and per space [D-280]
@@ -1490,7 +1501,7 @@ page sage-overview: Overview
   section: SAGE
   route: /docs/sage/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What SAGE is in one paragraph, on its own: durable agent processes with an identity of their own, typed tools, skills and any model [D-280]
@@ -1690,7 +1701,7 @@ page plex-build-with-agent: Build with a coding agent
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
-    - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
+    - What the reader does when the agent hands off: click Plugin Settings in the rail, open Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
 ```
 
 ### Learning path
@@ -1794,7 +1805,7 @@ page plex-run-in-composer: Run it in Composer
   status: spike
   covers:
     - Sign in to Composer Preview, which loads plugins from a dev server; composer.space loads only its own
-    - Run the plugin's dev server with `npm run dev`, then open Settings, Plugins, and Enable under Dev Server, allowing the browser's local-network prompt
+    - Run the plugin's dev server with `npm run dev`, then click Plugin Settings in the rail, open Plugins, and click Enable under Dev Server, allowing the browser's local-network prompt
     - Create a link from the + menu and open it in the main area, and mark it as read with the Mark as read action on its toolbar
     - Write the Stash skill, which gives the assistant Mark as read as a tool, and add its module to the manifest
     - Have the assistant run the same operation from a chat with the Stash skill
@@ -1814,6 +1825,10 @@ page app-framework-publishing: Publishing a plugin
     - Describe the plugin in `dx.config.ts` and publish it with `dx registry publish --private`
     - Confirm it in Composer's registry and publish an update
     - A note that an experimental public registry exists, with a Discord link for anyone who wants to try it
+    - Load a plugin without publishing it: from its dev server, from a built bundle by manifest URL, or built by the assistant
+    - Two worked examples: a plugin with its own navigation group, and Stash with data, an operation and the Space plugin's create menu
+    - Ship the plugin's `.mdl` spec with it
+    - A command reference
 ```
 
 ### Core concepts
@@ -1860,7 +1875,7 @@ page plex-activation: Activation
   covers:
     - Activation events, and combining them with `ActivationEvent.oneOf` and `allOf`
     - The `Startup` and `Idle` events, and the events built-in capabilities fire, such as `SurfacesRequested`
-    - How the plugin manager orders activation, with events fired before and after a module activates
+    - How the plugin manager orders activation: the providers of a module's `requires` activate before it
     - Lazy loading: a module whose event never fires never loads
     - Adding and removing plugins while the app runs
 ```
@@ -1926,7 +1941,7 @@ page plex-guide-testing: Testing
   covers:
     - Start a headless app with the plugin under test, with `Harness.createComposerTestApp` from `@dxos/plugin-testing`
     - Fire activation events and read the capabilities that result
-    - Invoke an operation and check its result
+    - Invoke an operation and check its result; for an operation that reads a space, start the app with the client plugin, create an identity and invoke in its space
 ```
 
 ```mdl
@@ -2015,7 +2030,7 @@ page plex-guide-using-echo: ECHO
   status: spike
   covers:
     - Register ECHO types with the `Schema` capability
-    - Annotate a type with `AppAnnotation` so the app can name and list its objects
+    - Annotate a type with `Annotation.LabelAnnotation`, `IconAnnotation` and `UserType` from `@dxos/echo` so the app can name and list its objects
     - Create objects from a plugin, and the create-object entry that adds them to the app's menus
     - Links to ECHO's Defining types for the types themselves
 ```
@@ -2065,7 +2080,7 @@ page app-framework-guide-activation-event: ActivationEvent
   status: spike
   covers:
     - Declare an activation event
-    - Fire events before and after a module activates to order dependencies
+    - Order modules with `activatesOn` and `requires`, and fire an event from a module with `Plugin.activate`
     - The built-in events in `ActivationEvents` and when each fires
 ```
 
@@ -2203,11 +2218,11 @@ page tile-overview: Overview
   section: TILE
   route: /docs/tile/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What TILE is in one paragraph: `@dxos/react-ui` and the `@dxos/ui-theme` tokens and build plugin it needs
-    - A grid of live component demos that follows the page's light or dark theme; each card names its package and opens that package's guide [D-293]
+    - A grid of live component demos that follows the page's light or dark theme; each card names its package, and its header opens the API page of the component it shows [D-293] [D-298]
     - The split between the core and the component packages, with a link to the catalog
     - Where to go next: Why TILE?, Build with a coding agent, then the learning path
 ```
@@ -3484,6 +3499,11 @@ feat F-4: Accuracy
   req F-4.3:
     when: the spec's own review marks a cited item as diverged or partial
     then: the page's Limits section says so
+
+  req F-4.4:
+    when: a page's prose, its sample or its `covers:` disagrees with the code of this commit
+    then: the code decides: the page and the sample are corrected to match it, and a `covers:` point the code no
+          longer supports is corrected in this spec [D-326]
 ```
 
 ```mdl
@@ -3720,9 +3740,9 @@ feat F-15: The tutorial app
 
   req F-15.6:
     when: a learning-path page shows ECHO code
-    then: the code is a region of one of the tutorial app's own modules, one module per page (`client.ts`,
-          `schema.ts`, `queries.ts`, `records.ts`, `sharing.ts`), which the app calls; no page quotes a script the
-          app does not run
+    then: the code is a region of the tutorial app module that uses it, usually a component (`schema.ts`,
+          `seed.ts`, `App.tsx`, `Contacts.tsx`, `RecordForm.tsx`, `RecordGraph.tsx`, `Share.tsx`) [D-199]; no page
+          quotes a script the app does not run
 
   req F-15.7:
     when: a reader opens The ECHO object
@@ -3923,6 +3943,45 @@ feat F-21: TILE demo grid
   req F-21.5:
     when: a reader opens the TILE Overview on a screen wider than the text column
     then: the grid is wider than the text, up to the width of the content panel, and centered on the text column
+```
+
+```mdl
+feat F-22: Voice
+
+  desc: |
+    The docs explain rather than specify. Their prose speaks to the reader, starts from what the reader already
+    does, and teaches through examples that it introduces and then explains [D-322]. The voice is the docs' own
+    and is expected to change over time [D-321]. It applies to every page under `/docs/`; the landing pages, the
+    blog and the legal pages keep their own voice [D-324].
+
+  req F-22.1:
+    when: a page introduces an idea, a type or an API member
+    then: its first sentence names the thing and says what it is, and a sentence near it says what the reader
+          uses it for
+
+  req F-22.2:
+    when: a page says what is possible or what to do
+    then: it addresses the reader as "you"; a learning-path page or a worked example may say "we" for the reader
+          and the writer working through it together
+
+  req F-22.3:
+    when: a page brings in an idea the reader has not met
+    then: it starts from what the reader already does without DXOS, or from the problem the idea removes, before
+          it gives the DXOS answer
+
+  req F-22.4:
+    when: a concept, namespace or guide page shows a code sample
+    then: a labelled line, `**Example** (what it shows)`, or a lead-in sentence introduces the sample, and the
+          prose after it says what to notice in it [D-325]
+
+  req F-22.5:
+    when: a page documents an API member or an option
+    then: it says what the member does, then when to use it, then what it does not do
+
+  req F-22.6:
+    when: a page is written
+    then: a paragraph holds one idea in one to three sentences, no sentence passes 30 words, and headings use
+          sentence case [D-323]
 ```
 
 ## Acceptance
@@ -6622,6 +6681,254 @@ decision D-320: On the docs home, the body panel has no top padding, so the intr
   for: user:wittjosiah
   affects: [F-16.5]
   why: With the rule between the title and body panels gone, both panels' padding left a 51px gap under the title, and at 1512x945 the grid's last row ended at 942px.
+```
+
+```mdl
+decision D-321: The docs have a voice of their own, which is expected to change over time. The Effect documentation is an example of docs we like and think are good, not the definition of the voice.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-22]
+```
+
+```mdl
+decision D-322: The voice is six habits: a first sentence that defines the thing; "you" for what the reader can do or should do, with "we" on learning-path pages and in worked examples; a start from what the reader already does or from the problem; an introduction before each code sample and an explanation after it; for each API member what it does, when to use it and what it does not do; and paragraphs of one to three short sentences. Fills in [D-321].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.1, F-22.2, F-22.3, F-22.4, F-22.5, F-22.6]
+  why: The docs read like the spec they are written from: facts about the system, one after another, with no reader in them. These habits are what docs that teach well have and ours lacked. Measured against the Effect documentation as the example, "you" appears 15 times per 1,000 words of prose there against 5 here, a paragraph averages 1.45 sentences against 2.2, and two of every three code blocks are introduced by a label against none.
+  rejected:
+    - Change the tone alone, friendlier wording over the same sentences: the difference a reader feels is in how a page leads into an example and out of it, not in its adjectives.
+```
+
+```mdl
+decision D-323: Headings stay in sentence case, and a page keeps the headings and the parts its template gives it. The voice has no padding, such as "it's important to note", "powerful", "leverage" and a closing summary. Fills in [D-321].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.6, F-17.2]
+  why: Headings are link targets across the site, and the templates fix each page's parts. Padding costs the reader time and tells them nothing.
+  rejected:
+    - Rename concept headings to a gerund form, such as "Following references" for "Model": every concept page would stop matching its template [F-17.2], and links to the old anchors would break.
+```
+
+```mdl
+decision D-324: The voice applies to the pages under `/docs/`. The landing pages (`/`, `/echo`, `/composer`, `/plugins`), the blog posts and the legal pages are outside it. Fills in [D-321].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22]
+  why: The voice is for teaching an API. A landing page sells in a line, a blog post is dated and signed by its author, and the legal text is not ours to reword.
+```
+
+```mdl
+decision D-325: An example's label is a line of its own, `**Example** (what it shows)`, in sentence case. The numbered steps of a learning-path page do not use it, since each step's bold lead already introduces its sample, and neither does the sample that opens a TILE component page. Fills in [D-322].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.4]
+  why: A second label inside a step repeats the step's lead, and a component page's opening sample stands for the page itself.
+```
+
+```mdl
+decision D-326: The docs are aligned to the implementation. Wherever a page, its sample or the spec disagrees with the code, the mismatch is corrected to match the code.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.4]
+```
+
+```mdl
+decision D-327: A TILE page whose component reads atoms tells the reader to wrap the app in `RegistryProvider`, as best practice, so that the app controls the registry. No page says a component needs one.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [tile-api-list-tree, tile-api-reference]
+```
+
+```mdl
+decision D-328: The Grid page documents the `Grid.Content` props a caller can set, each verified against the code first.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [tile-api-grid-grid]
+```
+
+```mdl
+decision D-329: The Grid page's table gains `initialCells`, `activeRefs` and `focusIndicatorVariant`, and leaves out `mode` and `gridId`. Fills in [D-328].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-api-grid-grid]
+  why: The React wrapper sets `mode` and `gridId` after it spreads the caller's props, so a value the caller passes is discarded. The other three reach the grid element, and each was checked on a running grid.
+```
+
+```mdl
+decision D-330: On a space connection only feed replication opens alongside the auth extension. Gossip, admission discovery, notarization and Automerge replication are added after the peer authenticates. A peer that fails authentication is disconnected only where the session's owner closes the session, which the admission-credential request does and an open space does not. Teleport's page and MESH's Architecture page say so. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-256
+  affects: [mesh-teleport, mesh-architecture]
+  why: The space protocol adds only the feed replicator beside auth and adds the rest in its authorized-connection callback. On an auth failure an open space logs and keeps the session; only `requestSpaceAdmissionCredential` closes it.
+```
+
+```mdl
+decision D-331: Teleport's page names channels, not streams, as what a session multiplexes, lists the auth extension, and describes `RpcExtension` as the base class that RPC extensions build on rather than as an extension. MESH's glossary and the Swarms page say MMST usually keeps a swarm connected. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-teleport]
+  why: The muxer's unit is a channel, which a stream or an RPC port consumes. No extension is named RPC, and `dxos.mesh.teleport.auth` is one. The MMST topology refuses offers past its maximum, so nothing guarantees a connected swarm [D-257].
+```
+
+```mdl
+decision D-332: ECHO's pages follow the code on six points: a query reads the registry only when `from()` names `Scope.registry()`; the client stores a space in SQLite, loads objects on demand and compiles queries to SQL with an in-memory fallback; a feed item is rewritten by id and a feed is rewound with a fork, while removing a branch is not built; `Text` edits any string field with no declaration; the tutorial's config is in `App.tsx`; and Installation links to HALO's Your profile. The Overview lists ECHO's groups in sidebar order. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [spaces, feeds, guide-text, installation, welcome, F-15.6]
+  why: Each `covers:` point named something the code does not do or a page that does not exist. The registry point came from a doc comment on `Hypergraph.registry` that said the opposite of the query engine, and that comment is corrected with the pages.
+```
+
+```mdl
+decision D-333: Installation says in prose how a Node client opens the space, and shows no Node sample. Fills in [D-332].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [installation]
+  why: A learning-path page quotes only code the tutorial app runs [F-15.6], and Installation's step 3 is the only config the path shows [D-196]. The app runs in the browser.
+  rejected:
+    - Add a Node sample from the Configuration guide's snippet file: it is a second config on the page and a script the app does not run.
+```
+
+```mdl
+decision D-334: HALO's pages follow the code on invitations and recovery: `multiUse` is the option that keeps an invitation open and the `multiuse` type is deprecated; a wrong authorization code returns the flow to the code step and fails it after three tries; the profile page provides the services to `HaloProvider` and names `layerClient` as the layer form; the React app follows a flow through `useInvitationFlow`; and a passkey is replaced by registering the new one before revoking the old. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-guide-invitation, halo-invitations, halo-your-profile, halo-invite-people, halo-guide-passkey-recovery]
+  why: The host keeps an invitation open only on `multiUse`. Revoking the last active recovery credential throws, so the old sample's last call failed. The sample that logged the joined space id read a result the adapter always leaves empty.
+```
+
+```mdl
+decision D-335: HALO's and EDGE's pages state what EDGE holds. No server issues an identity or holds its identity key. An identity linked to a DXOS account has an EDGE agent, a device of kind `agent-managed` whose key EDGE holds, and a device can act for its identity. Recovery returns from EDGE the signed credential that admits the new device, and `recover` also accepts an account sign-in token or an OAuth proof. The limit "no one, including DXOS, can restore it" applies only to an identity with no account. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-identities-devices, halo-recovery-credentials, edge-identity-services]
+  why: The pages said no server holds a key that can act for an identity. The client admits a device key that EDGE creates for the agent, and the recovery manager accepts a token with no recovery-key signature. Which key signs the credential EDGE returns is decided in the EDGE repository and is not stated.
+  rejected:
+    - Weaken the limits without naming account recovery: the old absolute claims were false for exactly the identities that can recover.
+```
+
+```mdl
+decision D-336: PLEX's pages follow the code on five points: the rail entry is Plugin Settings, then Plugins; a type is named and listed with `Annotation.LabelAnnotation`, `IconAnnotation` and `UserType` from `@dxos/echo`; activation is ordered by `activatesOn` and `requires`, with no events fired before or after a module; a module waits only on its singleton requirements; and the publishing page's `covers:` lists the local-development, examples, spec and command-reference parts the page has. Each PLEX API page has a Members at a glance table. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [plex-build-with-agent, plex-run-in-composer, plex-guide-using-echo, plex-activation, app-framework-guide-activation-event, app-framework-publishing]
+  why: `AppAnnotation` holds only space-level annotations, `activatesBefore` and `activatesAfter` no longer exist, and a requirement that takes many providers never blocks a module.
+```
+
+```mdl
+decision D-337: A card in the TILE Overview's grid opens the API page of the component it shows, and the Overview's `covers:` says so. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-overview]
+  why: [D-298] retired the package guides, and the grid's cards already link to the API pages [F-21.2].
+```
+
+```mdl
+decision D-338: The single-page plugin tutorial at `/docs/plex/tutorial/` is removed. The PLEX learning path replaces it.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [plex-the-plex-plugin]
+```
+
+```mdl
+decision D-339: The tutorial's three old URLs, under `/docs/plex/`, `/docs/app-framework/` and `/docs/composer/`, redirect to The PLEX plugin, the first page of the learning path. Fills in [D-338].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [plex-the-plex-plugin]
+  why: Every API the page taught is gone from the code, and Composer's support plugin still listed one of the URLs as its Plugins entry.
+```
+
+```mdl
+decision D-340: A section's Overview follows an `overview` template of its own, not `concept`. Its parts are the ones these pages have: a definition, the section in brief, where it fits with the rest of DXOS, and how its pages are organized or where to go next. The Overviews of ECHO, HALO, MESH, EDGE, SAGE and TILE use it, and ECHO's Overview loses its one-sentence Behavior section.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [welcome, halo-welcome, mesh-overview, edge-overview, sage-overview, tile-overview, F-17.2]
+  why: The `concept` template requires Behavior with citations and Limits. None of the six pages has either, and writing them would repeat the concept pages.
+```
+
+```mdl
+decision D-341: The `narrative` template asks for a sample only where the section has an API a reader calls, and for a spec citation only where a spec states the claim.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-17.2]
+  why: The Why pages of MESH, EDGE, SAGE and TILE have no sample and no citation, and those sections have no spec to cite.
+```
+
+```mdl
+decision D-342: The Samples page keeps Contacts and Game Arena beside Tasks and TodoMVC. Its live links use `https://`, and Game Arena's code link points at `dxos/arena`.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [examples]
+```
+
+```mdl
+decision D-343: The Testing guide's invoke sample starts the app with the client plugin, creates an identity, adds the link to the default space and invokes `MarkRead` in that space. The docs package depends on `@dxos/plugin-client` for it.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [plex-guide-testing, F-3.2]
+  why: The old sample could not work: the handler resolves the link in a database, the harness loads no client, and the link was never added to one.
+```
+
+```mdl
+decision D-344: Querying keeps the tutorial app's search as it is, with `useQuery`, and says what the hook does. Matching a field value stays an inline example with no step of its own.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [querying]
+```
+
+```mdl
+decision D-345: The Stash modules diagram draws Startup activating only the operation handler, and Idle activating translations, schema and the App Graph builder. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [app-framework-anatomy]
+  why: `AppCapability.translations` and `AppCapability.schema` name no event, and a module that names none activates on Idle.
+```
+
+```mdl
+decision D-346: The docs do not describe a server holding a key as an exception. By default no server holds a key that can act for an identity. An identity can grant a server access to hold a key for it, and EDGE provides that as a service. Amends [D-335].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [halo-identities-devices, halo-recovery-credentials, edge-identity-services, halo-welcome]
+```
+
+```mdl
+decision D-347: The HALO docs do not document a personal space. HALO has none; a personal space is an app-level concept.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [halo-identities-devices]
+```
+
+```mdl
+decision D-348: The personal space leaves the Identities and devices page, the HALO glossary, the Identity API page and its sample, and the learning-path pages that named it. `Space.spaces` is described as the spaces the identity belongs to. Fills in [D-347].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-identities-devices]
+  why: `Identity.personalSpaceId` returns the id of the space that holds the identity's credentials, and the pages called that a personal space holding the user's settings.
+```
+
+```mdl
+decision D-349: The publishing page's "With an assistant" section covers the two templates a reader of a deployed or desktop Composer can use, the Projects plugin's and the Sandbox plugin's. It does not cover the Dev Shell plugin's template.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [app-framework-publishing]
+  why: Dev Shell is a proof of concept that Composer includes only when it is run from source, and its template's last step loads a plugin by URL, which a Composer served that way cannot do.
 ```
 
 ## Appendix: Extension Definitions

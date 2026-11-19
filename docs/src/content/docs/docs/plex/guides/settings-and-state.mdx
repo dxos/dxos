@@ -5,32 +5,67 @@ description: Keep a plugin's settings, which sync, apart from its device state, 
 
 import Snippet from '../../../../../components/Snippet.astro';
 
-A plugin keeps two kinds of value outside ECHO:
+This guide gives your plugin settings that sync and state that stays on one device. It also shows how a component
+reads and writes both.
+
+A plugin keeps these two kinds of value outside ECHO:
 
 - **Settings** are choices the person makes, such as a default view. They follow the person to every device.
 - **State** belongs to one device, such as the last item opened or a panel's width. It does not sync.
 
-Keep them apart. A device-only value stored as a setting moves to the person's other devices, where it is wrong.
+Keep them apart. If you store a device-only value as a setting, it moves to the person's other devices, where it is
+wrong.
 
 ## Settings
 
 Describe the settings with a schema, and contribute it with `AppCapabilities.Settings`. The app renders a form for
-it on the settings page, using each field's `title`, and syncs the values. `KvsStore.make` gives an atom that holds
-the values, with defaults for a first run.
+it on the settings page, using each field's `title`, and syncs the values.
+
+`KvsStore.make` gives an atom that holds the values, with defaults for a first run.
+
+**Example** (Contributing one synced setting)
 
 <Snippet file="plex-guide-settings-and-state" region="settings" />
+
+In this example, `Settings` has one field, `openInNewTab`, and its `title` is the label in the form. On a first run,
+the atom holds `openInNewTab` as `true`.
+
+The module contributes the atom twice. `AppCapabilities.Settings` gives it to the app, and `SettingsCapability`, the
+plugin's own capability, gives it to the plugin's components.
 
 ## State
 
 Device state is the plugin's own capability. Declare a singleton on the plugin's namespace and store it under the
 key `${key}.state`, so it stays on this device.
 
+**Example** (Keeping device state in the plugin's own capability)
+
 <Snippet file="plex-guide-settings-and-state" region="state" />
+
+In this example, `StateCapability` is the singleton. `makeState` stores `lastOpened` under the plugin's key with
+`.state` added, and `StateModule` contributes the atom.
 
 ## Read and write them
 
-Both are atoms. A component reads one with `useAtomValue` and writes it with `useAtomSet`, after getting it with
-`useCapability`. Other modules read them the same way they read any capability.
+Both are atoms that the plugin contributes as its own capabilities. In a component, you read and write them with two
+hooks from `@dxos/app-framework/Hooks`:
+
+- `useAtomCapability` returns the atom's value and re-renders the component when it changes.
+- `useAtomCapabilityState` returns the value and a function that updates it, like `useState`. Use it when the
+  component changes the value.
+
+Each hook calls `useCapability` for the atom and then reads it. This means you do not call the atom hooks
+`useAtomValue` and `useAtomSet` yourself.
+
+**Example** (Reading a setting, and reading and writing device state)
+
+<Snippet file="plex-guide-settings-and-state" region="component" lang="tsx" />
+
+In this example, `OpenLink` reads `openInNewTab` from the settings, and opens the link in a new tab when it is set.
+When the person clicks the link, `setState` stores its address as `lastOpened`.
+
+`useAtomCapabilityState` writes a setting the same way, because the settings atom is writable too. Other modules read
+both atoms the same way they read any capability. [React](/docs/plex/guides/react/) covers the other hooks.
 
 ## Limits
 

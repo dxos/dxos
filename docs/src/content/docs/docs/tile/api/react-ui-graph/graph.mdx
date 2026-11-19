@@ -17,28 +17,50 @@ import * as GraphModel from '@dxos/graph/GraphModel';
 npm install @dxos/react-ui-graph @dxos/graph
 ```
 
-`Graph` draws the nodes and edges of a `GraphModel` from `@dxos/graph`, and a projector decides where each node goes.
-The force projector pulls linked nodes together and pushes the rest apart, which suits graphs with no natural order,
-such as people and the teams they belong to. The package has other projectors for trees, rings and layers. It draws
-inside [`SVG.Root`](/docs/tile/api/react-ui-graph/svg/).
+`Graph` draws the nodes and edges of a `GraphModel` from `@dxos/graph`. A **projector** decides where each node goes.
+
+The force projector pulls linked nodes together and pushes the rest apart. Use it for a graph with no natural order,
+such as people and the teams they belong to. The package has other projectors for trees, rings and layers.
+
+`Graph` draws inside [`SVG.Root`](/docs/tile/api/react-ui-graph/svg/).
 
 ## Props
 
 | Prop | Type | Effect |
 | --- | --- | --- |
 | `model` | `GraphModel` | The nodes and edges |
-| `projector` | `GraphProjector` | Places the nodes; make it after `SVG.Root` mounts |
+| `projector` | `GraphProjector` | Places the nodes; a `GraphForceProjector` by default. Make your own after `SVG.Root` mounts |
+| `renderer` | `GraphRenderer` | Draws the layout; by default, one made from the props below |
 | `labels` | `{ text }` | What to write beside each node |
+| `attributes` | `{ node, edge }` | Classes and `data-` attributes for each node and each edge |
+| `subgraphs` | `boolean` | Draws a hull around each group of more than two connected nodes |
+| `renderNode` | `(group, node) => void` | Draws a node, in place of the default circle |
+| `applyNode` | `(group, node) => void` | Runs for each node after its position changes |
+| `highlightOnHover` | `boolean` | Hovering a node colors its edges and dims the rest |
+| `edgeOpacity` | `number` | The opacity of the edges |
 | `drag` | `boolean` | The user can move a node |
 | `arrows` | `boolean` | Edges end in arrowheads |
 | `onSelect` | `(node, event) => void` | The user clicked a node |
-| `onInspect` | `(node | null, event) => void` | The pointer entered a node, or left it |
+| `onInspect` | `(node \| null, event) => void` | The pointer entered a node, or left it |
+| `onPointerMove` | `(point, event) => void` | The pointer moved over the graph; `point` is in the nodes' coordinates |
+| `onPointerLeave` | `(event) => void` | The pointer left the graph |
 
 ## Draw a graph
 
-`addNode` takes an `id` and any `data`, and `addEdge` a `source` and a `target`. `SVG.Zoom` lets the user zoom and pan,
-and `SVG.Graph` draws the model. The projector needs the SVG context, so make it in an effect after `SVG.Root` mounts:
+You build the model first, then draw it:
+
+- `addNode` takes an `id` and any `data`.
+- `addEdge` takes a `source` and a `target`.
+- `SVG.Zoom` lets the user zoom and pan.
+- `SVG.Graph` draws the model.
+
+The projector needs the SVG context. For this reason, make it in an effect after `SVG.Root` mounts.
+
+**Example** (Drawing people and their teams)
 
 <Snippet file="tile-guide-graph" region="graph" lang="tsx" />
+
+In this example, `makeModel` adds a node for each team and each person, and an edge from each person to their team.
+The `useEffect` runs after `SVG.Root` has mounted, and makes the `GraphForceProjector` from the context in `svgRef`.
 
 The story at the top of this page runs this example.

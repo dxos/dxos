@@ -5,17 +5,26 @@ description: What a type is, how ECHO names it, and how it changes over time.
 
 import Snippet from '../../../../../components/Snippet.astro';
 
-A type describes the fields an object or relation has, and ECHO uses it to check every write and to tell other peers
-what the data means.
+A type describes the fields an object or relation has. ECHO uses it to check every write and to tell other peers what
+the data means.
 
 ## Model
 
+In TypeScript, an interface describes an object to the compiler, and nothing of it is left when the app runs. An ECHO
+type is a value that is still there at run time, with a name that every object of the type carries.
+
 A type is an [Effect Schema](https://effect.website/docs/schema/introduction/) with a **typename** and a **version**.
 Together they make the type's DXN, `dxn:<typename>:<version>`, and every object stores the DXN of its type.
-[Defining types](/docs/echo/learn/defining-types/) builds the Person, Organization and Event types that the snippets on
-this page use.
+
+**Example** (Reading a type's typename, version and DXN)
 
 <Snippet file="concept-types" region="identity" />
+
+In this example, the first three lines read the parts of the `Person` type's name. The last line reads the typename
+from an object of that type.
+
+[Defining types](/docs/echo/learn/defining-types/) builds the Person, Organization and Event types that the snippets on
+this page use.
 
 There are two kinds of type:
 
@@ -23,42 +32,71 @@ There are two kinds of type:
 - A **relation type**, made with `Type.makeRelation`, describes an entity that joins a source and a target, and can carry
   fields of its own. [Objects and relations](/docs/echo/concepts/objects-relations/) shows when to use one.
 
+**Example** (Declaring a relation type)
+
 <Snippet file="works-at" region="relation" />
 
+Here, `WorksAt` joins a `Person` to an `Organization` and carries one field of its own, `role`.
+
 **Annotations** add what the schema alone does not say: which field labels an object, which icon it has, how a form
-orders its fields. ECHO reads some of them itself; `Obj.getLabel` returns the field the label annotation names. Tools
+orders its fields.
+
+ECHO reads some annotations itself. For example, `Obj.getLabel` returns the field the label annotation names. Tools
 such as Composer read the rest. [Annotation](/docs/echo/api/annotation/) lists them.
+
+**Example** (Reading a label annotation)
 
 <Snippet file="concept-types" region="annotations" />
 
+In this example, the `Event` type names `title` as its label, so `Obj.getLabel` returns the event's title.
+
 ## Behavior
 
-- A database accepts only objects of types it knows. Register types with the client, when you make it or later; types
-  registered there apply to every space.
+- A database accepts only objects of types it knows. Types registered with the client apply to every space.
+
+  Register types with the client when you make it, or later:
 
   <Snippet file="concept-types" region="register" />
+
+  Here, the constructor takes the tutorial's `types`, and `addTypes` adds `WorksAt` after the client initializes.
 
 - A type converts to and from [JSON Schema](https://json-schema.org/), so a type can come from a form, an agent or
   another system as well as from code.
 
+  The conversion goes both ways:
+
   <Snippet file="concept-types" region="json-schema" />
 
-- `db.addType` stores a type in the space, as an object of its own, so it replicates to the other members like data.
-  Fields of a stored type can be added, changed and removed at runtime.
+  Here, `jsonSchema` is the JSON Schema of the `Organization` type, and `Note` is a type made from a JSON Schema.
+
+- `db.addType` stores a type in the space, as an object of its own. This means the type replicates to the other
+  members like data. You can add, change and remove the fields of a stored type at runtime.
+
+  To add a field, pass the stored type to `Type.addFields`. To change the declaration of a field, pass it to
+  `Type.updateFields`:
 
   <Snippet file="concept-types" region="fields" />
 
+  Here, the stored `Note` type gains an optional `pinned` field that holds a boolean. `Type.updateFields` then
+  declares `pinned` again, as a number.
+
 ### Versions and migrations
 
-A change to a type that old data does not fit, such as a field that becomes an array, is a new version of the type. A
-**migration** moves objects from one version to the next:
+When you change a type in a way that old data does not fit, such as a field that becomes an array, you make a new
+version of the type. A **migration** moves objects from one version to the next:
 
 - `Migration.define` reads an object of the old version and returns the fields of the new one.
 - `Migration.defineRename` gives a type a new typename and points every reference at it.
 - `Migration.defineContent` upgrades a content format that an object carries in a field, such as a drawing's scene,
   without changing the type's version.
 
+**Example** (Migrating a field to an array, and renaming a type)
+
 <Snippet file="concept-types" region="migration" />
+
+In this example, `PersonV2` is version `0.2.0` of the person type, with an `emails` array in place of `email`.
+`personEmails` turns the old address into an array of one, or an empty array. `renameEvent` renames the event type to
+`com.example.type.meeting`.
 
 A plugin contributes its migrations to Composer, which runs them on every space once the plugin is active. The
 [API reference](/docs/additional-resources/api-reference/) covers each kind.
@@ -68,4 +106,4 @@ A plugin contributes its migrations to Composer, which runs them on every space 
 - Objects of two versions of one type do not merge. Peers must run the same migration before they edit the same
   objects.
 - The docs do not yet say how to run migrations outside a Composer plugin.
-- Adding a field to a stored type is safe; changing or removing one leaves the old values in objects already written.
+- Adding a field to a stored type is safe. Changing or removing one leaves the old values in objects already written.

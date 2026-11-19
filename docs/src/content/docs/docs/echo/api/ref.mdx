@@ -13,41 +13,76 @@ import SpecCite from '../../../../../components/SpecCite.astro';
 import { Ref } from '@dxos/echo';
 ```
 
-A reference is a field that points at another entity. It stores the target's DXN, not a copy, and resolves the target
-only when you ask. <SpecCite item="org.dxos.echo#F-4.1" /> [References and DXNs](/docs/echo/concepts/references/)
-explains the model; this page is the API.
+A reference is a field that points at another entity. It stores the target's DXN, not a copy, and it resolves the
+target only when you ask. <SpecCite item="org.dxos.echo#F-4.1" />
+
+See [References and DXNs](/docs/echo/concepts/references/) for the model. This page is the API.
 
 ## Declare a reference field
 
-`Ref.Ref(Type)` is the schema of a field that points at that type. Use it inside `Schema.optional` or `Schema.Array` like
-any other field schema. The tutorial's Person and Event declare both:
+`Ref.Ref(Type)` is the schema of a field that points at that type. Use it inside `Schema.optional` or `Schema.Array`
+like any other field schema. The tutorial's Person and Event declare both.
+
+**Example** (Declaring an optional reference)
 
 <Snippet file="echo-tutorial/schema" region="person" />
 
+In this example, `employer` is an optional reference to an `Organization`.
+
+**Example** (Declaring an array of references)
+
+<Snippet file="echo-tutorial/schema" region="event" />
+
+Here, `attendees` is an optional array of references, each to a `Person`.
+
 ## Make a reference
 
-`Ref.make` takes an object you already hold. `db.makeRef` takes a URI and returns a reference bound to the database, so it
-can load its target. `Ref.fromURI` also takes a URI, but its reference has nothing to load from until a database binds
-it.
+You can make a reference in three ways:
+
+- `Ref.make` takes an object you already hold.
+- `db.makeRef` takes a URI and returns a reference bound to the database, so it can load its target. Use it when you
+  have a URI and no object.
+- `Ref.fromURI` also takes a URI. However, its reference has nothing to load from until a database binds it.
+
+**Example** (Making references from objects and from a URI)
 
 <Snippet file="guide-ref" region="make" />
 
+In this example, `Ref.make` points `ada` at `acme` and `launch` at `ada`. `again` is a second reference to `ada`,
+which `db.makeRef` makes from the URI that `Obj.getURI` returns.
+
 ## Resolve a reference
 
-`peek` returns the target if it is already in memory and never starts a load. `load` waits for the target, reading it
-from disk or the network, and throws if it cannot be found; `tryLoad` returns `undefined` instead. `Ref.loadAll` loads an
-array of references at once.
+In a relational database, a foreign key gives you an id, and you run another query to read the row. With a
+reference, you ask the reference for its target:
 
-Avoid `ref.target`. It is deprecated because reading it starts a load as a side effect and can throw.
+- `peek` returns the target if it is already in memory, and never starts a load. Use it where the code cannot wait.
+- `load` waits for the target, reading it from disk or the network, and throws if it cannot be found.
+- `tryLoad` does the same, but returns `undefined` instead of throwing. Use it when a missing target is not an error.
+- `Ref.loadAll` loads an array of references at once.
+
+**Example** (Peeking at, loading and batch-loading references)
 
 <Snippet file="guide-ref" region="resolve" />
 
+In this example, `loaded` is the organization or `undefined`, and it never waits. `employer` waits for the same
+target. `attendees` holds the people the event points at, with missing and deleted targets left out.
+
+Avoid `ref.target`. It is deprecated because reading it starts a load as a side effect and can throw.
+
 ## Compare references
 
-Each read of a reference field returns a new wrapper, so `===` never matches. Compare with `Ref.equals`, or test the target
-id with `Ref.hasEntityId`.
+Each read of a reference field returns a new wrapper, so `===` never matches.
+
+- Use `Ref.equals` when you compare two references.
+- Use `Ref.hasEntityId` when you test a reference against a target id.
+
+**Example** (Comparing references and testing a target id)
 
 <Snippet file="guide-ref" region="compare" />
+
+In this example, `same` is true when Ada's employer is Acme. `attending` is true when one of the event's attendees
+points at `ada.id`.
 
 ## Members at a glance
 

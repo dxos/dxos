@@ -7,11 +7,17 @@ import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 import PluginPackage from '../../../../../components/PluginPackage.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
-By the end of this page the inspector on this page loads your plugin, named Stash, from your machine, with one module: its strings. The next four pages give it a type, a view, an action and a place in the navigation tree.
+By the end of this page, the inspector on this page loads your plugin, named Stash, from your machine. The plugin has
+one module so far, for its strings. The next four pages give it a type, a view, an action and a place in the
+navigation tree.
 
 ## Background
 
-A plugin is a set of modules. Each module activates on an event and contributes capabilities, which are typed values that other parts of the app look up. [The PLEX plugin](/docs/plex/learn/the-plex-plugin/) explains how they fit. In this tutorial the whole plugin is defined in one file, `dx.config.ts`, and each module's code lives in its own file that loads only when the module activates.
+A plugin is a set of modules. Each module activates on an event and contributes capabilities, which are typed values
+that other parts of the app look up. [The PLEX plugin](/docs/plex/learn/the-plex-plugin/) explains how they fit.
+
+In this tutorial, we define the whole plugin in one file, `dx.config.ts`. Each module's code lives in its own file,
+which loads only when the module activates.
 
 ## Steps
 
@@ -25,23 +31,35 @@ A plugin is a set of modules. Each module activates on an event and contributes 
    npm install
    ```
 
-   The `@dxos/*` packages are pinned to the build these docs run, so the inspector on each page can load your plugin. `composerPlugin` serves the plugin from Vite's dev server on port 3967, with a manifest that describes it at `http://localhost:3967/manifest.json`. [Publishing a plugin](/docs/plex/publishing-plugins/) pins them to a Composer release instead.
+   The `@dxos/*` packages are pinned to the build these docs run, so the inspector on each page can load your plugin.
+   [Publishing a plugin](/docs/plex/publishing-plugins/) pins them to a Composer release instead.
 
-2. **Name the plugin.** The plugin's key is a reverse-domain name that no other plugin uses. Its last segment must be camelCase. Put it in a file of its own, so the manifest and any capability tags the plugin declares can both import it.
+   `composerPlugin` serves the plugin from Vite's dev server on port 3967. It also serves a manifest that describes the
+   plugin, at `http://localhost:3967/manifest.json`.
+
+2. **Name the plugin.** The plugin's key is a reverse-domain name that no other plugin uses. Its last segment must be
+   camelCase. Put it in a file of its own, so the manifest and any capability tags the plugin declares can both import
+   it.
 
    <Snippet file="plex-tutorial/src/namespace" region="namespace" />
 
-3. **Write the manifest.** `Plugin.config` takes the plugin's registry metadata and its modules. It returns the plugin's `meta` and a `make` function that the app's plugin manager calls to create it. The file's default export is what the dev server reads. `modules` starts empty; each step that follows adds one.
+   Here, the key is `com.example.plugin.stash`. The rest of the plugin reads it as `StashNamespace.key`.
+
+3. **Write the manifest.** `Plugin.config` takes the plugin's registry metadata and its modules. It returns the
+   plugin's `meta` and a `make` function that the app's plugin manager calls to create it. The file's default export
+   is what the dev server reads. `modules` starts empty, and each step that follows adds one.
 
    <Snippet file="plex-tutorial/dx.config" region="config" omit="translations, schema, operation, app-graph, surface, skill" />
 
    The `tags` field starts with a quality tier. A new plugin is `labs`.
 
-4. **Add the first module.** Translations give the plugin's strings their text. The module lists the translation resource by namespace. For now it has one entry, for the plugin's own strings; the next page adds one for its type.
+4. **Add the first module.** Translations give the plugin's strings their text. The module lists the translation
+   resource by namespace. For now it has one entry, for the plugin's own strings. The next page adds one for its type.
 
    <Snippet file="plex-tutorial/src/translations" region="translations" omit="type" />
 
-   Add it to the manifest's `modules`. `AppCapability.translations` is a module maker: it fixes the capability the module contributes and the event it activates on, so the manifest only names the file to load.
+   Add it to the manifest's `modules`. `AppCapability.translations` is a **module maker**. It fixes the capability the
+   module contributes, so the manifest only names the file to load.
 
    <Snippet file="plex-tutorial/dx.config" region="translations" />
 
@@ -51,7 +69,11 @@ A plugin is a set of modules. Each module activates on an event and contributes 
    npm run dev
    ```
 
-   Then click **Load dev plugin** below. The browser asks to reach devices on your local network: allow it, since your plugin's code comes from your machine. The inspector lists your plugin's modules on the left, with Translations active, and shows its strings by namespace. **This page adds** turns to a check once the module loads.
+   Then click **Load dev plugin** below. The browser asks to reach devices on your local network. Allow it, because
+   your plugin's code comes from your machine.
+
+   The inspector lists your plugin's modules on the left, with Translations active, and shows its strings by
+   namespace. **This page adds** turns to a check once the module loads.
 
    <InspectorEmbed adds={['translations']} />
 
