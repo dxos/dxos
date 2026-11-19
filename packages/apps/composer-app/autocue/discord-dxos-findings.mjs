@@ -89,14 +89,23 @@ const backIndexInput = (page) =>
   page.evaluate(async () => {
     const space = globalThis.dxos.client.spaces.get()[0];
     const objects = await space.db.query(globalThis.dxos.Filter.everything()).run();
-    const trigger = objects.find((object) => globalThis.dxos.Obj.getTypename(object) === 'org.dxos.type.trigger');
+    // The back-index trigger is the one whose input names a crawl state; the space may hold other triggers.
+    const trigger = objects.find(
+      (object) => globalThis.dxos.Obj.getTypename(object) === 'org.dxos.type.trigger' && object.input?.state,
+    );
     return trigger ? JSON.parse(JSON.stringify(trigger.input ?? {})) : undefined;
   });
 
 /** Marks the findings request as sent in the page's storage, which a restart's reload keeps. */
 const SENT_KEY = 'autocue.discord-dxos-findings.sent';
 
-const requestSent = (page) => page.evaluate((key) => localStorage.getItem(key) === '1', SENT_KEY);
+/** The marker's key for the flow's space, so a reused profile's marker never suppresses the request in another space. */
+const sentKey = (page) => page.evaluate((key) => `${key}:${globalThis.dxos.client.spaces.get()[0].id}`, SENT_KEY);
+
+const requestSent = async (page) => {
+  const key = await sentKey(page);
+  return page.evaluate((key) => localStorage.getItem(key) === '1', key);
+};
 
 /** Whether the agent is not working now: no chat shows activity. */
 const agentQuiet = (page) =>
@@ -214,7 +223,7 @@ export const steps = [
         await demo.click({ selector: PROMPT, label: 'Prompt' });
         await demo.type({ selector: PROMPT, value: REQUEST, delay: 6 });
         await demo.press({ key: 'Enter', hud: false });
-        await page.evaluate((key) => localStorage.setItem(key, '1'), SENT_KEY);
+        await page.evaluate((key) => localStorage.setItem(key, '1'), await sentKey(page));
       }
       await demo.speed({ factor: 8 });
       await until(page, findingsMade, (made) => made === true, { timeout: 1_200_000, every: 10_000 });

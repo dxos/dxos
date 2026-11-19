@@ -155,6 +155,8 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
 
   const enabled = triggerView?.enabled ?? false;
   const configuredChannels: string[] = Array.isArray(input?.channels) ? input.channels : [];
+  // Run now crawls with the bot the trigger was saved with, as the timer does, not whichever one is current.
+  const savedApplicationId = typeof input?.applicationId === 'string' ? input.applicationId : undefined;
   const channelOptions = useMemo(() => {
     const ids = new Set([...channelConfigs.flatMap((config) => [...config.channels]), ...configuredChannels]);
     return [...ids].map((id) => ({ value: id, label: `#${names[id] ?? id}` }));
@@ -269,7 +271,7 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
       invokePromise(
         DiscordOperation.CrawlDiscordChannels,
         {
-          applicationId: kaiId,
+          applicationId: savedApplicationId ?? kaiId,
           channels: configuredChannels,
           descendThreads,
           ...(maxDays !== undefined ? { maxDays } : {}),
@@ -279,7 +281,18 @@ export const PipelineDiscordModule = (_props: Surface.ComponentProps<Record<stri
         { spaceId: space.id },
       ),
     );
-  }, [space, kaiId, state, configuredChannels, descendThreads, maxDays, maxDepth, invokePromise, run]);
+  }, [
+    space,
+    kaiId,
+    savedApplicationId,
+    state,
+    configuredChannels,
+    descendThreads,
+    maxDays,
+    maxDepth,
+    invokePromise,
+    run,
+  ]);
 
   const handleReset = useCallback(
     (targets?: string[]) => {

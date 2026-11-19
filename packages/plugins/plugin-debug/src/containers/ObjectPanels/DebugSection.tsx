@@ -25,7 +25,7 @@ export const DebugSection = ({ title, onRefresh, refreshLabel, children }: Debug
             variant='ghost'
             iconOnly
             icon='ph--arrows-clockwise--regular'
-            label={refreshLabel}
+            label={refreshLabel ?? title}
             onClick={onRefresh}
           />
         )}
