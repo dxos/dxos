@@ -1,38 +1,27 @@
 diagram kind=grid size=1600x880 cols="1096 344" gap=64 padding=48
 
-group layers-section rows="224 544" gap=16 {
+group layers-section rows="248 520" gap=16 {
   group types-section padding=16 border=true {
     group types-section-inner "ECHO Core" cols=3 gap=24 {
       group types-col-0 gap=16 {
-        node typescript "TypeScript" kind=card icon=file-ts variant=simple {
+        node typescript "TypeScript" kind=card icon=file-ts {
           item "Effect API"
-        }
-        node json-schema "Effect/JSON Schema" kind=card icon=brackets-angle variant=simple {
-          item "Strong and weak types"
         }
       }
       group types-col-1 gap=16 {
-        node versioning "Versioning" kind=card icon=git-branch variant=simple {
+        node json-schema "JSON Schema" kind=card icon=brackets-angle {
+          item "Strong and weak types"
           item "Schema migration"
-        }
-        node uri "URI" kind=card icon=link variant=simple {
           item "dxn:type:org.dxos/Task"
-        }
-      }
-      group types-col-2 gap=16 {
-        node validation "Validation" kind=card icon=shield-check variant=simple {
-          item "every write"
-        }
-        node migration "Schema migration" kind=card icon=arrows-clockwise variant=simple {
-          item "lenses"
         }
       }
     }
   }
   group layers-body cols=3 gap=24 padding=16 border=true {
-    group layers-col-0 gap=16 autoRows=160 {
+    group layers-col-0 gap=16 autoRows=152 {
       node graph "Graph" kind=card icon=graph iconTone=accent {
-        item "Typed objects and relations: a property graph per space."
+        item "Typed objects and relations"
+        item "Globally addressable"
       }
       node crdt "CRDT" kind=card icon=git-merge iconTone=message {
         item "Automerge: concurrent edits from people and agents merge deterministically."
@@ -41,7 +30,7 @@ group layers-section rows="224 544" gap=16 {
         item "Triggers on queries, feeds, cron, webhooks and email run functions on each change."
       }
     }
-    group layers-col-1 gap=16 autoRows=160 {
+    group layers-col-1 gap=16 autoRows=152 {
       node feeds "Feeds" kind=card icon=queue iconTone=file {
         item "Append-only logs: chat, transcripts, agent trajectories."
       }
@@ -52,7 +41,7 @@ group layers-section rows="224 544" gap=16 {
         item "SQLite everywhere: typed queries, full-text search, reverse references."
       }
     }
-    group layers-col-2 gap=16 autoRows=160 {
+    group layers-col-2 gap=16 autoRows=152 {
       node blobs "Blobs" kind=card icon=files iconTone=violet {
         item "Files and binary content, referenced from objects."
       }
@@ -67,7 +56,7 @@ group layers-section rows="224 544" gap=16 {
 }
 
 group runtime-section padding=16 border=true {
-  group runtime-section-inner "Runtime" gap=16 autoRows=160 alignContent=end {
+  group runtime-section-inner "Runtime" gap=16 autoRows=152 alignContent=end {
     node browser "Browser" kind=card body="Full replica in the tab; works offline." footer="wa-sqlite on OPFS" icon=browser
     node node-box "Node" kind=card body="Agents, CLIs and servers." footer="native SQLite" icon=terminal-window
     node worker "Worker" kind=card body="Always-on peer, sync hub and index per space." footer="Workers · DO SQLite" icon=cloud
