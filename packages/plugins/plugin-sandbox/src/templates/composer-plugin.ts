@@ -79,7 +79,7 @@ const makeSteps = (ref: string): ReadonlyArray<TaskSeed> => {
     },
     {
       title: 'Read the plugin guide',
-      description: `Fetch \`https://raw.githubusercontent.com/dxos/dxos/${ref}/${GUIDE_PATH}\` in the sandbox and read the "Example: a plugin with its own navtree group" and "Example: data, an operation and another plugin's menu" sections. The first builds a navtree group with a page that opens as an article, and the second an ECHO type and a contribution to another plugin; the rules list between them is where a first build goes wrong. The guide has no example of plugin-map's \`World\` role or of react-ui-form: take the role from \`@dxos/plugin-map/MapSurface\` and read both packages' types in \`node_modules\` for their props.`,
+      description: `Fetch \`https://raw.githubusercontent.com/dxos/dxos/${ref}/${GUIDE_PATH}\` in the sandbox and read the "Example: a plugin with its own group in the navigation tree" and "Example: data, an operation and another plugin's menu" sections. The first builds a navtree group with a page that opens as an article, and the second an ECHO type and a contribution to another plugin; the rules list between them is where a first build goes wrong. The guide has no example of plugin-map's \`World\` role or of react-ui-form: take the role from \`@dxos/plugin-map/MapSurface\` and read both packages' types in \`node_modules\` for their props.`,
       estimate: 'xs',
     },
     {
