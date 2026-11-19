@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { decide, fixPrompt, landPrompt, type PullRequestSnapshot, sentKey, toSnapshot } from './drive-decision.ts';
+import { type PullRequestSnapshot, decide, fixPrompt, landPrompt, sentKey, toSnapshot } from './drive-decision.ts';
 
 const pr = (overrides: Partial<PullRequestSnapshot> = {}): PullRequestSnapshot => ({
   url: 'https://github.com/dxos/dxos/pull/1',

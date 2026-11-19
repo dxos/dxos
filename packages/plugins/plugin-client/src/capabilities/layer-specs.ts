@@ -14,6 +14,8 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as ComputeSqlService from '@dxos/compute/SqlService';
 import { ConfigService } from '@dxos/config';
 import { Database, Hypergraph } from '@dxos/echo';
+import * as MemoryService from '@dxos/echo-memory/MemoryService';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
@@ -154,6 +156,43 @@ const DatabaseLayerSpec = LayerSpec.make(
     ),
 );
 
+/** The space's RDF store, kept by the client services host in its own database and replicated through its fact feed. */
+const RdfStoreLayerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService],
+    provides: [RdfStore.RdfStore],
+  },
+  (context) =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for RdfStore layer');
+        const client = yield* ClientService.client;
+        return Layer.succeed(RdfStore.RdfStore, client.rdf(context.space));
+      }),
+    ),
+);
+
+/**
+ * The space's {@link MemoryService.MemoryService}, run by the client services host beside the space's store, so every
+ * page and operation shares one rule evaluator per space.
+ */
+const MemoryLayerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService],
+    provides: [MemoryService.MemoryService],
+  },
+  (context) =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for MemoryService layer');
+        const client = yield* ClientService.client;
+        return Layer.succeed(MemoryService.MemoryService, client.memory(context.space));
+      }),
+    ),
+);
+
 /**
  * The cross-space graph, application-scoped because it is not about any one space: it is the handle
  * for work that must find which space holds something before it can act on it — the case a
@@ -249,6 +288,8 @@ export default Capability.makeModule(() =>
       SqlLayerSpec,
       EdgeHttpClientLayerSpec,
       DatabaseLayerSpec,
+      RdfStoreLayerSpec,
+      MemoryLayerSpec,
       HypergraphLayerSpec,
       AccessTokenResolverLayerSpec,
       CredentialsLayerSpec,

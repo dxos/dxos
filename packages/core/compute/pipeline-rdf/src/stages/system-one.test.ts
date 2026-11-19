@@ -6,8 +6,10 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
+import { Ontology } from '@dxos/echo-memory';
+
 import { type ScriptedAnswer, systemOneAiService } from '../testing/system-one.ts';
-import { type ExtractDocument, type ExtractOptions, Ontology } from '../types/index.ts';
+import { type ExtractDocument, type ExtractOptions } from '../types/index.ts';
 import { extractDocFacts, extractSystemOneDocFacts } from './extract-facts.ts';
 
 const MYKOLA = { iri: 'https://discord.com/users/1', label: 'Mykola', type: 'person' as const };

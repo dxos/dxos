@@ -9,8 +9,9 @@ import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
 import { type Type } from '@dxos/crawler';
+import { type Fact } from '@dxos/echo-memory';
 import { Pipeline } from '@dxos/pipeline';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf';
 
 import { DiscordPipeline } from '../pipeline.ts';
 import { replayStream } from '../replay.ts';
@@ -74,7 +75,7 @@ describe('extractQuestionsStage', () => {
     Effect.fnUntraced(function* () {
       yield* DiscordPipeline.run(CONFIG);
       const facts = yield* FactStore;
-      const questionGraph = (all: readonly RDF.Fact[]) =>
+      const questionGraph = (all: readonly Fact.Fact[]) =>
         all.filter((fact) => fact.extractor.id === 'extract-questions');
 
       const recorded = questionGraph(yield* facts.query({ source: 'discord:1000' }));

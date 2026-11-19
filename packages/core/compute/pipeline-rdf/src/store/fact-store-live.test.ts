@@ -4,48 +4,59 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { Parser, Writer } from 'n3';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { Fact, Mapping } from '@dxos/echo-memory';
 import { SqlSparqlEngine } from '@dxos/sparql-sqlite';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
 import { buildSparql } from '../internal/sparql/query-builder.ts';
-import { type Fact } from '../types/index.ts';
-import * as Mapping from '../types/Mapping.ts';
 import * as FactStoreLive from './fact-store-live.ts';
 import { FactStore } from './fact-store.ts';
 
-const fact = (id: string, over: Partial<Fact> = {}): Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
-    predicate: 'travelsTo',
-    object: { kind: 'entity', entity: 'paris' },
-    validFrom: '2026-06-01T00:00:00.000Z',
-  },
-  factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
-  attribution: {
-    agent: 'alice',
-    source: 'dxn:q:m1',
-    generatedAtTime: '2026-06-06T00:00:00.000Z',
-    span: { start: 3, end: 10 },
-  },
-  recordedAt: '2026-06-06T12:00:00.000Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: 'h1',
-  ...over,
-});
+const fact = (id: string, over: Partial<Fact.Encoded> = {}): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
+      predicate: 'travelsTo',
+      object: { kind: 'entity', entity: 'paris' },
+      validFrom: '2026-06-01T00:00:00.000Z',
+    },
+    factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
+    attribution: {
+      agent: 'alice',
+      source: 'dxn:q:m1',
+      generatedAtTime: '2026-06-06T00:00:00.000Z',
+      span: { start: 3, end: 10 },
+    },
+    recordedAt: '2026-06-06T12:00:00.000Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: 'h1',
+    ...over,
+  });
 
 /** A fact as stored: named graphs key statements by predicate IRI, which reads back on the fact. */
-const stored = (written: Fact): Fact => ({
-  ...written,
-  assertion: { ...written.assertion, predicateIri: Mapping.predicateOf(written) },
-});
+const stored = (written: Fact.Fact): Fact.Fact =>
+  Fact.make({
+    ...written,
+    assertion: { ...written.assertion, predicateIri: Mapping.predicateOf(written) },
+  });
 
-const termOf = (found: Fact) =>
+/** A TriG document's quads as sorted N-Quads lines, since the export's statement order is the engine's. */
+const quadSet = (trig: string): string[] =>
+  new Parser({ format: 'application/trig' })
+    .parse(trig)
+    .map((quad) =>
+      new Writer({ format: 'N-Quads' }).quadToString(quad.subject, quad.predicate, quad.object, quad.graph),
+    )
+    .sort();
+
+const termOf = (found: Fact.Fact) =>
   found.assertion.subject.kind === 'entity' ? found.assertion.subject.entity : found.assertion.subject.literal;
 
 const withFile = <A, E>(run: (path: string) => Effect.Effect<A, E>): Effect.Effect<A, E> =>
@@ -84,6 +95,39 @@ describe('FactStoreLive', () => {
           expect(cursor).toBe('hashA');
         }),
       );
+    }),
+  );
+
+  it.effect(
+    'a TriG export imports into an empty store as the same facts and ontology',
+    Effect.fnUntraced(function* () {
+      const source = FactStoreLive.makeMemory();
+      yield* source.putFacts([fact('f1'), fact('f2', { sourceHash: 'h2' })]);
+      const trig = yield* source.exportTrig();
+      expect(trig).toContain('@prefix sx:');
+      expect(trig).not.toContain('semantic#seed');
+
+      const target = FactStoreLive.makeMemory();
+      const read = yield* target.importTrig(trig);
+      expect(read).toBeGreaterThan(0);
+      expect((yield* target.query({})).map((found) => found.id).sort()).toEqual(['f1', 'f2']);
+      expect(yield* target.query({})).toEqual(yield* source.query({}));
+      expect(yield* target.predicates()).toEqual(yield* source.predicates());
+      // A second import adds nothing, since quads are a set.
+      yield* target.importTrig(trig);
+      expect(quadSet(yield* target.exportTrig())).toEqual(quadSet(trig));
+    }),
+  );
+
+  it.effect(
+    'importTrig fails on a malformed document and leaves the store as it was',
+    Effect.fnUntraced(function* () {
+      const store = FactStoreLive.makeMemory();
+      yield* store.putFacts([fact('f1')]);
+      const before = yield* store.exportTrig();
+      const exit = yield* store.importTrig('<urn:a> <urn:b> .').pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(quadSet(yield* store.exportTrig())).toEqual(quadSet(before));
     }),
   );
 

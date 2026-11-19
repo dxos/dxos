@@ -238,11 +238,15 @@ ckw<term> { @extend[@name={term}]<name, term> }
   // produce text this grammar rejects.
   exponent { $[eE] $[+\-]? digits }
   decimal { "-"? digits ("." digits)? exponent? }
-  number { decimal }
+  // A fraction says a quotient exactly where a decimal cannot: a run of three divides as 692/3, which prints as
+  // 230.66666666666666 and reads back as a different number. The denominator is digits only, so `A/box` (a ref,
+  // which must start with a letter) and a bare `/` are unaffected, and longest-match prefers `692/3` over `692`.
+  fraction { decimal "/" digits }
+  number { fraction | decimal }
   // `100x50`, longer than the `100` a bare number would match, so the tokenizer prefers it.
-  size { decimal "x" decimal }
+  size { number "x" number }
   // `2x1x0.5`, a 3D scale.
-  size3 { decimal "x" decimal "x" decimal }
+  size3 { number "x" number "x" number }
   // `dim=2d`; a name cannot start with a digit, and longest match prefers this to the number `2`.
   dimension { $[23] "d" }
 

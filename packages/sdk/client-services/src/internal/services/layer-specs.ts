@@ -53,8 +53,10 @@ import {
   InboxService,
   InvitationsService,
   LoggingService,
+  MemoryService,
   NetworkService,
   QueryService,
+  RdfStoreService,
   SpacesService,
   SqlService,
   SystemService,
@@ -100,6 +102,7 @@ import { LoggingServiceLayer } from '../logging/index.ts';
 import { IMetadataStoreService, SqliteMetadataStoreLayer } from '../metadata/index.ts';
 import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
+import { MemoryHostLayer, RdfHostLayer, SpaceMemories, SpaceMemoriesLayer } from '../rdf/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
 import { SqlServiceLayer } from '../sql/index.ts';
@@ -588,7 +591,12 @@ export const FeedSyncerSpec = LayerSpec.make(
   () =>
     FeedSyncerLayer({
       peerId: '',
-      syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+      syncNamespaces: [
+        FeedProtocol.WellKnownNamespaces.data,
+        FeedProtocol.WellKnownNamespaces.trace,
+        // A space's memory replicates through its fact feed, which EDGE's memory follows as a replica.
+        FeedProtocol.WellKnownNamespaces.facts,
+      ],
     }),
 );
 
@@ -840,6 +848,31 @@ export const SqlServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(SqlService.Rpcs, SqlService.Tag),
 );
 
+export const SpaceMemoriesSpec = LayerSpec.make(
+  { affinity: 'application', requires: [EchoHostService, SqlClient.SqlClient], provides: [SpaceMemories] },
+  () => SpaceMemoriesLayer,
+);
+
+export const RdfStoreServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SpaceMemories], provides: [RdfStoreService.Tag] },
+  () => RdfHostLayer,
+);
+
+export const MemoryServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SpaceMemories], provides: [MemoryService.Tag] },
+  () => MemoryHostLayer,
+);
+
+export const MemoryServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [MemoryService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(MemoryService.Rpcs, MemoryService.Tag),
+);
+
+export const RdfStoreServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [RdfStoreService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(RdfStoreService.Rpcs, RdfStoreService.Tag),
+);
+
 export const LocalBlobStoreSpec = LayerSpec.make(
   { affinity: 'application', requires: [SqlClient.SqlClient], provides: [LocalBlobStoreService] },
   () => LocalBlobStoreLayer,
@@ -950,6 +983,11 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   LoggingServiceRegistrationSpec,
   SqlServiceSpec,
   SqlServiceRegistrationSpec,
+  SpaceMemoriesSpec,
+  RdfStoreServiceSpec,
+  RdfStoreServiceRegistrationSpec,
+  MemoryServiceSpec,
+  MemoryServiceRegistrationSpec,
   LocalBlobStoreSpec,
   BlobReplicationSpec(options),
   BlobStoreServiceSpec,

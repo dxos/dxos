@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -25,7 +26,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-excalidraw/containers/ExcalidrawArticle',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   parameters: {
     layout: 'fullscreen',
   },

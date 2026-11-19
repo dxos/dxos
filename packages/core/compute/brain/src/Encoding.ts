@@ -6,7 +6,7 @@
 
 import * as Ast from '@dxos/datalog/Ast';
 import type * as Engine from '@dxos/datalog/Engine';
-import { RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 
 import type * as Vocabulary from './Vocabulary.ts';
 
@@ -51,16 +51,16 @@ export const RELATIONS: Readonly<Record<string, number>> = { ...FACT_RELATIONS, 
  * form, which `surface(F, …)` keeps; a fact without an illocution is `assertive`, and `supersedes` lists
  * `attribution.wasDerivedFrom` and the graphs the fact's graph replaces.
  */
-export const encode = (fact: RDF.Fact, vocabulary?: Vocabulary.Vocabulary): Engine.Entry[] => {
+export const encode = (fact: Fact.Fact, vocabulary?: Vocabulary.Vocabulary): Engine.Entry[] => {
   const { id, assertion, factuality, illocution, attribution } = fact;
   const entries: Engine.Entry[] = [
     {
       relation: 'fact',
       tuple: [
         id,
-        RDF.termValue(assertion.subject),
+        Fact.termValue(assertion.subject),
         vocabulary?.resolve(assertion.predicate) ?? assertion.predicate,
-        RDF.termValue(assertion.object),
+        Fact.termValue(assertion.object),
       ],
     },
     { relation: 'surface', tuple: [id, assertion.predicate] },
@@ -109,5 +109,5 @@ export const formatEntry = ({ relation, tuple }: Engine.Entry): string =>
   Ast.formatRule({ head: Ast.atom(relation, tuple.map(Ast.constant)), body: [] });
 
 /** The relations the rules engine sees for a fact ({@link encode}), one ground Datalog fact per line. */
-export const format = (fact: RDF.Fact, vocabulary?: Vocabulary.Vocabulary): string[] =>
+export const format = (fact: Fact.Fact, vocabulary?: Vocabulary.Vocabulary): string[] =>
   encode(fact, vocabulary).map(formatEntry);

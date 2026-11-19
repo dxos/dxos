@@ -8,9 +8,9 @@ import { useMemo } from 'react';
 
 import type * as Agent from '@dxos/assistant/Agent';
 import { type Database, Filter, Obj, type Ref } from '@dxos/echo';
+import { Fact, Graph, Mapping, Ontology, Vocab } from '@dxos/echo-memory';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { RDF } from '@dxos/pipeline-rdf';
 import { type EntityCardModel, curie, toEntityCards } from '@dxos/react-ui-rdf';
 import { Organization, Person } from '@dxos/types';
 
@@ -92,7 +92,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
                 ...entities.map((entity) => ({ id: entity.id, label: Profile.displayName(entity), object: entity })),
                 ...liveGoals.map((goal) => ({ id: goal.id, label: goal.title, object: goal })),
               ];
-        const entityId = (term: RDF.Term): string | undefined => {
+        const entityId = (term: Fact.Term): string | undefined => {
           const uri = term.kind === 'entity' ? EID.tryParse(term.entity) : undefined;
           return uri && EID.getEntityId(uri);
         };
@@ -163,11 +163,11 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
   const brainId = AgentPresence.brainId(agent);
   const { predicates, ontology } = useMemo(() => {
     const all = (inspection?.facts ?? []).map(({ fact }) => fact);
-    const seeded = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(brainId));
-    const known = seeded.include(RDF.Graph.mintedPredicates(all, seeded));
+    const seeded = Ontology.DEFAULT.withNamespace(Vocab.brainNamespace(brainId));
+    const known = seeded.include(Graph.mintedPredicates(all, seeded));
     const counts = new Map<string, number>();
     for (const fact of all) {
-      const iri = RDF.Mapping.predicateOf(fact, known);
+      const iri = Mapping.predicateOf(fact, known);
       const canonical = known.canonical(iri)?.iri ?? iri;
       counts.set(canonical, (counts.get(canonical) ?? 0) + 1);
     }
@@ -185,7 +185,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
         };
       })
       .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
-    return { predicates: items, ontology: RDF.Graph.ontologyToTriG(known) };
+    return { predicates: items, ontology: Graph.ontologyToTriG(known) };
   }, [inspection, brainId]);
 
   // A failed re-read keeps the last snapshot on screen, so an error stands in only before anything was read.

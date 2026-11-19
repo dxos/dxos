@@ -6,6 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
@@ -26,6 +27,7 @@ export type KanbanPropertiesProps = AppSurface.ObjectPropertiesProps<Kanban.Kanb
  */
 export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => {
   const registry = useContext(RegistryContext);
+  const readOnly = ToolkitHooks.useReadOnly();
   const db = Obj.getDatabase(object);
   const isView = object.spec.kind === 'view';
   const [view, updateView] = useObject(object.spec.kind === 'view' ? object.spec.view : undefined);
@@ -85,6 +87,10 @@ export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => 
   // Schema is picked by `kanban.spec.kind` — they have different shapes,
   // so cast for `Form.Root`'s single-schema prop.
   const settingsSchema = (isView ? KanbanSchema.KanbanViewSettingsSchema : KanbanSchema.KanbanSettingsSchema) as any;
+
+  if (readOnly) {
+    return null;
+  }
 
   return (
     <Form.FieldSet>

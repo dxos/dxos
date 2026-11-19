@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type FactStoreApi, type RDF, type SemanticIndexError } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
+import { type FactStoreApi, type SemanticIndexError } from '@dxos/pipeline-rdf';
 
 /**
  * Predicates treated as commitments (spec §3③ commitment ledger). Editable: extraction phrasing
@@ -32,10 +33,10 @@ export type Commitment = {
   readonly source: string;
 };
 
-const termLabel = (term: RDF.Assertion['subject']): string =>
+const termLabel = (term: Fact.Assertion['subject']): string =>
   term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
-const toCommitment = (fact: RDF.Fact): Commitment => ({
+const toCommitment = (fact: Fact.Fact): Commitment => ({
   who: termLabel(fact.assertion.subject),
   what: termLabel(fact.assertion.object),
   ...(fact.assertion.validTo ? { dueBy: fact.assertion.validTo } : {}),

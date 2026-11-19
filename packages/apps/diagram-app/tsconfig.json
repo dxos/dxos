@@ -105,6 +105,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/observability"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {

@@ -58,10 +58,16 @@ for (const { name, bundleTask, outDir } of apps) {
         LOG_FILTER: 'error',
       }
     : {};
+  const endpoints = Object.fromEntries(
+    [
+      ['DX_OTEL_ENDPOINT', process.env[`${prefix}_OTEL_ENDPOINT`]],
+      ['DX_POSTHOG_API_HOST', process.env[`${prefix}_POSTHOG_API_HOST`]],
+    ].filter(([, value]) => value),
+  );
 
   execFileSync('moon', ['run', bundleTask], {
     stdio: 'inherit',
-    env: { ...process.env, DX_ENVIRONMENT: environment, ...posthog },
+    env: { ...process.env, DX_ENVIRONMENT: environment, ...posthog, ...endpoints },
   });
   console.log('::endgroup::');
 }

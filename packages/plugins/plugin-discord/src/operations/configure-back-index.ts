@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { CrawlState } from '@dxos/crawler';
-import { Database, Feed, Obj, Ref, type Type } from '@dxos/echo';
-import * as FactFeed from '@dxos/plugin-agent/FactFeed';
+import { Database, Obj, Ref, type Type } from '@dxos/echo';
 
 import { DiscordOperation } from '#types';
 
@@ -32,14 +31,10 @@ const handler: Operation.WithHandler<typeof DiscordOperation.ConfigureBackIndex>
         const state =
           (yield* loadInput(CrawlState.CrawlState, existing?.input?.state)) ??
           (yield* Database.add(CrawlState.make({ name: name ?? 'Discord back-index' })));
-        const facts =
-          (yield* loadInput(Feed.Feed, existing?.input?.facts)) ??
-          (yield* Database.add(Feed.make({ name: name ?? 'Discord facts', kind: FactFeed.KIND })));
         const input = {
           ...config,
           channels: [...new Set(config.channels)],
           state: Ref.make(state),
-          facts: Ref.make(facts),
         };
         const spec = Trigger.specTimer(cron ?? DiscordOperation.DEFAULT_BACK_INDEX_CRON);
         const trigger =
@@ -62,7 +57,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.ConfigureBackIndex>
         }
         // The frontier shows the configured channels at once, before the first run.
         Obj.update(state, (state) => CrawlState.reconcileChannels(state, input.channels));
-        return { trigger: Ref.make(trigger), state: Ref.make(state), facts: Ref.make(facts) };
+        return { trigger: Ref.make(trigger), state: Ref.make(state) };
       }),
     ),
   );

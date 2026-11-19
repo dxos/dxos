@@ -5,6 +5,9 @@
 
 /* eslint-disable no-console */
 
+import * as Effect from 'effect/Effect';
+import * as Result from 'effect/Result';
+import * as Schedule from 'effect/Schedule';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -12,6 +15,8 @@ import { parseArgs } from 'node:util';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient, formatPluginBundleLoad } from '@dxos/edge-client';
 import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { EdgeCallFailedError } from '@dxos/protocols';
 
@@ -31,6 +36,19 @@ const readBundleFiles = async (bundleDir: string): Promise<BundleFile[]> => {
   return files;
 };
 
+/** One failed upload attempt; `cause` is what the EDGE client threw. */
+class UploadFailedError extends BaseError.extend('UploadFailedError', 'Plugin bundle upload failed.') {}
+
+/** Retries after the first attempt; with the backoff below they wait under half a minute in all. */
+const UPLOAD_RETRIES = 3;
+
+/**
+ * A failure on EDGE's side (5xx, e.g. R2's transient `InternalError` 10001) or one before any response arrived.
+ * Sending the upload again is safe: EDGE discards the files of a failed upload and writes the manifest last.
+ */
+const isTransientFailure = ({ cause }: UploadFailedError): boolean =>
+  cause instanceof EdgeCallFailedError && (cause.status === undefined || cause.status >= 500);
+
 const readManifest = async (bundleDir: string): Promise<{ key: string; version: string }> => {
   const { key, version } = JSON.parse(await readFile(join(bundleDir, PluginLoader.MANIFEST_FILE), 'utf8'));
   invariant(typeof key === 'string' && typeof version === 'string', `${bundleDir} has no manifest key and version`);
@@ -43,7 +61,8 @@ const readManifest = async (bundleDir: string): Promise<{ key: string; version: 
  * `DX_HUB_API_KEY`. Prints one line: the plugin key, its version, and the result.
  *
  * A version is immutable on EDGE: re-uploading the same content succeeds, and a version that already holds other
- * content is reported as `stale` (a warning, not a failure) since only a version bump can publish it.
+ * content is reported as `stale` (a warning, not a failure) since only a version bump can publish it. An upload that
+ * EDGE fails with a 5xx, or that gets no response, is sent again up to {@link UPLOAD_RETRIES} times.
  *
  * `--build <id>` (default `DX_PLUGIN_BUILD`) publishes the bundle as `<version>+<id>`, so a snapshot of `main` gets a
  * version of its own and moves `latest` instead of colliding with the release it was built from.
@@ -79,16 +98,40 @@ const main = async () => {
   invariant(apiKey, 'Set DX_HUB_API_KEY to the EDGE admin key: first-party plugins are owned by the admin key.');
 
   const http = new EdgeHttpClient(edgeUrl, { apiKey });
-  try {
-    // `auth: false` skips the identity presentation, leaving the admin key as the only credential.
-    const { moduleUrl, edge } = await http.uploadPluginBundle(
-      Context.default(),
-      { slug: key, version, files, channel: values.channel },
-      { auth: false },
-    );
+  // `auth: false` skips the identity presentation, leaving the admin key as the only credential.
+  const upload = Effect.tryPromise({
+    try: () =>
+      http.uploadPluginBundle(
+        Context.default(),
+        { slug: key, version, files, channel: values.channel },
+        { auth: false },
+      ),
+    catch: (cause) => new UploadFailedError({ cause }),
+  }).pipe(
+    Effect.tapError((error) =>
+      Effect.sync(() => {
+        if (isTransientFailure(error)) {
+          console.log(`! ${key} ${version} upload attempt failed on EDGE: ${String(error.cause)}`);
+        }
+      }),
+    ),
+  );
+  const result = await EffectEx.runPromise(
+    Effect.result(
+      Effect.retry(upload, {
+        schedule: Schedule.exponential('2 seconds').pipe(Schedule.jittered),
+        times: UPLOAD_RETRIES,
+        while: isTransientFailure,
+      }),
+    ),
+  );
+
+  if (Result.isSuccess(result)) {
+    const { moduleUrl, edge } = result.success;
     const load = edge?.load ? ` (${formatPluginBundleLoad(edge.load)})` : '';
     console.log(`✓ ${key} ${version} published: ${moduleUrl}${load}`);
-  } catch (error) {
+  } else {
+    const error = result.failure.cause;
     if (error instanceof EdgeCallFailedError && error.data?.type === 'conflict') {
       const message = `${key} ${version} stale: EDGE holds other content for this version; bump it to publish`;
       console.log(`! ${message}`);

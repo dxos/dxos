@@ -90,6 +90,7 @@ type EphemeralDeckState
     toasts: Toast[]
     currentUndoId?: string
     scrollIntoView?: { id: string; focus?: boolean }   # focus unset means the plank takes focus once in view
+    restored?: boolean            # the boot URL's first projection has ended, with or without a link action
 ```
 
 ```mdl
@@ -563,6 +564,20 @@ feat F-5: URL Navigation & Deep Linking
   req F-5.4:
     when: a navigation target cannot be resolved (unknown key, failed resolver, or missing node)
     then: Open operation redirects to a 404 node
+
+  req F-5.5:
+    when: a URL from outside the app carries `?action=<name>`, where `<name>` is a link action's DXN
+          without its `dxn:` prefix
+    then: once the URL has landed, DeckPlugin removes the parameter from the address bar and runs the
+          `LinkAction` a plugin contributes under that id on the object at the end of the chain, once;
+          an id no plugin contributes, an action that does not apply to the object, or a URL that opens
+          no object is dropped with a warning. A navigation that starts before the action has run
+          cancels it. Any URL from outside the app, with or without an action, that a newer
+          navigation overtakes while its navigation handlers run is not projected, so the newer
+          navigation keeps its deck and its link action; the handlers still run to the end. An
+          in-app navigation never carries an `action` parameter into the URL it writes. When the
+          app boots on such a URL, the boot loader stays up until the action has run, or for 10
+          seconds at most, so the page first shows what the action leaves
 ```
 
 ```mdl
@@ -674,6 +689,19 @@ feat F-8: Flat Navigation (breadcrumbs)
     when: the flatten setting is off
     then: the deck renders the full active stack as the scrolling/tiling/fullbleed presentation (F-1),
           with no breadcrumbs
+```
+
+```mdl
+feat F-9: Informational Banner
+
+  req F-9.1: When a host contributes to `BannerStart` or `BannerEnd`, the deck shows its top bar at every breakpoint except fullscreen.
+  req F-9.2: The top bar's start renders the `BannerStart` surface in place of the app name, and its end renders the `BannerEnd` surface, where a host puts its notice and actions.
+```
+
+```mdl
+feat F-10: Companions Start Closed
+
+  req F-10.1: On a read-only host, each workspace's deck starts with every companion closed, so a plank shows a companion only once the reader opens one.
 ```
 
 ## Acceptance
@@ -1026,6 +1054,202 @@ decision D-8: A companion's article sits in a scroll scope with no EID, which ke
 ```
 
 ---
+
+```mdl
+decision D-9: A host can show a full-width top bar that carries information and actions but no command search.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-10: The `banner` option turns the top bar on, and a `BannerEnd` surface holds the host's content. Fills in [D-9].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: The top bar already exists for Windows desktop; an option reuses it and a surface keeps host content out of the deck.
+```
+
+```mdl
+decision D-11: In a read-only host, companions start closed.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-12: A `companionsClosed` option seeds each new workspace deck with an empty companion list, through a `NewDeck` capability that URL navigation also reads. Fills in [D-11].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10.1]
+  why: An empty list already means every companion was closed, so no new deck state is needed; a deck opened from a link is created by URL navigation and starts the same way.
+```
+
+```mdl
+decision D-13: The top bar turns on when a host contributes to the banner's surfaces, with no deck option.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-10
+  affects: [F-9.1, F-9.2]
+```
+
+```mdl
+decision D-14: The deck starts a read-only host's workspace decks with their companions closed, read from `AppCapabilities.ReadOnly` when URL navigation creates a deck, with no deck option.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-12
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-15: A `BannerStart` surface replaces the app name, so a host draws its own title, and a contribution to either banner surface turns the top bar on. Fills in [D-13].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: The viewer's wordmark and its font then live in the viewer, and Composer, which contributes to neither surface, keeps its bar as before.
+  rejected: Turning the bar on only for `BannerEnd`: a host with only a title would get no bar.
+```
+
+```mdl
+decision D-16: `DeckSchema.closedCompanionsDeck` names the deck whose companion list is empty, as opposed to absent. Fills in [D-14].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10.1]
+  why: An empty list and an absent one mean different things to the companion layout, so the closed deck gets a name instead of an inline literal.
+```
+
+```mdl
+decision D-17: A link can carry an action that the app runs on the object the link opens. An action's id is a DXN, so plugins' actions do not collide.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-18: Plugins contribute link actions as an `AppCapabilities.LinkAction` capability, and a link names one in its `action` parameter. The deck's URL projection runs it after the URL lands, activates the app's idle modules first, and removes the parameter before it runs. Fills in [D-17].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: Contributions are the only actions a link can name, so a link cannot run an arbitrary operation. The projection is what turns a URL into deck state, and it clears fullscreen when it opens a workspace, so an action that sets fullscreen has to run after it. Operation handlers load when the app goes idle, which is after boot. Removing the parameter first means a reload or a failed action never runs it again.
+  rejected: A link naming an operation key directly, which would let any link run any operation; a viewer-only handler, which would not serve Composer links or Tauri deep links.
+```
+
+```mdl
+decision D-19: Approve [D-18].
+  date: 2026-11-18
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-20: A link names its action by the action's DXN without the `dxn:` prefix.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-21: A link that runs an action opens in the state the action leaves; the reader does not see the page change into it. A public link to a presentation is presenting when it loads.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-22: The deck contributes a `BootGate` from its startup-pass state module, pending when the boot URL names an action. The URL handler releases it when its first projection, and the action with it, has finished; the state module releases it after 10 seconds regardless. Fills in [D-21].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The URL handler waits on capabilities that arrive after the startup pass, so it activates after the boot loader would have dismissed, and a dismissed loader does not come back. The state module activates on the startup pass with only the atom registry, so the gate is decided in time. The budget keeps a projection that never finishes from holding the loader forever.
+  rejected: Contributing the gate from the URL handler, which decides it too late; running the action before the projection, which clears the fullscreen state the action sets.
+```
+
+```mdl
+decision D-23: The boot gate comes from its own startup-pass module, `LinkActionGate`, which also releases it after the 10-second budget; the deck's state module no longer holds it. Fills in [D-21].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  supersedes: D-22
+  why: The gate shares nothing with the deck's state but the startup pass, so a module of its own says why it activates there.
+```
+
+```mdl
+decision D-24: The URL handler records in the deck's ephemeral state that the boot URL has been projected, and the link-action gate reads that state to release itself, as the app's other boot gates do; the gate is no longer a capability the URL handler writes.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+  supersedes: D-23
+```
+
+```mdl
+decision D-25: The ephemeral field is an optional `restored` flag, set once the URL handler's first projection ends, whether or not it ran an action. The gate module keeps the 10-second budget in an atom of its own. Fills in [D-24].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: An optional field leaves every existing ephemeral state valid. The budget expiring does not mean the URL was projected, so it does not write `restored`.
+```
+
+```mdl
+decision D-26: A link action runs as part of its URL's projection, so a navigation that starts before the action has run cancels it. Fills in [D-21].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: An action that outlives its navigation reopens an object the reader has left, such as presenting a deck over the page they moved to.
+  rejected: Checking a navigation counter before the action runs; the projection's single-flight handle already marks a navigation as overtaken.
+```
+
+```mdl
+decision D-27: A link action runs only on an object its URL opened; a URL that opens nothing drops the action with a warning. Fills in [D-21].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: An action is defined on the object a link opens, so with no object there is nothing for it to act on.
+```
+
+```mdl
+decision D-28: Every navigation claims ownership when it starts: a URL from outside the app when it arrives, before its navigation handlers run, and an in-app navigation when its URL is pushed. An earlier link whose navigation has been claimed by a newer one does not run its action and leaves the newer URL's `action` parameter in place. Fills in [D-26].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The single-flight projection only sees a newer navigation once that navigation projects, so a slow navigation handler would let the earlier link strip the newer URL's action and run its own over the newer page.
+```
+
+```mdl
+decision D-29: A URL from outside the app is not projected when a newer navigation has claimed ownership by the time its navigation handlers finish. Its handlers still run to the end. Fills in [D-28].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: A late projection replaces the newer navigation's deck and interrupts the newer URL's projection, which cancels that URL's link action. Navigation handlers have side effects, such as accepting an invitation, that the reader asked for whichever page they end on. The boot restore is a URL from outside the app too. In Composer its handlers finish within about 100 ms of its claim, and onboarding's first in-app navigation comes 2 to 3 seconds later, so boot never overtakes its own restore.
+  rejected: Interrupting the handlers when a newer navigation starts, which would drop an invitation the link carried.
+```
+
+```mdl
+decision D-30: An in-app navigation that overtakes a link does not carry the link's `action` parameter into the URL it writes, so a reload does not run the action on the page the reader moved to.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-31: An in-app navigation drops the `action` parameter from the URL it writes, and leaves it out when comparing that URL with the current one. A navigation to what the address bar already shows stays a no-op, so it neither claims ownership nor cancels the pending link. Fills in [D-30].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The deck writes its URL through the same path when it re-states the deck it already shows. Counting the dropped parameter as a change would turn that write into a newer navigation and cancel the link's action.
+  rejected: Having the overtaken link remove its parameter from the address bar, which cannot tell its own parameter from a newer link's.
+```
 
 ## Appendix: Extension Definitions
 

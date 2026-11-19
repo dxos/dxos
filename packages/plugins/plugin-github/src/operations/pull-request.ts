@@ -91,8 +91,8 @@ export const githubWriteCredentials = () =>
  */
 export const resolvePullRequest = (ref: Ref.Ref<PullRequest.PullRequest>) =>
   Effect.gen(function* () {
-    // A ref decoded from another invocation's input is bound to a database but not yet loaded, so `target` alone is empty.
-    const pullRequest = ref.target ?? (yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)));
+    // A ref decoded from an operation's input is bound but not loaded; `load` resolves at once when it is.
+    const pullRequest = yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined));
     const db = pullRequest ? Obj.getDatabase(pullRequest) : undefined;
     if (!pullRequest || !db) {
       return yield* Effect.die(new GitHubPullRequestUnstoredError());

@@ -405,7 +405,7 @@ For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](h
 
 ## Dependencies
 
-Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
+Packages can be locked to a particular version as required by updating `overrides` in `pnpm-workspace.yaml` (pnpm 11+ no longer reads the `pnpm` field in `package.json`).
 
 Examples:
 
@@ -607,7 +607,7 @@ pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
+This project requires Node.js 24.x, pnpm 12.21.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
 
 ```bash
 export PROTO_HOME="$HOME/.proto"
@@ -632,6 +632,6 @@ See the [Run commands](#run-commands) section above for the full list.
   them with `tools/moon-cache/install-certs.sh --op` — once per machine, covering every worktree. In GitHub Actions it is stricter: any job
   using `.github/actions/setup` **fails** when the credentials are missing or the cache does not
   answer, unless it is a fork PR or the call passes `remote-cache: 'false'`.
-- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
+- The `allowBuilds` map in `pnpm-workspace.yaml` controls which dependency build scripts run. pnpm fails the install on any build script it lists neither as `true` nor `false`, so a new native dependency needs an entry. `node-gyp` is a root devDependency because the standalone pnpm binary that proto installs does not bundle one.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

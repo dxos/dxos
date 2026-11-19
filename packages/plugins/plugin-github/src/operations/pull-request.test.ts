@@ -280,8 +280,6 @@ describe('GitHub access', () => {
     );
     await db.flush();
     const ref = db.makeRef(Obj.getURI(pullRequest));
-    // Stands in for the unloaded ref: no synchronous target, as a freshly decoded input has.
-    Object.defineProperty(ref, 'target', { get: () => undefined });
 
     const resolved = await EffectEx.runPromise(resolvePullRequest(ref));
 
