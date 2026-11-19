@@ -118,6 +118,25 @@ const REQUIRE_SHIM_BANNER = [
   '// --- end CJS require shim ---',
 ].join('\n');
 
+/** Rolldown's runtime helpers, with no other module reached by the same entries, so they always get a chunk of their own. */
+const RUNTIME_ANCHOR_ID = '\0dx-runtime-anchor';
+
+/**
+ * Emits {@link RUNTIME_ANCHOR_ID} as an entry: Rolldown otherwise puts its runtime in any chunk reached by the same
+ * entries, and a browser chunk there makes every workerd chunk import React, which `codeSplitting` groups cannot prevent.
+ */
+const runtimeAnchorPlugin = (): VitePlugin => ({
+  name: 'composer-plugin:runtime-anchor',
+  apply: 'build',
+  buildStart() {
+    this.emitFile({ type: 'chunk', id: RUNTIME_ANCHOR_ID, name: 'runtime-anchor' });
+  },
+  resolveId: (id) => (id === RUNTIME_ANCHOR_ID ? id : undefined),
+  // A namespace object needs the runtime's `__export` helper.
+  load: (id) =>
+    id === RUNTIME_ANCHOR_ID ? `import * as self from '${RUNTIME_ANCHOR_ID}';\nexport default self;` : undefined,
+});
+
 /**
  * Whether the chunk holds rolldown's runtime `require` fallback, which looks up `require` in the chunk's own scope; a
  * bundled CJS module elsewhere calls that fallback rather than `require` itself.
@@ -558,6 +577,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     plugins.push(
       pluginConfigPlugin({ onLibraryManifest: ({ modules }) => (libraryModules = modules) }),
       moduleBodyAttributePlugin(),
+      runtimeAnchorPlugin(),
     );
   }
   return plugins;

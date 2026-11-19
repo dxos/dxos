@@ -42,6 +42,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-host-cloudflare": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/vite-plugin-import-source": "workspace:*",
     "effect": "catalog:",
     "miniflare": "catalog:",
     "oxc-parser": "catalog:",

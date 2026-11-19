@@ -6,14 +6,10 @@ tasks:
     # a module does not import or activate, or it contributes no operations, skills or types.
     # See `@dxos/plugin-builder`.
     # TODO(dmaretskyi): Reorganize all plugin-related tasks under a single `dx-plugin` tag.
-    # TODO(dmaretskyi): Drop `--allow-stale` once the stale-dist check compares content. It compares mtimes, and moon
-    #   restores a cached `dist` with the mtimes it was built with, so a fresh checkout's `src/` always reads as newer.
-    command: node $workspaceRoot/packages/core/compute/plugin-builder/dist/lib/bin/check-release.mjs --package . --allow-stale
+    command: node $workspaceRoot/packages/core/compute/plugin-builder/dist/lib/bin/check-release.mjs --package .
     deps:
-      # The bundle is built from source; dependencies' `dist` provide their types and the shared packages.
+      # The bundle is built from source, its own `#` imports included; dependencies' `dist` provide the shared packages.
       - ^:build
-      # The bundle resolves the package's own `#` imports to its `dist`, which must be complete before it builds.
-      - build
       - plugin-builder:build
       - plugin-host-cloudflare:build
     inputs:
