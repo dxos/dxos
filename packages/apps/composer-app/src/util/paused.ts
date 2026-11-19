@@ -43,18 +43,17 @@ export const showPausedPage = (reason: PausedReason, { version, otherVersion }: 
 };
 
 /**
- * `from` as a path on this origin, or `/`. Parsed rather than prefix-checked, since `/\host` reads as
+ * `from` as a URL on this origin, or `/`. Parsed rather than prefix-checked, since `/\host` reads as
  * a path but resolves to another origin, so a crafted link could send the user elsewhere.
  */
-const sameOriginPath = (from: string | null): string => {
+const sameOriginUrl = (from: string | null): string => {
   if (!from) {
     return '/';
   }
   try {
     const destination = new URL(from, location.href);
-    return destination.origin === location.origin
-      ? `${destination.pathname}${destination.search}${destination.hash}`
-      : '/';
+    // The full URL, not its path: a path like `//host` would itself read as another origin.
+    return destination.origin === location.origin ? destination.href : '/';
   } catch {
     return '/';
   }
@@ -67,7 +66,7 @@ export const continueHere = (from: string | null): void => {
   } catch {
     // Without the flag the app still opens; it just does not take over at once.
   }
-  location.replace(sameOriginPath(from));
+  location.replace(sameOriginUrl(from));
 };
 
 /** Whether the user chose this tab on the paused page; reading it clears it. */
