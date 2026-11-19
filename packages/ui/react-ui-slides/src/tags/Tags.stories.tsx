@@ -162,10 +162,44 @@ export const CardVariants: Story = {
 const iconCard = (attributes: string, title: string, ...bullets: string[]) =>
   [`<Card ${attributes}>`, '', `### ${title}`, '', ...bullets.map((bullet) => `- ${bullet}`), '', '</Card>'].join('\n');
 
+/** Three icon cards whose titles wrap differently: one line, then two, then two with a bullet more. */
+const ICON_CARDS = [
+  iconCard('icon="brain" tone="warning"', 'Shared Memory', 'Beyond silos', 'One graph for people and agents'),
+  iconCard('icon="shield-check"', 'Access and Authorization', 'Delegation', 'Policy and auditing'),
+  iconCard(
+    'icon="users-three" tone="success"',
+    'Coordination and Collaboration',
+    'Rethinking the User Interface',
+    'Agents as peers',
+    'Shared context',
+  ),
+];
+
+/** The titles of a row's cards end on one line however each wraps, so the first bullets of the row are level. */
+const expectLevelBodies = async (cards: HTMLElement[]) => {
+  const headers = await Promise.all(cards.map((card) => query(card, 'header')));
+  const titles = await Promise.all(cards.map((card) => query(card, 'header h3')));
+  const first = await Promise.all(cards.map((card) => query(card, 'li')));
+  // The story is only a test of this while the titles do wrap differently.
+  const lines = titles.map((title) => {
+    const style = getComputedStyle(title);
+    return Math.round(parseFloat(style.height) / parseFloat(style.lineHeight));
+  });
+  await expect(lines).toEqual([1, 2, 2]);
+  for (const index of [1, 2]) {
+    await expect(headers[index].getBoundingClientRect().height).toBeCloseTo(
+      headers[0].getBoundingClientRect().height,
+      0,
+    );
+    await expect(first[index].getBoundingClientRect().top).toBeCloseTo(first[0].getBoundingClientRect().top, 0);
+  }
+};
+
 /**
  * A row of cards with an icon in place of art: `icon` names a Phosphor glyph, which stands with the title as one
- * header and takes the card's `tone`, and the bullets are sized for the card and set under the title. The deck's font
- * here is Space Grotesk, whose widths are not the default mono's.
+ * header and takes the card's `tone`, and the bullets are sized for the card and set under the title. The cards of a
+ * row share one header height, so their bullets start level under titles of one line and of two. The deck's font here
+ * is Space Grotesk, whose widths are not the default mono's.
  */
 export const IconCards: Story = {
   render: (props: MarkdownSlideProps) => (
@@ -174,24 +208,7 @@ export const IconCards: Story = {
     </SlideThemeProvider>
   ),
   args: {
-    content: slide(
-      { layout: 'default' },
-      '# Problems',
-      '',
-      '<Grid cols="3">',
-      '',
-      iconCard('icon="brain" tone="warning"', 'Shared Memory', 'Beyond silos', 'One graph for people and agents'),
-      iconCard('icon="shield-check"', 'Access and Authorization', 'Delegation', 'Policy and auditing'),
-      iconCard(
-        'icon="users-three" tone="success"',
-        'Coordination and Collaboration',
-        'Rethinking the User Interface',
-        'Agents as peers',
-        'Shared context',
-      ),
-      '',
-      '</Grid>',
-    ),
+    content: slide({ layout: 'default' }, '# Problems', '', '<Grid cols="3">', '', ...ICON_CARDS, '', '</Grid>'),
   },
   play: async ({ canvasElement }) => {
     await query(canvasElement, 'article[data-icon] header svg');
@@ -254,6 +271,56 @@ export const IconCards: Story = {
         await expect(box.right).toBeLessThanOrEqual(card.getBoundingClientRect().right);
       }
     }
+
+    // 5. A one-line title beside two-line titles: every header is as tall as the tallest, and the bullets start level.
+    await expectLevelBodies(cards);
+  },
+};
+
+/**
+ * `<Grid align>` gives a grid the height of what it holds and places it in the space left to it, here in the middle
+ * of the slide under its title; without it a grid fills that space, as in the story above. The cards of the row still
+ * share one height, the tallest card's.
+ */
+export const GridAlign: Story = {
+  render: IconCards.render,
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# Problems',
+      '',
+      '<Grid cols="3" align="center">',
+      '',
+      ...ICON_CARDS,
+      '',
+      '</Grid>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const grid = await query(canvasElement, '[data-align="center"]');
+    const slot = await query(canvasElement, '[data-slot="default"]');
+    const heading = await query(canvasElement, '[data-slide] h1');
+    await query(canvasElement, 'article[data-icon] header svg');
+    const cards = [...canvasElement.querySelectorAll('article')];
+    const rects = cards.map((card) => card.getBoundingClientRect());
+
+    // 1. The grid is as tall as its cards, which is less than the space under the title.
+    const space = slot.getBoundingClientRect().bottom - heading.getBoundingClientRect().bottom;
+    await expect(grid.getBoundingClientRect().height).toBeCloseTo(rects[0].height, 0);
+    await expect(grid.getBoundingClientRect().height).toBeLessThan(space / 2);
+
+    // 2. It stands in the middle of that space: the room over it and under it is the same.
+    const style = getComputedStyle(grid);
+    await expect(parseFloat(style.marginTop)).toBeGreaterThan(0);
+    await expect(parseFloat(style.marginTop)).toBeCloseTo(parseFloat(style.marginBottom), 0);
+    await expect(grid.getBoundingClientRect().bottom).toBeLessThan(slot.getBoundingClientRect().bottom);
+
+    // 3. The three cards are one height, the tallest's, and their bullets still start level.
+    for (const rect of rects.slice(1)) {
+      await expect(rect.height).toBeCloseTo(rects[0].height, 0);
+      await expect(rect.top).toBeCloseTo(rects[0].top, 0);
+    }
+    await expectLevelBodies(cards);
   },
 };
 

@@ -41,6 +41,14 @@ export const CARD_VARIANTS = ['default', 'outline', 'plain'] as const;
 
 export type CardVariant = (typeof CARD_VARIANTS)[number];
 
+/**
+ * Where a `<Grid>` stands in the space left to it; the first fills that space, and each of the others takes the
+ * height of what the grid holds and places it at the start, the middle or the end.
+ */
+export const GRID_ALIGNMENTS = ['stretch', 'start', 'center', 'end'] as const;
+
+export type GridAlignment = (typeof GRID_ALIGNMENTS)[number];
+
 /** The icon set a bare `<Card icon>` name belongs to, and the weight it is drawn at. */
 const ICON_SET = 'ph';
 const ICON_WEIGHT = 'regular';
@@ -591,11 +599,33 @@ const trackCount = (
   return undefined;
 };
 
-/** The tracks a `<Grid>` lays down. */
+const isGridAlignment = (value: string): value is GridAlignment => GRID_ALIGNMENTS.some((align) => align === value);
+
+/** The alignment a `<Grid>` asks for, or none when it asks for the default, which fills the space it is given. */
+const gridAlignment = (
+  tag: ContainerTag,
+  value: string | undefined,
+  issues: SlideIssue[],
+): GridAlignment | undefined => {
+  if (value === undefined || value === GRID_ALIGNMENTS[0]) {
+    return undefined;
+  }
+  if (isGridAlignment(value)) {
+    return value;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} align "${value}"; using "${GRID_ALIGNMENTS[0]}".`,
+  });
+  return undefined;
+};
+
+/** The tracks a `<Grid>` lays down, and where it stands in the space left to it. */
 const gridProperties = (tag: ContainerTag, attributes: Record<string, string>, issues: SlideIssue[]): Properties => {
   const cols = trackCount(tag, 'cols', attributes.cols, issues);
   const rows = trackCount(tag, 'rows', attributes.rows, issues);
-  return { ...(cols && { cols }), ...(rows && { rows }) };
+  const align = gridAlignment(tag, attributes.align, issues);
+  return { ...(cols && { cols }), ...(rows && { rows }), ...(align && { align }) };
 };
 
 /**
