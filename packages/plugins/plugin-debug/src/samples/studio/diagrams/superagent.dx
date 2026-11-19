@@ -15,7 +15,7 @@ group inbound-body gap=24 {
 group agents-body gap=24 {
   group agents-col-0 rows="464 304" gap=16 {
     group triage-cell autoRows=176 alignContent=center {
-      node triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=violet
+      node triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=accent
     }
     group planner-cell autoRows=176 alignContent=center {
       node planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=sheet
@@ -25,9 +25,9 @@ group agents-body gap=24 {
 
 group subagents-body gap=24 {
   group subagents-col-0 gap=16 autoRows=144 alignContent=center {
-    node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=violet
-    node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=violet
-    node summary "Summarize" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=violet
+    node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
+    node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
+    node summary "Summarize" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
     node calendar "Email" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot tone=sheet
     node travel "Travel" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot tone=sheet
   }
