@@ -146,7 +146,8 @@ export type PluginConfigPluginOptions = {
   /**
    * The app's plugin-worker entry (relative to the project root), whose build hosts every
    * `plugin-worker` module of the app's plugins as a dynamically imported chunk, so a module the tab
-   * sends shares the worker's chunks. Pass the same options to the instance in `worker.plugins`.
+   * sends shares the worker's chunks. Pass the same options to the instance in `worker.plugins`. Without it
+   * the app has no plugin worker, and its plugins' stubs carry no worker modules.
    */
   workerHost?: string;
 };
@@ -351,9 +352,10 @@ export const pluginConfigPlugin = ({
       const query = new URLSearchParams(id.split('?')[1] ?? '');
       // An app boots with each plugin's metadata only; its module list loads when the plugin is enabled.
       if (!library && !query.has(MODULES_PARAM)) {
-        // Data only: the tab sends these to its plugin worker, and the page never loads their bodies.
+        // Data only: the tab sends these to its plugin worker, and the page never loads their bodies. An app
+        // with no worker host has no plugin worker to send them to.
         const workerModules: string[] = [];
-        for (const module of config.modules) {
+        for (const module of workerHost ? config.modules : []) {
           if (!module?.environments?.includes(WORKER_ENVIRONMENT)) {
             continue;
           }
