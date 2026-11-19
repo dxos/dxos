@@ -128,7 +128,7 @@ describe('editor binding lifecycle', () => {
   test('mode round-trips always end editable (F1.7)', async () => {
     const { result, rerender } = setup();
     await settled(result);
-    // Suggesting → Markdown (preview) → Plain text (source) → Suggesting, twice — the dropdown sets
+    // Suggesting → Preview → Source → Suggesting, twice — the dropdown sets
     // BOTH the editor view mode and the review mode on each hop (see MarkdownArticle), so each step
     // drives the pair the way the UI does. The reported repro ended read-only.
     for (let cycle = 0; cycle < 2; cycle++) {

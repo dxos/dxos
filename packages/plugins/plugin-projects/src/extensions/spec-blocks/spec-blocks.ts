@@ -7,7 +7,9 @@ import { Decoration } from '@codemirror/view';
 
 import { type WidgetDef, type WidgetMatcher, createWidget, widgetMatchersFacet, widgetsCore } from '@dxos/ui-editor';
 
+import { SpecBlockCard, type SpecBlockCardProps } from '../../components/SpecBlocks/SpecBlockCard.tsx';
 import { blockCommands } from './block-commands.ts';
+import { keyLabelDecorations } from './key-labels.ts';
 import {
   type SpecBlocksConfig,
   blockListeners,
@@ -15,7 +17,6 @@ import {
   specBlocksConfig,
   specBlocksField,
 } from './spec-blocks-state.ts';
-import { SpecBlockCard, type SpecBlockCardProps } from './SpecBlockCard.tsx';
 
 const CARD: WidgetDef<SpecBlockCardProps> = { Component: SpecBlockCard, block: true, keepAlive: true };
 
@@ -49,14 +50,15 @@ const matcher: WidgetMatcher = {
 
 /**
  * A spec's blocks typed by their kinds' schemas, which the spec's dialects and its own `ext` blocks define: a slash
- * command per kind, and with `cards` each block drawn as a form over its schema. The text stays the source: a form edits
- * the source of the field it changed and nothing else.
+ * command per kind, and with `cards` each block drawn as a form over its schema; without, each key drawn as its label.
+ * The text stays the source: a form edits the source of the field it changed and nothing else.
  */
 export const specBlocks = (config: SpecBlocksConfig): Extension => [
   specBlocksConfig.of(config),
   specBlocksField,
   blockListeners,
   blockCommands,
+  keyLabelDecorations,
   widgetsCore,
   widgetMatchersFacet.of(matcher),
 ];

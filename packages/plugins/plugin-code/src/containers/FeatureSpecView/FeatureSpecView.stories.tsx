@@ -89,6 +89,27 @@ const pickSpec = async (canvas: ReturnType<typeof within>, name: string) => {
   });
 };
 
+const VIEW_MODE = 'editor.toolbar.viewMode';
+
+/** Picks the spec's view labelled `label`. A narrow toolbar folds the view menu into its overflow (⋮) menu. */
+const pickView = async (canvas: ReturnType<typeof within>, label: string) => {
+  const control = await waitFor(
+    () => {
+      const found = canvas.queryByTestId(VIEW_MODE) ?? canvas.queryByTestId('toolbar.overflow');
+      if (!found) {
+        throw new Error('Neither the view menu nor the overflow menu is in the toolbar.');
+      }
+      return found;
+    },
+    { timeout: 10_000 },
+  );
+  await userEvent.click(control);
+  if (control.dataset.testid !== VIEW_MODE) {
+    await userEvent.click(await screen.findByTestId(VIEW_MODE, undefined, { timeout: 10_000 }));
+  }
+  await userEvent.click(await screen.findByText(label, undefined, { timeout: 10_000 }));
+};
+
 const EXTENSIONS = 'projectsPlugin.specExtensions';
 
 /**
@@ -197,6 +218,8 @@ export const SoftwareSpec: Story = {
     const canvas = within(canvasElement);
     await showTab(canvas, 'spec');
     const document = await canvas.findByTestId('projectsPlugin.spec.document', undefined, { timeout: 10_000 });
+    // A spec opens on its source; its forms are the Preview view.
+    await pickView(canvas, 'Preview');
     await waitFor(
       () =>
         expect(

@@ -6,7 +6,7 @@ import { type EditorState, type Extension, StateEffect, StateField } from '@code
 
 import { type BlockSchema, type SourceBlock, mintKey } from '@dxos/deus/schema';
 
-import { type SlashCommand, slashCommands, slashCommandSource } from '../SpecDocumentEditor/slash-commands.ts';
+import { type SlashCommand, slashCommands, slashCommandSource } from '../slash-commands.ts';
 import { specBlocksField } from './spec-blocks-state.ts';
 
 /** Asks the card of the block at `at`, one a command just wrote, to focus its first field. */

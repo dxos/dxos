@@ -11,8 +11,8 @@ import { ProjectCapabilities, type Settings } from '#types';
 
 const UNSET = Atom.make<Settings.Settings>({});
 
-/** The view a spec opens in, from the projects plugin's settings; the forms when unset or outside the plugin. */
+/** The view a spec opens in, from the projects plugin's settings; its source when unset or outside the plugin. */
 export const useDefaultSpecView = (): Settings.SpecView => {
   const [settings] = Hooks.useCapabilities(ProjectCapabilities.Settings);
-  return useAtomValue(settings ?? UNSET).defaultSpecView ?? 'preview';
+  return useAtomValue(settings ?? UNSET).defaultSpecView ?? 'source';
 };

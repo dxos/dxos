@@ -920,7 +920,7 @@ export const SuggestingTest: Story = {
  * Review chrome on the ambient path, with the suggestion seeded before mount (no play setup):
  * - A suggestion anchored at the end of the document leaves an empty line below it, so the caret can
  *   still reach the end (the widget renders at `doc.length` and would otherwise be the last line).
- * - Switching to the "Markdown" view mode keeps the suggestions overlaid and the editor editable —
+ * - Switching to the "Preview" view mode keeps the suggestions overlaid and the editor editable —
  *   only "Read only" is a viewing posture, and treating preview as viewing hid every suggestion.
  */
 export const ReviewChromeTest: Story = {
@@ -947,8 +947,8 @@ export const ReviewChromeTest: Story = {
       { timeout: 15_000 },
     );
 
-    // Preview ("Markdown") is an editing posture: suggestions stay and the editor stays editable.
-    await selectViewMode(canvasElement, 'Markdown');
+    // Preview is an editing posture: suggestions stay and the editor stays editable.
+    await selectViewMode(canvasElement, 'Preview');
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
     await expect(canvasElement.querySelector('.cm-content')?.getAttribute('contenteditable')).toBe('true');
   },
@@ -998,7 +998,7 @@ export const SuggestingSwapTest: Story = {
     await expect(rootContent(doc)).not.toContain('SWAP');
 
     // Leave Suggesting: still the same view and DOM.
-    await selectViewMode(canvasElement, 'Markdown');
+    await selectViewMode(canvasElement, 'Preview');
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('SWAP'), { timeout: 15_000 });
     await expect(contentEl()).toBe(before);
     await expect(EditorView.findFromDOM(before)).toBe(view);

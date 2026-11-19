@@ -13,7 +13,7 @@ import { type ReviewScenario, type ScenarioStep } from './scenarios.ts';
 
 /**
  * Open the editor view-mode dropdown and pick an entry by label. The review mode is folded into this
- * single dropdown: Source/Markdown ⇒ editing, Read-only ⇒ viewing, Suggesting ⇒ suggesting.
+ * single dropdown: Source/Preview ⇒ editing, Read-only ⇒ viewing, Suggesting ⇒ suggesting.
  */
 export const selectViewMode = async (canvasElement: HTMLElement, label: string): Promise<void> => {
   const body = within(canvasElement.ownerDocument.body);
@@ -56,7 +56,7 @@ const modeLabel = (step: Extract<ScenarioStep, { kind: 'select-mode' }>): string
     case 'viewing':
       return 'Read-only';
     case 'editing':
-      return step.viewMode === 'source' ? 'Source' : 'Markdown';
+      return step.viewMode === 'source' ? 'Source' : 'Preview';
   }
 };
 

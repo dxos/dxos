@@ -23,8 +23,8 @@ import * as Util from '@dxos/react-ui/Util';
 import { type WidgetState, formattingListener, widgetHost } from '@dxos/ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
+import { createMdlExtensions } from '../../extensions/mdl.ts';
 import { useCaretIdentity, useSpecBlockForms } from '../../hooks/index.ts';
-import { createMdlExtensions } from './extensions.ts';
 
 const SPEC_DOCUMENT_EDITOR_NAME = 'SpecDocumentEditor';
 
