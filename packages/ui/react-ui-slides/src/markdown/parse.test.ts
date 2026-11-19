@@ -279,6 +279,35 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([{ kind: 'html', message: 'Invalid <Grid> align "middle"; using "stretch".' }]);
   });
 
+  test('<Grid variant> names a style, and a grid that names none is the plain one', () => {
+    const flow = parseSlide('<Grid cols="4" variant="flow">\n\nCells\n\n</Grid>');
+    expect(elements(flow.slots.default, 'slide-grid')[0].properties.variant).toBe('flow');
+    expect(flow.issues).toEqual([]);
+    const plain = parseSlide('<Grid cols="4">\n\nCells\n\n</Grid>');
+    expect(elements(plain.slots.default, 'slide-grid')[0].properties.variant).toBe('default');
+    expect(plain.issues).toEqual([]);
+  });
+
+  test('a <Grid variant> the grid does not know falls back to the plain one, with an issue', () => {
+    const slide = parseSlide('<Grid variant="arrows">\n\nCells\n\n</Grid>');
+    expect(elements(slide.slots.default, 'slide-grid')[0].properties.variant).toBe('default');
+    expect(slide.issues).toEqual([{ kind: 'html', message: 'Invalid <Grid> variant "arrows"; using "default".' }]);
+  });
+
+  test('<v-clicks> straight inside a <Grid> gives each of the grid\u2019s children a step', () => {
+    const card = (title: string) => `<Card>\n\n${title}\n\n</Card>`;
+    const slide = parseSlide(
+      ['<Grid cols="3">', '<v-clicks>', card('One'), card('Two'), card('Three'), '</v-clicks>', '</Grid>'].join('\n\n'),
+    );
+    expect(elements(slide.slots.default, 'slide-card').map((element) => element.properties.step)).toEqual([
+      '1',
+      '2',
+      '3',
+    ]);
+    expect(slide.clicks).toBe(3);
+    expect(slide.issues).toEqual([]);
+  });
+
   test('<Cell> and <Card> carry the tracks they span', () => {
     const slide = parseSlide(
       '<Grid cols="3">\n\n<Cell colSpan="2">\n\nWide\n\n</Cell>\n\n<Card rowSpan="2">\n\nTall\n\n</Card>\n\n</Grid>',

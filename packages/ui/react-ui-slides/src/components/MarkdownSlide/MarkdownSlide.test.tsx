@@ -227,6 +227,61 @@ describe('MarkdownSlide', () => {
     expect(render('<Grid cols="3">\n\nCells\n\n</Grid>')).not.toContain('data-align');
   });
 
+  test('click tags straight inside a grid leave no box, so what they reveal stays the grid\u2019s children', ({
+    expect,
+  }) => {
+    const card = (title: string) => `<Card icon="brain">\n\n### ${title}\n\n</Card>`;
+    const grid = (...children: string[]) => ['<Grid cols="3">', ...children, '</Grid>'].join('\n\n');
+    const built = grid('<v-clicks>', card('One'), card('Two'), card('Three'), '</v-clicks>');
+
+    // The cards follow the grid's own tag with nothing between them, each with its step, hidden until it.
+    const markup = render(built, 1);
+    expect(markup).not.toContain('data-click');
+    expect(markup).toMatch(/<div [^>]*data-variant="default"[^>]*>\s*<article /);
+    const cards = [...markup.matchAll(/<article [^>]*>/g)].map(([tag]) => tag);
+    expect(cards.map((tag) => tag.match(/data-step="(\d)"/)?.[1])).toEqual(['1', '2', '3']);
+    expect(cards.map((tag) => / class="[^"]*\binvisible\b/.test(tag))).toEqual([false, true, true]);
+
+    // A single `<v-click>` hands its step to the card it wraps, and `<v-after>` the step before it.
+    const single = render(grid(card('One'), `<v-click>\n\n${card('Two')}\n\n</v-click>`), 0);
+    expect(single).not.toContain('data-click');
+    const [first, second] = [...single.matchAll(/<article [^>]*>/g)].map(([tag]) => tag);
+    expect(first).not.toContain('data-step');
+    expect(second).toContain('data-step="1"');
+    expect(second).toMatch(/ class="[^"]*\binvisible\b/);
+
+    // Outside a grid a click tag is still a box of its own.
+    expect(render(`<v-clicks>\n\n${card('One')}\n\n</v-clicks>`)).toContain('data-click="slide-clicks"');
+  });
+
+  test('a flow grid draws an arrow after each child but the last, and waits for a child still to come', ({
+    expect,
+  }) => {
+    const markup = render('<Grid cols="4" variant="flow">\n\n<Card icon="brain">\n\n### A\n\n</Card>\n\n</Grid>');
+    const classes = markup.match(/<div [^>]*data-variant="flow"[^>]*class="([^"]*)"/)?.[1] ?? '';
+    // It is still the grid: the tracks, the alignment and the icon cards' shared header rows.
+    expect(classes).toContain('[grid-template-columns:repeat(var(--slide-grid-cols,1),minmax(0,1fr))]');
+    expect(classes).toContain('[&amp;&gt;article[data-icon]]:grid-rows-subgrid');
+    // The arrow stands in a gap as wide as its box, and a card lets it out of its own box.
+    expect(classes).toContain('gap-x-24');
+    expect(classes).toContain('[&amp;&gt;*]:after:w-24');
+    expect(classes).toContain('[&amp;&gt;*]:after:content-[&#x27;→&#x27;]');
+    expect(classes).toContain('[&amp;&gt;article]:overflow-visible');
+    expect(classes).toContain('[&amp;&gt;*:last-child]:after:content-none');
+    expect(classes).toContain('[&amp;&gt;*:has(+.invisible)]:after:content-none');
+    // The arrow after the last card of a row falls outside the grid, which cuts it.
+    expect(classes).toContain('overflow-x-clip');
+    // A plain grid draws none.
+    expect(render('<Grid cols="4">\n\nCells\n\n</Grid>')).not.toContain('after:content-');
+  });
+
+  test('a list nested in a flow item takes the card\u2019s size, not the slide\u2019s', ({ expect }) => {
+    const markup = render('<List variant="flow">\n\n1. **Chat** A model\n   - Search\n   - Recall\n\n</List>');
+    const classes = markup.match(/<ol [^>]*data-variant="flow"[^>]*>\s*<li [^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('[&amp;_li]:text-[length:inherit]');
+    expect(classes).toContain('[&amp;_:is(ul,ol)]:ml-10');
+  });
+
   test('a card with no title still shows its icon', ({ expect }) => {
     const markup = render('<Card icon="brain">\n\nJust text\n\n</Card>');
     expect(markup).toMatch(/<article [^>]*><header [^>]*><svg [^>]*>.*?<\/svg><\/header><div [^>]*><p /);

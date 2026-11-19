@@ -42,6 +42,14 @@ export const CARD_VARIANTS = ['default', 'outline', 'plain'] as const;
 export type CardVariant = (typeof CARD_VARIANTS)[number];
 
 /**
+ * Named grid styles a `<Grid>` may request; the first is the bare grid, and `flow` draws an arrow in each gap between
+ * the children of a row, for a progression.
+ */
+export const GRID_VARIANTS = ['default', 'flow'] as const;
+
+export type GridVariant = (typeof GRID_VARIANTS)[number];
+
+/**
  * Where a `<Grid>` stands in the space left to it; the first fills that space, and each of the others takes the
  * height of what the grid holds and places it at the start, the middle or the end.
  */
@@ -643,13 +651,15 @@ const containerNodes = (
   children: RootContent[],
   issues: SlideIssue[],
 ): RootContent[] => {
-  if (open.tag === 'grid' || open.tag === 'cell') {
-    // Neither takes a named style, but both carry the only one they have so the renderer finds their classes where
-    // every other tag's live.
-    const tracks =
-      open.tag === 'grid'
-        ? gridProperties(open.tag, open.attributes, issues)
-        : spanProperties(open.tag, open.attributes, issues);
+  if (open.tag === 'grid') {
+    const variant = variantName(open.tag, open.attributes.variant, GRID_VARIANTS, issues);
+    const tracks = gridProperties(open.tag, open.attributes, issues);
+    return [slideElement(CONTAINER_TAGS[open.tag], { variant, ...tracks }, children)];
+  }
+  if (open.tag === 'cell') {
+    // A cell takes no named style, but carries the only one it has so the renderer finds its classes where every
+    // other tag's live.
+    const tracks = spanProperties(open.tag, open.attributes, issues);
     return [slideElement(CONTAINER_TAGS[open.tag], { variant: 'default', ...tracks }, children)];
   }
   if (open.tag === 'box' || open.tag === 'card') {
