@@ -7,6 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import type * as Operation from '@dxos/compute/Operation';
+import type * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, type Error, Obj, type Registry } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
@@ -17,6 +18,28 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../util/index.ts';
 import type * as AiRequest from './AiRequest.ts';
 import { ArtifactDiffResolver } from './artifact-diff.ts';
+
+/** The name a skill goes by in its definition and in a notice that disables it. */
+const skillName = (skill: Skill.Skill): string => Obj.getLabel(skill) ?? Obj.getMeta(skill).key ?? skill.id;
+
+/**
+ * The skills' instructions as the system prompt carries them, under `## Skills Definitions`; `undefined` for none.
+ * Each is named, so a notice that disables one can say which instructions no longer apply.
+ */
+export const formatSkills = (skills: readonly Skill.Skill[]) =>
+  Function.pipe(
+    skills,
+    Effect.forEach((skill) =>
+      Effect.gen(function* () {
+        return trim`
+          <skill name="${skillName(skill).replaceAll('"', '&quot;')}">
+            ${yield* Template.processTemplate(skill.instructions)}
+          </skill>
+        `;
+      }),
+    ),
+    Effect.map((defs) => (defs.length > 0 ? ['## Skills Definitions', ...defs].join('\n\n') : undefined)),
+  );
 
 /**
  * Formats the system prompt.
@@ -33,22 +56,7 @@ export const formatSystemPrompt = ({
   Database.Service | Registry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
-    const skillDefs = yield* Function.pipe(
-      skills,
-      Effect.forEach((skill) => Effect.succeed(skill.instructions)),
-      Effect.flatMap(
-        Effect.forEach((template) =>
-          Effect.gen(function* () {
-            return trim`
-            <skill>
-              ${yield* Template.processTemplate(template)}
-            </skill>
-          `;
-          }),
-        ),
-      ),
-      Effect.map((skills) => (skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined)),
-    );
+    const skillDefs = yield* formatSkills(skills);
 
     // Instructions steer the session, so their text (and sentinel commands) belongs in the system
     // prompt itself — a context-object stub would force the model to tool-load them and follow nothing.
@@ -79,23 +87,7 @@ export const formatSystemPrompt = ({
       Effect.map((defs) => (defs.length > 0 ? ['## Instructions', ...defs].join('\n\n') : undefined)),
     );
 
-    const objectDefs = yield* Function.pipe(
-      objects,
-      Effect.forEach((object) => {
-        // Carry the label so the model only tool-loads an object when it needs the contents,
-        // not just to learn what the reference is.
-        const label = Obj.getLabel(object);
-        return Effect.succeed(
-          trim`
-            <object>
-              <dxn>${Obj.getURI(object)}</dxn>
-              <typename>${Obj.getTypename(object)}</typename>${label ? `\n  <label>${label}</label>` : ''}
-            </object>
-          `,
-        );
-      }),
-      Effect.map((objects) => (objects.length > 0 ? ['## Context Objects', ...objects].join('\n\n') : undefined)),
-    );
+    const objectDefs = formatObjects(objects);
 
     return yield* Function.pipe(
       Effect.succeed(
@@ -104,6 +96,57 @@ export const formatSystemPrompt = ({
       Effect.map((parts) => parts.join('\n\n')),
     );
   }).pipe(Effect.withSpan('formatSystemPrompt'));
+
+/**
+ * The context objects as the system prompt carries them, under `## Context Objects`; `undefined` for none.
+ */
+export const formatObjects = (objects: readonly Obj.Unknown[]): string | undefined => {
+  const defs = objects.map((object) => {
+    // Carry the label so the model only tool-loads an object when it needs the contents,
+    // not just to learn what the reference is.
+    const label = Obj.getLabel(object);
+    return trim`
+      <object>
+        <dxn>${Obj.getURI(object)}</dxn>
+        <typename>${Obj.getTypename(object)}</typename>${label ? `\n  <label>${label}</label>` : ''}
+      </object>
+    `;
+  });
+  return defs.length > 0 ? ['## Context Objects', ...defs].join('\n\n') : undefined;
+};
+
+/** The skills and objects bound to a conversation at some point of a turn. */
+export type TurnBindings = {
+  readonly skills: readonly Skill.Skill[];
+  readonly objects: readonly Obj.Unknown[];
+};
+
+/**
+ * What changed in the bindings since the turn's system prompt was written, as the parts of a notice: a turn keeps the
+ * system prompt it started with, since a changed one discards the whole prompt cache, so the conversation carries the
+ * change instead. The next turn's system prompt includes it as usual. Empty when nothing changed.
+ */
+export const formatBindingChanges = (before: TurnBindings, after: TurnBindings) =>
+  Effect.gen(function* () {
+    const skillIds = new Set(before.skills.map((skill) => skill.id));
+    const currentSkillIds = new Set(after.skills.map((skill) => skill.id));
+    const objectIds = new Set(before.objects.map((object) => object.id));
+    const enabled = yield* formatSkills(after.skills.filter((skill) => !skillIds.has(skill.id)));
+    const disabled = before.skills.filter((skill) => !currentSkillIds.has(skill.id));
+    const added = formatObjects(after.objects.filter((object) => !objectIds.has(object.id)));
+    const currentObjectIds = new Set(after.objects.map((object) => object.id));
+    const removed = before.objects.filter((object) => !currentObjectIds.has(object.id));
+    return [
+      enabled && `Skills enabled in this turn, in addition to those above:\n\n${enabled}`,
+      disabled.length > 0 &&
+        `Skills disabled in this turn; the instructions above under these names no longer apply: ${disabled
+          .map((skill) => `"${skillName(skill)}"`)
+          .join(', ')}.`,
+      added && `Objects added to the context in this turn, in addition to those above:\n\n${added}`,
+      removed.length > 0 &&
+        `Objects removed from the context in this turn: ${removed.map((object) => Obj.getURI(object)).join(', ')}.`,
+    ].filter((part): part is string => typeof part === 'string');
+  });
 
 /**
  * Formats the user prompt.
