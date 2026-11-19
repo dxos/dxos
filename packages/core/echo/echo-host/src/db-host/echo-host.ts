@@ -1610,7 +1610,11 @@ export class EchoHost extends Resource {
         return;
       }
       const pending = first.filter((_, index) => !heads[index]?.length);
-      if (pending.length > 0) {
+      // An object created since this peer last synced is not in its directory yet; waiting for the root update that
+      // names it keeps the rest of the space from being requested ahead of the object's document.
+      const named =
+        directory.objects?.[entry.objectId] !== undefined || directory.links?.[entry.objectId] !== undefined;
+      if (pending.length > 0 || !named) {
         entry.pending = new Set(pending);
         announced = first;
       } else {

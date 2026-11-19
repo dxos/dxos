@@ -162,10 +162,45 @@ describe('EchoHost.syncFirst', () => {
       announced,
       createObjectDoc,
       everything,
+      rootUrl: root.url,
       shownFirst: ids(root.url, shownUrl, referencedUrl),
       referencedDocumentId: interpretAsDocumentId(referencedUrl),
     };
   };
+
+  test('an object the directory does not name yet holds the rest of the space until the root names it', async ({
+    expect,
+  }) => {
+    const { host, spaceId, announced, createObjectDoc, everything, rootUrl } = await setup();
+    // Created by a peer since this one last synced: the root update naming it and its document are still to arrive.
+    const newcomer = EntityId.random();
+    const newcomerUrl = generateAutomergeUrl();
+
+    const rootOnly = announced(ids(rootUrl));
+    host.syncFirst(spaceId, newcomer);
+    await rootOnly;
+
+    const named = announced(ids(rootUrl, newcomerUrl));
+    {
+      using rootLease = await host['_automergeHost'].loadDoc<DatabaseDirectory>(
+        Context.default(),
+        interpretAsDocumentId(rootUrl),
+      );
+      expect(rootLease).toBeTruthy();
+      rootLease?.change((draft: DatabaseDirectory) => {
+        if (draft.links) {
+          draft.links[newcomer] = new A.RawString(newcomerUrl);
+        }
+      });
+    }
+    await host.flush(Context.default());
+    await named;
+
+    const rest = announced([...everything, interpretAsDocumentId(newcomerUrl)].sort());
+    await createObjectDoc(newcomer, {}, interpretAsDocumentId(newcomerUrl));
+    await host.flush(Context.default());
+    await rest;
+  });
 
   test('names the object and what it references, then the whole space once the reference arrives', async () => {
     const {
