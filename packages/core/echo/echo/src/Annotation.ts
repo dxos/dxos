@@ -169,7 +169,8 @@ export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotatio
  * A read-only return is sound regardless of context — the reactive proxy rejects mutation outside an
  * `Obj.update`.
  *
- * @performance O(1) meta-dictionary read; returns the stored value without decoding or copying.
+ * @performance O(1) meta-dictionary read; returns the stored value without decoding or copying. A keyed
+ * annotation scans the meta keys and returns a fresh record of the live entries.
  */
 export const get: {
   <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>;
@@ -202,7 +203,8 @@ export const set: {
  * Mutate an existing annotation value in place via a callback, wrapping the mutation in a change
  * transaction (like `Obj.update`). The result is validated against the annotation's schema. Use when
  * only an annotation needs to change; to mutate it alongside other changes (unvalidated), call
- * `Annotation.get` inside an existing `Obj.update` instead. No-op when absent.
+ * `Annotation.get` inside an existing `Obj.update` instead. No-op when absent, except for a keyed
+ * annotation, whose mutator starts from an empty record.
  *
  * @performance O(value size) schema validation after the mutator, inside one change.
  */
