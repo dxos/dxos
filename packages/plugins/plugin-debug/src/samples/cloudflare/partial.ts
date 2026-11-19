@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database, Ref } from '@dxos/echo';
+import { Collection, Database, Obj, Ref } from '@dxos/echo';
 import * as Architecture from '@dxos/plugin-canvas/Architecture';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
@@ -38,9 +38,16 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('studi
         ]),
       );
       const deck = yield* Database.add(makeStudioDeck(drawings));
+      // The drawings are what the slides embed, so they sit in a folder beside the presentation rather than around it.
+      const diagrams = yield* Database.add(
+        Obj.make(Collection.Collection, {
+          name: 'Diagrams',
+          objects: [...drawings.values()].map((drawing) => Ref.make(drawing)),
+        }),
+      );
       yield* SampleSpace.collection(
         'Deck',
-        [deck, ...drawings.values()].map((object) => Ref.make(object)),
+        [deck, diagrams].map((object) => Ref.make(object)),
       );
       return { deck, drawings };
     }),
