@@ -183,6 +183,8 @@
     "codemirror-lang-spreadsheet": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/halo": "workspace:*",
