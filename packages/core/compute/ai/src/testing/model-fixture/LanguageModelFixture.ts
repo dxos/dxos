@@ -39,6 +39,23 @@ const TIME_LINE_PATTERN = /The current date and time is [^\n]+/g;
 const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.';
 
 /**
+ * Matches the `## Current Date` section `formatSystemPrompt` (`@dxos/assistant`) ends a system prompt with, and the
+ * blank line before it. Stripped rather than replaced by a placeholder, and a system message it leaves empty is dropped,
+ * so a conversation recorded before the section existed still replays, here and in EDGE's memo server, which matches
+ * through {@link __testing.normalizeForMatching}.
+ */
+const CURRENT_DATE_SECTION_PATTERN =
+  /(?:\n\n)?## Current Date\n\nToday is [A-Za-z]+, \d{4}-\d{2}-\d{2} \(UTC\)\.[^\n]*/g;
+
+const isEmptySystemMessage = (value: unknown): boolean =>
+  typeof value === 'object' &&
+  value !== null &&
+  'role' in value &&
+  value.role === 'system' &&
+  'content' in value &&
+  value.content === '';
+
+/**
  * NEVER redact EntityIds, EIDs, or DXNs in this module. Fixture prompts
  * must match the exact strings the LLM is asked to reason about — collapsing
  * ids to a placeholder hides real mismatches and produces false hits. Test
@@ -59,7 +76,10 @@ const normalizePromptForMatching = (prompt: unknown, dynamicMatcher?: RegExp): u
       return TIMESTAMP_PLACEHOLDER;
     }
     if (typeof value === 'string') {
-      return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER);
+      return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER).replace(CURRENT_DATE_SECTION_PATTERN, '');
+    }
+    if (Array.isArray(value)) {
+      return recurse(value).filter((item: unknown) => !isEmptySystemMessage(item));
     }
     return recurse(value);
   });

@@ -5,6 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as TestClock from 'effect/testing/TestClock';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
@@ -79,6 +80,21 @@ describe('formatSystemPrompt', () => {
       expect(prompt).toContain('<label>Draft</label>');
       expect(prompt).not.toContain('## Instructions');
       expect(prompt).not.toContain('Answer like a pirate.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect("ends with today's date in UTC, read from the clock", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(Date.UTC(2026, 10, 19, 23, 59));
+      const prompt = yield* formatSystemPrompt({ system: 'Base prompt.' });
+      expect(prompt).toBe(
+        'Base prompt.\n\n## Current Date\n\n' +
+          'Today is Thursday, 2026-11-19 (UTC). Use it to resolve relative dates and dates given without a year.',
+      );
+
+      // A day, not a time: the prompt changes only when the UTC date does.
+      yield* TestClock.adjust('1 minute');
+      expect(yield* formatSystemPrompt({ system: 'Base prompt.' })).toContain('Today is Friday, 2026-11-20 (UTC).');
     }).pipe(Effect.provide(testLayer())),
   );
 

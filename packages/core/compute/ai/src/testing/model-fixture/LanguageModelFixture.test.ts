@@ -223,6 +223,21 @@ describe('dynamic value matching', () => {
     expect(a).toEqual(b);
   });
 
+  test("a system prompt's current-date section does not take part in the match", ({ expect }) => {
+    const system = (date = '') => [{ role: 'system', content: `Base prompt.${date}` }];
+    const section = (day: string) =>
+      `\n\n## Current Date\n\nToday is ${day} (UTC). Use it to resolve relative dates and dates given without a year.`;
+    // Recorded before the section existed, then replayed on two different days: one conversation.
+    const recorded = __testing.normalizeForMatching(system(), []);
+    expect(__testing.normalizeForMatching(system(section('Thursday, 2026-11-19')), [])).toEqual(recorded);
+    expect(__testing.normalizeForMatching(system(section('Friday, 2026-11-20')), [])).toEqual(recorded);
+
+    // A prompt with no system text of its own gains a system message holding only the section.
+    const user = { role: 'user', content: 'Hi.' };
+    const dateOnly = { role: 'system', content: section('Thursday, 2026-11-19').trimStart() };
+    expect(__testing.normalizeForMatching([dateOnly, user], [])).toEqual(__testing.normalizeForMatching([user], []));
+  });
+
   test('without patterns the differing space keys do not match (opt-in)', ({ expect }) => {
     const a = __testing.normalizeForMatching(promptWith(SPACE_A), []);
     const b = __testing.normalizeForMatching(promptWith(SPACE_B), []);
