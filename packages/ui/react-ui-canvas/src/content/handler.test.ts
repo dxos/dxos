@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type ContentMap, Dsl, SvgFile, applyCommands } from '@dxos/diagram';
+import { type ContentMap, DSL, SvgFile, applyCommands } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Node, type Shape, isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
 
@@ -94,12 +94,12 @@ describe('SceneHandler', () => {
     };
     content['node:deck/card-1'] = { kind: 'node', scene, node, dsl: { object: 'deck', element: 'card-1' } };
 
-    const text = Dsl.print(SceneHandler.read(content).scene);
+    const text = DSL.print(SceneHandler.read(content).scene);
     expect(text).toContain('kind=card');
     expect(text).toContain('tone=event');
     expect(text).toContain('variant=simple');
 
-    const { commands, problems } = Dsl.read(text);
+    const { commands, problems } = DSL.read(text);
     expect(problems).toEqual([]);
     const rebuilt: ContentMap = {};
     applyCommands(rebuilt, commands, SceneHandler);
@@ -578,9 +578,9 @@ const drawn = (scene: RenderList2D): string[] =>
 
 describe('SceneHandler on a canvas of diagram shapes', () => {
   test('the canvas draws a laid-out diagram element for element as its SVG file does', async ({ expect }) => {
-    const { commands, problems } = await EffectEx.runPromise(Dsl.compile(ARCHITECTURE));
+    const { commands, problems } = await EffectEx.runPromise(DSL.compile(ARCHITECTURE));
     expect(problems).toEqual([]);
-    const { objects } = Dsl.toScene(commands);
+    const { objects } = DSL.toScene(commands);
     const content: ContentMap = {};
     seedContent(content);
     updateCanvasRecord(content, { diagramShapes: true });
@@ -603,13 +603,13 @@ describe('SceneHandler on a canvas of diagram shapes', () => {
   });
 
   test('a moved box re-routes its connectors at right angles, in the same renderer', async ({ expect }) => {
-    const { commands } = await EffectEx.runPromise(Dsl.compile(ARCHITECTURE));
+    const { commands } = await EffectEx.runPromise(DSL.compile(ARCHITECTURE));
     const content: ContentMap = {};
     seedContent(content);
     updateCanvasRecord(content, { diagramShapes: true });
     applyCommands(
       content,
-      Dsl.toScene(commands).objects.map((object) => ({ op: 'upsert-object' as const, object })),
+      DSL.toScene(commands).objects.map((object) => ({ op: 'upsert-object' as const, object })),
       SceneHandler,
     );
     const before = readViews(content);

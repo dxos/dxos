@@ -10,7 +10,7 @@ canvas. Landed on PR #14595, stacked on #14583.
 ### Tasks
 
 - [x] **Grid kind** — `group`, `node` and `edge` lower to the grid boxes `@dxos/scene` solves.
-- [x] **Read back** — `Dsl.printIntent` prints a drawing's intent, or the reasons it has none.
+- [x] **Read back** — `DSL.printIntent` prints a drawing's intent, or the reasons it has none.
 - [x] **DSL companion** — the text beside a Canvas drawing, editable, with Rebuild; read-only under a read-only host.
 - [x] **Nine slides as intent** — each `.dx` is what its boxes read back as.
 - [x] **Fixes** — diagnostics measure a grid's members where the grid puts them; a headless connector stays headless;

@@ -2,13 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EID } from '@dxos/echo';
 import type * as Canvas from '@dxos/plugin-canvas/Canvas';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 
-import agentDiagram from './diagrams/agent.dx?raw';
 import agentsDiagram from './diagrams/agents.dx?raw';
 import architectureDiagram from './diagrams/architecture.dx?raw';
 import chatDiagram from './diagrams/chat.dx?raw';
@@ -17,7 +16,7 @@ import echoDiagram from './diagrams/echo.dx?raw';
 import hyperspaceDiagram from './diagrams/hyperspace.dx?raw';
 // import ontologyDiagram from './diagrams/ontology.dx?raw';
 import pluginsDiagram from './diagrams/plugins.dx?raw';
-import agent from './slides/agent.md?raw';
+import superagentDiagram from './diagrams/superagent.dx?raw';
 import agents from './slides/agents.md?raw';
 import architecture from './slides/architecture.md?raw';
 import chat from './slides/chat.md?raw';
@@ -31,6 +30,7 @@ import next from './slides/next.md?raw';
 // import ontology from './slides/ontology.md?raw';
 import plugins from './slides/plugins.md?raw';
 import stack from './slides/stack.md?raw';
+import superagent from './slides/superagent.md?raw';
 
 /** A diagram the deck draws: its text, written as intent (`diagram kind=grid`), and the id a slide embeds it by. */
 export type StudioDiagram = { id: string; source: string };
@@ -48,7 +48,7 @@ export const STUDIO_DIAGRAMS: readonly StudioDiagram[] = [
   { id: 'architecture', source: architectureDiagram },
   { id: 'agents', source: agentsDiagram },
   { id: 'chat', source: chatDiagram },
-  { id: 'agent', source: agentDiagram },
+  { id: 'superagent', source: superagentDiagram },
 ];
 
 /** The slides in the order they are presented; `slides/<id>.md` is where a title or a note is changed. */
@@ -63,8 +63,8 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   { id: 'composer', markdown: composer },
   { id: 'architecture', markdown: architecture },
   { id: 'chat', markdown: chat },
-  { id: 'agent', markdown: agent },
   { id: 'agents', markdown: agents },
+  { id: 'superagent', markdown: superagent },
   { id: 'demo', markdown: demo },
   { id: 'next', markdown: next },
 ];
@@ -102,7 +102,7 @@ export const STUDIO_CANVAS: Partial<Canvas.CanvasSettings> = {
 
 /** The commands a diagram's text draws; one that does not parse is a broken bundled file, so it throws. */
 export const diagramCommands = ({ id, source }: StudioDiagram) => {
-  const { commands, problems } = Dsl.parse(source);
+  const { commands, problems } = DSL.parse(source);
   const errors = problems.filter(({ severity }) => severity === 'error');
   if (errors.length > 0) {
     throw new Error(`The ${id} diagram does not parse: ${errors.map(({ message }) => message).join(' · ')}`);

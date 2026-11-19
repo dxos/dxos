@@ -200,7 +200,7 @@ rule is what is stored. Outside a grid diagram a nested group still reports, and
 
 #### Reading a grid diagram back out of a drawing
 
-A drawing stores records, not the text it was written as. `Dsl.printIntent(scene)` gives the `diagram kind=grid`
+A drawing stores records, not the text it was written as. `DSL.printIntent(scene)` gives the `diagram kind=grid`
 text for a drawing made of grid boxes: each grid is a `group`, a grid holding a heading over a second grid is a
 labelled group, a box that draws nothing is an empty group, every other box a `node`, every arrow an `edge`.
 

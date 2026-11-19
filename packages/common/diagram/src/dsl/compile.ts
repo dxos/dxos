@@ -17,7 +17,7 @@ export type CompileOptions = Pick<SemanticEngine.SolveOptions, 'emitCandidate'>;
  * mermaid engine's placements when nothing was hinted. Asynchronous only because that engine's ELK
  * is; a document of scene statements alone reads exactly as {@link parse} reads it.
  */
-export const compile: (text: string, options?: CompileOptions) => Effect.Effect<ParseResult> = Effect.fn('Dsl.compile')(
+export const compile: (text: string, options?: CompileOptions) => Effect.Effect<ParseResult> = Effect.fn('DSL.compile')(
   function* (text: string, options: CompileOptions = {}) {
     const reading = read(text);
     const { diagram } = reading;

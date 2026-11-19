@@ -301,7 +301,7 @@ const scalarsOf = (
  * its id, padding and frame, around a labelled one named by {@link innerId}.
  *
  * This reads only what a grid diagram can say, so a drawing that holds more comes back as a diagram that draws
- * less. The caller compares {@link drawn} of both to know (see `Dsl.printIntent`).
+ * less. The caller compares {@link drawn} of both to know (see `DSL.printIntent`).
  */
 export const infer = (object: Scene.WorldObject): Semantic.Diagram | undefined => {
   const boxes = object.elements.filter(isBox);

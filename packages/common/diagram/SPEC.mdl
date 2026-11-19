@@ -70,18 +70,18 @@ edge Code -> Diagram
 
 ## Pipeline
 
-A diagram is text until a variant stores it. `Dsl.read` parses the text and collects the semantic
+A diagram is text until a variant stores it. `DSL.read` parses the text and collects the semantic
 statements into a `Semantic.Diagram`. The engine for its kind lays it out as `Scene.Command[]`, and
 the variant's builder writes those as records into the drawing's canvas. `Diagnostics` reads the
 scene back and reports what is wrong with the layout, which is what lets an agent fix its own drawing.
 The figure is itself a data-flow diagram ([F-3]).
 
-![The author's .dx source flows to Dsl.read, a Semantic.Diagram to the engine for its kind, Scene.Command[] to the variant builder, records into the Drawing.Canvas store, the scene to Diagnostics, and the report back to the author.](spec/diagrams/pipeline.dx.svg)
+![The author's .dx source flows to DSL.read, a Semantic.Diagram to the engine for its kind, Scene.Command[] to the variant builder, records into the Drawing.Canvas store, the scene to Diagnostics, and the report back to the author.](spec/diagrams/pipeline.dx.svg)
 
 ```diagram
 diagram kind=dataflow
 node Author "Author or agent" role=external
-node Read "Dsl.read" ref="packages/common/diagram/src/dsl/parse.ts"
+node Read "DSL.read" ref="packages/common/diagram/src/dsl/parse.ts"
 node Layout "Engine by kind" ref="packages/common/diagram/src/dsl/compile.ts"
 node Apply "Variant builder" ref="packages/common/diagram/src/content.ts"
 node Store "Drawing.Canvas" role=store ref="packages/plugins/plugin-illustrator/src/types/Drawing.ts"
@@ -173,7 +173,7 @@ type Step
 ## Components
 
 ```mdl
-component Dsl
+component DSL
   desc: >
     The `.dx` language (`src/dsl/`): a Lezer grammar, `read` (text to commands plus a semantic
     diagram), `parse` (laid out synchronously, for an editor), `compile` (the full search), `print`
@@ -227,7 +227,7 @@ component ContentHandler
 component MermaidDialects
   desc: >
     DEPRECATED. `Mermaid.compile` (flowchart), `Uml.compile` (classDiagram) and
-    `MermaidEngine.compile` compile mermaid source. They still work, and `Dsl.convert` turns a
+    `MermaidEngine.compile` compile mermaid source. They still work, and `DSL.convert` turns a
     mermaid source into DSL text, but nothing new is written in mermaid ([F-4]).
 ```
 
@@ -235,7 +235,7 @@ component MermaidDialects
 
 ```mdl
 feat F-1: Diagram kinds
-  uses: [Diagram, Dsl]
+  uses: [Diagram, DSL]
 
   req F-1.1: `diagram kind=` selects the engine: `structure` (the default), `sequence` or `dataflow`. Every kind reads the same `node`, `edge` and `group` statements.
 
@@ -243,7 +243,7 @@ feat F-1: Diagram kinds
 
   req F-1.3: `note`, `fragment` and `else` are contextual keywords. Where they do not start a statement or a section they are ordinary names, so a document that uses one as an id parses, and the printer leaves it unquoted.
 
-  req F-1.4: `Dsl.parse` and `Dsl.compile` give the same result for a sequence diagram; neither searches.
+  req F-1.4: `DSL.parse` and `DSL.compile` give the same result for a sequence diagram; neither searches.
 ```
 
 ```mdl
@@ -291,15 +291,15 @@ feat F-3: Data-flow diagrams
 
 ```mdl
 feat F-4: Mermaid is deprecated
-  uses: [Dsl]
+  uses: [DSL]
 
   req F-4.1: The `generate` operation and the mermaid compilers are marked deprecated and keep working.
 
   req F-4.2: The agent skills teach the `.dx` DSL and do not ask for mermaid. The UML skill calls `generate` only when the user asks for class members in the boxes, which the DSL cannot show yet.
 
-  req F-4.3: `Dsl.convert` stays, as the way an existing mermaid source becomes DSL text.
+  req F-4.3: `DSL.convert` stays, as the way an existing mermaid source becomes DSL text.
 
-  req F-4.4: Neither `Dsl.compile` nor `draw` needs mermaid input. The semantic engine's internal search over the mermaid engine's placements is not author-facing and stays.
+  req F-4.4: Neither `DSL.compile` nor `draw` needs mermaid input. The semantic engine's internal search over the mermaid engine's placements is not author-facing and stays.
 ```
 
 ```mdl
@@ -326,26 +326,26 @@ feat F-5: Shared trunks
 
 What happens when an agent calls `draw`. The figure is itself a sequence diagram ([F-2]).
 
-![The agent calls the Draw op with a source; the op calls Dsl.compile, which calls SequenceEngine.solve for kind=sequence and SemanticEngine.compile otherwise; if there are no errors the op applies the commands through the variant builder; it then has Diagnostics analyze the scene and returns the scene and report to the agent.](spec/diagrams/draw.dx.svg)
+![The agent calls the Draw op with a source; the op calls DSL.compile, which calls SequenceEngine.solve for kind=sequence and SemanticEngine.compile otherwise; if there are no errors the op applies the commands through the variant builder; it then has Diagnostics analyze the scene and returns the scene and report to the agent.](spec/diagrams/draw.dx.svg)
 
 ```diagram
 diagram kind=sequence
 node Agent "Agent" role=actor
 node Op "Draw op" ref="packages/plugins/plugin-illustrator/src/operations/draw.ts"
-node Dsl "Dsl.compile" ref="packages/common/diagram/src/dsl/compile.ts"
+node DSL "DSL.compile" ref="packages/common/diagram/src/dsl/compile.ts"
 node Engine "Layout engine" ref="packages/common/diagram/src/sequence-engine.ts"
 node Variant "Variant builder" ref="packages/plugins/plugin-illustrator/src/types/IllustratorCapabilities.ts"
 node Diag "Diagnostics" ref="packages/common/diagram/src/diagnostics.ts"
 edge Agent calls Op "draw(source)"
-edge Op calls Dsl "compile"
+edge Op calls DSL "compile"
 fragment alt "kind=sequence" {
-  edge Dsl calls Engine "SequenceEngine.solve"
-  edge Engine returns Dsl "commands"
+  edge DSL calls Engine "SequenceEngine.solve"
+  edge Engine returns DSL "commands"
 } else "structure, dataflow" {
-  edge Dsl calls Engine "SemanticEngine.compile"
-  edge Engine returns Dsl "commands, issues"
+  edge DSL calls Engine "SemanticEngine.compile"
+  edge Engine returns DSL "commands, issues"
 }
-edge Dsl returns Op "commands, problems"
+edge DSL returns Op "commands, problems"
 fragment opt "no errors" {
   edge Op calls Variant "apply(commands)"
   edge Variant returns Op "upserted"
@@ -686,5 +686,13 @@ decision D-30: A node that names a component may end in braces listing the compo
   rejected:
     - Rows as child nodes the card places: a `group` places things and a `node` is a leaf, and a card that placed nodes would be a group drawn by a component.
     - The word `text` for a row: it is already an element, with an id and a position.
+
+decision D-31: The language's namespace is exported as `DSL`, not `Dsl` (`import { DSL } from '@dxos/diagram'`); the component is named the same.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DSL]
+  why: DSL is an initialism and is written in capitals everywhere else it is named (the docs, the companion, the skill), so the one spelling in code was the odd one.
+  rejected:
+    - Keeping `Dsl` as an alias: a moved name leaves no re-export behind, so every call site changes with it.
 ```
 

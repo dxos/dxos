@@ -8,7 +8,7 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -73,7 +73,7 @@ const sceneDrawing = (text: string) =>
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
-      const stored = toEcho(Dsl.readScenes(text).document);
+      const stored = toEcho(DSL.readScenes(text).document);
       [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()].forEach((object) =>
         space.db.add(object),
       );

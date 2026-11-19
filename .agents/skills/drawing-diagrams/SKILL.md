@@ -17,7 +17,7 @@ where. The engine (`SemanticEngine` in `@dxos/diagram`) puts the boxes on a grid
 through the gutters with the fewest bends, spreads the ports and places the labels. Do not write a
 script that generates the DSL; write the `.dx` text yourself.
 
-The pipeline is: `.dx` source → `Dsl.compile` → `SceneSvg` → `<name>.dx.svg` + `<name>.png` + a
+The pipeline is: `.dx` source → `DSL.compile` → `SceneSvg` → `<name>.dx.svg` + `<name>.png` + a
 layout report. One moon task runs it: `plugin-illustrator:render-diagrams`
 (`packages/plugins/plugin-illustrator/scripts/render-diagrams.tsx`).
 

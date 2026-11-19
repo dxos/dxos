@@ -15,7 +15,7 @@ stores records, not its text, so the text is read back out of the records each t
 | Intent | `diagram`, `group`, `node`, `edge`  | an author                   |
 | Boxes  | `object`, `grid`, `rect`, `arrow` … | the lowering, and the print |
 
-Intent lowers to boxes, and `Dsl.printIntent` reads boxes back as intent, checking its answer by lowering it again.
+Intent lowers to boxes, and `DSL.printIntent` reads boxes back as intent, checking its answer by lowering it again.
 The box form stays as the view of what intent became and as the text of a drawing no grid diagram can say.
 
 ## Decisions taken on 2026-11-18 (user:richburdon)

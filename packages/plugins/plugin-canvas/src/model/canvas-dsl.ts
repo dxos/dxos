@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Dsl, applyCommands } from '@dxos/diagram';
+import { DSL, applyCommands } from '@dxos/diagram';
 import { SceneHandler } from '@dxos/react-ui-canvas';
 
 import { type Canvas } from '#types';
@@ -26,8 +26,8 @@ export type CanvasDsl = {
 /** The canvas's open scene as text, in both forms. */
 export const canvasDsl = (canvas: Canvas.Canvas): CanvasDsl => {
   const { scene } = CanvasLayoutBuilder.read(canvas);
-  const { text, reasons } = Dsl.printIntent(scene);
-  return { boxes: Dsl.print(scene), reasons: reasons ?? [], ...(text === undefined ? {} : { intent: text }) };
+  const { text, reasons } = DSL.printIntent(scene);
+  return { boxes: DSL.print(scene), reasons: reasons ?? [], ...(text === undefined ? {} : { intent: text }) };
 };
 
 export type RebuildResult = {
@@ -46,7 +46,7 @@ export type RebuildResult = {
 export const rebuildCanvas = (canvas: Canvas.Canvas, text: string, form: DslForm): RebuildResult => {
   // Intent has no commands until its diagram is laid out. Box text carries its own coordinates, and solving a
   // layout over it would move the shapes it placed.
-  const { commands, problems } = form === 'intent' ? Dsl.parse(text) : Dsl.read(text);
+  const { commands, problems } = form === 'intent' ? DSL.parse(text) : DSL.read(text);
   const errors = problems.filter(({ severity }) => severity === 'error').map(({ message }) => message);
   if (errors.length > 0) {
     return { errors, drawn: 0, cleared: 0 };

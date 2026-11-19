@@ -6,7 +6,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -38,7 +38,7 @@ describe('useCanvasLoaded', () => {
     {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl ?? '';
-      const { root, layouts, models } = toEcho(Dsl.readScenes(EXEMPLARS.subscene).document);
+      const { root, layouts, models } = toEcho(DSL.readScenes(EXEMPLARS.subscene).document);
       [...models.values(), ...layouts.values(), root].forEach((object) => db.add(object));
       const canvas = db.add(
         Obj.make(Canvas.Canvas, {

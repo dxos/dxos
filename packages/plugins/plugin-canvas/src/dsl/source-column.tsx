@@ -15,7 +15,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
@@ -38,7 +38,7 @@ import { rebuildCanvas } from '../model/canvas-dsl.ts';
 export const seeded: { canvas?: Canvas.Canvas; source?: string } = {};
 
 /** The drawing as scene DSL: one `object` statement per shape, which is what a drawing serializes to. */
-const printCanvas = (canvas: Canvas.Canvas): string => Dsl.print(CanvasLayoutBuilder.read(canvas).scene);
+const printCanvas = (canvas: Canvas.Canvas): string => DSL.print(CanvasLayoutBuilder.read(canvas).scene);
 
 /**
  * The drawing as the records it is actually stored as. The DSL is a second way of saying the same drawing, so
@@ -75,7 +75,7 @@ const ColumnEditor = ({ canvas, intent }: { canvas: Canvas.Canvas; intent?: stri
   // solve — and solving one would move the shapes the slide placed. A document of intent has no commands until
   // its diagram is laid out, so it is parsed.
   const parse = useCallback(() => {
-    const { commands, problems: found } = intent === undefined ? Dsl.read(source) : Dsl.parse(source);
+    const { commands, problems: found } = intent === undefined ? DSL.read(source) : DSL.parse(source);
     const errors = found.filter(({ severity }) => severity === 'error');
     setProblems(errors);
     const objects = commands.filter(({ op }) => op === 'upsert-object').length;

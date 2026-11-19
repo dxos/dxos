@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
@@ -24,7 +24,7 @@ describe('IllustratorPlugin in workerd', () => {
 
   test('lays out a semantic diagram', async ({ expect }) => {
     const { commands, problems } = await EffectEx.runPromise(
-      Dsl.compile('node api "API"\nnode db "Database" right-of api\nedge api -> db "reads"'),
+      DSL.compile('node api "API"\nnode db "Database" right-of api\nedge api -> db "reads"'),
     );
     expect(problems).toEqual([]);
     expect(commands.length).toBeGreaterThan(0);

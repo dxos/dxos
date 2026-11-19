@@ -14,7 +14,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
-import { type ContentMap, Dsl, applyCommands } from '@dxos/diagram';
+import { type ContentMap, DSL, applyCommands } from '@dxos/diagram';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { SceneHandler } from '@dxos/react-ui-canvas';
@@ -36,7 +36,7 @@ const CANVAS = { styleSet: 'neu', background: 'neu', grid: 8, backgroundGrid: 'd
 const seedSource =
   (source: string) =>
   (content: ContentMap): void => {
-    const { commands, problems } = Dsl.read(source);
+    const { commands, problems } = DSL.read(source);
     const errors = problems.filter(({ severity }) => severity === 'error');
     if (errors.length > 0) {
       throw new Error(`grid story does not parse: ${errors.map(({ message }) => message).join(' · ')}`);

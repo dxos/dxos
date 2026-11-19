@@ -17,7 +17,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Dsl, applyCommands } from '@dxos/diagram';
+import { DSL, applyCommands } from '@dxos/diagram';
 import { DXN } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
@@ -90,7 +90,7 @@ const story = (name: string, source: string, { readOnly = false }: { readOnly?: 
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), ...(readOnly ? [ReadOnlyHost()] : [])],
     onInit: async ({ space }) => {
       const canvas = addTestCanvas(space.db, (content) => {
-        const { commands, problems } = Dsl.parse(source);
+        const { commands, problems } = DSL.parse(source);
         const errors = problems.filter(({ severity }) => severity === 'error');
         if (errors.length > 0) {
           throw new Error(`${name} does not parse: ${errors.map(({ message }) => message).join(' · ')}`);

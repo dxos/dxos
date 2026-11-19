@@ -1,0 +1,41 @@
+diagram kind=grid size=1600x880 cols=4 gap=64 padding=48
+
+group inbound-body gap=24 {
+  group inbound-col-0 gap=16 autoRows=176 alignContent=center {
+    node email "Email" kind=feed-card feed=9 footer="plugin-inbox · JMAP" icon=envelope
+    node discord "Discord" kind=feed-card feed=9 footer=plugin-discord icon=discord-logo
+    node chat "Chat" kind=feed-card feed=9 footer=plugin-thread icon=chat-circle-dots
+  }
+}
+
+group agents-body gap=24 {
+  group agents-col-0 gap=16 autoRows=176 alignContent=center {
+    node triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=ink
+    node planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=ink
+  }
+}
+
+group subagents-body gap=24 {
+  group subagents-col-0 gap=16 autoRows=176 alignContent=center {
+    node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=magnifying-glass
+    node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=pencil-simple-line
+    node calendar "Calendar" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=calendar-blank
+    node travel "Travel" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=airplane-tilt
+  }
+}
+
+group space-body gap=24 {
+  node space kind=graph extra=0.45 data-fill=0.6 hue=neutral pitch=26 seed=7 size=24
+}
+
+edge email -> triage head=triangle
+edge discord -> triage head=triangle
+edge chat -> planner head=triangle
+edge triage -> research head=triangle
+edge triage -> reply head=triangle
+edge planner -> calendar head=triangle
+edge planner -> travel head=triangle
+edge research -> space head=triangle
+edge reply -> space head=triangle
+edge calendar -> space head=triangle
+edge travel -> space head=triangle
