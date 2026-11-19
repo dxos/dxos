@@ -17,7 +17,7 @@ import { Config, defs } from '@dxos/config';
 import { Filter, Obj, Query } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { parseId } from '@dxos/keys';
-import { ClientProvider, createClientServices, useShell } from '@dxos/react-client';
+import { type Client, ClientProvider, createClientServices, useShell } from '@dxos/react-client';
 import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { getConfig } from './config.ts';
@@ -120,6 +120,13 @@ const createServices = (config?: Config) =>
     },
   );
 
+const createFirstSpace = async (client: Client, searchProps: URLSearchParams) => {
+  if (client.halo.identity.get() && client.spaces.get().length === 0 && !searchProps.has('spaceInvitationCode')) {
+    const space = await client.spaces.create();
+    await space.waitUntilReady();
+  }
+};
+
 export const App = () => {
   // Create a registry instance for atom reactivity
   const registry = useMemo(() => AtomEx.makeRegistry(), []);
@@ -136,11 +143,7 @@ export const App = () => {
           await client.halo.createIdentity();
         }
 
-        // Home renders nothing until a space exists, and the SDK no longer creates a default one.
-        if (client.halo.identity.get() && client.spaces.get().length === 0 && !searchProps.has('spaceInvitationCode')) {
-          const space = await client.spaces.create();
-          await space.waitUntilReady();
-        }
+        await createFirstSpace(client, searchProps);
       }}
     >
       <RegistryContext.Provider value={registry}>
