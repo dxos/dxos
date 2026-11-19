@@ -22,6 +22,8 @@ export type CreateClientServicesOptions = {
   sqlitePath?: LocalClientServicesParams['sqlitePath'];
   /** Escalation hook for persistent worker-connection failures (dedicated worker mode). See {@link DedicatedWorkerClientServicesOptions.onPersistentFailure}. */
   onPersistentWorkerFailure?: DedicatedWorkerClientServicesOptions['onPersistentFailure'];
+  /** How this tab hands the worker to other tabs (dedicated worker mode). See {@link DedicatedWorkerClientServicesOptions.takeover}. */
+  workerTakeover?: DedicatedWorkerClientServicesOptions['takeover'];
 };
 
 /**
@@ -36,8 +38,14 @@ export const createClientServices = async (
   config: Config,
   options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
-  const { createDedicatedWorker, createCoordinatorWorker, createOpfsWorker, sqlitePath, onPersistentWorkerFailure } =
-    options;
+  const {
+    createDedicatedWorker,
+    createCoordinatorWorker,
+    createOpfsWorker,
+    sqlitePath,
+    onPersistentWorkerFailure,
+    workerTakeover,
+  } = options;
 
   // The legacy protobuf byte-transport remote providers (websocket `fromSocket`, unix-socket
   // `fromAgent`, iframe) have been removed; a `remote_source` endpoint is no longer supported until
@@ -86,6 +94,7 @@ export const createClientServices = async (
               : raise(new TypeError('createCoordinatorWorker is required when singleClientMode is false')),
         config,
         onPersistentFailure: onPersistentWorkerFailure,
+        takeover: workerTakeover,
       });
     }
 

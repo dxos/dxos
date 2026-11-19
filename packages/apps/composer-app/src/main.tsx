@@ -76,6 +76,7 @@ import {
   startupProfiler,
   translations,
 } from './util/index.ts';
+import { consumeTakeover, showPausedPage } from './util/paused.ts';
 import { watchWindowCorners } from './util/window-corners.ts';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
@@ -103,6 +104,8 @@ const verboseStatus =
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
+// Injected by the `define` block in vite.config.ts: when this build was made (or the dev server started).
+declare const __DX_BUILD_TIME__: number;
 
 // Session id for the agent debug port when the dev server was launched with the debug-port flag.
 // Always '' in production builds, so the port cannot be auto-started on a deployed origin.
@@ -205,55 +208,6 @@ const whenIdle = (timeout: number): Promise<void> =>
 
 /** Stands in for the prespawned worker when the worker is deferred, so nothing spawns at load. */
 const NOT_PRESPAWNED: PrespawnedWorker = { take: () => undefined, dispose: () => {} };
-
-// Cross-tab reload coordination for persistent worker failures (see `onPersistentWorkerFailure`
-// below). BroadcastChannel is shared by origin, so it reaches tabs on other app builds, which the
-// SharedWorker coordinator cannot. The guard lets each tab reload at most once per window, so a
-// failure that reloads don't fix cannot loop them, while a later deploy can still recover.
-const WORKER_RELOAD_CHANNEL = 'dxos-worker-reload';
-const WORKER_RELOAD_GUARD_KEY = 'dxos.composer.worker-reload';
-const WORKER_RELOAD_GUARD_MS = 10 * 60_000;
-
-/**
- * Reloads this tab unless it already did so within the guard window.
- * @returns ms until the guard allows a reload, 0 when reloading now, or undefined when it never can.
- */
-const reloadOnce = (): number | undefined => {
-  try {
-    const remaining =
-      Number(sessionStorage.getItem(WORKER_RELOAD_GUARD_KEY) ?? 0) + WORKER_RELOAD_GUARD_MS - Date.now();
-    if (remaining > 0) {
-      return remaining;
-    }
-    sessionStorage.setItem(WORKER_RELOAD_GUARD_KEY, String(Date.now()));
-  } catch {
-    // Storage unavailable: no guard can be kept, so do not risk a reload loop.
-    return undefined;
-  }
-  window.location.reload();
-  return 0;
-};
-
-let deferredReload: ReturnType<typeof setTimeout> | undefined;
-
-/** Reloads every same-origin tab, whatever build it runs, so they converge on one generation. */
-const reloadAllTabs = () => {
-  const channel = new BroadcastChannel(WORKER_RELOAD_CHANNEL);
-  channel.postMessage('reload');
-  channel.close();
-  const remaining = reloadOnce();
-  // The connection escalates once per streak, so a guarded-off reload is retried here or never.
-  if (remaining && !deferredReload) {
-    deferredReload = setTimeout(() => {
-      deferredReload = undefined;
-      reloadAllTabs();
-    }, remaining);
-  }
-};
-
-new BroadcastChannel(WORKER_RELOAD_CHANNEL).onmessage = () => {
-  reloadOnce();
-};
 
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
@@ -644,15 +598,22 @@ const main = async () => {
       }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    // Tabs on different builds (one opened before a deploy or dev-server restart) fight over the
-    // worker and neither keeps one, so force every same-origin tab through one coordinated reload.
-    // Leader contention is that case for certain, so it reloads in production too; other persistent
-    // failures in production rely on the fatal dialog via the startup timeout (see ResetDialog).
+    // Contention means another tab keeps taking the worker; other persistent failures rely on the
+    // fatal dialog via the startup timeout (see ResetDialog).
     onPersistentWorkerFailure: (error) => {
       log.error('worker connection failing persistently', { error });
-      if (import.meta.env?.DEV || WorkerLeaderContentionError.is(error)) {
-        reloadAllTabs();
+      if (WorkerLeaderContentionError.is(error)) {
+        showPausedPage('contention', { version: __DX_BUILD_TIME__ });
       }
+    },
+    // One tab owns the worker; every hand-over between tabs goes through the paused page, so the
+    // user decides which tab continues instead of tabs taking it from each other.
+    workerTakeover: {
+      generation: { id: String(__DX_BUILD_TIME__), time: __DX_BUILD_TIME__ },
+      takeover: consumeTakeover(),
+      onTakeoverRequired: () => showPausedPage('unresponsive', { version: __DX_BUILD_TIME__ }),
+      onLockStolen: () => showPausedPage('stolen', { version: __DX_BUILD_TIME__ }),
+      onSuperseded: (newer) => showPausedPage('superseded', { version: __DX_BUILD_TIME__, otherVersion: newer.time }),
     },
   });
 
