@@ -107,7 +107,7 @@ export const QueryTypes = Operation.make({
     }),
   }),
   output: Schema.Array(ListedType),
-  services: [Registry.Service],
+  services: [Database.Service],
 });
 
 export const EnableSkills = Operation.make({

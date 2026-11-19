@@ -750,10 +750,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return undefined;
       } else if (DXN.isDXN(uri)) {
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
-        // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
-        const entity = this._registry.getByURI(uri.toString());
+        // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN — or else from its sources.
+        const entity = await this._registry.resolve(uri);
         status = entity ? 'resolved' : 'missing';
-        return entity ?? undefined;
+        return entity;
       } else {
         status = 'error';
         throw new Error(`Unsupported URI kind: ${uri}`);
