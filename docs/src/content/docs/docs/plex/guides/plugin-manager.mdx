@@ -21,8 +21,8 @@ See [Activation](/docs/plex/concepts/activation/) for the order it activates mod
 
 ## Create a plugin manager
 
-`PluginManager.make` creates a manager. It takes the plugins the app knows about and the ones enabled at start.
-Plugins tagged `system` are always enabled.
+`PluginManager.make` creates a manager. It takes the plugins the app knows about and the ones enabled at start. A
+plugin with `system` in its `tags` is always enabled.
 
 The `pluginLoader` turns an id into a plugin when the manager is later asked to add one.
 
@@ -30,8 +30,8 @@ The `pluginLoader` turns an id into a plugin when the manager is later asked to 
 
 <Snippet file="plex-guide-plugin-manager" region="make" />
 
-In this example, the manager knows one plugin, `stash`, and enables it by its key. `UrlLoader.make` gives the manager a
-loader for manifest URLs.
+`plugins` takes the plugin itself and `enabled` takes its key. A plugin that is in `plugins` and not in `enabled` is
+known to the manager and stays off.
 
 `start` runs the startup pass. It activates the Startup modules and every module whose requirements they satisfy. An
 app fires `Idle` once it has painted.
@@ -55,15 +55,15 @@ You can change which plugins are on while the app runs.
 
 <Snippet file="plex-guide-plugin-manager" region="runtime" />
 
-In this example, `toggle` reads `getEnabled` to see whether the plugin is on. It then calls `disable` or `enable` with
-the plugin's key.
+`manager.enable` and `manager.disable` return Effects, so `toggle` changes nothing until its Effect runs.
 
 ## Load a plugin from a URL
 
 `add` hands an id to the plugin loader and registers the result without enabling it.
 
-`UrlLoader.make` makes a loader that loads a plugin from its manifest URL. This is how Composer's Load dev plugin and
-the docs' [inspector](/docs/plex/guides/debugging/) load a plugin from its dev server.
+`UrlLoader.make` makes a loader that loads a plugin from the URL of its manifest, the `manifest.json` that the
+plugin's dev server serves and its build writes. Composer's **Dev Server** setting loads a plugin from its dev server
+this way, and so does the inspector in [Debugging](/docs/plex/guides/debugging/).
 
 The page needs an import map of the shared packages, so the plugin uses the page's copies.
 
@@ -71,12 +71,10 @@ The page needs an import map of the shared packages, so the plugin uses the page
 
 <Snippet file="plex-guide-plugin-manager" region="url" />
 
-In this example, `add` returns the plugin, and `enable` takes the key from the plugin's own metadata. That key may
-differ from the URL the plugin was loaded from.
-
 ## Read which plugins and modules are active
 
-Each piece of state has a getter and an atom.
+Each piece of state has a getter and an [atom](/docs/plex/resources/glossary/#atom), a reactive value that code
+subscribes to.
 
 - Use the getter for a one-off read.
 - Use the atom in a component that should update.
@@ -87,17 +85,16 @@ Each piece of state has a getter and an atom.
 
 <Snippet file="plex-guide-plugin-manager" region="read" />
 
-Here, `report` reads the enabled plugins, the active modules and the failures once. `enabledAtom` holds the enabled
-plugins as an atom.
+`phase` is `load` or `activation`, so `report` can say which step broke for each failed plugin.
 
 ## Members at a glance
 
 | Member | What it does |
 | --- | --- |
 | `make(options)` | Creates a manager. |
-| `start()`, `activate(event)` | Runs startup; fires an event. |
+| `start()`, `activate(event)` | Runs startup, or fires an event. |
 | `add(id)`, `enable(id)`, `disable(id)`, `remove(id)` | Changes which plugins are loaded and on. |
-| `plugins`, `enabled`, `active`, `failed` | Atoms of the manager's state; each has a `get…` reader. |
+| `plugins`, `enabled`, `active`, `failed` | Atoms of the manager's state. Each has a `get…` reader. |
 | `getDependencies(id)`, `getDependents(id)` | The plugins a plugin needs, or that need it. |
 | `capabilities` | The capability manager that holds every contribution. |
 
@@ -107,4 +104,4 @@ plugins as an atom.
 | --- | --- |
 | [Activation](/docs/plex/concepts/activation/) | When the manager activates each module. |
 | [Plugin](/docs/plex/guides/plugin/) | Defining the plugins the manager holds. |
-| [Testing a plugin](/docs/plex/guides/testing/) | A manager in a headless test app. |
+| [Testing](/docs/plex/guides/testing/) | A manager in a headless test app. |

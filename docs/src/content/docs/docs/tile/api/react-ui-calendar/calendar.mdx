@@ -17,24 +17,23 @@ import { Calendar, type CalendarEvent } from '@dxos/react-ui-calendar';
 npm install @dxos/react-ui-calendar
 ```
 
-`Calendar` draws dates in two ways:
+A calendar shows dates for the user to pick from or to plan. `Calendar` draws them in two ways:
 
 - `Calendar.Grid` is a scrolling grid of weeks. Use it when the user picks a day or a range.
-- `Calendar.Week` is a week of hours with events in it.
+- `Calendar.Week` is a week of hours with events in it. Use it when the user plans a week.
 
 Both sit inside `Calendar.Root`, which holds the date the calendar shows.
 
-The package's strings come from `@dxos/react-ui-calendar/translations`. Add them to the theme provider's
-`resourceExtensions`.
+Add the package's strings from `@dxos/react-ui-calendar/translations` to the `resourceExtensions` of `Theme.Provider`.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Calendar.Root` | Holds the date in view and the first day of the week (`weekStartsOn`) |
-| `Calendar.Toolbar` | Names the month in view and jumps back to today |
-| `Calendar.Grid` | Weeks of days that scroll; `rows` sets how many show |
-| `Calendar.Week` | A week of hours, each event in its day's column; overlapping events share it |
+| `Calendar.Root` | The root, which holds the date in view and the first day of the week (`weekStartsOn`) |
+| `Calendar.Toolbar` | The row that names the month in view and jumps back to today |
+| `Calendar.Grid` | Weeks of days that scroll. `rows` sets how many show |
+| `Calendar.Week` | A week of hours, with each event in its day's column. Overlapping events share the column |
 
 ## `Calendar.Grid`
 
@@ -42,10 +41,10 @@ The package's strings come from `@dxos/react-ui-calendar/translations`. Add them
 
 | Prop | Type | Effect |
 | --- | --- | --- |
-| `rows` | `number` | How many weeks show |
-| `dates` | `DateMarker[]` | Days to mark, each with a border for its `tag` |
-| `initialDate` | `Date` | The day scrolled into view; today by default |
-| `scrollMargin` | `number` | How many weeks stay above a day scrolled into view; `2` by default |
+| `rows` | `number` | Sets how many weeks show |
+| `dates` | `DateMarker[]` | Marks days, each with a border for its `tag` |
+| `initialDate` | `Date` | Sets the day scrolled into view. Today by default |
+| `scrollMargin` | `number` | Sets how many weeks stay above a day scrolled into view. `2` by default |
 | `onSelect` | `({ date }) => void` | The user picked a day, with a click or an arrow key |
 | `onSelectRange` | `({ range }) => void` | The user picked a range, with a drag or Shift and an arrow key |
 
@@ -54,19 +53,19 @@ The package's strings come from `@dxos/react-ui-calendar/translations`. Add them
 `Calendar.Week` draws a week of hours, with each event in its day's column. An event is an `id`, a `title`, a `start`
 and an `end`.
 
-The week reports gestures and holds no events of its own. This means you apply each change to your state.
+`Calendar.Week` reports gestures and holds no events of its own, so you apply each change to your state.
 
 | Prop | Type | Effect |
 | --- | --- | --- |
-| `date` | `Date` | Any day in the week to show; today by default |
-| `events` | `CalendarEvent[]` | The events to draw |
+| `date` | `Date` | Sets the week to show, from any day in it. Today by default |
+| `events` | `CalendarEvent[]` | Sets the events to draw |
 | `onEventCreate` | `({ start, end }) => void` | The user dragged out an empty slot |
 | `onEventUpdate` | `({ id, start, end }) => void` | The user moved an event or dragged its edge |
 
 ## Pick a day
 
-`Calendar.Grid` scrolls through the weeks, and the toolbar names the month in view. The user clicks a day to pick it,
-or drags across days to pick a range. `onSelect` reports the day, and `onSelectRange` reports the range.
+`Calendar.Grid` scrolls through the weeks, and `Calendar.Toolbar` names the month in view. The user clicks a day to
+pick it, or drags across days to pick a range. `onSelect` reports the day, and `onSelectRange` reports the range.
 
 **Example** (Showing six weeks under a toolbar)
 
@@ -74,8 +73,8 @@ or drags across days to pick a range. `onSelect` reports the day, and `onSelectR
 
 <TilePreview id="calendar-picker" />
 
-In this example, `rows` sets the grid to six weeks, and `Calendar.Toolbar` sits above it. The two handlers put the
-day or the range into `picked`, which the line under the grid shows.
+`rows` sets the grid to six weeks. The two handlers put the day or the range into `picked`, which the line under the
+grid shows.
 
 ## Plan a week
 
@@ -88,5 +87,5 @@ resize it. The week calls `onEventCreate` or `onEventUpdate`, and you change the
 
 <TilePreview id="calendar-week" height="28rem" />
 
-In this example, `onEventCreate` appends an event with the `start` and `end` of the slot the user dragged out.
-`onEventUpdate` replaces the `start` and `end` of the event with the same `id`.
+`onEventCreate` appends an event with the `start` and `end` of the slot the user dragged out. `onEventUpdate`
+replaces the `start` and `end` of the event with the same `id`.

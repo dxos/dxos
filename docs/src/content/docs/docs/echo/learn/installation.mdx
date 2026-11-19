@@ -17,15 +17,14 @@ write and its file.
 
 ## Background
 
-In a client-server app, the database runs on a server and your code sends it requests. In ECHO, the database is on
-the device, and the `Client` is the app's way into it. The `Client` holds the databases of the spaces you belong to
-and connects them to the network so peers can replicate them.
+ECHO's database is on the device, and the `Client` is the app's way into it. The `Client` holds the databases of the
+spaces you belong to and connects them to the network so peers can replicate them. Step 4 makes one.
 
-A client acts for an **identity**. The identity owns the spaces it creates, and other peers recognize it when it joins
-theirs. We create one the first time the app runs.
+An **identity** is the user a client acts for. It owns the spaces it creates, and other peers recognize it when it
+joins theirs. Step 4 creates one the first time the app runs.
 
-A **space** is a database that a set of identities replicate between them, and every object lives in exactly one
-space. Our app keeps all its records in one space, called Contacts.
+A **space** is a database that a set of peers replicate between them, and every object lives in exactly one space.
+Our app keeps all its records in one space, called Contacts, which step 4 opens.
 
 ## Steps
 
@@ -55,17 +54,15 @@ space. Our app keeps all its records in one space, called Contacts.
      </TabItem>
    </Tabs>
 
-   Install any other `@dxos` package from the same build, with its name in place of `client`. The tutorial app's
-   [package.json](/echo/project/package.json) lists every package it uses at that build.
-
-   Most of those packages are for the app's interface: the `@dxos/react-ui` packages, `@dxos/ui-theme`,
-   `@dxos/vite-plugin-icons` and `tailwindcss`. If your app has its own interface, it needs only `@dxos/client` (or
-   `@dxos/react-client`) and `effect`.
-
-   In TypeScript, also add `@types/zen-observable` as a dev dependency. The client's observables, such as
-   `client.spaces` and an invitation, take their `subscribe` method from it.
-
-   In a React app, install `@dxos/react-client` instead and follow the [React guide](/docs/echo/guides/react/).
+   - Install any other `@dxos` package from the same build, with its name in place of `client`. The tutorial app's
+     [package.json](/echo/project/package.json) lists every package it uses at that build.
+   - Most of those packages are for the app's interface: the `@dxos/react-ui` packages, `@dxos/ui-theme`,
+     `@dxos/vite-plugin-icons` and `tailwindcss`. If your app has its own interface, it needs only `@dxos/client` and
+     `effect`.
+   - In TypeScript, also add `@types/zen-observable` as a dev dependency. The client's observables, such as
+     `client.spaces` and an invitation, take their `subscribe` method from it.
+   - In a React app, also install `@dxos/react-client`, which adds a provider and hooks around the client. The
+     tutorial app installs both, and the [React guide](/docs/echo/guides/react/) covers the hooks.
 
 2. **Configure the bundler.** In the browser, ECHO runs its database in a worker and loads WebAssembly in the page and
    in that worker. Vite needs four settings for it:
@@ -83,14 +80,20 @@ space. Our app keeps all its records in one space, called Contacts.
    The tutorial app's [vite.config.ts](/echo/project/vite.config.ts) has these settings, plus React, the theme's
    `ThemePlugin` and an `IconsPlugin` for the icons of the `@dxos/react-ui` components. Node needs no bundler setup.
 
-3. **Point the client at the network.** A client keeps its data on the device and reaches other devices through
-   DXOS's [EDGE](/docs/edge/concepts/connecting/) network, which relays invitations and replicates spaces. The app's
-   config, at the top of `App.tsx`, says where EDGE is and keeps the data across reloads.
+3. **Point the client at the network.** A client reaches other devices through DXOS's
+   [EDGE](/docs/edge/concepts/connecting/) network. We write the app's config at the top of `App.tsx`.
 
    <Snippet file="echo-tutorial/app/App" region="config" lang="tsx" />
 
-   We write the config in code here. See the [Configuration guide](/docs/echo/guides/configuration/) for loading it
-   from files instead.
+   - `storage.persistent` keeps the data across reloads.
+   - `services.edge.url` says where EDGE is.
+   - `edgeFeatures.signaling` lets peers find each other through EDGE.
+   - `subductionReplicator` and `feedReplicator` replicate the space's objects and its feeds through EDGE.
+   - `iceProviders` names the URL where the client fetches its ICE servers, which WebRTC needs to connect two peers
+     directly.
+
+   We write the config in code here. See [Configuration](/docs/echo/guides/configuration/) for loading it from files
+   instead.
 
    EDGE serves only identities linked to a DXOS account, which for now you can create only through
    [Composer](https://composer.space). Without an account, the console shows `403` responses from `dxos.network` for
@@ -102,18 +105,19 @@ space. Our app keeps all its records in one space, called Contacts.
 
    <Snippet file="echo-tutorial/app/App" region="client" lang="tsx" />
 
-   Reading `openSpace` from the top:
+   `openSpace` does five things in order:
 
    - `new Client` takes the app's types, which the next page declares, and the config.
-   - `createOpfsWorker` keeps the database in the browser's private file system.
+   - `createOpfsWorker` starts the worker that keeps the database in the browser's private file system.
    - `initialize` opens local storage and connects to the network.
-   - The first time, the client needs an identity before it can create a space. HALO's
+   - `createIdentity` runs only when `client.halo.identity.get()` finds no identity, which is the first time the app
+     runs. A client needs an identity before it can create a space. HALO's
      [Your profile](/docs/halo/learn/your-profile/) covers creating an identity, and [HALO](/docs/halo/overview/)
      covers identities and devices.
-   - After that, the app opens the space it made before.
+   - `client.spaces.get()[0]` is the space the app made before. The first time there is none, so
+     `client.spaces.create` makes it. `waitUntilReady` then waits until the space's database is open.
 
-   `openSpace` returns the client and the space. The space's database is `space.db`, which the rest of the learning
-   path reads and writes.
+   The space's database is `space.db`, which the rest of the learning path reads and writes.
 
    `services` replaces the network. The embeds on these pages pass in-memory services, so each runs its devices in
    the page and keeps nothing.

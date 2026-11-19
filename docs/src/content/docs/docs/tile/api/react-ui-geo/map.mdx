@@ -19,16 +19,18 @@ npm install @dxos/react-ui-geo
 OpenStreetMap unless you give it another server. For a map that needs no tile server, use
 [`Globe`](/docs/tile/api/react-ui-geo/globe/).
 
+Add the package's strings from `@dxos/react-ui-geo/translations` to the `resourceExtensions` of `Theme.Provider`.
+
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Map.Root` | Holds the map; its `ref` gives a `MapController`, and `onChange` reports the center and zoom |
+| `Map.Root` | The root, which holds the map. Its `ref` gives a `MapController`, and `onChange` reports the center and zoom |
 | `Map.Viewport` | The Leaflet frame, which takes focus |
-| `Map.Tiles` | The tile layer; `url` is a tile URL template |
-| `Map.Markers` | A marker per `GeoMarker`; `onSelect` gets the clicked marker's id |
+| `Map.Tiles` | The tile layer. `url` is a tile URL template |
+| `Map.Markers` | A marker per `GeoMarker`. `onSelect` gets the clicked marker's id |
 | `Map.Lines` | Lines between places, such as a route |
-| `Map.Zoom` | Zoom in and out buttons |
+| `Map.Zoom` | The zoom in and zoom out buttons |
 | `Map.Action` | A start button |
 
 ## `Map.Markers`
@@ -37,7 +39,7 @@ OpenStreetMap unless you give it another server. For a map that needs no tile se
 
 | Prop | Type | Effect |
 | --- | --- | --- |
-| `markers` | `GeoMarker[]` | Each an `id`, a `title` and a `location` |
-| `lines` | `MapLine[]` | Lines the view fits around; `Map.Lines` draws them |
-| `selected` | `string[]` | Ids of the markers to highlight |
+| `markers` | `GeoMarker[]` | Sets the markers, each an `id`, a `title` and a `location` |
+| `lines` | `MapLine[]` | Sets the lines the view fits around. `Map.Lines` draws them |
+| `selected` | `string[]` | Sets the ids of the markers to highlight |
 | `onSelect` | `(id) => void` | The user clicked a marker |

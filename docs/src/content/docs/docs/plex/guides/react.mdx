@@ -12,8 +12,8 @@ import Snippet from '../../../../../components/Snippet.astro';
 import * as Hooks from '@dxos/app-framework/Hooks';
 ```
 
-A plugin's components reach the rest of the app through hooks. With the hooks on this page, your component can read
-capabilities, invoke operations and read settings.
+By the end of this guide, your component reads capabilities, invokes operations and reads settings. A plugin's
+components reach the rest of the app through the hooks on this page.
 
 The hooks work in any component under the app's plugin manager, which every surface is.
 
@@ -29,26 +29,25 @@ work without one.
 
 <Snippet file="app-framework-guide-react" region="capabilities" lang="tsx" />
 
-In this example, `surfaces` holds every `ReactSurface` contribution. The count updates when a plugin adds or removes
-one.
-
 ## Invoke operations from a component
 
 `useOperation` binds an operation to a callback. Its argument maps the callback's arguments to the operation's input.
 
-`useOperationInvoker` returns the invoker, whose `invokePromise` returns the operation's output. Use it when your
-component needs that output.
+`useOperationInvoker` returns the invoker. Its `invokePromise` resolves to `{ data, error }`, which holds the
+operation's output or the error it failed with. Use it when your component needs that output.
 
 **Example** (Opening an item in two ways)
 
 <Snippet file="app-framework-guide-react" region="invoke" lang="tsx" />
 
-In this example, `OpenButton` binds `LayoutOperation.Open` to `open`, with the path as its subject. `OpenTwice` runs
-the same operation through `invokePromise` and awaits it.
+`OpenButton` starts the operation and moves on. `OpenAndWait` awaits `invokePromise`, so the code after the `await`
+runs once the item is open. The promise does not reject, so check `error` before you use `data`.
 
 ## Read plugin settings and translations
 
-`useAtomCapability` reads an atom capability, such as a plugin's settings, and re-renders when it changes.
+`useAtomCapability` reads a capability whose value is an [atom](/docs/plex/resources/glossary/#atom), such as a
+plugin's settings, and re-renders when it changes. An atom is a reactive value that code subscribes to.
+
 `useAtomCapabilityState` also returns a setter. Use it when the component changes the value.
 
 `useTranslation` from `@dxos/react-ui/Hooks` takes the plugin's namespace.
@@ -57,8 +56,8 @@ the same operation through `invokePromise` and awaits it.
 
 <Snippet file="app-framework-guide-react" region="settings" lang="tsx" />
 
-In this example, `CompactToggle` reads `settings.compact` and flips it with `setSettings`. `t` looks up the button's
-label in the `com.example.plugin.notes` namespace.
+`setSettings` takes a function of the current value, so `CompactToggle` flips `compact` and keeps the other settings.
+`t` reads the label from the plugin's namespace, `com.example.plugin.notes`.
 
 `@dxos/app-toolkit/Hooks` adds hooks for app state, such as `useActiveSpace`, `useAppGraph` and `useLayout`.
 
@@ -68,7 +67,7 @@ In React, a component re-renders when its props or state change. A field of an E
 component follows three rules:
 
 - Reading an ECHO object's field in render does not subscribe the component. Use `useObject` for a snapshot that does,
-  and `useQuery` for a list. See the ECHO [React guide](/docs/echo/guides/react/).
+  and `useQuery` for a list. See ECHO's [React](/docs/echo/guides/react/) guide.
 - Write objects inside `Obj.update`, from an event handler or an operation, never during render.
 - Never assume your component is the only view of an object. The same object can be open in another plank, on another
   device, or in the assistant's hands.
@@ -77,8 +76,8 @@ component follows three rules:
 
 <Snippet file="app-framework-guide-react" region="reactivity" lang="tsx" />
 
-In this example, `useObject` returns a snapshot that re-renders `NoteTitle` when the note changes. `rename` writes the
-title inside `Obj.update`, from the click handler.
+`NoteTitle` renders from `snapshot` and writes to `note`. The snapshot is for reading, and the write goes to the
+object, inside `Obj.update`.
 
 ## Members at a glance
 

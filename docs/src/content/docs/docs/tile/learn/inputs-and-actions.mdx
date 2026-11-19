@@ -12,33 +12,37 @@ revert.
 
 ## Before you start
 
-We build the form from three parts:
+We build the form from three components:
 
 - A `Field` holds one input. It ties the label to the control for screen readers, and lines up labels, help text and
-  errors.
-- `Input.Root` is a text input.
-- `Select` is a list of options in a popup.
+  errors. Use one around every input that has a label.
+- `Input.Root` is a text input. Use its `type` for one kind of text, such as the `'email'` of step 1.
+- `Select` opens a list of options, and the user picks one. Use it when the choices are fixed, as our three roles
+  are.
 
-`Input.Root` and `Select` both work controlled, with a value and a change handler, the way React inputs do. See
-[Input](/docs/tile/api/input/) and [Button](/docs/tile/api/button/).
+`Input.Root` and `Select` both work controlled, with a value and a change handler, the way React inputs do.
+[Input](/docs/tile/api/input/) lists the other controls, such as checkboxes and switches, and
+[Button](/docs/tile/api/button/) lists the button variants.
 
 <Steps>
 
-1. **Write the editor.** The editor edits a copy of the contact, the **draft**, so nothing changes until Save. We
-   disable Save until the draft differs from the contact, and while the name is empty. Add
+1. **Write the editor.** The editor edits a copy of the contact, which it keeps in `draft`, so nothing changes until
+   Save. We disable Save until the draft differs from the contact, and while the name is empty. Add
    `src/inputs/ContactEditor.tsx`:
 
    <Snippet file="tile-tutorial/inputs/ContactEditor" region="editor" lang="tsx" />
 
-   Notice two things in the editor. `gap='form'` is the spacing the theme uses between fields. A `Select`'s value is
-   a list, because a select can allow several choices, so the handler takes its first item.
+   `gap='form'` is the spacing the theme uses between fields. A `Select`'s value is a list, because a select can
+   allow several choices, so `onValueChange` takes its first item.
 
 2. **Put the editor in the detail column.** The screen now holds the contacts with `setContacts`, and Save replaces
-   the one that changed. `key={contact.id}` gives each contact its own editor, so choosing another contact starts a
-   fresh draft. Add `src/inputs/ContactsScreen.tsx`, which reuses `ContactList` from the last page, and render this
-   `ContactsScreen` from `src/main.tsx`:
+   the one that changed. Add `src/inputs/ContactsScreen.tsx`, which reuses `ContactList` from the last page, and
+   render this `ContactsScreen` from `src/main.tsx`:
 
    <Snippet file="tile-tutorial/inputs/ContactsScreen" region="screen" lang="tsx" />
+
+   `key={contact.id}` gives each contact its own editor. Without it, the editor would keep the last contact's draft
+   when we choose another.
 
 </Steps>
 

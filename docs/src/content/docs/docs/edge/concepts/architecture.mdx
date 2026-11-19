@@ -5,32 +5,35 @@ description: EDGE's services, the objects it keeps per space and per identity, a
 
 import Diagram from '../../../../../components/Diagram.astro';
 
-EDGE is a set of Cloudflare Workers. Each worker is a service, and each service keeps its state in Durable Objects, one
+EDGE is a set of Cloudflare Workers. Each Worker is a service, and each service keeps its state in Durable Objects, one
 per space, identity or other key.
 
 ## Model
 
-**Entry points.** Each device's WebSocket ends at the Router, a Durable Object per identity. HTTP requests go to the
-`edge` worker, which authenticates the caller and forwards each request to the service that owns its path.
+**Entry points.** EDGE has two. Each device's WebSocket ends at the Router. HTTP requests go to the `edge` Worker,
+which authenticates the caller and forwards each request to the service that owns its path.
 
-**Services.** Each service has one job, and every service except the Router answers at a path:
+**Services.** Every service except the Router answers at a path:
 
 | Service   | Path         | Does                                                                                         |
 | --------- | ------------ | -------------------------------------------------------------------------------------------- |
 | Router    | (WebSocket)  | Holds each device's WebSocket, routes messages between an identity's devices, and runs signaling |
-| DB        | `/db`        | Replicates spaces, indexes them, and keeps each space's state                               |
-| Identity  | `/identity`  | Identity recovery and agent identities                                                       |
-| Compute   | `/compute`   | Operations, triggers, the scheduler and agent processes                                      |
+| DB        | `/db`        | Replicates spaces, indexes them, keeps each space's state, and answers identity recovery     |
+| Identity  | `/identity`  | Keeps the agent device of each identity that grants EDGE a key                               |
+| Compute   | `/compute`   | Runs operations, triggers, the scheduler and agent processes, and creates SAGE agents' identities |
 | KMS       | `/kms`       | Keeps secrets for a space, such as OAuth tokens for the services it connects to              |
-| Hub       | `/hub`       | Accounts, invitations and email verification                                                 |
-| AI        | `/ai`        | Model access for agents and the assistant                                                    |
-| Blob      | `/blob`      | File upload and download                                                                     |
-| Registry  | `/registry`  | The plugin registry and the bundles it hosts                                                 |
+| Hub       | `/hub`       | Keeps accounts, invitations and email verification                                           |
+| AI        | `/ai`        | Gives agents and Composer's assistant access to models                                       |
+| Blob      | `/blob`      | Uploads and downloads files                                                                  |
+| Registry  | `/registry`  | Keeps the plugin registry and the bundles it hosts                                           |
 
-**Durable Objects.** A Durable Object is a small server with its own storage, created on first use and named by a key.
-EDGE keys them like this:
+**Durable Objects.** A **Durable Object** is a small server with its own storage, created on first use and named by a
+key. EDGE keys them like this:
 
 <Diagram name="edge-objects" alt="Durable Objects keyed by identity (RouterObject), swarm topic (SwarmObject), space (Automerge replicator, FeedReplicator, SpaceStateMachine, Indexer) and agent (agent process)." />
+
+In the diagram, each box in the top row is a kind of key, and each box in the group below is a Durable Object. An
+arrow joins a key to the objects EDGE keeps for it. The table lists the same objects with what each keeps.
 
 | Key         | Object                          | Keeps                                        |
 | ----------- | ------------------------------- | -------------------------------------------- |
@@ -41,6 +44,9 @@ EDGE keys them like this:
 | Space       | `SpaceStateMachine`             | Members, credentials and other space state   |
 | Space       | `Indexer`                       | The space's index for queries                |
 | Agent       | Agent process                   | The agent's process and memory, in compute   |
+
+A swarm topic is the key MESH gives the group of devices that share one space. See MESH's
+[Signaling and discovery](/docs/mesh/concepts/signaling/).
 
 ## Environments
 
@@ -55,8 +61,8 @@ Your app chooses one with `runtime.services.edge.url`. Every service answers und
 
 ## Behavior
 
-- A space's Durable Objects run in one place at a time. This means all writes to a space's copy go through one server
-  and need no coordination between servers.
+- A space's Durable Objects run in one place at a time. All writes to a space's copy go through one server, so they
+  need no coordination between servers.
 - EDGE authenticates every request with the caller's HALO identity. See [Connecting](/docs/edge/concepts/connecting/).
 
 ## Limits

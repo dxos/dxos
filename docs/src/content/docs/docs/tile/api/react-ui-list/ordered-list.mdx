@@ -17,8 +17,9 @@ import { OrderedList } from '@dxos/react-ui-list';
 npm install @dxos/react-ui-list
 ```
 
-`OrderedList` gives each row a drag handle. A drop, or a keyboard move from the handle, calls `onMove` with the old
-and the new index. You then update your state.
+An ordered list is a list of rows the user drags into order. `OrderedList` gives each row a drag handle.
+
+A drop, or a keyboard move from the handle, calls `onMove` with the old and the new index. You then update your state.
 
 Each part handles keyboard navigation and the current and selected states. Each part also sets its own spacing, so put
 the list in a panel's body with no padding around it.
@@ -27,22 +28,22 @@ the list in a panel's body with no padding around it.
 
 | Part | What it is |
 | --- | --- |
-| `OrderedList.Root` | Takes the `items`, `getId`, `getLabel` and `onMove`; its child is a function of the items |
-| `OrderedList.Label` | Names the list |
-| `OrderedList.Viewport` | Scrolls the list, and scrolls it during a drag near its edges |
-| `OrderedList.Content` | The listbox element |
-| `OrderedList.Item` | A row; `collapsible` folds a `Detail` under it |
+| `OrderedList.Root` | The root, which takes the `items`, `getId`, `getLabel` and `onMove`. Its child is a function of the items |
+| `OrderedList.Label` | The list's name |
+| `OrderedList.Viewport` | The scroll area for the list. It also scrolls during a drag near its edges |
+| `OrderedList.Content` | The list element |
+| `OrderedList.Item` | A row. `collapsible` folds an `OrderedList.Detail` under it |
 | `OrderedList.DragHandle` | The grip the user drags, or moves with Alt and the arrow keys |
 | `OrderedList.Detail` | A collapsible row's detail, at full width |
 | `OrderedList.ItemIcon` | The row's icon |
 | `OrderedList.ItemText` | The row's text |
 | `OrderedList.ItemDescription` | The row's description |
-| `OrderedList.Empty` | Stands in for the rows while there are none |
+| `OrderedList.Empty` | The placeholder shown while there are no items |
 
 ## Let the user reorder rows
 
-`getLabel` names each row for screen readers as it moves. The root's child is a function of the items, so the rows
-always follow the order you hold.
+`getLabel` names each row for screen readers as it moves. The child of `OrderedList.Root` is a function of the items,
+so the rows always follow the order you hold.
 
 **Example** (Reordering an agenda)
 
@@ -50,5 +51,5 @@ always follow the order you hold.
 
 <TilePreview id="agenda" height="14rem" />
 
-In this example, `move` takes the step out at its old index and puts it back at the new one. Each row also has a
-`SystemButton.Remove`, which takes its step out of `steps`.
+`move` takes the step out at its old index and puts it back at the new one. Each row also has a `SystemButton.Remove`,
+which takes its step out of `steps`.

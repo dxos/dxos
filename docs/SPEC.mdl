@@ -346,7 +346,7 @@ page objects-relations: Objects and relations
   status: spike
   covers:
     - Objects are typed records in one space; relations are entities that join a source and a target
-    - The managed fields: id, type, meta keys and tags, label, deleted
+    - The managed fields: id, type, foreign keys and tags, label, deleted [D-356]
     - A relation next to a reference field, shown with a WorksAt relation beside `Person.employer` [D-160]
     - Parents and children, and what removing a parent does
     - Removal marks an object deleted, and it stays in history until the next epoch
@@ -412,7 +412,7 @@ page spaces: Spaces and databases
   covers:
     - A space is the unit of sharing and replication, with one database
     - Storage: SQLite in a worker, browser file storage or disk; objects load on demand, not with the space; indexing, and queries compiled to SQL with an in-memory fallback; writes and flush
-    - Replication: each member holds a full copy, syncing over WebRTC or through EDGE
+    - Replication: each peer holds a replica, syncing over WebRTC or through EDGE [D-356]
     - The Hypergraph: every reachable space as one graph, qualified EIDs, references across spaces and unreachable spaces, the in-process registry a query reads only with `Scope.registry()` in `from()`, and `db` versus Hypergraph
     - Access in one paragraph: HALO controls members and roles, built on Keyhive, with a link [D-156]
 ```
@@ -560,7 +560,7 @@ page guide-ref: Ref
   template: namespace
   status: spike
   covers:
-    - Make a reference to an object, or from a DXN
+    - Make a reference to an object, or from a URI [D-356]
     - Peek at, load, and load many references at once
     - Compare references and check what they point at
 ```
@@ -605,7 +605,7 @@ page guide-filter: Filter
   template: namespace
   status: spike
   covers:
-    - Match by type, id, tag and key
+    - Match by type, id, tag, key and foreign key; match everything or nothing; filter a feed by cursor [D-356]
     - Compare a field: equals, ranges, contains
     - Combine filters with `and`, `or` and `not`
     - Search text, and filter by creation and update time
@@ -672,7 +672,7 @@ page glossary: Glossary
   template: reference
   status: spike
   covers:
-    - Every ECHO term, defined once: space, object, relation, reference, DXN, epoch, Hypergraph, registry, scope, branch, migration, content version and the rest
+    - Every ECHO term, defined once: space, object, relation, entity, reference, URI, DXN, epoch, Hypergraph, registry, scope, source, replica, branch, migration, content version and the rest [D-354]
     - Links to HALO's glossary for identity, device and invitation terms
 ```
 ```mdl
@@ -802,14 +802,14 @@ page halo-welcome: Overview
   status: spike
   covers:
     - What HALO is: identity management for local-first apps, covering identities, devices, credentials and space membership
-    - An identity is a key pair a client generates; no server issues it
+    - An identity is a group of keys that the user's devices hold, named by a DID; the first device creates it and no server issues it [D-357]
     - The three `@dxos/halo` namespaces, Identity, Invitation and Space, in one line each
     - HALO is built on Keyhive: signed delegations and group encryption keys
     - The learning path builds a contact book of its own; ECHO's Sharing a space is where ECHO meets HALO [D-169]
 ```
 ```mdl
 page why-halo: Why HALO?
-  Why identity is a key pair your device makes, not an account a server issues.
+  Why identity is keys your devices hold, not an account a server issues.
   section: HALO
   route: /docs/halo/why-halo/
   group: Start here
@@ -817,7 +817,7 @@ page why-halo: Why HALO?
   status: spike
   covers:
     - The pattern: create an identity and share a space with no sign-up server
-    - Comparison: an account a server issues and revokes, against a key pair the device holds
+    - Comparison: an account a server issues and revokes, against an identity made of keys the user's devices hold [D-357]
     - Practical problems: one identity across devices, access that peers check without a server, recovery without a password reset
     - What HALO does not do: it is not a login for third-party sites
 ```
@@ -956,8 +956,8 @@ page halo-spaces-membership: Spaces and membership
     - Access levels pull, read, edit and admin, each including the ones before it
     - The membership policy: invite or locked
     - Membership is signed delegations and revocations that converge with no server; a member revokes only those it has causal seniority over, an admin anyone
-    - The group key, which changes with membership and which pull members relay without reading
-    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-245]
+    - The group key, which members with read or more hold, which changes with membership and which pull members relay without reading [D-357]
+    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-245]; an agent device gives EDGE its identity's access level in that identity's spaces [D-357]
     - Links to ECHO's Spaces and databases for data and replication
 ```
 ```mdl
@@ -974,6 +974,7 @@ page halo-invitations: Invitations
     - The invitation flow, step by step, with its events [D-165]
     - Admission: a contact-card exchange and a delegation
     - Delegated invitations with the host offline: prekeys, and EDGE holding the signed operations until the guest connects
+    - Behavior: a space invitation with no role admits its guest as an admin; `share` with no options is interactive with auth method none, under a caution [D-358]
     - Limits: expiry, cancellation and a code that fails to authenticate
 ```
 ```mdl
@@ -987,6 +988,7 @@ page halo-recovery-credentials: Recovery and credentials
   covers:
     - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Recovery kinds: passkey, recovery code and OAuth
+    - A recovery credential is the signed record that registers a recovery key, and a lookup key names it [D-357]
     - The recovery key is a member of the identity's group
     - The recovery challenge, and what a recovered identity gets back
     - The credentials stream, service access and API tokens
@@ -999,7 +1001,7 @@ Passkey recovery, then React [D-167].
 
 ```mdl
 page halo-guide-passkey-recovery: Passkey recovery
-  Register a passkey as a recovery credential and recover with it.
+  Register a passkey as a recovery key and recover with it.
   section: HALO
   route: /docs/halo/guides/passkey-recovery/
   group: Guides
@@ -1046,7 +1048,7 @@ page halo-guide-identity: Identity
     - List devices, share the identity and join from a device
     - Create, revoke and use recovery credentials, and request a recovery challenge
     - Read credentials, grant service access, create API tokens and get the EDGE identity
-    - Errors: IdentityError, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError
+    - Errors: IdentityError, with the wrapped failure in `context.error`, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError, which no function's error type includes yet [D-358]
 ```
 ```mdl
 page halo-guide-invitation: Invitation
@@ -1060,7 +1062,7 @@ page halo-guide-invitation: Invitation
     - The `Invitation.Flow` that `Identity.share`, `Identity.join`, `Space.share` and `Space.join` return
     - Read the code, authenticate with it and cancel a flow
     - Follow a flow with `Invitation.events`
-    - Share options: auth method, type, multi-use and target
+    - Share options: auth method, type, multi-use and target, with their defaults and a caution that the default auth method is none [D-358]
     - Errors: InvitationError
 ```
 ```mdl
@@ -1077,7 +1079,7 @@ page halo-guide-space: Space
     - List members, change a member's access and remove a member
     - Share and join a space
     - Export and import a space archive, and set EDGE replication
-    - Errors: SpaceError, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError
+    - Errors: SpaceError, with the wrapped failure in `context.error`, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError, which no function's error type includes yet [D-358]
 ```
 
 ### Resources
@@ -1104,6 +1106,7 @@ page halo-glossary: Glossary
   covers:
     - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, access and space key
     - Contact card, delegation, revocation, prekey, access level and group key
+    - Agent device, causal seniority, contact, EDGE, flow, group, guest, host, Hub, lookup key, profile, recovery key and space [D-354]
 ```
 ```mdl
 page halo-llms-txt: llms.txt
@@ -1167,7 +1170,7 @@ page mesh-architecture: Architecture
   template: concept
   status: spike
   covers:
-    - The layers, bottom to top: transport, Teleport, signaling, swarm, extensions, in one diagram
+    - The five layers and which uses which, in one diagram: a swarm finds peers through signaling and opens Teleport sessions, a transport carries a session, and extensions run on it [D-359]
     - Which package holds each layer in `packages/core/mesh`: `network-manager`, `teleport`, `messaging`, the `teleport-extension-*` packages and `edge-client`
     - The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of these pages [D-230]
 ```
@@ -1250,6 +1253,7 @@ page mesh-glossary: Glossary
   status: spike
   covers:
     - Swarm, topic, topology, MMST, signaling, transport, Teleport, extension, ICE, TURN, presence and network status
+    - Always-online peer, channel, direct link, gossip, peer and signal manager [D-354]
     - Links to EDGE's glossary for router, Durable Object and environment
 ```
 ```mdl
@@ -1277,7 +1281,7 @@ Swarms, signaling and ICE/TURN are MESH's; Connecting covers only the link betwe
 
 ```mdl
 page edge-overview: Overview
-  What EDGE is, and where ECHO, HALO, MESH and PLEX use it.
+  What EDGE is, and where ECHO, HALO, MESH, SAGE and PLEX use it.
   section: EDGE
   route: /docs/edge/overview/
   group: Start here
@@ -1416,9 +1420,9 @@ page edge-processes: Processes
   status: spike
   covers:
     - The process manager, and one process per running operation
-    - The layer stack: the services a process gets, such as the database, storage and credentials
+    - The layer stack: the services a process gets, such as the database, storage and secrets [D-359]
     - Local and remote processes: the same operation runs in the app, in a worker or on EDGE, and the app invokes one on EDGE by key [D-276]
-    - Operation code kept as an ECHO object and deployed to EDGE, and the credentials it uses, kept in the space [D-276]
+    - Operation code kept as an ECHO object and deployed to EDGE, and the secrets it uses, kept in the space [D-276] [D-359]
     - One paragraph on pipelines: an operation that streams a long source, such as a mailbox, uses `@dxos/pipeline` and a saved cursor inside its process [D-277]
 ```
 ```mdl
@@ -1471,6 +1475,7 @@ page edge-glossary: Glossary
   status: spike
   covers:
     - Durable Object, environment, hub, index, replicator, router, service access, worker, operation, handler, invoker, process, layer stack, trigger, pipeline and trace
+    - Agent device, always-online peer, guard, hibernation, operation registry, plugin registry and secret [D-354]
 ```
 ```mdl
 page edge-llms-txt: llms.txt
@@ -1504,7 +1509,7 @@ page sage-overview: Overview
   template: overview
   status: spike
   covers:
-    - What SAGE is in one paragraph, on its own: durable agent processes with an identity of their own, typed tools, skills and any model [D-280]
+    - What SAGE is in one paragraph, on its own: durable agent processes that can have an identity of their own, typed tools, skills and any model [D-280] [D-360]
     - A table of where SAGE runs, in Composer's assistant, in agents on EDGE and behind the MCP server, each linking its concept page
     - After the table, one sentence each on operations as the agent's actions and on memory as objects in the user's spaces [D-280]
     - Where to go next: Why SAGE?, then Agents
@@ -1542,7 +1547,7 @@ page sage-models: Models
 ```
 ```mdl
 page sage-agents: Agents
-  A model in a loop, acting in a space with its own identity.
+  A model in a loop, acting in a space, with an identity of its own when it is given one.
   section: SAGE
   route: /docs/sage/concepts/agents/
   group: Core concepts
@@ -1634,6 +1639,7 @@ page sage-glossary: Glossary
   status: spike
   covers:
     - Agent, turn, model, provider, tool, skill, instructions, code mode, memory, fact, goal, MCP, spec, decision and review
+    - Assistant, host, resolver and workspace [D-354]
 ```
 ```mdl
 page sage-llms-txt: llms.txt
@@ -1729,7 +1735,7 @@ page app-framework-create-plugin: Create a plugin
   template: tutorial
   status: spike
   covers:
-    - Create the package and its `dx.config.ts` manifest
+    - Create the package and its `dx.config.ts`, which the dev server turns into the `manifest.json` manifest [D-361]
     - Define the plugin and its metadata with `Plugin`
     - Add a first module that contributes translations, and the activation event that loads it
     - Start the plugin's dev server and click Load dev plugin, then see the Translations module and its strings in the inspector
@@ -1745,7 +1751,7 @@ page app-framework-define-type: Define a type
   status: spike
   covers:
     - Declare the plugin's type with `Type`, linking to the ECHO Defining types page for the details
-    - Register the type with the app so it can store, list and name objects of it
+    - Register the type with the app so it can create, list and name its objects [D-361]
     - See the type's fields in the inspector's Schema module
 ```
 
@@ -1807,7 +1813,7 @@ page plex-run-in-composer: Run it in Composer
     - Sign in to Composer Preview, which loads plugins from a dev server; composer.space loads only its own
     - Run the plugin's dev server with `npm run dev`, then click Plugin Settings in the rail, open Plugins, and click Enable under Dev Server, allowing the browser's local-network prompt
     - Create a link from the + menu and open it in the main area, and mark it as read with the Mark as read action on its toolbar
-    - Write the Stash skill, which gives the assistant Mark as read as a tool, and add its module to the manifest
+    - Write the Stash skill, which gives the assistant Mark as read as a tool, and add its module to `dx.config.ts`
     - Have the assistant run the same operation from a chat with the Stash skill
 ```
 
@@ -1843,7 +1849,7 @@ page app-framework-anatomy: Plugins and modules
   status: spike
   covers:
     - A plugin is metadata plus modules; `Plugin.define`, `Plugin.addModule` and `Plugin.make` build one
-    - The `dx.config.ts` manifest, which describes the plugin for the registry and lists its modules
+    - `dx.config.ts`, which describes the plugin for the registry and lists its modules, and the manifest the build and dev server make from it [D-361]
     - Inline and lazy modules (`Capability.inlineModule`, `Capability.lazyModule`), and why a module's code loads only when it activates
     - A diagram of the Stash plugin's modules, their events and their capabilities
 ```
@@ -2153,6 +2159,7 @@ page app-framework-glossary: Glossary
   status: spike
   covers:
     - Action, activation event, annotation, App Graph, App Toolkit, builder extension, capability, filter, handler, module, node, operation, operation invoker, plugin, plugin manager, role, schema registration and surface
+    - Assistant, atom, contribution, dev plugin, disposition, DXN, handler set, host, inspector, manifest, module maker, NSID, private registry, skill and tag [D-354]
 ```
 
 ```mdl
@@ -2266,7 +2273,7 @@ page tile-the-tile-component: The TILE component
   template: tutorial
   status: spike
   covers:
-    - What a TILE component is: a namespace of parts, themed by the provider, styled with `classNames` [D-248]
+    - What a TILE component is: a namespace of parts, styled by the theme's stylesheets and adjusted with `classNames`; `Theme.Provider` supplies strings and icons [D-248] [D-362]
     - The finished contacts screen, running, so the reader sees where the path ends
     - What each page of the path adds, and the folder it goes in
 ```
@@ -2282,12 +2289,12 @@ page tile-learn-installation: Installation
     - The packages: `@dxos/react-ui` and its peer `@dxos/ui-theme` [D-248]
     - The Vite plugins: `ThemePlugin` from `@dxos/ui-theme/plugin` and `IconsPlugin` from `@dxos/vite-plugin-icons`
     - The stylesheets, `Theme.Provider` with `Theme.defaultTx`, and the `translations` resources
-    - Dark mode: the `dark` class on the root element, following the system
+    - Dark mode: the `dark` class on the root element, which `ThemePlugin` sets from the system [D-362]
     - The first buttons, which follow light and dark [D-239]
 ```
 ```mdl
 page tile-learn-layout: Lay out a screen
-  A list beside a detail panel, with a toolbar.
+  A list beside a detail column, with a toolbar.
   section: TILE
   route: /docs/tile/learn/lay-out-a-screen/
   group: Learning path
@@ -2394,7 +2401,7 @@ page tile-density: Density and sizes
   status: spike
   covers:
     - Sizes `xs` to `xl`, set with the `size` prop or the `data-size` attribute
-    - Popups take their trigger's size
+    - Overlays take their trigger's size, except a top-level menu, which is `md` [D-362]
 ```
 ```mdl
 page tile-focus: Focus and keyboard
@@ -2620,7 +2627,7 @@ page tile-api-collapsible: Collapsible
 ```
 ```mdl
 page tile-api-color-picker: ColorPicker
-  A colour typed as text or picked from a swatch.
+  A color typed as text or picked from a swatch.
   section: TILE
   route: /docs/tile/api/color-picker/
   group: API
@@ -2698,7 +2705,7 @@ page tile-api-floating-panel: FloatingPanel
 ```
 ```mdl
 page tile-api-focus: Focus
-  Keyboard focus groups: one Tab stop, arrow keys inside.
+  Keyboard focus groups: one tab stop, arrow keys inside.
   section: TILE
   route: /docs/tile/api/focus/
   group: API
@@ -3217,7 +3224,7 @@ page tile-api-canvas-editor-canvas-editor: CanvasEditor
   template: namespace
   status: spike
   covers:
-    - The package's `Model` story, the one the Overview's Canvas card runs, live at the top [D-307]
+    - The package's `Docs` story, the one the Overview's Canvas card runs, live at the top [D-307] [D-362]
     - Every part of `CanvasEditor` and the props of `CanvasEditor.Root` [D-307]
 ```
 ```mdl
@@ -3965,14 +3972,16 @@ feat F-22: Voice
           and the writer working through it together
 
   req F-22.3:
-    when: a page brings in an idea the reader has not met
-    then: it starts from what the reader already does without DXOS, or from the problem the idea removes, before
-          it gives the DXOS answer
+    when: a page brings in its main idea
+    then: it gives the reader one foothold first: the way they do it today and what it costs, a failure they have
+          hit, or the question they arrive with; the foothold differs from the one on the pages before it in the
+          sidebar [D-353]
 
   req F-22.4:
     when: a concept, namespace or guide page shows a code sample
-    then: a labelled line, `**Example** (what it shows)`, or a lead-in sentence introduces the sample, and the
-          prose after it says what to notice in it [D-325]
+    then: a labelled line, `**Example** (what it shows)`, or a lead-in sentence introduces the sample [D-325]; the
+          sentence after it starts from a name in the code and says what the sample's comments do not, and a sample
+          whose comments carry the idea ends the passage [D-352]
 
   req F-22.5:
     when: a page documents an API member or an option
@@ -3982,6 +3991,16 @@ feat F-22: Voice
     when: a page is written
     then: a paragraph holds one idea in one to three sentences, no sentence passes 30 words, and headings use
           sentence case [D-323]
+
+  req F-22.7:
+    when: a page uses a term
+    then: the term means one thing across the section, the section's glossary defines it, and the page introduces
+          it at its first use with half a sentence or a link [D-354]
+
+  req F-22.8:
+    when: a page has a table
+    then: a cell holds a phrase or a sentence, two facts are two sentences, a type is in code font and a default
+          comes last in its cell; spelling across the docs is American [D-355]
 ```
 
 ## Acceptance
@@ -6946,6 +6965,117 @@ decision D-351: The Invitation pages say what a `success` event's result names: 
   for: user:wittjosiah
   affects: [halo-guide-invitation, halo-invitations]
   why: The adapter now derives the result from the invitation when it succeeds, where it used to return an empty one.
+```
+
+```mdl
+decision D-352: The sentence after a code sample has a name from the code as its subject and says what the sample's comments do not: the result, the consequence, or why this line and not the obvious one. A sample whose comments carry the idea ends the passage, and no two explanations on a page open with the same words. Amends [D-322].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.4]
+  why: An audit of the 212 pages found that nearly every sentence after a sample opened "In this example," or "Here,": 104 of 133 in ECHO and all 81 in PLEX. About a third only listed the sample's names, and at least 15 repeated its comment.
+```
+
+```mdl
+decision D-353: A page gives its reader one foothold, in the section that brings in its main idea, in one of three shapes: the way they do it today and its cost, a failure they have hit, or the question they arrive with. It differs from the foothold of the pages before it in the sidebar, and a page whose idea the section's overview already grounded has none. Amends [D-322].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.3]
+  why: Applied page by page, the earlier rule gave 15 MESH and EDGE pages the same opening about a client-server app, and five HALO pages in a row the same contrast with an account on a server.
+```
+
+```mdl
+decision D-354: A term means one thing across a section and one thing has one word. The section's glossary is its term list, a page introduces a term at its first use, and the glossary holds every term the section's pages put in bold. Fills in [D-321].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.7]
+  why: The audit found one word for two things, such as "recovery credential" for a key and for a signed record, and terms that many pages used and none defined, such as entity, NSID and lookup key.
+```
+
+```mdl
+decision D-355: Table cells follow one style: a phrase or a sentence, two facts in two sentences, a type in code font and a default last. A change to a page keeps a table's rows, columns and facts and may bring its cells to that style. Spelling across the docs is American. Amends [D-323].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.8]
+  why: Tables were outside every rule, so 76 cells joined two facts with a semicolon and the TILE pages stated a default seven ways. Three TILE pages wrote "colour" where the rest wrote "color".
+```
+
+```mdl
+decision D-356: ECHO's pages say what the code does where the two differed. A reference stores its target's URI, an `echo:` EID for an object or a `dxn:` DXN for a type. The Filter API page covers foreign keys, `everything`, `nothing` and feed cursors. A space's copies are replicas held by peers, and a managed field holds foreign keys. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [guide-ref, guide-filter, spaces, objects-relations]
+  why: `Ref.uri` is the stored value in the code. Three pages sent readers to the Filter page for members it did not have. "Member" is HALO's word for an identity in a space.
+```
+
+```mdl
+decision D-357: HALO's pages agree on four things. An identity is a group of keys that the user's devices hold, named by a DID, and each device signs with its own key. Members with `read` or more hold a space's group key. A recovery key is the key and a recovery credential is the signed record that registers it, found by a lookup key. An agent device gives EDGE its identity's access level in that identity's spaces. Fills in [D-175] and [D-335].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-welcome, why-halo, halo-spaces-membership, halo-recovery-credentials, halo-guide-passkey-recovery]
+  why: The start pages said an identity is a key pair and the concept pages said a group. One page said current members hold the group key while `pull` members, who are current, do not. "Recovery credential" named both a key and a record.
+```
+
+```mdl
+decision D-358: HALO's pages state three behaviors of the adapter that the code has and the pages lacked. A space invitation with no role admits its guest as an admin. `Invitation.share` with no options is interactive with auth method `none`, and each page that shares carries a caution. `IdentityError` and `SpaceError` carry the wrapped failure in `context.error`, and no function's error type includes the four Keyhive errors yet. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-invitations, halo-guide-invitation, halo-guide-identity, halo-guide-space]
+  why: A reader who copies the default call makes an unauthenticated invitation that grants admin, and the pages said the guest joins with the access the host chose.
+```
+
+```mdl
+decision D-359: MESH's Architecture page says which layer uses which, as its diagram draws them, in place of a stack read bottom to top. EDGE's Overview names SAGE among the sections that use it. EDGE's compute pages call the API keys a process uses secrets, and keep "credential" for HALO's signed record.
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-architecture, edge-overview, edge-processes]
+  why: The diagram shows a swarm using signaling and Teleport side by side, so "each layer uses the one below it" was false of it.
+```
+
+```mdl
+decision D-360: SAGE's and EDGE's pages say an agent can have an identity of its own, which EDGE creates when Composer's setting for it is on, and that the identity's DID lets content name the agent as its author. They no longer say every agent has one or that a process writes to the database as the agent. Implements [D-326]. Amends [D-280].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [sage-overview, sage-agents, edge-processes]
+  why: `Agent.did` is optional, the setting that asks EDGE for an identity is off by default, and no runtime in this repository provides the agent's identity to an operation.
+  rejected:
+    - Describe the planned model in the present tense, as HALO does for Keyhive [D-99]: no decision says SAGE does this.
+```
+
+```mdl
+decision D-361: In PLEX's pages "manifest" means `manifest.json`, which the build and the dev server make from `dx.config.ts`, and `dx.config.ts` goes by its file name. Publishing a plugin starts step 3 from the `dx.config.ts` the learning path made, and shows `Config2.make` with an entry file as the alternative. Registering a type lets the app create, list and name its objects.
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [app-framework-create-plugin, app-framework-define-type, app-framework-anatomy, app-framework-publishing]
+  why: The code and Composer's UI call `manifest.json` the manifest. A reader who finished the learning path had a config the publishing page did not mention. Objects of an unregistered type still sync, and only creating one fails.
+```
+
+```mdl
+decision D-362: TILE's pages follow the code in five places. `ThemePlugin` sets the `dark` class before first paint, so Installation has no step for it. A component is styled by the theme's stylesheets, and `Theme.Provider` supplies strings and icons. An overlay takes its trigger's size, except a top-level menu. The Canvas editor page runs the `Docs` story. Until the next npm release, Installation and Connect to ECHO install from pkg.pr.new at `DXOS_COMMIT`, as ECHO's pages do under [D-189]. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-learn-installation, tile-learn-echo, tile-the-tile-component, tile-density, tile-api-canvas-editor-canvas-editor]
+  why: The tutorial told the reader to write a script the plugin already injects, and two pages placed it differently. The packages on npm predate the change that lets them install outside the repository.
+```
+
+```mdl
+decision D-363: Recover an identity says its last step does not run in the embed and fails in a fork of the tutorial project, because an identity the fork creates has no DXOS account. Supersedes [D-172]'s "runs only in the StackBlitz project".
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-recover-identity]
+  supersedes: D-172
+  why: [D-173] says recovery needs an account, and the tutorial project has no account or agent code.
 ```
 
 ## Appendix: Extension Definitions

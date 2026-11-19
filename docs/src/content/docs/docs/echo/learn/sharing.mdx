@@ -3,7 +3,7 @@ title: Sharing a space
 description: Invite a second peer to the tutorial app's space and watch both replicas follow each other's edits.
 ---
 
-import { Steps } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
@@ -11,16 +11,18 @@ By the end of this page a second peer will have joined the app's space, and each
 
 ## Background
 
-In a client-server app, the server decides who may read a document, and you share it by adding someone to a list
-there. In ECHO, you share a space by invitation. The **host** creates an invitation, and the **guest** uses its code
-to find the host and open a secure connection.
+A second device wants the app's records, and no server decides who may read them. How does it get in? In ECHO, you
+share a space by invitation.
 
-An invitation can also ask the guest for an authentication code, which the host passes on by another channel. The
-authentication code proves that the guest received the invitation from the host. Our app leaves it out, so pasting
-the invitation's code is enough.
+- The **host** is the peer that creates the invitation.
+- The **guest** is the peer that uses the invitation code to find the host and open a secure connection.
 
-Once the guest is in, both peers hold a full **replica** of the space's database. Each peer reads and writes its own
-replica, and the replicas exchange changes whenever the peers can reach each other.
+An invitation can also ask the guest for an authorization code, which the host passes on by another channel. The
+authorization code proves that the guest received the invitation from the host. Our app leaves it out in step 1, so
+pasting the invitation code is enough.
+
+A **replica** is one peer's full copy of the space's database. Once the guest is in, both peers hold one. Each peer
+reads and writes its own replica, and the replicas exchange changes whenever the peers can reach each other.
 
 A peer that goes offline keeps working, and catches up when it reconnects. [MESH](/docs/mesh/concepts/presence/) is
 what tells the peers who is online.
@@ -34,31 +36,32 @@ We write both steps in `Share.tsx`, which draws the toolbar's Invite and Join bu
 <Steps>
 
 1. **Invite a peer.** `space.share` starts an invitation and reports each change to its state. Once the invitation is
-   connecting to the network, its encoded form is the code to send. Opening the **Invite** popover runs this, and the
-   app copies the code.
+   connecting to the network, its encoded form is the invitation code to send. The **Invite** popover calls
+   `handleOpen` when it opens, and the app copies the code.
 
    <Snippet file="echo-tutorial/app/Share" region="invite" lang="tsx" />
 
-   Here, `Invitation_AuthMethod.NONE` is what leaves out the authentication code. Anyone with the invitation's code
-   can join while the invitation is open.
+   `Invitation_AuthMethod.NONE` leaves out the authorization code, so anyone with the invitation code can join while
+   the invitation is open.
 
    If the code should not be enough on its own, leave out `authMethod`. The invitation then asks for an
-   authentication code, which you send over a different channel.
+   authorization code, which you send over a different channel.
 
-2. **Join from the other peer.** The guest needs a client that knows the app's types and an identity of its own. It
-   decodes the code and joins. Once the invitation succeeds, the space is among the guest's spaces, and both peers
-   replicate it. The **Join** button calls this.
+2. **Join from the other peer.** The guest needs a client that knows the app's types and an identity of its own. The
+   **Join** button passes the pasted code to `joinSpace`, which decodes it and joins.
 
    <Snippet file="echo-tutorial/app/Share" region="join" lang="tsx" />
 
-   In `joinSpace`, `wait` resolves with the space's id once the invitation succeeds. The space joins the client's list
-   a moment later, so the function waits for it there before it returns.
+   `wait` resolves with the space's id once the invitation succeeds. The space joins the client's list a moment
+   later, so `joinSpace` waits for it there before it returns. From then on, both peers replicate the space.
+
+   <Aside type="caution" title="Reopen the joined space">
+     `openSpace` from [Installation](/docs/echo/learn/installation/) reopens the first space in
+     `client.spaces.get()`, which after a join may be the guest's own empty space. To reopen the space a peer joined,
+     remember its id, as the app does in `localStorage`, and on load open `client.spaces.get(id)` when it is there.
+   </Aside>
 
 </Steps>
-
-`openSpace` from [Installation](/docs/echo/learn/installation/) reopens the first space in `client.spaces.get()`, which
-after a join may be the guest's own empty space. To reopen the space a peer joined, remember its id, as the app does in
-`localStorage`, and on load open `client.spaces.get(id)` when it is there.
 
 ## Try it
 

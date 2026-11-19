@@ -10,9 +10,9 @@ toolbar, and the assistant marks links as read from a chat.
 
 ## Background
 
-Until now, the inspector has loaded the plugin. Composer loads it the same way, from a manifest the plugin's dev
-server serves. Composer also gives the plugin the parts the inspector leaves out: a navigation tree, a command palette
-and the assistant.
+Until now, the inspector has loaded the plugin. Composer loads it the same way, from the manifest that the plugin's
+dev server serves. Composer also gives the plugin the parts the inspector leaves out: a navigation tree, a command
+palette and the assistant.
 
 Only [Composer Preview](https://preview.composer.space) loads plugins from a dev server. The app at composer.space
 loads only the plugins it ships with.
@@ -33,43 +33,45 @@ loads only the plugins it ships with.
    the port is taken, Vite fails rather than moving to another one, because Composer loads from 3967.
 
 3. **Enable the dev plugin.** In Composer, click **Plugin Settings** in the rail and open **Plugins**. Under
-   **Dev Server**, leave the manifest URL as it is and click **Enable**. Allow the browser's prompt to reach devices on
+   **Dev Server**, leave **Manifest URL** as it is and click **Enable**. Allow the browser's prompt to reach devices on
    your local network, because the plugin's source comes from your machine.
 
    Stash appears in the list of plugins, turned on. It stays on until you click **Disable**. Every reload of Composer
    loads it again from the dev server, so an edit is one reload away.
 
 4. **Stash a link.** Click **+** on a space and choose **Stashed link**. The space gets a **Stashed links** section
-   with the link in it. The link opens in the main area, in the article from
-   [Add a surface](/docs/plex/learn/add-surface/). Give it a title, an address and a note.
+   with the link in it.
+
+   The link opens in the main area, in the article from [Add a surface](/docs/plex/learn/add-surface/). Give it a
+   title, an address and a note.
 
 5. **Mark it as read.** Click **Mark as read** on the link's toolbar, or run it from the command palette. The article
-   changes to **Read**. This is the action we added in
-   [Extend the App Graph](/docs/plex/learn/extend-app-graph/).
+   changes to **Read**. We added this action in [Extend the App Graph](/docs/plex/learn/extend-app-graph/).
 
-6. **Offer the operation to the assistant.** A **skill** gives the assistant a set of operations as tools, with
-   instructions on when to use them.
+6. **Offer the operation to the assistant.** A **skill** is a set of operations that the assistant gets as tools,
+   with instructions on when to use them.
 
    <Snippet file="plex-tutorial/src/skills/StashSkill" region="skill" />
 
-   Here, `tools` holds one operation, `MarkRead`, and `instructions` tells the assistant when to run it. A module
-   contributes the skill as the `AppCapabilities.SkillDefinition` capability:
+   The file exports `key` and `make`, which is the shape the capability takes. A module contributes the whole file
+   to the `AppCapabilities.SkillDefinition` capability:
 
    <Snippet file="plex-tutorial/src/capabilities/skill-definition" region="skill-definition" />
 
-   Add the module to the manifest, then reload Composer to load it.
+   Add the module to `dx.config.ts`, then reload Composer to load it.
 
    <Snippet file="plex-tutorial/dx.config" region="skill" />
 
 7. **Run it from the assistant.** Create a second link and give it a title. Open a chat, add the **Stash** skill, and
-   write "I've read" followed by that title. The assistant finds the link and calls the Mark as read tool with a
-   reference to it. The article changes to **Read**.
+   write "I've read" followed by that title.
+
+   The assistant finds the link and calls the Mark as read tool with a reference to it. The article changes to
+   **Read**.
 
 ## What you can do now
 
-- Load a plugin into Composer Preview from its dev server.
-- Run a plugin's action from its toolbar and the command palette.
-- Give the assistant the operation through a skill, and have it run the operation from a chat.
+You can load a plugin into Composer Preview from its dev server, run its action from the toolbar, and give the
+assistant the same operation through a skill.
 
 Next, [Publishing a plugin](/docs/plex/publishing-plugins/) puts the plugin in your private registry, so Composer
 lists it for you on every device.

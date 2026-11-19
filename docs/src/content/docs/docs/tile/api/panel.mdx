@@ -10,7 +10,7 @@ import TilePreview from '../../../../../components/TilePreview.astro';
 import * as Panel from '@dxos/react-ui/Panel';
 ```
 
-A `Panel` is the shell of a pane: a header row, a body that takes the rest of the height, and a footer row.
+A panel is the shell of a pane: a header row, a body that takes the rest of the height, and a footer row.
 [Layout](/docs/tile/concepts/layout/) explains how it scrolls.
 
 <Snippet file="tile-components" region="panel" lang="tsx" />
@@ -19,20 +19,22 @@ A `Panel` is the shell of a pane: a header row, a body that takes the rest of th
 
 ## Parts
 
-| Part           | What it is                                                     |
-| -------------- | -------------------------------------------------------------- |
-| `Panel.Root`   | Fills its parent and sets the size and surface for everything in it |
-| `Panel.Header` | A row sized to its content, usually a toolbar                  |
-| `Panel.Body`   | Takes the remaining height. `asChild` onto a [`ScrollArea.Root`](/docs/tile/api/scroll-area/) |
-| `Panel.Footer` | A row sized to its content, such as a status line              |
+| Part | What it is |
+| --- | --- |
+| `Panel.Root` | The shell. It fills its parent and sets the size and surface for everything in it |
+| `Panel.Header` | A row sized to its content, usually a toolbar |
+| `Panel.Body` | The area that takes the remaining height. Use `asChild` to put it on a [`ScrollArea.Root`](/docs/tile/api/scroll-area/) |
+| `Panel.Footer` | A row sized to its content, such as a status line |
 
 ## `Panel.Root`
 
-| Prop     | Type                                                       | Effect                                                         |
-| -------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
-| `size`   | `Size`                                                     | The size of everything in the panel                            |
-| `level`  | `'sunken' \| 'chrome' \| 'base' \| 'raised' \| 'overlay' \| 'popup'` | Its surface. `base` by default                   |
-| `width`  | `'document'`                                               | Keep the body's content at reading width, centered, while it still scrolls at the panel's edge |
-| `gutter` | `'rail' \| 'inset' \| 'sm' \| 'md' \| 'lg' \| 'none'`      | The gutter of the first container in the body. `sm` by default |
+`Panel.Root` takes these props:
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `size` | `Size` | Sets the size of everything in the panel |
+| `level` | `'sunken' \| 'chrome' \| 'base' \| 'raised' \| 'overlay' \| 'popup'` | Sets the surface. `'base'` by default |
+| `width` | `'document'` | Keeps the body's content at reading width, centered, while it still scrolls at the panel's edge |
+| `gutter` | `'rail' \| 'inset' \| 'sm' \| 'md' \| 'lg' \| 'none'` | Sets the gutter of the first container in the body. `'sm'` by default |
 
 The panel is a container query, so its header, body and footer can change layout together at a narrow width.

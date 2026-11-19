@@ -13,19 +13,20 @@ This guide wires HALO into a React app. At the end, your components show the ide
 their members, and follow an invitation.
 
 `@dxos/halo-react` reads HALO from React components. Each hook follows one `@dxos/halo` stream and re-renders when it
-emits. This means a component shows the current identity, devices or members without subscribing itself.
+emits, so a component shows the current identity, devices or members without subscribing itself.
 
 ## Set up the provider
 
-`HaloProvider` takes the HALO services as an Effect `Context`. Build the context from a `Client` with the adapter's
-`makeIdentityService` and `makeSpaceService`. Then wrap the part of the app that uses the hooks.
+`HaloProvider` takes the two HALO services, `Identity.Service` and `Space.Service`, in an Effect `Context`. Build the
+context from a `Client` with `makeIdentityService` and `makeSpaceService` from `@dxos/halo-adapter-client`. Then wrap
+the part of the app that uses the hooks.
 
 **Example** (Providing the HALO services to an app)
 
 <Snippet file="halo-guide-react" region="provider" lang="tsx" />
 
-In this example, `services` holds `Identity.Service` and `Space.Service`. `Profile` renders inside `HaloProvider`, so
-it can use the hooks.
+`services` is built once, outside any component, so every hook reads the same two services. Every hook except
+`useInvitationFlow` throws when it runs outside `HaloProvider`.
 
 ## The identity
 
@@ -36,8 +37,8 @@ it can use the hooks.
 
 <Snippet file="halo-guide-react" region="identity" lang="tsx" />
 
-Here, `Profile` renders a placeholder until an identity exists. It then shows the display name, the number of devices
-and the number of recovery credentials that are not revoked.
+`recovery` counts only the credentials that carry `recovery` and are not revoked. `useCredentials` returns every
+credential the identity holds, and a revoked recovery credential stays in the list.
 
 ## Spaces and members
 
@@ -48,12 +49,13 @@ id, and `useMembers` returns a space's members.
 
 <Snippet file="halo-guide-react" region="spaces" lang="tsx" />
 
-In this example, `SpaceList` renders one `Members` for each space. `Members` shows the space's name and each member's
-display name, or the DID when a member has no display name.
+`Members` falls back to `member.did` because a display name is optional. `useSpace` returns `undefined` for an id the
+identity has no space for, so the name is read as `space?.name`.
 
 ## Invitations
 
-Start a flow with `Space.share` or `Identity.share`, run as an Effect with the same services.
+An invitation in progress is a flow, an `Invitation.Flow` handle that `Space.share` or `Identity.share` returns. Start
+one by running that Effect with the services you gave the provider.
 
 `useInvitationFlow` follows the flow, and returns its latest event and its code. It needs no provider, because a flow
 carries what it needs.
@@ -64,9 +66,8 @@ carries what it needs.
 
 <Snippet file="halo-guide-react" region="invitations" lang="tsx" />
 
-In this example, `share` runs `Space.share` and keeps the flow in state. `Invite` then shows the invitation code, and
-the authorization code once the flow reaches `readyForAuthentication`. `OpenInvitations` counts the open space and
-device invitations.
+`code` is the invitation code to send, and `Invite` shows it as soon as the flow has one. `event.authCode` is the
+authorization code to tell the guest. Only the host's flow carries it, and only at `readyForAuthentication`.
 
 ## Hooks at a glance
 

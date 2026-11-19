@@ -17,8 +17,8 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 ```
 
 App Graph is a graph of everything a person can open or do in a PLEX app. In Composer, the navigation tree,
-toolbars, context menus and the command palette all read it. This means a plugin that adds to App Graph shows up in
-all of them.
+toolbars, context menus and the command palette all read it, so a plugin that adds to App Graph shows up in all of
+them.
 
 App Graph comes from the App Toolkit, not the framework. It is how a workspace app such as Composer organizes what
 plugins add, and a PLEX app can run without it.
@@ -28,27 +28,27 @@ plugins add, and a PLEX app can run without it.
 A **node** has an id, a type, data and properties. Its data is usually the thing it stands for, such as a space or an
 ECHO object. Its properties carry the label, icon and display hints. The graph starts from a root node.
 
-Nodes connect by **relations**:
+Nodes connect by relations:
 
 - `child` makes the navigation tree. A space's children are its sections and objects.
 - `action` connects a node to the things a person can do to it. An action node's data is a function that returns an
   Effect.
 - Other relations, such as `companion`, attach panels to a node.
 
-A node's identity is its **path**, which is the ids from the root down to it, joined like a URL. `GraphPath` from
+A node's identity is its path, which is the ids from the root down to it, joined like a URL. `GraphPath` from
 `@dxos/app-toolkit` builds the paths of the common nodes, such as a space or an object in it. Navigation operations
 take paths, and in Composer the address bar shows the open node's path.
 
-Plugins add nodes through **builder extensions**. An extension has a matcher and a connector. The matcher picks the
-nodes it applies to, and the connector returns the nodes to connect to them.
+Plugins add nodes through builder extensions. A **builder extension** has a matcher and a connector. The matcher
+picks the nodes it applies to, and the connector returns the nodes to connect to them.
 
 For the usual section that lists an object type, `TypeSection.createTypeSectionExtension` builds the extensions for
 you, with an address for each object. Stash uses it:
 
 <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="section" />
 
-In this example, the section goes in the Content group of each space. `urlKey` gives each link the address
-`/w/<space>/stash/<id>` in Composer's URL.
+`match` and `groupSegment` both name the Content group, and they go together. `match` picks the node the section
+hangs under, and `groupSegment` puts that group into each link's node path.
 
 Stash's App Graph module in the inspector shows the branches that lead to what it added:
 
@@ -63,16 +63,16 @@ Stash's App Graph module in the inspector shows the branches that lead to what i
   connector reruns and the node's connections update.
 - Nodes that nothing is showing can be dropped again. If your plugin must keep a node loaded while it is off screen,
   such as the one a panel is pinned to, contribute it through `AppCapabilities.AppGraphRetention`.
-- Actions reach every menu from one place. An action node carries a disposition that says where it appears: `toolbar`
-  for an object's toolbar, `list-item` for its context menu in the tree. The command palette lists every action of the
-  open node, so an action needs no command of its own.
+- Actions reach every menu from one place. An action node carries a disposition, which says where the action appears.
+  `toolbar` puts it on an object's toolbar, and `list-item` puts it in the object's context menu in the tree. The
+  command palette lists every action of the open node, so an action needs no command of its own.
 
-**Example** (Adding an action to every link)
+  **Example** (Adding an action to every link)
 
-<Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="actions" />
+  <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="actions" />
 
-In this example, the action's `data` invokes `MarkRead` on the link. Its `disposition` names both `toolbar` and
-`list-item`, so the action shows on the link's toolbar and in its menu in the tree.
+  `data` passes `spaceId` to `Operation.invoke`. `MarkRead` declares the database as a service, and the space is where
+  its handler gets that database from.
 
 ## Write a graph builder extension
 
@@ -86,8 +86,8 @@ In this example, the action's `data` invokes `MarkRead` on the link. Its `dispos
 
 <Snippet file="app-framework-guide-app-graph" region="nodes" lang="tsx" />
 
-In this example, `AppNodeMatcher.whenSpace` matches each space node. The connector reads a query for `Note` through
-`get`, so it reruns when the results change, and `AppNode.makeObject` makes a node for each note.
+`get(...)` on the query's atom is the line that keeps the list live. Without it, the connector would read the notes
+once. `AppNode.makeObject` can return `null`, so the connector filters those out before it returns.
 
 ## Attach actions to nodes
 
@@ -101,8 +101,8 @@ action nodes.
 
 <Snippet file="app-framework-guide-app-graph" region="actions" lang="tsx" />
 
-Here, the action's `data` toggles `pinned` on the note. `disposition: 'list-item'` puts the action in the note's
-context menu in the tree.
+`pin` names only `list-item`, so it appears in the note's context menu in the tree and not on its toolbar. The command
+palette still lists it.
 
 Both builders return Effects. Run them in the module body and contribute the result through
 `AppCapabilities.AppGraphBuilder`.
@@ -111,7 +111,8 @@ Both builders return Effects. Run them in the module body and contribute the res
 
 <Snippet file="app-framework-guide-app-graph" region="contribute" lang="tsx" />
 
-Here, `Effect.all` runs both builders, and the module contributes the flattened list of extensions.
+`notes` and `pin` are Effects, not extensions, which is why the module runs them with `Effect.all` before it
+contributes. `extensions.flat()` joins the list that each one returns.
 
 ## Work with AppNode and GraphPath
 
@@ -127,7 +128,7 @@ Here, `Effect.all` runs both builders, and the module contributes the flattened 
 
 <Snippet file="app-framework-guide-app-graph" region="path" lang="tsx" />
 
-Here, `GraphPath.getSpacePath` builds the path from the space's id and the note's id.
+`pathOfNote` returns a string, and `LayoutOperation.Open` takes that string in `subject` to open the note.
 
 ## Expand and read the graph from a component
 
@@ -138,11 +139,10 @@ connections, because the graph builds them lazily.
 
 <Snippet file="app-framework-guide-app-graph" region="read" lang="tsx" />
 
-In this example, `AppGraph.expand` builds the node's children, and `AppGraph.getConnections` reads them once the
-expansion finishes.
+`ChildCount` counts once, after the expansion finishes, and does not update when a child is added later.
 
-`graph.connections(id, relation)` is the same data as an atom. Use it when a component should update as the graph
-changes.
+`graph.connections(id, relation)` is the same data as an [atom](/docs/plex/resources/glossary/#atom), a reactive value
+that code subscribes to. Use it when a component should update as the graph changes.
 
 ## Limits
 

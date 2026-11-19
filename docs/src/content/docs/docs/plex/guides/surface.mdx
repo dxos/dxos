@@ -13,8 +13,8 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 ```
 
-`Surface` creates surface contributions and renders surfaces. `AppSurface` holds the App Toolkit's roles and the
-filters that match them.
+`Surface` creates surface contributions and renders surfaces. `AppSurface` holds the App Toolkit's roles, which name
+the places in the UI, and the filters that match them.
 
 See [Surfaces](/docs/plex/concepts/surfaces/) for how matching works.
 
@@ -29,27 +29,28 @@ object of the type.
 
 <Snippet file="app-framework-guide-surface" region="contribute" lang="tsx" />
 
-In this example, the filter matches the `Article` role when the subject is a `Note`. `props` maps the surface's data
-onto the props of `NoteArticle`, and it is checked against the filter's data type.
+`AppSurface.object` narrows `subject` to `Note`, so `props` and `NoteArticle` get a typed note and need no check of
+their own.
 
-Contribute surfaces from a module through `Capabilities.ReactSurface`. In a manifest, `AppCapability.surface` makes
-that module and loads it when one of its `roles` is first requested.
+Contribute surfaces from a module through `Capabilities.ReactSurface`. In `dx.config.ts`, `AppCapability.surface`
+makes that module and loads it when one of its `roles` is first requested.
 
 **Example** (Contributing two surfaces from one module)
 
 <Snippet file="app-framework-guide-surface" region="module" lang="tsx" />
 
-Here, the module's body contributes `NoteArticleSurface` and `NoteCardSurface` in one list.
+`Capabilities.ReactSurface` takes one surface or a list, so one module can carry all of a plugin's surfaces.
+`NoteCardSurface` is defined in the next section.
 
 ## Match on data and set the order
 
 `AppSurface.oneOf` matches any of several filters. Use it when one component fits more than one role.
 
-`AppSurface.allOf` requires all of them.
+`AppSurface.allOf` requires all of them. Use it to add a second condition to a role.
 
 Other filters match one thing each:
 
-- `AppSurface.literal` matches a literal value.
+- `AppSurface.literal` matches when the subject is one given string, such as the id of a page.
 - `AppSurface.companion` matches the object a companion panel is attached to.
 - `AppSurface.subject` matches a subject that passes a predicate you give it.
 
@@ -57,7 +58,8 @@ Other filters match one thing each:
 
 <Snippet file="app-framework-guide-surface" region="match" lang="tsx" />
 
-In this example, `NoteCard` renders for a `Note` in the `CardContent` role and in the `Section` role.
+`CardContent` and `Section` pass different data, and `props` receives the union of the two. `subject` is in both, so
+it is the one field `NoteCardSurface` hands to `NoteCard`.
 
 When several surfaces match, `position` on the contribution orders them. Pass `Position.first` or `Position.last` from
 `@dxos/util` to come before or after the rest.
@@ -71,21 +73,25 @@ another plugin knows how to render. Pass `limit` to cap how many render.
 
 <Snippet file="app-framework-guide-surface" region="nested" lang="tsx" />
 
-In this example, `Embedded` asks for the `Section` role with the note as its subject. `limit={1}` renders at most one
-match.
+`limit={1}` renders only the first match. Without `limit`, `Surface.Surface` renders every surface that matches.
 
 ## The standard roles
 
 | Role | Where it renders | Data |
 | --- | --- | --- |
-| `Article` | The main content area, one object per plank. | `{ subject, attendableId }` |
-| `Section` | An object inside a stack or another document. | `{ subject, attendableId }` |
-| `CardContent`, `CardIcon` | The body and the leading picture of an object's card. | `{ subject }` |
-| `CardMenu` | Menu items for an object's card. | `{ subject, menu }` |
-| `ObjectProperties` | The properties panel of an object. | `{ subject }` |
-| `Dialog`, `Popover` | A dialog or popover opened by an operation. | `{ component, props }`, set by the caller. |
-| `StatusIndicator` | The status bar. | None. |
-| `deckCompanion(variant)` | A workspace-wide panel beside the deck. | `{ id?, subject? }` |
+| `Article` | The main content area, one object at a time | `subject`, `attendableId` |
+| `Section` | An object inside a stack or another document | `subject`, `attendableId` |
+| `CardContent` | The body of an object's card, as in search results and boards | `subject` |
+| `CardIcon` | The leading picture of an object's card | `subject` |
+| `CardMenu` | Menu items for an object's card | `subject`, `menu` |
+| `ObjectProperties` | An object's properties panel | `subject` |
+| `Dialog`, `Popover` | A dialog or popover, which a plugin opens with `LayoutOperation.UpdateDialog` or `UpdatePopover` | `component`, `props` |
+| `Navigation` | The navigation sidebar | `current`, the active workspace's id |
+| `StatusIndicator` | A status indicator on the rail of Composer's complementary sidebar | No data |
+| `deckCompanion(variant)` | A workspace-wide panel beside the deck | `id`, `subject`. Both are optional |
+
+The caller of `UpdateDialog` or `UpdatePopover` names the component to show, and that name is the `component` a
+dialog or popover surface matches with `AppSurface.component`.
 
 ## Members at a glance
 

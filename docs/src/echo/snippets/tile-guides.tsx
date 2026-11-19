@@ -6,14 +6,12 @@ import React from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Listbox from '@dxos/react-ui/Listbox';
 import * as Status from '@dxos/react-ui/Status';
 import { withTheme } from '@dxos/react-ui/testing';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import * as Typography from '@dxos/react-ui/Typography';
 
 // #region resource
 const ns = 'com.example.contacts';
@@ -25,6 +23,8 @@ export const translations = [
         'add.label': 'Add contact',
         'count.label_one': '{{count}} contact',
         'count.label_other': '{{count}} contacts',
+        'empty.message': 'No contacts yet',
+        'list.label': 'Contacts',
       },
     },
   },
@@ -58,40 +58,34 @@ export const App = () => (
 // #region component
 export type ContactListProps = {
   contacts: { id: string; name: string }[];
-  onAdd?: () => void;
+  onSelect?: (id: string) => void;
 };
 
 /** Takes its data and callbacks as props; a container reads them from the app and passes them in. */
-export const ContactList = ({ contacts, onAdd }: ContactListProps) => (
-  <Panel.Root>
-    <Panel.Header>
-      <Toolbar.Root>
-        <Toolbar.Separator variant='gap' />
-        <Button.Root
-          icon='ph--plus--regular'
-          label='Add contact'
-          iconOnly
-          onClick={onAdd}
-        />
-      </Toolbar.Root>
-    </Panel.Header>
-    <Panel.Body asChild>
-      <ScrollArea.Root>
-        <ScrollArea.Viewport>
-          {contacts.length === 0 ? (
-            <Status.Empty icon='ph--address-book--regular'>
-              No contacts yet
-            </Status.Empty>
-          ) : (
-            contacts.map(({ id, name }) => (
-              <Typography.Text key={id}>{name}</Typography.Text>
-            ))
-          )}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Panel.Body>
-  </Panel.Root>
-);
+export const ContactList = ({ contacts, onSelect }: ContactListProps) => {
+  // Every string comes from the plugin's translations.
+  const { t } = Hooks.useTranslation(ns);
+  if (contacts.length === 0) {
+    return (
+      <Status.Empty icon='ph--address-book--regular'>
+        {t('empty.message')}
+      </Status.Empty>
+    );
+  }
+
+  const items = contacts.map(({ id, name }) => ({ value: id, label: name }));
+  return (
+    <Listbox.Root items={items} onValueChange={([id]) => id && onSelect?.(id)}>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label={t('list.label')}>
+          {items.map((item) => (
+            <Listbox.Item key={item.value} item={item} />
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
+    </Listbox.Root>
+  );
+};
 // #endregion
 
 // #region story
@@ -99,7 +93,8 @@ export default {
   title: 'contacts/ContactList',
   component: ContactList,
   decorators: [withTheme()],
-  parameters: { translations: uiTranslations },
+  // react-ui's strings, and the component's own.
+  parameters: { translations: [...uiTranslations, ...translations] },
 };
 
 export const Default = {

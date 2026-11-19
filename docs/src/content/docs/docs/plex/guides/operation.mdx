@@ -13,22 +13,28 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 ```
 
-An operation is a named action with a typed input and output. [Operations](/docs/plex/concepts/operations/)
-explains why the UI and agents share them.
+`Operation` defines operations, attaches their handlers and invokes them. An operation is a named action with a typed
+input and output, and [Operations](/docs/plex/concepts/operations/) explains why the UI and the assistant share them.
 
 ## Define an operation with input and output schema
 
-`Operation.make` defines an operation. It takes a key, metadata and two schemas, one for the input and one for the
-output.
+`Operation.make` defines an operation. It takes metadata and two schemas, one for the input and one for the output.
+The key in the metadata is a DXN, the DXOS name for a resource.
 
-Annotations such as `Operation.mutation` describe the operation's effect, which tools show before running it.
+`Operation.mutation` classifies the operation's effect on state:
+
+- `'none'` changes nothing.
+- `'write'` changes data in a way that can be undone.
+- `'destructive'` deletes, or cannot be undone.
+
+Use it so that a tool can tell a person what the operation does before it runs.
 
 **Example** (Defining an operation)
 
 <Snippet file="app-framework-guide-operation" region="define" />
 
-In this example, `Slugify` takes a `title` and returns a `slug`. The pipe to `Operation.mutation('none')` adds the
-annotation.
+`Slugify` only computes a string, so it is marked `'none'`. An operation with no such annotation is unclassified, and
+a tool may then warn that it could be destructive.
 
 ## Implement handlers and group them
 
@@ -38,12 +44,14 @@ annotation.
 
 <Snippet file="app-framework-guide-operation" region="handler" />
 
-Here, the handler receives `{ title }` and succeeds with `{ slug }`, which match the two schemas of `Slugify`.
+`SlugifyHandler` is checked against the two schemas of `Slugify`. A handler that returned a field other than `slug`
+would not compile.
 
 A handler set groups handlers, and you make one in two ways:
 
 - `OperationHandlerSet.make` groups handlers that are already loaded.
-- `OperationHandlerSet.lazy` takes lazy handlers, whose modules load the first time each operation runs.
+- `OperationHandlerSet.lazy` takes handlers made with `Operation.lazyHandler`, whose modules load the first time each
+  operation runs.
 
 Contribute the set through `Capabilities.OperationHandler`.
 
@@ -51,8 +59,8 @@ Contribute the set through `Capabilities.OperationHandler`.
 
 <Snippet file="app-framework-guide-operation" region="set" />
 
-In this example, `TextHandlers` holds the loaded `SlugifyHandler`. `LazyTextHandlers` wraps `Slugify` with
-`Operation.lazyHandler`, whose loader returns the handler as its default export.
+`LazyTextHandlers` returns its handler from an inline loader to keep the sample in one file. In a plugin, the loader
+is a dynamic `import` of the handler's file, and the file's default export is the handler.
 
 ## Invoke an operation and handle its typed errors
 
@@ -64,8 +72,8 @@ handles the operation.
 
 <Snippet file="app-framework-guide-operation" region="invoke" />
 
-In this example, `slugOf` invokes `Slugify` and maps the output to its `slug`. If no plugin handles the operation,
-`Effect.catchTag` catches the error and the Effect succeeds with the `title` unchanged.
+`Effect.catchTag` takes `NoHandlerError` out of the type of `slugOf`, so its callers have no error left to handle.
+When no plugin handles `Slugify`, they get the title back unchanged.
 
 From React, use `useOperation` or `useOperationInvoker`. See [React](/docs/plex/guides/react/).
 
@@ -73,15 +81,17 @@ From React, use `useOperation` or `useOperationInvoker`. See [React](/docs/plex/
 
 `LayoutOperation` from `@dxos/app-toolkit` changes what is on screen.
 
-- `Open` and `Close` take node paths.
+- `Open` opens items by their node paths, and `Close` closes them.
 - `Set` replaces the open items.
-- `ScrollIntoView`, `UpdateSidebar`, `UpdateDialog` and `AddToast` do what their names say.
+- `ScrollIntoView` scrolls an item into view.
+- `UpdateSidebar` and `UpdateDialog` open, close or change the sidebar and the dialog.
+- `AddToast` shows a toast notification.
 
 **Example** (Opening an object by its path)
 
 <Snippet file="app-framework-guide-operation" region="layout" />
 
-Here, `openObject` invokes `LayoutOperation.Open` with one path in `subject`.
+`subject` takes a list of paths, so one call to `LayoutOperation.Open` can open several items.
 
 ## Members at a glance
 

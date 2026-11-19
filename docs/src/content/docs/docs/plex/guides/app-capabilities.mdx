@@ -19,29 +19,31 @@ The framework defines how plugins extend each other, but not what an app is made
 for a workspace app such as Composer: a layout, App Graph, settings, translations and the standard surface roles.
 
 Its capabilities are in `AppCapabilities`, and Composer and any other app built with the toolkit read them.
-`AppCapability` has a module maker for most of them. A maker sets the activation event and environments, so a
-manifest only names the file.
+
+`AppCapability` has a module maker for most of them. A module maker is a function that makes a module for one
+capability. It sets the activation event and the environments, so `dx.config.ts` names only the file.
 
 ## A tour, by group
 
 Most plugins touch a handful of these. The rest exist for the plugins that build the app's own features. If your
 plugin is not one of those, you can ignore them.
 
-- **Layout.** `Layout` is the current layout as an atom: what is open, the sidebar, the mode. Plugins read it, and
-  the layout plugin provides it. To change it, use `LayoutOperation`.
-- **App Graph.** `AppGraphBuilder` adds nodes and actions, `AppGraph` is the graph itself for reading, and
+- For layout, `Layout` is the current layout as an [atom](/docs/plex/resources/glossary/#atom), a reactive value that
+  code subscribes to. It holds what is open, the sidebar and the mode. Plugins read it, and the layout plugin provides
+  it. To change it, use `LayoutOperation`.
+- For App Graph, `AppGraphBuilder` adds nodes and actions, `AppGraph` is the graph itself for reading, and
   `AppGraphRetention` keeps nodes loaded while they are off screen. [App Graph](/docs/plex/guides/app-graph/) covers
   them.
-- **Settings and text.** `Settings` adds a section to the settings page, and `Translations` gives the plugin's
+- For settings and text, `Settings` adds a section to the settings page, and `Translations` gives the plugin's
   strings their text. [Settings and state](/docs/plex/guides/settings-and-state/) covers settings, and
   [Translations](#translations) below covers text.
-- **Schema.** `Schema` registers the ECHO types the app can store, query and name.
-  [Using ECHO in a plugin](/docs/plex/guides/using-echo/) covers it.
-- **Agents.** `SkillDefinition` gives the assistant a skill, `Toolkit` adds tools outside a skill, and `McpServer`
-  exposes a built-in MCP server.
-- **Files and content.** `FileUploader` stores an uploaded file, and `Exporter` adds Print and Save to a type's
-  objects. `TextContent` extracts an object's text for search and agents. `PluginAsset` publishes a file other tools
-  can read, such as the plugin's spec.
+- For schema, `Schema` registers the ECHO types the app can create, name and list. The
+  [ECHO](/docs/plex/guides/using-echo/) guide covers it.
+- For the assistant, `SkillDefinition` gives it a skill, `Toolkit` adds tools outside a skill, and `McpServer` exposes
+  a built-in MCP server.
+- For files and content, `FileUploader` stores an uploaded file, and `Exporter` adds Print and Save to a type's
+  objects. `TextContent` extracts an object's text for search and the assistant. `PluginAsset` publishes a file
+  other tools can read, such as the plugin's spec.
 
 This table lists every capability with its maker:
 
@@ -71,15 +73,15 @@ This table lists every capability with its maker:
 | `NavigationTargetResolver` | `navigationResolver` | The places a query can navigate to. |
 | `ObservabilityMapping` | `observabilityMappings` | Telemetry events for the plugin's operations. |
 | `PluginAsset` | `pluginAsset` | A file other tools can read, such as the plugin's spec. |
-| `ProgressRegistry` | none | The registry of progress monitors. A host plugin provides it. |
-| `ReadOnly` | none | A marker that the whole app is read-only. The host provides it. |
-| `Schema` | `schema` | ECHO types the app can store, query and name. |
+| `ProgressRegistry` | none | The registry of progress monitors. The Progress plugin provides it. |
+| `ReadOnly` | none | A marker that the whole app is read-only. The app provides it. |
+| `Schema` | `schema` | ECHO types the app can create, name and list. |
 | `Settings` | `settings` | A section in the settings page. |
 | `SettingsSync` | none | Control over the settings that sync between devices. |
 | `SkillDefinition` | `skillDefinition` | A skill the assistant can use. |
 | `SpaceTemplate` | `spaceTemplates` | A template for new spaces. |
 | `StatsPanel` | none | A store for stats, with a compartment for each plugin. |
-| `TextContent` | `textContent` | The text of an object, for search and agents. |
+| `TextContent` | `textContent` | The text of an object, for search and the assistant. |
 | `Toolkit` | none | Tools for the assistant outside a skill. |
 | `Tour` | `tour` | A guided tour. |
 | `TourFragment` | `tourFragment` | Steps for whichever tour is running. |
@@ -94,30 +96,28 @@ This table lists every capability with its maker:
 ## Translations
 
 A plugin never writes its UI text inline. It contributes translation resources, keyed by language and namespace, and
-reads strings by key. This means the app can show them in the person's language, and other plugins can label its
-objects.
+reads strings by key. The app can then show them in the person's language, and other plugins can label its objects.
 
 ### Contribute translation resources
 
 A resource maps a language to namespaces, and each namespace to keys and their text. Use the plugin's key as the
 namespace for its own strings, and a type's typename for the strings that describe the type.
 
-`AppCapability.translations` contributes the resources. It sets no activation event, so the module joins the idle
-wave, like any module with no `activatesOn`. It activates sooner if a module that requires `Translations` activates
-first.
+`AppCapability.translations` contributes the resources. It sets no activation event, so the module waits for `Idle`,
+like any module with no `activatesOn`. It activates sooner if a module that requires `Translations` activates first.
 
 **Example** (Writing the resources for Stash)
 
 <Snippet file="plex-tutorial/src/translations" region="translations" />
 
-In this example, the `en-US` resource has two namespaces. `StashNamespace.key` holds the plugin's own strings, and
-the typename of `StashedLink` holds the strings that describe a link.
+`StashNamespace.key` is the namespace for the plugin's own strings. `Type.getTypename(StashedLink)` is the namespace
+the app reads when it labels a link, and both sit under the language, `en-US`.
 
-**Example** (Contributing the resources from the manifest)
+**Example** (Contributing the resources from `dx.config.ts`)
 
 <Snippet file="plex-tutorial/dx.config" region="translations" />
 
-Here, the maker names only the file that holds the resources.
+`AppCapability.translations` takes a loader here, so the strings stay out of `dx.config.ts` and load with the module.
 
 ### The keys the app reads for a type
 
@@ -138,15 +138,11 @@ The app labels objects of a type from that type's namespace, so a type with thes
 
 <Snippet file="plex-guide-translations" region="read" lang="tsx" />
 
-In this example, `t('plugin.name')` resolves in the plugin's namespace, and the app picks the language.
-
 A key with a `count` picks its plural form.
 
 **Example** (Picking a plural form)
 
 <Snippet file="plex-guide-translations" region="count" lang="tsx" />
-
-Here, `count` picks `typename.label_zero`, `_one` or `_other`.
 
 App Graph nodes and actions take a label as a key and namespace, `['mark-read.label', { ns }]`, and the app
 translates it where it renders.
@@ -158,15 +154,15 @@ The roles a plugin fills most often are in `AppSurface` from `@dxos/app-toolkit`
 | Role | Where it renders | What it is given |
 | --- | --- | --- |
 | `Article` | The main content area, one object at a time | `subject`, `attendableId` |
-| `Section` | An object inside a stack of objects | `subject`, `attendableId` |
-| `CardContent` | The body of a card, in search results and boards | `subject` |
-| `ObjectProperties` | The object's properties panel | `subject` |
-| `Dialog`, `Popover` | A dialog or popover a plugin opens by name | `component`, `props` |
-| `Navigation` | The navigation sidebar | `current`, the open item's id |
-| `StatusIndicator` | The status bar | no data |
+| `Section` | An object inside a stack or another document | `subject`, `attendableId` |
+| `CardContent` | The body of an object's card, as in search results and boards | `subject` |
+| `ObjectProperties` | An object's properties panel | `subject` |
+| `Dialog`, `Popover` | A dialog or popover, which a plugin opens with `LayoutOperation.UpdateDialog` or `UpdatePopover` | `component`, `props` |
+| `Navigation` | The navigation sidebar | `current`, the active workspace's id |
+| `StatusIndicator` | A status indicator on the rail of Composer's complementary sidebar | No data |
 
-A plugin can render into any role another plugin defines, and declare its own. See
-[Surfaces](/docs/plex/concepts/surfaces/).
+[Surface](/docs/plex/guides/surface/#the-standard-roles) has the full table. A plugin can render into any role
+another plugin defines, and declare its own. See [Surfaces](/docs/plex/concepts/surfaces/).
 
 ## Contribute settings and schema registrations
 
@@ -177,18 +173,19 @@ the person's changes to the atom.
 
 <Snippet file="app-framework-guide-app-capabilities" region="settings" />
 
-In this example, the `Settings` schema has one field, `showSeconds`. The module contributes it with the plugin's key
-as the `prefix` and a writable `atom`.
+`prefix` tells this plugin's settings apart from every other plugin's, and here it is the plugin's key.
+[Settings and state](/docs/plex/guides/settings-and-state/) builds the same module with an atom that persists.
 
-In a manifest, most makers take a loader, which imports the module that contributes the value.
+In `dx.config.ts`, most makers take a loader, which imports the module that contributes the value.
 `AppCapability.translations` and `AppCapability.schema` take either a loader or the values themselves:
 
 <Snippet file="app-framework-guide-app-capabilities" region="makers" />
 
-Here, `AppCapability.settings` takes a loader whose default export is `SettingsModule`, and
-`AppCapability.translations` takes its resources inline.
+`modules` gives `AppCapability.translations` its resources inline. Prefer a loader in a plugin, because an inline
+list loads together with `dx.config.ts`.
 
-Stash registers its type with `AppCapability.schema`. The module's default export is the list of types:
+Stash registers its type with `AppCapability.schema`. The module's default export is the list of types, and the
+[ECHO](/docs/plex/guides/using-echo/) guide covers the rest:
 
 <Snippet file="plex-tutorial/src/capabilities/schema" region="schema" />
 
@@ -196,8 +193,8 @@ Stash registers its type with `AppCapability.schema`. The module's default expor
 
 - Use an app capability when you are adding to something the app already shows, such as a setting, a node or a
   skill.
-- Declare a new capability when your plugin is the host and other plugins add to it. The Space plugin does this when
-  it declares `SpaceCapabilities.CreateObjectEntry` for the types in its create menu.
+- Declare a new capability when other plugins add to something your plugin shows. The Space plugin does this when it
+  declares `SpaceCapabilities.CreateObjectEntry` for the types in its create menu.
 
 [Capability](/docs/plex/guides/capability/) shows how.
 

@@ -5,10 +5,11 @@ description: Have Claude Code, Codex or Cursor build a plugin and load it into y
 
 import AgentPrompt from '../../../../components/AgentPrompt.astro';
 
-A coding agent can build a plugin in a folder of yours and load it into Composer, in a few minutes. Before you start:
+A coding agent can build a plugin in a folder of yours in a few minutes, and serve it for you to load into Composer.
+Before you start:
 
-1. Sign in to [Composer Preview](https://preview.composer.space) and keep it open. Only Composer Preview loads plugins
-   from a dev server. The app at composer.space loads only the plugins it ships with.
+1. Sign in to [Composer Preview](https://preview.composer.space) and keep it open. Only Composer Preview loads a
+   plugin from a dev server. The app at composer.space loads only the plugins it ships with.
 2. Open an empty folder in your agent. The plugin is its own project, and the agent sets it up there.
 
 Then describe the plugin you want in the prompt below, or pick an example, and open it in your agent.
@@ -43,8 +44,9 @@ export const examples = [
 
 <AgentPrompt skill="composer-plugin-dev" examples={examples} prompt={examples[0].prompt} />
 
-The `composer-plugin-dev` skill tells the agent how to set up the project, which DXOS packages to use, and how to load
-the plugin into your Composer. The prompt installs it in the folder first, so you do not need to install anything.
+The `composer-plugin-dev` skill tells the agent how to set up the project, which DXOS packages to use, and how to hand
+the plugin over for you to load. The prompt installs the skill in the folder first, so you do not need to install
+anything.
 
 ## When the agent hands off
 
@@ -58,4 +60,5 @@ The agent builds the plugin and starts a dev server for it. Then it asks you to 
 The plugin loads from the agent's dev server, so it is there only while the server runs. To keep it, see
 [Publishing a plugin](/docs/plex/publishing-plugins/), which puts it in your private registry.
 
-To build one yourself instead, start with [Create a plugin](/docs/plex/learn/create-plugin/).
+To build one yourself instead, start with [The PLEX plugin](/docs/plex/learn/the-plex-plugin/), the first page of
+the learning path.

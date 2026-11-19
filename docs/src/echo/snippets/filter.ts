@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Filter, Obj, Query, Tag } from '@dxos/echo';
+import { type Database, type Feed, Filter, Obj, Query, Tag } from '@dxos/echo';
 
 import { Event, Person } from '../../echo-tutorial/schema.ts';
 
 declare const db: Database.Database;
 declare const launch: Event;
+declare const chat: Feed.Feed;
+declare const lastRead: Feed.Cursor;
 
 // #region type
 const adas = Filter.type(Person, { name: 'Ada' });
@@ -26,6 +28,13 @@ const speakers = Filter.tag(Obj.getURI(speaker));
 const fromEntry = Filter.key('com.example.template.agenda', {
   version: '^1.0.0',
 });
+// #endregion
+
+// #region foreign-keys
+// The person synced from one record of another system.
+const fromCrm = Filter.foreignKeys(Person, [
+  { source: 'crm.example.com', id: 'contact-42' },
+]);
 // #endregion
 
 // #region compare
@@ -51,6 +60,13 @@ const peopleNotAda = Filter.and(Filter.type(Person), Filter.not(adas));
 const results = await db.query(Query.select(peopleNotAda)).run();
 // #endregion
 
+// #region everything
+const search = (text: string) =>
+  // An empty search box matches no object, in place of every object.
+  text.length > 0 ? Filter.text(text) : Filter.nothing();
+const all = Filter.everything();
+// #endregion
+
 // #region text
 const matches = Filter.text('product launch', { type: 'full-text' });
 // #endregion
@@ -68,11 +84,20 @@ const direct = Filter.childOf(launch, { transitive: false });
 const history = Query.select(Filter.changes([launch])).limit(50);
 // #endregion
 
+// #region feed-cursor
+// The next 10 items after the last one this reader consumed.
+const unread = Query.select(Filter.feedCursor({ begin: lastRead }))
+  .from(chat)
+  .limit(10);
+// #endregion
+
 export {
+  all,
   atExample,
   byId,
   direct,
   firstHalf,
+  fromCrm,
   fromEntry,
   history,
   matches,
@@ -80,7 +105,9 @@ export {
   owned,
   recent,
   results,
+  search,
   speakers,
+  unread,
   untyped,
   urgent,
 };

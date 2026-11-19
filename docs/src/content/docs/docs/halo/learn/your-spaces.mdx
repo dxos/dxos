@@ -11,28 +11,33 @@ By the end of this page you can make named spaces, such as Book club and Climbin
 
 ## Background
 
-A **space** is a group of identities that replicate the same data. ECHO keeps a database in each one. However, the
-contact book uses spaces only for who is in them.
+Bob and Carol need somewhere to be before we can invite them. A **space** is a group of identities that replicate the
+same data. ECHO keeps a database in each one. However, the contact book uses spaces only for who is in them.
 
-In Keyhive terms, a space is a group, and the identity that creates it is its first admin. Admins invite people,
-change what members may do and remove them.
+In Keyhive's terms a space is a group, and the identity that creates it is its first admin. An admin can invite
+people, change what members may do and remove them. We create a space in step 1.
 
-`Space.create` makes a space, and `Space.spaces` lists the spaces your identity has created or joined.
+A space takes a moment to become ready after we create it, and `Space.spaces` lists it before then. We list only the
+ready ones, in step 2.
 
 ## Steps
 
 <Steps>
 
-1. **Create a space.** `Space.create` returns the new space's id, name and state at once. The space is ready a moment
-   later, so wait for `Space.waitReady` before you use it, then select it. **New space** calls this.
+1. **Create a space.** **New space** asks for a name and calls `handleCreate`. `Space.create` returns the new space's
+   id, name and state at once.
 
    <Snippet file="halo-tutorial/app/Spaces" region="create" lang="tsx" />
 
-2. **List your spaces.** `useSpaces` returns the spaces that are ready, and re-renders when one is created, joined or
-   left. It follows `Space.spaces`, which also lists spaces that are not ready. The dropdown shows the named ones, by
-   name.
+   `Space.waitReady` is the line to keep. The space is ready a moment after `Space.create` returns, and the dropdown
+   lists only ready spaces, so `onSelect` has to wait for it.
+
+2. **List your spaces.** The dropdown takes its options from `useSpaces`. The hook follows the `Space.spaces` stream
+   and keeps the spaces that are ready.
 
    <Snippet file="halo-tutorial/app/ContactBook" region="spaces" lang="tsx" />
+
+   `name` is optional on a space, so `named` leaves out any space that was made without one.
 
 </Steps>
 

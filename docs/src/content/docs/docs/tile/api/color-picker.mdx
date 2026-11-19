@@ -1,6 +1,6 @@
 ---
 title: ColorPicker
-description: "A colour typed as text or picked from a swatch."
+description: "A color typed as text or picked from a swatch."
 ---
 
 import ApiStory from '../../../../../components/ApiStory.astro';
@@ -11,16 +11,16 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as ColorPicker from '@dxos/react-ui/ColorPicker';
 ```
 
-A colour picker lets the user type a colour as text or pick it from a swatch. The trigger opens a colour wheel and a
-grid of the theme's hues. Use `HueGrid` alone to pick a theme hue by name.
+A color picker lets the user type a color as text or pick it from a swatch. `ColorPicker.Trigger` opens a color wheel
+and a grid of the theme's hues. Use `ColorPicker.HueGrid` alone when the user picks a theme hue by name.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `ColorPicker.Root` | Holds the colour |
-| `ColorPicker.Input` | The colour as text, so any CSS colour can be typed |
-| `ColorPicker.Trigger` | A swatch of the current colour that opens the picker |
+| `ColorPicker.Root` | The root, which holds the color |
+| `ColorPicker.Input` | The color as text, so the user can type any CSS color |
+| `ColorPicker.Trigger` | A swatch of the current color that opens the picker |
 | `ColorPicker.HueGrid` | A grid of theme hues whose value is the hue's name |
 | `ColorPicker.DEFAULT_HUES` | The hues offered by default |
 | `ColorPicker.DEFAULT_TONES` | The tones offered by default, light to dark |

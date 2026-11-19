@@ -4,34 +4,28 @@ description: An identity is a Keyhive group named by a DID; its devices are its 
 ---
 
 An identity stands for one user. In [Keyhive](https://www.inkandswitch.com/keyhive/notebook/), which HALO is built on, it
-is a group named by a DID, and its members are the user's devices.
+is a group named by a DID, and its members are the keys of the user's devices.
 
 ## Model
 
-In most web apps, a user is a row in a server's database, and the server decides who is signed in. A HALO identity has
-no such server. The client makes the identity's keys on the device, and no server issues the identity.
+A user has a laptop and a phone, and may lose either. If the identity were one key, both devices would have to hold
+it, and losing one device would give the key away. In HALO each device has a key of its own, and the identity is the
+group that those keys belong to.
 
-By default, no server holds a key that can act for the identity. You can grant a server that access, so that it
-holds a key for you, and EDGE provides this as a service.
+An **identity** is a group of keys named by a DID, such as `did:halo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`.
+`Identity.create` makes the group and its first member, which is the key of the device the code runs on. No server
+issues an identity. Other members and services refer to the user by the DID.
 
-When you grant it, EDGE runs an agent for the identity. The agent is one of the identity's devices, of kind
-`agent-managed`, and EDGE holds its key. Like any device, the agent can act for the identity.
+The identity also has a profile, which holds a display name and free-form data such as an avatar.
 
-Composer grants this when the identity is linked to a DXOS account.
-[Recovery and credentials](/docs/halo/concepts/recovery-credentials/) describes EDGE's part in a recovery.
-
-**Identity.** `Identity.create` makes the group and its first member, which is the device the code runs on. Other
-members and services refer to the user by the DID, such as `did:halo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`. The identity
-also has a profile, which holds a display name and free-form data such as an avatar.
-
-**Device.** Each client storage, such as one browser profile on one site, has its own device key. A device becomes a
-member of the identity through a **delegation**. A delegation is a statement, signed by a device that is already a
-member, that admits the new key. Removing a device is a **revocation**.
+A **device** is one client storage, such as one browser profile on one site, and it has its own device key. A device
+becomes a member of the identity through a **delegation**. A delegation is a statement, signed by a device that is
+already a member, that admits the new key. Removing a device is a **revocation**.
 
 The first device creates the identity. Later devices join through a
 [device invitation](/docs/halo/concepts/invitations/).
 
-A device signs the changes it makes, and peers check the signature against the identity's members.
+A device signs the changes it makes with its device key, and peers check the signature against the identity's members.
 
 Each device reports:
 
@@ -49,6 +43,20 @@ identity (did:halo:…)
 └── device: phone            ← joined by invitation
 ```
 
+**Recovery keys.** A [recovery key](/docs/halo/concepts/recovery-credentials/) is a member of the identity too, kept
+off every device. A new device that signs EDGE's challenge with it joins the identity when no device is left.
+
+**Key holding.** By default, no server holds a key that can act for the identity. An identity can grant a server
+access to hold a key for it, and EDGE, DXOS's always-online peer, provides this as a service.
+
+When an identity makes the grant, EDGE runs an **agent device** for it. The agent device is one of the identity's
+devices, of kind `agent-managed`, and EDGE holds its key. Like any device, it can act for the identity, and that
+includes the spaces the identity belongs to. [Spaces and membership](/docs/halo/concepts/spaces-membership/) says what
+that gives EDGE in a space.
+
+`@dxos/halo` has no function that makes the grant. Composer makes it when the identity is linked to a DXOS account.
+[Recovery and credentials](/docs/halo/concepts/recovery-credentials/) describes EDGE's part in a recovery.
+
 ## Behavior
 
 - You need no network to create an identity.
@@ -60,6 +68,4 @@ identity (did:halo:…)
 - If every device is lost, the identity comes back only through
   [recovery](/docs/halo/concepts/recovery-credentials/), and recovery needs a DXOS account. With no account, the
   identity is gone. No one, including DXOS, can restore it, and its spaces are reachable only through other members.
-- A [recovery key](/docs/halo/concepts/recovery-credentials/) is a member of the identity too. A new device that signs
-  EDGE's challenge with it joins the identity when no device is left.
 - Clearing a browser's site data deletes that device's keys. The device must join again as a new device.

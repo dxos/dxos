@@ -25,20 +25,20 @@ npm install @dxos/react-ui-form
 
 When you change the schema, the form follows.
 
-Register the package's strings from `@dxos/react-ui-form/translations` with the theme provider.
+Add the package's strings from `@dxos/react-ui-form/translations` to the `resourceExtensions` of `Theme.Provider`.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Form.Root` | Takes the `schema` and the `values` or `defaultValues`; `onSave` gets the checked values |
-| `Form.Viewport` | The form's container; with `scroll` it fills its parent and scrolls |
+| `Form.Root` | The root, which takes the `schema` and the `values` or `defaultValues`. `onSave` gets the checked values |
+| `Form.Viewport` | The form's container. With `scroll` it fills its parent and scrolls |
 | `Form.Content` | The `form` element |
 | `Form.Fields` | A field for each property of the schema, or of the properties in `include` |
 | `Form.Field` | One row, bound to the form at `path` or holding controls of your own |
-| `Form.FieldSet` | A labelled group of fields, which can fold |
+| `Form.FieldSet` | A labeled group of fields, which can fold |
 | `Form.Layout` | The schema's fields laid out by a template |
-| `Form.Actions` | Save and Cancel |
+| `Form.Actions` | The Save and Cancel buttons |
 | `Form.Submit` | A submit button alone, with a label and icon of your own |
 | `Form.ErrorText` | The text of a field's error |
 
@@ -52,8 +52,8 @@ The type of each property decides the kind of field it gets.
 
 <Snippet file="tile-guide-forms" region="schema" lang="tsx" />
 
-In this schema, `Format.Email` asks for an email field, the set of literals in `role` asks for a select, and
-`Format.Text` asks for a text area.
+`Format.Email` asks for an email field, the set of literals in `role` asks for a select, and `Format.Text` asks for a
+text area.
 
 ## Render the form
 
@@ -71,15 +71,15 @@ The form checks the values as the user works:
 
 <TilePreview id="form-new-contact" height="26rem" />
 
-In this example, `values` starts `role` at `viewer`, and `onSave` keeps the checked values in state.
+`values` starts `role` at `viewer`, and `onSave` keeps the checked values in state.
 
-To show some of the fields, list them in `include`. They keep the schema's order. Pass `sort` to reorder them.
+To show only some of the fields, list them in `include`. They keep the schema's order. Pass `sort` to reorder them.
 
 **Example** (Showing two of the fields)
 
 <Snippet file="tile-guide-forms" region="include" lang="tsx" />
 
-Here, `include` leaves `name` and `email`, in the schema's order.
+`include` leaves `name` and `email`, in the schema's order.
 
 ## Edit an ECHO object
 
@@ -92,7 +92,7 @@ The types from ECHO's [Defining types](/docs/echo/learn/defining-types/) page wo
 
 <Snippet file="tile-guide-forms" region="object" lang="tsx" />
 
-In this example, `Person` is an ECHO type with a `name` and an optional `email`, and `ObjectForm` edits them on
-`person`.
+`Person` is an ECHO type with a `name` and an optional `email`, and `ObjectForm` edits them on `person`. `ObjectForm`
+also shows a field for the object's tags, and `showTags={false}` leaves it out.
 
 [Connect to ECHO](/docs/tile/learn/connect-to-echo/) uses `ObjectForm` for the contacts screen's edit dialog.

@@ -16,27 +16,27 @@ row has. A type does the same for an object, and it also carries annotations.
 The app reads the type's annotations to name an object, pick its icon, and decide whether a person can create one. We
 set all three in step 1.
 
+The app can create, name and list an object only if a plugin has registered its type. We register ours in step 3.
+
 [Defining types](/docs/echo/learn/defining-types/) and the [Type](/docs/echo/api/type/) guide cover types in full.
 This page uses only what PLEX needs.
 
 ## Steps
 
-1. **Declare the type.** `Type.makeObject` gives the schema a DXN and makes it an ECHO type. The fields are optional
-   because a new object starts empty.
+1. **Declare the type.** `Type.makeObject` makes the schema an ECHO type. It takes the type's DXN, the DXOS name for
+   a resource, which here is a typename and a version. The fields are optional because a new object starts empty.
 
    <Snippet file="plex-tutorial/src/types/StashedLink" region="type" />
 
-   Notice the three annotations. They tell the app which field is the object's label, which icon to show, and that
-   the type is one a person creates. The last of these is `UserType`.
+   `LabelAnnotation` names `title` as the field that labels a link, and `IconAnnotation` gives the type its icon and
+   hue. `UserType` marks the type as one a person creates, which puts it in the app's create menus.
 
 2. **Add a factory.** `make` fills in defaults, so every caller creates a link the same way.
 
    <Snippet file="plex-tutorial/src/types/StashedLink" region="make" />
 
-   Here, a new link starts with an empty `note` and with `read` set to `false`.
-
-3. **Register the type with the app.** The schema module tells the app the type exists, so it can query, store and
-   name objects of it.
+3. **Register the type with the app.** The schema module's file has one default export, the list of the plugin's
+   types.
 
    <Snippet file="plex-tutorial/src/capabilities/schema" region="schema" />
 
@@ -45,9 +45,11 @@ This page uses only what PLEX needs.
 
    <Snippet file="plex-tutorial/src/translations" region="type" />
 
-   In this entry, `Type.getTypename(StashedLink)` is the namespace.
+   `typename.label` is the name the **+** menu shows, and `object-name.placeholder` names a new link until the person
+   gives it a title.
 
-5. **Add the module to the manifest.**
+5. **Add the module to `dx.config.ts`.** `AppCapability.schema` is the module maker for types. It turns the list from
+   step 3 into a contribution to the `Schema` capability.
 
    <Snippet file="plex-tutorial/dx.config" region="schema" />
 
@@ -60,6 +62,5 @@ This page uses only what PLEX needs.
 
 ## What you can do now
 
-- Declare a type with the annotations the app reads.
-- Register the type so the app can store and name it.
-- Name the type in the plugin's translations.
+You can declare a type with the annotations the app reads, register it so the app can create and list its objects,
+and name it in the plugin's translations.

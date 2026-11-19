@@ -13,35 +13,35 @@ from `@dxos/config`, and earlier sources override later ones.
 
 ## Defaults from a file
 
-`Defaults` returns the config in `dx.yml`. In Node it reads `config/default.yml` in your project instead.
+`Defaults` returns the config in `dx.yml`. In Node it reads `config/defaults.yml` in your project instead.
 
 **Example** (Loading the defaults)
 
 <Snippet file="configuration" region="defaults" />
 
-Here, `Defaults()` is the only source, so the client takes its config from that one file.
+`fromDefaults` takes every setting from that one file.
 
 ## Local development
 
-`Local` returns the config in `dx-local.yml`. Use it when you want a development preset to sit beside the defaults. In
-Node, `Local` returns nothing.
+`Local` returns the config in `dx-local.yml`. Use it when you want a development preset to sit beside the defaults.
+A production build leaves the file out, and in Node `Local` returns nothing.
 
 **Example** (Putting local settings over the defaults)
 
 <Snippet file="configuration" region="local" />
 
-In this example, `Local()` comes before `Defaults()`, so a setting in `dx-local.yml` overrides the same setting in
-`dx.yml`.
+`Local()` comes before `Defaults()`, so a setting in `dx-local.yml` overrides the same setting in `dx.yml`.
 
 ## Environment variables
 
-`Envs` maps environment variables to config paths, as listed in `dx-env.yml`.
+`Envs` maps environment variables to config paths, as listed in `dx-env.yml`. In Node it reads the list from
+`config/envs-map.yml` instead.
 
 **Example** (Putting environment variables over both files)
 
 <Snippet file="configuration" region="envs" />
 
-Here, `Envs()` comes first, so an environment variable overrides both files.
+`Envs()` comes first, so an environment variable overrides both files.
 
 Each entry in `dx-env.yml` names a variable, the config path it sets, and its type:
 
@@ -51,7 +51,7 @@ LOG_FILTER:
   type: string
 
 DX_PERSIST:
-  path: runtime.client.storage.persistence
+  path: runtime.client.storage.persistent
   type: boolean
 ```
 
@@ -66,7 +66,8 @@ ConfigPlugin({ root: import.meta.dirname, env: ['MY_ENV_VAR'] }),
 ```
 
 Vite exposes only variables prefixed with `VITE_`. To read any other variable at build time, list it in `env`. Its
-value appears at the config path `runtime.app.env.MY_ENV_VAR`.
+value appears at the config path `runtime.app.env.MY_ENV_VAR`. A variable whose name starts with `DX_` appears
+there without being listed.
 
 For Rollup and esbuild, `@dxos/config/rollup-plugin` and `@dxos/config/esbuild-plugin` export the same `ConfigPlugin`.
 

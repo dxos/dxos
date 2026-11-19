@@ -3,16 +3,17 @@ title: Traces
 description: What ran, when and why, kept so people and agents can see it.
 ---
 
-Every process records what it does as trace events. The durable ones are kept in the space, so a member can see what a
-trigger or an agent did while they were away. The live ones show progress on the devices watching.
+Every [process](/docs/edge/concepts/processes/), which is one run of an operation, records what it does as trace events.
+The durable ones are kept in the space, so a member can see what a trigger or an agent did while they were away. The
+live ones show progress on the devices watching.
 
 ## Model
 
-On a server, you read the logs to learn what a job did. A trace is that record for a process, and its durable part is
-data in the space.
+A trigger fired overnight. What did it run, and did the run succeed? A trace is the record that answers, and its
+durable part is data in the space.
 
-**Events.** A trace event has a type, a timestamp and a payload, and it names the process that wrote it. An operation
-writes its own events with `Trace.write`. The runtime writes the rest. Some of the types:
+**Events.** A **trace event** has a type, a timestamp and a payload, and it names the process that wrote it. An
+operation writes its own events with `Trace.write`. The runtime writes the rest. Some of the types:
 
 | Event                                 | Written when                                         | Kept    |
 | ------------------------------------- | ---------------------------------------------------- | ------- |
@@ -26,8 +27,9 @@ writes its own events with `Trace.write`. The runtime writes the rest. Some of t
 **Durable events** go to the space's trace feed, a [feed](/docs/echo/concepts/feeds/) like any other. They replicate to
 members and to EDGE, and the app and agents query them like other ECHO data.
 
-**Live events** go to the devices in the space's swarm that are watching the process, and are not stored. A device that
-starts watching a running process gets the events buffered so far, then new ones as they come.
+**Live events** go to the devices in the space's swarm that are watching the process, and are not stored. The swarm is
+the set of devices that MESH links for the space. A device that starts watching a running process gets the events
+buffered so far, then new ones as they come.
 
 ## Behavior
 

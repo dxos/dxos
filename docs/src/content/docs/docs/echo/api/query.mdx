@@ -28,9 +28,8 @@ form for a filter on a type.
 
 <Snippet file="guide-query" region="common" />
 
-In this example, `people` matches every `Person`, `acme` matches the organizations named Acme, and `launches` matches
-objects by a text search for "launch". These three cover most uses, and [Filter](/docs/echo/api/filter/) has the
-rest.
+`launches` names no type, so it matches an object of any type whose text has "launch" in it. These three forms cover
+most uses, and [Filter](/docs/echo/api/filter/) lists the other predicates.
 
 ## Combine queries
 
@@ -42,8 +41,8 @@ rest.
 
 <Snippet file="guide-query" region="combine" />
 
-Here, `peopleOrOrgs` holds every person and every organization, and `withoutAda` holds every person except the ones
-named Ada.
+`withoutAda` holds every person except the ones named Ada. Both functions take queries, so each argument can have
+steps of its own.
 
 ## Traverse references and relations
 
@@ -59,9 +58,8 @@ to the query. Each step returns a new query, so steps chain.
 
 <Snippet file="guide-query" region="traverse" />
 
-In this example, `employers` follows each person's `employer` field, and `staff` follows the same field backwards from
-Acme. `jobs` selects the `WorksAt` relations that end at Acme, and `workers` steps from those relations to the people
-at their other end.
+`staff` and `workers` both reach the people at Acme. `staff` gets there through a reference field on `Person`, and
+`workers` through `WorksAt` relations, which can carry fields of their own.
 
 ## Order results
 
@@ -75,7 +73,7 @@ at their other end.
 
 <Snippet file="guide-query" region="order" />
 
-Here, people with the same name are ordered by when they were last updated, and `limit` keeps the first 20.
+`Order.updated` only decides between people with the same name, because orders apply in turn.
 
 ## Aggregate results
 
@@ -92,7 +90,7 @@ the objects themselves.
 
 <Snippet file="guide-query" region="aggregate" />
 
-In this example, the query returns one record, and `count` holds the number of events.
+`count` is a field of the one record the query returns. The name comes from the key you pass to `aggregate`.
 
 ## Choose sources
 
@@ -109,8 +107,6 @@ yourself, with `Scope`:
 
 <Snippet file="guide-query" region="scope" />
 
-Here, `from` names two sources, so `types` holds the types stored in the space and the types registered in code.
-
 ## Run once or subscribe
 
 `db.query` returns a `QueryResult`, which you read in one of two ways. <SpecCite item="org.dxos.echo#F-5.1" />
@@ -119,7 +115,7 @@ Here, `from` names two sources, so `types` holds the types stored in the space a
 - `subscribe` calls back each time the results change. Use it when the screen has to stay current. With
   `{ fire: true }`, it also calls back straight away with the current results.
 
-A query reads the objects on this device first and adds what the indexes and EDGE return. This means a subscriber can
+A query reads the objects this client has loaded first and adds what the index and EDGE return, so a subscriber can
 see results arrive in more than one step. `QueryResult.sources` lists each source with its state: pending, answered or
 failed. <SpecCite item="org.dxos.echo.query#F-5" />
 
@@ -127,8 +123,8 @@ failed. <SpecCite item="org.dxos.echo.query#F-5" />
 
 <Snippet file="guide-query" region="run" />
 
-In this example, `all` and `first` read the results once. `result.subscribe` logs the number of results each time it
-changes, and the function it returns ends the subscription.
+`firstOrUndefined` resolves with the first result, or with `undefined` when nothing matches. `subscribe` returns the
+function that ends the subscription, which the last line calls.
 
 ## Members at a glance
 

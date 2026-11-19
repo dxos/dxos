@@ -7,12 +7,15 @@ import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
 Every TILE control takes its height, text size, icon size and spacing from one scale with five steps: `xs`, `sm`, `md`,
-`lg` and `xl`. When you set a size on a container, everything inside it follows.
+`lg` and `xl`. When you set a size on an element, the controls inside it follow.
 
 ## Model
 
-In plain CSS, each control has its own height and padding, and a compact toolbar means an override for every control
-in it. With TILE, you set the size once, on an element, and the controls inside read it.
+To make one toolbar compact by hand, you override the height and the padding of every control in it. With TILE, you
+set the size once, on the toolbar, and the controls inside read it.
+
+**Density** is how compact a region's controls are, and a **size** is the step of the scale that sets it. A smaller
+size makes the controls shorter, with smaller text, smaller icons and narrower gaps.
 
 **A size is an attribute.** A component that takes a `size` prop sets `data-size` on its element. The theme defines,
 for each step, variables such as `--dx-block-size` (a control's height), `--dx-font-size`, `--dx-icon-size` and
@@ -27,14 +30,15 @@ for each step, variables such as `--dx-block-size` (a control's height), `--dx-f
 
 <TilePreview id="sizes" />
 
-In this example, each `Toolbar.Root` takes a `size`. The buttons and the input inside it have no `size` of their own,
-so they follow the toolbar.
+`Toolbar.Root` is the only component here that takes a `size`. The buttons and the input inside it name none, so
+each row of controls follows its toolbar.
 
 ## Behavior
 
-- A popup takes the size of its trigger. For example, a menu opened from a `sm` toolbar is `sm` too, though the menu
-  renders in a portal outside the toolbar.
-- A popup's content can name its own `size` to break from its trigger. Use this for a dialog that should be `lg`
+- An overlay takes the size of its trigger. For example, a popover opened from a `sm` toolbar is `sm` too, though the
+  popover renders in a portal outside the toolbar.
+- A menu is the exception. It is `md` wherever it opens, and a submenu takes the size of the menu it opens from.
+- An overlay's content can name its own `size` to break from its trigger. Use this for a dialog that should be `lg`
   wherever it opens.
 - Labels read one text step below the body at the same size, and helper text one step below that.
 

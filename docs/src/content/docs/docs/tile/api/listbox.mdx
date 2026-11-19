@@ -18,16 +18,16 @@ A listbox is a list the user selects one, several or no items from. It handles t
 
 | Part | What it is |
 | --- | --- |
-| `Listbox.Root` | Holds the items and the selection |
-| `Listbox.Label` | Names the list |
+| `Listbox.Root` | The root, which holds the items and the selection |
+| `Listbox.Label` | The list's name |
 | `Listbox.Viewport` | A scroll area, for a list that scrolls by itself |
 | `Listbox.Content` | The list element |
 | `Listbox.Item` | One row |
 | `Listbox.ItemIcon` | The row's icon |
-| `Listbox.ItemText` | The row's label |
-| `Listbox.ItemDescription` | A second line under the label |
+| `Listbox.ItemText` | The row's label. The option's `label` by default |
+| `Listbox.ItemDescription` | A second line under the label. The option's `description` by default |
 | `Listbox.ItemIndicator` | The check shown while the row is selected |
 | `Listbox.ItemGroup` | A group of rows |
-| `Listbox.ItemGroupLabel` | Names a group |
-| `Listbox.Empty` | Shown while there are no items |
-| `Listbox.useContext` | The selection and its setters, for parts inside the Root |
+| `Listbox.ItemGroupLabel` | The group's name |
+| `Listbox.Empty` | The placeholder shown while there are no items |
+| `Listbox.useContext` | A hook that returns the selection and its setters, for parts inside `Listbox.Root` |

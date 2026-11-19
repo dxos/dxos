@@ -24,8 +24,8 @@ The schema is an [Effect Schema](https://effect.website/docs/schema/introduction
 reverse-domain name and a version, such as `com.example.type.person` at `0.1.0`. Use a domain you control, because
 the name is global.
 
-A field can hold a reference to another object, with `Ref.Ref(Type)`. A reference stores the target's identity, not
-a copy. This means the graph stays consistent when the target changes.
+A field can hold a reference to another object, with `Ref.Ref(Type)`. A reference stores the target's URI, which is
+its address, and not a copy. Every object that points at an organization sees the organization's latest name.
 
 ## Steps
 
@@ -36,8 +36,8 @@ a copy. This means the graph stays consistent when the target changes.
 
    <Snippet file="echo-tutorial/schema" region="organization" />
 
-   Notice the two annotations. `Format.URL` marks the website as a URL, so a form offers a URL field for it.
-   `IconAnnotation` gives the type an icon and a hue, which the app's list and graph use.
+   `Format.URL` marks the website as a URL, so a form offers a URL field for it. `IconAnnotation` gives the type an
+   icon and a hue, which the app's list and graph use.
 
 2. **Point a person at an organization.** `employer` is a reference to an `Organization`.
 

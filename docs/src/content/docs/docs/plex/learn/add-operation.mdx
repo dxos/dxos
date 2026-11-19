@@ -11,54 +11,56 @@ a link as read.
 
 ## Background
 
-An **operation** is a named action with a typed input and output. In a typical React app, the code for an action sits
-in a click handler, where only that button can reach it.
+A button can mark a link as read. How does the command palette do the same, or the assistant in a chat?
 
-Here, the plugin defines the operation once and contributes a handler. After that, a button, the command palette and
-the assistant all run it the same way, through the framework's operation invoker.
-[Operations](/docs/plex/concepts/operations/) explains why.
+An **operation** is a named action with a typed input and output. The plugin defines it once and contributes a
+handler. After that, a button, the command palette and the assistant all run it the same way, through the framework's
+operation invoker. [Operations](/docs/plex/concepts/operations/) explains why.
 
 Creating an object is an operation too. The Space plugin defines `SpaceOperation.AddObject`, and a plugin uses it to
 put a new object in a space. We use it in step 4.
 
 ## Steps
 
-1. **Define an operation.** The key is a DXN. The input and output are schemas, and an agent reads their
-   descriptions to learn what to pass. The input is a reference to a link rather than the link itself, so the
-   assistant can pass one by its id.
+1. **Define an operation.** The key is a DXN, the DXOS name for a resource. The input and output are schemas, and the
+   assistant reads their descriptions to learn what to pass.
 
    <Snippet file="plex-tutorial/src/types/StashedLinkOperation" region="operation" />
 
-   The operation's `services` list what the handler uses from the context, here the space's database.
+   The input is a reference to a link, not the link itself, so the assistant can pass one by its id. `services` lists
+   what the handler uses from its context, which here is the space's database.
 
-2. **Implement the handler.** `Operation.withHandler` attaches an Effect to the definition. Operations are built on
-   [Effect](https://effect.website/). `Effect.gen` reads like an async function, with `yield*` in place of `await`.
+2. **Implement the handler.** Operations are built on [Effect](https://effect.website/), so a handler is an Effect.
+   `Operation.withHandler` attaches one to the definition. `Effect.gen` reads like an async function, with `yield*`
+   in place of `await`.
 
    <Snippet file="plex-tutorial/src/operations/mark-read" region="handler" />
 
-   This handler looks the reference up in the space's database with `Database.resolve`. Then it sets the link's
-   `read` field.
+   `Database.resolve` takes the type as its second argument. It fails with `EntityNotFoundError` if the reference does
+   not resolve to a link.
 
 3. **Contribute the handler.** A handler set lists the plugin's handlers. `Operation.lazyHandler` loads the handler's
    file the first time the operation runs, not when the plugin starts.
 
    <Snippet file="plex-tutorial/src/operations/index" region="handler-set" />
 
-   The module contributes the set as the `Capabilities.OperationHandler` capability:
+   The module contributes the set to the `Capabilities.OperationHandler` capability:
 
    <Snippet file="plex-tutorial/src/capabilities/operation-handler" region="operation-handler" />
 
 4. **Create a link through an operation.** The create-object module adds the type to the **+** menu and says how to
-   create one. It invokes `SpaceOperation.AddObject` with a new link from `make`. Invoking the operation, rather than
-   adding to the database directly, puts the link wherever the person asked, such as inside a collection.
+   create one. It invokes `SpaceOperation.AddObject` with a new link from `make`.
 
    <Snippet file="plex-tutorial/src/capabilities/create-object" region="create-object" />
 
-5. **Add the modules to the manifest.**
+   `options.target` is the parent the person chose for the link, such as a collection. Passing it on, instead of
+   adding the link to the database directly, puts the link where the person asked.
+
+5. **Add the modules to `dx.config.ts`.**
 
    <Snippet file="plex-tutorial/dx.config" region="operation" />
 
-6. **Run it.** Load or reload your plugin below. Then try both operations:
+6. **Run it.** Load or reload your plugin below. Then create a link and mark it as read:
 
    - Click **New** in the header. The inspector runs the create-object module, as Composer's **+** menu would. A link
      named "New link" becomes the sample object that every module is shown with.
@@ -74,6 +76,5 @@ put a new object in a space. We use it in step 4.
 
 ## What you can do now
 
-- Define an operation with schemas for its input and output, taking an object by reference.
-- Implement a handler and load it lazily.
-- Create an object of the plugin's type through the Space plugin's operation.
+You can define an operation that takes an object by reference, load its handler lazily, and create an object through
+the Space plugin's operation.

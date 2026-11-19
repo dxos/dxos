@@ -12,9 +12,9 @@ them.
 
 ## Model
 
-In a client-server app, the server holds the one copy of a record, and every write goes through it. In ECHO, each
-object lives in an [Automerge](https://automerge.org/) document, a CRDT, and a peer writes to its own copy. The write
-is finished when the call returns. <SpecCite item="org.dxos.echo.query#F-2.1" />
+Two people change the same event while both are offline. Whose change is kept? In ECHO, each object lives in an
+[Automerge](https://automerge.org/) document, a CRDT, and a peer writes to its own replica of it. The write is
+finished when the call returns. <SpecCite item="org.dxos.echo.query#F-2.1" />
 
 Peers then exchange changes. Every peer that has seen the same changes ends up with the same state, whatever order the
 changes arrived in.
@@ -27,7 +27,7 @@ What "merged" means depends on the kind of value:
 | The same scalar field, such as a status          | One value wins, the same on every peer                       |
 | A whole string assigned twice                    | One string wins, as with any scalar                          |
 | Characters inserted or deleted with `Text`       | Both edits kept, interleaved                                 |
-| Items inserted into one array                    | Both kept; the order of the two new items is decided by ECHO |
+| Items inserted into one array                    | Both kept. ECHO decides the order of the two new items       |
 | One peer edits an object another removes         | The removal stands                                           |
 
 The table explains the choice between assigning a string and editing it with `Text`:
@@ -40,26 +40,22 @@ The table explains the choice between assigning a string and editing it with `Te
 
 <Snippet file="concept-changes" region="text" />
 
-In this example, the assignment replaces the whole `title`, so a concurrent edit to the title loses. `Text.splice`
-inserts characters into `description`, so concurrent edits to the description interleave.
-
 ## Behavior
 
 - When you write locally, the write shows in query results and reaches subscribers before the writing call returns.
   <SpecCite item="org.dxos.echo.query#F-2.1" />
 - If a subscriber writes from inside a notification, the write makes a separate commit, with its own notification
   after the first. <SpecCite item="org.dxos.echo.query#F-2.2" />
-- A peer that was offline keeps writing to its copy. When it reconnects, peers exchange the changes each is missing and
-  merge them by the rules above. Nothing is rejected for being late.
-- Each change records the device that made it. This means your app can see that two devices wrote the same field and
-  ask a person to confirm the result.
+- A peer that was offline keeps writing to its replica. When it reconnects, peers exchange the changes each is missing
+  and merge them by the rules above. Nothing is rejected for being late.
+- Each change records the device that made it, so your app can see that two devices wrote the same field and ask a
+  person to confirm the result.
 
 **Example** (Detecting that several devices wrote a field)
 
 <Snippet file="concept-changes" region="detect" />
 
-Here, `Obj.getChanges` returns every change to the event's title. `writers` collects the `actor` of each change,
-which is the device that made it. More than one writer means several devices set the title.
+`actor` names a device, not a person. One person who edits the title from two devices counts as two writers.
 
 ### History
 
@@ -74,8 +70,8 @@ Each object keeps its changes, and you can read them in three ways:
 
 <Snippet file="concept-changes" region="history" />
 
-In this example, `changes` holds the changes to the event's `title`, and `first` is the event as it was after the
-first of them. `perDay` counts the changes across the space for each day, newest first.
+`heads` are the ids that name the version of the document a change left. `Obj.getVersion` takes them, so `first` is
+a snapshot of `launch` at that version, and the live `launch` stays as it is.
 
 ### Branches
 
@@ -88,7 +84,7 @@ changes since the branch started are kept.
 - `switchBranch` shows a branch on this device, for the object and its children. Other devices keep the branch they
   are on.
 - `syncBranch` brings main's newer changes into a branch.
-- `deleteBranch` drops a branch.
+- `deleteBranch` removes a branch.
 - `db.branch` gives a second live copy of an object, bound to a branch, without switching. Use it when you want to
   show a branch next to main. Call `dispose` when the view closes.
 
@@ -96,15 +92,15 @@ changes since the branch started are kept.
 
 <Snippet file="concept-changes" region="branch" />
 
-In this example, the device shows `draft` when the title changes, so main does not have the new title. After the
-switch back to `main`, `mergeBranch` merges the draft into it, and `deleteAfter` drops the branch.
+`Obj.update` runs while the device shows `draft`, so the new title lands on the branch, and main keeps the old one
+until `mergeBranch`. `deleteAfter` removes the branch once it is merged.
 
 **Example** (Showing a branch next to main)
 
 <Snippet file="concept-changes" region="side-by-side" />
 
-Here, `proposal.object` is the copy bound to the `proposal` branch. The update changes its title and leaves
-`launch.title` as it was.
+`proposal.dispose` releases the copy when the view closes. The `proposal` branch itself stays until you merge or
+remove it.
 
 A [feed](/docs/echo/concepts/feeds/) has branches of its own, for items appended to a log. Branches of objects are for
 objects that people edit in place.

@@ -13,8 +13,8 @@ import SpecCite from '../../../../../components/SpecCite.astro';
 import { Ref } from '@dxos/echo';
 ```
 
-A reference is a field that points at another entity. It stores the target's DXN, not a copy, and it resolves the
-target only when you ask. <SpecCite item="org.dxos.echo#F-4.1" />
+A reference is a field that points at another object or relation. It stores the target's URI, not a copy, and it
+resolves the target only when you ask. <SpecCite item="org.dxos.echo#F-4.1" />
 
 See [References and DXNs](/docs/echo/concepts/references/) for the model. This page is the API.
 
@@ -27,13 +27,14 @@ like any other field schema. The tutorial's Person and Event declare both.
 
 <Snippet file="echo-tutorial/schema" region="person" />
 
-In this example, `employer` is an optional reference to an `Organization`.
+`employer` can hold a reference to an `Organization` and nothing else, so the compiler rejects a reference to a
+`Person` there.
 
 **Example** (Declaring an array of references)
 
 <Snippet file="echo-tutorial/schema" region="event" />
 
-Here, `attendees` is an optional array of references, each to a `Person`.
+`attendees` is an array of references, so an event with ten attendees stores ten URIs and no copy of a person.
 
 ## Make a reference
 
@@ -48,13 +49,12 @@ You can make a reference in three ways:
 
 <Snippet file="guide-ref" region="make" />
 
-In this example, `Ref.make` points `ada` at `acme` and `launch` at `ada`. `again` is a second reference to `ada`,
-which `db.makeRef` makes from the URI that `Obj.getURI` returns.
+`Obj.getURI` returns the URI that a reference to `ada` stores. `again` is made from that URI alone, which is how you
+get a reference back from a URI you saved or received.
 
 ## Resolve a reference
 
-In a relational database, a foreign key gives you an id, and you run another query to read the row. With a
-reference, you ask the reference for its target:
+A reference field holds the reference, not the target. You ask the reference for its target in one of four ways:
 
 - `peek` returns the target if it is already in memory, and never starts a load. Use it where the code cannot wait.
 - `load` waits for the target, reading it from disk or the network, and throws if it cannot be found.
@@ -65,8 +65,8 @@ reference, you ask the reference for its target:
 
 <Snippet file="guide-ref" region="resolve" />
 
-In this example, `loaded` is the organization or `undefined`, and it never waits. `employer` waits for the same
-target. `attendees` holds the people the event points at, with missing and deleted targets left out.
+`Ref.loadAll` leaves out the targets that are missing or removed, so its result can be shorter than
+`launch.attendees`.
 
 Avoid `ref.target`. It is deprecated because reading it starts a load as a side effect and can throw.
 
@@ -74,15 +74,15 @@ Avoid `ref.target`. It is deprecated because reading it starts a load as a side 
 
 Each read of a reference field returns a new wrapper, so `===` never matches.
 
-- Use `Ref.equals` when you compare two references.
+- Use `Ref.equals` when you compare two references, or two arrays of references element by element.
 - Use `Ref.hasEntityId` when you test a reference against a target id.
 
 **Example** (Comparing references and testing a target id)
 
 <Snippet file="guide-ref" region="compare" />
 
-In this example, `same` is true when Ada's employer is Acme. `attending` is true when one of the event's attendees
-points at `ada.id`.
+`Ref.hasEntityId` returns a predicate, which is why `some` takes it directly. `same` comes from `Ref.equals`, which
+compares the targets the two references name and ignores the wrappers.
 
 ## Members at a glance
 
@@ -92,7 +92,7 @@ points at `ada.id`.
 | `Array(Type)`             | Schema of an array of references                          |
 | `make`                    | A reference to an object you hold                         |
 | `fromURI`                 | An unbound reference from a URI                           |
-| `loadAll`                 | Load many targets, skipping missing and deleted ones      |
+| `loadAll`                 | Load many targets, skipping missing and removed ones      |
 | `equals` `hasEntityId`    | Compare references                                        |
 | `isRef`                   | Predicate                                                 |
 | `ref.peek()` `ref.load()` `ref.tryLoad()` | Read the target in memory, or load it     |

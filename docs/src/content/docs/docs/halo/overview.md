@@ -10,15 +10,19 @@ welcome:
 HALO is identity management for local-first apps. It handles a user's identity, the devices and credentials that act
 for it, and who can join a space.
 
-In most apps, a server holds the user's account and checks a password to know who they are. An identity in HALO is a
-key pair. The client generates it on the device, and no server issues it. By default no server holds a key for it
-either. You can grant a server that access, and EDGE offers it as a service.
+In most apps, a server holds the user's account and checks a password to know who they are. A HALO **identity** is a
+group of keys that the user's own devices hold, named by a [DID](/docs/halo/resources/glossary/#did). The first device
+creates it, and no server issues it.
 
-The identity signs the user's changes, and peers check those signatures instead of asking a server who the user is.
+Each device signs the changes it makes with its own key. Peers check those signatures against the identity's keys,
+instead of asking a server who the user is.
+
+By default no server holds a key that can act for an identity. An identity can grant a server access to hold a key
+for it, and EDGE, DXOS's always-online peer, provides that as a service.
 
 HALO is built on [Keyhive](https://github.com/inkandswitch/keyhive), a capability-based access control and group
 encryption system for local-first data. Keyhive records who may do what as signed delegations that every peer can
-check. It also keeps the keys that encrypt a space for its current members.
+check. It also keeps the key that encrypts a space, for the members allowed to read it.
 
 ## The `@dxos/halo` package
 
@@ -26,8 +30,8 @@ The package has three namespaces:
 
 - **Identity** creates, reads and recovers the user's identity, lists its devices, and invites a new device.
 - **Invitation** drives one invitation once it exists. It covers the invitation's code, its events, and the step where
-  the guest enters the authorization code.
-- **Space** creates spaces, invites people to them, and manages each member's role.
+  the person joining enters the authorization code.
+- **Space** creates spaces, invites people to them, and manages each member's access level.
 
 ## Ways to establish an identity on a device
 
@@ -46,4 +50,4 @@ The [ECHO learning path](/docs/echo/learn/the-echo-object/) creates an identity 
 Its [Sharing a space](/docs/echo/learn/sharing/) page invites a second person.
 
 The HALO learning path builds an app of its own, a [contact book](/docs/halo/learn/the-halo-identity/). The contact
-book has a name, a few named spaces, the people in them, a second device and a recovery code.
+book has a name, a few spaces, the people in them, a second device and a recovery code.

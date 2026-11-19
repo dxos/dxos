@@ -11,7 +11,10 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 ```
 
-`ScrollArea.Root` holds a themed scrollbar, and `ScrollArea.Viewport` holds the content. The root takes `orientation`
-(`'vertical'` by default) and `width` (`'thin'` by default, or `'regular'`).
+A scroll area is a scrolling region with a themed scrollbar. `ScrollArea.Root` holds the scrollbar, and
+`ScrollArea.Viewport` holds the content.
 
-`Panel.Body` takes `asChild` onto a `ScrollArea.Root`. See [Panel](/docs/tile/api/panel/).
+- `orientation` on `ScrollArea.Root` is `'vertical'` by default.
+- `width` is `'thin'` by default, or `'regular'`.
+
+Use `asChild` on `Panel.Body` to put the body on a `ScrollArea.Root`. See [Panel](/docs/tile/api/panel/).

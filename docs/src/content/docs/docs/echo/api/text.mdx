@@ -33,15 +33,15 @@ You can edit any string field this way. It needs no special declaration. Call th
 
 <Snippet file="guide-text" region="edit" />
 
-In this example, `description` starts as "Agenda: demo." and ends as "Agenda: welcome, demo, Q&A." All three edits
-run inside one `Obj.update`.
+`description` starts as "Agenda: demo." and ends as "Agenda: welcome, demo, Q&A." All three edits run inside one
+`Obj.update`, so they reach subscribers as one change.
 
 The field is still a string, so you read it as usual.
 
 ## Text in an input
 
-Take a text field bound to an ECHO string, such as a `<textarea>` whose `value` is the field. When a peer's edit
-arrives, React sets the whole value again, and the text field loses its caret.
+Take an input bound to an ECHO string, such as a `<textarea>` whose `value` is the field. When a peer's edit
+arrives, React sets the whole value again, and the input loses its caret.
 
 To keep the caret, save the selection before the remote change renders. Then move it by the number of characters the
 change inserted or removed before it.

@@ -19,15 +19,15 @@ explains how names become the sprite.
 
 ## `Icon.Icon`
 
-| Prop      | Type                                           | Effect                                                         |
-| --------- | ---------------------------------------------- | -------------------------------------------------------------- |
-| `icon`    | string                                         | The name, such as `ph--house--regular`                         |
-| `label`   | string                                         | An accessible name. Without one the icon is decorative         |
-| `size`    | `Size`                                         | Its size. Unset, it takes the icon size of its surroundings    |
-| `hue`     | a palette hue                                  | Color it with a hue                                            |
-| `valence` | `'info' \| 'success' \| 'warning' \| 'error' \| 'neutral'` | Color it by status                                 |
-| `tone`    | `'muted' \| 'subtle'`                          | Dim it                                                         |
-| `spin`    | boolean                                        | Spin it, for a busy state                                      |
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `icon` | `string` | Names the icon, such as `ph--house--regular` |
+| `label` | `string` | Sets an accessible name. Without one the icon is decorative |
+| `size` | `Size` | Sets the size. The icon size of its surroundings by default |
+| `hue` | `Icon.IconHue` | Colors the icon with a palette hue |
+| `valence` | `'info' \| 'success' \| 'warning' \| 'error' \| 'neutral'` | Colors the icon by status |
+| `tone` | `'muted' \| 'subtle'` | Dims the icon |
+| `spin` | `boolean` | Spins the icon, for a busy state |
 
 Most components that show an icon, such as `Button.Root`, `Menu.Item` and `Status.Empty`, take an `icon` name and draw it
 themselves.

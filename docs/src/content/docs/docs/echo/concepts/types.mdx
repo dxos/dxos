@@ -4,24 +4,29 @@ description: What a type is, how ECHO names it, and how it changes over time.
 ---
 
 import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
 
 A type describes the fields an object or relation has. ECHO uses it to check every write and to tell other peers what
 the data means.
 
 ## Model
 
-In TypeScript, an interface describes an object to the compiler, and nothing of it is left when the app runs. An ECHO
-type is a value that is still there at run time, with a name that every object of the type carries.
+Two peers run different builds of your app. How does one know what the other's object is? In ECHO, every object
+carries the name of its type, and the type is a value that is still there at run time.
 
-A type is an [Effect Schema](https://effect.website/docs/schema/introduction/) with a **typename** and a **version**.
+A type is an [Effect Schema](https://effect.website/docs/schema/introduction/) with a name in two parts:
+
+- A **typename** is a dotted, reverse-domain name, such as `com.example.type.person`.
+- A **version** is a semver string, such as `0.1.0`.
+
 Together they make the type's DXN, `dxn:<typename>:<version>`, and every object stores the DXN of its type.
 
 **Example** (Reading a type's typename, version and DXN)
 
 <Snippet file="concept-types" region="identity" />
 
-In this example, the first three lines read the parts of the `Person` type's name. The last line reads the typename
-from an object of that type.
+`Obj.getTypename` reads from `ada` the same typename that `Type.getTypename` reads from `Person`, so code that holds
+only an object can find its type. <SpecCite item="org.dxos.echo#F-2.3" />
 
 [Defining types](/docs/echo/learn/defining-types/) builds the Person, Organization and Event types that the snippets on
 this page use.
@@ -29,17 +34,18 @@ this page use.
 There are two kinds of type:
 
 - An **object type**, made with `Type.makeObject`, describes a record such as a person.
-- A **relation type**, made with `Type.makeRelation`, describes an entity that joins a source and a target, and can carry
-  fields of its own. [Objects and relations](/docs/echo/concepts/objects-relations/) shows when to use one.
+- A **relation type**, made with `Type.makeRelation`, describes a relation, which joins a source and a target and can
+  carry fields of its own. [Objects and relations](/docs/echo/concepts/objects-relations/) shows when to use one.
 
 **Example** (Declaring a relation type)
 
 <Snippet file="works-at" region="relation" />
 
-Here, `WorksAt` joins a `Person` to an `Organization` and carries one field of its own, `role`.
+`source` and `target` fix the types of the two ends, and `role` is the one field that `WorksAt` carries itself.
+<SpecCite item="org.dxos.echo#F-2.2" />
 
-**Annotations** add what the schema alone does not say: which field labels an object, which icon it has, how a form
-orders its fields.
+An **annotation** is a typed value attached to a schema. It adds what the fields alone do not say: which field labels
+an object, which icon it has, how a form orders its fields.
 
 ECHO reads some annotations itself. For example, `Obj.getLabel` returns the field the label annotation names. Tools
 such as Composer read the rest. [Annotation](/docs/echo/api/annotation/) lists them.
@@ -48,7 +54,8 @@ such as Composer read the rest. [Annotation](/docs/echo/api/annotation/) lists t
 
 <Snippet file="concept-types" region="annotations" />
 
-In this example, the `Event` type names `title` as its label, so `Obj.getLabel` returns the event's title.
+`LabelAnnotation.get` returns an `Option`, which is empty for a type that names no label. For such a type,
+`Obj.getLabel` reads the `name` field.
 
 ## Behavior
 
@@ -58,7 +65,8 @@ In this example, the `Event` type names `title` as its label, so `Obj.getLabel` 
 
   <Snippet file="concept-types" region="register" />
 
-  Here, the constructor takes the tutorial's `types`, and `addTypes` adds `WorksAt` after the client initializes.
+  `types` covers the three tutorial types from the start. `addTypes` adds `WorksAt` to a client that is already
+  running.
 
 - A type converts to and from [JSON Schema](https://json-schema.org/), so a type can come from a form, an agent or
   another system as well as from code.
@@ -67,18 +75,18 @@ In this example, the `Event` type names `title` as its label, so `Obj.getLabel` 
 
   <Snippet file="concept-types" region="json-schema" />
 
-  Here, `jsonSchema` is the JSON Schema of the `Organization` type, and `Note` is a type made from a JSON Schema.
+  `Type.makeObjectFromJsonSchema` returns `Note` as a value, with no class behind it.
 
-- `db.addType` stores a type in the space, as an object of its own. This means the type replicates to the other
-  members like data. You can add, change and remove the fields of a stored type at runtime.
+- `db.addType` stores a type in the space, as an object of its own, so the type replicates to the other peers like
+  data. You can add, change and remove the fields of a stored type at run time.
 
   To add a field, pass the stored type to `Type.addFields`. To change the declaration of a field, pass it to
   `Type.updateFields`:
 
   <Snippet file="concept-types" region="fields" />
 
-  Here, the stored `Note` type gains an optional `pinned` field that holds a boolean. `Type.updateFields` then
-  declares `pinned` again, as a number.
+  `note` is the stored type that `db.addType` returns. Both calls take it and not `Note`, because they throw for a
+  type that is not stored.
 
 ### Versions and migrations
 
@@ -86,6 +94,7 @@ When you change a type in a way that old data does not fit, such as a field that
 version of the type. A **migration** moves objects from one version to the next:
 
 - `Migration.define` reads an object of the old version and returns the fields of the new one.
+  <SpecCite item="org.dxos.echo#Migration" />
 - `Migration.defineRename` gives a type a new typename and points every reference at it.
 - `Migration.defineContent` upgrades a content format that an object carries in a field, such as a drawing's scene,
   without changing the type's version.
@@ -94,9 +103,8 @@ version of the type. A **migration** moves objects from one version to the next:
 
 <Snippet file="concept-types" region="migration" />
 
-In this example, `PersonV2` is version `0.2.0` of the person type, with an `emails` array in place of `email`.
-`personEmails` turns the old address into an array of one, or an empty array. `renameEvent` renames the event type to
-`com.example.type.meeting`.
+`PersonV2` keeps the typename of `Person` and changes only the version, which is what ties the two classes together.
+`transform` gets the fields of the old version, so a person with no `email` ends up with an empty `emails` array.
 
 A plugin contributes its migrations to Composer, which runs them on every space once the plugin is active. The
 [API reference](/docs/additional-resources/api-reference/) covers each kind.

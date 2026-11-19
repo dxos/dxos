@@ -1,9 +1,10 @@
 ---
 title: API reference
-description: Typedoc generated api reference for DXOS packages
+description: Generated API reference for the ECHO and client packages.
 ---
 
-Each link opens the generated Typedoc reference for one package.
+This page links the generated Typedoc reference for each ECHO and client package. Each link opens one package's
+reference in a new tab.
 
 ## ECHO
 

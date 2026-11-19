@@ -16,37 +16,38 @@ import { Grid, GridCellEditor } from '@dxos/react-ui-grid';
 npm install @dxos/react-ui-grid
 ```
 
-`Grid` is the grid under Composer's sheets and tables. It draws only the cells in view, so it stays fast for large
-data. It also handles selection, keyboard movement and resizing.
+A grid is rows and columns of cells that the user selects and edits. `Grid` is the one under Composer's sheets and
+tables. It draws only the cells in view, so it stays fast for large data.
 
-You give it cells, and it asks for the ones it shows.
+`Grid` also handles selection, keyboard movement and resizing. You pass it a `getCells` function, and it calls the
+function for the cells it shows.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Grid.Root` | Takes the grid's `id`, which it requires, and holds which cell is being edited (`editing`, `onEditingChange`) |
-| `Grid.Content` | The grid itself; `getCells` gives it the cells in view |
+| `Grid.Root` | The root, which requires the grid's `id`. It holds which cell is being edited (`editing`, `onEditingChange`) |
+| `Grid.Content` | The grid itself. `getCells` gives it the cells in view |
 | `GridCellEditor` | An editor that opens over the cell being edited |
 
 ## `Grid.Content`
 
-`Grid.Content` is the grid itself. It calls `getCells` for the cells in view.
+`Grid.Content` takes these props:
 
 | Prop | Type | Effect |
 | --- | --- | --- |
-| `getCells` | `(range, plane) => cells` | A plane's cells, keyed `col,row`, each with a `value` |
-| `initialCells` | `DxGridCells` | Cells by plane, keyed `col,row`, shown wherever `getCells` gives no cell; `{ grid: {} }` by default |
-| `frozen` | `DxGridFrozenAxes` | How many rows or columns each frozen edge plane has |
-| `columnDefault` | `per plane` | Default column sizes |
-| `rowDefault` | `per plane` | Default row sizes |
-| `columns` | `DxGridAxisMeta` | The size of single columns, by plane and index |
-| `rows` | `DxGridAxisMeta` | The size of single rows, by plane and index |
-| `limitColumns` | `number` | How far the grid scrolls across; no limit by default |
-| `limitRows` | `number` | How far the grid scrolls down; no limit by default |
-| `overscroll` | `'trap' \| 'inline' \| 'block'` | Which wheel scrolls stay in the grid at its edges |
-| `focusIndicatorVariant` | `'sheet' \| 'stack'` | The width of the focus indicator: a hairline for `'sheet'`, the default, or a thick line for `'stack'` |
-| `activeRefs` | `string` | Refs, separated by spaces. The grid highlights each cell whose `dataRefs` holds one; empty by default |
+| `getCells` | `(range, plane) => cells` | Returns a plane's cells, keyed `col,row`, each with a `value` |
+| `initialCells` | `DxGridCells` | Sets cells by plane, keyed `col,row`, shown wherever `getCells` gives no cell. `{ grid: {} }` by default |
+| `frozen` | `DxGridFrozenAxes` | Sets how many rows or columns each frozen edge plane has |
+| `columnDefault` | `GridContentProps['columnDefault']` | Sets the default column sizes, by plane |
+| `rowDefault` | `GridContentProps['rowDefault']` | Sets the default row sizes, by plane |
+| `columns` | `DxGridAxisMeta` | Sets the size of single columns, by plane and index |
+| `rows` | `DxGridAxisMeta` | Sets the size of single rows, by plane and index |
+| `limitColumns` | `number` | Sets how far the grid scrolls across. No limit by default |
+| `limitRows` | `number` | Sets how far the grid scrolls down. No limit by default |
+| `overscroll` | `'trap' \| 'inline' \| 'block'` | Sets which wheel scrolls stay in the grid at its edges |
+| `focusIndicatorVariant` | `'sheet' \| 'stack'` | Sets the width of the focus indicator, a hairline for `'sheet'` or a thick line for `'stack'`. `'sheet'` by default |
+| `activeRefs` | `string` | Sets refs, separated by spaces. The grid highlights each cell whose `dataRefs` holds one. Empty by default |
 | `addressing` | `GridAddressing` | Names each cell by its row and column identity, so the grid can share the selection with collaborators |
 | `onSelect` | `(event) => void` | The user selected a range of cells |
 | `onAxisResize` | `(event) => void` | The user resized a row or a column |
@@ -57,11 +58,6 @@ A grid has **planes**. The main plane is `grid`. Frozen planes sit at its edges,
 grid scrolls.
 
 A new `getCells` makes the grid ask again, so build it from your state.
-
-The example in the next section also sets these props:
-
-- `limitColumns` and `limitRows` run past the data, so blank rows and columns wait to be filled in.
-- `overscroll='trap'` keeps wheel and trackpad scrolls in the grid, so the page neither scrolls nor swipes back.
 
 ## Edit a cell
 
@@ -76,8 +72,14 @@ The example in the next section also sets these props:
 
 <Snippet file="tile-guide-grid" region="sheet" lang="tsx" />
 
-In this example, `toCells` returns the header row for the `frozenRowsStart` plane and the values for the `grid` plane.
-`handleBlur` writes the new text into `rows`. That makes a new `getCells`, so the grid asks again and the row's total
-follows.
+`toCells` returns the header row for the `frozenRowsStart` plane and the values for the `grid` plane. `handleBlur`
+writes the new text into `rows`. That makes a new `getCells`, so the grid asks again and the row's total follows.
+
+`Grid.Content` also gets three props that make the sheet behave like a spreadsheet:
+
+- `limitRows` is the length of `rows`, which ends in 40 blank rows for the user to fill in.
+- `limitColumns` runs six columns past the data, so the sheet runs off the right edge. `handleBlur` writes only into
+  a row's four cells, so it drops text typed in a blank column.
+- `overscroll='trap'` keeps wheel and trackpad scrolls in the grid, so the page neither scrolls nor swipes back.
 
 The story at the top of this page runs this example.

@@ -6,43 +6,46 @@ description: How the framework decides which component renders an object in a gi
 import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
-A surface is a named place in an app's UI that plugins fill with components. The host asks for "the article for this
+A surface is a named place in an app's UI that plugins fill with components. The app asks for "the article for this
 object" and does not know which plugin will answer.
 
 ## Model
 
-In a React app, the component that renders a page imports a component for each kind of content, so it has to know
-every kind there is. With surfaces, the host names the place and passes the data, and the framework finds the
-component.
+A person opens an object in the main area. Which component renders it, when the app was written before the plugin
+that defines the object's type? With surfaces, the app names the place and passes the data, and the framework finds
+the component.
 
-A **role** names a place. Each role declares the shape of the data it passes, such as `{ subject, attendableId }` for
-an article.
+Three terms describe the two sides:
 
-The roles a plugin fills most often come from `AppSurface` in `@dxos/app-toolkit`. This table lists the standard
-ones:
+- A **host** is the code that renders a surface. The app's layout is a host, and so is any component that asks for
+  one.
+- A **role** names a place. Each role declares the shape of the data the host passes, such as
+  `{ subject, attendableId }` for an article.
+- A **filter** is what a plugin contributes with its component. It names one or more roles and a guard on the data,
+  for example "the article role, when the subject is a Note".
+
+The roles a plugin fills most often come from `AppSurface` in `@dxos/app-toolkit`:
 
 | Role | Place | What it is given |
 | --- | --- | --- |
-| `Article` | The main content area. | `subject`, `attendableId` |
-| `Section` | An object inside a stack. | `subject`, `attendableId` |
-| `CardContent` | The body of a card. | `subject` |
-| `ObjectProperties` | An object's properties panel. | `subject` |
-| `Dialog`, `Popover` | A dialog or popover that a plugin opens by name. | `component`, `props` |
-| `StatusIndicator` | The status bar. | No data. |
+| `Article` | The main content area, one object at a time | `subject`, `attendableId` |
+| `Section` | An object inside a stack or another document | `subject`, `attendableId` |
+| `CardContent` | The body of an object's card, as in search results and boards | `subject` |
+| `ObjectProperties` | An object's properties panel | `subject` |
+| `Dialog`, `Popover` | A dialog or popover, which a plugin opens with `LayoutOperation.UpdateDialog` or `UpdatePopover` | `component`, `props` |
+| `StatusIndicator` | A status indicator on the rail of Composer's complementary sidebar | No data |
 
-[App capabilities](/docs/plex/guides/app-capabilities/#surface-roles) says where each one renders.
-[Surface](/docs/plex/guides/surface/) lists the rest and shows how to narrow a role's `subject` to one type.
+[Surface](/docs/plex/guides/surface/#the-standard-roles) has the full table, and shows how to narrow a role's
+`subject` to one type.
 
-A **surface contribution** is a component plus a **filter**. The filter names one or more roles and a guard on the data,
-for example "the article role, when the subject is a Note". Plugins contribute surfaces through the `ReactSurface`
-capability.
+Plugins contribute surfaces through the `ReactSurface` capability.
 
 **Example** (Contributing an article for one type)
 
 <Snippet file="app-framework-guide-surface" region="contribute" lang="tsx" />
 
-In this example, `filter` matches the article role when the data's subject is a `Note`. `props` maps the surface's
-data onto the props of `NoteArticle`.
+`NoteArticleSurface` never says where it will appear. Any host that asks for an article with a `Note` gets
+`NoteArticle`, including a host written after this plugin.
 
 Stash's Surface module in the inspector renders its article with the sample link:
 
@@ -52,27 +55,27 @@ Stash's Surface module in the inspector renders its article with the sample link
 
 - The host renders `<Surface.Surface type={role} data={data} />`. The framework collects every contribution whose filter
   names that role and whose guard accepts the data.
-- Contributions are ordered by their `position`, then by plugin order. The host renders the first one, or the first
-  `limit` of them when it wants several, as a toolbar does.
+- Contributions are ordered by their `position`, then by plugin order. The host renders every match, or the first
+  `limit` of them when it passes a `limit`.
 - You can match several roles at once with `AppSurface.oneOf`, or require two conditions with `AppSurface.allOf`.
 - Your component can render another plugin's surface by rendering `Surface.Surface` itself. This is how a stack shows
   each object with whatever plugin owns its type, and how a markdown document embeds a table.
 
-**Example** (Rendering another plugin's surface)
+  **Example** (Rendering another plugin's surface)
 
-<Snippet file="app-framework-guide-surface" region="nested" lang="tsx" />
+  <Snippet file="app-framework-guide-surface" region="nested" lang="tsx" />
 
-Here, `Embedded` asks for the section role with a `Note` as the subject. It renders whatever surface another plugin
-contributed for that object, and `limit={1}` keeps it to one.
+  `Embedded` is a host here. It passes `attendableId` because the section role declares it, and `limit={1}` keeps the
+  result to one surface when several plugins match.
 
-- A surface module loads lazily. The manifest lists the roles the module serves, and the plugin manager imports the
+- A surface module loads lazily. `dx.config.ts` lists the roles the module serves, and the plugin manager imports the
   module the first time one of those roles is requested.
 
 ## Limits
 
 - A surface component gets only the data its role passes. It must not assume which container it is in, how wide it
   is, or that it is the only surface on screen. The same article can show in a plank, a stack or a dialog.
-- The `props` mapper of a surface runs during the host's render, so it cannot call hooks. A component that needs hooks
-  is its own component.
-- A surface does not own the object it renders. Other surfaces, devices and agents edit the same object, so the
-  component reads it reactively.
+- The `props` mapper of a surface runs during the host's render, so it cannot call hooks. Call a hook in the component
+  that the surface renders.
+- A surface does not own the object it renders. Other surfaces, devices and the assistant edit the same object, so
+  the component reads it reactively.

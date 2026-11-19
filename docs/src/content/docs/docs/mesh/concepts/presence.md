@@ -8,12 +8,12 @@ know whether its own device is connected. It is also the switch that takes the d
 
 ## Model
 
-In a client-server app, the server knows who is online, because every client holds a connection to it. In a swarm,
-the devices tell each other.
+No server keeps the list of who is online in a **swarm**, the set of direct links a device keeps for one space or
+identity. The devices tell each other.
 
-**Gossip.** Every device in a swarm announces itself every 10 seconds over the gossip extension. It also passes on the
-announcements it receives to its other connections. This means an announcement reaches devices that its sender has no
-direct link to.
+**Gossip.** **Gossip** is passing a message on from one device to the next. Every device in a swarm announces itself
+every 10 seconds over the gossip extension. It also passes on the announcements it receives to its other links, so an
+announcement reaches devices that its sender has no direct link to.
 
 **Online and offline.** A peer whose announcement has not arrived for 20 seconds counts as offline. ECHO uses this for
 a space's members, and HALO uses it for an identity's devices.
@@ -24,7 +24,7 @@ a space's members, and HALO uses it for an identity's devices.
 | ---------------- | ---------------------------------------------------------------------- |
 | `swarm`          | `ONLINE` while the device joins swarms, `OFFLINE` after it leaves them |
 | `signaling`      | The state of each signaling server connection                          |
-| `connectionInfo` | The swarms the device is in, and their connections                     |
+| `connectionInfo` | The swarms the device is in, and their direct links                    |
 
 **Going offline.** `client.mesh.updateConfig(ConnectionState.OFFLINE)` makes the device leave every swarm.
 `ConnectionState.ONLINE` joins them again. The tutorials' offline switch calls it, so you can watch two windows diverge
@@ -41,9 +41,6 @@ await client.mesh.updateConfig(ConnectionState.ONLINE);
 // The swarm reconnects and the changes merge.
 ```
 
-In this example, the edits made between the two calls stay on the device. After the second call, the swarm reconnects
-and the edits merge with the other devices' changes.
-
 ## Behavior
 
 - Going offline does not close spaces or stop writes. Changes stay on the device and replicate when it is online again.
@@ -52,4 +49,4 @@ and the edits merge with the other devices' changes.
 ## Limits
 
 - Presence is eventually right. A device that drops off the network shows as online for up to 20 seconds.
-- Gossip runs over direct links, so a device with no peers online sees no presence for that space.
+- Gossip runs over direct links. In a space where no other device is online, a device sees no presence.

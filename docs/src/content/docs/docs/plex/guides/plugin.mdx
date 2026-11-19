@@ -12,20 +12,20 @@ import Snippet from '../../../../../components/Snippet.astro';
 import * as Plugin from '@dxos/app-framework/Plugin';
 ```
 
-`Plugin` defines a plugin: its metadata and the modules it is made of. A plugin does nothing by itself. Its modules
-contribute everything it adds to the app.
+`Plugin` defines a plugin from its metadata and its modules. A plugin does nothing by itself. Its modules contribute
+everything it adds to the app.
 
 ## Define a plugin with its metadata
 
-A plugin's metadata names it. The key is a reverse-domain NSID whose last segment is camelCase, such as
+A plugin's metadata names it. The key is an NSID, a reverse-domain name whose last segment is camelCase, such as
 `com.example.plugin.hello`.
 
 **Example** (Making a plugin's metadata)
 
 <Snippet file="app-framework-guide-plugin" region="meta" />
 
-In this example, `Plugin.makeMeta` takes the key, a name and a description. It takes the key as a DXN, so
-`DXN.make` wraps the NSID.
+`DXN.make` wraps the key because `Plugin.makeMeta` takes a DXN, the DXOS name for a resource, and not a string. A key
+with a hyphen in its last segment fails here, when the file is imported.
 
 If your package has a `dx.config.ts`, describe the same metadata there, and `Plugin.config` derives the `meta`.
 [Create a plugin](/docs/plex/learn/create-plugin/) shows that form.
@@ -35,14 +35,12 @@ If your package has a `dx.config.ts`, describe the same metadata there, and `Plu
 A module declares the capabilities it `provides` and `requires`, and optionally the event it `activatesOn`. The plugin
 manager activates a module when its event fires and every singleton capability it requires has been contributed.
 
-By default, a module with no `activatesOn` activates when the app is idle after startup.
-
 **Example** (Declaring a module that activates at startup)
 
 <Snippet file="app-framework-guide-plugin" region="module" />
 
-In this example, `GreetingModule` provides the `Greeting` capability and activates on `Startup`. Its body contributes
-one string.
+`activatesOn: ActivationEvents.Startup` makes `GreetingModule` part of the app's boot. Leave the field out and the
+module waits for `Idle`, which the app fires when it is idle after startup.
 
 A module's body can sit in the same file or load later:
 
@@ -54,7 +52,8 @@ A module's body can sit in the same file or load later:
 
 <Snippet file="app-framework-guide-plugin" region="lazy" />
 
-Here, the loader runs only when `Idle` fires, and its default export is checked against `provides`.
+`LazyGreetingModule` writes its loader inline to keep the sample in one file. In a plugin, the loader is a dynamic
+`import` of the body's file, which is what moves the body into a chunk of its own.
 
 `Plugin.define` starts a plugin from its metadata, `Plugin.addModule` adds each module, and `Plugin.make` returns the
 factory the plugin manager calls.
@@ -63,34 +62,35 @@ factory the plugin manager calls.
 
 <Snippet file="app-framework-guide-plugin" region="define" />
 
-Here, `HelloPlugin` is that factory. Its plugin has one module, `GreetingModule`.
+`HelloPlugin` is that factory. Call `HelloPlugin()` where the app lists its plugins.
 
 ## Contribute capabilities from a module
 
 A module body returns the contributions it declared in `provides`. The compiler checks the match. A missing or
 undeclared contribution is a type error at `Plugin.addModule`.
 
-See [Capability](/docs/plex/guides/capability/) for how to declare and request capabilities.
+`GreetingModule` above returns one contribution, made with `Capability.contribute`. See
+[Capability](/docs/plex/guides/capability/) for how to declare and request capabilities.
 
 ## Describe the plugin in `dx.config.ts`
 
-A plugin that is published describes itself in a `dx.config.ts` manifest. `Plugin.config` takes these parts:
+A plugin that is published describes itself in `dx.config.ts`. `Plugin.config` takes these parts:
 
 - The metadata.
 - The registry's fields, such as tags.
-- The modules. You make each one with a maker from `AppCapability` that names the file to load.
+- The modules. You make each one with a module maker from `AppCapability`, a function that makes a module for one
+  capability and names the file to load.
 
 `Plugin.config` returns `meta` and `make`, so the registry reads the plugin without importing its modules.
 
-**Example** (Describing the Stash plugin in a manifest)
+**Example** (Describing the Stash plugin in `dx.config.ts`)
 
 <Snippet file="plex-tutorial/dx.config" region="config" />
 
-In this example, `plugin` holds the metadata and the `labs` tag. Each entry in `modules` names its file with a dynamic
-`import`, and the last lines export `meta` and `make`.
+`config` is the file's default export, which the plugin's dev server and build read. `meta` and `make` are named
+exports for code that creates the plugin itself, such as a test.
 
-[Testing a plugin](/docs/plex/guides/testing/)
-boots a plugin in a headless app.
+[Testing](/docs/plex/guides/testing/) starts a plugin made this way in a headless app.
 
 ## Members at a glance
 

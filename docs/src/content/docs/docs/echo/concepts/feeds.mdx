@@ -15,19 +15,23 @@ In a relational database, you would keep a chat as a table of messages, and sort
 ECHO, you append the messages to a feed and read them back in order.
 
 A feed is one append log of ECHO objects, usually messages. <SpecCite item="org.dxos.echo.feeds#F-1.1" /> The feed
-itself is an object in a space. The items you append to it are objects too, with types, ids and references. However,
-they are not stored as objects of the space.
+itself is an object in a space.
+
+The items you append to it are objects too, with types, ids and references. However, they are not stored as objects
+of the space, so a query over the space does not return them. You read them with a query whose `from` names the
+feed.
 
 **Example** (Making a feed and appending two messages)
 
 <Snippet file="concept-feeds" region="append" />
 
-In this example, `Feed.make` makes the feed and `db.add` puts it in the space, like any object. `db.appendToFeed`
-then appends two messages to it.
+`db.add` has to come first, because `db.appendToFeed` writes only to a feed that the space already stores. The two
+messages go in as one batch.
 
-A feed is a **tree of branches**. Each branch has a parent and a fixed fork point. When you read a branch, you get the
-items of its ancestors up to the fork point, then the items of the branch. A branch costs about one record and needs
-no other object in the space. <SpecCite item="org.dxos.echo.feeds#F-1.2" />
+A feed is a tree of branches. A **branch** is one line of items with a parent and a fixed fork point, the item of
+the parent where it starts. When you read a branch, you get the items of its ancestors up to the fork point, then the
+items of the branch. A branch costs about one record and needs no other object in the space.
+<SpecCite item="org.dxos.echo.feeds#F-1.2" />
 
 AI chat, comments and messaging all use this model. <SpecCite item="org.dxos.echo.feeds#F-3.1" /> These are uses of one
 model, not different kinds of feed. For example, in an AI chat an agent's work on a thread runs on a branch forked from
@@ -45,8 +49,8 @@ the chat, so it stays off the reader's main branch.
 
   <Snippet file="concept-feeds" region="walk" />
 
-  Here, `page` holds the first 50 messages, oldest first. `cursor` marks the last of them, and `next` adds
-  `Filter.feedCursor` to read the 50 after it.
+  `Scope.feed(uri, { walk: {} })` makes the query a walk of the root branch, and `Order.natural('asc')` reads it
+  oldest first. `next` is the same query with `Filter.feedCursor` added, so its 50 messages start after `cursor`.
 
 - You rewrite an item by updating it. The update appends the whole item to the feed again under the same id. A reader
   sees the old version or the new one, and never both. <SpecCite item="org.dxos.echo.feeds#F-1.3" />
@@ -55,8 +59,7 @@ the chat, so it stays off the reader's main branch.
 
   <Snippet file="concept-feeds" region="rewrite" />
 
-  Here, `Obj.update` gives the first message new text. A walk still returns that message once, in its first place,
-  with the new text.
+  `page[0]` keeps its id and its place. A later walk returns it once, where it first stood, with the new text.
 
 - `db.forkFeed` starts a branch at any item. A walk can also return the fork points it passes, so a reader can show
   that other branches start there. <SpecCite item="org.dxos.echo.feeds#F-5.4" />
@@ -65,8 +68,8 @@ the chat, so it stays off the reader's main branch.
 
   <Snippet file="concept-feeds" region="fork" />
 
-  Here, `forkFeed` starts a branch at the first message, for an alternate reply. The walk of `branch` reads the root
-  branch up to the fork point, then the branch.
+  `branch` is the id that `forkFeed` resolves with. A walk that leaves it out still reads the root branch, where
+  the second message is.
 
 - A rewind is a fork, not a separate mechanism. To go back to an earlier item, fork there and walk the new branch. The
   walk leaves out what followed that item on the old branch. <SpecCite item="org.dxos.echo.feeds#F-1.5" />
@@ -78,7 +81,8 @@ the chat, so it stays off the reader's main branch.
 
   <Snippet file="concept-feeds" region="options" />
 
-  Here, `indexing` turns the index off, and `retention` keeps at most 1,000 items.
+  `indexing` and `retention` are fields of the feed object, so they replicate and merge like any other field. This
+  `retention` keeps at most 1,000 items.
 
 ### When to use a feed
 
@@ -94,6 +98,6 @@ The design of feeds goes further than the code does today. These parts of
 - A list of a feed's branches and their heads, and a cheap call for the heads that changed.
   <SpecCite item="org.dxos.echo.feeds#F-2.2" />
 - Sync of some branches only. A client syncs the whole feed. <SpecCite item="org.dxos.echo.feeds#F-2.3" />
-- Merging a branch back, and removing a branch from reads. <SpecCite item="org.dxos.echo.feeds#F-1.4" /> This
-  means a rewind leaves the old branch in the feed, where a walk of that branch still reads it.
+- Merging a branch back, and removing a branch from reads. <SpecCite item="org.dxos.echo.feeds#F-1.4" /> A rewind
+  leaves the old branch in the feed, where a walk of that branch still reads it.
 - Retention per branch. Retention applies to the whole feed. <SpecCite item="org.dxos.echo.feeds#F-4.4" />

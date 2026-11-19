@@ -11,25 +11,25 @@ By the end of this page the app will list its records sorted, search them, and f
 
 ## Background
 
-In a client-server app, you fetch a list from a server, and you fetch it again when you think it has changed. In
+With an array in memory, you call `filter` and `sort` to get a list, and you call them again after every change. In
 ECHO, we describe the records we want once, as a query, and the query can keep its results current.
 
-A query has two parts:
+The description has two parts:
 
-- A **filter** says which objects match: by type, by field values, by text.
-- A **query** wraps the filter and adds what to do with the matches: their order, a limit, or a step to the objects
-  they reference or that reference them.
+- A **filter** says which objects match: by type, by field values, by text. Steps 1 and 2 build filters.
+- A **query** wraps a filter and adds what to do with the matches: their order, a limit, or a step to the objects
+  they reference or that reference them. Step 3 adds such a step.
 
-A query is a value, so building one runs nothing. `db.query(query)` runs it against the database on the device, which
-means a query never waits on the network. You can then read the matches in two ways:
+A query is a value, so building one runs nothing. `db.query(query)` binds it to the database on the device and
+returns a result, which you read in two ways:
 
-- `run` returns the matches once.
-- `subscribe` returns them, then runs again whenever an object that could match changes, whichever peer changed it.
+- `run` resolves with the matches once. Step 4 calls it.
+- `subscribe` calls back each time the matches change, whichever peer changed them. Step 5 calls it.
 
 The client returns typed objects only for the types it knows. We pass the app's types to the client when the app
 starts, in [Installation](/docs/echo/learn/installation/).
 
-[The Filter guide](/docs/echo/api/filter/) lists every comparison and combinator.
+[Filter](/docs/echo/api/filter/) lists every comparison and combinator.
 
 We put each query in the component that runs it: the lists, search and count in `Contacts.tsx`, and an organization's
 people in `RecordForm.tsx`.
@@ -39,47 +39,57 @@ people in `RecordForm.tsx`.
 <Steps>
 
 1. **List each type, sorted.** `Filter.type` selects the objects of a type, and `orderBy` sorts them by a field. The
-   app's lists use these.
+   app's three lists each run one of these queries.
 
    <Snippet file="echo-tutorial/app/Contacts" region="by-type" lang="tsx" />
 
-   Organizations and people sort by `name`, and events sort by `title`.
+   `Order.property` takes the type as a type argument, so the compiler rejects a field the type does not have. An
+   event has no `name`, which is why `events` sorts by `title`.
 
    `Filter.type` also matches field values. Pass them as a second argument, as in
    `Filter.type(Person, { name: 'Ada' })`, to select only the people named Ada.
 
 2. **Search text.** `Filter.text` matches objects whose text contains the words, whatever their type. The space indexes
-   text as objects are written. The search box uses this.
+   text as objects are written. The search box passes what you type to this filter.
 
    <Snippet file="echo-tutorial/app/Contacts" region="search" lang="tsx" />
 
-   Notice the `searching` check. The search runs only while the box has text, because an empty search has nothing to
-   match.
+   `useQuery` is a React hook from `@dxos/react-client/echo`. It calls `db.query` and subscribes to the result, as
+   step 5 does by hand, and it re-renders the component when the results change.
+   [React](/docs/echo/guides/react/) covers the hook.
 
-   The search box runs its query with `useQuery`, a React hook from `@dxos/react-client/echo`. The hook calls
-   `db.query` and subscribes to the result, as step 5 does by hand, and it re-renders the component when the results
-   change. The [React guide](/docs/echo/guides/react/) covers the hook.
+   A hook has to run on every render, so the component cannot skip the call while the box is empty. Instead it
+   passes `undefined` for the database, which makes `useQuery` run nothing and return an empty list. The query still
+   needs a filter, and `Filter.nothing()` is the one that matches no object.
+
+   `{ type: 'full-text' }` asks for a match on the words themselves, which is also what `Filter.text` does without
+   it.
 
 3. **Follow references backwards.** `referencedBy` steps from an organization to the people whose `employer` points at
    it.
 
    <Snippet file="echo-tutorial/app/RecordForm" region="employees" lang="tsx" />
 
-   Here, `Filter.id` selects the one organization, and `referencedBy` follows `employer` backwards to its people.
+   `Filter.id` selects the one organization. The query never loads a person to check its `employer`, because
+   `referencedBy` starts from the organization.
 
-4. **Run a query.** `db.query(query).run()` returns the matches once, typed, so each result is a `Person`. An
-   organization's form lists its people with this.
+4. **Run a query.** `db.query(query).run()` resolves with the matches once, typed, so each result is a `Person`. An
+   organization's form runs `employees` this way to list its people.
 
    <Snippet file="echo-tutorial/app/RecordForm" region="run" lang="tsx" />
 
-   `run` returns a promise, and `setStaff` stores the people when it resolves.
+   `setStaff` stores the people when the promise resolves. The list does not change if someone joins the organization
+   later, because `run` reads once.
 
 5. **Keep a query live.** `subscribe` calls back with the current results each time they change, and returns a function
-   that stops it. `fire: true` calls back once at the start too. The toolbar's count of people uses this.
+   that stops it. The toolbar subscribes to `people` to show how many there are.
 
    <Snippet file="echo-tutorial/app/Contacts" region="live" lang="tsx" />
 
-   The callback runs again whenever a person is added, changed or removed, on this peer or another.
+   `fire: true` calls back once at the start too. Without it, the count stays empty until the first change. The
+   effect returns what `subscribe` returns, so React stops the subscription when the component unmounts.
+
+   The callback runs again whenever a person is added or removed, on this peer or another.
    [Mutating objects](/docs/echo/learn/mutating-objects/) makes those changes.
 
 </Steps>
@@ -89,7 +99,7 @@ people in `RecordForm.tsx`.
 Type in the search box to search every record. Choose Organizations and open one to see its people. The table button
 shows the records of the chosen type with one column per field.
 
-Each list is a live query, which the next page puts to work.
+Each list is a live query, so it follows the changes that the next page makes.
 
 <TutorialEmbed stage="queries" />
 

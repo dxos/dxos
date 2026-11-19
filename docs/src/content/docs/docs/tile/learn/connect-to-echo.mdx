@@ -6,64 +6,86 @@ description: Replace the screen's React state with ECHO's Person type, a live qu
 import { Steps } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 
-By the end of this page the contacts are ECHO objects. They are stored on the device, and they sync to your other
-devices and to anyone you share the space with. The edit dialog is a form built from their schema.
+By the end of this page the contacts are objects in [ECHO](/docs/echo/overview/), DXOS's database. They are stored on
+the device, and they sync to your other devices and to anyone you share the space with. The edit dialog is a form
+built from their schema.
 
 ## Before you start
-
-This page uses ECHO, DXOS's database, through its React hooks. Add the bundler settings from step 2 of
-[ECHO's Installation](/docs/echo/learn/installation/) to `vite.config.ts`, so the database's worker and WebAssembly load.
-Then install the React client and the form package:
-
-```sh
-npm install @dxos/react-client @dxos/react-ui-form
-```
 
 So far the contacts live in React state, which a reload resets and no other device sees. To move them into ECHO, we
 change three things from the last page:
 
-- A **type** replaces the `Contact` type. ECHO checks and syncs objects of a type it knows.
-- `useQuery` replaces `useState` for the list. It returns the objects that match, and the component renders again
-  when one is added or removed, here or on another device.
+- An ECHO type replaces the `Contact` type. ECHO checks and syncs objects of a type it knows. Step 2 adds the type.
+- `useQuery` replaces the `useState` that held the list. It returns the objects that match, and the component
+  renders again when one is added or removed, here or on another device. Step 7 makes the swap.
 - `useObject` reads one object. A component that reads an object's fields this way renders again when that object
-  changes.
+  changes. Steps 4 and 5 use it.
+
+We take the type from ECHO's own learning path. Its `Person` has a name, an email and an employer, and no role. The
+role select, the role's tooltip and the `role.*` strings from the earlier pages therefore have no place on this
+screen.
 
 <Steps>
 
-1. **Use ECHO's Person type.** This is the `Person` from [ECHO's learning path](/docs/echo/learn/defining-types/),
-   with a name, an optional email and an optional employer. Add `src/echo/schema.ts`, with the `Organization` type
-   from the same page above it:
+1. **Install the React client and the form package.** `@dxos/react-client` holds the hooks, and
+   `@dxos/react-ui-form` holds the form. Until the next npm release, they come from the same build as the packages in
+   [Installation](/docs/tile/learn/installation/):
+
+   ```sh
+   npm install \
+     https://pkg.pr.new/dxos/dxos/@dxos/react-client@20a14b9 \
+     https://pkg.pr.new/dxos/dxos/@dxos/react-ui-form@20a14b9
+   npm install --save-dev vite-plugin-wasm
+   ```
+
+   Then add the bundler settings from step 2 of ECHO's [Installation](/docs/echo/learn/installation/) to
+   `vite.config.ts`, so the database's worker and WebAssembly load. Those settings use `vite-plugin-wasm`.
+
+2. **Use ECHO's Person type.** This is the `Person` from ECHO's
+   [Defining types](/docs/echo/learn/defining-types/), with a name, an optional email and an optional employer. Add
+   `src/echo/schema.ts`. Put that page's `Organization` type in it first, because `employer` refers to it:
 
    <Snippet file="tile-tutorial/echo/schema" region="person" lang="ts" />
 
-2. **Query the people.** The query selects every `Person`, sorted by name. Add `src/echo/ContactsScreen.tsx`:
+3. **Query the people.** The query selects every `Person`, sorted by name. Add `src/echo/ContactsScreen.tsx`:
 
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="query" lang="tsx" />
 
-3. **List them.** The list is the same `Listbox` as before. Each row reads its person with `useObject`, so a rename
+   `people` only describes the query. Nothing reads the database until step 7 passes it to `useQuery`.
+
+4. **List them.** The list is the same `Listbox` as before. Each row reads its person with `useObject`, so a rename
    shows in the list at once:
 
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="list" lang="tsx" />
 
-4. **Show the selected person.** The detail reads the person the same way:
+   `useObject` returns a pair. `snapshot` is the first of the two, a copy of the person's fields as they are now.
+   The second is a function that changes the person.
+
+5. **Show the selected person.** The detail reads the person the same way. It shows the name and the email, and no
+   role, because `Person` has none:
 
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="detail" lang="tsx" />
 
-5. **Edit with a schema form.** `ObjectForm` builds its fields from `Person`'s schema: a text field for the name, an
-   email field, and a picker of organizations for the employer. It writes each change to the object as it is made.
-   This means the dialog needs no Save button, and we no longer need the editor from
+6. **Edit with a schema form.** `ObjectForm` builds its fields from `Person`'s schema: a text field for the name, an
+   email field, and a picker of organizations for the employer. It writes each change to the object as it is made,
+   so the dialog needs no Save button. We no longer need the editor from
    [Inputs and actions](/docs/tile/learn/inputs-and-actions/).
 
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="edit" lang="tsx" />
 
-   [Form](/docs/tile/api/react-ui-form/form/) covers the form in depth.
+   `Dialog.Root` takes no `open` now. With no Save to close the dialog, it can hold its own state.
+   [Form](/docs/tile/api/react-ui-form/form/) shows how to describe a form's fields and how to edit an ECHO object
+   with one.
 
-6. **Write the screen.** Add puts a new object in the database with `db.add`, and Delete takes it out with
-   `db.remove`. Neither touches React state. The query sees the change, and the list renders again.
+7. **Write the screen.** Add puts a new object in the database with `db.add`, and Delete takes it out with
+   `db.remove`. Neither changes a list of our own. The query sees the change, and the list renders again.
 
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="screen" lang="tsx" />
 
-7. **Open a space.** A space is a database that its members share, and an identity owns the spaces it creates. The
+   `const contacts = useQuery(db, people)` is the line that replaces `useState(CONTACTS)`. One `useState` is left,
+   and it holds `selected`, the id of the chosen person, which `handleAdd` and `handleDelete` still set.
+
+8. **Open a space.** A space is a database that its members share, and an identity owns the spaces it creates. The
    first time the app runs, `setUp` creates an identity and then a space. `Contacts` shows the screen once the space
    is there.
 
@@ -72,9 +94,10 @@ change three things from the last page:
 
    <Snippet file="tile-tutorial/echo/main" region="space" lang="tsx" />
 
-8. **Render it inside the client.** `ClientProvider` starts ECHO with the types the app uses, and runs `setUp`
-   once the client is ready. Its config is the one from ECHO's [Installation](/docs/echo/learn/installation/) page. It
-   keeps the data across reloads and reaches other devices through EDGE, which the next section needs.
+9. **Render it inside the client.** `ClientProvider` starts ECHO with the types the app uses, and runs `setUp`
+   once the client is ready. Its config is the one from ECHO's [Installation](/docs/echo/learn/installation/) page.
+   The config keeps the data across reloads, and reaches other devices through [EDGE](/docs/edge/overview/), the
+   always-online peer that DXOS runs.
 
    The theme provider goes inside it, and now also registers `@dxos/react-ui-form`'s strings:
 
@@ -86,15 +109,18 @@ change three things from the last page:
 
 ## Try it
 
-Run the app and add a few contacts. Reload, and they are still there. Open the app in a second browser profile and
-join the space as [Sharing](/docs/echo/learn/sharing/) shows, and edits in one window appear in the other.
+Run the app and add a few contacts. Reload, and they are still there.
+
+To see the contacts sync, a second browser profile has to join the space, and this screen has no way to invite one.
+ECHO's [Sharing a space](/docs/echo/learn/sharing/) adds an invitation. With that in place, edits in one window
+appear in the other.
 
 ## What you can do now
 
-You have a screen built with TILE whose data lives in ECHO. From here:
+You can build a screen with TILE whose data lives in ECHO. From here:
 
 - The API section covers each component package, such as [Listbox](/docs/tile/api/react-ui-list/listbox/),
   [Form](/docs/tile/api/react-ui-form/form/), [ActionToolbar](/docs/tile/api/react-ui-menu/action-toolbar/) and
   [Editor](/docs/tile/api/react-ui-editor/editor/).
-- [TILE in a PLEX plugin](/docs/tile/guides/tile-in-a-plex-plugin/) shows how this screen would become a Composer
-  plugin.
+- [TILE in a PLEX plugin](/docs/tile/guides/tile-in-a-plex-plugin/) shows how this screen would become a plugin for
+  [Composer](/composer), DXOS's local-first workspace.

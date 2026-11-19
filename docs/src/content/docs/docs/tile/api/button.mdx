@@ -10,6 +10,8 @@ import TilePreview from '../../../../../components/TilePreview.astro';
 import * as Button from '@dxos/react-ui/Button';
 ```
 
+A button is a control the user presses to act. `Button` has parts for a toggle, a group and a button that opens a menu.
+
 <Snippet file="tile-components" region="buttons" lang="tsx" />
 
 <TilePreview id="buttons" />
@@ -18,29 +20,29 @@ import * as Button from '@dxos/react-ui/Button';
 
 `Button.Root` renders a button. It takes the props of a `<button>`, plus:
 
-| Prop          | Type                                                                      | Effect                                                         |
-| ------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `variant`     | `'default' \| 'primary' \| 'ghost' \| 'outline' \| 'destructive' \| 'valence'` | The fill. `primary` for the one main action of a view       |
-| `valence`     | `'info' \| 'success' \| 'warning' \| 'error' \| 'neutral'`                | The status color, with `variant='valence'`                     |
-| `hue`         | a palette hue                                                             | A colored button                                              |
-| `icon`        | icon name                                                                 | A leading icon                                                 |
-| `iconEnd`     | icon name                                                                 | A trailing icon                                                |
-| `label`       | string                                                                    | The text, or with `iconOnly` the accessible name and tooltip   |
-| `iconOnly`    | boolean                                                                   | Show only the icon                                             |
-| `showTooltip` | boolean                                                                   | With `iconOnly`, show the label as a tooltip. On by default    |
-| `tooltipSide` | `'top' \| 'right' \| 'bottom' \| 'left'`                                  | Where that tooltip opens                                       |
-| `caretDown`   | boolean                                                                   | A trailing caret, for a button that opens a menu               |
-| `spin`        | boolean                                                                   | Spin the icon, for a busy state                                |
-| `compact`     | boolean                                                                   | Less padding                                                   |
-| `align`       | `'center' \| 'start'`                                                     | Where the content sits in a wide button                        |
-| `size`        | `Size`                                                                    | Override the inherited size                                    |
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `variant` | `'default' \| 'primary' \| 'ghost' \| 'outline' \| 'destructive' \| 'valence'` | Sets the fill. Use `primary` for the one main action of a view |
+| `valence` | `'info' \| 'success' \| 'warning' \| 'error' \| 'neutral'` | Sets the status color, with `variant='valence'` |
+| `hue` | `Button.Hue` | Colors the button with a palette hue |
+| `icon` | `string` | Shows a leading icon, by name |
+| `iconEnd` | `string` | Shows a trailing icon, by name |
+| `label` | `string` | Sets the text, or with `iconOnly` the accessible name and tooltip |
+| `iconOnly` | `boolean` | Shows only the icon |
+| `showTooltip` | `boolean` | Shows the label as a tooltip, with `iconOnly`. `true` by default |
+| `tooltipSide` | `'top' \| 'right' \| 'bottom' \| 'left'` | Sets where that tooltip opens |
+| `caretDown` | `boolean` | Adds a trailing caret, for a button that opens a menu |
+| `spin` | `boolean` | Spins the icon, for a busy state |
+| `compact` | `boolean` | Reduces the padding |
+| `align` | `'center' \| 'start'` | Sets where the content sits in a wide button |
+| `size` | `Size` | Overrides the inherited size |
 
 A button with `icon` and `label` needs no children. For any other content, pass children instead.
 
 ## `Button.Toggle`
 
-`Button.Toggle` is a button that stays pressed. It takes `Button.Root`'s props, plus `pressed`, `defaultPressed` and
-`onPressedChange`. Use `activeIcon` to show a different icon while the button is pressed.
+`Button.Toggle` is a button that stays pressed. It takes the props of `Button.Root`, plus `pressed`, `defaultPressed`
+and `onPressedChange`. Use `activeIcon` to show a different icon while the button is pressed.
 
 ## `Button.Group`
 
@@ -48,7 +50,7 @@ A button with `icon` and `label` needs no children. For any other content, pass 
 
 - `justify` is `'start'`, `'end'` or `'between'`.
 - `fill` shares the width equally, so a lone button stretches across the group.
-- `compact` removes the gap. Use it for a run of icon-only buttons.
+- `compact` removes the gap. Use `compact` to pack a run of icon-only buttons.
 
 ## `Button.Menu`
 

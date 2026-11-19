@@ -19,7 +19,7 @@ db.add(ada);
 // #endregion make
 
 // #region make-options
-// The compiler has already checked these props, so skip the check at runtime.
+// The compiler has already checked these props, so skip the check at run time.
 const grace = Obj.make(Person, { name: 'Grace' }, { skipValidation: true });
 // #endregion make-options
 

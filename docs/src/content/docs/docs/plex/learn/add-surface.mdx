@@ -11,9 +11,12 @@ they have read it.
 
 ## Background
 
-A **surface** is a named place in an app's UI, such as the main article area, a card or the status bar. In most React
-apps, the layout imports the component that fills each place. In a PLEX app, plugins fill surfaces by contributing a
-component and a **filter**, which says which data the component can render.
+Click a link in the navigation tree now, and the main area has nothing to show for it. No plugin has said how to
+render a link there.
+
+A **surface** is a named place in an app's UI, such as the main article area, a card or a dialog. Plugins fill a
+surface by contributing a component and a **filter**. A filter says which place and which data the component can
+render.
 
 When Composer opens a link in the article area, it asks for every component that matches the article role and a link,
 and renders the best one. [Surfaces](/docs/plex/concepts/surfaces/) explains the matching.
@@ -28,7 +31,7 @@ We write the component in step 1 and its filter in step 2.
 
    <Snippet file="plex-tutorial/src/containers/StashedLinkArticle" region="article" lang="tsx" />
 
-   Notice that each input reads its value from the snapshot, `link`, and writes to `subject`. `Panel.Root` with the
+   Each input reads its value from `link`, the snapshot, and writes to `subject`, the object. `Panel.Root` with the
    surface's `role` gives the view the standard article layout.
 
 2. **Contribute the surface.** `AppSurface.object(AppSurface.Article, StashedLink)` matches the article role when the
@@ -37,14 +40,14 @@ We write the component in step 1 and its filter in step 2.
 
    <Snippet file="plex-tutorial/src/capabilities/react-surface" region="surface" />
 
-3. **Add the module to the manifest.** The `roles` list lets the plugin manager load the module only when it first
+3. **Add the module to `dx.config.ts`.** The `roles` list lets the plugin manager load the module only when it first
    needs an article surface.
 
    <Snippet file="plex-tutorial/dx.config" region="surface" />
 
 4. **See the view.** Load or reload your plugin below, click **New** in the header to create a sample link, and
-   select **Surface**. The inspector renders each of the module's surfaces whose filter accepts the sample. Here, that
-   is the article.
+   select **Surface**. The inspector renders each of the module's surfaces whose filter accepts the sample, which for
+   Stash is the article.
 
    <InspectorEmbed adds={['surface']} />
 
@@ -53,9 +56,8 @@ We write the component in step 1 and its filter in step 2.
 
 ## What you can do now
 
-- Read an object reactively in a component and write it with `Obj.update`.
-- Contribute an article surface for a type.
-- Load a surface module only when its role is needed.
+You can read an object reactively in a component, write it with `Obj.update`, and contribute an article surface that
+loads only when its role is needed.
 
 Next, [Run it in Composer](/docs/plex/learn/run-in-composer/) loads the plugin into Composer from your machine, and
 gives the assistant Mark as read.

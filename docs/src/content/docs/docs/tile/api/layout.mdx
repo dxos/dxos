@@ -8,37 +8,38 @@ import * as Layout from '@dxos/react-ui/Layout';
 ```
 
 `Layout` arranges children without hand-written flex or grid classes. [Layout](/docs/tile/concepts/layout/) explains
-how the primitives fit with `Panel` and `ScrollArea`. Every primitive takes `classNames` and `asChild`.
+how the primitives fit with `Panel` and `ScrollArea`. Every primitive takes `classNames`. `Layout.Flex`,
+`Layout.Grid` and `Layout.Container` also take `asChild`.
 
 ## `Layout.Flex`
 
 `Layout.Flex` lays children out on one axis.
 
-| Prop      | Type                                                     | Effect                                                    |
-| --------- | -------------------------------------------------------- | --------------------------------------------------------- |
-| `column`  | boolean                                                  | Stack on the block axis instead of the inline axis        |
-| `gap`     | `Gap`                                                    | Space between children, as a step of the spacing ramp     |
-| `align`   | `'start' \| 'center' \| 'end' \| 'baseline' \| 'stretch'` | Cross-axis alignment. Unset, children stretch             |
-| `justify` | main-axis alignment                                      | As CSS `justify-content`                                  |
-| `wrap`    | boolean                                                  | Wrap onto more lines                                      |
-| `grow`    | boolean                                                  | Take the parent's slack and clip what overflows           |
-| `center`  | boolean                                                  | Center on both axes                                       |
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `column` | `boolean` | Stacks children on the block axis instead of the inline axis |
+| `gap` | `Gap` | Sets the space between children, as a step of the spacing ramp |
+| `align` | `'start' \| 'center' \| 'end' \| 'baseline' \| 'stretch'` | Aligns children on the cross axis. Children stretch by default |
+| `justify` | `'start' \| 'center' \| 'end' \| 'between' \| 'around' \| 'evenly'` | Aligns children on the main axis, as CSS `justify-content` |
+| `wrap` | `boolean` | Wraps children onto more lines |
+| `grow` | `boolean` | Takes the parent's slack and clips what overflows |
+| `center` | `boolean` | Centers children on both axes |
 
 ## `Layout.Grid`
 
 `Layout.Grid` lays children out on two axes.
 
-| Prop       | Type                                     | Effect                                                                     |
-| ---------- | ---------------------------------------- | -------------------------------------------------------------------------- |
-| `cols`     | number, `'subgrid'` or a list of tracks  | `3` for three equal columns; a list for anything else; `'subgrid'` to share the parent's |
-| `rows`     | as `cols`                                | The same for rows                                                          |
-| `gap`      | `Gap`                                    | Space between cells                                                        |
-| `align`    | as `Flex`                                | Alignment within each cell                                                 |
-| `center`   | boolean                                  | Center children on both axes                                               |
-| `grow`     | boolean                                  | Fill and clip the parent                                                   |
-| `contents` | boolean                                  | Render as `display: contents`, so children join the parent grid            |
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `cols` | `number \| 'subgrid' \| GridTrack[]` | Sets the columns. `3` gives three equal columns, a list gives anything else, and `'subgrid'` shares the parent's |
+| `rows` | `number \| 'subgrid' \| GridTrack[]` | Sets the rows, the same way |
+| `gap` | `Gap` | Sets the space between cells |
+| `align` | `'start' \| 'center' \| 'end' \| 'baseline' \| 'stretch'` | Aligns children within each cell |
+| `center` | `boolean` | Centers children on both axes |
+| `grow` | `boolean` | Fills and clips the parent |
+| `contents` | `boolean` | Renders as `display: contents`, so children join the parent grid |
 
-A track in the list is one of these:
+A `GridTrack` in the list is one of these:
 
 - `'fill'` takes the rest of the space, and can shrink.
 - A number takes a share of the rest, so `[2, 1]` is two thirds and one third.
@@ -54,11 +55,11 @@ spacing between fields, and `'form-section'` for the spacing between groups of f
 
 `Layout.Container` puts content between two gutters, so rows line up with the panel's edges.
 
-| Prop      | Type                                                       | Effect                                                    |
-| --------- | ---------------------------------------------------------- | --------------------------------------------------------- |
-| `gutter`  | `'rail' \| 'inset' \| 'sm' \| 'md' \| 'lg' \| 'none' \| 'inherit'` | The gutter width; `rail` leaves room for an icon column |
-| `layout`  | `'stack' \| 'row'`                                         | `row` lays a child's parts across the container's tracks  |
-| `size`    | `Size`                                                     | The size for everything inside. See [Density and sizes](/docs/tile/concepts/density-and-sizes/) |
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `gutter` | `'rail' \| 'inset' \| 'sm' \| 'md' \| 'lg' \| 'none' \| 'inherit'` | Sets the gutter width. `rail` leaves room for an icon column |
+| `layout` | `'stack' \| 'row'` | Sets how children flow. `row` lays a child's parts across the container's tracks |
+| `size` | `Size` | Sets the size for everything inside. See [Density and sizes](/docs/tile/concepts/density-and-sizes/) |
 
 ## `Layout.Block`
 
@@ -70,12 +71,12 @@ spacing between fields, and `'form-section'` for the spacing between groups of f
 `Layout.Columns` is a horizontal run of as many columns as fit, each an equal share of the width. When there are more,
 it scrolls a column at a time.
 
-| Prop             | Type    | Effect                                         |
-| ---------------- | ------- | ---------------------------------------------- |
-| `minColumnWidth` | number  | The narrowest a column may be, in rem          |
-| `maxColumns`     | number  | The most columns shown at once                 |
-| `gap`            | number  | Space between columns, in rem                  |
-| `follow`         | boolean | Scroll to a newly added column                 |
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `minColumnWidth` | `number` | Sets the narrowest a column may be, in rem. `24` by default |
+| `maxColumns` | `number` | Sets the most columns shown at once |
+| `gap` | `number` | Sets the space between columns, in rem. `0` by default |
+| `follow` | `boolean` | Scrolls to a newly added column. `true` by default |
 
 ## `Layout.Separator`
 

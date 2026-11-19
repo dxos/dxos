@@ -6,8 +6,8 @@ description: Named, typed actions that the UI, the command palette and agents al
 import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
-An operation is an action with a name, a typed input and a typed output. You define it once, and people and agents
-run it from anywhere in the app.
+An operation is an action with a name, a typed input and a typed output. You define it once, and people and the
+assistant run it from anywhere in the app.
 
 ## Model
 
@@ -17,22 +17,21 @@ gives the action a name and schemas, so every caller runs it the same way.
 
 An operation has two parts:
 
-- An operation **definition** has a key (a DXN), metadata for people and agents, and schemas for its input and
-  output.
+- The definition has a key, metadata for people and the assistant, and schemas for its input and output. The key is a
+  DXN, the DXOS name for a resource.
 - A **handler** is an Effect that takes the input and returns the output.
 
-Definitions and handlers are separate values. This means a plugin can export a definition for other plugins to call
-without exposing how it runs.
+Definitions and handlers are separate values.
 
 **Example** (Defining the Mark as read operation)
 
 <Snippet file="plex-tutorial/src/types/StashedLinkOperation" region="operation" />
 
-In this example, `MarkRead` takes a reference to a `StashedLink` as its input, and its output is `Schema.Void`. The
-definition holds no handler.
+`MarkRead` holds no handler. Another plugin can import this definition and invoke the operation without importing
+any of the code that runs it.
 
-Plugins contribute handlers in an **operation handler set** through the `OperationHandler` capability. The **operation
-invoker** looks up the handler by the definition's key and runs it.
+A **handler set** is a group of handlers that a plugin contributes through the `OperationHandler` capability. The
+**operation invoker** looks up the handler by the definition's key and runs it.
 
 You can invoke an operation from any module, handler or graph action with `Operation.invoke`. In a component, use
 `useOperation`.
@@ -41,17 +40,18 @@ You can invoke an operation from any module, handler or graph action with `Opera
 
 <Snippet file="plex-concepts" region="invoke" />
 
-In this example, `markRead` invokes `MarkRead` with a reference to the link. If no plugin handles the operation,
-`Effect.catchTag` catches the `NoHandlerError` and the Effect succeeds with `undefined`.
+`NoHandlerError` is in the type of the Effect that `Operation.invoke` returns, so the compiler makes `markRead` deal
+with a missing handler. `Effect.catchTag` turns that case into `undefined`.
 
-A **skill** hands operations to the assistant. It is a name, instructions, and a list of operations that become the
-assistant's tools. A plugin contributes it through `AppCapabilities.SkillDefinition`.
+A **skill** hands operations to the assistant, Composer's built-in AI agent. It is a name, instructions, and a list
+of operations that become the assistant's tools. A plugin contributes it through `AppCapabilities.SkillDefinition`.
 
 **Example** (Handing an operation to the assistant)
 
 <Snippet file="plex-tutorial/src/skills/StashSkill" region="skill" />
 
-Here, `Skill.toolDefinitions` makes a tool from `MarkRead`, and `instructions` tells the assistant when to use it.
+`Skill.toolDefinitions` turns each operation in its list into a tool, so `MarkRead` needs no code of its own for the
+assistant. `instructions` is where the skill says when to call it.
 
 Stash's Operations module in the inspector runs Mark as read from a form built from its input schema:
 
@@ -71,12 +71,12 @@ Stash's Operations module in the inspector runs Mark as read from a form built f
   the inverse's input from the forward input and output. The app records each undoable invocation and offers to undo
   it.
 
-**Example** (Mapping an operation to its inverse)
+  **Example** (Mapping an operation to its inverse)
 
-<Snippet file="plex-concepts" region="undo" />
+  <Snippet file="plex-concepts" region="undo" />
 
-In this example, `Rename` is its own inverse. `deriveContext` builds the inverse's input from the `id` in the forward
-input and the `previous` name in the output.
+  `deriveContext` reads `previous` from the forward output, which is why `Rename` returns the old name. Without it,
+  the mapping would have nothing to build the inverse's input from.
 
 - A handler can load lazily. A handler set made with `OperationHandlerSet.lazy` names each handler's module, and the
   framework imports it the first time the operation is invoked. A set made with `OperationHandlerSet.make` holds
@@ -91,6 +91,6 @@ input and the `previous` name in the output.
 - A handler runs with the services its definition declares, plus the operation service for invoking other operations.
   It does not get the React tree.
 - An operation's input must be serializable for the assistant to call it. Pass objects by reference where the caller
-  is an agent.
+  is the assistant.
 - Undo replays the inverse operation. It does not restore a snapshot. An operation whose effect cannot be inverted
   from its input and output is not undoable.

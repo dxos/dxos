@@ -11,56 +11,65 @@ who gets it.
 
 ## Model
 
-In a client-server app, the server keeps the list of who may read what, and checks it on every request. In a space,
-every peer keeps the membership and does the checking itself.
+Two peers sync a space with no server between them. Who says the other peer may have the data? Each peer does. It
+keeps the space's membership and checks against it.
 
-**Members.** Each member is an identity, named by its DID, with one access level. The levels are ordered, and each includes
-the one before:
+A **member** is an identity that the space has admitted, named by its DID. Each member has one **access level**. The
+levels are ordered, and each includes the one before:
 
 | Access  | The member can                                             |
 | ------- | ---------------------------------------------------------- |
-| `pull`  | Receive the space's data in encrypted form, for example a sync service |
+| `pull`  | Receive the space's data in encrypted form. A sync service is such a member |
 | `read`  | Read the space                                             |
 | `edit`  | Read and change the space                                  |
-| `admin` | Change membership: invite, change roles, remove members    |
+| `admin` | Change membership. It can invite, change access levels and remove members |
 
-The identity that creates a space is its first admin. Levels come from [Keyhive](https://www.inkandswitch.com/keyhive/notebook/).
+The identity that creates a space is its first admin. The levels come from
+[Keyhive](https://www.inkandswitch.com/keyhive/notebook/), and the API calls a member's level its `role`.
 
-**Membership policy.** A space has one of two policies:
+A **membership policy** says whether the space takes new members. A space has one of two policies:
 
 - `invite` admits new members through [invitations](/docs/halo/concepts/invitations/).
 - `locked` admits no one new. Use it for a space that should stay private to one person or a fixed group.
 
-**How access is checked.** Membership is a graph of signed delegations and revocations. Each delegation, such as "admit
-this identity with `edit`", is signed by a member allowed to make it. No member can delegate more access than it
-holds.
+**How access is checked.** Membership is a graph of signed delegations and revocations. A **delegation** admits a
+member with an access level, such as "admit this identity with `edit`", and a **revocation** removes one. Each is
+signed by a member allowed to make it, and no member can delegate more access than it holds.
 
-Every peer keeps the graph and checks each operation against the members it already trusts. This means a peer decides
-whether to accept another peer's changes without asking a server.
+Every peer keeps the graph and checks each operation against the members it already trusts. A peer needs no server
+to decide whether to accept another peer's changes.
 
 Delegations and revocations converge. Peers that have seen the same ones agree on the membership, whatever order they
 arrived in.
 
-**Who can revoke whom.** An admin can revoke any member. Any other member can revoke only members it has **causal
-seniority** over. These are the members whose delegation depends on its own, because it admitted them or admitted
-whoever did. A revocation that breaks this rule fails with `NotAuthorizedError`.
+**Who can revoke whom.** An admin can revoke any member. Any other member can revoke only the members it has **causal
+seniority** over.
 
-**Encryption.** Keyhive keeps a group key that the current members share. A space's changes are encrypted with it, so a
-member with `pull` stores and relays the data without reading it. When membership changes, the key changes too.
+A member has causal seniority over the members whose delegation depends on its own, because it admitted them or
+admitted whoever did. A revocation that breaks this rule is refused.
 
-**EDGE.** EDGE, DXOS's sync service, joins a space as a `pull` member. It holds and relays the encrypted changes, so
-devices that are never online together still sync, and it cannot read them.
+**Encryption.** The **group key** encrypts a space's changes. Keyhive keeps it for the members with `read` or more,
+so a member with `pull` stores and relays the changes without reading them. When membership changes, the key changes
+too.
 
-An admin who gives EDGE more than `pull` makes the space readable on EDGE, so EDGE can index it, run functions and
+**EDGE.** EDGE, DXOS's always-online peer, joins a space as a `pull` member. It holds and relays the encrypted
+changes, so devices that are never online together still sync, and it cannot read them.
+
+An admin who gives EDGE more than `pull` makes the space readable on EDGE, so EDGE can index it, run operations and
 agents on it, and send it to AI. EDGE still stores the data encrypted and keeps the keys apart from it, and reading
-the data needs both. The two come together while an operation works on the data. That is the trade-off for using
-EDGE's indexing, compute and other services.
+the data needs both. EDGE brings the two together while an operation works on the data. That is the trade-off for
+using EDGE's indexing, compute and other services.
+
+An [agent device](/docs/halo/concepts/identities-devices/) is a separate grant, made by one identity. The agent
+device is one of that identity's devices, and EDGE holds its key. Through it, EDGE has that identity's access level
+in the spaces the identity belongs to, whatever level the space gave EDGE itself.
 
 ## Behavior
 
-- An admin can invite members, change a member's access with `Space.updateMemberRole` and remove a member with
+- An admin can invite members, change a member's access level with `Space.updateMemberRole` and remove a member with
   `Space.removeMember`.
-- Peers reject changes from an identity whose access does not allow them.
+- A guest who joins through an invitation started with `Space.share` is an `admin`.
+- Peers reject changes from an identity whose access level does not allow them.
 - Removing a member is a revocation, and it rotates the space's key. The removed member stops receiving new changes,
   and could not decrypt them if they did.
 

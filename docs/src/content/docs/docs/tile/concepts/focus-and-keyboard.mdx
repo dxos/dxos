@@ -14,18 +14,21 @@ On the web, a `<button>` takes focus and answers Enter and Space with no code. A
 build from `<div>` elements gets none of that, so you write the key handlers and move the focus yourself. TILE's
 components do this work for you.
 
-**One focus ring.** A focused control draws a ring of `--dx-focus-ring-width` in `--dx-focus-ring-color`, which
-defaults to the theme's `focus-ring` token. The ring shows on `:focus-visible`, so it appears when the user moves by
-keyboard and not after every click.
+**One focus ring.** The **focus ring** is the ring a control draws while it has the focus. It is
+`--dx-focus-ring-width` wide and takes its color from `--dx-focus-ring-color`, which defaults to the theme's `focus`
+token. The ring shows on `:focus-visible`, so it appears when the user moves by keyboard and not after every click.
 
 **Tab moves between groups, arrows move within one.** A toolbar, a menu, a radio or toggle group and a list are each one
-tab stop. Inside, the arrow keys move between items. To try it, tab into one of the toolbars below, then press the
-arrow keys.
+tab stop. Inside, the arrow keys move between items.
+
+To try it, tab into one of the toolbars below, then press the arrow keys. They are the three toolbars from
+[Density and sizes](/docs/tile/concepts/density-and-sizes/), and each is one tab stop.
 
 <TilePreview id="sizes" />
 
-**Overlays hold focus.** A dialog moves focus into itself when it opens, keeps Tab inside, closes on Escape, and returns
-focus to the element that opened it. A menu does the same, and closes when an item is chosen.
+**Overlays hold focus.** An overlay is a component that TILE draws above the page. A dialog moves focus into itself
+when it opens, keeps Tab inside, closes on Escape, and returns focus to the element that opened it. A menu does the
+same, and closes when an item is chosen.
 
 A tooltip never takes focus. It shows while its trigger is focused or hovered.
 

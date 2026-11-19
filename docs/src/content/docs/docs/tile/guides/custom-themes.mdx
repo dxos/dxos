@@ -5,17 +5,18 @@ description: Change the theme's tokens, and follow or force dark mode.
 
 import Snippet from '../../../../../components/Snippet.astro';
 
-TILE's look is its tokens. To change it, you set new token values in your own stylesheet. You change no component, and
-you write no theme function of your own. [Theme and tokens](/docs/tile/concepts/theme-and-tokens/) explains the tokens.
-
 By the end of this guide your app has its own accent color, and a light or dark mode that follows the system or the
 user's choice.
+
+TILE's look is its tokens, the named colors and sizes that the components read. To change the look, you set new token
+values in your own stylesheet. You change no component, and you write no theme function of your own.
+[Theme and tokens](/docs/tile/concepts/theme-and-tokens/) explains how tokens are named and layered.
 
 ## Override tokens
 
 The theme declares its tokens in the `theme` cascade layer. Its `dx-tokens` layer comes next, and sets the values
-that change with a density or a surface. Declare yours in `user-tokens`, which comes after both, so yours win wherever
-both apply:
+that change with a surface or with a density, which is how compact a region's controls are. Declare yours in
+`user-tokens`, which comes after both, so yours win wherever both apply:
 
 ```css title="src/theme.css"
 @layer user-tokens {
@@ -28,7 +29,8 @@ both apply:
 }
 ```
 
-In this example, the three `accent` tokens take emerald values, so primary buttons, links and selection turn green.
+`--color-accent-bg-hover` is a token of its own. If you override only `--color-accent-bg`, a green button turns blue
+again under the pointer.
 
 Import your stylesheet after the theme:
 
@@ -41,7 +43,18 @@ import './theme.css';
 Override semantic tokens, such as `accent-*`, `fg-*` or a surface, rather than the scale. A semantic token is what the
 components read. A scale value such as `--color-blue-600` is also read by everything else that happens to use blue.
 
-Give every override a light and a dark value with `light-dark()`, in that order. A plain value applies in both themes.
+Give every override a light and a dark value with `light-dark()`, in that order. A plain value applies in both modes.
+
+The components also read `--dx-*` variables, which hold their sizes and states. `@dxos/react-ui/theme.css` sets them
+in the `dx-components` layer, which comes after `user-tokens`. Override one outside any layer, where your rule wins
+over every layer:
+
+```css title="src/theme.css"
+:root {
+  /* A wider focus ring on every control. */
+  --dx-focus-ring-width: 3px;
+}
+```
 
 ## Override a part of the page
 
@@ -53,24 +66,22 @@ Tokens are custom properties, so an override on an element applies to everything
 }
 ```
 
-Here, `--color-sidebar-surface` has its new value only inside an element with the `compact-sidebar` class.
+`--color-sidebar-surface` keeps the theme's value everywhere outside `.compact-sidebar`.
 
 ## Follow the system theme
 
-The dark values apply under a `dark` class on the root element. [Installation](/docs/tile/learn/installation/) sets it from
-the system setting and keeps it in step:
+The dark values apply under a `dark` class on the root element. `ThemePlugin`, which
+[Installation](/docs/tile/learn/installation/) adds to the Vite config, sets the class for you. It puts a script in
+the `<head>` of your page, which runs before the first paint, so the page never shows the wrong mode for a frame. The
+script does what this code does:
 
 <Snippet file="tile-setup" region="dark" lang="tsx" />
 
-In this example, `sync` sets the class from the media query. It runs once straight away, and again each time the
-system setting changes.
-
-Run it before the first paint, in a `<script>` in `index.html` or at the top of your entry, so the page never shows the
-wrong theme for a frame.
+`sync` runs once straight away, and again each time the system's setting changes.
 
 ## Force light or dark
 
-To let the user choose, store their choice and set the class from it instead of from the media query:
+To let the user choose, keep their choice wherever your app keeps its settings, and set the class from the choice:
 
 ```ts
 type Choice = 'light' | 'dark' | 'system';
@@ -81,10 +92,14 @@ const apply = (choice: Choice) => {
 };
 ```
 
-Here, `apply` reads the media query only when the choice is `'system'`.
+`apply` reads the media query only when the choice is `'system'`. Call it when your app starts and each time the
+choice changes.
+
+Call it from a `change` listener on the media query too. `ThemePlugin`'s script sets the class from the system again
+on every change, and a listener that you add later runs after the script's.
 
 Pass the same mode to `Theme.Provider`'s `themeMode`, so `useThemeMode` reports it to components that draw their own
-canvas or chart.
+canvas or chart. By default, `themeMode` is `'dark'`.
 
 ## Limits
 

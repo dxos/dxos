@@ -12,8 +12,8 @@ import Snippet from '../../../../../components/Snippet.astro';
 import { Space } from '@dxos/halo';
 ```
 
-`Space` manages spaces as units of membership. Use it to say which spaces exist, who belongs to each and what they may
-do.
+`Space` manages spaces as units of membership. Use it to create spaces, to list them, and to decide who belongs to
+each and what they may do.
 
 `Space` does not read or write the data inside a space. That is ECHO's [Database](/docs/echo/api/database/), which you
 reach by the same space id.
@@ -29,58 +29,65 @@ value to read it once. `Space.get` looks one up by id.
 
 <Snippet file="halo-guide-space" region="list" />
 
-In this example, `listSpaces` takes the first value from the stream and logs each space's id, name and state.
-`findSpace` returns the space, or `undefined` when `Space.get` finds none.
+`space.name` is `undefined` for a space that is not ready yet, because a space reports its name only once it is ready.
+`findSpace` turns the `Option` from `Space.get` into the space or `undefined`.
 
 ## Create a space
 
-`create` returns the new space's id, name and state. Wait for `waitReady` before you open its database.
-`membershipPolicy: 'locked'` creates a space no one else can join.
+`Space.create` returns the new space's id, name and state. Wait for `Space.waitReady` before you open its database.
+Pass `membershipPolicy: 'locked'` to create a space no one else can join.
 
 **Example** (Creating a space and waiting until it is ready)
 
 <Snippet file="halo-guide-space" region="create" />
 
-Here, `createSpace` makes a space named Team with the `invite` policy, and returns it once `waitReady` completes.
+`createSpace` passes `'invite'`, which is also what a space gets when you leave `membershipPolicy` out.
 
 ## Members
 
-`members` is a stream of the member list. Each member has a DID, a display name, an access level (`role`) and whether
-it is online.
+`Space.members` is a stream of the member list. Each member has a DID, a display name, an access level and whether it
+is online. The API calls the access level `role`.
 
-`updateMemberRole` changes a member's access, and `removeMember` revokes it. Both take the member's DID. Both need
-`admin`, or [causal seniority](/docs/halo/concepts/spaces-membership/) to revoke.
+`Space.updateMemberRole` changes a member's access level. Use it to raise or lower what a member may do. It takes
+`read`, `edit` or `admin`, and it fails for `pull`.
+
+`Space.removeMember` revokes a member's access. Both functions take the member's DID. Both need `admin`, or
+[causal seniority](/docs/halo/concepts/spaces-membership/) to revoke.
 
 **Example** (Listing members, then changing and revoking one member's access)
 
 <Snippet file="halo-guide-space" region="members" />
 
-In this example, `listMembers` logs each member's display name, role and whether it is online. `demote` sets Grace's
-access to `read`, and `remove` revokes it.
+`demote` leaves Grace in the space with `read`. `remove` takes her out of it, and she leaves the list that
+`listMembers` reads.
 
 ## Share and join
 
-`share` starts a space invitation and `join` accepts one. Both return an [`Invitation.Flow`](/docs/halo/api/invitation/).
+`Space.share` starts a space invitation and `Space.join` accepts one. Both return an
+[`Invitation.Flow`](/docs/halo/api/invitation/).
+
+The guest joins as an `admin`. With no options, `share` admits anyone who has the invitation code, so pass
+`authMethod: 'shared-secret'` unless you control every screen the code appears on.
 
 **Example** (Inviting someone to a space, and accepting)
 
 <Snippet file="halo-guide-space" region="share" />
 
-Here, `invite` runs on the host and logs the invitation code to send. `accept` runs on the guest with that code.
+`invite` runs on the host, and `accept` runs on the guest with the code that `invite` logged.
+[Invitation](/docs/halo/api/invitation/) drives the two flows from there.
 
 ## Archives and EDGE replication
 
-`exportSpace` writes the space to an archive, and `importSpace` creates a new space from one.
+`Space.exportSpace` writes the space to an archive, and `Space.importSpace` creates a new space from one.
 
-`setEdgeReplication` turns replication through [EDGE](/docs/edge/concepts/replication/) on or off. With it off, the
-space syncs only between peers that are online together.
+`Space.setEdgeReplication` turns replication through [EDGE](/docs/edge/concepts/replication/) on or off. With it off,
+the space syncs only between peers that are online together.
 
 **Example** (Turning on EDGE replication and copying a space)
 
 <Snippet file="halo-guide-space" region="archive" />
 
-In this example, `backUp` creates a space and enables EDGE replication for it. It then exports the space to an
-archive, imports the archive, and returns the id of the copy.
+`backUp` returns `copy.id`, which is not the id of the space it exported. `importSpace` always makes a new space.
 
 ## Members at a glance
 
@@ -90,7 +97,7 @@ archive, imports the archive, and returns the id of the copy.
 | `spaces` `get`                          | The identity's spaces                           |
 | `create` `waitReady`                    | Make a space and wait until it is ready         |
 | `members`                               | The member list as a stream                     |
-| `updateMemberRole` `removeMember`       | Change a member's access                        |
+| `updateMemberRole` `removeMember`       | Change or revoke a member's access level        |
 | `share` `join` `invitations`            | Space invitations                               |
 | `exportSpace` `importSpace`             | Archives                                        |
 | `setEdgeReplication`                    | Sync through EDGE, or only peer to peer         |
@@ -99,13 +106,14 @@ The full list is in the [API reference](/docs/halo/resources/api-reference/).
 
 ## Errors
 
-Every function that can fail fails with `SpaceError`, whose message says what went wrong. Handle it by its tag:
+Every function that can fail fails with `SpaceError`. Handle it by its tag:
 
 <Snippet file="halo-guide-space" region="errors" />
 
-Here, `safeRemove` catches the error from `remove` and logs its message.
+`error.message` says only that a space operation failed, so `safeRemove` logs `error.context.error` instead.
 
-A membership change Keyhive refuses names the reason with one of the errors `@dxos/halo` exports:
+`@dxos/halo` also exports four errors that name why Keyhive refuses a membership change. None of them is in the error
+type of `removeMember` or `updateMemberRole`, which is `SpaceError`:
 
 | Error                    | Raised when                                                              |
 | ------------------------ | ------------------------------------------------------------------------ |

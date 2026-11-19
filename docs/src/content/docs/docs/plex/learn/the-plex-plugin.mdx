@@ -12,11 +12,14 @@ This page explains what a plugin is made of, and shows Stash finished.
 
 ## What a plugin is
 
-A PLEX plugin is metadata and a set of **modules**. The metadata names the plugin and describes it in the registry.
+A PLEX plugin is metadata and a set of modules. The metadata names the plugin and describes it in the registry. The
+modules do the work, and three terms describe how:
 
-Each module waits for an **activation event**, such as the app starting or a view first needing it. Then it
-contributes **capabilities**, which are typed values that the rest of the app looks up. Strings, types, views,
-operations and entries in the navigation tree are all capabilities.
+- A **module** is a part of the plugin that does one job, such as registering a type or rendering a view.
+- An **activation event** is a named moment in the app's life, such as the app starting or a view first being needed.
+  Each module waits for one.
+- A **capability** is a typed slot that modules contribute values to and the rest of the app reads. A plugin's
+  strings, types, views, operations and entries in the navigation tree are all contributions to capabilities.
 
 A module's code loads only when it activates, so a plugin costs nothing until it is used.
 
@@ -36,7 +39,8 @@ Click **New** in the header to create a sample link. Then select a module:
 
 <InspectorEmbed />
 
-Each page of the learning path builds one piece of it, and ends with that piece in the inspector:
+Each page of the path builds one piece of Stash. Every page but the last ends with that piece in the inspector, and
+the last runs the plugin in Composer:
 
 | Page | Files | What it adds |
 | --- | --- | --- |
@@ -47,5 +51,5 @@ Each page of the learning path builds one piece of it, and ends with that piece 
 | [Add a surface](/docs/plex/learn/add-surface/) | `containers/StashedLinkArticle.tsx`, `capabilities/react-surface.ts` | The view that edits a link's title, address and note, and shows whether it has been read |
 | [Run it in Composer](/docs/plex/learn/run-in-composer/) | `skills/`, `capabilities/skill-definition.ts` | The plugin in Composer, and the skill that gives Mark as read to the assistant |
 
-From the next page on, the inspector on each page loads your own plugin from its dev server, and checks what that
-page adds.
+From the next page to [Add a surface](/docs/plex/learn/add-surface/), the inspector on each page loads your own
+plugin from its dev server, and checks what that page adds.

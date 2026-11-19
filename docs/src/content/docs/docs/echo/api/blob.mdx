@@ -27,12 +27,17 @@ To give an object a blob, declare a reference field whose target is `Blob.Blob`.
 
 <Snippet file="guide-blob" region="declare" />
 
-Here, `image` is the reference field, so each `Photo` points at one blob.
+`image` is not optional, so every `Photo` points at one blob.
 
 ## Store a blob
 
-`db.createBlob` hashes the bytes and uploads them to the storage backend. It returns a `Blob` object that is not yet
-in the space, so you add it and then reference it.
+`db.createBlob` hashes the bytes and stores them with a **blob backend**, the store that keeps a blob's bytes. It
+returns a `Blob` object that is not yet in the space, so you add it and then reference it.
+
+There are two built-in backends, and the `storage` option picks one:
+
+- `inline` keeps the bytes in the `Blob` object itself, up to `Blob.MAX_INLINE_SIZE`, which is 4 MiB.
+- `edge` uploads the bytes to EDGE. A client configured for EDGE uses it by default.
 
 If the bytes are over the backend's size limit, `db.createBlob` rejects with `BlobTooLargeError`.
 
@@ -40,8 +45,8 @@ If the bytes are over the backend's size limit, `db.createBlob` rejects with `Bl
 
 <Snippet file="guide-blob" region="store" />
 
-In this example, `db.add(blob)` puts the blob in the space, and `Ref.make(blob)` points the photo's `image` field at
-it.
+`db.createBlob` resolves once the bytes are stored, so `blob` already records their hash and size when `db.add`
+puts it in the space.
 
 ## Read a blob
 
@@ -54,9 +59,8 @@ rejects with `BlobNotAvailableError` when it cannot load them.
 
 <Snippet file="guide-blob" region="read" />
 
-In this example, `photo.image.load()` resolves the reference to the `Blob` object first. `data` then holds the bytes
-as a `Uint8Array`, and `url` holds a URL for an `<img>`, if one can be made. `db.blobExists` checks whether the
-bytes exist.
+`photo.image.load()` comes first, because the field holds a reference and the three calls take the `Blob` object.
+`url` is `undefined` when no URL can be made. `db.blobExists` checks for the bytes without loading them.
 
 ## Members at a glance
 

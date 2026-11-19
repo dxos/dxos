@@ -16,24 +16,25 @@ import { Feed } from '@dxos/echo';
 A feed is an append-only log of objects, such as the messages of a chat or the events of a sync.
 
 The feed itself is an ECHO object of type `org.dxos.type.feed`, stored in the space like any other. Its items are
-stored in blocks, apart from the space's documents.
+stored in blocks, apart from the space's documents, so a query over the space does not return them. To read them,
+name the feed in the query's `from`.
 
 See [Feeds](/docs/echo/concepts/feeds/) for the model of branches and walks.
 
 ## Make a feed and append to it
 
-`Feed.make` creates the feed object. Add it to the database first. `db.appendToFeed` then writes items in one batch.
+`Feed.make` creates the feed object, and `db.appendToFeed` writes items to it in one batch.
 
 **Example** (Making a chat feed and appending two messages)
 
 <Snippet file="guide-feed" region="make" />
 
-In this example, `db.add` stores the feed, and one call to `db.appendToFeed` writes both messages.
+`db.add` comes before the append, because `db.appendToFeed` writes only to a feed that the space already stores.
 
 ## Read a feed
 
-A walk reads items in the order they were appended. It is a query with a `Scope.feed` source and an `Order.natural`
-order.
+A walk reads a feed along one path of its tree of branches, in the order the items were appended. It is a query
+with a `Scope.feed` source and an `Order.natural` order.
 
 To read a page at a time, pass `limit`. To get the page after it, select with `Filter.feedCursor` from the cursor of
 the last item.
@@ -45,9 +46,9 @@ path.
 
 <Snippet file="guide-feed" region="read" />
 
-In this example, `messages` walks the main path from the oldest item. `next` resumes after the last message read,
-with the cursor from `Feed.getLocalCursor` and a `limit` of 50. `greetings` reads from the feed itself and keeps the
-messages whose text is "Hello".
+`Feed.getLocalCursor` reads the cursor from the last message of `messages`, and `next` reads the 50 after it.
+`positions: 'local'` says the cursor is a walk's own. The other kind is `'edge'`, for a cursor from
+`Feed.getCursor`.
 
 ## Indexing and retention
 
@@ -65,7 +66,8 @@ A write returns once the change is applied locally. It does not wait for the fee
 
 <Snippet file="guide-feed" region="options" />
 
-In this example, `Obj.update` writes both fields. `retention` sets one limit of 1,000 items and one of 30 days.
+`Obj.update` sets both options, because they are fields of the feed object. `retention` sets one limit of 1,000
+items and one of 30 days.
 
 ## Fork a feed
 
@@ -78,8 +80,8 @@ that branch.
 
 <Snippet file="guide-feed" region="fork" />
 
-In this example, the fork starts at `messages[0]` with one new message. `alternate` holds the path from the start of
-the feed to the end of the new branch.
+`alternate` holds two messages: the first message of the feed, where the fork starts, and the alternate reply. The
+second message of the main branch is not on that path.
 
 ## Remove items
 
@@ -89,12 +91,9 @@ ids and not the items.
 For an item on a branch that this client holds no copy of, pass `branches` to `removeFeedItemsByIds`, with the branch
 of each id. Without it, the item is removed from the root branch.
 
-**Example** (Deleting one message you hold, and others by id)
+**Example** (Removing one message you hold, and others by id)
 
 <Snippet file="guide-feed" region="remove" />
-
-In this example, `deleteFromFeed` takes the second message itself. `removeFeedItemsByIds` takes the id of each
-greeting.
 
 ## Members at a glance
 
@@ -105,8 +104,8 @@ greeting.
 | `getFeedUri`                             | The URI a `Scope.feed` source takes                  |
 | `getLocalCursor`                         | The cursor to resume a walk after an item            |
 | `getBranch` `isFork`                     | The branch an item is on, and whether it starts one  |
-| `db.appendToFeed` `db.deleteFromFeed`    | Write and delete items                               |
-| `db.removeFeedItemsByIds`                | Delete items by id                                   |
+| `db.appendToFeed` `db.deleteFromFeed`    | Append and remove items                              |
+| `db.removeFeedItemsByIds`                | Remove items by id                                   |
 | `db.forkFeed`                            | Start a branch                                       |
 | `db.syncFeed` `db.getFeedSyncState`      | Replicate a feed and read its progress               |
 

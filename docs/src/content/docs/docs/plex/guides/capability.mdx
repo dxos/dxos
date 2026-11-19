@@ -13,8 +13,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 ```
 
-A capability is a typed slot that modules contribute values to and other modules read. Capabilities are how plugins
-extend each other without importing each other.
+`Capability` declares capabilities, contributes to them and reads them. `Capabilities` holds the ones the framework
+defines. A capability is a typed slot that modules contribute values to and other modules read.
 
 ## Declare a new capability type
 
@@ -23,14 +23,15 @@ You declare a capability in one of two ways:
 - `Capability.make` declares a multi capability, which any number of modules contribute to.
 - `Capability.makeSingleton` declares a capability with exactly one provider.
 
-Both take the value's type and an NSID.
+Both take the value's type and an NSID, a reverse-domain name whose last segment is camelCase. Both return a **tag**,
+the value in code that names the capability.
 
 **Example** (Declaring a multi capability and a singleton)
 
 <Snippet file="app-framework-guide-capability" region="declare" />
 
-In this example, `Exporter` is a multi capability whose values have a `format` and an `export` function. `Clock` is a
-singleton whose value is a function that returns a `Date`.
+Each declaration is two calls. `Capability.make<Exporter>()` fixes the type of the values, and the call after it
+takes the NSID.
 
 `Plugin.namespace` derives the NSID from the plugin's key, so a plugin's capabilities share its prefix.
 
@@ -38,7 +39,8 @@ singleton whose value is a function that returns a `Date`.
 
 <Snippet file="app-framework-guide-capability" region="namespace" />
 
-Here, `ExportNamespace.makeSingleton` takes only the name `'settings'`, and the namespace supplies the prefix.
+`Settings` gets the NSID `com.example.plugin.export.capability.settings`. The namespace puts the plugin's key and
+`.capability.` in front of the name you pass.
 
 ## Contribute an implementation and request all implementations
 
@@ -48,7 +50,8 @@ To contribute, a module lists the capability in `provides` and returns `Capabili
 
 <Snippet file="app-framework-guide-capability" region="contribute" />
 
-In this example, `TextExporterModule` lists `Exporter` in `provides` and contributes one exporter for `text/plain`.
+`TextExporterModule` returns the contribution from its body. A body that listed `Exporter` in `provides` and returned
+nothing would not compile.
 
 To request a capability, a module lists it in `requires` and reads it with `yield*`. If the capability is a
 singleton, the module activates only after it is contributed.
@@ -59,8 +62,8 @@ singleton, the module activates only after it is contributed.
 
 <Snippet file="app-framework-guide-capability" region="request" />
 
-In this example, `ExportMenuModule` requires `Clock`, so `yield* Clock` returns the one clock.
-`Capability.getAll(Exporter)` returns every exporter, and the module logs their formats.
+`yield* Clock` returns the clock function itself, because `Clock` is a singleton. `Capability.getAll(Exporter)`
+returns an array, which is empty when no module has contributed an exporter.
 
 ## The built-in capabilities
 
@@ -80,8 +83,6 @@ A built-in capability is a tag like any other, and you request it the same way.
 
 <Snippet file="app-framework-guide-capability" region="builtin" />
 
-Here, `Capabilities.OperationInvoker` is a singleton, so `yield*` returns its one implementation.
-
 The App Toolkit's capabilities, such as settings and App Graph, are in
 [App capabilities](/docs/plex/guides/app-capabilities/).
 
@@ -90,14 +91,14 @@ The App Toolkit's capabilities, such as settings and App Graph, are in
 Contributions change as people turn plugins on and off. You can follow them in two ways:
 
 - `Capability.contributions` returns a live view with `get` and `subscribe`.
-- `Capability.atom` returns the same as an atom. Use it in reactive code.
+- `Capability.atom` returns the same list as an [atom](/docs/plex/resources/glossary/#atom), a reactive value that
+  code subscribes to. Use it in reactive code.
 
 **Example** (Subscribing to contributions from a module)
 
 <Snippet file="app-framework-guide-capability" region="later" />
 
-In this example, `ExportListModule` logs the formats each time the contributions change. The finalizer calls
-`unsubscribe` when the module deactivates.
+`subscribe` calls back with the whole list each time, not with the one contribution that changed.
 
 In React, `useCapabilities` re-renders on each change. See [React](/docs/plex/guides/react/).
 

@@ -11,10 +11,10 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 ```
 
-`ToggleGroup` is a set of buttons that toggle.
+A toggle group is a set of buttons that toggle. `ToggleGroup.Root` requires `type`:
 
-- `single` lets one item be on at a time.
-- `multiple` lets any number be on.
+- `type='single'` lets one item be on at a time.
+- `type='multiple'` lets any number be on.
 
 Arrow keys move between the items.
 
@@ -22,5 +22,5 @@ Arrow keys move between the items.
 
 | Part | What it is |
 | --- | --- |
-| `ToggleGroup.Root` | Holds which items are on |
+| `ToggleGroup.Root` | The root, which holds which items are on |
 | `ToggleGroup.Item` | One toggle |

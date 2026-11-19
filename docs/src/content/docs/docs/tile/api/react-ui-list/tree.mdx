@@ -14,10 +14,11 @@ import { Tree, createStaticTreeModel } from '@dxos/react-ui-list';
 ```
 
 ```sh
-npm install @dxos/react-ui-list
+npm install @dxos/react-ui-list @effect/atom-react
 ```
 
-`Tree` reads its rows from a model and reports what the user does to them.
+A tree is a list of nested rows that open and close. `Tree` reads its rows from a model and reports what the user
+does to them.
 
 The model keeps each row's open and current state in an atom.
 
@@ -31,18 +32,18 @@ the tree in a panel's body with no padding around it.
 
 | Part | What it is |
 | --- | --- |
-| `Tree.Root` | Takes the `model` and an `id`; reports `onOpenChange` and `onSelect` |
-| `Tree.Label` | Names the tree |
-| `Tree.Content` | Scrolls the rows; its child can render each row |
-| `Tree.Item` | One row, or a group header |
+| `Tree.Root` | The root, which takes the `model` and an `id`. It reports `onOpenChange` and `onSelect` |
+| `Tree.Label` | The tree's name |
+| `Tree.Content` | The scroll area for the rows. Its child can render each row |
+| `Tree.Item` | One row, or a section header |
 | `Tree.ItemIndicator` | The caret that opens a branch |
 | `Tree.ItemIcon` | The row's icon |
 | `Tree.ItemText` | The row's label |
 | `Tree.ItemCount` | A count badge |
-| `Tree.ItemActions` | Controls at the row's end, shown on the row in play |
+| `Tree.ItemActions` | The controls at the row's end. They show on a row that is hovered, focused, selected or holding an open menu |
 | `Tree.ItemGroup` | A section header |
-| `Tree.ItemGroupLabel` | A section header's label |
-| `Tree.Empty` | Stands in for the rows while there are none |
+| `Tree.ItemGroupLabel` | The section header's label |
+| `Tree.Empty` | The placeholder shown while there are no rows |
 
 ## Show nested rows
 
@@ -53,7 +54,7 @@ to show for the item.
 
 <Snippet file="tile-guide-lists" region="data" lang="tsx" />
 
-Here, each `Folder` keeps its children in `items`.
+Each `Folder` keeps its children in `items`.
 
 When the user opens a row or selects it, the tree calls `onOpenChange` or `onSelect`. Write the new state to the row's
 atom, and the tree draws it.
@@ -64,8 +65,7 @@ atom, and the tree draws it.
 
 <TilePreview id="folder-tree" height="14rem" />
 
-In this example, `getChildren` returns a folder's `items`, and `getProps` gives each row its label and icon.
-`handleOpenChange` and `handleSelect` write `open` and `current` to the atom that `model.stateAtom` returns for the
-row's path.
+`getChildren` returns a folder's `items`, and `getProps` gives each row its label and icon. `handleOpenChange` and
+`handleSelect` write `open` and `current` to the atom that `model.stateAtom` returns for the row's path.
 
 A tree over App Graph, such as Composer's navigation, gets its model from the graph instead.

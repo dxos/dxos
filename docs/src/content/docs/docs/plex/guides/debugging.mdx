@@ -5,13 +5,17 @@ description: Find out why a module did not activate or a contribution did not sh
 
 import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 
-Most plugin bugs are one of three things. The plugin did not load, a module did not activate, or a contribution
-reached the app but did not show where you expected. Start with the inspector, which shows all three.
+By the end of this guide, you can tell which of three things went wrong with a plugin. The plugin did not load, a
+module did not activate, or a contribution reached the app and did not show where you expected.
+
+The inspector, a small PLEX app in these docs that loads one plugin, shows the first two. Composer Preview shows the
+third.
 
 ## Load the plugin into the inspector
 
 Start the plugin's dev server in its folder with `npm run dev`, then click **Load dev plugin** below. The inspector
-loads the plugin from `http://localhost:3967/manifest.json`, the same way Composer does.
+loads the plugin from its manifest, the `manifest.json` that the dev server serves at
+`http://localhost:3967/manifest.json`. Composer loads it the same way.
 
 <InspectorEmbed adds={[]} />
 
@@ -46,4 +50,4 @@ Breakpoints and `console.log` work as in any Vite app. To load your latest edit,
 
 - The inspector shows one plugin. A bug that depends on another plugin, such as a surface another plugin's surface
   outranks, shows only in Composer.
-- Only Composer Preview loads dev plugins, and composer.space does not.
+- Only Composer Preview loads a plugin from a dev server. The app at composer.space does not.

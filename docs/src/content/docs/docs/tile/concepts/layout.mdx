@@ -6,22 +6,26 @@ description: The Panel and ScrollArea container model, and the layout primitives
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
-TILE lays out a screen with a few primitives instead of hand-written flex and grid classes. A `Panel` is the shell of a
-pane, `ScrollArea` makes its body scroll, and `Flex`, `Grid` and `Container` arrange what is inside.
+TILE lays out a screen with a few components instead of hand-written flex and grid classes. A `Panel` is the shell of
+a pane, `ScrollArea` makes its body scroll, and the layout primitives, such as `Flex`, `Grid` and `Container`, arrange
+what is inside.
 
 ## Model
 
-In plain CSS, a pane with a fixed header and a scrolling body takes a flex column, a `min-height: 0` and an
-`overflow`, each on the right element. If you miss one, the whole page scrolls where the pane should. With TILE, you
-compose the pane from a panel and a scroll area instead.
+A pane with a fixed header and a scrolling body is easy to get wrong by hand. It takes a flex column, a
+`min-height: 0` and an `overflow`, each on the right element, and if you miss one, the whole page scrolls where the
+pane should. With TILE, you compose the pane from a panel and a scroll area instead.
 
 **A panel has three rows.** `Panel.Root` is a grid whose rows are `Panel.Header`, `Panel.Body` and `Panel.Footer`. The
-header and footer take the height of their content, and the body takes the rest. The panel fills its parent, so its
-parent needs a height.
+header and footer take the height of their content, and the body takes the rest.
 
-**The height chain.** For the body to scroll, every element between the panel and the scrolling content must pass the
-height down. `Panel.Body asChild` makes the `ScrollArea.Root` the body itself, and `ScrollArea.Viewport asChild` makes
-the content the viewport. This way, no extra element breaks the chain.
+Use a panel as the outer shell of a pane. It fills its parent, so its parent needs a height.
+
+**The height chain.** The height chain is the run of elements from the panel down to the content that scrolls. For
+the body to scroll, each of them must pass its height down.
+
+`Panel.Body asChild` makes the `ScrollArea.Root` the body itself, and `ScrollArea.Viewport asChild` makes the content
+the viewport. This way, no extra element breaks the chain.
 
 **Example** (Building a panel with a scrolling body)
 
@@ -29,33 +33,40 @@ the content the viewport. This way, no extra element breaks the chain.
 
 <TilePreview id="panel" height="20rem" />
 
-In this example, the header and the footer each hold a toolbar, and the contacts scroll between them. The rows sit in a
-`Layout.Container` with `gutter='rail'`, and each row's icon sits in a `Layout.Block`.
+`ContactsPanel` puts four parts between the panel and its rows: the body, the scroll area's root, its viewport and a
+`Layout.Container`. The two `asChild` lines fold them into two elements. Each row's icon sits in a `Layout.Block`, in
+the rail that `gutter='rail'` leaves.
 
-**Layout primitives.** All of these are in the `Layout` namespace. `Flex`, `Grid` and `Container` take `asChild`, so
-you can lay out a semantic element such as a `<header>` or `<ul>` without an extra wrapper. `Block`, `Columns` and
-`Separator` do not take it:
+**Layout primitives.** A layout primitive is one of the six components in the `Layout` namespace, which place
+content and own its spacing. `Flex`, `Grid` and `Container` take `asChild`, so you can lay out a semantic element such
+as a `<header>` or `<ul>` without an extra wrapper. `Block`, `Columns` and `Separator` do not take it. The table says
+what each one arranges and when to use it:
 
 | Primitive   | Arranges                                                                                       |
 | ----------- | ---------------------------------------------------------------------------------------------- |
-| `Flex`      | Children along one axis. `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`         |
-| `Grid`      | Children in tracks. `cols={3}` for equal columns, `cols={['min', 'fill']}` for a label column and the rest, `cols='subgrid'` to share a parent's tracks |
-| `Container` | Content between two gutters, so rows line up with the panel's edges. `gutter='rail'` leaves room for an icon column |
-| `Block`     | One slot in a container's rail, sized so an icon and an icon button line up                    |
-| `Columns`   | A horizontal run of as many columns as fit, which scrolls one column at a time                 |
-| `Separator` | A rule between groups                                                                          |
+| `Flex`      | Children along one axis. Use it for a row of controls or a stack of fields. Its props are `column`, `gap`, `align`, `justify`, `wrap`, `grow` and `center` |
+| `Grid`      | Children in tracks. Use it when columns must line up, or when one track has a fixed size. `cols={3}` gives equal columns, `cols={['min', 'fill']}` a label column and the rest, and `cols='subgrid'` the parent's tracks |
+| `Container` | Content between two gutters, so rows line up with the panel's edges. Use it for the rows of a panel's body. `gutter='rail'` leaves room for an icon column |
+| `Block`     | One slot in the rail of a `Container`, sized so an icon and an icon button line up. Use it for the icon at the start or the end of a row |
+| `Columns`   | A horizontal run of as many columns as fit, which scrolls one column at a time. Use it for a drill-down, where each choice opens a column beside the last |
+| `Separator` | A rule between groups. Use it to part two groups of rows or of controls                        |
+
+A **gutter** is the space at the start and at the end of the rows of a `Layout.Container`.
 
 **`gap` takes steps, not numbers.** `Flex` and `Grid` take `gap='xs'` through `'2xl'`, plus `'form'` and
-`'form-section'` for the spacing between fields. Steps keep spacing consistent. A literal such as `gap-2` drifts.
+`'form-section'` for the spacing between fields. Steps keep the spacing the same from one screen to the next. A
+literal such as `gap-2`, passed in `classNames`, still applies, and that screen then drifts from the rest.
 
 ## Behavior
 
-- **Sizing is physical.** Use `w-*`, `h-*`, `min-w-*` and `max-h-*` for width and height.
-- **Spacing that depends on direction is logical.** Use `ps-*` and `pe-*` for padding, `ms-*` and `me-*` for margin,
-  and `start-*` and `end-*` for insets. These flip in a right-to-left language.
+- Width and height use physical classes: `w-*`, `h-*`, `min-w-*` and `max-h-*`. A physical class names an axis of the
+  screen, which is the same in every language.
+- Spacing that depends on the reading direction uses logical classes: `ps-*` and `pe-*` for padding, `ms-*` and
+  `me-*` for margin, and `start-*` and `end-*` for insets. A logical class names the start or the end of a line, so
+  it flips in a right-to-left language.
 - By default, `Flex` sets no `align`, so children stretch as they do in plain CSS.
-- `grow` on a `Flex` or `Grid` makes it take the slack of its parent and clip what overflows. That is the link a
-  scrolling child needs.
+- `grow` on a `Flex` or `Grid` makes it take the slack of its parent and clip what overflows. A child that scrolls
+  needs that from its parent, as a link in the height chain.
 
 ## Limits
 

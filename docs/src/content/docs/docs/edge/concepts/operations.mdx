@@ -6,61 +6,58 @@ description: A typed action with an input and output schema, invoked by key.
 import Snippet from '../../../../../components/Snippet.astro';
 
 An operation is the unit of compute in DXOS. It is a typed action that you define once. Whoever needs it runs it: a
-person through the UI, an agent as a tool, or a trigger.
+person through the UI, an agent as a tool, or a trigger. A trigger is an object that starts an operation on a schedule
+or an event.
 
 ## Model
 
 An HTTP endpoint has a path, a request body and a response body. An operation has the same three parts: a key, an input
 schema and an output schema.
 
-**Definition.** `Operation.make` builds a definition from a key, metadata and two schemas:
+**Definition.** `Operation.make` builds a **definition** from metadata and two schemas:
 
-- The **key** is a DXN, such as `com.example.operation.stashedLink.markRead`, and it names the operation everywhere it
-  runs.
-- The **metadata** gives a name, a description and an icon. The description is what an agent reads when it decides
-  whether to call the operation.
-- The **input and output schemas** are Effect schemas. Their field descriptions tell people and agents what to pass.
-- A definition can also list the ECHO **types** it uses, so the types are known where it runs remotely, and the
-  **services** its handler needs.
+- The metadata, `meta`, holds the key, a name, a description and an icon. The **key** is a DXN, such as
+  `com.example.operation.stashedLink.markRead`, and it names the operation everywhere it runs. The description is
+  what an agent reads when it decides whether to call the operation.
+- The input and output schemas are Effect schemas. Their field descriptions tell people and agents what to pass.
+- A definition can also list the ECHO types it uses, so the types are known where it runs remotely, and the
+  `services` its handler needs.
 
 **Example** (Defining an operation)
 
 <Snippet file="plex-tutorial/src/types/StashedLinkOperation" region="operation" />
 
-In this example, `MarkRead` is a definition on its own, with no handler attached. `meta` holds the key, the name, the
-description and the icon. `services` lists `Database.Service`, which the handler needs to resolve the reference in the
-link's space. The input is one field, `link`, and the output is `Schema.Void`.
+`MarkRead` has no handler yet. Its one input field, `link`, is a reference to the link, not the link itself, and its
+output is `Schema.Void`, so a caller gets nothing back.
 
-**Handler.** A handler takes the input and returns an Effect that produces the output. `Operation.withHandler`
+**Handler.** A **handler** takes the input and returns an Effect that produces the output. `Operation.withHandler`
 attaches one to a definition.
 
 **Example** (Attaching a handler)
 
 <Snippet file="plex-tutorial/src/operations/mark-read" region="handler" />
 
-In this example, `MarkRead.pipe(Operation.withHandler(...))` returns the definition with its handler attached. The
-handler resolves the `link` reference with `Database.resolve`, which it can do because the definition lists
-`Database.Service`. It then sets `read` to `true` inside `Obj.update`. It returns nothing, because the output is
-`Schema.Void`.
+`handler` is the `MarkRead` definition with its handler attached. The handler can call `Database.resolve` because the
+definition lists `Database.Service`. It then sets `read` to `true` inside `Obj.update`.
 
-The definition and the handler are separate values. This means a package can publish the definition for others to call
+The definition and the handler are separate values, so a package can publish the definition for others to call
 without shipping how it runs.
 
 `Operation.lazyHandler` names the module that holds the handler. Use it when the code should load only on the first
 call.
 
-**Registry and invoker.** A **handler set** is a group of handlers that a runtime loads together. A PLEX plugin
-contributes one through a capability. See PLEX's [Operations](/docs/plex/concepts/operations/).
+A **handler set** is a group of handlers that a runtime loads together. A PLEX plugin contributes one through a
+capability. See PLEX's [Operations](/docs/plex/concepts/operations/).
 
-When a caller invokes an operation, the **invoker** does four things in order:
+**The invoker.** The **invoker** runs an operation for a caller. It does four things in order:
 
 1. It finds the handler by the definition's key.
 2. It checks the input against the input schema.
 3. It runs the handler with the services it declared.
 4. It checks the output.
 
-The **registry** holds every definition as an ECHO object. This means agents and the MCP server can search the
-operations a space offers.
+The **operation registry** holds each definition as an ECHO object, so agents and the MCP server can search the
+operations a space offers. A definition whose metadata sets `skipRegistry` is left out of it.
 
 **Annotations.** A definition carries hints for its callers:
 
@@ -68,7 +65,7 @@ operations a space offers.
 | ---------- | ---- |
 | Mutation   | Whether the operation changes nothing, writes, or destroys data         |
 | Idempotent | Whether running it twice with the same input has the same effect as once |
-| Visible    | Whether people can pick it, as in the command palette; unmarked operations are hidden |
+| Visible    | Whether people can pick it, as in a trigger's operation picker. Unmarked operations are hidden |
 
 ## Behavior
 
@@ -90,7 +87,8 @@ operations a space offers.
 
 ## Limits
 
-- Input and output must be serializable, because a call may cross to another worker or to EDGE. Pass ECHO objects by
-  reference.
+- Input and output must be serializable, because a call may cross to a browser worker or to EDGE. Pass ECHO objects
+  by reference.
 - A handler gets only the services its definition declares and the ones every process has. It does not get the UI.
-- If you mark an operation as UI-only, it is left out of the registry, so agents and the MCP server cannot find it.
+- An operation that sets `skipRegistry` is not in the operation registry, so agents and the MCP server cannot find it.
+  Use it for an operation that only makes sense in the UI.

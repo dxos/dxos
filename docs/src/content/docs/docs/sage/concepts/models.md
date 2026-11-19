@@ -3,17 +3,18 @@ title: Models
 description: The model an agent uses, and how DXOS picks and calls it.
 ---
 
-SAGE calls models through one service. This means an agent, the assistant and an operation that needs a model all ask
-for one the same way. The caller names a model, and the service finds a provider that serves it.
+SAGE calls models through one service, `AiService`. An agent, Composer's assistant and an operation that needs a
+model all ask for one the same way. The caller names a model, and the service finds a provider that serves it.
 
 ## Model
 
-When you call an LLM API directly, the model and the vendor that serves it come as a pair, in one SDK with one API key.
-SAGE separates the two.
+A model SDK ties a model to the vendor that serves it, in one package with one API key. SAGE separates the two.
 
-**Models and providers.** A model has an id, which is a DXN in its developer's namespace. Several providers can serve
-the same id. A provider is who serves the model: EDGE for hosted models, or a local server. Each pairing has its own
-back-end name and characteristics, such as the context window and whether the model accepts images.
+**Models and providers.** A **model** has an id, which is a DXN in its developer's namespace. A **provider** is who
+serves the model: EDGE for hosted models, or a local server.
+
+Several providers can serve the same id. Each pairing has its own back-end name and characteristics, such as the
+context window and whether the model accepts images.
 
 | Provider  | Serves                                                          |
 | --------- | --------------------------------------------------------------- |
@@ -22,11 +23,16 @@ back-end name and characteristics, such as the context window and whether the mo
 | Ollama    | Local models on an Ollama server the user runs                  |
 | LM Studio | Local models on an LM Studio server the user runs               |
 
-**The AI service.** If your operation needs a model, it declares the AI service and asks it for a model by id. The
-service returns a layer for that model, which the operation provides to its model calls.
+**`AiService`.** If your operation needs a model, it declares `AiService` and asks it for a model by id. The service
+returns a layer for that model, which is the Effect value that supplies it. The operation provides the layer to its
+model calls.
 
-**Resolution.** Resolvers are chained. A resolver serves the models it knows, and passes the rest, or any it fails to
-reach, to the one below it. The default provider is EDGE, so a local resolver can sit in front and fall back to EDGE.
+EDGE's AI service is a different thing. It is the EDGE service that calls hosted models, and it stands behind the EDGE
+provider.
+
+**Resolution.** A **resolver** maps a model id to a provider that can serve it. Resolvers are chained. A resolver
+serves the models it knows, and passes the rest, or any it fails to reach, to the one below it. By default the provider
+is EDGE, so a local resolver can sit in front and fall back to EDGE.
 
 **Kinds of model.** The service resolves language models, which hold a conversation. It also resolves decision models,
 which pick from a fixed set of answers, and extraction models, which pull structured facts from text.

@@ -12,19 +12,19 @@ import * as FloatingPanel from '@dxos/react-ui/FloatingPanel';
 ```
 
 A floating panel is a window the user can drag, resize, minimize and maximize. The panel keeps its own position, size
-and stage. Several open panels stack in the order they were last used.
+and stage, which is `minimized`, `maximized` or `default`. Several open panels stack in the order they were last used.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `FloatingPanel.Root` | Holds the open state, position and size |
-| `FloatingPanel.Trigger` | Opens the panel |
+| `FloatingPanel.Root` | The root, which holds the open state, position and size |
+| `FloatingPanel.Trigger` | The control that opens the panel |
 | `FloatingPanel.Content` | The window |
 | `FloatingPanel.Header` | The title row |
 | `FloatingPanel.DragTrigger` | The area the user drags the panel by |
-| `FloatingPanel.Title` | Names the window |
+| `FloatingPanel.Title` | The window's name |
 | `FloatingPanel.Control` | The buttons at the end of the header |
-| `FloatingPanel.StageTrigger` | Minimizes, maximizes or restores |
-| `FloatingPanel.CloseTrigger` | Closes the panel |
-| `FloatingPanel.Body` | The content; it scrolls itself |
+| `FloatingPanel.StageTrigger` | The button that minimizes, maximizes or restores the panel |
+| `FloatingPanel.CloseTrigger` | The button that closes the panel |
+| `FloatingPanel.Body` | The area under the header. It clips, so its content scrolls itself |

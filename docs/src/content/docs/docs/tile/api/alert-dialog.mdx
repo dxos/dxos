@@ -11,20 +11,20 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 ```
 
-An alert dialog asks the user to confirm or cancel. Only its own buttons close it. It opens with focus on `Cancel`,
-the least destructive choice.
+An alert dialog is a dialog that asks the user to confirm or cancel. Only its own buttons close it. It opens with
+focus on `AlertDialog.Cancel`, the least destructive choice.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `AlertDialog.Root` | Holds the open state |
-| `AlertDialog.Trigger` | Opens the dialog |
+| `AlertDialog.Root` | The root, which holds the open state |
+| `AlertDialog.Trigger` | The control that opens the dialog |
 | `AlertDialog.Content` | The dialog itself |
-| `AlertDialog.Header` | The row that holds the Title |
-| `AlertDialog.Title` | Names the dialog |
-| `AlertDialog.Description` | What confirming will do |
+| `AlertDialog.Header` | The row that holds `AlertDialog.Title` |
+| `AlertDialog.Title` | The dialog's name |
+| `AlertDialog.Description` | The text that says what confirming will do |
 | `AlertDialog.Body` | Any further content |
 | `AlertDialog.Footer` | The row of buttons |
-| `AlertDialog.Cancel` | Closes the dialog without acting |
-| `AlertDialog.Action` | Confirms: runs `onClick`, then closes unless the handler prevents it |
+| `AlertDialog.Cancel` | The button that closes the dialog without acting |
+| `AlertDialog.Action` | The button that confirms. It runs `onClick`, then closes the dialog unless the handler prevents it |

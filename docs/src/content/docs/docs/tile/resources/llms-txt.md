@@ -3,8 +3,8 @@ title: llms.txt
 description: The TILE site map and full text for agents, in the llms.txt format.
 ---
 
-Point an agent at these files before you ask it to work with TILE. They follow the [llms.txt](https://llmstxt.org/)
-format and cover every written page of this section.
+This page lists the two files that hold TILE's docs for a coding agent. Point your agent at them before you ask it
+to work with TILE. They follow the [llms.txt](https://llmstxt.org/) format and cover every page of this section.
 
 | File                                         | Contents                                                   |
 | -------------------------------------------- | ---------------------------------------------------------- |

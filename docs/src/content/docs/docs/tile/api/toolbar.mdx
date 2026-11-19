@@ -29,15 +29,15 @@ items. See [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/).
 
 ## `Toolbar.Root`
 
-`Toolbar.Root` is the row. Any TILE control you put inside it joins its arrow-key order.
+`Toolbar.Root` takes these props:
 
-| Prop          | Type                           | Effect                                                    |
-| ------------- | ------------------------------ | --------------------------------------------------------- |
-| `size`        | `Size`                         | The size of every control in it                           |
-| `orientation` | `'horizontal' \| 'vertical'`   | The axis the arrow keys move along                        |
-| `loop`        | boolean                        | Wrap from the last item to the first. On by default       |
-| `disabled`    | boolean                        | Disable every control                                     |
-| `inactive`    | boolean                        | Dim the controls without disabling them                   |
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `size` | `Size` | Sets the size of every control in the toolbar |
+| `orientation` | `'horizontal' \| 'vertical'` | Sets the axis the arrow keys move along |
+| `loop` | `boolean` | Wraps from the last item to the first. `true` by default |
+| `disabled` | `boolean` | Disables every control |
+| `inactive` | `boolean` | Dims the controls without disabling them |
 
 ## Toolbars built from actions
 

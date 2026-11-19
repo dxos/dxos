@@ -5,7 +5,7 @@ description: The contract people and agents both work from, with what to build, 
 
 A spec says what a piece of software should do, in text that a person can read and an agent can act on. It records who
 decided each part, people and agents alike. It can also be checked. A review says how far the code meets each item, and
-its tests are steps that a person can follow and an agent can run.
+the spec's tests are steps that a person can follow and an agent can run.
 
 ## Model
 
@@ -19,14 +19,14 @@ numbered requirements, and tests.
 Simple requirements stay as prose. The block types are themselves declared in DEUS, so a project can add its own. The
 language and its tools are in `@dxos/deus`.
 
-**The changelog.** Every change to a spec is a decision in its changelog. A decision says what is now true, the day it
-was made, why, and who made it. The author is written as `user:` for a person, or `agent:` for an agent, with the
+**The changelog.** Every change to a spec is a **decision** in its changelog. A decision says what is now true, the day
+it was made, why, and who made it. The author is written as `user:` for a person, or `agent:` for an agent, with the
 person it acted for.
 
 A choice nobody has made yet is a question, which a later decision answers. When you read the changelog, you can tell
 which parts of a spec a person decided and which an agent proposed.
 
-**Reviews.** A review reads the code at one commit and gives each spec item a verdict, with the code it read as
+**Reviews.** A **review** reads the code at one commit and gives each spec item a verdict, with the code it read as
 evidence:
 
 | Verdict    | Means                                     |

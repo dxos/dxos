@@ -55,24 +55,29 @@ through a hook. Two rules decide when a component re-renders:
 
    <Snippet file="echo-tutorial/app/PeerApp" region="provider" lang="tsx" />
 
-   Notice that the app also keeps the space it shows in state, so Join can switch it to another.
+   `setSpace` keeps the space the app shows in React state, so `handleJoin` can switch it to a space the user
+   joined. The `key` on `Contacts` remounts the component for the new space.
 
    <Aside type="caution" title="One client per page load">
      Open the client once per page load. In development, `StrictMode` runs each effect twice. Two clients on the same
-     storage race to create the identity, so a reload can come back with the other one and none of its records. Start
-     `openSpace` at module level, `const opened = openSpace();`, and await that promise in the effect.
+     storage race to create the identity, so a reload can come back with the other one and none of its records.
+
+     The tutorial app renders without `StrictMode`, so it calls `openSpace` in an effect. If your app uses
+     `StrictMode`, start `openSpace` at module level, `const opened = openSpace();`, and await that promise in the
+     effect.
    </Aside>
 
 3. **Query the space.** `useQuery` takes a database and a query. It returns the current results and re-renders the
-   component when they change. Here it runs the app's queries from [Querying](/docs/echo/learn/querying/):
+   component when they change. The app passes it the queries from [Querying](/docs/echo/learn/querying/):
 
    <Snippet file="echo-tutorial/app/Contacts" region="query" lang="tsx" />
 
-   A query returns the same live object for an id every time, so a renamed record leaves the results array as it was.
-   For this reason, the app's list reads its labels with `useLabels`, which re-renders the list when a label changes.
+   `allPeople` stays the same array when a person is renamed, because a query returns the same live object for an id
+   every time. Further down `Contacts.tsx`, the list reads its labels with `useLabels` from `@dxos/echo-react`, which
+   re-renders the list when a label changes.
 
    To show only the records whose field has a value, put the field in the query, as in
-   `Filter.type(Todo, { completed: false })`. The results then change when a record's field does. However, a
+   `Filter.type(Person, { name: 'Ada' })`. The results then change when a record's field does. However, a
    `.filter()` over the results in render reads the fields straight off the objects, so the list goes stale.
 
 4. **Show a record.** `useObject` returns a snapshot of the object and re-renders the component when the object
@@ -80,8 +85,8 @@ through a hook. Two rules decide when a component re-renders:
 
    <Snippet file="echo-tutorial/app/RecordForm" region="title" lang="tsx" />
 
-   Here, `Obj.getLabel` reads the label from `snapshot` and not from `record`, so the title follows a rename by any
-   peer.
+   `Obj.getLabel` takes `snapshot` and not `record`. The hook returns a new snapshot on each change, and that new
+   value is what makes React render the title again.
 
    <Aside type="caution" title="Read through the snapshot">
      Read fields through the snapshot from `useObject`. A field read straight off the ECHO object shows its value at
@@ -94,7 +99,8 @@ through a hook. Two rules decide when a component re-renders:
 
    <Snippet file="echo-tutorial/app/RecordForm" region="edit" lang="tsx" />
 
-   Notice that `handleChange` writes only the fields that changed, and only while the form is valid.
+   `handleChange` writes only while `isValid` is true, so a half-typed email never reaches the database. `omitId`
+   leaves `id` out of the form's schema.
 
    `ObjectForm` from the same package does all of this in one component:
 
@@ -107,14 +113,16 @@ through a hook. Two rules decide when a component re-renders:
 
    <Snippet file="echo-tutorial/app/RecordForm" region="create" lang="tsx" />
 
-   Here, `handleSave` makes the record with `Obj.make` and adds it with `db.add`.
+   `Form.Actions` adds the save button, which calls `handleSave`. The edit form in step 5 has none, because it
+   writes as you type.
 
 </Steps>
 
 ## Try it
 
 This is the app with every piece in place. The lists, the table and the graph all read with `useQuery`, and the form
-writes inside `Obj.update`.
+writes inside `Obj.update`. The [Tasks sample](/docs/additional-resources/samples#tasks) is another complete app
+built this way.
 
 <TutorialEmbed stage="complete" />
 
@@ -136,21 +144,21 @@ writes inside `Obj.update`.
 
 <Snippet file="react" region="client" lang="tsx" />
 
-In this example, `client` is a module-level value, so code outside the component tree can use it.
+`client` is a module-level value, so code outside the component tree can use it.
 
 ### Pass a config
 
-`config` takes a function that returns a `Config`, built from the same sources as in the
-[Configuration guide](/docs/echo/guides/configuration/).
+`config` takes a function that returns a `Config`, built from the same sources as in
+[Configuration](/docs/echo/guides/configuration/).
 
 **Example** (Loading the config from files)
 
 <Snippet file="react" region="config" lang="tsx" />
 
-Here, the config comes from `Local` and `Defaults`, and `Local` comes first so that it overrides the defaults.
+`Local` comes before `Defaults`, so its settings override the defaults. The function is `async`, and the provider
+waits for it before it makes the client.
 
 ## What you can do now
 
-You can provide a client to a React app and query a space from a component. You can show a record that re-renders on
-every change, and edit records with a form built from their schema. The
-[Tasks sample](/docs/additional-resources/samples#tasks) is another complete app built this way.
+You can provide a client to a React app, query a space from a component, show a record that follows every change,
+and edit records with a schema form.

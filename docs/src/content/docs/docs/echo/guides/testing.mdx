@@ -24,23 +24,24 @@ both in memory, without an identity or a server, so tests run fast in Node.
 
 <Snippet file="echo-guide-testing" region="database" />
 
-Notice the flush before the query. `flush({ indexes: true })` waits until queries see what the test wrote, so a read
-right after a write does not race the index.
+`db.flush({ indexes: true })` waits until the write is on disk and in the index, so the `run` on the next line does
+not race the index. `indexes` is on by default. The sample names it to show what the test waits for.
 
 ## Replicate between peers
 
 Each peer from `createPeer` has its own storage, like a separate device. A `TestReplicationNetwork` from
-`@dxos/echo-host/testing` connects them in memory.
+`@dxos/echo-host/testing` connects them in memory. Each peer joins the network by passing one of its replicators to
+`host.addReplicator`.
 
-One peer creates the space, and the other opens it from the space's root URL. `waitUntilHeadsReplicated` waits until
-one peer has all the changes another has made.
+One peer creates the space, and the other opens it from the space's root URL, the address of the space's root
+document. `waitUntilHeadsReplicated` waits until one peer has all the changes another has made.
 
 **Example** (Replicating a write from one peer to another)
 
 <Snippet file="echo-guide-testing" region="peers" />
 
-In this example, `db1` adds a person on the first peer. The last line returns once `db2` has every change that `db1`
-made.
+`getDocumentHeads` returns the heads of `db1`, which are the ids of the latest changes in each of its documents.
+`db2` has caught up once it holds those changes, and the last line waits for exactly that.
 
 Use two peers when you test what happens when both write. Make the writes on each peer, wait for each to have the
 other's changes, then check that both show the same result.

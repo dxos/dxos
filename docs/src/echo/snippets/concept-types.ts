@@ -60,7 +60,7 @@ const Note = Type.makeObjectFromJsonSchema({
 // #endregion json-schema
 
 // #region fields
-// Stored in the space, so it replicates to the other members.
+// Stored in the space, so it replicates to the other peers.
 const note = await db.addType(Note);
 Type.addFields(note, { pinned: Schema.optional(Schema.Boolean) });
 // Replaces the declaration of a field the type already has.
