@@ -1,19 +1,25 @@
 diagram kind=grid size=1600x880 cols=4 gap=64 padding=48
 
 group inbound-body gap=24 {
-  group inbound-col-0 gap=16 autoRows=176 alignContent=center {
-    node email "Email" kind=feed-card feed=9 footer="plugin-inbox · JMAP" icon=envelope
-    node discord "Discord" kind=feed-card feed=9 footer=plugin-discord icon=discord-logo
-    node chat "Calendar" kind=feed-card feed=9 footer=plugin-thread icon=chat-circle-dots
+  group inbound-col-0 rows="464 304" gap=16 {
+    group inbound-triage gap=16 autoRows=176 alignContent=center {
+      node email "Email" kind=feed-card feed=9 footer="plugin-inbox · JMAP" icon=envelope
+      node discord "Discord" kind=feed-card feed=9 footer=plugin-discord icon=discord-logo
+    }
+    group inbound-planner autoRows=176 alignContent=center {
+      node chat "Calendar" kind=feed-card feed=9 footer=plugin-thread icon=chat-circle-dots
+    }
   }
 }
 
 group agents-body gap=24 {
-  group agents-col-0 rows="368 176" gap=16 alignContent=center {
+  group agents-col-0 rows="464 304" gap=16 {
     group triage-cell autoRows=176 alignContent=center {
       node triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=violet
     }
-    node planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=sheet
+    group planner-cell autoRows=176 alignContent=center {
+      node planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=sheet
+    }
   }
 }
 

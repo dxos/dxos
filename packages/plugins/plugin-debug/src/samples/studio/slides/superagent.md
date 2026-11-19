@@ -1,9 +1,9 @@
 ---
-title: 'SuperAgent'
+title: 'SuperAgents'
 layout: 'default'
 ---
 
-# SuperAgent
+# SuperAgents
 
 <Surface ref="{{superagent}}" />
 
