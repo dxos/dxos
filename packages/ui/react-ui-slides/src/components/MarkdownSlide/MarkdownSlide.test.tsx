@@ -288,6 +288,16 @@ describe('MarkdownSlide', () => {
     expect(classes).toContain('[&amp;_:is(ul,ol)]:ml-10');
   });
 
+  test('a title box sets its name in the brand\u2019s display face, not the deck\u2019s heading font', ({ expect }) => {
+    const markup = render('<Box variant="title">\n\n# composer\n\n</Box>');
+    const classes = markup.match(/<h1 [^>]*class="([^"]*)"/)?.[1] ?? '';
+    // Its size and place were measured for Poiret One, so the deck's own font must not reach it.
+    expect(classes).toContain('font-[&#x27;Poiret_One&#x27;,ui-sans-serif,sans-serif]');
+    expect(classes).not.toContain('--slide-font-heading');
+    // A heading outside the box still takes the deck's.
+    expect(render('# composer')).toMatch(/<h1 [^>]*class="[^"]*font-\(family-name:--slide-font-heading\)/);
+  });
+
   test('a card with no title still shows its icon', ({ expect }) => {
     const markup = render('<Card icon="brain">\n\nJust text\n\n</Card>');
     expect(markup).toMatch(/<article [^>]*><header [^>]*><svg [^>]*>.*?<\/svg><\/header><div [^>]*><p /);
