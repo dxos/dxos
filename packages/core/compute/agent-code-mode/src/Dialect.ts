@@ -6,7 +6,8 @@ import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
 import { ABRIDGED_UNION, type FieldDescription, type TypeDescription, renderFields } from '@dxos/assistant/Describe';
-import type * as Operation from '@dxos/compute/Operation';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
+import * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -87,6 +88,12 @@ export type InstructionsContext = {
 };
 
 /**
+ * Named by its tool name, the one the Operations section lists: another skill's type listing sits beside it and may not
+ * know every type.
+ */
+const QUERY_TYPES = Operation.toolName(SkillManagerSkill.Operations.QueryTypes);
+
+/**
  * The types section of the API reference, shared by the dialects. `name` renders the identifier a
  * dialect's code names a type by — its typename, or the DXN it resolves.
  */
@@ -95,7 +102,7 @@ export const renderTypes = (
   name: (type: SandboxType) => string = ({ typename }) => typename,
 ): string =>
   types === undefined
-    ? "### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's `queryTypes`."
+    ? `### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's \`${QUERY_TYPES}\`, which searches every registered type.`
     : types.length === 0
       ? '### Types\n\nNo types are registered.'
       : trim`
