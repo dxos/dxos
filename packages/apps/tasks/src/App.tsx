@@ -135,6 +135,12 @@ export const App = () => {
         if (!client.halo.identity.get() && !searchProps.has('deviceInvitationCode')) {
           await client.halo.createIdentity();
         }
+
+        // Home renders nothing until a space exists, and the SDK no longer creates a default one.
+        if (client.halo.identity.get() && client.spaces.get().length === 0 && !searchProps.has('spaceInvitationCode')) {
+          const space = await client.spaces.create();
+          await space.waitUntilReady();
+        }
       }}
     >
       <RegistryContext.Provider value={registry}>
