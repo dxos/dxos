@@ -12,11 +12,11 @@ An action is a [node](#node) in [App Graph](#app-graph) that stands for somethin
 Its data is a function that returns an Effect. Its [disposition](#disposition) says where it appears. See
 [App Graph](/docs/plex/guides/app-graph/).
 
-### Activation event
+### [Activation event](/docs/plex/concepts/activation/)
 
 An activation event is a named moment in an app's life, such as startup or the first time a view is needed. A
 [module](#module) names the event it waits for, and the [plugin manager](#plugin-manager) loads the module when the
-event fires. See [Activation](/docs/plex/concepts/activation/).
+event fires.
 
 ### Annotation
 
@@ -54,25 +54,25 @@ A builder extension is a matcher and a connector that add [nodes](#node) to [App
 picks the nodes it applies to, and the connector returns the nodes to connect to them. See
 [App Graph](/docs/plex/guides/app-graph/).
 
-### Capability
+### [Capability](/docs/plex/concepts/capabilities/)
 
 A capability is a typed slot that [modules](#module) contribute values to and other modules read. Plugins extend each
-other through capabilities instead of imports. See [Capabilities](/docs/plex/concepts/capabilities/).
+other through capabilities instead of imports.
 
 ### Contribution
 
 A contribution is one value that a [module](#module) puts into a [capability](#capability), such as a surface, a
 handler set or a list of types. A module's contributions are removed when the module deactivates.
 
-### Dev plugin
+### [Dev plugin](/docs/plex/learn/run-in-composer/)
 
 A dev plugin is a plugin that Composer Preview loads from the plugin's dev server. It is never installed, and
-Composer loads it again on every reload. See [Run it in Composer](/docs/plex/learn/run-in-composer/).
+Composer loads it again on every reload.
 
-### Disposition
+### [Disposition](/docs/plex/guides/app-graph/)
 
 A disposition is the property of an [action](#action) that says where the action appears: `toolbar` for an object's
-toolbar, or `list-item` for its menu in the navigation tree. See [App Graph](/docs/plex/guides/app-graph/).
+toolbar, or `list-item` for its menu in the navigation tree.
 
 ### DXN
 
@@ -115,42 +115,42 @@ A manifest is the `manifest.json` file that describes a plugin to the app that l
 metadata and says where its code is. The plugin's dev server serves one and its build writes one, both made from
 `dx.config.ts`. Composer and the [inspector](#inspector) load a plugin from its manifest's URL.
 
-### Module
+### [Module](/docs/plex/concepts/plugins/)
 
 A module is a part of a [plugin](#plugin) that activates on an [activation event](#activation-event) and contributes
-to [capabilities](#capability). See [Plugins and modules](/docs/plex/concepts/plugins/).
+to [capabilities](#capability).
 
-### Module maker
+### [Module maker](/docs/plex/guides/app-capabilities/)
 
 A module maker is a function, such as `AppCapability.surface`, that makes a [module](#module) for one
 [capability](#capability). It fixes the capability and the activation event, so `dx.config.ts` names only the file to
-load. See [App capabilities](/docs/plex/guides/app-capabilities/).
+load.
 
-### Node
+### [Node](/docs/plex/guides/app-graph/)
 
 A node is an item in [App Graph](#app-graph), with an id, a type, data and properties. Its data is usually what it
 stands for, such as a space or an ECHO object. Each node has a path of ids from the root, and in Composer the URL is
-a node path. See [App Graph](/docs/plex/guides/app-graph/).
+a node path.
 
 ### NSID
 
 An NSID is a reverse-domain name with dots between its segments, such as `com.example.plugin.stash`. Its last segment
 is camelCase. An NSID names a plugin, a capability or an activation event, and a [DXN](#dxn) is built from one.
 
-### Operation
+### [Operation](/docs/plex/concepts/operations/)
 
 An operation is a named action with a typed input and output. You define it once, and buttons, the command palette
-and the [assistant](#assistant) all run it. See [Operations](/docs/plex/concepts/operations/).
+and the [assistant](#assistant) all run it.
 
 ### Operation invoker
 
 The operation invoker is the part of the framework that runs an [operation](#operation). It looks up the
 [handler](#handler) by the operation's key, validates the input and output, and runs the handler.
 
-### Plugin
+### [Plugin](/docs/plex/concepts/plugins/)
 
 A plugin is metadata and the [modules](#module) it is made of. A plugin does nothing by itself. Its modules
-contribute everything it adds to the app. See [Plugins and modules](/docs/plex/concepts/plugins/).
+contribute everything it adds to the app.
 
 ### Plugin manager
 
@@ -158,10 +158,10 @@ The plugin manager is the part of the framework that loads [plugins](#plugin), f
 [activation events](#activation-event) and activates the [modules](#module) waiting on them. See
 [PluginManager](/docs/plex/guides/plugin-manager/).
 
-### Private registry
+### [Private registry](/docs/plex/publishing-plugins/)
 
 A private registry is the list of plugins that DXOS hosts for one identity. Composer lists them only to that
-identity. See [Publishing a plugin](/docs/plex/publishing-plugins/).
+identity.
 
 ### Role
 

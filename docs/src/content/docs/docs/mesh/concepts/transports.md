@@ -51,8 +51,8 @@ that reaches it:
   it, and the next link catches up. With EDGE replication off, the changes wait on the device for the next direct
   link.
 
-## Planned: Iroh
+## Limits
 
-A design in `packages/core/mesh/iroh` adds [Iroh](https://www.iroh.computer/), a QUIC transport that dials a peer by its
-public key and traverses NATs itself, falling back to a relay. The first use would be presence and gossip directly
-between peers, beside EDGE. It is a design, with no code yet.
+- No transport dials a peer by its public key yet. [Iroh](https://www.iroh.computer/), a QUIC transport that does, is
+  planned. It traverses NATs itself and falls back to a relay. A design in `packages/core/mesh/iroh` would first use
+  it for presence and gossip directly between peers, beside EDGE. The design has no code yet.

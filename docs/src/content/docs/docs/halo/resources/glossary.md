@@ -4,10 +4,10 @@ title: Glossary
 
 ECHO terms, such as object and epoch, are in ECHO's [glossary](/docs/additional-resources/glossary/).
 
-### Access level
+### [Access level](/docs/halo/concepts/spaces-membership/)
 
 An access level is a member's level in a space: `pull`, `read`, `edit` or `admin`. Each level includes the ones before
-it. The API calls it the member's `role`. See [Spaces and membership](/docs/halo/concepts/spaces-membership/).
+it. The API calls it the member's `role`.
 
 ### Agent device
 
@@ -31,10 +31,10 @@ intercepting one is not enough to get in.
 Causal seniority is what a member has over the members whose [delegation](#delegation) depends on its own, because it
 admitted them or admitted whoever did. A member that is not an admin can revoke only those members.
 
-### Contact
+### [Contact](/docs/halo/learn/your-contacts/)
 
 A contact is anyone who shares a space with you. The learning path's contact book lists contacts by merging each
-space's [members](#member) by [DID](#did). See [Your contacts](/docs/halo/learn/your-contacts/).
+space's [members](#member) by [DID](#did).
 
 ### Contact card
 
@@ -52,11 +52,11 @@ A delegation is a signed statement that admits an identity, a device or a key to
 carries an [access level](#access-level). A member can delegate no more access than it holds. See
 [Spaces and membership](/docs/halo/concepts/spaces-membership/).
 
-### Device
+### [Device](/docs/halo/concepts/identities-devices/)
 
 A device is one client storage with a device key of its own, which an [identity](#identity) has admitted as a
 [member](#member). In a browser, each profile on each site is a device, and its tabs share it. A computer can hold
-several devices. See [Identities and devices](/docs/halo/concepts/identities-devices/).
+several devices.
 
 ### DID
 
@@ -68,10 +68,10 @@ A DID is the decentralized identifier that names an [identity](#identity), such 
 EDGE is DXOS's always-online peer. For HALO it relays invitations, replicates spaces and takes part in recovery. See
 EDGE's [Overview](/docs/edge/overview/).
 
-### Flow
+### [Flow](/docs/halo/api/invitation/)
 
 A flow is one side's handle on an [invitation](#invitation) in progress, an `Invitation.Flow`. The [host](#host) and
-the [guest](#guest) each hold one. See [Invitation](/docs/halo/api/invitation/).
+the [guest](#guest) each hold one.
 
 ### Group
 
@@ -164,10 +164,10 @@ lives in a [recovery code](#recovery-code), a passkey or an OAuth account.
 A revocation is a signed statement that removes a member from a [group](#group). An admin can revoke anyone. Another
 member can revoke only those it has [causal seniority](#causal-seniority) over.
 
-### Space
+### [Space](/docs/halo/concepts/spaces-membership/)
 
 A space is a group of identities that replicate the same data. HALO decides who its [members](#member) are, and ECHO
-keeps a database in it. See [Spaces and membership](/docs/halo/concepts/spaces-membership/).
+keeps a database in it.
 
 ### Space key
 

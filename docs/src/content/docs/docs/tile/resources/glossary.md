@@ -42,21 +42,20 @@ Density is how compact a region's controls are. A size sets it. See
 The focus ring is the ring a control draws while it has the keyboard's focus. See
 [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/) for the variables that set its width and color.
 
-### Gutter
+### [Gutter](/docs/tile/api/layout/)
 
 A gutter is the space at the start and at the end of the rows of a `Layout.Container`. A `rail` gutter is wide enough
-for an icon. See [Layout](/docs/tile/api/layout/) for the gutter widths.
+for an icon.
 
-### Height chain
+### [Height chain](/docs/tile/concepts/layout/)
 
 The height chain is the run of elements from a panel to its scrolling content, each passing its height down. A wrapper
-that breaks it stops the content from scrolling. See [Layout](/docs/tile/concepts/layout/) for how `asChild` keeps the
-chain whole.
+that breaks it stops the content from scrolling.
 
-### Layout primitive
+### [Layout primitive](/docs/tile/concepts/layout/)
 
 A layout primitive is one of the six components in the `Layout` namespace: `Flex`, `Grid`, `Container`, `Block`,
-`Columns` and `Separator`. See [Layout](/docs/tile/concepts/layout/) for when to use each.
+`Columns` and `Separator`.
 
 ### Level
 
@@ -64,22 +63,20 @@ A level is a step of the surface ladder, from `sunken` to `popup`. A higher leve
 levels `overlay` and `popup` name surfaces, not components. See
 [Theme and tokens](/docs/tile/concepts/theme-and-tokens/) for the surfaces at each level.
 
-### Mode
+### [Mode](/docs/tile/guides/custom-themes/)
 
 The mode is light or dark. Every semantic token has a value for each, and the dark values apply under a `dark` class
-on the root element. See [Custom themes and dark mode](/docs/tile/guides/custom-themes/) for how to follow the system
-or force a mode.
+on the root element.
 
-### Namespace
+### [Namespace](/docs/tile/concepts/composite-components/)
 
 A namespace is the object that holds a component's parts, such as `Dialog`. You import it whole from the component's
-entry point. See [Composite components](/docs/tile/concepts/composite-components/) for the import line.
+entry point.
 
-### Overlay
+### [Overlay](/docs/tile/learn/overlays/)
 
 An overlay is a component that TILE draws above the page, such as a dialog, a popover, a menu, a tooltip or a toast.
-It is not the `overlay` level of the surface ladder. See [Overlays](/docs/tile/learn/overlays/) for when to use each
-of four.
+It is not the `overlay` level of the surface ladder.
 
 ### Part
 
@@ -101,15 +98,15 @@ A skill is a folder with a `SKILL.md` file that tells a coding agent how to do o
 The sprite is the single SVG file, `/icons.svg`, that holds the icons an app draws. See
 [Translations and icons](/docs/tile/concepts/translations-and-icons/) for how an icon gets into it.
 
-### Surface
+### [Surface](/docs/tile/concepts/theme-and-tokens/)
 
 A surface is a background that content sits on, such as `card-surface`. A PLEX surface is a different thing, a named
-place in an app's UI. See [Theme and tokens](/docs/tile/concepts/theme-and-tokens/) for the ladder of surfaces.
+place in an app's UI.
 
-### Theme
+### [Theme](/docs/tile/concepts/theme-and-tokens/)
 
 The theme is TILE's stylesheets and the tokens they are built from. `ThemePlugin` generates the tokens' CSS when the
-app builds. See [Theme and tokens](/docs/tile/concepts/theme-and-tokens/) for its tiers and layers.
+app builds.
 
 ### Token
 
@@ -121,10 +118,10 @@ A token is a CSS custom property for a color, size or spacing, used by role. See
 A translation namespace is the name a set of translation keys is filed under, such as `com.example.contacts`. See
 [Translations and icons](/docs/tile/concepts/translations-and-icons/) for how a component reads one.
 
-### Translation resource
+### [Translation resource](/docs/tile/concepts/translations-and-icons/)
 
 A translation resource is an object that maps a language to translation namespaces, and each namespace to keys and
-their strings. See [Translations and icons](/docs/tile/concepts/translations-and-icons/) for how to register one.
+their strings.
 
 ### `tx`
 
