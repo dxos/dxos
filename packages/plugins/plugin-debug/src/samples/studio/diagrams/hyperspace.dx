@@ -1,6 +1,6 @@
 diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
 
-group composer "Composer" gap=24 {
+group composer "App" gap=24 {
   node plank-board "Roadmap" kind=plank comp=board package=react-ui-board
   node plank-sheet "Budget" kind=plank comp=sheet package=react-ui-sheet
   node plank-thread "Design chat" kind=plank comp=thread package=react-ui-thread

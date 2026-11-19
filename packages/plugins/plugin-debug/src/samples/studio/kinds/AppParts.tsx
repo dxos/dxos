@@ -41,10 +41,22 @@ const highlightOf = (tone: string | undefined): { style: Styled; mark: true | un
 /**
  * A part's content at the deck's own lengths, scaled into the box the grid gave it: the pieces are written once, in
  * the window's units, and a pane that is narrower here draws the same picture smaller rather than reflowing it.
+ * `width` and `height` are the content's own, in the window's units, so what is drawn is exactly the room it has.
  */
-const Scaled = ({ nominal, width, children }: { nominal: number; width: number; children: React.ReactNode }) => (
-  <div style={{ width: nominal, transform: `scale(${width / nominal})`, transformOrigin: '0 0' }}>{children}</div>
-);
+const Scaled = ({
+  width,
+  height,
+  scale,
+  children,
+}: {
+  width: number;
+  height: number;
+  scale: number;
+  children: React.ReactNode;
+}) => <div style={{ width, height, transform: `scale(${scale})`, transformOrigin: '0 0' }}>{children}</div>;
+
+/** A side pane's padding in the window's units, as `AppFrame` draws the navtree and the assistant. */
+const PANE_PADDING = { nav: { block: 16, inline: 12.8 }, comp: { block: 16, inline: 14.4 } } as const;
 
 //
 // The title bar and the status bar.
@@ -141,7 +153,7 @@ const PaneNodeView = ({ node }: NodeViewProps) => {
     return null;
   }
   const { style, mark } = highlightOf(data.tone);
-  const { width } = node.size;
+  const { width, height } = node.size;
   // The document pane is a surface and nothing else: its title, its text and its two embeds are nodes of their own.
   if (data.pane === 'doc') {
     return (
@@ -153,14 +165,18 @@ const PaneNodeView = ({ node }: NodeViewProps) => {
       />
     );
   }
+  // The window's side pane is `SIDE` wide with its padding inside, so the padding is scaled with the content: left
+  // at the window's size round content scaled to the whole box, the content ran past the pane's right edge.
+  const scale = width / SIDE;
+  const padding = PANE_PADDING[data.pane === 'comp' ? 'comp' : 'nav'];
   return (
     <div
       className='studio-frame studio-frame-part studio-frame-pane dx-cover overflow-hidden'
       data-testid='app-pane-node'
       data-highlight={mark}
-      style={{ padding: '16px 12.8px', ...style }}
+      style={{ padding: `${padding.block * scale}px ${padding.inline * scale}px`, ...style }}
     >
-      <Scaled nominal={SIDE} width={width}>
+      <Scaled width={SIDE - 2 * padding.inline} height={height / scale - 2 * padding.block} scale={scale}>
         {data.pane === 'comp' ? <Assistant /> : <Nav />}
       </Scaled>
     </div>

@@ -17,6 +17,9 @@
   --sd-deep: light-dark(hsl(220 14% 88%), hsl(220 10% 12.5%));
   --sd-fg: light-dark(hsl(220 14% 10%), hsl(220 10% 96%));
   --sd-muted: light-dark(hsl(220 14% 36%), hsl(220 10% 68%));
+  /* A card's body and its footer, each a step back from the title so the title is what is read first. */
+  --sd-card-body-fg: light-dark(hsl(220 14% 30%), hsl(220 10% 74%));
+  --sd-card-footer-fg: light-dark(hsl(220 14% 46%), hsl(220 10% 54%));
   --sd-line: light-dark(hsl(220 14% 80%), hsl(220 10% 27%));
   --sd-accent: light-dark(#2d6fff, #06c5fd);
   --sd-lo: light-dark(hsl(220 22% 57% / 0.32), hsl(220 20% 3% / 0.7));
@@ -58,9 +61,18 @@
 
 /* The glyph is the card's colour: its own tone where it has one, the deck's accent otherwise — a muted glyph read
    as disabled beside a titled card. */
-/* A plain card's title: the framed card's 23px, so the two read as one family. */
+/* The cards' type scale, in one place: a card's title, its body and its footer, and the one-line card's two. */
+.studio-card {
+  --sd-card-title: 26px;
+  --sd-card-body: 18px;
+  --sd-card-footer: 14px;
+  --sd-card-simple-title: 24px;
+  --sd-card-simple-note: 15px;
+}
+
+/* A plain card's title: the framed card's size, so the two read as one family. */
 .studio-card-title {
-  font-size: 23px;
+  font-size: var(--sd-card-title);
   line-height: 1;
 }
 
@@ -81,31 +93,37 @@
   color: var(--sd-muted);
 }
 
-/* The deck's type scale inside the shared card frame: its own glyph, drawn beside a 23px title rather than on the
+/* The deck's type scale inside the shared card frame: its own glyph, drawn beside the title rather than on the
    canvas's three-cell header, which would push a 120px card's footer out of its frame. */
 .studio-card-frame {
   --dx-card-glyph: 26px;
   --dx-card-gap: 9px;
 }
 
+/* Each part's line is set through `--dx-line`: the frame's own line height is `!important` and reads that variable,
+   so a `line-height` here would lose to it and the part would keep the canvas's lines under the deck's type. */
 .studio-card-frame [data-part='label'] {
-  font-size: 23px;
-  line-height: 1;
+  --dx-line: 28px;
+  font-size: var(--sd-card-title);
 }
 
+/* `$=`, since a kind keeps its text in its own bag and the part is then `data.body`: matching `body` alone left the
+   deck's cards at the canvas's 14px and 12px. */
 .studio-card-frame .studio-card-body,
-.studio-card-frame [data-part='body'] {
-  font-size: 17px;
-  line-height: 1.35;
-  color: var(--sd-fg);
+.studio-card-frame [data-part$='body'] {
+  --dx-line: 24px;
+  font-size: var(--sd-card-body);
+  color: var(--sd-card-body-fg);
 }
 
-.studio-card-frame [data-part='footer'] {
-  font-family: var(--dx-fontFamily-mono, ui-monospace, monospace);
-  font-size: 13px;
-  color: var(--sd-muted);
+/* The footer's block is 22px, what the canvas's own footer took, so a larger footer costs the body no line. It is
+   set in the body's face: in mono at this size the longest footers no longer fit their cards. */
+.studio-card-frame [data-part$='footer'] {
+  --dx-line: 17px;
+  font-size: var(--sd-card-footer);
+  color: var(--sd-card-footer-fg);
   border-block-start: 1px solid var(--sd-line);
-  padding-block-start: 8px;
+  padding-block-start: 4px;
 }
 
 /* As the simple card's glyph: the card's tone where it has one, the deck's accent otherwise. */
@@ -391,7 +409,7 @@
 }
 
 .studio-card-simple [data-part='label'] {
-  font-size: 21.6px;
+  font-size: var(--sd-card-simple-title);
   line-height: 1.1;
 }
 
@@ -404,7 +422,7 @@
 /* The line box holds the mono descenders: `truncate` clips to it, so 1.3 cut the tails off `query` and `free/busy`. */
 .studio-card-simple .studio-card-note {
   margin-inline-start: 43.2px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--sd-muted);
+  font-size: var(--sd-card-simple-note);
+  line-height: 1.4;
+  color: var(--sd-card-footer-fg);
 }
