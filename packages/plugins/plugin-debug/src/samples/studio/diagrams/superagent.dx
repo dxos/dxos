@@ -35,16 +35,16 @@ group space-body gap=24 {
   }
 }
 
-edge email    -> triage head=triangle
-edge discord  -> triage head=triangle
-edge chat     -> planner head=triangle
-edge triage   -> research head=triangle
-edge triage   -> reply head=triangle
-edge triage   -> summary head=triangle
-edge planner  -> calendar head=triangle
-edge planner  -> travel head=triangle
-edge research -> research-space head=triangle
-edge reply    -> reply-space head=triangle
-edge summary  -> summary-space head=triangle
-edge calendar -> calendar-space head=triangle
-edge travel   -> travel-space head=triangle
+edge email#e3    -> triage#w3 head=triangle
+edge discord#e3  -> triage#w3 head=triangle
+edge chat#e3     -> planner#w3 head=triangle
+edge triage#e3   -> research#w3 head=triangle
+edge triage#e3   -> reply#w3 head=triangle
+edge triage#e3   -> summary#w3 head=triangle
+edge planner#e3  -> calendar#w3 head=triangle
+edge planner#e3  -> travel#w3 head=triangle
+edge research#e3 -> research-space#w2 head=triangle
+edge reply#e3    -> reply-space#w2 head=triangle
+edge summary#e3  -> summary-space#w2 head=triangle
+edge calendar#e3 -> calendar-space#w2 head=triangle
+edge travel#e3   -> travel-space#w2 head=triangle
