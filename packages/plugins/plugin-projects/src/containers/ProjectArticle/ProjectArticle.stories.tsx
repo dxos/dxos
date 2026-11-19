@@ -301,6 +301,13 @@ const showTab = async (canvas: ReturnType<typeof within>, tab: ProjectView.Tab) 
   await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
 };
 
+/** A spec opens on its source, so a story about its forms picks Preview. */
+const showSpecForms = async (canvas: ReturnType<typeof within>) => {
+  await showTab(canvas, 'spec');
+  await userEvent.click(await canvas.findByTestId('editor.toolbar.viewMode', undefined, { timeout: 10_000 }));
+  await userEvent.click(await screen.findByText('Preview'));
+};
+
 type StoryArgs = {
   role: string;
   attendableId: string;
@@ -485,7 +492,7 @@ export const SpecBlockForms: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const { project } = await seedContent();
-    await showTab(canvas, 'spec');
+    await showSpecForms(canvas);
     // The editor is rebuilt as the spec packages' extensions arrive, so each element is read from the settled editor.
     const featureCard = () => {
       const card = canvas.queryAllByTestId('spec-block').find((element) => element.dataset.kind === 'feat');
@@ -599,7 +606,7 @@ const dialectStory = ({ content, dialects, kinds }: DialectSamples.Sample): Stor
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    await showTab(canvas, 'spec');
+    await showSpecForms(canvas);
     await canvas.findAllByTestId('spec-block', undefined, { timeout: 30_000 });
     // The editor draws only the blocks near its viewport, so each is read on the way down.
     const scroller = canvasElement.querySelector<HTMLElement>('.cm-scroller')!;
@@ -631,8 +638,8 @@ export const ReviewDialect = dialectStory(DialectSamples.samples.review);
 export const SqlDialect = dialectStory(DialectSamples.samples.sql);
 
 /**
- * A feature reads by its label in the plain text as in its form, and its keys cannot be edited there. Enter in a
- * requirement starts the next one, with a fresh key, ready for its text.
+ * A spec opens on its source, where a feature reads by its label as in its form and its keys cannot be edited. Enter
+ * in a requirement starts the next one, with a fresh key, ready for its text.
  */
 export const SpecKeyLabels: Story = {
   ...Default,
@@ -640,16 +647,11 @@ export const SpecKeyLabels: Story = {
     const canvas = within(canvasElement);
     const { project } = await seedContent();
     await showTab(canvas, 'spec');
-    await waitFor(() => expect(canvas.getAllByTestId('spec-block.label')[0]).toHaveTextContent('F-1'), {
-      timeout: 30_000,
-    });
-
-    await userEvent.click(canvas.getByTestId('editor.toolbar.viewMode'));
-    await userEvent.click(await screen.findByText('Source'));
     const document = () => canvas.getByTestId('projectsPlugin.spec.document');
     const labels = () =>
       [...document().querySelectorAll('[data-testid="spec-block.key-label"]')].map((element) => element.textContent);
-    await waitFor(() => expect(labels()).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-2', 'F-2.1']), { timeout: 10_000 });
+    await waitFor(() => expect(labels()).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-2', 'F-2.1']), { timeout: 30_000 });
+    await expect(canvas.queryAllByTestId('spec-block')).toHaveLength(0);
     await expect(document().textContent).not.toContain('k7q2x');
 
     const view = EditorView.findFromDOM(document().querySelector<HTMLElement>('.cm-content')!)!;

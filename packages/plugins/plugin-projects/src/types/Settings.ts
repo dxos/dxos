@@ -32,7 +32,7 @@ export const Settings = Schema.Struct({
   defaultSpecView: Schema.optional(
     SpecView.annotate({
       title: 'Default spec view',
-      description: 'The view a spec opens in: its blocks as forms, read only, or its plain text.',
+      description: 'The view a spec opens in: its source, its blocks as forms, or read only.',
     }),
   ),
   showTaskDescriptions: Schema.optional(

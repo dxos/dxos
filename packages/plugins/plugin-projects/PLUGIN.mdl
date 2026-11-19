@@ -111,7 +111,7 @@ feat F-4: A project's specs
               naming a block by key or positional label. A write is checked against the kind's schema and changes only
               the parts it names; a new block of a numbered kind, and each new keyed entry, gets a fresh key.
   req F-4.16: The projects plugin's Default spec view setting picks the view a spec opens in, named as the toolbar's
-              view menu names them: Preview (the forms), Read only or Source. Unset, a spec opens as Preview;
+              view menu names them: Preview (the forms), Read only or Source. Unset, a spec opens as Source;
               changing it leaves a spec already open in the view it shows.
   req F-4.17: A peer following another (org.dxos.plugin.space#F-8.21) shows the tab, the spec and the chart the
               leader has open in each project, since the article's view state aspect is followed.
@@ -574,7 +574,8 @@ test QA-10: Two peers see each other's carets in every project editor
       do: Both open Config > Agent; Bob types in the instructions, then Alice puts her cursor there.
       expect: each instructions editor shows the other peer's caret with that peer's name
     - name: Spec prose
-      do: Both open the Specs tab; Alice puts her cursor at the end of the prose, then Bob types after it.
+      do: Both open the Specs tab and pick Preview; Alice puts her cursor at the end of the prose, then Bob types after
+        it.
       expect: each spec shows the other peer's caret with that peer's name
     - name: Feature title and description
       do: Bob puts his cursor at the end of "Landing page"'s title in its form, then Alice types at the end of its
@@ -3251,4 +3252,12 @@ decision D-286: The view menu names a spec's views Preview, Read only and Source
   by: user:wittjosiah
   affects: [F-4.16, QA-10, QA-12]
   why: "Markdown" named the view that draws a spec's blocks as forms, which is not Markdown, and "Plain text" did not say it was the spec's source.
+```
+
+```mdl
+decision D-287: Unset, the Default spec view setting opens a spec on its source, not its forms. QA-10 picks Preview when it opens the Specs tab, since its steps read the feature's form. Amends [D-267].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.16, QA-10]
+  why: The source now reads by the same labels as the forms and keeps its keys safe, so it is the view a spec opens in.
 ```

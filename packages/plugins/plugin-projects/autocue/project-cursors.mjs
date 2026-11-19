@@ -283,6 +283,8 @@ const openAgent = async (peer) => {
 const openSpec = async (peer) => {
   await peer.click(plank(peer.page).getByTestId('projectsPlugin.tab.spec'));
   await specLine(peer.page, PROSE).waitFor({ timeout: TIMEOUT });
+  // A spec opens on its source; the steps after this one read the feature's form.
+  await setView(peer, 'Preview');
 };
 
 export const steps = [
@@ -343,6 +345,7 @@ export const steps = [
       await clearChrome(alice);
       await showSpec(page);
       await usePackage(page, 'Software');
+      await setView(alice, 'Preview');
 
       await specDocument(page).locator('.cm-content').first().click();
       await page.keyboard.type(`${PROSE}\n\n${FEATURE} /feat`, { delay: 10 });
