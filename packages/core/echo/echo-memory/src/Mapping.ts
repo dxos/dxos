@@ -5,14 +5,14 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
-import { DataFactory, type Literal, type NamedNode, type Quad, type Term as RdfTerm } from 'n3';
 
 import * as Fact from './Fact.ts';
 import * as Hash from './Hash.ts';
 import * as Ontology from './Ontology.ts';
+import * as Rdf from './Rdf.ts';
 import * as Vocab from './Vocab.ts';
 
-const { quad, defaultGraph, namedNode } = DataFactory;
+const { quad, defaultGraph, namedNode } = Rdf;
 
 const decodeFact = Schema.decodeUnknownSync(Fact.Fact);
 
@@ -66,20 +66,20 @@ export const classIri = (kind: Fact.EntityKind): string => CLASSES[kind];
  * RDF has no literal subjects, so a literal subject is stored as the entity it names. An entity slug is local to the
  * graph: the extractor resolved it to no stable IRI, and a label alone does not say two graphs mean one thing.
  */
-const subjectNode = (term: Fact.Term, graph: string): NamedNode =>
+const subjectNode = (term: Fact.Term, graph: string): Rdf.NamedNode =>
   term.kind === 'entity' ? Vocab.entityNode(term.entity, graph) : Vocab.localEntityIri(graph, term.literal);
 
-const objectNode = (term: Fact.Term, graph: string): NamedNode | Literal =>
+const objectNode = (term: Fact.Term, graph: string): Rdf.NamedNode | Rdf.Literal =>
   term.kind === 'entity' ? Vocab.entityNode(term.entity, graph) : Vocab.str(term.literal);
 
 /** The predicate IRI a fact is stored with. */
 export const predicateOf = (fact: Fact.Fact, ontology: Ontology.Ontology = Ontology.DEFAULT): string =>
   fact.assertion.predicateIri ?? ontology.resolve(fact.assertion.predicate).iri;
 
-const nodeKey = (term: RdfTerm): string => (term.termType === 'Literal' ? JSON.stringify(term.value) : term.value);
+const nodeKey = (term: Rdf.Term): string => (term.termType === 'Literal' ? JSON.stringify(term.value) : term.value);
 
 /** A statement's id within a named graph, from the triple itself, so writing and reading agree. */
-const statementId = (graph: string, subject: RdfTerm, predicate: string, object: RdfTerm): string =>
+const statementId = (graph: string, subject: Rdf.Term, predicate: string, object: Rdf.Term): string =>
   `${graph}#${Hash.text(`${nodeKey(subject)} ${predicate} ${nodeKey(object)}`)}`;
 
 /** The id a fact has once stored in `graph` ({@link triplesToFacts} reads it back). */
@@ -100,13 +100,13 @@ export const idInGraph = (
   );
 
 /** Expands a fact into its statement, the descriptions of its entities, and its graph's provenance. */
-export const factToTriples = (fact: Fact.Fact, ontology: Ontology.Ontology = Ontology.DEFAULT): Quad[] => {
+export const factToTriples = (fact: Fact.Fact, ontology: Ontology.Ontology = Ontology.DEFAULT): Rdf.Quad[] => {
   const graph = namedNode(Fact.graphOf(fact));
   const meta = defaultGraph();
   const predicate = predicateOf(fact, ontology);
   const subject = subjectNode(fact.assertion.subject, graph.value);
   const object = objectNode(fact.assertion.object, graph.value);
-  const quads: Quad[] = [quad(subject, namedNode(predicate), object, graph)];
+  const quads: Rdf.Quad[] = [quad(subject, namedNode(predicate), object, graph)];
 
   for (const [node, term] of [
     [subject, fact.assertion.subject],
@@ -136,7 +136,7 @@ export const factToTriples = (fact: Fact.Fact, ontology: Ontology.Ontology = Ont
     quads.push(...Ontology.toQuads(definition));
   }
 
-  const about = (name: NamedNode, value: NamedNode | Literal) => quads.push(quad(graph, name, value, meta));
+  const about = (name: Rdf.NamedNode, value: Rdf.NamedNode | Rdf.Literal) => quads.push(quad(graph, name, value, meta));
   about(namedNode(Vocab.RDF_TYPE), namedNode(Vocab.SX_GRAPH));
   about(Vocab.sx('factuality'), Vocab.str(fact.factuality.value));
   about(Vocab.sx('polarity'), Vocab.str(fact.factuality.polarity));
@@ -147,7 +147,7 @@ export const factToTriples = (fact: Fact.Fact, ontology: Ontology.Ontology = Ont
   about(Vocab.sx('extractorId'), Vocab.str(fact.extractor.id));
   about(Vocab.sx('extractorModel'), Vocab.str(fact.extractor.model));
   about(Vocab.sx('extractorVersion'), Vocab.str(fact.extractor.version));
-  const optional: ReadonlyArray<[NamedNode, string | undefined]> = [
+  const optional: ReadonlyArray<[Rdf.NamedNode, string | undefined]> = [
     [Vocab.sx('confidence'), fact.factuality.confidence?.toString()],
     [Vocab.sx('nature'), fact.factuality.nature],
     [Vocab.sx('validFrom'), fact.assertion.validFrom],
@@ -184,13 +184,16 @@ export const factToTriples = (fact: Fact.Fact, ontology: Ontology.Ontology = Ont
 };
 
 /** Reassembles (and validates) facts from quads: the inverse of {@link factToTriples}, one fact per statement. */
-export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontology = Ontology.DEFAULT): Fact.Fact[] => {
+export const triplesToFacts = (
+  quads: readonly Rdf.Quad[],
+  ontology: Ontology.Ontology = Ontology.DEFAULT,
+): Fact.Fact[] => {
   const labels = new Map<string, string>();
   const comments = new Map<string, string>();
-  const provenance = new Map<string, Map<string, RdfTerm[]>>();
+  const provenance = new Map<string, Map<string, Rdf.Term[]>>();
   const graphs = new Map<
     string,
-    { statements: Quad[]; labels: Map<string, string>; types: Map<string, Fact.EntityKind> }
+    { statements: Rdf.Quad[]; labels: Map<string, string>; types: Map<string, Fact.EntityKind> }
   >();
   const graphFor = (iri: string) => {
     let graph = graphs.get(iri);
@@ -235,10 +238,10 @@ export const triplesToFacts = (quads: readonly Quad[], ontology: Ontology.Ontolo
 
   const facts: Fact.Fact[] = [];
   for (const [iri, graph] of graphs) {
-    const props = provenance.get(iri) ?? new Map<string, RdfTerm[]>();
+    const props = provenance.get(iri) ?? new Map<string, Rdf.Term[]>();
     const one = (name: string) => props.get(name)?.[0]?.value;
     const many = (name: string) => props.get(name)?.map((term) => term.value) ?? [];
-    const term = (node: RdfTerm): Fact.Term | undefined =>
+    const term = (node: Rdf.Term): Fact.Term | undefined =>
       node.termType === 'Literal'
         ? { kind: 'literal', literal: node.value }
         : node.termType === 'NamedNode'

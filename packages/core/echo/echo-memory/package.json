@@ -73,6 +73,11 @@
       "types": "./dist/types/src/Predicate.d.ts",
       "import": "./dist/lib/Predicate.mjs"
     },
+    "./Rdf": {
+      "source": "./src/Rdf.ts",
+      "types": "./dist/types/src/Rdf.d.ts",
+      "import": "./dist/lib/Rdf.mjs"
+    },
     "./RdfStore": {
       "source": "./src/RdfStore.ts",
       "types": "./dist/types/src/RdfStore.d.ts",
@@ -87,6 +92,11 @@
       "source": "./src/Subscription.ts",
       "types": "./dist/types/src/Subscription.d.ts",
       "import": "./dist/lib/Subscription.mjs"
+    },
+    "./Trig": {
+      "source": "./src/Trig.ts",
+      "types": "./dist/types/src/Trig.d.ts",
+      "import": "./dist/lib/Trig.mjs"
     },
     "./Vocab": {
       "source": "./src/Vocab.ts",
@@ -108,12 +118,13 @@
   "dependencies": {
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "n3": "catalog:"
+    "@rdfjs/types": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
     "effect": "catalog:",
+    "n3": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

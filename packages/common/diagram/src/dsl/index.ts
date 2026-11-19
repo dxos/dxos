@@ -24,7 +24,17 @@ export {
   withLayout,
 } from './parse.ts';
 export { type AttrValue, printScenes, readScenes } from './scene-model.ts';
-export { formatCommand, formatElement, formatId, formatObject, formatString, print, printCommands } from './print.ts';
+export {
+  formatCommand,
+  formatElement,
+  formatGridDiagram,
+  formatId,
+  formatObject,
+  formatString,
+  print,
+  printCommands,
+} from './print.ts';
+export { type Intent, printIntent } from './intent.ts';
 export {
   type AttrSpec,
   type AttrType,
@@ -35,6 +45,7 @@ export {
   ELEMENT_KINDS,
   type ElementKind,
   GROUP_ATTRS,
+  KIND_ATTR,
   NODE_ATTRS,
   OBJECT_ATTRS,
   RELATION_WORDS,

@@ -4,12 +4,11 @@
 
 // @import-as-namespace
 
-import { DataFactory, type Literal, type NamedNode, type Quad } from 'n3';
-
 import * as Predicate from './Predicate.ts';
+import * as Rdf from './Rdf.ts';
 import * as Vocab from './Vocab.ts';
 
-const { quad, namedNode, literal } = DataFactory;
+const { quad, namedNode, literal } = Rdf;
 
 /**
  * A predicate the brain knows: its IRI, the shorthand rules use, the surface forms that map onto it, and the RDFS /
@@ -257,10 +256,10 @@ export const labelFromIri = (iri: string): string =>
 const ontologyGraph = () => namedNode(Vocab.ONTOLOGY_GRAPH);
 
 /** The entry as quads in the ontology graph. */
-export const toQuads = (entry: Entry): Quad[] => {
+export const toQuads = (entry: Entry): Rdf.Quad[] => {
   const subject = namedNode(entry.iri);
-  const quads: Quad[] = [];
-  const add = (predicate: string, object: NamedNode | Literal) =>
+  const quads: Rdf.Quad[] = [];
+  const add = (predicate: string, object: Rdf.NamedNode | Rdf.Literal) =>
     quads.push(quad(subject, namedNode(predicate), object, ontologyGraph()));
   add(Vocab.RDF_TYPE, namedNode(Vocab.RDF_PROPERTY));
   add(Vocab.RDFS_LABEL, literal(entry.label));
@@ -305,7 +304,7 @@ export const toQuads = (entry: Entry): Quad[] => {
  * only by its label (as facts store a minted one) reads with the shorthand its label keys to. Multi-valued fields
  * keep their first value where an entry holds one value.
  */
-export const fromQuads = (quads: readonly Quad[]): Entry[] => {
+export const fromQuads = (quads: readonly Rdf.Quad[]): Entry[] => {
   const subjects = new Map<string, Map<string, string[]>>();
   for (const entry of quads) {
     if (entry.graph.value !== Vocab.ONTOLOGY_GRAPH || entry.subject.termType !== 'NamedNode') {
@@ -353,7 +352,7 @@ export const fromQuads = (quads: readonly Quad[]): Entry[] => {
 };
 
 /** Every entry of the ontology as quads in the ontology graph. */
-export const ontologyQuads = (ontology: Ontology): Quad[] => ontology.entries.flatMap(toQuads);
+export const ontologyQuads = (ontology: Ontology): Rdf.Quad[] => ontology.entries.flatMap(toQuads);
 
 //
 // The seed vocabulary. A predicate an established vocabulary defines is used under that vocabulary's own IRI, so

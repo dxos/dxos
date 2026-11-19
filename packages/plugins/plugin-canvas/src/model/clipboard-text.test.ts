@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { nextPaste } from '@dxos/react-ui-canvas-editor';
 import { toRenderLists2D } from '@dxos/react-ui-canvas/headless';
@@ -18,7 +18,7 @@ import {
   sceneClipboardCodec,
 } from './clipboard-text.ts';
 
-const linksDoc = () => Dsl.readScenes(EXEMPLARS.links).document;
+const linksDoc = () => DSL.readScenes(EXEMPLARS.links).document;
 const cubeLayout: Scene.LayoutRecord3D = {
   id: 'cube',
   dim: '3d',

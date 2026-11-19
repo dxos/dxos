@@ -3,15 +3,17 @@
 //
 
 import { type ContentMap } from '@dxos/diagram';
-import { type Database, type Type } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type DiagramSet, nestDrills } from '@dxos/react-ui-canvas';
 import { isNodeRecord, rootOf } from '@dxos/react-ui-canvas/headless';
+import { Scene } from '@dxos/scene';
 
 import { CanvasLayoutBuilder, editCanvasContent, makeCanvas, readCanvasContent, setLayoutLattice } from '#model';
 import { Canvas } from '#types';
 
 import schemaTypes from '../../capabilities/schema.ts';
+import { applyLayoutIntent } from '../../model/layout-source.ts';
 import { type CompiledDiagrams } from './compiled.ts';
 
 export type { DiagramSet };
@@ -27,6 +29,8 @@ export type CanvasDrawingProps = {
   lattice?: boolean;
   /** Opens read-only until a viewer chooses to edit. */
   readonly?: boolean;
+  /** The canvas's other settings: its look, its pitch, and the frame a fit shows. */
+  settings?: Partial<Canvas.CanvasSettings>;
 };
 
 /** The tone the reference diagrams' plain boxes take: the style set's second (index 1). */
@@ -38,9 +42,13 @@ export const DIAGRAM_GROUP_TONE = 3;
 /** Adds a canvas drawing built from scene commands to `db`. */
 export const addCanvasDrawing = (
   db: Database.Database,
-  { name, commands, lattice, readonly }: CanvasDrawingProps,
+  { name, commands, lattice, readonly, settings }: CanvasDrawingProps,
 ): Drawing.Drawing => {
-  const { canvas, model, layout, scene } = makeCanvas(readonly ? { readonly } : {});
+  const { canvas, model, layout, scene } = makeCanvas({ ...settings, ...(readonly ? { readonly } : {}) });
+  // A drawing's pitch lives on its layout, where snapping and the drawn grid read it.
+  if (settings?.grid !== undefined && Obj.instanceOf(Scene.Layout2D, layout)) {
+    applyLayoutIntent(layout, { kind: 'layout', patch: { grid: settings.grid } });
+  }
   for (const object of [model, layout, scene]) {
     db.add(object);
   }

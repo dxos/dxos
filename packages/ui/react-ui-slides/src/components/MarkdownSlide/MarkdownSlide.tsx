@@ -16,6 +16,7 @@ import React, {
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 
 import { SyntaxHighlighter, type SyntaxHighlighterProps, renderRows } from '@dxos/react-ui-syntax-highlighter';
+import * as Icon from '@dxos/react-ui/Icon';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -184,8 +185,14 @@ type SlideCodeProps = { 'language'?: string; 'meta'?: string; 'source'?: string;
 // `className` and `data-step` carry click-step visibility from `prepareElement`.
 type SlideSurfaceProps = { 'uri'?: string; 'role'?: string; 'className'?: string; 'data-step'?: string };
 
+// `className` carries the classes the card's variant gives its icon.
+type SlideIconProps = { icon?: string; className?: string };
+
 type SlideComponents = Partial<Components> & {
-  [tag: `slide-${string}`]: ComponentType<SlideCodeProps> | ComponentType<SlideSurfaceProps>;
+  [tag: `slide-${string}`]:
+    | ComponentType<SlideCodeProps>
+    | ComponentType<SlideSurfaceProps>
+    | ComponentType<SlideIconProps>;
 };
 
 const isSurfaceRole = (role: string | undefined): role is SlideSurfaceRole =>
@@ -208,6 +215,9 @@ const SlideSurface = ({ uri = '', role, className, 'data-step': dataStep }: Slid
     </div>
   );
 };
+
+/** A card's icon: decorative, since the title beside it already names the card. */
+const SlideIcon = ({ icon = '', className }: SlideIconProps) => <Icon.Icon icon={icon} classNames={className} />;
 
 type Renderer = NonNullable<SyntaxHighlighterProps['renderer']>;
 
@@ -258,6 +268,7 @@ const CodeBlock = ({ language, meta, source = '', 'data-source': dataSource }: S
 const components: SlideComponents = {
   'slide-code': CodeBlock,
   'slide-surface': SlideSurface,
+  'slide-icon': SlideIcon,
 };
 
 // Bounds a range like `{1-100000000}` so a fence cannot allocate an enormous set.
@@ -323,6 +334,7 @@ const BLOCK_TAGS = new Set([
   'slide-grid',
   'slide-cell',
   'slide-card',
+  'slide-body',
 ]);
 
 const NODE_CLASSES: Record<string, string> = theme.nodes;
@@ -350,6 +362,8 @@ const VARIANT_PARTS: Record<string, string> = {
   'slide-grid': 'grid',
   'slide-cell': 'cell',
   'slide-card': 'card',
+  'slide-icon': 'icon',
+  'slide-body': 'body',
 };
 
 const variantPart = (tagName: string): string => VARIANT_PARTS[tagName] ?? tagName;
@@ -362,6 +376,24 @@ const TRACK_PROPERTIES: Record<string, Record<string, string>> = {
   'slide-grid': { cols: '--slide-grid-cols', rows: '--slide-grid-rows' },
   'slide-cell': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
   'slide-card': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
+};
+
+/** The headings a card takes as its title. */
+const TITLE_TAGS = new Set(['h1', 'h2', 'h3']);
+
+/**
+ * An icon card's children as a header over a body: the icon and the title are the header, which the card's variant
+ * lays out as a row, and everything else is the body under it. The two are the card's only children, so the cards of
+ * a grid row can share one header track and start their bodies level. A card with no title still shows its icon.
+ */
+const withIconHeader = (children: ElementContent[], icon: string): ElementContent[] => {
+  const glyph: Element = { type: 'element', tagName: 'slide-icon', properties: { icon }, children: [] };
+  const index = children.findIndex((child) => child.type === 'element' && TITLE_TAGS.has(child.tagName));
+  const title = index < 0 ? [] : [children[index]];
+  const rest = index < 0 ? children : [...children.slice(0, index), ...children.slice(index + 1)];
+  const header: Element = { type: 'element', tagName: 'header', properties: {}, children: [glyph, ...title] };
+  const body: Element = { type: 'element', tagName: 'slide-body', properties: {}, children: rest };
+  return [header, body];
 };
 
 /** A variant in force: the kind of block that set it and the name it carries. */
@@ -405,7 +437,12 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName = element.children.some((child) => child.type === 'element' && BLOCK_TAGS.has(child.tagName))
       ? 'div'
       : 'span';
-  } else if (tagName === 'slide-box' || tagName === 'slide-grid' || tagName === 'slide-cell') {
+  } else if (
+    tagName === 'slide-box' ||
+    tagName === 'slide-grid' ||
+    tagName === 'slide-cell' ||
+    tagName === 'slide-body'
+  ) {
     tagName = 'div';
   } else if (tagName === 'slide-card') {
     // An article: a card is a titled, self-contained piece, which is what the element means.
@@ -428,10 +465,18 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   const block = VARIANT_BLOCKS[element.tagName];
   const name = block ? asVariant(properties.variant) : undefined;
   delete properties.variant;
-  // A nested list or table with no variant of its own starts clean rather than inheriting the one around it.
-  const activeVariant: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
-  const variantClass =
-    activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[variantPart(element.tagName)];
+  // A nested list or table with no variant of its own starts clean rather than inheriting the one around it, unless
+  // a block of another kind around it sets that part itself, as a card sets its own bullets.
+  const part = variantPart(element.tagName);
+  const inherited = variant && variant.kind !== block && theme.variants[variant.kind]?.[variant.name]?.[part];
+  const activeVariant: ActiveVariant | undefined = block
+    ? name
+      ? { kind: block, name }
+      : inherited
+        ? variant
+        : undefined
+    : variant;
+  const variantClass = activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[part];
   if (block && variantClass) {
     properties.dataVariant = name;
   }
@@ -461,6 +506,25 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     properties.style = declarations.join('; ');
   }
 
+  // Where a grid stands in the space left to it, which its classes read.
+  const align = element.tagName === 'slide-grid' ? asVariant(properties.align) : undefined;
+  if (element.tagName === 'slide-grid') {
+    delete properties.align;
+  }
+  if (align) {
+    properties.dataAlign = align;
+  }
+
+  // A card's icon joins its title; the card says it has one, so its variant can set the bullets under it.
+  const icon = element.tagName === 'slide-card' ? asVariant(properties.icon) : undefined;
+  if (element.tagName === 'slide-card') {
+    delete properties.icon;
+  }
+  if (icon) {
+    properties.dataIcon = icon;
+  }
+  const children = icon ? withIconHeader(element.children, icon) : element.children;
+
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);
   if (themed) {
     properties.className = [themed, ...classList(properties.className)];
@@ -471,7 +535,7 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName,
     properties: withStep(properties),
     children: markActive(
-      element.children.map((child) =>
+      children.map((child) =>
         child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', activeVariant) : child,
       ),
       activeItem,

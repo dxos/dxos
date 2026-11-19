@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
 import type * as SqlClient from 'effect/sql/SqlClient';
 
-import { RdfStore } from '@dxos/echo-memory';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { QuadStore } from '@dxos/sparql-sqlite/async';
 
 /** Drops the variables a solution leaves unbound, which the engine reports as `undefined`. */

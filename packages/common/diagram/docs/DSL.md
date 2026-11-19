@@ -67,6 +67,7 @@ label is a bare quoted string, and everything else is `name=value`.
 | Kind                                  | Geometry                          | Label    |
 | ------------------------------------- | --------------------------------- | -------- |
 | `rect` `ellipse` `diamond` `triangle` | `<x>,<y> <w>x<h>`                 | optional |
+| `custom`                              | `<x>,<y> <w>x<h>`                 | optional |
 | `circle`                              | `<cx>,<cy> <r>`                   | optional |
 | `line` `curve`                        | `<x>,<y> <x>,<y> …` (two or more) | —        |
 | `arc`                                 | `<cx>,<cy> <r> <from>..<to>`      | —        |
@@ -77,6 +78,13 @@ label is a bare quoted string, and everything else is `name=value`.
 Attributes, all optional unless noted: `color` `fill` `stroke` `weight` on every element;
 `rotation` and `corners` on the box kinds; `w` (wrap width) on `text`; `closed` on `line`; `head`
 and `tail` on `arrow`; `ref` on `portal`, where the schema requires it.
+
+A `custom` box may be followed by braces holding the component's rows (`{ item "…" }`), as a node may.
+
+`custom <id> kind=<name>` is a box a contributed component draws (`custom s0 kind=graph seed=7`): `kind` is
+required and names the component, and every attribute the box does not define is the component's own field. A
+shape word never takes `kind`, so a component has one spelling. Inside a `grid` a box states no geometry, and
+`width` and `height` are the size it keeps in its cell.
 
 There are no bare flags — `closed=true`, not `closed`. A bare word after an arrow's `->` would be
 ambiguous between a ref and a flag, and an LR(1) parser cannot settle it without looking past the
@@ -138,6 +146,76 @@ gives them its own meaning. The full reference an agent reads is the drawing ski
 | `structure` (default) | boxes on a grid; `shape=`                                   | routed connectors; relationship words set markers                    | `semantic-engine.ts`                 |
 | `sequence`            | participants, as columns in declaration order; `role=actor` | messages, as rows in source order: `->`, `calls`, `returns`, `sends` | `sequence-engine.ts`                 |
 | `dataflow`            | `role=process` (default), `store`, `external`               | flows of named data                                                  | `semantic-engine.ts` + `dataflow.ts` |
+| `grid`                | boxes in the next cell of their group; `kind=` a component  | connectors between boxes, groups and places on a component           | `grid-engine.ts`                     |
+
+### Grid diagrams
+
+`diagram kind=grid size=1600x880 cols=3 gap=64 padding=48` divides a frame by tracks, as CSS grid does. Every
+`group` is a grid in the cell it was given and may hold other groups; each member takes the next cell in the order
+it is written, so nothing states a coordinate and nothing is searched for.
+
+```diagram
+diagram kind=grid size=1600x880 cols="1fr 2fr 1fr" gap=64 padding=48
+
+group services "EDGE Services" gap=12 {
+  node calendar "Calendar" kind=card icon=calendar-blank tone=event
+  node email "Email" kind=card icon=envelope
+}
+node field kind=graph seed=29
+
+edge calendar -- field stroke=dashed
+```
+
+- `cols` and `rows` are a count (`3`) or a track list (`"48 1fr"`, `"1fr auto 2fr"`); an axis with none takes
+  one track per member. `gap` is the space between cells and `padding` the space inside the frame.
+- `autoCols` and `autoRows` size every track an axis does not state (`autoRows=88` makes a run of cards one
+  height); `justifyContent` and `alignContent` (`start`, `center`, `end`) say where the tracks sit when they
+  leave space over.
+- `layout=pack` places a group's members as circles packed into its frame instead of on tracks; `packSeed`
+  fixes the arrangement and `packMin`/`packMax` bound the size drawn for a member that states none. Sizes that do
+  not all fit are drawn at one factor of what was asked, the largest that fits, so asking for more than the frame
+  holds fills it.
+- A group with a label draws it as a heading over its members; a group without one is only their grid.
+- `border=true`, `fill`, `stroke` and `color` on a group draw a frame round its members. The heading stays
+  outside it; for a frame round the heading too, put the labelled group inside a framed one.
+- An empty group (`group port { }`) draws nothing and holds its cell: a spacer, or a place for an edge to end.
+- `node … kind=card` places a component. Every attribute the node does not define itself is the component's own
+  field; one whose name the node does define is written escaped (`data-fill=0.55`).
+- A node that names a component may list the component's rows in braces, one `item "…"` to a line, each with
+  attributes of its own (`item "Registered with ECHO" icon=database`). A row is the component's content: it has no
+  id, nothing places it, and it is stored on the node's own record. A node without `kind=` takes none.
+- `border=true|false` on a node says whether its box draws a border.
+- `width=240` and `height=48` on a node are the size it keeps in its cell, centred there; an axis left out fills
+  the cell. In a packed group the larger is the diameter of its circle. They are the only way a node states a
+  size: a component's own field named `width` is written `data-width`.
+- An edge may end on a group, on a place only the component knows (`frame/nav`), and on a port of a node or of a
+  group's frame (`card#e3`, `frame#w2`).
+  `path=line|ortho|curve|smart` says how it runs between its ends.
+- Placement relations, pins, sides, waypoints and buses are ignored with a warning.
+
+The engine places nothing itself. It lowers the diagram to one object of `grid` boxes, component boxes and
+arrows — the scene statements above — and `@dxos/scene` solves the tracks wherever the drawing is rendered, so the
+rule is what is stored. Outside a grid diagram a nested group still reports, and what only this kind reads
+(`size`, the track and frame attributes, `kind=` on a node, `path` on an edge) says it belongs here.
+
+#### Reading a grid diagram back out of a drawing
+
+A drawing stores records, not the text it was written as. `DSL.printIntent(scene)` gives the `diagram kind=grid`
+text for a drawing made of grid boxes: each grid is a `group`, a grid holding a heading over a second grid is a
+labelled group, a box that draws nothing is an empty group, every other box a `node`, every arrow an `edge`.
+
+It returns either `{ text }` or `{ reasons }`, never an approximation. Before it returns text it lowers that text
+again and compares what the two draw: the same boxes in the same frames, the same group frames, the same
+connectors. So text that comes back always draws the drawing it came from.
+
+- From a drawing a grid diagram made, the text lowers to the same object, element for element, and printing its
+  own text again gives the same text.
+- From boxes written by hand it draws the same picture, but the grids are the engine's: a heading and its
+  members' grid take the engine's ids, and a heading's grid that is also padded or framed becomes two groups.
+- It is refused, with the reason, when the drawing holds what this kind cannot say: text style on a box
+  (`align`, `fontSize`), a routed connector or one with a free end, a box no grid places, a box whose own size an
+  `auto` track measures, a shape that is not a box, a scaled object, or more than one object.
+- Comments and the author's spacing are not in the records, so they do not come back.
 
 A sequence diagram also reads two statements no other kind does:
 

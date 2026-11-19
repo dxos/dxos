@@ -37,6 +37,7 @@ export default defineConfig({
     'app-graph/TypeSection': 'src/app-graph/TypeSection.ts',
     'app/AppUpdate': 'src/app/AppUpdate.ts',
     'app/GraphPath': 'src/app/GraphPath.ts',
+    'app/LinkAction': 'src/app/LinkAction.ts',
     'app/NativeOAuth': 'src/app/NativeOAuth.ts',
     'app/NativePasskey': 'src/app/NativePasskey.ts',
     'app/NavigationResolver': 'src/app/NavigationResolver.ts',

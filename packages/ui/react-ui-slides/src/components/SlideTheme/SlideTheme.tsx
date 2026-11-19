@@ -155,6 +155,10 @@ export const slideThemeStyle = (settings: SlideTheme.Settings = {}): SlideThemeS
     '--slide-font-body': font?.family ?? vars.fontBody,
     '--slide-font-heading': font?.family ?? vars.fontHeading,
     '--slide-font-mono': monoFont?.family ?? vars.fontMono,
+    // Published only where the deck sets them: a heading's class falls back to `--slide-accent` as it stands at the
+    // heading, which a variable resolved here would freeze, cutting an unset heading color off from a tone around it.
+    ...(SlideTheme.isColor(settings.heading) ? { '--slide-heading': settings.heading } : {}),
+    ...(SlideTheme.isColor(settings.subheading) ? { '--slide-subheading': settings.subheading } : {}),
   };
 };
 

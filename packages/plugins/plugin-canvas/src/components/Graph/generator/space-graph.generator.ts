@@ -41,7 +41,7 @@ export type Params = {
 // ---------------------------------------------------------------- geometry (pure; tested against the golden file)
 
 /** Mulberry32: seeded floats in [0, 1). `ctx.random()` would give a different graph than the deck's. */
-const rng = (seed: number) => {
+export const rng = (seed: number) => {
   let a = seed | 0;
   return () => {
     a = (a + 0x6d2b79f5) | 0;
@@ -159,6 +159,40 @@ export const layout = (center: Point, r: number, p: Pick<Params, 'seed' | 'pitch
   const nodes = shuffle(cells, random).slice(0, count);
   const links = connect(nodes, p.pitch, p.extra, random);
   return { cells, nodes, links, nodeR };
+};
+
+/**
+ * The objects within `depth` hops of `root`, and the links between them: what a drawing colours when it marks a
+ * subgraph. A walk over the graph the same seed produced, so the mark is a rule rather than a list of positions —
+ * re-pack the field and the same objects are still the ones that light up.
+ */
+export const subgraph = (links: readonly Link[], root: number, depth: number) => {
+  const neighbours = new Map<number, number[]>();
+  for (const [from, to] of links) {
+    neighbours.set(from, [...(neighbours.get(from) ?? []), to]);
+    neighbours.set(to, [...(neighbours.get(to) ?? []), from]);
+  }
+  const nodes = new Set<number>([root]);
+  let front = [root];
+  for (let step = 0; step < Math.max(0, depth); step++) {
+    const next: number[] = [];
+    for (const index of front) {
+      for (const other of neighbours.get(index) ?? []) {
+        if (!nodes.has(other)) {
+          nodes.add(other);
+          next.push(other);
+        }
+      }
+    }
+    front = next;
+  }
+  const inside = new Set<number>();
+  links.forEach(([from, to], index) => {
+    if (nodes.has(from) && nodes.has(to)) {
+      inside.add(index);
+    }
+  });
+  return { nodes, links: inside };
 };
 
 /** `n` objects near a point: every third of the 3n nearest, so picks spread out instead of clumping. */

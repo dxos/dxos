@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DataFactory } from 'n3';
 import { describe, test } from 'vitest';
 
 import * as Fact from './Fact.ts';
 import * as Graph from './Graph.ts';
 import * as Mapping from './Mapping.ts';
+import * as Rdf from './Rdf.ts';
 import * as Vocab from './Vocab.ts';
 
 /** A fact as stored: its predicate carries the IRI it resolved to. */
@@ -133,7 +133,7 @@ describe('fact ↔ quads mapping', () => {
   test('rejects an invalid stored force', ({ expect }) => {
     const quads = Mapping.factToTriples({ ...FACT, illocution: { force: 'assertive' } }).map((quad) =>
       quad.predicate.value.endsWith('#force')
-        ? DataFactory.quad(quad.subject, quad.predicate, DataFactory.literal('bogus'), quad.graph)
+        ? Rdf.quad(quad.subject, quad.predicate, Rdf.literal('bogus'), quad.graph)
         : quad,
     );
     expect(() => Mapping.triplesToFacts(quads)).toThrow();

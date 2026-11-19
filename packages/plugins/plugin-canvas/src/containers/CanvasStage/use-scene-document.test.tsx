@@ -6,7 +6,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj } from '@dxos/echo';
 import { toEcho } from '@dxos/scene';
@@ -15,7 +15,7 @@ import { useSceneDocument } from './use-scene-document.ts';
 
 describe('useSceneDocument', () => {
   test("follows edits to the stored scene's layout", () => {
-    const { root, layouts } = toEcho(Dsl.readScenes(EXEMPLARS.links).document);
+    const { root, layouts } = toEcho(DSL.readScenes(EXEMPLARS.links).document);
     const layout = layouts.get('links');
     const { result } = renderHook(() => useSceneDocument(root));
     const label = () => result.current?.layouts[0]?.elements.a?.label;
@@ -30,7 +30,7 @@ describe('useSceneDocument', () => {
   });
 
   test('follows edits to the stored scene', () => {
-    const { root } = toEcho(Dsl.readScenes(EXEMPLARS.links).document);
+    const { root } = toEcho(DSL.readScenes(EXEMPLARS.links).document);
     const { result } = renderHook(() => useSceneDocument(root));
     act(() => {
       Obj.update(root, (root) => {
@@ -41,7 +41,7 @@ describe('useSceneDocument', () => {
   });
 
   test("follows edits to a composite object's parts layout", () => {
-    const { root, layouts } = toEcho(Dsl.readScenes(EXEMPLARS.subscene).document);
+    const { root, layouts } = toEcho(DSL.readScenes(EXEMPLARS.subscene).document);
     const detail = layouts.get('b-detail');
     const { result } = renderHook(() => useSceneDocument(root));
     const label = () => result.current?.layouts.find((layout) => layout.id === 'b-detail')?.elements.x?.label;

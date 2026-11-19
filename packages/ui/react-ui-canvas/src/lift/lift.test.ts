@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Scene, resolveLayout3D } from '@dxos/scene';
 
@@ -13,7 +13,7 @@ import { PIXELS_PER_UNIT, camera2DTo3D, flattenLayout, liftLayout, liftScene } f
 
 const viewport = { width: 800, height: 600 };
 
-const lifted = (name: 'links' | 'subscene') => liftScene(Dsl.readScenes(EXEMPLARS[name]).document);
+const lifted = (name: 'links' | 'subscene') => liftScene(DSL.readScenes(EXEMPLARS[name]).document);
 
 describe('liftScene', () => {
   test("an element right of the origin in 2D is at +x in 3D, sized by its object's size", () => {
