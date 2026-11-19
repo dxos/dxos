@@ -73,15 +73,16 @@ export class TestReplicationNetwork extends Resource {
         replicator,
         otherReplicator,
       );
-      await replicator.context!.onConnectionOpen(connection1);
-      await otherReplicator.context!.onConnectionOpen(connection2);
+      // Registered on both replicators, since teardown walks their `connections`.
+      await replicator.addConnection(connection1);
+      await otherReplicator.addConnection(connection2);
     }
   }
 
   private async _disconnectReplicator(replicator: TestReplicator): Promise<void> {
+    // Only this side's end, since notifying a still-open peer stalls its repo shutdown.
     for (const connection of replicator.connections) {
-      await replicator.context!.onConnectionClosed(connection);
-      await connection.otherSide!.owningReplicator!.removeConnection(connection.otherSide!);
+      await replicator.removeConnection(connection);
     }
   }
 

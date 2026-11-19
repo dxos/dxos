@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { type DeletionMemo, type ItemsUpdatedEvent } from '../core-db/index.ts';
 import { isEchoObject } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { toDeclaredVersions } from '../proxy-db/version-documents/declared-version.ts';
 import { adjustGroups, withMembers } from './manifest-merge.ts';
 import {
   type MergePlan,
@@ -262,7 +263,12 @@ export class LocalQueryEngine implements QueryContext {
     return states;
   }
 
-  async run(
+  async run(ctx: Context, query: QueryAST.Query, options: QueryContextRunOptions = {}): Promise<SourceEntry[]> {
+    // Each object at the version the query declares for it, as a live query reads it.
+    return toDeclaredVersions(await this.#run(ctx, query, options), query);
+  }
+
+  async #run(
     ctx: Context,
     query: QueryAST.Query,
     { timeout = 30_000, onExecutionTime }: QueryContextRunOptions = {},

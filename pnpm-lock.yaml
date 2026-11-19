@@ -300,6 +300,9 @@ catalogs:
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
+    '@noble/hashes':
+      specifier: ^1.8.0
+      version: 1.8.0
     '@observablehq/plot':
       specifier: ^0.6.11
       version: 0.6.11
@@ -6876,9 +6879,6 @@ importers:
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../echo-host
-      '@dxos/echo-panproto':
-        specifier: workspace:*
-        version: link:../echo-panproto
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
@@ -7066,6 +7066,9 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)
+      '@noble/hashes':
+        specifier: 'catalog:'
+        version: 1.8.0
       bs58check:
         specifier: 'catalog:'
         version: 4.0.0
@@ -7190,9 +7193,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant

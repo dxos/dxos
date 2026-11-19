@@ -7,6 +7,6 @@ export { EchoReactiveHandler, createObject, initEchoReactiveObjectRootProxy } fr
 export { getObjectCore } from './echo-object-utils.ts';
 export { isEchoObject } from './echo-object-utils.ts';
 export * from './edit-history.ts';
-export { type ProxyTarget } from './echo-proxy-target.ts';
+export { type ProxyTarget, getEchoDatabase } from './echo-proxy-target.ts';
 export * from './subscription.ts';
 export * from './util.ts';

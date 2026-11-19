@@ -19,6 +19,7 @@ export * as Hypergraph from './Hypergraph.ts';
 export * as Json from './Json.ts';
 export * as JsonSchema from './JsonSchema.ts';
 export * as Key from './Key.ts';
+export * as Lens from './Lens.ts';
 export * as Migration from './Migration.ts';
 export * as Obj from './Obj.ts';
 export * as Order from './Order.ts';

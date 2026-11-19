@@ -20,6 +20,7 @@ import {
   type Filter,
   type Hypergraph,
   JsonSchema,
+  Lens,
   type Migration,
   Obj,
   Query,
@@ -149,6 +150,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   readonly #heads = new WeakMap<Entity.Unknown, readonly string[]>();
   /** Persisted type entities; few, and needed to hydrate anything, so held for the database's life. */
   readonly #types = new Map<string, Entity.Unknown>();
+  readonly #lenses: Lens.Stored[] = [];
 
   /** Changed entities, held strongly until their write is durable. */
   #dirty = new Map<string, Entity.Unknown>();
@@ -422,8 +424,22 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     if (Type.isType(obj)) {
       throw new TypeError('Type entities must be persisted via db.addType(), not db.add().');
     }
+    if (Lens.isLens(obj) || Lens.isStored(obj)) {
+      throw new TypeError('Lenses must be persisted via db.addLens(), not db.add().');
+    }
     this.#attach(obj);
     return obj;
+  }
+
+  async addLens(lens: Lens.Any): Promise<Lens.Stored> {
+    const match = this.#lenses.find((stored) => stored.name === lens.name && stored.digest === lens.digest);
+    if (match) {
+      return match;
+    }
+    const stored = Lens.toStored(lens);
+    this.#attach(stored);
+    this.#lenses.push(stored);
+    return stored;
   }
 
   async addType<T extends Type.AnyEntity>(type: T): Promise<T> {

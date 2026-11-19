@@ -21,6 +21,7 @@ import {
 } from '../core-db/index.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { declaredResultType, peekDeclaredVersion } from '../proxy-db/version-documents/declared-version.ts';
 import { type MergePlan, createMergePlan, evaluateCore, matchesFeedSelection, ordersLocally } from './merge-plan.ts';
 import { type SourceEntry } from './query-context.ts';
 import {
@@ -52,6 +53,8 @@ export class WorkingSetView {
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
   private _results?: SourceEntry<Obj.Any>[] = undefined;
+  /** {@link _results} at the version the query declares, kept until the results or a version binding change. */
+  #declared?: { results: SourceEntry[]; entries: SourceEntry[] } = undefined;
   readonly #covers = new WeakMap<QueryAST.Query, boolean>();
   /** Asked on every subscription and completeness read, and each answer plans the whole query. */
   readonly #windowEvaluation = new WeakMap<QueryAST.Query, boolean>();
@@ -247,8 +250,36 @@ export class WorkingSetView {
   }
 
   getResults(): SourceEntry[] {
-    const space = this._query ? (this._results ??= this.#computeResults(this._query)) : [];
+    const space = this._query
+      ? this.#declaredVersions(this._query, (this._results ??= this.#computeResults(this._query)))
+      : [];
     return this.#tailMatches ? [...space, ...this.#tailMatches.entries()] : space;
+  }
+
+  /**
+   * Each result at the version the query declares for it, as the index source returns it. A result is left out
+   * only while its declared version is being bound; a relation, or an object read as it is, comes back unchanged.
+   */
+  #declaredVersions(query: QueryAST.Query, results: SourceEntry[]): SourceEntry[] {
+    if (this.#declared?.results === results) {
+      return this.#declared.entries;
+    }
+    const type = declaredResultType(query, this._database.graph.registry);
+    const entries =
+      type === undefined
+        ? results
+        : results.flatMap((entry) => {
+            if (entry.result === undefined) {
+              return [entry];
+            }
+            const result = peekDeclaredVersion(entry.result, type, () => {
+              this.#declared = undefined;
+              this.changed.emit();
+            });
+            return result === undefined ? [] : result === entry.result ? [entry] : [{ ...entry, result }];
+          });
+    this.#declared = { results, entries };
+    return entries;
   }
 
   /** A one-shot answer from what the working set holds now; nothing is loaded. */
