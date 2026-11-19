@@ -210,6 +210,19 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
     setBusy(false);
   }, [invokePromise, spaceId, applicationId, backIndex, crawlState, maxDays]);
 
+  // Forgets the frontier, cursors and source hashes, so the next run re-reads the history window and re-extracts it.
+  const handleRestart = useCallback(async () => {
+    if (!crawlState) {
+      return;
+    }
+    Obj.update(crawlState, (crawlState) => {
+      CrawlState.removeTargets(crawlState, Object.keys(crawlState.targets));
+      CrawlState.clearSourceHashes(crawlState);
+      crawlState.messages = 0;
+    });
+    await handleCheckNow();
+  }, [crawlState, handleCheckNow]);
+
   const handlePause = useCallback(() => {
     if (backIndex) {
       Obj.update(backIndex.trigger, (trigger) => {
@@ -365,27 +378,35 @@ export const DiscordConnectionSetup = ({ connection }: DiscordConnectionSetupPro
               </Select.Content>
             </Select.Root>
           </Form.Field>
-          <Typography.Text tone='muted'>
-            {state?.lastRun
-              ? t('discord-index-totals.label', {
-                  messages: state.messages,
-                  status: state.runStatus,
-                  at: new Date(state.lastRun.at).toLocaleTimeString(),
-                })
-              : t('discord-index-not-run.label')}
-          </Typography.Text>
-          <Button.Root
-            icon={triggerView?.enabled ? 'ph--pause--regular' : 'ph--play--regular'}
-            label={t(triggerView?.enabled ? 'discord-index-pause.label' : 'discord-index-resume.label')}
-            disabled={busy || indexedChannels.size === 0}
-            onClick={handlePause}
-          />
-          <Button.Root
-            icon='ph--arrows-clockwise--regular'
-            label={t('discord-index-check-now.label')}
-            disabled={busy || indexedChannels.size === 0 || !crawlState}
-            onClick={() => void handleCheckNow()}
-          />
+          <div className='flex flex-wrap items-center gap-2'>
+            <Typography.Text tone='muted' classNames='grow'>
+              {state?.lastRun
+                ? t('discord-index-totals.label', {
+                    messages: state.messages,
+                    status: state.runStatus,
+                    at: new Date(state.lastRun.at).toLocaleTimeString(),
+                  })
+                : t('discord-index-not-run.label')}
+            </Typography.Text>
+            <Button.Root
+              icon={triggerView?.enabled ? 'ph--pause--regular' : 'ph--play--regular'}
+              label={t(triggerView?.enabled ? 'discord-index-pause.label' : 'discord-index-resume.label')}
+              disabled={busy || indexedChannels.size === 0}
+              onClick={handlePause}
+            />
+            <Button.Root
+              icon='ph--arrows-clockwise--regular'
+              label={t('discord-index-check-now.label')}
+              disabled={busy || indexedChannels.size === 0 || !crawlState}
+              onClick={() => void handleCheckNow()}
+            />
+            <Button.Root
+              icon='ph--arrow-counter-clockwise--regular'
+              label={t('discord-index-restart.label')}
+              disabled={busy || indexedChannels.size === 0 || !crawlState}
+              onClick={() => void handleRestart()}
+            />
+          </div>
         </Form.FieldSet>
       )}
     </>

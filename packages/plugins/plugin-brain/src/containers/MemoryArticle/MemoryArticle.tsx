@@ -20,7 +20,7 @@ import { BrainCapabilities } from '#types';
 import { type FactStoreRegistry } from '../../capabilities/fact-store-registry.ts';
 import { BrainNamespace } from '../../namespace.ts';
 import type * as QueryLog from '../../QueryLog.ts';
-import { downloadText, exportTrig, importTrig, runQuery, statementCount } from './memory.ts';
+import { clearStore, downloadText, exportTrig, importTrig, runQuery, statementCount } from './memory.ts';
 import { useQueryLog } from './use-query-log.ts';
 
 const STARTER_QUERY = `SELECT ?p (COUNT(*) AS ?n) WHERE { GRAPH ?g { ?s ?p ?o } }
@@ -79,6 +79,20 @@ const MemoryPanel = ({ registry, spaceId }: { registry: FactStoreRegistry; space
     downloadText(result.trig, `memory-${spaceId}.trig`, 'application/trig');
   }, [registry, spaceId, t]);
 
+  // Clearing cannot be undone, so the first click only arms the button and the second clears.
+  const [confirmClear, setConfirmClear] = useState(false);
+  const handleClear = useCallback(async () => {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      return;
+    }
+    setConfirmClear(false);
+    const result = await clearStore(registry.forSpace(spaceId));
+    setStatus(
+      'error' in result ? t('memory-clear-failed.message', { error: result.error }) : t('memory-cleared.message'),
+    );
+  }, [registry, spaceId, t, confirmClear]);
+
   const handleRun = useCallback(() => {
     setPinned(undefined);
     void runQuery(registry.logged(spaceId), draft).catch((error) => log.catch(error));
@@ -120,6 +134,14 @@ const MemoryPanel = ({ registry, spaceId }: { registry: FactStoreRegistry; space
             label={t('memory-export.button')}
             onClick={() => void handleExport()}
             data-testid='brain.memory.export'
+          />
+          <Button.Root
+            variant='ghost'
+            icon='ph--trash--regular'
+            label={t(confirmClear ? 'memory-clear-confirm.button' : 'memory-clear.button')}
+            onClick={() => void handleClear()}
+            onBlur={() => setConfirmClear(false)}
+            data-testid='brain.memory.clear'
           />
           {status && <Toolbar.Text classNames='text-description truncate'>{status}</Toolbar.Text>}
         </Toolbar.Root>

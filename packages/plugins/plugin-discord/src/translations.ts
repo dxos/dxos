@@ -69,6 +69,7 @@ export const translations = [
         'discord-index-totals.label': '{{messages}} messages read · {{status}} · last run {{at}}',
         'discord-index-pause.label': 'Pause',
         'discord-index-check-now.label': 'Check now',
+        'discord-index-restart.label': 'Restart',
         'discord-index-resume.label': 'Resume',
         'discord-setup-disconnect.label': 'Disconnect',
         'discord-channel.label': 'Discord',
