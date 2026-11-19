@@ -208,8 +208,8 @@ export type RecordedQuestion = {
 };
 
 /** Every question {@link extractQuestionsStage} recorded, read back from the fact store's `asked` facts. */
-export const listQuestions = (): Effect.Effect<RecordedQuestion[], SemanticIndexError, FactStore> =>
-  Effect.gen(function* () {
+export const listQuestions: () => Effect.Effect<RecordedQuestion[], SemanticIndexError, FactStore> = Effect.fnUntraced(
+  function* () {
     const store = yield* FactStore;
     const facts = yield* store.query({ predicate: 'asked' });
     return facts.flatMap((fact): RecordedQuestion[] => {
@@ -227,4 +227,5 @@ export const listQuestions = (): Effect.Effect<RecordedQuestion[], SemanticIndex
         },
       ];
     });
-  });
+  },
+);
