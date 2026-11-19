@@ -56,12 +56,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
       const results = truncated ? matched.slice(0, limit) : matched;
       return {
         // Every row names its object the same way; `includeContent` adds the object's own fields beside the names,
-        // where callers have always read them.
+        // where callers have always read them. A stored field of the same name (e.g. `label`) keeps its value.
         results: results.map((object) => ({
-          ...(includeContent ? Obj.toJSON(object) : {}),
           dxn: Obj.getURI(object),
           typename: Obj.getTypename(object),
           label: Obj.getLabel(object),
+          ...(includeContent ? Obj.toJSON(object) : {}),
         })),
         truncated,
       };
