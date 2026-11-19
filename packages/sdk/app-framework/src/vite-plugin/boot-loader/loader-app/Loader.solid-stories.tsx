@@ -181,3 +181,50 @@ export const StalledThenReady: Story = {
     return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
 };
+
+/**
+ * The loader stopped for good: another tab took over. The ring gives way to one line and one action,
+ * with the facts behind a disclosure — what composer-app's `paused.html` shows.
+ */
+export const Paused: Story = {
+  render: (args) => {
+    const store = createLoaderStore('Starting…');
+    store.pause({
+      title: 'Another instance of the app is open',
+      action: { label: 'Continue here', onClick: () => console.log('continue pressed — the host would take over') },
+      details: [
+        { term: 'Reason', value: 'Different versions open' },
+        { term: 'This version', value: '11/19/2026, 10:07:28 AM' },
+        { term: 'Other version', value: '11/19/2026, 10:08:28 AM' },
+      ],
+      note: 'A newer version of Composer opened in another tab. Continuing here loads the newer version.',
+    });
+    onCleanup(() => store.dispose());
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
+  },
+};
+
+/** Loading, then paused: the ring and status log give way to the message. */
+export const LoadingThenPaused: Story = {
+  render: (args) => {
+    const store = createLoaderStore('Starting…');
+    void store.loadSprite(DEFAULT_SPRITE_PATH);
+    onMount(() => {
+      const timers = [
+        setTimeout(() => store.setProgress(0.4), 500),
+        setTimeout(
+          () =>
+            store.pause({
+              title: 'Another instance of the app is open',
+              action: { label: 'Continue here', onClick: () => console.log('continue pressed') },
+              details: [{ term: 'Reason', value: 'Taken over by another tab' }],
+            }),
+          1_500,
+        ),
+      ];
+      onCleanup(() => timers.forEach(clearTimeout));
+    });
+    onCleanup(() => store.dispose());
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
+  },
+};

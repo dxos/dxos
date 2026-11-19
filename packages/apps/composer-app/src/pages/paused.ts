@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import type {} from '@dxos/app-framework/App';
+
 import { PausedParam, type PausedReason, continueHere } from '../util/paused.ts';
 
 // No client, plugins or React: the page must render while another tab owns the worker.
@@ -36,26 +38,17 @@ const params = new URLSearchParams(location.search);
 const reasonParam = params.get(PausedParam.REASON);
 const reason = isReason(reasonParam) ? REASONS[reasonParam] : undefined;
 
-const facts: Array<[string, string | undefined]> = [
-  ['Reason', reason?.label ?? 'Composer is open in another tab'],
-  ['This version', formatVersion(params.get(PausedParam.VERSION))],
-  ['Other version', formatVersion(params.get(PausedParam.OTHER_VERSION))],
-];
+const action = { label: 'Continue here', onClick: () => continueHere(params.get(PausedParam.FROM)) };
 
-const factsElement = document.getElementById('facts');
-for (const [term, value] of facts) {
-  if (value && factsElement) {
-    const dt = document.createElement('dt');
-    dt.textContent = term;
-    const dd = document.createElement('dd');
-    dd.textContent = value;
-    factsElement.append(dt, dd);
-  }
-}
-
-const explanationElement = document.getElementById('explanation');
-if (explanationElement && reason) {
-  explanationElement.textContent = reason.explanation;
-}
-
-document.getElementById('continue')?.addEventListener('click', () => continueHere(params.get(PausedParam.FROM)));
+// The boot loader, stopped: the same mark, surface and button as every load, so the page reads as the
+// app pausing rather than as a different screen.
+window.__bootLoader?.paused?.({
+  title: 'Another instance of the app is open',
+  action,
+  details: [
+    { term: 'Reason', value: reason?.label ?? 'Composer is open in another tab' },
+    { term: 'This version', value: formatVersion(params.get(PausedParam.VERSION)) },
+    { term: 'Other version', value: formatVersion(params.get(PausedParam.OTHER_VERSION)) },
+  ],
+  note: reason?.explanation,
+});

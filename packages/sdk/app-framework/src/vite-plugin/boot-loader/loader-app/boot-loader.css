@@ -358,7 +358,8 @@ body {
   opacity: 0.5;
 }
 
-#boot-loader-stalled-abort {
+/* The loader's one button style, shared by the stalled offer and the paused page's action. */
+.boot-loader-action {
   /*
    * Styled from scratch rather than inherited: the loader paints before any app CSS loads, so it
    * cannot rely on the design system's button.
@@ -373,8 +374,91 @@ body {
   cursor: pointer;
 }
 
-#boot-loader-stalled-abort:hover {
+.boot-loader-action:hover,
+.boot-loader-action:focus-visible {
   opacity: 1;
+}
+
+/*
+ * Paused (see `BootLoaderApi.paused`): the ring is gone and the mark stays, in colour; the message
+ * takes the status log's place under the disc, at the same offset, so the page reads as the loader
+ * that stopped rather than a different screen.
+ */
+/* The id rules set `display`, which would override the browser's own `[hidden]` rule. */
+#boot-loader-status[hidden],
+#boot-loader-plugins[hidden] {
+  display: none;
+}
+
+#boot-loader-disc[data-paused] #boot-loader-mark {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+/*
+ * The message runs taller than the status log it replaces, so the disc and the message rise together
+ * by `--boot-loader-paused-lift` and the details stay on screen on a short window.
+ */
+#boot-loader {
+  --boot-loader-paused-lift: min(160px, 22vh);
+}
+
+/* Paused, the disc also yields to height: the message under it needs room the status log did not. */
+#boot-loader:has(#boot-loader-paused) {
+  --boot-loader-disc-size: min(384px, 80vmin, 50vh);
+  --boot-loader-mark-size: min(300px, 62.5vmin, 39vh);
+}
+
+#boot-loader-disc[data-paused] {
+  transform: translate(-50%, calc(-50% - var(--boot-loader-paused-lift)));
+}
+
+#boot-loader-paused {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translate(
+    0,
+    calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap) - var(--boot-loader-paused-lift))
+  );
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+#boot-loader-paused-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+#boot-loader-paused-details {
+  width: min(420px, 100%);
+  opacity: 0.5;
+  text-align: left;
+}
+
+#boot-loader-paused-details summary {
+  cursor: pointer;
+}
+
+#boot-loader-paused-details dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+}
+
+#boot-loader-paused-details dd {
+  margin: 0;
+}
+
+#boot-loader-paused-details p {
+  margin: 8px 0 0;
 }
 
 /*

@@ -751,7 +751,8 @@ export default defineConfig((env) => ({
     viewerRoutePlugin(),
 
     bootLoaderPlugin({
-      include: ['index.html', 'viewer.html'],
+      // `paused.html` shows the loader stopped, with one action, rather than a screen of its own.
+      include: ['index.html', 'viewer.html', 'paused.html'],
       // A prerelease bundle and the dev server recolour the released mark; production shows it as is.
       markFilter: bootMarkFilter(channelVariant(env.command)),
       markSvg: (() => {
