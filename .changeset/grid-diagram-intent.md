@@ -1,6 +1,8 @@
 ---
 '@dxos/diagram': minor
 '@dxos/plugin-illustrator': patch
+'@dxos/react-ui-slides': patch
+'@dxos/plugin-presenter': patch
 ---
 
 Add `diagram kind=grid`, which lays a drawing out from structure alone: the diagram states one frame and its
@@ -30,3 +32,7 @@ Fixes: diagnostics measure a box a grid places in the frame the grid gives it; t
 a grid as not fitting. A packed group places every member; it used to leave some at the origin. A connector with
 `stroke=dotted` is drawn dotted on a canvas, and one drawn with no arrowhead reads back with none. A card's body
 and footer start under its title.
+
+Slides: a slide is labelled by its front matter `title`, then by its first heading. `<Box variant="brand">` draws a
+product's mark over its name, centred, with the name in the brand's display face whatever font the deck picked. The
+arrows between the cards of a `<List variant="flow">` sit midway between them.

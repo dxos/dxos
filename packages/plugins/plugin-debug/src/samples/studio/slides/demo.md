@@ -1,6 +1,12 @@
 ---
 title: 'Demo'
-layout: 'default'
+layout: 'center'
 ---
 
-# Demo
+<Box variant="brand">
+
+![Composer](https://assets.dxos.org/brand/icons/composer-icon.svg)
+
+# composer
+
+</Box>

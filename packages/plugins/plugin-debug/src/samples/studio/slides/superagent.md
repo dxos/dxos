@@ -9,4 +9,8 @@ layout: 'default'
 
 <!--
 Notes.
+- Collaborative
+- Duplex (chat + unattended)
+- Scheduler (audit and monitoring)
+- Delegated access control
 -->

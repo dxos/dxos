@@ -102,6 +102,15 @@ export const theme = {
         img: 'h-[420px] w-auto max-w-full object-contain',
         p: '[&:has(>img)]:contents',
       },
+      // A product's mark over its name, as one centred block. The name is set in the brand's display face whatever
+      // font the deck picked, since it is the product's wordmark rather than a heading of the deck's.
+      brand: {
+        box: 'flex flex-col items-center gap-16',
+        img: 'h-[640px] w-auto max-w-full object-contain',
+        // `!`: an emphasis layout sizes its headings with a descendant rule that outranks a class on the heading.
+        h1: "text-[240px]! leading-none! font-['Poiret_One',ui-sans-serif,sans-serif] text-(color:--slide-foreground)",
+        p: '[&:has(>img)]:contents',
+      },
       // A picture drawn to the column's height and left to run past its sides, which the slide crops rather than the
       // column: art cut at a column's edge ends in mid-air, and `dxos-center.svg` stops short of its own frame (its
       // drawing reaches x 226..1694 of 1920), so cropping it to the column shows exactly where its rays stop.
