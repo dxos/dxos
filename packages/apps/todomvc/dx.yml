@@ -4,8 +4,13 @@ runtime:
   client:
     storage:
       persistent: true
+    # EDGE features as Composer and diagram-app set them, so a space syncs with both apps and through EDGE.
+    # EDGE gives an identity with no Hub account signaling only, so those identities sync peer to peer.
     edgeFeatures:
       signaling: true
+      subductionReplicator: true
+      feedReplicator: true
+      agents: true
 
   services:
     edge:
