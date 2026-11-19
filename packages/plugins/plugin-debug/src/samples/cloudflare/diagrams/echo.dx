@@ -6,13 +6,14 @@ group layers-section rows="251 517" gap=16 {
       group types-col-0 gap=16 {
         node typescript "TypeScript" kind=card icon=file-ts {
           item "Effect API"
+          item "Design partner with Effect team."
         }
       }
       group types-col-1 gap=16 {
         node json-schema "JSON Schema" kind=card icon=brackets-angle {
           item "Strong and weak types"
-          item "Schema migration"
-          item "dxn:type:org.dxos/Task"
+          item "Versioning, and schema migration"
+          item "Semantic annotations"
         }
       }
     }
@@ -22,28 +23,35 @@ group layers-section rows="251 517" gap=16 {
       node graph "Graph" kind=card icon=graph iconTone=accent {
         item "Globally addressable."
         item "Typed objects and relations."
+        item "Graph traversal DSL."
       }
       node crdt "CRDT" kind=card icon=git-merge iconTone=message {
-        item "Automerge: concurrent edits from people and agents merge deterministically."
+        item "Concurrent edits with multiple actors."
+        item "Design partner with Automerge team."
       }
       node pipeline "Pipeline" kind=card icon=flow-arrow iconTone=event {
-        item "Triggers on queries, feeds, cron, webhooks and email run functions on each change."
+        item "Triggers on queries, feeds, cron, webhooks and email."
+        item "Control for long-running processes."
       }
     }
     group layers-col-1 gap=10 autoRows=155 {
       node feeds "Feeds" kind=card icon=queue iconTone=file {
-        item "Append-only logs: chat, transcripts, agent trajectories."
+        item "Append-only logs: sync, chat, transcripts, agent trajectories."
+        item "Scalable, high throughput."
       }
       node sync "Sync" kind=card icon=arrows-clockwise iconTone=teal {
-        item "Subduction exchanges compacted history fragments by fingerprint."
+        item "Full and partial replication."
+        item "Content-defined chunks, reconciled by fingerprint."
       }
       node index "Index" kind=card icon=list-magnifying-glass iconTone=sheet {
-        item "SQLite everywhere: typed queries, full-text search, reverse references."
+        item "SQLite everywhere."
+        item "Typed queries, full-text search, reverse references."
       }
     }
     group layers-col-2 gap=10 autoRows=155 {
       node blobs "Blobs" kind=card icon=files iconTone=violet {
         item "Files and binary content, referenced from objects."
+        item "Content-addressable."
       }
       node cache "Cache" kind=card icon=lightning iconTone=lime {
         item "A full replica on every device"
@@ -61,8 +69,12 @@ group runtime-section padding=16 border=true {
   group runtime-section-inner "Runtime" gap=10 autoRows=155 alignContent=end {
     node browser "Browser" kind=card icon=browser {
       item "Full replica in the tab."
-      item "Offline and mobile."
-      item "wa-sqlite on OPFS"
+      item "Offline, low-latency."
+      item "wa-sqlite on OPFS."
+    }
+    node mobile "Mobile" kind=card icon=device-mobile {
+      item "Native functionality."
+      item "Design partner with Tauri team."
     }
     node node-box "Node" kind=card icon=terminal-window {
       item "Agents, CLIs and servers."

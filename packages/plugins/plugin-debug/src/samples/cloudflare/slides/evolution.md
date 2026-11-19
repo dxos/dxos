@@ -8,27 +8,44 @@ title: 'Evolution'
 <br>
 <br>
 
-<List variant='flow'>
+<Grid cols="4" align="center">
 
-- **Chat**
-  - Search
-- **Copilot**
-  - Autocomplete
-  - Artifacts
-- **Cowork**
-  - Integration/MCP/OAuth
-  - Playgrounds/gadgets
-- **SuperAgents**
-  - Long running, autonomous
-  - Multi-player (Multica, Buzz)
+<Card icon="chat-circle">
 
-</List>
+### Chat
 
-<br>
-<br>
-<br>
+- Search
 
-## But what happened to the SAASpocalypse?
+</Card>
+
+<Card icon="magic-wand">
+
+### Copilot
+
+- Autocomplete
+- Artifacts
+
+</Card>
+
+<Card icon="plugs-connected">
+
+### Cowork
+
+- Integration, MCP, OAuth
+- Playgrounds, gadgets
+
+</Card>
+
+<Card icon="robot">
+
+### SuperAgents
+
+- Long running, autonomous
+- Multi-player (Multica, Buzz)
+
+</Card>
+
+</Grid>
 
 <!--
 - Notion, etc.
