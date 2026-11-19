@@ -7,6 +7,7 @@ import { Decoration } from '@codemirror/view';
 
 import { type WidgetDef, type WidgetMatcher, createWidget, widgetMatchersFacet, widgetsCore } from '@dxos/ui-editor';
 
+import { SpecBlockCard, type SpecBlockCardProps } from '../../components/SpecBlocks/SpecBlockCard.tsx';
 import { blockCommands } from './block-commands.ts';
 import { keyLabelDecorations } from './key-labels.ts';
 import {
@@ -16,7 +17,6 @@ import {
   specBlocksConfig,
   specBlocksField,
 } from './spec-blocks-state.ts';
-import { SpecBlockCard, type SpecBlockCardProps } from './SpecBlockCard.tsx';
 
 const CARD: WidgetDef<SpecBlockCardProps> = { Component: SpecBlockCard, block: true, keepAlive: true };
 
