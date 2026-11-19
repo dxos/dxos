@@ -31,6 +31,7 @@ describe('element base', () => {
         'composite',
         'constrain',
         'exposed',
+        'extent',
         'follows',
         'grow',
         'hidden',

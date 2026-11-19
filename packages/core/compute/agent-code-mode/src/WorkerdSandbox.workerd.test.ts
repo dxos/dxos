@@ -114,6 +114,7 @@ const makeWorkspace = () => {
 const dialectOver = (bindings: Record<string, unknown>): Dialect => ({
   name: 'plain',
   instructions: () => '',
+  operations: () => '',
   wrap: (code) => code,
   bindings: () => bindings,
 });

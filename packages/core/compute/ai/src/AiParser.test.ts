@@ -528,6 +528,31 @@ describe('parser', () => {
     );
 
     it.effect(
+      "the stats block carries the call's prompt-cache reads and writes",
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          Response.makePart('finish', {
+            reason: 'stop',
+            usage: { inputTokens: { total: 35_256, cacheRead: 35_000, cacheWrite: 254 }, outputTokens: { total: 37 } },
+          }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result.at(-1)).toMatchObject({
+          _tag: 'stats',
+          usage: {
+            inputTokens: 35_256,
+            outputTokens: 37,
+            totalTokens: 35_293,
+            cacheReadTokens: 35_000,
+            cacheWriteTokens: 254,
+          },
+        });
+      }),
+    );
+
+    it.effect(
       'a tool call opened while another is still open closes the previous one',
       Effect.fn(function* ({ expect }) {
         // Providers streaming parallel tool calls (the OpenAI dialect) end each call only after

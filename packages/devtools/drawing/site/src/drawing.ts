@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { type Report, render } from '@dxos/drawing';
 import { BaseError } from '@dxos/errors';
 
@@ -55,7 +55,7 @@ export const draw: (text: string, name?: string) => Effect.Effect<Drawing, Rende
 export const toDsl = (language: Language, text: string): Effect.Effect<string, ConvertError> =>
   language === 'dx'
     ? Effect.succeed(text)
-    : Dsl.convert(text).pipe(Effect.mapError((cause) => new ConvertError({ cause, context: { name: HERO } })));
+    : DSL.convert(text).pipe(Effect.mapError((cause) => new ConvertError({ cause, context: { name: HERO } })));
 
 /**
  * Converts Mermaid to `.dx` text, then renders that, so the download carries editable `.dx` source whichever
@@ -63,7 +63,7 @@ export const toDsl = (language: Language, text: string): Effect.Effect<string, C
  */
 export const drawMermaid: (text: string, name?: string) => Effect.Effect<Drawing, RenderError | ConvertError> =
   Effect.fn('drawMermaid')(function* (text: string, name: string = HERO) {
-    const source = yield* Dsl.convert(text).pipe(
+    const source = yield* DSL.convert(text).pipe(
       Effect.mapError((cause) => new ConvertError({ cause, context: { name } })),
     );
     return yield* draw(source, name);

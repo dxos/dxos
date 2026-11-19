@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Dsl, DxSvg } from '@dxos/diagram';
+import { DSL, DxSvg } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 
@@ -25,7 +25,7 @@ describe('drawing-io', () => {
     const source = DxSvg.extract(svg);
     const text = payload?.source?.text ?? '';
     expect(source).toMatchObject({ source: { language: 'dsl' } });
-    const { problems } = await EffectEx.runPromise(Dsl.compile(text));
+    const { problems } = await EffectEx.runPromise(DSL.compile(text));
     expect(problems.filter(({ severity }) => severity === 'error')).toHaveLength(0);
     expect(fileName(drawing)).toBe('Starter.dx.svg');
   });

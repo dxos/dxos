@@ -7,8 +7,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import { DataFactory, type Quad, Writer } from 'n3';
 
+import * as Rdf from './Rdf.ts';
+import * as Trig from './Trig.ts';
 import * as Vocab from './Vocab.ts';
 
 /** One source a pipeline read (a Discord channel or thread): how far it read and what it found there. */
@@ -74,22 +75,17 @@ export const STATE = `${Vocab.SX}pipelineState`;
 const JSON_DATATYPE = `${Vocab.RDF}JSON`;
 
 /** The quad storing `state`; importing it into a store replaces nothing, so a store holds one state per run name. */
-export const toQuads = (state: State): Quad[] => [
-  DataFactory.quad(
-    DataFactory.namedNode(`${GRAPH}/${encodeURIComponent(state.name)}`),
-    DataFactory.namedNode(STATE),
-    DataFactory.literal(JSON.stringify(state), DataFactory.namedNode(JSON_DATATYPE)),
-    DataFactory.namedNode(GRAPH),
+export const toQuads = (state: State): Rdf.Quad[] => [
+  Rdf.quad(
+    Rdf.namedNode(`${GRAPH}/${encodeURIComponent(state.name)}`),
+    Rdf.namedNode(STATE),
+    Rdf.literal(JSON.stringify(state), Rdf.namedNode(JSON_DATATYPE)),
+    Rdf.namedNode(GRAPH),
   ),
 ];
 
 /** `state` as a TriG document, which a store imports beside the facts the run wrote. */
-export const toTrig = (state: State): Effect.Effect<string, Error> =>
-  Effect.callback<string, Error>((resume) => {
-    const writer = new Writer({ format: 'application/trig' });
-    writer.addQuads(toQuads(state));
-    writer.end((error, result) => resume(error ? Effect.fail(error) : Effect.succeed(result)));
-  });
+export const toTrig = (state: State): Effect.Effect<string> => Effect.sync(() => Trig.write(toQuads(state)));
 
 /** Selects every stored run state as `?state`. */
 export const SPARQL = `SELECT ?state WHERE { GRAPH <${GRAPH}> { ?run <${STATE}> ?state } }`;

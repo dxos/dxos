@@ -7,7 +7,8 @@
 import * as Layer from 'effect/Layer';
 import type * as SqlClient from 'effect/sql/SqlClient';
 
-import { type MemoryService, type RdfStore } from '@dxos/echo-memory';
+import type * as MemoryService from '@dxos/echo-memory/MemoryService';
+import type * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { type QuadStore } from '@dxos/sparql-sqlite/async';
 import * as Platform from '@dxos/sql-sqlite/Platform';
 

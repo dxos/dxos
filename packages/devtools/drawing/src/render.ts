@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Diagnostics, Dsl, DxSvg, SvgFile } from '@dxos/diagram';
+import { Diagnostics, DSL, DxSvg, SvgFile } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 /** One problem with the source or the layout, as the engine words it. */
@@ -45,7 +45,7 @@ export type RenderResult = { readonly svg: string; readonly report: Report };
 export const render = (text: string, { name, plain = false }: RenderOptions): Promise<RenderResult> =>
   EffectEx.runPromise(
     Effect.gen(function* () {
-      const { commands, problems } = yield* Dsl.compile(text);
+      const { commands, problems } = yield* DSL.compile(text);
       const sourceNotes = problems.map(({ severity, message }): Note => ({ severity, message }));
       if (problems.some(({ severity }) => severity === 'error')) {
         return {
@@ -54,7 +54,7 @@ export const render = (text: string, { name, plain = false }: RenderOptions): Pr
         };
       }
 
-      const objects = Dsl.toScene(commands).objects;
+      const objects = DSL.toScene(commands).objects;
       const analysis = Diagnostics.analyze(objects);
       const { nodes, connectors, crossings, bends } = analysis.metrics;
       const notes = [

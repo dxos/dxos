@@ -80,7 +80,7 @@ const Presentation = Schema.Struct({
 - **One section is exactly one slide** _(user)_. `---` inside a section is a horizontal rule, not a slide break,
   so the navtree, the pager count and `sections` always agree.
 - App graph: the Presentation is a folder node; each section is a child, labelled by its first heading (owned) or
-  the object's own label (linked). An owned slide is labelled by its `name`, else its first heading, else
+  the object's own label (linked). An owned slide is labelled by its `name`, else its frontmatter `title`, else its first heading, else
   "Slide N". Drag-reorder in the navtree writes `sections`. Clicking a child opens that slide's own article
   (the markdown editor for an owned slide) rather than the deck _(agent call)_.
 - "Add to presentation": a picker over space objects with a toggle _(user)_ that filters to schemas with a

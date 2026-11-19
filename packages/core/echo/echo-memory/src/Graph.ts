@@ -4,12 +4,12 @@
 
 // @import-as-namespace
 
-import { type Quad, Writer } from 'n3';
-
 import * as Fact from './Fact.ts';
 import * as Hash from './Hash.ts';
 import * as Mapping from './Mapping.ts';
 import * as Ontology from './Ontology.ts';
+import * as Rdf from './Rdf.ts';
+import * as Trig from './Trig.ts';
 import * as Vocab from './Vocab.ts';
 
 /** Everything a graph states once for all its statements: facts that differ in any of it need separate graphs. */
@@ -90,24 +90,17 @@ export const PREFIXES: Readonly<Record<string, string>> = {
 /** Prefixes a whole store's TriG export abbreviates: {@link PREFIXES}, the brain namespaces and SIOC. */
 export const EXPORT_PREFIXES: Readonly<Record<string, string>> = { ...PREFIXES, brain: Vocab.BRAIN, sioc: Vocab.SIOC };
 
-const write = (quads: Iterable<Quad>, prefixes: Record<string, string>): string => {
-  const writer = new Writer({ format: 'application/trig', prefixes });
+const write = (quads: Iterable<Rdf.Quad>, prefixes: Record<string, string>): string => {
   const seen = new Set<string>();
+  const unique: Rdf.Quad[] = [];
   for (const quad of quads) {
     const key = `${quad.subject.value} ${quad.predicate.value} ${quad.object.termType}:${quad.object.value} ${quad.graph.value}`;
     if (!seen.has(key)) {
       seen.add(key);
-      writer.addQuad(quad);
+      unique.push(quad);
     }
   }
-  let output = '';
-  writer.end((error: Error | null, result: string) => {
-    if (error) {
-      throw error;
-    }
-    output = result;
-  });
-  return output;
+  return Trig.write(unique, { prefixes });
 };
 
 /**

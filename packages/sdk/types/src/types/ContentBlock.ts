@@ -227,6 +227,10 @@ export const Stats = Schema.TaggedStruct('stats', {
       inputTokens: Schema.optional(Schema.Number),
       outputTokens: Schema.optional(Schema.Number),
       totalTokens: Schema.optional(Schema.Number),
+      /** Input tokens read from the prompt cache; part of `inputTokens`. */
+      cacheReadTokens: Schema.optional(Schema.Number),
+      /** Input tokens written to the prompt cache; part of `inputTokens`. */
+      cacheWriteTokens: Schema.optional(Schema.Number),
     }),
   ),
   toolCalls: Schema.optional(Schema.Number),

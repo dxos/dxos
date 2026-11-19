@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 import * as SqlClient from 'effect/sql/SqlClient';
-import { DataFactory, type Quad as RdfQuad, Parser as TrigParser, Writer as TrigWriter } from 'n3';
+import { Parser as TrigParser } from 'n3';
 import { Parser } from 'sparqljs';
 
-import { Fact, Graph, Hash, Mapping, Ontology, Sparql, Vocab } from '@dxos/echo-memory';
+import { Fact, Graph, Hash, Mapping, Ontology, Rdf, Sparql, Trig, Vocab } from '@dxos/echo-memory';
 import {
   EngineCore,
   type Program,
@@ -61,17 +61,17 @@ const SEED_IRIS = [...new Set(SEED_QUADS.map((quad) => quad.subject.value))];
 const SEED_VERSION = Hash.text(
   SEED_QUADS.map((quad) => `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`).join('\n'),
 );
-const SEED_MARKER = DataFactory.quad(
-  DataFactory.namedNode(Vocab.ONTOLOGY_GRAPH),
-  DataFactory.namedNode(Vocab.SX_SEED),
-  DataFactory.literal(SEED_VERSION),
+const SEED_MARKER = Rdf.quad(
+  Rdf.namedNode(Vocab.ONTOLOGY_GRAPH),
+  Rdf.namedNode(Vocab.SX_SEED),
+  Rdf.literal(SEED_VERSION),
 );
 
 /**
  * The quads persisting the facts, plus the provenance of each predicate they mint that the store has not described
  * yet, so a predicate records when, by what and from which quote it was first minted rather than every use.
  */
-const factQuads = (facts: readonly Fact.Fact[], described: ReadonlySet<string>): RdfQuad[] => [
+const factQuads = (facts: readonly Fact.Fact[], described: ReadonlySet<string>): Rdf.Quad[] => [
   ...facts.flatMap((fact) => Mapping.factToTriples(fact)),
   ...Graph.mintedPredicates(facts)
     .filter(({ iri }) => !described.has(iri))
@@ -98,20 +98,10 @@ function* dropLegacyTables(): Program<void> {
 const ALL_QUADS_SPARQL = 'SELECT ?g ?s ?p ?o WHERE { { GRAPH ?g { ?s ?p ?o } } UNION { ?g ?p ?o } }';
 
 /** The seed marker names this store's seed version, so it is neither exported nor taken from another store. */
-const isSeedMarker = (quad: RdfQuad): boolean => quad.predicate.value === Vocab.SX_SEED;
+const isSeedMarker = (quad: Rdf.Quad): boolean => quad.predicate.value === Vocab.SX_SEED;
 
-const writeTrig = (quads: readonly RdfQuad[]): Effect.Effect<string, SemanticIndexError> =>
-  Effect.callback<string, SemanticIndexError>((resume) => {
-    const writer = new TrigWriter({ format: 'application/trig', prefixes: { ...Graph.EXPORT_PREFIXES } });
-    writer.addQuads([...quads]);
-    writer.end((error, result) =>
-      resume(
-        error
-          ? Effect.fail(new SemanticIndexError({ message: 'Failed to write TriG', cause: error }))
-          : Effect.succeed(result),
-      ),
-    );
-  });
+const writeTrig = (quads: readonly Rdf.Quad[]): Effect.Effect<string> =>
+  Effect.sync(() => Trig.write(quads, { prefixes: Graph.EXPORT_PREFIXES }));
 
 /** Fails unless `sparql` is a `SELECT`, since the engine would run an update as readily as a query. */
 const assertSelect = (sparql: string): void => {
@@ -132,7 +122,7 @@ const toSparqlRow = (row: Row): SparqlRow =>
 const programs = (engine: EngineCore, prefix = '') => {
   const cursors = `${prefix}${CURSORS_TABLE}`;
 
-  function* insert(rdfQuads: readonly RdfQuad[]): Program<void> {
+  function* insert(rdfQuads: readonly Rdf.Quad[]): Program<void> {
     const quads: Quad[] = rdfQuads.map(Sparql.toQuad);
     for (let start = 0; start < quads.length; start += INSERT_BATCH) {
       yield* engine.insert(quads.slice(start, start + INSERT_BATCH));
@@ -151,7 +141,7 @@ const programs = (engine: EngineCore, prefix = '') => {
     yield* insert([...SEED_QUADS, SEED_MARKER]);
   }
 
-  function* ontologyQuads(): Program<RdfQuad[]> {
+  function* ontologyQuads(): Program<Rdf.Quad[]> {
     return Sparql.rowsToQuads(yield* engine.query(Sparql.ONTOLOGY_SPARQL));
   }
 
@@ -207,7 +197,7 @@ const programs = (engine: EngineCore, prefix = '') => {
       if (graphs.length === 0) {
         return [];
       }
-      const quads: RdfQuad[] = [];
+      const quads: Rdf.Quad[] = [];
       for (let start = 0; start < graphs.length; start += LOAD_BATCH) {
         const batch = Sparql.graphValues(graphs.slice(start, start + LOAD_BATCH));
         quads.push(...Sparql.rowsToQuads(yield* engine.query(Sparql.graphQuadsSparql(batch))));
@@ -234,11 +224,11 @@ const programs = (engine: EngineCore, prefix = '') => {
     },
 
     // The seed marker names this store's seed version, so it is neither exported nor taken from another store.
-    *exportQuads(): Program<RdfQuad[]> {
+    *exportQuads(): Program<Rdf.Quad[]> {
       return Sparql.rowsToQuads(yield* engine.query(ALL_QUADS_SPARQL)).filter((quad) => !isSeedMarker(quad));
     },
 
-    *importQuads(quads: readonly RdfQuad[]): Program<number> {
+    *importQuads(quads: readonly Rdf.Quad[]): Program<number> {
       const kept = quads.filter((quad) => !isSeedMarker(quad));
       yield* insert(kept);
       return kept.length;
