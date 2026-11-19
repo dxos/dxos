@@ -39,3 +39,31 @@
 .dx-play {
   margin-block: 2rem;
 }
+
+/*
+ * The splash hero is as tight as the custom home page's, with the install command in place of buttons, so the top of
+ * the editor shows without scrolling on a laptop.
+ */
+[data-has-hero] .hero {
+  padding-block: 1.5rem 0;
+}
+
+[data-has-hero] .hero .stack {
+  gap: 1rem;
+}
+
+.dx-play.install-row {
+  margin-block: 1.5rem 2rem;
+}
+
+.dx-play .alt {
+  margin: 14px 0 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.dx-play .alt code {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+}

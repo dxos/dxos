@@ -157,7 +157,7 @@ feat F-12: Share API
 ```mdl
 feat F-13: Landing site and hosts
   req F-13.1: Each environment serves the landing page at its own host and the app at `app.` of that host: production at drawing.sh (and www.drawing.sh) and app.drawing.sh, dev at dev.drawing.sh and app.dev.drawing.sh, preview at preview.drawing.sh and app.preview.drawing.sh. Staging serves only the app, on its `workers.dev` host.
-  req F-13.2: The landing site is an Astro Starlight site: a home page at `/` and the docs under `/docs/` (F-13.9). The home page is the agent-diagram DSL page: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript. Until one is chosen, a second home page built from Starlight's splash template is served at `/splash/` for comparison.
+  req F-13.2: The landing site is an Astro Starlight site: a home page at `/` and the docs under `/docs/` (F-13.9). The home page is the agent-diagram DSL page: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, the DSL's relations, and a download of the drawing. Its diagrams are rendered at build time, so the page shows them without JavaScript. Until one is chosen, a second home page built from Starlight's splash template is served at `/splash/` for comparison. Its hero is the heading, the lede and the agent skill's install command, with no buttons, and is as tight as the custom page's, so the top of the editor shows without scrolling on a 14-inch MacBook Pro. Every Starlight page's header shows the drawing.sh logotype; the splash page's header has a Docs link where the docs pages have search.
   req F-13.3: On a landing host, `/api/*` is the Worker's API, and `/`, `/docs/` and the pages under it, `/splash/`, the site's build files and any address with a file extension are served from the site's build. Any other address, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
   req F-13.4: The landing editor's "Open in app" button posts the source to its own host's share API and opens the link it returns, which names the app host.
   req F-13.5: The site's pages load only the site's own scripts: no client, identity, plugins or telemetry.
@@ -2027,4 +2027,23 @@ decision D-160: Astro builds the site into a `site/` folder of the app's build o
     - Astro's output at the build root: its `index.html` and `404.html` would replace the app's.
     - A separate Worker for the site: a second deploy for one product, which [D-149] rejected for the landing page.
     - Moving the app under a path such as `/app/`: app links and invitation links name the app host's root.
+```
+
+```mdl
+decision D-161: The splash home page's hero drops its Open app and Read the docs links and holds the install command instead. The page is tighter, like the custom home page, so at least the top of the diagram shows without scrolling on a MacBook Pro screen. Its header has a Docs link in place of search, and the custom drawing.sh logotype in place of Starlight's site title. Done with as little custom work as possible.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-13.2]
+```
+
+```mdl
+decision D-162: The logotype replaces the site title on every Starlight page, and only the splash page swaps search for the Docs link; the docs pages keep search. The hero stays Starlight's own component, tightened with CSS, with the install command and the "Works with…" line straight after it. The fold is a 1512×860 window, a 14-inch MacBook Pro's default display less the browser's bars. Fills in [D-161].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.2]
+  why: Search is how a reader finds a docs page, and a Docs link on a docs page leads where they already are. Keeping Starlight's hero and overriding only the site title and search components is the least custom code that does what was asked.
+  rejected:
+    - Removing search from every page: the docs lose it.
+    - A hero component of our own: more custom code than CSS on Starlight's.
 ```

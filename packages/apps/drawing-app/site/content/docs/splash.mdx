@@ -4,15 +4,6 @@ description: Install a skill and your coding agent draws architecture diagrams. 
 template: splash
 hero:
   tagline: Draw a diagram in your browser, or ask your agent for one. Your agent writes a few lines of text; drawing places the boxes, routes every arrow around them and hands back an SVG. Edit the .dx text below, or switch to Mermaid to paste a flowchart, which drawing converts to .dx and draws.
-  actions:
-    - text: Open app
-      link: https://app.drawing.sh/
-      icon: right-arrow
-      attrs:
-        data-app-link: true
-    - text: Read the docs
-      link: /docs/
-      variant: minimal
 ---
 
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
@@ -21,12 +12,10 @@ import Editor from '../../components/Editor.astro';
 import Install from '../../components/Install.astro';
 import Relations from '../../components/Relations.astro';
 
-<div class="not-content dx-play">
+<div class="not-content dx-play install-row">
   <Install />
+  <p class="alt">Works with Claude Code, Cursor, Codex and any agent that reads <code>SKILL.md</code>. Without an agent: <code>npx -y @dxos/drawing render arch.dx</code></p>
 </div>
-
-Works with Claude Code, Cursor, Codex and any agent that reads `SKILL.md`. Without an agent:
-`npx -y @dxos/drawing render arch.dx`.
 
 <div class="not-content dx-play">
   <Editor />

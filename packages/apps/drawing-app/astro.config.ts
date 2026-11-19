@@ -60,6 +60,8 @@ export default defineConfig({
       expressiveCode: { shiki: { langs: [dxGrammar] } },
       customCss: ['./site/styles/tokens.css', './site/styles/editor.css', './site/styles/starlight.css'],
       components: {
+        Search: './site/components/Search.astro',
+        SiteTitle: './site/components/SiteTitle.astro',
         SocialIcons: './site/components/SocialIcons.astro',
       },
       sidebar: [
