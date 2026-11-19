@@ -164,7 +164,7 @@ feat F-13: Landing site and hosts
   req F-13.6: The landing page's header has an "Open app" button, and the file section has "Open the app". Each opens the app host of the environment the page is served from. The hero has no app button: it is the heading, the lede and the agent skill's install command.
   req F-13.7: The landing page points to Composer as a second place to use the same editor: a Composer section says the diagram editor is a plugin in Composer that works with Composer's other plugins and agents, that Composer is in early access, and that the drawing.sh app can be used now. It links to Composer's early-access request. The page never calls drawing the engine behind Composer.
   req F-13.8: The landing editor's tabs are the source languages it accepts, not a comparison of renderers: `.dx` is drawing's own language, and Mermaid is converted to `.dx` and drawn by drawing. A hint beside the tabs names what the selected one does. The drawing sits in a box of fixed size, the hero's 16:9, which switching tabs or editing the source never resizes; a drawing of another shape is scaled to fit inside it.
-  req F-13.9: The docs have three sections. Getting started covers the drawing.sh app, the agent skill and the `drawing` CLI. Language reference covers the `.dx` language: diagrams, nodes, groups, edges, relations and layout hints. Files and sharing covers the `.dx.svg` file, import and export in the app, the `?src=` and `?d=` links and the share API.
+  req F-13.9: The docs have four sections. Getting started covers the drawing.sh app, the agent skill and the `drawing` CLI. Language reference covers the `.dx` language: diagrams, nodes, groups, edges, relations and layout hints. Files and sharing covers the `.dx.svg` file, import and export in the app, the `?src=` and `?d=` links and the share API. DXOS covers how the app builds on DXOS: its identity and spaces, that it syncs peer to peer only because it has no Composer account, working with Composer, and the `dx` CLI's `drawing` commands.
   req F-13.10: The home page and every docs page link to the app host (F-13.6) and to the docs.
 ```
 
@@ -2064,4 +2064,23 @@ decision D-164: The splash page's content moves to `/`, and `/splash/` is no lon
   why: Starlight renders a content page at `/` without a custom route, so removing the custom page leaves no code of our own for the home page's layout. A redirect would keep a route for an address no one has.
   rejected:
     - Redirecting `/splash/` to `/`: no link to it was ever published.
+```
+
+```mdl
+decision D-165: The docs also document using drawing.sh with the DX CLI, in a section on how it integrates with DXOS, the DX CLI and Composer. The section has a brief note that the app is peer to peer only for those without a Composer account.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-13.9]
+```
+
+```mdl
+decision D-166: The DXOS section has three pages: drawing.sh and DXOS (identity, spaces and the peer-to-peer note), Composer, and The DX CLI. The CLI page tells readers to install `@dxos/cli@next`, since `dx drawing` is not in the `latest` release, and to keep the app open while `dx` joins or imports, since the app syncs only with members online at the same time. It documents `dx drawing render`, `list`, `export` and `import`, `dx space join` with an app link, and `dx mcp serve`. Fills in [D-165].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.9]
+  why: Each page answers one question a reader arrives with. `dx drawing` first shipped in 0.17, and `latest` is 0.14. The CLI signs in with a Composer account, so its spaces sync through EDGE, but an app member's copy reaches it only peer to peer.
+  rejected:
+    - One page for all of it: the CLI reference would bury the peer-to-peer note.
+    - Documenting `dx space share` for the app: it makes a secret-code invitation and holds the terminal until someone joins, so sharing from the app or Composer is simpler.
 ```

@@ -1,0 +1,42 @@
+---
+title: Composer
+description: Open the same spaces and diagrams in Composer, DXOS's collaborative workspace, and let its agents draw.
+---
+
+[Composer](https://dxos.org/composer/) is DXOS's collaborative local-first workspace. Its diagram editor is the
+canvas the app uses. There a diagram is one more object in a space, next to documents, tasks and anything else your
+team keeps. Composer is in early access; [request access](https://dxos.org/composer/) to use it.
+
+## Spaces work in both apps
+
+A space is the same thing in both apps, and so is the invitation link:
+
+- **From the app to Composer.** Share the space in the app, then open the link in Composer, or paste it into
+  Composer's join dialog. The space's diagrams show in Composer's navigator.
+- **From Composer to the app.** Use Composer's share link for the space, and open it at
+  [app.drawing.sh](https://app.drawing.sh/), or paste it into **Join with a link…** in the space menu. The app lists
+  the space's diagrams; it does not show the space's other objects.
+
+People in the same space see each other in either app. The avatars in the pill include Composer users, and
+following someone works between the two apps.
+
+A diagram made in the app is filed in the space's root collection, as Composer files one, so it shows in Composer
+with the rest of the space.
+
+## Files
+
+A `.dx.svg` exported from Composer imports into the app with **Import .dx.svg…**, and one exported from the app
+imports into Composer. [The .dx.svg file](/docs/files/) covers what the file holds.
+
+## Agents in Composer
+
+Composer's agents have a Drawing skill: ask one for a diagram and it writes `.dx` statements, which the layout
+engine places on the space's canvas. The result is an ordinary diagram in the space, so it opens in the app as
+well.
+
+## Sync
+
+With a Composer account, Composer syncs your spaces through EDGE, so changes reach your other devices and members
+who were offline. The app has no account and syncs peer to peer only;
+[drawing.sh and DXOS](/docs/dxos/#peer-to-peer-only-without-a-composer-account) explains what that means for a
+space shared between the two.

@@ -89,6 +89,14 @@ export default defineConfig({
             { label: 'Links and the share API', link: '/docs/sharing/' },
           ],
         },
+        {
+          label: 'DXOS',
+          items: [
+            { label: 'drawing.sh and DXOS', link: '/docs/dxos/' },
+            { label: 'Composer', link: '/docs/dxos/composer/' },
+            { label: 'The DX CLI', link: '/docs/dxos/cli/' },
+          ],
+        },
       ],
     }),
   ],
