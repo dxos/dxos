@@ -142,4 +142,32 @@ describe('SlideTheme.Settings', () => {
   test('the theme accent is published separately, for a tone to return to', () => {
     expect(slideThemeStyle({ accent: '#f80' })['--slide-theme-accent']).toBe('#f80');
   });
+
+  test('each heading level takes its own color', () => {
+    expect(Result.isSuccess(decode({ heading: '#CA6346', subheading: '#336288' }))).toBe(true);
+    const style = slideThemeStyle({ accent: '#f80', heading: '#CA6346', subheading: '#336288' });
+    expect(style['--slide-heading']).toBe('#CA6346');
+    expect(style['--slide-subheading']).toBe('#336288');
+    expect(style['--slide-accent']).toBe('#f80');
+  });
+
+  test('one heading color is set without the other', () => {
+    const style = slideThemeStyle({ subheading: '#336288' });
+    expect(style).not.toHaveProperty('--slide-heading');
+    expect(style['--slide-subheading']).toBe('#336288');
+  });
+
+  test('an unset heading color publishes no variable, so the heading falls back to the accent where it stands', () => {
+    const style = slideThemeStyle({ accent: '#f80' });
+    expect(style).not.toHaveProperty('--slide-heading');
+    expect(style).not.toHaveProperty('--slide-subheading');
+  });
+
+  test('an invalid heading color is ignored', () => {
+    expect(Result.isSuccess(decode({ heading: 'url(x)' }))).toBe(false);
+    expect(Result.isSuccess(decode({ subheading: 'notacolor' }))).toBe(false);
+    const style = slideThemeStyle({ heading: 'url(https://example.com/x)', subheading: 'red; color: blue' });
+    expect(style).not.toHaveProperty('--slide-heading');
+    expect(style).not.toHaveProperty('--slide-subheading');
+  });
 });

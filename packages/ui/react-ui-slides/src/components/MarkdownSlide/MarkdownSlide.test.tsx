@@ -16,8 +16,34 @@ const render = (content: string, step?: number) =>
 const clicks = ['<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n');
 
 describe('MarkdownSlide', () => {
-  test('heading uses the theme accent', ({ expect }) => {
-    expect(render('# Title')).toMatch(/<h1 [^>]*class="[^"]*text-\(color:--slide-accent\)[^"]*"[^>]*>Title<\/h1>/);
+  test('a heading reads the color of its level, and the accent where the theme sets none', ({ expect }) => {
+    const markup = render('# Title\n\n## Second\n\n### Third');
+    const classOf = (tag: string) => markup.match(new RegExp(`<${tag} [^>]*class="([^"]*)"`))?.[1];
+    expect(classOf('h1')).toContain('text-[color:var(--slide-heading,var(--slide-accent))]');
+    expect(classOf('h2')).toContain('text-[color:var(--slide-subheading,var(--slide-accent))]');
+    expect(classOf('h3')).toContain('text-[color:var(--slide-subheading,var(--slide-accent))]');
+    // Neither variable is published by a theme that sets no heading color, so the fallback is what paints.
+    expect(markup).not.toContain('--slide-heading:');
+    expect(markup).not.toContain('--slide-subheading:');
+  });
+
+  test('the theme publishes the heading colors it sets', ({ expect }) => {
+    const markup = renderToStaticMarkup(
+      <SlideThemeProvider settings={{ heading: '#CA6346', subheading: '#336288' }}>
+        <MarkdownSlide content={'# Title\n\n## Second'} />
+      </SlideThemeProvider>,
+    );
+    expect(markup).toMatch(/data-slide="true"[^>]*style="[^"]*--slide-heading:#CA6346/);
+    expect(markup).toMatch(/data-slide="true"[^>]*style="[^"]*--slide-subheading:#336288/);
+  });
+
+  test('a heading in a toned block falls back to the tone, as nothing above it sets its color', ({ expect }) => {
+    const markup = render('<Box tone="warning">\n\n## Second\n\n</Box>');
+    // The tone rebinds the accent on the block, and the heading under it reads the accent only as its fallback.
+    expect(markup).toMatch(
+      /data-tone="warning"[^>]*style="[^"]*--slide-accent: ?var\(--color-warning-text\)[^"]*"[^>]*>\s*<h2 [^>]*class="[^"]*var\(--slide-subheading,var\(--slide-accent\)\)/,
+    );
+    expect(markup).not.toContain('--slide-subheading:');
   });
 
   test('root carries the default theme variables', ({ expect }) => {
