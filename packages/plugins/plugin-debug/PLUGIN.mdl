@@ -149,9 +149,10 @@ feat Wireframe
 ```mdl
 feat DeckTemplate
   desc: |
-    The DXOS Deck space template: DXOS in nine diagrams (ECHO, the ontology, plugins, Composer, the
-    architecture, agents, a chat, an agent), each a canvas drawing built from its `.dx` text in
-    `src/samples/studio/diagrams`, and one presentation that embeds them. The plugin contributes the
+    The DXOS Deck space template: one presentation whose slides are the markdown files of
+    `src/samples/studio/slides`, in the order `deck.ts` lists them. A slide embeds a diagram by naming
+    it (`<Surface ref="{{echo}}" />`); each diagram is a canvas drawing built from its `.dx` text in
+    `src/samples/studio/diagrams`, named after the slide that shows it. The plugin contributes the
     element kinds the drawings are drawn by (card, feed card, chip, plank, app frame and its parts) to
     the canvas; the graph kind is plugin-canvas's own.
 ```
@@ -575,3 +576,12 @@ decision D-4: The nine studio diagrams, their deck and the element kinds they dr
   rejected:
     - Adding them to plugin-canvas's DXOS Architecture template, which would keep presentation kinds in the canvas plugin.
 ```
+
+```mdl
+decision D-5: Every slide of the DXOS Deck is a markdown file, the diagram slides included; a slide's title is its first heading and its notes are a comment in the file. Refines [D-4].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: A title or a note is then changed in the slide's own file, and a slide with no diagram (the cover, the stack) is written the same way as one with.
+```
+

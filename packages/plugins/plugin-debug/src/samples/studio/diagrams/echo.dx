@@ -4,15 +4,15 @@ group layers-section rows="224 544" gap=16 {
   group types-section padding=16 border=true {
     group types-section-inner "ECHO Core" cols=3 gap=64 {
       group types-col-0 gap=16 {
-        node validation "Validation" kind=card footer="every write" icon=shield-check variant=simple
-        node typescript "TypeScript" kind=card footer="Effect Schema" icon=file-ts variant=simple
+        node typescript "TypeScript" kind=card footer="Effect API" icon=file-ts variant=simple
+        node json-schema "Effect/JSON Schema" kind=card footer="Strong and weak types" icon=brackets-angle variant=simple
       }
       group types-col-1 gap=16 {
-        node json-schema "JSON Schema" kind=card footer="agent tools" icon=brackets-angle variant=simple
+        node versioning "Versioning" kind=card footer="Schema migration" icon=git-branch variant=simple
         node uri "URI" kind=card footer="dxn:type:org.dxos/Task" icon=link variant=simple
       }
       group types-col-2 gap=16 {
-        node versioning "Versioning" kind=card footer="semver per type" icon=git-branch variant=simple
+        node validation "Validation" kind=card footer="every write" icon=shield-check variant=simple
         node migration "Schema migration" kind=card footer=lenses icon=arrows-clockwise variant=simple
       }
     }

@@ -27,7 +27,7 @@ group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
   group field-ports gap=12 {
     group port-calendar { }
     group port-email { }
-    group port-storage { }
+    group port-projects { }
     group port-translation { }
     group port-search { }
     group port-sql { }
@@ -41,19 +41,19 @@ group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
 group services "EDGE Services" gap=12 {
   node calendar "Calendar" kind=card icon=calendar-blank tone=event variant=simple
   node email "Email" kind=card icon=envelope tone=message variant=simple
-  node storage "Storage" kind=card icon=database tone=file variant=simple
+  node projects "Projects" kind=card icon=database tone=file variant=simple
   node translation "Translation" kind=card icon=translate variant=simple
   node search "Search" kind=card icon=magnifying-glass variant=simple
   node sql "SQL" kind=card icon=table variant=simple
   node files "Files" kind=card icon=folder variant=simple
   node commerce "Commerce" kind=card icon=shopping-cart variant=simple
-  node travel "Travel" kind=card icon=airplane-tilt tone=trip variant=simple
-  node slack "Slack" kind=card icon=hash variant=simple
+  node travel "Travel" kind=card icon=airplane-tilt variant=simple
+  node slack "Slack" kind=card icon=hash variant=simple tone=trip 
 }
 
 edge calendar     -- port-calendar    path=line stroke=dotted
 edge email        -- port-email       path=line stroke=dotted
-edge storage      -- port-storage     path=line stroke=dotted
+edge projects     -- port-projects    path=line stroke=dotted
 edge translation  -- port-translation path=line stroke=dotted
 edge search       -- port-search      path=line stroke=dotted
 edge sql          -- port-sql         path=line stroke=dotted

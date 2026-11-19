@@ -35,7 +35,7 @@ import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import { translations } from '#translations';
 
-import { STUDIO_SLIDES } from './deck.ts';
+import { STUDIO_DIAGRAMS, STUDIO_SLIDES, diagramTitle } from './deck.ts';
 import { STUDIO_KINDS } from './kinds/registry.ts';
 import * as StudioSpace from './StudioSpace.ts';
 
@@ -85,9 +85,8 @@ const decorators = (slide?: string) =>
         }
         return [[Cell.article(deck)]];
       }
-      const title = STUDIO_SLIDES.find(({ id }) => id === slide)?.title;
       const drawings = await space.db.query(Filter.type(Drawing.Drawing)).run();
-      const drawing = drawings.find((drawing) => Obj.getLabel(drawing) === title);
+      const drawing = drawings.find((drawing) => Obj.getLabel(drawing) === diagramTitle(slide));
       if (!drawing) {
         throw new Error(`The template seeded no ${slide} drawing.`);
       }
@@ -105,7 +104,7 @@ export default meta;
 
 type Story = StoryObj;
 
-/** Nine slides, one per diagram, each a drawing of the deck rather than a picture of one. */
+/** The markdown slides, then one per diagram, each a drawing rather than a picture of one. */
 export const Deck: Story = {
   decorators: decorators(),
   play: async ({ canvasElement }) => {
@@ -122,7 +121,7 @@ export const Deck: Story = {
 const slide = (id: string): Story => ({
   decorators: decorators(id),
   play: async ({ canvasElement }) => {
-    const source = STUDIO_SLIDES.find((slide) => slide.id === id)?.source ?? '';
+    const source = STUDIO_DIAGRAMS.find((diagram) => diagram.id === id)?.source ?? '';
     const [first] = source.split('\n');
     const editor = await within(canvasElement).findByTestId('canvas-dsl.editor', undefined, { timeout: 30_000 });
     await waitFor(() => expect(editor.textContent).toContain(first), { timeout: 30_000 });
@@ -131,7 +130,6 @@ const slide = (id: string): Story => ({
 
 export const Hyperspace = slide('hyperspace');
 export const Echo = slide('echo');
-export const Ontology = slide('ontology');
 export const Plugins = slide('plugins');
 export const Composer = slide('composer');
 export const Architecture = slide('architecture');
