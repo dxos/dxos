@@ -60,6 +60,7 @@ Videos are served from the `composer` R2 bucket at `https://assets.composer.spac
 
 ## App and tools
 
+| [worker-framework/tab-handover](../../../packages/sdk/worker-framework/autocue/tab-handover.mjs) | Browser tabs hand the worker over only with consent: one build shares it, an older build pauses for a newer one, and a tab that cannot reach the leader asks before taking over. | worker-framework QA-1 | [2026-11-19](https://dx.pub/demo/2026-11-19-worker-tab-handover/) |
 | [composer-app/inbox-triage](../../../packages/apps/composer-app/autocue/inbox-triage.mjs) | Triage an inbox with decision and extraction models, see its tasks in a project, and let the agent reply after you allow sending. | inbox TRIAGE QA-2 | [2026-10-27](https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-10-27-inbox-triage/inbox-triage.webm?v=f70920ef) |
 | [composer-app/discord-dxos-findings](../../../packages/apps/composer-app/autocue/discord-dxos-findings.mjs) | Back-index six DXOS Discord channels, crawl a year on EDGE, query the facts in Brain's Memory view, and have the agent turn them into sheets with charts, a deck and a summary. | plugin-discord BACK-INDEX QA-1 | [2026-11-19](https://dx.pub/demo/2026-11-19-discord-dxos-back-index/) |
 | [composer-app/composer-basics](../../../packages/apps/composer-app/autocue/composer-basics.mjs) | A tour of the default space: comment on the README, write and link a document, and more. | composer-app QA-11 | — |

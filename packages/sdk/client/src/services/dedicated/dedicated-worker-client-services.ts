@@ -22,7 +22,15 @@ export interface DedicatedWorkerClientServicesOptions {
   leaderTimeouts?: LeaderTimeoutOptions;
   /** See {@link Client.Options.onPersistentFailure}. */
   onPersistentFailure?: Client.Options['onPersistentFailure'];
+  /** How this tab hands the worker to other tabs; see {@link Client.Options}. */
+  takeover?: WorkerTakeoverOptions;
 }
+
+/** The app's side of handing the worker between tabs: its build, and what each tab shows. */
+export type WorkerTakeoverOptions = Pick<
+  Client.Options,
+  'generation' | 'onSuperseded' | 'onTakeoverRequired' | 'onLockStolen' | 'takeover'
+>;
 
 /**
  * Runs services in a dedicated worker, exposed to other tabs.
@@ -42,6 +50,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       config: options.config?.values,
       leaderTimeouts: options.leaderTimeouts,
       onPersistentFailure: options.onPersistentFailure,
+      ...options.takeover,
       onConnect: async ({ clientToWorker, workerToClient }) => {
         const config = options.config ?? new Config();
 
