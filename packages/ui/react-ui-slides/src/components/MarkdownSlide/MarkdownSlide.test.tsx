@@ -254,41 +254,25 @@ describe('MarkdownSlide', () => {
     expect(render(`<v-clicks>\n\n${card('One')}\n\n</v-clicks>`)).toContain('data-click="slide-clicks"');
   });
 
-  test('a flow grid draws an arrow after each child but the last, and waits for a child still to come', ({
-    expect,
-  }) => {
+  test('a flow grid draws an arrow into each child, and cuts off the one into a row\u2019s first', ({ expect }) => {
     const markup = render('<Grid cols="4" variant="flow">\n\n<Card icon="brain">\n\n### A\n\n</Card>\n\n</Grid>');
     const classes = markup.match(/<div [^>]*data-variant="flow"[^>]*class="([^"]*)"/)?.[1] ?? '';
     // It is still the grid: the tracks, the alignment and the icon cards' shared header rows.
     expect(classes).toContain('[grid-template-columns:repeat(var(--slide-grid-cols,1),minmax(0,1fr))]');
     expect(classes).toContain('[&amp;&gt;article[data-icon]]:grid-rows-subgrid');
-    // The arrow stands in a gap as wide as its box, and a card lets it out of its own box.
+    // The arrow stands before its child, in a gap as wide as its box, and a card lets it out of its own box.
     expect(classes).toContain('gap-x-24');
-    expect(classes).toContain('[&amp;&gt;*]:after:w-24');
-    expect(classes).toContain('[&amp;&gt;*]:after:content-[&#x27;→&#x27;]');
+    expect(classes).toContain('[&amp;&gt;*]:before:w-24');
+    expect(classes).toContain('[&amp;&gt;*]:before:end-full');
+    expect(classes).toContain('[&amp;&gt;*]:before:content-[&#x27;→&#x27;]');
     expect(classes).toContain('[&amp;&gt;article]:overflow-visible');
-    expect(classes).toContain('[&amp;&gt;[data-row-end]]:after:content-none');
-    expect(classes).toContain('[&amp;&gt;*:has(+.invisible)]:after:content-none');
+    // The arrow into a row's first child falls outside the grid, which cuts it, so nothing here counts columns.
+    expect(classes).toContain('overflow-x-clip');
+    expect(markup).not.toContain('data-row-end');
+    // During a build an arrow waits for the child it points from.
+    expect(classes).toContain('[&amp;&gt;.invisible+*]:before:content-none');
     // A plain grid draws none.
-    expect(render('<Grid cols="4">\n\nCells\n\n</Grid>')).not.toContain('after:content-');
-  });
-
-  test('a flow grid marks the last child of each row, counting the columns each child covers', ({ expect }) => {
-    const card = (title: string, attributes = '') => `<Card${attributes}>\n\n### ${title}\n\n</Card>`;
-    const rowEnds = (markup: string) =>
-      [...markup.matchAll(/<article [^>]*>/g)].map(([tag]) => tag.includes('data-row-end'));
-    const flow = (cols: number, ...cards: string[]) =>
-      render([`<Grid cols="${cols}" variant="flow">`, ...cards, '</Grid>'].join('\n\n'));
-
-    // One full row: only the last card ends it.
-    expect(rowEnds(flow(4, card('A'), card('B'), card('C'), card('D')))).toEqual([false, false, false, true]);
-    // Three columns: A covers two and B does not fit beside it, so A ends a row that stops short of the grid's edge.
-    const wide = ' colSpan="2"';
-    expect(rowEnds(flow(3, card('A', wide), card('B', wide), card('C'), card('D')))).toEqual([true, false, true, true]);
-    // Revealed by clicks, the cards are still counted as the grid's children.
-    expect(rowEnds(flow(2, '<v-clicks>', card('A'), card('B'), card('C'), '</v-clicks>'))).toEqual([false, true, true]);
-    // A plain grid marks nothing.
-    expect(render(`<Grid cols="2">\n\n${card('A')}\n\n${card('B')}\n\n</Grid>`)).not.toContain('data-row-end');
+    expect(render('<Grid cols="4">\n\nCells\n\n</Grid>')).not.toContain('before:content-');
   });
 
   test('a list nested in a flow item takes the card\u2019s size, not the slide\u2019s', ({ expect }) => {

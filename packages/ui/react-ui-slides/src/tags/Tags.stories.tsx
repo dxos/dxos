@@ -418,26 +418,34 @@ export const FlowGrid: Story = {
     // 1. Four cards of one size on one row, headers and first bullets level, as in a grid with no arrows.
     await expectLevelRow(cards);
 
-    // 2. An arrow after every card but the last, in a box that is the gap between two cards: it starts at the
+    // 2. An arrow into every card from the one before it, in a box that is the gap between the two: it ends at the
     // card's edge and is as wide as the gap, so the glyph is centred between them.
     const gap = parseFloat(getComputedStyle(grid).columnGap);
     await expect(gap).toBe(96);
-    for (const card of cards.slice(0, -1)) {
-      const arrow = getComputedStyle(card, '::after');
+    for (const card of cards.slice(1)) {
+      const arrow = getComputedStyle(card, '::before');
       await expect(arrow.content).toBe('"→"');
       await expect(parseFloat(arrow.width)).toBe(gap);
-      await expect(parseFloat(arrow.left)).toBeCloseTo(card.offsetWidth, 0);
+      await expect(parseFloat(arrow.right)).toBeCloseTo(card.offsetWidth, 0);
       await expect(arrow.textAlign).toBe('center');
       // The card lets the arrow out of its own box.
       await expect(getComputedStyle(card).overflowX).toBe('visible');
     }
-    await expect(getComputedStyle(cards[3], '::after').content).toBe('none');
+
+    // 3. The arrow into the first card would stand outside the grid, which cuts it off.
+    await expect(getComputedStyle(grid).overflowX).toBe('clip');
+    await expect(cards[0].getBoundingClientRect().left).toBeCloseTo(grid.getBoundingClientRect().left, 0);
   },
 };
 
+/** The cards a flow grid cuts the arrow off for: those whose start edge is the grid's own. */
+const rowStarts = (grid: Element, cards: HTMLElement[]) =>
+  cards.map((card) => Math.abs(card.getBoundingClientRect().left - grid.getBoundingClientRect().left) < 1);
+
 /**
- * A flow grid's rows end where its children stop fitting: the first card covers two of three columns and the next
- * does not fit beside it, so it ends a row short of the grid's edge and draws no arrow into the empty column.
+ * A flow grid's arrows follow the layout, whatever its children span. The first card covers two of three columns and
+ * the next does not fit beside it, so the first row stops short of the grid's edge with no arrow into the empty
+ * column; the arrow into the last card is the only one.
  */
 export const FlowGridSpans: Story = {
   render: IconCards.render,
@@ -456,18 +464,63 @@ export const FlowGridSpans: Story = {
   play: async ({ canvasElement }) => {
     const grid = await query(canvasElement, '[data-variant="flow"]');
     await query(canvasElement, 'article[data-icon] header svg');
-    const [chat, code, cowork] = [...grid.querySelectorAll<HTMLElement>(':scope > article')];
+    const cards = [...grid.querySelectorAll<HTMLElement>(':scope > article')];
+    const [chat, code, cowork] = cards;
 
     // 1. Two rows: the first card alone, then the other two side by side.
     await expect(code.getBoundingClientRect().top).toBeGreaterThan(chat.getBoundingClientRect().bottom);
     await expect(cowork.getBoundingClientRect().top).toBeCloseTo(code.getBoundingClientRect().top, 0);
-    // The first row stops a column short of the grid's edge, which is where an arrow would otherwise stand.
+    // The first row stops a column short of the grid's edge, and nothing is drawn after it.
     await expect(chat.getBoundingClientRect().right).toBeLessThan(grid.getBoundingClientRect().right - 1);
-
-    // 2. An arrow only between the two cards that share a row.
     await expect(getComputedStyle(chat, '::after').content).toBe('none');
-    await expect(getComputedStyle(code, '::after').content).toBe('"→"');
-    await expect(getComputedStyle(cowork, '::after').content).toBe('none');
+
+    // 2. Each of the first two starts a row, where the grid cuts its arrow off; the third takes one from the second.
+    await expect(getComputedStyle(grid).overflowX).toBe('clip');
+    await expect(rowStarts(grid, cards)).toEqual([true, true, false]);
+    await expect(getComputedStyle(cowork, '::before').content).toBe('"→"');
+  },
+};
+
+/**
+ * A card that spans rows takes a column out of the rows under it. The layout places the cards, and each arrow goes
+ * with the card it points at, so no count of columns has to agree with it: B and C each take an arrow from A, D
+ * starts the third row, and E takes one from D.
+ */
+export const FlowGridRowSpan: Story = {
+  render: IconCards.render,
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '<Grid cols="2" align="center" variant="flow">',
+      '',
+      iconCard('icon="chat-circle" rowSpan="2"', 'A', 'Two rows tall'),
+      iconCard('icon="code"', 'B', 'Beside A'),
+      iconCard('icon="users-three"', 'C', 'Beside A, under B'),
+      iconCard('icon="rocket-launch"', 'D', 'Starts the third row'),
+      iconCard('icon="flag"', 'E', 'Ends it'),
+      '',
+      '</Grid>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const grid = await query(canvasElement, '[data-variant="flow"]');
+    await query(canvasElement, 'article[data-icon] header svg');
+    const cards = [...grid.querySelectorAll<HTMLElement>(':scope > article')];
+    const [first, second, third, fourth, fifth] = cards.map((card) => card.getBoundingClientRect());
+
+    // 1. A is two rows tall, with B and C beside it one over the other; D and E share the row under them.
+    await expect(second.top).toBeCloseTo(first.top, 0);
+    await expect(third.top).toBeGreaterThan(second.bottom);
+    await expect(third.bottom).toBeCloseTo(first.bottom, 0);
+    await expect(third.left).toBeCloseTo(second.left, 0);
+    await expect(fourth.top).toBeGreaterThan(first.bottom);
+    await expect(fifth.top).toBeCloseTo(fourth.top, 0);
+
+    // 2. A and D start rows; every other card has a card beside it at its start edge, and an arrow from it.
+    await expect(rowStarts(grid, cards)).toEqual([true, false, false, true, false]);
+    for (const card of [cards[1], cards[2], cards[4]]) {
+      await expect(getComputedStyle(card, '::before').content).toBe('"→"');
+    }
   },
 };
 
@@ -511,15 +564,16 @@ export const FlowGridBuild: Story = {
     await expect(cards.map((card) => card.classList.contains('invisible'))).toEqual([false, false, true, true]);
     await expectLevelRow(cards);
 
-    // 3. The arrow between the two revealed cards is drawn; the one that would point at a card to come is not.
-    await expect(getComputedStyle(cards[0], '::after').content).toBe('"→"');
-    await expect(getComputedStyle(cards[1], '::after').content).toBe('none');
+    // 3. The arrow into the second card is drawn; the one into the third is hidden with the card it points at.
+    await expect(getComputedStyle(cards[1], '::before').content).toBe('"→"');
+    await expect(getComputedStyle(cards[1], '::before').visibility).toBe('visible');
+    await expect(getComputedStyle(cards[2], '::before').visibility).toBe('hidden');
 
     // 4. Clicking the slide runs the build on: the third card appears, and with it the arrow that was waiting.
     await userEvent.click(cards[0]);
     await waitFor(() => expect(cards[2].classList.contains('invisible')).toBe(false));
-    await expect(getComputedStyle(cards[1], '::after').content).toBe('"→"');
-    await expect(getComputedStyle(cards[2], '::after').content).toBe('none');
+    await expect(getComputedStyle(cards[2], '::before').visibility).toBe('visible');
+    await expect(getComputedStyle(cards[3], '::before').visibility).toBe('hidden');
     await expectLevelRow(cards);
   },
 };

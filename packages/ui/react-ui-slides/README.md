@@ -26,9 +26,9 @@ A `<Grid>` fills the space the slide leaves it (`align="stretch"`, the default).
 `"end"` it takes the height of what it holds and stands at the top, the middle or the bottom of that space. Either way
 the cards of a row share one height.
 
-`<Grid variant="flow">` draws an arrow in each gap between the children of a row, for a progression, and none after
-the last child of a row. A row ends where the next child no longer fits, counting `cols` and each child's `colSpan`;
-a `rowSpan` is not counted. It is otherwise the grid, so its cards are one size and `align` places it.
+`<Grid variant="flow">` draws an arrow in each gap between the children of a row, for a progression: into each child
+from the one beside it, and none into the first child of a row, whatever the children span. It is otherwise the grid,
+so its cards are one size and `align` places it.
 A card in a flow grid does not clip what it holds, since its arrow stands outside it.
 
 A click tag (`<v-clicks>`, `<v-click>`, `<v-after>`) written straight inside a `<Grid>` is no box of its own: what it
