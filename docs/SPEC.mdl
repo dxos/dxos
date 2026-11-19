@@ -969,7 +969,7 @@ page halo-invitations: Invitations
   template: concept
   status: spike
   covers:
-    - The two kinds, device and space, the types interactive and delegated, and the `multiUse` option; the `multiuse` type is deprecated
+    - The two kinds, device and space, the types interactive and delegated, and the `multiUse` option
     - The auth methods: none, shared secret and known public key
     - The invitation flow, step by step, with its events [D-165]
     - Admission: a contact-card exchange and a delegation
@@ -6929,6 +6929,23 @@ decision D-349: The publishing page's "With an assistant" section covers the two
   by: user:wittjosiah
   affects: [app-framework-publishing]
   why: Dev Shell is a proof of concept that Composer includes only when it is run from source, and its template's last step loads a plugin by URL, which a Composer served that way cannot do.
+```
+
+```mdl
+decision D-350: `@dxos/halo` has no `multiuse` invitation type, and the HALO pages do not mention one. An invitation is kept open with the `multiUse` option. Amends [D-334].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [halo-guide-invitation, halo-invitations]
+  why: The host treated the type as single-use, and nothing passed it.
+```
+
+```mdl
+decision D-351: The Invitation pages say what a `success` event's result names: the space for a space invitation, on host and guest, and the identity for a device invitation, on the guest. Amends [D-334].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-guide-invitation, halo-invitations]
+  why: The adapter now derives the result from the invitation when it succeeds, where it used to return an empty one.
 ```
 
 ## Appendix: Extension Definitions

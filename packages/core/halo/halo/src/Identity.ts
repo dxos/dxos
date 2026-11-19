@@ -12,7 +12,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { IdentityDid, SpaceId } from '@dxos/keys';
+import { IdentityDid } from '@dxos/keys';
 import { type AccessToken } from '@dxos/link';
 import { type Presentation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -230,12 +230,6 @@ export interface ServiceApi {
     data?: Record<string, unknown>;
     deviceLabel?: string;
   }) => Effect.Effect<Info, IdentityError>;
-  /**
-   * Id of the identity's personal (HALO) space — where its credentials live. `Option.none` when no
-   * identity exists. Derived asynchronously from the identity key, hence a verb rather than a field
-   * on {@link Info}.
-   */
-  readonly personalSpaceId: Effect.Effect<Option.Option<SpaceId>, IdentityError>;
   /** Re-admit this device to an existing identity via a recovery credential. */
   readonly recover: (args: RecoverArgs) => Effect.Effect<Info, IdentityError>;
   /**
@@ -302,12 +296,6 @@ export const create = (options?: {
   data?: Record<string, unknown>;
   deviceLabel?: string;
 }): Effect.Effect<Info, IdentityError, Service> => Effect.flatMap(Service, (service) => service.create(options));
-
-/** Id of the identity's personal (HALO) space (requires {@link Service}). */
-export const personalSpaceId: Effect.Effect<Option.Option<SpaceId>, IdentityError, Service> = Effect.flatMap(
-  Service,
-  (service) => service.personalSpaceId,
-);
 
 /** Re-admit this device via a recovery credential (requires {@link Service}). */
 export const recover = (args: RecoverArgs): Effect.Effect<Info, IdentityError, Service> =>

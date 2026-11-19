@@ -33,7 +33,6 @@ because they act on the flow handle itself.
 
 - `'interactive'` needs host and guest online together.
 - `'delegated'` can be redeemed while the host is offline.
-- `'multiuse'` is deprecated. Set `multiUse` instead.
 
 `multiUse` says how many guests can redeem the invitation. By default it ends when the host admits the first guest.
 Set `multiUse` to `true` when more than one guest has to redeem the same code.
@@ -75,8 +74,13 @@ In this example, `follow` reads events until the flow ends in `success`, `error`
 `readyForAuthentication` case reads `event.authCode`, which only the host's event carries. This means the same
 handler shows the code on the host and asks for it on the guest.
 
-The `result` of a `success` event is empty, so it does not name what the guest joined. On the guest, a joined space
-then appears in `Space.spaces`, and a joined identity in `Identity.identity`.
+The `result` of a `success` event names what the guest joined:
+
+- For a space invitation, `result.spaceId` is the space, on both the host and the guest.
+- For a device invitation, `result.identityDid` is the identity, on the guest. The host's result is empty, because
+  the guest joined the host's own identity.
+
+On the guest, the joined space then appears in `Space.spaces`, and the joined identity in `Identity.identity`.
 
 **Example** (Authenticating as the guest)
 

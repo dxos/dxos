@@ -22,7 +22,6 @@ the host admits the guest, and the record of it is a signed delegation.
 | ------------- | -------------------------------------------------------------- |
 | `interactive` | Host and guest are online at the same time and talk directly   |
 | `delegated`   | The guest can redeem it while the host is offline              |
-| `multiuse`    | Deprecated. Set the `multiUse` option instead                  |
 
 An invitation ends when the host admits its first guest. The `multiUse` option keeps it open, so more than one guest
 can redeem the same code.
@@ -60,8 +59,8 @@ ends.
    the guest by another route.
 5. The guest calls `Invitation.authenticate` with the code. Both flows emit `authenticating`.
 6. The host checks the code. The two sides exchange contact cards, and the host writes the delegation that admits the
-   guest. Both flows emit `success`. The guest then finds the space in `Space.spaces`, or the identity in
-   `Identity.identity`.
+   guest. Both flows emit `success`, and the guest's event names the space or the identity it joined. The guest
+   then finds the space in `Space.spaces`, or the identity in `Identity.identity`.
 
 Any step can end in `cancelled`, if either side calls `Invitation.cancel`, or in `error`.
 

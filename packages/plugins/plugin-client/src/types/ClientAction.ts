@@ -4,14 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { IdentityDid, SpaceId } from '@dxos/keys';
+import { IdentityDid } from '@dxos/keys';
 
 import { ClientNamespace } from '../namespace.ts';
 
 // TODO(wittjosiah): Factor out. Generate?
 const IdentitySchema = Schema.Struct({
   identityDid: IdentityDid,
-  spaceId: Schema.optional(SpaceId),
   profile: Schema.optional(
     Schema.Struct({
       displayName: Schema.optional(Schema.String),

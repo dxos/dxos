@@ -44,7 +44,8 @@ const follow = Invitation.events(flow).pipe(
             ? console.log('tell the guest this code:', event.authCode)
             : console.log('ask for the code the host shows');
         case 'success':
-          return console.log('the guest is in');
+          // A space invitation names the space, and a device invitation names the identity.
+          return console.log('the guest is in', event.result);
         case 'cancelled':
           return console.log('cancelled');
         case 'error':
