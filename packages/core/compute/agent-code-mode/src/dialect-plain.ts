@@ -99,19 +99,27 @@ export const PlainDialect: Dialect = {
             // unversioned. Objects only: a relation needs a source and target `make` cannot take.
             const registered = () =>
               db.registry.list().find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
-            // A type the registry lacks is asked of the graph's type sources, which add what they find to the
-            // registry: on EDGE an agent's database registers only its own types, and the rest are published by
-            // the plugin bundles that contribute them.
-            // A name that is not a valid typename is simply unknown, never a defect.
-            const dxn = typename.includes('#') ? undefined : DXN.tryMake(`dxn:${typename}`);
-            const type =
-              registered() ??
-              (dxn === undefined
-                ? undefined
-                : yield* Effect.promise(async () => {
-                    await db.graph.createRefResolver({ context: { space: db.spaceId } }).resolveType?.(dxn);
-                    return registered();
-                  }));
+            // A type the registry lacks is asked of the graph's type sources: on EDGE an agent's database registers
+            // only its own types, and the rest are published by the plugin bundles that contribute them. A name that
+            // is not a valid unversioned typename, or a resolver that fails, is an unknown type, never a defect.
+            const resolved = (): Effect.Effect<unknown> =>
+              Schema.is(DXN.NameSchema)(typename)
+                ? Effect.tryPromise(
+                    () =>
+                      db.graph
+                        .createRefResolver({ context: { space: db.spaceId } })
+                        .resolveType?.(DXN.make(typename)) ?? Promise.resolve(undefined),
+                  ).pipe(Effect.orElseSucceed(() => undefined))
+                : Effect.succeed(undefined);
+            const type = registered() ?? (yield* resolved());
+            if (type !== undefined && Type.isType(type) && Type.isRelation(type)) {
+              return yield* Effect.fail(
+                new UnknownObjectTypeError({
+                  typename,
+                  message: `${typename} is a relation type; make creates objects only`,
+                }),
+              );
+            }
             if (type === undefined || !Type.isType(type) || !Type.isObject(type)) {
               return yield* Effect.fail(
                 new UnknownObjectTypeError({ typename, message: `Unknown object type: ${typename}` }),

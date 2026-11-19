@@ -637,6 +637,11 @@ describe('code mode types', () => {
         expect(output).toEqual('notes: 1');
         expect(asked).toEqual([String(DXN.make(NOTE_TYPENAME))]);
 
+        // The source added the type to the registry, so a second `make` does not ask it again: on EDGE each ask is
+        // an RPC to the registry service.
+        yield* runEval(`await make('${NOTE_TYPENAME}', { title: 'Again' });`);
+        expect(asked).toHaveLength(1);
+
         const unknown = yield* runEvalResult(`await make('com.example.type.unknown', {});`);
         expect(unknown).toEqual({ output: 'Error: Unknown object type: com.example.type.unknown', ok: false });
 
