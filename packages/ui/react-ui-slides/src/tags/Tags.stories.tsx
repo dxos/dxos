@@ -164,7 +164,7 @@ const iconCard = (attributes: string, title: string, ...bullets: string[]) =>
 
 /**
  * A row of cards with an icon in place of art: `icon` names a Phosphor glyph, which stands with the title as one
- * header and takes the card's `tone`, and the bullets are set in the card's own text under the title. The deck's font
+ * header and takes the card's `tone`, and the bullets are sized for the card and set under the title. The deck's font
  * here is Space Grotesk, whose widths are not the default mono's.
  */
 export const IconCards: Story = {
@@ -231,7 +231,7 @@ export const IconCards: Story = {
     await expect(cards.map((card) => card.dataset.tone)).toEqual(['warning', undefined, 'success']);
     await expect(new Set(headers.map(({ icon }) => getComputedStyle(icon).color)).size).toBe(3);
 
-    // 4. The bullets are the card's own: its text size rather than the slide's, each marker drawn inside the card
+    // 4. The bullets are the card's own: its list size rather than the slide's, each marker drawn inside the card
     // under the icon, and the text starting where the title does.
     for (const { card, icon, title } of headers) {
       const items = [...card.querySelectorAll('li')];
@@ -242,7 +242,7 @@ export const IconCards: Story = {
         const box = item.getBoundingClientRect();
         // The slide is scaled to fit the story, so a computed length is converted to the screen's pixels.
         const scale = box.width / item.offsetWidth;
-        await expect(style.fontSize).toBe('32px');
+        await expect(style.fontSize).toBe('40px');
         await expect(marker.content).toBe('"•"');
         await expect(marker.textAlign).toBe('center');
         await expect(box.left).toBeCloseTo(icon.getBoundingClientRect().left, 0);

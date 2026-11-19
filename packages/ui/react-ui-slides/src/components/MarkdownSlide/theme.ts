@@ -7,12 +7,13 @@
 const cardHeader = 'flex items-start gap-6 [&>:is(h1,h2,h3)]:p-0 [&>:is(h1,h2,h3)]:min-w-0';
 const cardIcon = 'shrink-0 size-[70px] text-(color:--slide-accent)';
 
-// A card's bullets, in the card's own text. Each marker is drawn in a column of its own rather than hung outside
-// the list, so it stays inside the card's padding: at the title's start edge, or centred under the icon, where the
-// text then starts under the title (the icon's 70px and the row's 24px gap).
+// A card's bullets, a step under its title and above its caption text, since they are the card's content rather than
+// a line under its art. Each marker is drawn in a column of its own rather than hung outside the list, so it stays
+// inside the card's padding: at the title's start edge, or centred under the icon, where the text then starts under
+// the title (the icon's 70px and the row's 24px gap).
 const cardList =
-  'flex flex-col gap-2 list-none text-[32px] leading-snug opacity-80 [counter-reset:slide-card-item] ' +
-  '[--slide-card-indent:38px] [--slide-card-marker:38px] [--slide-card-marker-align:start] ' +
+  'flex flex-col gap-2 list-none text-[40px] leading-snug opacity-80 [counter-reset:slide-card-item] ' +
+  '[--slide-card-indent:1.2em] [--slide-card-marker:1.2em] [--slide-card-marker-align:start] ' +
   '[[data-icon]>&]:[--slide-card-indent:94px] [[data-icon]>&]:[--slide-card-marker:70px] ' +
   '[[data-icon]>&]:[--slide-card-marker-align:center]';
 const cardItem =
@@ -21,8 +22,9 @@ const cardItem =
   'before:[text-align:var(--slide-card-marker-align)] ' +
   "[ul>&]:before:content-['•'] [ol>&]:before:content-[counter(slide-card-item)_'.'] " +
   // A list or a paragraph inside an item is already indented by it, so it drops the padding and the dimming the
-  // card gives the same tag at its top level.
-  '[&>:is(ul,ol)]:p-0! [&>:is(ul,ol)]:mt-2 [&>:is(ul,ol)]:opacity-100 [&>p]:p-0! [&>p]:opacity-100';
+  // card gives the same tag at its top level, and a loose item's paragraph keeps the item's size.
+  '[&>:is(ul,ol)]:p-0! [&>:is(ul,ol)]:mt-2 [&>:is(ul,ol)]:opacity-100 ' +
+  '[&>p]:p-0! [&>p]:opacity-100 [&>p]:[font-size:inherit]';
 
 // The tracks a grid child covers. The counts are reset on the child itself rather than left to the `var()`
 // fallbacks: a custom property inherits, so a child inside a child would otherwise cover the tracks of the one

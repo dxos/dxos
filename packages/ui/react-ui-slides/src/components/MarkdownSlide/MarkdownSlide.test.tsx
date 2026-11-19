@@ -221,13 +221,13 @@ describe('MarkdownSlide', () => {
     );
   });
 
-  test('a list in a card takes the card\u2019s text and padding, two levels deep', ({ expect }) => {
+  test('a list in a card takes the card\u2019s list size and padding, two levels deep', ({ expect }) => {
     const markup = render('<Card>\n\n### Title\n\n- one\n  - nested\n\n1. first\n\n</Card>');
     const lists = markup.match(/<(?:ul|ol) [^>]*>/g) ?? [];
     expect(lists).toHaveLength(3);
     for (const list of lists) {
       // The card's own list classes, not the slide's (`ml-12 list-disc`), whose markers hang outside the padding.
-      expect(list).toMatch(/class="px-10 [^"]*list-none[^"]*text-\[32px\]/);
+      expect(list).toMatch(/class="px-10 [^"]*list-none[^"]*text-\[40px\]/);
       expect(list).not.toContain('ml-12');
       expect(list).not.toContain('data-variant');
     }
