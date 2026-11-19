@@ -25,7 +25,7 @@ holds.
 A `<Card>` holds art or an icon, a title, and a line or a few bullets. `icon` names a
 [Phosphor](https://phosphoricons.com) glyph, bare (`icon="shield-check"`) or as a whole symbol
 (`icon="ph--shield-check--duotone"`). It stands with the card's first heading as one header, in the card's tone. A list
-in a card is set in the card's own text, two levels deep, with its markers under the icon.
+in a card is sized for the card and kept inside its padding, two levels deep, with its markers under the icon.
 
 ```md
 <Grid cols="3">
