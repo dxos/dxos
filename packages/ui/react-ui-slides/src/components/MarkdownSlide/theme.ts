@@ -63,8 +63,8 @@ const grid =
   // that sets none of its own, which would otherwise inherit the span of a cell around the grid.
   '[--slide-row-span:1] [&:has(>[data-icon])>*]:[grid-row:span_calc(var(--slide-row-span,1)*2)]';
 
-// A flow draws an arrow into each child from the one beside it; the column gap is the arrow's own box (`w-24` for
-// `gap-x-24`), so the glyph is centred between the two.
+// A flow draws an arrow into each child from the one beside it, as the child's own, so a build hides and reveals it
+// with that child. The column gap is the arrow's box (`w-24` for `gap-x-24`), so the glyph is centred in it.
 const gridFlow =
   'gap-x-24 [&>*]:relative ' +
   "[&>*]:before:content-['→'] [&>*]:before:absolute [&>*]:before:end-full [&>*]:before:top-1/2 [&>*]:before:w-24 " +
@@ -73,8 +73,6 @@ const gridFlow =
   // The arrow into a row's first child stands outside the grid, which cuts it off: the layout alone decides where a
   // row starts, whatever its children span.
   'overflow-x-clip ' +
-  // An arrow is hidden with its own child during a build; it also waits for the child it points from.
-  '[&>.invisible+*]:before:content-none ' +
   // A card's own clipping would hide its arrow, so its art is rounded at the card's corners instead.
   '[&>article]:overflow-visible [&>article>p:first-child>img]:rounded-t-[24px] ' +
   '[&>article>p:last-child>img]:rounded-b-[24px] [&>article>div>p:last-child>img]:rounded-b-[24px]';
