@@ -27,7 +27,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
     const { t } = Hooks.useTranslation(KanbanNamespace.key);
     const { model } = useBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
-    const { onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
+    const { onCardRemove, readonly } = useKanbanBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
     const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
@@ -51,13 +51,13 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         data={data}
         location={location}
         debug={debug}
-        draggable={draggable}
+        draggable={draggable && !readonly}
         dragHandle={dragHandle}
       >
         <Focus.Item asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Header>
-              <DragHandle.DragHandle ref={dragHandleRef} />
+              {readonly ? <Layout.Block /> : <DragHandle.DragHandle ref={dragHandleRef} />}
               <Card.Title>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Layout.Block rail='end'>

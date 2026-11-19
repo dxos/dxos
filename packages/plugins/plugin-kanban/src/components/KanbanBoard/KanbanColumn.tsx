@@ -22,7 +22,8 @@ const KANBAN_COLUMN_NAME = 'KanbanBoard.Column';
 export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
   ({ data: column, location, debug, draggable }, forwardedRef) => {
     const { model } = useBoard<KanbanLayout.ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
-    const { columnFieldPath, change, onCardAdd, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
+    const { columnFieldPath, change, onCardAdd, getPivotAttributes, itemTile, readonly } =
+      useKanbanBoard(KANBAN_COLUMN_NAME);
 
     const { title } = getPivotAttributes(column.columnValue);
     const uncategorized = column.columnValue === KanbanConstants.UNCATEGORIZED_VALUE;
@@ -41,14 +42,14 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         location={location}
         classNames='grid grid-rows-[var(--dx-rail-action)_1fr_var(--dx-rail-action)]'
         debug={debug}
-        draggable={draggable}
+        draggable={draggable && !readonly}
         dragHandle={dragHandle}
         ref={forwardedRef}
       >
-        <Board.Column.Header label={title} dragHandleRef={uncategorized ? undefined : setDragHandle} />
+        <Board.Column.Header label={title} dragHandleRef={uncategorized || readonly ? undefined : setDragHandle} />
         <Board.Column.Body
           data={column}
-          eventHandler={eventHandler}
+          eventHandler={readonly ? undefined : eventHandler}
           Tile={itemTile as FC<MosaicTileProps<Obj.Unknown>>}
         />
         <Board.Column.Footer

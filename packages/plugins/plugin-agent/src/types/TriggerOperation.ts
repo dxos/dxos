@@ -10,8 +10,8 @@ import { AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { Space } from '@dxos/halo';
-import { RDF } from '@dxos/pipeline-rdf';
 
 import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
@@ -148,7 +148,7 @@ export interface InspectedSubscription extends Schema.Schema.Type<typeof Inspect
 
 /** An agent's brain as stored: what {@link InspectBrain} reads. */
 export const BrainSnapshot = Schema.Struct({
-  facts: Schema.Array(RDF.Fact),
+  facts: Schema.Array(Fact.Fact),
   subscriptions: Schema.Array(InspectedSubscription),
   nextDueAt: Schema.optional(Format.DateTime.annotate({ description: 'When the clock next matters to a watch.' })),
 });

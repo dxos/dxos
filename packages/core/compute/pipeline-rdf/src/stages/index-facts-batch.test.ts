@@ -7,11 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
+import { Vocab } from '@dxos/echo-memory';
+
 import { TRANSCRIPT_RULE } from '../internal/stages/extract.ts';
 import { FactPipeline } from '../pipeline.ts';
 import { FactStore, FactStoreLive } from '../store/index.ts';
 import { queuedAiService } from '../testing/index.ts';
-import { type ExtractDocument, Vocab } from '../types/index.ts';
+import { type ExtractDocument } from '../types/index.ts';
 import { extractTranscriptFacts, normalizeEntityId } from './extract-facts.ts';
 import { DEFAULT_INDEX_BATCH_SIZE, indexFactsBatch } from './index-facts.ts';
 

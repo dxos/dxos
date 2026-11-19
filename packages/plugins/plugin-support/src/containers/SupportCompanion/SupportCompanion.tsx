@@ -17,6 +17,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { MarkdownView } from '@dxos/react-ui-markdown';
@@ -46,6 +47,7 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
+  const readonly = ToolkitHooks.useReadOnly();
   const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -97,7 +99,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          {tours.map((tour) => (
+          {(readonly ? [] : tours).map((tour) => (
             <Button.Root
               key={tour.id}
               icon='ph--path--regular'

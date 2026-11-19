@@ -12,19 +12,13 @@ import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { type AiModelNotAvailableError, AiService, AiUsage } from '@dxos/ai';
+import { Fact, Ontology, Vocabularies } from '@dxos/echo-memory';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { SemanticIndexError } from '../../errors.ts';
-import {
-  type ExtractDocument,
-  type ExtractOptions,
-  FactualityValue,
-  type KnownEntity,
-  Ontology,
-  Vocabularies,
-} from '../../types/index.ts';
+import { type ExtractDocument, type ExtractOptions, type KnownEntity } from '../../types/index.ts';
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-5-5.default';
 
@@ -83,7 +77,7 @@ export const ExtractedFact = Schema.Struct({
   object: Schema.String,
   validFrom: OptionalString,
   validTo: OptionalString,
-  factuality: FactualityValue,
+  factuality: Fact.FactualityValue,
   polarity: Schema.Literals(['+', '-', '?']),
   confidence: nullableAsAbsent(Schema.Number),
   nature: Nature,

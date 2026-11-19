@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
 import { FactViewer } from '@dxos/react-ui-rdf';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -13,7 +13,7 @@ import { PredicateList } from '../PredicateList/index.ts';
 import { entitiesFromFacts, predicatesFromFacts } from '../types.ts';
 
 export type FactPanelProps = {
-  facts: RDF.Fact[];
+  facts: Fact.Fact[];
 };
 
 /**

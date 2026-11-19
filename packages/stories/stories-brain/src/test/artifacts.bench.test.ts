@@ -7,10 +7,10 @@ import { describe, test } from 'vitest';
 
 import { type AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { buildThreads, clusterThreads, materializeTopics, summarizeTopics } from '@dxos/pipeline-email';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import {
@@ -56,7 +56,7 @@ const senderOf = (message: Message.Message): string => message.sender.name ?? me
 const subjectOf = (message: Message.Message): string => String(message.properties?.subject ?? '(no subject)');
 
 /** Display label for a fact term (entity label/slug or literal). */
-const termLabel = (term: RDF.Fact['assertion']['subject']): string => {
+const termLabel = (term: Fact.Fact['assertion']['subject']): string => {
   if (term && typeof term === 'object') {
     if ('entity' in term && typeof term.entity === 'string') {
       const label = (term as { label?: unknown }).label;
@@ -77,7 +77,7 @@ const titleCase = (slug: string): string =>
     .join(' ');
 
 /** Top entities by mention count (subject + object), excluding owner/self slugs. */
-const topEntities = (facts: readonly RDF.Fact[], exclude: readonly string[], limit: number) => {
+const topEntities = (facts: readonly Fact.Fact[], exclude: readonly string[], limit: number) => {
   const counts = new Map<string, number>();
   const labels = new Map<string, string>();
   for (const fact of facts) {

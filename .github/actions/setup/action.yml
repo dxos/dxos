@@ -282,6 +282,9 @@ runs:
           ${{ inputs.cache-scope }}-${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-
 
     - name: Install dependencies
+      env:
+        # The CPU runtime ships in the package; the optional CUDA download 404s on onnxruntime's releases.
+        ONNXRUNTIME_NODE_INSTALL_CUDA: skip
       run: |
         if [ "${{ inputs.verify-integrity }}" = "true" ]; then
           pnpm set verify-store-integrity true

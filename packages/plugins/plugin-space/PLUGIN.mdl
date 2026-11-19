@@ -616,6 +616,18 @@ feat F-8: Presence and Sync Status
   req F-8.26: SpacePresence can list everyone attending something in its space instead of one object's viewers. Each row carries the actions on what that person (or session) attends, and when the host names an object, the avatars of those on it are lit and the rest dimmed.
 ```
 
+```mdl
+feat F-9: Publishing
+
+  req F-9.1: An editor or admin publishes the open space with Publish space; with no space open, it does nothing. The space's JSON export, cut to the objects the space shows as live whose type resolves to a schema with no password field, without edit history, trace feeds, or the archive's `originalSpaceId` and `exportedBy`, goes to EDGE with a manifest of the space's plugins and object ids, under an unguessable public id. The manifest's `preview` carries what link previews draw: the space's description, icon and hue, a count of the published objects of each type that has a label, most numerous first, and the title, type label, icon, hue and description of each published object that has a title. EDGE checks the publisher's role.
+  req F-9.2: The space properties' `org.dxos.space.publication` annotation keeps the publication (public id, time), so Publish again replaces the same publication. Nothing republishes automatically. Unpublish removes the publication and clears the annotation to `null`. The annotation names the space that published it, so a copy of the space, however it was imported, reads as unpublished and never updates or withdraws the original's publication.
+  req F-9.3: Copy public link copies the viewer link of a published space's object, `<viewer>/<publicId>/db/<typeSlug>+<objectId>`; Copy public link on the space copies `<viewer>/<publicId>`. Copy link and Copy public link on an object add the link action, if any, that a plugin contributes for that kind of link (`internal` or `public`) and that object, as `?action=<name>`, where `<name>` is the action's DXN without its `dxn:` prefix.
+  req F-9.4: Composer opened with `?fork=<publicId>&path=<objectPath>` imports the publication as a new space of the user's once the user has an identity, which is after sign-in, and opens the object at `path`. The fork reads as unpublished and is migrated to the host's version, so it never asks to be migrated. Plugins the manifest names are not enabled.
+  req F-9.5: When the host contributes `ReadOnly`, the plugin's graph is navigation only: no space, object or section actions, no Settings, export or peer nodes, and no Selected objects companion. The Database section shows, and its type pages list and open objects with no selection, deletion, filing, merging or cell edits. The object properties companion shows the properties as static rows.
+  req F-9.6: Space settings has a Description field after Name, kept in the space properties. Space settings has a Publishing section after the space properties and before the space controls. Its Status row says whether the space is published, with Publish space while it is not; while it is, the row shows when it was published, beside a Manage menu (Republish space, Unpublish space). A published space also shows its public link in a copyable field.
+  req F-9.7: Publications are read from the viewer origin: `<viewer>/publications/<publicId>/archive.json` and `manifest.json`, open to any origin. The viewer and a fork read there; `publicationsUrl` overrides it. The viewer host answers a crawler with link-preview tags: a space link is named and described after the manifest's space, and an object link after the manifest's object, else after the object title its URL carries. Each preview names an image, `<viewer>/publications/<publicId>/preview.png`, with `?object=<objectId>` for an object the manifest describes: a 1200×630 PNG card the Composer worker draws from the manifest. The space card shows the space's name, description and icon, its three most numerous types with a count of the rest, and a bar weighted by type; the object card shows the object's type, title and description, with the space's name beside its icon. Every navigation on the viewer host, its root included, gets the viewer, never the app. The worker answers 404 for a publication file only when EDGE does; any other EDGE failure is an uncached 502. The viewer says a space is no longer published only on a 404; any other failure says the space could not be opened.
+```
+
 ## Acceptance
 
 ```mdl
@@ -1856,6 +1868,415 @@ decision D-102: `OpenDeleteSpace` opens the plugin's delete-space confirmation a
   why: The diagram app's user asked for its own delete-space dialog to give way to one from the space plugin.
   rejected:
     - Ask inside `Delete`: an agent or MCP call would wait on a dialog nobody sees.
+```
+
+```mdl
+decision D-103: A space can be published as a read-only copy: its export is baked and hosted on EDGE, viewed at a separate viewer host, and forked into Composer as a new space. Any editor or admin may publish, with the role checked by EDGE. Republishing is manual only. Public links can name one object in the space. A fork does not enable the plugins the publication names.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.1, F-9.2, F-9.3, F-9.4]
+```
+
+```mdl
+decision D-104: Read-only handling is per plugin, through each plugin's options, with no new app-framework, compute or ECHO concepts.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.5]
+```
+
+```mdl
+decision D-105: The receipt lives in the space's `publication` property, and the published archive drops `originalSpaceId` and `exportedBy`. Fills in [D-103].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: A property travels with the space without a new type. The source space id would let anyone with the link query that space through EDGE routes that do not check auth.
+  rejected: A `Publication` object in the space; it would be exported into the publication itself.
+```
+
+```mdl
+decision D-106: A fork link's intent is stashed in localStorage at startup and run once spaces are available, if under an hour old. Fills in [D-103].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.4]
+  why: Sign-in by magic link lands in a new tab, which sessionStorage does not reach; spaces becoming available is the sign-in gate.
+  rejected: sessionStorage.
+```
+
+```mdl
+decision D-107: `readOnly` builds a navigation-only graph and hides the System group rather than dropping the Database subgraph. Fills in [D-104].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: Object paths (`db/<typeSlug>+<objectId>`) resolve through the Database subgraph, so dropping it breaks public object links.
+```
+
+```mdl
+decision D-108: The Database section shows in a read-only host.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.5]
+```
+
+```mdl
+decision D-109: `readOnly` keeps the Database section, System group included; its type pages list and open objects only. Fills in [D-108].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: Object paths resolve through the Database subgraph, and a type page that writes nothing is safe to show.
+  supersedes: D-107
+```
+
+```mdl
+decision D-110: The object properties companion is available in a read-only host.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.5]
+```
+
+```mdl
+decision D-111: Read-only, the properties companion shows static rows with empty ones omitted, and the Selected objects companion is withheld. Fills in [D-110].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: Selection is off in a read-only space, so the Selected companion would always be empty.
+```
+
+```mdl
+decision D-112: Public reads of a publication, with link previews such as Open Graph tags, are served by the Composer worker. Publishing writes go through EDGE.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.7]
+```
+
+```mdl
+decision D-113: The Composer worker serves `/publications/*` on the viewer host by proxying EDGE's public read with a 60-second cache, and reads the manifest the same way for a link preview, waiting at most 2 seconds. The dev server proxies the same path to its EDGE. Fills in [D-112].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.7]
+  why: EDGE stays the only binding of the publications bucket and the only owner of its layout, and a local run reads publications the way a deployed one does.
+  rejected: Binding the publications bucket in the Composer worker; two workers would read one layout, and the dev server could not reach the bucket at all.
+```
+
+```mdl
+decision D-114: A link preview names a space link after the manifest's `name` and an object link after the `title` its URL carries, with a description naming the space; no preview image yet. Fills in [D-112].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.7]
+  why: The manifest is the only thing the worker can read about a publication without parsing its archive.
+```
+
+```mdl
+decision D-115: A forked space does not ask to be migrated.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.4]
+```
+
+```mdl
+decision D-116: The fork runs `SpaceOperation.Migrate` after the import. Fills in [D-115].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.4]
+  why: The archive carries the publisher's migration version, or none, and a JSON import keeps exactly that; migrating brings the space to the host's version whatever the publisher ran.
+  rejected: Stamping the target version without running migrations, which would skip migrations an older publisher's content needs.
+```
+
+```mdl
+decision D-117: Space settings show whether the space is published, with a link to the publication, in a Publishing section after the space properties and before the space controls.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.6]
+```
+
+```mdl
+decision D-118: The Publishing section holds a Status row with Publish space or Republish space, and while the space is published a Public link row (copyable, with Open) and an Unpublish row. Fills in [D-117].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: Publishing from settings needs no trip to the command dialog, and the status row says when the public copy last matched the space.
+```
+
+```mdl
+decision D-119: The receipt is the `org.dxos.space.publication` annotation on the space properties, `null` once unpublished, in place of the `publication` property [D-105] named. Fills in [D-103].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.2, F-9.4]
+  why: The space properties schema rejects unknown keys, so a `publication` property could not be written; space-level data a plugin owns (the root collection, the migration version) is kept as annotations. ECHO has no way to remove an annotation, so unpublishing clears it.
+```
+
+```mdl
+decision D-120: The public link in the Publishing section is only a copyable field, with no Open button, and Republish and Unpublish are combined into one control.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.6]
+```
+
+```mdl
+decision D-121: Republish and Unpublish are the items of a Manage menu on the Status row, which shows Publish space while the space is unpublished. Fills in [D-120].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: The Status row already says the space is published, so its control only needs the two actions; a caret menu matches the Backup Space row in the same settings.
+  supersedes: D-118
+```
+
+```mdl
+decision D-122: A link preview shows an image: a card for the space, modelled on a repository's social card, and a card for an object. The Composer worker draws both, with the drawing self-contained and tested.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.7]
+  supersedes: D-114
+```
+
+```mdl
+decision D-123: Spaces have a description, set in space settings.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.6]
+```
+
+```mdl
+decision D-124: The object card names the space beside the space's icon, not at the top beside the object's type.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.7]
+```
+
+```mdl
+decision D-125: The manifest carries a `preview` written at publish time from ECHO: the space's description, icon and hue, per-type counts labelled from the translations plugins register, and each titled object's title, type, icon, hue and description, clipped in length and capped at 1000 objects. The worker parses it defensively, since any member can write a manifest. Fills in [D-122].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.7]
+  why: The worker cannot run ECHO or read type annotations, and parsing the archive on each preview would be slow; the publishing client already knows every label and icon.
+  rejected: Deriving the card from `archive.json` in the worker, which has typenames but no labels or icons.
+```
+
+```mdl
+decision D-126: The worker draws a card with Satori 0.32 and resvg-wasm, with Inter (Latin and Latin Extended) inlined, and Phosphor icons read from the build's own `/phosphor` assets, coloured with Tailwind hex values for each Composer hue. The image is served from the viewer origin at `/publications/<publicId>/preview.png`, cached for five minutes. Each object or space description also becomes the page's `og:description`. Fills in [D-122].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.7]
+  why: Workers cannot compile WebAssembly at run time, so each engine is bundled as a precompiled module; Satori from 0.33 shapes text with HarfBuzz, which it compiles at run time. An image cannot read the theme's CSS, so hues need literal colours.
+  rejected: Satori 0.33 and later; `workers-og`, which wraps the same engines; drawing at publish time and storing the PNG on EDGE, which leaves old images when the drawing changes.
+```
+
+```mdl
+decision D-127: The Status row shows when the space was published beside the Manage menu, in a more compact form without seconds.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-9.6]
+```
+
+```mdl
+decision D-128: The publish time is the app's relative `Timestamp` ("Published 18 minutes ago"), with the full date and time in its tooltip. Fills in [D-127].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: `Timestamp` is the app's one form for when something happened, and it keeps the exact time a hover away.
+  rejected: A short absolute date and time, which reads the same for every publish that day.
+```
+
+```mdl
+decision D-129: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-9.5]
+  supersedes: D-104
+```
+
+```mdl
+decision D-130: When the host contributes `ReadOnly`, the graph is navigation only and keeps the Database section, System group included; its type pages list and open objects only. Fills in [D-129].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  supersedes: D-109
+  why: The host contributes `ReadOnly` at startup with no ordering against other modules, so every extension, surface and container reads it when it expands or renders, and an extension that wrote matches no node rather than going uncontributed.
+```
+
+```mdl
+decision D-131: When the host contributes `ReadOnly`, every type section, whichever plugin builds it, offers no create, drop or rearrange, and an object card shows its fields as static rows even where its host asked for an editable card. Fills in [D-129].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: Type sections and fallback object cards are shared builders, so gating them where they are built covers every plugin that uses them; a plugin re-gating its own section had to copy the section's internals.
+```
+
+```mdl
+decision D-132: The published-space viewer sends no telemetry: events other plugins schedule are dropped there. Fills in [D-129].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: The viewer is anonymous and leaves out the observability plugin, so without a handler every navigation logged a failed event.
+```
+
+```mdl
+decision D-133: The published-space viewer keeps observability; it is as valuable there as in Composer.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-132
+  affects: [F-9.5]
+```
+
+```mdl
+decision D-134: The viewer reports under Composer's namespace and deployment config, with space events on, and honors the same opt-out; it keeps no log store, so it offers no log download or feedback logs. Fills in [D-133].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.5]
+  why: One namespace puts viewer sessions beside Composer's in PostHog, and the viewer's in-memory client has nothing durable for a log store to keep.
+  rejected: A separate `viewer` service name, which would split one product's dashboards in two.
+```
+
+```mdl
+decision D-135: A fork link is handled by one module, not one that keeps the link and another that runs the fork.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-9.4]
+```
+
+```mdl
+decision D-136: A space's publication is only an annotation on the space properties; there is no separate publication type around it.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-9.2]
+```
+
+```mdl
+decision D-137: The space navigation handler takes a fork link: it moves the link's params into localStorage, and once the tab has an identity, runs the fork if the link is under an hour old. Fills in [D-135].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-106
+  affects: [F-9.4]
+  why: Navigation handlers already read the space's link params, and they run on the first URL before onboarding replaces it. A tab signed in by a magic link elsewhere gets the identity through the shared client, and the import needs an identity, not the space list.
+  rejected: One module at startup that waits for the client; it would hold a wait inside module activation, which nothing else does.
+```
+
+```mdl
+decision D-138: The annotation is `AppAnnotation.PublicationAnnotation`, read with `AppAnnotation.getPublication`. The links a publication uses (viewer, fork, archive, and the object path they carry) are `PublicationLink`, and a fork finds its object with `UrlPath.readReferences`. Fills in [D-136].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.2, F-9.4]
+  why: app-toolkit holds the other `org.dxos.space.*` annotations. The viewer needs the links, and plugin-space exports only namespace modules.
+  rejected: A `Publication` namespace holding the annotation beside the links.
+```
+
+```mdl
+decision D-139: A published archive leaves out deleted objects, objects whose type has a password-format field anywhere in its schema, and trace feeds, with the feeds of the objects it drops. Fills in [D-103].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1]
+  why: The export keeps deleted objects' data and every feed, and credentials such as access tokens and API keys live in ordinary spaces.
+  rejected: Dropping `AccessToken` objects by typename, which misses API keys and any other credential type.
+```
+
+```mdl
+decision D-140: The publication actions act on the open space only, never the default space. Fills in [D-103].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1]
+  why: Publishing makes a space public, so running it from Home must not publish the default space.
+```
+
+```mdl
+decision D-141: Importing a space clears its publication annotation, for a fork and for a re-imported export alike. Fills in [D-136].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.2, F-9.4]
+  why: A copy that kept it would show as published and update or withdraw the original's publication. The import is the one path both take.
+  rejected: Scrubbing the annotation from the published archive, which leaves a re-imported export published.
+```
+
+```mdl
+decision D-142: The Composer worker serves the viewer for every navigation on the viewer host, its root included. Fills in [D-113].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.7]
+  why: The app's page at the root installs its service worker on the viewer origin, and the worker then answers every viewer link with the app.
+```
+
+```mdl
+decision D-143: The viewer says a space is no longer published only on EDGE's 404, and any other failure, a thrown one included, replaces the boot loader with a could-not-open message. Fills in [D-103].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.7]
+  why: A network or import failure left the boot loader up for good, and a server error claimed the publication was gone.
+```
+
+```mdl
+decision D-144: A published archive keeps only the objects the space's query returns as live whose type resolves to a schema with no password field, and their data feeds. Fills in [D-103].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-139
+  affects: [F-9.1]
+  why: ECHO decides deletion at read time, so a child or relation of a deleted object has no deleted flag of its own and came back to life once its parent was dropped. A type the publisher cannot resolve may be a credential, so it is left out.
+  rejected: Closing the deleted set over parents and relation endpoints in the archive, which re-implements ECHO's deletion rules.
+```
+
+```mdl
+decision D-145: The publication annotation records the id of the space that published it, and a space reads as published only when that id is its own. Fills in [D-136].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-141
+  affects: [F-9.2, F-9.4]
+  why: Import paths outside the Import Space operation, such as the CLI, kept the annotation, so clearing it on one path left copies that could withdraw the original's publication.
+```
+
+```mdl
+decision D-146: The worker answers 404 for a publication file only when EDGE does, and any other EDGE failure, or a build with no EDGE, as an uncached 502. Fills in [D-143].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.7]
+  why: The viewer reads the archive through the worker, which answered every failure with 404, so an EDGE outage still said the space was no longer published.
+```
+
+```mdl
+decision D-147: Copied links add an action through one pattern that every kind of link shares.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-9.3]
+```
+
+```mdl
+decision D-148: Copy link and Copy public link pass their kind, `internal` or `public`, to `LinkAction.withAction`, which adds the first contributed link action that the kind carries and that applies to the object. A link carries one action at most. Fills in [D-147].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3]
+  why: Each link action declares the kinds of link that carry it, so a link builder names only its own kind and needs no knowledge of any plugin's actions.
+```
+
+```mdl
+decision D-149: A link names its action by the action's DXN without the `dxn:` prefix.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-9.3]
 ```
 
 ## Appendix: Extension Definitions

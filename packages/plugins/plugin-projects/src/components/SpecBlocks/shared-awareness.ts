@@ -4,9 +4,16 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type AwarenessProvider } from '@dxos/ui-editor';
+import { type AwarenessProvider, type AwarenessState } from '@dxos/ui-editor';
 
-type Slot = { hasFocus: () => boolean };
+type Slot = {
+  hasFocus: () => boolean;
+  /** The peers whose carets fall in the field now, and those it last drew. */
+  peers: () => string;
+  drawn: string;
+};
+
+const peersOf = (states: readonly AwarenessState[]) => states.map(({ peerId }) => peerId).join(',');
 
 export type FieldAwarenessOptions = {
   hasFocus: () => boolean;
@@ -48,17 +55,22 @@ export class SharedAwareness {
     if (!provider) {
       return undefined;
     }
-    const slot: Slot = { hasFocus };
+    const inField = () =>
+      provider
+        .getRemoteStates()
+        .filter(
+          ({ position }) => position?.anchor && position.head && contains(position.anchor) && contains(position.head),
+        );
+    const slot: Slot = { hasFocus, peers: () => peersOf(inField()), drawn: '' };
     return {
       remoteStateChange: provider.remoteStateChange,
       open: () => this.#fields.add(slot),
       close: () => this.#fields.delete(slot),
-      getRemoteStates: () =>
-        provider
-          .getRemoteStates()
-          .filter(
-            ({ position }) => position?.anchor && position.head && contains(position.anchor) && contains(position.head),
-          ),
+      getRemoteStates: () => {
+        const states = inField();
+        slot.drawn = peersOf(states);
+        return states;
+      },
       update: (position, options) => {
         // Focus that left the field for the spec editor or another field publishes from there.
         if (position || !this.view?.hasFocus) {
@@ -66,5 +78,15 @@ export class SharedAwareness {
         }
       },
     };
+  }
+
+  /**
+   * Redraws the editors when the spec's text moved a caret into or out of a field. A caret names the character after it,
+   * so text typed ahead of it changes no presence state, and a field whose own text did not change would keep it.
+   */
+  textChanged(): void {
+    if ([...this.#fields].some((slot) => slot.peers() !== slot.drawn)) {
+      this.#provider?.remoteStateChange.emit();
+    }
   }
 }

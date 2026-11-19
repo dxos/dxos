@@ -9,10 +9,12 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
+import { AnimatorNamespace } from './src/namespace.ts';
+
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.animator',
+    key: AnimatorNamespace.key,
     name: 'Animator',
     author: 'DXOS',
     description: trim`

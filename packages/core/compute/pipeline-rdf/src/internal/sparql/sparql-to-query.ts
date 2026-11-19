@@ -4,8 +4,9 @@
 
 import { type Expression, type IriTerm, type LiteralTerm, Parser, type Pattern, type Triple } from 'sparqljs';
 
+import { Vocab } from '@dxos/echo-memory';
+
 import { SemanticIndexError } from '../../errors.ts';
-import * as Vocab from '../../types/Vocab.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 const PRED_SOURCE = Vocab.PROV + 'wasDerivedFrom';
