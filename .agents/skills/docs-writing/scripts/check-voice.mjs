@@ -210,9 +210,7 @@ const parse = (text) => {
     ...blockTags.filter((blockTag) => !blockTag.startsWith('<Aside')),
   ];
   // A glossary heading carries its link.
-  const links = new Set(
-    [...`${prose}\n${headings.join('\n')}`.matchAll(/\]\(([^)\s]+)\)/g)].map((match) => match[1]),
-  );
+  const links = new Set([...`${prose}\n${headings.join('\n')}`.matchAll(/\]\(([^)\s]+)\)/g)].map((match) => match[1]));
   // Facts sit in table cells as well as in sentences.
   const codeSpans = new Set([...`${prose}\n${tableText}`.matchAll(/`[^`\n]+`/g)].map((match) => match[0]));
   const tableKeys = tableRows.map((row) => row.split('|')[1]?.trim() ?? '');
