@@ -73,7 +73,7 @@ feat F-4: A project's specs
               packages add their own editing on top.
   req F-4.13: A spec's text, and each block form drawn in it, shows the carets of the other peers editing it, each
               with the peer's name, and a form shows a peer's caret only in the field it is in.
-  req F-4.14: A spec's text opens in preview unless the Default spec view setting (F-4.16) names another view. In
+  req F-4.14: A spec's text opens in source unless the Default spec view setting (F-4.16) names another view. In
               preview each block of a kind its schemas define is drawn as a form over that kind's fields, and the text
               offers readonly and source views. The text is the only store: a form edit changes only
               the source of the field it edits, and the title, the prose and each prose field are editors of their own
@@ -653,7 +653,7 @@ test QA-12: Two people write a chess plugin's spec with the agent
       do: Alice types a line saying what the plugin is and two bullets under it.
       expect: the spec's text holds the line and the two bullets
     - name: Bob joins the draft
-      do: Bob opens "Chess" from Projects in the navigation tree, then its Specs tab.
+      do: Bob opens "Chess" from Projects in the navigation tree, then its Specs tab, and picks Preview.
       expect: each plank heading shows the other person among its viewers, and Bob's spec shows Alice's caret with her
         name
     - name: Type at the same time
@@ -699,8 +699,8 @@ test QA-12: Two people write a chess plugin's spec with the agent
       do: Bob resolves the thread.
       expect: the thread leaves Active comments on both sides
     - name: Pick the dependencies
-      do: Alice opens Board in the Structure companion. Bob opens "Chess" again and, in "Make Move"'s form, picks
-        "Gameboard" and "Move Validation" as features it depends on. Alice selects "Make Move" on her Board.
+      do: Alice opens Board in the Structure companion. Bob opens "Chess" again, picks Preview and, in "Make
+        Move"'s form, picks "Gameboard" and "Move Validation" as features it depends on. Alice selects "Make Move" on her Board.
       expect: Alice's Board marks "Gameboard" and "Move Validation" as features "Make Move" depends on
     - name: Read the finished spec
       do: Both scroll through the spec's text from the top.
@@ -3255,9 +3255,9 @@ decision D-286: The view menu names a spec's views Preview, Read only and Source
 ```
 
 ```mdl
-decision D-287: Unset, the Default spec view setting opens a spec on its source, not its forms. QA-10 picks Preview when it opens the Specs tab, since its steps read the feature's form. Amends [D-267].
+decision D-287: Unset, the Default spec view setting opens a spec on its source, not its forms. QA-10 and QA-12 pick Preview where their steps read a feature's form. Amends [D-267].
   date: 2026-11-19
   by: user:wittjosiah
-  affects: [F-4.16, QA-10]
+  affects: [F-4.14, F-4.16, QA-10, QA-12]
   why: The source now reads by the same labels as the forms and keeps its keys safe, so it is the view a spec opens in.
 ```

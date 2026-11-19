@@ -20,39 +20,43 @@ import { specBlocksConfig, specBlocksField } from './spec-blocks-state.ts';
 /** Where the text writes a numbered item's key, and the positional label drawn in its place. */
 export type KeyLabel = { from: number; to: number; key: string; label: string };
 
+type Span = { from: number; to: number };
+
 /** Text the user cannot edit in part: a numbered item's key with the syntax around it. */
-export type Guard = { from: number; to: number; item: SpecItem };
+export type Guard = Span & {
+  /** The key within the guard. */
+  key: Span;
+  /** What an edit may remove whole: a keyed line through its text, a block's header line, or a reference. */
+  extent: Span;
+  /** The item the key declares; a reference declares none. */
+  item?: SpecItem;
+};
 
 const TOKEN = /[A-Za-z0-9][\w-]*/g;
+const TOKEN_END = /[\w-]$/;
+const TOKEN_START = /^[\w-]/;
+/** Where a value's note starts: a `#` at the line's start or after a space. */
+const NOTE = /(^|[ \t])#/;
 
-/**
- * Every place the text writes the key of a numbered item: a block's id, a keyed line's key, and a reference field's
- * value that names one. In document order.
- */
-export const keyLabels = (state: EditorState): KeyLabel[] => {
+/** The keys a block's reference fields name, outside any note, labelled by the items they name. */
+const references = (state: EditorState): KeyLabel[] => {
   const { items, schemas, blocks } = state.field(specBlocksField);
   const labels = labelsByKey(items);
   const result: KeyLabel[] = [];
-  for (const { key, label, block, entry } of items) {
-    const range = entry ? entry.keyRange : block.header.id;
-    if (label && range) {
-      result.push({ ...range, key, label });
-    }
-  }
-
   for (const block of blocks) {
-    const references = new Set(
+    const names = new Set(
       schemas
         .get(block.kind)
         ?.fields.filter(isReferenceField)
         .map(({ name }) => name),
     );
     for (const field of block.fields) {
-      if (!references.has(field.name)) {
+      if (!names.has(field.name)) {
         continue;
       }
       for (const line of [field.inline, ...field.lines]) {
-        for (const match of line.text.matchAll(TOKEN)) {
+        const note = line.text.search(NOTE);
+        for (const match of line.text.slice(0, note < 0 ? undefined : note).matchAll(TOKEN)) {
           const label = labels.get(match[0]);
           if (label) {
             const from = line.from + match.index;
@@ -62,22 +66,39 @@ export const keyLabels = (state: EditorState): KeyLabel[] => {
       }
     }
   }
-
-  return result.sort((a, b) => a.from - b.from);
+  return result;
 };
 
-/** The end of `req <key>: ` on a keyed line: its colon and the one space after it. */
-const prefixEnd = (text: string, keyEnd: number) => {
-  const colon = text[keyEnd] === ':' ? keyEnd + 1 : keyEnd;
-  return text[colon] === ' ' ? colon + 1 : colon;
+/**
+ * Every place the text writes the key of a numbered item: a block's id, a keyed line's key, and a reference field's
+ * value that names one. In document order.
+ */
+export const keyLabels = (state: EditorState): KeyLabel[] => {
+  const result: KeyLabel[] = [];
+  for (const { key, label, block, entry } of state.field(specBlocksField).items) {
+    const range = entry ? entry.keyRange : block.header.id;
+    if (label && range) {
+      result.push({ ...range, key, label });
+    }
+  }
+  return [...result, ...references(state)].sort((a, b) => a.from - b.from);
+};
+
+/** The end of the colon after a key, past any spaces or tabs before it; the key's end if there is none. */
+const colonEnd = (text: string, keyEnd: number) => {
+  let at = keyEnd;
+  while (text[at] === ' ' || text[at] === '\t') {
+    at++;
+  }
+  return text[at] === ':' ? at + 1 : keyEnd;
 };
 
 /** Guards by the blocks they were read from, which change with every edit of the text. */
 const guardCache = new WeakMap<object, Guard[]>();
 
 /**
- * The text around each numbered item's key that an edit must change whole or not at all: a keyed line from its line's
- * start through `req <key>: `, and a block's id with the space before it and the colon after it.
+ * The text around each key that an edit must change whole or not at all: a keyed line from its line's start through
+ * `req <key>: `, a block's id with the space before it and its colon, and a key a reference field names.
  */
 export const guards = (state: EditorState): Guard[] => {
   const blocks = state.field(specBlocksField);
@@ -86,43 +107,46 @@ export const guards = (state: EditorState): Guard[] => {
     return cached;
   }
   const text = state.doc.toString();
-  const result = blocks.items
-    .flatMap((item): Guard[] => {
-      if (!item.label) {
-        return [];
-      }
-      if (item.entry?.keyRange) {
-        const from = state.doc.lineAt(item.entry.from).from;
-        return [{ from, to: prefixEnd(text, item.entry.keyRange.to), item }];
-      }
-      const id = item.block.header.id;
-      if (!id) {
-        return [];
-      }
-      const from = text[id.from - 1] === ' ' ? id.from - 1 : id.from;
-      return [{ from, to: text[id.to] === ':' ? id.to + 1 : id.to, item }];
-    })
-    .sort((a, b) => a.from - b.from);
+  const declared = blocks.items.flatMap((item): Guard[] => {
+    if (!item.label) {
+      return [];
+    }
+    if (item.entry?.keyRange) {
+      const from = state.doc.lineAt(item.entry.from).from;
+      const colon = colonEnd(text, item.entry.keyRange.to);
+      const to = text[colon] === ' ' ? colon + 1 : colon;
+      return [{ from, to, key: item.entry.keyRange, extent: { from, to: Math.max(item.entry.to, to) }, item }];
+    }
+    const id = item.block.header.id;
+    if (!id) {
+      return [];
+    }
+    const from = text[id.from - 1] === ' ' ? id.from - 1 : id.from;
+    const line = state.doc.lineAt(item.block.header.from);
+    return [{ from, to: colonEnd(text, id.to), key: id, extent: { from: line.from, to: line.to }, item }];
+  });
+  const named = references(state).map(({ from, to }): Guard => ({ from, to, key: { from, to }, extent: { from, to } }));
+  const result = [...declared, ...named].sort((a, b) => a.from - b.from);
   guardCache.set(blocks, result);
   return result;
 };
 
-/** The whole of what a guard keeps: a keyed line through its text, a block's header line. */
-const extent = (state: EditorState, { from, item }: Guard) =>
-  item.entry ? { from, to: Math.max(item.entry.to, from) } : state.doc.lineAt(item.block.header.from);
-
 /**
- * Whether a change breaks a guard: it edits inside one, or joins its line to the one above, without removing all of
- * what the guard keeps.
+ * Whether a change breaks a guard without removing all of what it keeps: it edits inside the guard, writes on a keyed
+ * line's start or joins that line to the one above, or extends a referenced key at either end.
  */
-const breaks = (state: EditorState, guard: Guard, from: number, to: number) => {
+const breaks = (guard: Guard, from: number, to: number, inserted: string) => {
   const inside = from === to ? from > guard.from && from < guard.to : from < guard.to && to > guard.from;
-  const joins = guard.item.entry !== undefined && to === guard.from && from < guard.from;
-  if (!inside && !joins) {
+  // Ends at a keyed line's start without leaving a line break there: text before the line, or a join with the one above.
+  const atLineStart =
+    guard.item?.entry !== undefined && to === guard.from && (from < to || inserted !== '') && !inserted.endsWith('\n');
+  const extended =
+    guard.item === undefined &&
+    ((to === guard.from && TOKEN_END.test(inserted)) || (from === guard.to && TOKEN_START.test(inserted)));
+  if (!inside && !atLineStart && !extended) {
     return false;
   }
-  const whole = extent(state, guard);
-  return !(from <= whole.from && to >= whole.to);
+  return !(from <= guard.extent.from && to >= guard.extent.to);
 };
 
 /** Drops a typed or deleted edit that would change part of a key, so a key only goes with its item. */
@@ -137,22 +161,22 @@ const keepKeys = EditorState.transactionFilter.of((transaction: Transaction) => 
   }
   const kept = guards(startState);
   let broken = false;
-  transaction.changes.iterChangedRanges((from, to) => {
-    broken ||= kept.some((guard) => breaks(startState, guard, from, to));
+  transaction.changes.iterChanges((from, to, _fromB, _toB, inserted) => {
+    broken ||= kept.some((guard) => breaks(guard, from, to, inserted.toString()));
   });
   return broken ? [] : transaction;
 });
 
-/** The keyed line of a numbered item whose text holds the caret, and where that text starts. */
+/** The keyed line of a numbered item whose text, or the spaces after it, holds the caret, and where that text starts. */
 const keyedLineAt = (state: EditorState) => {
   const head = state.selection.main;
   if (!head.empty) {
     return undefined;
   }
   const guard = guards(state).find(
-    ({ item, to }) => item.entry && head.head >= to && head.head <= Math.max(item.entry.to, to),
+    ({ item, to }) => item?.entry && head.head >= to && head.head <= state.doc.lineAt(Math.max(item.entry.to, to)).to,
   );
-  return guard && { guard, entry: guard.item.entry!, textFrom: guard.to };
+  return guard && { guard, entry: guard.item!.entry!, textFrom: guard.to };
 };
 
 /**
@@ -248,9 +272,8 @@ const atomic = (state: EditorState): RangeSet<Decoration> => {
   }
   const mark = Decoration.mark({});
   return RangeSet.of(
-    guards(state).flatMap(({ from, to, item }): Range<Decoration>[] => {
-      const key = item.entry ? item.entry.keyRange : item.block.header.id;
-      const edges = key ? [from, key.from, key.to, to] : [from, to];
+    guards(state).flatMap(({ from, to, key }): Range<Decoration>[] => {
+      const edges = [from, key.from, key.to, to];
       return edges.slice(1).flatMap((end, index) => (end > edges[index] ? [mark.range(edges[index], end)] : []));
     }),
   );

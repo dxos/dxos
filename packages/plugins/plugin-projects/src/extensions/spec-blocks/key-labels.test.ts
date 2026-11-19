@@ -102,5 +102,42 @@ describe('keyLabels', () => {
     expect(type(after(TEXT, 'goes to'), after(TEXT, 'goes to'), ' straight').toString()).toContain(
       'goes to straight its folder.',
     );
+
+    // Typing before a requirement's indent is dropped; a line break there, or a paste that keeps one, is kept.
+    expect(type(line.from, line.from, 'x')).toBe(state.doc);
+    expect(type(line.from, line.from, '\n').toString()).toContain('Sorted inbox\n\n  req a2b3c');
+    expect(type(line.from - 3, line.from, '!\n').toString()).toContain('Sorted inb!\n  req a2b3c');
+  });
+
+  test('a key written with spaces before its colon is guarded through the colon', ({ expect }) => {
+    const doc = TEXT.replace('feat k7q2x:', 'feat k7q2x :').replace('req a2b3c:', 'req a2b3c :');
+    const state = create(doc);
+    const type = (at: number, insert: string) =>
+      state.update({ changes: { from: at, insert }, userEvent: 'input.type' }).state.doc;
+    expect(type(after(doc, 'k7q2x'), 'x')).toBe(state.doc);
+    expect(type(after(doc, 'a2b3c'), 'x')).toBe(state.doc);
+    expect(type(after(doc, 'a2b3c : '), 'Always: ').toString()).toContain('req a2b3c : Always: A message');
+  });
+
+  test('a referenced key is guarded and labelled outside its note', ({ expect }) => {
+    const doc = TEXT.replace('depends: [k7q2x]', 'depends: [k7q2x]  # split from q8r9s');
+    const state = create(doc);
+    expect(keyLabels(state).filter(({ key }) => key === 'q8r9s')).toHaveLength(1);
+
+    const reference = doc.indexOf('[k7q2x]') + 1;
+    const edit = (from: number, to: number, insert = '') =>
+      state.update({ changes: { from, to, insert }, userEvent: insert ? 'input.type' : 'delete.backward' }).state.doc;
+    expect(edit(reference + 5, reference + 5, 'x')).toBe(state.doc);
+    expect(edit(reference, reference, 'x')).toBe(state.doc);
+    expect(edit(reference + 2, reference + 3)).toBe(state.doc);
+    expect(edit(reference, reference + 5).toString()).toContain('depends: []');
+    expect(edit(reference + 5, reference + 5, ', ').toString()).toContain('depends: [k7q2x, ]');
+  });
+
+  test('Enter after spaces at the end of a requirement starts the next one', ({ expect }) => {
+    const doc = TEXT.replace('its folder.\n', 'its folder.  \n');
+    const state = create(doc, after(doc, 'its folder.  '));
+    const next = state.update(continueKeyedLine(state)!).state;
+    expect(next.doc.toString()).toMatch(/its folder\. {2}\n {2}req \w{5}: \n```/);
   });
 });

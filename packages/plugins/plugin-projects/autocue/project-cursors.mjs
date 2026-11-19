@@ -258,9 +258,9 @@ const usePackage = async (page, label) => {
 
 /**
  * Picks the Specs tab's view: `Source` is the spec's text, `Preview` a form per block. A narrow toolbar folds the
- * view menu into its overflow menu as a submenu.
+ * view menu into its overflow menu as a submenu. Unless `wait` is false, waits for the feature's form to come or go.
  */
-const setView = async (peer, label) => {
+const setView = async (peer, label, { wait = true } = {}) => {
   const viewMode = specToolbar(peer.page).getByTestId('editor.toolbar.viewMode');
   if (await viewMode.isVisible()) {
     await peer.click(viewMode);
@@ -269,7 +269,9 @@ const setView = async (peer, label) => {
     await peer.click(peer.page.locator('[role="menu"] [data-testid="editor.toolbar.viewMode"]'));
   }
   await peer.click(peer.page.locator(`[role="menu"] >> [role^="menuitem"]:has-text("${label}")`).first());
-  await featureForm(peer.page).waitFor({ state: label === 'Source' ? 'detached' : 'visible', timeout: 10_000 });
+  if (wait) {
+    await featureForm(peer.page).waitFor({ state: label === 'Source' ? 'detached' : 'visible', timeout: 10_000 });
+  }
 };
 
 const openAgent = async (peer) => {
@@ -345,7 +347,8 @@ export const steps = [
       await clearChrome(alice);
       await showSpec(page);
       await usePackage(page, 'Software');
-      await setView(alice, 'Preview');
+      // The spec has no feature yet, so there is no form to wait for.
+      await setView(alice, 'Preview', { wait: false });
 
       await specDocument(page).locator('.cm-content').first().click();
       await page.keyboard.type(`${PROSE}\n\n${FEATURE} /feat`, { delay: 10 });

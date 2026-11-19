@@ -707,13 +707,15 @@ export const steps = [
     },
   },
   {
-    name: 'Bob opens "Chess" from Projects in the navigation tree, then its Specs tab.',
+    name: 'Bob opens "Chess" from Projects in the navigation tree, then its Specs tab, and picks Preview.',
     subtitle: 'QA-12 step 3',
     run: async ({ peers: { alice, bob } }) => {
       await openProject(bob);
       await closeCompanion(bob);
       await bob.click(plank(bob.page).getByTestId('projectsPlugin.tab.spec'));
       await specLine(bob.page, MOVE).waitFor({ timeout: TIMEOUT });
+      // A spec opens on its source; Bob works in the forms.
+      await setView(bob, 'Preview');
       for (const { page } of [alice, bob]) {
         await plank(page).getByTestId('spacePlugin.presence.member').first().waitFor({ timeout: TIMEOUT });
       }
@@ -911,13 +913,14 @@ export const steps = [
     },
   },
   {
-    name: 'Alice opens Board. Bob opens "Chess" again and, in "Make Move"\'s form, picks "Gameboard" and "Move Validation" as features it depends on. Alice selects "Make Move" on her Board.',
+    name: 'Alice opens Board. Bob opens "Chess" again, picks Preview and, in "Make Move"\'s form, picks "Gameboard" and "Move Validation" as features it depends on. Alice selects "Make Move" on her Board.',
     subtitle: 'QA-12 step 12',
     run: async ({ peers: { alice, bob } }) => {
       await openBoard(alice);
       await openProject(bob);
       await closeCompanion(bob);
       await bob.click(plank(bob.page).getByTestId('projectsPlugin.tab.spec'));
+      await setView(bob, 'Preview');
       await reveal(bob.page, featureForm(bob.page, 'Make Move'), "Make Move's form");
       for (const name of DEPENDENCIES) {
         await pickDependency(bob, 'Make Move', name);
