@@ -1,0 +1,77 @@
+---
+title: Diagrams your agent can draw.
+description: Install a skill and your coding agent draws architecture diagrams. It writes a few lines of text; drawing lays them out and writes an SVG.
+template: splash
+hero:
+  title: Diagrams your <span class="hero-agent"><u>agent can draw</u>.</span>
+  tagline: Your agent describes a system in a few lines of text, naming the parts and how they connect. drawing.sh lays out the boxes, routes every arrow around them and returns an SVG. Try it below. Edit the .dx source, or paste a Mermaid flowchart into the From Mermaid tab.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+import Editor from '../../components/Editor.astro';
+import Install from '../../components/Install.astro';
+import Relations from '../../components/Relations.astro';
+
+<div class="not-content dx-play install-row">
+  <Install />
+  <p class="alt">Works with Claude Code, Cursor, Codex and any agent that reads <code>SKILL.md</code>. Without an agent: <code>npx -y @dxos/drawing render arch.dx</code></p>
+</div>
+
+<div class="not-content dx-play">
+  <Editor />
+</div>
+
+## From a question to a picture in one turn
+
+Agents describe systems well and draw them badly. drawing splits the job: the agent says what connects to what, and
+a layout engine decides where everything goes.
+
+<CardGrid>
+  <Card title="Install the skill" icon="download">
+    One command teaches your agent the diagram language and gives it the `drawing` command.
+  </Card>
+  <Card title="Ask for a diagram" icon="comment">
+    “Draw how a request moves through our services.” Your agent reads the code and writes .dx.
+  </Card>
+  <Card title="Get an SVG" icon="document">
+    drawing lays it out in about a second, ready for a README, a pull request or a doc.
+  </Card>
+</CardGrid>
+
+## Say what's related, not where it goes
+
+Name the relationship and the right arrowhead follows. There are no coordinates to get wrong; add a placement hint
+only when you want one.
+
+<div class="not-content dx-play">
+  <Relations />
+</div>
+
+## The SVG is the drawing
+
+A .dx.svg is an ordinary image, and it also carries everything needed to edit it again. Nothing is locked in a
+service you have to log in to.
+
+<CardGrid>
+  <Card title="Shows up anywhere" icon="seti:svg">
+    GitHub, browsers and docs sites show it like any other SVG, with nothing to install.
+  </Card>
+  <Card title="Re-renders from text" icon="pencil">
+    The .dx source rides inside the file, so the next change is a small diff, not a redraw.
+  </Card>
+  <Card title="Opens on a canvas" icon="puzzle">
+    Import it into the drawing.sh app or a Composer space, and keep editing it with your team.
+  </Card>
+</CardGrid>
+
+## Also in Composer
+
+The same diagram editor is a plugin in Composer, DXOS's collaborative local-first workspace. There a diagram is one
+more object in a space, next to documents, tasks and everything else your team keeps, and it works with Composer's
+other plugins and agents. Composer is in early access; the drawing.sh app is the same canvas, open to everyone now.
+
+<CardGrid>
+  <LinkCard title="Open the app" description="Start drawing now, no sign-up." href="https://app.drawing.sh/" data-app-link />
+  <LinkCard title="Request early access to Composer" description="Get a Composer space for your team." href="https://dxos.org/composer/" />
+</CardGrid>

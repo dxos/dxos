@@ -1,0 +1,136 @@
+/* Starlight in drawing.sh's palette and type. Starlight's default theme is dark; `data-theme='light'` is light. */
+
+:root {
+  --sl-font: var(--sans);
+  --sl-font-mono: var(--mono);
+  --sl-color-accent-low: #161d4d;
+  --sl-color-accent: #4a5fff;
+  --sl-color-accent-high: #b8c1ff;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #e4e8ee;
+  --sl-color-gray-2: #c4cbd5;
+  --sl-color-gray-3: #98a2b0;
+  --sl-color-gray-4: #5e6875;
+  --sl-color-gray-5: #343c48;
+  --sl-color-gray-6: #141920;
+  --sl-color-black: #0d1015;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d9e0ff;
+  --sl-color-accent: #2f4bff;
+  --sl-color-accent-high: #1a2bb0;
+  --sl-color-white: #18202b;
+  --sl-color-gray-1: #252d38;
+  --sl-color-gray-2: #3a4350;
+  --sl-color-gray-3: #5e6875;
+  --sl-color-gray-4: #8b96a6;
+  --sl-color-gray-5: #c4cbd5;
+  --sl-color-gray-6: #eef1f5;
+  --sl-color-gray-7: #f7f8fa;
+  --sl-color-black: #ffffff;
+}
+
+/* The home page holds the editor, which needs more width than prose. */
+[data-has-hero] {
+  --sl-content-width: 72rem;
+}
+
+/*
+ * The home page hero is one centred column at every width. Starlight keeps a 4fr image column beside the
+ * text from 50rem up even with no image, which leaves a blank strip and wraps the heading. The install
+ * command stands in for buttons, and the hero stays short enough that the top of the editor shows on a laptop.
+ */
+[data-has-hero] .hero {
+  grid-template-columns: 100%;
+  padding-block: 2.5rem 0;
+}
+
+[data-has-hero] .hero .stack {
+  gap: 1rem;
+  text-align: center;
+}
+
+[data-has-hero] .hero .copy {
+  align-items: center;
+  gap: 1.5rem;
+}
+
+[data-has-hero] .hero .copy > * {
+  max-width: none;
+}
+
+[data-has-hero] .hero .tagline {
+  max-width: 58ch;
+  line-height: 1.6;
+}
+
+/*
+ * On a phone the heading is two lines that fill the column, where Starlight's minimum size leaves it
+ * barely larger than the lede. "agent can draw.", the longer line, is 7.57em wide.
+ */
+@media (max-width: 30rem) {
+  [data-has-hero] .hero {
+    container-type: inline-size;
+  }
+
+  [data-has-hero] .hero h1 {
+    font-size: calc(100cqi / 7.65);
+  }
+}
+
+/* "agent can draw." never breaks, and its words carry the route colour as an underline. */
+.hero-agent {
+  white-space: nowrap;
+}
+
+.hero-agent u {
+  text-decoration: underline var(--route);
+  text-decoration-thickness: 0.08em;
+  /* Below the descenders, so the line runs unbroken instead of skipping round the y and g. */
+  text-decoration-skip-ink: none;
+  text-underline-offset: 0.28em;
+}
+
+/*
+ * Starlight's `Card` takes the corner its `LinkCard` and the page's own panels have, and at most 1.5rem of padding
+ * in place of Starlight's 2.5rem, which leaves little room for text in a row of three.
+ */
+.card {
+  border-radius: 0.5rem;
+  padding: clamp(1rem, calc(0.125rem + 3vw), 1.5rem);
+}
+
+/* A grid of three cards is one row of three where it fits, and one column where they do not; never two and one. */
+@media (min-width: 50rem) {
+  .card-grid:has(> :nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* The install command and the line under it are centred under the hero. */
+.dx-play.install-row {
+  margin-block: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* The box is centred; the command inside it reads from the left, as a shell line does. */
+.dx-play.install-row .install {
+  max-width: min(560px, 100%);
+  text-align: start;
+}
+
+.dx-play .alt {
+  margin: 0.75rem 0 0;
+  font-size: var(--sl-text-sm);
+  color: var(--muted);
+}
+
+.dx-play .alt code {
+  font-family: var(--mono);
+  font-size: var(--sl-text-xs);
+  color: var(--ink);
+}
