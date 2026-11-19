@@ -436,6 +436,42 @@ export const FlowGrid: Story = {
 };
 
 /**
+ * A flow grid's rows end where its children stop fitting: the first card covers two of three columns and the next
+ * does not fit beside it, so it ends a row short of the grid's edge and draws no arrow into the empty column.
+ */
+export const FlowGridSpans: Story = {
+  render: IconCards.render,
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '<Grid cols="3" align="center" variant="flow">',
+      '',
+      iconCard('icon="chat-circle" colSpan="2"', 'Chat', 'Covers two columns'),
+      iconCard('icon="code" colSpan="2"', 'Vibe coding', 'Starts the second row'),
+      iconCard('icon="users-three"', 'Cowork', 'Ends it'),
+      '',
+      '</Grid>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const grid = await query(canvasElement, '[data-variant="flow"]');
+    await query(canvasElement, 'article[data-icon] header svg');
+    const [chat, code, cowork] = [...grid.querySelectorAll<HTMLElement>(':scope > article')];
+
+    // 1. Two rows: the first card alone, then the other two side by side.
+    await expect(code.getBoundingClientRect().top).toBeGreaterThan(chat.getBoundingClientRect().bottom);
+    await expect(cowork.getBoundingClientRect().top).toBeCloseTo(code.getBoundingClientRect().top, 0);
+    // The first row stops a column short of the grid's edge, which is where an arrow would otherwise stand.
+    await expect(chat.getBoundingClientRect().right).toBeLessThan(grid.getBoundingClientRect().right - 1);
+
+    // 2. An arrow only between the two cards that share a row.
+    await expect(getComputedStyle(chat, '::after').content).toBe('none');
+    await expect(getComputedStyle(code, '::after').content).toBe('"→"');
+    await expect(getComputedStyle(cowork, '::after').content).toBe('none');
+  },
+};
+
+/**
  * `<v-clicks>` straight inside a grid reveals the grid's children one per click. Each is still the grid's own child,
  * so a card yet to come holds its place and the row never shifts, and an arrow waits for the card it points at.
  */

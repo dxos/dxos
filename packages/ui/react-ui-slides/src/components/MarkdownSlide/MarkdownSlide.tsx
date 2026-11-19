@@ -420,6 +420,42 @@ const withoutClickBoxes = (children: ElementContent[]): ElementContent[] =>
     );
   });
 
+/** A count of tracks an attribute carries, or one where it carries none. */
+const tracksOf = (value: Properties[string]): number => {
+  const count = Number(value);
+  return Number.isInteger(count) && count >= 1 ? count : 1;
+};
+
+/**
+ * A grid's children with the last of each row marked, counting the columns each covers, so a flow draws no arrow
+ * into the space a row leaves short of the grid's edge. A child that spans rows is not counted in the rows under it.
+ */
+const withRowEnds = (children: ElementContent[], cols: number): ElementContent[] => {
+  const ends = new Set<ElementContent>();
+  let column = 0;
+  let previous: Element | undefined;
+  for (const child of children) {
+    if (child.type !== 'element') {
+      continue;
+    }
+    const span = Math.min(tracksOf(child.properties.colSpan), cols);
+    if (previous && column + span > cols) {
+      ends.add(previous);
+      column = 0;
+    }
+    column += span;
+    previous = child;
+  }
+  if (previous) {
+    ends.add(previous);
+  }
+  return children.map((child) =>
+    child.type === 'element' && ends.has(child)
+      ? { ...child, properties: { ...child.properties, dataRowEnd: '' } }
+      : child,
+  );
+};
+
 /** A variant in force: the kind of block that set it and the name it carries. */
 type ActiveVariant = { kind: string; name: string };
 
@@ -436,6 +472,15 @@ const prepareRoot = (root: Root, step: number): Root => ({
   ...root,
   children: root.children.map((child) => (child.type === 'element' ? prepareElement(child, step, false) : child)),
 });
+
+/** What a grid lays out: its children with no click box between it and them, and in a flow the row ends marked. */
+const gridChildren = (element: Element, variant: string | undefined): ElementContent[] => {
+  if (element.tagName !== 'slide-grid') {
+    return element.children;
+  }
+  const children = withoutClickBoxes(element.children);
+  return variant === 'flow' ? withRowEnds(children, tracksOf(element.properties.cols)) : children;
+};
 
 /** `variant` is the style of the `<List>`/`<Table>` this element sits in, which its parts take their classes from. */
 const prepareElement = (element: Element, step: number, inPre: boolean, variant?: ActiveVariant): Element => {
@@ -547,11 +592,7 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   if (icon) {
     properties.dataIcon = icon;
   }
-  const children = icon
-    ? withIconHeader(element.children, icon)
-    : element.tagName === 'slide-grid'
-      ? withoutClickBoxes(element.children)
-      : element.children;
+  const children = icon ? withIconHeader(element.children, icon) : gridChildren(element, name);
 
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);
   if (themed) {
