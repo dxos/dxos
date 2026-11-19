@@ -18,6 +18,7 @@ export const createBridge = (store: LoaderStore, dismissNow: () => void): BootLo
   activated: (id) => store.activatePlugin(id),
   progress: (fraction) => store.setProgress(fraction),
   stalled: (onAbort) => store.stalled(onAbort),
+  paused: (payload) => store.pause(payload),
   ready: () => store.ready(),
   dismiss: () => {
     if (store.phase() === 'dismissing') {

@@ -22,6 +22,7 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'ConnectorAnnotations': 'src/types/ConnectorAnnotations.ts',
     'ConnectorSpec': 'src/types/ConnectorSpec.ts',
+    'ConnectorSurface': 'src/types/ConnectorSurface.ts',
     'ConnectorCoordination': 'src/types/ConnectorCoordination.ts',
     'ConnectorEvents': 'src/types/ConnectorEvents.ts',
     'ConnectorOperation': 'src/types/ConnectorOperation.ts',

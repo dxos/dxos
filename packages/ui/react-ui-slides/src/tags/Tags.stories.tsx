@@ -604,6 +604,48 @@ export const ThemeOverrides: Story = {
 };
 
 /**
+ * A deck's theme colors each heading level apart from the accent. The deck here sets only the second level: the
+ * first still follows the accent, and inside a toned box it follows the tone, while the second keeps its own color.
+ */
+export const HeadingColors: Story = {
+  render: (props: MarkdownSlideProps) => (
+    <SlideThemeProvider settings={{ accent: '#2d6fff', subheading: '#336288' }}>
+      <TestContainer {...props} />
+    </SlideThemeProvider>
+  ),
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# Follows the accent',
+      '',
+      '## Takes the subheading color',
+      '',
+      '### As does a third level',
+      '',
+      '<Box variant="outline" tone="warning">',
+      '',
+      '# Follows the tone',
+      '',
+      '## Keeps the subheading color',
+      '',
+      '</Box>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const color = async (selector: string) => getComputedStyle(await query(canvasElement, selector)).color;
+    await expect(await color('[data-slide] h1')).toBe('rgb(45, 111, 255)');
+    await expect(await color('[data-slide] h2')).toBe('rgb(51, 98, 136)');
+    await expect(await color('[data-slide] h3')).toBe('rgb(51, 98, 136)');
+
+    // Unset, the first level reads the accent where it stands, which the box has rebound to its tone.
+    const box = await query(canvasElement, 'div[data-tone="warning"]');
+    await expect(await color('div[data-tone="warning"] h1')).toBe(getComputedStyle(box).borderTopColor);
+    await expect(await color('div[data-tone="warning"] h1')).not.toBe('rgb(45, 111, 255)');
+    await expect(await color('div[data-tone="warning"] h2')).toBe('rgb(51, 98, 136)');
+  },
+};
+
+/**
  * `<List variant="flow">` lays the items out as a row of cards with an arrow in each gap, and `active` marks the
  * one the story has reached. The item's own markdown names its parts: emphasis is the label, strong is the title.
  */

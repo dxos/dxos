@@ -7,6 +7,7 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } fro
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -24,6 +25,7 @@ import { DiscordAdminOperation } from '#types';
 
 import { DISCORD_USER_PROVIDER_ID, edgeConsoleUrl, kaiApplicationId } from '../../constants.ts';
 import { DiscordNamespace } from '../../namespace.ts';
+import { findBackIndex } from '../../services/back-index.ts';
 
 /**
  * The permissions Kai asks for when installed: view, send, read history, create public threads, send in threads, and
@@ -74,6 +76,14 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
   const [guildId, setGuildId] = useState<string>();
   const [channels, setChannels] = useState<DiscordAdminOperation.GuildChannel[]>([]);
   const [bindings, setBindings] = useState<DiscordAdminOperation.ChannelBinding[]>([]);
+
+  // The channels the space indexes into its memory (set up in space settings), shown beside the routing.
+  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
+  const backIndex = useMemo(
+    () => (applicationId ? findBackIndex(triggers, applicationId) : undefined),
+    [triggers, applicationId],
+  );
+  const indexed = useMemo(() => new Set(backIndex?.channels ?? []), [backIndex]);
 
   const refreshGuilds = useCallback(async () => {
     if (!spaceId) {
@@ -262,7 +272,13 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
             ) : (
               <DiscordSetup.List ids={connected.map(({ id }) => id)}>
                 {connected.map((channel) => (
-                  <DiscordSetup.Item key={channel.id} id={channel.id} icon='ph--hash--regular' label={channel.name}>
+                  <DiscordSetup.Item
+                    key={channel.id}
+                    id={channel.id}
+                    icon='ph--hash--regular'
+                    label={channel.name}
+                    detail={indexed.has(channel.id) ? t('discord-setup-indexed.label') : undefined}
+                  >
                     <Button.Root
                       variant='ghost'
                       iconOnly
@@ -288,7 +304,14 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                     id={channel.id}
                     icon='ph--hash--regular'
                     label={channel.name}
-                    detail={elsewhere ? t('discord-setup-bound-other.label') : undefined}
+                    detail={
+                      [
+                        elsewhere ? t('discord-setup-bound-other.label') : undefined,
+                        indexed.has(channel.id) ? t('discord-setup-indexed.label') : undefined,
+                      ]
+                        .filter((part) => part !== undefined)
+                        .join(' · ') || undefined
+                    }
                   >
                     <Button.Root
                       variant='ghost'

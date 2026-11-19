@@ -15,7 +15,7 @@ import { FactStore, FactStoreMemory } from '@dxos/pipeline-rdf';
  * feed. The per-source content hashes that make re-ingest idempotent live in the crawl's {@link CrawlState.CrawlState},
  * so resetting the memory does not lose them and a message read again unchanged is never sent to the model again.
  */
-export const memoryFactStoreLayer = ({
+export const spaceMemoryFactStoreLayer = ({
   state,
 }: {
   state: CrawlState.CrawlState;

@@ -25,6 +25,16 @@ declare global {
      * out. Dev-only — see the canonical doc on `BootLoaderApi.stalled`.
      */
     stalled: (onAbort: () => void) => void;
+    /**
+     * Stop loading and show one line, one action and optional details. See the canonical doc on
+     * `BootLoaderApi.paused`.
+     */
+    paused?: (payload: {
+      title: string;
+      action: { label: string; onClick: () => void };
+      details?: { term: string; value?: string }[];
+      note?: string;
+    }) => void;
     ready: () => void;
     dismiss: () => void;
   }

@@ -9,6 +9,5 @@ export * from './skill-manager/index.ts';
 export * from './browser/index.ts';
 export * from './chat-context/index.ts';
 export * from './delegation/index.ts';
-export * from './memory/index.ts';
 export * from './planning/index.ts';
 export * from './websearch/index.ts';
