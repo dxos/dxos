@@ -52,6 +52,13 @@
   gap: 1rem;
 }
 
+/* A grid of three cards is one row of three where it fits, and one column where it does not; never two and one. */
+@media (min-width: 50rem) {
+  .card-grid:has(> :nth-child(3):last-child) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .dx-play.install-row {
   margin-block: 1.5rem 2rem;
 }
