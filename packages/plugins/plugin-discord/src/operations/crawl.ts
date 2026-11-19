@@ -87,7 +87,12 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
         const at = new Date(yield* Clock.currentTimeMillis).toISOString();
         Obj.update(state, (state) => {
           CrawlState.recordRun(state, { at, ...result });
-          CrawlState.setRunStatus(state, error !== undefined ? 'error' : summary.done ? 'done' : 'running');
+          // Every run reopens the finished channels to check for new messages, so a run that reads none is caught up
+          // even when its step budget did not reach every reopened channel.
+          CrawlState.setRunStatus(
+            state,
+            error !== undefined ? 'error' : summary.done || summary.messages === 0 ? 'done' : 'running',
+          );
         });
         return result;
       }),
