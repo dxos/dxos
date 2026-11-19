@@ -87,10 +87,11 @@
   color: var(--sd-tone, var(--sd-accent));
 }
 
-/* A plain card's title: the framed card's size, so the two read as one family. */
+/* A plain card's title: the framed card's size, so the two read as one family. The line box holds the face's whole
+   height: `truncate` clips to it, so a line of 1 cut the tails off `Registry`. */
 .studio-card-title {
   font-size: var(--sd-card-title);
-  line-height: 1;
+  line-height: 1.3;
 }
 
 .studio-card-icon {
@@ -202,14 +203,14 @@
   color: var(--sd-tone, var(--sd-accent));
 }
 
-/* A feed block: an inset well, or filled in its mark's tone. */
+/* A feed block: an inset well, or filled in the strip's own tone, else the glyph's colour. */
 .studio-feed-block {
   background: var(--sd-deep);
   box-shadow: var(--sd-inset-sm);
 }
 
 .studio-feed-block[data-marked] {
-  background: var(--sd-mark, var(--sd-accent));
+  background: var(--sd-mark, var(--sd-tone, var(--sd-accent)));
   box-shadow: none;
 }
 

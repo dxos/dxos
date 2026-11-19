@@ -72,20 +72,27 @@ const TONE_TOKENS: Record<Tone, string> = {
 export const toneValue = (tone: string | undefined): string | undefined =>
   tone === undefined ? undefined : TONE_TOKENS[tone as Tone];
 
+/** A count of feed blocks: a whole number the strip can draw. */
+const BlockCount = Schema.Number.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isBetween({ minimum: 0, maximum: FEED_BLOCKS_MAX })),
+);
+
 /** What this kind adds to the core card, kept under `data`: its tone and its feed strip. */
 export const FeedCardData = Schema.Struct({
   /** An accent drawn as the card's outline and its icon; `ink` is the agents' dark edge. */
   tone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Tone' })),
+  /** The glyph's own colour, with no outline on the card. */
+  iconTone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Icon tone' })),
   /** How many blocks the feed strip has. */
-  feed: Schema.optional(
-    Schema.Number.pipe(
-      Schema.check(Schema.isInt()),
-      Schema.check(Schema.isBetween({ minimum: 0, maximum: FEED_BLOCKS_MAX })),
-    ).annotate({ title: 'Feed blocks' }),
-  ),
+  feed: Schema.optional(BlockCount.annotate({ title: 'Feed blocks' })),
   /** A mono caption to the left of the strip (`feed`, `task`). */
   feedLabel: Schema.optional(Schema.String.annotate({ title: 'Feed label' })),
-  /** Which blocks of the strip are filled, by 0-based index; a filled block takes the deck's accent. */
+  /** How many blocks are filled, counted from the strip's left edge: a count, so a diagram's text can state it. */
+  feedFill: Schema.optional(BlockCount.annotate({ title: 'Filled blocks' })),
+  /** The filled blocks' colour; without one they take the glyph's. */
+  feedTone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Fill tone' })),
+  /** Which further blocks of the strip are filled, by 0-based index. */
   marks: Schema.optional(Schema.Array(Schema.Number).annotate({ title: 'Marked blocks' })),
 });
 
@@ -106,12 +113,14 @@ export const FeedCardNode = Schema.Struct({
 type FeedStripProps = {
   n: number;
   label?: string;
-  /** The 0-based indexes of the filled blocks; a filled block takes the accent, whatever the card's tone. */
+  /** How many blocks are filled, from the left edge. */
+  fill?: number;
+  /** The 0-based indexes of further filled blocks. */
   marks?: readonly number[];
   editing?: NodeViewProps['editing'];
 };
 
-const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => {
+const FeedStrip = ({ n, label, fill = 0, marks, editing }: FeedStripProps) => {
   const filled = new Set(marks ?? []);
   return (
     <div className='flex items-center shrink-0' style={{ gap: 5 }} data-testid='feed-strip'>
@@ -129,7 +138,7 @@ const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => {
         return (
           <i
             key={index}
-            data-marked={filled.has(index) ? true : undefined}
+            data-marked={index < fill || filled.has(index) ? true : undefined}
             className='studio-feed-block block shrink-0 rounded-[3px]'
             style={{ width: 17, height: 17 }}
           />
@@ -145,7 +154,14 @@ export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
     return null;
   }
   const tone = toneValue(data.tone);
-  const style: Styled = { padding: '12px 18px', ...(tone ? { '--sd-tone': tone } : {}) };
+  // The glyph takes the card's tone where it has one, its own where the slide colours only the glyph.
+  const glyph = tone ?? toneValue(data.iconTone);
+  const mark = toneValue(data.feedTone);
+  const style: Styled = {
+    padding: '12px 18px',
+    ...(glyph ? { '--sd-tone': glyph } : {}),
+    ...(mark ? { '--sd-mark': mark } : {}),
+  };
   return (
     <div
       className='studio-card dx-cover rounded-xl overflow-hidden'
@@ -156,7 +172,9 @@ export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
       {/* The core card prototype's frame draws the header, body and footer and makes each a part; the feed strip is
           what this kind adds between the header and the body. */}
       <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
-        {data.feed ? <FeedStrip n={data.feed} label={data.feedLabel} marks={data.marks} editing={editing} /> : null}
+        {data.feed ? (
+          <FeedStrip n={data.feed} label={data.feedLabel} fill={data.feedFill} marks={data.marks} editing={editing} />
+        ) : null}
       </CardFrame>
     </div>
   );

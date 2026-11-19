@@ -17,7 +17,7 @@ layout: 'default'
 - Cloudflare `OS` becomes the most capable agent harness and runtime
 - Cloudflare `ECHO` becomes the most capable and most trusted agentic memory
 - Cloudflare `PLEX` becomes the complete Enterprise AI Stack
-- Cloudflare `DXNS` becomes the global OpenSource regisgtry for SAAS modules and services
+- Cloudflare becomes the global OpenSource registry for SAAS modules and services
 
 </v-clicks>
 

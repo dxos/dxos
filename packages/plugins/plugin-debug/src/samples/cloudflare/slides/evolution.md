@@ -11,9 +11,16 @@ title: 'Evolution'
 <List variant='flow'>
 
 - **Chat**
+  - Search
 - **Copilot**
+  - Autocomplete
+  - Artifacts
 - **Cowork**
-- **SuperApp**
+  - Integration/MCP/OAuth
+  - Playgrounds/gadgets
+- **SuperAgents**
+  - Long running, autonomous
+  - Multi-player (Multica, Buzz)
 
 </List>
 
@@ -28,4 +35,6 @@ title: 'Evolution'
 - Salesforce/Cloudforce (abandon Quip)
 - SAASpocalypse; need framework (rails)
 - why does saas work? niche: PM life cycle;
+- Coherence vs. human bottleneck
+- DeepSeek router/delegation/duplex
 -->

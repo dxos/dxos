@@ -3,11 +3,11 @@ diagram kind=grid size=1600x880 cols=4 gap=64 padding=48
 group inbound-body gap=24 {
   group inbound-col-0 rows="464 304" gap=16 {
     group inbound-triage gap=16 autoRows=176 alignContent=center {
-      node email "Email" kind=feed-card feed=9 footer="plugin-inbox · JMAP" icon=envelope
-      node discord "Discord" kind=feed-card feed=9 footer=plugin-discord icon=discord-logo
+      node email "Email" kind=feed-card feed=9 feedFill=6 footer="plugin-inbox · JMAP" icon=envelope iconTone=message
+      node discord "Discord" kind=feed-card feed=9 feedFill=3 footer=plugin-discord icon=discord-logo iconTone=violet
     }
     group inbound-planner autoRows=176 alignContent=center {
-      node chat "Calendar" kind=feed-card feed=9 footer=plugin-thread icon=chat-circle-dots
+      node chat "Calendar" kind=feed-card feed=9 feedFill=5 footer=plugin-thread icon=chat-circle-dots iconTone=rose
     }
   }
 }
@@ -15,21 +15,21 @@ group inbound-body gap=24 {
 group agents-body gap=24 {
   group agents-col-0 rows="464 304" gap=16 {
     group triage-cell autoRows=176 alignContent=center {
-      node triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=accent
+      node triage "Triage agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedFill=7 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=accent
     }
     group planner-cell autoRows=176 alignContent=center {
-      node planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=sheet
+      node planner "Planner agent" kind=feed-card body="Delegates tasks; each opens a child feed." feed=9 feedFill=4 feedLabel=feed footer="Agent DO · ProcessObject" icon=robot tone=sheet
     }
   }
 }
 
 group subagents-body gap=24 {
   group subagents-col-0 gap=16 autoRows=144 alignContent=center {
-    node research "Research" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
-    node reply "Draft reply" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
-    node summary "Summarize" kind=feed-card feed=6 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
-    node calendar "Email" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot tone=sheet
-    node travel "Travel" kind=feed-card feed=6 feedLabel=task footer="parent: planner agent" icon=robot tone=sheet
+    node research "Research" kind=feed-card feed=6 feedFill=4 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
+    node reply "Draft reply" kind=feed-card feed=6 feedFill=2 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
+    node summary "Summarize" kind=feed-card feed=6 feedFill=5 feedLabel=task footer="parent: triage agent" icon=robot tone=accent
+    node calendar "Email" kind=feed-card feed=6 feedFill=3 feedLabel=task footer="parent: planner agent" icon=robot tone=sheet
+    node travel "Travel" kind=feed-card feed=6 feedFill=1 feedLabel=task footer="parent: planner agent" icon=robot tone=sheet
   }
 }
 
