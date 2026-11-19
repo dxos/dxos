@@ -198,7 +198,7 @@ describe('MarkdownSlide', () => {
     expect(markup).toMatch(/<article [^>]*style="--slide-accent: ?var\(--color-info-text\)"/);
     // One row: the icon, then the title, which keeps the type it has in any card.
     expect(markup).toMatch(
-      /<header class="[^"]*flex[^"]*"><svg [^>]*data-icon="ph--brain--regular"[^>]*class="[^"]*text-\(color:--slide-accent\)[^"]*"[^>]*>.*?<\/svg><h3 [^>]*class="[^"]*text-\[56px\][^"]*"[^>]*>Shared Memory<\/h3><\/header>/,
+      /<header class="[^"]*flex[^"]*"><svg [^>]*data-icon="ph--brain--regular"[^>]*class="[^"]*text-\(color:--slide-accent\)[^"]*"[^>]*>.*?<\/svg><h3 [^>]*class="[^"]*text-\[length:var\(--slide-card-title\)\][^"]*"[^>]*>Shared Memory<\/h3><\/header>/,
     );
     expect(markup.match(/<svg /g)).toHaveLength(1);
   });
@@ -266,6 +266,12 @@ describe('MarkdownSlide', () => {
     expect(classes).toContain('[&amp;&gt;*]:before:end-full');
     expect(classes).toContain('[&amp;&gt;*]:before:content-[&#x27;→&#x27;]');
     expect(classes).toContain('[&amp;&gt;article]:overflow-visible');
+    // A flow's cards are narrow, so the grid sets their title and icon a step under the sizes a card gives itself.
+    expect(classes).toContain('[&amp;&gt;article]:[--slide-card-title:48px]');
+    expect(classes).toContain('[&amp;&gt;article]:[--slide-card-icon:60px]');
+    const card = markup.match(/<article [^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(card).toContain('[--slide-card-title:56px]');
+    expect(card).toContain('[--slide-card-icon:70px]');
     // The arrow into a row's first child falls outside the grid, which cuts it, so nothing here counts columns.
     expect(classes).toContain('overflow-x-clip');
     expect(markup).not.toContain('data-row-end');
@@ -295,7 +301,7 @@ describe('MarkdownSlide', () => {
     expect(markup).toMatch(/<article [^>]*><p [^>]*><img [^>]*><\/p>\s*<h3 /);
     expect(markup).not.toContain('data-icon="');
     expect(markup).toMatch(
-      /<h3 [^>]*class="px-10 pt-8 text-\[56px\] leading-tight font-\(family-name:--slide-font-heading\) text-balance"/,
+      /<h3 [^>]*class="px-10 pt-8 text-\[length:var\(--slide-card-title\)\] leading-tight font-\(family-name:--slide-font-heading\) text-balance"/,
     );
     expect(markup).toMatch(
       /<p [^>]*class="px-10 pb-8 pt-4 text-\[32px\] leading-snug opacity-80 last:pb-10 \[&amp;:has\(&gt;img\)\]:contents"[^>]*>Text/,

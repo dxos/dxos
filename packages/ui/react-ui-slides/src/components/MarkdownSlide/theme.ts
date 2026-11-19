@@ -2,19 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-// A card's icon and title share one row. The icon is one title line tall (56px at `leading-tight`), so it stands on
-// the first line of a title that wraps, and the title gives its own padding up to the row.
+// A card's title size and its icon's, which is one title line (the title at `leading-tight`). They are set on the card
+// itself, so a grid that narrows its cards can set both a step down and a card nested in one of them starts afresh.
+const cardScale = '[--slide-card-title:56px] [--slide-card-icon:70px]';
+const cardTitle =
+  'text-[length:var(--slide-card-title)] leading-tight font-(family-name:--slide-font-heading) text-balance';
+
+// A card's icon and title share one row. The icon is one title line tall, so it stands on the first line of a title
+// that wraps, and the title gives its own padding up to the row.
 const cardHeader = 'flex items-start gap-6 [&>:is(h1,h2,h3)]:p-0 [&>:is(h1,h2,h3)]:min-w-0';
-const cardIcon = 'shrink-0 size-[70px] text-(color:--slide-accent)';
+const cardIcon = 'shrink-0 size-(--slide-card-icon) text-(color:--slide-accent)';
 
 // A card's bullets, a step under its title and above its caption text, since they are the card's content rather than
 // a line under its art. Each marker is drawn in a column of its own rather than hung outside the list, so it stays
 // inside the card's padding: at the title's start edge, or centred under the icon, where the text then starts under
-// the title (the icon's 70px and the row's 24px gap).
+// the title (the icon's width and the row's 24px gap).
 const cardList =
   'flex flex-col gap-2 list-none text-[40px] leading-snug opacity-80 [counter-reset:slide-card-item] ' +
   '[--slide-card-indent:1.2em] [--slide-card-marker:1.2em] [--slide-card-marker-align:start] ' +
-  '[[data-icon]>*>&]:[--slide-card-indent:94px] [[data-icon]>*>&]:[--slide-card-marker:70px] ' +
+  '[[data-icon]>*>&]:[--slide-card-indent:calc(var(--slide-card-icon)+24px)] ' +
+  '[[data-icon]>*>&]:[--slide-card-marker:var(--slide-card-icon)] ' +
   '[[data-icon]>*>&]:[--slide-card-marker-align:center]';
 const cardItem =
   'relative ps-(--slide-card-indent) [counter-increment:slide-card-item] ' +
@@ -73,6 +80,8 @@ const gridFlow =
   // The arrow into a row's first child stands outside the grid, which cuts it off: the layout alone decides where a
   // row starts, whatever its children span.
   'overflow-x-clip ' +
+  // Four cards across are each under a quarter of the slide, so a card's title and icon are a step down.
+  '[&>article]:[--slide-card-title:48px] [&>article]:[--slide-card-icon:60px] ' +
   // A card's own clipping would hide its arrow, so its art is rounded at the card's corners instead.
   '[&>article]:overflow-visible [&>article>p:first-child>img]:rounded-t-[24px] ' +
   '[&>article>p:last-child>img]:rounded-b-[24px] [&>article>div>p:last-child>img]:rounded-b-[24px]';
@@ -255,11 +264,11 @@ export const theme = {
     // (`brand/backgrounds/cards/`) carries a window of the same height, not because of anything the card does.
     card: {
       default: {
-        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ${span} ${cardRows}`,
+        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] bg-(--slide-code) ${span} ${cardRows} ${cardScale}`,
         img: 'w-full grow min-h-0 object-cover',
-        h1: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
-        h2: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
-        h3: 'px-10 pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h1: `px-10 pt-8 ${cardTitle}`,
+        h2: `px-10 pt-8 ${cardTitle}`,
+        h3: `px-10 pt-8 ${cardTitle}`,
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
         header: `px-10 pt-8 ${cardHeader}`,
         icon: cardIcon,
@@ -268,17 +277,11 @@ export const theme = {
         li: cardItem,
       },
       outline: {
-        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ${span} ${cardRows}`,
+        card: `flex flex-col min-w-0 overflow-hidden rounded-[24px] border-4 border-(--slide-accent) ${span} ${cardRows} ${cardScale}`,
         img: 'w-full grow min-h-0 object-cover',
-        h1:
-          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
-          'text-balance',
-        h2:
-          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
-          'text-balance',
-        h3:
-          'px-10 pt-8 text-[56px] leading-tight text-(color:--slide-accent) font-(family-name:--slide-font-heading) ' +
-          'text-balance',
+        h1: `px-10 pt-8 text-(color:--slide-accent) ${cardTitle}`,
+        h2: `px-10 pt-8 text-(color:--slide-accent) ${cardTitle}`,
+        h3: `px-10 pt-8 text-(color:--slide-accent) ${cardTitle}`,
         p: 'px-10 pb-8 pt-4 text-[32px] leading-snug opacity-80 last:pb-10 [&:has(>img)]:contents',
         header: `px-10 pt-8 ${cardHeader}`,
         icon: cardIcon,
@@ -288,11 +291,11 @@ export const theme = {
       },
       // No surface of its own: the art and the text sit straight on the slide, for a grid that is all pictures.
       plain: {
-        card: `flex flex-col min-w-0 ${span} ${cardRows}`,
+        card: `flex flex-col min-w-0 ${span} ${cardRows} ${cardScale}`,
         img: 'w-full grow min-h-0 object-contain',
-        h1: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
-        h2: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
-        h3: 'pt-8 text-[56px] leading-tight font-(family-name:--slide-font-heading) text-balance',
+        h1: `pt-8 ${cardTitle}`,
+        h2: `pt-8 ${cardTitle}`,
+        h3: `pt-8 ${cardTitle}`,
         p: 'pt-4 text-[32px] leading-snug opacity-80 [&:has(>img)]:contents',
         header: `pt-8 ${cardHeader}`,
         icon: cardIcon,

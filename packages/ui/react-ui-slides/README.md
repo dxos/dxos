@@ -28,7 +28,8 @@ the cards of a row share one height.
 
 `<Grid variant="flow">` draws an arrow in each gap between the children of a row, for a progression: into each child
 from the one beside it, and none into the first child of a row, whatever the children span. It is otherwise the grid,
-so its cards are one size and `align` places it.
+so its cards are one size and `align` places it. Its cards are narrower than a plain grid's, so a card's title is set
+at 48px in place of 56px, and its icon to match.
 A card in a flow grid does not clip what it holds, since its arrow stands outside it.
 
 A click tag (`<v-clicks>`, `<v-click>`, `<v-after>`) written straight inside a `<Grid>` is no box of its own: what it
