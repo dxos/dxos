@@ -125,6 +125,8 @@ const RUNTIME_ANCHOR_ID = '\0dx-runtime-anchor';
  * Emits {@link RUNTIME_ANCHOR_ID} as an entry: Rolldown otherwise puts its runtime in any chunk reached by the same
  * entries, and a browser chunk there makes every workerd chunk import React, which `codeSplitting` groups cannot prevent.
  */
+// TODO(dmaretskyi): Replace with a `codeSplitting` group for the runtime once Rolldown passes `\0rolldown/runtime.js` to
+//   group tests; delete when `check-edge-release` passes for plugin-agent and plugin-tasks without it.
 const runtimeAnchorPlugin = (): VitePlugin => ({
   name: 'composer-plugin:runtime-anchor',
   apply: 'build',
