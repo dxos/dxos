@@ -58,12 +58,7 @@ export default defineConfig({
         { icon: 'github', label: 'GitHub', href: 'https://github.com/dxos/dxos/tree/main/packages/devtools/drawing' },
       ],
       expressiveCode: { shiki: { langs: [dxGrammar] } },
-      customCss: [
-        './site/styles/tokens.css',
-        './site/styles/editor.css',
-        './site/styles/starlight.css',
-        './site/styles/starlight-demo.css',
-      ],
+      customCss: ['./site/styles/tokens.css', './site/styles/editor.css', './site/styles/starlight.css'],
       components: {
         Search: './site/components/Search.astro',
         SiteTitle: './site/components/SiteTitle.astro',

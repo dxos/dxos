@@ -48,14 +48,18 @@
   gap: 1rem;
 }
 
-/* Starlight's `Card` takes the corner its `LinkCard` and the page's own panels have. */
+/*
+ * Starlight's `Card` takes the corner its `LinkCard` and the page's own panels have, and at most 1.5rem of padding
+ * in place of Starlight's 2.5rem, which leaves little room for text in a row of three.
+ */
 .card {
   border-radius: 0.5rem;
+  padding: clamp(1rem, calc(0.125rem + 3vw), 1.5rem);
 }
 
-/* A grid of three or six cards is rows of three where they fit, and one column where they do not; never two and one. */
+/* A grid of three cards is one row of three where it fits, and one column where they do not; never two and one. */
 @media (min-width: 50rem) {
-  .card-grid:has(> :nth-child(3n):last-child) {
+  .card-grid:has(> :nth-child(3):last-child) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

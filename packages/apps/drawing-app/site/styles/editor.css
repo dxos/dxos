@@ -136,6 +136,41 @@
   border-color: var(--line);
 }
 
+/* Once the script has measured the tabs, one box slides under the selected tab in place of the tab's own. */
+.dx-play .tabs {
+  position: relative;
+}
+
+.dx-play .tabs button {
+  position: relative;
+}
+
+.dx-play .tabs[data-indicator]::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: var(--indicator-left);
+  width: var(--indicator-width);
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - 2px);
+  transition:
+    left 200ms ease,
+    width 200ms ease;
+}
+
+.dx-play .tabs[data-indicator] button[aria-selected='true'] {
+  background: none;
+  border-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dx-play .tabs[data-indicator]::before {
+    transition: none;
+  }
+}
+
 /* Disabled until the editor loads, since only the live editor can switch languages. */
 .dx-play .tabs button:disabled {
   cursor: default;

@@ -233,6 +233,18 @@ const openInApp = ({ appButton, report }: Elements, language: Language, text: st
 };
 
 /** Replaces the static source with the live editor; the prerendered drawing stays until the first edit. */
+/** Moves the tab track's box under the selected tab; the stylesheet animates the move. */
+const placeIndicator = (tabs: readonly HTMLButtonElement[]) => {
+  const selected = tabs.find((tab) => tab.getAttribute('aria-selected') === 'true');
+  const track = selected?.parentElement;
+  if (!selected || !track) {
+    return;
+  }
+  track.style.setProperty('--indicator-left', `${selected.offsetLeft}px`);
+  track.style.setProperty('--indicator-width', `${selected.offsetWidth}px`);
+  track.dataset.indicator = '';
+};
+
 export const mount = (playground: HTMLElement) => {
   const elements = find(playground);
   if (!elements) {
@@ -251,6 +263,7 @@ export const mount = (playground: HTMLElement) => {
       tab.setAttribute('aria-selected', String(tab.dataset.language === language));
       tab.disabled = false;
     }
+    placeIndicator(elements.tabs);
     root.render(
       <SourceEditor
         key={language}
@@ -273,4 +286,9 @@ export const mount = (playground: HTMLElement) => {
     });
   }
   show('dx');
+  // The tabs change width when the web font replaces the fallback.
+  const resize = new ResizeObserver(() => placeIndicator(elements.tabs));
+  for (const tab of elements.tabs) {
+    resize.observe(tab);
+  }
 };
