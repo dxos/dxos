@@ -3,7 +3,7 @@
 // page script once it loads.
 import { prerendered } from '../util/prerendered.ts';
 
-const { source, report, hero, file } = await prerendered();
+const { source, report, hero, fileName } = await prerendered();
 ---
 
 <div class="sheet" id="playground" aria-label="A diagram source and the drawing it produces">
@@ -19,7 +19,7 @@ const { source, report, hero, file } = await prerendered();
   </div>
   <div class="output" id="output">
     <div class="tab">
-      <span><b>{file.fileName}</b></span>
+      <span><b>{fileName}</b></span>
       <span class="actions">
         <button
           type="button"
@@ -30,7 +30,6 @@ const { source, report, hero, file } = await prerendered();
         >
           Open in app
         </button>
-        <a class="action primary" id="download" href={`/${file.fileName}`} download={file.fileName}>Download</a>
       </span>
     </div>
     <div class="canvas" set:html={hero} />

@@ -50,8 +50,8 @@ export type Prerendered = {
   readonly hero: string;
   /** The relation examples: the statement, what it means, and its drawing. */
   readonly relations: readonly Relation[];
-  /** The hero drawing as a `.dx.svg`, served so the download works before the editor loads. */
-  readonly file: { readonly fileName: string; readonly svg: string };
+  /** The name the hero drawing renders to, which titles the editor's drawing. */
+  readonly fileName: string;
 };
 
 /**
@@ -88,6 +88,6 @@ const renderPage = async (directory: string): Promise<Prerendered> => {
     report: reportHtml(HERO, hero.report),
     hero: stageHtml(markup, cols, rows),
     relations,
-    file: { fileName: fileName(HERO), svg: hero.svg },
+    fileName: fileName(HERO),
   };
 };

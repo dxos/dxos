@@ -184,29 +184,11 @@
 .dx-play .action {
   font: 500 var(--sl-text-sm) var(--sans);
   color: var(--ink);
-  text-decoration: none;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 6px 12px;
   background: var(--sheet);
   white-space: nowrap;
-}
-
-.dx-play a.action:hover {
-  border-color: var(--route);
-  color: var(--route);
-}
-
-.dx-play .action.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
-}
-
-.dx-play .action.primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  color: var(--on-accent);
 }
 
 .dx-play button.action {

@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { UmlGrid } from '@dxos/diagram';
-import { source } from '@dxos/drawing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import mermaidSource from './diagrams/arch.mmd?raw';
@@ -23,10 +22,8 @@ describe('draw', () => {
     expect(GRID).toBe(UmlGrid.GRID);
   });
 
-  test('downloads a .dx.svg that carries its source', async ({ expect }) => {
+  test('reports what it drew', async ({ expect }) => {
     const drawing = await EffectEx.runPromise(draw(SOURCE, 'web'));
-    expect(drawing.file.fileName).toBe('web.dx.svg');
-    expect(source(drawing.file.svg)).toBe(SOURCE);
     expect(drawing.report.failed).toBe(false);
     expect(drawing.reportHtml).toContain('2 nodes, 1 connector');
   });
@@ -57,8 +54,7 @@ describe('draw', () => {
     const drawing = await EffectEx.runPromise(drawMermaid(mermaidSource, 'arch'));
     expect(drawing.report.failed).toBe(false);
     expect([drawing.report.nodes, drawing.report.connectors]).toEqual([8, 6]);
-    expect(drawing.stageHtml).toBeDefined();
-    expect(source(drawing.file.svg)).toContain('API server');
+    expect(drawing.stageHtml).toContain('API server');
   });
 
   test('reports Mermaid it cannot convert', async ({ expect }) => {

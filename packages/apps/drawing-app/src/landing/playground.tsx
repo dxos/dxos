@@ -125,7 +125,6 @@ type Elements = {
   readonly output: HTMLElement;
   readonly canvas: HTMLElement;
   readonly report: HTMLElement;
-  readonly download: HTMLAnchorElement;
   readonly appButton: HTMLButtonElement;
   readonly tabs: readonly HTMLButtonElement[];
 };
@@ -135,31 +134,24 @@ const find = (playground: HTMLElement): Elements | undefined => {
   const output = playground.querySelector<HTMLElement>('#output');
   const canvas = playground.querySelector<HTMLElement>('.canvas');
   const report = playground.querySelector<HTMLElement>('#report');
-  const download = playground.querySelector<HTMLAnchorElement>('#download');
   const appButton = playground.querySelector<HTMLButtonElement>('#open-in-app');
   const tabs = [...playground.querySelectorAll<HTMLButtonElement>('[role="tab"][data-language]')];
-  return editor && output && canvas && report && download && appButton
-    ? { editor, output, canvas, report, download, appButton, tabs }
+  return editor && output && canvas && report && appButton
+    ? { editor, output, canvas, report, appButton, tabs }
     : undefined;
 };
 
 /**
- * Lays out each edit after a pause and puts it on the page. The drawing, report and download are the
+ * Lays out each edit after a pause and puts it on the page. The drawing and report are the
  * prerendered page's own elements, updated in place, so nothing on first paint is replaced until the user types.
  */
-const scheduler = ({ output, canvas, report, download }: Elements) => {
+const scheduler = ({ output, canvas, report }: Elements) => {
   let pending: Fiber.Fiber<void> | undefined;
-  let url: string | undefined;
   const show = (drawing: Drawing) => {
     report.innerHTML = drawing.reportHtml;
     // A source that does not compile keeps the last drawing up, under the errors that explain why.
     if (drawing.stageHtml) {
       canvas.innerHTML = drawing.stageHtml;
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
-      url = URL.createObjectURL(new Blob([drawing.file.svg], { type: 'image/svg+xml' }));
-      download.href = url;
     }
   };
 

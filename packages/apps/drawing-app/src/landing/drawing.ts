@@ -8,11 +8,10 @@ import { DSL } from '@dxos/diagram';
 import { type Report, render } from '@dxos/drawing';
 import { BaseError } from '@dxos/errors';
 
-import { HERO, fileName, inline, reportHtml, stageHtml } from './markup.ts';
+import { HERO, inline, reportHtml, stageHtml } from './markup.ts';
 
-/** One render of the editor's text: the file to download, and what the page shows of it. */
+/** One render of the editor's text: what the page shows of it. */
 export type Drawing = {
-  readonly file: { readonly fileName: string; readonly svg: string };
   readonly report: Report;
   /** The page's report for this render. */
   readonly reportHtml: string;
@@ -30,10 +29,7 @@ export class ConvertError extends BaseError.extend(
 /** The source languages the editor accepts; `.dx` is the drawing's own, Mermaid converts to it. */
 export type Language = 'dx' | 'mermaid';
 
-/**
- * Renders source the way the CLI does, through `render`, so the downloaded `.dx.svg` carries its source and
- * `drawing source` reads it back.
- */
+/** Renders source the way the CLI does, through `render`, so the page shows what the CLI would draw. */
 export const draw: (text: string, name?: string) => Effect.Effect<Drawing, RenderError> = Effect.fn('draw')(function* (
   text: string,
   name: string = HERO,
@@ -44,7 +40,6 @@ export const draw: (text: string, name?: string) => Effect.Effect<Drawing, Rende
   });
   const stage = svg.length > 0 ? inline(svg, { prefix: 'h', label: `${name} diagram` }) : undefined;
   return {
-    file: { fileName: fileName(name), svg },
     report,
     reportHtml: reportHtml(name, report),
     stageHtml: stage && stageHtml(stage.markup, stage.cols, stage.rows),
@@ -57,10 +52,7 @@ export const toDsl = (language: Language, text: string): Effect.Effect<string, C
     ? Effect.succeed(text)
     : DSL.convert(text).pipe(Effect.mapError((cause) => new ConvertError({ cause, context: { name: HERO } })));
 
-/**
- * Converts Mermaid to `.dx` text, then renders that, so the download carries editable `.dx` source whichever
- * language it was written in.
- */
+/** Converts Mermaid to `.dx` text, then renders that, so both languages are drawn by the same engine. */
 export const drawMermaid: (text: string, name?: string) => Effect.Effect<Drawing, RenderError | ConvertError> =
   Effect.fn('drawMermaid')(function* (text: string, name: string = HERO) {
     const source = yield* DSL.convert(text).pipe(
