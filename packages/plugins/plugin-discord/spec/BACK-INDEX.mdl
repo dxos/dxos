@@ -46,6 +46,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `decision`  | `org.dxos.mdl.decision@1.0`    |
 | `question`  | `org.dxos.mdl.question@1.0`    |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Diagram
 
@@ -321,6 +322,39 @@ scenario T-4: Stop indexing
     - the CrawlState is kept
 ```
 
+## QA
+
+```mdl
+test QA-1: Index the DXOS server, query its memory, and have the agent report on it
+  desc: End to end on local Composer and EDGE — from a space holding only its Discord connection, the person indexes DXOS channels, the crawl runs on EDGE, the facts are queried in Brain's Memory view, and the agent turns them into sheets with charts, a deck and a summary.
+  actors: human, agent
+  status: unverified
+  given:
+    - a space whose only Discord data is the Discord sign-in connection and its token, with the space memory cleared
+    - Kai installed in the DXOS server, and the space granted it (DXOS shows as indexed)
+    - the Discord, Brain, Sheet, Presenter and Markdown plugins enabled, with a live model
+  steps:
+    - name: Pick the channels
+      do: On the Discord connection's page, select DXOS and turn on general, announcements, sdk, composer, help and interesting.
+      expect: each channel shows as indexed, and the back-index settings appear with "Not run yet."
+    - name: Crawl back a year
+      do: Set Crawl back to 365 days.
+      expect: the trigger's input carries a 365-day window
+    - name: Run the crawl on EDGE
+      do: Click Check now and wait for the runs to finish.
+      expect: the trace shows "Crawl Discord channels" running on EDGE, and the totals line counts the messages read
+    - name: Query the memory
+      do: Open Brain's Memory view and run a SPARQL query over the facts.
+      expect: the statement count is above the seed vocabulary, and the query returns rows from the crawl
+    - name: Ask for findings
+      do: In a new chat, ask the agent to find the five most interesting things in its memory of the DXOS server and build a sheet with a chart for each, a deck of the charts and a markdown summary.
+      expect: the agent queries the memory, then creates five sheets with charts, a presentation and a document
+    - name: Open the deck and a finding
+      do: Open the presentation, then one of the sheets.
+      expect: a cover slide and one slide per chart; the sheet holds the rows the agent queried, with its chart
+  note: What the findings are, and their titles and charts, are the model's, so they differ from take to take.
+```
+
 ## Changelog
 
 ```mdl
@@ -484,4 +518,11 @@ decision D-18: Only the Discord sign-in connection gets the section; the pasted 
   for: user:dmaretskyi
   affects: [F-1.6]
   why: The grant check reads the person's own sign-in to see that they manage the server; a bot token cannot show that.
+```
+
+```mdl
+decision D-19: An end-to-end QA test covers the back-index from a space holding only its Discord connection: index DXOS channels, run the crawl, query the memory in Composer, and have the agent turn the DXOS server's memory into artifacts as it did for the Cloudflare Developers Discord.
+  date: 2026-11-19
+  by: user:dmaretskyi
+  affects: [QA-1]
 ```
