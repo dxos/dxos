@@ -16,6 +16,7 @@ import * as Schema from 'effect/Schema';
 import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
 
+import * as ScriptRunner from '@dxos/compute-runtime/script-runner';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
@@ -78,30 +79,20 @@ export type SkillGate = {
 };
 
 /**
- * A {@link SkillGate} whose token is one common word derived from `secret` and the skill key, so
- * every process holding the same secret issues and accepts the same word.
+ * A {@link SkillGate} whose token is one common word derived from the skill's key alone, so every
+ * process issues and accepts the same word with nothing to configure or share.
  */
-export const skillGate = (secret: string): SkillGate => {
-  const issue = (skillKey: string) => skillTokenInternal.derive(secret, skillKey);
-  return {
-    issue,
-    verify: (ownerSkillKeys, token) =>
-      token === undefined
-        ? Effect.succeed(false)
-        : Effect.forEach(ownerSkillKeys, issue).pipe(
-            Effect.map((issued) => issued.includes(skillTokenInternal.normalize(token))),
-          ),
-  };
-};
+export const skillGate = (): SkillGate => ({
+  issue: (skillKey) => Effect.succeed(skillTokenInternal.derive(skillKey)),
+  verify: (ownerSkillKeys, token) =>
+    Effect.succeed(
+      token !== undefined &&
+        ownerSkillKeys.map(skillTokenInternal.derive).includes(skillTokenInternal.normalize(token)),
+    ),
+});
 
 export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
-  /**
-   * Secret the skill tokens are derived from. A host serving one session per process (stdio) may
-   * omit it and get a random one per build; a host whose requests land on different processes must
-   * supply one they all share, or a token issued by one is refused by the next.
-   */
-  readonly skillSecret?: string;
   /**
    * Spaces this session may address. No member is a default: a call that names none is refused.
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
@@ -678,7 +669,7 @@ export const ScriptServerToolkit = Toolkit.make(QueryOperations, InvokeOperation
  *
  * An `invoke` carries the skill tokens the script holds (`skillTokens`, attached by the sandbox) as
  * well as any `skillToken` it named, and passes if one of them belongs to a skill governing the
- * operation. Forwarding them is safe: a token is checked against the gate's secret, so script code
+ * operation. Forwarding them is safe: a token is checked against the gate's derivation, so script code
  * can present only tokens it was issued.
  */
 export const scriptDispatch = (
@@ -763,17 +754,73 @@ export const runScript = (
   host: HostShape,
   gate: SkillGate,
   { code, spaceId, skillTokens = [] }: { code: string; spaceId?: SpaceId; skillTokens?: readonly string[] },
-  { sandbox, timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT }: ScriptOptions,
+  options: ScriptOptions,
 ): Effect.Effect<ScriptResult> =>
-  sandbox
-    .run({ code, spaceId, skillTokens, timeout: Duration.fromInputUnsafe(timeout), maxOutput }, (call) =>
-      scriptDispatch(registry, host, gate, call, { spaceId }),
-    )
+  scriptRunner(registry, host, gate, options)
+    // No process is handed over: this server answers a script's calls through its own host.
+    .run({
+      source: Operation.inlineScript(code, { dialect: Operation.ScriptDialects.Effect }),
+      ...(spaceId !== undefined ? { spaceId } : {}),
+      skillTokens,
+    })
     .pipe(
-      Effect.tap(({ error }) =>
-        error === undefined ? Effect.void : Effect.sync(() => log.info('mcp script failed', { message: error })),
-      ),
+      // A runner failure here is this server's own misconfiguration, and the caller is a model: it
+      // reads the message as the script's failure rather than losing the turn to a tool error.
+      Effect.catchTag('ScriptError', (error) => Effect.succeed({ output: '', error: error.message })),
     );
+
+/**
+ * This server's script execution as a {@link Operation.ScriptRunner}: the same sandbox, dispatch and
+ * skill gate, behind the API every other script caller uses.
+ *
+ * Only the `effect` dialect: the program is written against this host's three verbs as effects, which
+ * is what `scriptDispatch` answers — a `plain` or `typescript` body has nothing to run against here.
+ */
+export const scriptRunner = (
+  registry: Registry.Registry,
+  host: HostShape,
+  gate: SkillGate,
+  { sandbox, timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT }: ScriptOptions,
+): Operation.ScriptRunner => ({
+  run: (request) =>
+    Effect.gen(function* () {
+      const { code, dialect } = yield* ScriptRunner.resolveSource(request.source);
+      if (dialect !== Operation.ScriptDialects.Effect) {
+        return yield* Effect.fail(
+          new Operation.ScriptError({
+            message: `This server runs the "${Operation.ScriptDialects.Effect}" dialect only, not "${dialect}".`,
+            context: { dialect },
+          }),
+        );
+      }
+      const spaceId = yield* decodeScriptSpaceId(request.spaceId);
+      return yield* sandbox
+        .run(
+          {
+            code,
+            spaceId,
+            skillTokens: request.skillTokens ?? [],
+            timeout:
+              request.timeoutMs !== undefined ? Duration.millis(request.timeoutMs) : Duration.fromInputUnsafe(timeout),
+            maxOutput: request.maxOutput ?? maxOutput,
+          },
+          (call) => scriptDispatch(registry, host, gate, call, { spaceId }),
+        )
+        .pipe(
+          Effect.tap(({ error }) =>
+            error === undefined ? Effect.void : Effect.sync(() => log.info('mcp script failed', { message: error })),
+          ),
+        );
+    }),
+});
+
+/** The request's space as this server's branded id; a value that is not one is the caller's mistake. */
+const decodeScriptSpaceId = (spaceId: string | undefined): Effect.Effect<SpaceId | undefined, Operation.ScriptError> =>
+  spaceId === undefined
+    ? Effect.succeed(undefined)
+    : Schema.decodeUnknownEffect(SpaceId)(spaceId).pipe(
+        Effect.mapError(() => new Operation.ScriptError({ message: `Not a space id: ${spaceId}` })),
+      );
 
 const ScriptInvokeArguments = Schema.Struct({
   key: Schema.String,
@@ -1051,7 +1098,7 @@ export const toolsLayer = ({
       const source = yield* RegistrySource;
       const host = yield* Host;
       // One gate for every tool, so a token `loadSkill` issued is accepted inside a script as well.
-      const gate = skillGate(host.skillSecret ?? skillTokenInternal.randomSecret());
+      const gate = skillGate();
       return {
         source,
         host,

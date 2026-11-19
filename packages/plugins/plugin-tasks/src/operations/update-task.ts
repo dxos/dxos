@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
@@ -15,6 +15,11 @@ import { InvalidOperationInput } from '../errors.ts';
 import { cascadeClaim, claimedAssignee } from './claim.ts';
 import { assignToSession } from './session-assignee.ts';
 import { requireOwner, validateAssignee, validateDelegate } from './validate-assignee.ts';
+
+/** A plain copy, so a before/after comparison is not fooled by live proxies. */
+const plain = <T>(value: T): T | undefined => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
+
+const differs = (before: unknown, after: unknown): boolean => JSON.stringify(before) !== JSON.stringify(after);
 
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOperation.UpdateTask.pipe(
   Operation.withHandler(
@@ -71,6 +76,18 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       // Through `Task.edit`, so the change and the log entry that explains it land together and a
       // no-op patch records nothing. Milestone stays here: it is set membership, not a field edit.
       const previousStatus = task.status;
+      const before = {
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        estimate: task.estimate,
+        assignee: plain(task.assignee),
+        delegate: plain(task.delegate),
+        milestone: task.milestone?.uri,
+        parentTask: Task.parentTaskId(task),
+      };
+      const historyLength = task.history?.length ?? 0;
       const previousDelegate = task.delegate && { ...task.delegate };
       Task.update(task, {
         title,
@@ -116,7 +133,24 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
         started: status === 'started',
       });
 
-      return { task: task };
+      const parent = Task.getParentTask(task);
+      const changed = {
+        ...(differs(before.title, task.title) && { title: task.title }),
+        ...(differs(before.description, task.description) && { description: task.description ?? null }),
+        ...(differs(before.status, task.status) && { status: task.status }),
+        ...(differs(before.priority, task.priority) && { priority: task.priority ?? null }),
+        ...(differs(before.estimate, task.estimate) && { estimate: task.estimate ?? null }),
+        ...(differs(before.assignee, task.assignee) && { assignee: plain(task.assignee) ?? null }),
+        ...(differs(before.delegate, task.delegate) && { delegate: plain(task.delegate) ?? null }),
+        ...(differs(before.milestone, task.milestone?.uri) && { milestone: task.milestone ?? null }),
+        ...(differs(before.parentTask, parent?.id) && { parentTask: parent ? Ref.make(parent) : null }),
+      };
+
+      return {
+        task: Ref.make(task),
+        changed,
+        historyEntry: task.history?.slice(historyLength).find(Task.isChangeEntry),
+      };
     }),
   ),
 );

@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Ontology from '../../types/Ontology.ts';
-import * as Vocab from '../../types/Vocab.ts';
+import { Ontology, Vocab } from '@dxos/echo-memory';
 
 export type SemanticQuery = {
   /** Entity key (slug or IRI) constrained to the subject position. */

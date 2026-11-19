@@ -26,6 +26,7 @@ import { addFormatting } from './formatting.ts';
 import { addHeadings } from './headings.ts';
 import { addImageUpload } from './image.ts';
 import { addLists } from './lists.ts';
+import { isReadonly } from './readonly.ts';
 import { addSearch } from './search.ts';
 import { type EditorToolbarState } from './types.ts';
 import { type ViewModeItem, addViewMode } from './view-mode.ts';
@@ -131,6 +132,7 @@ export const createEditorToolbarActions = ({
   return Atom.make((get) => {
     // Subscribe to state changes.
     const stateSnapshot = get(state);
+    const readonly = isReadonly(stateSnapshot);
     // Insert folds and leaves the row before Format, whose marks the document tour points at.
     const builder = MenuBuilder.make()
       .group(
@@ -141,6 +143,7 @@ export const createEditorToolbarActions = ({
           iconOnly: false,
           placement: { fold: true },
           testId: 'editor.toolbar.format',
+          disabled: readonly,
         },
         (group) =>
           group
@@ -155,12 +158,13 @@ export const createEditorToolbarActions = ({
           iconOnly: false,
           placement: { fold: true, collapse: 0 },
           testId: 'editor.toolbar.insert',
+          disabled: readonly,
         },
         (group) =>
           group
             .subgraph(features?.showLists !== false && addLists(stateSnapshot, getView))
             .subgraph(features?.showBlocks !== false && addBlocks(stateSnapshot, getView))
-            .subgraph(features?.onImageUpload && addImageUpload(features.onImageUpload)),
+            .subgraph(features?.onImageUpload && addImageUpload(features.onImageUpload, readonly)),
       );
 
     return builder

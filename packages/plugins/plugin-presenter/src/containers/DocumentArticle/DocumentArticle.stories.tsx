@@ -66,10 +66,13 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('1 / 3', undefined, LOAD_TIMEOUT)).toBeVisible();
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
+    // Right lands on the next slide fully built, and Up then hides its last step.
     await userEvent.keyboard('{ArrowRight}');
     await expect(await canvas.findByText('2 / 3')).toBeVisible();
-    await userEvent.keyboard('{ArrowDown}');
-    await expect(await canvas.findByText('alpha')).toBeVisible();
+    await waitFor(() => expect(canvas.getByText('beta')).toBeVisible());
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(canvas.getByText('beta')).not.toBeVisible());
+    await expect(canvas.getByText('alpha')).toBeVisible();
     await expect(canvas.getByText('2 / 3')).toBeVisible();
     await userEvent.keyboard('f');
     // The overlay pager mounts only in fullscreen (it fades, but stays in the DOM, while the pointer rests).

@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import { useResolveRef, useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
@@ -22,6 +23,7 @@ export const MapSettingsSchema = Schema.Struct({
 type MapViewEditorProps = { object: Map.Map };
 
 export const MapViewEditor = ({ object }: MapViewEditorProps) => {
+  const readOnly = Hooks.useReadOnly();
   const db = Obj.getDatabase(object);
   const view = useResolveRef(object?.view);
   const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
@@ -93,7 +95,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     [schemaOptions, locationFields],
   );
 
-  if (!db || !object) {
+  if (readOnly || !db || !object) {
     return null;
   }
 

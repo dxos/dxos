@@ -6,8 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type Fact } from '@dxos/echo-memory';
 import { messageSource } from '@dxos/pipeline-email';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import { slugify } from './fact-store.ts';
@@ -47,7 +47,7 @@ export interface SubjectIndexApi {
 }
 
 // Display label + slug for a fact term (entity or literal).
-const termLabel = (term: RDF.Fact['assertion']['subject']): string => {
+const termLabel = (term: Fact.Fact['assertion']['subject']): string => {
   if (term && typeof term === 'object') {
     if ('entity' in term && typeof term.entity === 'string') {
       return typeof (term as { label?: unknown }).label === 'string' ? (term as { label: string }).label : term.entity;
@@ -69,7 +69,7 @@ const subjectTokens = (subject: string): string[] =>
     .split(/[^a-z0-9]+/)
     .filter((token) => token.length >= 4);
 
-const termMatches = (term: RDF.Fact['assertion']['subject'], tokens: readonly string[]): boolean => {
+const termMatches = (term: Fact.Fact['assertion']['subject'], tokens: readonly string[]): boolean => {
   if (term && typeof term === 'object' && 'entity' in term && typeof term.entity === 'string') {
     const haystack = `${term.entity} ${slugify(termLabel(term))}`;
     return tokens.some((token) => haystack.includes(token));
@@ -78,7 +78,7 @@ const termMatches = (term: RDF.Fact['assertion']['subject'], tokens: readonly st
 };
 
 export const buildSubjectIndex = (
-  facts: readonly RDF.Fact[],
+  facts: readonly Fact.Fact[],
   messages: readonly Message.Message[],
 ): SubjectIndexApi => {
   const bySource = new Map<string, Message.Message>();
@@ -115,7 +115,7 @@ export const buildSubjectIndex = (
 
 /** A `SubjectIndex` layer built from the facts + messages — injected via `extraServices`. */
 export const subjectIndexLayer = (
-  facts: readonly RDF.Fact[],
+  facts: readonly Fact.Fact[],
   messages: readonly Message.Message[],
 ): Layer.Layer<SubjectIndex> =>
   Layer.effect(

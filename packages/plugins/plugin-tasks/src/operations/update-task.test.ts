@@ -30,7 +30,13 @@ describe('update-task', () => {
         priority: 'low',
       });
 
-      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 'm' });
+      const result = yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 'm' });
+
+      // Only the delta comes back, not the task and its history.
+      expect(result.task.uri).toBe(Ref.make(task).uri);
+      expect(result.changed).toEqual({ status: 'started', estimate: 'm' });
+      expect(result.historyEntry).toBeDefined();
+      expect(result).not.toHaveProperty('history');
 
       expect(task.title).toBe('Draft');
       expect(task.priority).toBe('low');

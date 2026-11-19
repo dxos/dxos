@@ -7,7 +7,7 @@ import { afterEach, describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { type ClientServicesProvider, makeDeferredClientServicesRpc } from '@dxos/client-protocol';
-import { type WorkingSetRow } from '@dxos/echo-client';
+import { type WorkingSetRow } from '@dxos/protocols';
 
 import { BootCacheServices, type WorkingSetSource } from './boot-cache-services.ts';
 import { BootCacheStore } from './boot-cache-store.ts';

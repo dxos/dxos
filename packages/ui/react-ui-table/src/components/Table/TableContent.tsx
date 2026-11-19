@@ -121,7 +121,7 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
 
       return {
         frozenRowsStart: 1,
-        frozenRowsEnd: Math.max(1, draftRowCount),
+        frozenRowsEnd: model?.features.dataEditable === false ? draftRowCount : Math.max(1, draftRowCount),
         frozenColsStart: model?.frozenColsStart ?? 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };

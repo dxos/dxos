@@ -31,6 +31,7 @@ export type TileData = {
   onSelect?: (id: string) => void;
   onOpen?: (object: Obj.Unknown) => void;
   onDelete?: (object: Obj.Unknown) => void;
+  readonly?: boolean;
 };
 
 export const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
@@ -42,7 +43,7 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 };
 
 /** Selectable header-only card for a single object. */
-export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
+export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete, readonly }: TileData) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
@@ -74,7 +75,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
           ]
         : []),
       // Offered where the tile is interactive, which is where it can be opened.
-      ...(onOpen && TypeOptions.isUserObject(object)
+      ...(onOpen && !readonly && TypeOptions.isUserObject(object)
         ? [
             {
               icon: CollectionOperation.OpenAddToCollection.meta.icon,
@@ -95,9 +96,9 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             },
           ]
         : []),
-      ...(archiveItem ? [archiveItem] : []),
+      ...(archiveItem && !readonly ? [archiveItem] : []),
     ],
-    [t, typename, onOpen, onDelete, archiveItem, object, invokePromise],
+    [t, typename, onOpen, onDelete, readonly, archiveItem, object, invokePromise],
   );
 
   return (

@@ -273,6 +273,9 @@ feat F-2: View Modes
   req F-2.3:
     when: viewMode is readonly
     then: editor is non-editable; toolbar hidden
+  req F-2.4:
+    when: the host contributes `ReadOnly`
+    then: every Document opens readonly and its view mode cannot be changed
 ```
 
 ```mdl
@@ -700,6 +703,40 @@ decision D-8: The reveal's flag is `focus`, true by default; `focus: false` is w
   by: user:wittjosiah
   affects: [op:scrollToAnchor]
   why: What the flag decides is whether the reveal takes the caret and focus; following is only one reason not to.
+```
+
+```mdl
+decision D-9: A read-only host shows documents but never edits them; the plugin decides how.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-2.4]
+```
+
+```mdl
+decision D-10: A `readOnly` plugin option forces the readonly view mode and withholds the view-mode toggle. Fills in [D-9].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.4]
+  why: The readonly view mode already makes the editor non-editable, so the option only has to pin it.
+```
+
+```mdl
+decision D-11: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-2.4]
+  supersedes: D-9
+```
+
+```mdl
+decision D-12: When the host contributes `ReadOnly`, every Document opens in the readonly view mode and the view-mode toggle is withheld. The document surface reads it with `useReadOnly`. Fills in [D-11].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.4]
+  supersedes: D-10
+  why: The readonly view mode already makes the editor non-editable, so read-only only has to pin it; the capability lands at startup with no order against module activation, so it is read when the surface renders.
 ```
 
 ## Appendix: Extension Definitions

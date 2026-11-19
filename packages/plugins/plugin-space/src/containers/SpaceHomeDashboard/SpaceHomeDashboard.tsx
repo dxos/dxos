@@ -26,12 +26,18 @@ type SpaceHomeDashboardProps = {
   space?: Space;
   /** Stat cards to render, in order; defaults to all. */
   stats?: readonly SpaceStatId[];
+  activity?: boolean;
   onClose?: () => void;
 };
 
 const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 
-export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
+export const SpaceHomeDashboard = ({
+  space,
+  stats = STAT_IDS,
+  activity: showActivity = true,
+  onClose,
+}: SpaceHomeDashboardProps) => {
   const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const members = useMembers(space?.key);
 
@@ -69,7 +75,9 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
         ))}
       </Dashboard.Stats>
       {/* Smaller cells so a full year fits the 40rem home column without horizontal scroll. */}
-      <Dashboard.Activity classNames='[--dx-dashboard-cell:0.75rem]' data={activity} endDate={new Date()} />
+      {showActivity && (
+        <Dashboard.Activity classNames='[--dx-dashboard-cell:0.75rem]' data={activity} endDate={new Date()} />
+      )}
     </HomeSection.Root>
   );
 };

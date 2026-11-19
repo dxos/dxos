@@ -19,14 +19,14 @@ import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar/index.ts';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string } & Pick<
+export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string; rail?: boolean } & Pick<
   L1TabsProps,
   'open' | 'unavailable'
 >;
 
 // TODO(wittjosiah): Refactor to Radix-style.
 export const NavTree = memo(
-  forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
+  forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, rail = true, ...props }, forwardedRef) => {
     const { onBack, onItemHover } = useNavTreeContext();
     const { topLevelActions, l0Items, pinnedItems, userAccountItem, topLevelItems } = useTopLevelNavItems(root);
 
@@ -39,15 +39,17 @@ export const NavTree = memo(
       //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
       //  not use `Tabs` at all.
       <Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
-        <L0Menu
-          menuActions={topLevelActions as MenuItem[]}
-          topLevelItems={l0Items}
-          pinnedItems={pinnedItems}
-          userAccountItem={userAccountItem}
-          path={path}
-          parent={root}
-          onItemHover={onItemHover}
-        />
+        {rail && (
+          <L0Menu
+            menuActions={topLevelActions as MenuItem[]}
+            topLevelItems={l0Items}
+            pinnedItems={pinnedItems}
+            userAccountItem={userAccountItem}
+            path={path}
+            parent={root}
+            onItemHover={onItemHover}
+          />
+        )}
         <L1Tabs topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
       </Tabs.Root>
     );

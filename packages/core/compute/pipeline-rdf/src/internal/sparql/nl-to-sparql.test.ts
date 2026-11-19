@@ -5,9 +5,10 @@
 import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { Ontology } from '@dxos/echo-memory';
+
 import { SemanticIndexError } from '../../errors.ts';
 import { queuedAiService } from '../../testing/index.ts';
-import * as Ontology from '../../types/Ontology.ts';
 import { generateSparql, sparqlPrompt } from './nl-to-sparql.ts';
 
 const PEOPLE = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

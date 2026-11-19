@@ -8,10 +8,11 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Database, type Feed, Ref } from '@dxos/echo';
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, extractDocFacts } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
@@ -35,7 +36,7 @@ export const extractDocFactsForMessages = (
 ): Promise<MessageFactsResult> =>
   EffectEx.runPromise(
     Effect.gen(function* () {
-      const noFacts: RDF.Fact[] = [];
+      const noFacts: Fact.Fact[] = [];
       let facts = 0;
       let inputChars = 0;
       for (const message of messages) {
@@ -59,7 +60,7 @@ export const extractDocFactsForMessages = (
 
 export type FactsRunResult = {
   readonly processed: number;
-  readonly facts: readonly RDF.Fact[];
+  readonly facts: readonly Fact.Fact[];
 };
 
 /**
@@ -81,7 +82,7 @@ export const extractFactsForVariant = (
       const aiService = yield* AiService.AiService;
       // A hung/very-slow model call must not stall the whole run (a single big page blocks on it);
       // time each message out and degrade to zero facts for that message.
-      const noFacts: RDF.Fact[] = [];
+      const noFacts: Fact.Fact[] = [];
       // The extract closure is invoked once per message the pipeline processes, so it's the natural
       // per-message progress hook without instrumenting runFactPipeline's internal stream.
       const extract: FactExtractor = (message) =>

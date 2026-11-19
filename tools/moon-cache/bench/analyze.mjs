@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 // Read moon run reports and say how the cache performed.
 //
 //   node analyze.mjs .moon/cache/runReport.json   one run, operation breakdown

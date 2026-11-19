@@ -22,11 +22,11 @@ import * as CodingAgentControl from '../CodingAgentControl.ts';
 import { CLAUDE_CODE_EDGE_AGENT } from '../constants.ts';
 import { fold, locatePullRequests, recordPullRequests, reopenTasks } from './cloud-run.ts';
 import {
+  type PullRequestSnapshot,
+  type PullRequestStatusLike,
   decide,
   fixPrompt,
   landPrompt,
-  type PullRequestSnapshot,
-  type PullRequestStatusLike,
   sentKey,
   toSnapshot,
 } from './drive-decision.ts';

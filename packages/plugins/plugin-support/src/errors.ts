@@ -4,6 +4,8 @@
 
 import { BaseError } from '@dxos/errors';
 
+export class ReadOnlyError extends BaseError.extend('ReadOnlyError', 'The app is read-only') {}
+
 /** No support service is configured, so nothing can file the report. */
 export class SupportUnavailableError extends BaseError.extend(
   'SupportUnavailableError',

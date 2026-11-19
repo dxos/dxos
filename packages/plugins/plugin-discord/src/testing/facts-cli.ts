@@ -8,20 +8,25 @@
 //   moon run plugin-discord:facts -- sql 'SELECT author_label, COUNT(*) n FROM message GROUP BY 1 ORDER BY 2 DESC'
 //   moon run plugin-discord:facts -- sparql @query.rq --facts <facts.db> --json
 //   moon run plugin-discord:facts -- sql @src/testing/insights/queries/product-weeks.sql --param product=D1 --crawl <db>
+//   moon run plugin-discord:facts -- trig <out.trig> --facts <facts.db>
 //
 // `sparql` runs against the fact store (DISCORD_FACTS_DB or --facts); `sql` against the crawl's message store
 // (DISCORD_CRAWL_DB or --crawl), run as given, so keep to SELECT. A query starting with `@` is read from that file. IRIs print with the
-// prefixes below so tables stay narrow.
+// prefixes below so tables stay narrow. `trig` writes the whole fact store as TriG, which Composer's Memory view
+// (plugin-brain) imports.
 
 import * as Effect from 'effect/Effect';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { parseArgs } from 'node:util';
 
+import { Pipeline, Vocab } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { FactStore, FactStoreLive, type SparqlRow } from '@dxos/pipeline-rdf';
+
+import { pipelineState } from './pipeline-state.ts';
 
 const DEFAULT_DIR = join(homedir(), '.local/share/dxos/discord-pipeline/cloudflare');
 
@@ -112,13 +117,14 @@ const { values: flags, positionals } = parseArgs({
 });
 
 const [mode, rawQuery] = positionals;
-if ((mode !== 'sparql' && mode !== 'sql') || !rawQuery) {
+if ((mode !== 'sparql' && mode !== 'sql' && mode !== 'trig') || !rawQuery) {
   console.error(
-    'Usage: facts-cli (sparql|sql) <query | @file> [--facts <db>] [--crawl <db>] [--param name=value] [--json] [--bars]',
+    'Usage: facts-cli (sparql|sql) <query | @file> [--facts <db>] [--crawl <db>] [--param name=value] [--json] [--bars]\n' +
+      '       facts-cli trig <out.trig> [--facts <db>]',
   );
   process.exit(1);
 }
-const query = rawQuery.startsWith('@') ? readFileSync(rawQuery.slice(1), 'utf8') : rawQuery;
+const query = mode !== 'trig' && rawQuery.startsWith('@') ? readFileSync(rawQuery.slice(1), 'utf8') : rawQuery;
 
 const isRow = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
@@ -163,6 +169,25 @@ const runSparql = Effect.fn(
   (effect, path) => effect.pipe(Effect.provide(FactStoreLive.layerFile(path))),
 );
 
+/** Each fact is a graph the default graph types as `sx:Graph`. */
+const FACT_GRAPHS_SPARQL = `SELECT (COUNT(?g) AS ?n) WHERE { ?g a <${Vocab.SX_GRAPH}> }`;
+
+const writeTrig = Effect.fn(
+  function* (out: string, path: string) {
+    const store = yield* FactStore;
+    const trig = yield* store.exportTrig();
+    // The crawl's own state goes beside its facts, so the memory says which run filled it and at what cost.
+    const [graphs] = yield* store.rows(FACT_GRAPHS_SPARQL);
+    const state = pipelineState(path, Number(graphs?.n?.value ?? 0));
+    const pipeline = state ? yield* Pipeline.toTrig(state) : '';
+    writeFileSync(out, `${trig}\n${pipeline}`);
+    console.log(
+      `Wrote ${(trig.length / 1e6).toFixed(1)} MB of TriG to ${out}${state ? `, with the state of ${state.name}` : ''}`,
+    );
+  },
+  (effect, _out, path) => effect.pipe(Effect.provide(FactStoreLive.layerFile(path))),
+);
+
 if (mode === 'sql') {
   const path = flags.crawl ?? process.env.DISCORD_CRAWL_DB ?? join(DEFAULT_DIR, 'crawl.db');
   if (!existsSync(path)) {
@@ -176,7 +201,7 @@ if (mode === 'sql') {
     console.error(`No fact store at ${path}`);
     process.exit(1);
   }
-  void EffectEx.runPromise(runSparql(path)).catch((error: unknown) => {
+  void EffectEx.runPromise(mode === 'trig' ? writeTrig(query, path) : runSparql(path)).catch((error: unknown) => {
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;
   });

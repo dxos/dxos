@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
@@ -40,7 +40,7 @@ describe('email pipeline (canonical assembly)', () => {
     ];
 
     // Fact persistence is proven by stages/extract-facts.test.ts; here the indexer is a no-op.
-    const indexFacts: FactIndexer = async () => [] as RDF.Fact[];
+    const indexFacts: FactIndexer = async () => [] as Fact.Fact[];
 
     const result = await EffectEx.runPromise(
       EmailPipeline.run(messages, {

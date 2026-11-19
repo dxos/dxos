@@ -20,6 +20,7 @@ import { invariant } from '@dxos/invariant';
 
 import { InvalidSparqlError, UnsupportedSparqlError } from './errors.ts';
 import { type Enc, Kind, encodeTerm, toTerm } from './store.ts';
+import { DEFAULT_TABLES, type Tables } from './tables.ts';
 import { XSD } from './terms.ts';
 
 /**
@@ -96,9 +97,6 @@ const strLit = (value: string) => `'${value.replace(/'/g, "''")}'`;
 const numLit = (value: number | null) => (value === null || !Number.isFinite(value) ? 'NULL' : String(value));
 const and = (conds: string[]) => (conds.length === 0 ? '1' : conds.map((cond) => `(${cond})`).join(' AND '));
 
-const termCol = (idSql: string, col: string, kindCond?: string) =>
-  `(SELECT ${col} FROM terms WHERE id = ${idSql}${kindCond ? ` AND ${kindCond}` : ''})`;
-
 /** Lexical spaces of the numeric cast targets (xsd:float/double also take INF and NaN). */
 const INTEGER_LEX = /^[+-]?\d+$/;
 const DECIMAL_LEX = /^[+-]?(\d+(\.\d*)?|\.\d+)$/;
@@ -162,6 +160,7 @@ export class Compiler {
    */
   tempTermsUsed = false;
   readonly resolver: ConstResolver;
+  readonly tables: Tables;
   #aliases = 0;
   #hidden = 0;
   /** Grouped select being compiled: aggregates met in expressions become its hidden columns. */
@@ -169,8 +168,13 @@ export class Compiler {
   /** Graph of the group being compiled (EXISTS bodies inherit it). */
   #graph: Graph = { kind: 'default' };
 
-  constructor(resolver: ConstResolver) {
+  constructor(resolver: ConstResolver, tables: Tables = DEFAULT_TABLES) {
     this.resolver = resolver;
+    this.tables = tables;
+  }
+
+  #termCol(idSql: string, col: string, kindCond?: string): string {
+    return `(SELECT ${col} FROM ${this.tables.terms} WHERE id = ${idSql}${kindCond ? ` AND ${kindCond}` : ''})`;
   }
 
   //
@@ -403,7 +407,7 @@ export class Compiler {
             // A body that binds no graph (empty, nested GRAPH <c>, VALUES …) ranges over every named graph.
             this.#bindGraphNames(child, inner.name);
           } else if (child.froms.length === 0) {
-            child.where.push(`EXISTS (SELECT 1 FROM quads WHERE g = ${inner.sql})`);
+            child.where.push(`EXISTS (SELECT 1 FROM ${this.tables.quads} WHERE g = ${inner.sql})`);
           }
           this.mergeInner(scope, child);
           break;
@@ -475,7 +479,7 @@ export class Compiler {
     }
     const alias = this.#alias('q');
     const conds: string[] = [];
-    scope.froms.push({ alias, src: 'quads', join: 'inner', on: [] });
+    scope.froms.push({ alias, src: this.tables.quads, join: 'inner', on: [] });
     for (const [col, term] of [
       ['s', subject],
       ['p', predicate],
@@ -561,10 +565,14 @@ export class Compiler {
         const graphCond = this.#graphFilter(graph).replace(' WHERE ', ' AND ');
         const parts: string[] = [];
         if (forward.length > 0 || backward.length === 0) {
-          parts.push(`SELECT s, o FROM quads WHERE p NOT IN (${forward.join(', ') || 'NULL'})${graphCond}`);
+          parts.push(
+            `SELECT s, o FROM ${this.tables.quads} WHERE p NOT IN (${forward.join(', ') || 'NULL'})${graphCond}`,
+          );
         }
         if (backward.length > 0) {
-          parts.push(`SELECT o AS s, s AS o FROM quads WHERE p NOT IN (${backward.join(', ')})${graphCond}`);
+          parts.push(
+            `SELECT o AS s, s AS o FROM ${this.tables.quads} WHERE p NOT IN (${backward.join(', ')})${graphCond}`,
+          );
         }
         return parts.join(' UNION ALL ');
       }
@@ -611,7 +619,7 @@ export class Compiler {
     let item: FromItem;
     const simple =
       child.froms.length === 1 &&
-      child.froms[0].src === 'quads' &&
+      child.froms[0].src === this.tables.quads &&
       [...child.vars.values()].every((info) => /^q\d+\.[spog]$/.test(info.sql));
     if (simple) {
       item = { ...child.froms[0], join: 'left', on: [...child.where] };
@@ -915,7 +923,7 @@ export class Compiler {
         if (val.t !== 'id') {
           return { t: 'str', sql: `''` };
         }
-        return { t: 'str', sql: termCol(val.sql, `COALESCE(lang, '')`, `kind >= ${Kind.STR}`) };
+        return { t: 'str', sql: this.#termCol(val.sql, `COALESCE(lang, '')`, `kind >= ${Kind.STR}`) };
       }
       case 'langmatches': {
         const tag = this.str(sub(args[0]));
@@ -1047,7 +1055,7 @@ export class Compiler {
           return { t: val.t, sql: `${name.toUpperCase()}(${val.sql})` };
         }
         // Order key + id packed into text so MIN/MAX picks the term in SPARQL order and returns its id.
-        const key = termCol(
+        const key = this.#termCol(
           val.sql,
           `(CASE WHEN kind IN (${Kind.NUM}, ${Kind.DATE}) AND num < 0 THEN '30' || ${descendingDigits("printf('%030.12f', -num)")} WHEN kind IN (${Kind.NUM}, ${Kind.DATE}) THEN '31' || printf('%030.12f', num) WHEN kind >= ${Kind.STR} THEN '4' || lex WHEN kind = ${Kind.IRI} THEN '2' || lex ELSE '1' || lex END) || char(1) || id`,
         );
@@ -1096,7 +1104,7 @@ export class Compiler {
         } else if (val.t === 'str') {
           sql = `(CASE WHEN ${numericLexSql(val.sql, lexical)} THEN CAST(trim(${val.sql}) AS REAL) END)`;
         } else {
-          sql = termCol(
+          sql = this.#termCol(
             val.sql,
             `CASE kind WHEN ${Kind.NUM} THEN num WHEN ${Kind.BOOL} THEN (lex IN ('true', '1')) WHEN ${Kind.STR} THEN (CASE WHEN ${numericLexSql('lex', lexical)} THEN CAST(trim(lex) AS REAL) END) END`,
           );
@@ -1135,7 +1143,7 @@ export class Compiler {
           case 'id':
             return {
               t: 'bool',
-              sql: termCol(
+              sql: this.#termCol(
                 val.sql,
                 `CASE kind WHEN ${Kind.NUM} THEN num <> 0 WHEN ${Kind.BOOL} THEN lex IN ('true', '1') WHEN ${Kind.STR} THEN ${fromLex('lex')} END`,
               ),
@@ -1160,7 +1168,7 @@ export class Compiler {
       case 'num':
         return val.sql;
       case 'id':
-        return termCol(val.sql, 'num', `kind = ${Kind.NUM}`);
+        return this.#termCol(val.sql, 'num', `kind = ${Kind.NUM}`);
       default:
         return 'NULL';
     }
@@ -1168,7 +1176,7 @@ export class Compiler {
 
   /** Value of a stored numeric, dateTime or boolean term as one comparable key (one lookup per side). */
   valueKey(val: Val): string {
-    return termCol(
+    return this.#termCol(
       val.sql,
       `CASE kind WHEN ${Kind.NUM} THEN 'n' || num WHEN ${Kind.DATE} THEN 'd' || num WHEN ${Kind.BOOL} THEN 'b' || (lex IN ('true', '1')) END`,
     );
@@ -1178,14 +1186,14 @@ export class Compiler {
     if (val.c) {
       return val.c.kind === Kind.DATE ? numLit(val.c.num) : 'NULL';
     }
-    return val.t === 'id' ? termCol(val.sql, 'num', `kind = ${Kind.DATE}`) : 'NULL';
+    return val.t === 'id' ? this.#termCol(val.sql, 'num', `kind = ${Kind.DATE}`) : 'NULL';
   }
 
   dateLex(val: Val): string {
     if (val.c) {
       return val.c.kind === Kind.DATE ? strLit(val.c.lex) : 'NULL';
     }
-    return val.t === 'id' ? termCol(val.sql, 'lex', `kind = ${Kind.DATE}`) : 'NULL';
+    return val.t === 'id' ? this.#termCol(val.sql, 'lex', `kind = ${Kind.DATE}`) : 'NULL';
   }
 
   /** Lexical form of a string literal (simple or language-tagged); `any` accepts every literal/IRI. */
@@ -1200,8 +1208,8 @@ export class Compiler {
         return val.sql;
       case 'id':
         return any
-          ? termCol(val.sql, 'lex', `kind <> ${Kind.BLANK}`)
-          : termCol(val.sql, 'lex', `kind IN (${Kind.STR}, ${Kind.LANG})`);
+          ? this.#termCol(val.sql, 'lex', `kind <> ${Kind.BLANK}`)
+          : this.#termCol(val.sql, 'lex', `kind IN (${Kind.STR}, ${Kind.LANG})`);
       case 'num':
         return any ? `CAST(${val.sql} AS TEXT)` : 'NULL';
       case 'bool':
@@ -1220,7 +1228,7 @@ export class Compiler {
     }
     switch (val.t) {
       case 'id':
-        return termCol(val.sql, 'kind');
+        return this.#termCol(val.sql, 'kind');
       case 'num':
         return `(CASE WHEN ${val.sql} IS NULL THEN NULL ELSE ${Kind.NUM} END)`;
       case 'str':
@@ -1260,7 +1268,7 @@ export class Compiler {
       case 'str':
         return `(length(${val.sql}) > 0)`;
       case 'id':
-        return termCol(
+        return this.#termCol(
           val.sql,
           `CASE kind WHEN ${Kind.BOOL} THEN lex IN ('true', '1') WHEN ${Kind.NUM} THEN num <> 0 WHEN ${Kind.STR} THEN length(lex) > 0 WHEN ${Kind.LANG} THEN length(lex) > 0 END`,
         );
@@ -1324,9 +1332,9 @@ export class Compiler {
       return [val.sql];
     }
     return [
-      termCol(val.sql, `CASE kind WHEN ${Kind.BLANK} THEN 1 WHEN ${Kind.IRI} THEN 2 ELSE 3 END`),
-      termCol(val.sql, 'num'),
-      termCol(val.sql, 'lex'),
+      this.#termCol(val.sql, `CASE kind WHEN ${Kind.BLANK} THEN 1 WHEN ${Kind.IRI} THEN 2 ELSE 3 END`),
+      this.#termCol(val.sql, 'num'),
+      this.#termCol(val.sql, 'lex'),
     ];
   }
 
@@ -1392,7 +1400,12 @@ export class Compiler {
     }
     scope.graphBound.add(name);
     const alias = this.#alias('gn');
-    scope.froms.push({ alias, src: '(SELECT DISTINCT g FROM quads WHERE g <> 0)', join: 'inner', on: [] });
+    scope.froms.push({
+      alias,
+      src: `(SELECT DISTINCT g FROM ${this.tables.quads} WHERE g <> 0)`,
+      join: 'inner',
+      on: [],
+    });
     const conds: string[] = [];
     this.bind(scope, name, { sql: `${alias}.g`, type: 'id', nullable: false }, conds);
     scope.where.push(...conds);
@@ -1429,7 +1442,7 @@ export class Compiler {
     } else if (this.resolver.namedGraphs) {
       conds.push('g = 0');
     }
-    return `SELECT s, o FROM quads WHERE ${conds.join(' AND ')}`;
+    return `SELECT s, o FROM ${this.tables.quads} WHERE ${conds.join(' AND ')}`;
   }
 
   #graphFilter(graph: Graph): string {
@@ -1444,12 +1457,12 @@ export class Compiler {
     // seed it only where they are nodes; a constant end matches itself regardless.
     const seed =
       anchor?.bound && zero
-        ? `SELECT n FROM (${anchor.seed}) WHERE EXISTS (SELECT 1 FROM quads WHERE s = n${this.#graphFilter(graph).replace(' WHERE ', ' AND ')}) OR EXISTS (SELECT 1 FROM quads WHERE o = n${this.#graphFilter(graph).replace(' WHERE ', ' AND ')})`
+        ? `SELECT n FROM (${anchor.seed}) WHERE EXISTS (SELECT 1 FROM ${this.tables.quads} WHERE s = n${this.#graphFilter(graph).replace(' WHERE ', ' AND ')}) OR EXISTS (SELECT 1 FROM ${this.tables.quads} WHERE o = n${this.#graphFilter(graph).replace(' WHERE ', ' AND ')})`
         : anchor?.seed;
     if (pathType === '?') {
       const nodes = seed
         ? `SELECT n AS s, n AS o FROM (${seed})`
-        : `SELECT s, s FROM quads${this.#graphFilter(graph)} UNION SELECT o, o FROM quads${this.#graphFilter(graph)}`;
+        : `SELECT s, s FROM ${this.tables.quads}${this.#graphFilter(graph)} UNION SELECT o, o FROM ${this.tables.quads}${this.#graphFilter(graph)}`;
       return `SELECT s, o FROM (${step}) UNION ${nodes}`;
     }
     const cte = this.#alias('c');
@@ -1461,7 +1474,7 @@ export class Compiler {
         : `SELECT a.n AS st, e.${to} AS n FROM (${anchor.seed}) a CROSS JOIN (${step}) e ON e.${from} = a.n`;
     } else {
       init = zero
-        ? `SELECT s AS st, s AS n FROM quads${this.#graphFilter(graph)} UNION SELECT o, o FROM quads${this.#graphFilter(graph)}`
+        ? `SELECT s AS st, s AS n FROM ${this.tables.quads}${this.#graphFilter(graph)} UNION SELECT o, o FROM ${this.tables.quads}${this.#graphFilter(graph)}`
         : `SELECT ${from} AS st, ${to} AS n FROM (${step})`;
     }
     // A plain (or inverted) IRI step joins `quads` directly so each iteration is an index probe.
@@ -1480,7 +1493,7 @@ export class Compiler {
       const [qFrom, qTo] = (from === 's') === edge.forward ? ['s', 'o'] : ['o', 's'];
       const graphCond = this.#graphFilter(graph).replace(' WHERE ', ' AND e.');
       // CROSS JOIN pins the CTE queue as the outer loop; otherwise SQLite may scan `quads` per step (Q7: 2 s → 3 ms).
-      recursive = `SELECT ${cte}.st, e.${qTo} FROM ${cte} CROSS JOIN quads e ON e.${qFrom} = ${cte}.n AND e.p = ${this.resolver.constId(edge.iri)}${graphCond}`;
+      recursive = `SELECT ${cte}.st, e.${qTo} FROM ${cte} CROSS JOIN ${this.tables.quads} e ON e.${qFrom} = ${cte}.n AND e.p = ${this.resolver.constId(edge.iri)}${graphCond}`;
     } else {
       recursive = `SELECT ${cte}.st, e.${to} FROM ${cte} CROSS JOIN (${step}) e ON e.${from} = ${cte}.n`;
     }

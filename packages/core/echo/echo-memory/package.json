@@ -1,0 +1,136 @@
+{
+  "name": "@dxos/echo-memory",
+  "version": "0.16.0",
+  "description": "Memory interface: the MemoryService tag, the attributed fact data model and typed memory queries.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./Fact": {
+      "source": "./src/Fact.ts",
+      "types": "./dist/types/src/Fact.d.ts",
+      "import": "./dist/lib/Fact.mjs"
+    },
+    "./FactFeed": {
+      "source": "./src/FactFeed.ts",
+      "types": "./dist/types/src/FactFeed.d.ts",
+      "import": "./dist/lib/FactFeed.mjs"
+    },
+    "./Graph": {
+      "source": "./src/Graph.ts",
+      "types": "./dist/types/src/Graph.d.ts",
+      "import": "./dist/lib/Graph.mjs"
+    },
+    "./Hash": {
+      "source": "./src/Hash.ts",
+      "types": "./dist/types/src/Hash.d.ts",
+      "import": "./dist/lib/Hash.mjs"
+    },
+    "./Mapping": {
+      "source": "./src/Mapping.ts",
+      "types": "./dist/types/src/Mapping.d.ts",
+      "import": "./dist/lib/Mapping.mjs"
+    },
+    "./MemoryError": {
+      "source": "./src/MemoryError.ts",
+      "types": "./dist/types/src/MemoryError.d.ts",
+      "import": "./dist/lib/MemoryError.mjs"
+    },
+    "./MemoryQuery": {
+      "source": "./src/MemoryQuery.ts",
+      "types": "./dist/types/src/MemoryQuery.d.ts",
+      "import": "./dist/lib/MemoryQuery.mjs"
+    },
+    "./MemoryService": {
+      "source": "./src/MemoryService.ts",
+      "types": "./dist/types/src/MemoryService.d.ts",
+      "import": "./dist/lib/MemoryService.mjs"
+    },
+    "./Ontology": {
+      "source": "./src/Ontology.ts",
+      "types": "./dist/types/src/Ontology.d.ts",
+      "import": "./dist/lib/Ontology.mjs"
+    },
+    "./Pipeline": {
+      "source": "./src/Pipeline.ts",
+      "types": "./dist/types/src/Pipeline.d.ts",
+      "import": "./dist/lib/Pipeline.mjs"
+    },
+    "./Predicate": {
+      "source": "./src/Predicate.ts",
+      "types": "./dist/types/src/Predicate.d.ts",
+      "import": "./dist/lib/Predicate.mjs"
+    },
+    "./Rdf": {
+      "source": "./src/Rdf.ts",
+      "types": "./dist/types/src/Rdf.d.ts",
+      "import": "./dist/lib/Rdf.mjs"
+    },
+    "./RdfStore": {
+      "source": "./src/RdfStore.ts",
+      "types": "./dist/types/src/RdfStore.d.ts",
+      "import": "./dist/lib/RdfStore.mjs"
+    },
+    "./Sparql": {
+      "source": "./src/Sparql.ts",
+      "types": "./dist/types/src/Sparql.d.ts",
+      "import": "./dist/lib/Sparql.mjs"
+    },
+    "./Subscription": {
+      "source": "./src/Subscription.ts",
+      "types": "./dist/types/src/Subscription.d.ts",
+      "import": "./dist/lib/Subscription.mjs"
+    },
+    "./Trig": {
+      "source": "./src/Trig.ts",
+      "types": "./dist/types/src/Trig.d.ts",
+      "import": "./dist/lib/Trig.mjs"
+    },
+    "./Vocab": {
+      "source": "./src/Vocab.ts",
+      "types": "./dist/types/src/Vocab.d.ts",
+      "import": "./dist/lib/Vocab.mjs"
+    },
+    "./Vocabularies": {
+      "source": "./src/Vocabularies.ts",
+      "types": "./dist/types/src/Vocabularies.d.ts",
+      "import": "./dist/lib/Vocabularies.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/errors": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@rdfjs/types": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@types/n3": "catalog:",
+    "effect": "catalog:",
+    "n3": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

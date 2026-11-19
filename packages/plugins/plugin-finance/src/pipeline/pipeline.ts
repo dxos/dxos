@@ -6,16 +6,16 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
+import { Hash } from '@dxos/echo-memory';
 import { log } from '@dxos/log';
 import {
   DEFAULT_INDEX_BATCH_SIZE,
   FactStore,
   type IndexBatchOptions,
-  RDF,
   type SemanticIndexError,
-  hashText,
   indexFactsBatch,
 } from '@dxos/pipeline-rdf';
+import { type ExtractDocument, type KnownEntity } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
 import { type Finance } from '#types';
@@ -78,7 +78,7 @@ export const NEWS_RULES: ReadonlyArray<string> = [
 ];
 
 /** The listed companies as entities the extractor links names to, so its facts and the mention index share nodes. */
-export const KNOWN_COMPANIES: ReadonlyArray<RDF.KnownEntity> = TICKERS.map(({ ticker, name, aliases }) => ({
+export const KNOWN_COMPANIES: ReadonlyArray<KnownEntity> = TICKERS.map(({ ticker, name, aliases }) => ({
   iri: companyIri(ticker),
   label: name,
   aliases: [ticker, ...(aliases ?? [])],
@@ -86,7 +86,7 @@ export const KNOWN_COMPANIES: ReadonlyArray<RDF.KnownEntity> = TICKERS.map(({ ti
 }));
 
 /** The document fact extraction reads for an item. */
-export const extractDocument = (item: TextItem): RDF.ExtractDocument => ({
+export const extractDocument = (item: TextItem): ExtractDocument => ({
   text: itemText(item),
   source: itemSource(item),
   author: item.publisher,
@@ -99,7 +99,7 @@ const ANNOTATION_VERSION = '1';
 
 const annotationCursor = (item: TextItem): string => `${itemSource(item)}#annotations`;
 const annotationHash = (item: TextItem, options: AnnotateOptions): string =>
-  hashText(
+  Hash.text(
     `${ANNOTATION_VERSION}|${options.linkNames ?? true}|${options.sentiment ?? 'llm'}|${options.events ?? true}|${itemText(item)}`,
   );
 
@@ -284,7 +284,7 @@ export const extractObservations = (
   });
 
 const observationHash = (observation: Finance.Observation): string =>
-  hashText(
+  Hash.text(
     `${OBSERVATION_EXTRACTOR.version}|${JSON.stringify([observation.values, observation.labels, observation.date])}`,
   );
 

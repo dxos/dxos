@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
@@ -49,6 +50,7 @@ const getInitialSchema = (subject: AppSurface.ObjectCardProps['subject'], ignore
 };
 
 export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps) => {
+  const readonly = ToolkitHooks.useReadOnly();
   const [snapshot] = useObject(subject);
   const schema = useMemo(() => getInitialSchema(subject, ignorePaths), [subject, ignorePaths]);
 
@@ -68,7 +70,13 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
 
   return (
     <Card.Body>
-      <Form.Root schema={schema} values={snapshot} autoSave onSave={handleSave}>
+      <Form.Root
+        schema={schema}
+        values={snapshot}
+        readonly={readonly}
+        autoSave={!readonly}
+        onSave={readonly ? undefined : handleSave}
+      >
         <Form.Viewport>
           <Form.Content>
             <Form.Fields />
