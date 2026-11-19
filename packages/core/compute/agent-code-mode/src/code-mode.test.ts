@@ -639,6 +639,10 @@ describe('code mode types', () => {
 
         const unknown = yield* runEvalResult(`await make('com.example.type.unknown', {});`);
         expect(unknown).toEqual({ output: 'Error: Unknown object type: com.example.type.unknown', ok: false });
+
+        // Not a valid typename: the same typed failure, not a defect.
+        const invalid = yield* runEvalResult(`await make('com.example.type.note#ABC123', {});`);
+        expect(invalid).toEqual({ output: 'Error: Unknown object type: com.example.type.note#ABC123', ok: false });
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

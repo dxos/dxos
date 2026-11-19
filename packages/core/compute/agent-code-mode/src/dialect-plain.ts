@@ -102,12 +102,16 @@ export const PlainDialect: Dialect = {
             // A type the registry lacks is asked of the graph's type sources, which add what they find to the
             // registry: on EDGE an agent's database registers only its own types, and the rest are published by
             // the plugin bundles that contribute them.
+            // A name that is not a valid typename is simply unknown, never a defect.
+            const dxn = typename.includes('#') ? undefined : DXN.tryMake(`dxn:${typename}`);
             const type =
               registered() ??
-              (yield* Effect.promise(async () => {
-                await db.graph.createRefResolver({ context: { space: db.spaceId } }).resolveType?.(DXN.make(typename));
-                return registered();
-              }));
+              (dxn === undefined
+                ? undefined
+                : yield* Effect.promise(async () => {
+                    await db.graph.createRefResolver({ context: { space: db.spaceId } }).resolveType?.(dxn);
+                    return registered();
+                  }));
             if (type === undefined || !Type.isType(type) || !Type.isObject(type)) {
               return yield* Effect.fail(
                 new UnknownObjectTypeError({ typename, message: `Unknown object type: ${typename}` }),
