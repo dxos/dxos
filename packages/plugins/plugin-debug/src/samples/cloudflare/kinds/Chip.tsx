@@ -58,12 +58,15 @@ export type ChipList = Schema.Schema.Type<typeof ChipList>;
 /** What a ghost chip writes in its last field. */
 const GHOST = 'ghost';
 
+/** The characters a backslash escapes; before any other, a backslash is itself. */
+const ESCAPABLE = '\\|~';
+
 /** The parts of `value` between each `separator` that no backslash escapes, with their escapes left in. */
 const splitUnescaped = (value: string, separator: '|' | '~'): string[] => {
   const parts = [''];
   for (let index = 0; index < value.length; index++) {
     const character = value[index];
-    if (character === '\\' && index + 1 < value.length) {
+    if (character === '\\' && index + 1 < value.length && ESCAPABLE.includes(value[index + 1])) {
       parts[parts.length - 1] += character + value[++index];
     } else if (character === separator) {
       parts.push('');
@@ -76,7 +79,7 @@ const splitUnescaped = (value: string, separator: '|' | '~'): string[] => {
 
 const escapeField = (value: string): string => value.replace(/[\\|~]/g, '\\$&');
 
-const unescapeField = (value: string): string => value.replace(/\\(.)/g, '$1');
+const unescapeField = (value: string): string => value.replace(/\\([\\|~])/g, '$1');
 
 /**
  * A chip row as text: `icon~label~note~tone~ghost`, chips separated by `|`. The DSL carries no list and no nested

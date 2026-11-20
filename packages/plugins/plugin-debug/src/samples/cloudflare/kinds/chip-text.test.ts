@@ -48,6 +48,12 @@ describe('chips as text', () => {
     expect(formatChips(parseChips(text))).toEqual(text);
   });
 
+  test('a backslash before any other character is kept', ({ expect }) => {
+    expect(parseChips('path~File~C:\\data~accent').items).toEqual([
+      { icon: 'path', label: 'File', note: 'C:\\data', tone: 'accent' },
+    ]);
+  });
+
   test('a tone the deck does not have is dropped', ({ expect }) => {
     expect(parseChips('database~ECHO~~unknown').items).toEqual([{ icon: 'database', label: 'ECHO' }]);
   });
