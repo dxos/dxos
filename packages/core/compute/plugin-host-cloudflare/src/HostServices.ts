@@ -17,7 +17,7 @@ import { handOffWorkingSet } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { Database, Entity, Obj } from '@dxos/echo';
-import * as HostProcessControl from '@dxos/edge-compute/host-process-control';
+import * as HostProcessManager from '@dxos/edge-compute/host-process-manager';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId, type SpaceId, URI } from '@dxos/keys';
@@ -125,9 +125,9 @@ const makeCallProxy = (key: string, host: PluginProtocol.ServiceHost): Capabilit
  */
 export const builtinAdapters: readonly Capabilities.HostServiceAdapter[] = [
   {
-    host: HostProcessControl.PROCESS_MANAGER_HOST_KEY,
+    host: HostProcessManager.PROCESS_MANAGER_HOST_KEY,
     service: Process.ManagerService.key,
-    make: (host) => HostProcessControl.makeProcessManager(host, Registry.make()),
+    make: (host) => HostProcessManager.make(host, Registry.make()),
   },
 ];
 

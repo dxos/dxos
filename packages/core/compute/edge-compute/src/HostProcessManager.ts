@@ -99,7 +99,7 @@ const callHost = <A>(host: Host, method: string, schema: Schema.Codec<A>, ...arg
   });
 
 /** The process routes over a host service; see {@link Control}. */
-export const make = (host: Host): Control => ({
+export const makeControl = (host: Host): Control => ({
   spawn: ({ key, name, annotations, idempotencyKey }) =>
     callHost(host, 'spawn', ProcessInfo, {
       key,
@@ -172,8 +172,8 @@ export const make = (host: Host): Control => ({
  * The {@link Process.ManagerService} a plugin host provides to every bundle: EDGE's processes in the invocation's space,
  * through the host service. A bundle runs no processes of its own, so every verb takes an EDGE location.
  */
-export const makeProcessManager = (host: Host, registry: Registry.AtomRegistry): Process.Manager => {
-  const control = make(host);
+export const make = (host: Host, registry: Registry.AtomRegistry): Process.Manager => {
+  const control = makeControl(host);
   const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
   registry.mount(processTreeAtom);
   const processTree = Effect.sync(() => registry.get(processTreeAtom));

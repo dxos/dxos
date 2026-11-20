@@ -23,10 +23,10 @@
       "types": "./dist/types/src/EdgeProcessControl.d.ts",
       "import": "./dist/lib/process-control.mjs"
     },
-    "./host-process-control": {
-      "source": "./src/HostProcessControl.ts",
-      "types": "./dist/types/src/HostProcessControl.d.ts",
-      "import": "./dist/lib/host-process-control.mjs"
+    "./host-process-manager": {
+      "source": "./src/HostProcessManager.ts",
+      "types": "./dist/types/src/HostProcessManager.d.ts",
+      "import": "./dist/lib/host-process-manager.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",

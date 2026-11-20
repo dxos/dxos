@@ -18,7 +18,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { SpaceId } from '@dxos/keys';
 
-import * as HostProcessControl from './HostProcessControl.ts';
+import * as HostProcessManager from './HostProcessManager.ts';
 
 const spaceId = SpaceId.random();
 const pid = Process.ID.make('01JZ0000000000000000000000');
@@ -70,7 +70,7 @@ const serve = (body: string, contentType: string | null) =>
 const makeHost = () => {
   const calls: { method: string; args: readonly unknown[] }[] = [];
   const record = (method: string, args: readonly unknown[]) => calls.push({ method, args });
-  const host: HostProcessControl.Host = {
+  const host: HostProcessManager.Host = {
     spawn: (...args) => Effect.sync(() => (record('spawn', args), info('STARTING'))),
     submitInput: (...args) => Effect.sync(() => (record('submitInput', args), info())),
     list: (...args) => Effect.sync(() => (record('list', args), [info(), info('TERMINATED')])),
@@ -97,11 +97,11 @@ const makeHost = () => {
   return { host, calls };
 };
 
-describe('HostProcessControl', () => {
+describe('HostProcessManager', () => {
   it.effect('spawns, submits and reads through the host, decoding what it answers', () =>
     Effect.gen(function* () {
       const { host, calls } = makeHost();
-      const control = HostProcessControl.make(host);
+      const control = HostProcessManager.makeControl(host);
 
       const snapshot = yield* control.spawn({
         spaceId,
@@ -129,7 +129,7 @@ describe('HostProcessControl', () => {
   it.effect("drives the process's RPC group across the host service", () =>
     Effect.gen(function* () {
       const { host } = makeHost();
-      const control = HostProcessControl.make(host);
+      const control = HostProcessManager.makeControl(host);
       const client = yield* control.makeRpcClient({ spaceId, pid, group: Echo });
       expect(yield* client.echo({ text: 'lend' })).toEqual({ echoed: 'LEND' });
     }).pipe(Effect.scoped),
@@ -138,7 +138,7 @@ describe('HostProcessControl', () => {
   it.effect('lists by key, filters by state, reads status and terminates through the host', () =>
     Effect.gen(function* () {
       const { host, calls } = makeHost();
-      const control = HostProcessControl.make(host);
+      const control = HostProcessManager.makeControl(host);
 
       const listed = yield* control.list({
         spaceId,
@@ -159,7 +159,7 @@ describe('HostProcessControl', () => {
   it.effect('serves Process.ManagerService for EDGE locations and refuses local ones', () =>
     Effect.gen(function* () {
       const { host, calls } = makeHost();
-      const manager = HostProcessControl.makeProcessManager(host, Registry.make());
+      const manager = HostProcessManager.make(host, Registry.make());
       // The handler never runs here: a remote spawn sends only the key.
       const definition = Operation.makeDurable({
         key: 'org.dxos.edge.process.coding-agent',
@@ -188,7 +188,7 @@ describe('HostProcessControl', () => {
 
   it.effect('dies on an answer that is not a process', () =>
     Effect.gen(function* () {
-      const control = HostProcessControl.make({ spawn: () => Effect.succeed({ nope: true }) });
+      const control = HostProcessManager.makeControl({ spawn: () => Effect.succeed({ nope: true }) });
       const exit = yield* control.spawn({ spaceId, key: 'k' }).pipe(Effect.exit);
       expect(exit._tag).toBe('Failure');
     }),
