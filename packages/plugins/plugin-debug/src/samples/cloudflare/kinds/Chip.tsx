@@ -55,34 +55,63 @@ export const ChipList = Schema.Struct({
 });
 export type ChipList = Schema.Schema.Type<typeof ChipList>;
 
+/** What a ghost chip writes in its last field. */
+const GHOST = 'ghost';
+
+/** The parts of `value` between each `separator` that no backslash escapes, with their escapes left in. */
+const splitUnescaped = (value: string, separator: '|' | '~'): string[] => {
+  const parts = [''];
+  for (let index = 0; index < value.length; index++) {
+    const character = value[index];
+    if (character === '\\' && index + 1 < value.length) {
+      parts[parts.length - 1] += character + value[++index];
+    } else if (character === separator) {
+      parts.push('');
+    } else {
+      parts[parts.length - 1] += character;
+    }
+  }
+  return parts;
+};
+
+const escapeField = (value: string): string => value.replace(/[\\|~]/g, '\\$&');
+
+const unescapeField = (value: string): string => value.replace(/\\(.)/g, '$1');
+
 /**
- * A chip row as text: `icon~label~note~tone`, chips separated by `|`. The DSL carries no list and no nested
+ * A chip row as text: `icon~label~note~tone~ghost`, chips separated by `|`. The DSL carries no list and no nested
  * object, so a kind whose field is a list of simple records writes it as one scalar and reads it back itself —
  * the spelling the substrate's packing uses, and `points="0,0.5 1,0.5"` before it.
  *
  * Neither separator is a space or a colon, because a note is prose and prose holds both: "every write" is one
- * note, and `dxn:type:org.dxos/Task` is one note with two colons in it.
+ * note, and `dxn:type:org.dxos/Task` is one note with two colons in it. A separator inside a field is written
+ * after a backslash. A tone the deck does not have is dropped, since it would draw nothing.
  */
 export const parseChips = (value: string): ChipList => ({
-  items: value
-    .split('|')
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-    .map((entry) => {
-      const [icon, label, note, tone] = entry.split('~').map((part) => part.trim());
+  items: splitUnescaped(value, '|')
+    .filter((entry) => entry.trim().length > 0)
+    .map((entry): ChipItem => {
+      const [icon, label, note, tone, ghost] = splitUnescaped(entry, '~').map((part) => unescapeField(part).trim());
+      const known = TONES.find((name) => name === tone);
       return {
-        icon,
+        ...(icon ? { icon } : {}),
         label: label ?? '',
         ...(note ? { note } : {}),
-        ...(tone ? { tone } : {}),
+        ...(known ? { tone: known } : {}),
+        ...(ghost === GHOST ? { ghost: true } : {}),
       };
-    }) as ChipList['items'],
+    }),
 });
 
 /** The inverse, so what a drawing writes down reads back as the same chips. */
 export const formatChips = (chips: ChipList): string =>
   chips.items
-    .map((chip) => [chip.icon, chip.label, chip.note ?? '', chip.tone ?? ''].join('~').replace(/~+$/, ''))
+    .map((chip) => {
+      const fields = [chip.icon ?? '', chip.label, chip.note ?? '', chip.tone ?? '', chip.ghost ? GHOST : ''];
+      // Trailing empty fields are left off, so a plain chip stays `icon~label`.
+      const used = fields.slice(0, fields.findLastIndex((field) => field.length > 0) + 1);
+      return used.map(escapeField).join('~');
+    })
     .join(' | ');
 
 /** The chips a card carries, however it carries them. */

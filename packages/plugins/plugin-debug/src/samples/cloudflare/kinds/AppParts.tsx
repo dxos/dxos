@@ -248,10 +248,18 @@ export const appEmbedSpec: ElementKindSpec = {
 // A run of the document's text.
 //
 
+/** The most lines a run draws. The field is a form input, so an unbounded count would be rendered. */
+export const LINES_MAX = 50;
+
 export const LinesData = Schema.Struct({
   ...partFields,
   /** How many lines the run draws; the first is a heading where `strong` says so. */
-  lines: Schema.optional(Schema.Number.check(Schema.isInt()).annotate({ title: 'Lines' })),
+  lines: Schema.optional(
+    Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isBetween({ minimum: 1, maximum: LINES_MAX })),
+    ).annotate({ title: 'Lines' }),
+  ),
   strong: Schema.optional(Schema.Boolean.annotate({ title: 'Heading' })),
 });
 
@@ -268,7 +276,7 @@ const LinesNodeView = ({ node }: NodeViewProps) => {
   if (node.type !== 'app-lines' || !data) {
     return null;
   }
-  const count = Math.max(1, data.lines ?? 3);
+  const count = Math.max(1, Math.min(Math.trunc(data.lines ?? 3), LINES_MAX));
   return (
     <div className='dx-cover flex flex-col justify-between' data-testid='app-lines-node'>
       {Array.from({ length: count }, (_, index) => (

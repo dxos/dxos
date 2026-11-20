@@ -149,7 +149,8 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
 
   // Anything the card holds beyond its title draws through the core card's frame, which makes each region a part;
   // the chips and the rows are what this kind adds between the header and the body.
-  if (data.chips !== undefined || rows !== undefined || body !== undefined || footer !== undefined) {
+  const chips = chipsOf(data.chips);
+  if (chips !== undefined || rows !== undefined || body !== undefined || footer !== undefined) {
     return (
       <div
         className='studio-card dx-cover rounded-xl overflow-hidden'
@@ -158,7 +159,7 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
         style={{ padding: '9px 18px', ...style }}
       >
         <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
-          {chipsOf(data.chips) ? <Chips {...chipsOf(data.chips)!} /> : null}
+          {chips ? <Chips {...chips} /> : null}
           {rows ? <CardRows items={rows} /> : null}
         </CardFrame>
       </div>
