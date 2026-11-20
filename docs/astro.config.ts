@@ -21,6 +21,7 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 import { generateIslandBase, generateTheme, generateWebflowScoped } from './scripts/gen-theme.mjs';
+import { DEMO_STORIES, ECHO_DEMOS } from './src/demos/catalog.ts';
 import { ISLAND_ROOTS, PAGE_LAYERS } from './src/demos/layers.ts';
 import { assertContentExists, parsePages, readSpec, sidebarFromSpec } from './src/echo/spec.ts';
 
@@ -191,6 +192,9 @@ const redirects: Record<string, string> = {
   // The llms.txt pages moved from each section's Agents group to its Resources group.
   '/docs/echo/agents/llms-txt': '/docs/echo/resources/llms-txt/',
   '/docs/plex/agents/llms-txt': '/docs/plex/resources/llms-txt/',
+  '/docs/additional-resources/api-reference': '/docs/echo/resources/api-reference/',
+  '/docs/additional-resources/glossary': '/docs/echo/resources/glossary/',
+  '/docs/additional-resources/samples': '/docs/echo/resources/examples/',
   // Why PLEX? took Try Composer's place in Start here.
   '/docs/app-framework/try': '/docs/plex/why-plex/',
   '/docs/composer/try': '/docs/plex/why-plex/',
@@ -297,6 +301,64 @@ const inspectorImportMap = (): AstroIntegration => {
   };
 };
 
+const PRELOAD_PAGE = 'echo/index.html';
+const storyModules = (ids: string[]) =>
+  new RegExp(`stories-echo/src/stories/(${ids.map((id) => DEMO_STORIES[id]).join('|')})\\.stories\\.tsx$`);
+const [SHOWN_DEMO, ...HIDDEN_DEMOS] = ECHO_DEMOS;
+const PRELOAD_STORY = storyModules([SHOWN_DEMO]);
+const OTHER_STORIES = storyModules(HIDDEN_DEMOS);
+
+/** Adds modulepreload links for the shown `/echo` demo's import graph, so its chunks fetch in parallel. */
+const demoModulePreload = (): AstroIntegration => {
+  let files: string[] | undefined;
+  const plugin: Plugin = {
+    name: 'docs:demo-module-preload',
+    applyToEnvironment: (environment) => environment.name === 'client',
+    generateBundle(_options, bundle) {
+      const chunks = Object.values(bundle).filter((output) => output.type === 'chunk');
+      const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
+      const roots = chunks.filter(
+        ({ facadeModuleId }) =>
+          facadeModuleId?.endsWith('/src/demos/StoryDemo.tsx') || PRELOAD_STORY.test(facadeModuleId ?? ''),
+      );
+      const seen = new Set<string>();
+      const visit = (fileName: string) => {
+        const chunk = byName.get(fileName);
+        if (!chunk || seen.has(fileName) || OTHER_STORIES.test(chunk.facadeModuleId ?? '')) {
+          return;
+        }
+        seen.add(fileName);
+        [...chunk.imports, ...chunk.dynamicImports].forEach(visit);
+      };
+      roots.forEach((root) => visit(root.fileName));
+      files = [...seen];
+    },
+  };
+
+  return {
+    name: 'docs:demo-module-preload',
+    hooks: {
+      'astro:config:setup': ({ command, updateConfig }) => {
+        if (command === 'build') {
+          updateConfig({ vite: { plugins: [plugin] } });
+        }
+      },
+      'astro:build:done': ({ dir }) => {
+        if (!files?.length) {
+          throw new Error('The demo module preload list was not built.');
+        }
+        const file = new URL(PRELOAD_PAGE, dir);
+        // Vite drops a chunk that only held CSS after the bundle is generated.
+        const links = files
+          .filter((name) => fs.existsSync(new URL(name, dir)))
+          .map((name) => `<link rel="modulepreload" href="/${name}">`)
+          .join('');
+        fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('</head>', `${links}</head>`));
+      },
+    },
+  };
+};
+
 export default defineConfig({
   site: 'https://dxos.org',
   redirects,
@@ -357,6 +419,7 @@ export default defineConfig({
   },
   integrations: [
     cloudflareRedirects(),
+    demoModulePreload(),
     inspectorImportMap(),
     react({
       include: [

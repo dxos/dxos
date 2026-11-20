@@ -108,6 +108,21 @@ const FileOperation: SandboxOperation = {
   invoke: () => Effect.die(new Error('not used')),
 };
 
+const Lookup = Operation.make({
+  meta: { key: DXN.make('com.example.operation.lookup'), name: 'Lookup' },
+  input: Schema.Struct({ id: Schema.String }),
+  output: Schema.Struct({ object: Schema.Struct({ id: Schema.String }) }),
+});
+
+/** Answers with an object's JSON wrapped as `{ object }`, as an operation that made or found one does. */
+const LookupOperation: SandboxOperation = {
+  name: 'lookup',
+  description: 'Looks an object up by id',
+  parameters: {},
+  definition: Lookup,
+  invoke: (input: unknown) => Effect.sync(() => ({ object: Schema.decodeUnknownSync(Lookup.input)(input) })),
+};
+
 /** Stands in for an MCP server's tool: no operation backs it, so the worker must not resolve one for it. */
 const WeatherTool: SandboxOperation = {
   name: 'get_weather',
@@ -244,6 +259,26 @@ describe('worker sandbox', () => {
     await db.flush();
 
     const output = await run(`return await query('${TASK_TYPENAME}');`);
+    expect(output).toContain('  title: "Write the docs"');
+  }, 60_000);
+
+  test('console output reaches the model, on both dialects', async () => {
+    const { run, runWith } = await setup();
+    expect(await run("console.log('one', 1); print('two'); console.error('three');")).toEqual('one 1\ntwo\nthree');
+    expect(await runWith(EffectDialect, "console.log('one'); yield* print('two'); console.warn('three');")).toEqual(
+      'one\ntwo\nthree',
+    );
+    expect(await run('const done = true;')).toMatch(/^No output: the code ran without error/);
+  }, 60_000);
+
+  test("describes an operation's output as the object it names", async () => {
+    const { db, run } = await setup();
+    const task = db.add(Obj.make(Task, { title: 'Write the docs', status: 'open' }));
+    await db.flush();
+
+    // The operation answers with the id alone, so the title on the card comes from the stored object.
+    const output = await run(`print(await describe(await ops.lookup({ id: '${task.id}' })));`);
+    expect(output).toMatch(new RegExp(`^${TASK_TYPENAME} ${task.id}`));
     expect(output).toContain('  title: "Write the docs"');
   }, 60_000);
 
@@ -482,7 +517,7 @@ const setup = async () => {
           dialect,
           sandbox,
           runtime,
-          operations: [ScoreOperation, FileOperation, WeatherTool],
+          operations: [ScoreOperation, FileOperation, WeatherTool, LookupOperation],
           timeout,
         });
         const result = yield* callTool(yield* toolkit.handlers, {

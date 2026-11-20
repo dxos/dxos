@@ -76,7 +76,7 @@ reference to each child in one of its fields. `Obj.setParent` sets the link, and
 - If you serialize an object and read it back, it keeps its id, type, metadata and references.
   <SpecCite item="org.dxos.echo#F-3.4" />
 - Removing an object marks it as deleted. The object stays in the change history until the next
-  [epoch](/docs/additional-resources/glossary#epoch), so a peer that wrote while offline can still merge its changes.
+  [epoch](/docs/echo/resources/glossary#epoch), so a peer that wrote while offline can still merge its changes.
 
   To remove an object, pass it to `db.remove`:
 

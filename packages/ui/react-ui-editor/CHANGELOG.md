@@ -1,5 +1,79 @@
 # @dxos/react-ui-editor
 
+## 0.17.0
+
+### Minor Changes
+
+- f37ae92: The arrow keys stop on an embedded block instead of skipping it. A selected embed has focus, attention and a focus ring. Enter goes into it, Escape from inside selects it again, and Escape on the selection returns to the line after it, or before it when none follows. From a selected embed, the arrows go on to the text or the next embed, Alt+Up and Alt+Down move it, and Backspace or Delete removes it. An embed renders its content in `Editor.BlockFrame`, which takes the focus, draws the ring and answers these keys through `handleBlockWidgetKey`. plugin-markdown contributes its object links and embeds as `MarkdownCapabilities.ObjectEmbeds`. A spec's editor draws them and takes every `MarkdownCapabilities.ExtensionProvider` through `ProjectHooks.useSpecExtensions`, so an embed is the same in a spec and in a Markdown document, and a spec gets what other plugins add to Markdown, such as diagrams.
+- 9f2cacf: A spec's text is the only store for its blocks. plugin-projects draws each block of a kind its dialects define as a form over that kind's schema, offers a slash command per kind, and reads and writes blocks with `ProjectOperation.GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock`. The Specs tab's spec picker nests a spec beneath the specs whose `Ref<spec>` fields cite it. In plugin-code a feature is a `feat` block: the board and the feature companion read the blocks through `ProjectHooks.useSpecBlocks`, and tasks and showcases name a feature by its block key through `SpecItem.Implements` and `Showcase.Demonstrates` with `item`. A migration folds existing feature objects into their specs' text.
+
+  The Specs tab has one toolbar, and every Markdown editor's toolbar groups its tools into Format and Insert, which show their buttons while there is room and fold into menus before anything moves into ⋮. A guided tour step opens the folded group that holds its control. Shared form and picker parts gained what the block forms use: inline labels, header grids, typed array rows, lookups of several values, option details and hues.
+
+  Breaking:
+
+  - plugin-code's feature operations (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `GetFeatures`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`) are removed. Use the block operations, `CodeOperation.CreateSpec` with `breaks`, `UpdateSpec`, `LinkTask` and `CreateShowcase` with `items`.
+  - The feature embeds, `/feature`, the feature article and the spec codec are removed; a spec syncs with its file as text.
+  - `@feature` code links are no longer stored on features.
+  - A read-only Boolean form field is no longer dimmed, and a `Select` shown as a tag is filled in its option's hue.
+
+### Patch Changes
+
+- df16fba: Popups (menus, selects, comboboxes, popovers) no longer draw a focus ring; the highlighted item shows where focus is. In the chat prompt, the placeholder is shortened to "/ for skills, @ for content", "Add an object" is renamed "Add object", and switching between the tasks and context drawers closes the open drawer before the other opens. The search and add-to-collection dialogs keep their input's inner padding. The prompt's command completions render as a react-ui-list Listbox in a popover above the editor, at most 8 rows tall, whose arrow keys stop at the first and last command instead of wrapping; Escape closes it and leaves focus in the editor. An editor no longer moves focus to its host on an Escape CodeMirror already acted on.
+
+  A polyline locked while its vertices are being edited loses its vertex handles, Delete no longer removes a vertex from it, and a vertex drag the lock lands in the middle of neither previews nor commits a change.
+
+- b8e76f9: Peers' avatars now act on what they view. Clicking an avatar opens the object's viewers with that row highlighted, each with Go to (open the object where the peer has it open in the tree, such as under a collection) or Jump (reveal the peer's selection or viewport, once the object is open). A peer with the object open in several tabs or on several devices is one row whose Jump goes to the session that moved last; a toggle in the list's toolbar lists their sessions under it, each named by its device ("Chrome on macOS"), with a dot for whether it moved in the last minute. A "See everyone in this space" button opens a Members companion listing every online peer by the object they view. Revealing an anchor moved from `CommentConfig.scrollToAnchor` to a per-type `AppCapabilities.Locator`, and `LayoutOperation.ScrollIntoView` drops `cursor`. New devices no longer get a placeholder label, and `getDeviceLabel` (from `@dxos/client/halo`) treats the old placeholders as no label, so devices are named from their platform and OS. A graph node that leaves and comes back, such as a peer who visits Settings, is expanded again, so its row keeps Go to and Jump. Jump goes to a peer's caret only once they have placed one, otherwise to the top of their viewport, and the avatars open the viewers list from the keyboard too.
+- 9864a15: When the Default spec view setting is unset, a spec now opens on its source rather than its forms. The source shows each feature and requirement by its label (`F-3`, `F-3.2`), as the forms do, in place of the random key the text stores. A key can no longer be edited there, but a label can be selected on its own, and copying it copies the label. Enter at the end of a requirement starts the next one under a fresh key, ready for its text, and Backspace on an empty requirement removes it. A reference field such as `depends` shows the label of the item it names. The editor's view menu now names its views Preview, Source and Read only, where Preview was labelled Markdown and Source was labelled Plain text; the projects plugin's Default spec view setting uses the same names.
+- Updated dependencies [caa28b3]
+- Updated dependencies [cb058b9]
+- Updated dependencies [73ed632]
+- Updated dependencies [df16fba]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [2176f79]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [b15e5c3]
+- Updated dependencies [17a9e75]
+- Updated dependencies [09d8716]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [0ad95b7]
+- Updated dependencies [7da5d17]
+- Updated dependencies [4be51c3]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [3d22d48]
+- Updated dependencies [7e07e49]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [a8e68c5]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [d00cc85]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

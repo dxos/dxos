@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -88,14 +89,27 @@ export const formatSystemPrompt = ({
     );
 
     const objectDefs = formatObjects(objects);
+    const currentDate = formatCurrentDate(yield* DateTime.now);
 
     return yield* Function.pipe(
       Effect.succeed(
-        [system, instructionDefs, skillDefs, objectDefs].filter((def): def is string => def !== undefined),
+        [system, instructionDefs, skillDefs, objectDefs, currentDate].filter((def): def is string => def !== undefined),
       ),
       Effect.map((parts) => parts.join('\n\n')),
     );
   }).pipe(Effect.withSpan('formatSystemPrompt'));
+
+/**
+ * Today's date as the system prompt ends with it, under `## Current Date`: given none, a model resolves a date without
+ * a year against its training data and writes a past year. The day in UTC, not the time, so the system prompt, and with
+ * it the prompt cache, changes once a day rather than on every call.
+ */
+const formatCurrentDate = (now: DateTime.DateTime): string =>
+  [
+    '## Current Date',
+    `Today is ${DateTime.formatUtc(now, { weekday: 'long', locale: 'en-US' })}, ${DateTime.formatIsoDateUtc(now)} (UTC). ` +
+      'Use it to resolve relative dates and dates given without a year.',
+  ].join('\n\n');
 
 /**
  * The context objects as the system prompt carries them, under `## Context Objects`; `undefined` for none.

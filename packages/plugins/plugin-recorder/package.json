@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-recorder",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "Record a presentation's voice-over from its speaker notes.",
   "homepage": "https://dxos.org",

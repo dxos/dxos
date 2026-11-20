@@ -1,6 +1,6 @@
 {
   "name": "@dxos/animation",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Renderer-neutral animation core: timelines, interpolation, the clock, scripts and the effect runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

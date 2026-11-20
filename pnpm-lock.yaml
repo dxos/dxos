@@ -5156,16 +5156,10 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      lodash.defaultsdeep:
-        specifier: 'catalog:'
-        version: 4.6.1
     devDependencies:
       '@opentelemetry/sdk-trace-base':
         specifier: 'catalog:'
         version: 2.11.0(@opentelemetry/api@1.9.1)
-      '@types/lodash.defaultsdeep':
-        specifier: 'catalog:'
-        version: 4.6.7
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -10266,6 +10260,9 @@ importers:
       '@dxos/react-ui-rdf':
         specifier: workspace:*
         version: link:../../ui/react-ui-rdf
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/scene':
         specifier: workspace:*
         version: link:../../common/scene
@@ -18931,6 +18928,12 @@ importers:
         specifier: 'catalog:'
         version: 1.3.0
     devDependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
