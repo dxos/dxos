@@ -100,7 +100,7 @@ export const useSheetFitWidth = (
   const [cells] = useObject(model.sheet, 'cells');
   // Formula results arrive from the engine without changing `cells`.
   const [computed, setComputed] = useState(0);
-  useEffect(() => model.graph.update.on(() => setComputed((count) => count + 1)), [model]);
+  useEffect(() => (grid ? model.graph.update.on(() => setComputed((count) => count + 1)) : undefined), [grid, model]);
   const widths = useMemo(() => {
     if (!grid) {
       return undefined;

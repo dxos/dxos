@@ -96,7 +96,10 @@ export const Narrow: Story = {
     await waitFor(async () => {
       const cells = box.querySelectorAll('[data-dx-grid-plane="frozenRowsStart"] [aria-colindex]');
       await expect(cells.length).toBe(1);
-      await expect(cells[0].getBoundingClientRect().right).toBeLessThanOrEqual(box.getBoundingClientRect().right + 1);
+      const cell = cells[0].getBoundingClientRect();
+      const bounds = box.getBoundingClientRect();
+      await expect(Math.abs(cell.left - bounds.left)).toBeLessThanOrEqual(2);
+      await expect(Math.abs(cell.right - bounds.right)).toBeLessThanOrEqual(2);
     });
   },
 };
