@@ -467,6 +467,7 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
                       spaceId={state.spaceId}
                       layout={layoutOf(index)}
                       ready={seeded && state.joined[index]}
+                      status={state.joined[index] ? 'Loading' : 'Connecting'}
                       Wrapper={props.Wrapper}
                       Story={Story}
                     />
@@ -529,12 +530,26 @@ type PeerAppProps = {
   layout?: ModuleLayout;
   /** Whether the peer has the space and the story its layout; until then the app boots behind a placeholder. */
   ready: boolean;
+  /** The word the placeholder shows until the story mounts. */
+  status: string;
   Wrapper?: FC<PropsWithChildren>;
   Story: FC;
 };
 
-const PeerApp = ({ id, client, plugins, setupEvents, spaceId, layout, ready, Wrapper, Story }: PeerAppProps) => {
+const PeerApp = ({
+  id,
+  client,
+  plugins,
+  setupEvents,
+  spaceId,
+  layout,
+  ready,
+  status,
+  Wrapper,
+  Story,
+}: PeerAppProps) => {
   const [layoutAtom] = useState(() => Atom.make<ModuleLayout | undefined>(undefined));
+  const [mounted, setMounted] = useState(false);
   const options = useMemo<WithPluginManagerOptions>(
     () => ({
       setupEvents,
@@ -551,23 +566,38 @@ const PeerApp = ({ id, client, plugins, setupEvents, spaceId, layout, ready, Wra
     [client],
   );
 
+  // The placeholder sits outside the plugin app, which renders nothing until it has booted.
   return (
-    <AppPluginManagerHost id={id} options={options}>
-      <StorySpaceProvider value={spaceId}>
-        <PublishLayout atom={layoutAtom} layout={layout} />
-        {!ready ? (
-          <div className='dx-cover grid place-items-center text-description'>Connecting…</div>
-        ) : Wrapper ? (
-          <Wrapper>
+    <>
+      <AppPluginManagerHost id={id} options={options}>
+        <StorySpaceProvider value={spaceId}>
+          <PublishLayout atom={layoutAtom} layout={layout} />
+          {ready && <OnMount onMount={() => setMounted(true)} />}
+          {!ready ? null : Wrapper ? (
+            <Wrapper>
+              <Story />
+            </Wrapper>
+          ) : (
             <Story />
-          </Wrapper>
-        ) : (
-          <Story />
-        )}
-      </StorySpaceProvider>
-    </AppPluginManagerHost>
+          )}
+        </StorySpaceProvider>
+      </AppPluginManagerHost>
+      {!(ready && mounted) && <StatusCover status={status} />}
+    </>
   );
 };
+
+const OnMount = ({ onMount }: { onMount: () => void }) => {
+  useEffect(onMount, []);
+  return null;
+};
+
+/** A one-word state, centered over a pane that has nothing to show yet. */
+const StatusCover = ({ status }: { status: string }) => (
+  <div role='status' className='dx-cover grid place-items-center text-description bg-base-surface'>
+    {status}…
+  </div>
+);
 
 const PublishLayout = ({ atom, layout }: { atom: Atom.Writable<ModuleLayout | undefined>; layout?: ModuleLayout }) => {
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);

@@ -6,6 +6,7 @@
 
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import { type PropsWithChildren, createContext, createElement, useContext } from 'react';
 
@@ -145,12 +146,14 @@ export class Runtime {
       yield* Effect.promise(() =>
         client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: peer.name, data: { hue: peer.hue } })),
       );
-      yield* AppSpace.setupIdentitySpaces(client);
+      // The shared space does not need the profile's own spaces, so they are created alongside it and awaited before ready.
+      const identitySpaces = yield* Effect.forkChild(AppSpace.setupIdentitySpaces(client));
 
       // The other peers join while the first seeds, and receive the content as it is written.
       if (index === 0) {
         const space = yield* Effect.promise(() => client.spaces.create({ name: title }));
         yield* Effect.promise(() => space.waitUntilReady());
+        yield* Fiber.join(identitySpaces);
         runtime.#update({ spaceId: space.id });
         runtime.#ready(index, space);
         runtime.#host.wake(space);
@@ -159,6 +162,7 @@ export class Runtime {
         yield* Effect.promise(() => Promise.all(performInvitation({ host, guest: client.spaces })));
         const space = yield* Effect.promise(() => listed(client, host.id));
         yield* Effect.promise(() => space.waitUntilReady());
+        yield* Fiber.join(identitySpaces);
         runtime.#ready(index, space);
       }
     });

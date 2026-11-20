@@ -3649,8 +3649,8 @@ feat F-7: Relationship to dxos.org
 
   req F-7.6:
     when: a reader opens `/echo`
-    then: the demos start as the page loads, and each shows its content as soon as that content is in the space,
-          without waiting for the other demos
+    then: the selected demo starts as the page loads, and each other demo starts when its tab is first selected;
+          each shows its content as soon as that content is in the space, without waiting for the other demos
 
   req F-7.7:
     when: a reader is on `/echo`
@@ -3660,7 +3660,8 @@ feat F-7: Relationship to dxos.org
   req F-7.8:
     when: a reader reaches a demo on `/echo` before it has loaded
     then: the demo's place shows a placeholder of the demo's size that says it is loading, so the page does not
-          shift when the demo arrives
+          shift when the demo arrives; until a peer shows content, its pane shows one word for its state, such as
+          Connecting…, centered, so it never looks blank
 
   req F-7.9:
     when: a reader is on `/echo`
@@ -3680,8 +3681,8 @@ feat F-7: Relationship to dxos.org
 
   req F-7.12:
     when: a reader opens `/echo`
-    then: every demo shows its content on every peer no later than the shared-runtime demos did (a median of
-          7.8 s on a local production build), measured over the whole page rather than per demo
+    then: the first demo shows its content on every peer within 5 s on a local production build; the second
+          peer may show it after the first
 ```
 
 ```mdl
@@ -7209,6 +7210,16 @@ decision D-372: PLEX's Resources has an Examples page listing Composer, drawing.
   date: 2026-11-20
   by: user:wittjosiah
   affects: [plex-examples]
+```
+
+```mdl
+decision D-373: On `/echo` only the selected demo boots as the page loads; another demo boots when its tab is first selected, and stays mounted after. Each peer creates its own default and settings spaces alongside the shared space instead of before it. Until a peer shows content, its pane shows Connecting… over the booting app. The editor demo shows content on both peers in about 4.4 s on a local production build, down from 7 s. Amends [D-222], whose demos all started at load.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [F-7.6, F-7.8, F-7.12]
+  why: Data took 10 s or more to show up in the demos, and the panes looked blank and broken while it loaded.
+  rejected:
+    - Booting every demo at load, which D-222 chose so a tab switch is instant; the hidden demos' eight plugin apps and the canvas seed held the shown demo back by seconds.
 ```
 
 ## Appendix: Extension Definitions

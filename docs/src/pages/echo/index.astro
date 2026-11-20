@@ -231,7 +231,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
               data-panel={id}
               data-active={index === 0 ? '' : undefined}
             >
-              <StoryDemo id={id} client:only="react">
+              <StoryDemo id={id} lazy client:only="react">
                 <div slot="fallback" class="echo-demo-loading" role="status">
                   <span class="echo-demo-spinner" aria-hidden="true" />
                   Loading live demo…
