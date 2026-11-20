@@ -7,17 +7,16 @@ layout: 'default'
 
 ## Today
 
-- Cloudflare has the right architecture for Services
-- Cloudflare has the right architecture for Agents
+- Cloudflare has the right architecture for Agents and Services.
 
 ## Beyond SAAS
 
 <v-clicks>
 
-- Cloudflare `OS` becomes the most capable agent harness and runtime
-- Cloudflare `ECHO` becomes the most capable and most trusted agentic memory
-- Cloudflare `PLEX` becomes the complete Enterprise AI Stack
-- Cloudflare becomes the global OpenSource registry for SAAS modules and services
+- Cloudflare `OS` becomes the most capable agent harness and runtime.
+- Cloudflare `ECHO` becomes the data model and shared context for teams and agents.
+- Cloudflare `PLEX` becomes the new Enterprise Application Stack.
+- Cloudflare becomes the global OpenSource registry for SAAS apps and services.
 
 </v-clicks>
 
