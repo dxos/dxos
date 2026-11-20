@@ -21,12 +21,11 @@ const narrative = NARRATIVES[id];
 <script>
   import { DEMO_READY } from '../demos/frames.ts';
 
-  // A frame shares the page's main thread, so its demos load one at a time, each once the one before it shows its
-  // content: the one in view first, then the rest in page order. A demo scrolled into view loads at once unless the
-  // one loading is in view too.
-  const TURN_TIMEOUT = 20_000;
+  // A frame shares the page's main thread, so the demo most in view loads alone; once it shows its content, the rest
+  // load together, since they overlap their network waits. A demo scrolled into view before then loads at once unless
+  // the one loading is in view too.
+  const FIRST_TIMEOUT = 20_000;
   const waiting = [...document.querySelectorAll<HTMLIFrameElement>('.demo-embed > iframe[data-src]')];
-  const loading = new Set<HTMLIFrameElement>();
   /** How much of the frame's height is in view. */
   const shown = (frame: HTMLIFrameElement) => {
     const rect = frame.getBoundingClientRect();
@@ -34,44 +33,43 @@ const narrative = NARRATIVES[id];
   };
   const inView = (frame: HTMLIFrameElement) => shown(frame) > 0;
   const mostInView = () => [...waiting].sort((a, b) => shown(b) - shown(a))[0];
-  const idle = (callback: () => void) =>
-    typeof requestIdleCallback === 'function' ? requestIdleCallback(callback, { timeout: 2_000 }) : setTimeout(callback, 200);
 
   const load = (frame: HTMLIFrameElement) => {
     waiting.splice(waiting.indexOf(frame), 1);
-    loading.add(frame);
-    const release = () => {
-      clearTimeout(timeout);
-      window.removeEventListener('message', onReady);
-      if (loading.delete(frame)) {
-        // The frame reports on mount, before it paints; let that finish first.
-        idle(next);
-      }
-    };
-    const onReady = (event: MessageEvent) => {
-      if (event.source === frame.contentWindow && event.data?.type === DEMO_READY) {
-        release();
-      }
-    };
-    const timeout = setTimeout(release, TURN_TIMEOUT);
-    window.addEventListener('message', onReady);
     frame.addEventListener('load', () => frame.closest('.demo-embed')?.removeAttribute('role'), { once: true });
     frame.src = frame.dataset.src!;
   };
 
-  const next = () => {
-    if (loading.size === 0 && waiting.length > 0) {
-      load(waiting.some(inView) ? mostInView() : waiting[0]);
+  const loadRest = () => {
+    observer.disconnect();
+    window.removeEventListener('message', onReady);
+    clearTimeout(timeout);
+    [...waiting].forEach(load);
+  };
+  // The frame reports on mount, before it paints; let that finish first.
+  const afterPaint = () =>
+    typeof requestIdleCallback === 'function'
+      ? requestIdleCallback(loadRest, { timeout: 2_000 })
+      : setTimeout(loadRest, 200);
+  const onReady = (event: MessageEvent) => {
+    if (event.source === first?.contentWindow && event.data?.type === DEMO_READY) {
+      afterPaint();
     }
   };
 
   const observer = new IntersectionObserver(() => {
-    if (waiting.some(inView) && ![...loading].some(inView)) {
+    if (first && !inView(first) && waiting.some(inView)) {
       load(mostInView());
     }
   });
   waiting.forEach((frame) => observer.observe(frame));
-  next();
+
+  const first = waiting.length > 0 ? (waiting.some(inView) ? mostInView() : waiting[0]) : undefined;
+  const timeout = setTimeout(loadRest, FIRST_TIMEOUT);
+  window.addEventListener('message', onReady);
+  if (first) {
+    load(first);
+  }
 </script>
 
 <style>

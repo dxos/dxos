@@ -3674,8 +3674,8 @@ feat F-7: Relationship to dxos.org
     then: it shows the four demos from `/echo` under What you can build, each with a narrative about the
           plugins that render it: which plugins load, what each contributes, and how they share the objects
           without importing each other; each demo runs on its own page in an iframe, so its styles stay off
-          the docs page; the demo frames load one at a time, the one most in view first and the rest in page order,
-          each once the one before it shows its content, so the demo the reader reaches first shows it within 5 s
+          the docs page; the demo frame most in view loads alone and the rest load together once it shows its
+          content, so the demo the reader reaches first shows it within 5 s
 
   req F-7.11:
     when: a reader comes back to a page with demos after its tab has been in the background
@@ -7226,13 +7226,14 @@ decision D-373: On `/echo` only the selected demo boots as the page loads. The o
 ```
 
 ```mdl
-decision D-374: A docs page with demo frames loads them one at a time: the frame most in view first, then the rest in page order, each once the one before it reports that it shows on every peer, or after 20 s. A frame scrolled into view loads at once unless the one loading is in view too. Each frame says Loading live demo… until its demo starts. On the PLEX Overview the first demo shows its content in about 4.4 s on a local production build, down from 13 s.
+decision D-374: A docs page with demo frames loads the frame most in view alone, and the rest together once it reports that it shows on every peer, or after 20 s. A frame scrolled into view before then loads at once unless the one loading is in view too. Each frame says Loading live demo… until its demo starts. On the PLEX Overview the first demo shows its content in about 4.4 s on a local production build, down from 13 s.
   date: 2026-11-20
   by: user:wittjosiah
   affects: [F-7.10]
   why: The four frames booted together on one main thread and each took 13 s or more.
   rejected:
     - One queue shared by the frames from inside them; each frame still loaded and evaluated its whole bundle while it waited, which kept the first demo at 9 s.
+    - Loading every frame one at a time; on a real network a frame spends much of its boot waiting on chunk round trips, so the fourth demo finished at 21 s, against 11 s with all four together.
 ```
 
 ## Appendix: Extension Definitions
