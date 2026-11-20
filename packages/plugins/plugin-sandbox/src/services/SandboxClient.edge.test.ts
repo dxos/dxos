@@ -63,8 +63,7 @@ describe.skipIf(!EDGE_URL)('SandboxClient against a deployed EDGE', { timeout: 5
         const processId = yield* client.startProcess(spaceId, sandboxId, {
           command: 'while read -r line; do echo "got:$line"; done',
         });
-        yield* client.writeStdin(spaceId, sandboxId, processId, 'one\n');
-        yield* client.writeStdin(spaceId, sandboxId, processId, 'two\n');
+        yield* client.writeStdin(spaceId, sandboxId, processId, Stream.make('one\n', 'two\n'));
         const read = yield* client.processOutput(spaceId, sandboxId, processId).pipe(
           Stream.filter((event) => event.type === 'stdout'),
           Stream.scan(
@@ -75,7 +74,7 @@ describe.skipIf(!EDGE_URL)('SandboxClient against a deployed EDGE', { timeout: 5
           Stream.runLast,
         );
         // A reader that comes back later skips what it already read.
-        yield* client.writeStdin(spaceId, sandboxId, processId, 'three\n');
+        yield* client.writeStdin(spaceId, sandboxId, processId, Stream.make('three\n'));
         const resumed = yield* client
           .processOutput(spaceId, sandboxId, processId, { stdout: 'got:one\ngot:two\n'.length })
           .pipe(

@@ -35,7 +35,7 @@ const fakeJob = () => {
       // A running job's output never ends on its own.
       return Stream.concat(Stream.fromIterable(events), Stream.never);
     },
-    write: (data) => Effect.sync(() => void written.push(data)),
+    stdin: (input) => Stream.runForEach(input, (data) => Effect.sync(() => void written.push(data))),
     state: () => Effect.succeed({ status: 'running' }),
     terminate: () => Effect.succeed({ status: 'killed' }),
   };

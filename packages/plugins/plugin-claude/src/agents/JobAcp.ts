@@ -57,7 +57,7 @@ export const request = (
   params: unknown,
 ): Effect.Effect<{ cursor: Cursor; id: number }, SandboxService.SandboxError> => {
   const id = cursor.nextId;
-  return job.write(line({ jsonrpc: '2.0', id, method, params })).pipe(
+  return job.stdin(Stream.make(line({ jsonrpc: '2.0', id, method, params }))).pipe(
     Effect.as({
       id,
       cursor: { ...cursor, nextId: id + 1, pending: { ...cursor.pending, [String(id)]: method } },
@@ -69,14 +69,14 @@ export const notify = (
   job: SandboxService.Job,
   method: string,
   params: unknown,
-): Effect.Effect<void, SandboxService.SandboxError> => job.write(line({ jsonrpc: '2.0', method, params }));
+): Effect.Effect<void, SandboxService.SandboxError> => job.stdin(Stream.make(line({ jsonrpc: '2.0', method, params })));
 
 /** Answers a request the agent sent. */
 export const respond = (
   job: SandboxService.Job,
   id: number | string,
   result: unknown,
-): Effect.Effect<void, SandboxService.SandboxError> => job.write(line({ jsonrpc: '2.0', id, result }));
+): Effect.Effect<void, SandboxService.SandboxError> => job.stdin(Stream.make(line({ jsonrpc: '2.0', id, result })));
 
 /**
  * Reads what the job wrote since `cursor`, for at most `wait`: a job that is still running never ends
