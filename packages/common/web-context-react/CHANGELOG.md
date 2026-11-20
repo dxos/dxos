@@ -1,5 +1,11 @@
 # @dxos/web-context-react
 
+## 0.17.0
+
+### Patch Changes
+
+- @dxos/web-context@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

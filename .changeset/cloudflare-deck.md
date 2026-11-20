@@ -1,5 +1,4 @@
 ---
-# multiple-changesets: slide-grid-flow.md is the entry of PR #14623, merged in here
 '@dxos/plugin-debug': patch
 ---
 

@@ -43,9 +43,9 @@ mkdir -p .dxos && g=https://raw.githubusercontent.com/dxos/dxos/<commit7>/docs/s
 curl -fsSL $g/plex/publishing-plugins.md -o .dxos/guide.md || curl -fsSL $g/composer/publishing-plugins.md -o .dxos/guide.md
 ```
 
-A new plugin starts from the guide's "Example: a plugin with its own navtree group"; read the
-"Things to know" list after it before writing code. In an existing plugin, change only the
-dependency pins.
+A new plugin starts from this section of the guide:
+"Example: a plugin with its own group in the navigation tree". Read the "Things to know" list after
+it before writing code. In an existing plugin, change only the dependency pins.
 
 Pin `package.json`:
 

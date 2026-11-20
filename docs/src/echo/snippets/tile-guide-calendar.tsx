@@ -6,15 +6,29 @@ import React, { useRef, useState } from 'react';
 
 import { Calendar, type CalendarEvent } from '@dxos/react-ui-calendar';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Typography from '@dxos/react-ui/Typography';
 
 // #region picker
 /** A date picker: the grid scrolls through weeks, and the toolbar names the month in view. */
-export const MonthPicker = () => (
-  <Calendar.Root>
-    <Calendar.Toolbar />
-    <Calendar.Grid rows={6} />
-  </Calendar.Root>
-);
+export const MonthPicker = () => {
+  const [picked, setPicked] = useState('Click a day, or drag across days.');
+
+  return (
+    <Calendar.Root>
+      <Calendar.Toolbar />
+      <Calendar.Grid
+        rows={6}
+        onSelect={({ date }) => setPicked(date.toDateString())}
+        onSelectRange={({ range }) =>
+          setPicked(
+            `${range.from.toDateString()} to ${range.to.toDateString()}`,
+          )
+        }
+      />
+      <Typography.Text tone='muted'>{picked}</Typography.Text>
+    </Calendar.Root>
+  );
+};
 // #endregion
 
 // #region week

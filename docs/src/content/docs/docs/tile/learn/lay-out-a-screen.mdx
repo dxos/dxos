@@ -1,6 +1,6 @@
 ---
 title: Lay out a screen
-description: A list of contacts beside a detail panel, under a toolbar.
+description: A list of contacts beside a detail column, under a toolbar.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
@@ -10,23 +10,31 @@ import TilePreview from '../../../../../components/TilePreview.astro';
 By the end of this page the app shows a toolbar over two columns: the contacts on the left, and the selected contact's
 details on the right.
 
-## Before you start
+## Background
 
-TILE lays out a screen with a few primitives that own their spacing, so you rarely write padding or flex classes:
+Built by hand, this screen is nested flex and grid boxes, each with its own padding and gap. TILE lays out a screen
+with a few components that own their spacing, so we rarely write padding or flex classes:
 
-- `Panel` is a frame with a header, a body that takes the remaining height, and an optional footer.
-- `Toolbar` is a row of controls and text.
-- `Layout.Grid` and `Layout.Flex` place their children in tracks or a row, with gaps from the theme's scale.
-- `ScrollArea` scrolls its content with the theme's scrollbar.
+- `Panel` is a frame with a header, a body that takes the remaining height, and an optional footer. Use it as the
+  outer shell of a screen. Step 4 puts the screen in one.
+- `Toolbar` is a row of controls and text. Use it in a panel's header.
+- `Layout.Grid` places its children in tracks, and `Layout.Flex` places them in a row or a stack. Both take their
+  gaps from the theme's scale. Use `Layout.Grid` when one track has a fixed size, as the list's column does in step 4.
+- `ScrollArea` scrolls its content with the theme's scrollbar. Use it around content that can grow taller than its
+  column, as the detail does in step 3.
 
-[Layout](/docs/tile/concepts/layout/) explains how they fit together.
+[Layout](/docs/tile/concepts/layout/) explains how a panel passes its height down to the part that scrolls.
+
+## Steps
 
 <Steps>
 
-1. **Add the data.** The contacts live in React state until the last page. Put their type and the starting list in
+1. **Add the data.** We keep the contacts in React state until the last page. Put their type and the starting list in
    `src/contacts.ts`:
 
    <Snippet file="tile-tutorial/contacts" region="contact" lang="ts" />
+
+   `ROLES` has the shape a `Select` takes for its options. The next page uses it.
 
 2. **List the contacts.** `Listbox` draws one row per item, with the label and a second line from `description`. It
    handles selection, arrow keys and typeahead. `Listbox.Viewport` makes the list scroll inside its column. Add
@@ -34,16 +42,23 @@ TILE lays out a screen with a few primitives that own their spacing, so you rare
 
    <Snippet file="tile-tutorial/layout/ContactsScreen" region="list" lang="tsx" />
 
-3. **Show the selected contact.** `Typography.Text` with `tone='muted'` reads as secondary text. When nothing is
+   `value` is a list, because a listbox can allow several selections, so `onValueChange` takes the first id.
+
+3. **Show the selected contact.** `Typography.Text` with `tone='muted'` reads as secondary text. When no contact is
    selected, `Status.Empty` shows an icon and a hint in the middle of the column:
 
    <Snippet file="tile-tutorial/layout/ContactsScreen" region="detail" lang="tsx" />
 
-4. **Put them in a panel.** The toolbar goes in `Panel.Header`. `Panel.Body asChild` makes the grid itself the body,
-   so the grid fills the height under the toolbar. `cols={['16rem', 'fill']}` gives the list a fixed width and the
-   detail the rest:
+   Nothing on this page clears the selection, so we don't see the hint yet. It first shows in
+   [Icons and translations](/docs/tile/learn/icons-and-translations/), after a delete.
+
+4. **Put them in a panel.** The toolbar goes in `Panel.Header`. `cols={['16rem', 'fill']}` gives the list a fixed
+   width and the detail the rest:
 
    <Snippet file="tile-tutorial/layout/ContactsScreen" region="screen" lang="tsx" />
+
+   `Panel.Body asChild` makes the grid itself the body, so the grid fills the height under the toolbar and no extra
+   element sits between them.
 
 5. **Render the screen.** In `src/main.tsx`, render `<ContactsScreen />` in place of `<App />`, imported from
    `./layout/ContactsScreen.tsx`. Give it the window's height in `index.html`, so the panel fills it:

@@ -23,7 +23,7 @@ DXOS is also the home of [Composer](https://composer.space) — an extensible ID
 
 - [🔩 SDK Intro](https://docs.dxos.org/)
 - [🔧 Composer Intro](https://docs.dxos.org/composer/introduction/)
-- [📚 API Reference](https://docs.dxos.org/additional-resources/api-reference/)
+- [📚 API Reference](https://dxos.org/docs/echo/resources/api-reference/)
 - [💻 Repository Guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md)
 
 ## DXOS Resources

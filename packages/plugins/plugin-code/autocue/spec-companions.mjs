@@ -120,7 +120,7 @@ const openView = async (demo, page, id, label, ready) => {
 const waitForRelated = (page, id) =>
   page.locator(`${RELATED}[data-definition="${id}"]`).waitFor({ state: 'visible', timeout: 10_000 });
 
-/** Picks the Specs tab's view: `Plain text` is the spec's text, `Markdown` a form per block. */
+/** Picks the Specs tab's view: `Source` is the spec's text, `Preview` a form per block. */
 const setView = async (page, label, demo) => {
   const click = (selector, label) => (demo ? demo.click({ selector, label }) : page.locator(selector).first().click());
   await click(VIEW_MODE, 'Editor view');
@@ -128,7 +128,7 @@ const setView = async (page, label, demo) => {
   await page
     .locator(FORMS)
     .first()
-    .waitFor({ state: label === 'Plain text' ? 'detached' : 'visible', timeout: 10_000 });
+    .waitFor({ state: label === 'Source' ? 'detached' : 'visible', timeout: 10_000 });
 };
 
 /**
@@ -396,7 +396,7 @@ export const steps = [
         composer.invoke('org.dxos.operation.deck.updatePlankSize', { id: 'companion', size: 62 }),
       );
       await pickSpec(page, CODE_SPEC);
-      await setView(page, 'Plain text');
+      await setView(page, 'Source');
       await page.locator(EDITOR).first().click();
       await page.keyboard.press('ControlOrMeta+Home');
       await page.waitForTimeout(2_000);
@@ -407,7 +407,7 @@ export const steps = [
     narration: "The spec starts as text: plugin-code's own PLUGIN.mdl, its blocks written in MDL.",
     run: async ({ demo, page }) => {
       await demo.title({ value: 'A spec, as text and as forms', subtitle: 'Then its companion tabs' });
-      await caption(demo, 1, 'Plain text: the spec as written, in MDL');
+      await caption(demo, 1, 'Source: the spec as written, in MDL');
       await demo.sleep({ ms: LOOK });
       await glide(page, 700);
       await demo.sleep({ ms: LOOK });
@@ -419,7 +419,7 @@ export const steps = [
     narration: 'The Markdown view draws each block as a form over a schema generated from its kind.',
     run: async ({ demo, page }) => {
       await caption(demo, 2, 'Markdown view: the same spec, a form per block');
-      await setView(page, 'Markdown', demo);
+      await setView(page, 'Preview', demo);
       await demo.sleep({ ms: LOOK });
     },
   },

@@ -12,53 +12,96 @@ import Snippet from '../../../../../components/Snippet.astro';
 import { Type } from '@dxos/echo';
 ```
 
-A type names a kind of entity and fixes its fields. You declare one at module scope as a class, and that class is both
-the runtime schema and the TypeScript type of its instances. Every type carries a DXN with a typename and a version, so
-two peers agree on what an object is without sharing code.
+A type names a kind of object or relation and fixes its fields. You declare one at module scope as a class, and that
+class is both the runtime schema and the TypeScript type of its instances.
+
+Every type carries a DXN, made of a typename and a version. Two peers that share no code can use it to agree on what
+an object is.
 
 ## Declare an object type
 
-`makeObject` takes the DXN first, then the fields. The optional second argument pipes annotations onto the schema, here
-the field that labels an object in lists.
+`Type.makeObject` takes the DXN first, then the fields. Use it for each kind of record your app stores. The optional
+second argument pipes annotations onto the schema.
+
+**Example** (Declaring a project type with a label)
 
 <Snippet file="guide-type" region="object" />
+
+`Annotation.LabelAnnotation.set` is that second argument. It names `name` as the field that labels a `Project` in
+lists.
 
 The last segment of the typename must be camelCase. A typename such as `com.example.type.works-at` fails to compile.
 
 ## Declare a relation type
 
-A relation type also names the types of its two endpoints. [Relation](/docs/echo/api/relation/) covers making
-instances.
+`Type.makeRelation` declares a relation type. Use it when a link between two objects has fields of its own. A
+relation type also names the types of its two endpoints.
+
+**Example** (Declaring a relation from a person to an organization)
 
 <Snippet file="works-at" region="relation" />
 
+`WorksAt` runs from a `Person` to an `Organization`, and the declaration fixes both. `Relation.getSource` and
+`Relation.getTarget` return values of those two types.
+
+See [Relation](/docs/echo/api/relation/) for making instances.
+
 ## Convert to and from JSON Schema
 
-The `JsonSchema` module converts a type's schema to JSON Schema and back. `Type.makeObjectFromJsonSchema` builds a type
-from JSON Schema, for a type that comes from a form, an agent or another system.
+The `JsonSchema` namespace converts a type's schema to JSON Schema and back.
+
+`Type.makeObjectFromJsonSchema` builds a type from JSON Schema. Use it when the type comes from a form, an agent or
+another system.
+
+**Example** (Converting a type to JSON Schema, and building one from it)
 
 <Snippet file="guide-type" region="json-schema" />
 
+`JsonSchema.toJsonSchema` takes a schema and not a type, so `Type.getSchema` comes first. `Note` goes the other way,
+and it has no class behind it.
+
 ## Change fields at runtime
 
-A type stored in a space with `db.addType` can gain and lose fields after it exists; the change replicates like any
-write. The functions throw for a type that is not stored. Objects already made from the type keep their data. Use a new
-version and a [migration](/docs/echo/concepts/types/#versions-and-migrations) instead when old objects need converting.
+A type stored in a space with `db.addType` can gain and lose fields after it exists, and a field can get a new
+declaration. The change replicates like any write.
+
+- `Type.addFields` adds fields.
+- `Type.updateFields` replaces the declaration of fields the type already has.
+- `Type.removeFields` takes fields away.
+
+All three throw for a type that is not stored. Objects already made from the type keep their data. When old objects
+need converting, use a new version and a [migration](/docs/echo/concepts/types/#versions-and-migrations) instead.
+
+**Example** (Adding a field to a stored type, changing it and removing it)
 
 <Snippet file="guide-type" region="fields" />
 
+`note` is the stored type that `db.addType` returns, and all three calls take it. `Note` itself is not stored, so
+passing it would throw.
+
 ## Inspect a type
 
-These read the identity and schema of a type, which is what an agent or a generic UI works from.
+`Type.getTypename`, `getVersion`, `getURI` and `getSchema` read the identity and schema of a type. Use them in code
+that works from any type, such as an agent or a generic UI.
+
+**Example** (Reading the identity and schema of a type)
 
 <Snippet file="guide-type" region="inspect" />
 
+`schema` is the Effect Schema of `Person`. It is the value that `JsonSchema.toJsonSchema` takes, and that a form reads
+to lay out its fields.
+
 ## Check the kind of a value
 
-`Type.isObject` and `Type.isRelation` test a type. To test an instance, use the predicates in [Obj](/docs/echo/api/obj/)
-and [Relation](/docs/echo/api/relation/).
+`Type.isObject` and `Type.isRelation` test a type. They do not test an instance. For that, use the predicates in
+[Obj](/docs/echo/api/obj/) and [Relation](/docs/echo/api/relation/).
+
+**Example** (Testing a type and an instance)
 
 <Snippet file="guide-type" region="kind" />
+
+`Obj.instanceOf` takes the type first and the value second. It is a type guard, so the compiler treats the value
+as a `Person` after it.
 
 ## Members at a glance
 
@@ -67,13 +110,13 @@ and [Relation](/docs/echo/api/relation/).
 | `makeObject`                                    | Declare an object type                          |
 | `makeRelation`                                  | Declare a relation type with typed endpoints    |
 | `makeObjectFromJsonSchema`                      | Build an object type from JSON Schema           |
-| `addFields` `updateFields` `removeFields`       | Change the fields of a type at runtime          |
+| `addFields` `updateFields` `removeFields`       | Change the fields of a stored type              |
 | `getTypename` `getVersion` `getURI` `getMeta`   | Read the identity and metadata of a type        |
 | `getSchema`                                     | The Effect Schema of a type                     |
 | `JsonSchema.toJsonSchema` `JsonSchema.toEffectSchema` | Convert to and from JSON Schema           |
 | `isObject` `isRelation` `isType`                | Test what kind of type a value is               |
 
-The full list is in the [API reference](/docs/additional-resources/api-reference/).
+The full list is in the [API reference](/docs/echo/resources/api-reference/).
 
 ## Related
 

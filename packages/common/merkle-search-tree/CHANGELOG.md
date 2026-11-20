@@ -1,5 +1,13 @@
 # @dxos/merkle-search-tree
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [c9c3867]
+  - @dxos/util@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 
 import { type Row, SOFTWARE_DIALECT, decodeBlock } from '@dxos/deus/schema';
 
+import { specBlocksConfig, specBlocksField } from '../../extensions/spec-blocks/spec-blocks-state.ts';
 import { type BlockFormContext, formKey, fromFormValues, toFormValues } from './block-form.ts';
-import { specBlocksConfig, specBlocksField } from './spec-blocks-state.ts';
 
 const TEXT = [
   '```mdl',

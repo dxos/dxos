@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories-echo",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "ECHO demos as stories: two peers sharing one space, run in Storybook and embedded on dxos.org.",
   "homepage": "https://dxos.org",

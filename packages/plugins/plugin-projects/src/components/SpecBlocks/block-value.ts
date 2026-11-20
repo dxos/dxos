@@ -7,7 +7,13 @@ import { useCallback, useSyncExternalStore } from 'react';
 
 import { type BlockValue, decodeBlock, patchBlock } from '@dxos/deus/schema';
 
-import { type BlockLocator, type SpecBlocks, blockListeners, findBlock, specBlocksField } from './spec-blocks-state.ts';
+import {
+  type BlockLocator,
+  type SpecBlocks,
+  blockListeners,
+  findBlock,
+  specBlocksField,
+} from '../../extensions/spec-blocks/spec-blocks-state.ts';
 
 /** The spec's blocks in the editor's current state, re-read on each change. */
 export const useSpecBlocks = (view: EditorView): SpecBlocks =>

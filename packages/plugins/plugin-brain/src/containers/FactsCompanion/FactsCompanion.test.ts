@@ -9,7 +9,7 @@ import { Fact, MemoryService } from '@dxos/echo-memory';
 import { MemorySqlite } from '@dxos/echo-memory-sqlite';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { queryFacts } from './use-facts.ts';
+import { queryFacts, refreshFacts } from './use-facts.ts';
 
 const mk = (over: Partial<Fact.Encoded> & Pick<Fact.Encoded, 'id'>): Fact.Fact =>
   Fact.make({
@@ -42,5 +42,50 @@ describe('queryFacts', () => {
   test('returns an empty list for an empty memory', async ({ expect }) => {
     const facts = await withMemory((memory) => Effect.promise(() => queryFacts(memory)));
     expect(facts).toEqual([]);
+  });
+});
+
+describe('refreshFacts', () => {
+  /** Runs `act`, lets its promises settle, and returns the rejections nothing handled meanwhile. */
+  const unhandledDuring = async (act: () => void): Promise<unknown[]> => {
+    const rejections: unknown[] = [];
+    const onRejection = (reason: unknown) => rejections.push(reason);
+    process.on('unhandledRejection', onRejection);
+    try {
+      act();
+      // A real macrotask turn: an unhandled rejection is reported after the microtasks that could still handle it.
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    } finally {
+      process.off('unhandledRejection', onRejection);
+    }
+    return rejections;
+  };
+
+  test('hands over the facts it reads', async ({ expect }) => {
+    const seen: number[] = [];
+    await withMemory((memory) =>
+      memory
+        .put([mk({ id: 'f1' })])
+        .pipe(
+          Effect.andThen(
+            Effect.promise(() => unhandledDuring(() => refreshFacts(memory, (facts) => seen.push(facts.length)))),
+          ),
+        ),
+    );
+    expect(seen).toEqual([1]);
+  });
+
+  test('a read cut short by teardown ends quietly, with no facts and no unhandled rejection', async ({ expect }) => {
+    const seen: number[] = [];
+    // The client's shutdown interrupts a query still in flight, which is neither a result nor a failure.
+    const rejections = await withMemory((memory) =>
+      Effect.promise(() =>
+        unhandledDuring(() =>
+          refreshFacts({ ...memory, query: () => Effect.interrupt }, (facts) => seen.push(facts.length)),
+        ),
+      ),
+    );
+    expect(seen).toEqual([]);
+    expect(rejections).toEqual([]);
   });
 });

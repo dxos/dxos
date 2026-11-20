@@ -146,9 +146,8 @@ export const evaluate = Effect.fnUntraced(function* ({
     printer.print(result.success);
   }
 
-  const hint = dialect.name === 'effect' && printer.isEmpty() ? emptyOutputHint(code) : undefined;
-  if (hint) {
-    printer.print(hint);
+  if (printer.isEmpty()) {
+    printer.print(dialect.name === 'effect' ? `${NO_OUTPUT}${unyieldedPrintHint(code)}` : NO_OUTPUT);
   }
 
   return printer.output();
@@ -378,13 +377,17 @@ const hintFor = (message: string): string => {
 };
 
 /**
+ * What a program that printed nothing and returned nothing is told: an empty result reads as a call that did not run,
+ * and a model that runs it again repeats whatever it wrote.
+ */
+const NO_OUTPUT = 'No output: the code ran without error but printed nothing. Print the values you need to see.';
+
+/**
  * A pointer for an Effect-dialect program that printed nothing because it called `print` without
  * `yield*`, which builds the effect and drops it.
  */
-const emptyOutputHint = (code: string): string | undefined =>
-  /(?<!yield\*\s*)\bprint\(|console\.log\(/.test(code)
-    ? 'Nothing was printed. `print` is an effect: write `yield* print(...)`; `console.log` does not reach you.'
-    : undefined;
+const unyieldedPrintHint = (code: string): string =>
+  /(?<!yield\*\s*)\bprint\(/.test(code) ? ' `print` is an effect: write `yield* print(...)`.' : '';
 
 /**
  * A failure's message cut to what the model can act on.

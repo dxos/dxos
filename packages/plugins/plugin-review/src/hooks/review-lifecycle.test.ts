@@ -151,7 +151,7 @@ describe('applyViewModeSelection', () => {
       { mode: 'editing', viewMode: 'preview' },
     ],
     [
-      'Plain text (source) is an editing posture',
+      'Source is an editing posture',
       { mode: 'viewing', viewMode: 'readonly' },
       { kind: 'builtin', viewMode: 'source' },
       { mode: 'editing', viewMode: 'source' },

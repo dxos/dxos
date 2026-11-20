@@ -19,7 +19,8 @@ export default class extends WorkerEntrypoint {
     try {
       const value = await program();
       await drain();
-      return { _tag: 'Ok', value: JSON.parse(JSON.stringify(value === undefined ? null : value) ?? 'null') };
+      // `undefined` crosses as itself, so a program that returned nothing is not reported as having returned `null`.
+      return { _tag: 'Ok', value: value === undefined ? undefined : JSON.parse(JSON.stringify(value) ?? 'null') };
     } catch (error) {
       // Drained here too, so output the program produced before it threw still reaches the model.
       try {

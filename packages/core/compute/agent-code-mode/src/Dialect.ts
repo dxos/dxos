@@ -5,8 +5,9 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import { ABRIDGED_UNION, type FieldDescription, type TypeDescription, renderFields } from '@dxos/assistant/Describe';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -95,7 +96,7 @@ export const renderTypes = (
   name: (type: SandboxType) => string = ({ typename }) => typename,
 ): string =>
   types === undefined
-    ? "### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's `queryTypes`."
+    ? `### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's \`${Operation.toolName(SkillManagerSkill.Operations.QueryTypes)}\`, which searches every registered type.`
     : types.length === 0
       ? '### Types\n\nNo types are registered.'
       : trim`
@@ -130,6 +131,23 @@ export const renderOperation = (
   - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
     input: ${input}
 `;
+
+/**
+ * The `console` bound in the code's scope: its output methods print into the call's output, since the model writes
+ * `console.log` by habit and the host's console is a channel it never reads. Its other methods stay the host's.
+ * A value prints as it is: the Effect dialect's `yield* print` also adds an object's relation hints, which take a query
+ * this synchronous call cannot wait for. `workerd/prelude.mjs` repeats this list, since it cannot import it.
+ */
+export const printingConsole = (print: (...values: unknown[]) => void): Console => ({
+  ...console,
+  log: print,
+  info: print,
+  warn: print,
+  error: print,
+  debug: print,
+  // Only the value: the second argument is the host's formatting options.
+  dir: (value: unknown) => print(value),
+});
 
 /** Shown in place of the operations section when the conversation binds no skills. */
 export const NO_OPERATIONS = '### Operations\n\nNo operations are bound to this conversation.';
