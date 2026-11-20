@@ -51,8 +51,16 @@ export const print = (...values) => {
 };
 
 // The isolate's own console writes where the model never reads, so its output methods print, as they do in every other
-// sandbox; the rest stay the isolate's.
-export const console = { ...globalThis.console, log: print, info: print, warn: print, error: print, debug: print };
+// sandbox; the rest stay the isolate's. The same list as `printingConsole` in `Dialect.ts`, which this cannot import.
+export const console = {
+  ...globalThis.console,
+  log: print,
+  info: print,
+  warn: print,
+  error: print,
+  debug: print,
+  dir: (value) => print(value),
+};
 
 export const describe = (obj) => call('describe', [obj]);
 export const relations = (obj, direction, type) => call('relations', [obj, direction, type]);

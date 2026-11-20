@@ -145,7 +145,7 @@ describe('worker sandbox in a Web Worker', () => {
       .toEqual([['Write the docs', 'filed']]);
   }, 60_000);
 
-  test('console output reaches the model as print does', async () => {
+  test('console output reaches the model', async () => {
     const { run } = await setup();
     expect(await run("console.log('one'); yield* print('two'); console.error('three');")).toEqual('one\ntwo\nthree');
   }, 60_000);

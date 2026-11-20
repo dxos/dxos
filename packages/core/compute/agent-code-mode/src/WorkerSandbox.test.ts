@@ -262,7 +262,7 @@ describe('worker sandbox', () => {
     expect(output).toContain('  title: "Write the docs"');
   }, 60_000);
 
-  test('console output reaches the model as print does, on both dialects', async () => {
+  test('console output reaches the model, on both dialects', async () => {
     const { run, runWith } = await setup();
     expect(await run("console.log('one', 1); print('two'); console.error('three');")).toEqual('one 1\ntwo\nthree');
     expect(await runWith(EffectDialect, "console.log('one'); yield* print('two'); console.warn('three');")).toEqual(

@@ -207,7 +207,7 @@ describe('workerd sandbox', () => {
     expect([...rows.values()].map((row) => row.title)).toEqual(['Review the PR']);
   });
 
-  test('console output reaches the host as print does', async () => {
+  test('console output reaches the host printer', async () => {
     const { run } = setup();
     const output = await run(`
       console.log('one', 1);
@@ -216,8 +216,9 @@ describe('workerd sandbox', () => {
       console.warn('four');
       console.error('five');
       console.debug(typeof console.table);
+      console.dir({ six: 6 }, { depth: null });
     `);
-    expect(output).toEqual(['one 1', 'two', 'three', 'four', 'five', 'function'].join('\n'));
+    expect(output).toEqual(['one 1', 'two', 'three', 'four', 'five', 'function', '{"six":6}'].join('\n'));
   });
 
   test('a program that returns nothing is told apart from one that returns null', async () => {

@@ -658,14 +658,16 @@ describe('code mode types', () => {
 // No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
 describe('code mode output', () => {
   it.effect(
-    'console output reaches the model as print does, on both dialects',
+    'console output reaches the model, on both dialects',
     Effect.fnUntraced(
       function* (_) {
         expect(
           yield* runEval(
-            "console.log('one', 1); print('two'); console.info('three'); console.warn('four'); console.error({ five: 5 });",
+            "console.log('one', 1); print('two'); console.info('three'); console.warn('four'); console.error({ five: 5 });" +
+              ' console.dir({ six: 6 }, { depth: null });',
           ),
-        ).toEqual('one 1\ntwo\nthree\nfour\n{\n  "five": 5\n}');
+          // `dir` prints its value only, not the formatting options after it.
+        ).toEqual('one 1\ntwo\nthree\nfour\n{\n  "five": 5\n}\n{\n  "six": 6\n}');
         expect(
           yield* runEval("console.log('one'); yield* print('two'); console.debug('three');", EffectDialect),
         ).toEqual('one\ntwo\nthree');

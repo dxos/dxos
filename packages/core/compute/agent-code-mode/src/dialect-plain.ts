@@ -65,7 +65,7 @@ export const PlainDialect: Dialect = {
       describe: (value: unknown) =>
         run(
           Effect.gen(function* () {
-            const id = Obj.isObject(value) || Relation.isRelation(value) ? undefined : wrappedId(value);
+            const id = Obj.isObject(value) || Relation.isRelation(value) ? undefined : objectIdOf(value);
             const stored = id === undefined ? undefined : yield* findById(id);
             return yield* describe(stored ?? value);
           }),
@@ -212,11 +212,15 @@ const PLAIN_HINTS: HintSyntax = {
 };
 
 /**
- * The id of the object a value stands for: an operation answers with its objects' JSON, often wrapped (`{ object }`),
- * and a card of that JSON counts none of the object's relations. Only an object id counts, so a wrapper's own id
- * (`{ id: 'result-1', object }`) does not hide the object it holds. Undefined for a value that names no single object.
+ * The id of the object `describe` is given in another form, since a card of its JSON counts none of its relations: the
+ * id itself, an object's JSON (as an operation answers), or a record with exactly one field holding an object
+ * (`{ object }`, or a `{ task, note }` the code built). Only an object id counts, so a wrapper's own id does not hide
+ * the object it holds; an array names no single object.
  */
-const wrappedId = (value: unknown): EntityId | undefined => {
+const objectIdOf = (value: unknown): EntityId | undefined => {
+  if (Predicate.isString(value)) {
+    return EntityId.isValid(value) ? value : undefined;
+  }
   if (!Predicate.isObject(value)) {
     return undefined;
   }
