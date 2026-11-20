@@ -18,7 +18,11 @@ import { DemoEmbedPage } from '../../demos/DemoEmbedPage.tsx';
     <style is:inline set:html={`@layer ${PAGE_LAYERS.join(', ')};`} />
   </head>
   <body>
-    <div id="root" class="dx-island"><DemoEmbedPage client:only="react" /></div>
+    <div id="root" class="dx-island">
+      <DemoEmbedPage client:only="react">
+        <div slot="fallback" class="demo-loading" role="status">Loading live demo…</div>
+      </DemoEmbedPage>
+    </div>
     <style is:global>
       html,
       body,
@@ -27,6 +31,15 @@ import { DemoEmbedPage } from '../../demos/DemoEmbedPage.tsx';
         display: block;
         height: 100%;
         margin: 0;
+      }
+
+      .demo-loading {
+        display: grid;
+        height: 100%;
+        place-items: center;
+        color: #a3a3a3;
+        font-family: system-ui, sans-serif;
+        font-size: 0.875rem;
       }
     </style>
   </body>

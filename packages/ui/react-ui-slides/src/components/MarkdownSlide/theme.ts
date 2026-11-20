@@ -324,6 +324,20 @@ export const theme = {
     },
   } as Record<string, Record<string, Record<string, string> | undefined> | undefined>,
 
+  /**
+   * The deck's footer: one quiet line that overlays the slide's bottom padding (`py-16`) on the content's own side
+   * margins, so no layout that keeps the padding gives up room to it. It takes no clicks but a link's own.
+   */
+  footer: {
+    root:
+      'absolute inset-x-40 bottom-0 h-16 grid grid-cols-3 items-center gap-8 pointer-events-none ' +
+      'text-[28px] leading-normal opacity-60 [&_a]:pointer-events-auto ' +
+      '[&_img]:inline-block [&_img]:h-8 [&_img]:w-auto [&_img]:max-w-none [&_img]:align-middle',
+    left: 'min-w-0 truncate text-start',
+    center: 'min-w-0 truncate text-center',
+    right: 'min-w-0 truncate text-end',
+  },
+
   /** Static `{2,4-5}` line highlights; other lines are dimmed as in Slidev. */
   line: {
     highlighted: 'block bg-hover-surface',

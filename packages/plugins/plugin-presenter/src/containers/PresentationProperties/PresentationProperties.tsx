@@ -13,7 +13,7 @@ import {
   type FormFieldOverride,
   type FormFieldRendererProps,
 } from '@dxos/react-ui-form';
-import { SlideTheme } from '@dxos/react-ui-slides';
+import { SlideFooter, SlideTheme } from '@dxos/react-ui-slides';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Presentation } from '#types';
@@ -54,11 +54,16 @@ const FIELD_MAP: FormFieldMap = {
   foreground: ColorRow,
 };
 
+/** The counters shown where a part is empty, since the tags' names are what an author has to type. */
+const FOOTER_OVERRIDES: Record<string, FormFieldOverride> = {
+  right: { placeholder: '<SlideCurrentNo /> / <SlidesTotal />' },
+};
+
 export type PresentationPropertiesProps = { presentation: Presentation.Presentation };
 
 /**
- * The deck's theme in the properties companion, as top-level selectors (theme, colors and fonts), rather than a
- * collapsed group in the generic object form.
+ * The deck's theme and footer in the properties companion, as top-level fields (theme, colors and fonts, then the
+ * footer's three parts), rather than collapsed groups in the generic object form.
  */
 export const PresentationProperties = ({ presentation }: PresentationPropertiesProps) => {
   const { t } = Hooks.useTranslation(PresenterNamespace.key);
@@ -90,19 +95,43 @@ export const PresentationProperties = ({ presentation }: PresentationPropertiesP
     [presentation],
   );
 
+  const [footer] = useObject(presentation, 'footer');
+  const handleSaveFooter = useCallback(
+    (next: SlideFooter.Settings) =>
+      Obj.update(presentation, (presentation) => {
+        // Empty parts are dropped, so clearing all three leaves no footer behind.
+        const settings = Object.fromEntries(Object.entries(next).filter(([, value]) => value?.trim()));
+        presentation.footer = Object.keys(settings).length > 0 ? settings : undefined;
+      }),
+    [presentation],
+  );
+
   return (
-    <Form.Root
-      schema={SlideTheme.Settings}
-      values={theme ?? {}}
-      fieldOverrides={fieldOverrides}
-      autoSave
-      onSave={handleSave}
-    >
-      {/* The theme is one sub-object, so its fields sit in one nested group, as the form shows any nested object. */}
-      <Form.FieldSet label={t('theme-group.label')} nested collapsible data-testid='presentation.theme'>
-        <Form.Layout template={TEMPLATE} fieldMap={FIELD_MAP} />
-      </Form.FieldSet>
-    </Form.Root>
+    <>
+      <Form.Root
+        schema={SlideTheme.Settings}
+        values={theme ?? {}}
+        fieldOverrides={fieldOverrides}
+        autoSave
+        onSave={handleSave}
+      >
+        {/* The theme is one sub-object, so its fields sit in one nested group, as the form shows any nested object. */}
+        <Form.FieldSet label={t('theme-group.label')} nested collapsible data-testid='presentation.theme'>
+          <Form.Layout template={TEMPLATE} fieldMap={FIELD_MAP} />
+        </Form.FieldSet>
+      </Form.Root>
+      <Form.Root
+        schema={SlideFooter.Settings}
+        values={footer ?? {}}
+        fieldOverrides={FOOTER_OVERRIDES}
+        autoSave
+        onSave={handleSaveFooter}
+      >
+        <Form.FieldSet label={t('footer-group.label')} nested collapsible data-testid='presentation.footer'>
+          <Form.Fields />
+        </Form.FieldSet>
+      </Form.Root>
+    </>
   );
 };
 
