@@ -284,7 +284,8 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
     async () => {
       window.dispatchEvent(new Event('resize'));
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      await expect(canvas.queryByText(text)).toBeTruthy();
+      // An artifact's name can show twice: in the card's title and in its form body.
+      await expect(canvas.queryAllByText(text).length).toBeGreaterThan(0);
     },
     { timeout: 10_000 },
   );
@@ -1262,7 +1263,7 @@ export const Updates: Story = {
     Obj.update(project, (project) => {
       project.artifacts = project.artifacts.filter((ref) => ref.target?.id !== artifact.id);
     });
-    await waitFor(() => expect(canvas.queryByText(ADDED_ARTIFACT)).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryAllByText(ADDED_ARTIFACT)).toHaveLength(0), { timeout: 10_000 });
     await findPainted(canvas, ARTIFACT_TITLE);
   },
 };
