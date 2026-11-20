@@ -47,7 +47,13 @@ export const makeEdgeBackend = (resolve: () => EdgeContext): SandboxService.Back
         Stream.mapError(toSandboxError),
         Stream.provide(FetchHttpClient.layer),
       ),
-    write: (data) => request((sandboxClient) => sandboxClient.writeStdin(spaceId, sandboxId, jobId, data)),
+    // Each chunk is its own request, so a failing input stream fails with its own error, unmapped.
+    stdin: (input) =>
+      input.pipe(
+        Stream.runForEach((data) =>
+          request((sandboxClient) => sandboxClient.writeStdin(spaceId, sandboxId, jobId, Stream.make(data))),
+        ),
+      ),
     state: () =>
       request((sandboxClient) => sandboxClient.processState(spaceId, sandboxId, jobId)).pipe(Effect.map(toJobState)),
     terminate: (signal) =>

@@ -65,8 +65,8 @@ export interface Job {
   readonly id: string;
   /** The job's output from `from` until it ends; a reader that reconnects passes what it already read. */
   output(from?: JobOffsets): Stream.Stream<JobEvent, SandboxError>;
-  /** Appends `data` to the job's stdin; writes land in the order they are made. */
-  write(data: string): Effect.Effect<void, SandboxError>;
+  /** Feeds `input` to the job's stdin, in order, until it ends; a later call carries on after it. */
+  stdin<E>(input: Stream.Stream<string, E>): Effect.Effect<void, SandboxError | E>;
   state(): Effect.Effect<JobState, SandboxError>;
   /** Signals the job, `SIGTERM` by default; a job that already ended is left as it is. */
   terminate(signal?: JobSignal): Effect.Effect<JobState, SandboxError>;

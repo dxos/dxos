@@ -258,19 +258,30 @@ export class SandboxClient {
     );
   }
 
-  /** Appends `data` to a process's stdin, split into as many requests as the service's limit needs. */
-  writeStdin(spaceId: string, sandboxId: string, processId: string, data: string): RequestEffect<void> {
+  /**
+   * Feeds `input` to a process's stdin, one request per chunk in the order the stream emits them; a chunk
+   * over the service's limit is split.
+   */
+  writeStdin<E>(
+    spaceId: string,
+    sandboxId: string,
+    processId: string,
+    input: Stream.Stream<string, E>,
+  ): Effect.Effect<void, SandboxRequestError | E, HttpClient.HttpClient> {
     const url = this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/processes/${processId}/stdin`);
-    const chunks = Array.from({ length: Math.ceil(data.length / STDIN_CHUNK_LENGTH) }, (_, index) =>
-      data.slice(index * STDIN_CHUNK_LENGTH, (index + 1) * STDIN_CHUNK_LENGTH),
-    );
-    return Effect.forEach(
-      chunks,
-      (chunk) =>
+    return input.pipe(
+      Stream.flatMap((data) =>
+        Stream.fromIterable(
+          Array.from({ length: Math.ceil(data.length / STDIN_CHUNK_LENGTH) }, (_, index) =>
+            data.slice(index * STDIN_CHUNK_LENGTH, (index + 1) * STDIN_CHUNK_LENGTH),
+          ),
+        ),
+      ),
+      Stream.runForEach((chunk) =>
         send(HttpClientRequest.post(url), { data: chunk }, Schema.Unknown, DEFAULT_TIMEOUT, this._authHeader, {
           checkStatus: true,
         }),
-      { discard: true },
+      ),
     );
   }
 
