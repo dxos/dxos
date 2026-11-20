@@ -1,5 +1,47 @@
 # @dxos/halo-adapter-client
 
+## 0.17.0
+
+### Patch Changes
+
+- b8e76f9: Peers' avatars now act on what they view. Clicking an avatar opens the object's viewers with that row highlighted, each with Go to (open the object where the peer has it open in the tree, such as under a collection) or Jump (reveal the peer's selection or viewport, once the object is open). A peer with the object open in several tabs or on several devices is one row whose Jump goes to the session that moved last; a toggle in the list's toolbar lists their sessions under it, each named by its device ("Chrome on macOS"), with a dot for whether it moved in the last minute. A "See everyone in this space" button opens a Members companion listing every online peer by the object they view. Revealing an anchor moved from `CommentConfig.scrollToAnchor` to a per-type `AppCapabilities.Locator`, and `LayoutOperation.ScrollIntoView` drops `cursor`. New devices no longer get a placeholder label, and `getDeviceLabel` (from `@dxos/client/halo`) treats the old placeholders as no label, so devices are named from their platform and OS. A graph node that leaves and comes back, such as a peer who visits Settings, is expanded again, so its row keeps Go to and Jump. Jump goes to a peer's caret only once they have placed one, otherwise to the top of their viewport, and the avatars open the viewers list from the keyboard too.
+- Updated dependencies [a458aef]
+- Updated dependencies [d338edb]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [034e231]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [22f759a]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [c9c3867]
+- Updated dependencies [3d06043]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [97de470]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+  - @dxos/protocols@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/halo@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/credentials@0.17.0
+  - @dxos/effect@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,51 @@
 # @dxos/pipeline-rdf
 
+## 0.17.0
+
+### Minor Changes
+
+- dd40958: Fact stores gain `FactStoreApi.rows(sparql)` for open-ended SPARQL SELECTs (`rows` and `select` refuse updates), a file-backed `FactStoreLive.layerFile`, and `FactStoreHttp` to serve a store over HTTP to pages on this machine; `generateSparql` writes full SPARQL from a question, newly minted predicates are named as written (`changed`, not `chang`), and `asked` / `has text` join the seed vocabulary. Discord crawls name each user by one `https://discord.com/users/<id>` IRI labelled from Discord, record detected questions as facts, take per-channel lookback settings, and retry channels that failed before; Brain's Query Facts and Summarize Subject find entities by name or by any absolute IRI and skip superseded or retracted facts. `Chat.Suggestions` shows premade prompts above the composer, and the entity browser, entity card and TriG snippet move from `@dxos/plugin-agent` to `@dxos/react-ui-rdf`.
+
+  Breaking: every `FactStoreApi` implementation must add `rows`, and `@dxos/plugin-agent/AgentKnowledge` no longer exports the moved components.
+
+- 342ff5a: A fact store moves in and out as TriG (Turtle with a named graph per fact): `FactStoreApi.exportTrig` and `importTrig`, served by `FactStoreHttp` too. `RDF.Pipeline` keeps the state of the run that filled a store beside its facts — each source's cursor and first and last item, each stage's model calls, tokens and catalog cost, the run's time and the facts written — and the Discord facts CLI's `trig` mode writes it from a crawl's `crawl.db` and `trace.jsonl`.
+
+  Brain adds a Memory view, under a space's settings and as a context-sidebar panel, that imports and exports the space's store as TriG, runs SPARQL, and shows every query an agent runs against the store, with its rows, as it runs; and a Pipeline panel that draws the recorded run on a read-only canvas with its counters, cost, models and busiest channels. The Brain skill now has a description, so the Skill Manager offers it as the space's memory.
+
+  Breaking: `FactStoreApi` gains `exportTrig` and `importTrig`, which every implementation must provide; `FactStoreRegistry` gains `logged`, `queries` and `subscribeQueries`, and operations now get the logged store.
+
+- d699067: Fact extraction now seeds its ontology with curated predicates from published vocabularies by default (`RDF.Vocabularies.DEFAULT`: schema.org, FOAF, Dublin Core, W3C ORG and SIOC under their own IRIs) and a `uses` seed predicate; pass an `ontology` to narrow it, and `ExtractOptions.closed` drops relations no listed predicate fits instead of minting new ones. The extractor defaults to Claude Haiku 5.5, sends its stable instructions as a cached system message (predicates learned from the store follow in a second, uncached one), and takes `ExtractOptions.thinking` (on by default); `ExtractOptions.extractor: 'system-one'` extracts with Cloudflare's Clairic and Clef models, falling back to the LLM per uncertain claim, a claim the caller's rules can't be checked against, or an unresolved reference; `ExtractDocument.context` carries earlier messages for resolving references. The model catalog lists Haiku 5.5 with list and cache prices (`Model.pricing`), and the Anthropic resolver sends `thinking: disabled` when a thinking model is asked not to think.
+
+  Model calls can be metered: `AiUsage.instrument` reports each language-model call's tokens, `AiUsage.withStage` attributes them to a pipeline stage, and `AiMetering.metered` (in `@dxos/compute`) is an `AiService` layer that writes each call as a durable `Trace.ModelCall` event, with `AiMetering.summarize` totalling them by model and stage at catalog prices. `Stage.batch` and the crawler's `tapStage` take a `concurrency`, which the crawler's fact extraction (`ExtractFactsOptions.concurrency`) and the Discord pipeline's topics stage (`RunOptions.topicsConcurrency`) pass through. Brain gains a Query SPARQL tool for raw SELECTs, and the fact tools cap what they return to the agent (50 rows, 500 characters a value) with a note to page with `LIMIT`/`OFFSET`; Query Facts takes an `offset` and returns `{ facts, total, note }`.
+
+  The fact explorer's lists (`react-ui-rdf`'s entity browser, fact viewer and ontology list) render only the rows near the viewport, and the entity browser gains a row of type toggles with counts; new exports `VirtualList`, `TypeFilter` and `entityTypeCounts`. `@dxos/plugin-magazine` exports its RSS and Atom parser as `@dxos/plugin-magazine/FeedParser`. `@dxos/plugin-sheet` adds an Add Chart operation (`SheetOperation.AddChart`, in the sheet skill) so an agent can chart a range of a sheet it made. `@dxos/plugin-brain/RemoteFactStorePlugin` gives every space a fact store served over HTTP (`RemoteFactStorePlugin.make(url)`) with the Brain skill and its operations, so a story or app can point an agent's memory at a fact server.
+
+  Breaking: extraction without an explicit `ontology` now shows the model the vocabulary packs as well as the seed predicates, so it reuses published predicates and its prompt is longer; Query Facts returns `{ facts, total, note? }` instead of an array.
+
+### Patch Changes
+
+- Updated dependencies [2ffc301]
+- Updated dependencies [498840b]
+- Updated dependencies [3585abc]
+- Updated dependencies [54ceffb]
+- Updated dependencies [3aef671]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [c9c3867]
+- Updated dependencies [d159a7d]
+- Updated dependencies [ad3d5e0]
+- Updated dependencies [768db81]
+  - @dxos/ai@0.17.0
+  - @dxos/echo-memory@0.17.0
+  - @dxos/sparql-sqlite@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/pipeline@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
