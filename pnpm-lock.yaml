@@ -18934,6 +18934,12 @@ importers:
         specifier: 'catalog:'
         version: 1.3.0
     devDependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
