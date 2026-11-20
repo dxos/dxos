@@ -9,6 +9,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownSlide, type MarkdownSlideProps } from '../components/MarkdownSlide/index.ts';
+import { SlidePositionProvider } from '../components/SlideDeck/index.ts';
 import { SlideThemeProvider } from '../components/SlideTheme/index.ts';
 import { query, slide } from '../testing/slideStory.tsx';
 import { SUITE } from '../testing/suiteArt.ts';
@@ -602,6 +603,50 @@ export const FlowGridBuild: Story = {
     await expect(getComputedStyle(cards[2], '::before').visibility).toBe('visible');
     await expect(getComputedStyle(cards[3], '::before').visibility).toBe('hidden');
     await expectLevelRow(cards);
+  },
+};
+
+const COUNTERS = slide(
+  { layout: 'center' },
+  '# Slide <SlideCurrentNo /> of <SlidesTotal />',
+  '',
+  'The counters are text like any other: here in a heading, and in **<SlideCurrentNo />** a paragraph.',
+);
+
+const counterValues = (canvasElement: HTMLElement, counter: 'current' | 'total') =>
+  [...canvasElement.querySelectorAll(`[data-slide] [data-slide-counter="${counter}"]`)].map(
+    (element) => element.textContent,
+  );
+
+/**
+ * `<SlideCurrentNo />` and `<SlidesTotal />` (Slidev's names) draw the slide's number and the deck's count, wherever
+ * they are written. The deck that draws the slide says which they are; here the story stands in for one.
+ */
+export const Counters: Story = {
+  render: (props: MarkdownSlideProps) => (
+    <SlidePositionProvider current={3} total={12}>
+      <TestContainer {...props} />
+    </SlidePositionProvider>
+  ),
+  args: { content: COUNTERS },
+  play: async ({ canvasElement }) => {
+    const heading = await query(canvasElement, '[data-slide] h1');
+    await expect(heading.textContent).toBe('Slide 3 of 12');
+    await expect(counterValues(canvasElement, 'current')).toEqual(['3', '3']);
+    await expect(counterValues(canvasElement, 'total')).toEqual(['12']);
+    // Digits of one width, so a number that changes from slide to slide does not move what follows it.
+    const counter = await query(canvasElement, '[data-slide] [data-slide-counter="current"]');
+    await expect(getComputedStyle(counter).fontVariantNumeric).toBe('tabular-nums');
+  },
+};
+
+/** Outside a deck a slide has no number, so each counter draws a dash that shows where one goes. */
+export const CountersOutsideDeck: Story = {
+  args: { content: COUNTERS },
+  play: async ({ canvasElement }) => {
+    const heading = await query(canvasElement, '[data-slide] h1');
+    await expect(heading.textContent).toBe('Slide \u2013 of \u2013');
+    await expect(counterValues(canvasElement, 'total')).toEqual(['\u2013']);
   },
 };
 

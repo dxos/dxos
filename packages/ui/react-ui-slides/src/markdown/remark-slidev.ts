@@ -225,9 +225,22 @@ type Token =
 
 const isContainerTag = (name: string): name is ContainerTag => Object.hasOwn(CONTAINER_TAGS, name);
 
-/** Tags the renderer draws with nothing inside them: a line break, and an embedded object. */
+/** Tags the renderer draws with nothing inside them: a line break, an embedded object, and the deck's counters. */
 const BR_TAG = 'br';
 const SURFACE_TAG = 'surface';
+
+/**
+ * The deck's counters, under Slidev's names: the number of the slide they are drawn on, and how many slides the deck
+ * presents. Each is the element the renderer draws it with.
+ */
+const COUNTER_TAGS = {
+  slidecurrentno: 'slide-current-no',
+  slidestotal: 'slide-total',
+} as const;
+
+type CounterTag = keyof typeof COUNTER_TAGS;
+
+const isCounterTag = (name: string): name is CounterTag => Object.hasOwn(COUNTER_TAGS, name);
 
 /** How a tag is written, which decides whether the renderer draws it at all. */
 export type SlideTagForm = {
@@ -238,12 +251,17 @@ export type SlideTagForm = {
 };
 
 /** What the renderer makes of a tag it draws. */
-export type SlideTag = { kind: 'container'; tag: ContainerTag } | { kind: 'br' } | { kind: 'surface' };
+export type SlideTag =
+  | { kind: 'container'; tag: ContainerTag }
+  | { kind: 'br' }
+  | { kind: 'surface' }
+  | { kind: 'counter'; tag: CounterTag };
 
 /**
  * What the renderer draws for a tag, or `undefined` for one it leaves as literal text — the single rule for which
  * tags the slide dialect allows, shared with the editor's highlighting so the two cannot disagree. A container tag
- * may open or close but never close itself, since it styles what it wraps; `<br>` and `<Surface>` only ever open.
+ * may open or close but never close itself, since it styles what it wraps; `<br>`, `<Surface>` and the counters only
+ * ever open.
  * The name is matched case-insensitively, as a browser matches an HTML tag.
  */
 export const slideTag = (name: string, { closing, selfClosing }: SlideTagForm): SlideTag | undefined => {
@@ -259,6 +277,9 @@ export const slideTag = (name: string, { closing, selfClosing }: SlideTagForm): 
   }
   if (lower === SURFACE_TAG) {
     return { kind: 'surface' };
+  }
+  if (isCounterTag(lower)) {
+    return { kind: 'counter', tag: lower };
   }
   return undefined;
 };
@@ -503,6 +524,10 @@ const tokenize = (
       }
       case 'surface': {
         tokens.push({ kind: 'node', node: surfaceElement(parseAttributes(attributes ?? ''), issues) });
+        break;
+      }
+      case 'counter': {
+        tokens.push({ kind: 'node', node: slideElement(COUNTER_TAGS[tag.tag], {}) });
         break;
       }
     }

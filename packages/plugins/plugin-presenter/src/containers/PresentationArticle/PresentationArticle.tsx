@@ -45,6 +45,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
   const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const slides = usePresentationDeck(subject);
   const [theme] = useObject(subject, 'theme');
+  const [footer] = useObject(subject, 'footer');
   const [index, setIndex] = useSlideIndex(Obj.getURI(subject), slides.length);
   const [gridSize, setGridSize] = useGridSize(Obj.getURI(subject));
   const fullscreen = useIsPresenting(subject);
@@ -130,6 +131,9 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
       attendableId={attendableId}
       autoFocus={hasAttention}
       theme={theme}
+      footer={footer}
+      // The grid shows hidden slides too, and numbers the rest as the presentation will.
+      presented={fullscreen ? undefined : positions}
     >
       <Panel.Root role={role} asChild>
         <Deck.Content>

@@ -31,6 +31,7 @@ describe('frontmatterCompletion', () => {
     expect(complete('---\nbackgroundBlend: s|\n---\n')?.options).toEqual(['screen']);
     expect(complete('---\nbleed: |\n---\n')?.options).toEqual(['left', 'right']);
     expect(complete('---\nhide: |\n---\n')?.options).toEqual(['true', 'false']);
+    expect(complete('---\nfooter: |\n---\n')?.options).toEqual(['true', 'false']);
     // A quoted value completes the same way, since the quote is not part of what is replaced.
     expect(complete('---\ntheme: "|\n---\n')?.options).toEqual(['default', 'light', 'dark', 'serif']);
   });

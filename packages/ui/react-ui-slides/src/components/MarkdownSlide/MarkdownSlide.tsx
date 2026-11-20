@@ -30,8 +30,10 @@ import {
   parseSlide,
   parseSourceRange,
 } from '../../markdown/index.ts';
+import * as SlideFooter from '../../SlideFooter.ts';
 import * as SlideTheme from '../../SlideTheme.ts';
 import { useSlideScrim } from '../scrim.ts';
+import { SlideCurrentNo, SlideFooterProvider, SlidesTotal, useSlideFooter } from '../SlideDeck/index.ts';
 import {
   type SlideThemeStyle,
   slideThemeClasses,
@@ -134,13 +136,41 @@ export const MarkdownSlide = ({
     >
       <SlideBackground frontmatter={frontmatter} layout={parsed.layout} />
       <div className='relative size-full'>
-        <RenderSurfaceContext.Provider value={renderSurface}>
-          <ActiveSlotContext.Provider value={outlinedSlot}>
-            <Layout slots={slots} frontmatter={frontmatter} />
-          </ActiveSlotContext.Provider>
-        </RenderSurfaceContext.Provider>
+        {/* The footer is this slide's: a slide embedded in it is part of its content, and draws none of its own. */}
+        <SlideFooterProvider>
+          <RenderSurfaceContext.Provider value={renderSurface}>
+            <ActiveSlotContext.Provider value={outlinedSlot}>
+              <Layout slots={slots} frontmatter={frontmatter} />
+            </ActiveSlotContext.Provider>
+          </RenderSurfaceContext.Provider>
+        </SlideFooterProvider>
       </div>
+      {SlideFooter.shownOn({ footer: parsed.frontmatter.footer, layout: parsed.layout }) && <SlideFooterLayer />}
     </div>
+  );
+};
+
+/**
+ * The footer of the deck the slide is drawn in, over the slide's bottom padding; nothing where the deck sets none.
+ * Drawn by a markdown slide for itself, and by whatever else draws a slide on the canvas (a linked object's).
+ */
+export const SlideFooterLayer = () => {
+  const settings = useSlideFooter();
+  const parts = useMemo(
+    () => SlideFooter.PARTS.map((part) => ({ part, content: renderInline(settings?.[part]) })),
+    [settings],
+  );
+  if (SlideFooter.isEmpty(settings)) {
+    return null;
+  }
+  return (
+    <footer data-slide-footer className={theme.footer.root}>
+      {parts.map(({ part, content }) => (
+        <div key={part} data-part={part} className={theme.footer[part]}>
+          {content}
+        </div>
+      ))}
+    </footer>
   );
 };
 
@@ -192,7 +222,8 @@ type SlideComponents = Partial<Components> & {
   [tag: `slide-${string}`]:
     | ComponentType<SlideCodeProps>
     | ComponentType<SlideSurfaceProps>
-    | ComponentType<SlideIconProps>;
+    | ComponentType<SlideIconProps>
+    | ComponentType;
 };
 
 const isSurfaceRole = (role: string | undefined): role is SlideSurfaceRole =>
@@ -269,6 +300,8 @@ const components: SlideComponents = {
   'slide-code': CodeBlock,
   'slide-surface': SlideSurface,
   'slide-icon': SlideIcon,
+  'slide-current-no': SlideCurrentNo,
+  'slide-total': SlidesTotal,
 };
 
 // Bounds a range like `{1-100000000}` so a fence cannot allocate an enormous set.
@@ -431,6 +464,26 @@ const textOf = (node: ElementContent): string =>
 
 const hasContent = (root: Root): boolean =>
   root.children.some((child) => child.type !== 'text' || child.value.trim().length > 0);
+
+/**
+ * One line of slide markdown as inline content, for a part of the footer: a part is a phrase, so the paragraph
+ * markdown puts around it is dropped and what it holds is drawn in the part's own type.
+ */
+const renderInline = (markdown: string | undefined): ReactNode => {
+  if (!markdown?.trim()) {
+    return null;
+  }
+  const root = parseSlide(markdown).slots.default;
+  const blocks = root.children.filter((child) => child.type !== 'text' || child.value.trim().length > 0);
+  const [only] = blocks;
+  const children = blocks.length === 1 && only.type === 'element' && only.tagName === 'p' ? only.children : blocks;
+  return toJsxRuntime(prepareRoot({ type: 'root', children }, Number.POSITIVE_INFINITY), {
+    Fragment,
+    jsx,
+    jsxs,
+    components,
+  });
+};
 
 const prepareRoot = (root: Root, step: number): Root => ({
   ...root,
