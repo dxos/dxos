@@ -100,7 +100,7 @@ const decorators = (slide?: string) =>
   });
 
 const meta: Meta = {
-  title: 'plugins/plugin-debug/samples/Cloudflare',
+  title: 'plugins/plugin-debug/samples/Deck',
   render: () => <ModuleContainer.Root />,
   parameters: { layout: 'fullscreen', translations },
 };
