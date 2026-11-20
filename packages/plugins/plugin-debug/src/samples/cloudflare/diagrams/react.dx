@@ -6,7 +6,7 @@ group operator-row autoCols=320 justifyContent=center {
 
 group agent-box cols=3 rows=3 gap=64 padding=32 border=true {
   group cell-nw { }
-  node feed "Feed" kind=card icon=queue iconTone=file
+  node feed "History" kind=card icon=queue iconTone=file
   group cell-ne { }
   group cell-w { }
   node session "Session" kind=card icon=play-circle iconTone=message

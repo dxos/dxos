@@ -62,8 +62,8 @@ export const SLIDES: readonly Slide[] = [
   { id: 'problem', markdown: problem },
   { id: 'echo', markdown: echo },
   { id: 'hyperspace', markdown: hyperspace },
-  { id: 'app', markdown: app },
   { id: 'plugins', markdown: plugins },
+  { id: 'app', markdown: app },
   { id: 'architecture', markdown: architecture },
   { id: 'demo', markdown: demo },
   { id: 'next', markdown: next },
@@ -118,7 +118,7 @@ export const diagramCommands = ({ id, source }: Diagram) => {
 };
 
 const DESCRIPTION =
-  'DXOS as canvas drawings: ECHO as a hyperspace of spaces, its layers, the ontology, the plugin model, Composer, ' +
+  'DXOS as canvas drawings: ECHO as a hyperspace of spaces, its layers, the plugin model, Composer, ' +
   'the architecture, agents and their feeds, a chat and an agent at work.';
 
 /**

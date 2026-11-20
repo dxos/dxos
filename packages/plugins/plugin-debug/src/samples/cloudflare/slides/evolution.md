@@ -13,6 +13,8 @@ title: 'Evolution'
 ### Chat
 
 - Search
+- Autocomplete
+- Hallucinations
 
 </Card>
 
@@ -20,7 +22,8 @@ title: 'Evolution'
 
 ### Copilot
 
-- Autocomplete
+- Memorized GitHub
+- Moved into IDE
 - Artifacts
 
 </Card>
@@ -29,8 +32,9 @@ title: 'Evolution'
 
 ### Cowork
 
-- Integration, MCP, OAuth
+- OAuth Integration, MCP
 - Playgrounds, gadgets
+- Triggers
 
 </Card>
 
@@ -39,7 +43,7 @@ title: 'Evolution'
 ### SuperAgents
 
 - Long running, autonomous
-- Multi-player (Multica, Buzz)
+- Multi-player, swarms
 
 </Card>
 
