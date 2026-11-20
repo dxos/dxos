@@ -91,8 +91,8 @@ const parseArgs = () => {
     'mode': 'record',
     // Record mode: `on` records from `--profile` instead of a fresh context.
     'persist': 'off',
-    // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
-    // so the user's recording starts in a prepared app instead of onboarding.
+    // Manual mode, and record mode with `--persist on`: the app's identity, spaces and dismissed first-run UI survive
+    // between sessions, so a recording starts in a prepared app instead of onboarding.
     'profile': path.join(homedir(), '.local/state/dxos/autocue/profile'),
     // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
     'theme': 'dark',
@@ -110,6 +110,7 @@ const parseArgs = () => {
       new URL('../../../../packages/apps/composer-app/src-tauri/target/release/app', import.meta.url),
     ),
     'driver-port': 4444,
+    // `on`: Tauri on Linux uses your `$DISPLAY`; a Chromium recording shows its window.
     'headed': 'off',
     // `on` launches full Chromium's headless mode, which has the GPU, instead of the software-rendered headless shell.
     'gpu': 'off',
@@ -247,22 +248,24 @@ if (native) {
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
 const persist = !manual && options.persist === 'on';
 const browser = manual || persist || tauri ? undefined : await chromium.launch(launchOptions);
+// A recording's context, fresh or from `--profile`.
+const recordOptions = {
+  viewport,
+  deviceScaleFactor: scale,
+  colorScheme: options.theme,
+  recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+  // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
+  // trust; the proxy itself verifies the upstream certificate.
+  ignoreHTTPSErrors: Boolean(sandbox),
+};
 const context = tauri
   ? undefined
   : manual || persist
     ? await chromium
         .launchPersistentContext(options.profile, {
           ...launchOptions,
-          // A manual window's page follows the window; a recording keeps the recorder's viewport and scale, and
-          // falls back to Playwright's recorder without a full ffmpeg, as a fresh context does.
-          ...(manual
-            ? { viewport: null }
-            : {
-                viewport,
-                deviceScaleFactor: scale,
-                recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-              }),
-          colorScheme: options.theme,
+          // A manual window's page follows the window.
+          ...(manual ? { viewport: null, colorScheme: options.theme } : recordOptions),
         })
         .catch((error) => {
           // Chromium locks a profile to one process; the usual cause is the previous session's window.
@@ -272,15 +275,7 @@ const context = tauri
           }
           throw error;
         })
-    : await browser.newContext({
-        viewport,
-        deviceScaleFactor: scale,
-        colorScheme: options.theme,
-        recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-        // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
-        // trust; the proxy itself verifies the upstream certificate.
-        ignoreHTTPSErrors: Boolean(sandbox),
-      });
+    : await browser.newContext(recordOptions);
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
 const page = native ? native.page : (context.pages()[0] ?? (await context.newPage()));
 page.setDefaultTimeout(options['action-timeout']);

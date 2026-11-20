@@ -1197,7 +1197,7 @@ test QA-6: Kai on Discord — brainstorm a made-up offsite in Kai's thread, writ
     take runs.
   actors: human
   covers: [F-2.4]
-  status: passing             # 2026-11-19, recorded by the discord-offsite flow against preview EDGE (https://dx.pub/demo/2026-11-19-kai-discord/)
+  status: passing             # 2026-11-19, recorded by the discord-offsite flow against preview EDGE (https://dx.pub/demo/2026-11-19-kai-discord/); the DM's link is rewritten to dev.composer.space until dxos/dxos#14637
   given:
     - discord: discord.com is signed in, in the autocue profile, as a member of the DXOS server
     - channel: #test-bot, https://discord.com/channels/837138313172353095/1494842957340086382, where the bot "Kai Preview" is bound
@@ -1208,7 +1208,7 @@ test QA-6: Kai on Discord — brainstorm a made-up offsite in Kai's thread, writ
       do: |
         In the channel, send "@Kai Preview [TEST] Brainstorm with me: we're planning a made-up team offsite called
         Driftwood, at a lake cabin in the Dolomites on March 12–14, for 10 people. What should we plan first?"
-      expect: Kai starts a thread on the message and answers in it
+      expect: Kai starts a thread on the message and answers in it, not in the channel
       note: NO `invoke` — the gestures are on discord.com. The thread shows before Kai's answer does; the flow waits for the answer.
     - name: Enter the thread
       do: Open the thread from its card under the message.
@@ -1237,7 +1237,7 @@ test QA-6: Kai on Discord — brainstorm a made-up offsite in Kai's thread, writ
       expect: |
         Composer opens "[TEST] Driftwood offsite plan" with the note that it is a test at the top and the packing list
         Kai added
-      note: The bot links to preview.composer.space; the identity lives on dev.composer.space, so the flow opens the same path there. The DM list and earlier DM history are the presenter's and stay off camera.
+      note: The link points at preview.composer.space, which runs against production EDGE and cannot open the document (dxos/dxos#14637), so the flow opens the same path on dev.composer.space; a person following the link as sent does not see the document. The DM list and earlier DM history are the presenter's and stay off camera.
   after:
     - name: Delete the test document
       do: In Composer, delete "[TEST] Driftwood offsite plan" from Kai Preview's space.

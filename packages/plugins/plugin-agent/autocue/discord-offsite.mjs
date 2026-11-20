@@ -8,8 +8,8 @@ import path from 'node:path';
 /**
  * Kai on Discord, timed per message. A person mentions Kai in a channel of the DXOS Discord; Kai answers in a thread,
  * brainstorms an invented team offsite there, writes the plan into a document marked as a test, and DMs its link,
- * asks it to edit the document, and opens it from the DM in Composer. Every reply carries a badge with its latency, and a panel in the corner keeps
- * each message's latency on screen to the end.
+ * asks it to edit the document, and opens it from the DM in Composer. Every reply carries a badge with its latency,
+ * and a panel in the corner keeps each message's latency on screen to the end.
  *
  * @title Kai on Discord
  * @mdl packages/plugins/plugin-agent/PLUGIN.mdl test QA-6
@@ -36,15 +36,20 @@ const GUILD = '837138313172353095';
 const CHANNEL = '1494842957340086382';
 const CHANNEL_URL = `https://discord.com/channels/${GUILD}/${CHANNEL}`;
 const AGENT = 'Kai Preview';
-const PERSON = 'mykola_vrmchk';
+/** Whom Kai DMs: the Discord handle signed in to the autocue profile, so the DM lands where the take can open it. */
+const PERSON = process.env.DX_DEMO_DISCORD_USER;
 const DOC_TITLE = '[TEST] Driftwood offsite plan';
 
 /** Mentions, written `{name}`, are picked from Discord's autocomplete when typed. */
 const MESSAGES = {
-  start: `{${AGENT}} [TEST] Brainstorm with me: we're planning a made-up team offsite called Driftwood, at a lake cabin in the Dolomites on March 12–14, for 10 people. What should we plan first?`,
+  start:
+    `{${AGENT}} [TEST] Brainstorm with me: we're planning a made-up team offsite called Driftwood, ` +
+    'at a lake cabin in the Dolomites on March 12–14, for 10 people. What should we plan first?',
   dayTwo: `{${AGENT}} Give me three ideas for day two that mix a morning hike with an afternoon hack session.`,
   budget: `{${AGENT}} The budget is 9,000 euros. What would you cut first if we run over?`,
-  document: `{${AGENT}} Put this plan in a document titled "${DOC_TITLE}", and say at the top that it is a test made for a demo.`,
+  document:
+    `{${AGENT}} Put this plan in a document titled "${DOC_TITLE}", ` +
+    'and say at the top that it is a test made for a demo.',
   dm: `{${AGENT}} DM {${PERSON}} the link to that document.`,
   edit: `{${AGENT}} Add a "Packing list" section to the document with five items.`,
 };
@@ -86,8 +91,8 @@ const TEXTBOX = 'div[role="textbox"][contenteditable="true"]';
 const MESSAGE = 'li[id^="chat-messages-"]';
 const AUTOCOMPLETE_OPTION = '[role="listbox"] [role="option"]';
 const DM_ENTRY = `a[aria-label*="${AGENT}"][href^="/channels/@me/"]`;
-// The DM list and the DM's earlier history are the presenter's own; the take shows only what Kai sent in it. Added only to
-// DM pages, since Discord rewrites the root element's attributes and a marker there does not last.
+// The DM list and the DM's earlier history are the presenter's own; the take shows only what Kai sent in it. Added
+// only to DM pages, since Discord rewrites the root element's attributes and a marker there does not last.
 const PRIVACY_STYLE = `
   [data-list-id^="private-channels"] { visibility: hidden !important; }
   li[id^="chat-messages-"]:not(.autocue-keep) { display: none !important; }
@@ -298,9 +303,10 @@ const send = async ({ demo, page }, text) => {
 
 /**
  * Waits for Kai's answer to `sent` in the open conversation, with a live stopwatch, and records the time between the
- * two by Discord's timestamps. Kai answers as a reply, so a reply to another message (a late one) is not taken.
+ * two by Discord's timestamps. Kai answers as a reply, so a reply to another message (a late one) is not taken, nor
+ * one of `exclude`: Kai messages that were already there, or that answered something else.
  */
-const awaitReply = async ({ demo, page }, sent, label, { match = () => true } = {}) => {
+const awaitReply = async ({ demo, page }, sent, label, { match = () => true, exclude = new Set() } = {}) => {
   await drawLatency(page, { label, since: Date.now() });
   await demo.speed({ factor: WAIT_SPEED });
   try {
@@ -310,6 +316,7 @@ const awaitReply = async ({ demo, page }, sent, label, { match = () => true } = 
           (message) =>
             fromAgent(message) &&
             message.at > sent.at &&
+            !exclude.has(message.id) &&
             (message.replyTo === undefined || message.replyTo === sent.id) &&
             match(message),
         ),
@@ -327,15 +334,48 @@ const awaitReply = async ({ demo, page }, sent, label, { match = () => true } = 
  * restarted take waits on a message it already sent instead of sending it again, and `answered` skips the step.
  */
 const exchange = async (context, key, text, label, options) => {
-  const sent = (state.sent ??= {})[key] ?? (state.sent[key] = await send(context, text));
+  // Answers to earlier steps, Kai's own note that it sent the DM, and what Kai had posted before this message.
+  const exclude = new Set([...Object.values(state.answered ?? {}), ...(state.aside ?? [])]);
+  let sent = (state.sent ??= {})[key];
+  if (!sent) {
+    for (const message of (await messages(context.page)).filter(fromAgent)) {
+      exclude.add(message.id);
+    }
+    sent = state.sent[key] = await send(context, text);
+  }
   save();
-  const reply = await awaitReply(context, sent, label, options);
+  const reply = await awaitReply(context, sent, label, { ...options, exclude });
   state.answered = { ...state.answered, [key]: reply.id };
   save();
   return reply;
 };
 
 const answered = (key) => Boolean(state.answered?.[key]);
+
+/** How long the thread must stay without a new message from Kai to count as quiet, and the longest wait for that. */
+const QUIET = 5_000;
+const QUIET_TIMEOUT = 30_000;
+
+/**
+ * Waits until Kai has posted nothing new in the open conversation for {@link QUIET}; returns the ids of what it posted
+ * after `since`.
+ */
+const quietSince = async (page, since) => {
+  const posted = async () =>
+    (await messages(page)).filter((message) => fromAgent(message) && message.at > since).map((message) => message.id);
+  const deadline = Date.now() + QUIET_TIMEOUT;
+  let seen = await posted();
+  let quietFrom = Date.now();
+  while (Date.now() - quietFrom < QUIET && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const now = await posted();
+    if (now.length !== seen.length) {
+      seen = now;
+      quietFrom = Date.now();
+    }
+  }
+  return seen;
+};
 
 /**
  * The card Discord puts under a message once a thread is started on it. It repeats the message's opening words, which
@@ -371,6 +411,9 @@ export const steps = [
     name: 'Open the channel',
     setup: true,
     run: async ({ demo, page }) => {
+      if (!PERSON) {
+        throw new Error('set DX_DEMO_DISCORD_USER to the Discord handle signed in to the autocue profile');
+      }
       await page.context().addInitScript((css) => {
         // The DM is only ever opened by a full load of its URL, so the rules are in place before anything renders.
         if (!location.pathname.startsWith('/channels/@me')) {
@@ -427,6 +470,13 @@ export const steps = [
         await demo.speed({ factor: 1 });
       }
       await page.bringToFront();
+      // The channel and the thread are separate conversations: Kai's answer is in the thread only.
+      const inChannel = (await messages(page)).filter(
+        (message) => fromAgent(message) && message.at > sent.at && message.content.trim().length > 0,
+      );
+      if (inChannel.length > 0) {
+        throw new Error(`${AGENT} answered in the channel, not only in its thread`);
+      }
     },
   },
   {
@@ -509,6 +559,9 @@ export const steps = [
         await demo.speed({ factor: 1 });
       }
       await record(page, LABELS.dm, state.dm.at - sent.at, state.dm.id);
+      // Kai may also say in the thread that it sent the DM. Waited out and set aside, so the edit's answer is not it.
+      state.aside = await quietSince(page, sent.at);
+      save();
     },
   },
   {
@@ -567,7 +620,8 @@ export const steps = [
   {
     name: 'Hold the result',
     narration:
-      'Kai worked from Discord on the same document you open in Composer, synced through DXOS, with every answer timed.',
+      'Kai worked from Discord on the same document you open in Composer, synced through DXOS, ' +
+      'with every answer timed.',
     run: async ({ demo, page }) => {
       const answers = latencies.filter(({ messageId }) => messageId);
       const total = answers.reduce((sum, { ms }) => sum + ms, 0);
