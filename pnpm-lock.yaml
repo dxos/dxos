@@ -10868,6 +10868,9 @@ importers:
       '@dxos/plugin-projects':
         specifier: workspace:*
         version: link:../plugin-projects
+      '@dxos/plugin-sandbox':
+        specifier: workspace:*
+        version: link:../plugin-sandbox
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

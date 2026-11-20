@@ -236,6 +236,7 @@
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
+    "@dxos/plugin-sandbox": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
