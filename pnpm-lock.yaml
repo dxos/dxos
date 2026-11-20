@@ -6528,6 +6528,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
+      '@dxos/edge-compute':
+        specifier: workspace:*
+        version: link:../edge-compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
