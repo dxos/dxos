@@ -24,8 +24,8 @@ import path from 'node:path';
  * identity lives in.
  *
  * Each latency is the time between Discord's own timestamps (the `datetime` of each message): the person's message
- * and Kai's answer to it. They are also written to `<out>/latencies.json`, `out` being `DX_DEMO_OUT` (default
- * `/tmp/demo`), and logged as `[latency]`. Waits on Kai play fast-forwarded, with the speed shown.
+ * and Kai's answer to it. They are also written to `<out>/latencies.json`, `out` being the driver's `--out` (or
+ * `DX_DEMO_OUT`), and logged as `[latency]`. Waits on Kai play fast-forwarded, with the speed shown.
  *
  * Progress (the thread, the document's link, Kai's DM) is saved to `<out>/discord-offsite.state.json` as the take
  * runs, so `run` with `from` picks up after the messages already sent instead of sending them again. Delete the file
@@ -73,7 +73,9 @@ const RENDER_TIMEOUT = 120_000;
 /** The closing beat: the finished result held on screen with every latency. */
 const LINGER = 10_000;
 
-const OUT = process.env.DX_DEMO_OUT ?? '/tmp/demo';
+// The take's own output directory: the flow runs in the driver's process, so its `--out` is in the arguments.
+const outFlag = process.argv.indexOf('--out');
+const OUT = process.env.DX_DEMO_OUT ?? (outFlag >= 0 ? process.argv[outFlag + 1] : '/tmp/demo');
 const STATE_FILE = path.join(OUT, 'discord-offsite.state.json');
 const LATENCY_FILE = path.join(OUT, 'latencies.json');
 
