@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-memory",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Memory interface: the MemoryService tag, the attributed fact data model and typed memory queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

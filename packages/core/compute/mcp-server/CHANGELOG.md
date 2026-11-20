@@ -1,5 +1,82 @@
 # @dxos/mcp-server
 
+## 0.17.0
+
+### Minor Changes
+
+- da51cc2: `McpServer.WhoAmI` (with `WhoAmIToolkit`, `WhoAmIResult`, `SpaceInfo` and `describeSpace`) defines the `whoami` tool once for every host; Composer's in-app MCP server now answers it with the app's identity and the chat's space, so the project skill can confirm its space there as it does over `dx mcp serve` and EDGE.
+- 9b1c454: An MCP skill token is now derived from the skill's key alone, so every process issues and accepts
+  the same word with nothing to configure or share. Breaking: `McpServer.skillGate()` takes no
+  argument and `McpServer.HostShape.skillSecret` is gone — a host that passed a secret drops it. This
+  fixes a surface served by two processes refusing its own tokens when only one of them held the
+  secret.
+
+### Patch Changes
+
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [66304b6]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [1054c31]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [a18cb35]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [f175a2d]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [101f620]
+- Updated dependencies [8e2f718]
+- Updated dependencies [768db81]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

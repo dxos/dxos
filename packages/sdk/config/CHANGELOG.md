@@ -1,5 +1,27 @@
 # @dxos/config
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [a458aef]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [ece15ab]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [c9c3867]
+- Updated dependencies [3d06043]
+  - @dxos/protocols@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
