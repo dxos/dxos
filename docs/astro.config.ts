@@ -191,6 +191,10 @@ const redirects: Record<string, string> = {
   // The llms.txt pages moved from each section's Agents group to its Resources group.
   '/docs/echo/agents/llms-txt': '/docs/echo/resources/llms-txt/',
   '/docs/plex/agents/llms-txt': '/docs/plex/resources/llms-txt/',
+  // ECHO's Resources moved under its own section, so the topic switcher finds them.
+  '/docs/additional-resources/api-reference': '/docs/echo/resources/api-reference/',
+  '/docs/additional-resources/glossary': '/docs/echo/resources/glossary/',
+  '/docs/additional-resources/samples': '/docs/echo/resources/examples/',
   // Why PLEX? took Try Composer's place in Start here.
   '/docs/app-framework/try': '/docs/plex/why-plex/',
   '/docs/composer/try': '/docs/plex/why-plex/',

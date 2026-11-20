@@ -45,7 +45,7 @@ page lacks. Write each one in your report with its file and line. It goes to the
 A reader goes down the sidebar, so they meet a page after its neighbors.
 
 - **The glossary is the section's term list.** Each section has one at `<section>/resources/glossary.md`, and
-  ECHO's is `additional-resources/glossary.md`. One word
+  ECHO's is `echo/resources/glossary.md`. One word
   names one thing across the section, and one thing has one word. Before you use a term, find it there, and use its
   word and its meaning. A term the page needs and the glossary lacks gets an entry in the same change.
 - **A term is introduced on every page that uses it.** At its first use, give it half a sentence or a link: "a
