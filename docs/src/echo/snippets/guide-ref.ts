@@ -25,7 +25,7 @@ const loaded = ada.employer?.peek(); // Organization | undefined, never loads
 const employer = await ada.employer?.load();
 // undefined instead of throwing when the target is missing
 const maybe = await again.tryLoad();
-// missing and deleted targets are left out
+// missing and removed targets are left out
 const attendees = await Ref.loadAll(launch.attendees ?? []);
 // #endregion resolve
 

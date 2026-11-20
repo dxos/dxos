@@ -13,68 +13,135 @@ import SpecCite from '../../../../../components/SpecCite.astro';
 import { Obj } from '@dxos/echo';
 ```
 
-`Obj` makes objects and reads and writes them. Its functions take the object as the first argument and work whether or
-not the object is in a database yet, so a getter that needs the database returns `undefined` outside one instead of
-throwing. <SpecCite item="org.dxos.echo#F-3.3" />
+`Obj` makes objects and reads and writes them.
+
+Its functions take the object as the first argument, and they work whether or not the object is in a database yet. A
+getter that needs the database returns `undefined` outside one instead of throwing.
+<SpecCite item="org.dxos.echo#F-3.3" />
 
 ## Make an object
 
-`Obj.make` checks the props against the type and gives the object an id. Reserved fields such as `Obj.Meta` go in the
-same props. Here the meta records the object's key in an external system. <SpecCite item="org.dxos.echo#F-3.1" />
+`Obj.make` checks the props against the type and gives the object an id. Managed fields, the ones ECHO keeps beside
+the type's own, go in the same props. <SpecCite item="org.dxos.echo#F-3.1" />
+
+**Example** (Making a person with a foreign key)
 
 <Snippet file="guide-obj" region="make" />
 
+`ada` exists only in memory until `db.add` stores it. The key under `Obj.Meta` is a **foreign key**, the id this
+person has in `crm.example.com`.
+
+The props take three keys for managed fields:
+
+- `id` sets the object's id. Without it, `Obj.make` makes a new one.
+- `Obj.Meta` sets the metadata, such as foreign keys and tags.
+- `Obj.Parent` sets the object's parent.
+
+`Obj.make` also takes options as a third argument. `skipValidation` leaves out the check of the props against the
+type. Use it only for props the compiler has already checked, when the check costs too much for large objects. With
+it, `Obj.make` does not reject invalid props.
+
+**Example** (Making an object without the runtime check)
+
+<Snippet file="guide-obj" region="make-options" />
+
 ## Read and update an object
 
-Read a field like any property. Writes go inside `Obj.update`; a write outside it throws. All the writes in one callback
-reach subscribers as one change.
+You read a field like any property. Writes go inside `Obj.update`, and a write outside it throws. All the writes in
+one callback reach subscribers as one change.
 
-A live object always shows the latest state. `Obj.getSnapshot` returns a frozen copy that later updates do not touch, which
-is what you want to keep a before-and-after or hand data to code that must not write it.
+A live object always shows the latest state. `Obj.getSnapshot` returns a snapshot, an immutable copy that later updates
+do not touch. Use it when you want to keep a before-and-after, or when you hand data to code that must not write it.
+
+**Example** (Updating a person and keeping a snapshot)
 
 <Snippet file="guide-obj" region="update" />
 
+`before` was taken after the first update and before the second, so it has the new `email` and the old `name`.
+
 ## Subscribe to one object
 
-The callback runs synchronously after each committed change. Query subscriptions over the object re-evaluate at the same
-time. <SpecCite item="org.dxos.echo#F-3.2" /> In React, use the hooks in the [React guide](/docs/echo/guides/react/)
-instead.
+`Obj.subscribe` takes an object and a callback. The callback runs synchronously after each committed change. Query
+subscriptions over the object re-evaluate at the same time. <SpecCite item="org.dxos.echo#F-3.2" />
+
+In React, use the hooks in [React](/docs/echo/guides/react/) instead.
+
+**Example** (Logging each change to a person)
 
 <Snippet file="guide-obj" region="subscribe" />
 
+`unsubscribe` is the function that `Obj.subscribe` returns. The callback keeps running until you call it.
+
 ## Meta, tags, labels and parents
 
-Meta holds data about the object rather than in it, such as foreign keys and tags. Labels and descriptions are what lists
-and pickers show.
+**Metadata** is the data ECHO keeps about an object and not in its fields: its foreign keys and its tags.
+
+- `Obj.getMeta` returns all of it. Use it when you need the whole record, such as the list of tags.
+- `Obj.getKeys` returns the foreign keys from one source. Use it in a sync, to find the id an object has in the other
+  system.
+- `Obj.addTag` and `Obj.removeTag` attach and detach a tag. Both run inside `Obj.update`.
+
+A **tag** is an object of its own, of the `Tag` type. You make one with `Tag.make` and store it with `db.add`
+before you attach it.
+
+**Example** (Reading a foreign key and adding a tag)
 
 <Snippet file="guide-obj" region="meta" />
 
-A child object can name a parent with `Obj.setParent`. The parent must hold a reference to the child, and deleting the
-parent deletes the child.
+`speaker` goes through `db.add` first, because an object keeps its tags as references to stored `Tag` objects.
+
+A label is the text that lists and pickers show for an object.
+
+- `Obj.getLabel` reads the field that the type's `LabelAnnotation` names, or `name` when the type names none.
+- `Obj.setLabel` writes that field. It runs inside `Obj.update`.
+
+[Annotation](/docs/echo/api/annotation/#read-annotations) reads a label and a description in its sample.
+
+A parent is the object that another object belongs to. `Obj.setParent` names the parent of a child, and
+`Obj.getParent` reads it. The parent must hold a reference to the child, and removing the parent removes the child.
 
 ## Read the history
 
-Each change to an object is a `Change` with the device that made it, the time, and the heads of the document after it.
-`Obj.getChanges` lists them, for the whole object or one field, where each carries the value before and after.
-`Obj.getVersion` reads the object at a change's heads. [Changes and branches](/docs/echo/concepts/changes/) explains the
-model.
+Each change to an object is a `Change`. It holds the device that made the change, the time, and the **heads** of the
+document after it, which are the ids that name that version of the document.
+
+- `Obj.getChanges` lists the changes, for the whole object or for one field. For one field, each change carries the
+  value before and after.
+- `Obj.getVersion` reads the object at a change's heads. Use it when you need the object as it was, without touching
+  the live object.
+
+**Example** (Listing the changes to a name and reading an old version)
 
 <Snippet file="guide-obj" region="history" />
 
+`changes` is oldest first, so `changes[0]` is the first change to `name` and `changes.slice(-1)` holds the latest.
+`then` is a snapshot, and the live `ada` still shows the latest name.
+
+See [Changes and branches](/docs/echo/concepts/changes/) for the model.
+
 ## Clone and serialize
 
-`Obj.clone` makes a structural copy. `Obj.toJSON` and `Obj.fromJSON` round-trip an object's id, type, meta and references.
-<SpecCite item="org.dxos.echo#F-3.4" />
+`Obj.clone` returns a new object with the same type and fields, and an id of its own. Use it when you want to
+duplicate a record. It copies references as they are, so the clone points at the same targets. Pass `deep` when you
+want the referenced objects cloned too.
+
+`Obj.toJSON` and `Obj.fromJSON` round-trip an object's id, type, metadata and references. Use them when an object has
+to leave ECHO, for example in an export. <SpecCite item="org.dxos.echo#F-3.4" />
+
+**Example** (Copying an object and converting it to JSON)
 
 <Snippet file="guide-obj" region="json" />
+
+`copy` has a new id, so adding it to the database makes a second person. `json` keeps the id of `ada`, and its
+`employer` holds the URI of the organization in place of the reference.
 
 ## Members at a glance
 
 | Member                                      | Summary                                              |
 | ------------------------------------------- | ---------------------------------------------------- |
 | `make`                                      | Create an object of a type                           |
-| `update`                                    | Write to an object; one notification per call        |
-| `getSnapshot`                               | A frozen copy of the current state                   |
+| `update`                                    | Write to an object. One notification per call        |
+| `getSnapshot`                               | An immutable copy of the current state               |
 | `subscribe`                                 | Run a callback after each change                     |
 | `getMeta` `getKeys` `deleteKeys`            | Read and change metadata and foreign keys            |
 | `addTag` `removeTag`                        | Tag an object                                        |
@@ -84,11 +151,11 @@ model.
 | `instanceOf` `isObject` `isDeleted`         | Predicates                                           |
 | `clone` `toJSON` `fromJSON`                 | Copy and serialize                                   |
 
-Functions shared by objects and relations, such as `getURI` and `getTypename`, are also in the `Entity` module. The
-full list is in the [API reference](/docs/additional-resources/api-reference/).
+Functions shared by objects and relations, such as `getURI` and `getTypename`, are also in the `Entity` namespace.
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
 
 ## Related
 
 - [The ECHO object](/docs/echo/learn/the-echo-object/) and [Mutating objects](/docs/echo/learn/mutating-objects/) in the
   learning path.
-- [Objects and relations](/docs/echo/concepts/objects-relations/) for the reserved fields and ownership.
+- [Objects and relations](/docs/echo/concepts/objects-relations/) for the managed fields and ownership.

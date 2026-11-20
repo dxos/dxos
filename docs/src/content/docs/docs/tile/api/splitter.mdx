@@ -11,13 +11,14 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as Splitter from '@dxos/react-ui/Splitter';
 ```
 
-A resizable divider can be dragged. In a narrow host the splitter shows one pane at a time.
+A splitter puts panes side by side with a divider between them. With `resizable`, the user can drag the divider. In
+a host narrower than `collapseBelow`, the splitter shows one pane at a time.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Splitter.Root` | Holds the panes |
+| `Splitter.Root` | The root, which holds the panes |
 | `Splitter.Panel` | One pane |
-| `Splitter.ResizeTrigger` | The divider |
-| `Splitter.useContext` | Which pane shows, for a Back button or a list that opens a detail |
+| `Splitter.ResizeTrigger` | The divider. It renders only when `Splitter.Root` is `resizable` |
+| `Splitter.useContext` | A hook that returns which pane shows, for a Back button or a list that opens a detail |

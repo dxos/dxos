@@ -13,46 +13,77 @@ import SpecCite from '../../../../../components/SpecCite.astro';
 import { Relation } from '@dxos/echo';
 ```
 
-A relation is an object with two typed endpoints, a source and a target. Use one when the link has data of its own, such
-as a role or a date, or when you need to query it from either end. A plain `Ref` field is enough when one object just
-points at another. `Relation` mirrors [Obj](/docs/echo/api/obj/) for everything that is not about endpoints.
+A relation joins two objects. It has two typed endpoints, a source and a target, and it can carry fields of its
+own.
+
+Use a relation when the link has data of its own, such as a role or a date, or when you need to query it from either
+end. A plain `Ref` field is enough when one object just points at another.
+
+`Relation` mirrors [Obj](/docs/echo/api/obj/) for everything that is not about endpoints.
 
 ## Make a relation
 
 Declare the type with `Type.makeRelation`, which fixes the endpoint types
-<SpecCite item="org.dxos.echo#F-2.2" />. Then pass the endpoints under the reserved `Relation.Source` and
-`Relation.Target` keys.
+<SpecCite item="org.dxos.echo#F-2.2" />. Then call `Relation.make`, and pass the endpoints under the
+`Relation.Source` and `Relation.Target` keys.
+
+**Example** (Relating a person to an organization)
 
 <Snippet file="guide-relation" region="make" />
 
+`db.add` stores `job` as it stores an object. `ada` and `acme` are not written to, because the relation holds both
+ends.
+
 ## Read the endpoints
 
-`getSource` and `getTarget` return the endpoint objects with their types. `getSourceURI` and `getTargetURI` return their
-URIs without resolving them.
+`Relation.getSource` and `Relation.getTarget` return the endpoint objects with their types.
+
+`Relation.getSourceURI` and `Relation.getTargetURI` return the endpoints' URIs without resolving them. Use them when
+you do not need the objects.
+
+**Example** (Reading both endpoints and a URI)
 
 <Snippet file="guide-relation" region="endpoints" />
 
+`employee` is typed as a `Person` and `employer` as an `Organization`, because `WorksAt` fixes both.
+
 ## Query from either end
 
-`targetOf` selects the relations that point at the current selection, and `sourceOf` the ones that start from it. Then
-`source()` or `target()` steps to the objects at the other end. [Query](/docs/echo/api/query/) covers traversal.
+`targetOf` selects the relations that point at the current selection, and `sourceOf` selects the ones that start from
+it. From those relations, `source()` or `target()` steps to the objects at the other end.
+
+**Example** (Finding the jobs at Acme and the people who hold them)
 
 <Snippet file="guide-relation" region="query" />
 
+`jobsAtAcme` holds relations, and `staff` holds people. The one difference between the queries is `source()`, which
+steps from each relation to the object at its other end.
+
+See [Query](/docs/echo/api/query/) for traversal.
+
 ## Update, subscribe and sort
 
+`Relation.update` writes to a relation and `Relation.subscribe` watches it, as in `Obj`.
+
+`Relation.sortByLabel` and `Relation.sortByTypename` are comparators for `Array.sort`. `Relation.sort` composes
+comparators into one, which tries each in turn until one tells two relations apart.
+
+**Example** (Changing a role, watching it and sorting relations)
+
 <Snippet file="guide-relation" region="update" />
+
+`sorted` is in order of label. `Relation.sortByTypename` decides only between two relations with the same label.
 
 ## Members at a glance
 
 | Member                                     | Summary                                       |
 | ------------------------------------------ | --------------------------------------------- |
 | `make`                                     | Create a relation between two objects         |
-| `Source` `Target`                          | Reserved keys for the endpoints               |
+| `Source` `Target`                          | Keys for the endpoints in `make`              |
 | `getSource` `getTarget`                    | The endpoint objects                          |
 | `getSourceURI` `getTargetURI`              | The endpoint URIs, unresolved                 |
 | `update` `subscribe` `getSnapshot`         | Write, watch and copy, as in `Obj`            |
-| `sort` `sortByLabel` `sortByTypename`      | Comparators for `Array.sort`                  |
+| `sort` `sortByLabel` `sortByTypename`      | Compose and supply comparators for `Array.sort` |
 | `instanceOf` `isRelation`                  | Predicates                                    |
 
 The full list is in the [API reference](/docs/additional-resources/api-reference/).

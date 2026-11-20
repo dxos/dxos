@@ -208,6 +208,10 @@ const redirects: Record<string, string> = {
   '/docs/app-framework/introduction': '/docs/plex/concepts/plugins/',
   '/docs/composer/introduction': '/docs/plex/concepts/plugins/',
   '/docs/plex/introduction': '/docs/plex/concepts/plugins/',
+  // The learning path replaced the single-page plugin tutorial.
+  '/docs/app-framework/tutorial': '/docs/plex/learn/the-plex-plugin/',
+  '/docs/composer/tutorial': '/docs/plex/learn/the-plex-plugin/',
+  '/docs/plex/tutorial': '/docs/plex/learn/the-plex-plugin/',
   // App Graph and Translations are app-level, so they moved to Guides.
   '/docs/plex/concepts/app-graph': '/docs/plex/guides/app-graph/',
   '/docs/plex/guides/translations': '/docs/plex/guides/app-capabilities/',
@@ -450,7 +454,7 @@ export default defineConfig({
               items: sidebarFromSpec(specPages, 'TILE'),
             },
           ],
-          // Pages missing from a section's sidebar, such as the old plugin tutorial, still belong to it.
+          // Pages missing from a section's sidebar still belong to it.
           {
             topics: {
               echo: ['/docs/echo/**'],

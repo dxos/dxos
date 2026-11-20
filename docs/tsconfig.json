@@ -100,6 +100,9 @@
       "path": "../packages/core/halo/halo-react"
     },
     {
+      "path": "../packages/plugins/plugin-client"
+    },
+    {
       "path": "../packages/plugins/plugin-inspector"
     },
     {

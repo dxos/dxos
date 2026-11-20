@@ -15,8 +15,12 @@ import {
   Invitation_Type as ClientInvitationType,
   InvitationEncoder,
 } from '@dxos/client/invitations';
+import { createDidFromIdentityKey } from '@dxos/credentials';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';
+import { SpaceId } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -57,6 +61,21 @@ const TERMINAL_STATES: ReadonlySet<ClientInvitationState> = new Set([
   ClientInvitationState.EXPIRED,
 ]);
 
+/** What a succeeded invitation admitted its guest to: the space for a space invitation, the identity for a device one. */
+const toResult = async (invitation: ClientInvitation, kind: HaloInvitation.Kind): Promise<HaloInvitation.Result> => {
+  if (kind === 'space') {
+    if (SpaceId.isValid(invitation.spaceId)) {
+      return { spaceId: invitation.spaceId };
+    }
+    const spaceKey = toPublicKey(invitation.spaceKey);
+    return spaceKey ? { spaceId: await createIdFromSpaceKey(spaceKey) } : {};
+  }
+
+  const identityKey = toPublicKey(invitation.identityKey);
+  return identityKey ? { identityDid: await createDidFromIdentityKey(identityKey) } : {};
+};
+
+/** Maps every state but SUCCESS, whose result is derived asynchronously by {@link toResult}. */
 const toEvent = (invitation: ClientInvitation): HaloInvitation.Event | undefined => {
   switch (invitation.state) {
     case ClientInvitationState.CONNECTING:
@@ -67,8 +86,6 @@ const toEvent = (invitation: ClientInvitation): HaloInvitation.Event | undefined
       return { _tag: 'readyForAuthentication', authCode: invitation.authCode };
     case ClientInvitationState.AUTHENTICATING:
       return { _tag: 'authenticating' };
-    case ClientInvitationState.SUCCESS:
-      return { _tag: 'success', result: {} };
     case ClientInvitationState.CANCELLED:
       return { _tag: 'cancelled' };
     case ClientInvitationState.TIMEOUT:
@@ -85,10 +102,21 @@ const toEvent = (invitation: ClientInvitation): HaloInvitation.Event | undefined
  * Maps an invitation observable's state transitions to the {@link HaloInvitation.Event} stream,
  * completing after a terminal event.
  */
-export const invitationEvents = (observable: CancellableInvitationObservable): Stream.Stream<HaloInvitation.Event> =>
+export const invitationEvents = (
+  observable: CancellableInvitationObservable,
+  kind: HaloInvitation.Kind,
+): Stream.Stream<HaloInvitation.Event> =>
   EffectEx.streamFromEmitter<HaloInvitation.Event>((emit) => {
     const subscription = observable.subscribe(
       (invitation: ClientInvitation) => {
+        if (invitation.state === ClientInvitationState.SUCCESS) {
+          void toResult(invitation, kind).then((result) => {
+            void emit.single({ _tag: 'success', result });
+            void emit.end();
+          });
+          return;
+        }
+
         const event = toEvent(invitation);
         if (event) {
           void emit.single(event);
@@ -114,7 +142,7 @@ export const makeFlow = (
 ): HaloInvitation.Flow => ({
   id: observable.get().invitationId,
   kind,
-  events: invitationEvents(observable),
+  events: invitationEvents(observable, kind),
   authenticate: (code: string) =>
     observable instanceof AuthenticatingInvitationObservable
       ? Effect.tryPromise({
@@ -206,8 +234,6 @@ const toType = (type?: HaloInvitation.Type): ClientInvitationType => {
   switch (type) {
     case 'delegated':
       return ClientInvitationType.DELEGATED;
-    case 'multiuse':
-      return ClientInvitationType.MULTIUSE;
     case 'interactive':
     default:
       return ClientInvitationType.INTERACTIVE;

@@ -75,7 +75,8 @@ const backUp = Effect.gen(function* () {
 // #region errors
 const safeRemove = remove.pipe(
   Effect.catchTag('SpaceError', (error) =>
-    Effect.sync(() => console.error('Could not remove:', error.message)),
+    // The failure that SpaceError wraps.
+    Effect.sync(() => console.error('Could not remove:', error.context.error)),
   ),
 );
 // #endregion errors
