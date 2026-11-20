@@ -465,6 +465,8 @@ export const useApp = ({
 
   const progressRef = useRef(startupProgress);
   progressRef.current = startupProgress;
+  const placeholderRef = useRef(placeholder);
+  placeholderRef.current = placeholder;
 
   const surfaces = useMemo(() => new SurfaceManager(manager.capabilities, manager), [manager]);
 
@@ -481,7 +483,7 @@ export const useApp = ({
                   debounce={debounce}
                   progress={progressRef.current}
                   verboseStatus={verboseStatus}
-                  placeholder={placeholder}
+                  placeholder={placeholderRef.current}
                 />
               </SurfaceManagerProvider>
             </RegistryContext.Provider>
@@ -489,7 +491,7 @@ export const useApp = ({
         </PluginManagerProvider>
       </ErrorBoundary>
     ),
-    [fallback, manager, surfaces, ready, error, placeholder],
+    [fallback, manager, surfaces, ready, error],
   );
 };
 
