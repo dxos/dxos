@@ -70,7 +70,7 @@ export const useTableFitWidth = ({
   const pin = model?.pinColumns ?? 0;
   const widths = useMemo(
     () => (grid && model ? measureFieldWidths(grid, model) : undefined),
-    [grid, model, rows, columnMeta],
+    [grid, model, rows, cellUpdate, columnMeta],
   );
   const fit = useFitWidth({
     reserved:
