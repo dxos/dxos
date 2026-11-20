@@ -523,6 +523,38 @@ test QA-10: Ride Check — spec, diagram, deploy, edit a feature card, redeploy
     - name: Redeploy and reload
       do: Deploy the gust-rule commit and reload the same URL.
       expect: the verdict reads MAYBE with "Gusts up to N km/h" and a highlighted Gusts row
+
+test QA-11: Cloudflare community — the agent answers a project's tasks from the space memory
+  desc: |
+    The Cloudflare community template as a demo of tasks that end in artifacts. The space holds a project whose five
+    analysis tasks each name the artifact their answer goes in (four sheets with charts and a docs-gap brief) and a deck
+    task that presents them. The take imports the Cloudflare Developers Discord into the space's memory, hands every
+    task to the agent, and opens each task with the artifact filed on it. Recorded as autocue/community-findings.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug is enabled (a dev-only default); the flow enables Brain
+    - the Cloudflare TriG, exported from the private discord-db-cloudflare-60d fixture, is on disk
+  steps:
+    - name: Create a space from the Cloudflare community template
+      do: Add a space and pick the "Cloudflare community" template.
+      expect: the space opens with the "Cloudflare community" project in the navtree
+    - name: Read the tasks
+      do: Open the project's Tasks tab.
+      expect: six tasks, all To do, five analyses and "Present the findings" last
+    - name: Import the community's memory
+      do: Open Memory in the context sidebar and import the TriG.
+      expect: the panel reports the quads imported
+    - name: Hand every task to the agent
+      do: Tick every task and Delegate to agent.
+      expect: every task is started and held by one agent session
+    - name: Wait for the agent
+      do: Wait while the agent queries the memory and works the tasks in order.
+      expect: every task in review, each with an artifact of the type it names filed on it and on the project
+    - name: Open each task's artifact
+      do: Open a chart task, its sheet and the Charts companion, then the brief and the deck.
+      expect: the sheet holds the counts and a chart drawn from them; no artifact names a person
 ```
 
 ## Changelog
@@ -554,4 +586,31 @@ decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-foreca
   affects: [QA-10]
   why: Every step of the loop has to change something a viewer can see; a greeting endpoint gives the deploy and the edit nothing to show.
   rejected: Rewriting Hello Worker in place, which its eval, QA-9 and the showcase speaking track still describe.
+```
+
+```mdl
+decision D-4: [QA-11] demos a space with a small project whose every task expects an artifact, an analysis of the Cloudflare Discord memory; the user assigns the tasks to the agent, which queries the memory and attaches an artifact to each task.
+  date: 2026-11-20
+  by: user:dmaretskyi
+  affects: [QA-11]
+```
+
+```mdl
+decision D-5: The Cloudflare community template holds five analysis tasks (four sheets with charts and a docs-gap brief) and a deck that depends on them, and ships without the memory, which the take imports as TriG. Fills in [D-4].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-11]
+  why: Sheets with charts are the artifact the user asked for most; a brief and a deck show other kinds. The memory comes from a private fixture, so a template that carried it would publish it.
+  rejected: A project template applied to an existing space, which the reader would have to find and apply before the demo starts.
+```
+
+```mdl
+decision D-6: The take hands all six tasks to one agent session, which files each artifact on its task with Add project artifact. Fills in [D-4].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-11]
+  why: The deck task needs the sheets the other tasks made, which one session already has in its context.
+  rejected: One session per task, which runs the analyses in parallel but leaves the deck without the charts.
 ```
