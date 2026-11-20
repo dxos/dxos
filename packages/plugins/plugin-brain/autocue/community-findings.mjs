@@ -307,7 +307,9 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Hand every task to the agent' });
       await openTasks(demo, page);
-      for (const { title } of TASKS) {
+      // A task already handed over is skipped: one named again is delegated to a second chat.
+      const state = await taskState(page);
+      for (const { title } of TASKS.filter(({ title }) => state[title]?.status === 'todo')) {
         await demo.click({ selector: `${taskRow(title)} >> [data-testid="taskList.item.checkbox"]`, label: title });
       }
       await page.waitForTimeout(BEAT);
@@ -353,6 +355,14 @@ export const steps = [
       await openTasks(demo, page);
       await openTask(demo, page, TASKS[1].title);
       await openArtifact(demo, page, TASKS[1]);
+    },
+  },
+  {
+    name: 'Open what members build with',
+    run: async ({ demo, page }) => {
+      await openTasks(demo, page);
+      await openTask(demo, page, TASKS[2].title);
+      await openArtifact(demo, page, TASKS[2]);
     },
   },
   {
