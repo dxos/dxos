@@ -16,7 +16,7 @@ import { JsonCard } from './JsonCard.tsx';
 // The card is a row slot, so it is mounted in the `Card.Root` its surface host supplies — on its own
 // it has no grid to place itself in and the toggle's column cannot be seen.
 const DefaultStory = ({ data }: { data: unknown }) => (
-  <div className='p-4 dx-card-max-width'>
+  <div className='p-4 dx-card-min-width dx-card-max-width'>
     <Card.Root>
       <Card.Header>
         <Card.Title>Notes</Card.Title>

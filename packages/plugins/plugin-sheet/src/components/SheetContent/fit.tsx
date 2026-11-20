@@ -6,11 +6,15 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { useObject } from '@dxos/echo-react';
 import { type DxGridAxisMeta, defaultColSize, defaultRowSize } from '@dxos/lit-grid';
+import { CELL_PADDING, type DxGridElement, type FitWidth, measureText, useFitWidth } from '@dxos/react-ui-grid';
 
 import { type Sheet, SheetUtil } from '#types';
 
+import { type SheetModel } from '../../model/index.ts';
+import { colLabelCell, projectCellProps } from './util.ts';
+
 /** Width of the frozen row-number column, as `SheetContent` declares it. */
-const ROW_HEADER_SIZE = 48;
+export const ROW_HEADER_SIZE = 48;
 
 /** The used range: one past the last row and column holding a value, at least one of each. */
 export const useUsedExtent = (sheet: Sheet.Sheet): { rows: number; columns: number } => {
@@ -83,4 +87,33 @@ export const FitBox = ({ width, height, children }: FitBoxProps) => {
       </div>
     </div>
   );
+};
+
+const FIT_WIDTH_COLUMNS = 12;
+const FIT_WIDTH_ROWS = 8;
+
+export const useSheetFitWidth = (
+  grid: DxGridElement | null,
+  model: SheetModel,
+  extent: { rows: number; columns: number },
+): { fitWidth: FitWidth; columns: DxGridAxisMeta } => {
+  const [cells] = useObject(model.sheet, 'cells');
+  const widths = useMemo(() => {
+    if (!grid) {
+      return undefined;
+    }
+    return Array.from({ length: Math.max(extent.columns, FIT_WIDTH_COLUMNS) }, (_, col) => {
+      const texts = [colLabelCell(col).value];
+      for (let row = 0; row < Math.min(extent.rows, FIT_WIDTH_ROWS); row++) {
+        texts.push(String(projectCellProps(model, col, row).value ?? ''));
+      }
+      return Math.max(...texts.map((text) => measureText(grid, text))) + CELL_PADDING;
+    });
+  }, [grid, model, cells, extent]);
+  const fitWidth = useFitWidth({ reserved: ROW_HEADER_SIZE, widths });
+  const columns = useMemo<DxGridAxisMeta>(
+    () => ({ grid: Object.fromEntries(fitWidth.sizes.map((size, index) => [index, { size, readonly: true }])) }),
+    [fitWidth.sizes],
+  );
+  return { fitWidth, columns };
 };
