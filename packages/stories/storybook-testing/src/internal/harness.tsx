@@ -296,7 +296,36 @@ const PluginManagerHost = ({
   return <App />;
 };
 
-const SingleHost = ({ props, contextId, Story }: { props: Options; contextId: string; Story: FC }) => {
+/** Calls `onReady` once, after the browser paints what mounted when `ready` turned true. */
+const useReportReady = (ready: boolean, onReady?: () => void) => {
+  const reported = useRef(false);
+  useEffect(() => {
+    if (!ready || !onReady || reported.current) {
+      return;
+    }
+    reported.current = true;
+    // The story mounts before it paints its content.
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(onReady, { timeout: 2_000 });
+    } else {
+      setTimeout(onReady, 200);
+    }
+  }, [ready, onReady]);
+};
+
+const SingleHost = ({
+  props,
+  shared,
+  contextId,
+  Story,
+}: {
+  props: Options;
+  shared?: StoryPeers.Shared;
+  contextId: string;
+  Story: FC;
+}) => {
+  const [mounted, setMounted] = useState(false);
+  useReportReady(mounted, shared?.onReady);
   // Non-lazy stories start with options ready; lazy stories wait.
   const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(props.lazyPlugins ? null : { plugins: [] });
   useEffect(() => {
@@ -325,6 +354,7 @@ const SingleHost = ({ props, contextId, Story }: { props: Options; contextId: st
   const Wrapper = props.Wrapper;
   return (
     <PluginManagerHost options={options} contextId={contextId}>
+      <OnMount onMount={() => setMounted(true)} />
       {Wrapper ? (
         <Wrapper>
           <Story />
@@ -372,20 +402,7 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
   const [seeded, setSeeded] = useState(false);
   const [mounted, setMounted] = useState<readonly number[]>([]);
   const allMounted = mounted.length === runtime.peers.length;
-  const reported = useRef(false);
-  const onReady = shared?.onReady;
-  useEffect(() => {
-    if (!allMounted || !onReady || reported.current) {
-      return;
-    }
-    reported.current = true;
-    // The story mounts before it paints its content.
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(onReady, { timeout: 2_000 });
-    } else {
-      setTimeout(onReady, 200);
-    }
-  }, [allMounted, onReady]);
+  useReportReady(allMounted, shared?.onReady);
   const [error, setError] = useState<string>();
   useEffect(() => {
     if (!lazy) {
@@ -667,7 +684,7 @@ export const decorators = <Args = any,>(input: DecoratorsInput<Args> = {}) => {
       );
     }
 
-    return <SingleHost props={props} contextId={context.id} Story={Story} />;
+    return <SingleHost props={props} shared={shared} contextId={context.id} Story={Story} />;
   }) as any;
 
   return [withTheme(), withLayout({ layout: 'fullscreen' }), host];

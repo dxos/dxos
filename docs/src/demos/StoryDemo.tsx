@@ -12,7 +12,7 @@ import '@dxos/node-std/globals';
 import '@dxos/react-ui/theme.css';
 import * as StoryEmbed from '@dxos/storybook-testing/StoryEmbed';
 
-import { STORIES, pageRuntime, pinDarkAppearance, queueBoot } from './stories.ts';
+import { type BootTurn, STORIES, pageRuntime, pinDarkAppearance, queueBoot } from './stories.ts';
 
 export type StoryDemoProps = {
   id: string;
@@ -37,11 +37,13 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
     return standalone ? undefined : pageRuntime();
   });
   const panel = usePanelOpened(lazy);
-  const [slot] = useState(() =>
-    lazy
-      ? queueBoot(() => panel.ref.current?.closest('[data-panel]')?.hasAttribute('data-active') ?? false)
-      : undefined,
-  );
+  // Queued after mount, so the panel's visibility can be read when the first turn is given.
+  const [slot, setSlot] = useState<BootTurn>();
+  useEffect(() => {
+    if (lazy) {
+      setSlot(queueBoot(() => panel.ref.current?.closest('[data-panel]')?.hasAttribute('data-active') ?? false));
+    }
+  }, []);
   const [turn, setTurn] = useState(false);
   useEffect(() => {
     void slot?.turn.then(() => setTurn(true));
