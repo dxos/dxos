@@ -187,4 +187,5 @@ in [DESIGN.md](DESIGN.md); this file is the ledger.
 - dxos/dxos#14557 — this project: draft-PR brief, repositories over MCP, specs. Draft; CI red on
   the cache entry above.
 - dxos/dxos#14555 — whoami on Composer's in-app MCP; dev channel → EDGE dev. Draft, green.
-- dxos/edge#1535 — checkouts on container disk, per-turn snapshot. Ready, green.
+- dxos/edge#1535 — the coding agent's sandbox runs with `persistentWorkspace: false` (no R2 backing); unpushed
+  work is lost when a container is replaced. Ready, green.

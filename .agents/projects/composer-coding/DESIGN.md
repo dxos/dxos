@@ -27,8 +27,9 @@ the task's repositories, and the result is a pull request attached to the task.
 ## Decisions
 
 - composer-dev → edge-dev by re-pointing the dev channel (dxos#14555), not a separate worker.
-- Checkouts on the container disk with a per-turn git-bundle snapshot (edge#1535): the R2-synced
-  `/workspace` could not hold a pnpm install.
+- The coding agent's sandbox runs with `persistentWorkspace: false` (edge#1535): the R2-synced
+  `/workspace` could not hold a pnpm install, so it is a plain directory on the container's disk. Unpushed
+  work is lost when a container is replaced; pushed work stays on GitHub.
 
 ## Decision log
 
