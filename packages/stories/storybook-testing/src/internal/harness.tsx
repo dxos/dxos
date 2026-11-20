@@ -10,6 +10,7 @@ import React, {
   type ReactNode,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
@@ -371,12 +372,20 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
   const [seeded, setSeeded] = useState(false);
   const [mounted, setMounted] = useState<readonly number[]>([]);
   const allMounted = mounted.length === runtime.peers.length;
+  const reported = useRef(false);
+  const onReady = shared?.onReady;
   useEffect(() => {
-    if (allMounted) {
-      shared?.onReady?.();
+    if (!allMounted || !onReady || reported.current) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allMounted]);
+    reported.current = true;
+    // The story mounts before it paints its content.
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(onReady, { timeout: 2_000 });
+    } else {
+      setTimeout(onReady, 200);
+    }
+  }, [allMounted, onReady]);
   const [error, setError] = useState<string>();
   useEffect(() => {
     if (!lazy) {
@@ -539,7 +548,6 @@ type PeerAppProps = {
   layout?: ModuleLayout;
   /** Whether the peer has the space and the story its layout; until then the app boots behind a placeholder. */
   ready: boolean;
-  /** The word the placeholder shows until the story mounts. */
   status: string;
   onMounted: () => void;
   Wrapper?: FC<PropsWithChildren>;
@@ -577,7 +585,6 @@ const PeerApp = ({
     [client],
   );
 
-  // The placeholder sits outside the plugin app, which renders nothing until it has booted.
   return (
     <>
       <AppPluginManagerHost id={id} options={options}>
@@ -610,7 +617,6 @@ const OnMount = ({ onMount }: { onMount: () => void }) => {
   return null;
 };
 
-/** A one-word state, centered over a pane that has nothing to show yet. */
 const StatusCover = ({ status }: { status: string }) => (
   <div role='status' className='dx-cover grid place-items-center text-description bg-base-surface'>
     {status}…

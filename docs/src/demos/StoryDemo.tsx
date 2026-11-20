@@ -18,11 +18,7 @@ export type StoryDemoProps = {
   id: string;
   /** Starts peers of the story's own instead of joining the page's. */
   standalone?: boolean;
-  /**
-   * Boots in turn with the page's other demos, the one in the active tab panel (`[data-panel]`) first, each once the
-   * one before it shows its content; a panel that turns `data-active` boots at once. Demos then never share the CPU,
-   * and the hidden ones are ready by the time the reader picks their tab.
-   */
+  /** Boots after the page's other demos show, active tab panel (`[data-panel]`) first. */
   lazy?: boolean;
   /** Called once the demo shows on every peer. */
   onReady?: () => void;
@@ -40,11 +36,10 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
     pinDarkAppearance();
     return standalone ? undefined : pageRuntime();
   });
-  const active = usePanelActive(lazy);
-  // Islands render in page order, so the queue follows the tabs.
+  const panel = usePanelOpened(lazy);
   const [slot] = useState(() =>
     lazy
-      ? queueBoot(() => active.ref.current?.closest('[data-panel]')?.hasAttribute('data-active') ?? false)
+      ? queueBoot(() => panel.ref.current?.closest('[data-panel]')?.hasAttribute('data-active') ?? false)
       : undefined,
   );
   const [story, setStory] = useState<StoryEmbed.Composed>();
@@ -71,8 +66,8 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
   if (error) {
     return <p role='alert'>{error}</p>;
   }
-  if (!active.shown && !turn) {
-    return <div ref={active.ref} hidden />;
+  if (!panel.opened && !turn) {
+    return <div ref={panel.ref} hidden />;
   }
   if (!story) {
     return (
@@ -98,21 +93,20 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
   );
 };
 
-/** Whether the tab panel around the returned ref has been shown; stays true once it has. Without a panel, never. */
-const usePanelActive = (lazy = false) => {
+const usePanelOpened = (lazy = false) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(!lazy);
+  const [opened, setOpened] = useState(!lazy);
   useEffect(() => {
     const panel = ref.current?.closest<HTMLElement>('[data-panel]');
-    if (shown || !panel) {
+    if (opened || !panel) {
       return;
     }
-    const check = () => panel.hasAttribute('data-active') && setShown(true);
+    const check = () => panel.hasAttribute('data-active') && setOpened(true);
     const observer = new MutationObserver(check);
     observer.observe(panel, { attributes: true, attributeFilter: ['data-active'] });
     check();
     return () => observer.disconnect();
-  }, [shown]);
+  }, [opened]);
 
-  return { ref, shown };
+  return { ref, opened };
 };

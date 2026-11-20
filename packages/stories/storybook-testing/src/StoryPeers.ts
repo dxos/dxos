@@ -146,7 +146,6 @@ export class Runtime {
       yield* Effect.promise(() =>
         client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: peer.name, data: { hue: peer.hue } })),
       );
-      // The shared space does not need the profile's own spaces, so they are created alongside it and awaited before ready.
       const identitySpaces = yield* Effect.forkChild(AppSpace.setupIdentitySpaces(client));
 
       // The other peers join while the first seeds, and receive the content as it is written.
@@ -234,7 +233,7 @@ const SharedContext = createContext<Shared | undefined>(undefined);
 
 export type ProviderProps = PropsWithChildren<Shared>;
 
-/** Runs the stories inside on `runtime`, if given, rather than on clients of their own: the escape hatch for a page of stories. */
+/** Shares `runtime`, `late` and `onReady` with the stories inside. */
 export const Provider = ({ runtime, late, onReady, children }: ProviderProps) =>
   createElement(SharedContext.Provider, { value: { runtime, late, onReady } }, children);
 

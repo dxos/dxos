@@ -21,18 +21,14 @@ const narrative = NARRATIVES[id];
 <script>
   import { DEMO_READY } from '../demos/frames.ts';
 
-  // A frame shares the page's main thread, so the demo most in view loads alone; once it shows its content, the rest
-  // load together, since they overlap their network waits. A demo scrolled into view before then loads at once unless
-  // the one loading is in view too.
   const FIRST_TIMEOUT = 20_000;
   const waiting = [...document.querySelectorAll<HTMLIFrameElement>('.demo-embed > iframe[data-src]')];
-  /** How much of the frame's height is in view. */
-  const shown = (frame: HTMLIFrameElement) => {
+  const visibleFraction = (frame: HTMLIFrameElement) => {
     const rect = frame.getBoundingClientRect();
     return Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)) / rect.height;
   };
-  const inView = (frame: HTMLIFrameElement) => shown(frame) > 0;
-  const mostInView = () => [...waiting].sort((a, b) => shown(b) - shown(a))[0];
+  const inView = (frame: HTMLIFrameElement) => visibleFraction(frame) > 0;
+  const mostInView = () => [...waiting].sort((a, b) => visibleFraction(b) - visibleFraction(a))[0];
 
   const load = (frame: HTMLIFrameElement) => {
     waiting.splice(waiting.indexOf(frame), 1);
@@ -46,14 +42,9 @@ const narrative = NARRATIVES[id];
     clearTimeout(timeout);
     [...waiting].forEach(load);
   };
-  // The frame reports on mount, before it paints; let that finish first.
-  const afterPaint = () =>
-    typeof requestIdleCallback === 'function'
-      ? requestIdleCallback(loadRest, { timeout: 2_000 })
-      : setTimeout(loadRest, 200);
   const onReady = (event: MessageEvent) => {
     if (event.source === first?.contentWindow && event.data?.type === DEMO_READY) {
-      afterPaint();
+      loadRest();
     }
   };
 

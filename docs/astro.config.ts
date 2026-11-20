@@ -300,16 +300,11 @@ const inspectorImportMap = (): AstroIntegration => {
   };
 };
 
-/** The page whose shown demo gets its modules preloaded, and the story module that demo renders. */
 const PRELOAD_PAGE = 'echo/index.html';
 const PRELOAD_STORY = /stories-echo\/src\/stories\/Editor\.stories\.tsx$/;
 const OTHER_STORIES = /stories-echo\/src\/stories\/(?!Editor\.)[^/]+\.stories\.tsx$/;
 
-/**
- * Preloads every chunk the shown `/echo` demo can import, so the browser fetches them in parallel instead of one
- * dynamic `import()` after another. Each step of that chain costs a network round trip, which put the demo's content
- * seconds behind its download. The other demos' stories are left out: they boot after the shown one.
- */
+/** Adds modulepreload links for the shown `/echo` demo's import graph, so its chunks fetch in parallel. */
 const demoModulePreload = (): AstroIntegration => {
   let files: string[] | undefined;
   const plugin: Plugin = {
