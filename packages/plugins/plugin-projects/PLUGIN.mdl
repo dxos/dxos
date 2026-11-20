@@ -3261,3 +3261,22 @@ decision D-287: Unset, the Default spec view setting opens a spec on its source,
   affects: [F-4.14, F-4.16, QA-10, QA-12]
   why: The source now reads by the same labels as the forms and keeps its keys safe, so it is the view a spec opens in.
 ```
+
+```mdl
+decision D-288: A task delegated to an external coding agent ends in a draft pull request. The delegation brief asks the agent to commit on a new branch, push it, open one draft PR per repository it changed, attach each PR to the task it implements and move that task to `review`; never to push to the default branch, force-push a branch it did not create, or merge.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The brief forbade pushing unless the person asked in the chat, and an unattended cloud run has nobody there to ask, so a delegated task could not end in the pull request the person reviews.
+  rejected:
+    - Pushing only when the person asks in the chat, which leaves every unattended run's work in its container.
+```
+
+```mdl
+decision D-289: The project skill lists `ProjectOperation.UpdateRepositories` (`org.dxos.operation.projects.updateRepositories`), which edits the repositories a project's cloud coding agents check out.
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: A project's repositories are an annotation no generic object write reaches, and this skill is the one MCP clients are served, so a coding session or a remote MCP user can set up a project for coding.
+```
+

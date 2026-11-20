@@ -6,6 +6,14 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: composer-coding
+    status: active
+    user: dmytro
+    host: cloud-sandbox
+    summary: "Make Composer's coding loop (task -> Claude Code session on EDGE or Tauri -> pull request) good enough to replace Claude Code desktop for dxos/dxos and dxos/edge, on the Claude subscription token only."
+    tasks: .agents/projects/composer-coding/TASKS.md
+    design: .agents/projects/composer-coding/DESIGN.md
+    prs: [14555]
   - name: diagram-dsl
     status: active
     user: burdon

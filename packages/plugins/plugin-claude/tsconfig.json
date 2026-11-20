@@ -100,7 +100,13 @@
       "path": "../plugin-connector"
     },
     {
+      "path": "../plugin-github"
+    },
+    {
       "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-sandbox"
     },
     {
       "path": "../plugin-space"

@@ -6522,6 +6522,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
+      '@dxos/edge-compute':
+        specifier: workspace:*
+        version: link:../edge-compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -10853,9 +10856,15 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
+      '@dxos/plugin-github':
+        specifier: workspace:*
+        version: link:../plugin-github
       '@dxos/plugin-projects':
         specifier: workspace:*
         version: link:../plugin-projects
+      '@dxos/plugin-sandbox':
+        specifier: workspace:*
+        version: link:../plugin-sandbox
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

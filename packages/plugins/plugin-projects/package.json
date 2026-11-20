@@ -57,6 +57,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Delegation": {
+      "source": "./src/operations/Delegation.ts",
+      "types": "./dist/types/src/operations/Delegation.d.ts",
+      "import": "./dist/lib/Delegation.mjs"
+    },
     "./LegacyProject": {
       "source": "./src/types/LegacyProject.ts",
       "types": "./dist/types/src/types/LegacyProject.d.ts",
@@ -164,6 +169,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "Delegation": [
+        "dist/types/src/operations/Delegation.d.ts"
+      ],
       "ProjectCapabilities": [
         "dist/types/src/types/ProjectCapabilities.d.ts"
       ],

@@ -129,6 +129,8 @@ export interface AccessTokenService {
 export type GetAccessTokenRequest = {
   /** Id of the `AccessToken` object the grant was registered against. */
   accessTokenId: string;
+  /** Exchange the grant now even if the stored token looks fresh, since the provider just refused it. */
+  refresh?: boolean;
 };
 
 export type GetAccessTokenResult =

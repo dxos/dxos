@@ -44,6 +44,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetPullRequestStatus
           ...summarizeCheckRuns(runs),
           runs: runs.map(toCheckRun),
           ...summarizeReviews(reviews),
+          labels: (pull.labels ?? []).map((label) => label.name),
         };
       }, Effect.provide(FetchHttpClient.layer)),
     ),

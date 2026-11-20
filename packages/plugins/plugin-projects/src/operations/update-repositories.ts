@@ -9,7 +9,7 @@ import { Database, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Repo } from '@dxos/types';
 
-import { CodeOperation } from '#types';
+import { ProjectOperation } from '#types';
 
 /** A space-qualified and a local URI may name the same repository. */
 const refKey = (ref: Ref.Ref<Repo.Repo>): string => {
@@ -17,10 +17,10 @@ const refKey = (ref: Ref.Ref<Repo.Repo>): string => {
   return (eid && EID.getEntityId(eid)) ?? ref.uri;
 };
 
-const handler: Operation.WithHandler<typeof CodeOperation.UpdateProjectRepositories> =
-  CodeOperation.UpdateProjectRepositories.pipe(
+const handler: Operation.WithHandler<typeof ProjectOperation.UpdateRepositories> =
+  ProjectOperation.UpdateRepositories.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({ project: projectRef, add = [], remove = [] }) {
+      Effect.fn(function* ({ project: projectRef, add = [], remove = [], setupScript }) {
         const project = yield* Database.load(projectRef);
         const current = Repo.getRepositories(project);
         const removed = new Set(remove.map(refKey));
@@ -35,7 +35,15 @@ const handler: Operation.WithHandler<typeof CodeOperation.UpdateProjectRepositor
           Repo.setRepositories(project, next);
           yield* Database.flush();
         }
-        return { repositories: [...Repo.getRepositories(project)] };
+        if (setupScript !== undefined && setupScript !== (Repo.getSetupScript(project) ?? '')) {
+          Repo.setSetupScript(project, setupScript);
+          yield* Database.flush();
+        }
+        const script = Repo.getSetupScript(project);
+        return {
+          repositories: [...Repo.getRepositories(project)],
+          ...(script !== undefined && { setupScript: script }),
+        };
       }),
     ),
   );

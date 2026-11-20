@@ -3,3 +3,4 @@
 //
 
 export * as ProjectOperationHandlerSet from './ProjectOperationHandlerSet.ts';
+export * as Delegation from './Delegation.ts';

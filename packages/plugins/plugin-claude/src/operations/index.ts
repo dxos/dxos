@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { ClaudeAgentOperation } from '#types';
+import { ClaudeAgentOperation, CloudRunOperation } from '#types';
 
 export const ClaudeAgentOperationHandlerSet = OperationHandlerSet.lazy([
   ClaudeAgentOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
@@ -17,4 +17,17 @@ export const ClaudeAgentOperationHandlerSet = OperationHandlerSet.lazy([
     Operation.lazyHandler(() => import('./update-session-credentials.ts')),
   ),
   ClaudeAgentOperation.GetTranscript.pipe(Operation.lazyHandler(() => import('./get-transcript.ts'))),
+]);
+
+/** The cloud coding run, started and folded by an operation; it runs where EDGE serves coding-agent control. */
+export const CloudRunOperationHandlerSet = OperationHandlerSet.lazy([
+  CloudRunOperation.StartCloudRun.pipe(
+    Operation.lazyHandler(() => import('./cloud-run.ts').then(({ start }) => ({ default: start }))),
+  ),
+  CloudRunOperation.SyncCloudRun.pipe(
+    Operation.lazyHandler(() => import('./cloud-run.ts').then(({ syncRun }) => ({ default: syncRun }))),
+  ),
+  CloudRunOperation.DriveCloudRuns.pipe(
+    Operation.lazyHandler(() => import('./drive-cloud-runs.ts').then(({ drive }) => ({ default: drive }))),
+  ),
 ]);
