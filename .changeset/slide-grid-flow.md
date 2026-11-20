@@ -1,5 +1,6 @@
 ---
 '@dxos/react-ui-slides': minor
+'@dxos/plugin-brain': patch
 ---
 
-A slide `<Grid variant="flow">` draws an arrow in each gap between the cards of a row, for a progression of cards that are still a grid's: one size, with level headers, and titles a step smaller to suit the narrower cards. A click tag (`<v-clicks>`, `<v-click>`, `<v-after>`) written straight inside a `<Grid>` now reveals the grid's children in place, where before it put them in one box that took a single cell. A list nested in a `<List variant="flow">` card takes the card's size. A `<Grid>` that holds icon cards keeps its rows when it also holds a `<Box>`, a `<Cell>` or a card with no icon. A slide's `<Box variant="title">` now sets its name in Poiret One whatever font the deck picked, as `variant="brand"` does.
+Slides: `<Grid variant="flow">` joins the cards of a row with arrows, with card titles a step smaller, and a click tag (`<v-clicks>`, `<v-click>`, `<v-after>`) written straight inside a `<Grid>` reveals the grid's children in place, where before they stacked in a single cell. A `<Grid>` of icon cards keeps its rows beside a `<Box>`, a `<Cell>` or a card with no icon; a list nested in a `<List variant="flow">` card takes the card's size; and `<Box variant="title">` sets its name in Poiret One whatever font the deck picked, as `variant="brand"` does. The brain plugin's Facts panel no longer raises an unhandled rejection when the client shuts down during a read.
