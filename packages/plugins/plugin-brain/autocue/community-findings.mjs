@@ -282,8 +282,11 @@ export const steps = [
       await demo.caption({ value: "Import the community's memory", subtitle: 'TriG: a named graph per fact' });
       await demo.click({ selector: 'button[aria-label="Memory"] >> nth=0', label: 'Memory' });
       await page.locator(MEMORY('import')).waitFor({ state: 'visible', timeout: 20_000 });
+      // The sidebar slides in; a click before it settles lands beside the button and opens no chooser.
+      await page.waitForTimeout(BEAT);
+      await page.locator(MEMORY('import')).scrollIntoViewIfNeeded();
       const [chooser] = await Promise.all([
-        page.waitForEvent('filechooser'),
+        page.waitForEvent('filechooser', { timeout: 30_000 }),
         demo.click({ selector: MEMORY('import'), label: 'Import TriG' }),
       ]);
       await chooser.setFiles(TRIG);
