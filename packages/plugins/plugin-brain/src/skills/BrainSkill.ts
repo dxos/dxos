@@ -39,6 +39,26 @@ export const make = (): Skill.Skill =>
         3. Report "nothing found" only after BOTH tools return empty. Never answer from prior
            knowledge or guess.
 
+        ## Open-ended questions ("what is interesting", themes, trends)
+        When asked what the memory shows, rather than about one named subject:
+        1. Survey before you filter. Query SPARQL for the predicates and their counts
+           (\`SELECT ?p (COUNT(*) AS ?n) WHERE { GRAPH ?g { ?s ?p ?o } } GROUP BY ?p ORDER BY DESC(?n) LIMIT 50\`),
+           then for the most-mentioned entities. Read the whole store this way, not a slice.
+        2. Do not filter on the source's own name (the company a Discord server or mailbox belongs to).
+           Most facts in a source are about its products, features and people, and few name the source
+           itself, so that filter drops nearly everything worth reporting.
+        3. Answer about the content: the topics people discuss, the problems they report ("hit error",
+           "asked about", "opened ticket with"), what they use, and how each changes over time. Group by
+           topic or product and count per topic and per week.
+        4. Do not report statistics about the extraction itself (how many facts per predicate, how many
+           per factuality code) as findings. They describe the pipeline, not what the content says; use
+           them only to choose what to query next.
+        5. A finding needs enough facts to carry it. Do not state a rate or a trend from two or three
+           facts; say the sample is too small, or leave it out.
+        6. Report themes in aggregate. Do not name individual people in a finding or an artifact unless the
+           user asked about that person, and never surface personal matters (job applications, health,
+           disputes) about a named person.
+
         ## Using the tools
         - Name entities as they are written ("Alice Smith", "dmaretskyi"): the tools match the name's slug
           ("alice-smith") and every entity labelled with the name, including those with an IRI of their own
@@ -62,6 +82,8 @@ export const make = (): Skill.Skill =>
         ## Interpreting results
         - Factuality codes: CT certain, PR probable, PS possible; a trailing "-" means the statement
           is negated; "CTu"/"Uu" mean unknown. Hedge non-certain facts when relaying them.
+        - A negated fact is what the source said, not a disputed or false claim: "X works for Y" at CT- means
+          the source states with certainty that X does not work for Y (e.g. "I don't work for Cloudflare").
         - Facts are extracted claims, not verified truth — attribute them ("according to the email…").
         - \`source\` is the DXN of the message or document the fact came from; \`date\` is when the
           fact was recorded.

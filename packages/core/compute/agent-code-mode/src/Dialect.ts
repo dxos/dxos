@@ -132,5 +132,22 @@ export const renderOperation = (
     input: ${input}
 `;
 
+/**
+ * The `console` bound in the code's scope: its output methods print into the call's output, since the model writes
+ * `console.log` by habit and the host's console is a channel it never reads. Its other methods stay the host's.
+ * A value prints as it is: the Effect dialect's `yield* print` also adds an object's relation hints, which take a query
+ * this synchronous call cannot wait for. `workerd/prelude.mjs` repeats this list, since it cannot import it.
+ */
+export const printingConsole = (print: (...values: unknown[]) => void): Console => ({
+  ...console,
+  log: print,
+  info: print,
+  warn: print,
+  error: print,
+  debug: print,
+  // Only the value: the second argument is the host's formatting options.
+  dir: (value: unknown) => print(value),
+});
+
 /** Shown in place of the operations section when the conversation binds no skills. */
 export const NO_OPERATIONS = '### Operations\n\nNo operations are bound to this conversation.';

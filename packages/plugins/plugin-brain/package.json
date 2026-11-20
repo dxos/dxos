@@ -158,6 +158,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-rdf": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",

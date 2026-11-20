@@ -403,9 +403,16 @@ skill ConversationSkill
     - op:createAgent
     - op:ensureChannelChat
     - op:listAgents
+    - op:resolveEntity
+    - op:recordFacts
+    - op:retrieveFacts
   instructions: >
     Authored in `src/skills/ConversationSkill.ts`: reply in the conversation (which may mirror a
-    channel conversation), address the latest message, be concise.
+    channel conversation), address the latest message, be concise. What people say is left to the Brain
+    skill's end-request hook, which reads the turn into the brain; the agent records facts itself only
+    from earlier messages shown to it as context (a channel's recent messages, which the hook does not
+    read), in the same steps as the requested work rather than in steps of their own. Asked about
+    someone, it recalls before answering.
 ```
 
 ```mdl
@@ -1179,6 +1186,64 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       note: Bob stays Kai's admin on EDGE, since admins are only added (F-7.9); his panel lists the agent spaces he is in.
 ```
 
+```mdl
+test QA-6: Kai on Discord — brainstorm a made-up offsite in Kai's thread, write it up, DM it, edit it, open it in Composer
+  desc: |
+    The Discord journey, timed per answer. A person mentions Kai in a channel; Kai starts a thread on the message and
+    answers there. In the thread the person brainstorms an invented offsite, asks for the plan as a document marked as a
+    test, asks Kai to DM them its link and asks for an edit; then they open the DM and follow the link to the edited
+    document in Composer. Each answer's latency is the time between Discord's timestamps of the message and of Kai's
+    answer, and the render is the time from opening the link to the edited document on screen; all are shown as the
+    take runs.
+  actors: human
+  covers: [F-2.4]
+  status: passing             # 2026-11-19, recorded by the discord-offsite flow against preview EDGE (https://dx.pub/demo/2026-11-19-kai-discord/); the DM's link is rewritten to dev.composer.space until dxos/dxos#14637
+  given:
+    - discord: discord.com is signed in, in the autocue profile, as a member of the DXOS server
+    - channel: #test-bot, https://discord.com/channels/837138313172353095/1494842957340086382, where the bot "Kai Preview" is bound
+    - Kai Preview runs on preview EDGE
+    - composer: dev.composer.space is signed in, in the same profile, as an identity in Kai Preview's space
+  steps:
+    - name: Mention Kai to start a thread about a made-up offsite
+      do: |
+        In the channel, send "@Kai Preview [TEST] Brainstorm with me: we're planning a made-up team offsite called
+        Driftwood, at a lake cabin in the Dolomites on March 12–14, for 10 people. What should we plan first?"
+      expect: Kai starts a thread on the message and answers in it, not in the channel
+      note: NO `invoke` — the gestures are on discord.com. The thread shows before Kai's answer does; the flow waits for the answer.
+    - name: Enter the thread
+      do: Open the thread from its card under the message.
+      expect: the thread holds Kai's first answer
+    - name: Brainstorm the second day
+      do: In the thread, send "@Kai Preview Give me three ideas for day two that mix a morning hike with an afternoon hack session."
+      expect: Kai answers in the thread with ideas for day two
+    - name: Brainstorm the budget
+      do: In the thread, send "@Kai Preview The budget is 9,000 euros. What would you cut first if we run over?"
+      expect: Kai answers in the thread, naming what it would cut
+    - name: Put the plan in a document marked as a test
+      do: |
+        In the thread, send "@Kai Preview Put this plan in a document titled "[TEST] Driftwood offsite plan", and say at
+        the top that it is a test made for a demo."
+      expect: Kai answers in the thread with a link to the new document
+      note: The title and the note at the top mark the document as test data, so it can be found and deleted afterwards.
+    - name: Ask Kai to DM the document
+      do: In the thread, send "@Kai Preview DM @<you> the link to that document."
+      expect: a DM from Kai with the document's link arrives
+      note: Kai answers with the DM itself; it may post nothing in the thread.
+    - name: Ask Kai to edit the document
+      do: In the thread, send "@Kai Preview Add a "Packing list" section to the document with five items."
+      expect: Kai answers in the thread that the section was added
+    - name: Go to the DM and open the document
+      do: Open the DM from Kai and follow the document's link.
+      expect: |
+        Composer opens "[TEST] Driftwood offsite plan" with the note that it is a test at the top and the packing list
+        Kai added
+      note: The link points at preview.composer.space, which runs against production EDGE and cannot open the document (dxos/dxos#14637), so the flow opens the same path on dev.composer.space; a person following the link as sent does not see the document. The DM list and earlier DM history are the presenter's and stay off camera.
+  after:
+    - name: Delete the test document
+      do: In Composer, delete "[TEST] Driftwood offsite plan" from Kai Preview's space.
+      expect: the document is gone
+```
+
 ## Changelog
 
 ```mdl
@@ -1317,6 +1382,60 @@ decision D-14: A space's memory has one feed of facts, its replicated `facts` fe
   by: user:dmaretskyi
   affects: [F-1.1]
   why: Facts reach a space's memory one way, through its replicated log, instead of a second feed format and an indexer per agent.
+```
+
+```mdl
+decision D-15: An agent in a conversation does not record what people say to it: the Brain skill's end-request hook reads each turn into the brain, attributed to its speakers. The agent records facts itself (op:resolveEntity, then op:recordFacts) only from earlier messages shown to it as context, such as a channel's recent messages, and does so in the same steps as the requested work, not in steps of their own.
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [ConversationSkill]
+  why: Resolving and recording a fact before replying cost one to three model calls per turn for facts the hook records anyway, and the hook attributes them to the person who said them where op:recordFacts attributes them to the agent. The hook reads only what was said in the conversation, not context blocks, which the channel marks synthetic, so facts in those blocks have no other path into the brain.
+  rejected:
+    - Drop in-turn recording entirely: facts from a channel's recent messages would reach the brain only if that channel is back-indexed.
+    - Have the hook read context blocks: it needs a structured form of the relayed messages from the channel, which the channel's prompt does not carry yet.
+```
+
+```mdl
+decision D-16: ConversationSkill contributes op:resolveEntity, op:recordFacts and op:retrieveFacts besides op:createAgent, op:ensureChannelChat and op:listAgents. Fills in [D-15].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [ConversationSkill]
+  why: The skill already binds them; the spec listed only the agent operations.
+```
+
+```mdl
+decision D-17: Reading a chat into the brain, the extractor attributes a first-person statement, "we" included, to the speaker of its line, and records a decision as `decided` with what was decided as the object. Fills in [D-15].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [ConversationSkill]
+  why: pipeline-rdf's default rules omit a proposition whose subject is an unresolved "we", so "we decided to ship offline mode" was lost once the agent stopped recording decisions itself. The rules are the chat read's own, as pipeline-email's are for mail, so other sources keep the default.
+  rejected:
+    - Keep in-turn recording for decisions stated with "we": the most common way to state a decision would cost the extra model calls D-15 removes.
+    - Change pipeline-rdf's default rule: every source would attribute "we" to an author, including documents with no speaker.
+```
+
+```mdl
+decision D-18: Reading a chat into the brain drops a fact whose subject or object is the placeholder for a speaker nothing identifies; the line's other facts are kept. Fills in [D-17].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [ConversationSkill]
+  why: A message with no identity, contact, name or chat participant is read under the placeholder name "User", and D-17's rules would make its "we decided" a decision by a person called User. Dropping it in code holds whatever the model emits.
+  rejected:
+    - Tell the extractor to omit first-person statements from such a line: a prompt rule the model can ignore, and it changes every chat read's recorded prompt.
+```
+
+```mdl
+decision D-19: QA-6 is the timed Kai-on-Discord demo: it enters the thread Kai starts once Kai has answered there, times every answer by Discord's timestamps, asks for an edit, and opens the edited document from the DM. It runs against preview EDGE with the "Kai Preview" bot, recorded by the `discord-offsite` flow.
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.4]
+  why: The demo times each answer and the document's render, so it needs Kai's own thread and answers, an edit, and the edited document on screen; preview EDGE and its bot keep the demo off production.
+  source: https://github.com/dxos/dxos/pull/14608
 ```
 
 ## Appendix: Extension Definitions
