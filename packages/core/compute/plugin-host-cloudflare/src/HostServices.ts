@@ -13,8 +13,9 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import { RemoteProcessManager, handOffWorkingSet } from '@dxos/compute-runtime';
+import { handOffWorkingSet } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import { Database, Entity, Obj } from '@dxos/echo';
 import * as HostProcessControl from '@dxos/edge-compute/host-process-control';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -120,14 +121,13 @@ const makeCallProxy = (key: string, host: PluginProtocol.ServiceHost): Capabilit
 
 /**
  * Adapters every bundle gets, after its own (so a plugin's adapter under the same service wins): EDGE's process control
- * as the `RemoteProcessManager.Service` a client gets over HTTP, so a plugin drives processes through the generic
- * interface rather than wiring a transport of its own.
+ * as `Process.ManagerService`, so an operation drives processes through `@dxos/compute` alone.
  */
 export const builtinAdapters: readonly Capabilities.HostServiceAdapter[] = [
   {
     host: HostProcessControl.PROCESS_MANAGER_HOST_KEY,
-    service: RemoteProcessManager.Service.key,
-    make: (host) => HostProcessControl.makeManager(host, Registry.make()),
+    service: Process.ManagerService.key,
+    make: (host) => HostProcessControl.makeProcessManager(host, Registry.make()),
   },
 ];
 

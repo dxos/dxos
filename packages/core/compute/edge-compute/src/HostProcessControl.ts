@@ -16,9 +16,11 @@ import type * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as RpcSerialization from 'effect/rpc/RpcSerialization';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 
 import { RemoteProcessManager } from '@dxos/compute-runtime';
-import type * as Process from '@dxos/compute/Process';
+import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import { SerializedError } from '@dxos/protocols';
 
 import { decodeEvent, decodeSnapshot } from './process-snapshot.ts';
@@ -167,17 +169,44 @@ export const make = (host: Host): Control => ({
 });
 
 /**
- * A {@link RemoteProcessManager.Manager} over the host service, which a plugin host provides to every bundle as
- * {@link RemoteProcessManager.Service}: the same view of EDGE's processes a client gets over HTTP.
+ * The {@link Process.ManagerService} a plugin host provides to every bundle: EDGE's processes in the invocation's space,
+ * through the host service. A bundle runs no processes of its own, so every verb takes an EDGE location.
  */
-export const makeManager = (host: Host, registry: Registry.AtomRegistry): RemoteProcessManager.Manager => {
+export const makeProcessManager = (host: Host, registry: Registry.AtomRegistry): Process.Manager => {
   const control = make(host);
   const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
   registry.mount(processTreeAtom);
+  const processTree = Effect.sync(() => registry.get(processTreeAtom));
+  const remote = RemoteProcessManager.makeControlVerbs(control, registry, processTreeAtom);
+  const localRefused = Effect.suspend(() =>
+    Effect.die(new Error('A plugin bundle on EDGE runs no local processes; pass an EDGE location.')),
+  );
   return {
-    processTree: Effect.sync(() => registry.get(processTreeAtom)),
+    processTree,
     processTreeAtom,
-    control,
-    ...RemoteProcessManager.makeControlVerbs(control, registry, processTreeAtom),
+    list: (filter?: Process.Filter) =>
+      filter?.space !== undefined
+        ? remote
+            .refreshProcessTree(filter.space)
+            .pipe(Effect.ignore, Effect.andThen(Process.listFromTree(processTree)(filter)))
+        : Process.listFromTree(processTree)(filter),
+    // Trace messages reach clients through the space swarm, which a bundle is not on.
+    subscribeToTraceMessages: () => Stream.empty,
+    spawn: <I, O, Rpcs extends Rpc.Any = never>(
+      definition: Operation.Durable<I, O, any, Rpcs> | Operation.ScriptDefinition<I, O>,
+      { location, ...options }: Process.SpawnOptions & Process.LocationOptions = {},
+    ): Effect.Effect<Process.Process<I, O, Rpcs>> =>
+      location?.kind !== 'edge'
+        ? localRefused
+        : Operation.isScript(definition)
+          ? Effect.die(new Error(`Script operation '${definition.meta.key}' runs through Operation.invoke, not spawn.`))
+          : remote.spawn({ ...options, spaceId: location.space, key: definition.key, definition }),
+    handles: ({ location, ...options }: Process.ListOptions & Process.LocationOptions = {}) =>
+      location?.kind === 'edge' ? remote.list({ ...options, spaceId: location.space }) : localRefused,
+    attach: <I, O, Rpcs extends Rpc.Any = never>(
+      pid: Process.ID,
+      { location }: Process.LocationOptions = {},
+    ): Effect.Effect<Process.Process<I, O, Rpcs>> =>
+      location?.kind === 'edge' ? remote.attach({ spaceId: location.space, pid }) : localRefused,
   };
 };

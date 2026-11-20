@@ -14,6 +14,7 @@ import * as RpcSerialization from 'effect/rpc/RpcSerialization';
 import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Schema from 'effect/Schema';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { SpaceId } from '@dxos/keys';
 
@@ -155,21 +156,33 @@ describe('HostProcessControl', () => {
     }),
   );
 
-  it.effect('builds a remote process manager whose spawn goes through the host', () =>
+  it.effect('serves Process.ManagerService for EDGE locations and refuses local ones', () =>
     Effect.gen(function* () {
       const { host, calls } = makeHost();
-      const manager = HostProcessControl.makeManager(host, Registry.make());
-      expect(manager.control).toBeDefined();
-      const spawn = manager.spawn;
-      expect(spawn).toBeDefined();
-      if (spawn !== undefined) {
-        const process = yield* spawn({ spaceId, key: 'org.dxos.edge.process.coding-agent', name: 'Claude Code' });
-        expect(process.pid).toBe(pid);
-      }
+      const manager = HostProcessControl.makeProcessManager(host, Registry.make());
+      // The handler never runs here: a remote spawn sends only the key.
+      const definition = Operation.makeDurable({
+        key: 'org.dxos.edge.process.coding-agent',
+        input: Schema.Unknown,
+        output: Schema.Unknown,
+        services: [],
+      }).pipe(Operation.withDurableHandler(() => Effect.succeed({})));
+
+      const process = yield* manager.spawn(definition, {
+        location: { kind: 'edge', space: spaceId },
+        name: 'Claude Code',
+      });
+      expect(process.pid).toBe(pid);
       expect(calls[0]).toMatchObject({
         method: 'spawn',
         args: [{ key: 'org.dxos.edge.process.coding-agent', name: 'Claude Code' }],
       });
+
+      const listed = yield* manager.list({ space: spaceId });
+      expect(listed.map(({ pid }) => pid)).toEqual([pid, pid]);
+
+      const local = yield* manager.spawn(definition).pipe(Effect.exit);
+      expect(local._tag).toBe('Failure');
     }),
   );
 
