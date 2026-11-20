@@ -3,30 +3,32 @@
 //
 
 /**
- * A project that asks a community's memory five questions. The space comes from the Cloudflare community template: a
- * project whose tasks each name the artifact their answer goes in — four sheets with charts, a docs-gap brief — and a
- * deck that presents them. The take imports sixty days of the Cloudflare Developers Discord into the space's memory,
- * hands every task to the agent at once, and opens what came back: each task with its artifact attached, each sheet
- * with its chart, then the deck. The agent's stretch plays fast-forwarded.
+ * A project that asks a community's memory five questions. In a new space, the take creates a project from the
+ * Community Findings template: tasks that each name the artifact their answer goes in — four sheets with charts, a
+ * docs-gap brief — and a deck that presents them. It imports sixty days of the Cloudflare Developers Discord into the
+ * space's memory, hands every task to the agent at once, and opens what came back: each task with its artifact
+ * attached, each sheet with its chart, then the deck. The agent's stretch plays fast-forwarded.
  *
  * @title Findings as tasks, from memory
- * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
+ * @mdl packages/plugins/plugin-brain/PLUGIN.mdl test QA-3
  * @app composer-app dev server on :4173 (`DX_DEV=true DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run
  *   composer-app:serve -- --port 4173`), with the TriG written by
  *   `moon run plugin-discord:facts -- trig <out.trig> --facts <cloudflare-60d facts.db>` at `$MEMORY_TRIG`
  *   (default `~/.local/share/dxos/discord-pipeline/cloudflare-60d/facts.trig`)
- * @template Cloudflare community
+ * @driver `--caption-position top`
  */
 
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 const TRIG = process.env.MEMORY_TRIG ?? join(homedir(), '.local/share/dxos/discord-pipeline/cloudflare-60d/facts.trig');
-const TEMPLATE = 'Cloudflare community';
+const SPACE = 'Cloudflare community';
+/** The project template, contributed by plugin-brain. */
+const TEMPLATE = 'org.dxos.project.communityFindings';
 const PROJECT = 'Cloudflare community';
 const BRAIN = 'org.dxos.plugin.brain';
 
-/** Kept in step with `samples/community/tasks.ts`; flow scripts take no imports. */
+/** Kept in step with `src/templates/community-findings.ts`; flow scripts take no imports. */
 const TASKS = [
   { title: 'Chart the questions by product', artifact: 'org.dxos.type.sheet' },
   { title: 'Chart the question volume by week', artifact: 'org.dxos.type.sheet' },
@@ -48,7 +50,7 @@ const PROJECT_NODE = `[data-testid="deck.sidebar"] [data-testid="spacePlugin.obj
 const MEMORY = (testId) => `[data-testid="brain.memory.${testId}"]`;
 
 /** Where the take's own space id is kept in the page, so a replay that reuses the page still finds it. */
-const TAKE_SPACE = '__communitySpace';
+const TAKE_SPACE = '__communityFindingsSpace';
 
 const visible = (locator, timeout) =>
   locator
@@ -211,7 +213,7 @@ export const steps = [
     },
   },
   {
-    name: 'Create a space from the Cloudflare community template',
+    name: 'Create a space',
     done: async ({ page }) => page.evaluate((key) => !!globalThis[key], TAKE_SPACE),
     run: async ({ demo, page }) => {
       await demo.title({
@@ -219,14 +221,10 @@ export const steps = [
         subtitle: 'A project the agent works from the space memory',
         hold: 3_200,
       });
-      await demo.caption({ value: 'Start from the Cloudflare community template' });
+      await demo.caption({ value: 'A new space for the community' });
       await demo.click({ selector: '[data-testid="spacePlugin.addSpace"]', label: 'Add space' });
       await demo.click({ selector: 'role=menuitem[name="Create space"]', label: 'Create space' });
-      await demo.click({
-        selector: `[data-testid="create-space-dialog"] [role="option"]:has-text("${TEMPLATE}")`,
-        label: TEMPLATE,
-      });
-      await page.waitForTimeout(BEAT);
+      await demo.type({ selector: '[data-testid="create-space-dialog"] input >> nth=0', value: SPACE, label: 'Name' });
       const before = await page.evaluate(() => dxos.spaces().map((space) => space.id));
       await demo.click({ selector: '[data-testid="create-space-dialog"] button:has-text("Create")', label: 'Create' });
       await page.waitForFunction(
@@ -240,6 +238,24 @@ export const steps = [
         { before, key: TAKE_SPACE },
         { timeout: 60_000 },
       );
+      await page
+        .locator('[data-testid="spacePlugin.createObject"]')
+        .first()
+        .waitFor({ state: 'visible', timeout: 60_000 });
+      await closeCompanion(page);
+    },
+  },
+  {
+    name: 'Create a project from the Community Findings template',
+    narration: 'The template brings the project, its instructions and the tasks; the memory comes next.',
+    done: async ({ page }) => (await page.locator(PROJECT_NODE).count()) > 0,
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Start a project from the Community Findings template' });
+      await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
+      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.project"]', label: 'Project' });
+      await demo.type({ selector: '[data-testid="create-project-panel.name-input"]', value: PROJECT, label: 'Name' });
+      await demo.click({ selector: `[role="option"][data-value="${TEMPLATE}"]`, label: 'Community Findings' });
+      await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Save' });
       await page.getByTestId('org.dxos.type.project.section').first().waitFor({ state: 'visible', timeout: 60_000 });
       await closeCompanion(page);
       await showProject(page);

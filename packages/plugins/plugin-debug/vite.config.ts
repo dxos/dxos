@@ -10,7 +10,6 @@ export default defineConfig({
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     operations: 'src/operations/index.ts',
-    CommunitySpace: 'src/samples/community/CommunitySpace.ts',
     DemoSpace: 'src/samples/demo/DemoSpace.ts',
     FieldstoneSpace: 'src/samples/fieldstone/FieldstoneSpace.ts',
     IncidentSpace: 'src/samples/incident/IncidentSpace.ts',
