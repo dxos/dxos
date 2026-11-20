@@ -300,6 +300,66 @@ const inspectorImportMap = (): AstroIntegration => {
   };
 };
 
+/** The page whose shown demo gets its modules preloaded, and the story module that demo renders. */
+const PRELOAD_PAGE = 'echo/index.html';
+const PRELOAD_STORY = /stories-echo\/src\/stories\/Editor\.stories\.tsx$/;
+const OTHER_STORIES = /stories-echo\/src\/stories\/(?!Editor\.)[^/]+\.stories\.tsx$/;
+
+/**
+ * Preloads every chunk the shown `/echo` demo can import, so the browser fetches them in parallel instead of one
+ * dynamic `import()` after another. Each step of that chain costs a network round trip, which put the demo's content
+ * seconds behind its download. The other demos' stories are left out: they boot after the shown one.
+ */
+const demoModulePreload = (): AstroIntegration => {
+  let files: string[] | undefined;
+  const plugin: Plugin = {
+    name: 'docs:demo-module-preload',
+    applyToEnvironment: (environment) => environment.name === 'client',
+    generateBundle(_options, bundle) {
+      const chunks = Object.values(bundle).filter((output) => output.type === 'chunk');
+      const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
+      const roots = chunks.filter(
+        ({ facadeModuleId }) =>
+          facadeModuleId?.endsWith('/src/demos/StoryDemo.tsx') || PRELOAD_STORY.test(facadeModuleId ?? ''),
+      );
+      const seen = new Set<string>();
+      const visit = (fileName: string) => {
+        const chunk = byName.get(fileName);
+        if (!chunk || seen.has(fileName) || OTHER_STORIES.test(chunk.facadeModuleId ?? '')) {
+          return;
+        }
+        seen.add(fileName);
+        [...chunk.imports, ...chunk.dynamicImports].forEach(visit);
+      };
+      roots.forEach((root) => visit(root.fileName));
+      files = [...seen];
+    },
+  };
+
+  return {
+    name: 'docs:demo-module-preload',
+    hooks: {
+      'astro:config:setup': ({ command, updateConfig }) => {
+        if (command === 'build') {
+          updateConfig({ vite: { plugins: [plugin] } });
+        }
+      },
+      'astro:build:done': ({ dir }) => {
+        if (!files?.length) {
+          throw new Error('The demo module preload list was not built.');
+        }
+        const file = new URL(PRELOAD_PAGE, dir);
+        // Vite drops a chunk that only held CSS after the bundle is generated.
+        const links = files
+          .filter((name) => fs.existsSync(new URL(name, dir)))
+          .map((name) => `<link rel="modulepreload" href="/${name}">`)
+          .join('');
+        fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('</head>', `${links}</head>`));
+      },
+    },
+  };
+};
+
 export default defineConfig({
   site: 'https://dxos.org',
   redirects,
@@ -360,6 +420,7 @@ export default defineConfig({
   },
   integrations: [
     cloudflareRedirects(),
+    demoModulePreload(),
     inspectorImportMap(),
     react({
       include: [
