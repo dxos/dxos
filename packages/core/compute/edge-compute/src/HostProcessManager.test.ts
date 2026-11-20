@@ -148,11 +148,14 @@ describe('HostProcessManager', () => {
       expect(listed.map(({ state }) => state)).toEqual(['RUNNING']);
       expect(calls[0]).toEqual({ method: 'list', args: [{ key: 'org.dxos.edge.process.coding-agent' }] });
 
+      // The host filters by key only; a target the host cannot see is applied to what it answers.
+      expect(yield* control.list({ spaceId, target: 'echo://chat' })).toEqual([]);
+
       expect((yield* control.status({ spaceId, pid })).pid).toBe(pid);
-      expect(calls[1]).toEqual({ method: 'status', args: [pid] });
+      expect(calls[2]).toEqual({ method: 'status', args: [pid] });
 
       yield* control.terminate({ spaceId, pid });
-      expect(calls[2]).toEqual({ method: 'terminate', args: [pid, null] });
+      expect(calls[3]).toEqual({ method: 'terminate', args: [pid, null] });
     }),
   );
 
@@ -183,6 +186,17 @@ describe('HostProcessManager', () => {
 
       const local = yield* manager.spawn(definition).pipe(Effect.exit);
       expect(local._tag).toBe('Failure');
+    }),
+  );
+
+  it.effect('refuses a child process, which the host cannot parent', () =>
+    Effect.gen(function* () {
+      const { host, calls } = makeHost();
+      const exit = yield* HostProcessManager.makeControl(host)
+        .spawn({ spaceId, key: 'org.dxos.edge.process.coding-agent', parentPid: pid })
+        .pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(calls).toEqual([]);
     }),
   );
 

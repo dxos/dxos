@@ -25,6 +25,8 @@ export type ExecStreamEvent = Schema.Schema.Type<typeof ExecStreamEvent>;
 
 const decodeEvent = Schema.decodeUnknownOption(Schema.fromJsonString(ExecStreamEvent));
 
+const ENDED_EARLY: ExecStreamEvent = { type: 'error', message: 'exec stream ended before the command exited' };
+
 /**
  * Parses an exec stream's body as it arrives into its events, ending after the `exit` or `error`.
  * Each event is one `data:` line; comments (the heartbeat) and unknown events are skipped.
@@ -36,6 +38,8 @@ export const parseExecStream = <E, R>(body: Stream.Stream<Uint8Array, E, R>): St
     Stream.map((line) => (line.startsWith('data: ') ? decodeEvent(line.slice('data: '.length)) : Option.none())),
     Stream.filter(Option.isSome),
     Stream.map((event) => event.value),
+    // A body that ends before its exit is a failed command, which the reader sees as an error event.
+    Stream.concat(Stream.make(ENDED_EARLY)),
     Stream.takeUntil((event) => event.type === 'exit' || event.type === 'error'),
   );
 

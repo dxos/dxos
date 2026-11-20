@@ -54,4 +54,13 @@ describe('parseExecStream', () => {
       { type: 'exit', exitCode: 3, success: false },
     ]);
   });
+
+  test('a body that ends before the exit ends with an error event', async ({ expect }) => {
+    const bytes = new TextEncoder().encode(frame({ type: 'stdout', data: 'partial' }));
+    const events = await EffectEx.runPromise(Stream.runCollect(parseExecStream(Stream.make(bytes))));
+    expect(Chunk.toReadonlyArray(Chunk.fromIterable(events))).toEqual([
+      { type: 'stdout', data: 'partial' },
+      { type: 'error', message: 'exec stream ended before the command exited' },
+    ]);
+  });
 });

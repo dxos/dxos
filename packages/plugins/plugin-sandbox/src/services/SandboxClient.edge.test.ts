@@ -79,7 +79,11 @@ describe.skipIf(!EDGE_URL)('SandboxClient against a deployed EDGE', { timeout: 5
           .processOutput(spaceId, sandboxId, processId, { stdout: 'got:one\ngot:two\n'.length })
           .pipe(
             Stream.filter((event) => event.type === 'stdout'),
-            Stream.take(1),
+            Stream.scan(
+              () => '',
+              (output: string, event) => output + (event.type === 'stdout' ? event.data : ''),
+            ),
+            Stream.takeUntil((output) => output === 'got:three\n'),
             Stream.runLast,
           );
         const running = yield* client.processState(spaceId, sandboxId, processId);
@@ -89,7 +93,7 @@ describe.skipIf(!EDGE_URL)('SandboxClient against a deployed EDGE', { timeout: 5
     );
 
     expect(result.read._tag === 'Some' && result.read.value).toBe('got:one\ngot:two\n');
-    expect(result.resumed._tag === 'Some' && result.resumed.value).toEqual({ type: 'stdout', data: 'got:three\n' });
+    expect(result.resumed._tag === 'Some' && result.resumed.value).toBe('got:three\n');
     expect(result.running.status).toBe('running');
     expect(result.killed.status).not.toBe('running');
   });

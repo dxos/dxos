@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as HttpClient from 'effect/http/HttpClient';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/http/HttpClientResponse';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Rpc from 'effect/rpc/Rpc';
@@ -21,6 +22,7 @@ import * as Stream from 'effect/Stream';
 import { RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
+import { Annotation } from '@dxos/echo';
 import { SerializedError } from '@dxos/protocols';
 
 import { decodeEvent, decodeSnapshot } from './process-snapshot.ts';
@@ -100,22 +102,33 @@ const callHost = <A>(host: Host, method: string, schema: Schema.Codec<A>, ...arg
 
 /** The process routes over a host service; see {@link Control}. */
 export const makeControl = (host: Host): Control => ({
-  spawn: ({ key, name, annotations, idempotencyKey }) =>
-    callHost(host, 'spawn', ProcessInfo, {
-      key,
-      ...(name !== undefined ? { name } : {}),
-      ...(annotations !== undefined ? { annotations } : {}),
-      ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
-    }).pipe(Effect.map(decodeSnapshot)),
+  // The host binds every process to the invocation's space and has no parent or conversation to give it, so those
+  // are refused rather than dropped.
+  spawn: ({ key, name, annotations, idempotencyKey, parentPid, environment }) =>
+    parentPid !== undefined || environment?.conversation !== undefined
+      ? Effect.die(new Error('The host spawns top-level processes only, with no parent or conversation.'))
+      : callHost(host, 'spawn', ProcessInfo, {
+          key,
+          ...(name !== undefined ? { name } : {}),
+          ...(annotations !== undefined ? { annotations } : {}),
+          ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
+        }).pipe(Effect.map(decodeSnapshot)),
 
+  // The host filters by key alone; state and target are applied to what it answers.
   list: ({ key, state, target }) =>
-    target !== undefined
-      ? Effect.die(new Error('The host lists processes by key only, not by target.'))
-      : callHost(host, 'list', Schema.Array(ProcessInfo), key !== undefined ? { key } : {}).pipe(
-          Effect.map((infos) =>
-            infos.map(decodeSnapshot).filter((info) => state === undefined || info.state === state),
+    callHost(host, 'list', Schema.Array(ProcessInfo), key !== undefined ? { key } : {}).pipe(
+      Effect.map((infos) =>
+        infos
+          .map(decodeSnapshot)
+          .filter(
+            (info) =>
+              (state === undefined || info.state === state) &&
+              (target === undefined ||
+                Option.getOrUndefined(Annotation.getDictionary(info.params.annotations, Process.TargetAnnotation)) ===
+                  target),
           ),
-        ),
+      ),
+    ),
 
   status: ({ pid }) => callHost(host, 'status', ProcessInfo, pid).pipe(Effect.map(decodeSnapshot)),
 
