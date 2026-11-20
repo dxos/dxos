@@ -254,6 +254,22 @@ describe('dynamic value matching', () => {
     );
   });
 
+  test('an Anthropic request body whose system prompt held only the current-date section matches one without', ({
+    expect,
+  }) => {
+    // The shape EDGE's memo server matches: a top-level `system` of text blocks. It hashes the body with plain
+    // `JSON.stringify`, so the key order has to survive too.
+    const text =
+      '## Current Date\n\nToday is Thursday, 2026-11-19 (UTC). ' +
+      'Use it to resolve relative dates and dates given without a year.';
+    const messages = [{ role: 'user', content: [{ type: 'text', text: 'Hi.' }] }];
+    const live = { model: 'claude', system: [{ type: 'text', text }], messages, max_tokens: 1024 };
+    const recorded = { model: 'claude', messages, max_tokens: 1024 };
+    expect(JSON.stringify(__testing.normalizeForMatching(live, []))).toEqual(
+      JSON.stringify(__testing.normalizeForMatching(recorded, [])),
+    );
+  });
+
   test("an empty system message inside a tool result's payload takes part in the match", ({ expect }) => {
     const prompt = (result: unknown[]) => ({
       content: [{ role: 'tool', content: [{ type: 'tool-result', result }] }],
