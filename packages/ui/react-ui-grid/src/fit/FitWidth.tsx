@@ -70,7 +70,7 @@ export const useFitWidth = ({ reserved = 0, widths }: UseFitWidthProps = {}): Fi
   return useMemo(() => {
     const width = (box?.width ?? 0) / FIT_WIDTH_SCALE;
     const height = (box?.height ?? 0) / FIT_WIDTH_SCALE;
-    const available = Math.max(MIN_COLUMN_SIZE, width - reserved);
+    const available = Math.max(1, width - reserved);
     return { ref, sizes: packColumns(available, widths), width, height };
   }, [ref, box, reserved, widths]);
 };

@@ -80,11 +80,24 @@ export const Default: Story = {
   args: { width: 352 },
   play: async ({ canvasElement }) => {
     const box = await within(canvasElement).findByTestId('fit-box');
-    await waitFor(() =>
-      expect(box.querySelectorAll('[data-dx-grid-plane="frozenRowsStart"] [aria-colindex]').length).toBeLessThan(
-        headers.length,
-      ),
-    );
+    await waitFor(async () => {
+      const shown = box.querySelectorAll('[data-dx-grid-plane="frozenRowsStart"] [aria-colindex]').length;
+      await expect(shown).toBeGreaterThan(0);
+      await expect(shown).toBeLessThan(headers.length);
+    });
+  },
+};
+
+/** Narrower than one column's minimum: the first column shrinks to the box instead of overflowing it. */
+export const Narrow: Story = {
+  args: { width: 40 },
+  play: async ({ canvasElement }) => {
+    const box = await within(canvasElement).findByTestId('fit-box');
+    await waitFor(async () => {
+      const cells = box.querySelectorAll('[data-dx-grid-plane="frozenRowsStart"] [aria-colindex]');
+      await expect(cells.length).toBe(1);
+      await expect(cells[0].getBoundingClientRect().right).toBeLessThanOrEqual(box.getBoundingClientRect().right + 1);
+    });
   },
 };
 

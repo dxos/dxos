@@ -150,6 +150,10 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
       columnMeta,
       actionColumn: frozen.frozenColsEnd > 0,
     });
+    const fitFrozen = useMemo(
+      () => (fit === 'width' ? { ...frozen, frozenColsStart: fitWidth.frozenColsStart } : frozen),
+      [fit, frozen, fitWidth.frozenColsStart],
+    );
 
     const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
       (range: DxGridPlaneRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
@@ -460,7 +464,7 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
           gridSeparatorInlineEnd,
           gridSeparatorBlockEnd,
         )}
-        frozen={frozen}
+        frozen={fitFrozen}
         columns={fit === 'width' ? fitWidth.columnMeta : columnMeta}
         columnDefault={columnDefault}
         rowDefault={rowDefault}

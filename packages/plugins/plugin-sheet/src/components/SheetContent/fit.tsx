@@ -98,6 +98,9 @@ export const useSheetFitWidth = (
   extent: { rows: number; columns: number },
 ): { fitWidth: FitWidth; columns: DxGridAxisMeta } => {
   const [cells] = useObject(model.sheet, 'cells');
+  // Formula results arrive from the engine without changing `cells`.
+  const [computed, setComputed] = useState(0);
+  useEffect(() => model.graph.update.on(() => setComputed((count) => count + 1)), [model]);
   const widths = useMemo(() => {
     if (!grid) {
       return undefined;
@@ -109,7 +112,7 @@ export const useSheetFitWidth = (
       }
       return Math.max(...texts.map((text) => measureText(grid, text))) + CELL_PADDING;
     });
-  }, [grid, model, cells, extent]);
+  }, [grid, model, cells, computed, extent]);
   const fitWidth = useFitWidth({ reserved: ROW_HEADER_SIZE, widths });
   const columns = useMemo<DxGridAxisMeta>(
     () => ({ grid: Object.fromEntries(fitWidth.sizes.map((size, index) => [index, { size, readonly: true }])) }),

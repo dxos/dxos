@@ -62,10 +62,13 @@ export const useTableFitWidth = ({
   rows,
   columnMeta,
   actionColumn,
-}: UseTableFitWidthProps): { fit: FitWidth; columnMeta: DxGridAxisMeta; columns: number } => {
+}: UseTableFitWidthProps): { fit: FitWidth; columnMeta: DxGridAxisMeta; columns: number; frozenColsStart: number } => {
   const selection = model?.selectionColumns ?? 0;
   const pin = model?.pinColumns ?? 0;
-  const widths = useMemo(() => (grid && model ? measureFieldWidths(grid, model) : undefined), [grid, model, rows]);
+  const widths = useMemo(
+    () => (grid && model ? measureFieldWidths(grid, model) : undefined),
+    [grid, model, rows, columnMeta],
+  );
   const fit = useFitWidth({
     reserved:
       Object.values(columnMeta.frozenColsStart ?? {})
@@ -75,20 +78,20 @@ export const useTableFitWidth = ({
     widths,
   });
   const fields = Math.min(fit.sizes.length, model?.projection.getFields().length ?? 0);
+  const pinned = Math.min(pin, fields);
   const fittedMeta = useMemo<DxGridAxisMeta>(() => {
     const size = (field: number) => ({ size: fit.sizes[field], resizeable: false });
     return {
       ...columnMeta,
       frozenColsStart: Object.fromEntries(
-        Object.entries(columnMeta.frozenColsStart ?? {}).map(([index, meta]) => [
-          index,
-          Number(index) < selection ? meta : size(Number(index) - selection),
-        ]),
+        Object.entries(columnMeta.frozenColsStart ?? {})
+          .filter(([index]) => Number(index) < selection + pinned)
+          .map(([index, meta]) => [index, Number(index) < selection ? meta : size(Number(index) - selection)]),
       ),
       grid: Object.fromEntries(
         Array.from({ length: Math.max(0, fields - pin) }, (_, index) => [index, size(pin + index)]),
       ),
     };
-  }, [columnMeta, fields, fit.sizes, selection, pin]);
-  return { fit, columnMeta: fittedMeta, columns: Math.max(0, fields - pin) };
+  }, [columnMeta, fields, fit.sizes, selection, pin, pinned]);
+  return { fit, columnMeta: fittedMeta, columns: Math.max(0, fields - pin), frozenColsStart: selection + pinned };
 };
