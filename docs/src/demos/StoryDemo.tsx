@@ -41,13 +41,20 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
   // Queued after mount, so the panel's visibility can be read when the first turn is given.
   const [slot, setSlot] = useState<BootTurn>();
   useEffect(() => {
-    if (lazy) {
-      setSlot(queueBoot(() => panel.ref.current?.closest('[data-panel]')?.hasAttribute('data-active') ?? false));
+    if (!lazy) {
+      return;
     }
+    const queued = queueBoot(() => panel.ref.current?.closest('[data-panel]')?.hasAttribute('data-active') ?? false);
+    setSlot(queued);
+    return queued.cancel;
   }, []);
   const [turn, setTurn] = useState(false);
   useEffect(() => {
-    void slot?.turn.then(() => setTurn(true));
+    let disposed = false;
+    void slot?.turn.then(() => !disposed && setTurn(true));
+    return () => {
+      disposed = true;
+    };
   }, [slot]);
 
   const [story, setStory] = useState<StoryEmbed.Composed>();

@@ -307,13 +307,17 @@ const useReportReady = (ready: boolean, onReady?: () => void) => {
     if (!ready || !onReady || reported.current) {
       return;
     }
-    reported.current = true;
+    const report = () => {
+      reported.current = true;
+      onReady();
+    };
     // The story mounts before it paints its content.
     if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(onReady, { timeout: 2_000 });
-    } else {
-      setTimeout(onReady, 200);
+      const handle = requestIdleCallback(report, { timeout: 2_000 });
+      return () => cancelIdleCallback(handle);
     }
+    const handle = setTimeout(report, 200);
+    return () => clearTimeout(handle);
   }, [ready, onReady]);
 };
 
