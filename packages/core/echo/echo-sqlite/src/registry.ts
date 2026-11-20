@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { type Database, Entity, type Filter, Query, Registry, Type } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { filterMatchEntity } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 
 import { LiveQueryResult, asItem } from './query-result.ts';
 
@@ -21,6 +21,7 @@ export class SimpleRegistry implements Registry.Registry {
   readonly changed = new Event<void>();
   readonly #invalidated = new Event<ReadonlySet<string>>();
   readonly #entities = new Map<string, Entity.Unknown>();
+  #sources: Registry.Source[] = [];
 
   constructor(initial: readonly Entity.Unknown[] = []) {
     initial.forEach((entity) => this.#entities.set(entity.id, entity));
@@ -75,6 +76,39 @@ export class SimpleRegistry implements Registry.Registry {
 
   list(): Entity.Unknown[] {
     return [...this.#entities.values()];
+  }
+
+  addSource(source: Registry.Source): () => void {
+    this.#sources.push(source);
+    return () => {
+      this.#sources = this.#sources.filter((entry) => entry !== source);
+    };
+  }
+
+  async resolve(uri: URI.URI): Promise<Entity.Unknown | undefined> {
+    const held = this.getByURI(uri);
+    if (held !== undefined) {
+      return held;
+    }
+    for (const source of this.#sources) {
+      // A failing source reads as one that does not know the entity.
+      const entity = await source.resolve(uri).catch(() => undefined);
+      if (entity !== undefined) {
+        this.add([entity]);
+        return entity;
+      }
+    }
+    return undefined;
+  }
+
+  async fetch(query: Query.Any): Promise<void> {
+    for (const source of this.#sources) {
+      const entities = await (source.query?.(query) ?? Promise.resolve([])).catch(() => []);
+      const missing = entities.filter((entity) => !this.#entities.has(entity.id));
+      if (missing.length > 0) {
+        this.add(missing);
+      }
+    }
   }
 
   query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) => {

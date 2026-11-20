@@ -16,8 +16,9 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManifest from '@dxos/app-framework/PluginManifest';
 import { wrapFunctionHandler } from '@dxos/compute-runtime/protocol';
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
-import { type Entity } from '@dxos/echo';
+import { type Entity, Obj, type Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, messageOf } from '@dxos/errors';
 import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
@@ -30,6 +31,7 @@ import * as HostServices from './HostServices.ts';
 import * as Output from './Output.ts';
 import * as PluginActivation from './PluginActivation.ts';
 import * as PluginCatalog from './PluginCatalog.ts';
+import * as RegistrySource from './RegistrySource.ts';
 import * as RequestContext from './RequestContext.ts';
 import * as TypeSource from './TypeSource.ts';
 
@@ -172,7 +174,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
         types: spaceId === undefined ? undefined : [...activation.registeredTypes],
         registry,
         toolkits: [...activation.toolkits],
-        typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
+        registrySource: registry === undefined ? undefined : edgeRegistry(env, registry),
         // EDGE's hosted blob store, the default storage of the file backend every bundle is offered.
         blobBackends: FileStorage.blobBackends(env),
         // Another bundle's nested call passes the objects it holds by reference.
@@ -290,14 +292,38 @@ const makeContext = async (
 };
 
 /**
- * The primary's skills, which a skill bound by registry URI resolves only through, and its operation records, which
- * the tool resolver projects a skill's tools from; no other plugin's, since a bundle reads none of theirs (D-88).
+ * The primary's skills, which a skill bound by registry URI resolves through first, and its operation records, which
+ * the tool resolver projects a skill's tools from. Every other plugin's come from EDGE's registry ({@link edgeRegistry}).
  */
 const registryEntities = (activation: PluginActivation.Activation): Entity.Unknown[] => [
   // Made per invocation: `make()` mints ids, which workerd allows only inside a request.
   ...activation.skills.map((definition) => definition.make()),
   ...activation.operationHandlers.flatMap(operationRecord),
 ];
+
+/**
+ * EDGE's registry as the invocation registry's source, so a registry query or URI reaches whichever enabled plugin
+ * publishes the entity; an EDGE that serves only `TYPE_REGISTRY` resolves types alone. The primary's entities, already
+ * registered, win for a key both hold.
+ */
+const edgeRegistry = (env: PluginProtocol.Env, own: readonly Entity.Unknown[]): Registry.Source | undefined => {
+  if (env.REGISTRY !== undefined) {
+    return RegistrySource.fromRegistry(env.REGISTRY, {
+      skills: new Set(
+        own.flatMap((entity) => (Obj.instanceOf(Skill.Skill, entity) ? keyOf(Skill.getKey(entity)) : [])),
+      ),
+      operations: new Set(
+        own.flatMap((entity) =>
+          Obj.instanceOf(Operation.PersistentOperation, entity) ? keyOf(Operation.getKey(entity)) : [],
+        ),
+      ),
+    });
+  }
+  return env.TYPE_REGISTRY === undefined ? undefined : { resolve: TypeSource.fromRegistry(env.TYPE_REGISTRY) };
+};
+
+/** A registry key without the `dxn:` prefix, or none. */
+const keyOf = (key: string | undefined): string[] => (key === undefined ? [] : [RegistrySource.bareKey(key)]);
 
 /**
  * An operation's registry record, as `registry-sync` publishes it: none for a `skipRegistry` operation, which is hidden
