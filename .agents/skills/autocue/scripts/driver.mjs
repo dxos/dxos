@@ -24,7 +24,9 @@
  * `--mode manual` is for a session a person records themselves: a headed window, no recorder, the
  * cursor without the action pills or caption banners (`--pills on` / `--captions on` bring them back),
  * and `stop` leaves the browser open. The driver exits when that window is closed. The browser runs on
- * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`).
+ * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`). `--persist on` records from that
+ * profile too, so a take starts signed in to whatever a manual session signed in to (Discord, a Composer identity), and
+ * `--headed on` shows a recording's window.
  *
  * `--target tauri` drives the native desktop app instead of Chromium: `--app` names its binary (the release
  * build under `packages/apps/composer-app/src-tauri/target/release/app` by default). On Linux it runs under
@@ -87,6 +89,8 @@ const parseArgs = () => {
     // `white-on-black` or `black-on-white` for the title and captions; unset, floating panels invert the page's theme.
     'caption-colors': undefined,
     'mode': 'record',
+    // Record mode: `on` records from `--profile` instead of a fresh context.
+    'persist': 'off',
     // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
     // so the user's recording starts in a prepared app instead of onboarding.
     'profile': path.join(homedir(), '.local/state/dxos/autocue/profile'),
@@ -184,7 +188,7 @@ if (!manual && !hires) {
 const scale = hires ? options.scale : 1;
 
 const launchOptions = {
-  headless: !manual,
+  headless: !manual && options.headed !== 'on',
   // The default headless shell renders WebGL in software (SwiftShader), so a 3D plugin records at a few frames a
   // second and starves the page; full Chromium's headless mode (`--gpu on`) uses the GPU.
   ...(options.gpu === 'on' && !sandbox ? { channel: 'chromium' } : {}),
@@ -192,7 +196,7 @@ const launchOptions = {
   args: [
     // The page follows the window, so a person can resize it for their capture without a fixed viewport
     // leaving dead space or scrollbars.
-    ...(manual ? [`--window-size=${options.width},${options.height}`] : []),
+    ...(manual || options.headed === 'on' ? [`--window-size=${options.width},${options.height}`] : []),
     ...(sandbox
       ? [
           '--no-sandbox',
@@ -241,12 +245,18 @@ if (native) {
 }
 
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
-const browser = manual || tauri ? undefined : await chromium.launch(launchOptions);
+const persist = !manual && options.persist === 'on';
+const browser = manual || persist || tauri ? undefined : await chromium.launch(launchOptions);
 const context = tauri
   ? undefined
-  : manual
+  : manual || persist
     ? await chromium
-        .launchPersistentContext(options.profile, { ...launchOptions, viewport: null, colorScheme: options.theme })
+        .launchPersistentContext(options.profile, {
+          ...launchOptions,
+          // A manual window's page follows the window; a recording keeps the recorder's viewport and scale.
+          ...(manual ? { viewport: null } : { viewport, deviceScaleFactor: scale }),
+          colorScheme: options.theme,
+        })
         .catch((error) => {
           // Chromium locks a profile to one process; the usual cause is the previous session's window.
           if (/already in use/.test(error.message)) {
