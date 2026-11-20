@@ -11,7 +11,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { SharedAwareness, specBlocks } from '../components/SpecBlocks/index.ts';
+import { SharedAwareness, specBlocks } from '../extensions/index.ts';
 import { useSpecFacts } from './useSpecFacts.ts';
 
 export type UseSpecBlockFormsOptions = {

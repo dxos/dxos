@@ -1,5 +1,178 @@
 # @dxos/plugin-illustrator
 
+## 0.17.0
+
+### Minor Changes
+
+- e8029c3: Canvas undo and redo patch the store instead of restoring snapshots. Every edit is a commit of a `CanvasHistory` that records the store's heads before and after and the paths it wrote; undo writes a path back only while nobody has changed it since, and returns the view to the View path and selection the edit was made in. `Canvas.Root` takes `history` (from `useCanvasHistory`, or a `CreateHistory`); without one the canvas keeps a local history, so ⌘Z, ⇧⌘Z and the toolbar work standalone. Breaking: `Projection.snapshot`/`restore`, `withUndo`, `recordViews`, `recordStoreStep` and `CanvasAtoms.undo` are removed; a projection with a model of its own exposes it as `model` (a `VersionedSource`) and may implement `restored()`, and `useViewProjection` now takes `history`. `ViewStore.versions`, `VersionedSource`, `recordChanges` and `patchSource` are exported from `headless`.
+
+  In plugin-canvas, a canvas in Composer records its edits on the app's `HistoryTracker` as `CanvasOperation.Patch`, scoped to the canvas, and agents can edit a canvas with `CanvasOperation.Apply` (intents); both are undoable, and `Apply` refuses a malformed intent (`isIntent`, exported from `headless`) or a canvas with no version history before it writes. The ECHO-backed store reads its past through Automerge heads. In app-framework, `UndoMapping` gains `merge` (fold merged invocations into one forward and re-derive the inverse) and `toast` (false records an entry without the deck's undo toast).
+
+  Drawing conversion copies by default: `DrawingOperation.Convert` writes a new drawing beside the source (`replace: true` converts in place, as drawing.sh does) and names it in its output, and Composer's menu offers "Copy as …" for each variant, opening the copy. A plugin can register an `IllustratorCapabilities.Converter` for a pair of variants, which `Convert` uses over the generic scene replay (`IllustratorModel.convertByScene`). plugin-canvas registers one for tldraw to canvas that converts a DSL-managed drawing generically and maps a hand-drawn one shape by shape; breaking: `CanvasOperation.ImportTldraw` and its "Copy as canvas" action are removed in its favour.
+
+  The canvas's Snap and Lattice toggles move to the bottom-right bar beside the grid and guides, and the centre action bar hides on a canvas too narrow for it. A link's `style.fontSize` sets its caption's size (unset is `LINK_FONT_SIZE`, 14), and a caption on a straight sloped line is shortened only when it does not fit the line's run. A rounded regular polygon rounds its corners by the look's rounded radius; a `NodeDef.silhouette` is given that radius in px. A polygon's `params.fit` sets how it sits in its frame: `frame` (the default) fills the frame, `circle` puts its vertices on the circle that fits it; `polygonPath` takes an options bag. The bottom-right bar ends with the theme picker. A form field override can control a nested group's `open` state (`onOpenChange`); the canvas properties panel takes `groups`, and plugin-canvas keeps which groups are open in its view state. Breaking: `ThemePanel` is renamed `DisplayPanel`. Breaking: a polygon's `sides` and `fit` and a cloud's `bumps` move into the node's `params` (`PolygonParams`, `CloudParams`), shown as the type's own group in the properties panel; stored drawings read in the new shape through `withLegacyParams`.
+
+- bc50a90: The `.dx` diagram DSL draws sequence diagrams (`diagram kind=sequence`: participants, `calls`/`sends`/`returns` messages with activations, notes and `alt`/`opt`/`loop`/`par`/`break`/`critical` fragments) and data-flow diagrams (`diagram kind=dataflow`: process, store and external roles, with warnings for flows that break the data-flow rules). Mermaid input is deprecated: the `generate` operation and `Mermaid.compile`, `Uml.compile` and `MermaidEngine.compile` still work but are marked deprecated in favour of `draw` and `DSL.compile`.
+- 3d22d48: You can follow a peer around a space. Follow sits next to Jump and Go to on a peer's row and follows whichever of their sessions moved last; with the sessions toggle on, each session row has a Follow that stays on that session. While you follow, your deck shows theirs: the same planks in their order, scrolled to the plank at the front of theirs, with each plank keeping their top line at the top and the companions they have open. With no planks reported, it opens the object they attend, at the path they opened it from. None of it moves your caret or focus, and they send their location every 100 ms instead of every second. A plank your deck has no URL binding for (a type from a plugin you lack) is left out, and your deck scrolls to the nearest plank of theirs it holds instead. Scrolling, clicking or typing in a plank, attending an object outside what you show of them, going back or forward in history, or pressing Escape stops it, and so does the leader being gone from the space for five seconds. A follow pauses while you cannot open what they attend and picks up again once you can. The Members tab shows a dot while you follow, and the leader's row sits first in its list with Stop. A `Locator` reveal takes `follow` to scroll without moving the caret and answers whether it revealed the anchor, so a follower whose editor mounts late still lands on the leader's line, a deck companion's `badge` atom can hold `true` to draw a dot, and `LayoutOperation.Set` takes `focus: false` to focus no plank and a `workspace` to set the planks in, as `Open` does. View state can now be followed: a `ViewState` aspect declared with `follow: 'write'` has its values for the space and each open object sent with presence, and a follower writes the leader's into its own view state; one declared `follow: 'reveal'` is sent for the follow to apply. The deck reports its front plank as the space's `ViewLocation` and its open companions as `AppCapabilities.Companions`, and the follow applies them with `LayoutOperation.ScrollIntoView` and `UpdateCompanion`. A project's view state is followed, so a follower sees the leader's tab, spec and chart; so is a presentation's slide, and a drawing's camera in tldraw, excalidraw and the 2D canvas, which a drawing variant takes as `camera` and reports with `onCameraChange`. The 2D canvas editor applies a host camera that changes while it is open. A project's view state is now keyed by its EID, so the tab each project last showed resets once. `GraphPath.getEidFromPath` names the object a graph path points at. A schema form's boolean field carries its JSON path as `data-testid`, as text fields do. Leading shows too, in amber on every screen: the Members tab's dot appears on both sides, a follower's leader row rises to the top of Members and carries Stop, and a leader sees its followers under "Following you". Every plank heading, companions included, washes in amber over a one-pixel underline while you follow or are followed, through a new `AppCapabilities.LayoutAccent` the deck applies, and those people's avatars ring in amber. A deck companion takes a `badgeHue` for its rail dot.
+
+### Patch Changes
+
+- fc5e071: `Binder.sync()` after an external binding write no longer stops waiting when a local binding is read first, and a failed re-read leaves the write for the next sync. `illustrator.draw` no longer fails on a host with no views (EDGE), where it skipped nothing but threw on the missing atom registry.
+- 98db701: `importDxSvg` returns the database's own drawing, so converting an imported drawing to another editor persists; `IllustratorCapabilities` exports `editTargets`, `editLabel` and `variantSlug` for hosts that offer the "Edit in …" actions outside the app graph.
+- 6eb949e: The Drawing skill lays out boxes-and-arrows diagrams with the semantic diagram engine: an agent states the boxes, arrows and groups and the engine places them and routes the arrows, instead of the agent positioning every box itself, which left boxes and labels overlapping. The Hello Worker template binds the Drawing skill to its project and asks for its architecture diagram in that language.
+- Updated dependencies [c9a38c1]
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [2ffc301]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [710da43]
+- Updated dependencies [82f2242]
+- Updated dependencies [cab57d0]
+- Updated dependencies [a349ae0]
+- Updated dependencies [df16fba]
+- Updated dependencies [10a11da]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [1ac444f]
+- Updated dependencies [cfc5c42]
+- Updated dependencies [7a8b279]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [6a37f4b]
+- Updated dependencies [1302e04]
+- Updated dependencies [7067fec]
+- Updated dependencies [bc50a90]
+- Updated dependencies [d45bf58]
+- Updated dependencies [39eb10b]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [908c301]
+- Updated dependencies [78e96da]
+- Updated dependencies [416201f]
+- Updated dependencies [3aef671]
+- Updated dependencies [13bc40d]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2176f79]
+- Updated dependencies [2bba392]
+- Updated dependencies [38ebf5e]
+- Updated dependencies [22f07db]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [22f759a]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [92ef425]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [0ad95b7]
+- Updated dependencies [f071de2]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [9c5af4a]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [fba77f7]
+- Updated dependencies [02254b0]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [4514d15]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [3d22d48]
+- Updated dependencies [7e07e49]
+- Updated dependencies [6cd526c]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [101f620]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [10b3963]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+  - @dxos/types@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/diagram@0.17.0
+  - @dxos/scene@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/cli-util@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

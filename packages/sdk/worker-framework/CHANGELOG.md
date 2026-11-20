@@ -1,5 +1,27 @@
 # @dxos/worker-framework
 
+## 0.17.0
+
+### Minor Changes
+
+- 9caabb2: A dedicated worker now tells its leader tab why it is shutting down (displaced by another worker, lost a lock, failed to start, or asked to by the runtime) before it closes, so the reason survives in the tab's logs and in the connection's error diagnostics. The `stop` displacement message names the worker that sent it. Breaking: `WorkerRuntime.makeWorkerRuntime`'s `requestShutdown` option is now a function of the shutdown reason (`(reason) => Effect`) instead of an `Effect`.
+- 4602f40: `Client.Connection` takes callbacks for handing the worker between tabs: `onTakeoverRequired` replaces the automatic steal from an unresponsive leader, `onLockStolen` stops a tab whose lock was stolen, and `generation` with `onSuperseded` stops a tab when a newer build of the app opens. `takeover: true` steals the lock when the connection opens, and a stopped connection rejects `open()` with `WorkerStoppedError`. `createClientServices` passes them through as `workerTakeover`. The boot loader (`@dxos/app-framework`) gains `window.__bootLoader.paused(...)`, which stops loading and shows one line, one action and optional details in place of the ring.
+
+### Patch Changes
+
+- 3fc554d: Two tabs on different app builds no longer kill each other's worker every port timeout. A tab whose leader lock is stolen twice by a tab it cannot reach over its coordinator stops stealing it back and calls `onPersistentFailure` with the new `WorkerLeaderContentionError`, so the app can reload every tab onto one build.
+- Updated dependencies [034e231]
+- Updated dependencies [c9c3867]
+- Updated dependencies [e50d1e5]
+  - @dxos/context@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

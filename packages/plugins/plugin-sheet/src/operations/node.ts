@@ -13,6 +13,7 @@ import { SheetOperation } from '#types';
 // without stopping a bundler walking into the React surface behind it.
 
 export const SheetOperationHandlerSet = OperationHandlerSet.lazy([
+  SheetOperation.AddChart.pipe(Operation.lazyHandler(() => import('./add-chart.ts'))),
   SheetOperation.Create.pipe(Operation.lazyHandler(() => import('./create.ts'))),
   SheetOperation.DropAxis.pipe(Operation.lazyHandler(() => import('./drop-axis.ts'))),
   SheetOperation.GetValues.pipe(Operation.lazyHandler(() => import('./get-values.ts'))),

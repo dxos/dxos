@@ -48,3 +48,9 @@ export class WorkerLeaderContentionError extends BaseError.extend(
   'WorkerLeaderContentionError',
   'Another tab keeps taking the worker leader lock but cannot be reached; reload every tab',
 ) {}
+
+/**
+ * The connection stopped because another tab took over (its leader lock was stolen, or a newer build
+ * opened). Expected, not a fault: the app was notified first and decides what the tab shows.
+ */
+export class WorkerStoppedError extends BaseError.extend('WorkerStoppedError', 'Worker connection stopped') {}

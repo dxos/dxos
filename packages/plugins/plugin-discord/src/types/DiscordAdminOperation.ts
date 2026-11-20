@@ -151,3 +151,39 @@ export const UnbindChannel = Operation.make({
   input: Schema.Struct({ applicationId: Bot.applicationId, discordChannelId: Schema.String }),
   output: Schema.Struct({}),
 });
+
+/**
+ * Lets the space read a server's history as the bot, for a back-index, or withdraws that: EDGE grants it only when the
+ * signed-in person owns the server or holds Manage Server there. Agent routing is untouched.
+ */
+export const SetServerIndexed = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.discord.setServerIndexed'),
+    name: 'Index Discord server',
+    description: "Lets this space read a Discord server's history into its memory, or stops it.",
+    icon: 'ph--magnifying-glass-plus--regular',
+  },
+  services: [Database.Service, Capability.Service],
+  input: Schema.Struct({
+    applicationId: Bot.applicationId,
+    guildId: Schema.String,
+    indexed: Schema.Boolean,
+    connection: Ref.Ref(Connection.Connection).annotate({
+      description: "The signed-in person's Discord connection, which shows the servers they manage.",
+    }),
+  }),
+  output: Schema.Struct({ guildIds: Schema.Array(Schema.String) }),
+});
+
+/** The servers the space may index as the bot. */
+export const ListIndexedServers = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.discord.listIndexedServers'),
+    name: 'List indexed Discord servers',
+    description: 'Lists the Discord servers this space may read into its memory.',
+    icon: 'ph--magnifying-glass--regular',
+  },
+  services: [Database.Service, Capability.Service],
+  input: Schema.Struct({ applicationId: Bot.applicationId }),
+  output: Schema.Struct({ guildIds: Schema.Array(Schema.String) }),
+});

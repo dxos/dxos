@@ -198,7 +198,7 @@ describe('MarkdownSlide', () => {
     expect(markup).toMatch(/<article [^>]*style="--slide-accent: ?var\(--color-info-text\)"/);
     // One row: the icon, then the title, which keeps the type it has in any card.
     expect(markup).toMatch(
-      /<header class="[^"]*flex[^"]*"><svg [^>]*data-icon="ph--brain--regular"[^>]*class="[^"]*text-\(color:--slide-accent\)[^"]*"[^>]*>.*?<\/svg><h3 [^>]*class="[^"]*text-\[56px\][^"]*"[^>]*>Shared Memory<\/h3><\/header>/,
+      /<header class="[^"]*flex[^"]*"><svg [^>]*data-icon="ph--brain--regular"[^>]*class="[^"]*text-\(color:--slide-accent\)[^"]*"[^>]*>.*?<\/svg><h3 [^>]*class="[^"]*text-\[length:var\(--slide-card-title\)\][^"]*"[^>]*>Shared Memory<\/h3><\/header>/,
     );
     expect(markup.match(/<svg /g)).toHaveLength(1);
   });
@@ -221,8 +221,81 @@ describe('MarkdownSlide', () => {
     expect(classes).toContain('data-[align=center]:my-auto');
     expect(classes).toContain('[&amp;:has(&gt;[data-icon])]:[grid-auto-rows:auto_minmax(0,1fr)]');
     expect(classes).toContain('[&amp;&gt;article[data-icon]]:grid-rows-subgrid');
+    // Every child covers both tracks of a row, not only the cards and cells that carry a span of their own.
+    expect(classes).toContain('[&amp;:has(&gt;[data-icon])&gt;*]:[grid-row:span_calc(var(--slide-row-span,1)*2)]');
     // A grid that asks for nothing fills the space it is given, as it always has.
     expect(render('<Grid cols="3">\n\nCells\n\n</Grid>')).not.toContain('data-align');
+  });
+
+  test('click tags straight inside a grid leave no box, so what they reveal stays the grid\u2019s children', ({
+    expect,
+  }) => {
+    const card = (title: string) => `<Card icon="brain">\n\n### ${title}\n\n</Card>`;
+    const grid = (...children: string[]) => ['<Grid cols="3">', ...children, '</Grid>'].join('\n\n');
+    const built = grid('<v-clicks>', card('One'), card('Two'), card('Three'), '</v-clicks>');
+
+    // The cards follow the grid's own tag with nothing between them, each with its step, hidden until it.
+    const markup = render(built, 1);
+    expect(markup).not.toContain('data-click');
+    expect(markup).toMatch(/<div [^>]*data-variant="default"[^>]*>\s*<article /);
+    const cards = [...markup.matchAll(/<article [^>]*>/g)].map(([tag]) => tag);
+    expect(cards.map((tag) => tag.match(/data-step="(\d)"/)?.[1])).toEqual(['1', '2', '3']);
+    expect(cards.map((tag) => / class="[^"]*\binvisible\b/.test(tag))).toEqual([false, true, true]);
+
+    // A single `<v-click>` hands its step to the card it wraps, and `<v-after>` the step before it.
+    const single = render(grid(card('One'), `<v-click>\n\n${card('Two')}\n\n</v-click>`), 0);
+    expect(single).not.toContain('data-click');
+    const [first, second] = [...single.matchAll(/<article [^>]*>/g)].map(([tag]) => tag);
+    expect(first).not.toContain('data-step');
+    expect(second).toContain('data-step="1"');
+    expect(second).toMatch(/ class="[^"]*\binvisible\b/);
+
+    // Outside a grid a click tag is still a box of its own.
+    expect(render(`<v-clicks>\n\n${card('One')}\n\n</v-clicks>`)).toContain('data-click="slide-clicks"');
+  });
+
+  test('a flow grid draws an arrow into each child, and cuts off the one into a row\u2019s first', ({ expect }) => {
+    const markup = render('<Grid cols="4" variant="flow">\n\n<Card icon="brain">\n\n### A\n\n</Card>\n\n</Grid>');
+    const classes = markup.match(/<div [^>]*data-variant="flow"[^>]*class="([^"]*)"/)?.[1] ?? '';
+    // It is still the grid: the tracks, the alignment and the icon cards' shared header rows.
+    expect(classes).toContain('[grid-template-columns:repeat(var(--slide-grid-cols,1),minmax(0,1fr))]');
+    expect(classes).toContain('[&amp;&gt;article[data-icon]]:grid-rows-subgrid');
+    // The arrow stands before its child, in a gap as wide as its box, and a card lets it out of its own box.
+    expect(classes).toContain('gap-x-24');
+    expect(classes).toContain('[&amp;&gt;*]:before:w-24');
+    expect(classes).toContain('[&amp;&gt;*]:before:end-full');
+    expect(classes).toContain('[&amp;&gt;*]:before:content-[&#x27;→&#x27;]');
+    expect(classes).toContain('[&amp;&gt;article]:overflow-visible');
+    // A flow's cards are narrow, so the grid sets their title and icon a step under the sizes a card gives itself.
+    expect(classes).toContain('[&amp;&gt;article]:[--slide-card-title:48px]');
+    expect(classes).toContain('[&amp;&gt;article]:[--slide-card-icon:60px]');
+    const card = markup.match(/<article [^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(card).toContain('[--slide-card-title:56px]');
+    expect(card).toContain('[--slide-card-icon:70px]');
+    // The arrow into a row's first child falls outside the grid, which cuts it, so nothing here counts columns.
+    expect(classes).toContain('overflow-x-clip');
+    expect(markup).not.toContain('data-row-end');
+    // An arrow belongs to the child it points at and to nothing else, so no rule reads a sibling's visibility.
+    expect(classes).not.toContain('.invisible');
+    // A plain grid draws none.
+    expect(render('<Grid cols="4">\n\nCells\n\n</Grid>')).not.toContain('before:content-');
+  });
+
+  test('a list nested in a flow item takes the card\u2019s size, not the slide\u2019s', ({ expect }) => {
+    const markup = render('<List variant="flow">\n\n1. **Chat** A model\n   - Search\n   - Recall\n\n</List>');
+    const classes = markup.match(/<ol [^>]*data-variant="flow"[^>]*>\s*<li [^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('[&amp;_li]:text-[length:inherit]');
+    expect(classes).toContain('[&amp;_:is(ul,ol)]:ml-10');
+  });
+
+  test('a title box sets its name in the brand\u2019s display face, not the deck\u2019s heading font', ({ expect }) => {
+    const markup = render('<Box variant="title">\n\n# composer\n\n</Box>');
+    const classes = markup.match(/<h1 [^>]*class="([^"]*)"/)?.[1] ?? '';
+    // Its size and place were measured for Poiret One, so the deck's own font must not reach it.
+    expect(classes).toContain('font-[&#x27;Poiret_One&#x27;,ui-sans-serif,sans-serif]');
+    expect(classes).not.toContain('--slide-font-heading');
+    // A heading outside the box still takes the deck's.
+    expect(render('# composer')).toMatch(/<h1 [^>]*class="[^"]*font-\(family-name:--slide-font-heading\)/);
   });
 
   test('a card with no title still shows its icon', ({ expect }) => {
@@ -238,7 +311,7 @@ describe('MarkdownSlide', () => {
     expect(markup).toMatch(/<article [^>]*><p [^>]*><img [^>]*><\/p>\s*<h3 /);
     expect(markup).not.toContain('data-icon="');
     expect(markup).toMatch(
-      /<h3 [^>]*class="px-10 pt-8 text-\[56px\] leading-tight font-\(family-name:--slide-font-heading\) text-balance"/,
+      /<h3 [^>]*class="px-10 pt-8 text-\[length:var\(--slide-card-title\)\] leading-tight font-\(family-name:--slide-font-heading\) text-balance"/,
     );
     expect(markup).toMatch(
       /<p [^>]*class="px-10 pb-8 pt-4 text-\[32px\] leading-snug opacity-80 last:pb-10 \[&amp;:has\(&gt;img\)\]:contents"[^>]*>Text/,

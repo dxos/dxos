@@ -45,6 +45,21 @@ export type PluginEntry = {
 };
 
 /**
+ * What {@link BootLoaderApi.paused} shows: one line of text, one action, and optional facts behind a
+ * disclosure, so the page stays as quiet as the loader it replaces.
+ */
+export type PausedPayload = {
+  /** The one line the user reads (e.g. "Another instance of the app is open"). */
+  title: string;
+  /** The only way forward the page offers. */
+  action: { label: string; onClick: () => void };
+  /** Facts shown under a "Details" disclosure, in order; rows with no value are skipped. */
+  details?: { term: string; value?: string }[];
+  /** A sentence under the facts that explains them. */
+  note?: string;
+};
+
+/**
  * Imperative facade exposed on `window.__bootLoader`, installed by the inlined
  * loader bundle and driven by the host app (the React relay forwards `useApp`'s
  * startup progress through it).
@@ -68,6 +83,11 @@ export type BootLoaderApi = {
    * used to raise on its own.
    */
   stalled: (onAbort: () => void) => void;
+  /**
+   * Stop loading and show why, with one action. For a page that will not start the app at all (e.g. a
+   * tab paused because another tab took over); the ring and status log give way to the message.
+   */
+  paused: (payload: PausedPayload) => void;
   /** Play the dismissal outro, then remove the loader DOM (graceful path). */
   ready: () => void;
   /** Remove the loader DOM immediately (fast-load backstop / terminal). */

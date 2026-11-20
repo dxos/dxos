@@ -15,6 +15,7 @@ import {
   WorkerConnectionError,
   WorkerLeaderContentionError,
   WorkerNotTerminableError,
+  WorkerStoppedError,
   WorkerTerminationError,
 } from './errors.ts';
 import { displaceChannelFor } from './internal/displace-channel.ts';
@@ -560,6 +561,169 @@ describe('Connection multi-client', () => {
     },
     30_000,
   );
+
+  test('a tab asks before taking over an unresponsive leader, and the leader it robs stops', async () => {
+    // Separate hubs make the leader unreachable, which is what an unresponsive leader looks like.
+    const keys = uniqueKeys();
+    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+    const stolen = new Trigger();
+    const leader = makeConnection(createHub(), keys, timeouts, { connection: { onLockStolen: () => stolen.wake() } });
+    await asyncTimeout(leader.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+
+    const takeovers: Array<() => void> = [];
+    const asked = new Trigger();
+    const follower = makeConnection(createHub(), keys, timeouts, {
+      connection: {
+        onTakeoverRequired: (takeover) => {
+          takeovers.push(takeover);
+          asked.wake();
+        },
+      },
+    });
+    const followerOpen = follower.connection.open();
+    onTestFinished(async () => {
+      await follower.connection.close();
+    });
+
+    await asyncTimeout(asked.wait(), 10_000);
+    // Asked once, and nothing stolen until the user agrees.
+    await sleep(timeouts.portTimeout * 3);
+    expect(takeovers).toHaveLength(1);
+    expect(leader.connection.isOpen).toBe(true);
+
+    takeovers[0]();
+    await asyncTimeout(stolen.wait(), 10_000);
+    expect((await asyncTimeout(follower.connected, 10_000)).isOwner).toBe(true);
+    await asyncTimeout(followerOpen, 10_000);
+  }, 30_000);
+
+  test('a takeover approved after its connection stopped steals nothing', async () => {
+    const keys = uniqueKeys();
+    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+    const leader = makeConnection(createHub(), keys, timeouts, {
+      connection: { onLockStolen: () => expect.unreachable() },
+    });
+    await asyncTimeout(leader.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+
+    const takeovers: Array<() => void> = [];
+    const asked = new Trigger();
+    const superseded = new Trigger();
+    const follower = makeConnection(createHub(), keys, timeouts, {
+      connection: {
+        generation: { id: 'a', time: 1 },
+        onSuperseded: () => superseded.wake(),
+        onTakeoverRequired: (takeover) => {
+          takeovers.push(takeover);
+          asked.wake();
+        },
+      },
+    });
+    const followerOpen = follower.connection.open();
+    onTestFinished(async () => {
+      await follower.connection.close();
+    });
+    await asyncTimeout(asked.wait(), 10_000);
+
+    // A newer build stops the follower while the user is still deciding.
+    const newer = makeConnection(createHub(), keys, timeouts, {
+      connection: { generation: { id: 'b', time: 2 }, onSuperseded: () => {}, onTakeoverRequired: () => {} },
+    });
+    void newer.connection.open().catch(() => {});
+    onTestFinished(async () => {
+      await newer.connection.close();
+    });
+    await asyncTimeout(superseded.wait(), 10_000);
+    await expect(followerOpen).rejects.toSatisfy((error) => WorkerStoppedError.is(error));
+
+    takeovers[0]();
+    await sleep(timeouts.portTimeout * 3);
+    expect(leader.connection.isOpen).toBe(true);
+  }, 30_000);
+
+  test('a tab opened with takeover steals the lock at once, and the previous leader stops', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const stolen = new Trigger();
+    const previous = makeConnection(hub, keys, undefined, { connection: { onLockStolen: () => stolen.wake() } });
+    await asyncTimeout(previous.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await previous.connection.close();
+    });
+    expect((await asyncTimeout(previous.connected, 10_000)).isOwner).toBe(true);
+
+    const next = makeConnection(hub, keys, undefined, { connection: { takeover: true } });
+    await asyncTimeout(next.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await next.connection.close();
+    });
+
+    await asyncTimeout(stolen.wait(), 10_000);
+    expect((await asyncTimeout(next.connected, 10_000)).isOwner).toBe(true);
+  }, 30_000);
+
+  test('an older build stops when a newer build opens, and the newer build leads', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const superseded = new Trigger<Client.Generation>();
+    const older = makeConnection(hub, keys, undefined, {
+      connection: { generation: { id: 'a', time: 1 }, onSuperseded: (newer) => superseded.wake(newer) },
+    });
+    await asyncTimeout(older.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await older.connection.close();
+    });
+
+    const newer = makeConnection(hub, keys, undefined, {
+      connection: { generation: { id: 'b', time: 2 }, onSuperseded: () => expect.unreachable() },
+    });
+    await asyncTimeout(newer.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await newer.connection.close();
+    });
+
+    expect(await asyncTimeout(superseded.wait(), 10_000)).toEqual({ id: 'b', time: 2 });
+    // The older tab released the lock as it stopped, so the newer one is elected without a steal.
+    await waitForCondition({ condition: () => !older.connection.isOpen, timeout: 10_000 });
+    expect(newer.connection.isOpen).toBe(true);
+    const { held } = await navigator.locks.query();
+    expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
+  }, 30_000);
+
+  test('an older build that opens after a newer one stops while booting', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const newer = makeConnection(hub, keys, undefined, {
+      connection: { generation: { id: 'b', time: 2 }, onSuperseded: () => expect.unreachable() },
+    });
+    await asyncTimeout(newer.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await newer.connection.close();
+    });
+
+    const superseded = new Trigger<Client.Generation>();
+    // Its own hub, as real builds never share a coordinator: only the generation reply can stop it.
+    const older = makeConnection(createHub(), keys, undefined, {
+      connection: { generation: { id: 'a', time: 1 }, onSuperseded: (other) => superseded.wake(other) },
+    });
+    const olderOpen = older.connection.open();
+    onTestFinished(async () => {
+      await older.connection.close();
+    });
+
+    expect(await asyncTimeout(superseded.wait(), 10_000)).toEqual({ id: 'b', time: 2 });
+    await expect(olderOpen).rejects.toSatisfy((error) => WorkerStoppedError.is(error));
+  }, 30_000);
 
   test('a connection closed while its leader session opens closes that session and does not lead again', async () => {
     const hub = createHub();

@@ -9,11 +9,10 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
-import { DXN, IdentityDid, SpaceId } from '@dxos/keys';
+import { DXN, IdentityDid } from '@dxos/keys';
 
 const IdentitySchema = Schema.Struct({
   identityDid: IdentityDid,
-  spaceId: Schema.optional(SpaceId),
   profile: Schema.optional(
     Schema.Struct({
       displayName: Schema.optional(Schema.String),

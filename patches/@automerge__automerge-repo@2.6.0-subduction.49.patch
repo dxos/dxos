@@ -689,10 +689,36 @@ index 609e087a8829d5170733ff14da63f8fbe81194b4..b07ef33c13bc9f83036d63e72ea26489
                  this.#log.debug(`heal sync succeeded for ${key.slice(0, 8)}`);
                  this.resetHealState(key);
 diff --git a/dist/subduction/network.js b/dist/subduction/network.js
-index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f22361b550 100644
+index 761e08f5065092d61888b381f5fe5ac08d5829db..cfd3dde5beca8e7879b46f41f7a4c0cac73e8a3f 100644
 --- a/dist/subduction/network.js
 +++ b/dist/subduction/network.js
-@@ -92,7 +92,11 @@ export class NetworkAdapterTransport {
+@@ -38,6 +38,8 @@ export class NetworkAdapterTransport {
+     #log;
+     #disconnectCallback = null;
+     #disconnected = false;
++    /** DXOS patch: whether the remote's first handshake frame has arrived on this transport. */
++    #handshakeStarted = false;
+     /**
+      * Create a new NetworkAdapterConnection.
+      *
+@@ -81,6 +83,16 @@ export class NetworkAdapterTransport {
+             this.#log.debug("ignoring message with no data");
+             return;
+         }
++        // DXOS patch: a handshake re-run over a link that stays open (a transport reset) can receive
++        // the previous connection's frames still in flight, and one of them read as a handshake frame
++        // fails the handshake for good; the remote's frames for this transport start with a handshake.
++        if (!this.#handshakeStarted) {
++            if (!isHandshakeFrame(payload)) {
++                this.#log.debug("dropping a frame that arrived before the handshake");
++                return;
++            }
++            this.#handshakeStarted = true;
++        }
+         // Otherwise enqueue for recv().
+         const waiter = this.#messageWaiters.shift();
+         if (waiter) {
+@@ -92,7 +104,11 @@ export class NetworkAdapterTransport {
      };
      #handlePeerDisconnected = ({ peerId }) => {
          if (peerId === this.#remotePeerId.toString()) {
@@ -705,6 +731,16 @@ index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f2
          }
      };
      /** Send a tagged frame over the adapter. */
+@@ -166,4 +182,8 @@ export class NetworkAdapterTransport {
+  * tag byte inside `data` distinguishes them.
+  */
+ export const SUBDUCTION_MESSAGE_TYPE = "subduction-connection";
++/** DXOS patch: the 4-byte schema tag that starts every Subduction handshake frame (`SUH\0`). */
++const HANDSHAKE_FRAME_PREFIX = [0x53, 0x55, 0x48, 0x00];
++const isHandshakeFrame = (payload) => payload.length >= HANDSHAKE_FRAME_PREFIX.length &&
++    HANDSHAKE_FRAME_PREFIX.every((byte, index) => payload[index] === byte);
+ //# sourceMappingURL=network.js.map
+\ No newline at end of file
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
 index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..ea01cae216eb538380f6468be3b33f5d14357b4c 100644
 --- a/dist/subduction/source.d.ts
@@ -1635,12 +1671,14 @@ index 37f9cc727f7ab1d24118879efadc4bb44f90e827..7c3f51b53a8df1512ee45f69c6a7c0d4
      async saveCommit(sedimentreeId, commitId, signedCommit, blob) {
          // Encode the signed commit to bytes
 diff --git a/dist/synchronizer/DocSynchronizer.js b/dist/synchronizer/DocSynchronizer.js
+index ec0cbbf273d3af58c744e5126cbb58f599916f9b..dcde85ad84cd9fa9785f78413309a1cf11dfafdc 100644
 --- a/dist/synchronizer/DocSynchronizer.js
 +++ b/dist/synchronizer/DocSynchronizer.js
-@@ -302,6 +302,21 @@
+@@ -301,6 +301,21 @@ export class DocSynchronizer extends EventEmitter {
+             }
          }
      }
-     /**
++    /**
 +     * Whether the doc holds the initial heads `peer` advertised. A peer's
 +     * initial heads are fixed for its status and a doc never loses heads, so
 +     * a positive answer is kept on the status: `A.hasHeads` rebuilds each
@@ -1655,11 +1693,10 @@ diff --git a/dist/synchronizer/DocSynchronizer.js b/dist/synchronizer/DocSynchro
 +            peer.status.hasInitialHeads = true;
 +        return has;
 +    }
-+    /**
+     /**
       * Returns true if any "has" peer advertised initial heads that we
       * don't yet have locally.
-      */
-@@ -311,7 +326,7 @@
+@@ -311,7 +326,7 @@ export class DocSynchronizer extends EventEmitter {
                  continue;
              if (peer.sharePolicyState === "denied")
                  continue;
@@ -1668,7 +1705,7 @@ diff --git a/dist/synchronizer/DocSynchronizer.js b/dist/synchronizer/DocSynchro
                  return true;
          }
          return false;
-@@ -327,7 +342,7 @@
+@@ -327,7 +342,7 @@ export class DocSynchronizer extends EventEmitter {
                  continue;
              if (peer.sharePolicyState === "denied")
                  continue;

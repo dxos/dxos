@@ -100,10 +100,9 @@ not "complete" references one of these numbers.
 
 ### HALO (this PR's surface)
 
-1. ~~**Personal space id from identity creation.**~~ DONE — `Identity.personalSpaceId`
-   returns `Option<SpaceId>` for the identity's HALO space. A verb, not a field on
-   `Info`, because the id is derived from the identity key by an async digest.
-   `Identity.create` also accepts `data` now, so profile metadata survives creation.
+1. ~~**Profile data at identity creation.**~~ DONE — `Identity.create` accepts `data`, so
+   profile metadata survives creation. `@dxos/halo` exposes no id for the identity's HALO
+   space: a personal space is an app-level concept, not part of HALO.
 2. ~~**Recovery-credential creation.**~~ DONE — `Identity.createRecoveryCredential`
    (no argument mints a recovery code; `{ externalKey: { recoveryKey, lookupKey,
 algorithm, label?, kind? } }` registers a passkey), `Identity.requestRecoveryChallenge`,

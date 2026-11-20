@@ -24,6 +24,7 @@ const ada = db.add(
 ada.id; // '01J…', unique and stable
 Obj.getTypename(ada); // 'com.example.type.person'
 Obj.getKeys(ada, 'crm.example.com'); // [{ source: 'crm.example.com', id: 'contact-42' }]
+Obj.getMeta(ada).tags; // [], the tags on the object
 Obj.getLabel(ada); // 'Ada'
 Obj.isDeleted(ada); // false
 // #endregion managed

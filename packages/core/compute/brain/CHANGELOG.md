@@ -1,5 +1,16 @@
 # @dxos/brain
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [3585abc]
+- Updated dependencies [c9c3867]
+  - @dxos/echo-memory@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/datalog@0.17.0
+  - @dxos/errors@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

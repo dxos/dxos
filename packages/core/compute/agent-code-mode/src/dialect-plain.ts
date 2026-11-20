@@ -162,7 +162,8 @@ export const PlainDialect: Dialect = {
     in scope.
 
     Prefer one \`eval\` call that does the whole job — query, inspect, change, print — over a call
-    per step. Print the specific values you need to reason about, not whole objects, and keep the
+    per step. Each call is a fresh program: nothing defined in an earlier call exists in the next,
+    so load again what you need. Print the specific values you need to reason about, not whole objects, and keep the
     output small. Stay on the objects the request names or the conversation is attached to: reading
     or changing others the request did not ask about spends calls and risks unasked-for writes.
 

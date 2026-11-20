@@ -5,21 +5,27 @@ description: Find out why a module did not activate or a contribution did not sh
 
 import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 
-Most plugin bugs are one of three things: the plugin did not load, a module did not activate, or a contribution
-reached the app but did not show where you expected. Start with the inspector, which shows all three.
+By the end of this guide, you can tell which of three things went wrong with a plugin. The plugin did not load, a
+module did not activate, or a contribution reached the app and did not show where you expected.
+
+The inspector, a small PLEX app in these docs that loads one plugin, shows the first two. Composer Preview shows the
+third.
 
 ## Load the plugin into the inspector
 
 Start the plugin's dev server in its folder with `npm run dev`, then click **Load dev plugin** below. The inspector
-loads the plugin from `http://localhost:3967/manifest.json`, the same way Composer does.
+loads the plugin from its manifest, the `manifest.json` that the dev server serves at
+`http://localhost:3967/manifest.json`. Composer loads it the same way.
 
 <InspectorEmbed adds={[]} />
 
 The sidebar lists each module with its status:
 
-- **Active:** the module ran and its contributions are in the app.
-- **Waiting:** its activation event has not fired yet. Check that the module lists the event you meant.
-- **Failed:** the module threw. Select it to read the error.
+- If a module is **Active**, it ran and its contributions are in the app.
+- If it is **Waiting**, it has not activated. Either its activation event has not fired yet, or a singleton
+  capability it requires has no contribution. Check that the module lists the event you meant, and that a plugin
+  provides each capability in its `requires`.
+- If it is **Failed**, the module threw. Select it to read the error.
 
 ## Load errors
 
@@ -35,12 +41,13 @@ When the plugin does not load at all, the inspector names the reason:
 ## Debug in Composer Preview
 
 Load the plugin into [Composer Preview](https://preview.composer.space) as on
-[Run it in Composer](/docs/plex/learn/run-in-composer/), then open the browser's devtools. The plugin's source is
-served unbundled, so its files appear under `localhost:3967` in the Sources panel, and breakpoints and `console.log`
-work as in any Vite app. A reload of Composer loads your latest edit.
+[Run it in Composer](/docs/plex/learn/run-in-composer/), then open the browser's devtools.
+
+The plugin's source is served unbundled, so its files appear under `localhost:3967` in the Sources panel.
+Breakpoints and `console.log` work as in any Vite app. To load your latest edit, reload Composer.
 
 ## Limits
 
 - The inspector shows one plugin. A bug that depends on another plugin, such as a surface another plugin's surface
   outranks, shows only in Composer.
-- Only Composer Preview loads dev plugins; composer.space does not.
+- Only Composer Preview loads a plugin from a dev server. The app at composer.space does not.

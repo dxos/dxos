@@ -159,9 +159,15 @@ const advance = (
       );
     }
 
-    const drained = page.messages.length === 0;
-    if (!drained && page.cursor) {
+    // Only an empty fetch ends the target: a page whose messages the source filtered out still moves the cursor.
+    const drained = page.messages.length === 0 && page.cursor === undefined;
+    if (page.cursor) {
       volatile.cursors.set(target.id, page.cursor);
+      // Messages the source filtered out after the last one kept (or a page of only those) move the cursor too, and no
+      // message carries it to the commit sink, so an event does; otherwise every run would refetch them.
+      if (page.cursor !== page.messages.at(-1)?.id) {
+        events.push({ _tag: 'Skipped', target: current, cursor: page.cursor });
+      }
     }
     if (drained) {
       volatile.done.add(target.id);
@@ -218,6 +224,8 @@ export const commit = (event: Type.Event): Effect.Effect<void, StateError, State
   switch (event._tag) {
     case 'Message':
       return StateStore.setCursor(event.target.id, event.message.id);
+    case 'Skipped':
+      return StateStore.setCursor(event.target.id, event.cursor);
     case 'ThreadEnd':
     case 'ChannelEnd':
       return StateStore.setStatus(event.target.id, 'done');

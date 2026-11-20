@@ -3,5 +3,9 @@ title: API reference
 description: Generated API reference for the HALO packages.
 ---
 
-- <a href='/typedoc/halo/index.html' target='_blank'>`@dxos/halo`</a>: the `Identity`, `Invitation` and `Space` namespaces.
-- <a href='/typedoc/halo-react/index.html' target='_blank'>`@dxos/halo-react`</a>: React hooks for those namespaces.
+Each link opens the generated API reference for one package:
+
+- <a href='/typedoc/halo/index.html' target='_blank'>`@dxos/halo`</a> has the `Identity`, `Invitation` and `Space`
+  namespaces.
+- <a href='/typedoc/halo-react/index.html' target='_blank'>`@dxos/halo-react`</a> has the React hooks for those
+  namespaces.
