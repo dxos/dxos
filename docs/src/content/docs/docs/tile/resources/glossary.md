@@ -3,7 +3,7 @@ title: Glossary
 description: Every TILE term, defined once.
 ---
 
-ECHO terms, such as space and object, are in ECHO's [glossary](/docs/additional-resources/glossary/). PLEX terms, such
+ECHO terms, such as space and object, are in ECHO's [glossary](/docs/echo/resources/glossary/). PLEX terms, such
 as surface and capability, are in PLEX's [glossary](/docs/plex/resources/glossary/).
 
 ### Action

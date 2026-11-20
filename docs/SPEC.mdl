@@ -692,7 +692,7 @@ page guide-blob: Blob
 page api-reference: API reference
   Generated API reference for the ECHO and client packages.
   section: ECHO
-  route: /docs/additional-resources/api-reference/
+  route: /docs/echo/resources/api-reference/
   group: Resources
   template: resource
   status: spike
@@ -703,7 +703,7 @@ page api-reference: API reference
 page glossary: Glossary
   Every ECHO term, defined once.
   section: ECHO
-  route: /docs/additional-resources/glossary/
+  route: /docs/echo/resources/glossary/
   group: Resources
   template: glossary
   status: spike
@@ -715,13 +715,14 @@ page glossary: Glossary
 page examples: Examples
   Apps built on ECHO, with code and live links.
   section: ECHO
-  route: /docs/additional-resources/samples/
+  route: /docs/echo/resources/examples/
   group: Resources
   template: resource
   status: spike
   covers:
     - Composer first, as the flagship app built on ECHO
-    - Tasks, TodoMVC, Contacts and Game Arena, each with its code and a live link
+    - drawing.sh, a diagramming app built with ECHO on Composer's network, so the two are compatible [D-371]
+    - TodoMVC, Tasks, Contacts and Game Arena, each with its code and a live link
 ```
 ```mdl
 page echo-llms-txt: llms.txt
@@ -2199,6 +2200,19 @@ page app-framework-glossary: Glossary
   covers:
     - Action, activation event, annotation, App Graph, App Toolkit, builder extension, capability, filter, handler, module, node, operation, operation invoker, plugin, plugin manager, role, schema registration and surface
     - Assistant, atom, contribution, dev plugin, disposition, DXN, handler set, host, inspector, manifest, module maker, NSID, private registry, skill and tag [D-354]
+```
+
+```mdl
+page plex-examples: Examples
+  Apps built with PLEX, with code and live links.
+  section: PLEX
+  route: /docs/plex/resources/examples/
+  group: Resources
+  template: resource
+  status: spike
+  covers:
+    - Composer, drawing.sh and Game Arena, each with its code and a live link [D-372]
+    - What each one shows: Composer's features as plugins, drawing.sh's own layout plugin, Game Arena's early app framework
 ```
 
 ```mdl
@@ -7179,6 +7193,22 @@ decision D-370: A glossary lists its terms in alphabetical order, and each entry
   for: user:wittjosiah
   affects: [mesh-transports, mesh-glossary, edge-glossary, sage-glossary, halo-glossary, app-framework-glossary, tile-glossary, glossary]
   why: ECHO's glossary already linked its headings. A planned transport is a known divergence, which the concept template's Limits holds.
+```
+
+```mdl
+decision D-371: ECHO's API reference, glossary and examples pages move from `/docs/additional-resources/` to `/docs/echo/resources/`, with redirects from the old routes. Examples lists drawing.sh after Composer.
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [api-reference, glossary, examples]
+  why: The header's topic switcher picks a topic by URL prefix, so pages outside `/docs/echo/` showed no topic.
+```
+
+```mdl
+decision D-372: PLEX's Resources has an Examples page listing Composer, drawing.sh and Game Arena.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [plex-examples]
 ```
 
 ## Appendix: Extension Definitions

@@ -2,7 +2,7 @@
 title: Glossary
 ---
 
-ECHO terms, such as object and epoch, are in ECHO's [glossary](/docs/additional-resources/glossary/).
+ECHO terms, such as object and epoch, are in ECHO's [glossary](/docs/echo/resources/glossary/).
 
 ### [Access level](/docs/halo/concepts/spaces-membership/)
 

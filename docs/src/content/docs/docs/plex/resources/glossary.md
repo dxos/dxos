@@ -3,7 +3,7 @@ title: Glossary
 description: Every Composer and PLEX term, defined once.
 ---
 
-ECHO terms, such as space and object, are in ECHO's [glossary](/docs/additional-resources/glossary/). Identity and
+ECHO terms, such as space and object, are in ECHO's [glossary](/docs/echo/resources/glossary/). Identity and
 invitation terms are in HALO's [glossary](/docs/halo/resources/glossary/).
 
 ### Action
