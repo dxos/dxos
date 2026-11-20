@@ -155,11 +155,10 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       const contextual = RequestContext.withConversation(
         RequestContext.withCancellation(
           withCapabilities(
-            HostServices.withHostServices(
-              withOperations,
-              scope.services,
-              activation.capabilities.getAll(Capabilities.HostServiceAdapter),
-            ),
+            HostServices.withHostServices(withOperations, scope.services, [
+              ...activation.capabilities.getAll(Capabilities.HostServiceAdapter),
+              ...HostServices.builtinAdapters,
+            ]),
             activation.capabilities,
           ),
           cancellation.signal,

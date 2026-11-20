@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import type * as HttpClient from 'effect/http/HttpClient';
+import * as Stream from 'effect/Stream';
 
 import * as SandboxService from '../types/SandboxService.ts';
 import { encodeExecCommand } from './exec-command.ts';
 import { type EdgeContext, createSandboxClient } from './sandbox-url.ts';
-import { type SandboxClient, type SandboxRequestError } from './SandboxClient.ts';
+import { type ProcessState, type SandboxClient, type SandboxRequestError } from './SandboxClient.ts';
 
 /**
  * Sandboxes run by EDGE's sandbox-service. The REST client is built per call: the service URL comes
@@ -17,20 +18,49 @@ import { type SandboxClient, type SandboxRequestError } from './SandboxClient.ts
  * `resolve` is read per call for the same reason: the client arrives after the runtime is built.
  */
 export const makeEdgeBackend = (resolve: () => EdgeContext): SandboxService.Backend => {
+  const toSandboxError = (cause: unknown) => new SandboxService.SandboxError({ message: describeError(cause), cause });
+
   const request = <T>(
     send: (sandboxClient: SandboxClient) => Effect.Effect<T, SandboxRequestError, HttpClient.HttpClient>,
   ): Effect.Effect<T, SandboxService.SandboxError> =>
     Effect.try({
       try: () => createSandboxClient(resolve()),
-      catch: (cause) => new SandboxService.SandboxError({ message: describeError(cause), cause }),
+      catch: toSandboxError,
     }).pipe(
       Effect.flatMap((sandboxClient) =>
-        send(sandboxClient).pipe(
-          Effect.mapError((cause) => new SandboxService.SandboxError({ message: describeError(cause), cause })),
-          Effect.provide(FetchHttpClient.layer),
-        ),
+        send(sandboxClient).pipe(Effect.mapError(toSandboxError), Effect.provide(FetchHttpClient.layer)),
       ),
     );
+
+  // A job is its id: every call re-resolves the client, so a handle stays usable across invocations.
+  const job = (spaceId: string, sandboxId: string, jobId: string): SandboxService.Job => ({
+    id: jobId,
+    output: (from) =>
+      Stream.unwrap(
+        Effect.try({ try: () => createSandboxClient(resolve()), catch: toSandboxError }).pipe(
+          Effect.map((sandboxClient) => sandboxClient.processOutput(spaceId, sandboxId, jobId, from)),
+        ),
+      ).pipe(
+        Stream.map((event): SandboxService.JobEvent =>
+          event.type === 'exit' ? { type: 'exit', exitCode: event.exitCode, success: event.success } : event,
+        ),
+        Stream.mapError(toSandboxError),
+        Stream.provide(FetchHttpClient.layer),
+      ),
+    // Each chunk is its own request, so a failing input stream fails with its own error, unmapped.
+    stdin: (input) =>
+      input.pipe(
+        Stream.runForEach((data) =>
+          request((sandboxClient) => sandboxClient.writeStdin(spaceId, sandboxId, jobId, Stream.make(data))),
+        ),
+      ),
+    state: () =>
+      request((sandboxClient) => sandboxClient.processState(spaceId, sandboxId, jobId)).pipe(Effect.map(toJobState)),
+    terminate: (signal) =>
+      request((sandboxClient) => sandboxClient.killProcess(spaceId, sandboxId, jobId, signal)).pipe(
+        Effect.map(toJobState),
+      ),
+  });
 
   return {
     kind: 'edge',
@@ -51,8 +81,18 @@ export const makeEdgeBackend = (resolve: () => EdgeContext): SandboxService.Back
       request((sandboxClient) => sandboxClient.exposePort(spaceId, sandboxId, port, options)),
     setRepositories: (spaceId, sandboxId, repositories) =>
       request((sandboxClient) => sandboxClient.setRepositories(spaceId, sandboxId, repositories)),
+    startJob: (spaceId, sandboxId, { command, ...options }) =>
+      request((sandboxClient) =>
+        sandboxClient.startProcess(spaceId, sandboxId, { command: encodeExecCommand(command), ...options }),
+      ).pipe(Effect.map((jobId) => job(spaceId, sandboxId, jobId))),
+    job: (spaceId, sandboxId, jobId) => job(spaceId, sandboxId, jobId),
   };
 };
+
+const toJobState = ({ status, exitCode }: ProcessState): SandboxService.JobState => ({
+  status,
+  ...(exitCode !== undefined && { exitCode }),
+});
 
 const describeError = (error: unknown): string =>
   error instanceof Error ? `${error.name}: ${error.message}` : String(error);
