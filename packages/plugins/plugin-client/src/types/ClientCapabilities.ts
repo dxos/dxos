@@ -18,6 +18,13 @@ import { ClientNamespace } from '../namespace.ts';
 import { type AccountCache as AccountCacheType } from './AccountCache.ts';
 
 export const Client = Capability.makeSingleton<Client$>()(`${ClientNamespace.key}.capability.client`);
+/**
+ * The `ClientService` handle the client capability builds: its `client` effect starts initialization when the
+ * capability defers it (`initializeOnUse`) and waits for it to settle, so every provider of `ClientService` shares it.
+ */
+export const ClientHandle = Capability.makeSingleton<{ readonly client: Effect.Effect<Client$> }>()(
+  `${ClientNamespace.key}.capability.clientHandle`,
+);
 export const Schema = Capability.make<Type.AnyEntity[]>()(`${ClientNamespace.key}.capability.schema`);
 /**
  * The effective `initializeTimeout` the client capability resolved. Consumers that wait on

@@ -115,14 +115,17 @@ const ProcessManagerSpec = LayerSpec.make(
 /**
  * A {@link Process.Manager} that is the stack's {@link Process.ManagerService}, resolved on first use: building it
  * resolves the host's remote manager, which may need services (the client) that are not ready at activation.
- * The process tree reads empty until then.
+ * The process tree reads empty until then; its first read starts the resolution through `fork` (which returns whether
+ * it could), so a view that only reads the tree still fills in.
  */
 export const fromStack = (
   resolver: ServiceResolver.ServiceResolver,
   scope: Scope.Scope,
   registry: Registry.AtomRegistry,
+  fork: (effect: Effect.Effect<unknown>) => boolean,
 ): Process.Manager => {
   const resolvedAtom = Atom.make<Process.Manager | undefined>(undefined).pipe(Atom.keepAlive);
+  let resolving = false;
   const manager: Effect.Effect<Process.Manager> = Effect.suspend(() => {
     const resolved = registry.get(resolvedAtom);
     return resolved !== undefined
@@ -139,7 +142,13 @@ export const fromStack = (
     processTree: Effect.flatMap(manager, (stackManager) => stackManager.processTree),
     processTreeAtom: Atom.make((get) => {
       const stackManager = get(resolvedAtom);
-      return stackManager === undefined ? [] : get(stackManager.processTreeAtom);
+      if (stackManager === undefined) {
+        if (!resolving) {
+          resolving = fork(manager);
+        }
+        return [];
+      }
+      return get(stackManager.processTreeAtom);
     }),
     list: (filter) => Effect.flatMap(manager, (stackManager) => stackManager.list(filter)),
     subscribeToTraceMessages: (filter) =>
@@ -289,7 +298,12 @@ export default Capability.makeModule(
     // Holds the stack's application slice that the manager resolves from, for the module's lifetime.
     const stackScope = yield* Scope.make();
     yield* Effect.addFinalizer(() => Scope.close(stackScope, Exit.void));
-    const unifiedProcessManager = fromStack(serviceResolver, stackScope, atomRegistry);
+    // Bound once the runtime exists.
+    let forkInRuntime: ((effect: Effect.Effect<unknown>) => void) | undefined;
+    const unifiedProcessManager = fromStack(serviceResolver, stackScope, atomRegistry, (effect) => {
+      forkInRuntime?.(effect);
+      return forkInRuntime !== undefined;
+    });
     const unifiedProcessManagerLayer = Layer.succeed(Process.ManagerService, unifiedProcessManager);
     // The stack's remote invoker, resolved per call for the same reason as the manager: it may need the client.
     const remoteOperationInvoker: RemoteOperationInvoker.Invoker = {
@@ -346,9 +360,12 @@ export default Capability.makeModule(
       >,
     );
 
-    // Resolved in the background rather than on first spawn, so a view that only reads the tree still fills in;
-    // after the holder above, which the stack's manager is built over.
-    managedRuntime.runFork(unifiedProcessManager.processTree);
+    // After the holder above, which the stack's manager is built over. Not resolved here: resolving builds the
+    // remote manager, which uses the client, and a host that initializes the client on first use (the CLI) would
+    // then initialize it for every command.
+    forkInRuntime = (effect) => {
+      managedRuntime.runFork(effect);
+    };
 
     // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer, via its own tag so the
     // contributed value carries the full OperationInvoker interface (`invocations`, `pendingFollowups`,

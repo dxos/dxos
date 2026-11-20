@@ -45,11 +45,12 @@ export const fromClient = (client: Client) => Layer.succeed(ClientService, { cli
 const destroyOnClose = (client: Client) =>
   Effect.addFinalizer(() =>
     Effect.interruptible(
-      Effect.raceAll([
+      // `raceFirst`, not `raceAll`: the timeout dies rather than succeeds, and `raceAll` would wait out a hung destroy.
+      Effect.raceFirst(
         // TODO(burdon): Sometimes hangs even after logging OK (a Cloudflare socket, seen via `lsof -i`).
         Effect.tryPromise(() => client.destroy()).pipe(Effect.orDie),
         Effect.sleep(5_000).pipe(Effect.andThen(Effect.die(new Error('Client did not shutdown in time.')))),
-      ]),
+      ),
     ),
   );
 
