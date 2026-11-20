@@ -19,15 +19,17 @@ export type StoryDemoProps = {
   /** Starts peers of the story's own instead of joining the page's. */
   standalone?: boolean;
   /**
-   * Boots in turn, once the demos before it show their content, or as soon as its tab panel (`[data-panel]`) is
-   * `data-active`; the shown demo then never shares the CPU with hidden ones, and the hidden ones are ready by the time
-   * their tab is picked.
+   * Boots in turn with the page's other demos, the one in the active tab panel (`[data-panel]`) first, each once the
+   * one before it shows its content; a panel that turns `data-active` boots at once. Demos then never share the CPU,
+   * and the hidden ones are ready by the time the reader picks their tab.
    */
   lazy?: boolean;
+  /** Called once the demo shows on every peer. */
+  onReady?: () => void;
 };
 
 /** A live demo island: `<StoryDemo id='editor' client:only='react' />`. */
-export const StoryDemo = ({ id, standalone, lazy }: StoryDemoProps) => {
+export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => {
   const entry = STORIES[id];
   if (!entry) {
     throw new Error(`No demo "${id}"`);
@@ -38,8 +40,13 @@ export const StoryDemo = ({ id, standalone, lazy }: StoryDemoProps) => {
     pinDarkAppearance();
     return standalone ? undefined : pageRuntime();
   });
+  const active = usePanelActive(lazy);
   // Islands render in page order, so the queue follows the tabs.
-  const [slot] = useState(() => (lazy ? queueBoot() : undefined));
+  const [slot] = useState(() =>
+    lazy
+      ? queueBoot(() => active.ref.current?.closest('[data-panel]')?.hasAttribute('data-active') ?? false)
+      : undefined,
+  );
   const [story, setStory] = useState<StoryEmbed.Composed>();
   const [error, setError] = useState<string>();
   useEffect(() => {
@@ -60,7 +67,6 @@ export const StoryDemo = ({ id, standalone, lazy }: StoryDemoProps) => {
   useEffect(() => {
     void slot?.turn.then(() => setTurn(true));
   }, [slot]);
-  const active = usePanelActive(lazy);
 
   if (error) {
     return <p role='alert'>{error}</p>;
@@ -79,20 +85,26 @@ export const StoryDemo = ({ id, standalone, lazy }: StoryDemoProps) => {
   return (
     <StoryEmbed.Root
       story={story}
-      shared={runtime && { runtime, late: entry.late, onReady: slot?.done }}
+      shared={{
+        runtime,
+        late: entry.late,
+        onReady: () => {
+          slot?.done();
+          onReady?.();
+        },
+      }}
       classNames='h-full border border-separator'
     />
   );
 };
 
-/** Whether the tab panel around the returned ref has been shown; stays true once it has. */
+/** Whether the tab panel around the returned ref has been shown; stays true once it has. Without a panel, never. */
 const usePanelActive = (lazy = false) => {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(!lazy);
   useEffect(() => {
     const panel = ref.current?.closest<HTMLElement>('[data-panel]');
     if (shown || !panel) {
-      setShown(true);
       return;
     }
     const check = () => panel.hasAttribute('data-active') && setShown(true);

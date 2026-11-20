@@ -353,7 +353,7 @@ type PeersHostProps = {
  */
 const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProps) => {
   const [own] = useState(() =>
-    shared ? undefined : StoryPeers.make({ title: props.title ?? contextId, count: props.peers }),
+    shared?.runtime ? undefined : StoryPeers.make({ title: props.title ?? contextId, count: props.peers }),
   );
   const runtime = shared?.runtime ?? own;
   invariant(runtime);
@@ -631,7 +631,7 @@ const PublishLayout = ({ atom, layout }: { atom: Atom.Writable<ModuleLayout | un
 
 /**
  * Story decorators: theme, fullscreen layout and the plugin-manager harness. A story with `peers` above one, or any
- * story inside a {@link StoryPeers.Provider}, runs once per peer over a shared space.
+ * story inside a {@link StoryPeers.Provider} with a runtime, runs once per peer over a shared space.
  */
 export const decorators = <Args = any,>(input: DecoratorsInput<Args> = {}) => {
   // Storybook's decorator type is keyed to its renderer's args, which a factory generic over `Args` cannot name.
@@ -646,7 +646,7 @@ export const decorators = <Args = any,>(input: DecoratorsInput<Args> = {}) => {
     );
     const shared = StoryPeers.useShared();
 
-    if (shared || (props.peers ?? 1) > 1) {
+    if (shared?.runtime || (props.peers ?? 1) > 1) {
       return (
         <PeersHost
           props={props}

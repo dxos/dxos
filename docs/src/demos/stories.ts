@@ -34,23 +34,76 @@ export const pinDarkAppearance = () => {
 };
 
 export type BootTurn = {
-  /** Resolves once every demo queued before this one shows its content. */
+  /** Resolves when this demo may boot. */
   readonly turn: Promise<void>;
-  /** Marks this demo's content as shown, which starts the next demo's turn. */
+  /** Marks this demo's content as shown; the next demo boots once the browser is idle. */
   readonly done: () => void;
 };
 
-let previous: Promise<void> = Promise.resolve();
+type Waiter = {
+  readonly visible: () => boolean;
+  readonly start: () => void;
+};
 
-/** Queues a demo to boot after the ones before it have shown their content, so they never share the CPU. */
-export const queueBoot = (): BootTurn => {
-  const turn = previous;
-  let done!: () => void;
-  const shown = new Promise<void>((resolve) => {
-    done = resolve;
+type Scheduler = {
+  readonly waiting: Waiter[];
+  busy: boolean;
+};
+
+/** How long a demo may hold its turn without reporting its content. */
+const TURN_TIMEOUT = 20_000;
+
+const queue: Scheduler = { waiting: [], busy: false };
+
+/** Starts the first visible waiting demo, or the first waiting one, unless a demo is booting. */
+const next = (scheduler: Scheduler) => {
+  if (scheduler.busy || scheduler.waiting.length === 0) {
+    return;
+  }
+  const index = Math.max(
+    0,
+    scheduler.waiting.findIndex((waiter) => waiter.visible()),
+  );
+  const [waiter] = scheduler.waiting.splice(index, 1);
+  scheduler.busy = true;
+  waiter.start();
+};
+
+/**
+ * Queues a demo to boot once the demo booting before it shows its content, so two demos never share the CPU. A visible
+ * demo goes ahead of hidden ones.
+ */
+export const queueBoot = (visible: () => boolean): BootTurn => {
+  let state: 'waiting' | 'booting' | 'done' = 'waiting';
+  let resolve!: () => void;
+  const turn = new Promise<void>((resolveTurn) => {
+    resolve = resolveTurn;
   });
-  // A story shows on mount, before it paints its content; the next demo waits for that to finish.
-  previous = turn.then(() => shown).then(idle);
+  const waiter: Waiter = {
+    visible,
+    start: () => {
+      state = 'booting';
+      resolve();
+      setTimeout(done, TURN_TIMEOUT);
+    },
+  };
+  const done = () => {
+    if (state === 'waiting') {
+      // Booted out of turn, as a selected tab does; it no longer needs one.
+      queue.waiting.splice(queue.waiting.indexOf(waiter), 1);
+    }
+    const releases = state === 'booting';
+    state = 'done';
+    if (releases) {
+      // A story shows on mount, before it paints its content; the next demo waits for that to finish.
+      void idle().then(() => {
+        queue.busy = false;
+        next(queue);
+      });
+    }
+  };
+  queue.waiting.push(waiter);
+  next(queue);
   return { turn, done };
 };
 
