@@ -20,11 +20,14 @@ import { SerializedError } from '@dxos/protocols';
 
 import { decodeEvent, decodeSnapshot } from './process-snapshot.ts';
 
+/** The key EDGE serves process control under to an operation running in a plugin bundle. */
+export const PROCESS_MANAGER_HOST_KEY = '@dxos/compute/Process.ManagerService';
+
 /**
- * The process routes as a host serves them to an operation running on EDGE (compute-service's
- * `CodingAgentControl` host service), instead of over HTTP with a signed identity: an operation has
- * no identity of its own, so EDGE binds the service to the invocation's space and checks every pid
- * against it. Only the verbs a coding run needs.
+ * The process routes as EDGE serves them to an operation running in a plugin bundle (the
+ * {@link PROCESS_MANAGER_HOST_KEY} host service), instead of over HTTP with a signed identity: an
+ * operation has no identity of its own, so EDGE binds the service to the invocation's space and checks
+ * every pid against it. Only the verbs a coding run needs.
  */
 export type Control = Pick<RemoteProcessManager.Control, 'spawn' | 'submitInput' | 'readEvents' | 'makeRpcClient'>;
 
@@ -92,8 +95,9 @@ const callHost = <A>(host: Host, method: string, schema: Schema.Codec<A>, ...arg
 
 /** The process routes over a host service; see {@link Control}. */
 export const make = (host: Host): Control => ({
-  spawn: ({ name, annotations, idempotencyKey }) =>
+  spawn: ({ key, name, annotations, idempotencyKey }) =>
     callHost(host, 'spawn', ProcessInfo, {
+      key,
       ...(name !== undefined ? { name } : {}),
       ...(annotations !== undefined ? { annotations } : {}),
       ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),

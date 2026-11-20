@@ -107,7 +107,9 @@ describe('HostProcessControl', () => {
       expect(snapshot.pid).toBe(pid);
       expect(calls[0]).toEqual({
         method: 'spawn',
-        args: [{ name: 'Claude Code', idempotencyKey: 'claude-code-edge:chat' }],
+        args: [
+          { key: 'org.dxos.edge.process.coding-agent', name: 'Claude Code', idempotencyKey: 'claude-code-edge:chat' },
+        ],
       });
 
       yield* control.submitInput({ spaceId, pid: snapshot.pid, input: { _tag: 'prompt' }, idempotencyKey: 'turn-1' });
