@@ -221,20 +221,17 @@ const listed = (client: Client, spaceId: SpaceId): Promise<Space> =>
   });
 
 export type Shared = {
-  /** Peers the story joins instead of starting its own. */
-  readonly runtime?: Runtime;
+  readonly runtime: Runtime;
   /** Seed this story only after every peer has joined. */
   readonly late?: boolean;
-  /** Called once the story shows on every peer. */
-  readonly onReady?: () => void;
 };
 
 const SharedContext = createContext<Shared | undefined>(undefined);
 
 export type ProviderProps = PropsWithChildren<Shared>;
 
-/** Shares `runtime`, `late` and `onReady` with the stories inside. */
-export const Provider = ({ runtime, late, onReady, children }: ProviderProps) =>
-  createElement(SharedContext.Provider, { value: { runtime, late, onReady } }, children);
+/** Runs the stories inside on `runtime` rather than on clients of their own: the escape hatch for a page of stories. */
+export const Provider = ({ runtime, late, children }: ProviderProps) =>
+  createElement(SharedContext.Provider, { value: { runtime, late } }, children);
 
 export const useShared = (): Shared | undefined => useContext(SharedContext);

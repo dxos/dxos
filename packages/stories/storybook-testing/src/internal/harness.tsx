@@ -8,6 +8,9 @@ import React, {
   type FC,
   type PropsWithChildren,
   type ReactNode,
+  Suspense,
+  createContext,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -54,6 +57,7 @@ import * as StoryLayout from '../StoryLayout.ts';
 import * as StoryPeers from '../StoryPeers.ts';
 import * as StorySnapshot from '../StorySnapshot.ts';
 import { type ModuleLayout } from './module-container.tsx';
+import { ReadyContext } from './ready.ts';
 import { StorySpaceProvider } from './story-space.ts';
 
 type LazyPluginsResult = {
@@ -315,17 +319,17 @@ const useReportReady = (ready: boolean, onReady?: () => void) => {
 
 const SingleHost = ({
   props,
-  shared,
   contextId,
+  onReady,
   Story,
 }: {
   props: Options;
-  shared?: StoryPeers.Shared;
   contextId: string;
+  onReady?: () => void;
   Story: FC;
 }) => {
   const [mounted, setMounted] = useState(false);
-  useReportReady(mounted, shared?.onReady);
+  useReportReady(mounted, onReady);
   // Non-lazy stories start with options ready; lazy stories wait.
   const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(props.lazyPlugins ? null : { plugins: [] });
   useEffect(() => {
@@ -373,6 +377,7 @@ const SingleHost = ({
 type PeersHostProps = {
   props: Options;
   shared?: StoryPeers.Shared;
+  onReady?: () => void;
   contextId: string;
   themeMode: ThemeMode;
   Story: FC;
@@ -382,9 +387,9 @@ type PeersHostProps = {
  * Runs the story once per peer, each in a plugin app of its own over its peer's client, with a toolbar to show one
  * or every peer. Peers stay mounted while hidden: their plugin apps own their clients and would destroy them.
  */
-const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProps) => {
+const PeersHost = ({ props, shared, onReady, contextId, themeMode, Story }: PeersHostProps) => {
   const [own] = useState(() =>
-    shared?.runtime ? undefined : StoryPeers.make({ title: props.title ?? contextId, count: props.peers }),
+    shared ? undefined : StoryPeers.make({ title: props.title ?? contextId, count: props.peers }),
   );
   const runtime = shared?.runtime ?? own;
   invariant(runtime);
@@ -402,7 +407,7 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
   const [seeded, setSeeded] = useState(false);
   const [mounted, setMounted] = useState<readonly number[]>([]);
   const allMounted = mounted.length === runtime.peers.length;
-  useReportReady(allMounted, shared?.onReady);
+  useReportReady(allMounted, onReady);
   const [error, setError] = useState<string>();
   useEffect(() => {
     if (!lazy) {
@@ -567,6 +572,7 @@ type PeerAppProps = {
   layout?: ModuleLayout;
   /** Whether the peer has the space and the story its layout; until then the app boots behind a placeholder. */
   ready: boolean;
+  /** The pane's state until the story mounts. */
   status: string;
   onMounted: () => void;
   Wrapper?: FC<PropsWithChildren>;
@@ -587,10 +593,10 @@ const PeerApp = ({
   Story,
 }: PeerAppProps) => {
   const [layoutAtom] = useState(() => Atom.make<ModuleLayout | undefined>(undefined));
-  const [mounted, setMounted] = useState(false);
   const options = useMemo<WithPluginManagerOptions>(
     () => ({
       setupEvents,
+      placeholder: peerStatus,
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({ client }),
@@ -605,31 +611,35 @@ const PeerApp = ({
   );
 
   return (
-    <>
+    <StatusContext.Provider value={status}>
       <AppPluginManagerHost id={id} options={options}>
         <StorySpaceProvider value={spaceId}>
           <PublishLayout atom={layoutAtom} layout={layout} />
-          {ready && (
-            <OnMount
-              onMount={() => {
-                setMounted(true);
-                onMounted();
-              }}
-            />
-          )}
-          {!ready ? null : Wrapper ? (
-            <Wrapper>
-              <Story />
-            </Wrapper>
+          {ready ? (
+            <Suspense fallback={peerStatus}>
+              <OnMount onMount={onMounted} />
+              {Wrapper ? (
+                <Wrapper>
+                  <Story />
+                </Wrapper>
+              ) : (
+                <Story />
+              )}
+            </Suspense>
           ) : (
-            <Story />
+            peerStatus
           )}
         </StorySpaceProvider>
       </AppPluginManagerHost>
-      {!(ready && mounted) && <StatusCover status={status} />}
-    </>
+    </StatusContext.Provider>
   );
 };
+
+const StatusContext = createContext('Loading');
+
+const PeerStatus = () => <StatusCover status={useContext(StatusContext)} />;
+
+const peerStatus = <PeerStatus />;
 
 const OnMount = ({ onMount }: { onMount: () => void }) => {
   useEffect(onMount, []);
@@ -656,7 +666,7 @@ const PublishLayout = ({ atom, layout }: { atom: Atom.Writable<ModuleLayout | un
 
 /**
  * Story decorators: theme, fullscreen layout and the plugin-manager harness. A story with `peers` above one, or any
- * story inside a {@link StoryPeers.Provider} with a runtime, runs once per peer over a shared space.
+ * story inside a {@link StoryPeers.Provider}, runs once per peer over a shared space.
  */
 export const decorators = <Args = any,>(input: DecoratorsInput<Args> = {}) => {
   // Storybook's decorator type is keyed to its renderer's args, which a factory generic over `Args` cannot name.
@@ -670,12 +680,14 @@ export const decorators = <Args = any,>(input: DecoratorsInput<Args> = {}) => {
       [context.args],
     );
     const shared = StoryPeers.useShared();
+    const onReady = useContext(ReadyContext);
 
-    if (shared?.runtime || (props.peers ?? 1) > 1) {
+    if (shared || (props.peers ?? 1) > 1) {
       return (
         <PeersHost
           props={props}
           shared={shared}
+          onReady={onReady}
           contextId={context.id}
           // Storybook types globals as a record of unknowns; `theme` is the toolbar's theme mode.
           themeMode={(context.globals?.theme as ThemeMode) || 'dark'}
@@ -684,7 +696,7 @@ export const decorators = <Args = any,>(input: DecoratorsInput<Args> = {}) => {
       );
     }
 
-    return <SingleHost props={props} shared={shared} contextId={context.id} Story={Story} />;
+    return <SingleHost props={props} contextId={context.id} onReady={onReady} Story={Story} />;
   }) as any;
 
   return [withTheme(), withLayout({ layout: 'fullscreen' }), host];

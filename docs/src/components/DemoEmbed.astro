@@ -19,9 +19,8 @@ const narrative = NARRATIVES[id];
 </div>
 
 <script>
-  import { DEMO_READY } from '../demos/frames.ts';
+  import { DEMO_READY, DEMO_TIMEOUT } from '../demos/frames.ts';
 
-  const FIRST_TIMEOUT = 20_000;
   const waiting = [...document.querySelectorAll<HTMLIFrameElement>('.demo-embed > iframe[data-src]')];
   const visibleFraction = (frame: HTMLIFrameElement) => {
     const rect = frame.getBoundingClientRect();
@@ -56,7 +55,7 @@ const narrative = NARRATIVES[id];
   waiting.forEach((frame) => observer.observe(frame));
 
   const first = waiting.length > 0 ? (waiting.some(inView) ? mostInView() : waiting[0]) : undefined;
-  const timeout = setTimeout(loadRest, FIRST_TIMEOUT);
+  const timeout = setTimeout(loadRest, DEMO_TIMEOUT);
   window.addEventListener('message', onReady);
   if (first) {
     load(first);

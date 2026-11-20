@@ -7,19 +7,20 @@ import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import type * as StoryEmbed from '@dxos/storybook-testing/StoryEmbed';
 import * as StoryPeers from '@dxos/storybook-testing/StoryPeers';
 
+import { DEMO_TIMEOUT } from './frames.ts';
+
 export type DemoStory = {
   load: () => Promise<StoryEmbed.Module>;
-  name: string;
   /** Seeds once every peer has joined, so a large write does not hold up the other demos. */
   late?: boolean;
 };
 
-/** Every demo, by id; the page decides which appear and in what order. */
+/** Every demo's story module, by demo id; its story is named in `DEMO_STORIES`. */
 export const STORIES: Record<string, DemoStory> = {
-  diagram: { load: () => import('@dxos/stories-echo/stories/Diagram'), name: 'Diagram', late: true },
-  editor: { load: () => import('@dxos/stories-echo/stories/Editor'), name: 'Editor' },
-  explorer: { load: () => import('@dxos/stories-echo/stories/Explorer'), name: 'Explorer' },
-  views: { load: () => import('@dxos/stories-echo/stories/Views'), name: 'Views' },
+  diagram: { load: () => import('@dxos/stories-echo/stories/Diagram'), late: true },
+  editor: { load: () => import('@dxos/stories-echo/stories/Editor') },
+  explorer: { load: () => import('@dxos/stories-echo/stories/Explorer') },
+  views: { load: () => import('@dxos/stories-echo/stories/Views') },
 };
 
 let runtime: StoryPeers.Runtime | undefined;
@@ -50,8 +51,6 @@ type Scheduler = {
   busy: boolean;
 };
 
-const TURN_TIMEOUT = 20_000;
-
 const queue: Scheduler = { waiting: [], busy: false };
 
 const next = (scheduler: Scheduler) => {
@@ -79,7 +78,7 @@ export const queueBoot = (visible: () => boolean): BootTurn => {
     start: () => {
       state = 'booting';
       resolve();
-      setTimeout(done, TURN_TIMEOUT);
+      setTimeout(done, DEMO_TIMEOUT);
     },
   };
   const done = () => {

@@ -21,6 +21,7 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 import { generateIslandBase, generateTheme, generateWebflowScoped } from './scripts/gen-theme.mjs';
+import { DEMO_STORIES, ECHO_DEMOS } from './src/demos/catalog.ts';
 import { ISLAND_ROOTS, PAGE_LAYERS } from './src/demos/layers.ts';
 import { assertContentExists, parsePages, readSpec, sidebarFromSpec } from './src/echo/spec.ts';
 
@@ -301,8 +302,11 @@ const inspectorImportMap = (): AstroIntegration => {
 };
 
 const PRELOAD_PAGE = 'echo/index.html';
-const PRELOAD_STORY = /stories-echo\/src\/stories\/Editor\.stories\.tsx$/;
-const OTHER_STORIES = /stories-echo\/src\/stories\/(?!Editor\.)[^/]+\.stories\.tsx$/;
+const storyModules = (ids: string[]) =>
+  new RegExp(`stories-echo/src/stories/(${ids.map((id) => DEMO_STORIES[id]).join('|')})\\.stories\\.tsx$`);
+const [SHOWN_DEMO, ...HIDDEN_DEMOS] = ECHO_DEMOS;
+const PRELOAD_STORY = storyModules([SHOWN_DEMO]);
+const OTHER_STORIES = storyModules(HIDDEN_DEMOS);
 
 /** Adds modulepreload links for the shown `/echo` demo's import graph, so its chunks fetch in parallel. */
 const demoModulePreload = (): AstroIntegration => {

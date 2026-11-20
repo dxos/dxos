@@ -12,6 +12,7 @@ import '@dxos/node-std/globals';
 import '@dxos/react-ui/theme.css';
 import * as StoryEmbed from '@dxos/storybook-testing/StoryEmbed';
 
+import { DEMO_STORIES } from './catalog.ts';
 import { type BootTurn, STORIES, pageRuntime, pinDarkAppearance, queueBoot } from './stories.ts';
 
 export type StoryDemoProps = {
@@ -58,7 +59,7 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
     }
     entry
       .load()
-      .then((module) => StoryEmbed.compose(module, entry.name))
+      .then((module) => StoryEmbed.compose(module, DEMO_STORIES[id]))
       // A composed story is a function, which `setStory` would call as an updater.
       .then(
         (composed) => setStory(() => composed),
@@ -86,13 +87,10 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
   return (
     <StoryEmbed.Root
       story={story}
-      shared={{
-        runtime,
-        late: entry.late,
-        onReady: () => {
-          slot?.done();
-          onReady?.();
-        },
+      shared={runtime && { runtime, late: entry.late }}
+      onReady={() => {
+        slot?.done();
+        onReady?.();
       }}
       classNames='h-full border border-separator'
     />
