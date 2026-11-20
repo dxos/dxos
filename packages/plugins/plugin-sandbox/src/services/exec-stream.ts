@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 /** Content type that asks sandbox-service to stream a command's output rather than answer once it exits. */
 export const EXEC_STREAM_CONTENT_TYPE = 'text/event-stream';
 
 /** One event of sandbox-service's exec stream; it ends with exactly one `exit` or `error`. */
-const ExecStreamEvent = Schema.Union([
+export const ExecStreamEvent = Schema.Union([
   Schema.Struct({ type: Schema.Literals(['stdout', 'stderr']), data: Schema.String }),
   Schema.Struct({
     type: Schema.Literal('exit'),
@@ -19,7 +21,23 @@ const ExecStreamEvent = Schema.Union([
   Schema.Struct({ type: Schema.Literal('error'), message: Schema.String }),
 ]);
 
+export type ExecStreamEvent = Schema.Schema.Type<typeof ExecStreamEvent>;
+
 const decodeEvent = Schema.decodeUnknownOption(Schema.fromJsonString(ExecStreamEvent));
+
+/**
+ * Parses an exec stream's body as it arrives into its events, ending after the `exit` or `error`.
+ * Each event is one `data:` line; comments (the heartbeat) and unknown events are skipped.
+ */
+export const parseExecStream = <E, R>(body: Stream.Stream<Uint8Array, E, R>): Stream.Stream<ExecStreamEvent, E, R> =>
+  body.pipe(
+    Stream.decodeText(),
+    Stream.splitLines,
+    Stream.map((line) => (line.startsWith('data: ') ? decodeEvent(line.slice('data: '.length)) : Option.none())),
+    Stream.filter(Option.isSome),
+    Stream.map((event) => event.value),
+    Stream.takeUntil((event) => event.type === 'exit' || event.type === 'error'),
+  );
 
 /**
  * Folds an exec stream's body into the result a non-streamed `exec` answers with. Comments (the

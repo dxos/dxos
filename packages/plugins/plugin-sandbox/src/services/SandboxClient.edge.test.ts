@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as HttpClient from 'effect/http/HttpClient';
+import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -49,5 +50,48 @@ describe.skipIf(!EDGE_URL)('SandboxClient against a deployed EDGE', { timeout: 5
 
     expect(status).toBe(200);
     expect(body.trim()).toBe(marker);
+  });
+
+  test('a job reads what is written to its stdin, resumes its output and is terminated', async ({ expect }) => {
+    const client = new SandboxClient(EDGE_URL ?? '', async () => undefined);
+    const spaceId = SpaceId.random();
+    const sandboxId = EntityId.random();
+
+    const result = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* client.createSandbox(spaceId, sandboxId, { name: 'manual-job-test', expiresIn: 10 * 60_000 });
+        const processId = yield* client.startProcess(spaceId, sandboxId, {
+          command: 'while read -r line; do echo "got:$line"; done',
+        });
+        yield* client.writeStdin(spaceId, sandboxId, processId, 'one\n');
+        yield* client.writeStdin(spaceId, sandboxId, processId, 'two\n');
+        const read = yield* client.processOutput(spaceId, sandboxId, processId).pipe(
+          Stream.filter((event) => event.type === 'stdout'),
+          Stream.scan(
+            () => '',
+            (output: string, event) => output + (event.type === 'stdout' ? event.data : ''),
+          ),
+          Stream.takeUntil((output) => output === 'got:one\ngot:two\n'),
+          Stream.runLast,
+        );
+        // A reader that comes back later skips what it already read.
+        yield* client.writeStdin(spaceId, sandboxId, processId, 'three\n');
+        const resumed = yield* client
+          .processOutput(spaceId, sandboxId, processId, { stdout: 'got:one\ngot:two\n'.length })
+          .pipe(
+            Stream.filter((event) => event.type === 'stdout'),
+            Stream.take(1),
+            Stream.runLast,
+          );
+        const running = yield* client.processState(spaceId, sandboxId, processId);
+        const killed = yield* client.killProcess(spaceId, sandboxId, processId, 'SIGKILL');
+        return { read, resumed, running, killed };
+      }).pipe(Effect.provide(FetchHttpClient.layer)),
+    );
+
+    expect(result.read._tag === 'Some' && result.read.value).toBe('got:one\ngot:two\n');
+    expect(result.resumed._tag === 'Some' && result.resumed.value).toEqual({ type: 'stdout', data: 'got:three\n' });
+    expect(result.running.status).toBe('running');
+    expect(result.killed.status).not.toBe('running');
   });
 });
