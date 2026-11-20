@@ -42,9 +42,18 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
       ? queueBoot(() => panel.ref.current?.closest('[data-panel]')?.hasAttribute('data-active') ?? false)
       : undefined,
   );
+  const [turn, setTurn] = useState(false);
+  useEffect(() => {
+    void slot?.turn.then(() => setTurn(true));
+  }, [slot]);
+
   const [story, setStory] = useState<StoryEmbed.Composed>();
   const [error, setError] = useState<string>();
+  const boot = panel.opened || turn;
   useEffect(() => {
+    if (!boot) {
+      return;
+    }
     entry
       .load()
       .then((module) => StoryEmbed.compose(module, entry.name))
@@ -56,17 +65,12 @@ export const StoryDemo = ({ id, standalone, lazy, onReady }: StoryDemoProps) => 
           slot?.done();
         },
       );
-  }, [entry]);
-
-  const [turn, setTurn] = useState(false);
-  useEffect(() => {
-    void slot?.turn.then(() => setTurn(true));
-  }, [slot]);
+  }, [entry, boot]);
 
   if (error) {
     return <p role='alert'>{error}</p>;
   }
-  if (!panel.opened && !turn) {
+  if (!boot) {
     return <div ref={panel.ref} hidden />;
   }
   if (!story) {

@@ -475,7 +475,7 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
                 />
                 {/* Story layouts are `fixed inset-0`; layout containment confines each peer's app to its pane. */}
                 <div className='relative overflow-hidden contain-layout'>
-                  {lazy && (
+                  {lazy ? (
                     <PeerApp
                       id={`${contextId}-${index}`}
                       client={runtime.clients[index]}
@@ -489,6 +489,8 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
                       Wrapper={props.Wrapper}
                       Story={Story}
                     />
+                  ) : (
+                    <StatusCover status='Loading' />
                   )}
                 </div>
               </div>
