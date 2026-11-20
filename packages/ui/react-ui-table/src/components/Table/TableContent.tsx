@@ -147,6 +147,7 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
       grid: fit === 'width' ? dxGrid : null,
       model,
       rows,
+      cellUpdate: cellUpdateCounter,
       columnMeta,
       actionColumn: frozen.frozenColsEnd > 0,
     });

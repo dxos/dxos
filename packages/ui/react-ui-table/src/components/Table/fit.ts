@@ -52,6 +52,8 @@ export type UseTableFitWidthProps = {
   grid: DxGridElement | null;
   model: TableModel | undefined;
   rows: readonly unknown[];
+  /** Bumped by the model on each cell edit, which leaves `rows` unchanged. */
+  cellUpdate: number;
   columnMeta: DxGridAxisMeta;
   actionColumn: boolean;
 };
@@ -60,6 +62,7 @@ export const useTableFitWidth = ({
   grid,
   model,
   rows,
+  cellUpdate,
   columnMeta,
   actionColumn,
 }: UseTableFitWidthProps): { fit: FitWidth; columnMeta: DxGridAxisMeta; columns: number; frozenColsStart: number } => {
