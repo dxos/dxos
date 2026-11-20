@@ -8,6 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as HttpClient from 'effect/http/HttpClient';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/http/HttpClientResponse';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Rpc from 'effect/rpc/Rpc';
 import * as RpcClient from 'effect/rpc/RpcClient';
 import type * as RpcGroup from 'effect/rpc/RpcGroup';
@@ -15,7 +17,8 @@ import * as RpcSerialization from 'effect/rpc/RpcSerialization';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
-import { type RemoteProcessManager } from '@dxos/compute-runtime';
+import { RemoteProcessManager } from '@dxos/compute-runtime';
+import type * as Process from '@dxos/compute/Process';
 import { SerializedError } from '@dxos/protocols';
 
 import { decodeEvent, decodeSnapshot } from './process-snapshot.ts';
@@ -26,10 +29,10 @@ export const PROCESS_MANAGER_HOST_KEY = '@dxos/compute/Process.ManagerService';
 /**
  * The process routes as EDGE serves them to an operation running in a plugin bundle (the
  * {@link PROCESS_MANAGER_HOST_KEY} host service), instead of over HTTP with a signed identity: an
- * operation has no identity of its own, so EDGE binds the service to the invocation's space and checks
- * every pid against it. Only the verbs a coding run needs.
+ * operation has no identity of its own, so EDGE binds every call to the invocation's space (whatever
+ * `spaceId` a request names) and checks every pid against it.
  */
-export type Control = Pick<RemoteProcessManager.Control, 'spawn' | 'submitInput' | 'readEvents' | 'makeRpcClient'>;
+export type Control = RemoteProcessManager.Control;
 
 /** A host service as the plugin host hands it over: every method takes and returns plain data. */
 export type Host = Readonly<Record<string, (...args: readonly unknown[]) => Effect.Effect<unknown, Error>>>;
@@ -103,6 +106,20 @@ export const make = (host: Host): Control => ({
       ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
     }).pipe(Effect.map(decodeSnapshot)),
 
+  list: ({ key, state, target }) =>
+    target !== undefined
+      ? Effect.die(new Error('The host lists processes by key only, not by target.'))
+      : callHost(host, 'list', Schema.Array(ProcessInfo), key !== undefined ? { key } : {}).pipe(
+          Effect.map((infos) =>
+            infos.map(decodeSnapshot).filter((info) => state === undefined || info.state === state),
+          ),
+        ),
+
+  status: ({ pid }) => callHost(host, 'status', ProcessInfo, pid).pipe(Effect.map(decodeSnapshot)),
+
+  terminate: ({ pid, idempotencyKey }) =>
+    callHost(host, 'terminate', Schema.Unknown, pid, idempotencyKey ?? null).pipe(Effect.asVoid),
+
   submitInput: ({ pid, input, idempotencyKey }) =>
     callHost(host, 'submitInput', ProcessInfo, pid, input, idempotencyKey ?? null).pipe(Effect.asVoid),
 
@@ -148,3 +165,19 @@ export const make = (host: Host): Control => ({
       );
     }).pipe(Effect.provide(RpcSerialization.layerNdjson)),
 });
+
+/**
+ * A {@link RemoteProcessManager.Manager} over the host service, which a plugin host provides to every bundle as
+ * {@link RemoteProcessManager.Service}: the same view of EDGE's processes a client gets over HTTP.
+ */
+export const makeManager = (host: Host, registry: Registry.AtomRegistry): RemoteProcessManager.Manager => {
+  const control = make(host);
+  const processTreeAtom = Atom.make<readonly Process.Process[]>([]);
+  registry.mount(processTreeAtom);
+  return {
+    processTree: Effect.sync(() => registry.get(processTreeAtom)),
+    processTreeAtom,
+    control,
+    ...RemoteProcessManager.makeControlVerbs(control, registry, processTreeAtom),
+  };
+};

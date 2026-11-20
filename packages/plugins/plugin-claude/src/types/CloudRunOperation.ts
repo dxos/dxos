@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import { RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,8 +20,6 @@ import { AccessToken } from '@dxos/link';
 import { Text } from '@dxos/schema';
 import { PullRequest, Repo, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
-
-import * as CodingAgentControl from '../CodingAgentControl.ts';
 
 //
 // A cloud coding run started and folded by an operation rather than by a Composer client, so an MCP client (or EDGE
@@ -92,7 +91,7 @@ export const StartCloudRun = Operation.make({
     Trace.TraceService,
     Operation.Service,
     Credential.AccessTokenResolver,
-    CodingAgentControl.CodingAgentControl,
+    RemoteProcessManager.Service,
   ],
   types,
 }).pipe(Operation.mutation('write'));
@@ -123,7 +122,7 @@ export const SyncCloudRun = Operation.make({
     Trace.TraceService,
     Operation.Service,
     Credential.AccessTokenResolver,
-    CodingAgentControl.CodingAgentControl,
+    RemoteProcessManager.Service,
   ],
   types,
 }).pipe(Operation.mutation('write'));
@@ -158,7 +157,7 @@ export const DriveCloudRuns = Operation.make({
     Trace.TraceService,
     Operation.Service,
     Credential.AccessTokenResolver,
-    CodingAgentControl.CodingAgentControl,
+    RemoteProcessManager.Service,
   ],
   types,
 }).pipe(Operation.mutation('write'));

@@ -65,16 +65,6 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
       () => import('./src/capabilities/claude-code-edge-agent.ts', { with: { type: 'module-url' } }),
     ),
-    // EDGE serves coding-agent control to the cloud coding run's operations as plain data.
-    Capability.lazyModule(
-      'CodingAgentControl',
-      {
-        provides: [Capabilities.HostServiceAdapter],
-        activatesOn: ActivationEvents.Startup,
-        environments: ['workerd'],
-      },
-      () => import('./src/capabilities/coding-agent-control.ts', { with: { type: 'module-url' } }),
-    ),
     Capability.lazyModule(
       'ClaudeCodeConnector',
       { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },

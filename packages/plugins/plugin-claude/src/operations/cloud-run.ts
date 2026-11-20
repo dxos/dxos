@@ -8,6 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { type Chat, TrajectoryStore } from '@dxos/assistant';
+import { RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
@@ -21,7 +22,6 @@ import { CloudRunOperation } from '#types';
 
 import * as EdgeAgent from '../agents/EdgeAgent.ts';
 import * as EdgeCredentials from '../agents/EdgeCredentials.ts';
-import * as CodingAgentControl from '../CodingAgentControl.ts';
 import { CLAUDE_CODE_EDGE_AGENT } from '../constants.ts';
 import { ensureDriveTrigger } from './drive-trigger.ts';
 
@@ -165,7 +165,11 @@ export const reopenTasks = Effect.fnUntraced(function* (chat: Chat.Chat) {
 
 /** Folds the run for up to `windowMs`, and records its pull requests once the turn has ended. */
 export const fold = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string, windowMs: number) {
-  const control = yield* CodingAgentControl.CodingAgentControl;
+  // EDGE's processes, as every bundle is given them; an operation run where processes are not remote has no control.
+  const { control } = yield* RemoteProcessManager.Service;
+  if (control === undefined) {
+    return yield* Effect.die(new Error('A cloud run needs control of EDGE processes, which this runtime lacks.'));
+  }
   // A GitHub App connection's token is custodied by EDGE; the resolver turns its placeholder into the token to lend.
   const accessTokens = Layer.succeed(Credential.AccessTokenResolver, yield* Credential.AccessTokenResolver);
   const feed = yield* Database.load(chat.feed);

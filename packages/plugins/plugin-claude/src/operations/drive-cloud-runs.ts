@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { Chat } from '@dxos/assistant';
+import { RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -18,7 +19,6 @@ import { type PullRequest } from '@dxos/types';
 import { CloudRunOperation } from '#types';
 
 import * as EdgeAgent from '../agents/EdgeAgent.ts';
-import * as CodingAgentControl from '../CodingAgentControl.ts';
 import { CLAUDE_CODE_EDGE_AGENT } from '../constants.ts';
 import { fold, locatePullRequests, recordPullRequests, reopenTasks } from './cloud-run.ts';
 import {
@@ -225,7 +225,7 @@ const edgeRunner: Runner<
   | Trace.TraceService
   | Operation.Service
   | Credential.AccessTokenResolver
-  | CodingAgentControl.CodingAgentControl
+  | RemoteProcessManager.Service
 > = {
   isRunning: (chat) => EdgeAgent.hasPendingTurn(chat, CLAUDE_CODE_EDGE_AGENT),
   fold: (chat, prompt, windowMs) => fold(chat, prompt, windowMs),

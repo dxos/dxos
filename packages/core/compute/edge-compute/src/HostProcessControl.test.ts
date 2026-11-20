@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as HttpServerRequest from 'effect/http/HttpServerRequest';
 import * as HttpServerResponse from 'effect/http/HttpServerResponse';
 import * as Layer from 'effect/Layer';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Rpc from 'effect/rpc/Rpc';
 import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as RpcSerialization from 'effect/rpc/RpcSerialization';
@@ -71,6 +72,9 @@ const makeHost = () => {
   const host: HostProcessControl.Host = {
     spawn: (...args) => Effect.sync(() => (record('spawn', args), info('STARTING'))),
     submitInput: (...args) => Effect.sync(() => (record('submitInput', args), info())),
+    list: (...args) => Effect.sync(() => (record('list', args), [info(), info('TERMINATED')])),
+    status: (...args) => Effect.sync(() => (record('status', args), info())),
+    terminate: (...args) => Effect.sync(() => (record('terminate', args), { terminated: true })),
     readEvents: (...args) =>
       Effect.sync(() => {
         record('readEvents', args);
@@ -128,6 +132,41 @@ describe('HostProcessControl', () => {
       const client = yield* control.makeRpcClient({ spaceId, pid, group: Echo });
       expect(yield* client.echo({ text: 'lend' })).toEqual({ echoed: 'LEND' });
     }).pipe(Effect.scoped),
+  );
+
+  it.effect('lists by key, filters by state, reads status and terminates through the host', () =>
+    Effect.gen(function* () {
+      const { host, calls } = makeHost();
+      const control = HostProcessControl.make(host);
+
+      const listed = yield* control.list({ spaceId, key: 'org.dxos.edge.process.coding-agent', state: 'RUNNING' });
+      expect(listed.map(({ state }) => state)).toEqual(['RUNNING']);
+      expect(calls[0]).toEqual({ method: 'list', args: [{ key: 'org.dxos.edge.process.coding-agent' }] });
+
+      expect((yield* control.status({ spaceId, pid })).pid).toBe(pid);
+      expect(calls[1]).toEqual({ method: 'status', args: [pid] });
+
+      yield* control.terminate({ spaceId, pid });
+      expect(calls[2]).toEqual({ method: 'terminate', args: [pid, null] });
+    }),
+  );
+
+  it.effect('builds a remote process manager whose spawn goes through the host', () =>
+    Effect.gen(function* () {
+      const { host, calls } = makeHost();
+      const manager = HostProcessControl.makeManager(host, Registry.make());
+      expect(manager.control).toBeDefined();
+      const spawn = manager.spawn;
+      expect(spawn).toBeDefined();
+      if (spawn !== undefined) {
+        const process = yield* spawn({ spaceId, key: 'org.dxos.edge.process.coding-agent', name: 'Claude Code' });
+        expect(process.pid).toBe(pid);
+      }
+      expect(calls[0]).toMatchObject({
+        method: 'spawn',
+        args: [{ key: 'org.dxos.edge.process.coding-agent', name: 'Claude Code' }],
+      });
+    }),
   );
 
   it.effect('dies on an answer that is not a process', () =>
