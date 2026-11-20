@@ -7,18 +7,22 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
 import { JsonCard } from './JsonCard.tsx';
 
-// The card is a row slot, so it is mounted in the `Card.Root` its surface host supplies — on its own
-// it has no grid to place itself in and the toggle's column cannot be seen.
+// Mounted in a grid card with a header icon, as an object card hosts it, so the toggle shares the icon's rail.
 const DefaultStory = ({ data }: { data: unknown }) => (
-  <div className='p-4 dx-card-max-width'>
-    <Card.Root>
+  <div className='p-4 dx-card-min-width dx-card-max-width'>
+    <Card.Root grid>
       <Card.Header>
+        <Layout.Block>
+          <Icon.Icon icon='ph--note--regular' />
+        </Layout.Block>
         <Card.Title>Notes</Card.Title>
       </Card.Header>
       <JsonCard data={data} />
@@ -43,11 +47,7 @@ export const Default: Story = {
   args: { data: { subject: { id: '01M270MRCEV0W2BR43HT4BPEGY', name: 'Notes — Priya Nair' } } },
 };
 
-/**
- * Expanded, over a payload tall enough to show where the toggle sits: the row centres its items, so
- * the toggle has to opt out of that or it floats at the middle of the dump rather than sitting on
- * the line whose disclosure it controls.
- */
+/** Expanded, over a payload taller than the poster's cap, so the dump scrolls inside it. */
 export const Expanded: Story = {
   args: {
     data: {
