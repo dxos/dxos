@@ -12,13 +12,17 @@ import '@dxos/node-std/globals';
 import '@dxos/react-ui/theme.css';
 import * as StoryEmbed from '@dxos/storybook-testing/StoryEmbed';
 
-import { STORIES, pageRuntime, pinDarkAppearance } from './stories.ts';
+import { STORIES, pageRuntime, pinDarkAppearance, queueBoot } from './stories.ts';
 
 export type StoryDemoProps = {
   id: string;
   /** Starts peers of the story's own instead of joining the page's. */
   standalone?: boolean;
-  /** Boots once the enclosing tab panel (`[data-panel]`) is `data-active`, so hidden tabs leave the shown one the CPU. */
+  /**
+   * Boots in turn, once the demos before it show their content, or as soon as its tab panel (`[data-panel]`) is
+   * `data-active`; the shown demo then never shares the CPU with hidden ones, and the hidden ones are ready by the time
+   * their tab is picked.
+   */
   lazy?: boolean;
 };
 
@@ -34,6 +38,8 @@ export const StoryDemo = ({ id, standalone, lazy }: StoryDemoProps) => {
     pinDarkAppearance();
     return standalone ? undefined : pageRuntime();
   });
+  // Islands render in page order, so the queue follows the tabs.
+  const [slot] = useState(() => (lazy ? queueBoot() : undefined));
   const [story, setStory] = useState<StoryEmbed.Composed>();
   const [error, setError] = useState<string>();
   useEffect(() => {
@@ -43,16 +49,23 @@ export const StoryDemo = ({ id, standalone, lazy }: StoryDemoProps) => {
       // A composed story is a function, which `setStory` would call as an updater.
       .then(
         (composed) => setStory(() => composed),
-        (error) => setError(String(error)),
+        (error) => {
+          setError(String(error));
+          slot?.done();
+        },
       );
   }, [entry]);
 
+  const [turn, setTurn] = useState(false);
+  useEffect(() => {
+    void slot?.turn.then(() => setTurn(true));
+  }, [slot]);
   const active = usePanelActive(lazy);
 
   if (error) {
     return <p role='alert'>{error}</p>;
   }
-  if (!active.shown) {
+  if (!active.shown && !turn) {
     return <div ref={active.ref} hidden />;
   }
   if (!story) {
@@ -66,7 +79,7 @@ export const StoryDemo = ({ id, standalone, lazy }: StoryDemoProps) => {
   return (
     <StoryEmbed.Root
       story={story}
-      shared={runtime && { runtime, late: entry.late }}
+      shared={runtime && { runtime, late: entry.late, onReady: slot?.done }}
       classNames='h-full border border-separator'
     />
   );

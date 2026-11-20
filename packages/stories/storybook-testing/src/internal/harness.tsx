@@ -369,6 +369,14 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
 
   const [init, setInit] = useState<Init>();
   const [seeded, setSeeded] = useState(false);
+  const [mounted, setMounted] = useState<readonly number[]>([]);
+  const allMounted = mounted.length === runtime.peers.length;
+  useEffect(() => {
+    if (allMounted) {
+      shared?.onReady?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allMounted]);
   const [error, setError] = useState<string>();
   useEffect(() => {
     if (!lazy) {
@@ -468,6 +476,7 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
                       layout={layoutOf(index)}
                       ready={seeded && state.joined[index]}
                       status={state.joined[index] ? 'Loading' : 'Connecting'}
+                      onMounted={() => setMounted((mounted) => [...new Set([...mounted, index])])}
                       Wrapper={props.Wrapper}
                       Story={Story}
                     />
@@ -532,6 +541,7 @@ type PeerAppProps = {
   ready: boolean;
   /** The word the placeholder shows until the story mounts. */
   status: string;
+  onMounted: () => void;
   Wrapper?: FC<PropsWithChildren>;
   Story: FC;
 };
@@ -545,6 +555,7 @@ const PeerApp = ({
   layout,
   ready,
   status,
+  onMounted,
   Wrapper,
   Story,
 }: PeerAppProps) => {
@@ -572,7 +583,14 @@ const PeerApp = ({
       <AppPluginManagerHost id={id} options={options}>
         <StorySpaceProvider value={spaceId}>
           <PublishLayout atom={layoutAtom} layout={layout} />
-          {ready && <OnMount onMount={() => setMounted(true)} />}
+          {ready && (
+            <OnMount
+              onMount={() => {
+                setMounted(true);
+                onMounted();
+              }}
+            />
+          )}
           {!ready ? null : Wrapper ? (
             <Wrapper>
               <Story />

@@ -3649,8 +3649,9 @@ feat F-7: Relationship to dxos.org
 
   req F-7.6:
     when: a reader opens `/echo`
-    then: the selected demo starts as the page loads, and each other demo starts when its tab is first selected;
-          each shows its content as soon as that content is in the space, without waiting for the other demos
+    then: the selected demo starts as the page loads; the others start one at a time in tab order, each once the
+          demo before it shows its content, or at once when the reader selects its tab; each shows its content as
+          soon as that content is in the space, without waiting for the other demos
 
   req F-7.7:
     when: a reader is on `/echo`
@@ -7213,13 +7214,14 @@ decision D-372: PLEX's Resources has an Examples page listing Composer, drawing.
 ```
 
 ```mdl
-decision D-373: On `/echo` only the selected demo boots as the page loads; another demo boots when its tab is first selected, and stays mounted after. Each peer creates its own default and settings spaces alongside the shared space instead of before it. Until a peer shows content, its pane shows Connecting… over the booting app. The editor demo shows content on both peers in about 4.4 s on a local production build, down from 7 s. Amends [D-222], whose demos all started at load.
+decision D-373: On `/echo` only the selected demo boots as the page loads. The others boot in the background one at a time, each once the demo before it shows its content on every peer, so a tab is ready by the time a reader picks it; a tab picked earlier boots at once. Each peer creates its own default and settings spaces alongside the shared space instead of before it. Until a peer shows content, its pane shows Connecting… over the booting app. The editor demo shows content on both peers in about 4.4 s on a local production build, down from 7 s. Amends [D-222], whose demos all started at load.
   date: 2026-11-20
   by: user:wittjosiah
   affects: [F-7.6, F-7.8, F-7.12]
   why: Data took 10 s or more to show up in the demos, and the panes looked blank and broken while it loaded.
   rejected:
     - Booting every demo at load, which D-222 chose so a tab switch is instant; the hidden demos' eight plugin apps and the canvas seed held the shown demo back by seconds.
+    - Booting a hidden demo only when its tab is picked, which left the reader waiting up to 3 s on a tab switch.
 ```
 
 ## Appendix: Extension Definitions

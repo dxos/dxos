@@ -65,7 +65,7 @@ export const Root = ({ story: Story, args, shared, classNames }: RootProps) => {
   );
 
   return shared ? (
-    <StoryPeers.Provider runtime={shared.runtime} late={shared.late}>
+    <StoryPeers.Provider runtime={shared.runtime} late={shared.late} onReady={shared.onReady}>
       {content}
     </StoryPeers.Provider>
   ) : (
