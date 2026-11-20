@@ -9,8 +9,7 @@ background: 'https://assets.dxos.org/brand/backgrounds/bg-dxos-glow.svg'
 
 # composer
 
-[https://dxos.org/composer](https://dxos.org/composer)  
-[https://dxos.org/cloudflare (video)](https://dxos.org/cloudflare)
+[https://dxos.org/composer](https://dxos.org/composer)
 
 </Box>
 

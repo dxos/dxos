@@ -24,8 +24,6 @@ import demo from './slides/demo.md?raw';
 import echo from './slides/echo.md?raw';
 import evolution from './slides/evolution.md?raw';
 import hyperspace from './slides/hyperspace.md?raw';
-import next from './slides/next.md?raw';
-import opportunity from './slides/opportunity.md?raw';
 import plugins from './slides/plugins.md?raw';
 import problem from './slides/problem.md?raw';
 import react from './slides/react.md?raw';
@@ -54,7 +52,6 @@ export const DIAGRAMS: readonly Diagram[] = [
 export const SLIDES: readonly Slide[] = [
   { id: 'cover', markdown: cover },
   { id: 'stack', markdown: stack },
-  { id: 'opportunity', markdown: opportunity },
   { id: 'evolution', markdown: evolution },
   { id: 'react', markdown: react },
   { id: 'agents', markdown: agents },
@@ -66,8 +63,6 @@ export const SLIDES: readonly Slide[] = [
   { id: 'app', markdown: app },
   { id: 'architecture', markdown: architecture },
   { id: 'demo', markdown: demo },
-  { id: 'next', markdown: next },
-  { id: 'cover', markdown: cover },
 ];
 
 /** Where a slide embeds a diagram: the diagram's id in braces, replaced with a reference to its drawing. */

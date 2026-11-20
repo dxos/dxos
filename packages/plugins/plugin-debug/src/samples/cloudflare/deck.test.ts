@@ -9,18 +9,14 @@ import { DSL, GridEngine } from '@dxos/diagram';
 import { DIAGRAMS, SLIDES, diagramCommands, diagramPage, diagramTitle, slideTitle } from './deck.ts';
 
 describe('the studio deck', () => {
-  test('names each diagram once, and each slide once but the cover', ({ expect }) => {
+  test('names each diagram once, and each slide once', ({ expect }) => {
     const diagrams = DIAGRAMS.map(({ id }) => id);
     expect(diagrams.length).toBeGreaterThan(0);
     expect(new Set(diagrams).size).toBe(diagrams.length);
 
-    // The cover opens the deck and closes it; no other slide is shown twice.
     const slides = SLIDES.map(({ id }) => id);
     expect(slides.at(0)).toBe('cover');
-    expect(slides.at(-1)).toBe('cover');
-    const between = slides.slice(1, -1);
-    expect(between).not.toContain('cover');
-    expect(new Set(between).size).toBe(between.length);
+    expect(new Set(slides).size).toBe(slides.length);
   });
 
   test('embeds every diagram on one slide, and no diagram it does not have', ({ expect }) => {
