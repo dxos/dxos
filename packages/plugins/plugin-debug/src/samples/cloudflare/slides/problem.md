@@ -20,7 +20,7 @@ title: 'Problems'
 
 <Card icon="shield-check">
 
-### Access and Authorization
+### Access &<br> Authorization
 
 - Policy and auditing
 - Delegation
@@ -29,7 +29,7 @@ title: 'Problems'
 
 <Card icon="users-three" tone="success">
 
-### Program and Control
+### Program &<br> Control
 
 - Rethinking the User Interface
 - Coordination and Collaboration

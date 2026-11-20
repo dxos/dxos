@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: slide-footer.md is the entry of PR #14643, merged in here
 '@dxos/plugin-debug': patch
 ---
 
