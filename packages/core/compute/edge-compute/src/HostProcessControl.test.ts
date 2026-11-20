@@ -139,7 +139,11 @@ describe('HostProcessControl', () => {
       const { host, calls } = makeHost();
       const control = HostProcessControl.make(host);
 
-      const listed = yield* control.list({ spaceId, key: 'org.dxos.edge.process.coding-agent', state: 'RUNNING' });
+      const listed = yield* control.list({
+        spaceId,
+        key: 'org.dxos.edge.process.coding-agent',
+        state: Process.State.RUNNING,
+      });
       expect(listed.map(({ state }) => state)).toEqual(['RUNNING']);
       expect(calls[0]).toEqual({ method: 'list', args: [{ key: 'org.dxos.edge.process.coding-agent' }] });
 
