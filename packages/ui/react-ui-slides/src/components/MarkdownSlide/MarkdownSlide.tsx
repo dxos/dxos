@@ -396,6 +396,30 @@ const withIconHeader = (children: ElementContent[], icon: string): ElementConten
   return [header, body];
 };
 
+const isBlank = (node: ElementContent): boolean => node.type === 'text' && node.value.trim().length === 0;
+
+/**
+ * A grid's children, with each click tag written straight inside the grid replaced by what it holds: a card revealed
+ * on a click must stay the grid's own child to take a track and its share of the row's header. A `<v-click>` or
+ * `<v-after>` passes its step to the elements it held; one holding bare text stays a box, as text carries no step.
+ */
+const withoutClickBoxes = (children: ElementContent[]): ElementContent[] =>
+  children.flatMap((child) => {
+    if (
+      child.type !== 'element' ||
+      !CLICK_TAGS.has(child.tagName) ||
+      !child.children.every((inner) => inner.type === 'element' || isBlank(inner))
+    ) {
+      return [child];
+    }
+    const step = child.properties.step ?? undefined;
+    return withoutClickBoxes(child.children).map((inner) =>
+      inner.type === 'element' && step !== undefined && (inner.properties.step ?? undefined) === undefined
+        ? { ...inner, properties: { ...inner.properties, step } }
+        : inner,
+    );
+  });
+
 /** A variant in force: the kind of block that set it and the name it carries. */
 type ActiveVariant = { kind: string; name: string };
 
@@ -523,7 +547,11 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   if (icon) {
     properties.dataIcon = icon;
   }
-  const children = icon ? withIconHeader(element.children, icon) : element.children;
+  const children = icon
+    ? withIconHeader(element.children, icon)
+    : element.tagName === 'slide-grid'
+      ? withoutClickBoxes(element.children)
+      : element.children;
 
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);
   if (themed) {
