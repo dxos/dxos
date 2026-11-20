@@ -1197,7 +1197,7 @@ test QA-6: Kai on Discord — brainstorm a made-up offsite in Kai's thread, writ
     take runs.
   actors: human
   covers: [F-2.4]
-  status: passing             # 2026-11-19, recorded by autocue/discord-offsite.mjs against preview EDGE (https://dx.pub/demo/2026-11-19-kai-discord/)
+  status: passing             # 2026-11-19, recorded by the discord-offsite flow against preview EDGE (https://dx.pub/demo/2026-11-19-kai-discord/)
   given:
     - discord: discord.com is signed in, in the autocue profile, as a member of the DXOS server
     - channel: #test-bot, https://discord.com/channels/837138313172353095/1494842957340086382, where the bot "Kai Preview" is bound
@@ -1429,7 +1429,7 @@ decision D-18: Reading a chat into the brain drops a fact whose subject or objec
 ```
 
 ```mdl
-decision D-19: QA-6 is the timed Kai-on-Discord demo: it enters the thread Kai starts once Kai has answered there, times every answer by Discord's timestamps, asks for an edit, and opens the edited document from the DM. It runs against preview EDGE with the "Kai Preview" bot, recorded by `autocue/discord-offsite.mjs`.
+decision D-19: QA-6 is the timed Kai-on-Discord demo: it enters the thread Kai starts once Kai has answered there, times every answer by Discord's timestamps, asks for an edit, and opens the edited document from the DM. It runs against preview EDGE with the "Kai Preview" bot, recorded by the `discord-offsite` flow.
   date: 2026-11-20
   by: agent:claude-code
   for: user:mykola-vrmchk

@@ -253,8 +253,15 @@ const context = tauri
     ? await chromium
         .launchPersistentContext(options.profile, {
           ...launchOptions,
-          // A manual window's page follows the window; a recording keeps the recorder's viewport and scale.
-          ...(manual ? { viewport: null } : { viewport, deviceScaleFactor: scale }),
+          // A manual window's page follows the window; a recording keeps the recorder's viewport and scale, and
+          // falls back to Playwright's recorder without a full ffmpeg, as a fresh context does.
+          ...(manual
+            ? { viewport: null }
+            : {
+                viewport,
+                deviceScaleFactor: scale,
+                recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+              }),
           colorScheme: options.theme,
         })
         .catch((error) => {

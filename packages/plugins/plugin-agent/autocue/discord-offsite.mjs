@@ -200,7 +200,10 @@ const drawLatency = (page, running) =>
   );
 
 const record = async (page, label, ms, messageId) => {
-  latencies.push({ label, ms, messageId });
+  // A restarted take can measure an answer it measured before; the new row replaces the old one.
+  const row = { label, ms, messageId };
+  const index = latencies.findIndex((other) => (messageId ? other.messageId === messageId : other.label === label));
+  index >= 0 ? latencies.splice(index, 1, row) : latencies.push(row);
   save();
   console.log(`[latency] ${label}: ${seconds(ms)}`);
   await drawLatency(page);
@@ -317,11 +320,20 @@ const awaitReply = async ({ demo, page }, sent, label, { match = () => true } = 
   }
 };
 
-/** Sends a message in the thread and waits for Kai's answer to it. */
-const exchange = async (context, text, label, options) => {
-  const sent = await send(context, text);
-  return awaitReply(context, sent, label, options);
+/**
+ * Sends a message in the thread and waits for Kai's answer to it. The message and the answer are saved under `key`: a
+ * restarted take waits on a message it already sent instead of sending it again, and `answered` skips the step.
+ */
+const exchange = async (context, key, text, label, options) => {
+  const sent = (state.sent ??= {})[key] ?? (state.sent[key] = await send(context, text));
+  save();
+  const reply = await awaitReply(context, sent, label, options);
+  state.answered = { ...state.answered, [key]: reply.id };
+  save();
+  return reply;
 };
+
+const answered = (key) => Boolean(state.answered?.[key]);
 
 /**
  * The card Discord puts under a message once a thread is started on it. It repeats the message's opening words, which
@@ -417,6 +429,7 @@ export const steps = [
   },
   {
     name: 'Enter the thread',
+    done: () => answered('start'),
     run: async (context) => {
       const { demo, page } = context;
       await demo.caption({ value: 'Kai answers in the thread' });
@@ -428,22 +441,26 @@ export const steps = [
       await demo.sleep({ ms: 1_500 });
       await demo.goto({ url: state.threadUrl });
       await page.locator(TEXTBOX).last().waitFor({ state: 'visible', timeout: 30_000 });
-      await awaitReply(context, state.start, LABELS.start);
+      const reply = await awaitReply(context, state.start, LABELS.start);
+      state.answered = { ...state.answered, start: reply.id };
+      save();
     },
   },
   {
     name: 'Brainstorm the second day',
     narration: 'Kai brainstorms in the thread, and every answer is timed.',
+    done: () => answered('dayTwo'),
     run: async (context) => {
       await context.demo.caption({ value: 'Brainstorm day two with Kai' });
-      await exchange(context, MESSAGES.dayTwo, LABELS.dayTwo);
+      await exchange(context, 'dayTwo', MESSAGES.dayTwo, LABELS.dayTwo);
     },
   },
   {
     name: 'Brainstorm the budget',
+    done: () => answered('budget'),
     run: async (context) => {
       await context.demo.caption({ value: 'Ask Kai what to cut' });
-      await exchange(context, MESSAGES.budget, LABELS.budget);
+      await exchange(context, 'budget', MESSAGES.budget, LABELS.budget);
     },
   },
   {
@@ -452,7 +469,7 @@ export const steps = [
     done: () => Boolean(state.docUrl),
     run: async (context) => {
       await context.demo.caption({ value: 'Ask Kai to write the plan up', subtitle: DOC_TITLE });
-      const reply = await exchange(context, MESSAGES.document, LABELS.document, { match: hasDocLink });
+      const reply = await exchange(context, 'document', MESSAGES.document, LABELS.document, { match: hasDocLink });
       state.docUrl = reply.links.find((link) => DOC_LINK.test(link)) ?? reply.content.match(DOC_LINK)[0];
       save();
     },
@@ -464,7 +481,8 @@ export const steps = [
     run: async (context) => {
       const { demo, page } = context;
       await demo.caption({ value: `Ask Kai to DM the document to @${PERSON}` });
-      const sent = await send(context, MESSAGES.dm);
+      // Saved before the wait, so a restarted take waits for this request's DM instead of asking again.
+      const sent = (state.sent ??= {}).dm ?? (state.sent.dm = await send(context, MESSAGES.dm));
       state.dmRequestedAt = sent.at;
       save();
       // Kai answers with the DM itself. The DM list is the presenter's own, so the DM is watched in a tab the recorder
@@ -494,9 +512,10 @@ export const steps = [
   {
     name: 'Ask Kai to edit the document',
     narration: 'Kai edits the same document on request.',
+    done: () => answered('edit'),
     run: async (context) => {
       await context.demo.caption({ value: 'Ask Kai to add a packing list' });
-      await exchange(context, MESSAGES.edit, LABELS.edit);
+      await exchange(context, 'edit', MESSAGES.edit, LABELS.edit);
     },
   },
   {
@@ -521,9 +540,14 @@ export const steps = [
     narration: 'The link opens the document in Composer, with Kai’s edit in it.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Open the document in Composer' });
-      // The link is followed in this tab, so the take stays on one page: Discord would open a new one.
+      // The DM's own link, which must name the document the thread made: its path holds the space and the object.
+      const dmLink = state.dm.links.find((link) => DOC_LINK.test(link)) ?? state.dm.content.match(DOC_LINK)?.[0];
+      if (!dmLink || new URL(dmLink).pathname !== new URL(state.docUrl).pathname) {
+        throw new Error(`${AGENT}'s DM links ${dmLink ?? 'nothing'}, not the document it wrote (${state.docUrl})`);
+      }
+      // Followed in this tab, so the take stays on one page: Discord would open a new one.
       const opened = Date.now();
-      await demo.goto({ url: toDevComposer(state.docUrl) });
+      await demo.goto({ url: toDevComposer(dmLink) });
       await drawLatency(page, { label: LABELS.render, since: opened });
       // Rendered means the edited document: its title and the packing list Kai added.
       await waitFor(
