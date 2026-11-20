@@ -66,7 +66,7 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
       provides: [Debug.DebugCapabilities.Settings],
       environments: ['browser', 'node', 'tauri'],
     }),
-    // Browser-only: the kinds the DXOS Deck template's drawings are drawn by, which carry React views; they ride
+    // Browser-only: the kinds the DXOS Deck's drawings are drawn by, which carry React views; they ride
     // illustrator's start, as the canvas's own kinds do.
     Capability.lazyModule(
       'CanvasNodeTypes',

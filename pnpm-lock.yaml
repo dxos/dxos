@@ -10493,9 +10493,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-presenter':
-        specifier: workspace:*
-        version: link:../plugin-presenter
       '@dxos/plugin-sheet':
         specifier: workspace:*
         version: link:../plugin-sheet
@@ -10520,9 +10517,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-slides':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-slides
       '@dxos/scene':
         specifier: workspace:*
         version: link:../../common/scene

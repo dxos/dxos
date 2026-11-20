@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as ArchitectureSpace from './architecture/ArchitectureSpace.ts';
 export * as DemoSpace from './demo/DemoSpace.ts';
 export * as FieldstoneSpace from './fieldstone/FieldstoneSpace.ts';
 export * as IncidentSpace from './incident/IncidentSpace.ts';
@@ -10,7 +11,6 @@ export * as PipelineSpace from './crm/PipelineSpace.ts';
 export * as ReviewSpace from './review/ReviewSpace.ts';
 export * as RideCheckSpace from './ride-check/RideCheckSpace.ts';
 export * as StockfishSpace from './stockfish/StockfishSpace.ts';
-export * as StudioSpace from './cloudflare/StudioSpace.ts';
 export * as TidepoolSpace from './tidepool/TidepoolSpace.ts';
 export * as TimelineSpace from './timeline/TimelineSpace.ts';
 export * as TriageSpace from './triage/TriageSpace.ts';

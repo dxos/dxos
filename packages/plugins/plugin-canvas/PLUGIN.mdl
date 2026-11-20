@@ -24,7 +24,6 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
     - ReactSurface: the canvas properties panel of a drawing
     - Schema: the canvas generator types
     - SkillDefinition: the canvas generators skill
-    - SpaceTemplates: the architecture space template
     - TldrawConverter: the illustrator converter from a tldraw drawing to a canvas
     - Translations: the plugin's strings
     - UndoMappings: undo for canvas edits
@@ -187,6 +186,7 @@ test QA-4: Showcase clip
     - an identity exists
     - space: a space is open
     - plugin-canvas enabled
+    - plugin-debug enabled (it contributes the DXOS Architecture template)
   steps:
     - name: Create the space from its template
       do: Open the app menu, choose Create space, pick DXOS Architecture, and open the Composer drawing.
@@ -231,7 +231,7 @@ test QA-3: DXOS Architecture tour
   status: passing           # 2026-10-16, recorded by autocue/architecture-tour.mjs
   given:
     - an identity exists, on a fresh profile
-    - plugin: Canvas is enabled in the plugin registry (the template is contributed only while it is)
+    - plugin: Canvas and Debug are enabled in the plugin registry (Debug contributes the template)
     - space: a space created from the "DXOS Architecture" template, open, with its Architecture collection expanded
   steps:
     - name: Read the Composer guide
@@ -627,3 +627,18 @@ decision D-42: The studio deck's diagrams, stories and element kinds leave this 
   why: The deck was here only while the diagram language was built against it; the canvas keeps the language's own stories and its one contributed kind.
 ```
 
+```mdl
+decision D-43: The DXOS Architecture space template leaves this plugin for plugin-debug, where the DXOS Deck is merged into it and replaces the ECHO presentation it had. This plugin keeps the architecture partial that the template applies.
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-44: The architecture partial seeds no presentation, and its Architecture collection lists Composer, DXOS, EDGE, ECHO design, Overview, CF Workers and Plugin metrics. The plugin contributes no space template. Fills in [D-43].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The deck that replaces the ECHO presentation is drawn with plugin-debug's element kinds, so only that plugin can seed it.
+```

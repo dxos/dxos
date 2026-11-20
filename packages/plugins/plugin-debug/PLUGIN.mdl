@@ -149,8 +149,10 @@ feat Wireframe
 ```mdl
 feat DeckTemplate
   desc: |
-    The DXOS Deck space template: one presentation whose slides are the markdown files of
-    `src/samples/cloudflare/slides`, in the order `deck.ts` lists them. A slide embeds a diagram by naming
+    The DXOS Architecture space template. It applies plugin-canvas's architecture partial (Composer and EDGE as
+    nested drawings, with their documents and sheets) and the DXOS Deck, which is its presentation. The deck is
+    one presentation whose slides are the markdown files of `src/samples/cloudflare/slides`, in the order
+    `deck.ts` lists them. A slide embeds a diagram by naming
     it (`<Surface ref="{{echo}}" />`); each diagram is a canvas drawing built from its `.dx` text in
     `src/samples/cloudflare/diagrams`, named after the slide that shows it. The plugin contributes the
     element kinds the drawings are drawn by (card, feed card, chip, heading, plank, app frame and its parts) to
@@ -601,3 +603,18 @@ decision D-7: The DXOS Deck is the Cloudflare sample: its slides, diagrams and e
   affects: [DeckTemplate]
 ```
 
+```mdl
+decision D-8: The DXOS Deck is merged into the DXOS Architecture space template and replaces the presentation that template had. The template moves from plugin-canvas into this plugin; there is no separate DXOS Deck template. Refines [D-4].
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [DeckTemplate]
+```
+
+```mdl
+decision D-9: The merged template is `org.dxos.plugin-debug.template.architecture`. Its space lists the Architecture collection first, then a Deck collection holding the presentation and a folder of its diagrams. Fills in [D-8].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DeckTemplate]
+  why: The architecture partial builds its own collection and is shared with the Alien Labs template, so the deck keeps the collection it already had rather than being inserted into that one.
+```

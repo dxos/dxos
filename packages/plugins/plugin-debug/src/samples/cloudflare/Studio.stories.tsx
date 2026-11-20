@@ -3,8 +3,8 @@
 //
 
 //
-// The DXOS Deck template: nine diagrams, each a canvas drawing built from its `.dx` text, and the presentation that
-// embeds them. The space is seeded by the template's own definition, so a story shows what applying it gives.
+// The DXOS Deck: its diagrams, each a canvas drawing built from its `.dx` text, and the presentation that embeds
+// them. The space is seeded by the deck's partial, as the DXOS Architecture template applies it.
 //
 // A slide's story puts the drawing beside the canvas's DSL companion: the text on the right is read back out of the
 // drawing, and it is the slide's file.
@@ -37,7 +37,7 @@ import { translations } from '#translations';
 
 import { DIAGRAMS, SLIDES, diagramTitle } from './deck.ts';
 import { STUDIO_KINDS } from './kinds/registry.ts';
-import * as StudioSpace from './StudioSpace.ts';
+import { Partial } from './partial.ts';
 
 /** The variant plugin-canvas gives its DSL companion. */
 const DSL_COMPANION = 'dsl';
@@ -60,7 +60,12 @@ const StudioKindsPlugin = Plugin.define(
   Plugin.make,
 );
 
-const definition = StudioSpace.make();
+// The deck's partial alone: the template also seeds the architecture drawings, which no slide embeds.
+const definition = SampleSpace.make({
+  space: { name: 'DXOS Deck' },
+  partials: { studio: Partial },
+  build: (partials) => partials.studio(),
+});
 
 /** The space as the template seeds it, opened on the deck or on one slide's drawing beside its text. */
 const decorators = (slide?: string) =>

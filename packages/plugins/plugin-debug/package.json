@@ -52,6 +52,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./ArchitectureSpace": {
+      "source": "./src/samples/architecture/ArchitectureSpace.ts",
+      "types": "./dist/types/src/samples/architecture/ArchitectureSpace.d.ts",
+      "import": "./dist/lib/ArchitectureSpace.mjs"
+    },
     "./Debug": {
       "source": "./src/types/Debug.ts",
       "types": "./dist/types/src/types/Debug.d.ts",
@@ -128,11 +133,6 @@
       "source": "./src/samples/stockfish/StockfishSpace.ts",
       "types": "./dist/types/src/samples/stockfish/StockfishSpace.d.ts",
       "import": "./dist/lib/StockfishSpace.mjs"
-    },
-    "./StudioSpace": {
-      "source": "./src/samples/cloudflare/StudioSpace.ts",
-      "types": "./dist/types/src/samples/cloudflare/StudioSpace.d.ts",
-      "import": "./dist/lib/StudioSpace.mjs"
     },
     "./TidepoolSpace": {
       "source": "./src/samples/tidepool/TidepoolSpace.ts",

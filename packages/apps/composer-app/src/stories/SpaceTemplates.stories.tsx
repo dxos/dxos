@@ -63,8 +63,7 @@ import { isNonNullable } from '@dxos/util';
 /** Ids of the templates contributed as `AppCapabilities.SpaceTemplate` by the plugins below. */
 const TEMPLATES = {
   aiBriefing: 'org.dxos.plugin.magazine.template.ai-briefing',
-  architecture: 'org.dxos.plugin.canvas.template.architecture',
-  cloudflare: 'org.dxos.plugin-debug.template.studio',
+  architecture: 'org.dxos.plugin-debug.template.architecture',
   demo: 'org.dxos.plugin-debug.template.demo',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
@@ -324,9 +323,6 @@ export const AiBriefing: Story = {
 };
 
 export const Architecture: Story = { args: { template: TEMPLATES.architecture }, play };
-
-/** The DXOS Deck: a presentation and the canvas drawings its slides embed. */
-export const Cloudflare: Story = { args: { template: TEMPLATES.cloudflare }, play };
 
 export const Demo: Story = { args: { template: TEMPLATES.demo }, play };
 
