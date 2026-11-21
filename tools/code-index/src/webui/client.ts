@@ -68,7 +68,10 @@ export const api = {
   treeChildren: (ids: readonly string[]) => call((client) => client.TreeChildren({ ids })),
 
   /** Cmd+P: public symbols and packages by name, each with its path in the tree. */
-  treeSearch: (query: string) => call((client) => client.TreeSearch({ query })),
+  search: (query: string) => call((client) => client.Search({ query })),
+
+  /** Where a node sits in the tree, as the path `Tree.Root.reveal` takes below its root id. */
+  treeLocate: (id: string) => call((client) => client.TreeLocate({ id })),
 
   /** The code behind a tree node, or `undefined` when it has none of its own. */
   treeSource: (id: string) => call((client) => client.TreeSource({ id })),

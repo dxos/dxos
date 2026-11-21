@@ -23,18 +23,23 @@ import * as Protocol from './Protocol.ts';
  * anything deeper. Every id kind resolves with a fixed query batched over all requested ids.
  */
 
-const REPO = 'repo:';
-const DIR = 'dir:';
-const PACKAGE = 'pkg:';
-const MODULE = 'mod:';
-const SYMBOL = 'sym:';
+export const REPO = 'repo:';
+export const DIR = 'dir:';
+export const PACKAGE = 'pkg:';
+/** A folder inside a package's `src`, by its repository-relative path. */
+export const FOLDER = 'src:';
+export const MODULE = 'mod:';
+export const SYMBOL = 'sym:';
 
-const DEUS = `PREFIX deus: <${Ontology.PREFIX}>`;
+export const DEUS = `PREFIX deus: <${Ontology.PREFIX}>`;
 
 /** An IRI the store minted; anything else in a request is dropped rather than spliced into SPARQL. */
 const INVALID_IRI = /[<>"{}|^`\\\s]/;
-const isIndexIri = (iri: string): boolean => iri.startsWith(Ontology.IRI_BASE) && !INVALID_IRI.test(iri);
-const values = (iris: readonly string[]): string => iris.map((iri) => `<${iri}>`).join(' ');
+export const isIndexIri = (iri: string): boolean => iri.startsWith(Ontology.IRI_BASE) && !INVALID_IRI.test(iri);
+export const values = (iris: readonly string[]): string => iris.map((iri) => `<${iri}>`).join(' ');
+
+/** A SPARQL string literal; JSON's escapes are a subset of SPARQL's. */
+export const literal = (value: string): string => JSON.stringify(value);
 
 const byLabel = (left: Protocol.TreeNode, right: Protocol.TreeNode): number =>
   Number(right.branch) - Number(left.branch) || left.label.localeCompare(right.label, 'en', { sensitivity: 'base' });
@@ -50,14 +55,52 @@ SELECT ?pkg ?file ?path WHERE {
   ?pkg deus:entry ?file . ?file deus:path ?path .
 }`;
 
-// A package that publishes nothing (an app) is shown by the modules at the top of its `src/`.
-const sourceModulesQuery = (pkg: Package) => `${DEUS}
+/** Tests and stories are not part of what a package is made of, so the source tree leaves them out. */
+const NOT_TEST = `FILTER(!REGEX(?path, "\\\\.(test|stories|spec)\\\\.tsx?$"))`;
+
+// Every TypeScript module below a folder, at any depth; the folder's own rows are derived from the paths.
+const sourceFilesQuery = (folder: string) => `${DEUS}
 SELECT ?file ?path WHERE {
-  ?file deus:inPackage <${pkg.iri}> ; deus:path ?path ; deus:language "typescript" .
-  FILTER(STRSTARTS(?path, ${JSON.stringify(`${pkg.path}/src/`)}))
-  FILTER(!CONTAINS(STRAFTER(?path, ${JSON.stringify(`${pkg.path}/src/`)}), "/"))
-  FILTER(!REGEX(?path, "\\\\.(test|stories|spec)\\\\.tsx?$"))
+  ?file deus:path ?path ; deus:language "typescript" .
+  FILTER(STRSTARTS(?path, ${literal(`${folder}/`)}))
+  ${NOT_TEST}
 }`;
+
+const hasSourcesQuery = (pkg: Package) => `${DEUS}
+ASK {
+  ?file deus:inPackage <${pkg.iri}> ; deus:path ?path ; deus:language "typescript" .
+  FILTER(STRSTARTS(?path, ${literal(`${pkg.path}/src/`)}))
+  ${NOT_TEST}
+}`;
+
+const fileQuery = (file: string) => `${DEUS}
+SELECT ?path ?pkg WHERE { <${file}> deus:path ?path . OPTIONAL { <${file}> deus:inPackage ?pkg } } LIMIT 1`;
+
+const entryQuery = (pkg: string, file: string) => `${DEUS}
+ASK { <${pkg}> deus:entry <${file}> }`;
+
+const declarationQuery = (symbol: string) => `${DEUS}
+SELECT ?file ?exported WHERE { ?file deus:declares <${symbol}> . OPTIONAL { <${symbol}> deus:exported ?exported } } LIMIT 1`;
+
+/**
+ * Which entry of its package exposes a symbol, and how: declared by the entry itself, behind a
+ * namespace the entry exports, or through a chain of `export *`. The tree shows a symbol under the
+ * entry that reaches it, so its path goes through one of these.
+ */
+const exposureQuery = (symbol: string) => `${DEUS}
+SELECT ?entry ?namespace ?via WHERE {
+  ?file deus:declares <${symbol}> ; deus:inPackage ?pkg .
+  ?pkg deus:entry ?entry .
+  {
+    ?entry deus:declares <${symbol}> . BIND("direct" AS ?via)
+  } UNION {
+    ?entry deus:declares ?namespace . ?namespace deus:namespaceOf ?file . BIND("namespace" AS ?via)
+  } UNION {
+    ?entry deus:reexports+ ?file . BIND("star" AS ?via)
+  }
+}`;
+
+const VIA_RANK: Record<string, number> = { direct: 0, star: 1, namespace: 2 };
 
 /** Every manifest exports its own `package.json`; as a tree row it is noise, and the package's card already shows it. */
 const isManifest = (path: string): boolean => path.endsWith('/package.json');
@@ -157,51 +200,6 @@ SELECT ?name ?kind ?line ?path ?canonical WHERE {
 const pathQuery = (iri: string) => `${DEUS}
 SELECT ?path ?name WHERE { <${iri}> deus:path|deus:packagePath ?path . OPTIONAL { <${iri}> deus:name ?name } } LIMIT 1`;
 
-/** A SPARQL string literal; JSON's escapes are a subset of SPARQL's. */
-const literal = (value: string): string => JSON.stringify(value);
-
-// Named re-exports and namespaces are left out: each repeats a declaration found under its own name.
-const searchSymbolsQuery = (needle: string) => `${DEUS}
-SELECT ?symbol ?name ?kind ?canonical ?pkg WHERE {
-  ?symbol deus:packagePublic true ; deus:name ?name ; deus:kind ?kind .
-  FILTER(?kind != "reexport" && ?kind != "namespace")
-  FILTER(CONTAINS(LCASE(?name), ${literal(needle)}))
-  OPTIONAL { ?symbol deus:canonicalName ?canonical }
-  ?file deus:declares ?symbol ; deus:inPackage ?pkg .
-} LIMIT 400`;
-
-const searchPackagesQuery = (needle: string) => `${DEUS}
-SELECT ?pkg WHERE { ?pkg a deus:Package ; deus:name ?name . FILTER(CONTAINS(LCASE(?name), ${literal(needle)})) } LIMIT 100`;
-
-/**
- * Which entry of its package exposes each symbol, and how: declared by the entry itself, behind a
- * namespace the entry exports, or through a chain of `export *`. The tree shows a symbol under the
- * entry that reaches it, so its path goes through one of these.
- */
-const exposureQuery = (symbols: readonly string[]) => `${DEUS}
-SELECT ?symbol ?entry ?namespace ?via WHERE {
-  VALUES ?symbol { ${values(symbols)} }
-  ?file deus:declares ?symbol ; deus:inPackage ?pkg .
-  ?pkg deus:entry ?entry .
-  {
-    ?entry deus:declares ?symbol . BIND("direct" AS ?via)
-  } UNION {
-    ?entry deus:declares ?namespace . ?namespace deus:namespaceOf ?file . BIND("namespace" AS ?via)
-  } UNION {
-    ?entry deus:reexports+ ?file . BIND("star" AS ?via)
-  }
-}`;
-
-const VIA_RANK: Record<string, number> = { direct: 0, star: 1, namespace: 2 };
-
-/** Exact name, then prefix, then substring; shorter names first within each. */
-const matchRank = (name: string, needle: string): number => {
-  const lower = name.toLowerCase();
-  return (lower === needle ? 0 : lower.startsWith(needle) ? 1 : 2) * 1000 + name.length;
-};
-
-const MAX_HITS = 50;
-
 /** The most a card shows; a longer declaration or file is cut and marked truncated. */
 const MAX_LINES = 120;
 
@@ -275,7 +273,11 @@ export const make = (store: Store.Api, root: string) =>
       .select(PACKAGES)
       .pipe(Effect.map((rows) => rows.map((row) => ({ iri: row.pkg, name: row.name, path: row.path }))));
 
-    /** Each package's entrypoints, labelled with the subpath importers write, then any packages nested in it. */
+    /**
+     * Each package's entrypoints, labelled with the subpath importers write; then its `src` as a
+     * plain file tree, so modules no entry reaches (a service behind an app's bootstrap) have a
+     * place too; then any packages nested in it.
+     */
     const packageChildren = (packages: readonly Package[], requested: readonly Package[]) =>
       Effect.gen(function* () {
         const rows = requested.length > 0 ? yield* store.select(entriesQuery(requested.map((pkg) => pkg.iri))) : [];
@@ -289,9 +291,17 @@ export const make = (store: Store.Api, root: string) =>
               const files = new Map(
                 rows.filter((row) => row.pkg === pkg.iri && !isManifest(row.path)).map((row) => [row.file, row]),
               );
-              const published = [...files.values()];
-              const sources = published.length > 0 ? [] : yield* store.select(sourceModulesQuery(pkg));
-              const entries = [...published, ...sources]
+              const sources = (yield* store.ask(hasSourcesQuery(pkg)))
+                ? [
+                    new Protocol.TreeNode({
+                      id: `${FOLDER}${pkg.path}/src`,
+                      label: 'src',
+                      kind: 'folder',
+                      branch: true,
+                    }),
+                  ]
+                : [];
+              const entries = [...files.values()]
                 .map(
                   (row) =>
                     new Protocol.TreeNode({
@@ -303,7 +313,7 @@ export const make = (store: Store.Api, root: string) =>
                     }),
                 )
                 .toSorted(bySubpath);
-              result.set(`${PACKAGE}${pkg.iri}`, [...entries, ...listing(packages, pkg.path)]);
+              result.set(`${PACKAGE}${pkg.iri}`, [...entries, ...sources, ...listing(packages, pkg.path)]);
             }),
           { concurrency: 8, discard: true },
         );
@@ -373,6 +383,47 @@ export const make = (store: Store.Api, root: string) =>
         );
       });
 
+    /** A `src` folder's subfolders, then its modules, each a branch onto its exports. */
+    const folderChildren = (folders: readonly string[]) =>
+      Effect.forEach(
+        folders,
+        (folder) =>
+          Effect.gen(function* () {
+            const rows = yield* store.select(sourceFilesQuery(folder));
+            const subfolders = new Set<string>();
+            const modules = new Map<string, Protocol.TreeNode>();
+            for (const row of rows) {
+              const rest = row.path.slice(folder.length + 1);
+              const slash = rest.indexOf('/');
+              if (slash >= 0) {
+                subfolders.add(rest.slice(0, slash));
+              } else {
+                modules.set(
+                  row.file,
+                  new Protocol.TreeNode({ id: `${MODULE}${row.file}`, label: rest, kind: 'file', branch: true }),
+                );
+              }
+            }
+            const nodes = [
+              ...[...subfolders].map(
+                (name) =>
+                  new Protocol.TreeNode({
+                    id: `${FOLDER}${folder}/${name}`,
+                    label: name,
+                    kind: 'folder',
+                    branch: true,
+                  }),
+              ),
+              ...modules.values(),
+            ].toSorted(
+              // Folders before files, as a file explorer lists them; both are branches, so `byLabel` alone cannot tell.
+              (left, right) => Number(right.kind === 'folder') - Number(left.kind === 'folder') || byLabel(left, right),
+            );
+            return [`${FOLDER}${folder}`, nodes] as const;
+          }),
+        { concurrency: 8 },
+      ).pipe(Effect.map((entries) => new Map(entries)));
+
     /** A namespace export's children are its module's exports, without a row for the module between. */
     const namespaceChildren = (symbols: readonly string[]) =>
       Effect.gen(function* () {
@@ -408,15 +459,18 @@ export const make = (store: Store.Api, root: string) =>
         }
 
         const requested = packages.filter((pkg) => packageIris.includes(pkg.iri));
-        const [byPackage, byModule, byNamespace] = yield* Effect.all(
+        // A folder path is spliced into a string literal, so only one the tree could have minted is taken.
+        const folders = tail(FOLDER).filter((path) => /^[\w@.\-/]+$/.test(path));
+        const [byPackage, byFolder, byModule, byNamespace] = yield* Effect.all(
           [
             packageChildren(packages, requested),
+            folderChildren(folders),
             moduleChildren(tail(MODULE).filter(isIndexIri)),
             namespaceChildren(tail(SYMBOL).filter(isIndexIri)),
           ],
           { concurrency: 'unbounded' },
         );
-        for (const map of [byPackage, byModule, byNamespace]) {
+        for (const map of [byPackage, byFolder, byModule, byNamespace]) {
           for (const [id, nodes] of map) {
             found.set(id, nodes);
           }
@@ -505,87 +559,82 @@ export const make = (store: Store.Api, root: string) =>
       ];
     };
 
-    const search = (query: string): Effect.Effect<Protocol.TreeHit[], Store.StoreError> =>
+    /** Ids from below the root down to a module: its package, then either the entry it is or its place in `src`. */
+    const modulePath = (packages: readonly Package[], file: string, name: string) =>
       Effect.gen(function* () {
-        const needle = query.trim().toLowerCase();
-        if (needle.length === 0) {
-          return [];
+        const [row] = yield* store.select(fileQuery(file));
+        const pkg = packages.find((candidate) => candidate.iri === row?.pkg);
+        if (!row || !pkg) {
+          return undefined;
         }
-        const name = yield* repository;
-        const [packages, symbolRows, packageRows] = yield* Effect.all(
-          [packageList, store.select(searchSymbolsQuery(needle)), store.select(searchPackagesQuery(needle))],
-          { concurrency: 'unbounded' },
-        );
-        const byIri = new Map(packages.map((pkg) => [pkg.iri, pkg]));
-
-        const packageHits = packageRows.flatMap((row) => {
-          const pkg = byIri.get(row.pkg);
-          return pkg
-            ? [
-                {
-                  rank: matchRank(pkg.name, needle),
-                  hit: new Protocol.TreeHit({
-                    node: new Protocol.TreeNode({
-                      id: `${PACKAGE}${pkg.iri}`,
-                      label: pkg.name,
-                      kind: 'package',
-                      branch: true,
-                      detail: pkg.path.split('/').at(-1),
-                    }),
-                    description: pkg.path,
-                    path: packagePath(packages, pkg, name),
-                  }),
-                },
-              ]
-            : [];
-        });
-
-        const ranked = [...new Map(symbolRows.map((row) => [row.symbol, row])).values()]
-          .toSorted((left, right) => matchRank(left.name, needle) - matchRank(right.name, needle))
-          .slice(0, MAX_HITS);
-        const exposures = ranked.length > 0 ? yield* store.select(exposureQuery(ranked.map((row) => row.symbol))) : [];
-        const best = new Map<string, Store.Binding>();
-        for (const row of exposures) {
-          const current = best.get(row.symbol);
-          if (!current || VIA_RANK[row.via] < VIA_RANK[current.via]) {
-            best.set(row.symbol, row);
-          }
+        const above = packagePath(packages, pkg, name);
+        if (yield* store.ask(entryQuery(pkg.iri, file))) {
+          return [...above, `${MODULE}${file}`];
         }
-
-        const symbolHits = ranked.flatMap((row) => {
-          const pkg = byIri.get(row.pkg);
-          const exposure = best.get(row.symbol);
-          if (!pkg || !exposure) {
-            return [];
-          }
-          return [
-            {
-              rank: matchRank(row.name, needle),
-              hit: new Protocol.TreeHit({
-                node: new Protocol.TreeNode({
-                  id: `${SYMBOL}${row.symbol}`,
-                  label: row.name,
-                  kind: 'symbol',
-                  branch: false,
-                  detail: row.kind,
-                }),
-                description: `${row.canonical ?? row.name} · ${pkg.name}`,
-                path: [
-                  ...packagePath(packages, pkg, name),
-                  `${MODULE}${exposure.entry}`,
-                  ...(exposure.via === 'namespace' ? [`${SYMBOL}${exposure.namespace}`] : []),
-                  `${SYMBOL}${row.symbol}`,
-                ],
-              }),
-            },
-          ];
-        });
-
-        return [...packageHits, ...symbolHits]
-          .toSorted((left, right) => left.rank - right.rank)
-          .slice(0, MAX_HITS)
-          .map(({ hit }) => hit);
+        const src = `${pkg.path}/src`;
+        if (!row.path.startsWith(`${src}/`) || /\.(test|stories|spec)\.tsx?$/.test(row.path)) {
+          return above;
+        }
+        const parts = row.path
+          .slice(src.length + 1)
+          .split('/')
+          .slice(0, -1);
+        return [
+          ...above,
+          `${FOLDER}${src}`,
+          ...parts.map((_, index) => `${FOLDER}${src}/${parts.slice(0, index + 1).join('/')}`),
+          `${MODULE}${file}`,
+        ];
       });
 
-    return { children, source, search };
+    /**
+     * Where a node sits in the tree: the ids from below the root down to it, or down to its nearest
+     * ancestor the tree shows (a declaration nothing exports is shown by its module). A symbol is
+     * placed under the entry that exposes it when one does, and in its package's `src` otherwise.
+     */
+    const locate = (id: string): Effect.Effect<string[] | undefined, Store.StoreError> =>
+      Effect.gen(function* () {
+        const name = yield* repository;
+        const packages = yield* packageList;
+        if (id.startsWith(PACKAGE)) {
+          const pkg = packages.find((candidate) => `${PACKAGE}${candidate.iri}` === id);
+          return pkg ? packagePath(packages, pkg, name) : undefined;
+        }
+        if (id.startsWith(MODULE)) {
+          const file = id.slice(MODULE.length);
+          return isIndexIri(file) ? yield* modulePath(packages, file, name) : undefined;
+        }
+        const symbol = id.slice(SYMBOL.length);
+        if (!id.startsWith(SYMBOL) || !isIndexIri(symbol)) {
+          return undefined;
+        }
+        const [declaration] = yield* store.select(declarationQuery(symbol));
+        if (!declaration) {
+          return undefined;
+        }
+        const exposures = (yield* store.select(exposureQuery(symbol))).toSorted(
+          (left, right) => VIA_RANK[left.via] - VIA_RANK[right.via],
+        );
+        for (const exposure of exposures) {
+          // `reexports+` also follows `export { x } from`, so a star exposure is kept only if the entry's
+          // own rows (which splice bare `export *` alone) really list the symbol.
+          if (exposure.via === 'star') {
+            const listed = (yield* moduleChildren([exposure.entry])).get(`${MODULE}${exposure.entry}`) ?? [];
+            if (!listed.some((node) => node.id === id)) {
+              continue;
+            }
+          }
+          const entryPath = yield* modulePath(packages, exposure.entry, name);
+          if (entryPath) {
+            return [...entryPath, ...(exposure.via === 'namespace' ? [`${SYMBOL}${exposure.namespace}`] : []), id];
+          }
+        }
+        const inSource = yield* modulePath(packages, declaration.file, name);
+        // Only exports are rows under a module; anything else is shown by the module that declares it.
+        return inSource && declaration.exported === 'true' && inSource.at(-1)?.startsWith(MODULE)
+          ? [...inSource, id]
+          : inSource;
+      });
+
+    return { children, source, locate };
   });

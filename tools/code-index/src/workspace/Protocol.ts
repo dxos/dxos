@@ -50,7 +50,17 @@ export class Entity extends Schema.Class<Entity>('code-index/Entity')({
   hint: Schema.optional(Schema.String),
 }) {}
 
-export const TreeNodeKind = Schema.Literals(['repo', 'dir', 'package', 'entry', 'namespace', 'symbol']);
+/** `dir` is a directory on the way to a package; `folder` and `file` are a package's own `src` tree. */
+export const TreeNodeKind = Schema.Literals([
+  'repo',
+  'dir',
+  'package',
+  'entry',
+  'folder',
+  'file',
+  'namespace',
+  'symbol',
+]);
 export type TreeNodeKind = typeof TreeNodeKind.Type;
 
 export class TreeNode extends Schema.Class<TreeNode>('code-index/TreeNode')({
@@ -83,12 +93,11 @@ export class TreeSource extends Schema.Class<TreeSource>('code-index/TreeSource'
   truncated: Schema.Boolean,
 }) {}
 
-/** A Cmd+P result: the node, and the ids from the top of the tree down to it, so the tree can reveal it. */
-export class TreeHit extends Schema.Class<TreeHit>('code-index/TreeHit')({
+/** A Cmd+P result: the node it names, addressed as the tree addresses it so `TreeLocate` can place it. */
+export class SearchHit extends Schema.Class<SearchHit>('code-index/SearchHit')({
   node: TreeNode,
-  /** Where it lives, for the result row: a symbol's canonical name and package. */
+  /** Where it lives, for the result row: a symbol's canonical name and package, or a path. */
   description: Schema.String,
-  path: Schema.Array(Schema.String),
 }) {}
 
 /** Id of the tree's root, whose children are the repositories. */
@@ -130,10 +139,17 @@ export class Rpcs extends RpcGroup.make(
     error: RequestFailed,
   }),
 
-  /** Public symbols and packages whose name contains the query, best match first. */
-  Rpc.make('TreeSearch', {
+  /** Where a node sits in the tree: ids from below the root down to it, or to its nearest shown ancestor. */
+  Rpc.make('TreeLocate', {
+    payload: { id: Schema.String },
+    success: Schema.optional(Schema.Array(Schema.String)),
+    error: RequestFailed,
+  }),
+
+  /** Packages, files and exported declarations whose name contains the query, best match first. */
+  Rpc.make('Search', {
     payload: { query: Schema.String },
-    success: Schema.Array(TreeHit),
+    success: Schema.Array(SearchHit),
     error: RequestFailed,
   }),
 

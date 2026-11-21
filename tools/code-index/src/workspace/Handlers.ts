@@ -19,6 +19,7 @@ import * as IndexStatus from './IndexStatus.ts';
 import * as Log from './Log.ts';
 import type * as Models from './Models.ts';
 import * as Protocol from './Protocol.ts';
+import * as Search from './Search.ts';
 import * as Titles from './Titles.ts';
 import * as Tree from './Tree.ts';
 
@@ -48,6 +49,7 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
       // Built on the first `Describe`, so `describe` resolves a box's `ref` exactly as the MCP tool does.
       const mcp = yield* Effect.cached(Server.handlers(store));
       const tree = yield* Tree.make(store, options.root);
+      const search = Search.make(store);
 
       /**
        * One turn at a time per project. The log serializes individual appends, not turns, so two
@@ -152,8 +154,11 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
         TreeChildren: ({ ids }: { ids: readonly string[] }) =>
           tree.children(ids).pipe(Effect.mapError((cause) => failure(cause.message))),
 
-        TreeSearch: ({ query }: { query: string }) =>
-          tree.search(query).pipe(Effect.mapError((cause) => failure(cause.message))),
+        TreeLocate: ({ id }: { id: string }) =>
+          tree.locate(id).pipe(Effect.mapError((cause) => failure(cause.message))),
+
+        Search: ({ query }: { query: string }) =>
+          search.search(query).pipe(Effect.mapError((cause) => failure(cause.message))),
 
         TreeSource: ({ id }: { id: string }) =>
           tree.source(id).pipe(Effect.mapError((cause) => failure(cause.message))),

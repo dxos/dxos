@@ -17,6 +17,7 @@ import * as Ontology from '../Ontology.ts';
 import * as Reasoner from '../Reasoner.ts';
 import * as Store from '../Store.ts';
 import * as Protocol from './Protocol.ts';
+import * as Search from './Search.ts';
 import * as Tree from './Tree.ts';
 
 /**
@@ -67,11 +68,15 @@ describe('Tree', () => {
     );
     await writeFile(join(src, 'extra.ts'), 'export const extra = 1;\n');
     await writeFile(join(src, 'named.ts'), 'export const thing = 1;\nexport const hidden = 2;\n');
-    // An app publishes nothing; the tree shows it by the modules at the top of its `src/`.
-    await mkdir(join(root, 'packages', 'app', 'src'), { recursive: true });
+    // An app publishes nothing, and its service sits where no entry reaches; the tree shows both through `src`.
+    await mkdir(join(root, 'packages', 'app', 'src', 'services'), { recursive: true });
     await writeFile(join(root, 'packages', 'app', 'package.json'), JSON.stringify({ name: '@fixture/app' }));
     await writeFile(join(root, 'packages', 'app', 'src', 'main.ts'), 'export const run = () => 1;\n');
     await writeFile(join(root, 'packages', 'app', 'src', 'main.test.ts'), 'export const check = 1;\n');
+    await writeFile(
+      join(root, 'packages', 'app', 'src', 'services', 'Sandbox.ts'),
+      'export class SandboxService {}\nconst secret = 1;\n',
+    );
     await git(root, 'init', '--quiet');
     await git(root, 'remote', 'add', 'origin', 'git@github.com:fixture/repo.git');
     // The bundled rules derive `publishedBy` and `packagePublic`, which the tree and search read.
@@ -101,6 +106,19 @@ describe('Tree', () => {
       ),
     );
 
+  const withSearch = <A, E>(body: (search: ReturnType<typeof Search.make>) => Effect.Effect<A, E>) =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.flatMap(Store.Store, (store) => body(Search.make(store))),
+          Store.layer(dir),
+        ),
+      ),
+    );
+
+  const appFile = (path: string) => Ontology.fileIri(`packages/app/src/${path}`).value;
+  const appSymbol = (path: string, name: string) => Ontology.symbolIri(`packages/app/src/${path}`, name).value;
+
   const childrenOf = (id: string) =>
     withTree((tree) => tree.children([id])).then(([result]) => result.children.map((node) => node.label));
 
@@ -114,17 +132,22 @@ describe('Tree', () => {
     ]);
   });
 
-  test("a package's entries carry the subpath keys its manifest declares, without its own package.json", async ({
+  test("a package's entries carry the subpath keys its manifest declares, then its src, without its package.json", async ({
     expect,
   }) => {
-    expect(await childrenOf(`pkg:${pkg}`)).toEqual(['.', './Thing']);
+    expect(await childrenOf(`pkg:${pkg}`)).toEqual(['.', './Thing', 'src']);
   });
 
-  test('a package that publishes nothing shows the modules at the top of its src, tests left out', async ({
-    expect,
-  }) => {
+  test("a package's src is a file tree of its modules, folders first and tests left out", async ({ expect }) => {
     const app = Ontology.packageIri('@fixture/app').value;
-    expect(await childrenOf(`pkg:${app}`)).toEqual(['src/main.ts']);
+    expect(await childrenOf(`pkg:${app}`)).toEqual(['src']);
+    const [src] = await withTree((tree) => tree.children(['src:packages/app/src']));
+    expect(src.children.map((node) => [node.label, node.kind])).toEqual([
+      ['services', 'folder'],
+      ['main.ts', 'file'],
+    ]);
+    expect(await childrenOf('src:packages/app/src/services')).toEqual(['Sandbox.ts']);
+    expect(await childrenOf(`mod:${appFile('services/Sandbox.ts')}`)).toEqual(['SandboxService']);
   });
 
   test('an entry lists its exports, splicing in a bare export * but not a named re-export source', async ({
@@ -147,19 +170,65 @@ describe('Tree', () => {
     expect(results.map((result) => [result.id, result.children.length])).toEqual([
       ['dir:packages', 2],
       ['sym:bogus', 0],
-      [`pkg:${pkg}`, 2],
+      [`pkg:${pkg}`, 3],
     ]);
   });
 
-  test('search returns the path the tree reveals a symbol by', async ({ expect }) => {
-    const hits = await withTree((tree) => tree.search('mak'));
-    expect(hits[0]?.path).toEqual([
-      'repo:fixture/repo',
-      'dir:packages',
-      `pkg:${pkg}`,
+  test('locate places a symbol under the entry that exposes it', async ({ expect }) => {
+    const above = ['repo:fixture/repo', 'dir:packages', `pkg:${pkg}`];
+    expect(await withTree((tree) => tree.locate(`sym:${symbol('Obj.ts', 'make')}`))).toEqual([
+      ...above,
       `mod:${file('Obj.ts')}`,
       `sym:${symbol('Obj.ts', 'make')}`,
     ]);
+    // Exported but reached by no entry: its place is its module in `src`.
+    expect(await withTree((tree) => tree.locate(`sym:${symbol('named.ts', 'hidden')}`))).toEqual([
+      ...above,
+      'src:packages/lib/src',
+      `mod:${file('named.ts')}`,
+      `sym:${symbol('named.ts', 'hidden')}`,
+    ]);
+  });
+
+  test('locate reaches a service no entry exposes, and stops at the module for what it does not export', async ({
+    expect,
+  }) => {
+    const app = Ontology.packageIri('@fixture/app').value;
+    const module = `mod:${appFile('services/Sandbox.ts')}`;
+    const above = [
+      'repo:fixture/repo',
+      'dir:packages',
+      `pkg:${app}`,
+      'src:packages/app/src',
+      'src:packages/app/src/services',
+    ];
+    expect(await withTree((tree) => tree.locate(`sym:${appSymbol('services/Sandbox.ts', 'SandboxService')}`))).toEqual([
+      ...above,
+      module,
+      `sym:${appSymbol('services/Sandbox.ts', 'SandboxService')}`,
+    ]);
+    expect(await withTree((tree) => tree.locate(`sym:${appSymbol('services/Sandbox.ts', 'secret')}`))).toEqual([
+      ...above,
+      module,
+    ]);
+    expect(await withTree((tree) => tree.locate('sym:bogus'))).toBeUndefined();
+  });
+
+  test('search finds what no entry exports, by declaration or by file name', async ({ expect }) => {
+    const hits = await withSearch((search) => search.search('sandbox'));
+    expect(hits.map((hit) => [hit.node.label, hit.node.kind])).toEqual([
+      ['Sandbox.ts', 'file'],
+      ['SandboxService', 'symbol'],
+    ]);
+  });
+
+  test('search ranks an exact name first, and published declarations ahead of internal ones', async ({ expect }) => {
+    const hits = await withSearch((search) => search.search('make'));
+    expect(hits[0]?.node).toMatchObject({ label: 'make', kind: 'symbol', detail: 'variable' });
+    // Both contain `n` mid-name, so they share a tier: the published `thing` goes ahead of the internal `hidden`.
+    const labels = (await withSearch((search) => search.search('n'))).map((hit) => hit.node.label);
+    expect(labels).toContain('hidden');
+    expect(labels.indexOf('thing')).toBeLessThan(labels.indexOf('hidden'));
   });
 
   test("a symbol's source is its declaration with the comment above it", async ({ expect }) => {

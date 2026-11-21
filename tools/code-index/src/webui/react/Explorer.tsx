@@ -49,6 +49,8 @@ const ICONS: Record<string, string> = {
   dir: 'ph--folder--regular',
   package: 'ph--package--regular',
   entry: 'ph--sign-in--regular',
+  folder: 'ph--folder--regular',
+  file: 'ph--file-code--regular',
   namespace: 'ph--brackets-curly--regular',
   function: 'ph--function--regular',
   class: 'ph--cube--regular',
@@ -221,11 +223,14 @@ const glyphOf = (node: Protocol.TreeNode): { readonly glyph: Glyph; readonly cla
   switch (node.kind) {
     case 'repo':
     case 'dir':
+    case 'folder':
       return undefined;
     case 'package':
       return { glyph: PACKAGE_ICON };
     case 'entry':
       return { glyph: fileGlyph(node.detail ?? node.label) };
+    case 'file':
+      return { glyph: fileGlyph(node.label) };
     default: {
       const symbol = SYMBOL_GLYPHS[node.kind === 'namespace' ? 'namespace' : (node.detail ?? '')] ?? {
         icon: 'symbol-misc',
@@ -334,14 +339,14 @@ const GoToDialog = ({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPick: (hit: Protocol.TreeHit) => void;
+  onPick: (hit: Protocol.SearchHit) => void;
 }) => {
-  const [hits, setHits] = useState<readonly Protocol.TreeHit[]>([]);
+  const [hits, setHits] = useState<readonly Protocol.SearchHit[]>([]);
   const latest = useRef('');
 
   const handleSearch = useCallback((query: string) => {
     latest.current = query;
-    api.treeSearch(query).then(
+    api.search(query).then(
       // A slow answer to an older query must not replace a newer one.
       (results) => latest.current === query && setHits(results),
       () => latest.current === query && setHits([]),
@@ -420,13 +425,18 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
     [model, registry, push],
   );
 
+  // Search finds the hit; the tree says where it sits, which for a declaration nothing exports is its module.
   const handlePick = useCallback(
-    (hit: Protocol.TreeHit) => {
+    (hit: Protocol.SearchHit) => {
       setSearching(false);
       push(hit.node);
-      const path = [TREE_ID, ...hit.path];
-      // Each ancestor's children must be loaded first, or the reveal finds no row and gives up.
-      void model.ensureLoaded(registry, [Protocol.TREE_ROOT, ...hit.path.slice(0, -1)]).then(() => {
+      void api.treeLocate(hit.node.id).then(async (located) => {
+        if (!located || located.length === 0) {
+          return;
+        }
+        // Each ancestor's children must be loaded first, or the reveal finds no row and gives up.
+        await model.ensureLoaded(registry, [Protocol.TREE_ROOT, ...located.slice(0, -1)]);
+        const path = [TREE_ID, ...located];
         registry.set(model.currentAtom, pathKey(path));
         treeRef.current?.reveal(path);
       });
@@ -434,9 +444,9 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
     [model, registry, push],
   );
 
-  // A directory or repository has no code of its own, so activating one opens it instead of adding a card.
+  // A directory has no code of its own, so activating one opens it instead of adding a card.
   const canSelect = useCallback(
-    ({ item }: { item: Protocol.TreeNode }) => item.kind !== 'dir' && item.kind !== 'repo',
+    ({ item }: { item: Protocol.TreeNode }) => item.kind !== 'dir' && item.kind !== 'repo' && item.kind !== 'folder',
     [],
   );
 
