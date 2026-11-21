@@ -97,6 +97,15 @@ export const makeLocalServer = Effect.fn(function* (
     host: {
       spaceIds,
       invoke: (request) => invoke({ handlerSet, handlers, ambient }, request),
+      // The client holds every space open already, so a script's database verbs cost no more than a query here.
+      database: (spaceId) => {
+        const space = client.spaces.get(spaceId);
+        return space === undefined
+          ? Effect.fail(McpServer.hostError(`Unknown space: ${spaceId}`))
+          : Effect.tryPromise({ try: () => space.waitUntilReady(), catch: McpServer.hostError }).pipe(
+              Effect.as(space.db),
+            );
+      },
     },
   } satisfies LocalServer;
 });

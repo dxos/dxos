@@ -13,7 +13,7 @@ import * as isolateInternal from './script-isolate.ts';
 
 /** One call a script made to its host: the verb, and the arguments exactly as the script passed them. */
 export const ScriptCall = Schema.Struct({
-  binding: Schema.Literals(['invoke', 'queryOperations', 'loadSkill']),
+  binding: Schema.Literals(['invoke', 'queryOperations', 'loadSkill', 'get', 'query', 'search', 'update']),
   args: Schema.Array(Schema.Unknown),
 });
 export type ScriptCall = Schema.Schema.Type<typeof ScriptCall>;
@@ -89,6 +89,10 @@ export const inProcess: Sandbox = {
         queryOperations: (...args: unknown[]) => counted({ binding: 'queryOperations', args }),
         loadSkill: (...args: unknown[]) =>
           counted({ binding: 'loadSkill', args }).pipe(Effect.tap((listing) => recordSkillToken(listing, tokens))),
+        get: (...args: unknown[]) => counted({ binding: 'get', args }),
+        query: (...args: unknown[]) => counted({ binding: 'query', args }),
+        search: (...args: unknown[]) => counted({ binding: 'search', args }),
+        update: (...args: unknown[]) => counted({ binding: 'update', args }),
         /** Supplied by the wrapper, not by the script: runs its program and reports how it failed. */
         runEffect: (program: unknown): Promise<unknown> =>
           isProgram(program)

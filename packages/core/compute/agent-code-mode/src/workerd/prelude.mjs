@@ -67,6 +67,8 @@ export const relations = (obj, direction, type) => call('relations', [obj, direc
 export const children = (obj) => call('children', [obj]);
 export const referrers = (obj, type, field) => call('referrers', [obj, type, field]);
 export const query = (typename, props) => call('query', [typename, props]);
+export const get = (target) => call('get', [target]);
+export const search = (text, typename) => call('search', [text, typename]);
 export const make = (typename, props) => call('make', [typename, props]);
 export const add = (obj) => call('add', [obj]);
 export const remove = (obj) => call('remove', [obj]);

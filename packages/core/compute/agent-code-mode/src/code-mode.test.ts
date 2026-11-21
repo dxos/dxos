@@ -656,6 +656,31 @@ describe('code mode types', () => {
 });
 
 // No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
+describe('code mode reads', () => {
+  it.effect(
+    'get reads an object by id, reference or envelope, and search finds it by its text',
+    Effect.fnUntraced(
+      function* (_) {
+        const missing = EntityId.random();
+        const output = yield* runEval(`
+          const task = await make('${TASK_TYPENAME}', { title: 'Water the plants', status: 'open' });
+          await add(task);
+          await flush();
+          const byId = await get(task.id);
+          const byRef = await get(ref(task));
+          const byEnvelope = await get({ '/': 'echo:///' + task.id });
+          const found = await search('plants', '${TASK_TYPENAME}');
+          print(byId.title, byRef.id === task.id, byEnvelope.id === task.id, await get('${missing}'), found.length);
+        `);
+        expect(output).toEqual('Water the plants true true undefined 1');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+// No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
 describe('code mode output', () => {
   it.effect(
     'console output reaches the model, on both dialects',

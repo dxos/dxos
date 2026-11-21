@@ -353,23 +353,33 @@ export const projectOperations = Effect.fnUntraced(function* (
 ) {
   const skillToolkit = yield* createToolkit({ skills, opaqueToolkits });
   const handlers = yield* skillToolkit.handlers;
-  return Record.toEntries(skillToolkit.toolkit.tools).map(([name, tool]): SandboxOperation => ({
-    name,
-    description: tool.description,
-    parameters: Tool.getJsonSchema(tool),
-    // Carried so a dialect can hand the model the operation itself rather than a wrapper around it.
-    definition: operationBehind(tool),
-    // A failed operation raises in the sandbox — as a rejected promise or a failed effect,
-    // depending on the dialect — since `toolResultValue` throws whatever the tool reported.
-    invoke: (input: unknown) =>
-      callTool(handlers, {
-        _tag: 'toolCall',
-        toolCallId: `code-mode-${name}`,
+  return Record.toEntries(skillToolkit.toolkit.tools).flatMap(([name, tool]): SandboxOperation[] => {
+    const definition = operationBehind(tool);
+    // A binding does all this operation does against the database the code already holds, without the invocation's
+    // round trip, so code mode does not offer it.
+    if (definition !== undefined && Operation.getScriptBinding(definition) !== undefined) {
+      return [];
+    }
+    return [
+      {
         name,
-        input: toToolInput(input),
-        providerExecuted: false,
-      }).pipe(Effect.map(toolResultValue), Effect.orDie),
-  }));
+        description: tool.description,
+        parameters: Tool.getJsonSchema(tool),
+        // Carried so a dialect can hand the model the operation itself rather than a wrapper around it.
+        definition,
+        // A failed operation raises in the sandbox — as a rejected promise or a failed effect,
+        // depending on the dialect — since `toolResultValue` throws whatever the tool reported.
+        invoke: (input: unknown) =>
+          callTool(handlers, {
+            _tag: 'toolCall',
+            toolCallId: `code-mode-${name}`,
+            name,
+            input: toToolInput(input),
+            providerExecuted: false,
+          }).pipe(Effect.map(toolResultValue), Effect.orDie),
+      },
+    ];
+  });
 });
 
 /**

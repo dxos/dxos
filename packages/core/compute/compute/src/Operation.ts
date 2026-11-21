@@ -1450,6 +1450,22 @@ export const getConsentPreview = (
 };
 
 /**
+ * Names the code-mode binding that does everything the operation does, against the database the code already has open
+ * (e.g. `'get'`). Code mode does not offer an annotated operation, since the binding needs no invocation; tool callers
+ * still see it.
+ */
+export const ScriptBindingAnnotation = Annotation.make({
+  id: 'org.dxos.operation.script-binding',
+  schema: Schema$.String,
+});
+
+/** The binding that replaces the operation in code mode, when it declares one. */
+export const getScriptBinding = (op: Definition.Any): string | undefined =>
+  op.meta.annotations
+    ? Option.getOrUndefined(Annotation.getDictionary(op.meta.annotations, ScriptBindingAnnotation))
+    : undefined;
+
+/**
  * Operation service interface - provides unified access to operation invocation and scheduling.
  * This service is automatically provided to operation handlers.
  */

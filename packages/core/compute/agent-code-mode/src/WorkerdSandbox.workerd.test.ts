@@ -46,6 +46,9 @@ type Row = {
   [field: string]: unknown;
 };
 
+/** A row carries its id; a reference holds the row instead. */
+const isRowRef = (value: Row | RowRef): value is RowRef => !('id' in value);
+
 /** A workspace with the plain dialect's shape and none of its machinery. */
 const makeWorkspace = () => {
   const rows = new Map<string, Row>();
@@ -78,6 +81,12 @@ const makeWorkspace = () => {
       [...rows.values()].filter(
         (row) =>
           row.typename === typename && Object.entries(props ?? {}).every(([field, value]) => row[field] === value),
+      ),
+    get: async (target: Row | RowRef | string) =>
+      rows.get(typeof target === 'string' ? target : isRowRef(target) ? target.ref.id : target.id),
+    search: async (text: string, typename?: string) =>
+      [...rows.values()].filter(
+        (row) => String(row.title ?? '').includes(text) && (typename === undefined || row.typename === typename),
       ),
     make: async (typename: string, props: Record<string, unknown>) => {
       if (typename !== TASK) {
@@ -205,6 +214,23 @@ describe('workerd sandbox', () => {
     // The handler ran on the HOST, not in the isolate.
     expect(scored).toEqual(['Review the PR']);
     expect([...rows.values()].map((row) => row.title)).toEqual(['Review the PR']);
+  });
+
+  test('reads an object by id or reference, and searches text, from inside the isolate', async () => {
+    const { rows, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs', status: 'open' });
+    rows.set('b', { id: 'b', typename: TASK, title: 'Ship the release', status: 'done' });
+    const output = await run(`
+      const byId = await get('a');
+      const byRef = await get(ref(byId));
+      const missing = await get('none');
+      const found = await search('release', '${TASK}');
+      update(byRef, (task) => { task.status = 'done'; });
+      print(byId.title, byRef.id, missing === undefined, found.map((task) => task.id).join(','));
+    `);
+    expect(output).toEqual('Write the docs a true b');
+    // What `get` returned names the host's row, so an update through it lands there.
+    expect(rows.get('a')!.status).toEqual('done');
   });
 
   test('console output reaches the host printer', async () => {

@@ -20,10 +20,11 @@ import { describe, test } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Database, Obj, Registry } from '@dxos/echo';
+import { Database, Obj, Registry, Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import * as McpServer from './McpServer.ts';
@@ -73,6 +74,32 @@ const RemoveObjects = Operation.make({
   input: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
   output: Schema.Struct({ removed: Schema.Number }),
 }).pipe(Operation.mutation('destructive'));
+
+const GET_OBJECTS_KEY = 'com.example.operation.space.getObjects';
+
+/** Replaced by a script's `get`: a script is refused it, while the tool still runs it. */
+const GetObjects = Operation.make({
+  meta: { key: DXN.make(GET_OBJECTS_KEY), name: 'Get Objects', description: 'Reads objects by reference.' },
+  input: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
+  output: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
+  services: [Database.Service],
+}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, 'get'));
+
+const TASK_TYPENAME = 'com.example.type.task';
+
+class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
+  Schema.Struct({ title: Schema.String, status: Schema.String }),
+) {}
+
+/** A real database holding two tasks, for a script's database verbs to act on. */
+const taskDatabase = async () => {
+  const builder = await new EchoTestBuilder().open();
+  const { db } = await builder.createDatabase({ types: [Task] });
+  const water = db.add(Obj.make(Task, { title: 'Water the plants', status: 'open' }));
+  db.add(Obj.make(Task, { title: 'Ship the release', status: 'done' }));
+  await db.flush({ secondaryIndexes: true });
+  return { db, water, close: () => builder.close() };
+};
 
 const makeSkill = (props: {
   key: string;
@@ -676,13 +703,14 @@ describe('McpServer', () => {
     const run = (
       code: string,
       options: {
+        registry?: Registry.Registry;
         host?: ReturnType<typeof testHost>;
         skillTokens?: readonly string[];
         spaceId?: SpaceId;
         timeout?: number;
       } = {},
     ) => {
-      const registry = testRegistry();
+      const registry = options.registry ?? testRegistry();
       const host = options.host ?? testHost();
       return {
         invocations: host.invocations,
@@ -825,6 +853,84 @@ describe('McpServer', () => {
     test('a program that outruns its budget is abandoned with an error', async ({ expect }) => {
       const { result } = run(`yield* Effect.never;`, { timeout: 50 });
       expect((await result).error).to.include('abandoned');
+    });
+
+    test('get, query, search and update act on the space database without invoking an operation', async ({
+      expect,
+    }) => {
+      const { db, water, close } = await taskDatabase();
+      try {
+        const host = testHost({ spaceIds: [db.spaceId] });
+        const { invocations, result } = run(
+          trim`
+            const open = yield* query('${TASK_TYPENAME}', { status: 'open' });
+            const found = yield* search('release', '${TASK_TYPENAME}');
+            const task = yield* get(open[0].id);
+            const updated = yield* update(task, { status: 'done' });
+            const missing = yield* get('${EntityId.random()}');
+            yield* print(open.length, found.map((row) => row.title).join(), task.title, updated.status, missing);
+          `,
+          { host: { ...host, host: { ...host.host, database: () => Effect.succeed(db) } }, spaceId: db.spaceId },
+        );
+        const { output, error, stats } = await result;
+        expect(error).to.be.undefined;
+        expect(output).to.equal('1 Ship the release Water the plants done undefined');
+        expect(stats?.calls).to.equal(5);
+        expect(invocations).to.have.length(0);
+        // Changed in the host's database, not in a copy.
+        expect(water.status).to.equal('done');
+      } finally {
+        await close();
+      }
+    });
+
+    test('without a database from the host, the verbs are refused and invoke still runs every operation', async ({
+      expect,
+    }) => {
+      const skill = makeSkill({ key: 'org.dxos.skill.codeProject', operations: [GetObjects] });
+      const registry = testRegistry({ operations: [GetObjects], skills: [skill] });
+      const { invocations, result } = run(
+        trim`
+          yield* loadSkill('codeProject');
+          yield* invoke('${GET_OBJECTS_KEY}', { objects: [] });
+          yield* get('x');
+        `,
+        { registry, spaceId: SPACE_A },
+      );
+      expect((await result).error).to.include('This server gives scripts no database');
+      expect(invocations.map(({ key }) => key)).to.deep.equal([GET_OBJECTS_KEY]);
+    });
+
+    test('a script is refused an operation a binding replaces, and is not offered it', async ({ expect }) => {
+      const skill = makeSkill({ key: 'org.dxos.skill.codeProject', operations: [CreateTask, GetObjects] });
+      const registry = testRegistry({ operations: [CreateTask, GetObjects], skills: [skill] });
+      const host = testHost();
+      const { invocations, result } = run(
+        trim`
+          yield* loadSkill('codeProject');
+          const attempt = yield* Effect.result(invoke('${GET_OBJECTS_KEY}', { objects: [] }));
+          yield* print(attempt.failure.message);
+          yield* print((yield* queryOperations({ keys: ['${GET_OBJECTS_KEY}', '${KEY}'] })).map((row) => row.key).join());
+        `,
+        {
+          registry,
+          // Never asked here: a host that offers a database is what makes the binding the way.
+          host: { ...host, host: { ...host.host, database: () => Effect.fail(McpServer.hostError('unused')) } },
+          spaceId: SPACE_A,
+        },
+      );
+      const { output, error } = await result;
+      expect(error).to.be.undefined;
+      const [refusal, offered] = output.split('\n');
+      expect(refusal).to.include('use `yield* get(...)`');
+      expect(offered).to.equal(KEY);
+      expect(invocations).to.have.length(0);
+
+      // The tool still lists and runs it, for a client that is not writing code.
+      const listed = await EffectEx.runPromise(McpServer.queryOperations(registry, { keys: [GET_OBJECTS_KEY] }));
+      expect(listed.operations.map((row) => row.key)).to.deep.equal([GET_OBJECTS_KEY]);
+      const tool = runInvoke({ key: GET_OBJECTS_KEY, input: { objects: [] }, spaceId: SPACE_A }, { registry });
+      expect((await tool.result)._tag).to.equal('Success');
     });
 
     test('nothing outside the bindings is in scope by name', async ({ expect }) => {

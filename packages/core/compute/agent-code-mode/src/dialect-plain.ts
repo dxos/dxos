@@ -101,6 +101,30 @@ export const PlainDialect: Dialect = {
       query: (typename: string, props?: Record<string, unknown>) =>
         run(Database.query(Filter.type(DXN.make(typename), props)).run),
 
+      /** The stored object an id or a reference names, or undefined when there is none. */
+      get: (target: unknown) =>
+        run(
+          Ref.isRef(target)
+            ? Effect.tryPromise(() => target.tryLoad()).pipe(Effect.orElseSucceed(() => undefined))
+            : Effect.suspend(() => {
+                const id = idOf(target);
+                return id === undefined ? Effect.succeed(undefined) : findById(id);
+              }),
+        ),
+
+      /** Objects whose text matches `text`, by full-text search, optionally of one typename. */
+      search: (text: string, typename?: string) =>
+        run(
+          Effect.gen(function* () {
+            // Flushed first, so what this evaluation just wrote is in the full-text index, which lags the primary one.
+            yield* Database.flush({ secondaryIndexes: true });
+            const matches = Query.select(Filter.text(text, { type: 'full-text' }));
+            return yield* Database.query(
+              typename === undefined ? matches : matches.select(Filter.type(DXN.make(typename))),
+            ).run;
+          }),
+        ),
+
       /** Creates an unpersisted object of `typename`; pass it to `add` to store it. */
       make: (typename: string, props: Record<string, unknown>) =>
         run(
@@ -190,6 +214,10 @@ export const PlainDialect: Dialect = {
       it is the parent of, and the objects whose ref fields point at it.
     - \`await query(typename, props?)\` — objects of that typename, optionally narrowed by exact
       property values, e.g. \`await query('example.com/type/Task', { status: 'open' })\`.
+    - \`await get(idOrRef)\` — the stored object an id or a reference names: \`ref(obj)\`, a \`Ref\` field, or the
+      \`{ "/": uri }\` an operation returns; \`undefined\` when there is none.
+    - \`await search(text, typename?)\` — objects whose text matches, by full-text search, optionally of one
+      typename.
     - \`await make(typename, props)\` — a new object; it is not stored until you add it.
     - \`await add(obj)\` / \`await remove(obj)\` — store or delete an object.
     - \`update(obj, (obj) => { obj.field = value; })\` — the only way to change a stored object.
@@ -198,6 +226,13 @@ export const PlainDialect: Dialect = {
     - \`ref(obj)\` — a reference to an object you hold. A \`Ref<typename>\` field takes one, never
       an id or a URI string: \`await make('example.com/type/Task', { title: 'Review', owner: ref(person) })\`.
       Where an operation's input takes references, pass \`ref(obj)\` too.
+
+    These bindings run against a database this evaluation already has open, so each call is a local read or write.
+    An \`ops\` call is a remote invocation that opens its own database, and can take seconds. Read and change
+    objects with the bindings, even where a skill names a tool for it: read with \`get\`, \`query\` or \`search\`,
+    and change with \`update\`. To create or delete an object the user should find in a collection, call the space
+    operations that add and remove objects when they are listed: they file the object into its collection, or
+    unlink it.
 
     ${renderTypes(types?.filter(({ kind }) => kind === 'object'))}
 
@@ -232,6 +267,23 @@ const objectIdOf = (value: unknown): EntityId | undefined => {
     Predicate.isObject(field) && Predicate.isString(field.id) && EntityId.isValid(field.id) ? [field.id] : [],
   );
   return ids.length === 1 ? ids[0] : undefined;
+};
+
+/** The id that an id, a URI, a `{ "/": uri }` envelope or an object (`objectIdOf`) names. */
+const idOf = (target: unknown): EntityId | undefined => {
+  if (Predicate.isString(target)) {
+    return EntityId.isValid(target) ? target : lastSegmentId(target);
+  }
+  if (Predicate.isObject(target) && Predicate.isString(target['/'])) {
+    return lastSegmentId(target['/']);
+  }
+  return objectIdOf(target);
+};
+
+/** The id that ends a URI: `echo://<space>/<id>` and `dxn:echo:@:<id>` alike. */
+const lastSegmentId = (uri: string): EntityId | undefined => {
+  const id = uri.split(/[/:]/).at(-1);
+  return id !== undefined && EntityId.isValid(id) ? id : undefined;
 };
 
 /** The stored object with `id`, or undefined when the database has no such object. */
