@@ -102,6 +102,10 @@ export const middleware = ({
               // allow list, it removes it, and `/@fs/<absolute path>` would then serve any file the
               // process can read.
               fs: { allow: [appRoot, repoRoot] },
+              // Only the UI's own sources are watched for hot reload. Every workspace module and icon asset the
+              // page loads would otherwise be watched too, and under Bun each watch holds its directory chain
+              // open: thousands of descriptors, past the point where the process can spawn git (Watch.ts).
+              watch: { ignored: (path: string) => !path.startsWith(appRoot) },
             },
             // The UI is Solid, except for the chat thread, which is the repository's own React
             // component. `vite-plugin-solid` must therefore be scoped to the Solid half — left

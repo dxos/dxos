@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
-import { type FSWatcher, existsSync, statSync, watch } from 'node:fs';
+import { type FSWatcher, existsSync, readdirSync, statSync, watch } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -81,6 +81,53 @@ export type Options = {
 /** Whether a changed path, relative to the root, could be a source file the indexer reads. */
 export const relevant = (path: string): boolean => !path.split(/[\\/]/).some((segment) => IGNORED.includes(segment));
 
+/**
+ * The descriptors a process may hold and still spawn. On macOS each directory watch is a descriptor, and
+ * once a Bun process holds about 10,240 (measured with Bun 1.3.11: 10,200 watches fine, 10,300 not) no
+ * child it spawns works: `git ls-files` comes back empty, and a pass read that as every file gone.
+ */
+export const SPAWN_DESCRIPTOR_LIMIT = 10_000;
+
+/** Descriptors kept free for what the server opens after a re-watch (Vite watches each module it serves). */
+export const DESCRIPTOR_HEADROOM = 1_500;
+
+/**
+ * The most directories this watcher may hold now: what the limit leaves once every other descriptor the
+ * process has open is counted. Not a constant, since the dev server's own watches grow as the page loads.
+ * Where `/dev/fd` cannot be read, the whole limit, as before.
+ */
+const watchBudget = (held: number): number => {
+  let open: number;
+  try {
+    open = readdirSync('/dev/fd').length;
+  } catch {
+    return SPAWN_DESCRIPTOR_LIMIT - DESCRIPTOR_HEADROOM;
+  }
+  return Math.max(0, SPAWN_DESCRIPTOR_LIMIT - DESCRIPTOR_HEADROOM - (open - held));
+};
+
+/** How often a pass runs when some directories go unwatched, so a change in one is still picked up. */
+export const UNWATCHED_POLL_MS = 30_000;
+
+/**
+ * The directories to watch within `max`: those holding the most indexed files first, since a change is
+ * likeliest there, then the root and its ancestors' order as tie-break. `skipped` counts the rest.
+ */
+export const budgeted = (paths: readonly string[], max: number): { watched: Set<string>; skipped: number } => {
+  const all = directories(paths);
+  if (all.size <= max) {
+    return { watched: all, skipped: 0 };
+  }
+  const files = new Map<string, number>();
+  for (const path of paths) {
+    files.set(dirname(path), (files.get(dirname(path)) ?? 0) + 1);
+  }
+  const ranked = [...all].toSorted(
+    (left, right) => (files.get(right) ?? 0) - (files.get(left) ?? 0) || left.length - right.length,
+  );
+  return { watched: new Set(ranked.slice(0, max)), skipped: all.size - max };
+};
+
 /** Every directory holding an indexed file, and its ancestors up to the root (`.`), which see new subdirectories. */
 export const directories = (paths: readonly string[]): Set<string> => {
   const found = new Set<string>(['.']);
@@ -146,18 +193,35 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
 
     // Directories that hold indexed files gain a watch; one is dropped only once it is gone, since
     // an empty directory may be about to receive files.
+    let polling = false;
     const rewatch = Effect.gen(function* () {
+      const { watched: wanted, skipped } = budgeted(
+        (yield* store.fileStates()).map((state) => state.path),
+        watchBudget(watchers.size),
+      );
+      // A directory gone, or one that fell out of the budget, gives its descriptor back.
       for (const [dir, watcher] of watchers) {
-        if (!existsSync(join(options.root, dir))) {
+        if (!wanted.has(dir) || !existsSync(join(options.root, dir))) {
           watcher.close();
           watchers.delete(dir);
         }
       }
-      const wanted = directories((yield* store.fileStates()).map((state) => state.path));
       const before = watchers.size;
       const failed = [...wanted].filter((dir) => !add(dir)).length;
       if (failed > 0) {
         yield* report({ _tag: 'Failed', message: `${failed} directories could not be watched` });
+      }
+      // What the budget leaves unwatched is caught by a periodic pass, which costs a crawl when nothing changed.
+      if (skipped > 0 && !polling) {
+        polling = true;
+        yield* Console.log(
+          `code-index · watching ${wanted.size} directories, polling for the other ${skipped} every ${UNWATCHED_POLL_MS / 1000}s`,
+        );
+        yield* Effect.forever(
+          Effect.sleep(UNWATCHED_POLL_MS).pipe(
+            Effect.andThen(Effect.sync(() => Queue.offerUnsafe(changes, undefined))),
+          ),
+        ).pipe(Effect.forkScoped);
       }
       // A file written between the pass's crawl and a new watch raised no event; one more pass sees it.
       if (watchers.size > before) {
@@ -196,6 +260,17 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
     );
 
     yield* pass;
+    // The dev server keeps opening watches as the page loads modules, so the budget is checked again
+    // on a timer, not only after a pass: this watcher gives descriptors back before the process runs out.
+    yield* Effect.forever(
+      Effect.sleep(UNWATCHED_POLL_MS).pipe(
+        Effect.andThen(
+          rewatch.pipe(
+            Effect.catchCause((cause) => report({ _tag: 'Failed', message: `watch failed\n${Cause.pretty(cause)}` })),
+          ),
+        ),
+      ),
+    ).pipe(Effect.forkScoped);
     return yield* Effect.forever(
       Effect.gen(function* () {
         yield* Queue.take(changes);
