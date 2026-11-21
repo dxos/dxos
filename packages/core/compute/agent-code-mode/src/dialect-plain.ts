@@ -186,7 +186,7 @@ export const PlainDialect: Dialect = {
       remove: (obj: Obj.Unknown) => run(Database.remove(obj)),
       flush: () => run(Database.flush()),
       update: (obj: Obj.Unknown, mutator: (obj: any) => void) =>
-        Obj.update(obj, (target) => mutator(diffingStrings(target))),
+        Obj.update(obj, (obj) => mutator(diffingStrings(obj))),
 
       ops: guardOperations(
         Object.fromEntries(
