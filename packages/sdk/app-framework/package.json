@@ -114,6 +114,11 @@
       "types": "./dist/types/src/core/plugin-manifest.d.ts",
       "import": "./dist/lib/core/plugin-manifest.mjs"
     },
+    "./PluginWorker": {
+      "source": "./src/worker/PluginWorker.ts",
+      "types": "./dist/types/src/worker/PluginWorker.d.ts",
+      "import": "./dist/lib/worker/PluginWorker.mjs"
+    },
     "./ProcessManagerPlugin": {
       "source": "./src/plugin-process-manager/ProcessManagerPlugin.ts",
       "types": "./dist/types/src/plugin-process-manager/ProcessManagerPlugin.d.ts",
@@ -176,6 +181,16 @@
     "./vite-plugin/config": {
       "types": "./dist/types/src/vite-plugin/config.d.ts",
       "import": "./dist/lib/vite-plugin/config.mjs"
+    },
+    "./WorkerCapabilities": {
+      "source": "./src/worker/WorkerCapabilities.ts",
+      "types": "./dist/types/src/worker/WorkerCapabilities.d.ts",
+      "import": "./dist/lib/worker/WorkerCapabilities.mjs"
+    },
+    "./WorkerEvents": {
+      "source": "./src/worker/WorkerEvents.ts",
+      "types": "./dist/types/src/worker/WorkerEvents.d.ts",
+      "import": "./dist/lib/worker/WorkerEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -188,6 +203,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -202,10 +218,12 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
+    "@dxos/worker-framework": "workspace:*",
     "babel-preset-solid": "catalog:",
     "cjs-module-lexer": "catalog:",
     "esbuild": "catalog:",
@@ -218,6 +236,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@effect/atom-react": "catalog:",
+    "@effect/platform-browser": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",

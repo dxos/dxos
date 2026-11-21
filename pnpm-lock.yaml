@@ -10986,6 +10986,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -11007,6 +11010,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -21742,6 +21748,9 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -21784,6 +21793,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -21796,6 +21808,9 @@ importers:
       '@dxos/web-context-react':
         specifier: workspace:*
         version: link:../../common/web-context-react
+      '@dxos/worker-framework':
+        specifier: workspace:*
+        version: link:../worker-framework
       babel-preset-solid:
         specifier: 'catalog:'
         version: 1.9.9(@babel/core@7.28.0(supports-color@10.2.2))(solid-js@1.9.11)
@@ -21827,6 +21842,9 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)

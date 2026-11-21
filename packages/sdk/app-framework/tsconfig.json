@@ -66,6 +66,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/mesh/rpc"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -85,6 +88,12 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../worker-framework"
     }
   ]
 }

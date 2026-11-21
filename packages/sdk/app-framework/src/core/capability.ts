@@ -11,6 +11,7 @@ import type * as Scope from 'effect/Scope';
 
 import type { DXN } from '@dxos/keys';
 
+import { Startup as WorkerStartup } from '../worker/startup.ts';
 import type * as ActivationEvent from './activation-event.ts';
 import type * as CapabilityManager from './capability-manager.ts';
 import { CapabilityNotFoundError } from './errors.ts';
@@ -550,7 +551,7 @@ export interface Module<Options = void> {
 
 /**
  * A package.json export/import condition a module loads under, via {@link ModuleSpec}'s
- * `environments` — `'browser'`, `'tauri'`, `'node'` and `'workerd'` in this repo.
+ * `environments` — `'browser'`, `'tauri'`, `'node'`, `'workerd'` and `'plugin-worker'` ({@link workerModule}) in this repo.
  *
  * Deliberately an open string rather than a union: conditions are defined by whichever build tool
  * resolves the package, so the framework has no business enumerating them (a consumer targeting
@@ -670,6 +671,28 @@ export const inlineModule = <
     environments: spec.environments,
   });
 };
+
+/**
+ * Helper to define a module that runs only in the plugin worker (`@dxos/app-framework/PluginWorker`):
+ * a {@link lazyModule} activating on `WorkerEvents.Startup`, in the `plugin-worker` environment
+ * alone. The environment is what keeps it out of the page: a plugin's manifest lists only the modules
+ * for its build's target, and the plugin's lazy stub carries the module's entry as data, which the tab
+ * sends to the worker (see `workerHost` in `pluginConfigPlugin`).
+ * @param name The export name — used to auto-compute module IDs.
+ * @param spec The requires/provides declaration; activation and conditions are fixed.
+ * @param loader The lazy loader function.
+ */
+export const workerModule = <
+  const Provides extends readonly AnyTag[],
+  const Requires extends readonly AnyTag[] = readonly [],
+  Props = void,
+  Options = Props,
+>(
+  name: string,
+  spec: Omit<ModuleSpec<Provides, Requires, Props, Options>, 'activatesOn' | 'environments'>,
+  loader: LoadModule<Props, Requires, Provides>,
+): Module<Options> =>
+  lazyModule(name, { ...spec, activatesOn: WorkerStartup, environments: ['plugin-worker'] }, loader);
 
 /**
  * Options accepted by makers built with {@link moduleMaker}.

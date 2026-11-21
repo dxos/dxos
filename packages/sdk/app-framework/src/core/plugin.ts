@@ -613,7 +613,24 @@ const LazyTag: unique symbol = Symbol.for('@dxos/app-framework/Plugin/Lazy');
 export type LazyLoader<T = void> = () => Promise<{ default: PluginFactory<T> }>;
 
 /** Internal: payload carried on a lazy stub. */
-type LazyPayload = { loader: LazyLoader<any>; options: unknown };
+type LazyPayload = { loader: LazyLoader<any>; options: unknown; workerModules: readonly WorkerModule[] };
+
+/** What a lazy stub carries besides its loader, all of it readable before the plugin loads. */
+export type LazyOptions = {
+  /**
+   * The plugin's modules that run in its app's plugin worker, as data: the tab sends the enabled
+   * plugins' entries to that worker (see {@link getWorkerModules}), and the page never loads them.
+   */
+  workerModules?: readonly WorkerModule[];
+};
+
+const isLazyPayload = (value: unknown): value is LazyPayload =>
+  typeof value === 'object' &&
+  value !== null &&
+  'loader' in value &&
+  typeof value.loader === 'function' &&
+  'workerModules' in value &&
+  Array.isArray(value.workerModules);
 
 /**
  * Defines a lazy plugin whose body is loaded on first enable.
@@ -639,14 +656,18 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * export default MarkdownPlugin;
  * ```
  */
-export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory<T>;
+export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>, lazyOptions?: LazyOptions): PluginFactory<T>;
 // Impl names the required-parameter form; the overload narrows to optional when `T` has no
 // required members (see {@link make} / {@link PluginFactory}).
-export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): ((options: T) => Plugin) & { meta: Meta } {
+export function lazy<T = void>(
+  meta: Meta,
+  loader: LazyLoader<T>,
+  { workerModules = [] }: LazyOptions = {},
+): ((options: T) => Plugin) & { meta: Meta } {
   const factory = (options?: T): Plugin => {
     const stub = new PluginImpl(meta, []);
     Object.defineProperty(stub, LazyTag, {
-      value: { loader, options } satisfies LazyPayload,
+      value: { loader, options, workerModules } satisfies LazyPayload,
       enumerable: false,
     });
     return stub;
@@ -658,6 +679,15 @@ export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): ((options: T)
  * Type guard for lazy plugin stubs produced by {@link lazy}.
  */
 export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
+
+/**
+ * The modules a lazy plugin runs in its app's plugin worker, recorded by the build on the stub so
+ * the tab can send them before the plugin loads; none for any other plugin.
+ */
+export const getWorkerModules = (plugin: Plugin): readonly WorkerModule[] => {
+  const payload: unknown = Reflect.get(plugin, LazyTag);
+  return isLazyPayload(payload) ? payload.workerModules : [];
+};
 
 /**
  * Builds a plugin from its module list, keeping only the modules that run in this build's
@@ -732,6 +762,44 @@ export type ManifestModule = {
 };
 
 /**
+ * A module that runs in its app's plugin worker, as its build records it for the tab. Every such
+ * module activates on the worker's startup event (see `Capability.workerModule`), so the entry
+ * carries no activation spec.
+ */
+export type WorkerModule = Pick<ManifestModule, 'id' | 'url' | 'requires' | 'provides'>;
+
+/** A {@link WorkerModule} named by its plugin's key, as an app sends it to its plugin worker. */
+export type PluginWorkerModule = WorkerModule & { plugin: string };
+
+/**
+ * The worker modules of the plugins an app starts with: its core (`system`-tagged) plugins, those
+ * in `enabled`, and what they depend on, which is the set its plugin manager enables at startup.
+ */
+export const getStartupWorkerModules = (
+  plugins: readonly Plugin[],
+  enabled: readonly string[],
+): PluginWorkerModule[] => {
+  const byKey = new Map(plugins.map((plugin) => [plugin.meta.profile.key, plugin]));
+  const pending = [
+    ...plugins.filter(({ meta }) => meta.profile.tags?.includes('system')).map(({ meta }) => meta.profile.key),
+    ...enabled,
+  ];
+  const started = new Set<string>();
+  for (let key = pending.pop(); key !== undefined; key = pending.pop()) {
+    const plugin = byKey.get(key);
+    if (!plugin || started.has(key)) {
+      continue;
+    }
+    started.add(key);
+    pending.push(...(plugin.meta.profile.dependsOn ?? []));
+  }
+  return [...started].flatMap((key) => {
+    const plugin = byKey.get(key);
+    return plugin ? getWorkerModules(plugin).map((module) => ({ ...module, plugin: key })) : [];
+  });
+};
+
+/**
  * Static loaders for a manifest's URLs, keyed by URL. A library build passes them so downstream
  * bundlers (e.g. a worker's) can follow each body; an app build omits them and loads by URL.
  */
@@ -761,34 +829,43 @@ export const fromManifest = <T = void>(
   loaders: ManifestLoaders = {},
 ): Pick<PluginConfig<T>, 'plugin' | 'meta' | 'make'> => {
   const meta = getMetaFromConfig(data);
-  const toTags = (tags: readonly ManifestTag[]) =>
-    tags.map(({ identifier, arity }) => Capability.fromIdentifier(identifier, arity));
-  const load = (url: string) => loaders[url]?.() ?? import(/* @vite-ignore */ url);
   return {
     plugin: data.plugin,
     meta,
     make: fromModules<T>(
       meta,
-      modules.map(({ id, url, activatesOn, requires, provides, adapter, environments }) =>
-        Capability.lazyModule(
-          id,
-          { activatesOn, requires: toTags(requires), provides: toTags(provides), environments },
-          async () => {
-            const loaded = await load(url);
-            if (!adapter) {
-              invariant(isModuleBody(loaded), `Module ${id} at ${url} has no default export.`);
-              return loaded;
-            }
-            const adapterModule = await load(adapter.url);
-            invariant(isModuleAdapter(adapterModule), `Adapter at ${adapter.url} has no default export.`);
-            const adapted = adapterModule.default(loaded, adapter.args);
-            invariant(isModuleBody(adapted), `Adapter at ${adapter.url} returned no module body.`);
-            return adapted;
-          },
-        ),
-      ),
+      modules.map((module) => fromManifestModule(module, loaders)),
     ),
   };
+};
+
+/**
+ * The lazy module a {@link ManifestModule} describes: its body loads on activation, through
+ * `loaders` when the build supplied static imports, otherwise from its URL.
+ */
+export const fromManifestModule = (
+  { id, url, activatesOn, requires, provides, adapter, environments }: ManifestModule,
+  loaders: ManifestLoaders = {},
+): Capability.Module<any> => {
+  const toTags = (tags: readonly ManifestTag[]) =>
+    tags.map(({ identifier, arity }) => Capability.fromIdentifier(identifier, arity));
+  const load = (url: string) => loaders[url]?.() ?? import(/* @vite-ignore */ url);
+  return Capability.lazyModule(
+    id,
+    { activatesOn, requires: toTags(requires), provides: toTags(provides), environments },
+    async () => {
+      const loaded = await load(url);
+      if (!adapter) {
+        invariant(isModuleBody(loaded), `Module ${id} at ${url} has no default export.`);
+        return loaded;
+      }
+      const adapterModule = await load(adapter.url);
+      invariant(isModuleAdapter(adapterModule), `Adapter at ${adapter.url} has no default export.`);
+      const adapted = adapterModule.default(loaded, adapter.args);
+      invariant(isModuleBody(adapted), `Adapter at ${adapter.url} returned no module body.`);
+      return adapted;
+    },
+  );
 };
 
 /**
