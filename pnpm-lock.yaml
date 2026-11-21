@@ -10493,9 +10493,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-presenter':
-        specifier: workspace:*
-        version: link:../plugin-presenter
       '@dxos/plugin-sheet':
         specifier: workspace:*
         version: link:../plugin-sheet
@@ -10520,9 +10517,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-slides':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-slides
       '@dxos/scene':
         specifier: workspace:*
         version: link:../../common/scene
@@ -12040,6 +12034,9 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../common/diagram
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -12115,6 +12112,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-presenter':
+        specifier: workspace:*
+        version: link:../plugin-presenter
       '@dxos/plugin-projects':
         specifier: workspace:*
         version: link:../plugin-projects
@@ -12145,6 +12145,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-canvas-compute':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas-compute
@@ -12224,6 +12227,9 @@ importers:
       '@dxos/react-ui-geo':
         specifier: workspace:*
         version: link:../../ui/react-ui-geo
+      '@dxos/storybook-testing':
+        specifier: workspace:*
+        version: link:../../stories/storybook-testing
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

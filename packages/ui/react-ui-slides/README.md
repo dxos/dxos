@@ -18,6 +18,7 @@ CodeMirror extensions that highlight and complete it.
 | `<Table>` | `variant` (`default`, `rows`, `cards`, `outline`), `tone` |
 | `<Box>` | `variant`, `tone` |
 | `<v-clicks>` | `depth`, `every` |
+| `<SlideCurrentNo />`, `<SlidesTotal />` | none: the slide's number, and the number of slides |
 
 A `tone` (`accent`, `info`, `success`, `warning`, `error`, `neutral`) repaints the accent for the block and what it
 holds.
@@ -96,6 +97,24 @@ than its neighbours'.
 
 </Grid>
 ```
+
+## Footer and slide number
+
+A deck draws one footer on every slide: `SlideFooter.Settings` holds a `left`, a `center` and a `right` part, each a
+line of inline slide markdown. `SlideFooterProvider` sets it for the slides drawn below it, and a slide draws it over
+its own bottom padding, so no slide gives up room to it.
+
+`<SlideCurrentNo />` and `<SlidesTotal />` (Slidev's names) draw the slide's number and the number of slides,
+anywhere in a slide or in the footer. Whatever draws the slide says which they are with `SlidePositionProvider`;
+with none, each counter draws a dash.
+
+```ts
+const footer: SlideFooter.Settings = { left: 'DXOS', right: '<SlideCurrentNo /> / <SlidesTotal />' };
+```
+
+A slide switches the footer with its frontmatter: `footer: false` leaves it off, `footer: true` draws it. A slide
+that says neither shows it, except in the `cover` and `end` layouts. Something that draws a slide which is not
+markdown (a linked object) puts `<SlideFooterLayer />` on the canvas itself.
 
 ## Storage
 

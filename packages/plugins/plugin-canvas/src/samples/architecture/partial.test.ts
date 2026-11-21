@@ -10,13 +10,12 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 
 import { Canvas } from '#types';
 
-import * as ArchitectureSpace from './ArchitectureSpace.ts';
+import { Partial } from './partial.ts';
 
 /** Header cells (row 1 labels) missing the heading style, or over all-numeric values without end alignment. */
 const unstyledHeaders = (sheet: Sheet.Sheet): string[] => {
@@ -65,9 +64,13 @@ afterEach(async () => {
 });
 
 // Seeding lays out every diagram, which takes a few seconds alone and several times that on a loaded CI shard.
-describe('ArchitectureSpace', { timeout: 60_000 }, () => {
+describe('the architecture partial', { timeout: 60_000 }, () => {
   test('seeds every diagram, and Composer, DXOS and EDGE documents that link and embed them', async ({ expect }) => {
-    const definition = ArchitectureSpace.make();
+    const definition = SampleSpace.make({
+      space: { name: 'Architecture' },
+      partials: { architecture: Partial },
+      build: (partials) => partials.architecture(),
+    });
     const { db } = await builder.createDatabase({ types: [...definition.schemas] });
     // The root collection is annotated onto whatever object stands for the space's properties.
     const properties = db.add(Obj.make(Collection.Collection, { objects: [] }));
@@ -86,16 +89,10 @@ describe('ArchitectureSpace', { timeout: 60_000 }, () => {
       'DXOS',
       'EDGE',
       'ECHO design',
-      'ECHO',
       'Overview',
       'CF Workers',
       'Plugin metrics',
     ]);
-
-    // The ECHO deck carries a description and its own theme.
-    const deck = listedObjects.find((object) => Obj.instanceOf(Presentation.Presentation, object));
-    expect(deck?.description).toMatch(/^ECHO, the DXOS object database/);
-    expect(deck?.theme).toEqual({ accent: '#0891b2', font: 'space-grotesk', monoFont: 'fira' });
 
     // The metrics sheet charts every plugin row as one stacked horizontal bar, one series per measure, and the busiest
     // plugins' PRs as a pie.

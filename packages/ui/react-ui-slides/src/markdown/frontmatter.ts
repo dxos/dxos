@@ -85,6 +85,7 @@ const fields = {
   scrim: Color,
   bleed: Schema.Literals(BLEED_SIDES),
   hide: Schema.Boolean,
+  footer: Schema.Boolean,
   theme: Schema.String,
   accent: Color,
   foreground: Color,
@@ -105,6 +106,7 @@ export const FRONTMATTER_VALUES: Partial<Record<FrontmatterKey, readonly string[
   bleed: BLEED_SIDES,
   theme: SlideTheme.NAMES,
   hide: ['true', 'false'],
+  footer: ['true', 'false'],
 };
 
 /** Per-slide frontmatter; unknown keys are dropped. */
@@ -129,6 +131,8 @@ export const SlideFrontmatter = Schema.Struct({
   bleed: Schema.optionalKey(fields.bleed),
   /** The slide is left out when the deck is presented; it still shows in the grid. */
   hide: Schema.optionalKey(fields.hide),
+  /** DXOS: `false` leaves the deck's footer off this slide, `true` draws it on a layout that shows none (`cover`, `end`). */
+  footer: Schema.optionalKey(fields.footer),
   /** Deck theme; read only from the first slide (Slidev headmatter). */
   theme: Schema.optionalKey(fields.theme),
   /** DXOS: theme colors this slide overrides for itself; a deck-wide change belongs in the deck's theme settings. */

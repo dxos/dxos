@@ -43,6 +43,7 @@ export const make = (): Skill.Skill =>
         - ${'`<v-click>`'} … ${'`</v-click>`'} to reveal a block on the next click, and ${'`<v-clicks>`'} to reveal list
           items one at a time.
         - ${'`<Surface ref="echo:///<id>" />`'} to embed an existing object, using its id.
+        - ${'`<SlideCurrentNo />`'} and ${'`<SlidesTotal />`'} for the slide's number and the number of slides.
         - A final HTML comment (${'`<!-- … -->`'}) for speaker notes.
 
         Keep slides short: a heading and a few points each. Turn each top-level heading or bullet of an outline into a

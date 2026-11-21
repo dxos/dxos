@@ -47,6 +47,7 @@ export const translations = [
         'toggle-presentation.label': 'Present',
         'slide-pending.label': 'Loading…',
         'theme-group.label': 'Theme',
+        'footer-group.label': 'Footer',
         'theme-color.placeholder': 'From theme',
         'default-font.placeholder': '{{font}} (default)',
         'add-slide.label': 'Add slide',
