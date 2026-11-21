@@ -35,5 +35,6 @@ The agent writes Markdown. A script makes the page. The agent publishes it.
 - [done] Open a draft PR.
 
 ## Pull requests
+
 - [draft] dxos/dxos#14647 Build the status board from Markdown.
   - The Check workflow runs on each push.

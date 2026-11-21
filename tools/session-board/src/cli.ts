@@ -41,6 +41,7 @@ One line that says what this session is for.
 ## Questions
 
 ## Goals
+
 - [doing] Write the first goal here.
 
 ## Pull requests
