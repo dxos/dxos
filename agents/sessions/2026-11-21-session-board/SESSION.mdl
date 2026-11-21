@@ -273,3 +273,9 @@ event T-9: The Land switch asked to land [PR-1]. The switch layout is fixed firs
   date: 2026-11-21T13:46Z
   by: user:dmaretskyi
 ```
+
+```mdl
+event T-10: [PR-1] is ready for review, with auto-merge on.
+  date: 2026-11-21T13:51Z
+  by: agent:claude-code
+```
