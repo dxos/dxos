@@ -105,8 +105,9 @@ export const MarkdownSlide = ({
   const handleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
       const element = event.target instanceof Element ? event.target.closest('[data-source]') : null;
-      // A slide embedded in this one has its own source offsets, which do not index this slide's markdown.
-      if (element?.closest('[data-slide]') !== event.currentTarget) {
+      // A slide embedded in this one has its own source offsets, which do not index this slide's markdown; nor do
+      // the footer's, which index the deck's footer text.
+      if (element?.closest('[data-slide]') !== event.currentTarget || element.closest('[data-slide-footer]')) {
         return;
       }
       const range = parseSourceRange(element.getAttribute('data-source'));
