@@ -1,0 +1,87 @@
+{
+  "name": "vscode-impl-fold",
+  "displayName": "Impl Fold",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Collapse function and method bodies so only the API stays visible; optionally on every file you open.",
+  "categories": [
+    "Other"
+  ],
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "publisher": "dxos",
+  "type": "module",
+  "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "implFold.toggleAutoCollapse",
+        "title": "Toggle Auto-Collapse of Implementation Bodies",
+        "category": "Impl Fold"
+      },
+      {
+        "command": "implFold.collapseAll",
+        "title": "Collapse All Implementation Bodies",
+        "category": "Impl Fold"
+      },
+      {
+        "command": "implFold.expandAll",
+        "title": "Expand All Implementation Bodies",
+        "category": "Impl Fold"
+      }
+    ],
+    "configuration": {
+      "title": "Impl Fold",
+      "properties": {
+        "implFold.autoCollapse": {
+          "type": "boolean",
+          "default": false,
+          "description": "Collapse implementation bodies the first time each file is shown in an editor."
+        },
+        "implFold.bodySymbolKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Function",
+            "Method",
+            "Constructor"
+          ],
+          "description": "Symbol kinds (`vscode.SymbolKind` names) whose body is always collapsed."
+        },
+        "implFold.valueSymbolKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Variable",
+            "Constant",
+            "Property",
+            "Field"
+          ],
+          "description": "Symbol kinds whose body is collapsed only when the value is a function, e.g. `const f = () => { ... }`."
+        }
+      }
+    }
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "catalog:",
+    "@vscode/vsce": "catalog:",
+    "esbuild": "catalog:",
+    "vitest": "catalog:"
+  }
+}
