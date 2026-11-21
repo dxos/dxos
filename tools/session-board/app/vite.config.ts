@@ -57,6 +57,19 @@ const iconSprite = (): Plugin => {
   };
 };
 
+/** Whether a character code is one the Artifact publisher refuses in a page: U+FFFD, or a control byte besides tab, LF and CR. */
+const isUnsafe = (code: number) => code === 0xfffd || (code < 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d);
+
+/** Rewrites refused characters as `\\uXXXX`, which means the same character inside the bundle's strings and regexes. */
+const escapeUnsafe = (code: string): string => {
+  let result = '';
+  for (const char of code) {
+    const point = char.charCodeAt(0);
+    result += isUnsafe(point) ? `\\u${point.toString(16).padStart(4, '0')}` : char;
+  }
+  return result;
+};
+
 /**
  * Folds the built script and stylesheet into `index.html`, so the page that `cli.ts build` fills with the board is one
  * file to publish.
@@ -73,14 +86,8 @@ const singleFile = (): Plugin => ({
     for (const [fileName, output] of Object.entries(bundle)) {
       if (output.type === 'chunk' && output.isEntry) {
         // `</script` inside the code would close the element early.
-        // `</script` would close the element early; a literal U+FFFD or control byte makes the Artifact publisher refuse
-        // the page, and inside the bundle's strings and regexes the escape means the same character.
-        const code = output.code
-          .replaceAll('</script', '<\\/script')
-          .replace(
-            /[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffd]/g,
-            (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`,
-          );
+        // `</script` inside the code would close the element early.
+        const code = escapeUnsafe(output.code.replaceAll('</script', '<\\/script'));
         // At the end of the body, where it runs after the board data is parsed.
         source = source
           .replace(new RegExp(`\\s*<script type="module" crossorigin src="[^"]*${fileName}"></script>`), '')
