@@ -73,7 +73,40 @@ const toPattern = (source: string | undefined): RegExp => {
   }
 };
 
+const OXC_LANGUAGES = new Set(['typescript', 'typescriptreact', 'javascript', 'javascriptreact']);
+
+type OxcModule = typeof import('./oxc.ts');
+
+let oxcModule: Promise<OxcModule | undefined> | undefined;
+
+/** The native parser ships for some platforms only; elsewhere the language-server path still works. */
+const loadOxc = () => {
+  oxcModule ??= import('./oxc.ts').catch((error: unknown) => {
+    console.warn('[impl-fold] oxc-parser unavailable, using the language server', error);
+    return undefined;
+  });
+  return oxcModule;
+};
+
+/** Parses JS/TS in-process, so a cold editor does not wait for tsserver to load the project. */
+const findBodiesInProcess = async (document: vscode.TextDocument): Promise<LineRange[] | undefined> => {
+  const config = vscode.workspace.getConfiguration(SECTION, document);
+  if (config.get<string>('parser', 'auto') !== 'auto' || !OXC_LANGUAGES.has(document.languageId)) {
+    return undefined;
+  }
+  const oxc = await loadOxc();
+  return oxc?.findBodiesOxc(
+    document.fileName,
+    document.getText(),
+    toPattern(config.get<string>('containerSymbolPattern')),
+  );
+};
+
 const findBodiesWithRetry = async (document: vscode.TextDocument): Promise<LineRange[] | undefined> => {
+  const parsed = await findBodiesInProcess(document);
+  if (parsed) {
+    return parsed;
+  }
   for (const delay of RETRY_DELAYS_MS) {
     if (delay > 0) {
       await new Promise((resolve) => setTimeout(resolve, delay));

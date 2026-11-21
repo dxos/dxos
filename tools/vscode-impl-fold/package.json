@@ -72,6 +72,19 @@
           ],
           "description": "Symbol kinds whose body is collapsed only when the value is a function, e.g. `const f = () => { ... }`."
         },
+        "implFold.parser": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "languageServer"
+          ],
+          "enumDescriptions": [
+            "Parse JS/TS in-process with oxc (no wait for tsserver); other languages use their language server.",
+            "Always ask the language's document-symbol and folding-range providers."
+          ],
+          "default": "auto",
+          "description": "Where implementation bodies are found."
+        },
         "implFold.containerSymbolPattern": {
           "type": "string",
           "default": "^(?:[\\w$]+\\.)*(?:describe|suite|context)\\b",
@@ -88,5 +101,8 @@
     "@vscode/vsce": "catalog:",
     "esbuild": "catalog:",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "oxc-parser": "catalog:"
   }
 }

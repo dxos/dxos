@@ -3,7 +3,7 @@
 //
 
 import { createVSIX } from '@vscode/vsce';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,7 +21,10 @@ try {
   delete manifest.dependencies;
   delete manifest.devDependencies;
   writeFileSync(join(stage, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  for (const entry of ['README.md', '.vscodeignore', 'dist/extension.cjs']) {
+  const bindings = readdirSync(join(root, 'dist'))
+    .filter((file) => file.endsWith('.node'))
+    .map((file) => `dist/${file}`);
+  for (const entry of ['README.md', '.vscodeignore', 'dist/extension.cjs', ...bindings]) {
     cpSync(join(root, entry), join(stage, entry), { recursive: true });
   }
   await createVSIX({ cwd: stage, packagePath: out, dependencies: false, skipLicense: true });
