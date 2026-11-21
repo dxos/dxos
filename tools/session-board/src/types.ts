@@ -78,3 +78,6 @@ export type BoardData = {
   prs: PullRequest[];
   timeline: TimelineEvent[];
 };
+
+/** A viewer turned landing on or off for a PR; `element` is the PR's row, which the request is anchored to. */
+export type LandChangeHandler = (pr: PullRequest, land: boolean, element: Element) => void | Promise<void>;

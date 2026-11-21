@@ -15,6 +15,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 
 import { Board } from '../src/Board.tsx';
 import { type BoardData } from '../src/types.ts';
+import { useLandActions } from './actions.ts';
 
 // The icon registry loads its sprite from `/icons.svg` at the site root, which an Artifact does not have; the page
 // carries the icons it uses and answers that one request itself.
@@ -40,11 +41,14 @@ document.documentElement.classList.add('dark');
 
 const translations = [...taskTranslations, ...formTranslations];
 
-const App = ({ board }: { board: BoardData }) => (
-  <Theme.Provider tx={Theme.defaultTx} themeMode='dark' resourceExtensions={translations}>
-    <Board board={board} />
-  </Theme.Provider>
-);
+const App = ({ board }: { board: BoardData }) => {
+  const { landing, onLandChange } = useLandActions();
+  return (
+    <Theme.Provider tx={Theme.defaultTx} themeMode='dark' resourceExtensions={translations}>
+      <Board board={board} landing={landing} onLandChange={onLandChange} />
+    </Theme.Provider>
+  );
+};
 
 const board = readBoard();
 const root = document.getElementById('root');

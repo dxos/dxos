@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useMemo } from 'react';
+import React, { type ReactNode, useMemo, useRef } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 import { TaskHistory, TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import * as Accordion from '@dxos/react-ui/Accordion';
+import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
@@ -14,7 +15,14 @@ import { Tag, type TagHue } from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 
-import { type BoardData, type Goal, type PrStatus, type PullRequest, type TimelineEvent } from './types.ts';
+import {
+  type BoardData,
+  type Goal,
+  type LandChangeHandler,
+  type PrStatus,
+  type PullRequest,
+  type TimelineEvent,
+} from './types.ts';
 
 const PR_HUES: Record<PrStatus, TagHue> = {
   draft: 'neutral',
@@ -98,32 +106,74 @@ const Section = ({
   </Accordion.Root>
 );
 
-const PrRows = ({ prs }: { prs: PullRequest[] }) => (
-  <Listbox.Root items={prs.map((pr) => ({ value: pr.id, label: pr.title, description: pr.branch }))}>
-    <Listbox.Viewport>
-      <Listbox.Content>
-        {prs.map((pr) => (
-          <Listbox.Item key={pr.id} id={pr.id} data-testid={`pr-${pr.id}`}>
-            <Listbox.ItemIcon icon={PR_ICONS[pr.status]} />
-            <Listbox.ItemText>
-              <Typography.Link href={pr.url}>{pr.ref}</Typography.Link> {plain(pr.title)}
-            </Listbox.ItemText>
-            {pr.branch && <Listbox.ItemDescription>{pr.branch}</Listbox.ItemDescription>}
-            <Tag hue={PR_HUES[pr.status]}>{pr.status}</Tag>
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
-    </Listbox.Viewport>
-  </Listbox.Root>
-);
+/** GitHub has settled these; there is nothing left to land. */
+const SETTLED = new Set<PullRequest['status']>(['merged', 'closed']);
 
-export type BoardProps = { board: BoardData };
+type PrRowsProps = Pick<BoardProps, 'landing' | 'onLandChange'> & { prs: PullRequest[] };
+
+const PrRows = ({ prs, landing = {}, onLandChange }: PrRowsProps) => {
+  const rows = useRef(new Map<string, HTMLElement>());
+  return (
+    <Listbox.Root items={prs.map((pr) => ({ value: pr.id, label: pr.title, description: pr.branch }))}>
+      <Listbox.Viewport>
+        <Listbox.Content>
+          {prs.map((pr) => {
+            // The database is the viewer's latest choice; the session file is the fallback until one is made.
+            const land = landing[pr.id] ?? pr.status === 'landing';
+            return (
+              <Listbox.Item
+                key={pr.id}
+                id={pr.id}
+                data-testid={`pr-${pr.id}`}
+                ref={(element: HTMLDivElement | null) => {
+                  if (element) {
+                    rows.current.set(pr.id, element);
+                  } else {
+                    rows.current.delete(pr.id);
+                  }
+                }}
+              >
+                <Listbox.ItemIcon icon={PR_ICONS[pr.status]} />
+                <Listbox.ItemText>
+                  <Typography.Link href={pr.url}>{pr.ref}</Typography.Link> {plain(pr.title)}
+                </Listbox.ItemText>
+                {pr.branch && <Listbox.ItemDescription>{pr.branch}</Listbox.ItemDescription>}
+                <Tag hue={PR_HUES[pr.status]}>{pr.status}</Tag>
+                {onLandChange && !SETTLED.has(pr.status) && (
+                  <Input.Switch
+                    label='Land'
+                    checked={land}
+                    data-testid={`land-${pr.id}`}
+                    onCheckedChange={({ checked }) => {
+                      const element = rows.current.get(pr.id);
+                      if (element) {
+                        void onLandChange(pr, checked, element);
+                      }
+                    }}
+                  />
+                )}
+              </Listbox.Item>
+            );
+          })}
+        </Listbox.Content>
+      </Listbox.Viewport>
+    </Listbox.Root>
+  );
+};
+
+export type BoardProps = {
+  board: BoardData;
+  /** Each PR's land choice from the artifact's database, by PR id. */
+  landing?: Record<string, boolean>;
+  /** Present when the viewer may change landing; absent, the page shows no toggle. */
+  onLandChange?: LandChangeHandler;
+};
 
 /**
  * The session board: open questions, goals as a task list, pull requests and the append-only timeline, each an
  * accordion section, with when it was built in the footer.
  */
-export const Board = ({ board }: BoardProps) => {
+export const Board = ({ board, landing, onLandChange }: BoardProps) => {
   const updated = Typography.useRelativeTime(board.updated);
   const tasks = useMemo(() => board.goals.map((goal) => goalTask(goal, board.questions)), [board]);
   const entries = useMemo(() => historyEntries(board.timeline), [board]);
@@ -184,7 +234,7 @@ export const Board = ({ board }: BoardProps) => {
                 {board.prs.length === 0 ? (
                   <Typography.Text tone='muted'>No pull requests yet.</Typography.Text>
                 ) : (
-                  <PrRows prs={board.prs} />
+                  <PrRows prs={board.prs} landing={landing} onLandChange={onLandChange} />
                 )}
               </Section>
               <Section id='timeline' icon='ph--clock--regular' label='Timeline'>
