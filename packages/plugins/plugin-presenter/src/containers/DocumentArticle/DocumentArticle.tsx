@@ -53,6 +53,8 @@ export const DocumentArticle = ({ role, subject: document, attendableId }: Docum
       onFullscreenChange={handleFullscreenChange}
       attendableId={attendableId}
       autoFocus={hasAttention}
+      // The preview shows hidden slides too, and numbers the rest as the presentation will.
+      presented={fullscreen ? undefined : positions}
     >
       <Panel.Root role={role} asChild>
         <Deck.Content>

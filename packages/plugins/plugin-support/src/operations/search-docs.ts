@@ -32,12 +32,12 @@ const DOCS_INDEX: ReadonlyArray<{ title: string; url: string; excerpt: string }>
   },
   {
     title: 'Spaces and ECHO',
-    url: 'https://dxos.org/docs/echo/introduction/',
+    url: 'https://dxos.org/docs/echo/overview/',
     excerpt: 'Spaces are replicated databases. ECHO objects live inside a space and sync across devices.',
   },
   {
     title: 'Plugins',
-    url: 'https://dxos.org/docs/app-framework/tutorial/',
+    url: 'https://dxos.org/docs/plex/learn/the-plex-plugin/',
     excerpt: 'Plugins contribute surfaces, operations, schemas and skills to Composer.',
   },
 ];

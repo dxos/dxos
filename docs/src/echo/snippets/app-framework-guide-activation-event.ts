@@ -20,8 +20,8 @@ export const IndexRequested = ActivationEvent.make(
   'com.example.plugin.search.event.indexRequested',
 );
 
-// Every plugin has a start event of its own, fired on demand and by the host's
-// idle trickle.
+// Every plugin has a start event of its own. The plugin manager fires it when
+// one of the plugin's surfaces first renders.
 export const SearchStart = ActivationEvent.pluginStart(
   'com.example.plugin.search',
 );
@@ -39,8 +39,8 @@ export const IndexModule = Capability.inlineModule(
 // #endregion
 
 // #region requires
-// No `activatesOn`: this module waits for `Index`, so it activates whenever the
-// module above does.
+// No `activatesOn`, so this module waits for `Idle`. It also waits for `Index`,
+// which the module above provides.
 export const QueryModule = Capability.inlineModule(
   'Query',
   { requires: [Index], provides: [] },

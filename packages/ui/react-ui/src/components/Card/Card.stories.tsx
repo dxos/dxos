@@ -89,7 +89,7 @@ const RowsCard = ({ size, grid, prefix = '', rows, onInvite }: RowsCardProps) =>
 };
 
 /**
- * A poster card, a card with a header action and footer, and one with a broken poster; then a card of sections, rows,
+ * A poster card, a card with a header action and footer, one with a broken poster, and one with a content poster at its end; then a card of sections, rows,
  * a link, a menu and a drag handle, as a `grid` card and beside it as a default (inline) one; a clickable, selected card with
  * a nested action; and a borderless card.
  */
@@ -138,6 +138,13 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Card.Body>
           <Typography.Text>A card with a broken poster and no footer.</Typography.Text>
         </Card.Body>
+      </Card.Root>
+
+      <Card.Root grid data-testid={`end-poster-card-${size}`}>
+        <Card.Header>
+          <Card.Title>Budget</Card.Title>
+        </Card.Header>
+        <Card.Poster position='end' classNames='h-24 bg-group-surface' data-testid={`end-poster-${size}`} />
       </Card.Root>
 
       <RowsCard size={size} grid rows={rows} onInvite={() => setRows((count) => count + 1)} />

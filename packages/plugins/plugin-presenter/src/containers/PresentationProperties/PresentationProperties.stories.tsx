@@ -11,6 +11,7 @@ import { useObject } from '@dxos/echo-react';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { SlideFooterProvider, SlidePositionProvider } from '@dxos/react-ui-slides';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -29,16 +30,21 @@ const greeting = 'Hello';
 \`\`\`
 `;
 
-/** A slide painted with the deck's theme, so each change in the form shows at once. */
+/** A slide painted with the deck's theme and footer, as the third of twelve, so each change in the form shows at once. */
 const ExampleSlide = ({ presentation }: { presentation: Presentation.Presentation }) => {
   const [theme] = useObject(presentation, 'theme');
+  const [footer] = useObject(presentation, 'footer');
   return (
     <SlideThemeProvider settings={theme}>
-      <Slide.Root source={{ kind: 'markdown', id: 'example', content: EXAMPLE }}>
-        <Slide.Frame inset>
-          <Slide.Content />
-        </Slide.Frame>
-      </Slide.Root>
+      <SlideFooterProvider settings={footer}>
+        <SlidePositionProvider current={3} total={12}>
+          <Slide.Root source={{ kind: 'markdown', id: 'example', content: EXAMPLE }}>
+            <Slide.Frame inset>
+              <Slide.Content />
+            </Slide.Frame>
+          </Slide.Root>
+        </SlidePositionProvider>
+      </SlideFooterProvider>
     </SlideThemeProvider>
   );
 };
@@ -133,6 +139,28 @@ export const ChangeColor: Story = {
       expect(slide.querySelector<HTMLElement>('[style*="--slide-bg"]')?.style.getPropertyValue('--slide-bg')).toBe(
         '#102030',
       ),
+    );
+  },
+};
+
+/** The deck's footer is three fields in a group of their own; text typed into one is drawn on the example slide. */
+export const Footer: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = await canvas.findByTestId('presentation.footer', undefined, { timeout: 10_000 });
+    for (const label of ['Left', 'Center', 'Right']) {
+      await expect(within(group).getByText(label)).toBeVisible();
+    }
+    // The empty end part names the two counters, which are what an author has to type.
+    await expect(within(group).getByPlaceholderText('<SlideCurrentNo /> / <SlidesTotal />')).toBeVisible();
+    const slide = canvas.getByTestId('example-slide');
+    await expect(slide.querySelector('[data-slide-footer]')).toBeNull();
+
+    const [left] = within(group).getAllByRole('textbox');
+    await userEvent.type(left, 'DXOS');
+    await userEvent.tab();
+    await waitFor(() =>
+      expect(slide.querySelector('[data-slide-footer] [data-part="left"]')?.textContent).toBe('DXOS'),
     );
   },
 };

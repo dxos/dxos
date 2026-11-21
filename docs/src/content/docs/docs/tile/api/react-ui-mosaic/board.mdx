@@ -14,39 +14,65 @@ import { Dnd } from '@dxos/react-ui-dnd';
 ```
 
 ```sh
-npm install @dxos/react-ui-mosaic @dxos/react-ui-dnd
+npm install @dxos/react-ui-mosaic @dxos/react-ui-dnd @effect/atom-react
 ```
 
-`Board` is a row of stacks, each a column of cards. Cards move within a column and across columns, and columns move
-by the handle in their header. The board reads a model of atoms, so it needs a `RegistryProvider` from
-`@effect/atom-react` above it.
+A board is a row of columns, each a stack of cards the user can drag. Cards move within a column and across columns,
+and columns move by the handle in their header.
+
+The board reads a model of atoms.
+
+Wrap your app in `RegistryProvider` from `@effect/atom-react`. This is best practice, because your app then controls
+the registry that the board reads. Without a provider, the board reads the library's default registry.
+
+Add the package's strings from `@dxos/react-ui-mosaic/translations` to the `resourceExtensions` of `Theme.Provider`.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Board.Root` | Reads a `BoardModel`: the columns, a column's items, and an id for each |
-| `Board.Content` | Draws a `Tile` for each column; its `eventHandler` takes columns |
+| `Board.Root` | The root, which reads a `BoardModel`. The model gives the columns, a column's items, and an id for each |
+| `Board.Content` | The row of columns, drawn as a `Tile` each. Its `eventHandler` takes columns |
 | `Board.Column.Root` | A column, draggable by the element passed as `dragHandle` |
-| `Board.Column.Header` | The column's header; its `dragHandleRef` is the column's handle |
+| `Board.Column.Header` | The column's header. Its `dragHandleRef` is the column's handle |
+| `Board.Column.Body` | The column's cards, drawn as a `Tile` each in a scroll area. Its `eventHandler` takes cards |
+| `Board.Column.Footer` | A toolbar under the column. It has an add button when it gets `onAdd` or the model has `onItemCreate` |
 | `Board.Item` | The default card |
 | `Board.Placeholder` | The gap a dropped card would land in |
+| `Board.Debug` | The state of the drag, for development |
 
 ## Model a board
 
-The columns and the cards are atoms, so a change redraws only the columns it touches. Here one atom holds the columns in
-order, each with its cards in order. `place` puts a dropped item where the drop landed: after the card it was dropped on,
-in the gap between two cards, or at the end:
+A `BoardModel` gives the board an atom for the columns and an atom for each column's cards, so a change redraws only
+the columns it touches.
+
+**Example** (Holding a board in one atom)
 
 <Snippet file="tile-guide-mosaic" region="model" lang="tsx" />
 
+`COLUMNS` goes into one atom, which holds the columns in order, each with its cards in order. The model derives the atom
+for each column's cards from it. `place` puts a dropped item where the drop landed:
+
+- If the user drops the item on a card, `place` puts it after that card.
+- If the user drops the item on a placeholder, `place` puts it in the gap between two cards.
+- If the user drops the item on the container, `place` puts it at the end.
+
 ## Draw and drag
 
-A column's body draws a `Mosaic.Tile` for each card. Each column's `eventHandler` takes cards: `onDrop` places a card in
-the column, and `onTake` runs on the column a card leaves, so it can remove the card once the other column has it. A card
-dropped in its own column only gets `onDrop`, which reorders it. `Dnd.Root` tracks the drag across the board:
+A column's body draws a `Mosaic.Tile` for each card. Each column's `eventHandler` takes cards:
+
+- `onDrop` places a card in the column.
+- `onTake` runs on the column a card leaves, so that column can remove the card once the other column has it.
+
+When the user drops a card in its own column, the column gets only `onDrop`, which reorders the card. `Dnd.Root`
+tracks the drag across the board.
+
+**Example** (Dragging cards and columns)
 
 <Snippet file="tile-guide-mosaic" region="board" lang="tsx" />
+
+`TaskColumn` gives its `eventHandler` to the column's body, and its `canDrop` takes only tasks. `Board.Content` gets
+`columnHandler`, which takes only columns. The header's `dragHandleRef` sets the handle that drags the column.
 
 The story at the top of this page runs this example.
 

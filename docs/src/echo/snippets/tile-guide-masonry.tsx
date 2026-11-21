@@ -54,7 +54,7 @@ const PHOTOS: Photo[] = [
     title: 'Glacier',
     color: '#0ea5e9',
     height: 120,
-    caption: 'Blue ice under a grey sky.',
+    caption: 'Blue ice under a gray sky.',
   },
   { id: '10', title: 'Orchard', color: '#16a34a', height: 52 },
   {

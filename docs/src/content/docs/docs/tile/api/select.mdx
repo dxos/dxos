@@ -11,6 +11,27 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as Select from '@dxos/react-ui/Select';
 ```
 
-`Select.Root` takes `items`, a list of `{ value, label, disabled?, icon? }`, and `value` with `onValueChange`, or
-`defaultValue`. `Select.Trigger` shows the chosen label, or its `placeholder`. `Select.Content` holds one `Select.Item`
-per item, each given its `item`.
+A select lets the user pick one value from a list, or several with `multiple`. You build it from these parts:
+
+- `Select.Root` takes `items`, a list of `{ value, label, disabled?, icon? }`. It also takes `value` with
+  `onValueChange`, or `defaultValue`.
+- Use `multiple` on `Select.Root` to let the user pick several values. The popup then stays open while the user
+  chooses, and `Select.Trigger` lists the chosen labels.
+- `Select.Trigger` shows the chosen label, or its `placeholder`.
+- `Select.Content` holds one `Select.Item` per item. Give each `Select.Item` its `item`.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Select.Root` | The root, which holds the options and the value |
+| `Select.Label` | The select's name |
+| `Select.Trigger` | The button that shows the chosen option and opens the list |
+| `Select.Content` | The popup that lists the options |
+| `Select.Item` | One option |
+| `Select.ItemIcon` | The option's icon |
+| `Select.ItemText` | The option's text. The option's `label` by default |
+| `Select.ItemIndicator` | The check shown while the option is selected |
+| `Select.ItemGroup` | A group of options |
+| `Select.ItemGroupLabel` | The group's name |
+| `Select.Separator` | A rule between options |

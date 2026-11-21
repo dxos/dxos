@@ -11,12 +11,13 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as Editable from '@dxos/react-ui/Editable';
 ```
 
-The preview and the field share one place, so switching between them moves nothing.
+`Editable` is text that turns into a field when the user edits it. `Editable.Preview` and `Editable.Input` share one
+place, so switching between them moves nothing.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Editable.Root` | Holds the value and the editing state |
-| `Editable.Preview` | The text, and what starts editing |
+| `Editable.Root` | The root, which holds the value and the editing state |
+| `Editable.Preview` | The text, and the control that starts editing |
 | `Editable.Input` | The field shown while editing, with a save button |

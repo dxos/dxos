@@ -12,13 +12,23 @@ import { type Fact, MemoryQuery, type MemoryService } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type SpaceId } from '@dxos/keys';
 
+/** All facts of a memory, or none where the query fails, so the surface never crashes on an unreachable memory. */
+const readFacts = (memory: MemoryService.Service): Effect.Effect<readonly Fact.Fact[]> =>
+  memory.query(MemoryQuery.facts()).pipe(Effect.orElseSucceed((): readonly Fact.Fact[] => []));
+
 /**
  * Reads all facts from a memory once. Extracted as a plain async function so the read path is unit-testable without
- * provisioning the full capability/render stack. Falls back to an empty list on query failure so the surface never
- * crashes on an unreachable memory.
+ * provisioning the full capability/render stack.
  */
 export const queryFacts = (memory: MemoryService.Service): Promise<readonly Fact.Fact[]> =>
-  EffectEx.runPromise(memory.query(MemoryQuery.facts()).pipe(Effect.orElseSucceed((): readonly Fact.Fact[] => [])));
+  EffectEx.runPromise(readFacts(memory));
+
+/**
+ * Reads all facts from a memory and hands them to `onFacts`, with nothing awaiting the read: the client's shutdown
+ * interrupts a query still in flight, which must end quietly rather than as a rejection no one handles.
+ */
+export const refreshFacts = (memory: MemoryService.Service, onFacts: (facts: readonly Fact.Fact[]) => void): void =>
+  EffectEx.runDetached(readFacts(memory).pipe(Effect.map(onFacts)));
 
 /**
  * Loads the facts of a space's memory, re-querying whenever its store applies a batch, so the view stays live as the
@@ -35,7 +45,7 @@ export const useFacts = (client: Client, spaceId: SpaceId | undefined): Fact.Fac
     // Ignore a late resolve after unmount or a space change, so state is never set from a stale space.
     let cancelled = false;
     const refresh = () =>
-      void queryFacts(client.memory(spaceId)).then((result) => {
+      refreshFacts(client.memory(spaceId), (result) => {
         if (!cancelled) {
           setFacts([...result]);
         }

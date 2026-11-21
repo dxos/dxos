@@ -78,7 +78,7 @@ export const ViewToolbar = () => {
 // #endregion
 
 // #region menu
-/** The same actions as a dropdown menu, opened by any button you pass as its child. */
+/** A dropdown menu built from actions, opened by the button you pass as its child. */
 export const RowMenu = () => {
   const [last, setLast] = useState<string>();
   const menu = useMenuBuilder(
@@ -121,8 +121,8 @@ export const RowMenu = () => {
 
 // #region plugin
 /**
- * In a plugin, the toolbar also shows the actions other plugins add to the object's node in the app graph.
- * `onAction` runs a graph action; get it from plugin-graph's `useActionRunner`.
+ * In a plugin, the toolbar also shows the actions other plugins add to the object's node in App Graph.
+ * `onAction` runs a graph action. Get one from `useActionRunner` in `@dxos/plugin-graph`.
  */
 export const ObjectToolbar = ({
   attendableId,

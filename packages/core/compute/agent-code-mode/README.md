@@ -35,7 +35,11 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
 ## The `eval` tool
 
 - **Input** is `code`; the **result** is what the code printed, or the value it returned when it
-  printed nothing, cut at 8,000 characters (`maxOutput`).
+  printed nothing, cut at 8,000 characters (`maxOutput`). `console.log`, `info`, `warn`, `error`,
+  `debug` and `dir` print their values into the same output, in every sandbox. In the Effect dialect
+  they print a value as it is: only `yield* print` adds an object's relation hints. A program that
+  printed and returned nothing is told it ran, so the model does not run it again to see what
+  happened.
 - **A throw** fails the call with what was printed before it and a short error (long serialized
   values cut, a hint for common mistakes), so the model reads it and writes different code.
 - **`print(obj)`** shows an object as a card: type, id, label and fields, references as
@@ -50,7 +54,9 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
 ### Plain ([`dialect-plain.ts`](./src/dialect-plain.ts))
 
 The body of an async function, over a small facade: `query`, `make`, `add`, `update`, `remove`,
-`ref`, `flush`, `relations`, `children`, `referrers`, `describe`, `print`. Every operation and MCP
+`ref`, `flush`, `relations`, `children`, `referrers`, `describe`, `print`. `describe` also takes
+an object's id or an operation's output — an object's JSON, or a record wrapping one such as
+`{ object }` — and describes the stored object with that id. Every operation and MCP
 tool is a function on `ops`: `await ops['name'](input)`, by the `tool` name `queryOperations`
 gives. Every binding takes and returns plain data, which is what lets a sandbox with no database run
 it.

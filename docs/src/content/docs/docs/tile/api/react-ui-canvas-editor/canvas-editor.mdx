@@ -15,23 +15,26 @@ import { CanvasEditor } from '@dxos/react-ui-canvas-editor';
 npm install @dxos/react-ui-canvas-editor
 ```
 
-`CanvasEditor` edits a drawing: shapes, the links between them, and views nested inside shapes that the user can open.
+`CanvasEditor` is an editor for a drawing. A drawing holds shapes, the links between them, and views nested inside
+shapes that the user can open.
+
 The canvas pans and zooms, and the editor keeps its own undo, clipboard and context menu. Composer's canvas, code graph
 and UML plugins draw with it.
 
-The story at the top of this page opens a three-level model with one box per class. Open a subsystem to see its own
-view, then go back up with the navigation bar.
+The story at the top of this page opens a three-level model, with a box for each class and a portal for each
+subsystem. Open a portal to see the subsystem's own view, then go back up with the navigation bar. The story has the
+canvas, the navigation bar, the palette and the zoom controls, and no inspectors.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `CanvasEditor.Root` | Holds the drawing and the editor's state; renders no element of its own |
+| `CanvasEditor.Root` | The root, which holds the drawing and the editor's state. It renders no element of its own |
 | `CanvasEditor.Viewport` | The surface that pans and zooms and draws the current view |
-| `CanvasEditor.Navigation` | Goes up a level, or home to the root view |
-| `CanvasEditor.Tools` | The palette: select, pan and the tools that draw shapes and links |
+| `CanvasEditor.Navigation` | The bar that goes up a level, or home to the root view |
+| `CanvasEditor.Tools` | The palette. It has select, pan and the tools that draw shapes and links |
 | `CanvasEditor.Actions` | The actions for the current selection |
-| `CanvasEditor.Camera` | Zoom in and out, fit the view, and the zoom level |
+| `CanvasEditor.Camera` | The controls that zoom in and out and fit the view, and the zoom level |
 | `CanvasEditor.Display` | The theme, the background grid, snapping and guides |
 | `CanvasEditor.Properties` | The selected element's properties |
 | `CanvasEditor.Views` | The views in the drawing |
@@ -40,12 +43,15 @@ view, then go back up with the navigation bar.
 
 ## `CanvasEditor.Root`
 
+`CanvasEditor.Root` holds the drawing and the editor's state. When the user changes the drawing, `onIntent` gets the
+change, and you apply it to `document`.
+
 | Prop | Type | Effect |
 | --- | --- | --- |
-| `document` | `Scene.SceneDocument` | The drawing to edit |
-| `scene` | `string` | The view to open; the drawing's root view if not given |
-| `onIntent` | `(intent) => void` | The user changed the drawing; apply the change to `document` |
-| `readonly` | `boolean` | Select, pan, zoom and open views, but change nothing |
-| `onReadonlyChange` | `(readonly: boolean) => void` | The palette's toggle turned editing on or off |
-| `inspectors` | `'floating' \| 'docked'` | Inspectors over the canvas, or in a column beside it |
-| `theme` | `string` | The drawing's look, such as `flat` or `paper` |
+| `document` | `Scene.SceneDocument` | Sets the drawing to edit |
+| `scene` | `string` | Sets the view to open. The drawing's root view by default |
+| `onIntent` | `(intent) => void` | The user changed the drawing. Apply the change to `document` |
+| `readonly` | `boolean` | Lets the user select, pan, zoom and open views, but change nothing |
+| `onReadonlyChange` | `(readonly: boolean) => void` | The user turned editing on or off with the palette's toggle |
+| `inspectors` | `'floating' \| 'docked'` | Puts the inspectors over the canvas, or in a column beside it |
+| `theme` | `string` | Sets the drawing's look, such as `flat` or `paper` |

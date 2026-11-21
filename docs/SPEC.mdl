@@ -27,7 +27,8 @@ The site is part of the dxos.org Astro build, with Starlight as the documentatio
 theme of every dxos.org docs page. The landing page is built on the dxos.org Webflow layout, like
 `/composer` and `/plugins`, and uses the theme's fonts and code colors inside it. Its look is flat and comes
 from the DXOS brand assets: logos, background art, fonts and palette. Its structure follows the Effect documentation: a short
-argument for the idea, then a learning path, core concepts, guides and a reference.
+argument for the idea, then a learning path, core concepts, guides and a reference. Its prose follows the docs
+voice [F-22].
 
 The site opens with why ECHO exists: it is the data model that plugins code against, the place agents keep
 their memory, a schema an agent can inspect, and the graph where data from external systems meets [F-14].
@@ -69,8 +70,8 @@ uses org.dxos.app.composer: The app that the PLEX section uses as its host, and 
 
 ## Templates
 
-Each page uses exactly one template. The template fixes the order of the page's parts, so a reader
-always knows where to look.
+Each page uses exactly one template. The template fixes the page's parts and their order, so a reader always knows
+where to look, and says how each part is written [D-367].
 
 ```mdl
 template landing: The front door
@@ -85,54 +86,108 @@ template landing: The front door
 ```
 
 ```mdl
+template home: The docs home
+  purpose: Show every section at once and route the reader into one.
+  parts:
+    - Title and a short, neutral paragraph on DXOS as a whole, not a list of its sections, with ECHO named as the usual start
+    - Grid: one card per section, four columns with ECHO two wide, falling to two columns and then one; each card is the section's hero art with its mark and name, and links to the section's Overview [D-272]
+```
+
+```mdl
+template overview: A section's front page
+  purpose: Say what the section is, and route the reader into it. The guarantees belong to the section's concept pages.
+  parts:
+    - Title and a definition in one paragraph, which pitches the section on its own
+    - The section in brief: its model or its parts, introducing the DXOS names the section uses, such as Composer and EDGE [D-368]
+    - Where the section fits with the rest of DXOS
+    - How the section's pages are organized, or where to go next
+```
+
+```mdl
 template narrative: An argument
-  purpose: Explain why, in the order of the Effect page "Why Effect?".
+  purpose: Explain why, in the order of the Effect page "Why Effect?". The page owns the section's contrast with the usual way, which the overview gives in one sentence, and it may say "we" [D-368].
   parts:
     - Title and one-paragraph answer that pitches the section on its own [D-280]
-    - The pattern: the smallest complete example and an anatomy strip of its key signature
+    - The pattern: the idea in brief, with the smallest complete example and an anatomy strip of its key signature where the section has an API a reader calls
     - Comparison: the same task against the strongest alternative, side by side [D-280]
-    - Practical problems: one H3 per problem, each with its mechanism and spec citation
+    - Practical problems: one H3 per problem, which starts from the problem and names the mechanism that removes it, shows the problem in code where the section has an API a reader calls, and carries a spec citation where a spec states the claim
     - Closing: where to go next
 ```
 
 ```mdl
-template tutorial: A learning path step
-  purpose: Teach one skill. The reader ends with code that runs, and sees the piece of the tutorial app it builds.
+template opener: The first page of a learning path
+  purpose: Show what the learning path builds before the reader builds it. The page has no steps [D-368].
   parts:
-    - Title and a one-sentence outcome
-    - Background: the facts the steps rely on, with a link to the concept page for the rest; prose only, no code to write [D-194]
-    - Steps: under their own heading, numbered, each one action, one snippet and one observable result; a snippet from the tutorial app is titled with the file it goes in [D-195], numbered as that file is [D-197]
-    - Try it: the tutorial app as it stands after this page, live [F-15.1]
+    - Title and a paragraph on what the path builds
+    - What the path's subject is, such as "What an object is": the idea, and the terms the path's pages lean on
+    - The finished app, plugin or screen: what the path ends with, shown as the reader will see it
+```
+
+```mdl
+template tutorial: A learning path step
+  purpose: Teach one skill. The reader ends with code that runs, and sees the piece of the tutorial app it builds. The page says "we" for the reader and the writer working through it together [D-368].
+  parts:
+    - Title and a one-sentence outcome: what the app gains on this page
+    - Background: the facts the steps rely on, each tied to the step that uses it, with a link to the concept page for the rest; prose only, no code to write [D-194]
+    - Steps: under their own heading, numbered, each one action, one snippet and one observable result; each step's bold lead is an instruction, and the sentence after its snippet covers the line a reader would get wrong, or there is none; a snippet from the tutorial app is titled with the file it goes in [D-195], numbered as that file is [D-197]
+    - Try it: the tutorial app as it stands after this page, live, on a page that changes an app the docs run in the page [F-15.1]
     - What you can do now: what the reader can now do [D-194]
 ```
 
 ```mdl
 template concept: A core concept
-  purpose: Describe one idea completely, for a reader who has finished the learning path.
+  purpose: Describe one idea completely, for a reader who has finished the learning path. The page says what the reader sees, or on a page about the machinery, what the system does [D-368].
   parts:
-    - Title and a definition in one sentence
-    - Model: the idea, with a diagram where the shape matters
-    - Behavior: what is guaranteed, with spec citations
-    - Limits: what is not guaranteed, and known divergences
-```
-
-```mdl
-template reference: One module
-  purpose: Answer a lookup in one glance. No narrative.
-  parts:
-    - Title, import line and a one-sentence summary
-    - Members table: strict columns of member, signature, summary
-    - One H3 per member family: signature, parameters, a compiled example
+    - Title and a definition in one sentence, then what the reader uses the idea for
+    - Model: the idea, with its samples and a diagram where the shape matters; a Model with more topics than four bold leads carry splits them under H3s [D-364]
+    - Behavior: what is guaranteed, one claim to a bullet, with the spec citation of each claim a spec states
+    - Limits: what is not guaranteed, and known divergences, one to a bullet
 ```
 
 ```mdl
 template namespace: One API namespace
-  purpose: Teach one namespace in a page a reader can read top to bottom, between the learning path and the generated API reference.
+  purpose: Teach one namespace in a page a reader can read top to bottom, between the learning path and the generated API reference. A sample that a concept page also shows is explained here for the call, and there for the idea [D-368].
   parts:
     - Title, import line and a one-paragraph summary of what the namespace is for
-    - Common tasks: one H3 per task, each with a compiled example
+    - Tasks: one H2 per task, each saying what the task does and when to do it, then a compiled example, then what it does not do [F-22.5]
     - Members at a glance: a short table of the members a reader uses most, each linking to the API reference
+    - Errors, on a HALO page: the error classes the namespace fails with [D-166]
     - Related: the concept pages and learning-path steps that use the namespace
+```
+
+```mdl
+template component: One TILE component
+  purpose: Show one component and its parts, so a reader can pick it and use it [D-369].
+  parts:
+    - Title, then the component's live story or preview where it has one [D-365]
+    - Import line, then one sentence that says what the component is, with its common noun as the subject where it has one, such as "An accordion is a stack of sections", then the sample, if any
+    - Parts: a table of the parts, or one H2 per part with its props table; a part with a heading of its own gets what it is and when to use it, and a part that sits only in the table gets no sentence that repeats its row
+```
+
+```mdl
+template guide: A task across APIs
+  purpose: Show how to get one result, for a reader who knows the APIs it uses [D-369].
+  parts:
+    - Title and an opening on what the reader has at the end, or the definition when the guide is about one thing
+    - Tasks: one H2 per task, written as a namespace page's tasks are
+    - Limits, where the guide has any: what the pattern does not do
+    - A close, where the guide has one: Members at a glance or Related, where its APIs have their own pages, or a checklist
+```
+
+```mdl
+template glossary: A section's terms
+  purpose: Define every term the section's pages put in bold [D-369].
+  parts:
+    - Title, and a line naming the glossaries that hold the terms this one leaves out
+    - Terms: one H3 per term, in alphabetical order, that links to the page that explains it; the entry is a full sentence with the term as its subject, "A swarm is the set of …", then any further facts, each in its own sentence
+```
+
+```mdl
+template resource: A list for lookup
+  purpose: List files, links or settings a reader looks up, with no narrative [D-369].
+  parts:
+    - Title and an opening on what the page lists and what the reader does with it
+    - The list or table, under a heading per group where it has groups
 ```
 
 ```mdl
@@ -141,14 +196,6 @@ template stub: A planned page
   parts:
     - Title, a planned badge and the page's summary
     - The page's `covers:` list
-```
-
-```mdl
-template home: The docs home
-  purpose: Show every section at once and route the reader into one.
-  parts:
-    - Title and a short, neutral paragraph on DXOS as a whole, not a list of its sections, with ECHO named as the usual start
-    - Grid: one card per section, four columns with ECHO two wide, falling to two columns and then one; each card is the section's hero art with its mark and name, and links to the section's Overview [D-272]
 ```
 
 ## Site map
@@ -181,15 +228,15 @@ page welcome: Overview
   section: ECHO
   route: /docs/echo/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What ECHO is in one paragraph: a typed, local-first, peer-to-peer object graph for TypeScript
     - The model in four points: CRDT replication, peers that sync directly or through a server, concurrent writers, offline writes that merge [D-280]
     - What DXOS is, in two sentences, with ECHO as the lead
     - Spaces hold data and objects are its unit, with links to both concept pages
-    - How these docs are organized: the ECHO, HALO and PLEX sections, and in each the learning path, core
-      concepts, guides and resources
+    - How these docs are organized: ECHO's groups in sidebar order, the learning path, core concepts, guides,
+      API and resources; the other sections are listed under Where ECHO fits in DXOS
     - Where to go next: Why ECHO?, the learning path, and PLEX for building apps on ECHO
 ```
 ```mdl
@@ -232,7 +279,7 @@ page the-echo-object: The ECHO object
   section: ECHO
   route: /docs/echo/learn/the-echo-object/
   group: Learning path
-  template: tutorial
+  template: opener
   status: spike
   covers:
     - What a live object is: typed, reactive, replicated
@@ -248,9 +295,9 @@ page installation: Installation
   status: spike
   covers:
     - Install `@dxos/client` and the bundler setup the browser needs: `vite-plugin-wasm` in the page and its workers, `build.target: 'esnext'`, the WebAssembly packages excluded from pre-bundling, and the worker's CommonJS dependencies pre-bundled
-    - Create a client and an identity, linking to HALO's Create an identity for the details
+    - Create a client and an identity, linking to HALO's Your profile for the details
     - Create or open a space and get its database, in Node and in the browser
-    - The client's config written inline in `client.ts`; loading config from files is the Configuration guide's [D-196]
+    - The client's config written inline in `App.tsx`; loading config from files is the Configuration guide's [D-196]
     - Follow along in StackBlitz: the starter, with each page's code to write
 ```
 ```mdl
@@ -335,7 +382,7 @@ page objects-relations: Objects and relations
   status: spike
   covers:
     - Objects are typed records in one space; relations are entities that join a source and a target
-    - The managed fields: id, type, meta keys and tags, label, deleted
+    - The managed fields: id, type, foreign keys and tags, label, deleted [D-356]
     - A relation next to a reference field, shown with a WorksAt relation beside `Person.employer` [D-160]
     - Parents and children, and what removing a parent does
     - Removal marks an object deleted, and it stays in history until the next epoch
@@ -367,7 +414,7 @@ page feeds: Feeds
   covers:
     - A feed is an append log of ECHO objects, a tree of branches [FEEDS.mdl F-1.1, F-1.2]
     - Uses as examples, not kinds: AI chat, comments, messaging, event logs [F-3.1]
-    - Rewrite by id, logical removal, and rewind as a branch [F-1.3, F-1.4, F-1.5]
+    - Rewrite by id, and rewind as a fork [F-1.3, F-1.5]; logical removal of a branch is a limit, not built yet [F-1.4]
     - Cursors, forward and backward walks, and fork points [F-5]
     - Indexing on or off, partial sync, and retention per branch [F-2, F-4.4]
     - When a feed fits better than objects
@@ -400,9 +447,9 @@ page spaces: Spaces and databases
   status: spike
   covers:
     - A space is the unit of sharing and replication, with one database
-    - Storage: SQLite in a worker, browser file storage or disk; a space is never loaded into memory whole [echo-sqlite F-3]; indexing, and queries compiled to SQL [F-4]; writes and flush [F-6]
-    - Replication: each member holds a full copy, syncing over WebRTC or through EDGE
-    - The Hypergraph: every reachable space as one graph, qualified EIDs, references across spaces and unreachable spaces, the in-process registry a query searches without `from()`, and `db` versus Hypergraph
+    - Storage: SQLite in a worker, browser file storage or disk; objects load on demand, not with the space; indexing, and queries compiled to SQL with an in-memory fallback; writes and flush
+    - Replication: each peer holds a replica, syncing over WebRTC or through EDGE [D-356]
+    - The Hypergraph: every reachable space as one graph, qualified EIDs, references across spaces and unreachable spaces, the in-process registry a query reads only with `Scope.registry()` in `from()`, and `db` versus Hypergraph
     - Access in one paragraph: HALO controls members and roles, built on Keyhive, with a link [D-156]
 ```
 ```mdl
@@ -432,7 +479,7 @@ page guide-effect: Effect
   section: ECHO
   route: /docs/echo/guides/effect/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Get the database as `Database.Service`, and provide it with a layer
@@ -445,7 +492,7 @@ page guide-testing: Testing
   section: ECHO
   route: /docs/echo/guides/testing/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Build a database with `EchoTestBuilder` from `@dxos/echo-client` testing
@@ -471,7 +518,7 @@ page guide-configuration: Configuration
   section: ECHO
   route: /docs/echo/guides/configuration/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - `Config` and its sources from `@dxos/config`: `Defaults`, `Local` and `Envs`, and their precedence
@@ -549,7 +596,7 @@ page guide-ref: Ref
   template: namespace
   status: spike
   covers:
-    - Make a reference to an object, or from a DXN
+    - Make a reference to an object, or from a URI [D-356]
     - Peek at, load, and load many references at once
     - Compare references and check what they point at
 ```
@@ -594,7 +641,7 @@ page guide-filter: Filter
   template: namespace
   status: spike
   covers:
-    - Match by type, id, tag and key
+    - Match by type, id, tag, key and foreign key; match everything or nothing; filter a feed by cursor [D-356]
     - Compare a field: equals, ranges, contains
     - Combine filters with `and`, `or` and `not`
     - Search text, and filter by creation and update time
@@ -623,7 +670,7 @@ page guide-text: Text
   template: namespace
   status: spike
   covers:
-    - Declare a text field and make text
+    - Edit any string field with `Text`; a field needs no declaration
     - Read and edit text, and what merges character by character
 ```
 ```mdl
@@ -645,9 +692,9 @@ page guide-blob: Blob
 page api-reference: API reference
   Generated API reference for the ECHO and client packages.
   section: ECHO
-  route: /docs/additional-resources/api-reference/
+  route: /docs/echo/resources/api-reference/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to the generated reference for `@dxos/echo`, `@dxos/echo-react`, `@dxos/echo-solid`, `@dxos/client` and `@dxos/react-client`
@@ -656,25 +703,26 @@ page api-reference: API reference
 page glossary: Glossary
   Every ECHO term, defined once.
   section: ECHO
-  route: /docs/additional-resources/glossary/
+  route: /docs/echo/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
-    - Every ECHO term, defined once: space, object, relation, reference, DXN, epoch, Hypergraph, registry, scope, branch, migration, content version and the rest
+    - Every ECHO term, defined once: space, object, relation, entity, reference, URI, DXN, epoch, Hypergraph, registry, scope, source, replica, branch, migration, content version and the rest [D-354]
     - Links to HALO's glossary for identity, device and invitation terms
 ```
 ```mdl
 page examples: Examples
   Apps built on ECHO, with code and live links.
   section: ECHO
-  route: /docs/additional-resources/samples/
+  route: /docs/echo/resources/examples/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Composer first, as the flagship app built on ECHO
-    - Tasks and TodoMVC, each with its code and a live link
+    - drawing.sh, a diagramming app built with ECHO on Composer's network, so the two are compatible [D-371]
+    - TodoMVC, Tasks, Contacts and Game Arena, each with its code and a live link
 ```
 ```mdl
 page echo-llms-txt: llms.txt
@@ -682,7 +730,7 @@ page echo-llms-txt: llms.txt
   section: ECHO
   route: /docs/echo/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/echo/llms.txt`, each ECHO page with its summary and a link to its Markdown
@@ -710,7 +758,7 @@ page guide-solid: Solid
   section: ECHO
   route: /docs/echo/guides/solid/
   group: Guides
-  template: tutorial
+  template: guide
   status: later
   covers:
     - The Solid.js bindings
@@ -721,7 +769,7 @@ page guide-foreign-records: Foreign records
   section: ECHO
   route: /docs/echo/guides/foreign-records/
   group: Guides
-  template: tutorial
+  template: guide
   status: later
   covers:
     - Map records from another system onto ECHO types with panproto lenses
@@ -787,18 +835,18 @@ page halo-welcome: Overview
   section: HALO
   route: /docs/halo/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What HALO is: identity management for local-first apps, covering identities, devices, credentials and space membership
-    - An identity is a key pair a client generates; no server issues it
+    - An identity is a group of keys that the user's devices hold, named by a DID; the first device creates it and no server issues it [D-357]
     - The three `@dxos/halo` namespaces, Identity, Invitation and Space, in one line each
     - HALO is built on Keyhive: signed delegations and group encryption keys
     - The learning path builds a contact book of its own; ECHO's Sharing a space is where ECHO meets HALO [D-169]
 ```
 ```mdl
 page why-halo: Why HALO?
-  Why identity is a key pair your device makes, not an account a server issues.
+  Why identity is keys your devices hold, not an account a server issues.
   section: HALO
   route: /docs/halo/why-halo/
   group: Start here
@@ -806,7 +854,7 @@ page why-halo: Why HALO?
   status: spike
   covers:
     - The pattern: create an identity and share a space with no sign-up server
-    - Comparison: an account a server issues and revokes, against a key pair the device holds
+    - Comparison: an account a server issues and revokes, against an identity made of keys the user's devices hold [D-357]
     - Practical problems: one identity across devices, access that peers check without a server, recovery without a password reset
     - What HALO does not do: it is not a login for third-party sites
 ```
@@ -822,7 +870,7 @@ page halo-the-halo-identity: The HALO identity
   section: HALO
   route: /docs/halo/learn/the-halo-identity/
   group: Learning path
-  template: tutorial
+  template: opener
   status: spike
   covers:
     - What an identity is, in a paragraph: a Keyhive group named by a DID, with a profile, whose members are its devices and recovery keys, and which joins spaces as a member [D-175]
@@ -839,7 +887,7 @@ page halo-your-profile: Your profile
   template: tutorial
   status: spike
   covers:
-    - Set up the project and provide the services with `layerClient(client)`, with Follow along in StackBlitz
+    - Set up the project and provide the services to `HaloProvider` with `makeIdentityService` and `makeSpaceService`, naming `layerClient(client)` as the layer form, with Follow along in StackBlitz
     - Create an identity with `Identity.create`, with the name the first run asks for
     - Follow it with the `Identity.identity` stream and show it in the profile chip
     - Rename with `Identity.updateProfile`
@@ -868,7 +916,7 @@ page halo-invite-people: Invite people
   status: spike
   covers:
     - Start a space invitation with `Space.share` and read its code
-    - Join with `Space.join`, follow the flow with `Invitation.events`, and enter the authorization code with `Invitation.authenticate`
+    - Join with `Space.join`, follow the flow with `useInvitationFlow`, which follows `Invitation.events`, and enter the authorization code with `Invitation.authenticate`
     - In Keyhive terms: the two sides exchange contact cards and the host writes a delegation that admits the guest
 ```
 ```mdl
@@ -930,8 +978,9 @@ page halo-identities-devices: Identities and devices
   covers:
     - An identity is a Keyhive group named by a DID, with a profile
     - Each device is a member key, added by a delegation and removed by a revocation, with a kind and presence
-    - The personal space every identity has, and `Identity.personalSpaceId`
-    - Limits: when every device is lost and no recovery credential exists
+    - Limits: when every device is lost and the identity has no DXOS account to recover through
+    - Key holding: no server holds a key for the identity by default; the identity can grant one, and EDGE provides this as an agent device whose key it holds
+    - What the agent device does: it signs only when another EDGE service asks, to admit a recovered device and to write credentials into a space when no member is online [D-366]
 ```
 ```mdl
 page halo-spaces-membership: Spaces and membership
@@ -945,8 +994,9 @@ page halo-spaces-membership: Spaces and membership
     - Access levels pull, read, edit and admin, each including the ones before it
     - The membership policy: invite or locked
     - Membership is signed delegations and revocations that converge with no server; a member revokes only those it has causal seniority over, an admin anyone
-    - The group key, which changes with membership and which pull members relay without reading
-    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-245]
+    - The group key, which members with read or more hold, which changes with membership and which pull members relay without reading [D-357]
+    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-245]; an agent device writes credentials into the identity's spaces and does not read their data [D-366]
+    - A caution on what runs today: spaces replicate through EDGE without end-to-end encryption, `pull` cannot be granted yet, and only an admin changes membership [D-365]
     - Links to ECHO's Spaces and databases for data and replication
 ```
 ```mdl
@@ -958,11 +1008,12 @@ page halo-invitations: Invitations
   template: concept
   status: spike
   covers:
-    - The two kinds, device and space, and the three types, interactive, delegated and multiuse
+    - The two kinds, device and space, the types interactive and delegated, and the `multiUse` option
     - The auth methods: none, shared secret and known public key
     - The invitation flow, step by step, with its events [D-165]
     - Admission: a contact-card exchange and a delegation
     - Delegated invitations with the host offline: prekeys, and EDGE holding the signed operations until the guest connects
+    - Behavior: a space invitation with no role admits its guest as an admin; `share` with no options is interactive with auth method none, under a caution [D-358]
     - Limits: expiry, cancellation and a code that fails to authenticate
 ```
 ```mdl
@@ -976,9 +1027,11 @@ page halo-recovery-credentials: Recovery and credentials
   covers:
     - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Recovery kinds: passkey, recovery code and OAuth
+    - A recovery credential is the signed record that registers a recovery key, and a lookup key names it [D-357]
     - The recovery key is a member of the identity's group
     - The recovery challenge, and what a recovered identity gets back
     - The credentials stream, service access and API tokens
+    - The identity's agent device signs the credential that admits a recovered device, so an identity without one cannot be recovered [D-366]
     - Limits: what a lost recovery credential means
 ```
 
@@ -988,18 +1041,18 @@ Passkey recovery, then React [D-167].
 
 ```mdl
 page halo-guide-passkey-recovery: Passkey recovery
-  Register a passkey as a recovery credential and recover with it.
+  Register a passkey as a recovery key and recover with it.
   section: HALO
   route: /docs/halo/guides/passkey-recovery/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Create the passkey with WebAuthn in the app, since `@dxos/halo` leaves the ceremony to the caller
     - Register it with `Identity.createRecoveryCredential({ externalKey })`
     - Recover: `Identity.requestRecoveryChallenge`, sign the challenge with the passkey, then `Identity.recover`
-    - Revoke it with `Identity.revokeRecoveryCredential`
+    - Replace it: register the new passkey, then revoke the old one with `Identity.revokeRecoveryCredential`
 ```
 ```mdl
 page halo-react: React
@@ -1007,7 +1060,7 @@ page halo-react: React
   section: HALO
   route: /docs/halo/guides/react/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Set up `HaloProvider` from `@dxos/halo-react`
@@ -1031,11 +1084,11 @@ page halo-guide-identity: Identity
   covers:
     - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Get the `Identity.Service` with `layerClient`, and read the identity once, as a stream or as an atom
-    - Create an identity, update its profile, and get its personal space id
+    - Create an identity and update its profile
     - List devices, share the identity and join from a device
     - Create, revoke and use recovery credentials, and request a recovery challenge
     - Read credentials, grant service access, create API tokens and get the EDGE identity
-    - Errors: IdentityError, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError
+    - Errors: IdentityError, with the wrapped failure in `context.error`, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError, which no function's error type includes yet [D-358]
 ```
 ```mdl
 page halo-guide-invitation: Invitation
@@ -1049,7 +1102,7 @@ page halo-guide-invitation: Invitation
     - The `Invitation.Flow` that `Identity.share`, `Identity.join`, `Space.share` and `Space.join` return
     - Read the code, authenticate with it and cancel a flow
     - Follow a flow with `Invitation.events`
-    - Share options: auth method, type and target
+    - Share options: auth method, type, multi-use and target, with their defaults and a caution that the default auth method is none [D-358]
     - Errors: InvitationError
 ```
 ```mdl
@@ -1066,7 +1119,7 @@ page halo-guide-space: Space
     - List members, change a member's access and remove a member
     - Share and join a space
     - Export and import a space archive, and set EDGE replication
-    - Errors: SpaceError, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError
+    - Errors: SpaceError, with the wrapped failure in `context.error`, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError, which no function's error type includes yet [D-358]
 ```
 
 ### Resources
@@ -1077,7 +1130,7 @@ page halo-api-reference: API reference
   section: HALO
   route: /docs/halo/resources/api-reference/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to the generated reference for `@dxos/halo` and `@dxos/halo-react`; `@dxos/halo-adapter-client` gets none
@@ -1088,11 +1141,12 @@ page halo-glossary: Glossary
   section: HALO
   route: /docs/halo/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, access and space key
     - Contact card, delegation, revocation, prekey, access level and group key
+    - Agent device, causal seniority, contact, EDGE, flow, group, guest, host, Hub, lookup key, profile, recovery key and space [D-354]
 ```
 ```mdl
 page halo-llms-txt: llms.txt
@@ -1100,7 +1154,7 @@ page halo-llms-txt: llms.txt
   section: HALO
   route: /docs/halo/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/halo/llms.txt`, each HALO page with its summary and a link to its Markdown
@@ -1123,7 +1177,7 @@ page mesh-overview: Overview
   section: MESH
   route: /docs/mesh/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What MESH is in one paragraph, on its own: devices that share a topic find each other and run protocols over direct links, with several transports at once [D-227], [D-280]
@@ -1156,7 +1210,7 @@ page mesh-architecture: Architecture
   template: concept
   status: spike
   covers:
-    - The layers, bottom to top: transport, Teleport, signaling, swarm, extensions, in one diagram
+    - The five layers and which uses which, in one diagram: a swarm finds peers through signaling and opens Teleport sessions, a transport carries a session, and extensions run on it [D-359]
     - Which package holds each layer in `packages/core/mesh`: `network-manager`, `teleport`, `messaging`, the `teleport-extension-*` packages and `edge-client`
     - The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of these pages [D-230]
 ```
@@ -1199,7 +1253,7 @@ page mesh-transports: Transports
   covers:
     - MESH multiplexes transports: the same replication runs over a direct link and over EDGE, and a device uses whichever reaches the peer [D-227]
     - WebRTC in the browser, TCP in Node, memory in tests, and the EDGE WebSocket
-    - Iroh, a QUIC transport for presence and gossip, in one paragraph marked planned [D-229]
+    - Iroh, a QUIC transport for presence and gossip, in one Limits bullet marked planned [D-229, D-370]
 ```
 ```mdl
 page mesh-teleport: Teleport
@@ -1210,8 +1264,8 @@ page mesh-teleport: Teleport
   template: concept
   status: spike
   covers:
-    - One Teleport session per connection, with named streams multiplexed over it
-    - The extensions and who adds them: control, RPC, feed replication, Automerge replication, gossip, admission, notarization and HALO invitations
+    - One Teleport session per connection, with named channels multiplexed over it
+    - The extensions and who adds them: control, auth, feed replication, Automerge replication, gossip, admission, notarization and HALO invitations; `RpcExtension` as the base class RPC extensions build on
     - Links to ECHO's Spaces page for replication and to HALO's invitation pages
 ```
 ```mdl
@@ -1235,10 +1289,11 @@ page mesh-glossary: Glossary
   section: MESH
   route: /docs/mesh/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Swarm, topic, topology, MMST, signaling, transport, Teleport, extension, ICE, TURN, presence and network status
+    - Always-online peer, channel, direct link, gossip, peer and signal manager [D-354]
     - Links to EDGE's glossary for router, Durable Object and environment
 ```
 ```mdl
@@ -1247,7 +1302,7 @@ page mesh-llms-txt: llms.txt
   section: MESH
   route: /docs/mesh/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/mesh/llms.txt`, each MESH page with its summary and a link to its Markdown
@@ -1266,11 +1321,11 @@ Swarms, signaling and ICE/TURN are MESH's; Connecting covers only the link betwe
 
 ```mdl
 page edge-overview: Overview
-  What EDGE is, and where ECHO, HALO, MESH and PLEX use it.
+  What EDGE is, and where ECHO, HALO, MESH, SAGE and PLEX use it.
   section: EDGE
   route: /docs/edge/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers, with a Durable Object per identity and per space [D-280]
@@ -1405,9 +1460,9 @@ page edge-processes: Processes
   status: spike
   covers:
     - The process manager, and one process per running operation
-    - The layer stack: the services a process gets, such as the database, storage and credentials
+    - The layer stack: the services a process gets, such as the database, storage and secrets [D-359]
     - Local and remote processes: the same operation runs in the app, in a worker or on EDGE, and the app invokes one on EDGE by key [D-276]
-    - Operation code kept as an ECHO object and deployed to EDGE, and the credentials it uses, kept in the space [D-276]
+    - Operation code kept as an ECHO object and deployed to EDGE, and the secrets it uses, kept in the space [D-276] [D-359]
     - One paragraph on pipelines: an operation that streams a long source, such as a mailbox, uses `@dxos/pipeline` and a saved cursor inside its process [D-277]
 ```
 ```mdl
@@ -1444,7 +1499,7 @@ page edge-configuration: Configuration
   section: EDGE
   route: /docs/edge/resources/configuration/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - `runtime.services.edge.url`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures`, with defaults [D-236]
@@ -1456,10 +1511,11 @@ page edge-glossary: Glossary
   section: EDGE
   route: /docs/edge/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Durable Object, environment, hub, index, replicator, router, service access, worker, operation, handler, invoker, process, layer stack, trigger, pipeline and trace
+    - Agent device, always-online peer, guard, hibernation, operation registry, plugin registry and secret [D-354]
 ```
 ```mdl
 page edge-llms-txt: llms.txt
@@ -1467,7 +1523,7 @@ page edge-llms-txt: llms.txt
   section: EDGE
   route: /docs/edge/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/edge/llms.txt`, each EDGE page with its summary and a link to its Markdown
@@ -1490,10 +1546,10 @@ page sage-overview: Overview
   section: SAGE
   route: /docs/sage/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
-    - What SAGE is in one paragraph, on its own: durable agent processes with an identity of their own, typed tools, skills and any model [D-280]
+    - What SAGE is in one paragraph, on its own: durable agent processes that can have an identity of their own, typed tools, skills and any model [D-280] [D-360]
     - A table of where SAGE runs, in Composer's assistant, in agents on EDGE and behind the MCP server, each linking its concept page
     - After the table, one sentence each on operations as the agent's actions and on memory as objects in the user's spaces [D-280]
     - Where to go next: Why SAGE?, then Agents
@@ -1531,7 +1587,7 @@ page sage-models: Models
 ```
 ```mdl
 page sage-agents: Agents
-  A model in a loop, acting in a space with its own identity.
+  A model in a loop, acting in a space, with an identity of its own when it is given one.
   section: SAGE
   route: /docs/sage/concepts/agents/
   group: Core concepts
@@ -1619,10 +1675,11 @@ page sage-glossary: Glossary
   section: SAGE
   route: /docs/sage/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Agent, turn, model, provider, tool, skill, instructions, code mode, memory, fact, goal, MCP, spec, decision and review
+    - Assistant, host, resolver and workspace [D-354]
 ```
 ```mdl
 page sage-llms-txt: llms.txt
@@ -1630,7 +1687,7 @@ page sage-llms-txt: llms.txt
   section: SAGE
   route: /docs/sage/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/sage/llms.txt`, each SAGE page with its summary and a link to its Markdown
@@ -1690,7 +1747,7 @@ page plex-build-with-agent: Build with a coding agent
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
-    - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
+    - What the reader does when the agent hands off: click Plugin Settings in the rail, open Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
 ```
 
 ### Learning path
@@ -1701,7 +1758,7 @@ page plex-the-plex-plugin: The PLEX plugin
   section: PLEX
   route: /docs/plex/learn/the-plex-plugin/
   group: Learning path
-  template: tutorial
+  template: opener
   status: spike
   covers:
     - What a plugin is, in a paragraph: metadata and modules that contribute capabilities
@@ -1718,7 +1775,7 @@ page app-framework-create-plugin: Create a plugin
   template: tutorial
   status: spike
   covers:
-    - Create the package and its `dx.config.ts` manifest
+    - Create the package and its `dx.config.ts`, which the dev server turns into the `manifest.json` manifest [D-361]
     - Define the plugin and its metadata with `Plugin`
     - Add a first module that contributes translations, and the activation event that loads it
     - Start the plugin's dev server and click Load dev plugin, then see the Translations module and its strings in the inspector
@@ -1734,7 +1791,7 @@ page app-framework-define-type: Define a type
   status: spike
   covers:
     - Declare the plugin's type with `Type`, linking to the ECHO Defining types page for the details
-    - Register the type with the app so it can store, list and name objects of it
+    - Register the type with the app so it can create, list and name its objects [D-361]
     - See the type's fields in the inspector's Schema module
 ```
 
@@ -1794,9 +1851,9 @@ page plex-run-in-composer: Run it in Composer
   status: spike
   covers:
     - Sign in to Composer Preview, which loads plugins from a dev server; composer.space loads only its own
-    - Run the plugin's dev server with `npm run dev`, then open Settings, Plugins, and Enable under Dev Server, allowing the browser's local-network prompt
+    - Run the plugin's dev server with `npm run dev`, then click Plugin Settings in the rail, open Plugins, and click Enable under Dev Server, allowing the browser's local-network prompt
     - Create a link from the + menu and open it in the main area, and mark it as read with the Mark as read action on its toolbar
-    - Write the Stash skill, which gives the assistant Mark as read as a tool, and add its module to the manifest
+    - Write the Stash skill, which gives the assistant Mark as read as a tool, and add its module to `dx.config.ts`
     - Have the assistant run the same operation from a chat with the Stash skill
 ```
 
@@ -1806,7 +1863,7 @@ page app-framework-publishing: Publishing a plugin
   section: PLEX
   route: /docs/plex/publishing-plugins/
   group: Learning path
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - How the private registry works, in a paragraph: hosted by DXOS, owned by your identity, no AT Protocol
@@ -1814,6 +1871,10 @@ page app-framework-publishing: Publishing a plugin
     - Describe the plugin in `dx.config.ts` and publish it with `dx registry publish --private`
     - Confirm it in Composer's registry and publish an update
     - A note that an experimental public registry exists, with a Discord link for anyone who wants to try it
+    - Load a plugin without publishing it: from its dev server, from a built bundle by manifest URL, or built by the assistant
+    - Two worked examples: a plugin with its own navigation group, and Stash with data, an operation and the Space plugin's create menu
+    - Ship the plugin's `.mdl` spec with it
+    - A command reference
 ```
 
 ### Core concepts
@@ -1828,7 +1889,7 @@ page app-framework-anatomy: Plugins and modules
   status: spike
   covers:
     - A plugin is metadata plus modules; `Plugin.define`, `Plugin.addModule` and `Plugin.make` build one
-    - The `dx.config.ts` manifest, which describes the plugin for the registry and lists its modules
+    - `dx.config.ts`, which describes the plugin for the registry and lists its modules, and the manifest the build and dev server make from it [D-361]
     - Inline and lazy modules (`Capability.inlineModule`, `Capability.lazyModule`), and why a module's code loads only when it activates
     - A diagram of the Stash plugin's modules, their events and their capabilities
 ```
@@ -1860,7 +1921,7 @@ page plex-activation: Activation
   covers:
     - Activation events, and combining them with `ActivationEvent.oneOf` and `allOf`
     - The `Startup` and `Idle` events, and the events built-in capabilities fire, such as `SurfacesRequested`
-    - How the plugin manager orders activation, with events fired before and after a module activates
+    - How the plugin manager orders activation: the providers of a module's `requires` activate before it
     - Lazy loading: a module whose event never fires never loads
     - Adding and removing plugins while the app runs
 ```
@@ -1907,7 +1968,7 @@ page plex-guide-effect: Effect
   section: PLEX
   route: /docs/plex/guides/effect/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Read a capability as an Effect service with `Capability.Service`
@@ -1921,12 +1982,12 @@ page plex-guide-testing: Testing
   section: PLEX
   route: /docs/plex/guides/testing/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Start a headless app with the plugin under test, with `Harness.createComposerTestApp` from `@dxos/plugin-testing`
     - Fire activation events and read the capabilities that result
-    - Invoke an operation and check its result
+    - Invoke an operation and check its result; for an operation that reads a space, start the app with the client plugin, create an identity and invoke in its space
 ```
 
 ```mdl
@@ -1935,7 +1996,7 @@ page plex-guide-debugging: Debugging
   section: PLEX
   route: /docs/plex/guides/debugging/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Load the plugin from its dev server into the docs inspector, and read each module's status and error [D-147]
@@ -1949,7 +2010,7 @@ page app-framework-guide-app-capabilities: App capabilities
   section: PLEX
   route: /docs/plex/guides/app-capabilities/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Why these are app capabilities, from `@dxos/app-toolkit`, and not part of the framework
@@ -1965,7 +2026,7 @@ page plex-guide-settings-and-state: Settings and state
   section: PLEX
   route: /docs/plex/guides/settings-and-state/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Contribute synced settings with a schema, and the settings form the app renders from it
@@ -1979,7 +2040,7 @@ page app-framework-guide-app-graph: App Graph
   section: PLEX
   route: /docs/plex/guides/app-graph/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - What a node is, how nodes connect, and a node's identity as a `GraphPath`
@@ -1996,7 +2057,7 @@ page app-framework-guide-react: React
   section: PLEX
   route: /docs/plex/guides/react/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Read capabilities from a component
@@ -2011,11 +2072,11 @@ page plex-guide-using-echo: ECHO
   section: PLEX
   route: /docs/plex/guides/using-echo/
   group: Guides
-  template: namespace
+  template: guide
   status: spike
   covers:
     - Register ECHO types with the `Schema` capability
-    - Annotate a type with `AppAnnotation` so the app can name and list its objects
+    - Annotate a type with `Annotation.LabelAnnotation`, `IconAnnotation` and `UserType` from `@dxos/echo` so the app can name and list its objects
     - Create objects from a plugin, and the create-object entry that adds them to the app's menus
     - Links to ECHO's Defining types for the types themselves
 ```
@@ -2065,7 +2126,7 @@ page app-framework-guide-activation-event: ActivationEvent
   status: spike
   covers:
     - Declare an activation event
-    - Fire events before and after a module activates to order dependencies
+    - Order modules with `activatesOn` and `requires`, and fire an event from a module with `Plugin.activate`
     - The built-in events in `ActivationEvents` and when each fires
 ```
 
@@ -2122,7 +2183,7 @@ page app-framework-api-reference: API reference
   section: PLEX
   route: /docs/plex/resources/api-reference/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to the generated reference for `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/app-graph` and `@dxos/compute`
@@ -2134,10 +2195,24 @@ page app-framework-glossary: Glossary
   section: PLEX
   route: /docs/plex/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Action, activation event, annotation, App Graph, App Toolkit, builder extension, capability, filter, handler, module, node, operation, operation invoker, plugin, plugin manager, role, schema registration and surface
+    - Assistant, atom, contribution, dev plugin, disposition, DXN, handler set, host, inspector, manifest, module maker, NSID, private registry, skill and tag [D-354]
+```
+
+```mdl
+page plex-examples: Examples
+  Apps built with PLEX, with code and live links.
+  section: PLEX
+  route: /docs/plex/resources/examples/
+  group: Resources
+  template: resource
+  status: spike
+  covers:
+    - Composer, drawing.sh and Game Arena, each with its code and a live link [D-372]
+    - What each one shows: Composer's features as plugins, drawing.sh's own layout plugin, Game Arena's early app framework
 ```
 
 ```mdl
@@ -2146,7 +2221,7 @@ page plex-llms-txt: llms.txt
   section: PLEX
   route: /docs/plex/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/plex/llms.txt`, each PLEX page with its summary and a link to its Markdown
@@ -2178,7 +2253,7 @@ page app-framework-cli: The dx CLI
   section: PLEX
   route: /docs/plex/tools/cli/
   group: Guides
-  template: namespace
+  template: guide
   status: later
   covers:
     - Install the CLI and set up a profile
@@ -2203,11 +2278,11 @@ page tile-overview: Overview
   section: TILE
   route: /docs/tile/overview/
   group: Start here
-  template: concept
+  template: overview
   status: spike
   covers:
     - What TILE is in one paragraph: `@dxos/react-ui` and the `@dxos/ui-theme` tokens and build plugin it needs
-    - A grid of live component demos that follows the page's light or dark theme; each card names its package and opens that package's guide [D-293]
+    - A grid of live component demos that follows the page's light or dark theme; each card names its package, and its header opens the API page of the component it shows [D-293] [D-298]
     - The split between the core and the component packages, with a link to the catalog
     - Where to go next: Why TILE?, Build with a coding agent, then the learning path
 ```
@@ -2248,10 +2323,10 @@ page tile-the-tile-component: The TILE component
   section: TILE
   route: /docs/tile/learn/the-tile-component/
   group: Learning path
-  template: tutorial
+  template: opener
   status: spike
   covers:
-    - What a TILE component is: a namespace of parts, themed by the provider, styled with `classNames` [D-248]
+    - What a TILE component is: a namespace of parts, styled by the theme's stylesheets and adjusted with `classNames`; `Theme.Provider` supplies strings and icons [D-248] [D-362]
     - The finished contacts screen, running, so the reader sees where the path ends
     - What each page of the path adds, and the folder it goes in
 ```
@@ -2267,12 +2342,12 @@ page tile-learn-installation: Installation
     - The packages: `@dxos/react-ui` and its peer `@dxos/ui-theme` [D-248]
     - The Vite plugins: `ThemePlugin` from `@dxos/ui-theme/plugin` and `IconsPlugin` from `@dxos/vite-plugin-icons`
     - The stylesheets, `Theme.Provider` with `Theme.defaultTx`, and the `translations` resources
-    - Dark mode: the `dark` class on the root element, following the system
+    - Dark mode: the `dark` class on the root element, which `ThemePlugin` sets from the system [D-362]
     - The first buttons, which follow light and dark [D-239]
 ```
 ```mdl
 page tile-learn-layout: Lay out a screen
-  A list beside a detail panel, with a toolbar.
+  A list beside a detail column, with a toolbar.
   section: TILE
   route: /docs/tile/learn/lay-out-a-screen/
   group: Learning path
@@ -2379,7 +2454,7 @@ page tile-density: Density and sizes
   status: spike
   covers:
     - Sizes `xs` to `xl`, set with the `size` prop or the `data-size` attribute
-    - Popups take their trigger's size
+    - Overlays take their trigger's size, except a top-level menu, which is `md` [D-362]
 ```
 ```mdl
 page tile-focus: Focus and keyboard
@@ -2416,7 +2491,7 @@ page tile-api-layout: Layout
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Each primitive's props, with the `gap` ramp
@@ -2429,7 +2504,7 @@ page tile-api-button: Button
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - `Button.Root` variants and props, `Button.Group` and `Button.Toggle`
@@ -2442,7 +2517,7 @@ page tile-api-input: Input
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - The `Input` parts [D-310]
@@ -2455,7 +2530,7 @@ page tile-api-status: Status
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - The `Status` parts and when each fits
@@ -2468,7 +2543,7 @@ page tile-api-panel: Panel
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - `Panel.Root`, `Panel.Header`, `Panel.Body` and `Panel.Footer` [D-310]
@@ -2481,7 +2556,7 @@ page tile-api-toolbar: Toolbar
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - The `Toolbar` parts
@@ -2494,7 +2569,7 @@ page tile-api-accordion: Accordion
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Accordion` under its own story [D-308]
@@ -2507,7 +2582,7 @@ page tile-api-alert-dialog: AlertDialog
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `AlertDialog` under its own story [D-308]
@@ -2520,7 +2595,7 @@ page tile-api-avatar: Avatar
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Avatar` under its own story [D-308]
@@ -2533,7 +2608,7 @@ page tile-api-badge: Badge
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Badge` under its own story [D-308]
@@ -2546,7 +2621,7 @@ page tile-api-banner: Banner
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Banner` under its own story [D-308]
@@ -2559,7 +2634,7 @@ page tile-api-breadcrumb: Breadcrumb
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Breadcrumb` under its own story [D-308]
@@ -2572,7 +2647,7 @@ page tile-api-card: Card
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Card` under its own story [D-308]
@@ -2585,7 +2660,7 @@ page tile-api-carousel: Carousel
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Carousel` under its own story [D-308]
@@ -2598,20 +2673,20 @@ page tile-api-collapsible: Collapsible
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Collapsible` under its own story [D-308]
 ```
 ```mdl
 page tile-api-color-picker: ColorPicker
-  A colour typed as text or picked from a swatch.
+  A color typed as text or picked from a swatch.
   section: TILE
   route: /docs/tile/api/color-picker/
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `ColorPicker` under its own story [D-308]
@@ -2624,7 +2699,7 @@ page tile-api-combobox: Combobox
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Combobox` under its own story [D-308]
@@ -2637,7 +2712,7 @@ page tile-api-drag-handle: DragHandle
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `DragHandle` under its own story [D-308]
@@ -2650,7 +2725,7 @@ page tile-api-editable: Editable
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Editable` under its own story [D-308]
@@ -2663,7 +2738,7 @@ page tile-api-fieldset: Fieldset
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Fieldset` under its own story [D-308]
@@ -2676,20 +2751,20 @@ page tile-api-floating-panel: FloatingPanel
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `FloatingPanel` under its own story [D-308]
 ```
 ```mdl
 page tile-api-focus: Focus
-  Keyboard focus groups: one Tab stop, arrow keys inside.
+  Keyboard focus groups: one tab stop, arrow keys inside.
   section: TILE
   route: /docs/tile/api/focus/
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Focus` under its own story [D-308]
@@ -2702,7 +2777,7 @@ page tile-api-listbox: Listbox
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Listbox` under its own story [D-308]
@@ -2715,7 +2790,7 @@ page tile-api-main: Main
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Main` under its own story [D-308]
@@ -2728,7 +2803,7 @@ page tile-api-media: Media
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Media` under its own story [D-308]
@@ -2741,7 +2816,7 @@ page tile-api-qr-code: QrCode
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `QrCode` under its own story [D-308]
@@ -2754,7 +2829,7 @@ page tile-api-scroll-container: ScrollContainer
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `ScrollContainer` under its own story [D-308]
@@ -2767,7 +2842,7 @@ page tile-api-splitter: Splitter
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Splitter` under its own story [D-308]
@@ -2780,7 +2855,7 @@ page tile-api-system-button: SystemButton
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `SystemButton` under its own story [D-308]
@@ -2793,7 +2868,7 @@ page tile-api-tabs: Tabs
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Tabs` under its own story [D-308]
@@ -2806,7 +2881,7 @@ page tile-api-tag: Tag
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Tag` under its own story [D-308]
@@ -2819,7 +2894,7 @@ page tile-api-toggle-group: ToggleGroup
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `ToggleGroup` under its own story [D-308]
@@ -2832,7 +2907,7 @@ page tile-api-tour: Tour
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Tour` under its own story [D-308]
@@ -2845,7 +2920,7 @@ page tile-api-typography: Typography
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Typography` under its own story [D-308]
@@ -2858,7 +2933,7 @@ page tile-api-dialog: Dialog
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Dialog` [D-310]
@@ -2871,7 +2946,7 @@ page tile-api-popover: Popover
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Popover` [D-310]
@@ -2884,7 +2959,7 @@ page tile-api-tooltip: Tooltip
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Tooltip` [D-310]
@@ -2897,7 +2972,7 @@ page tile-api-hover-card: HoverCard
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `HoverCard` [D-310]
@@ -2910,7 +2985,7 @@ page tile-api-toast: Toast
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Toast` [D-310]
@@ -2923,7 +2998,7 @@ page tile-api-field: Field
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Field` [D-310]
@@ -2936,7 +3011,7 @@ page tile-api-select: Select
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `Select` [D-310]
@@ -2949,7 +3024,7 @@ page tile-api-scroll-area: ScrollArea
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - Every part of `ScrollArea` [D-310]
@@ -2962,7 +3037,7 @@ page tile-api-menu: Menu
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - The `Menu` parts, and where `@dxos/react-ui-menu` takes over for menus built from actions
@@ -2975,7 +3050,7 @@ page tile-api-icon: Icon
   group: API
   package: react-ui
   family: Core
-  template: namespace
+  template: component
   status: spike
   covers:
     - `Icon.Icon` props
@@ -2989,7 +3064,7 @@ page tile-api-mosaic-board: Board
   group: API
   package: react-ui-mosaic
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3003,7 +3078,7 @@ page tile-api-list-listbox: Listbox (react-ui-list)
   group: API
   package: react-ui-list
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Listbox` story, live at the top [D-298]
@@ -3017,7 +3092,7 @@ page tile-api-masonry-masonry: Masonry
   group: API
   package: react-ui-masonry
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3031,7 +3106,7 @@ page tile-api-mosaic-mosaic: Mosaic
   group: API
   package: react-ui-mosaic
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Mosaic` story, live at the top [D-298]
@@ -3045,7 +3120,7 @@ page tile-api-list-ordered-list: OrderedList
   group: API
   package: react-ui-list
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `OrderedList` story, live at the top [D-298]
@@ -3059,7 +3134,7 @@ page tile-api-list-picker: Picker
   group: API
   package: react-ui-list
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Picker` story, live at the top [D-298]
@@ -3073,7 +3148,7 @@ page tile-api-list-tree: Tree
   group: API
   package: react-ui-list
   family: Collections
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Tree` story, live at the top [D-298]
@@ -3087,7 +3162,7 @@ page tile-api-editor-editor: Editor
   group: API
   package: react-ui-editor
   family: Editing
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Editor` story, live at the top [D-298]
@@ -3101,7 +3176,7 @@ page tile-api-form-form: Form
   group: API
   package: react-ui-form
   family: Editing
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Form` story, live at the top [D-298]
@@ -3115,7 +3190,7 @@ page tile-api-grid-grid: Grid
   group: API
   package: react-ui-grid
   family: Editing
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3129,7 +3204,7 @@ page tile-api-menu-action-menu: ActionMenu
   group: API
   package: react-ui-menu
   family: Actions
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `ActionMenu` story, live at the top [D-298]
@@ -3143,7 +3218,7 @@ page tile-api-menu-action-toolbar: ActionToolbar
   group: API
   package: react-ui-menu
   family: Actions
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `ActionToolbar` story, live at the top [D-298]
@@ -3157,7 +3232,7 @@ page tile-api-calendar-calendar: Calendar
   group: API
   package: react-ui-calendar
   family: Time
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Calendar` story, live at the top [D-298]
@@ -3171,7 +3246,7 @@ page tile-api-plot-timeline: Timeline
   group: API
   package: react-ui-plot
   family: Time
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Timeline` story, live at the top [D-298]
@@ -3185,7 +3260,7 @@ page tile-api-plot-plot: Plot
   group: API
   package: react-ui-plot
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3199,10 +3274,10 @@ page tile-api-canvas-editor-canvas-editor: CanvasEditor
   group: API
   package: react-ui-canvas-editor
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
-    - The package's `Model` story, the one the Overview's Canvas card runs, live at the top [D-307]
+    - The package's `Docs` story, the one the Overview's Canvas card runs, live at the top [D-307] [D-362]
     - Every part of `CanvasEditor` and the props of `CanvasEditor.Root` [D-307]
 ```
 ```mdl
@@ -3213,7 +3288,7 @@ page tile-api-geo-globe: Globe
   group: API
   package: react-ui-geo
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3227,7 +3302,7 @@ page tile-api-graph-graph: Graph
   group: API
   package: react-ui-graph
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
@@ -3241,7 +3316,7 @@ page tile-api-geo-map: Map
   group: API
   package: react-ui-geo
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `Map` story, live at the top [D-298]
@@ -3255,7 +3330,7 @@ page tile-api-graph-svg: SVG
   group: API
   package: react-ui-graph
   family: Visualization
-  template: namespace
+  template: component
   status: spike
   covers:
     - The package's own `SVG` story, live at the top [D-298]
@@ -3270,7 +3345,7 @@ page tile-guide-custom-themes: Custom themes and dark mode
   section: TILE
   route: /docs/tile/guides/custom-themes/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Overriding `--dx-*` variables and color tokens in an app's own stylesheet
@@ -3282,7 +3357,7 @@ page tile-guide-plex: TILE in a PLEX plugin
   section: TILE
   route: /docs/tile/guides/tile-in-a-plex-plugin/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - Components take props and never read capabilities; containers connect them, with a link to PLEX Surfaces
@@ -3294,7 +3369,7 @@ page tile-guide-testing: Testing and stories
   section: TILE
   route: /docs/tile/guides/testing-and-stories/
   group: Guides
-  template: tutorial
+  template: guide
   status: spike
   covers:
     - A story with `withTheme` and the `translations` parameter
@@ -3308,7 +3383,7 @@ page tile-api-reference: API reference
   section: TILE
   route: /docs/tile/resources/api-reference/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Typedoc for `@dxos/react-ui` and `@dxos/ui-theme` [D-249]
@@ -3320,7 +3395,7 @@ page tile-glossary: Glossary
   section: TILE
   route: /docs/tile/resources/glossary/
   group: Resources
-  template: reference
+  template: glossary
   status: spike
   covers:
     - Each term with a link to the page that explains it
@@ -3331,7 +3406,7 @@ page tile-llms-txt: llms.txt
   section: TILE
   route: /docs/tile/resources/llms-txt/
   group: Resources
-  template: reference
+  template: resource
   status: spike
   covers:
     - Links to `/tile/llms.txt`, each TILE page with its summary and a link to its Markdown
@@ -3484,6 +3559,11 @@ feat F-4: Accuracy
   req F-4.3:
     when: the spec's own review marks a cited item as diverged or partial
     then: the page's Limits section says so
+
+  req F-4.4:
+    when: a page's prose, its sample or its `covers:` disagrees with the code of this commit
+    then: the code decides: the page and the sample are corrected to match it, and a `covers:` point the code no
+          longer supports is corrected in this spec [D-326]
 ```
 
 ```mdl
@@ -3569,8 +3649,9 @@ feat F-7: Relationship to dxos.org
 
   req F-7.6:
     when: a reader opens `/echo`
-    then: the demos start as the page loads, and each shows its content as soon as that content is in the space,
-          without waiting for the other demos
+    then: the selected demo starts as the page loads; the others start one at a time in tab order, each once the
+          demo before it shows its content, or at once when the reader selects its tab; each shows its content as
+          soon as that content is in the space, without waiting for the other demos
 
   req F-7.7:
     when: a reader is on `/echo`
@@ -3580,7 +3661,8 @@ feat F-7: Relationship to dxos.org
   req F-7.8:
     when: a reader reaches a demo on `/echo` before it has loaded
     then: the demo's place shows a placeholder of the demo's size that says it is loading, so the page does not
-          shift when the demo arrives
+          shift when the demo arrives; until a peer shows content, its pane shows one word for its state, such as
+          Connecting…, centered, so it never looks blank
 
   req F-7.9:
     when: a reader is on `/echo`
@@ -3592,7 +3674,8 @@ feat F-7: Relationship to dxos.org
     then: it shows the four demos from `/echo` under What you can build, each with a narrative about the
           plugins that render it: which plugins load, what each contributes, and how they share the objects
           without importing each other; each demo runs on its own page in an iframe, so its styles stay off
-          the docs page
+          the docs page; the demo frame most in view loads alone and the rest load together once it shows its
+          content, so the demo the reader reaches first shows it within 5 s
 
   req F-7.11:
     when: a reader comes back to a page with demos after its tab has been in the background
@@ -3600,8 +3683,8 @@ feat F-7: Relationship to dxos.org
 
   req F-7.12:
     when: a reader opens `/echo`
-    then: every demo shows its content on every peer no later than the shared-runtime demos did (a median of
-          7.8 s on a local production build), measured over the whole page rather than per demo
+    then: the first demo shows its content on every peer within 5 s on a local production build; the second
+          peer may show it after the first
 ```
 
 ```mdl
@@ -3720,9 +3803,9 @@ feat F-15: The tutorial app
 
   req F-15.6:
     when: a learning-path page shows ECHO code
-    then: the code is a region of one of the tutorial app's own modules, one module per page (`client.ts`,
-          `schema.ts`, `queries.ts`, `records.ts`, `sharing.ts`), which the app calls; no page quotes a script the
-          app does not run
+    then: the code is a region of the tutorial app module that uses it, usually a component (`schema.ts`,
+          `seed.ts`, `App.tsx`, `Contacts.tsx`, `RecordForm.tsx`, `RecordGraph.tsx`, `Share.tsx`) [D-199]; no page
+          quotes a script the app does not run
 
   req F-15.7:
     when: a reader opens The ECHO object
@@ -3824,8 +3907,9 @@ feat F-18: API by namespace
 
   req F-18.1:
     when: a section's API group is built
-    then: it has one page per core API namespace, written with the `namespace` template; the framework guides,
-          React among them, go in the Guides group
+    then: it has one page per core API namespace, written with the `namespace` template, or in TILE one page per
+          component, written with the `component` template [D-369]; the framework guides, React among them, go in
+          the Guides group
 
   req F-18.2:
     when: a reader wants every member of a namespace
@@ -3923,6 +4007,57 @@ feat F-21: TILE demo grid
   req F-21.5:
     when: a reader opens the TILE Overview on a screen wider than the text column
     then: the grid is wider than the text, up to the width of the content panel, and centered on the text column
+```
+
+```mdl
+feat F-22: Voice
+
+  desc: |
+    The docs explain rather than specify. Their prose speaks to the reader, starts from what the reader already
+    does, and teaches through examples that it introduces and then explains [D-322]. The voice is the docs' own
+    and is expected to change over time [D-321]. It applies to every page under `/docs/`; the landing pages, the
+    blog and the legal pages keep their own voice [D-324].
+
+  req F-22.1:
+    when: a page introduces an idea, a type or an API member
+    then: its first sentence names the thing and says what it is, and a sentence near it says what the reader
+          uses it for
+
+  req F-22.2:
+    when: a page says what is possible or what to do
+    then: it addresses the reader as "you"; a learning-path page or a worked example may say "we" for the reader
+          and the writer working through it together
+
+  req F-22.3:
+    when: a page brings in its main idea
+    then: it gives the reader one foothold first: the way they do it today and what it costs, a failure they have
+          hit, or the question they arrive with; the foothold differs from the one on the pages before it in the
+          sidebar [D-353]
+
+  req F-22.4:
+    when: a concept, namespace or guide page shows a code sample
+    then: a labelled line, `**Example** (what it shows)`, or a lead-in sentence introduces the sample [D-325]; the
+          sentence after it starts from a name in the code and says what the sample's comments do not, and a sample
+          whose comments carry the idea ends the passage [D-352]
+
+  req F-22.5:
+    when: a page documents an API member or an option
+    then: it says what the member does, then when to use it, then what it does not do
+
+  req F-22.6:
+    when: a page is written
+    then: a paragraph holds one idea in one to three sentences, no sentence passes 30 words, and headings use
+          sentence case [D-323]
+
+  req F-22.7:
+    when: a page uses a term
+    then: the term means one thing across the section, the section's glossary defines it, and the page introduces
+          it at its first use with half a sentence or a link [D-354]
+
+  req F-22.8:
+    when: a page has a table
+    then: a cell holds a phrase or a sentence, two facts are two sentences, a type is in code font and a default
+          comes last in its cell; spelling across the docs is American [D-355]
 ```
 
 ## Acceptance
@@ -6622,6 +6757,493 @@ decision D-320: On the docs home, the body panel has no top padding, so the intr
   for: user:wittjosiah
   affects: [F-16.5]
   why: With the rule between the title and body panels gone, both panels' padding left a 51px gap under the title, and at 1512x945 the grid's last row ended at 942px.
+```
+
+```mdl
+decision D-321: The docs have a voice of their own, which is expected to change over time. The Effect documentation is an example of docs we like and think are good, not the definition of the voice.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-22]
+```
+
+```mdl
+decision D-322: The voice is six habits: a first sentence that defines the thing; "you" for what the reader can do or should do, with "we" on learning-path pages and in worked examples; a start from what the reader already does or from the problem; an introduction before each code sample and an explanation after it; for each API member what it does, when to use it and what it does not do; and paragraphs of one to three short sentences. Fills in [D-321].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.1, F-22.2, F-22.3, F-22.4, F-22.5, F-22.6]
+  why: The docs read like the spec they are written from: facts about the system, one after another, with no reader in them. These habits are what docs that teach well have and ours lacked. Measured against the Effect documentation as the example, "you" appears 15 times per 1,000 words of prose there against 5 here, a paragraph averages 1.45 sentences against 2.2, and two of every three code blocks are introduced by a label against none.
+  rejected:
+    - Change the tone alone, friendlier wording over the same sentences: the difference a reader feels is in how a page leads into an example and out of it, not in its adjectives.
+```
+
+```mdl
+decision D-323: Headings stay in sentence case, and a page keeps the headings and the parts its template gives it. The voice has no padding, such as "it's important to note", "powerful", "leverage" and a closing summary. Fills in [D-321].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.6, F-17.2]
+  why: Headings are link targets across the site, and the templates fix each page's parts. Padding costs the reader time and tells them nothing.
+  rejected:
+    - Rename concept headings to a gerund form, such as "Following references" for "Model": every concept page would stop matching its template [F-17.2], and links to the old anchors would break.
+```
+
+```mdl
+decision D-324: The voice applies to the pages under `/docs/`. The landing pages (`/`, `/echo`, `/composer`, `/plugins`), the blog posts and the legal pages are outside it. Fills in [D-321].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22]
+  why: The voice is for teaching an API. A landing page sells in a line, a blog post is dated and signed by its author, and the legal text is not ours to reword.
+```
+
+```mdl
+decision D-325: An example's label is a line of its own, `**Example** (what it shows)`, in sentence case. The numbered steps of a learning-path page do not use it, since each step's bold lead already introduces its sample, and neither does the sample that opens a TILE component page. Fills in [D-322].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.4]
+  why: A second label inside a step repeats the step's lead, and a component page's opening sample stands for the page itself.
+```
+
+```mdl
+decision D-326: The docs are aligned to the implementation. Wherever a page, its sample or the spec disagrees with the code, the mismatch is corrected to match the code.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.4]
+```
+
+```mdl
+decision D-327: A TILE page whose component reads atoms tells the reader to wrap the app in `RegistryProvider`, as best practice, so that the app controls the registry. No page says a component needs one.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [tile-api-list-tree, tile-api-reference]
+```
+
+```mdl
+decision D-328: The Grid page documents the `Grid.Content` props a caller can set, each verified against the code first.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [tile-api-grid-grid]
+```
+
+```mdl
+decision D-329: The Grid page's table gains `initialCells`, `activeRefs` and `focusIndicatorVariant`, and leaves out `mode` and `gridId`. Fills in [D-328].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-api-grid-grid]
+  why: The React wrapper sets `mode` and `gridId` after it spreads the caller's props, so a value the caller passes is discarded. The other three reach the grid element, and each was checked on a running grid.
+```
+
+```mdl
+decision D-330: On a space connection only feed replication opens alongside the auth extension. Gossip, admission discovery, notarization and Automerge replication are added after the peer authenticates. A peer that fails authentication is disconnected only where the session's owner closes the session, which the admission-credential request does and an open space does not. Teleport's page and MESH's Architecture page say so. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-256
+  affects: [mesh-teleport, mesh-architecture]
+  why: The space protocol adds only the feed replicator beside auth and adds the rest in its authorized-connection callback. On an auth failure an open space logs and keeps the session; only `requestSpaceAdmissionCredential` closes it.
+```
+
+```mdl
+decision D-331: Teleport's page names channels, not streams, as what a session multiplexes, lists the auth extension, and describes `RpcExtension` as the base class that RPC extensions build on rather than as an extension. MESH's glossary and the Swarms page say MMST usually keeps a swarm connected. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-teleport]
+  why: The muxer's unit is a channel, which a stream or an RPC port consumes. No extension is named RPC, and `dxos.mesh.teleport.auth` is one. The MMST topology refuses offers past its maximum, so nothing guarantees a connected swarm [D-257].
+```
+
+```mdl
+decision D-332: ECHO's pages follow the code on six points: a query reads the registry only when `from()` names `Scope.registry()`; the client stores a space in SQLite, loads objects on demand and compiles queries to SQL with an in-memory fallback; a feed item is rewritten by id and a feed is rewound with a fork, while removing a branch is not built; `Text` edits any string field with no declaration; the tutorial's config is in `App.tsx`; and Installation links to HALO's Your profile. The Overview lists ECHO's groups in sidebar order. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [spaces, feeds, guide-text, installation, welcome, F-15.6]
+  why: Each `covers:` point named something the code does not do or a page that does not exist. The registry point came from a doc comment on `Hypergraph.registry` that said the opposite of the query engine, and that comment is corrected with the pages.
+```
+
+```mdl
+decision D-333: Installation says in prose how a Node client opens the space, and shows no Node sample. Fills in [D-332].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [installation]
+  why: A learning-path page quotes only code the tutorial app runs [F-15.6], and Installation's step 3 is the only config the path shows [D-196]. The app runs in the browser.
+  rejected:
+    - Add a Node sample from the Configuration guide's snippet file: it is a second config on the page and a script the app does not run.
+```
+
+```mdl
+decision D-334: HALO's pages follow the code on invitations and recovery: `multiUse` is the option that keeps an invitation open and the `multiuse` type is deprecated; a wrong authorization code returns the flow to the code step and fails it after three tries; the profile page provides the services to `HaloProvider` and names `layerClient` as the layer form; the React app follows a flow through `useInvitationFlow`; and a passkey is replaced by registering the new one before revoking the old. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-guide-invitation, halo-invitations, halo-your-profile, halo-invite-people, halo-guide-passkey-recovery]
+  why: The host keeps an invitation open only on `multiUse`. Revoking the last active recovery credential throws, so the old sample's last call failed. The sample that logged the joined space id read a result the adapter always leaves empty.
+```
+
+```mdl
+decision D-335: HALO's and EDGE's pages state what EDGE holds. No server issues an identity or holds its identity key. An identity linked to a DXOS account has an EDGE agent, a device of kind `agent-managed` whose key EDGE holds, and a device can act for its identity. Recovery returns from EDGE the signed credential that admits the new device, and `recover` also accepts an account sign-in token or an OAuth proof. The limit "no one, including DXOS, can restore it" applies only to an identity with no account. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-identities-devices, halo-recovery-credentials, edge-identity-services]
+  why: The pages said no server holds a key that can act for an identity. The client admits a device key that EDGE creates for the agent, and the recovery manager accepts a token with no recovery-key signature. Which key signs the credential EDGE returns is decided in the EDGE repository and is not stated.
+  rejected:
+    - Weaken the limits without naming account recovery: the old absolute claims were false for exactly the identities that can recover.
+```
+
+```mdl
+decision D-336: PLEX's pages follow the code on five points: the rail entry is Plugin Settings, then Plugins; a type is named and listed with `Annotation.LabelAnnotation`, `IconAnnotation` and `UserType` from `@dxos/echo`; activation is ordered by `activatesOn` and `requires`, with no events fired before or after a module; a module waits only on its singleton requirements; and the publishing page's `covers:` lists the local-development, examples, spec and command-reference parts the page has. Each PLEX API page has a Members at a glance table. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [plex-build-with-agent, plex-run-in-composer, plex-guide-using-echo, plex-activation, app-framework-guide-activation-event, app-framework-publishing]
+  why: `AppAnnotation` holds only space-level annotations, `activatesBefore` and `activatesAfter` no longer exist, and a requirement that takes many providers never blocks a module.
+```
+
+```mdl
+decision D-337: A card in the TILE Overview's grid opens the API page of the component it shows, and the Overview's `covers:` says so. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-overview]
+  why: [D-298] retired the package guides, and the grid's cards already link to the API pages [F-21.2].
+```
+
+```mdl
+decision D-338: The single-page plugin tutorial at `/docs/plex/tutorial/` is removed. The PLEX learning path replaces it.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [plex-the-plex-plugin]
+```
+
+```mdl
+decision D-339: The tutorial's three old URLs, under `/docs/plex/`, `/docs/app-framework/` and `/docs/composer/`, redirect to The PLEX plugin, the first page of the learning path. Fills in [D-338].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [plex-the-plex-plugin]
+  why: Every API the page taught is gone from the code, and Composer's support plugin still listed one of the URLs as its Plugins entry.
+```
+
+```mdl
+decision D-340: A section's Overview follows an `overview` template of its own, not `concept`. Its parts are the ones these pages have: a definition, the section in brief, where it fits with the rest of DXOS, and how its pages are organized or where to go next. The Overviews of ECHO, HALO, MESH, EDGE, SAGE and TILE use it, and ECHO's Overview loses its one-sentence Behavior section.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [welcome, halo-welcome, mesh-overview, edge-overview, sage-overview, tile-overview, F-17.2]
+  why: The `concept` template requires Behavior with citations and Limits. None of the six pages has either, and writing them would repeat the concept pages.
+```
+
+```mdl
+decision D-341: The `narrative` template asks for a sample only where the section has an API a reader calls, and for a spec citation only where a spec states the claim.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-17.2]
+  why: The Why pages of MESH, EDGE, SAGE and TILE have no sample and no citation, and those sections have no spec to cite.
+```
+
+```mdl
+decision D-342: The Samples page keeps Contacts and Game Arena beside Tasks and TodoMVC. Its live links use `https://`, and Game Arena's code link points at `dxos/arena`.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [examples]
+```
+
+```mdl
+decision D-343: The Testing guide's invoke sample starts the app with the client plugin, creates an identity, adds the link to the default space and invokes `MarkRead` in that space. The docs package depends on `@dxos/plugin-client` for it.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [plex-guide-testing, F-3.2]
+  why: The old sample could not work: the handler resolves the link in a database, the harness loads no client, and the link was never added to one.
+```
+
+```mdl
+decision D-344: Querying keeps the tutorial app's search as it is, with `useQuery`, and says what the hook does. Matching a field value stays an inline example with no step of its own.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [querying]
+```
+
+```mdl
+decision D-345: The Stash modules diagram draws Startup activating only the operation handler, and Idle activating translations, schema and the App Graph builder. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [app-framework-anatomy]
+  why: `AppCapability.translations` and `AppCapability.schema` name no event, and a module that names none activates on Idle.
+```
+
+```mdl
+decision D-346: The docs do not describe a server holding a key as an exception. By default no server holds a key that can act for an identity. An identity can grant a server access to hold a key for it, and EDGE provides that as a service. Amends [D-335].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [halo-identities-devices, halo-recovery-credentials, edge-identity-services, halo-welcome]
+```
+
+```mdl
+decision D-347: The HALO docs do not document a personal space. HALO has none; a personal space is an app-level concept.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [halo-identities-devices]
+```
+
+```mdl
+decision D-348: The personal space leaves the Identities and devices page, the HALO glossary, the Identity API page and its sample, and the learning-path pages that named it. `Space.spaces` is described as the spaces the identity belongs to. Fills in [D-347].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-identities-devices]
+  why: `Identity.personalSpaceId` returns the id of the space that holds the identity's credentials, and the pages called that a personal space holding the user's settings.
+```
+
+```mdl
+decision D-349: The publishing page's "With an assistant" section covers the two templates a reader of a deployed or desktop Composer can use, the Projects plugin's and the Sandbox plugin's. It does not cover the Dev Shell plugin's template.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [app-framework-publishing]
+  why: Dev Shell is a proof of concept that Composer includes only when it is run from source, and its template's last step loads a plugin by URL, which a Composer served that way cannot do.
+```
+
+```mdl
+decision D-350: `@dxos/halo` has no `multiuse` invitation type, and the HALO pages do not mention one. An invitation is kept open with the `multiUse` option. Amends [D-334].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [halo-guide-invitation, halo-invitations]
+  why: The host treated the type as single-use, and nothing passed it.
+```
+
+```mdl
+decision D-351: The Invitation pages say what a `success` event's result names: the space for a space invitation, on host and guest, and the identity for a device invitation, on the guest. Amends [D-334].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-guide-invitation, halo-invitations]
+  why: The adapter now derives the result from the invitation when it succeeds, where it used to return an empty one.
+```
+
+```mdl
+decision D-352: The sentence after a code sample has a name from the code as its subject and says what the sample's comments do not: the result, the consequence, or why this line and not the obvious one. A sample whose comments carry the idea ends the passage, and no two explanations on a page open with the same words. Amends [D-322].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.4]
+  why: An audit of the 212 pages found that nearly every sentence after a sample opened "In this example," or "Here,": 104 of 133 in ECHO and all 81 in PLEX. About a third only listed the sample's names, and at least 15 repeated its comment.
+```
+
+```mdl
+decision D-353: A page gives its reader one foothold, in the section that brings in its main idea, in one of three shapes: the way they do it today and its cost, a failure they have hit, or the question they arrive with. It differs from the foothold of the pages before it in the sidebar, and a page whose idea the section's overview already grounded has none. Amends [D-322].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.3]
+  why: Applied page by page, the earlier rule gave 15 MESH and EDGE pages the same opening about a client-server app, and five HALO pages in a row the same contrast with an account on a server.
+```
+
+```mdl
+decision D-354: A term means one thing across a section and one thing has one word. The section's glossary is its term list, a page introduces a term at its first use, and the glossary holds every term the section's pages put in bold. Fills in [D-321].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.7]
+  why: The audit found one word for two things, such as "recovery credential" for a key and for a signed record, and terms that many pages used and none defined, such as entity, NSID and lookup key.
+```
+
+```mdl
+decision D-355: Table cells follow one style: a phrase or a sentence, two facts in two sentences, a type in code font and a default last. A change to a page keeps a table's rows, columns and facts and may bring its cells to that style. Spelling across the docs is American. Amends [D-323].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.8]
+  why: Tables were outside every rule, so 76 cells joined two facts with a semicolon and the TILE pages stated a default seven ways. Three TILE pages wrote "colour" where the rest wrote "color".
+```
+
+```mdl
+decision D-356: ECHO's pages say what the code does where the two differed. A reference stores its target's URI, an `echo:` EID for an object or a `dxn:` DXN for a type. The Filter API page covers foreign keys, `everything`, `nothing` and feed cursors. A space's copies are replicas held by peers, and a managed field holds foreign keys. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [guide-ref, guide-filter, spaces, objects-relations]
+  why: `Ref.uri` is the stored value in the code. Three pages sent readers to the Filter page for members it did not have. "Member" is HALO's word for an identity in a space.
+```
+
+```mdl
+decision D-357: HALO's pages agree on four things. An identity is a group of keys that the user's devices hold, named by a DID, and each device signs with its own key. Members with `read` or more hold a space's group key. A recovery key is the key and a recovery credential is the signed record that registers it, found by a lookup key. An agent device gives EDGE its identity's access level in that identity's spaces. Fills in [D-175] and [D-335].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-welcome, why-halo, halo-spaces-membership, halo-recovery-credentials, halo-guide-passkey-recovery]
+  why: The start pages said an identity is a key pair and the concept pages said a group. One page said current members hold the group key while `pull` members, who are current, do not. "Recovery credential" named both a key and a record.
+```
+
+```mdl
+decision D-358: HALO's pages state three behaviors of the adapter that the code has and the pages lacked. A space invitation with no role admits its guest as an admin. `Invitation.share` with no options is interactive with auth method `none`, and each page that shares carries a caution. `IdentityError` and `SpaceError` carry the wrapped failure in `context.error`, and no function's error type includes the four Keyhive errors yet. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-invitations, halo-guide-invitation, halo-guide-identity, halo-guide-space]
+  why: A reader who copies the default call makes an unauthenticated invitation that grants admin, and the pages said the guest joins with the access the host chose.
+```
+
+```mdl
+decision D-359: MESH's Architecture page says which layer uses which, as its diagram draws them, in place of a stack read bottom to top. EDGE's Overview names SAGE among the sections that use it. EDGE's compute pages call the API keys a process uses secrets, and keep "credential" for HALO's signed record.
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-architecture, edge-overview, edge-processes]
+  why: The diagram shows a swarm using signaling and Teleport side by side, so "each layer uses the one below it" was false of it.
+```
+
+```mdl
+decision D-360: SAGE's and EDGE's pages say an agent can have an identity of its own, which EDGE creates when Composer's setting for it is on, and that the identity's DID lets content name the agent as its author. They no longer say every agent has one or that a process writes to the database as the agent. Implements [D-326]. Amends [D-280].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [sage-overview, sage-agents, edge-processes]
+  why: `Agent.did` is optional, the setting that asks EDGE for an identity is off by default, and no runtime in this repository provides the agent's identity to an operation.
+  rejected:
+    - Describe the planned model in the present tense, as HALO does for Keyhive [D-99]: no decision says SAGE does this.
+```
+
+```mdl
+decision D-361: In PLEX's pages "manifest" means `manifest.json`, which the build and the dev server make from `dx.config.ts`, and `dx.config.ts` goes by its file name. Publishing a plugin starts step 3 from the `dx.config.ts` the learning path made, and shows `Config2.make` with an entry file as the alternative. Registering a type lets the app create, list and name its objects.
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [app-framework-create-plugin, app-framework-define-type, app-framework-anatomy, app-framework-publishing]
+  why: The code and Composer's UI call `manifest.json` the manifest. A reader who finished the learning path had a config the publishing page did not mention. Objects of an unregistered type still sync, and only creating one fails.
+```
+
+```mdl
+decision D-362: TILE's pages follow the code in five places. `ThemePlugin` sets the `dark` class before first paint, so Installation has no step for it. A component is styled by the theme's stylesheets, and `Theme.Provider` supplies strings and icons. An overlay takes its trigger's size, except a top-level menu. The Canvas editor page runs the `Docs` story. Until the next npm release, Installation and Connect to ECHO install from pkg.pr.new at `DXOS_COMMIT`, as ECHO's pages do under [D-189]. Implements [D-326].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-learn-installation, tile-learn-echo, tile-the-tile-component, tile-density, tile-api-canvas-editor-canvas-editor]
+  why: The tutorial told the reader to write a script the plugin already injects, and two pages placed it differently. The packages on npm predate the change that lets them install outside the repository.
+```
+
+```mdl
+decision D-363: Recover an identity says its last step does not run in the embed and fails in a fork of the tutorial project, because an identity the fork creates has no DXOS account. Supersedes [D-172]'s "runs only in the StackBlitz project".
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-recover-identity]
+  supersedes: D-172
+  why: [D-173] says recovery needs an account, and the tutorial project has no account or agent code.
+```
+
+```mdl
+decision D-364: Approve the recommendations on five open questions. Spaces and membership keeps describing Keyhive and gains one titled note on what today's implementation does. The docs home says an agent works in that same data through typed operations, and SAGE's tagline is left for user:richburdon. TILE's tutorial keeps no dark-mode step and installs from pkg.pr.new until the next npm release, while the component pages keep their npm install lines until then. The two EDGE questions are settled by reading the EDGE repository. TILE's learning-path pages use `## Background` and `## Steps`, TILE's component pages share one order, and a concept page's Model section may hold H3 subheadings.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [halo-spaces-membership, docs-home, tile-learn-installation, tile-learn-echo]
+```
+
+```mdl
+decision D-365: The note on Spaces and membership is a caution titled "What runs today". It says the implementation under HALO has not moved to Keyhive yet, so spaces replicate through EDGE without end-to-end encryption and EDGE can read every space it replicates, `pull` cannot be granted, and only an admin can change membership. TILE's component pages open with the live preview or story, then the import line, then the opening sentence, then the sample. Fills in [D-364].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-spaces-membership]
+  why: The legacy layer maps `pull` to no role and the observability code states that every space replicates through EDGE in plaintext. The order is the one 32 of the 43 core component pages already used.
+```
+
+```mdl
+decision D-366: EDGE's agent device is a store that signs credentials when another EDGE service asks, and runs no logic of its own. It signs the credential that admits a recovered device, so recovery needs an agent device, and it writes credentials into the identity's spaces when no member's device is online, such as a new device's feed admission. It does not read space data. Answers what [D-357] left open. Fills in [D-364].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [halo-recovery-credentials, halo-identities-devices, halo-spaces-membership, edge-identity-services]
+  why: In the EDGE repository, the db-service recovery handler admits the device through the identity service's `authorizeDevice`, which signs with the agent key, and fails with "Agent key not found" for an identity without one. Notarization writes credentials through the agent's feed. The identity service's README describes an agent as a passive Durable Object that stores keys and signs credentials on request.
+```
+
+```mdl
+decision D-367: The spec's templates fit the docs as written. Every page's template matches the page, and each template says how its pages are written as well as which parts they have.
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-17.2]
+```
+
+```mdl
+decision D-368: The overview, narrative, opener, tutorial, concept and namespace templates say how their parts are written. A namespace page gives each task its own H2, and a HALO namespace page has an Errors part. A tutorial step has Try it only where it changes an app that the docs run in the page. Fills in [D-367].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-17.2, F-18.1]
+  why: These are the pages as written. All 22 namespace pages give a task an H2, where the template asked for an H3 under a Common tasks heading that no page has. PLEX's steps and ECHO's Installation have no app to run in the page.
+  rejected:
+    - Keep the writing guidance per template in the docs-writing skill: it repeated the templates' parts and drifted from them.
+```
+
+```mdl
+decision D-369: Five templates join the spec, and `reference` leaves it. `opener` holds the four learning-path openers, `component` the 64 TILE API pages, and `guide` the 19 guide pages besides ECHO's React guide, plus Publishing a plugin. `glossary` holds the seven glossaries, and `resource` the 13 llms.txt, API reference, configuration and samples pages. ECHO's React guide keeps `tutorial`, since it has steps and a live app. TILE's API group is written with `component`. Fills in [D-367].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1, app-framework-publishing, mesh-glossary, edge-glossary, sage-glossary, halo-glossary, app-framework-glossary, tile-glossary, glossary]
+  why: Each page kept the template it was given when it was added. TILE's API then moved to one page per component [D-310], and no template was written for openers, guides, glossaries or resource lists. `reference` described a module page with a members table, which no page is.
+  rejected:
+    - Stretch `namespace` and `tutorial` to cover these pages: their parts would no longer say where to look.
+```
+
+```mdl
+decision D-370: A glossary lists its terms in alphabetical order, and each entry's heading links to the page that explains the term, with no "See" sentence. The six glossaries besides ECHO's move their links into their headings. MESH's Transports gives Iroh one Limits bullet, marked planned, in place of a section of its own. Fills in [D-369].
+  date: 2026-11-19
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-transports, mesh-glossary, edge-glossary, sage-glossary, halo-glossary, app-framework-glossary, tile-glossary, glossary]
+  why: ECHO's glossary already linked its headings. A planned transport is a known divergence, which the concept template's Limits holds.
+```
+
+```mdl
+decision D-371: ECHO's API reference, glossary and examples pages move from `/docs/additional-resources/` to `/docs/echo/resources/`, with redirects from the old routes. Examples lists drawing.sh after Composer.
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [api-reference, glossary, examples]
+  why: The header's topic switcher picks a topic by URL prefix, so pages outside `/docs/echo/` showed no topic.
+```
+
+```mdl
+decision D-372: PLEX's Resources has an Examples page listing Composer, drawing.sh and Game Arena.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [plex-examples]
+```
+
+```mdl
+decision D-373: On `/echo` only the selected demo boots as the page loads. The others boot in the background one at a time, each once the demo before it shows its content on every peer, so a tab is ready by the time a reader picks it; a tab picked earlier boots at once. Each peer creates its own default and settings spaces alongside the shared space instead of before it. Until a peer shows content, its pane shows Connecting… over the booting app. The editor demo shows content on both peers in about 4.4 s on a local production build, down from 7 s. Amends [D-222], whose demos all started at load.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [F-7.6, F-7.8, F-7.12]
+  why: Data took 10 s or more to show up in the demos, and the panes looked blank and broken while it loaded.
+  rejected:
+    - Booting every demo at load, which D-222 chose so a tab switch is instant; the hidden demos' eight plugin apps and the canvas seed held the shown demo back by seconds.
+    - Booting a hidden demo only when its tab is picked, which left the reader waiting up to 3 s on a tab switch.
+```
+
+```mdl
+decision D-374: A docs page with demo frames loads the frame most in view alone, and the rest together once it reports that it shows on every peer, or after 20 s. A frame scrolled into view before then loads at once unless the one loading is in view too. Each frame says Loading live demo… until its demo starts. On the PLEX Overview the first demo shows its content in about 4.4 s on a local production build, down from 13 s.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [F-7.10]
+  why: The four frames booted together on one main thread and each took 13 s or more.
+  rejected:
+    - One queue shared by the frames from inside them; each frame still loaded and evaluated its whole bundle while it waited, which kept the first demo at 9 s.
+    - Loading every frame one at a time; on a real network a frame spends much of its boot waiting on chunk round trips, so the fourth demo finished at 21 s, against 11 s with all four together.
+```
+
+```mdl
+decision D-375: The `/echo` page's HTML lists every chunk the editor demo imports as a module preload, so the browser fetches them in parallel instead of finding them one import wave at a time. The list leaves out the other demos' stories, which load after the editor shows. On dev the editor shows content on both peers in about 5.75 s, against 6.2 s without the list, measured on the same deploy.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [F-7.12]
+  why: About 35 waves of dynamic imports stood between the page load and the editor demo's content, each a network round trip.
+  rejected:
+    - Preloading every demo's chunks, which would compete with the editor demo for bandwidth, as D-373 keeps the hidden demos from doing for the CPU.
 ```
 
 ## Appendix: Extension Definitions

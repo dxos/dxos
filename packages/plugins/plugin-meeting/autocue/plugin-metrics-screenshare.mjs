@@ -6,7 +6,7 @@
  * The screen Lucía shares in the four-person meeting: the DXOS Architecture template's "Plugin metrics" sheet, whose
  * chart she switches from horizontal to vertical bars.
  *
- * @app composer-app dev build (plugin-canvas's DXOS Architecture template on), via
+ * @app composer-app dev build (plugin-debug's DXOS Architecture template on), via
  *   `DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
  *
  * Recorded without the action feed or captions, since it plays inside a call tile as a screenshare:

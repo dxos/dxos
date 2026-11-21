@@ -1,5 +1,212 @@
 # @dxos/plugin-discord
 
+## 0.17.0
+
+### Minor Changes
+
+- b73cc5b: An agent can attach files to what it posts in Discord: the `sendMessage` and `sendDirectMessage` operations take `files`, references to File objects held in blob storage (images, videos, documents up to 10 MB each), and `DiscordBot.Action` carries them to the bot as `Attachment`s keyed by their blob digest, so only the key crosses to the bot.
+- 7f9b8bc: Discord back-indexing runs without an agent: a space owner grants a server from the Discord connection page, picks channels and a history window, and a crawl on EDGE reads them through Composer's Discord bot, runs the pipeline-discord stages and writes facts to the space's memory; the page can pause, check now or restart the crawl, and Brain's Memory view can clear the store. The crawler reaches unread channels before re-reading finished ones, and a page of only system messages no longer ends a channel. The connection page gains a section slot (`ConnectorSurface.ConnectionSection`), the Debug companion gains an object-panel slot (`DebugSurface.ObjectPanel`) with KMS and trigger-manager panels and redacts secrets in its JSON view, and the trace panel names operations run on EDGE. Composer's agent now explores its skills and operations before saying it cannot answer.
+
+  Breaking: `CrawlDiscordChannels` and `ConfigureBackIndex` take a bot `applicationId` instead of a connection. `ExtractedQuestionStore` is removed from `@dxos/pipeline-discord`; read the questions it held from the fact store with `listQuestions`. The Memory skill (`org.dxos.skill.memory`) and its `Memory` type are removed, with the `@dxos/assistant-toolkit/Memory` and `@dxos/assistant-toolkit/MemorySkill` subpaths; agents keep knowledge in the space's memory and read it with Brain's fact tools.
+
+### Patch Changes
+
+- e6c7425: A Discord reaction now counts as the agent's answer in that conversation, so an agent that acknowledges a message with 👍 is no longer reminded to send a reply. `discord.addReaction` reports the channel it reacted in.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [c9a38c1]
+- Updated dependencies [eea5752]
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [6f6547f]
+- Updated dependencies [af3985b]
+- Updated dependencies [1b93cb0]
+- Updated dependencies [9314c91]
+- Updated dependencies [8af81ed]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [2ffc301]
+- Updated dependencies [5e9c5ab]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [1ac444f]
+- Updated dependencies [d105c19]
+- Updated dependencies [cfc5c42]
+- Updated dependencies [7a8b279]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [6a37f4b]
+- Updated dependencies [dd40958]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [3585abc]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [a245692]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [1054c31]
+- Updated dependencies [416201f]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2176f79]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [22f759a]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [b15e5c3]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [92ef425]
+- Updated dependencies [17a9e75]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [342ff5a]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [ddd19e9]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [d699067]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [0ad95b7]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [9c5af4a]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [d159a7d]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [fba77f7]
+- Updated dependencies [02254b0]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [3d22d48]
+- Updated dependencies [7e07e49]
+- Updated dependencies [6cd526c]
+- Updated dependencies [b159f41]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [101f620]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+  - @dxos/plugin-agent@0.17.0
+  - @dxos/edge-client@0.17.0
+  - @dxos/assistant@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/pipeline-rdf@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo-memory@0.17.0
+  - @dxos/plugin-thread@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/pipeline-discord@0.17.0
+  - @dxos/crawler@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/pipeline@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

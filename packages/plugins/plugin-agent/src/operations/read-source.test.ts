@@ -61,6 +61,14 @@ const FACTS = [
     quote: 'The race is in the v12 index migration.',
   },
   { subject: 'Josiah', predicate: 'reviews', object: 'fix', quote: 'I will review the fix.', force: 'commissive' },
+  // What the chat rules make of "we" from a line whose speaker nothing identifies.
+  { subject: 'User', predicate: 'decided', object: 'ship offline mode', quote: 'We decided to ship offline mode.' },
+  {
+    subject: 'offline mode',
+    predicate: 'depends on',
+    object: 'background sync',
+    quote: 'Offline mode depends on background sync.',
+  },
 ];
 
 /** Extraction calls made so far, so a test can tell a read that reached the model from one that did not. */
@@ -281,6 +289,37 @@ describe('ReadSource', () => {
         yield* Operation.invoke(AgentOperation.ReadSource, { agent: agentRef, source: Ref.make<Obj.Unknown>(chat) });
         const [fact] = yield* brainFacts(yield* Database.load(agentRef));
         expect(fact.attribution.agent).toBe('did:halo:dima');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'omits a decision whose speaker nothing identifies, and keeps the rest of the line',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const chat = yield* Agent.loadChat(agent);
+        if (!chat) {
+          return expect.unreachable('The agent has a chat.');
+        }
+        const feed = yield* Database.load(chat.feed);
+        yield* Feed.append(feed, [
+          Message.make({
+            sender: { role: 'user' },
+            blocks: [
+              { _tag: 'text', text: 'We decided to ship offline mode. Offline mode depends on background sync.' },
+            ],
+          }),
+        ]);
+        yield* Database.flush();
+
+        yield* Operation.invoke(AgentOperation.ReadSource, { agent: agentRef, source: Ref.make<Obj.Unknown>(chat) });
+        const facts = yield* brainFacts(agent);
+        expect(facts.map(({ assertion }) => assertion.predicate)).toEqual(['depends on']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -16,32 +16,42 @@ import { Masonry } from '@dxos/react-ui-masonry';
 npm install @dxos/react-ui-masonry
 ```
 
-`Masonry` packs tiles of different heights into columns, each tile in the shortest column, so the columns have no
-gaps. The number of columns follows the width it has. When the items change, the tiles that stay move to their new
+`Masonry` packs tiles of different heights into columns. It puts each tile in the shortest column, so the columns have
+no gaps.
+
+The number of columns follows the width the masonry has. When the items change, the tiles that stay move to their new
 places, and the masonry measures only the new ones.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Masonry.Root` | Takes the `Tile` that draws one item, and the column sizes |
-| `Masonry.Content` | Scrolls the tiles |
-| `Masonry.Viewport` | Takes the `items` and a `getId` for each |
+| `Masonry.Root` | The root, which takes the `Tile` that draws one item, and the column sizes |
+| `Masonry.Content` | The scroll area for the tiles |
+| `Masonry.Viewport` | The tiles. It takes the `items` and a `getId` for each |
 
 ## `Masonry.Root`
+
+`Masonry.Root` takes these props:
 
 | Prop | Type | Effect |
 | --- | --- | --- |
 | `Tile` | `ComponentType<{ data }>` | Draws one item |
-| `minColumnWidth` | `number` | The narrowest a column gets, in rem |
-| `maxColumnWidth` | `number` | The widest a column gets, in rem |
-| `maxColumns` | `number` | At most this many columns |
-| `gap` | `number` | The space between tiles, in rem |
+| `minColumnWidth` | `number` | Sets the narrowest a column gets, in rem |
+| `maxColumnWidth` | `number` | Sets the widest a column gets, in rem |
+| `maxColumns` | `number` | Sets the most columns |
+| `gap` | `number` | Sets the space between tiles, in rem |
 
 ## Lay out tiles
 
-Build each tile from a `Card` from `@dxos/react-ui`, so the gallery matches the rest of the app:
+Build each tile from a `Card` from `@dxos/react-ui`, so the tiles match the rest of the app.
+
+**Example** (Laying out a photo gallery)
 
 <Snippet file="tile-guide-masonry" region="gallery" lang="tsx" />
 
-The story at the top of this page runs this example.
+`PhotoTile` draws one photo as a card, and `minColumnWidth` keeps each column at least 9rem wide. `Masonry.Viewport`
+takes the photos as `items` and reads each one's id with `getId`.
+
+The story at the top of this page is a different gallery. It shows portrait cards of people, in columns at least 10rem
+wide.

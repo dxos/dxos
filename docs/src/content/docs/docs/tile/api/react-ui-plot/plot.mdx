@@ -23,18 +23,23 @@ chart with more than one series has a legend.
 
 | Prop | Type | Effect |
 | --- | --- | --- |
-| `data` | `PlotData` | Columns and rows; the first column is the category or the x axis |
-| `options.type` | `'bar' | 'pie' | 'xy' | 'scatter' | 'heatmap' | 'radar' | 'map'` | The kind of chart |
-| `options.grid` | `boolean` | Grid lines |
-| `options.stacked` | `boolean` | Bars stack instead of standing side by side |
-| `options.horizontal` | `boolean` | Bars run across |
-| `options.regression` | `boolean` | A trend line on a scatter chart |
+| `data` | `PlotData` | Sets the columns and rows. The first column is the category or the x axis |
+| `options.type` | `'bar' \| 'pie' \| 'xy' \| 'scatter' \| 'heatmap' \| 'radar' \| 'map'` | Sets the kind of chart. `'xy'` is a line chart |
+| `options.grid` | `boolean` | Draws grid lines, on a bar or line chart |
+| `options.stacked` | `boolean` | Stacks bars instead of standing them side by side |
+| `options.horizontal` | `boolean` | Runs bars across |
+| `options.regression` | `boolean` | Draws a trend line on a scatter chart |
 
 ## Chart a table
 
 `toPlotData` turns rows into the chart's data. With `header`, the first row names the columns. The same data works for
-every type, so switching is one option:
+every type, so you switch charts by changing one option.
+
+**Example** (Drawing one table as three kinds of chart)
 
 <Snippet file="tile-guide-chart" region="chart" lang="tsx" />
+
+`type` is the only option the buttons change. `grid` stays on, and shows only on the bar chart, because grid lines
+are for bar and line charts.
 
 The story at the top of this page runs this example.

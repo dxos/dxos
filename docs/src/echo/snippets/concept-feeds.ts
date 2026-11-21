@@ -60,6 +60,13 @@ const next = await db
   .run();
 // #endregion walk
 
+// #region rewrite
+// Appends the whole message again under its id.
+Obj.update(page[0], (message) => {
+  message.text = 'Hello, everyone';
+});
+// #endregion rewrite
+
 // #region fork
 // A new branch that replies to the first message instead of the second.
 const branch = await db.forkFeed(

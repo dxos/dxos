@@ -11,14 +11,14 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as Fieldset from '@dxos/react-ui/Fieldset';
 ```
 
-`disabled` and `invalid` on the root reach every control inside it.
+A fieldset is a named group of fields. `disabled` and `invalid` on `Fieldset.Root` reach every control inside it.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
 | `Fieldset.Root` | The group of fields |
-| `Fieldset.Legend` | Names the group |
+| `Fieldset.Legend` | The group's name |
 | `Fieldset.HelperText` | A hint under the fields |
-| `Fieldset.ErrorText` | Shown only while the group is `invalid` |
-| `Fieldset.useFieldsetDisabled` | A control's `disabled`, or its fieldset's |
+| `Fieldset.ErrorText` | The error, shown only while the group is `invalid` |
+| `Fieldset.useFieldsetDisabled` | A hook that returns a control's `disabled`, or its fieldset's |

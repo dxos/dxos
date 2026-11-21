@@ -1,5 +1,75 @@
 # @dxos/ai
 
+## 0.17.0
+
+### Minor Changes
+
+- 2ffc301: Leaner agent turn prompts. A turn keeps the system prompt it started with: a skill, operation or object bound or unbound mid-turn is announced in a notice instead, in `AiSession` and in code mode, so the prompt cache holds across the turn. Skill definitions are named (`<skill name="…">`). Turns before the last five are compacted: their tool results, reasoning and stats are dropped, and each tool call is kept as a note of its input. The stats block records prompt-cache reads and writes (`cacheReadTokens`, `cacheWriteTokens`). `Dialect` gains `operations`. `queryObjects` names every result by `dxn`, `typename` and `label`, and `includeContent` adds the object's fields beside them.
+- 498840b: `Model.defaultDecisionModel` now resolves to Cloudflare's Clef on Workers AI when no default is configured: `TypeSafeResolver.make` falls back to `Model.cloudflareClef` when it has a Workers AI route (jev on TypeSafe otherwise), and the TypeSafe plugin's **Default decision model** setting does the same when unset. Clef answers through EDGE on its own Cloudflare account, so every signed-in user gets a decision with no key connected.
+- 6ba7a88: Add `ExtractionModel` to `@dxos/ai`, a typed-field extraction service served by Cloudflare's Clairic (`Model.cloudflareClairic`), and use it with a decision model to triage an inbox in one action: each email gets labels and a priority band, and what it asks for becomes a task filed in a per-mailbox project and shown under the email. An agent assigned such a task replies through `InboxOperation.SendReply` only after the person allows it in the chat, where the request previews the reply (`Operation.ConsentPreviewAnnotation`); delegated agents now start from their tasks' and source objects' URIs, and code mode accepts an object where an operation expects a reference to it. `TagIndex.taggedIdsAtom` now updates on every write to a tag, not only the first.
+- d159a7d: `ScriptedScene` (from `@dxos/ai/testing`) writes a scripted model as the conversations it plays: `user`, `system`, `tool` and `assistant` turns, plus a `generated` escape hatch for a hand-written turn generator. Patterns are strings, RegExps or template strings whose placeholders (`objectId`, `threadId`, `capture`) capture values from prompts and tool results and write them into later turns; a mismatch reports the conversation, the turn, the pattern as written and the full text it was tested against. `ScriptedLanguageModel.resolver` serves each script as a model of its own, `org.dxos.model.scripted.<name>`, beside the real models.
+
+  `ChatPlane` is exported as `@dxos/plugin-assistant/ChatPlane`, and `ChatPlane.Cell` takes a `title`. While every column fits in the viewport, the plane centers them as a group rather than the selected column, so selecting one no longer pushes another off screen. A chat model given a subagent's thread shows that thread alone, so each subagent can be rendered in a column of its own. `Chat.Suggestions` offers premade prompts as chips above the composer. `AssistantCapabilities.ModelPreset` lets a plugin offer models beyond the built-in catalog in the chat's model picker.
+
+### Patch Changes
+
+- Updated dependencies [c9a38c1]
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [2ffc301]
+- Updated dependencies [c1f845f]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [7a8b279]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [908c301]
+- Updated dependencies [3aef671]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [592fdad]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b159f41]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/types@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

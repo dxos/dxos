@@ -21,6 +21,8 @@ export const translations = [
         'unsupported-type.message':
           'No enabled plugin supports {{typename}}, so there is nothing to show. The item itself is unchanged and still stored in the space.',
         'find-plugin.label': 'Find plugin',
+        'json-card.size.label': 'JSON · {{count}} chars',
+        'json-card.toggle.label': 'Toggle JSON',
       },
     },
   },

@@ -457,6 +457,34 @@ test QA-2: An agent turns a community's memory into sheets with charts, a deck a
       do: Open the sheets, the presentation and the document the agent created.
       expect: each sheet holds the rows a query returned and a chart of them; the deck and the summary describe the same five findings
       note: The findings are the model's; nothing in the flow names them.
+
+test QA-3: A project's tasks each come back from the agent with an artifact drawn from the space memory
+  desc: |
+    In a new space, create a project from the Community Findings template: five tasks that each name the artifact
+    their answer goes in (four sheets with charts and a docs-gap brief) and a deck task that presents them. Import the
+    Cloudflare Developers Discord's facts as TriG, hand every task to the agent, and open each task with the artifact
+    filed on it. Recorded as autocue/community-findings.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, with a model the assistant can reach
+    - a TriG export of a crawl's fact store (`moon run plugin-discord:facts -- trig <out.trig> --facts <facts.db>`)
+  steps:
+    - name: Create the project
+      do: In a new space, add a Project and pick the "Community Findings" template.
+      expect: the project opens with six tasks, all To do, "Present the findings" last and depending on the other five
+    - name: Import the community's memory
+      do: Open Memory in the context sidebar and import the TriG.
+      expect: the toolbar reports the quads imported
+    - name: Hand every task to the agent
+      do: Tick every task and Delegate to agent.
+      expect: every task is started and held by one agent session
+    - name: Wait for the agent
+      do: Wait while the agent queries the memory and works the tasks in order.
+      expect: every task in review, each with an artifact of the type it names filed on it and on the project
+    - name: Open each task's artifact
+      do: Open a chart task, its sheet and the Charts companion, then the brief and the deck.
+      expect: each chart draws only the rows it should (no catch-all bar, no partial weeks); no artifact names a person
 ```
 
 ## Changelog
@@ -528,6 +556,30 @@ decision D-8: The Memory view's query log is kept per space memory, and `QuerySp
   for: user:dmaretskyi
   affects: [MemoryArticle, querySparql, FactStoreRegistry]
   why: An operation sees only the space's MemoryService, which the client hands out once per space, so that instance is the key that joins the agent's queries to the view.
+```
+
+```mdl
+decision D-9: A project template holds a small project whose every task expects an artifact, an analysis of a community's memory; the user assigns the tasks to the agent, which queries the memory and attaches an artifact to each task. It is a project template, not a space template.
+  date: 2026-11-20
+  by: user:dmaretskyi
+  affects: [QA-3]
+```
+
+```mdl
+decision D-10: The Community Findings template holds five analysis tasks (four sheets with charts and a docs-gap brief) and a deck task that depends on them, binds the Brain, Sheet, Presenter and Markdown skills to the project, and ships without the memory. Fills in [D-9].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-3]
+  why: Sheets with charts are the artifact asked for most, and a brief and a deck show other kinds; the memory comes from a private fixture and is imported per space.
+  rejected: Naming the template after Cloudflare, since nothing in the tasks needs a particular community.
+```
+
+```mdl
+decision D-11: A chart draws only the rows it should: the product chart leaves out questions that name no product and counts them in a note, and the weekly chart leaves out the partial first and last weeks of the crawl and lists them below. Fills in [D-10].
+  date: 2026-11-20
+  by: user:dmaretskyi
+  affects: [QA-3]
 ```
 
 

@@ -1,0 +1,102 @@
+---
+title: Layout hints
+description: Fix one thing you saw in a layout with the smallest hint.
+---
+
+A **layout hint** is a word in a statement that tells drawing.sh where to put a box or how to route an arrow. Start
+with none. drawing.sh places every box and routes every arrow on its own, and its report counts the crossings and
+bends.
+
+When the picture has a defect, fix that one defect with the smallest hint, render again, and look. If a hint makes
+the report worse, remove it rather than adding a second one to fight it.
+
+## Placement
+
+Placement words put a box against another:
+
+```dx
+node Api "API server"
+node Db "Postgres" below Api
+node Cache "Redis" right-of Db
+```
+
+`right-of X`, `left-of X`, `below X`, `above X`, `same-row X` and `same-col X` each place a box against another.
+Each is a rule the layout must keep. Prefix `~` (`~below X`) to make it a preference the layout may break.
+
+Groups take the same words. Relate groups to each other (`group data below web`) rather than relating members of
+different groups, or the frames stretch around empty space.
+
+**Example** (Placing one group below another)
+
+```dx
+group web "Web app" {
+  node Browser
+  node Api
+}
+group data "Storage" below web {
+  node Db
+}
+edge Browser -> Api
+edge Api -> Db
+```
+
+## Shape
+
+Two hints fix a diagram that came out as a long strip:
+
+- `diagram aspect=16:9` asks for a wider, shorter picture.
+- `compact` on a group keeps it near square, and `max-width=N` limits it to N columns.
+
+**Example** (Keeping a group to three columns)
+
+```dx
+group services "Services" compact max-width=3 {
+  node Auth
+  node Billing
+  node Search
+  node Mail
+}
+```
+
+## Sides
+
+An arrow that wraps around a box can be pinned to a side of each end: `top`, `bottom`, `left` or `right`.
+
+**Example** (Pinning both ends of an arrow)
+
+```dx
+node A
+node B below A
+edge A:right -> B:top
+```
+
+`A:~right` prefers the side without requiring it.
+
+## Gutters
+
+A **gutter** is the space between two columns or two rows of the layout grid. `via` routes an edge through one:
+
+```dx
+node A
+node B below A
+node C below B
+node D right-of B
+edge A -> C via cell(1.5,_)
+```
+
+`via cell(1.5,_)` routes an edge through the gutter between columns 1 and 2, and `via cell(_,1.5)` through the
+gutter between rows 1 and 2. Use it when several arrows crowd one gutter.
+
+## Buses
+
+A **bus** is one trunk from the source that splits to each target, in place of separate arrows:
+
+```dx
+node Api
+node Db
+node Cache
+node Queue
+edge Api -> Db, Cache, Queue bus
+```
+
+`bus` at the end of an edge with several targets draws them as one bus.
