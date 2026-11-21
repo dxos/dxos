@@ -1,0 +1,297 @@
+---
+id: org.dxos.session.2026-11-21-session-board
+name: Session board skill
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Session board skill
+
+The agent keeps the session as mdl. A script makes the page. The agent publishes it.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: The session file is `SESSION.mdl`, parsed with Deus.
+  status: done
+  notes:
+    - Questions, answers and the timeline are append-only.
+    - The session dialect is `org.dxos.spec.session`.
+```
+
+```mdl
+goal G-2: The page is dark, in the react-ui design system.
+  status: done
+```
+
+```mdl
+goal G-3: Goals and questions use the plugin-projects task UI.
+  status: done
+  notes:
+    - Goals render in `TaskList`, questions in `TaskQuestion`.
+```
+
+```mdl
+goal G-4: An append-only timeline is at the bottom of the page.
+  status: done
+```
+
+```mdl
+goal G-5: The page reads live state through the `mcp` capability.
+  status: backlog
+  notes:
+    - GitHub for PR state, and the DXOS MCP servers.
+```
+
+```mdl
+goal G-6: The agentic review of the PR finds no issues.
+  status: done
+  notes:
+    - System One found 0 issues for $0.0087.
+```
+
+```mdl
+goal G-7: The Stop hook reminds the agent to keep the board current.
+  status: done
+  notes:
+    - It never blocks a stop that a Stop hook already continued.
+```
+
+```mdl
+goal G-8: The build reads the PR state from GitHub.
+  status: done
+  notes:
+    - The lookup is cached for 2 minutes, so the Stop hook stays fast.
+```
+
+```mdl
+goal G-9: A Land switch on each PR starts or stops the `land` skill.
+  status: done
+  notes:
+    - The switch writes `prs/<PR id>` in the artifact database and sends a comment to Claude.
+    - The skill keeps the database in step when the session starts or stops the `land` skill.
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Build the status board from a session file.
+  ref: dxos/dxos#14647
+  status: merged
+```
+
+## Changelog
+
+```mdl
+question Q-1: Is `agents/sessions/<date>-<slug>/` the correct place for session files?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Yes: the session file is committed with the work.
+    - No: use `.agents/sessions/`, beside the project registry.
+```
+
+```mdl
+question Q-2: Must the Stop hook block the stop, or only show a note?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Block: one time for each change, so the agent publishes.
+    - Note: the agent can skip the publish, and the page can be old.
+```
+
+```mdl
+question Q-3: Must the script get the PR state from GitHub?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Yes: the script reads the state on each build.
+    - No: the agent writes the state.
+```
+
+```mdl
+question Q-4: Is a new skill name necessary?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: This work replaces the old `status-board` skill, which wrote HTML by hand.
+```
+
+```mdl
+decision D-1: The agent writes the PR state for now. The page reads live state through the `mcp` capability later.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  answers: Q-3
+```
+
+```mdl
+decision D-2: Yes.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  answers: Q-1
+```
+
+```mdl
+decision D-3: The Stop hook reminds the agent to keep the board updated, without recursive loops.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  answers: Q-2
+```
+
+```mdl
+decision D-4: Yes. The script gets the PR state from GitHub.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  supersedes: D-1
+```
+
+```mdl
+decision D-5: No. This work replaces the old `status-board` skill under its name.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  answers: Q-4
+```
+
+```mdl
+decision D-6: The hook reminds once when HEAD or the working tree changed but the board did not. Fills in [D-3].
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: A reminder on every stop would fire on turns that only answer a question.
+  rejected:
+    - Remind on every stop: noise on turns with no work.
+```
+
+```mdl
+decision D-7: The hook never blocks a stop that a Stop hook already continued. Fills in [D-3].
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The `stop_hook_active` flag is the only signal that a block would repeat.
+```
+
+```mdl
+decision D-8: GitHub state wins, except `landing` and `queued`, which GitHub does not show. Fills in [D-4].
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The merge queue and the `land` skill are not visible in the pull request API.
+```
+
+```mdl
+decision D-9: Each PR gets a land toggle. It writes the artifact database, so the state is consistent, and notifies Claude. The skill keeps the database in sync.
+  date: 2026-11-21
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-10: The database document `prs/<PR id>` holds `{ land, ref, at }`, and only editors write it. Fills in [D-9].
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: Only editors can send a comment to Claude, so a lower write level would change the switch with no request.
+```
+
+```mdl
+decision D-11: The notice is a comment sent to Claude on the PR row; on a mismatch the database wins. Fills in [D-9].
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: A sent comment wakes the session that watches the artifact; the database is the latest state of the switch.
+  rejected:
+    - The `mcp` capability with Claude Code Remote `send_message`: not checked from a page, and tied to one session id.
+```
+
+## Timeline
+
+```mdl
+event T-1: The session started.
+  date: 2026-11-21T11:34Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-2: Opened [PR-1] as a draft.
+  date: 2026-11-21T11:55Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-3: Fixed the dark theme text in the Artifact frame.
+  date: 2026-11-21T12:19Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-4: The session file changed from Markdown to `SESSION.mdl`.
+  date: 2026-11-21T12:30Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-5: The user answered [Q-1], [Q-2], [Q-3] and [Q-4].
+  date: 2026-11-21T12:38Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-6: The build reads PR state from GitHub, and the hook reminds once.
+  date: 2026-11-21T12:45Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-7: CI found the new block types missing in the mdl editor grammar. Fixed.
+  date: 2026-11-21T12:55Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-8: The PR rows have a Land switch for editors.
+  date: 2026-11-21T13:10Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-9: The Land switch asked to land [PR-1]. The switch layout is fixed first.
+  date: 2026-11-21T13:46Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-10: [PR-1] is ready for review, with auto-merge on.
+  date: 2026-11-21T13:51Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-11: The review findings on [PR-1] are fixed.
+  date: 2026-11-21T14:20Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-12: [PR-1] is in the merge queue.
+  date: 2026-11-21T14:36Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-13: [PR-1] is merged.
+  date: 2026-11-21T15:07Z
+  by: agent:claude-code
+```

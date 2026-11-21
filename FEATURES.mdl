@@ -10,7 +10,7 @@ items that describe it; the format is `packages/reflect/deus/lang/features.mdl`.
 
 - `pnpm deus features check` shows each feature's status beside the status its spec reviews support.
 - To add or change a feature, edit its block here with a `## Changelog` decision, then carry it down
-  the layers with the `feature-waterfall` skill (`agents/routines/feature-waterfall.md`).
+  the layers with the `feature-waterfall` skill (`.agents/routines/feature-waterfall.md`).
 
 The map was seeded with one feature per spec, its status taken from that spec's review. Split a
 feature into narrower ones (citing `#F-n` items) as the work on it gets specific.

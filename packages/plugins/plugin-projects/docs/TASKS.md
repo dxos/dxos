@@ -41,7 +41,7 @@ Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
 ## Phase 1: Core plugin + Project type (milestone 1) — DONE
 
-Plan: agents/superpowers/plans/2026-07-24-plugin-projects.md (all 10 tasks complete, per-task + final reviews clean)
+Plan: .agents/superpowers/plans/2026-07-24-plugin-projects.md (all 10 tasks complete, per-task + final reviews clean)
 
 ### Tasks
 
