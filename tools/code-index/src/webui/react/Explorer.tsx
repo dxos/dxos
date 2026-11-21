@@ -458,7 +458,7 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
         seen = revision;
       },
       () => {
-        reconnected = seen !== undefined;
+        reconnected = true;
       },
     );
   }, [model, registry]);
