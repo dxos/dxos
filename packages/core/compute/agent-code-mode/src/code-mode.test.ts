@@ -712,6 +712,11 @@ describe('code mode queries', () => {
           print(memos.map((memo) => memo.title).join(), spaceOnly.length, withFeeds.length, inInbox.map((task) => task.title).join());
         `);
         expect(output).toEqual('Stored memo 0 1 Mail about the plants');
+
+        // A guessed typename in an old form says what one looks like instead of failing on the DXN parser.
+        const guessed = yield* runEvalResult(`await search('plants', 'dxos.org/type/Document');`);
+        expect(guessed.ok).toBe(false);
+        expect(guessed.output).toContain("'dxos.org/type/Document' is not a typename");
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

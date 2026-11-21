@@ -92,7 +92,7 @@ export const Open = Operation.make({
   output: Schema.Struct({
     content: Schema.String,
   }),
-});
+}).pipe(Operation.annotate(Operation.ScriptBindingAnnotation, ['get']));
 
 export const GetSelection = Operation.make({
   meta: {

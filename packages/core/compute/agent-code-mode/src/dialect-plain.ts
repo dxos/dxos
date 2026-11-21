@@ -36,6 +36,12 @@ export class UnknownObjectTypeError extends Schema.TaggedError<UnknownObjectType
   },
 ) {}
 
+/** A typename `query` or `search` cannot parse, such as an old `example.com/type/Name` form. */
+export class InvalidTypenameError extends Schema.TaggedError<InvalidTypenameError>('InvalidTypenameError')(
+  'InvalidTypenameError',
+  { message: Schema.String },
+) {}
+
 /** An object `in` names that the database does not hold: the model's mistake, so an expected failure. */
 export class UnknownParentError extends Schema.TaggedError<UnknownParentError>('UnknownParentError')(
   'UnknownParentError',
@@ -315,12 +321,20 @@ type QueryOptions = {
  * type stored in the space, since objects of a stored type carry its `echo:` id, which the typename does not match.
  */
 const storedTypes = (typename: string) =>
-  Effect.map(
-    Database.query(
-      Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry()),
-    ).run,
-    (declared) => declared.filter((type) => Type.getDatabase(type) != null),
-  );
+  Schema.is(DXN.NameSchema)(typename)
+    ? Effect.map(
+        Database.query(
+          Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry()),
+        ).run,
+        (declared) => declared.filter((type) => Type.getDatabase(type) != null),
+      )
+    : Effect.fail(
+        new InvalidTypenameError({
+          message:
+            `'${typename}' is not a typename: typenames look like 'org.dxos.type.document'. ` +
+            'Look them up with the type lookup operation rather than guessing.',
+        }),
+      );
 
 const typeFilter = (typename: string) =>
   Effect.map(storedTypes(typename), (stored) =>
