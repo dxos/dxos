@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-canvas",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Infinite multi-depth canvas as an illustrator drawing variant",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -143,7 +143,6 @@
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-presenter": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -152,7 +151,6 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-slides": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",

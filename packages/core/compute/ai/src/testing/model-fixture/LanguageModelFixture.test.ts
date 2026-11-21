@@ -223,6 +223,62 @@ describe('dynamic value matching', () => {
     expect(a).toEqual(b);
   });
 
+  test("a system prompt's current-date section does not take part in the match", ({ expect }) => {
+    const system = (date = '') => [{ role: 'system', content: `Base prompt.${date}` }];
+    const section = (day: string) =>
+      `\n\n## Current Date\n\nToday is ${day} (UTC). Use it to resolve relative dates and dates given without a year.`;
+    // Recorded before the section existed, then replayed on two different days: one conversation.
+    const recorded = __testing.normalizeForMatching(system(), []);
+    expect(__testing.normalizeForMatching(system(section('Thursday, 2026-11-19')), [])).toEqual(recorded);
+    expect(__testing.normalizeForMatching(system(section('Friday, 2026-11-20')), [])).toEqual(recorded);
+
+    // A prompt with no system text of its own gains a system message holding only the section.
+    const user = { role: 'user', content: 'Hi.' };
+    const dateOnly = { role: 'system', content: section('Thursday, 2026-11-19').trimStart() };
+    expect(__testing.normalizeForMatching({ content: [dateOnly, user] }, [])).toEqual(
+      __testing.normalizeForMatching({ content: [user] }, []),
+    );
+  });
+
+  test('text after the current-date section still takes part in the match', ({ expect }) => {
+    const message = (tail: string) => [
+      {
+        role: 'user',
+        content:
+          '## Current Date\n\nToday is Thursday, 2026-11-19 (UTC). ' +
+          `Use it to resolve relative dates and dates given without a year.${tail}`,
+      },
+    ];
+    expect(__testing.normalizeForMatching(message(' Book the hall.'), [])).not.toEqual(
+      __testing.normalizeForMatching(message(' Cancel the hall.'), []),
+    );
+  });
+
+  test('an Anthropic request body whose system prompt held only the current-date section matches one without', ({
+    expect,
+  }) => {
+    // The shape EDGE's memo server matches: a top-level `system` of text blocks. It hashes the body with plain
+    // `JSON.stringify`, so the key order has to survive too.
+    const text =
+      '## Current Date\n\nToday is Thursday, 2026-11-19 (UTC). ' +
+      'Use it to resolve relative dates and dates given without a year.';
+    const messages = [{ role: 'user', content: [{ type: 'text', text: 'Hi.' }] }];
+    const live = { model: 'claude', system: [{ type: 'text', text }], messages, max_tokens: 1024 };
+    const recorded = { model: 'claude', messages, max_tokens: 1024 };
+    expect(JSON.stringify(__testing.normalizeForMatching(live, []))).toEqual(
+      JSON.stringify(__testing.normalizeForMatching(recorded, [])),
+    );
+  });
+
+  test("an empty system message inside a tool result's payload takes part in the match", ({ expect }) => {
+    const prompt = (result: unknown[]) => ({
+      content: [{ role: 'tool', content: [{ type: 'tool-result', result }] }],
+    });
+    expect(__testing.normalizeForMatching(prompt([{ role: 'system', content: '' }]), [])).not.toEqual(
+      __testing.normalizeForMatching(prompt([]), []),
+    );
+  });
+
   test('without patterns the differing space keys do not match (opt-in)', ({ expect }) => {
     const a = __testing.normalizeForMatching(promptWith(SPACE_A), []);
     const b = __testing.normalizeForMatching(promptWith(SPACE_B), []);

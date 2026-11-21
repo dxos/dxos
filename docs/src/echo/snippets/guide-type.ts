@@ -31,7 +31,7 @@ class Project extends Type.makeObject<Project>(
 // Out: a JSON Schema document for a form, an agent or another system.
 const jsonSchema = JsonSchema.toJsonSchema(Type.getSchema(Organization));
 
-// In: a type built from JSON Schema at runtime.
+// In: a type built from JSON Schema at run time.
 const Note = Type.makeObjectFromJsonSchema({
   typename: 'com.example.type.note',
   version: '0.1.0',
@@ -42,6 +42,8 @@ const Note = Type.makeObjectFromJsonSchema({
 // #region fields
 const note = await db.addType(Note);
 Type.addFields(note, { pinned: Schema.optional(Schema.Boolean) });
+// Replaces the declaration of a field the type already has.
+Type.updateFields(note, { pinned: Schema.optional(Schema.Number) });
 Type.removeFields(note, ['pinned']);
 // #endregion fields
 

@@ -7,4 +7,5 @@
 // which reaches the renderer and so React and the syntax highlighter.
 
 export * from './markdown/index.ts';
+export * as SlideFooter from './SlideFooter.ts';
 export * as SlideTheme from './SlideTheme.ts';

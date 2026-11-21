@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as ArchitectureSpace from './architecture/ArchitectureSpace.ts';
 export * as AvailabilityPollSpace from './availability-poll/AvailabilityPollSpace.ts';
 export * as DemoSpace from './demo/DemoSpace.ts';
 export * as FieldstoneSpace from './fieldstone/FieldstoneSpace.ts';

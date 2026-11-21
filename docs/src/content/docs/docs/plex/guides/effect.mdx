@@ -5,36 +5,61 @@ description: Use Effect services and layers from a plugin's modules and operatio
 
 import Snippet from '../../../../../components/Snippet.astro';
 
-A module's body and an operation's handler are Effects. A plugin can read the capability manager as an Effect
-service, contribute layers of its own, and name the services an operation needs.
+By the end of this guide, your module reads the capability manager as a service, your plugin contributes a layer, and
+your operation names the services it needs. All three work because a module's body and an operation's handler are
+[Effects](https://effect.website/).
+
+In Effect, a service is a value that code asks for by a tag, and a layer is the recipe that builds one.
+[Managing Services](https://effect.website/docs/requirements-management/services/) covers both.
 
 ## Read capabilities as a service
 
-Inside a module, the capability manager is `Capability.Service`. `Capability.get`, `getAll` and `waitFor` read it
-for you; yield the service itself when you need the manager.
+Inside a module, the capability manager is `Capability.Service`. `Capability.get`, `Capability.getAll` and
+`Capability.waitFor` read it for you. Yield the service itself when you need the manager, for example to read a
+capability from a callback, where you cannot `yield*`.
+
+**Example** (Yielding the capability manager)
 
 <Snippet file="plex-guide-effect" region="service" />
 
+`manager.getAll` is a plain function call that returns at once. Each `AppCapabilities.Schema` contribution is a list
+of types, which is why the result is flattened.
+
 ## Contribute a layer
 
-A service an operation uses comes from a layer. Contribute a `LayerSpec` to `Capabilities.LayerSpec`: it says what
-the layer provides, what it requires and how widely one instance is shared. With `affinity: 'application'` the app
-builds the layer once and every operation shares it.
+A service that an operation uses comes from a layer. To supply one, contribute a `LayerSpec` to
+`Capabilities.LayerSpec`. The spec says what the layer provides, what it requires and how widely one instance is
+shared. The `affinity` field sets that width:
+
+- `'application'` builds the layer once, and every operation shares it.
+- `'space'` builds one for each space.
+- `'process'` builds one for each process, and removes it when the process ends.
+
+**Example** (Contributing a layer for a service)
 
 <Snippet file="plex-guide-effect" region="layer" />
 
+`LinkCheckerModule` contributes the spec, not the layer. The runtime calls the function in the spec to build
+`LinkCheckerLive` the first time an operation asks for `LinkChecker`.
+
 ## Declare an operation's services
 
-An operation lists the services it needs in `services`. When it is invoked, the runtime builds them from the layer
-specs plugins contributed, and the handler yields them like any Effect service.
+An operation lists the services it needs in `services`. When you invoke it, the runtime builds them from the layer
+specs that plugins contributed. The handler yields them like any Effect service.
+
+**Example** (Declaring a service and yielding it in the handler)
 
 <Snippet file="plex-guide-effect" region="operation" />
 
-An operation whose services have no layer fails when invoked, not when the plugin loads. [Testing a
-plugin](/docs/plex/guides/testing/) catches it.
+`services` is what lets the handler `yield* LinkChecker`. Leave `LinkChecker` out of the list, and the handler does
+not compile.
+
+If an operation's services have no layer, the operation fails when it is invoked, not when the plugin loads. A test
+from [Testing](/docs/plex/guides/testing/) catches it.
 
 ## Limits
 
 - Never run an Effect with `Effect.runPromise` inside a module. Return it, so the plugin manager can interrupt it
   when the module deactivates.
-- A layer spec's service is in-process. A service that must run on EDGE needs a layer there too.
+- A layer spec's service is in-process. A service that must run on [EDGE](/docs/edge/overview/), the always-online
+  peer that DXOS runs, needs a layer there too.

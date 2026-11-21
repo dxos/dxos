@@ -284,7 +284,8 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
     async () => {
       window.dispatchEvent(new Event('resize'));
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      await expect(canvas.queryByText(text)).toBeTruthy();
+      // An artifact's name can show twice: in the card's title and in its form body.
+      await expect(canvas.queryAllByText(text).length).toBeGreaterThan(0);
     },
     { timeout: 10_000 },
   );
@@ -299,6 +300,13 @@ const openConfigGroup = async (canvas: ReturnType<typeof within>, id: string) =>
 /** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */
 const showTab = async (canvas: ReturnType<typeof within>, tab: ProjectView.Tab) => {
   await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
+};
+
+/** A spec opens on its source, so a story about its forms picks Preview. */
+const showSpecForms = async (canvas: ReturnType<typeof within>) => {
+  await showTab(canvas, 'spec');
+  await userEvent.click(await canvas.findByTestId('editor.toolbar.viewMode', undefined, { timeout: 10_000 }));
+  await userEvent.click(await screen.findByText('Preview'));
 };
 
 type StoryArgs = {
@@ -485,7 +493,7 @@ export const SpecBlockForms: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const { project } = await seedContent();
-    await showTab(canvas, 'spec');
+    await showSpecForms(canvas);
     // The editor is rebuilt as the spec packages' extensions arrive, so each element is read from the settled editor.
     const featureCard = () => {
       const card = canvas.queryAllByTestId('spec-block').find((element) => element.dataset.kind === 'feat');
@@ -599,7 +607,7 @@ const dialectStory = ({ content, dialects, kinds }: DialectSamples.Sample): Stor
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    await showTab(canvas, 'spec');
+    await showSpecForms(canvas);
     await canvas.findAllByTestId('spec-block', undefined, { timeout: 30_000 });
     // The editor draws only the blocks near its viewport, so each is read on the way down.
     const scroller = canvasElement.querySelector<HTMLElement>('.cm-scroller')!;
@@ -629,6 +637,36 @@ export const PluginDialect = dialectStory(DialectSamples.samples.plugin);
 export const QaDialect = dialectStory(DialectSamples.samples.qa);
 export const ReviewDialect = dialectStory(DialectSamples.samples.review);
 export const SqlDialect = dialectStory(DialectSamples.samples.sql);
+
+/**
+ * A spec opens on its source, where a feature reads by its label as in its form and its keys cannot be edited. Enter
+ * in a requirement starts the next one, with a fresh key, ready for its text.
+ */
+export const SpecKeyLabels: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+    await showTab(canvas, 'spec');
+    const document = () => canvas.getByTestId('projectsPlugin.spec.document');
+    const labels = () =>
+      [...document().querySelectorAll('[data-testid="spec-block.key-label"]')].map((element) => element.textContent);
+    await waitFor(() => expect(labels()).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-2', 'F-2.1']), { timeout: 30_000 });
+    await expect(canvas.queryAllByTestId('spec-block')).toHaveLength(0);
+    await expect(document().textContent).not.toContain('k7q2x');
+
+    const view = EditorView.findFromDOM(document().querySelector<HTMLElement>('.cm-content')!)!;
+    const text = () => project.specs[0]?.target?.content.target?.content ?? '';
+    const end = view.state.doc.toString().indexOf('stays in the inbox.') + 'stays in the inbox.'.length;
+    view.focus();
+    view.dispatch({ selection: { anchor: end } });
+    await userEvent.keyboard('{Enter}A muted sender is archived.');
+    await waitFor(() => expect(text()).toMatch(/\n {2}req [a-z][a-z2-9]{4}: A muted sender is archived\.\n/), {
+      timeout: 5_000,
+    });
+    await waitFor(() => expect(labels()).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-1.3', 'F-2', 'F-2.1']));
+  },
+};
 
 /** Each tab's tools follow the tabs: the agent and the chart on Tasks; the Overview adds artifacts in their section. */
 export const ToolbarByTab: Story = {
@@ -1225,7 +1263,7 @@ export const Updates: Story = {
     Obj.update(project, (project) => {
       project.artifacts = project.artifacts.filter((ref) => ref.target?.id !== artifact.id);
     });
-    await waitFor(() => expect(canvas.queryByText(ADDED_ARTIFACT)).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryAllByText(ADDED_ARTIFACT)).toHaveLength(0), { timeout: 10_000 });
     await findPainted(canvas, ARTIFACT_TITLE);
   },
 };

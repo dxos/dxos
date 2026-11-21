@@ -27,7 +27,7 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 | Template          | Code                                                          | Partials                                      |
 | ----------------- | ------------------------------------------------------------- | --------------------------------------------- |
 | AI Briefing       | `plugin-magazine/src/samples/ai-briefing/AiBriefingSpace.ts`  | AI Briefing                                   |
-| DXOS Architecture | `plugin-canvas/src/samples/architecture/ArchitectureSpace.ts` | Architecture                                  |
+| DXOS Architecture | `plugin-debug/src/samples/architecture/ArchitectureSpace.ts`  | Architecture, DXOS Deck                       |
 | Availability Poll | `plugin-debug/src/samples/availability-poll/AvailabilityPollSpace.ts` | Availability Poll                    |
 | Bramble           | `plugin-onboarding/src/samples/bramble/BrambleSpace.ts`       | Bramble                                       |
 | Alien Labs   | `plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`      | team, inbox-crm, projects, docs, metrics, Architecture |

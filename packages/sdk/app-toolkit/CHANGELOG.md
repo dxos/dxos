@@ -1,5 +1,204 @@
 # @dxos/app-toolkit
 
+## 0.17.0
+
+### Minor Changes
+
+- 9cb96c7: Composer's context menu replaces the browser's everywhere: right-click opens the node's actions, then the clipboard and link actions the browser would have offered, a container's undo and redo (registered with `AppNode.registerEditCommands`), and Home, Back and Forward. An inline object preview in a markdown document shows its label and open button together, inset at the bottom, only while hovered.
+- 812ae94: `AppCapability.surface({ roles })` now takes role tokens (`[AppSurface.Article]`) instead of NSID strings, and `@dxos/app-toolkit/AppSurface` can be imported without loading React, so a `dx.config.ts` can name roles as `AppSurface.*`. Breaking: plugin role modules are renamed to `<Plugin>Surface`: `@dxos/plugin-deck/DeckRole` is now `DeckSurface`, `@dxos/plugin-map/MapRole` is now `MapSurface`, `@dxos/plugin-assistant/ChatSurface` is now `AssistantSurface`, and the projects settings role moves from `ProjectView.Settings` to `@dxos/plugin-projects/ProjectSurface`.
+- cb058b9: `AttentionGlyph` draws activity in four slots (fill, mark, edge, corner) from a `treatments` prop; each treatment names its slot, hue, mark, priority and whether it animates, and at most one slot animates. The navtree glyph shows the progress monitors keyed `<uri>#<suffix>` to an object (new `useObjectProgressMonitors` hook): a pulsing star while one runs, a red edge when one fails. Agent turns report themselves as trace status updates (`withTurnStatus` in `@dxos/agent-runtime`), on the chat and on a companion chat's subject (`Chat.getCompanionSubject`), so a turn shows wherever it runs; `@dxos/compute` exports the terminal status messages (`Trace.StatusComplete`, `StatusFailed`, `StatusError`, `StatusCancelled`), and `StatusError` (`Failed`) ends a run that is not a sync without calling it one. Breaking: the glyph's `presence` and `syncing` props are removed; pass `treatments`. `@dxos/ui-types` exports `Hue`, which `IconHue` aliases; `Icon` accepts the `primary` hue.
+- cfc5c42: The comment agent's reply shows in the comment thread again. `AppCapabilities.CommentAgentRunner.run` now returns the text of the turn's final reply (or `undefined` when there is none), and the review plugin posts it in the agent's name; a runner that appended its own reply to the thread's feed should return the text instead.
+- d45bf58: Drawings show collaborators' live mouse cursors, each labelled with the member's name in their presence hue. This covers tldraw sketches and svg architecture diagrams. `Hooks.useAwareness` binds a `@dxos/protocols/Awareness` channel to an object and the local identity; `Hooks.usePointerAwareness` and `Hooks.usePointerCursors` share a `Hooks.Point` in the surface's own coordinates, with a 50 ms throttle, a 5 s heartbeat and a 60 s idle withdraw. `react-ui-attention` adds `RemoteCursor` and `RemoteCursorLayer`, an overlay that places cursors on any surface through a coordinate projection.
+- 2176f79: A follower now lands where the leader is scrolled in any article inside a `ScrollArea`, with no follow code in its plugin, and an article comes back where you left it when its plank remounts. Plugins can opt a viewport out with `follow={false}` on `ScrollArea.Viewport`, follow only some fields of a `ViewState` aspect with `follow: { policy: 'write', fields }`, and mark a section with `HomeSection.Root`'s `anchor` so a follower at another width keeps it at the top.
+- 92ef425: A link can name an action that runs on the object it opens, so a public link to a presentation opens already presenting. The URL carries the action as `?action=<name>`, its DXN without the `dxn:` prefix. Plugins contribute actions with `AppCapabilities.LinkAction`, each scoped to internal or public links and to the objects it applies to; `@dxos/app-toolkit/LinkAction` adds the action to a link (`withAction`), finds it (`find`) and strips it (`withoutAction`). The deck runs the action once the object is open, and the boot loader stays up until it has run, for 10 seconds at most.
+- c9c3867: Add `ExportOperation.Print` and `ExportOperation.Save` with a per-type `AppCapabilities.Exporter` capability. Objects whose type contributes an exporter get "Print…" and "Save as file…" on their article menu. Markdown saves `.md`, sheets save `.csv`, tables save `.dx.json`, and 2D canvas drawings save `.svg`. Print opens the browser print dialog, which can save a PDF. `@dxos/util` gains `printHtml`, `htmlTable` and `escapeHtml`.
+- 80c25fe: The transcription microphone shows in every chat prompt again, just before Send: the Space Home prompt, the assistant companion before its first message, an agent's chat, and stored chats. Each prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it, which `AppNode.makePrompt`, `AppNode.getPromptId` and `AppNode.PROMPT_TYPE` describe; contributors file app-graph actions on it with the `prompt` disposition. Every surface that hosts a chat article now passes its graph node as `nodeId`, which is where the prompt finds its host. `ObjectAction` is deprecated in favour of app-graph actions on the subject's node.
+- 5970ed3: Add an "Update on startup" setting to the PWA and native plugins. While the app starts, it holds the boot loader, checks for a newer build, shows its download progress, and then reloads or relaunches onto it. Offline, or when the check fails or finds no update within 3 s, the app starts on the version it has. With the setting off, updates still download in the background and the app asks to refresh or restart. The `defaultAutoUpdate` option sets the setting's default. `AppUpdate.makeBootGate` is the shared driver. In the PWA plugin, `serviceWorker: false` checks a build that has no service worker by comparing its entry script with the server's.
+- fba77f7: `@dxos/app-toolkit/ResetDialog` is the fatal error dialog an app shows in place of itself: the error, its stack, a copy of both and Reload, with optional handlers that each add a button (reset, safe mode, recovery, log download, a crash report). `SceneEditor.Root` takes an `overlay` that its viewport draws in every role, so a section or card shows what an article does, such as collaborators' cursors.
+- 02254b0: Comments on sheet cells stay on their cells when rows and columns are inserted, deleted or moved: the anchor names the cells by row and column id, and selecting a commented cell or a thread now finds the other. Anchors stored in A1 or `col,row` form are still read, by position. `CommentConfig.anchorFromSelection` lets a plugin build the comment anchor from its selection.
+- b8e76f9: Peers' avatars now act on what they view. Clicking an avatar opens the object's viewers with that row highlighted, each with Go to (open the object where the peer has it open in the tree, such as under a collection) or Jump (reveal the peer's selection or viewport, once the object is open). A peer with the object open in several tabs or on several devices is one row whose Jump goes to the session that moved last; a toggle in the list's toolbar lists their sessions under it, each named by its device ("Chrome on macOS"), with a dot for whether it moved in the last minute. A "See everyone in this space" button opens a Members companion listing every online peer by the object they view. Revealing an anchor moved from `CommentConfig.scrollToAnchor` to a per-type `AppCapabilities.Locator`, and `LayoutOperation.ScrollIntoView` drops `cursor`. New devices no longer get a placeholder label, and `getDeviceLabel` (from `@dxos/client/halo`) treats the old placeholders as no label, so devices are named from their platform and OS. A graph node that leaves and comes back, such as a peer who visits Settings, is expanded again, so its row keeps Go to and Jump. Jump goes to a peer's caret only once they have placed one, otherwise to the top of their viewport, and the avatars open the viewers list from the keyboard too.
+- 3d22d48: You can follow a peer around a space. Follow sits next to Jump and Go to on a peer's row and follows whichever of their sessions moved last; with the sessions toggle on, each session row has a Follow that stays on that session. While you follow, your deck shows theirs: the same planks in their order, scrolled to the plank at the front of theirs, with each plank keeping their top line at the top and the companions they have open. With no planks reported, it opens the object they attend, at the path they opened it from. None of it moves your caret or focus, and they send their location every 100 ms instead of every second. A plank your deck has no URL binding for (a type from a plugin you lack) is left out, and your deck scrolls to the nearest plank of theirs it holds instead. Scrolling, clicking or typing in a plank, attending an object outside what you show of them, going back or forward in history, or pressing Escape stops it, and so does the leader being gone from the space for five seconds. A follow pauses while you cannot open what they attend and picks up again once you can. The Members tab shows a dot while you follow, and the leader's row sits first in its list with Stop. A `Locator` reveal takes `follow` to scroll without moving the caret and answers whether it revealed the anchor, so a follower whose editor mounts late still lands on the leader's line, a deck companion's `badge` atom can hold `true` to draw a dot, and `LayoutOperation.Set` takes `focus: false` to focus no plank and a `workspace` to set the planks in, as `Open` does. View state can now be followed: a `ViewState` aspect declared with `follow: 'write'` has its values for the space and each open object sent with presence, and a follower writes the leader's into its own view state; one declared `follow: 'reveal'` is sent for the follow to apply. The deck reports its front plank as the space's `ViewLocation` and its open companions as `AppCapabilities.Companions`, and the follow applies them with `LayoutOperation.ScrollIntoView` and `UpdateCompanion`. A project's view state is followed, so a follower sees the leader's tab, spec and chart; so is a presentation's slide, and a drawing's camera in tldraw, excalidraw and the 2D canvas, which a drawing variant takes as `camera` and reports with `onCameraChange`. The 2D canvas editor applies a host camera that changes while it is open. A project's view state is now keyed by its EID, so the tab each project last showed resets once. `GraphPath.getEidFromPath` names the object a graph path points at. A schema form's boolean field carries its JSON path as `data-testid`, as text fields do. Leading shows too, in amber on every screen: the Members tab's dot appears on both sides, a follower's leader row rises to the top of Members and carries Stop, and a leader sees its followers under "Following you". Every plank heading, companions included, washes in amber over a one-pixel underline while you follow or are followed, through a new `AppCapabilities.LayoutAccent` the deck applies, and those people's avatars ring in amber. A deck companion takes a `badgeHue` for its rail dot.
+- 6cd526c: A space can be published as a read-only copy at a public link, republished or unpublished, and forked from the link into Composer. `SpaceOperation` gains `PublishSpace`, `UnpublishSpace` and `ForkPublication`, and a space gains a `description`. A published space carries `AppAnnotation.PublicationAnnotation` on its properties; `@dxos/plugin-space/PublicationLink` builds the viewer, fork and archive links, and `@dxos/plugin-space/PublicationManifest` is the manifest the viewer host reads. A host contributes `AppCapabilities.ReadOnly` to make the app read-only: plugins read it with `ReadOnly.atom`, `ReadOnly.unless` and `ReadOnly.isActive` from `@dxos/app-toolkit/ReadOnly`, or `Hooks.useReadOnly` and `Hooks.unlessReadOnly` in components, and drop the controls, actions and background work that write. `useObjectMenuItems`, `ObjectForm` and `TableToolbar` take a `readonly` option.
+- 3b37cd1: Space templates now run in the new space's process: `SpaceOperation.ApplyTemplate` applies them, so a template's `build` can schedule operations. Breaking: `SpaceTemplate.apply` returns an `Effect` (requiring `Operation.Service`) instead of a `Promise`, and `SampleSpace.Definition`, `applyTo` and `buildArchive` take an `R` type parameter for what `build` needs. The magazine plugin adds an AI Briefing template with five live AI news feeds and a magazine that curates itself after creation, and feed and magazine cards share one layout.
+- 9f2cacf: A spec's text is the only store for its blocks. plugin-projects draws each block of a kind its dialects define as a form over that kind's schema, offers a slash command per kind, and reads and writes blocks with `ProjectOperation.GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock`. The Specs tab's spec picker nests a spec beneath the specs whose `Ref<spec>` fields cite it. In plugin-code a feature is a `feat` block: the board and the feature companion read the blocks through `ProjectHooks.useSpecBlocks`, and tasks and showcases name a feature by its block key through `SpecItem.Implements` and `Showcase.Demonstrates` with `item`. A migration folds existing feature objects into their specs' text.
+
+  The Specs tab has one toolbar, and every Markdown editor's toolbar groups its tools into Format and Insert, which show their buttons while there is room and fold into menus before anything moves into ⋮. A guided tour step opens the folded group that holds its control. Shared form and picker parts gained what the block forms use: inline labels, header grids, typed array rows, lookups of several values, option details and hues.
+
+  Breaking:
+
+  - plugin-code's feature operations (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `GetFeatures`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`) are removed. Use the block operations, `CodeOperation.CreateSpec` with `breaks`, `UpdateSpec`, `LinkTask` and `CreateShowcase` with `items`.
+  - The feature embeds, `/feature`, the feature article and the spec codec are removed; a spec syncs with its file as text.
+  - `@feature` code links are no longer stored on features.
+  - A read-only Boolean form field is no longer dimmed, and a `Select` shown as a tag is filled in its option's hue.
+
+- 0a14251: Connector syncs report a progress meter. `Progress.withReporter` (with `makeReporter` and `createSyncKey`) starts a meter for one run and ends it with the run's outcome. Trello, Linear, GitHub, Slack and Google Contacts report one meter per synced board, team, repo, channel or group, with the exact total set from the listing before anything is processed. The magazine feed sync's total is now the posts it adds rather than every post it fetched. Google Calendar reports a count of events synced, since its API returns no total.
+
+### Patch Changes
+
+- b6d1c9c: Documents, sheets and presentations an agent creates on EDGE, and drawings it copies with `convert`, are filed into the space's collection again: these operations hand the new object to `SpaceOperation.AddObject`, which plugin-space runs with its filing rule, instead of looking for that rule in a bundle that does not have it. `DefaultParent.resolve` warns when a collection item has no filing rule at all.
+- f142d06: The chat prompt is redesigned. One picker chooses the agent, where it runs (this device or EDGE) and the model. Skills load as `/` commands, and `@` mentions an object, which joins the chat's context when the message is sent. A "+" menu adds files, objects, commands and MCP servers; "Add an object…" opens the search dialog as a picker (`SearchOperation.SelectObject`). The chat's tasks and its context are two drawers above the prompt, and other plugins can add sections to the context drawer (`ChatSurface.ChatDetails`).
+
+  The `@` menus in the chat and in the markdown editor now run a full-text search once typing pauses, through `ObjectCombobox.useSearch` in `@dxos/app-toolkit`; the markdown `@` menu now matches body text as well as names. `searchQuery`, `searchFilter`, `byRelevance` and `useListedTypeUris` moved to `ObjectCombobox` from plugin-search, which no longer exports `buildSearchQuery`, `buildSearchFilter` or `useSearchableTypeUris`.
+
+  Replies no longer stop rendering when the thread's view is switched while they stream.
+
+- 6a37f4b: PostHog events no longer carry a space invitation code in `$current_url`, `$referrer` or their `$initial_*` forms. `@dxos/observability/OtelProxy` forwards OTLP from a Cloudflare Worker to PostHog with the project token. The `ResetDialog` stack trace scrolls inside the dialog instead of running past its edge.
+- f175a2d: An EDGE run's progress meter now takes over from the pending meter a sync button starts, instead of timing out with "sync reported no progress". The remote trace subscription ignores messages that are not trace broadcasts and skips a payload that does not decode, where either used to end it for the session. Progress broadcasts may arrive in any order: a run's count no longer moves back, and an update from the same run that lands within 10 s after its terminal no longer reopens its meter.
+- 1a0fff1: Keep guided tours working on a narrow plank: a step pointing at a toolbar control now opens the overflow menu when the toolbar has folded that control away, and a step whose target never appears is stepped over rather than ending the tour.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [c9a38c1]
+- Updated dependencies [6f6547f]
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [2ffc301]
+- Updated dependencies [c1f845f]
+- Updated dependencies [caa28b3]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [710da43]
+- Updated dependencies [d338edb]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [7a8b279]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [a245692]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2176f79]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [b15e5c3]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [1a1012b]
+- Updated dependencies [17a9e75]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [20a14b9]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [0ad95b7]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [d159a7d]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [3d06043]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [3d22d48]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [101f620]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/halo-react@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/react-ui-syntax-highlighter@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/migrations@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/credentials@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/display-name@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-focus@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/i18n@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/progress@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

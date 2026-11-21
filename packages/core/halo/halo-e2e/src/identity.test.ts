@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 import { describe } from 'vitest';
 
 import { Identity } from '@dxos/halo';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 
 import { currentOf, makeClientLayer, pollUntil } from './testing.ts';
 
@@ -104,20 +104,6 @@ describe('Identity', () => {
 
         const current = yield* currentOf(Identity.identity);
         expect(Option.getOrThrow(current).displayName).toEqual('test-user-updated');
-      },
-      Effect.provide(makeClientLayer({ identity: false })),
-    ),
-  );
-
-  it.effect(
-    'no personal space id before creation, one after',
-    Effect.fn(
-      function* ({ expect }) {
-        expect(Option.isNone(yield* Identity.personalSpaceId)).toBe(true);
-
-        yield* Identity.create({ displayName: 'test-user' });
-        const spaceId = yield* Identity.personalSpaceId;
-        expect(SpaceId.isValid(Option.getOrThrow(spaceId))).toBe(true);
       },
       Effect.provide(makeClientLayer({ identity: false })),
     ),

@@ -7,6 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useObject } from '@dxos/echo-react';
 import { Listbox, type ReorderListController, useReorderItem, useReorderList } from '@dxos/react-ui-list';
+import { type SlidePosition } from '@dxos/react-ui-slides';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
@@ -39,6 +40,8 @@ export type SlideGalleryProps = {
   onAdd?: () => void;
   /** The graph node a tile shows, so right-clicking it opens that node's actions (the app's context menu). */
   contextMenuId?: (source: SlideSource) => string | undefined;
+  /** A slide's place in the deck, for the counters its thumbnail draws; without it they have no number. */
+  positionOf?: (index: number) => SlidePosition;
 };
 
 type Tile = { key: string; index: number; source: SlideSource };
@@ -55,6 +58,7 @@ export const SlideGallery = ({
   onMove,
   onAdd,
   contextMenuId,
+  positionOf,
 }: SlideGalleryProps) => {
   const { t } = Hooks.useTranslation(PresenterNamespace.key);
   // An object linked twice yields two slides with one id, so options are keyed by position.
@@ -113,6 +117,7 @@ export const SlideGallery = ({
               draggable={!!onMove}
               onPresent={onPresent}
               contextMenuId={contextMenuId?.(tile.source)}
+              position={positionOf?.(tile.index)}
             />
           ))}
           {onAdd && (
@@ -142,9 +147,10 @@ type SlideTileProps = {
   draggable: boolean;
   onPresent?: (index: number) => void;
   contextMenuId?: string;
+  position?: SlidePosition;
 };
 
-const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: SlideTileProps) => {
+const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId, position }: SlideTileProps) => {
   const { rowRef, handleRef, isDragging } = useReorderItem(controller, tile.key);
   const [slide] = useObject(tile.source.kind === 'markdown' ? undefined : tile.source.slide);
   const hidden = slide?.hidden === true;
@@ -173,7 +179,7 @@ const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: Sl
     >
       {/* Thumbnails are pictures of the slide; their controls must not take clicks from the grid. */}
       <div className='relative flex aspect-video pointer-events-none rounded-sm overflow-hidden border border-separator'>
-        <Slide.Root source={tile.source} step={Number.POSITIVE_INFINITY}>
+        <Slide.Root source={tile.source} step={Number.POSITIVE_INFINITY} position={position}>
           <Slide.Frame>
             <Slide.Content />
           </Slide.Frame>

@@ -185,7 +185,7 @@ const sqliteLayerFromParams = ({
     case Runtime_Client_Storage_SqliteMode.FILE: {
       if (!sqlitePath) {
         throw new Error(
-          'LocalClientServices: runtime.client.storage.sqlite_mode=FILE requires sqlitePath (or runtime.client.storage.data_root with persistent=true).',
+          'LocalClientServices: runtime.client.storage.sqlite_mode=FILE requires the sqlitePath option. createClientServices derives it from runtime.client.storage.data_root; code that constructs LocalClientServices directly must pass it.',
         );
       }
       sqliteLayer = layerFile(sqlitePath);

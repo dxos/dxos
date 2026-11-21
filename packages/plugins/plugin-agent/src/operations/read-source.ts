@@ -14,7 +14,7 @@ import { Fact, Graph, Ontology, Vocab } from '@dxos/echo-memory';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Space } from '@dxos/halo';
 import { EID } from '@dxos/keys';
-import { type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
+import { type SemanticIndexError, extractDocFacts, normalizeEntityId } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -59,6 +59,16 @@ type SourceText = {
 const SPEAKER_LINE = /^\*\*([^*:]{1,40}):\*\*\s*/;
 
 type Speaker = Pick<Segment, 'speaker' | 'speakerId' | 'speakerLabel'>;
+
+/** The name an utterance appears under when nothing identifies who said it. */
+const UNKNOWN_SPEAKER = 'User';
+
+/**
+ * Whether a term is the placeholder speaker left unresolved: the chat rules make "I" and "we" the line's speaker, which
+ * would otherwise store a decision by a person called User.
+ */
+const isUnknownSpeaker = (term: Fact.Term): boolean =>
+  term.kind === 'entity' && term.entity === normalizeEntityId(UNKNOWN_SPEAKER);
 
 /**
  * A member speaks under the name they signed with, else their display name; one with neither appears under a
@@ -113,7 +123,7 @@ const speakerOf = Effect.fnUntraced(function* (
     return namedSpeaker(members, sender.name);
   }
   const participantDid = participant ? personDid(participant) : undefined;
-  return participantDid ? memberSpeaker(members, participantDid) : ({ speaker: 'User' } satisfies Speaker);
+  return participantDid ? memberSpeaker(members, participantDid) : ({ speaker: UNKNOWN_SPEAKER } satisfies Speaker);
 });
 
 /** What a message says aloud; synthetic text (a woken chat's relay, system notes) is not something anyone said. */
@@ -147,6 +157,12 @@ const CONTEXT_HEADER = 'Earlier messages, for context only — do not extract fa
 const NEW_HEADER = 'New messages:';
 
 const renderSegment = ({ text, speaker, at }: Segment): string => `[${at}] ${speaker}: ${text}`;
+
+/** Extraction rules for a chat read: the default rules drop an unresolved "we", which is how people state decisions. */
+const CHAT_RULES: readonly string[] = [
+  'Each line is "[time] Speaker: text". Attribute a first-person statement ("I am working on…", "we decided…", "we will ship…") to that line\'s speaker as subject, so a decision or commitment stated with "we" is kept, not omitted.',
+  'A decision is predicate "decided" with what was decided as the object: "we decided to ship offline mode" => subject the speaker, predicate "decided", object "ship offline mode".',
+];
 
 /**
  * The chat's messages after `after` (a message URI) in append order, each as a `[time] speaker: text`
@@ -336,7 +352,9 @@ export const readSource: (
     if (through === undefined || through === cursor) {
       return NOTHING_READ;
     }
-    const facts = yield* extract(agent, members, yield* loadEntities, read, uri);
+    const facts = (yield* extract(agent, members, yield* loadEntities, read, uri, CHAT_RULES)).filter(
+      ({ assertion }) => !isUnknownSpeaker(assertion.subject) && !isUnknownSpeaker(assertion.object),
+    );
     const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
     return {
       facts: fresh,
@@ -366,6 +384,7 @@ const extract = (
   entities: EntityIndex,
   body: Pick<SourceText, 'text' | 'segments'>,
   uri: string,
+  rules?: readonly string[],
 ) =>
   body.segments.length === 0 && body.text.trim().length === 0
     ? Effect.succeed([])
@@ -374,6 +393,7 @@ const extract = (
         {
           ontology: Ontology.DEFAULT.withNamespace(Vocab.brainNamespace(AgentPresence.brainId(agent))),
           entities: knownEntities(members, entities),
+          ...(rules ? { rules } : {}),
         },
       ).pipe(
         Effect.map((facts) =>

@@ -3,6 +3,8 @@ title: API reference
 description: Generated API reference for the PLEX packages.
 ---
 
+Each link opens the generated reference for one package.
+
 - <a href='/typedoc/app-framework/index.html' target='_blank'>`@dxos/app-framework`</a>: plugins, modules,
   capabilities, activation events and the plugin manager.
 - <a href='/typedoc/app-toolkit/index.html' target='_blank'>`@dxos/app-toolkit`</a>: the capabilities, makers and

@@ -147,6 +147,18 @@ feat Wireframe
 ```
 
 ```mdl
+feat DeckTemplate
+  desc: |
+    The DXOS Architecture space template. It applies plugin-canvas's architecture partial (Composer and EDGE as
+    nested drawings, with their documents and sheets) and the DXOS Deck, which is its presentation. The deck is
+    one presentation whose slides are markdown files, in the order `SLIDES` lists them. A slide embeds a
+    diagram by naming it (`<Surface ref="{{echo}}" />`); each diagram is a canvas drawing built from the `.dx`
+    text that `DIAGRAMS` lists for it, named after the slide that shows it. The plugin contributes the
+    element kinds the drawings are drawn by (card, feed card, chip, heading, plank, app frame and its parts) to
+    the canvas; the graph kind is plugin-canvas's own.
+```
+
+```mdl
 feat StatsPanel
   desc: |
     The shared telemetry store (`AppCapabilities.StatsPanel`) as one `StatCard` per plugin
@@ -618,7 +630,57 @@ decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-foreca
 ```
 
 ```mdl
-decision D-4: [QA-11] demos the development loop with the Availability Poll template: the spec is finished and no task exists, the agent plans each milestone from it, the delegated tasks run on the Gantt chart, and feature status is the validation the reader follows, including a requirement change that fails and recovers.
+decision D-4: The nine studio diagrams, their deck and the element kinds they draw with live here as the DXOS Deck template ([DeckTemplate]). Each diagram has one source, its `.dx` text.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: They are a presentation, not part of the canvas; plugin-canvas held them only while the diagram language was being built against them.
+  rejected:
+    - Adding them to plugin-canvas's DXOS Architecture template, which would keep presentation kinds in the canvas plugin.
+```
+
+```mdl
+decision D-5: Every slide of the DXOS Deck is a markdown file, the diagram slides included; a slide's title is its first heading and its notes are a comment in the file. Refines [D-4].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: A title or a note is then changed in the slide's own file, and a slide with no diagram (the cover, the stack) is written the same way as one with.
+
+decision D-6: A row named down a slide's left edge is a `heading` element: a glyph over a title, in a tone, with no panel behind them. The row's cards take the same tone on their glyphs (`iconTone`). Refines [D-4].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: A group's own label is a heading over its members, at one size and with no glyph; a row label beside its cards needed a size and a colour of its own, which a plain node cannot state.
+  rejected:
+    - A `fontSize` on a plain node: it gives the size but no glyph, and adds a field to the language for one slide.
+    - A fourth card variant: a heading draws no card.
+```
+
+```mdl
+decision D-7: The DXOS Deck is the Cloudflare sample: its slides, diagrams and element kinds are one folder, `src/samples/cloudflare`. It lands in a change of its own, apart from the diagram language it is drawn with. Refines [D-4].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+```
+
+```mdl
+decision D-8: The DXOS Deck is merged into the DXOS Architecture space template and replaces the presentation that template had. The template moves from plugin-canvas into this plugin; there is no separate DXOS Deck template. Refines [D-4].
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [DeckTemplate]
+```
+
+```mdl
+decision D-9: The merged template is `org.dxos.plugin-debug.template.architecture`. Its space lists the Architecture collection first, then a Deck collection holding the presentation and a folder of its diagrams. Fills in [D-8].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DeckTemplate]
+  why: The architecture partial builds its own collection and is shared with the Alien Labs template, so the deck keeps the collection it already had rather than being inserted into that one.
+```
+
+```mdl
+decision D-10: [QA-11] demos the development loop with the Availability Poll template: the spec is finished and no task exists, the agent plans each milestone from it, the delegated tasks run on the Gantt chart, and feature status is the validation the reader follows, including a requirement change that fails and recovers.
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -628,7 +690,7 @@ decision D-4: [QA-11] demos the development loop with the Availability Poll temp
 ```
 
 ```mdl
-decision D-5: [QA-11] checks one scenario per milestone, plans one task per feature and a check task, sets each feature prototype as its task deploys it, and shows the showcase and a person accepting the tasks. Amends [D-4].
+decision D-11: [QA-11] checks one scenario per milestone, plans one task per feature and a check task, sets each feature prototype as its task deploys it, and shows the showcase and a person accepting the tasks. Amends [D-4].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -638,7 +700,7 @@ decision D-5: [QA-11] checks one scenario per milestone, plans one task per feat
 ```
 
 ```mdl
-decision D-6: [QA-11] has the agent check each task and scenario on `wrangler dev` in its sandbox, exposed as a preview, and deploy only once the milestone's scenario passes; the take opens the preview on the scenario's poll instead of a showcase. Amends [D-5].
+decision D-12: [QA-11] has the agent check each task and scenario on `wrangler dev` in its sandbox, exposed as a preview, and deploy only once the milestone's scenario passes; the take opens the preview on the scenario's poll instead of a showcase. Amends [D-5].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -648,7 +710,7 @@ decision D-6: [QA-11] has the agent check each task and scenario on `wrangler de
 ```
 
 ```mdl
-decision D-7: [QA-11] does not open the Worker: the take shows the spec, the tasks, the Gantt chart and the feature statuses, and a published cut edits a clip of the working poll in. The agent still checks on `wrangler dev` in its sandbox before it deploys. Amends [D-6].
+decision D-13: [QA-11] does not open the Worker: the take shows the spec, the tasks, the Gantt chart and the feature statuses, and a published cut edits a clip of the working poll in. The agent still checks on `wrangler dev` in its sandbox before it deploys. Amends [D-6].
   date: 2026-11-04
   by: user:wittjosiah
   affects: [QA-11]

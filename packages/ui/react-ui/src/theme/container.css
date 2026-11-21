@@ -99,7 +99,9 @@
   .dx-container:not([data-layout='row']) > .dx-date-field > .dx-date-field > * {
     grid-column: content;
   }
-  .dx-container > [data-place='full'] {
+  .dx-container > [data-place='full'],
+  .dx-container > dx-surface > [data-place='full'],
+  .dx-container > dx-surface > dx-surface > [data-place='full'] {
     grid-column: full;
   }
   .dx-container > [data-rail='start'] {

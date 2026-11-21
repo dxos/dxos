@@ -9,6 +9,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 import { type SparqlTerm } from '@dxos/pipeline-rdf';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -258,9 +259,14 @@ const QueryView = ({ entry, following }: { entry: QueryLog.Entry | undefined; fo
                   : t('memory-rows.message', { total: result.count.toLocaleString() })}
             </span>
           </div>
-          <pre className='font-mono text-sm whitespace-pre-wrap break-words p-2 rounded-sm bg-group-surface'>
+          <SyntaxHighlighter
+            language='sparql'
+            scroll={false}
+            wrapLongLines
+            classNames='text-sm p-2 rounded-sm bg-group-surface'
+          >
             {entry.sparql.trim()}
-          </pre>
+          </SyntaxHighlighter>
           {result && 'error' in result && <p className='text-sm text-error-text'>{result.error}</p>}
           {result && 'preview' in result && result.preview.length > 0 && (
             <table className='text-sm border-collapse' data-testid='brain.memory.results'>

@@ -24,7 +24,8 @@ export const useTranslation = (...args: Parameters<typeof useI18NextTranslation>
   const result = useI18NextTranslation(...args);
   const version = useResourceVersion(result.i18n);
   // A fresh `t` per version, since compiled components memoize what they render on its identity.
-  const t = useMemo(() => result.t.bind(undefined), [result.t, version]);
+  // `Trans` reads the namespace from `t.ns`, which `bind` drops, so the copy carries over `t`'s own properties.
+  const t = useMemo(() => Object.assign(result.t.bind(undefined), result.t), [result.t, version]);
   const { dtLocale } = useContext(TranslationsContext);
   return { ...result, t, dtLocale };
 };

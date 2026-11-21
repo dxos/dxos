@@ -20,13 +20,26 @@ const ada = db.add(Obj.make(Person, { name: 'Ada' }));
 db.remove(ada);
 // #endregion write
 
+// #region load
+const grace = db.add(Obj.make(Person, { name: 'Grace' }));
+const uri = Obj.getURI(grace);
+
+// By URI: a reference bound to the database reads its target from disk or
+// the network. `tryLoad` returns undefined when the target is missing.
+const loaded = await db.makeRef<Person>(uri).tryLoad();
+
+// By id: a query finds the object, and loads it if this client has not yet.
+const [found] = await db.query(Filter.id(grace.id)).run();
+// #endregion load
+
 // #region query
 const people = await db.query(Query.select(Filter.type(Person))).run();
 // #endregion query
 
 // #region flush
-await db.flush(); // pending writes are on disk
-await db.flush({ indexes: true, updates: true }); // and queries see them
+await db.flush(); // pending writes are on disk and in the index
+// and in the full-text index, and live queries have run
+await db.flush({ secondaryIndexes: true, updates: true });
 // #endregion flush
 
 // #region types
@@ -35,7 +48,7 @@ const Note = Type.makeObjectFromJsonSchema({
   version: '0.1.0',
   jsonSchema: { type: 'object', properties: { title: { type: 'string' } } },
 });
-const persisted = await db.addType(Note); // replicates to the other members
+const persisted = await db.addType(Note); // replicates to the other peers
 // #endregion types
 
 // #region branches
@@ -61,4 +74,4 @@ const unsubscribe = db.subscribeToSyncState((state) => console.log(state));
 unsubscribe();
 // #endregion sync
 
-export { everyone, people, persisted, sameDb, state };
+export { everyone, found, loaded, people, persisted, sameDb, state };

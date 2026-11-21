@@ -354,6 +354,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // Background end-request hooks still running as children; persisted so a rehydrated process
         // still waits for them, and so it knows the request they belong to has already ended.
         let asyncHooks: Process.ID[] = [...(yield* AsyncHooksCell.get)];
+        // The hook each of them runs, and the hooks owed one more run because a request ended while their copy was still
+        // running: a hook that reads the conversation from a cursor would record the same messages twice if two copies ran.
+        let asyncHookKeys: Record<Process.ID, string> = { ...(yield* AsyncHookKeysCell.get) };
+        let asyncHookReruns: string[] = [...(yield* AsyncHookRerunsCell.get)];
         // Exits of children this process did not recognise yet: child events run concurrently with
         // the handler, so a background hook can exit before its pid is registered below.
         const untrackedExits = new Set<Process.ID>();
@@ -380,6 +384,34 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           unseenWriteIds.add(message.id);
           yield* ctx.setAlarm(0);
         });
+
+        // Starts a background hook as a linked child, so its exit wakes `onChildEvent`. A hook whose copy from an earlier
+        // request is still running is not started beside it: it is owed one more run, which starts when that copy exits
+        // and reads what the requests in between added.
+        const startAsyncHook = Effect.fnUntraced(function* (hook: Hook.Definition) {
+          if (asyncHooks.some((pid) => asyncHookKeys[pid] === hook.key)) {
+            if (!asyncHookReruns.includes(hook.key)) {
+              asyncHookReruns = [...asyncHookReruns, hook.key];
+              yield* AsyncHookRerunsCell.set(asyncHookReruns);
+            }
+            return;
+          }
+          const handle = yield* Process.spawn(
+            OperationProcess.make(hook.operation),
+            { ...hook.input },
+            {
+              environment: { conversation: Obj.getURI(feed) },
+              traceMeta: { conversation: Ref.make(feed) },
+            },
+          );
+          if (untrackedExits.delete(handle.pid)) {
+            return;
+          }
+          asyncHooks.push(handle.pid);
+          asyncHookKeys = { ...asyncHookKeys, [handle.pid]: hook.key };
+          yield* AsyncHooksCell.set(asyncHooks);
+          yield* AsyncHookKeysCell.set(asyncHookKeys);
+        }, Effect.provide(childServices));
 
         // Snapshots the end-request hooks for the request now beginning, and records why each runs and any plugin a
         // setting turns on that this host lacks, so a hook that did not run is still on file.
@@ -410,6 +442,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           let followedUp = false;
           for (const hook of hooks) {
             yield* Effect.gen(function* () {
+              if (hook.async) {
+                // Not awaited, so the request settles now and the next prompt's turn can start; `onChildEvent`
+                // completes the process once every background hook is done.
+                yield* startAsyncHook(hook);
+                return;
+              }
               const handle = yield* Process.spawn(
                 OperationProcess.make(hook.operation),
                 { ...hook.input },
@@ -418,16 +456,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   traceMeta: { conversation: Ref.make(feed) },
                 },
               );
-              if (hook.async) {
-                if (untrackedExits.delete(handle.pid)) {
-                  return;
-                }
-                // Not awaited, so the request settles now; the child is linked, so its exit wakes
-                // `onChildEvent`, which completes the process once every background hook is done.
-                asyncHooks.push(handle.pid);
-                yield* AsyncHooksCell.set(asyncHooks);
-                return;
-              }
               const followUp = Hook.followUp(yield* Process.awaitOutput(handle));
               if (followUp !== undefined) {
                 yield* enqueueFollowUp(followUp);
@@ -919,13 +947,33 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onChildEvent: Effect.fnUntraced(function* (event) {
             log('childEvent', { event });
             if (event._tag === 'exited' && asyncHooks.includes(event.pid)) {
+              const key = asyncHookKeys[event.pid];
               asyncHooks = asyncHooks.filter((pid) => pid !== event.pid);
+              const { [event.pid]: _exited, ...stillRunning } = asyncHookKeys;
+              asyncHookKeys = stillRunning;
               yield* AsyncHooksCell.set(asyncHooks);
+              yield* AsyncHookKeysCell.set(asyncHookKeys);
               const manager = yield* Process.ManagerService;
               const exit = yield* manager.attach(event.pid).pipe(Effect.flatMap(Process.awaitOutput), Effect.exit);
               // A failed background hook is reported and dropped, like a failed inline hook.
               if (Exit.isFailure(exit)) {
                 log.warn('background end-request hook failed', { pid: event.pid });
+              }
+              // A request that ended while this copy ran is owed its run now; started first, so the process stays
+              // resident for it.
+              if (key !== undefined && asyncHookReruns.includes(key)) {
+                asyncHookReruns = asyncHookReruns.filter((other) => other !== key);
+                yield* AsyncHookRerunsCell.set(asyncHookReruns);
+                const hook = (options.hooks?.() ?? []).find((candidate) => candidate.key === key);
+                if (hook) {
+                  yield* startAsyncHook(hook).pipe(
+                    Effect.catchCause((cause) =>
+                      Effect.sync(() =>
+                        log.warn('background end-request hook failed', { operation: hook.operation.meta.key, cause }),
+                      ),
+                    ),
+                  );
+                }
               }
               const followUp = Exit.isSuccess(exit) ? Hook.followUp(exit.value) : undefined;
               if (followUp !== undefined) {
@@ -1081,6 +1129,18 @@ const RequestHooksCell = StorageService.cell(
 const AsyncHooksCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(Process.ID).pipe(Schema.mutable)),
   'asyncHooks',
+).pipe(StorageService.withDefault(() => []));
+
+/** The hook key each running background hook's pid runs; a pid recorded before this cell existed has none. */
+const AsyncHookKeysCell = StorageService.cell(
+  Schema.fromJsonString(Schema.Record(Process.ID, Schema.String)),
+  'asyncHookKeys',
+).pipe(StorageService.withDefault(() => ({})));
+
+/** Keys of background hooks owed one more run, started when their running copy exits. */
+const AsyncHookRerunsCell = StorageService.cell(
+  Schema.fromJsonString(Schema.Array(Schema.String).pipe(Schema.mutable)),
+  'asyncHookReruns',
 ).pipe(StorageService.withDefault(() => []));
 
 /**

@@ -40,7 +40,7 @@ export const OpenButton = ({ path }: { path: string }) => {
   return <Button.Root onClick={() => open()}>Open</Button.Root>;
 };
 
-export const OpenTwice = ({ path }: { path: string }) => {
+export const OpenAndWait = ({ path }: { path: string }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const handleClick = useCallback(async () => {
     await invokePromise(LayoutOperation.Open, { subject: [path] });

@@ -257,10 +257,10 @@ const usePackage = async (page, label) => {
 };
 
 /**
- * Picks the Specs tab's view: `Plain text` is the spec's text, `Markdown` a form per block. A narrow toolbar folds the
- * view menu into its overflow menu as a submenu.
+ * Picks the Specs tab's view: `Source` is the spec's text, `Preview` a form per block. A narrow toolbar folds the
+ * view menu into its overflow menu as a submenu. Unless `wait` is false, waits for the feature's form to come or go.
  */
-const setView = async (peer, label) => {
+const setView = async (peer, label, { wait = true } = {}) => {
   const viewMode = specToolbar(peer.page).getByTestId('editor.toolbar.viewMode');
   if (await viewMode.isVisible()) {
     await peer.click(viewMode);
@@ -269,7 +269,9 @@ const setView = async (peer, label) => {
     await peer.click(peer.page.locator('[role="menu"] [data-testid="editor.toolbar.viewMode"]'));
   }
   await peer.click(peer.page.locator(`[role="menu"] >> [role^="menuitem"]:has-text("${label}")`).first());
-  await featureForm(peer.page).waitFor({ state: label === 'Plain text' ? 'detached' : 'visible', timeout: 10_000 });
+  if (wait) {
+    await featureForm(peer.page).waitFor({ state: label === 'Source' ? 'detached' : 'visible', timeout: 10_000 });
+  }
 };
 
 const openAgent = async (peer) => {
@@ -283,6 +285,8 @@ const openAgent = async (peer) => {
 const openSpec = async (peer) => {
   await peer.click(plank(peer.page).getByTestId('projectsPlugin.tab.spec'));
   await specLine(peer.page, PROSE).waitFor({ timeout: TIMEOUT });
+  // A spec opens on its source; the steps after this one read the feature's form.
+  await setView(peer, 'Preview');
 };
 
 export const steps = [
@@ -343,6 +347,8 @@ export const steps = [
       await clearChrome(alice);
       await showSpec(page);
       await usePackage(page, 'Software');
+      // The spec has no feature yet, so there is no form to wait for.
+      await setView(alice, 'Preview', { wait: false });
 
       await specDocument(page).locator('.cm-content').first().click();
       await page.keyboard.type(`${PROSE}\n\n${FEATURE} /feat`, { delay: 10 });
@@ -505,10 +511,10 @@ export const steps = [
     },
   },
   {
-    name: "Plain text and the form: Bob in the spec's text, Alice in the feature's form",
+    name: "Source and the form: Bob in the spec's text, Alice in the feature's form",
     subtitle: 'plugin-projects QA-10 step 7',
     run: async ({ peers: { alice, bob } }) => {
-      await setView(bob, 'Plain text');
+      await setView(bob, 'Source');
       await alice.click(editable(featureField(alice.page, '_prose')).locator('.cm-line').first(), { force: true });
       await alice.page.keyboard.press('ControlOrMeta+End');
       await alice.type(FORM_ADDITION);
@@ -554,7 +560,7 @@ export const steps = [
       await expectComment(featureField(alice.page, 'req[0].text'), footer, "Alice's requirement");
       await hold(alice);
 
-      await setView(bob, 'Markdown');
+      await setView(bob, 'Preview');
       await expectComment(featureField(bob.page, '_prose'), dark, "Bob's feature description");
       await expectComment(featureField(bob.page, 'req[0].text'), footer, "Bob's requirement");
       await hold(alice);
