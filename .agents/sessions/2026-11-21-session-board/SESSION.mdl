@@ -88,7 +88,7 @@ goal G-9: A Land switch on each PR starts or stops the `land` skill.
 ```mdl
 pr PR-1: Build the status board from a session file.
   ref: dxos/dxos#14647
-  status: queued
+  status: merged
 ```
 
 ## Changelog
@@ -287,5 +287,11 @@ event T-11: The review findings on [PR-1] are fixed.
 ```mdl
 event T-12: [PR-1] is in the merge queue.
   date: 2026-11-21T14:36Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-13: [PR-1] is merged.
+  date: 2026-11-21T15:07Z
   by: agent:claude-code
 ```
