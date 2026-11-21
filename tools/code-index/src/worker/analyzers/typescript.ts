@@ -1226,8 +1226,11 @@ export const snippetOf = (
   const cuts: Cut[] = [];
   const literals: Array<{ node: Node; depth: number }> = [];
 
+  // JSDoc stays: it is the API a reader of the signature needs (a member's meaning, its defaults). Other
+  // comments are implementation notes, and go with the implementation.
   for (const comment of comments) {
-    if (comment.start >= statement.start && comment.end <= statement.end) {
+    const isDoc = comment.type === 'Block' && comment.value.startsWith('*');
+    if (!isDoc && comment.start >= statement.start && comment.end <= statement.end) {
       cuts.push({ start: comment.start, end: comment.end, text: '' });
     }
   }

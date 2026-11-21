@@ -147,7 +147,7 @@ const createModel = (diff: boolean): ExplorerModel => {
       const node = nodes.get(id);
       return {
         id,
-        label: node?.label ?? id,
+        label: node ? displayName(node) : id,
         icon: node ? glyphOf(node)?.icon : undefined,
         // Reading the children of every visible branch is what fetches one level ahead of what is open.
         parentOf: node?.branch ? get(childIds(id)) : undefined,
@@ -222,6 +222,13 @@ const fileGlyph = (path: string): Glyph => {
 
 /** A JavaScript or TypeScript source file, which the tree treats as a module. */
 const MODULE_FILE = /\.[cm]?[jt]sx?$/;
+
+/** A module is named without its extension (`./Obj`, `Order`), as an import names it; the `{}` glyph says what it is. */
+const moduleName = (name: string): string => name.replace(MODULE_FILE, '');
+
+/** What a node is called wherever it is listed: the tree row, the palette row, the card's title. */
+const displayName = (node: Protocol.TreeNode, label: string = node.label): string =>
+  (node.kind === 'entry' || node.kind === 'file') && MODULE_FILE.test(node.label) ? moduleName(label) : label;
 
 const MODULE_GLYPH: Glyph = { icon: SYMBOL_ICONS['symbol-namespace'] };
 
@@ -303,7 +310,7 @@ const SourceCard = ({ node, mode, onClose }: { node: Protocol.TreeNode; mode: So
           <span className='flex shrink-0' data-testid='tree-card-icon'>
             <RowIcon node={node} />
           </span>
-          <span className='truncate font-mono'>{source?.title ?? node.label}</span>
+          <span className='truncate font-mono'>{displayName(node, source?.title ?? node.label)}</span>
         </Card.Title>
         <Card.Action system='close' onClick={onClose} data-testid='tree-card-close' />
       </Card.Header>
@@ -384,7 +391,7 @@ const GoToDialog = ({
                 <SearchList.Item
                   key={hit.node.id}
                   value={hit.node.id}
-                  label={hit.node.label}
+                  label={displayName(hit.node)}
                   icon={glyphOf(hit.node)?.icon}
                   iconClassNames={glyphOf(hit.node)?.className}
                   suffix={hit.description}

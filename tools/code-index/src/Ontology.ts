@@ -46,7 +46,7 @@ export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}
  * dropped and rebuilt on open: the ledger keys commits by graph IRI, so mixing schemes would leave
  * graphs no row points at and rules matching only half the facts.
  */
-export const VERSION = 7;
+export const VERSION = 8;
 
 /**
  * Name and kind of the synthetic symbol carrying a file's top-level references (`describe(…)`,

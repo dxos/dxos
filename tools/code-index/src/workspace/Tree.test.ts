@@ -191,8 +191,13 @@ describe('Tree', () => {
     expect(await childrenOf(`mod:${file('extra.ts')}`)).toContain('Extra');
   });
 
-  test("a namespace's children are its module's exports", async ({ expect }) => {
-    expect(await childrenOf(`sym:${symbol('index.ts', 'Obj')}`)).toEqual(['Any', 'make']);
+  test("a namespace's children are its module's exports, each labelled by what it is", async ({ expect }) => {
+    const [obj] = await withTree((tree) => tree.children([`sym:${symbol('index.ts', 'Obj')}`]));
+    // `make` is declared `const` but holds a function, so it is one; `Any` is the interface it is declared as.
+    expect(obj.children.map((node) => [node.label, node.detail])).toEqual([
+      ['Any', 'interface'],
+      ['make', 'function'],
+    ]);
   });
 
   test('several ids resolve in one call, an unknown one to no children', async ({ expect }) => {
@@ -264,7 +269,8 @@ describe('Tree', () => {
 
   test('search ranks an exact name first, and published declarations ahead of internal ones', async ({ expect }) => {
     const hits = await withSearch((search) => search.search('make'));
-    expect(hits[0]?.node).toMatchObject({ label: 'Obj.make', kind: 'symbol', detail: 'variable' });
+    // `export const make = () => …` is labelled by what it is, a function.
+    expect(hits[0]?.node).toMatchObject({ label: 'Obj.make', kind: 'symbol', detail: 'function' });
     // Both contain `n` mid-name, so they share a tier: the published `thing` goes ahead of the internal `hidden`.
     const labels = (await withSearch((search) => search.search('n'))).map((hit) => hit.node.label);
     expect(labels).toContain('hidden');
@@ -299,12 +305,13 @@ describe('Tree', () => {
     expect(await withTree((tree) => tree.source(grow))).toMatchObject({
       title: 'Box.grow',
       line: 4,
-      code: '  grow(by: number): Box {\n    return this;\n  }',
+      code: 'grow(by: number): Box {\n  return this;\n}',
       signature: 'grow(by: number): Box { … }',
     });
-    // The member's own doc comment comes with it.
+    // The member's own doc comment comes with it, in both forms, aligned with the member and dedented.
     expect(await withTree((tree) => tree.source(box.children[0].id))).toMatchObject({
-      code: '  /** How wide it is. */\n  readonly width = 1;',
+      code: '/** How wide it is. */\nreadonly width = 1;',
+      signature: '/** How wide it is. */\nreadonly width = 1',
     });
     expect((await withTree((tree) => tree.locate(grow)))?.slice(-3)).toEqual([
       `mod:${file('Box.ts')}`,

@@ -22,13 +22,15 @@ import * as Tree from './Tree.ts';
 
 // Namespaces are left out: each repeats its module, which is found by file name.
 const SYMBOLS = `${Tree.DEUS}
-SELECT DISTINCT ?symbol ?name ?kind ?canonical ?public ?packageName ?origin ?realKind ?path WHERE {
+SELECT DISTINCT ?symbol ?name ?kind ?canonical ?public ?packageName ?origin ?realKind ?typeTerm ?snippet ?path WHERE {
   ?symbol a deus:Symbol ; deus:exported true ; deus:name ?name ; deus:kind ?kind .
   FILTER(?kind != "namespace")
   ?file deus:declares ?symbol ; deus:path ?path .
   OPTIONAL { ?symbol deus:canonicalName ?canonical }
   OPTIONAL { ?symbol deus:packagePublic ?public }
   OPTIONAL { ?symbol deus:aliasOf ?origin }
+  OPTIONAL { ?symbol deus:typeTerm ?typeTerm }
+  OPTIONAL { ?symbol deus:snippet ?snippet }
   OPTIONAL { ?symbol deus:resolvesTo ?real . ?real deus:kind ?realKind }
   OPTIONAL { ?file deus:inPackage ?pkg . ?pkg deus:name ?packageName }
 }`;
@@ -113,7 +115,12 @@ const build = (store: Store.Api): Effect.Effect<readonly Entry[], Store.StoreErr
             label,
             kind: 'symbol',
             branch: false,
-            detail: row.kind === 'reexport' ? (row.realKind ?? 'variable') : row.kind,
+            // Labelled by what it is (a `const` holding a function is a function), as the tree labels it.
+            detail: Tree.semanticKind({
+              kind: row.kind === 'reexport' ? (row.realKind ?? 'variable') : row.kind,
+              typeTerm: row.typeTerm,
+              snippet: row.snippet,
+            }),
           }),
           description: row.packageName ?? row.path,
         }),

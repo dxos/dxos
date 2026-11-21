@@ -726,6 +726,26 @@ describe('members and declaration extents', () => {
     expect(declared('Alias')?.members).toBeUndefined();
   });
 
+  test('a snippet keeps the JSDoc inside a declaration and drops other comments', () => {
+    const documented = analyzeTypeScript({
+      ...context,
+      path: 'src/documented.ts',
+      source: [
+        'export type Options = {',
+        '  /** Retain the original id. */',
+        '  retainId?: boolean;',
+        '  // An implementation note.',
+        '  deep?: boolean;',
+        '};',
+        '',
+      ].join('\n'),
+      resolve: () => undefined,
+    });
+    const snippet = documented.declares.find((candidate) => candidate.name === 'Options')?.snippet ?? '';
+    expect(snippet).toContain('/** Retain the original id. */');
+    expect(snippet).not.toContain('implementation note');
+  });
+
   test('a declaration records the line its statement ends on', () => {
     expect(
       Object.fromEntries(

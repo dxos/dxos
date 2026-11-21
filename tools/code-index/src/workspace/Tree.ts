@@ -108,15 +108,29 @@ const isManifest = (path: string): boolean => path.endsWith('/package.json');
 
 // A named re-export takes the kind of what it resolves to, so `export { DXN } from` reads as the class it is.
 const exportsQuery = (modules: readonly string[]) => `${DEUS}
-SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members WHERE {
+SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members ?typeTerm ?realTypeTerm ?realSnippet WHERE {
   VALUES ?module { ${values(modules)} }
   ?module deus:declares ?symbol .
   ?symbol deus:exported true ; deus:name ?name ; deus:kind ?declKind .
-  OPTIONAL { ?symbol deus:resolvesTo ?real . ?real deus:kind ?realKind }
+  OPTIONAL {
+    ?symbol deus:resolvesTo ?real . ?real deus:kind ?realKind .
+    OPTIONAL { ?real deus:typeTerm ?realTypeTerm }
+    OPTIONAL { ?real deus:snippet ?realSnippet }
+  }
   OPTIONAL { ?symbol deus:namespaceOf ?target }
   OPTIONAL { ?symbol deus:snippet ?snippet }
   OPTIONAL { ?symbol deus:members ?members }
+  OPTIONAL { ?symbol deus:typeTerm ?typeTerm }
 }`;
+
+/** A row's semantic kind, from the declaration a re-export resolves to when it does. */
+const rowKind = (row: Store.Binding): string =>
+  semanticKind({
+    kind: row.declKind ?? row.kind,
+    realKind: row.realKind,
+    typeTerm: row.realTypeTerm ?? row.typeTerm,
+    snippet: row.realSnippet ?? row.snippet,
+  });
 
 const membersQuery = (symbols: readonly string[]) => `${DEUS}
 SELECT ?symbol ?members WHERE { VALUES ?symbol { ${values(symbols)} } ?symbol deus:members ?members }`;
@@ -152,6 +166,35 @@ const memberNodes = (symbol: string, literal: string | undefined): Protocol.Tree
       }),
   );
 
+/** A value whose initializer is a function: `= (…) =>`, `= async x =>`, `= function`. */
+const FUNCTION_INITIALIZER =
+  /=\s*(?:async\s+)?(?:function\b|(?:<[^>]*>\s*)?\([^)]*\)\s*(?::[^=]*)?=>|[A-Za-z_$][\w$]*\s*=>)/;
+
+/**
+ * What a declaration is, which is what the tree and the palette label and draw it by: a `const` holding
+ * a function is a function. Its inferred type says so (`deus:typeTerm`'s kind); where inference gave up,
+ * the declaring statement still shows a function initializer. Anything else keeps the kind it was
+ * declared as, a named re-export the kind of what it resolves to.
+ */
+export const semanticKind = (row: {
+  readonly kind: string;
+  readonly realKind?: string;
+  readonly typeTerm?: string;
+  readonly snippet?: string;
+}): string => {
+  const kind = row.realKind ?? row.kind;
+  if (kind !== 'variable') {
+    return kind;
+  }
+  const typeKind = row.typeTerm ? /^\{"k":"(\w+)"/.exec(row.typeTerm)?.[1] : undefined;
+  if (typeKind === 'function') {
+    return 'function';
+  }
+  return (typeKind === undefined || typeKind === 'unresolved') && FUNCTION_INITIALIZER.test(row.snippet ?? '')
+    ? 'function'
+    : kind;
+};
+
 /**
  * Whether an export is its module's default. The index names `export default class X` by `X`, with
  * no default marker, but a symbol's snippet is its declaring statement, which says so.
@@ -177,9 +220,13 @@ SELECT ?symbol ?target WHERE { VALUES ?symbol { ${values(symbols)} } ?symbol deu
 /** A git command's output, or `undefined` when it fails; the tree degrades rather than erroring on git. */
 const git = (root: string, args: readonly string[]): Effect.Effect<string | undefined> =>
   Effect.callback<string | undefined>((resume) => {
-    execFile('git', args, { cwd: root, maxBuffer: 64 * 1024 * 1024 }, (error, stdout) =>
-      resume(Effect.succeed(error ? undefined : stdout)),
-    );
+    execFile('git', args, { cwd: root, maxBuffer: 64 * 1024 * 1024 }, (error, stdout, stderr) => {
+      // Logged, since the tree only degrades (no branch, a folder name for the repository) and would hide why.
+      if (error) {
+        console.error(`code-index · git ${args.join(' ')} failed: ${stderr.trim() || error.message}`);
+      }
+      resume(Effect.succeed(error ? undefined : stdout));
+    });
   });
 
 /** The `owner/name` of the repository's GitHub remote, or `undefined` when it has none or git failed. */
@@ -290,8 +337,9 @@ const bySubpath = (left: Protocol.TreeNode, right: Protocol.TreeNode): number =>
   Number(right.detail === ROOT_ENTRY) - Number(left.detail === ROOT_ENTRY) || left.label.localeCompare(right.label);
 
 const symbolQuery = (symbol: string) => `${DEUS}
-SELECT ?name ?kind ?line ?endLine ?snippet ?members ?path ?canonical ?packageName WHERE {
+SELECT ?name ?kind ?line ?endLine ?snippet ?members ?typeTerm ?path ?canonical ?packageName WHERE {
   <${symbol}> deus:name ?name ; deus:kind ?kind .
+  OPTIONAL { <${symbol}> deus:typeTerm ?typeTerm }
   OPTIONAL { <${symbol}> deus:line ?line }
   OPTIONAL { <${symbol}> deus:endLine ?endLine }
   OPTIONAL { <${symbol}> deus:snippet ?snippet }
@@ -335,6 +383,14 @@ const declarationEnd = (lines: readonly string[], start: number): number => {
     }
   }
   return Math.min(lines.length, start + MAX_LINES) - 1;
+};
+
+/** Lines with their common leading whitespace removed: a member excerpt reads from the left edge, not a class's indent. */
+const dedent = (lines: readonly string[]): string[] => {
+  const margin = Math.min(
+    ...lines.filter((line) => line.trim().length > 0).map((line) => /^\s*/.exec(line)?.[0].length ?? 0),
+  );
+  return Number.isFinite(margin) ? lines.map((line) => line.slice(margin)) : [...lines];
 };
 
 /** The JSDoc or line comments directly above `start`, so a card carries the declaration's documentation. */
@@ -503,7 +559,7 @@ export const make = (store: Store.Api, root: string) =>
               kind: namespace ? 'namespace' : 'symbol',
               // A class, interface or object type opens onto its members, as a namespace onto its module.
               branch: namespace || parseMembers(row.members).length > 0,
-              detail: namespace ? 'namespace' : (row.realKind ?? row.declKind),
+              detail: namespace ? 'namespace' : rowKind(row),
             }),
           );
         }
@@ -702,17 +758,19 @@ export const make = (store: Store.Api, root: string) =>
           const end = recordedEnd === undefined ? declarationEnd(lines, declared) : recordedEnd - 1;
           const last = Math.min(end, declared + MAX_LINES - 1);
           const comment = lines.slice(first, declared);
-          const signature = member?.signature ?? row.snippet;
+          // A member's one-line signature takes its own line's indentation, so it sits under its JSDoc as in the file.
+          const indent = member ? (/^\s*/.exec(lines[declared] ?? '')?.[0] ?? '') : '';
+          const signature = member ? `${indent}${member.signature}` : row.snippet;
           const owner = row.canonical ?? row.name;
           return new Protocol.TreeSource({
             id,
             title: member ? `${owner}.${member.name}` : owner,
-            subtitle: member?.kind ?? row.kind,
+            subtitle: member?.kind ?? semanticKind({ kind: row.kind, typeTerm: row.typeTerm, snippet: row.snippet }),
             packageName: row.packageName,
             path: row.path,
             line: first + 1,
-            code: lines.slice(first, last + 1).join('\n'),
-            signature: signature === undefined ? undefined : [...comment, signature].join('\n'),
+            code: dedent(lines.slice(first, last + 1)).join('\n'),
+            signature: signature === undefined ? undefined : dedent([...comment, ...signature.split('\n')]).join('\n'),
             truncated: end > last,
           });
         }
