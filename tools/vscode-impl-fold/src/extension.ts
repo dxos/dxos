@@ -174,7 +174,7 @@ export const activate = (context: vscode.ExtensionContext) => {
   // VS Code paints a file before its language server answers, so the bodies found last time are applied first to
   // keep the unfolded flash to a frame; the content-and-settings hash rules out stale lines.
   const cache = new Map<string, CacheEntry>(context.globalState.get<[string, CacheEntry][]>(CACHE_KEY, []));
-  const pending = new Map<string, { version: number; result: Promise<LineRange[] | undefined> }>();
+  const pending = new Map<string, { hash: string; result: Promise<LineRange[] | undefined> }>();
 
   const remember = (key: string, entry: CacheEntry) => {
     cache.delete(key);
@@ -191,24 +191,23 @@ export const activate = (context: vscode.ExtensionContext) => {
   /** Shares one provider round trip between the open-time prefetch and the editor that shows the document. */
   const compute = (document: vscode.TextDocument): Promise<LineRange[] | undefined> => {
     const key = document.uri.toString();
+    const hash = hashOf(document);
     const inFlight = pending.get(key);
-    // A computation started before an edit describes old line numbers, so only the same version is shared.
-    if (inFlight && inFlight.version === document.version) {
+    // A lookup started before an edit or a settings change answers for other inputs, so only the same hash is shared.
+    if (inFlight && inFlight.hash === hash) {
       return inFlight.result;
     }
-    const version = document.version;
-    const hash = hashOf(document);
     const result = findBodiesWithRetry(document).then((bodies) => {
       if (pending.get(key)?.result === result) {
         pending.delete(key);
       }
-      if (!bodies || document.version !== version) {
+      if (!bodies || hashOf(document) !== hash) {
         return undefined;
       }
       remember(key, { hash, bodies });
       return bodies;
     });
-    pending.set(key, { version, result });
+    pending.set(key, { hash, result });
     return result;
   };
 
