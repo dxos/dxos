@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { Database, type Entity, Filter, Obj, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
+import { Database, type Entity, Filter, Obj, Query, Ref, Relation, Scope, Text, Type } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN, EntityId } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -185,7 +185,8 @@ export const PlainDialect: Dialect = {
       add: (obj: Obj.Unknown) => run(Database.add(obj)),
       remove: (obj: Obj.Unknown) => run(Database.remove(obj)),
       flush: () => run(Database.flush()),
-      update: (obj: Obj.Unknown, mutator: (obj: any) => void) => Obj.update(obj, mutator),
+      update: (obj: Obj.Unknown, mutator: (obj: any) => void) =>
+        Obj.update(obj, (target) => mutator(diffingStrings(target))),
 
       ops: guardOperations(
         Object.fromEntries(
@@ -258,6 +259,22 @@ export const PlainDialect: Dialect = {
     ${operations.length > 0 ? renderPlainOperations(operations) : NO_OPERATIONS}
   `,
 };
+
+/**
+ * The object a mutator writes through: a string assigned over a string is written as a diff (`Text.update`), which keeps
+ * cursors and merges with concurrent edits, instead of replacing the whole text, the way a text operation edits it.
+ */
+const diffingStrings = <T extends Obj.Unknown>(target: T): T =>
+  new Proxy(target, {
+    get: (object, key) => Reflect.get(object, key),
+    set: (object, key, value) => {
+      if (typeof key === 'string' && typeof value === 'string' && typeof Reflect.get(object, key) === 'string') {
+        Text.update(object, key, value);
+        return true;
+      }
+      return Reflect.set(object, key, value);
+    },
+  });
 
 /** Names `ops` answers although no operation is bound under them: the hooks JSON, promises and inspection read. */
 const OPERATION_PASSTHROUGH = new Set(['then', 'toJSON', 'inspect']);

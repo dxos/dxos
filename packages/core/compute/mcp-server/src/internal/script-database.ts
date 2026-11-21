@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { type Database, type Entity, Filter, Obj, Query, type Ref, Scope, Type } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Query, type Ref, Scope, Text, Type } from '@dxos/echo';
 import { DXN, EID, EntityId, type SpaceId, URI } from '@dxos/keys';
 import { deepMapValues } from '@dxos/util';
 
@@ -83,8 +83,18 @@ export const call = (
         }
         yield* Effect.try({
           // Assigned rather than set through `Obj.setValue`, which needs the object's schema: a database a host opens
-          // for a script may not have the type registered, and the agent's `update` assigns the same way.
-          try: () => Obj.update(object, (object) => Object.assign(object, toRefs(db, patch))),
+          // for a script may not have the type registered, and the agent's `update` assigns the same way. A string over a
+          // string is written as a diff (`Text.update`), so a document's text keeps concurrent edits.
+          try: () =>
+            Obj.update(object, (object) => {
+              for (const [key, value] of Object.entries(patch)) {
+                if (typeof value === 'string' && typeof Reflect.get(object, key) === 'string') {
+                  Text.update(object, key, value);
+                } else {
+                  Reflect.set(object, key, toRefs(db, value));
+                }
+              }
+            }),
           catch: (error) => failure('invalid_request', `update of ${id} was refused: ${describe(error)}`),
         });
         // Stored before the verb answers, as the operation it replaces does: nothing later flushes for the script.
