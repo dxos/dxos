@@ -673,6 +673,11 @@ describe('code mode reads', () => {
           print(byId.title, byRef.id === task.id, byEnvelope.id === task.id, await get('${missing}'), found.length);
         `);
         expect(output).toEqual('Water the plants true true undefined 1');
+
+        // An operation a binding replaces is not bound, and calling it by the name a skill gives says what to use.
+        const replaced = yield* runEvalResult(`await ops['space-get-objects']({ objects: [] });`);
+        expect(replaced.ok).toBe(false);
+        expect(replaced.output).toContain('is not offered in code. Read and change objects with get, query, search');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

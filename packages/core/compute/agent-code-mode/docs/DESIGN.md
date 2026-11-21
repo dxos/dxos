@@ -117,11 +117,16 @@ compute-service.
 
 The plain dialect's API reference gets one paragraph ahead of the operations section:
 
-> The bindings above run against a database this evaluation already has open: each call is a local read or write.
+> These bindings run against a database this evaluation already has open, so each call is a local read or write.
 > An `ops` call is a remote invocation that opens its own database, and can take seconds. Read and change objects
 > with the bindings, even where a skill names a tool for it: read with `get`, `query` or `search`, and change with
-> `update`. To create or delete an object the user should find in a collection, use the space operations, which
-> file it into its collection or unlink it.
+> `update`. Two cases still take an operation, when it is listed: content held in a feed (mail, calendar events),
+> which only the space operation that queries objects reaches, with `includeQueues`; and creating or deleting an
+> object the user should find in a collection, which the space operations that add and remove objects file into
+> its collection, or unlink.
+
+The Database skill's text still tells the model to read with `space-get-objects`. So `ops` answers a name it does not
+bind with an error that names the bindings, instead of the bare "is not a function".
 
 MCP's `runScript` description gets the same guidance. The Database skill's own text does not change. It is correct
 for a client that calls tools, and code mode's reference overrides it for code.

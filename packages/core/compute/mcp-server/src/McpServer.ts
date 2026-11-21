@@ -639,8 +639,10 @@ export const RunScript = Tool.make('runScript', {
     'stores the change and returns the object. These four read and write the database directly, while ' +
     'invoke runs an operation remotely and can take seconds: read and change objects with them, even ' +
     'where a skill names an operation for it. Objects come back as invoke returns them, references as ' +
-    '{"/": "echo://..."} envelopes that update and invoke take as they are. To create or delete an ' +
-    'object, invoke the space operations, which also file it into its collection. A failed call fails the program with ' +
+    '{"/": "echo://..."} envelopes that update and invoke take as they are. Two cases still take invoke: ' +
+    'content held in a feed (mail, calendar events), which only the space query operation reaches, with ' +
+    'includeQueues; and creating or deleting an object, which the space operations also file into its ' +
+    'collection or unlink. A failed call fails the program with ' +
     'a ToolFailure ({ code, message }); recover with `yield* Effect.result(invoke(...))`, whose value ' +
     "is { _tag: 'Success', success } or { _tag: 'Failure', failure }. Run independent calls together " +
     'with `yield* Effect.all([...], { concurrency: 8 })`. Nothing else is in scope: no import, ' +

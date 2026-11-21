@@ -172,17 +172,19 @@ export const PlainDialect: Dialect = {
       flush: () => run(Database.flush()),
       update: (obj: Obj.Unknown, mutator: (obj: any) => void) => Obj.update(obj, mutator),
 
-      ops: Object.fromEntries(
-        operations.flatMap((operation) => {
-          const invoke = (input: unknown = {}) => run(operation.invoke(input));
-          // Bound under the tool name and its camelCase form: the derived names are kebab-case,
-          // which is not an identifier, so `ops.researchOrg` would otherwise have to be bracketed.
-          // Also under the operation's key, with and without `dxn:`, since the Skill Manager says an
-          // operation is called by its key or its tool name.
-          const key = operation.definition === undefined ? undefined : String(operation.definition.meta.key);
-          const keys = key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])];
-          return [operation.name, camelCase(operation.name), ...keys].map((name) => [name, invoke] as const);
-        }),
+      ops: guardOperations(
+        Object.fromEntries(
+          operations.flatMap((operation) => {
+            const invoke = (input: unknown = {}) => run(operation.invoke(input));
+            // Bound under the tool name and its camelCase form: the derived names are kebab-case,
+            // which is not an identifier, so `ops.researchOrg` would otherwise have to be bracketed.
+            // Also under the operation's key, with and without `dxn:`, since the Skill Manager says an
+            // operation is called by its key or its tool name.
+            const key = operation.definition === undefined ? undefined : String(operation.definition.meta.key);
+            const keys = key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])];
+            return [operation.name, camelCase(operation.name), ...keys].map((name) => [name, invoke] as const);
+          }),
+        ),
       ),
     };
   },
@@ -230,15 +232,36 @@ export const PlainDialect: Dialect = {
     These bindings run against a database this evaluation already has open, so each call is a local read or write.
     An \`ops\` call is a remote invocation that opens its own database, and can take seconds. Read and change
     objects with the bindings, even where a skill names a tool for it: read with \`get\`, \`query\` or \`search\`,
-    and change with \`update\`. To create or delete an object the user should find in a collection, call the space
-    operations that add and remove objects when they are listed: they file the object into its collection, or
-    unlink it.
+    and change with \`update\`. Two cases still take an operation, when it is listed: content held in a feed (mail,
+    calendar events), which only the space operation that queries objects reaches, with \`includeQueues\`; and
+    creating or deleting an object the user should find in a collection, which the space operations that add and
+    remove objects file into its collection, or unlink.
 
     ${renderTypes(types?.filter(({ kind }) => kind === 'object'))}
 
     ${operations.length > 0 ? renderPlainOperations(operations) : NO_OPERATIONS}
   `,
 };
+
+/** Names `ops` answers although no operation is bound under them: the hooks JSON, promises and inspection read. */
+const OPERATION_PASSTHROUGH = new Set(['then', 'toJSON', 'inspect']);
+
+/**
+ * `ops` as the code reaches it: a name no bound operation has throws saying what to use, rather than the bare "is not
+ * a function". That includes an operation a binding replaces, which a skill's instructions may still name.
+ */
+const guardOperations = <T extends Record<string, unknown>>(ops: T): T =>
+  new Proxy(ops, {
+    get: (target, name, receiver) => {
+      if (typeof name !== 'string' || name in target || OPERATION_PASSTHROUGH.has(name)) {
+        return Reflect.get(target, name, receiver);
+      }
+      throw new Error(
+        `ops[${JSON.stringify(name)}] is not offered in code. Read and change objects with get, query, search and ` +
+          'update; call only the operations listed under Operations.',
+      );
+    },
+  });
 
 /** The calls a described object's hints show, in this dialect's facade. */
 const PLAIN_HINTS: HintSyntax = {
