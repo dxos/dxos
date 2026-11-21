@@ -32,6 +32,8 @@ The agent writes Markdown. A script makes the page. The agent publishes it.
 - [doing] Cache the prebuilt page in R2.
   - The **Session Board Cache** workflow pushes it from `main`.
   - It runs only after this work merges.
-- [todo] Open a draft PR.
+- [done] Open a draft PR.
 
 ## Pull requests
+- [draft] dxos/dxos#14647 Build the status board from Markdown.
+  - The Check workflow runs on each push.
