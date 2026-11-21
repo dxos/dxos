@@ -162,6 +162,11 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
       }),
     );
 
+    /** How many watches the last re-watch allowed; a directory appearing between re-watches stays within it. */
+    let allowance = Number.POSITIVE_INFINITY;
+    /** Directories left unwatched, by the budget or by a new directory that did not fit; the timer polls while any are. */
+    let uncovered = 0;
+
     /** Watches `dir`, and any directory created in it from then on; true unless the watch failed. */
     const add = (dir: string): boolean => {
       if (watchers.has(dir)) {
@@ -174,10 +179,15 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
           }
           Queue.offerUnsafe(changes, undefined);
           // Watched at once, not after the pass: a directory created empty would otherwise go
-          // unwatched until something else changed, missing the files written into it.
+          // unwatched until something else changed, missing the files written into it. Past the
+          // allowance it is left to the poll instead, so a burst of new directories cannot exhaust it.
           const child = name === null ? undefined : join(dir, name);
           if (child && statSync(join(options.root, child), { throwIfNoEntry: false })?.isDirectory()) {
-            add(child);
+            if (watchers.size < allowance) {
+              add(child);
+            } else {
+              uncovered++;
+            }
           }
         });
         watcher.on('error', () => {
@@ -191,37 +201,40 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
       }
     };
 
-    // Directories that hold indexed files gain a watch; one is dropped only once it is gone, since
-    // an empty directory may be about to receive files.
-    let polling = false;
+    // Directories that hold indexed files gain a watch. One already watched is kept while the budget has
+    // room, even with no indexed file yet, since an empty directory may be about to receive files; one is
+    // dropped once it is gone, or when the budget needs its descriptor back.
+    let announced = false;
     const rewatch = Effect.gen(function* () {
+      const budget = watchBudget(watchers.size);
       const { watched: wanted, skipped } = budgeted(
         (yield* store.fileStates()).map((state) => state.path),
-        watchBudget(watchers.size),
+        budget,
       );
-      // A directory gone, or one that fell out of the budget, gives its descriptor back.
+      let room = budget - wanted.size;
+      let dropped = 0;
       for (const [dir, watcher] of watchers) {
-        if (!wanted.has(dir) || !existsSync(join(options.root, dir))) {
-          watcher.close();
-          watchers.delete(dir);
+        const exists = existsSync(join(options.root, dir));
+        if (exists && (wanted.has(dir) || room > 0)) {
+          room -= wanted.has(dir) ? 0 : 1;
+          continue;
         }
+        watcher.close();
+        watchers.delete(dir);
+        dropped += exists ? 1 : 0;
       }
+      allowance = budget;
+      uncovered = skipped + dropped;
       const before = watchers.size;
       const failed = [...wanted].filter((dir) => !add(dir)).length;
       if (failed > 0) {
         yield* report({ _tag: 'Failed', message: `${failed} directories could not be watched` });
       }
-      // What the budget leaves unwatched is caught by a periodic pass, which costs a crawl when nothing changed.
-      if (skipped > 0 && !polling) {
-        polling = true;
+      if (uncovered > 0 && !announced) {
+        announced = true;
         yield* Console.log(
-          `code-index · watching ${wanted.size} directories, polling for the other ${skipped} every ${UNWATCHED_POLL_MS / 1000}s`,
+          `code-index · watching ${watchers.size} directories, polling for the other ${uncovered} every ${UNWATCHED_POLL_MS / 1000}s`,
         );
-        yield* Effect.forever(
-          Effect.sleep(UNWATCHED_POLL_MS).pipe(
-            Effect.andThen(Effect.sync(() => Queue.offerUnsafe(changes, undefined))),
-          ),
-        ).pipe(Effect.forkScoped);
       }
       // A file written between the pass's crawl and a new watch raised no event; one more pass sees it.
       if (watchers.size > before) {
@@ -262,8 +275,10 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
     yield* pass;
     // The dev server keeps opening watches as the page loads modules, so the budget is checked again
     // on a timer, not only after a pass: this watcher gives descriptors back before the process runs out.
+    // While any directory goes unwatched the same tick runs a pass, which catches a change in it.
     yield* Effect.forever(
       Effect.sleep(UNWATCHED_POLL_MS).pipe(
+        Effect.andThen(Effect.sync(() => uncovered > 0 && Queue.offerUnsafe(changes, undefined))),
         Effect.andThen(
           rewatch.pipe(
             Effect.catchCause((cause) => report({ _tag: 'Failed', message: `watch failed\n${Cause.pretty(cause)}` })),

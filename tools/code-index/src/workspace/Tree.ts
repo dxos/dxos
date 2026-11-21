@@ -108,7 +108,7 @@ const isManifest = (path: string): boolean => path.endsWith('/package.json');
 
 // A named re-export takes the kind of what it resolves to, so `export { DXN } from` reads as the class it is.
 const exportsQuery = (modules: readonly string[]) => `${DEUS}
-SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members ?typeTerm ?realTypeTerm ?realSnippet ?defaultExport WHERE {
+SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members ?realMembers ?typeTerm ?realTypeTerm ?realSnippet ?defaultExport WHERE {
   VALUES ?module { ${values(modules)} }
   ?module deus:declares ?symbol .
   ?symbol deus:exported true ; deus:name ?name ; deus:kind ?declKind .
@@ -116,6 +116,7 @@ SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members ?type
     ?symbol deus:resolvesTo ?real . ?real deus:kind ?realKind .
     OPTIONAL { ?real deus:typeTerm ?realTypeTerm }
     OPTIONAL { ?real deus:snippet ?realSnippet }
+    OPTIONAL { ?real deus:members ?realMembers }
   }
   OPTIONAL { ?symbol deus:namespaceOf ?target }
   OPTIONAL { ?symbol deus:snippet ?snippet }
@@ -133,8 +134,14 @@ const rowKind = (row: Store.Binding): string =>
     snippet: row.realSnippet ?? row.snippet,
   });
 
+// A named re-export has no members of its own; it lists those of the declaration it resolves to, which owns them.
 const membersQuery = (symbols: readonly string[]) => `${DEUS}
-SELECT ?symbol ?members WHERE { VALUES ?symbol { ${values(symbols)} } ?symbol deus:members ?members }`;
+SELECT ?symbol ?owner ?members WHERE {
+  VALUES ?symbol { ${values(symbols)} }
+  { ?symbol deus:members ?members . BIND(?symbol AS ?owner) }
+  UNION
+  { ?symbol deus:resolvesTo ?owner . ?owner deus:members ?members . FILTER NOT EXISTS { ?symbol deus:members ?own } }
+}`;
 
 /** A member of a class, interface or object type, by its owner and name (`static ` first for a static one). */
 export const MEMBER = 'mem:';
@@ -555,7 +562,7 @@ export const make = (store: Store.Api, root: string) =>
               label: row.name,
               kind: namespace ? 'namespace' : 'symbol',
               // A class, interface or object type opens onto its members, as a namespace onto its module.
-              branch: namespace || parseMembers(row.members).length > 0,
+              branch: namespace || parseMembers(row.members ?? row.realMembers).length > 0,
               detail: namespace ? 'namespace' : rowKind(row),
             }),
           );
@@ -635,7 +642,10 @@ export const make = (store: Store.Api, root: string) =>
           { concurrency: 'unbounded' },
         );
         for (const row of members) {
-          namespaces.set(`${SYMBOL}${row.symbol}`, memberNodes(row.symbol, row.members));
+          // A symbol comes back once per graph it is in; the first row lists its members.
+          if (!namespaces.has(`${SYMBOL}${row.symbol}`)) {
+            namespaces.set(`${SYMBOL}${row.symbol}`, memberNodes(row.owner, row.members));
+          }
         }
         return namespaces;
       });

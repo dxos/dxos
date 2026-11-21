@@ -81,7 +81,7 @@ const createLoader = (onNodes: (nodes: readonly Protocol.TreeNode[]) => void, di
     }
   };
 
-  return (id: string): Promise<readonly Protocol.TreeNode[]> => {
+  const load = (id: string): Promise<readonly Protocol.TreeNode[]> => {
     const cached = cache.get(id);
     if (cached) {
       return cached;
@@ -99,6 +99,11 @@ const createLoader = (onNodes: (nodes: readonly Protocol.TreeNode[]) => void, di
     cache.set(id, result);
     return result;
   };
+
+  /** Forgets every loaded level, so the next read of each asks the server again. */
+  const invalidate = () => cache.clear();
+
+  return { load, invalidate };
 };
 
 const pathKey = (path: readonly string[]) => JSON.stringify(path);
@@ -108,22 +113,35 @@ type ExplorerModel = TreeModel<Protocol.TreeNode> & {
   readonly openAtom: (path: readonly string[]) => Atom.Writable<boolean>;
   /** Resolves once every id's children are loaded, so a reveal finds each ancestor's row. */
   readonly ensureLoaded: (registry: AtomRegistry.AtomRegistry, ids: readonly string[]) => Promise<void>;
+  /** Reloads every branch read so far, after the index changed; each keeps its rows until the new ones arrive. */
+  readonly refresh: (registry: AtomRegistry.AtomRegistry) => void;
 };
 
 const createModel = (diff: boolean): ExplorerModel => {
   const nodes = new Map<string, Protocol.TreeNode>();
-  const load = createLoader((loaded) => {
+  const loader = createLoader((loaded) => {
     for (const node of loaded) {
       nodes.set(node.id, node);
     }
   }, diff);
+  const requested = new Set<string>();
 
   // Kept alive so a branch scrolled away and back does not refetch and flash empty.
   // A failed load is retried, not kept: a kept-alive atom would otherwise hold the failure and show the branch
   // empty for as long as the island lives. Successes stay cached by the loader.
-  const children = Atom.family((id: string) =>
-    Atom.make(Effect.tryPromise(() => load(id)).pipe(Effect.retry(Schedule.spaced(RETRY_LOAD)))).pipe(Atom.keepAlive),
-  );
+  const children = Atom.family((id: string) => {
+    requested.add(id);
+    return Atom.make(Effect.tryPromise(() => loader.load(id)).pipe(Effect.retry(Schedule.spaced(RETRY_LOAD)))).pipe(
+      Atom.keepAlive,
+    );
+  });
+
+  const refresh = (registry: AtomRegistry.AtomRegistry) => {
+    loader.invalidate();
+    for (const id of requested) {
+      registry.refresh(children(id));
+    }
+  };
 
   const childIds = Atom.family((id: string) =>
     Atom.make((get) => AsyncResult.getOrElse(get(children(id)), () => []).map((node) => node.id)),
@@ -185,6 +203,7 @@ const createModel = (diff: boolean): ExplorerModel => {
     openAtom: (path) => open(pathKey(path)),
     currentAtom,
     ensureLoaded,
+    refresh,
   };
 };
 
@@ -416,6 +435,16 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
   // Diff mode is a different tree, not a filter over this one: its own model, loader and open state.
   const [diff, setDiff] = useState(false);
   const model = useMemo(() => createModel(diff), [diff]);
+  // A finished pass moves the revision; branches read before it reload, so the tree never shows a stale index.
+  useEffect(() => {
+    let seen: number | undefined;
+    return api.watchIndex(({ revision }) => {
+      if (seen !== undefined && revision !== seen) {
+        model.refresh(registry);
+      }
+      seen = revision;
+    });
+  }, [model, registry]);
   const treeRef = useRef<TreeRootHandle>(null);
   const [searching, setSearching] = useState(false);
   const [mode, setMode] = useState<SourceMode>('signature');

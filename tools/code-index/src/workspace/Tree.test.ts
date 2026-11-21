@@ -58,6 +58,7 @@ describe('Tree', () => {
         "export * from './extra.ts';",
         "export { thing } from './named.ts';",
         "export { hidden as Surfaced } from './named.ts';",
+        "export { Box } from './Box.ts';",
         '',
       ].join('\n'),
     );
@@ -182,6 +183,7 @@ describe('Tree', () => {
   }) => {
     const [entry] = await withTree((tree) => tree.children([`mod:${file('index.ts')}`]));
     expect(entry.children.map((node) => [node.label, node.kind])).toEqual([
+      ['Box', 'symbol'],
       ['Obj', 'namespace'],
       ['extra', 'symbol'],
       ['Surfaced', 'symbol'],
@@ -318,6 +320,15 @@ describe('Tree', () => {
       `sym:${symbol('Box.ts', 'Box')}`,
       grow,
     ]);
+  });
+
+  test('a class re-exported by name opens onto the members of its declaration', async ({ expect }) => {
+    const [entry] = await withTree((tree) => tree.children([`mod:${file('index.ts')}`]));
+    expect(entry.children.find((node) => node.label === 'Box')).toMatchObject({ branch: true, detail: 'class' });
+    const [box] = await withTree((tree) => tree.children([`sym:${symbol('index.ts', 'Box')}`]));
+    expect(box.children.map((node) => node.label)).toEqual(['width', 'grow']);
+    // The members belong to the declaration, so each one's source is read from Box.ts.
+    expect(await withTree((tree) => tree.source(box.children[1].id))).toMatchObject({ title: 'Box.grow', line: 4 });
   });
 
   // Last, since it commits the fixture and changes a file: the tests above read it as indexed.

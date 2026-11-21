@@ -145,12 +145,26 @@ const rank = (entry: Entry, needle: string): number | undefined => {
 
 export const make = (store: Store.Api) =>
   Effect.gen(function* () {
-    const current = yield* Ref.make<readonly Entry[] | undefined>(undefined);
+    const current = yield* Ref.make<{ readonly generation: number; readonly entries: readonly Entry[] } | undefined>(
+      undefined,
+    );
+    let started = 0;
+    // Each build is numbered as it starts, so a slow, older build finishing late cannot replace a newer list.
+    const install = Effect.suspend(() => {
+      const generation = ++started;
+      return build(store).pipe(
+        Effect.tap((entries) =>
+          Ref.update(current, (installed) =>
+            installed !== undefined && installed.generation > generation ? installed : { generation, entries },
+          ),
+        ),
+      );
+    });
     // The first search waits for the first build; later ones never wait, since a rebuild swaps in when done.
-    const first = yield* Effect.cached(build(store).pipe(Effect.tap((entries) => Ref.set(current, entries))));
+    const first = yield* Effect.cached(install);
 
     /** Rebuilds the names after an index pass; the old list answers until the new one is ready. */
-    const refresh = build(store).pipe(Effect.flatMap((entries) => Ref.set(current, entries)));
+    const refresh = Effect.asVoid(install);
 
     const search = (query: string): Effect.Effect<Protocol.SearchHit[], Store.StoreError> =>
       Effect.gen(function* () {
@@ -158,7 +172,7 @@ export const make = (store: Store.Api) =>
         if (needle.length === 0) {
           return [];
         }
-        const entries = (yield* Ref.get(current)) ?? (yield* first);
+        const entries = (yield* Ref.get(current))?.entries ?? (yield* first);
         const ranked: { readonly rank: number; readonly hit: Protocol.SearchHit }[] = [];
         for (const entry of entries) {
           const score = rank(entry, needle);
