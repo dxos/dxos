@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type ReactNode, useMemo } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 import { TaskHistory, TaskList, TaskQuestion } from '@dxos/react-ui-task';
@@ -69,15 +69,33 @@ const historyEntries = (timeline: TimelineEvent[]): Task.HistoryEntry[] =>
       : {}),
   }));
 
-const SectionTrigger = ({ icon, label, count }: { icon: string; label: string; count?: string }) => (
-  <Accordion.ItemTrigger icon={icon}>
-    {label}
-    {count && (
-      <Typography.Text asChild tone='muted'>
-        <span> · {count}</span>
-      </Typography.Text>
-    )}
-  </Accordion.ItemTrigger>
+/** One collapsible section, open by default; each is its own accordion, so the page's gap separates them. */
+const Section = ({
+  id,
+  icon,
+  label,
+  count,
+  children,
+}: {
+  id: string;
+  icon: string;
+  label: string;
+  count?: string;
+  children: ReactNode;
+}) => (
+  <Accordion.Root border={false} defaultValue={[id]}>
+    <Accordion.Item value={id} data-testid={`section-${id}`}>
+      <Accordion.ItemTrigger icon={icon}>
+        <span className='font-medium'>{label}</span>
+        {count && (
+          <Typography.Text asChild tone='muted'>
+            <span> · {count}</span>
+          </Typography.Text>
+        )}
+      </Accordion.ItemTrigger>
+      <Accordion.ItemContent>{children}</Accordion.ItemContent>
+    </Accordion.Item>
+  </Accordion.Root>
 );
 
 const PrRows = ({ prs }: { prs: PullRequest[] }) => (
@@ -111,18 +129,17 @@ export const Board = ({ board }: BoardProps) => {
   const entries = useMemo(() => historyEntries(board.timeline), [board]);
   const open = board.questions.filter((question) => !question.answer);
   const done = board.goals.filter((goal) => goal.status === 'done').length;
-  const sections = ['questions', 'goals', 'prs', 'timeline'];
 
   return (
     <Panel.Root size='sm' gutter='rail'>
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Layout.Container gap='md'>
+            <Layout.Container gap='xl'>
               <Layout.Flex column gap='xs'>
                 <Layout.Flex gap='sm' align='center' justify='between'>
                   <Typography.Text asChild truncate>
-                    <h1 className='font-medium'>{board.title}</h1>
+                    <h1 className='text-lg font-medium'>{board.title}</h1>
                   </Typography.Text>
                   <Typography.Text tone='subtle' classNames='text-xs shrink-0' data-testid='updated'>
                     Updated {updated}
@@ -130,71 +147,49 @@ export const Board = ({ board }: BoardProps) => {
                 </Layout.Flex>
                 {board.summary && <Typography.Text tone='muted'>{board.summary}</Typography.Text>}
               </Layout.Flex>
-              <Accordion.Root border={false} defaultValue={sections}>
-                <Accordion.Item value='questions' data-testid='section-questions'>
-                  <SectionTrigger
-                    icon='ph--question--regular'
-                    label='Questions'
-                    count={open.length > 0 ? `${open.length} open` : undefined}
-                  />
-                  <Accordion.ItemContent>
-                    {board.questions.length === 0 ? (
-                      <Typography.Text tone='muted'>No questions now.</Typography.Text>
-                    ) : (
-                      <Layout.Container gap='md'>
-                        {[...open, ...board.questions.filter((question) => question.answer)].map((question) => (
-                          <TaskQuestion
-                            key={question.id}
-                            thread={{
-                              question: {
-                                text: `${question.id} ${plain(question.text)}`,
-                                ...(question.context ? { context: plain(question.context) } : {}),
-                                options: question.options,
-                              },
-                              ...(question.answer ? { answer: { answer: plain(question.answer) } } : {}),
-                            }}
-                          />
-                        ))}
-                      </Layout.Container>
-                    )}
-                  </Accordion.ItemContent>
-                </Accordion.Item>
-
-                <Accordion.Item value='goals' data-testid='section-goals'>
-                  <SectionTrigger icon='ph--target--regular' label='Goals' count={`${done}/${board.goals.length}`} />
-                  <Accordion.ItemContent>
-                    <TaskList.Root
-                      tasks={tasks}
-                      columns={['status', 'title']}
-                      showMnemonics={false}
-                      showDescription
-                      flush
-                    >
-                      <TaskList.Viewport>
-                        <TaskList.Content />
-                      </TaskList.Viewport>
-                    </TaskList.Root>
-                  </Accordion.ItemContent>
-                </Accordion.Item>
-
-                <Accordion.Item value='prs' data-testid='section-prs'>
-                  <SectionTrigger icon='ph--git-pull-request--regular' label='Pull requests' />
-                  <Accordion.ItemContent>
-                    {board.prs.length === 0 ? (
-                      <Typography.Text tone='muted'>No pull requests yet.</Typography.Text>
-                    ) : (
-                      <PrRows prs={board.prs} />
-                    )}
-                  </Accordion.ItemContent>
-                </Accordion.Item>
-
-                <Accordion.Item value='timeline' data-testid='section-timeline'>
-                  <SectionTrigger icon='ph--clock--regular' label='Timeline' />
-                  <Accordion.ItemContent>
-                    <TaskHistory entries={entries} limit={entries.length} />
-                  </Accordion.ItemContent>
-                </Accordion.Item>
-              </Accordion.Root>
+              <Section
+                id='questions'
+                icon='ph--question--regular'
+                label='Questions'
+                count={open.length > 0 ? `${open.length} open` : undefined}
+              >
+                {board.questions.length === 0 ? (
+                  <Typography.Text tone='muted'>No questions now.</Typography.Text>
+                ) : (
+                  <Layout.Container gap='sm'>
+                    {[...open, ...board.questions.filter((question) => question.answer)].map((question) => (
+                      <TaskQuestion
+                        key={question.id}
+                        thread={{
+                          question: {
+                            text: `${question.id} ${plain(question.text)}`,
+                            ...(question.context ? { context: plain(question.context) } : {}),
+                            options: question.options,
+                          },
+                          ...(question.answer ? { answer: { answer: plain(question.answer) } } : {}),
+                        }}
+                      />
+                    ))}
+                  </Layout.Container>
+                )}
+              </Section>
+              <Section id='goals' icon='ph--target--regular' label='Goals' count={`${done}/${board.goals.length}`}>
+                <TaskList.Root tasks={tasks} columns={['status', 'title']} showMnemonics={false} showDescription flush>
+                  <TaskList.Viewport>
+                    <TaskList.Content />
+                  </TaskList.Viewport>
+                </TaskList.Root>
+              </Section>
+              <Section id='prs' icon='ph--git-pull-request--regular' label='Pull requests'>
+                {board.prs.length === 0 ? (
+                  <Typography.Text tone='muted'>No pull requests yet.</Typography.Text>
+                ) : (
+                  <PrRows prs={board.prs} />
+                )}
+              </Section>
+              <Section id='timeline' icon='ph--clock--regular' label='Timeline'>
+                <TaskHistory entries={entries} limit={entries.length} />
+              </Section>
             </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
