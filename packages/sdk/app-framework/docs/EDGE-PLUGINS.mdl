@@ -11,6 +11,46 @@ it does today, and EDGE loads the same bundle on demand into a Dynamic Worker th
 Loader API. Its ECHO types, skills and operations become visible in the registry, and its
 operations are callable through compute-service like any other EDGE operation.
 
+![Plugin build, publish and invocation on EDGE](diagrams/edge-plugins.dx.svg)
+
+A plugin is built and published from dxos into registry-service; Composer loads the bundle by its
+manifest, and compute-service resolves an operation key, loads the bundle into a Dynamic Worker and
+runs it in PluginHost against the space.
+
+```diagram
+diagram flow=down
+group build "dxos: build and publish" {
+  node Config "dx.config.ts" ref="packages/sdk/app-framework/src/vite-plugin/composer/index.ts"
+  node Builder "PluginBuilder" ref="packages/core/compute/plugin-builder/src/build-bundle.ts"
+  node CLI "dx registry publish" ref="packages/devtools/cli"
+}
+group registry "edge: registry-service" {
+  node Store "PluginStore"
+  node Bundles "R2 bundles"
+  node Index "D1 operation index"
+}
+group compute "edge: compute-service" {
+  node Router "PluginRouter"
+  node Loader "PluginLoader" ref="packages/core/compute/edge-compute/src/plugin-loader"
+  node Host "PluginHost" ref="packages/core/compute/plugin-host-cloudflare"
+}
+node Browser "Composer (browser)"
+node Caller "MCP, agent, trigger"
+node DB "db-service (ECHO)"
+edge Config -> Builder "vite build"
+edge Builder -> CLI "bundle + vendor/"
+edge CLI -> Store "upload"
+edge Store owns Bundles
+edge Store owns Index
+edge Browser -> Bundles "load manifest"
+edge Caller -> Router "invoke dxn:"
+edge Router -> Index "resolve key"
+edge Router -> Loader
+edge Loader -> Bundles "read bundle"
+edge Loader -> Host "Dynamic Worker"
+edge Host -> DB "space via scope"
+```
+
 Today a plugin reaches EDGE only by being compiled into operation-service: a static list of
 `@dxos/plugin-*` imports, activated by one `PluginManager` per isolate and republished as a KV
 catalog. Adding or changing a plugin needs a dxos catalog bump and a redeploy of a 12 MiB worker,
