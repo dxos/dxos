@@ -30,11 +30,12 @@ export type Subscribers = Schema.Schema.Type<typeof Subscribers>;
 
 /**
  * The people who hear about activity on an object, stored on the object itself. Written only through the helpers
- * below.
+ * below. Keyed, so subscribers added concurrently on different peers all survive.
  */
 export const Subscription: Annotation.Annotation<Subscribers> = Annotation.make({
   id: 'org.dxos.annotation.subscription',
   schema: Subscribers,
+  keyed: true,
 });
 
 /** Whether an entry (possibly absent) receives `kind`. */
@@ -78,14 +79,7 @@ export const set = (obj: Obj.Unknown, did: string, kind: Kind, subscribed: boole
   }
 };
 
-const write = (obj: Obj.Unknown, did: string, entry: Entry): void => {
-  if (Option.isSome(Annotation.get(obj, Subscription))) {
-    Annotation.update(obj, Subscription, (subscribers) => {
-      subscribers[did] = entry;
-    });
-  } else {
-    Obj.update(obj, (obj) => {
-      Annotation.set(obj, Subscription, { [did]: entry });
-    });
-  }
-};
+const write = (obj: Obj.Unknown, did: string, entry: Entry): void =>
+  Annotation.update(obj, Subscription, (subscribers) => {
+    subscribers[did] = entry;
+  });

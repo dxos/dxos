@@ -547,6 +547,7 @@ interface MakeAnnoationsProps<T> {
   schema: Schema.Codec<T, any, never>;
   /** Skips the FQN format check on `id`, for a pre-existing id that may already be embedded in persisted schemas. */
   legacyId?: boolean;
+  keyed?: boolean;
 }
 
 // Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
@@ -563,10 +564,20 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
     );
   }
 
+  if (props.keyed) {
+    const ast = props.schema.ast;
+    assertArgument(
+      SchemaAST.isObjects(ast) && ast.propertySignatures.length === 0 && ast.indexSignatures.length > 0,
+      'keyed',
+      'A keyed annotation must have a record schema (Schema.Record(Schema.String, ...)).',
+    );
+  }
+
   const annotation: Annotation.Annotation<T> = {
     [ANNOTATION_TYPE_ID]: { _Type: {} as T },
     key: props.id as Annotation.Key,
     schema: props.schema,
+    keyed: props.keyed ?? false,
     get: (schema) => getFromAst(schema.ast, annotation),
     getFromAst: (ast) => getFromAst(ast, annotation),
     set: (value) =>

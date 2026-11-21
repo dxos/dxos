@@ -82,6 +82,12 @@ export interface Annotation<T> {
   readonly schema: Schema.Codec<T, unknown, never>;
 
   /**
+   * Whether an entity stores each entry of this record-valued annotation under its own meta key,
+   * so peers that concurrently write different entries merge instead of one whole record winning.
+   */
+  readonly keyed: boolean;
+
+  /**
    * Get the annotation value from an Effect schema.
    *
    * Only accepts `Schema.Top` — to read an annotation off a `Type.Type`
@@ -113,11 +119,25 @@ export interface Annotation<T> {
 export const Key = internalAnnotations.Key;
 export type Key = Schema.Schema.Type<typeof Key>;
 
+/** True when `T` is a record with open-ended string keys (not a struct, scalar, or array). */
+type IsStringRecord<T> = T extends object
+  ? T extends readonly unknown[]
+    ? false
+    : string extends keyof T
+      ? true
+      : false
+  : false;
+
 interface MakeProps<T> {
   id: string;
   schema: Schema.Codec<T, any, never>;
   /** Skips the FQN id-format check, for a pre-existing id that may already be embedded in persisted schemas. */
   legacyId?: boolean;
+  /**
+   * Stores each entry under its own meta key (`<id>/<entry key>`); only for `Schema.Record(Schema.String, …)`.
+   * A value written by a non-keyed annotation with the same id is still read, and loses to a keyed entry.
+   */
+  keyed?: IsStringRecord<T> extends true ? boolean : never;
 }
 
 /**
@@ -149,7 +169,8 @@ export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotatio
  * A read-only return is sound regardless of context — the reactive proxy rejects mutation outside an
  * `Obj.update`.
  *
- * @performance O(1) meta-dictionary read; returns the stored value without decoding or copying.
+ * @performance O(1) meta-dictionary read; returns the stored value without decoding or copying. A keyed
+ * annotation scans the meta keys and returns a fresh record of the live entries.
  */
 export const get: {
   <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>;
@@ -182,7 +203,8 @@ export const set: {
  * Mutate an existing annotation value in place via a callback, wrapping the mutation in a change
  * transaction (like `Obj.update`). The result is validated against the annotation's schema. Use when
  * only an annotation needs to change; to mutate it alongside other changes (unvalidated), call
- * `Annotation.get` inside an existing `Obj.update` instead. No-op when absent.
+ * `Annotation.get` inside an existing `Obj.update` instead. No-op when absent, except for a keyed
+ * annotation, whose mutator starts from an empty record.
  *
  * @performance O(value size) schema validation after the mutator, inside one change.
  */

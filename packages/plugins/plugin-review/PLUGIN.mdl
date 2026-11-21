@@ -616,8 +616,9 @@ feat F-7: Independence & testability
 feat F-8: Comment subscriptions
 
   req F-8.1: An object's subscribers MUST live in one `Subscription` annotation on the object
-    (`@dxos/types`), a map keyed by identity DID, written one key at a time so concurrent subscribers
-    merge once the map exists. No object is created per subscriber.
+    (`@dxos/types`), a keyed ECHO annotation that stores each identity DID's entry
+    under its own key, so subscribers written concurrently merge, the first ones included. No object is
+    created per subscriber.
 
   req F-8.2: Commenting MUST subscribe the commenter to the subject's comments, unless they already have
     an entry or are an agent; an unsubscribe outlives later comments.
@@ -942,4 +943,12 @@ decision D-9: The comment agent's runner returns the text of the turn's final re
   for: user:wittjosiah
   affects: [F-6.1, CommentAgentRunner, RespondToThread]
   why: Since the assistant ran chats on trajectory events (dxos#13782), no reply showed in any comment thread, and the pending message vanished when the turn ended.
+```
+
+```mdl
+decision D-10: `Subscription` is a keyed annotation, one meta key per subscriber, so the first subscribers written concurrently on two peers both survive. Subscriptions already stored as one map are still read.
+  date: 2026-11-19
+  by: user:wittjosiah
+  supersedes: D-6
+  affects: [F-8.1]
 ```
