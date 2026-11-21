@@ -65,28 +65,39 @@ export type CrawlOptions = {
   readonly filenames?: readonly string[];
 };
 
+/** Paths per `check-ignore` call: well under the platform's argument-size limit for repository paths. */
+const CHECK_IGNORE_BATCH = 500;
+
 /**
  * The paths git ignores, of those given. `check-ignore` exits 1 when it ignores none of them,
- * which is an answer, not a failure.
+ * which is an answer, not a failure. Paths go as arguments, the same way `ls-files` is run: the
+ * `--stdin` form crashed the server's indexing worker (SIGTRAP inside Bun 1.3.11) on its startup pass,
+ * though an isolated worker writing a git child's stdin does not, so that trigger is not pinned down.
  */
 export const ignored = (root: string, paths: readonly string[]): Effect.Effect<Set<string>, CrawlError> =>
-  paths.length === 0
-    ? Effect.succeed(new Set())
-    : Effect.callback<Set<string>, CrawlError>((resume) => {
-        const child = execFile(
-          'git',
-          ['check-ignore', '--stdin', '-z'],
-          { cwd: root, maxBuffer: 64 * 1024 * 1024 },
-          (error, stdout) => {
-            if (error && error.code !== 1) {
-              resume(Effect.fail(new CrawlError({ message: `git check-ignore failed in ${root}`, cause: error })));
-              return;
-            }
-            resume(Effect.succeed(new Set(stdout.split('\0').filter((path) => path.length > 0))));
-          },
-        );
-        child.stdin?.end(paths.join('\0'));
-      });
+  Effect.forEach(
+    Array.from({ length: Math.ceil(paths.length / CHECK_IGNORE_BATCH) }, (_, index) =>
+      paths.slice(index * CHECK_IGNORE_BATCH, (index + 1) * CHECK_IGNORE_BATCH),
+    ),
+    (batch) =>
+      Effect.tryPromise({
+        try: () =>
+          // `-z` needs `--stdin`, so the answer is one path per line, unquoted so it matches the paths asked about.
+          promisify(execFile)('git', ['-c', 'core.quotePath=false', 'check-ignore', '--', ...batch], {
+            cwd: root,
+            maxBuffer: 64 * 1024 * 1024,
+          })
+            .then(({ stdout }) => stdout)
+            .catch((error: unknown) =>
+              typeof error === 'object' && error !== null && Reflect.get(error, 'code') === 1
+                ? ''
+                : Promise.reject(error),
+            ),
+        catch: (cause) => new CrawlError({ message: `git check-ignore failed in ${root}`, cause }),
+      }),
+  ).pipe(
+    Effect.map((outputs) => new Set(outputs.flatMap((stdout) => stdout.split('\n').filter((path) => path.length > 0)))),
+  );
 
 /** Whether a stat failed because the path does not exist, rather than because it could not be read. */
 const isAbsent = (error: unknown): boolean => {
