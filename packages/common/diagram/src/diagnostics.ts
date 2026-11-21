@@ -11,7 +11,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Shape } from '@dxos/scene';
+import { Shape, solveGrids } from '@dxos/scene';
 
 import * as Layout from './layout.ts';
 import * as Scene from './scene.ts';
@@ -109,6 +109,28 @@ const isBox = (element: Shape.Element): element is Shape.Box =>
   element.kind === 'rect' || element.kind === 'ellipse' || element.kind === 'diamond' || element.kind === 'triangle';
 
 type Node = { ref: string; rect: Rect; text?: string; weight: Shape.Weight };
+
+const PLACED_KINDS: readonly string[] = Shape.BoxKind.literals;
+const isPlaced = (element: Shape.Element): element is Shape.Box => PLACED_KINDS.includes(element.kind);
+
+/**
+ * Each object with the boxes a grid places in the frames the grid gives them. A grid's member states no geometry
+ * of its own, so measured as written it is an empty box at the origin and every label in it fails to fit.
+ */
+const solved = (objects: readonly Scene.WorldObject[]): readonly Scene.WorldObject[] =>
+  objects.map((object) => {
+    const boxes = object.elements.filter(isPlaced);
+    if (!boxes.some((box) => box.parent !== undefined)) {
+      return object;
+    }
+    const frames = solveGrids(boxes);
+    return {
+      ...object,
+      elements: object.elements.map((element) =>
+        isPlaced(element) ? { ...element, ...frames.get(element.id) } : element,
+      ),
+    };
+  });
 
 /** Absolute rects for every closed shape, keyed by scene ref. */
 const nodes = (objects: readonly Scene.WorldObject[]): Node[] =>
@@ -627,7 +649,8 @@ const labelFits = ({ rect, text, weight }: Node): boolean => !text || !layoutLab
  * Analyzes an emitted scene for layout defects and quality metrics. Pure: the same scene always
  * yields the same report, so the soft metrics can be golden-filed and the hard codes asserted.
  */
-export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }: Options = {}): Report => {
+export const analyze = (written: readonly Scene.WorldObject[], { maxBends = 3 }: Options = {}): Report => {
+  const objects = solved(written);
   const diagnostics: Diagnostic[] = [];
   const allNodes = nodes(objects);
   const allConnectors = connectors(objects, bindTargets(objects));

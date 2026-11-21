@@ -18,7 +18,7 @@ Two fixed/lockstep groups plus deploy-only apps:
 
 - **Group A — Core/SDK** — core + common + sdk + ui + devtools + reflect on one shared line (currently `0.9.x`), published to npm. A few private members (e.g. the storybook helper libraries) are versioned on this line but not published (`tag: false`).
 - **Group B — Plugins + CLI** — every `@dxos/plugin-*` + `@dxos/cli` on a second line, published under it.
-- **Apps** — every `private` app (composer-app/crx/dxos-org, diagram-app, docs, todomvc, tasks, testbench, and the storybook apps `storybook-react`/`-lit`/`-solid`) deploys and never publishes. They are **not in Changesets** (`ignore`d): Composer is versioned by its deploy release (§5), the rest are unversioned.
+- **Apps** — every `private` app (composer-app/crx/dxos-org, drawing-app, docs, todomvc, tasks, testbench, and the storybook apps `storybook-react`/`-lit`/`-solid`) deploys and never publishes. They are **not in Changesets** (`ignore`d): Composer is versioned by its deploy release (§5), the rest are unversioned.
 
 **Independent numbers, coupled timing.** The groups carry independent version lines (a Group B-only changeset bumps B alone) but share **one** "Version Packages" PR — merging it drains all pending changesets. Independent release _cadence_ comes later, when plugins move to their own repo with their own trunk + Version PR (§6), not via per-group release branches.
 

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type ContentMap, Dsl, SvgFile, applyCommands } from '@dxos/diagram';
+import { type ContentMap, DSL, SvgFile, applyCommands } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Node, type Shape, isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
 
@@ -94,12 +94,12 @@ describe('SceneHandler', () => {
     };
     content['node:deck/card-1'] = { kind: 'node', scene, node, dsl: { object: 'deck', element: 'card-1' } };
 
-    const text = Dsl.print(SceneHandler.read(content).scene);
+    const text = DSL.print(SceneHandler.read(content).scene);
     expect(text).toContain('kind=card');
     expect(text).toContain('tone=event');
     expect(text).toContain('variant=simple');
 
-    const { commands, problems } = Dsl.read(text);
+    const { commands, problems } = DSL.read(text);
     expect(problems).toEqual([]);
     const rebuilt: ContentMap = {};
     applyCommands(rebuilt, commands, SceneHandler);
@@ -118,6 +118,140 @@ describe('SceneHandler', () => {
     // side of the `data` split needs the kind's own schema, which only the registry holding the kind has.
     expect(text).not.toContain('marks=');
     expect(Reflect.get(rebuiltNode, 'icon')).toBeUndefined();
+  });
+
+  test('a connector keeps the head it was drawn with, a missing one included', ({ expect }) => {
+    const heads: (Shape.ArrowHead | undefined)[] = [undefined, 'arrow', 'triangle', 'crowsfoot', 'none'];
+    const object = {
+      id: 'heads',
+      origin: { x: 0, y: 0 },
+      elements: [
+        { kind: 'rect' as const, id: 'a', x: 0, y: 0, w: 128, h: 64, text: 'A' },
+        { kind: 'rect' as const, id: 'b', x: 256, y: 0, w: 128, h: 64, text: 'B' },
+        ...heads.map((head, index) => ({
+          kind: 'arrow' as const,
+          id: `link-${index}`,
+          from: 'a',
+          to: 'b',
+          ...(head ? { head } : {}),
+        })),
+        { kind: 'arrow' as const, id: 'tailed', from: 'a', to: 'b', head: 'none' as const, tail: 'circle' as const },
+      ],
+    };
+    const content: ContentMap = {};
+    applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
+    const [read] = SceneHandler.read(content).scene.objects;
+    const arrows = read.elements.flatMap((element) => (element.kind === 'arrow' ? [element] : []));
+    // An arrow that states no head draws the default one, so it reads back as that head, not as none. A headless
+    // one is stored with no end markers at all, which is what once came back as the default arrow.
+    expect(arrows.map(({ id, head, tail }) => `${id}:${head}:${tail}`)).toEqual([
+      'link-0:arrow:undefined',
+      'link-1:arrow:undefined',
+      'link-2:triangle:undefined',
+      'link-3:crowsfoot:undefined',
+      'link-4:none:undefined',
+      'tailed:none:circle',
+    ]);
+  });
+
+  test('a connector keeps the stroke it was drawn with, dotted included', ({ expect }) => {
+    const strokes: (Shape.Stroke | undefined)[] = [undefined, 'solid', 'dashed', 'dotted'];
+    const object = {
+      id: 'strokes',
+      origin: { x: 0, y: 0 },
+      elements: [
+        { kind: 'rect' as const, id: 'a', x: 0, y: 0, w: 128, h: 64, text: 'A' },
+        { kind: 'rect' as const, id: 'b', x: 256, y: 0, w: 128, h: 64, text: 'B', stroke: 'dotted' as const },
+        ...strokes.map((stroke, index) => ({
+          kind: 'arrow' as const,
+          id: `link-${index}`,
+          from: 'a',
+          to: 'b',
+          ...(stroke ? { stroke } : {}),
+        })),
+        // A relation that draws dashes of its own, which a stated stroke overrides.
+        { kind: 'arrow' as const, id: 'depends', from: 'a', to: 'b', relation: 'dependency' as const },
+        {
+          kind: 'arrow' as const,
+          id: 'depends-dotted',
+          from: 'a',
+          to: 'b',
+          relation: 'dependency' as const,
+          stroke: 'dotted' as const,
+        },
+      ],
+    };
+    const content: ContentMap = {};
+    applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
+    // What the canvas draws: the link's own line style.
+    const drawn = Object.values(content).flatMap((record) =>
+      record.kind === 'link' ? [`${record.link.id.split('/').pop()}:${record.link.style?.lineStyle}`] : [],
+    );
+    expect(drawn).toEqual([
+      'link-0:undefined',
+      'link-1:undefined',
+      'link-2:dashed',
+      'link-3:dotted',
+      'depends:dashed',
+      'depends-dotted:dotted',
+    ]);
+    const [read] = SceneHandler.read(content).scene.objects;
+    const strokeOf = (id: string) => read.elements.flatMap((element) => (element.id === id ? [element] : []))[0];
+    expect(Reflect.get(strokeOf('link-3'), 'stroke')).toBe('dotted');
+    expect(Reflect.get(strokeOf('link-2'), 'stroke')).toBe('dashed');
+    expect(Reflect.get(strokeOf('b'), 'stroke')).toBe('dotted');
+  });
+
+  test('a box keeps the size it asks its grid for, apart from the frame the grid gives it', ({ expect }) => {
+    const object = {
+      id: 'sized',
+      origin: { x: 0, y: 0 },
+      elements: [
+        { kind: 'grid' as const, id: 'root', x: 0, y: 0, w: 800, h: 200, cols: 2 },
+        { kind: 'rect' as const, id: 'a', x: 0, y: 0, w: 0, h: 0, text: 'A', parent: 'root', width: 200, height: 50 },
+        { kind: 'rect' as const, id: 'b', x: 0, y: 0, w: 0, h: 0, text: 'B', parent: 'root' },
+      ],
+    };
+    const content: ContentMap = {};
+    applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
+    const node = (id: string) =>
+      Object.values(content).flatMap((record) =>
+        record.kind === 'node' && record.dsl?.element === id ? [record.node] : [],
+      )[0];
+    // The node's size is the grid's answer; what it asked for is beside it.
+    expect(node('a').size).toEqual({ width: 200, height: 50 });
+    expect(node('a').extent).toEqual({ width: 200, height: 50 });
+    expect(node('b').size).toEqual({ width: 400, height: 200 });
+    expect(node('b').extent).toBeUndefined();
+    const [read] = SceneHandler.read(content).scene.objects;
+    const box = (id: string) => read.elements.flatMap((element) => (element.id === id ? [element] : []))[0];
+    expect([Reflect.get(box('a'), 'width'), Reflect.get(box('a'), 'height')]).toEqual([200, 50]);
+    expect(Reflect.get(box('b'), 'width')).toBeUndefined();
+  });
+
+  test('a component keeps the rows it lists, beside its fields', ({ expect }) => {
+    const rows = [{ text: 'Effect Schema types' }, { text: 'Registered with ECHO', icon: 'database' }];
+    const object = {
+      id: 'listed',
+      origin: { x: 0, y: 0 },
+      elements: [
+        {
+          kind: 'rect' as const,
+          id: 'types',
+          x: 0,
+          y: 0,
+          w: 256,
+          h: 128,
+          text: 'Types',
+          type: 'card',
+          data: { icon: 'brackets-curly', items: rows },
+        },
+      ],
+    };
+    const content: ContentMap = {};
+    applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
+    const [read] = SceneHandler.read(content).scene.objects;
+    expect(Reflect.get(read.elements[0], 'data')).toEqual({ icon: 'brackets-curly', items: rows });
   });
 
   test('moves and removes objects; edits by the canvas keep the identity', ({ expect }) => {
@@ -444,9 +578,9 @@ const drawn = (scene: RenderList2D): string[] =>
 
 describe('SceneHandler on a canvas of diagram shapes', () => {
   test('the canvas draws a laid-out diagram element for element as its SVG file does', async ({ expect }) => {
-    const { commands, problems } = await EffectEx.runPromise(Dsl.compile(ARCHITECTURE));
+    const { commands, problems } = await EffectEx.runPromise(DSL.compile(ARCHITECTURE));
     expect(problems).toEqual([]);
-    const { objects } = Dsl.toScene(commands);
+    const { objects } = DSL.toScene(commands);
     const content: ContentMap = {};
     seedContent(content);
     updateCanvasRecord(content, { diagramShapes: true });
@@ -469,13 +603,13 @@ describe('SceneHandler on a canvas of diagram shapes', () => {
   });
 
   test('a moved box re-routes its connectors at right angles, in the same renderer', async ({ expect }) => {
-    const { commands } = await EffectEx.runPromise(Dsl.compile(ARCHITECTURE));
+    const { commands } = await EffectEx.runPromise(DSL.compile(ARCHITECTURE));
     const content: ContentMap = {};
     seedContent(content);
     updateCanvasRecord(content, { diagramShapes: true });
     applyCommands(
       content,
-      Dsl.toScene(commands).objects.map((object) => ({ op: 'upsert-object' as const, object })),
+      DSL.toScene(commands).objects.map((object) => ({ op: 'upsert-object' as const, object })),
       SceneHandler,
     );
     const before = readViews(content);

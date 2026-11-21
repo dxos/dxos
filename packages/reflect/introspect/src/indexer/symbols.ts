@@ -4,7 +4,15 @@
 
 import { globSync } from 'glob';
 import { join, relative } from 'node:path';
-import { type ExportedDeclarations, type JSDoc, type Node, Project, ScriptTarget, SyntaxKind } from 'ts-morph';
+import {
+  type ExportedDeclarations,
+  type JSDoc,
+  type Node,
+  Project,
+  ScriptTarget,
+  type SourceFile,
+  SyntaxKind,
+} from 'ts-morph';
 
 import { formatSymbolRef } from '../refs.ts';
 import type { SourceLocation, SymbolKind } from '../types.ts';
@@ -73,13 +81,24 @@ export const extractSymbols = (rootPath: string, pkg: PackageLike): PackageSymbo
     nodir: true,
   });
 
-  const symbols: ExtractedSymbol[] = [];
+  // Add every file before reading exports: `getExportedDeclarations` uses the type checker, and
+  // adding a file after the checker exists discards the program, so interleaving rebuilds it per file.
+  const sources: SourceFile[] = [];
   for (const filePath of files) {
     try {
       const source = project.addSourceFileAtPathIfExists(filePath);
-      if (!source) {
-        continue;
+      if (source) {
+        sources.push(source);
       }
+    } catch (err) {
+      warn(`symbol extraction failed for ${pkg.name} (${filePath})`, err);
+    }
+  }
+
+  const symbols: ExtractedSymbol[] = [];
+  for (const source of sources) {
+    const filePath = source.getFilePath();
+    try {
       const exported = source.getExportedDeclarations();
       for (const [name, declarations] of exported) {
         if (declarations.length === 0) {

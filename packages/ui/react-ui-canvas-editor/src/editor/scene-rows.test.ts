@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { type Scene, applyIntent, findLayout } from '@dxos/scene';
 
@@ -21,7 +21,7 @@ import {
   withoutHidden,
 } from './scene-rows.ts';
 
-const encapsulated = () => Dsl.readScenes(EXEMPLARS.encapsulated).document;
+const encapsulated = () => DSL.readScenes(EXEMPLARS.encapsulated).document;
 
 describe('scene rows', () => {
   test('the views tree is the scene layout: a portal is a View row with its full path, and a composite opens on its own', () => {
@@ -80,7 +80,7 @@ describe('scene rows', () => {
   });
 
   test('a document without its hidden layers drops their elements and the links bound to them', () => {
-    const doc = Dsl.readScenes(EXEMPLARS.links).document;
+    const doc = DSL.readScenes(EXEMPLARS.links).document;
     const layout = doc.layouts[0];
     if (layout?.dim !== '2d') {
       throw new Error('expected a 2D layout');

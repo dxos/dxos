@@ -24,7 +24,7 @@ export const diagramLanguage = LRLanguage.define({
         // Relation words and sides are plain names the reader checks, so they are tagged by position.
         'RelationKind Side FragmentKind': tags.keyword,
         'Soft': tags.modifier,
-        'rect ellipse diamond triangle grid circle line curve arc text arrow portal': tags.keyword,
+        'rect ellipse diamond triangle grid custom item circle line curve arc text arrow portal': tags.keyword,
         // A quoted id is still an id, not a string.
         'Id/String': tags.variableName,
         'Id': tags.variableName,

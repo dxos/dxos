@@ -191,9 +191,13 @@ const endsOf = (arrow: Shape.Arrow): Link['ends'] => {
  * Only the markers an arrow can spell are given back. A `diamond` end has no `ArrowHead`, and a marker reached
  * through a `relation` cannot be read back as that relation, since several relations draw the same marker.
  */
-const arrowEnds = (ends: Link['ends']): { head?: Shape.ArrowHead; tail?: Shape.ArrowTail } => {
-  // A link that carries ends but no end marker draws no arrowhead, and an arrow's default head IS an arrow, so the
-  // absence has to be written down: the deck's two dashed connectors grew arrowheads without this.
+const arrowEnds = (
+  ends: Link['ends'],
+  connector: Link['connector'],
+): { head?: Shape.ArrowHead; tail?: Shape.ArrowTail } => {
+  // A link with no end marker draws no arrowhead, and an arrow's default head IS an arrow, so the absence has to be
+  // written down: the deck's two dashed connectors grew arrowheads without this. A headless arrow with no tail is
+  // stored with no `ends` at all (see `endsOf`), so that reads as headless too, unless a connector says the markers.
   const head: Shape.ArrowHead | undefined =
     ends?.end === 'triangle'
       ? 'triangle'
@@ -201,9 +205,13 @@ const arrowEnds = (ends: Link['ends']): { head?: Shape.ArrowHead; tail?: Shape.A
         ? 'crowsfoot'
         : ends?.end === 'arrow'
           ? 'arrow'
-          : ends && ends.end === undefined
-            ? 'none'
-            : undefined;
+          : ends
+            ? ends.end === undefined
+              ? 'none'
+              : undefined
+            : connector === undefined
+              ? 'none'
+              : undefined;
   const tail: Shape.ArrowTail | undefined =
     ends?.start === 'circle' || ends?.start === 'arrow' ? ends.start : undefined;
   return { ...(head ? { head } : {}), ...(tail ? { tail } : {}) };
@@ -332,14 +340,25 @@ export const SceneHandler: ContentHandler = {
     const parentOf = new Map(
       object.elements.filter(isBox).flatMap((box) => (box.parent ? [[box.id, box.parent] as const] : [])),
     );
+    // The size a box asks its grid for, kept apart from the node's own size, which is the grid's answer.
+    const extentOf = new Map(
+      object.elements.filter(isBox).flatMap((box) => {
+        const extent = {
+          ...(box.width === undefined ? {} : { width: box.width * placement.scale }),
+          ...(box.height === undefined ? {} : { height: box.height * placement.scale }),
+        };
+        return Object.keys(extent).length > 0 ? [[box.id, extent] as const] : [];
+      }),
+    );
     const put = (element: string, node: Node) => {
-      // The grid that placed it, carried on the node: its frame here is the rule's result, and the membership is
-      // the only part of the rule the child itself holds.
+      // The grid that placed it, carried on the node: its frame here is the rule's result, and the membership and
+      // the size it asked for are the only parts of the rule the child itself holds.
       const parent = parentOf.get(element);
+      const extent = extentOf.get(element);
       records[nodeKey(node.id)] = {
         kind: 'node',
         scene,
-        node: parent ? { ...node, parent } : node,
+        node: { ...node, ...(parent ? { parent } : {}), ...(extent ? { extent } : {}) },
         dsl: identity(element),
       } satisfies NodeRecord;
     };
@@ -620,10 +639,12 @@ export const SceneHandler: ContentHandler = {
             break;
           }
           const ends = endsOf(element);
-          const dashed = Shape.markersOf(element).dashed;
+          // The stroke the arrow states, or the dashes its relation draws where it states none.
+          const pattern =
+            element.stroke === 'dotted' ? 'dotted' : Shape.markersOf(element).dashed ? 'dashed' : undefined;
           // A link's own line style, which is where a plain canvas keeps what a routed link keeps on its connector.
           const lineStyle: Link['style'] = {
-            ...(dashed ? { lineStyle: 'dashed' as const } : {}),
+            ...(pattern ? { lineStyle: pattern } : {}),
             ...(element.color && HUES[element.color] ? { hue: HUES[element.color] } : {}),
           };
           // Routed by the canvas (on a lattice, along its gutters) rather than through the layout's bends: the canvas
@@ -709,9 +730,15 @@ export const SceneHandler: ContentHandler = {
         taken.add(candidate);
         return candidate;
       };
-      const placedBy = (node: Node): { parent?: string } => {
+      const placedBy = (node: Node): { parent?: string; width?: number; height?: number } => {
         const parent = node.parent;
-        return typeof parent === 'string' && parent.length > 0 ? { parent } : {};
+        const { width, height } = node.extent ?? {};
+        return {
+          ...(typeof parent === 'string' && parent.length > 0 ? { parent } : {}),
+          // In canvas units, as every frame read back is: the object is read at a scale of 1.
+          ...(width === undefined ? {} : { width }),
+          ...(height === undefined ? {} : { height }),
+        };
       };
       for (const record of members.sort((left, right) => (zOf(left) < zOf(right) ? -1 : 1))) {
         const element = record.dsl?.element ?? '';
@@ -825,7 +852,7 @@ export const SceneHandler: ContentHandler = {
               // connector). The connector still fills in what the link does not say, such as a `relation`.
               ...(record.link.connector ? connectorStyle(record.link.connector) : {}),
               ...fieldsOf(record.link.style),
-              ...arrowEnds(record.link.ends),
+              ...arrowEnds(record.link.ends, record.link.connector),
             });
           }
         }
@@ -938,10 +965,16 @@ const dataOf = (node: Node): Record<string, unknown> | undefined => {
   if (typeof bag !== 'object' || bag === null || Array.isArray(bag)) {
     return undefined;
   }
-  const scalars = Object.entries(bag).filter(
-    ([, value]) => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean',
-  );
-  return scalars.length ? Object.fromEntries(scalars) : undefined;
+  const isScalar = (value: unknown) =>
+    typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+  // A list of flat rows is the one thing beside a scalar the text form says: the rows in a component's braces.
+  const isRows = (value: unknown) =>
+    Array.isArray(value) &&
+    value.every(
+      (row) => typeof row === 'object' && row !== null && !Array.isArray(row) && Object.values(row).every(isScalar),
+    );
+  const fields = Object.entries(bag).filter(([, value]) => isScalar(value) || isRows(value));
+  return fields.length ? Object.fromEntries(fields) : undefined;
 };
 
 /** The DSL ref of the node a link end names, relative to `object`. */

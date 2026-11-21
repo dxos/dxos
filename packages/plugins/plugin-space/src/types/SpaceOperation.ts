@@ -894,7 +894,8 @@ export const QueryObjects = Operation.make({
     typename: Schema.optional(typenameParameter),
     text: Schema.optional(Schema.String).annotate({ description: 'Full-text search terms.' }),
     includeContent: Schema.optional(Schema.Boolean).annotate({
-      description: 'Return full object data (default false); false returns id/type/label only.',
+      description:
+        "Also return each object's fields in its result (default false). Every result has `dxn` and `typename`, and `label` when the object has one.",
     }),
     limit: Schema.optional(Schema.Number).annotate({
       description: 'Maximum number of results (default 10). A capped result sets `truncated`.',
@@ -978,8 +979,9 @@ export const QueryTypes = Operation.make({
     name: 'Query Types',
     description:
       'List the types objects in this space can have — those persisted in the space and those the ' +
-      'host itself registers. Returns a summary per type — typename, version, kind, name, ' +
-      'description, field names — or, for the typenames named, their full JSON Schema. Read the ' +
+      'host running this operation registers, which may lack a type another plugin contributes. ' +
+      'Returns a summary per type — typename, version, kind, name, ' +
+      'description, field names — or, for the typenames named, their full JSON Schema and any it did not find. Read the ' +
       "summary first and ask for a type's schema only when about to create or update one of it.",
     icon: 'ph--list--regular',
   },
@@ -992,5 +994,9 @@ export const QueryTypes = Operation.make({
   }),
   output: Schema.Struct({
     types: Schema.Array(Schema.Unknown),
+    notFound: Schema.optional(Schema.Array(Schema.String)).annotate({
+      description: 'The typenames asked for that neither the space nor this host has.',
+    }),
+    hint: Schema.optional(Schema.String),
   }),
 }).pipe(Operation.mutation('none'));

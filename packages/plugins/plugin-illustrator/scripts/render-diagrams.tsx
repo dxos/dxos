@@ -21,7 +21,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 
-import { Diagnostics, Dsl, Mermaid, MermaidEngine, type Scene, SvgFile } from '@dxos/diagram';
+import { Diagnostics, DSL, Mermaid, MermaidEngine, type Scene, SvgFile } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { DrawingFile } from '#model';
@@ -143,9 +143,9 @@ const sources = paths.map((path) => ({
 const compileSource = async ({
   language,
   source,
-}: (typeof sources)[number]): Promise<{ commands: readonly Scene.Command[]; problems: readonly Dsl.Problem[] }> =>
+}: (typeof sources)[number]): Promise<{ commands: readonly Scene.Command[]; problems: readonly DSL.Problem[] }> =>
   language === 'dsl'
-    ? EffectEx.runPromise(Dsl.compile(source, { emitCandidate }))
+    ? EffectEx.runPromise(DSL.compile(source, { emitCandidate }))
     : {
         commands: await MermaidEngine.compile(source, { emitCandidate, ...(LAYERING ? { layering: LAYERING } : {}) }),
         problems: [],

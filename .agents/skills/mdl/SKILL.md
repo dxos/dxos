@@ -23,6 +23,7 @@ A `.mdl` file is the authoritative description of a component: Markdown prose pl
 | `lang/changelog.mdl`               | `decision`, `question` — the attributed changelog                    |
 | `lang/sql.mdl`                     | `table` — a SQL table a component owns                               |
 | `lang/worker.mdl`                  | `binding`, `actor`, `route`, `keyspace` — a worker's surface         |
+| `lang/session.mdl`                 | `goal`, `pr`, `event` — a session's `SESSION.mdl` (`status-board`)   |
 | `lang/PLUGIN-.template.mdl`        | Starting point for a new `PLUGIN.mdl`                                |
 
 Read the dialect file before you use one of its blocks. Copy `ext` definitions from `lang/`; do not

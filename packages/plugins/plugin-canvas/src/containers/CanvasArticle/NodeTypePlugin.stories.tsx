@@ -151,7 +151,7 @@ export const WithPlugin: Story = {
     // one of its tools, so either may be the one in the rail.
     const palette = await canvas.findByTestId('palette');
     const extension = palette.querySelector(
-      '[data-testid="canvas.tool.node:task"], [data-testid="canvas.tool.node:space-graph"]',
+      '[data-testid="canvas.tool.node:task"], [data-testid="canvas.tool.node:graph"]',
     );
     const group = extension?.closest('[data-testid="palette"] > *');
     await expect(group).toBeTruthy();

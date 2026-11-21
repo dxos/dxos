@@ -121,6 +121,13 @@ const gridFields = {
    * what an `auto` track measures, so a label can keep its own height while the body beside it takes the rest.
    */
   parent: Schema.optional(Schema.String).annotate({ description: 'The grid that places this box.' }),
+  /**
+   * The size the box keeps in the cell its grid gives it, centred there; an axis left out fills the cell. Stated
+   * apart from `w` and `h`, which for a placed box are the grid's result and are written over each time it is
+   * solved. In a packed grid the larger of the two is the diameter of the box's circle.
+   */
+  width: Schema.optional(Schema.Number).annotate({ description: 'Width the box keeps inside its grid cell.' }),
+  height: Schema.optional(Schema.Number).annotate({ description: 'Height the box keeps inside its grid cell.' }),
 };
 
 const id = Schema.String.annotate({

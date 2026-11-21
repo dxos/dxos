@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { isSafeUrl } from './remark-slidev.ts';
+import { iconSymbol, isSafeUrl } from './remark-slidev.ts';
 
 describe('isSafeUrl', () => {
   test('allows relative URLs and allowlisted schemes', ({ expect }) => {
@@ -24,5 +24,28 @@ describe('isSafeUrl', () => {
     expect(isSafeUrl('javascript:alert(1)', true)).toBe(false);
     expect(isSafeUrl('java\tscript:alert(1)', false)).toBe(false);
     expect(isSafeUrl('data:text/html,<script>', true)).toBe(false);
+  });
+});
+
+describe('iconSymbol', () => {
+  test('a bare name is the regular Phosphor glyph', ({ expect }) => {
+    expect(iconSymbol('brain')).toBe('ph--brain--regular');
+    expect(iconSymbol('users-three')).toBe('ph--users-three--regular');
+    expect(iconSymbol('number-circle-1')).toBe('ph--number-circle-1--regular');
+  });
+
+  test('a whole symbol is taken as written, whatever its set or weight', ({ expect }) => {
+    expect(iconSymbol('ph--brain--regular')).toBe('ph--brain--regular');
+    expect(iconSymbol('ph--brain--duotone')).toBe('ph--brain--duotone');
+    expect(iconSymbol('dx--composer--regular')).toBe('dx--composer--regular');
+  });
+
+  test('anything else names no icon', ({ expect }) => {
+    for (const value of ['', 'Brain', 'shield check', 'shield_check', '-brain', 'brain-', 'ph--brain', 'a--b--c--d']) {
+      expect(iconSymbol(value), value).toBeUndefined();
+    }
+    // Nothing that could carry markup or a URL reaches the renderer.
+    expect(iconSymbol('"><script>')).toBeUndefined();
+    expect(iconSymbol('https://example.com/a.svg')).toBeUndefined();
   });
 });

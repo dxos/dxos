@@ -21,7 +21,8 @@ asked.
   brain's index (pipeline-rdf's SQLite schema) is derived and rebuildable.
 - **Back-indexing is a trigger-run operation outside the brain:** a remote timer trigger runs
   plugin-discord's `CrawlDiscordChannels`, which reads a channel's history live with `@dxos/crawler`
-  (the Discord token comes from the space, where the Discord OAuth sign-in stored it), keeps its
+  (reading as the bot installed in the server through plugin-discord's `DiscordService`, whose host on EDGE
+  holds the bot's token, so the space holds none for Kai), keeps its
   progress in a `CrawlState` ECHO object and puts the facts it extracts into the space's memory
   (`MemoryService`), whose replicated `facts` feed every replica, EDGE's included, follows.
 - **Goals are directives, not tasks:** plain-text outcomes or conditions, owned by an `Actor` (user,
@@ -161,7 +162,7 @@ invocation; its output is a fact feed. The brain consumes fact feeds and knows n
 | Cursors    | `StateStore.layerEcho` over the `CrawlState`; moved only by `Crawler.commit`, once an event cleared every stage. Reset rewinds targets there; each run reopens the channels |
 | Identities | `AgentRegistry.layerMemory` per invocation: an author's canonical id is their Discord user id, so it is stable across runs without a store                                  |
 | Extraction | `extractFactsStage`: a page of messages per model request; a fact's `source` is `discord:<message id>`                                                                      |
-| Record     | A `FactStore` over the space's `MemoryService` (`memoryFactStoreLayer`): each fact is put into the space's memory; its content hashes live in the `CrawlState`              |
+| Record     | A `FactStore` over the space's `MemoryService` (`spaceMemoryFactStoreLayer`): each fact is put into the space's memory; its content hashes live in the `CrawlState`         |
 
 Why not the crawl in the brain Durable Object: the brain then owned scheduling, the Discord source
 (over discord-service's bot), the crawl state (in its SQLite, invisible to the space) and controls

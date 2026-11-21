@@ -214,13 +214,114 @@ describe('a box that packs what it holds', () => {
     expect(solveGrid({ layout: 'pack', packSeed: 4, packMin: 20, packMax: 60 }, frame, children)).not.toEqual(first);
   });
 
-  test('leaves out a child the packing could not place', ({ expect }) => {
-    // Three circles of 90 cannot fit a 200-wide frame: the first is placed and the rest find no room.
-    const placed = solveGrid(
-      { layout: 'pack', packSeed: 1, packMin: 90, packMax: 90, gap: 4 },
-      { x: 0, y: 0, w: 200, h: 200 },
-      [box('a'), box('b'), box('c')],
-    );
-    expect(placed.length).toBeLessThan(3);
+  test('places every child, smaller than asked where the sizes asked for do not fit', ({ expect }) => {
+    // Three circles of 90 cannot fit a 200-wide frame, so all three are drawn smaller rather than two left out.
+    const frame = { x: 0, y: 0, w: 200, h: 200 };
+    const placed = solveGrid({ layout: 'pack', packSeed: 1, packMin: 90, packMax: 90, gap: 4 }, frame, [
+      box('a'),
+      box('b'),
+      box('c'),
+    ]);
+    expect(placed.map(({ id }) => id)).toEqual(['a', 'b', 'c']);
+    for (const { frame: child } of placed) {
+      expect(child.w).toBeLessThan(180);
+      expect(child.w).toBeGreaterThan(0);
+      expect(child.x).toBeGreaterThanOrEqual(4);
+      expect(child.x + child.w).toBeLessThanOrEqual(196);
+    }
+  });
+
+  test('places every child for any seed of a field its sizes crowd', ({ expect }) => {
+    // The Hyperspace field: nine members, sizes up to 185. Some seeds draw sizes that do not all fit at full size.
+    const frame = { x: 0, y: 0, w: 592, h: 624 };
+    const children = Array.from({ length: 9 }, (_, index) => box(`s${index}`));
+    for (let packSeed = 0; packSeed < 64; packSeed++) {
+      const placed = solveGrid({ layout: 'pack', packSeed, packMin: 36, packMax: 185, gap: 10 }, frame, children);
+      expect(placed, `seed ${packSeed}`).toHaveLength(9);
+    }
+  });
+
+  test('keeps the sizes its seed draws where they fit', ({ expect }) => {
+    const rule = { layout: 'pack' as const, packSeed: 7, packMin: 40, packMax: 40, gap: 8 };
+    const placed = solveGrid(rule, { x: 0, y: 0, w: 400, h: 400 }, [box('a'), box('b'), box('c')]);
+    expect(placed.map(({ frame }) => frame.w)).toEqual([80, 80, 80]);
+  });
+
+  test('a child that states a size is a circle of that diameter; the rest take what the seed draws', ({ expect }) => {
+    const frame = { x: 0, y: 0, w: 600, h: 600 };
+    const rule = { layout: 'pack' as const, packSeed: 5, packMin: 20, packMax: 40, gap: 8 };
+    const stated = solveGrid(rule, frame, [box('a'), { ...box('b'), width: 300 }, { ...box('c'), height: 120 }]);
+    const widthOf = (id: string) => stated.find((entry) => entry.id === id)?.frame.w ?? 0;
+    expect(widthOf('b')).toBe(300);
+    expect(widthOf('c')).toBe(120);
+    // The one that states nothing is drawn from the rule's range.
+    expect(widthOf('a')).toBeGreaterThanOrEqual(40);
+    expect(widthOf('a')).toBeLessThanOrEqual(80);
+  });
+});
+
+describe('a packing whose sizes do not fit', () => {
+  const frame = { x: 0, y: 0, w: 640, h: 672 };
+  // The Hyperspace field as it is written: nine graphs, each asking for more than a ninth of the frame.
+  const widths = [700, 500, 500, 550, 500, 550, 500, 575, 500];
+  const children = widths.map((width, index) => ({ ...box(`s${index}`), width }));
+  const rule = { layout: 'pack' as const, packSeed: 28, packMin: 36, packMax: 185, gap: 10 };
+  const placed = solveGrid(rule, frame, children);
+
+  test('fills the frame: the circles cover most of it, at one factor of the sizes asked', ({ expect }) => {
+    expect(placed).toHaveLength(9);
+    const factors = placed.map(({ frame: child }, index) => child.w / widths[index]);
+    for (const factor of factors) {
+      expect(factor).toBeCloseTo(factors[0], 6);
+    }
+    const covered = placed.reduce((area, { frame: child }) => area + (Math.PI * child.w * child.w) / 4, 0);
+    expect(covered / (frame.w * frame.h)).toBeGreaterThan(0.55);
+  });
+
+  test('keeps every circle inside the frame and clear of the others by the gap', ({ expect }) => {
+    for (const { frame: child } of placed) {
+      expect(child.x).toBeGreaterThanOrEqual(10 - 0.001);
+      expect(child.y).toBeGreaterThanOrEqual(10 - 0.001);
+      expect(child.x + child.w).toBeLessThanOrEqual(frame.w - 10 + 0.001);
+      expect(child.y + child.h).toBeLessThanOrEqual(frame.h - 10 + 0.001);
+    }
+    const circles = placed.map(({ frame: child }) => ({
+      x: child.x + child.w / 2,
+      y: child.y + child.h / 2,
+      r: child.w / 2,
+    }));
+    for (const [index, left] of circles.entries()) {
+      for (const right of circles.slice(index + 1)) {
+        // Half a unit of the gap may be given up where two circles are pushed together.
+        expect(Math.hypot(left.x - right.x, left.y - right.y)).toBeGreaterThanOrEqual(left.r + right.r + 10 - 0.5);
+      }
+    }
+  });
+
+  test('is the same field each time, and another for another seed', ({ expect }) => {
+    expect(solveGrid(rule, frame, children)).toEqual(placed);
+    expect(solveGrid({ ...rule, packSeed: 29 }, frame, children)).not.toEqual(placed);
+  });
+});
+
+describe('a child that states its own size', () => {
+  const frame = { x: 0, y: 0, w: 400, h: 200 };
+
+  test('keeps it in the middle of its cell, and fills the axis it leaves out', ({ expect }) => {
+    const placed = solveGrid({ cols: 2 }, frame, [
+      { ...box('a'), width: 100 },
+      { ...box('b'), width: 80, height: 50 },
+    ]);
+    const frames = new Map(placed.map((entry) => [entry.id, entry.frame]));
+    expect(frames.get('a')).toEqual({ x: 50, y: 0, w: 100, h: 200 });
+    expect(frames.get('b')).toEqual({ x: 260, y: 75, w: 80, h: 50 });
+  });
+
+  test('is what an `auto` track measures, over the frame the child was written with', ({ expect }) => {
+    // The frame is the last solve's result once a drawing has been stored, so it cannot be what the child asks for.
+    const placed = solveGrid({ cols: 'auto 1fr' }, frame, [{ ...box('a'), w: 999, width: 120 }, box('b')]);
+    const frames = new Map(placed.map((entry) => [entry.id, entry.frame]));
+    expect(frames.get('a')).toEqual({ x: 0, y: 0, w: 120, h: 200 });
+    expect(frames.get('b')).toEqual({ x: 120, y: 0, w: 280, h: 200 });
   });
 });

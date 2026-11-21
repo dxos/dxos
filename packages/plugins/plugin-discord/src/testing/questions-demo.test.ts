@@ -21,10 +21,10 @@ import { deterministicAiService } from '@dxos/crawler/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 import {
-  ExtractedQuestionStore,
   type TopicSegment,
   buildTopicsForTarget,
   extractQuestionsStage,
+  listQuestions,
   replayStream,
 } from '@dxos/pipeline-discord';
 import { storesLayer } from '@dxos/pipeline-discord/testing';
@@ -44,7 +44,7 @@ describe('questions demo', () => {
       const { questions, topics } = await EffectEx.runPromise(
         Effect.gen(function* () {
           yield* replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
-          const questions = yield* ExtractedQuestionStore.list();
+          const questions = yield* listQuestions();
 
           const targets = yield* StateStore.listTargets();
           const topics: TopicSegment[] = [];
@@ -58,9 +58,7 @@ describe('questions demo', () => {
       console.log(`\ndb: ${dbPath}`);
       console.log(`questions: ${questions.length}\n`);
       for (const question of questions) {
-        console.log(
-          `  (${question.authorLabel ?? question.authorId} × ${question.targetId} × ${question.messageId})\n    ${question.question}`,
-        );
+        console.log(`  (${question.agentLabel ?? question.agent} × ${question.source})\n    ${question.question}`);
       }
 
       console.log(`\ntopics: ${topics.length}\n`);

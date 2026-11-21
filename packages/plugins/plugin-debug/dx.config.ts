@@ -9,6 +9,8 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as CanvasCapabilities from '@dxos/plugin-canvas/CanvasCapabilities';
+import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -64,6 +66,17 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
       provides: [Debug.DebugCapabilities.Settings],
       environments: ['browser', 'node', 'tauri'],
     }),
+    // Browser-only: the kinds the DXOS Deck's drawings are drawn by, which carry React views; they ride
+    // illustrator's start, as the canvas's own kinds do.
+    Capability.lazyModule(
+      'CanvasNodeTypes',
+      {
+        provides: [CanvasCapabilities.NodeType],
+        activatesOn: IllustratorEvents.Start,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/canvas-node-types.ts', { with: { type: 'module-url' } }),
+    ),
     Capability.lazyModule(
       'GraphRetention',
       { provides: [AppCapabilities.AppGraphRetention] },
@@ -91,6 +104,7 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
+        DebugSurface.ObjectPanel,
         DebugSurface.Page,
         DebugSurface.Stats,
         AppSurface.Article,

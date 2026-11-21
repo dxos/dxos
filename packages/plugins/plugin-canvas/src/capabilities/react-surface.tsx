@@ -10,7 +10,9 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
-import { CanvasProperties } from '#containers';
+import { CanvasDsl, CanvasProperties } from '#containers';
+
+import { DSL_COMPANION } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -20,6 +22,15 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.ObjectProperties, Drawing.Drawing),
         component: CanvasProperties,
         props: ({ data: { subject } }) => ({ drawing: subject }),
+      }),
+      Surface.create({
+        id: 'companion.dsl',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, DSL_COMPANION),
+          AppSurface.companion(AppSurface.Article, Drawing.Drawing),
+        ),
+        component: CanvasDsl,
+        props: ({ role, data: { companionTo } }) => ({ role, drawing: companionTo }),
       }),
     ]),
   ),

@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, within } from 'storybook/test';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Scene } from '@dxos/scene';
@@ -42,7 +42,7 @@ const cameraFor = (base: Scene.Camera3D, preset: StoryProps['camera']): Scene.Ca
 };
 
 const DefaultStory = ({ exemplar, theme, camera }: StoryProps) => {
-  const document = useMemo(() => Dsl.readScenes(EXEMPLARS[exemplar]).document, [exemplar]);
+  const document = useMemo(() => DSL.readScenes(EXEMPLARS[exemplar]).document, [exemplar]);
   const root = document.scenes[0];
   const view = useMemo(() => (root?.dim === '3d' ? cameraFor(root.camera, camera) : undefined), [root, camera]);
   return <Scene3DView document={document} theme={theme} camera={view} />;
@@ -83,7 +83,7 @@ export const DisposedWhileDecoding: Story = {
     const canvas = await within(canvasElement).findByTestId<HTMLCanvasElement>('canvas');
     const engine = new Engine(canvas, true);
     const view = new SceneRenderer3D({ engine, theme: 'presentation', background: '#000000' });
-    const document = Dsl.readScenes(EXEMPLARS.encapsulated).document;
+    const document = DSL.readScenes(EXEMPLARS.encapsulated).document;
     const root = document.scenes[0];
     view.render(renderList(document), root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);
     const lookup = engine.scenes[0]?.environmentBRDFTexture;
@@ -109,7 +109,7 @@ export const SelectionBoxWhileOrbiting: Story = {
     const canvas = await within(canvasElement).findByTestId<HTMLCanvasElement>('canvas');
     const engine = new Engine(canvas, true);
     const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#000000' });
-    const document = Dsl.readScenes(EXEMPLARS.cube).document;
+    const document = DSL.readScenes(EXEMPLARS.cube).document;
     const root = document.scenes[0];
     const camera = root?.dim === '3d' ? root.camera : DEFAULT_CAMERA;
     const list = renderList(document);

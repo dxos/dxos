@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { type Pipeline } from '@dxos/echo-memory';
 
 import { modelName, pipelineScene, totals } from './pipeline-diagram.ts';
@@ -80,7 +80,7 @@ describe('pipelineScene', () => {
   });
 
   test('reads back as one 2D scene with every card and link', ({ expect }) => {
-    const { document, problems } = Dsl.readScenes(pipelineScene(STATE));
+    const { document, problems } = DSL.readScenes(pipelineScene(STATE));
     expect(problems).toEqual([]);
     expect(document.scenes).toHaveLength(1);
     // Source, first, last, three stages, memory and one model; three stage links, the output and two model links.

@@ -20,10 +20,3 @@ createRoot(document.getElementById('root')!).render(
   </Theme.Provider>,
 );
 // #endregion
-
-// #region dark
-const media = window.matchMedia('(prefers-color-scheme: dark)');
-const sync = () => document.documentElement.classList.toggle('dark', media.matches);
-sync();
-media.addEventListener('change', sync);
-// #endregion

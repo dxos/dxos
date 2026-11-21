@@ -1,5 +1,181 @@
 # @dxos/plugin-magazine
 
+## 0.17.0
+
+### Minor Changes
+
+- f0cc5e6: Add the Reading Room space template: three illustrated feeds with article bodies and a curated Weekend Reading magazine.
+- d699067: Fact extraction now seeds its ontology with curated predicates from published vocabularies by default (`RDF.Vocabularies.DEFAULT`: schema.org, FOAF, Dublin Core, W3C ORG and SIOC under their own IRIs) and a `uses` seed predicate; pass an `ontology` to narrow it, and `ExtractOptions.closed` drops relations no listed predicate fits instead of minting new ones. The extractor defaults to Claude Haiku 5.5, sends its stable instructions as a cached system message (predicates learned from the store follow in a second, uncached one), and takes `ExtractOptions.thinking` (on by default); `ExtractOptions.extractor: 'system-one'` extracts with Cloudflare's Clairic and Clef models, falling back to the LLM per uncertain claim, a claim the caller's rules can't be checked against, or an unresolved reference; `ExtractDocument.context` carries earlier messages for resolving references. The model catalog lists Haiku 5.5 with list and cache prices (`Model.pricing`), and the Anthropic resolver sends `thinking: disabled` when a thinking model is asked not to think.
+
+  Model calls can be metered: `AiUsage.instrument` reports each language-model call's tokens, `AiUsage.withStage` attributes them to a pipeline stage, and `AiMetering.metered` (in `@dxos/compute`) is an `AiService` layer that writes each call as a durable `Trace.ModelCall` event, with `AiMetering.summarize` totalling them by model and stage at catalog prices. `Stage.batch` and the crawler's `tapStage` take a `concurrency`, which the crawler's fact extraction (`ExtractFactsOptions.concurrency`) and the Discord pipeline's topics stage (`RunOptions.topicsConcurrency`) pass through. Brain gains a Query SPARQL tool for raw SELECTs, and the fact tools cap what they return to the agent (50 rows, 500 characters a value) with a note to page with `LIMIT`/`OFFSET`; Query Facts takes an `offset` and returns `{ facts, total, note }`.
+
+  The fact explorer's lists (`react-ui-rdf`'s entity browser, fact viewer and ontology list) render only the rows near the viewport, and the entity browser gains a row of type toggles with counts; new exports `VirtualList`, `TypeFilter` and `entityTypeCounts`. `@dxos/plugin-magazine` exports its RSS and Atom parser as `@dxos/plugin-magazine/FeedParser`. `@dxos/plugin-sheet` adds an Add Chart operation (`SheetOperation.AddChart`, in the sheet skill) so an agent can chart a range of a sheet it made. `@dxos/plugin-brain/RemoteFactStorePlugin` gives every space a fact store served over HTTP (`RemoteFactStorePlugin.make(url)`) with the Brain skill and its operations, so a story or app can point an agent's memory at a fact server.
+
+  Breaking: extraction without an explicit `ontology` now shows the model the vocabulary packs as well as the seed predicates, so it reuses published predicates and its prompt is longer; Query Facts returns `{ facts, total, note? }` instead of an array.
+
+- 3b37cd1: Space templates now run in the new space's process: `SpaceOperation.ApplyTemplate` applies them, so a template's `build` can schedule operations. Breaking: `SpaceTemplate.apply` returns an `Effect` (requiring `Operation.Service`) instead of a `Promise`, and `SampleSpace.Definition`, `applyTo` and `buildArchive` take an `R` type parameter for what `build` needs. The magazine plugin adds an AI Briefing template with five live AI news feeds and a magazine that curates itself after creation, and feed and magazine cards share one layout.
+
+### Patch Changes
+
+- d95ffc3: Plugin operations now work when EDGE runs them from their own plugin bundles. An invocation's writes are saved even when its operation declares no `Database.Service`, so `tasks.move` and the Gmail, Calendar and JMAP materialize operations keep what they create. A bundle's skills keep `agentCanEnable`, so an agent can still enable them. Fixes in individual plugins:
+
+  - `thread.createChannel` saves the channel in the space, and the feed backend loads the channel's feed before appending.
+  - Markdown creates documents with an empty history.
+  - Magazine's `loadPostContent` loads its post.
+  - Loading an object by reference resolves its type from the type sources when the registry lacks it, so an object whose type another plugin publishes arrives with a schema.
+  - Unsubscribing from a sender keeps the first skip filter, and plugin-inbox registers the `Tag` type it creates.
+
+  plugin-google and plugin-jmap now ship EDGE bundles.
+
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [2ffc301]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [c8d6d86]
+- Updated dependencies [f142d06]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [1ac444f]
+- Updated dependencies [665d1af]
+- Updated dependencies [cfc5c42]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [6a37f4b]
+- Updated dependencies [7f9b8bc]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [908c301]
+- Updated dependencies [78e96da]
+- Updated dependencies [416201f]
+- Updated dependencies [3aef671]
+- Updated dependencies [13bc40d]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2176f79]
+- Updated dependencies [38ebf5e]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [22f759a]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [92ef425]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [0ad95b7]
+- Updated dependencies [f071de2]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [9c5af4a]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [fba77f7]
+- Updated dependencies [02254b0]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [4514d15]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [3d22d48]
+- Updated dependencies [7e07e49]
+- Updated dependencies [6cd526c]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [101f620]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+- Updated dependencies [fe3aaf6]
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/assistant-toolkit@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/react-ui-masonry@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-markdown@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/markdown@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { HAND_ICON, SELECT_ICON } from '@dxos/react-ui-canvas';
 import { type WorkPlane } from '@dxos/react-ui-canvas/3d';
@@ -142,7 +142,7 @@ const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, sna
           ? KIT
           : exemplar === 'flush'
             ? FLUSH
-            : Dsl.readScenes(EXEMPLARS[exemplar]).document,
+            : DSL.readScenes(EXEMPLARS[exemplar]).document,
     [exemplar],
   );
   // The document with what undo and redo step back and forward to, as the full editor's history does.

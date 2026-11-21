@@ -100,6 +100,8 @@ const GRID: readonly AttrSpec[] = [
   { name: 'justifyContent', type: 'enum', values: Shape.Place.literals },
   { name: 'alignContent', type: 'enum', values: Shape.Place.literals },
   { name: 'parent', type: 'name' },
+  { name: 'width', type: 'number' },
+  { name: 'height', type: 'number' },
 ];
 
 const BOX_ATTRS: readonly AttrSpec[] = [
@@ -179,6 +181,28 @@ export const OBJECT_ATTRS: readonly AttrSpec[] = [
   { name: 'ref', type: 'string' },
 ];
 
+/** The rule a grid diagram's frame divides by; a group states the same. */
+const RULE: readonly AttrSpec[] = [
+  { name: 'cols', type: 'scalar' },
+  { name: 'rows', type: 'scalar' },
+  { name: 'gap', type: 'number' },
+  { name: 'padding', type: 'number' },
+  { name: 'autoCols', type: 'scalar' },
+  { name: 'autoRows', type: 'scalar' },
+  { name: 'justifyContent', type: 'enum', values: Shape.Place.literals },
+  { name: 'alignContent', type: 'enum', values: Shape.Place.literals },
+  { name: 'layout', type: 'enum', values: Shape.Layout.literals },
+  { name: 'packSeed', type: 'number' },
+  { name: 'packMin', type: 'number' },
+  { name: 'packMax', type: 'number' },
+];
+
+/** The rule's attributes other than `gap`, which every kind's group reads. */
+export const GRID_RULE_ATTRS: readonly string[] = RULE.map(({ name }) => name).filter((name) => name !== 'gap');
+
+/** The frame a grid diagram draws round a group's members. */
+export const GROUP_FRAME_ATTRS: readonly string[] = ['fill', 'stroke', 'border'];
+
 /** `diagram` attributes. */
 export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
   { name: 'kind', type: 'enum', values: Semantic.DIAGRAM_KINDS },
@@ -186,29 +210,40 @@ export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
   { name: 'grid', type: 'size' },
   { name: 'box', type: 'size' },
   { name: 'aspect', type: 'ratio' },
+  { name: 'size', type: 'size' },
+  ...RULE,
 ];
 
 /** `group` attributes. */
 export const GROUP_ATTRS: readonly AttrSpec[] = [
-  { name: 'gap', type: 'number' },
+  ...RULE,
   { name: 'max-width', type: 'number' },
   { name: 'color', type: 'enum', values: Shape.Color.literals },
+  { name: 'fill', type: 'enum', values: Shape.Fill.literals },
+  { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
+  { name: 'border', type: 'boolean' },
 ];
 
-/** `node` attributes. */
+/** `node` attributes. A node naming a component (`kind=card`) also takes that component's own, as a box does. */
 export const NODE_ATTRS: readonly AttrSpec[] = [
+  { name: 'kind', type: 'name' },
   { name: 'ref', type: 'string' },
   { name: 'role', type: 'enum', values: Semantic.ROLES },
   { name: 'shape', type: 'enum', values: Shape.BoxKind.literals },
   { name: 'color', type: 'enum', values: Shape.Color.literals },
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
+  { name: 'border', type: 'boolean' },
+  // The size the node keeps in its cell. Not `size`, which a component may name a field of its own.
+  { name: 'width', type: 'number' },
+  { name: 'height', type: 'number' },
 ];
 
 /** `edge` attributes. */
 export const EDGE_ATTRS: readonly AttrSpec[] = [
   { name: 'head', type: 'enum', values: Shape.ArrowHead.literals },
   { name: 'tail', type: 'enum', values: Shape.ArrowTail.literals },
+  { name: 'path', type: 'enum', values: Shape.Path.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
   { name: 'color', type: 'enum', values: Shape.Color.literals },
 ];

@@ -73,7 +73,7 @@ feat F-4: A project's specs
               packages add their own editing on top.
   req F-4.13: A spec's text, and each block form drawn in it, shows the carets of the other peers editing it, each
               with the peer's name, and a form shows a peer's caret only in the field it is in.
-  req F-4.14: A spec's text opens in preview unless the Default spec view setting (F-4.16) names another view. In
+  req F-4.14: A spec's text opens in source unless the Default spec view setting (F-4.16) names another view. In
               preview each block of a kind its schemas define is drawn as a form over that kind's fields, and the text
               offers readonly and source views. The text is the only store: a form edit changes only
               the source of the field it edits, and the title, the prose and each prose field are editors of their own
@@ -111,10 +111,15 @@ feat F-4: A project's specs
               naming a block by key or positional label. A write is checked against the kind's schema and changes only
               the parts it names; a new block of a numbered kind, and each new keyed entry, gets a fresh key.
   req F-4.16: The projects plugin's Default spec view setting picks the view a spec opens in, named as the toolbar's
-              view menu names them: Markdown (the forms), Read only or Plain text. Unset, a spec opens as Markdown;
+              view menu names them: Preview (the forms), Read only or Source. Unset, a spec opens as Source;
               changing it leaves a spec already open in the view it shows.
   req F-4.17: A peer following another (org.dxos.plugin.space#F-8.21) shows the tab, the spec and the chart the
               leader has open in each project, since the article's view state aspect is followed.
+  req F-4.18: A numbered item reads by its positional label (`F-3`, `F-3.2`) in the plain text as in the forms: the
+              text draws each key it writes, as a block's id, a keyed line's key or a reference field's value, as the
+              item's label. A key cannot be edited there: the caret steps over it, and an edit that changes part of it is
+              dropped. A label can be selected on its own, and copying it copies the label. Enter in a requirement
+              starts the next one under a fresh key, and Backspace on an empty one removes it.
 ```
 
 ```mdl
@@ -569,7 +574,8 @@ test QA-10: Two peers see each other's carets in every project editor
       do: Both open Config > Agent; Bob types in the instructions, then Alice puts her cursor there.
       expect: each instructions editor shows the other peer's caret with that peer's name
     - name: Spec prose
-      do: Both open the Specs tab; Alice puts her cursor at the end of the prose, then Bob types after it.
+      do: Both open the Specs tab and pick Preview; Alice puts her cursor at the end of the prose, then Bob types after
+        it.
       expect: each spec shows the other peer's caret with that peer's name
     - name: Feature title and description
       do: Bob puts his cursor at the end of "Landing page"'s title in its form, then Alice types at the end of its
@@ -578,14 +584,14 @@ test QA-10: Two peers see each other's carets in every project editor
     - name: Feature requirement
       do: Alice types at the end of the feature's requirement, then Bob puts his cursor there.
       expect: each requirement row shows the other peer's caret with that peer's name
-    - name: Plain text and the form
-      do: Bob switches the Specs tab to Plain text; Alice types at the end of the feature's description in its form,
+    - name: Source and the form
+      do: Bob switches the Specs tab to Source; Alice types at the end of the feature's description in its form,
         then Bob types at the end of the requirement's line in the text.
       expect: Bob's description line shows Alice's caret and Alice's requirement row shows Bob's, each with that peer's name
     - name: Comments in plain text and the form
-      do: With Bob still in Plain text, Alice selects "Dark mode included" in the feature's description in its form and
+      do: With Bob still in Source, Alice selects "Dark mode included" in the feature's description in its form and
         comments on it; Bob selects "the footer" on the requirement's line in the text and comments on it; then Bob
-        switches back to Markdown.
+        switches back to Preview.
       expect: each comment is highlighted over its words in both peers' views, in the text and in the form's field
 ```
 
@@ -641,13 +647,13 @@ test QA-12: Two people write a chess plugin's spec with the agent
   steps:
     - name: Create the project and its spec
       do: Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab, checks Software in
-        Extensions and sets the tab's view to Plain text.
+        Extensions and sets the tab's view to Source.
       expect: the Specs tab shows the empty spec's plain text
     - name: Write the draft
       do: Alice types a line saying what the plugin is and two bullets under it.
       expect: the spec's text holds the line and the two bullets
     - name: Bob joins the draft
-      do: Bob opens "Chess" from Projects in the navigation tree, then its Specs tab.
+      do: Bob opens "Chess" from Projects in the navigation tree, then its Specs tab, and picks Preview.
       expect: each plank heading shows the other person among its viewers, and Bob's spec shows Alice's caret with her
         name
     - name: Type at the same time
@@ -693,8 +699,8 @@ test QA-12: Two people write a chess plugin's spec with the agent
       do: Bob resolves the thread.
       expect: the thread leaves Active comments on both sides
     - name: Pick the dependencies
-      do: Alice opens Board in the Structure companion. Bob opens "Chess" again and, in "Make Move"'s form, picks
-        "Gameboard" and "Move Validation" as features it depends on. Alice selects "Make Move" on her Board.
+      do: Alice opens Board in the Structure companion. Bob opens "Chess" again, picks Preview and, in "Make
+        Move"'s form, picks "Gameboard" and "Move Validation" as features it depends on. Alice selects "Make Move" on her Board.
       expect: Alice's Board marks "Gameboard" and "Move Validation" as features "Make Move" depends on
     - name: Read the finished spec
       do: Both scroll through the spec's text from the top.
@@ -3230,4 +3236,28 @@ decision D-284: In QA-12 Alice writes in the spec's plain text and Bob in its fo
   by: user:wittjosiah
   affects: [F-4.13, QA-12]
   why: The demo showed one peer's caret twice, at the end of a feature's title and in its description. A caret names the character after it, so typing ahead of it changes no presence state, and the title kept the caret it drew while the empty description shared its end.
+```
+
+```mdl
+decision D-285: The plain text draws each numbered item's key as its positional label and never shows or edits the key: the caret steps over it and a typed edit that changes part of it is dropped, but the label alone can be selected and copies as the label. Enter in a requirement writes the next one under a fresh key; Backspace on an empty one removes it. Keys stay what the text stores. Fills in [D-244].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.18]
+  why: A feature read as `F-3` in its form and as a random key in the plain text, and a key typed or edited by hand could collide or break the links that cite it.
+```
+
+```mdl
+decision D-286: The view menu names a spec's views Preview, Read only and Source, as the editor's toolbar names them for every document, and so does the Default spec view setting. Amends [D-267].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.16, QA-10, QA-12]
+  why: "Markdown" named the view that draws a spec's blocks as forms, which is not Markdown, and "Plain text" did not say it was the spec's source.
+```
+
+```mdl
+decision D-287: Unset, the Default spec view setting opens a spec on its source, not its forms. QA-10 and QA-12 pick Preview where their steps read a feature's form. Amends [D-267].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.14, F-4.16, QA-10, QA-12]
+  why: The source now reads by the same labels as the forms and keeps its keys safe, so it is the view a spec opens in.
 ```

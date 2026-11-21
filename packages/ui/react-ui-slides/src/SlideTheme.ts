@@ -267,6 +267,10 @@ export const isTone = (value: unknown): value is Tone => TONES.some((tone) => to
 export const Settings = Schema.Struct({
   base: Schema.optional(Schema.Literals(NAMES)).annotate({ title: 'Base' }),
   accent: Schema.optional(Color).annotate({ title: 'Accent color' }),
+  /** First-level headings; unset, they take the accent. */
+  heading: Schema.optional(Color).annotate({ title: 'Heading color' }),
+  /** Second- and third-level headings; unset, they take the accent. */
+  subheading: Schema.optional(Color).annotate({ title: 'Subheading color' }),
   background: Schema.optional(Color).annotate({ title: 'Background color' }),
   /** Outside the slide: the inset void in the editor, and the letterbox bands when presenting. */
   scrim: Schema.optional(Color).annotate({ title: 'Scrim color' }),

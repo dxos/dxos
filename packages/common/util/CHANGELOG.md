@@ -1,5 +1,20 @@
 # @dxos/util
 
+## 0.17.0
+
+### Minor Changes
+
+- c9c3867: Add `ExportOperation.Print` and `ExportOperation.Save` with a per-type `AppCapabilities.Exporter` capability. Objects whose type contributes an exporter get "Print…" and "Save as file…" on their article menu. Markdown saves `.md`, sheets save `.csv`, tables save `.dx.json`, and 2D canvas drawings save `.svg`. Print opens the browser print dialog, which can save a PDF. `@dxos/util` gains `printHtml`, `htmlTable` and `escapeHtml`.
+
+### Patch Changes
+
+- Updated dependencies [3aef671]
+- Updated dependencies [768db81]
+  - @dxos/keys@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

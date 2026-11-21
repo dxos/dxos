@@ -18,6 +18,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { HypergraphImpl } from '@dxos/echo-client';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
@@ -32,6 +33,9 @@ import * as Sandbox from './Sandbox.ts';
 EntityId.dangerouslyDisableRandomness();
 
 const TASK_TYPENAME = 'com.example.type.task';
+
+/** A type no layer registers, which only a type source supplies. */
+const NOTE_TYPENAME = 'com.example.type.note';
 
 /** The versioned DXN the effect dialect resolves the type by. */
 const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
@@ -596,6 +600,96 @@ describe('code mode records the operations an eval ran', () => {
           { toolCallId: 'effect', invocations: [{ operationKey: SCORE_KEY }] },
           { toolCallId: 'promise', invocations: [{ operationKey: SCORE_KEY }] },
         ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+// No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
+describe('code mode types', () => {
+  it.effect(
+    'make finds a type the registry lacks through the type sources',
+    Effect.fnUntraced(
+      function* (_) {
+        class Note extends Type.makeObject<Note>(DXN.make(NOTE_TYPENAME, '0.1.0'))(
+          Schema.Struct({ title: Schema.String }),
+        ) {}
+        const { db } = yield* Database.Service;
+        const graph = db.graph;
+        if (!(graph instanceof HypergraphImpl)) {
+          throw new Error('The test database is not backed by echo-client.');
+        }
+        const asked: string[] = [];
+        const unregister = graph.registerTypeSource(async (uri) => {
+          asked.push(String(uri));
+          return DXN.isDXN(uri) && DXN.getName(uri) === NOTE_TYPENAME ? Note : undefined;
+        });
+        yield* Effect.addFinalizer(() => Effect.sync(unregister));
+
+        const output = yield* runEval(`
+          const note = await make('${NOTE_TYPENAME}', { title: 'Plan' });
+          await add(note);
+          await flush();
+          print('notes:', (await query('${NOTE_TYPENAME}')).length);
+        `);
+        expect(output).toEqual('notes: 1');
+        expect(asked).toEqual([String(DXN.make(NOTE_TYPENAME))]);
+
+        // The source added the type to the registry, so a second `make` does not ask it again: on EDGE each ask is
+        // an RPC to the registry service.
+        yield* runEval(`await make('${NOTE_TYPENAME}', { title: 'Again' });`);
+        expect(asked).toHaveLength(1);
+
+        const unknown = yield* runEvalResult(`await make('com.example.type.unknown', {});`);
+        expect(unknown).toEqual({ output: 'Error: Unknown object type: com.example.type.unknown', ok: false });
+
+        // Not a valid typename: the same typed failure, not a defect.
+        const invalid = yield* runEvalResult(`await make('com.example.type.note#ABC123', {});`);
+        expect(invalid).toEqual({ output: 'Error: Unknown object type: com.example.type.note#ABC123', ok: false });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+// No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
+describe('code mode output', () => {
+  it.effect(
+    'console output reaches the model, on both dialects',
+    Effect.fnUntraced(
+      function* (_) {
+        expect(
+          yield* runEval(
+            "console.log('one', 1); print('two'); console.info('three'); console.warn('four'); console.error({ five: 5 });" +
+              ' console.dir({ six: 6 }, { depth: null });',
+          ),
+          // `dir` prints its value only, not the formatting options after it.
+        ).toEqual('one 1\ntwo\nthree\nfour\n{\n  "five": 5\n}\n{\n  "six": 6\n}');
+        expect(
+          yield* runEval("console.log('one'); yield* print('two'); console.debug('three');", EffectDialect),
+        ).toEqual('one\ntwo\nthree');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a program that printed and returned nothing says it ran',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('const score = await ops.score({ title: "abc" });');
+        expect(ok).toBe(true);
+        expect(output).toEqual(
+          'No output: the code ran without error but printed nothing. Print the values you need to see.',
+        );
+        expect(yield* runEval('return null;')).toEqual('null');
+        expect(yield* runEval("print('hello');", EffectDialect)).toMatch(
+          /^No output: .* `print` is an effect: write `yield\* print\(\.\.\.\)`\.$/,
+        );
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

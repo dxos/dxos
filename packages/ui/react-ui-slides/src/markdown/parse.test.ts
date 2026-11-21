@@ -259,6 +259,55 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([]);
   });
 
+  test('<Grid align> says where the grid stands, and the default says nothing', () => {
+    for (const align of ['start', 'center', 'end']) {
+      const slide = parseSlide(`<Grid cols="3" align="${align}">\n\nCells\n\n</Grid>`);
+      expect(elements(slide.slots.default, 'slide-grid')[0].properties.align).toBe(align);
+      expect(slide.issues).toEqual([]);
+    }
+    // `stretch` is the default written out, so it travels as no alignment at all.
+    for (const tag of ['<Grid cols="3">', '<Grid cols="3" align="stretch">']) {
+      const slide = parseSlide(`${tag}\n\nCells\n\n</Grid>`);
+      expect(elements(slide.slots.default, 'slide-grid')[0].properties.align).toBeUndefined();
+      expect(slide.issues).toEqual([]);
+    }
+  });
+
+  test('a <Grid align> the grid does not know falls back to filling, with an issue', () => {
+    const slide = parseSlide('<Grid align="middle">\n\nCells\n\n</Grid>');
+    expect(elements(slide.slots.default, 'slide-grid')[0].properties.align).toBeUndefined();
+    expect(slide.issues).toEqual([{ kind: 'html', message: 'Invalid <Grid> align "middle"; using "stretch".' }]);
+  });
+
+  test('<Grid variant> names a style, and a grid that names none is the plain one', () => {
+    const flow = parseSlide('<Grid cols="4" variant="flow">\n\nCells\n\n</Grid>');
+    expect(elements(flow.slots.default, 'slide-grid')[0].properties.variant).toBe('flow');
+    expect(flow.issues).toEqual([]);
+    const plain = parseSlide('<Grid cols="4">\n\nCells\n\n</Grid>');
+    expect(elements(plain.slots.default, 'slide-grid')[0].properties.variant).toBe('default');
+    expect(plain.issues).toEqual([]);
+  });
+
+  test('a <Grid variant> the grid does not know falls back to the plain one, with an issue', () => {
+    const slide = parseSlide('<Grid variant="arrows">\n\nCells\n\n</Grid>');
+    expect(elements(slide.slots.default, 'slide-grid')[0].properties.variant).toBe('default');
+    expect(slide.issues).toEqual([{ kind: 'html', message: 'Invalid <Grid> variant "arrows"; using "default".' }]);
+  });
+
+  test('<v-clicks> straight inside a <Grid> gives each of the grid\u2019s children a step', () => {
+    const card = (title: string) => `<Card>\n\n${title}\n\n</Card>`;
+    const slide = parseSlide(
+      ['<Grid cols="3">', '<v-clicks>', card('One'), card('Two'), card('Three'), '</v-clicks>', '</Grid>'].join('\n\n'),
+    );
+    expect(elements(slide.slots.default, 'slide-card').map((element) => element.properties.step)).toEqual([
+      '1',
+      '2',
+      '3',
+    ]);
+    expect(slide.clicks).toBe(3);
+    expect(slide.issues).toEqual([]);
+  });
+
   test('<Cell> and <Card> carry the tracks they span', () => {
     const slide = parseSlide(
       '<Grid cols="3">\n\n<Cell colSpan="2">\n\nWide\n\n</Cell>\n\n<Card rowSpan="2">\n\nTall\n\n</Card>\n\n</Grid>',
@@ -282,6 +331,41 @@ describe('parseSlide', () => {
     const [card] = elements(slide.slots.default, 'slide-card');
     expect(card.properties.variant).toBe('outline');
     expect(textOf(card)).toContain('Title');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<Card icon> names a glyph, bare or as a whole symbol', () => {
+    const slide = parseSlide(
+      '<Card icon="shield-check" tone="info">\n\n### Title\n\n- a\n\n</Card>\n\n' +
+        '<Card icon="ph--brain--duotone">\n\n### Title\n\n</Card>',
+    );
+    const [bare, symbol] = elements(slide.slots.default, 'slide-card');
+    // A bare name is the regular Phosphor glyph; a whole symbol is taken as written.
+    expect(bare.properties.icon).toBe('ph--shield-check--regular');
+    expect(bare.properties.tone).toBe('info');
+    expect(symbol.properties.icon).toBe('ph--brain--duotone');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a <Card> with no icon carries none', () => {
+    const slide = parseSlide('<Card>\n\n### Title\n\nText\n\n</Card>');
+    const [card] = elements(slide.slots.default, 'slide-card');
+    expect(card.properties.icon).toBeUndefined();
+    expect(card.properties.variant).toBe('default');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a <Card icon> that is not a glyph name falls away with an issue', () => {
+    const slide = parseSlide('<Card icon="Shield Check">\n\n### Title\n\n</Card>');
+    const [card] = elements(slide.slots.default, 'slide-card');
+    expect(card.properties.icon).toBeUndefined();
+    expect(textOf(card)).toContain('Title');
+    expect(slide.issues).toEqual([{ kind: 'html', message: 'Invalid <Card> icon "Shield Check"; ignored.' }]);
+  });
+
+  test('only a <Card> takes an icon', () => {
+    const slide = parseSlide('<Box icon="brain">\n\nBoxed\n\n</Box>');
+    expect(elements(slide.slots.default, 'slide-box')[0].properties.icon).toBeUndefined();
     expect(slide.issues).toEqual([]);
   });
 
@@ -309,6 +393,31 @@ describe('parseSlide', () => {
     const slide = parseSlide('<Box tone="neon">\n\nBoxed\n\n</Box>');
     expect(elements(slide.slots.default, 'slide-box')[0].properties.tone).toBe('accent');
     expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <Box> tone') }]);
+  });
+
+  test('`footer:` switches the deck\u2019s footer on or off for the slide, and anything but a boolean is an issue', () => {
+    expect(parseSlide('---\nfooter: false\n---\n\n# One').frontmatter.footer).toBe(false);
+    expect(parseSlide('---\nlayout: cover\nfooter: true\n---\n\n# One').frontmatter.footer).toBe(true);
+    expect(parseSlide('# One').frontmatter.footer).toBeUndefined();
+    const invalid = parseSlide('---\nfooter: sometimes\n---\n\n# One');
+    expect(invalid.frontmatter.footer).toBeUndefined();
+    expect(invalid.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('footer') }]);
+  });
+
+  test('the deck\u2019s counters are tags of the dialect, under Slidev\u2019s names', () => {
+    const slide = parseSlide('Slide <SlideCurrentNo /> of <SlidesTotal />');
+    expect(elements(slide.slots.default, 'slide-current-no')).toHaveLength(1);
+    expect(elements(slide.slots.default, 'slide-total')).toHaveLength(1);
+    expect(textOf(slide.slots.default)).toBe('Slide  of ');
+    expect(slide.issues).toEqual([]);
+    // Written without the closing slash, as a browser reads a tag, and whatever its case.
+    const loose = parseSlide('<slidecurrentno> / <SLIDESTOTAL>');
+    expect(elements(loose.slots.default, 'slide-current-no')).toHaveLength(1);
+    expect(elements(loose.slots.default, 'slide-total')).toHaveLength(1);
+    // A counter holds nothing, so it has no closing tag: one written is shown as text.
+    const closed = parseSlide('<SlideCurrentNo></SlideCurrentNo>');
+    expect(elements(closed.slots.default, 'slide-current-no')).toHaveLength(1);
+    expect(textOf(closed.slots.default)).toContain('</SlideCurrentNo>');
   });
 
   test('a slide overrides theme colors in its own frontmatter', () => {

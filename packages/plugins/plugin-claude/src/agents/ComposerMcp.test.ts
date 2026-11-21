@@ -27,7 +27,7 @@ const CreateNote = Operation.make({
   output: Schema.Struct({ id: Schema.String }),
 }).pipe(Operation.mutation('write'));
 
-const setup = () => {
+const setup = ({ whoami }: Pick<ComposerMcp.HandlerOptions, 'whoami'> = {}) => {
   const invocations: { input: unknown; spaceId: SpaceId | undefined }[] = [];
   const registry = makeRegistry({
     initial: [
@@ -52,7 +52,7 @@ const setup = () => {
     spaceIds: [SPACE],
     database: () => undefined,
   });
-  return { invocations, ...ComposerMcp.handler({ registry, host, path: '/mcp/server-1' }) };
+  return { invocations, ...ComposerMcp.handler({ registry, host, path: '/mcp/server-1', whoami }) };
 };
 
 const call = async (
@@ -110,6 +110,48 @@ describe('ComposerMcp', () => {
     } finally {
       await dispose();
     }
+  });
+
+  test("answers whoami with the host's identity and the chat's space, and offers no whoami without one", async ({
+    expect,
+  }) => {
+    const identity = {
+      identityDid: 'did:halo:BTEST',
+      displayName: 'Tester',
+      spaces: [{ spaceId: SPACE, name: 'Work' }],
+    };
+    const served = setup({ whoami: () => Effect.succeed(identity) });
+    try {
+      const names = (await call(served.handle, 'tools/list')).result.tools.map((tool: { name: string }) => tool.name);
+      expect(names).toContain('whoami');
+      const answered = await call(served.handle, 'tools/call', { name: 'whoami', arguments: {} });
+      expect(answered.result.isError).not.toBe(true);
+      expect(answered.result.structuredContent).toEqual(identity);
+    } finally {
+      await served.dispose();
+    }
+
+    const bare = setup();
+    try {
+      const names = (await call(bare.handle, 'tools/list')).result.tools.map((tool: { name: string }) => tool.name);
+      expect(names).not.toContain('whoami');
+    } finally {
+      await bare.dispose();
+    }
+  });
+
+  test('describes a space by what it can read of it, leaving out a field it cannot', ({ expect }) => {
+    const space = { id: SPACE, properties: { name: 'Work' }, members: { get: () => [{}, {}] } };
+    expect(McpServer.describeSpace(SPACE, space)).toEqual({ spaceId: SPACE, name: 'Work', memberCount: 2 });
+    const closed = {
+      id: SPACE,
+      get properties(): { name?: unknown } {
+        throw new Error('not open');
+      },
+      members: { get: () => [{}] },
+    };
+    expect(McpServer.describeSpace(SPACE, closed)).toEqual({ spaceId: SPACE, memberCount: 1 });
+    expect(McpServer.describeSpace(SPACE, undefined)).toEqual({ spaceId: SPACE });
   });
 
   test('resolves a reference in the input against its space, and refuses one into another', async ({ expect }) => {

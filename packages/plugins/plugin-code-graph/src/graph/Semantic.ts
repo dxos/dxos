@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Dsl, type Scene, SemanticEngine } from '@dxos/diagram';
+import { DSL, type Scene, SemanticEngine } from '@dxos/diagram';
 import { Shape } from '@dxos/scene';
 
 import type * as Model from './Model.ts';
@@ -81,7 +81,7 @@ export const toDsl = (graph: Model.Patch, { flow = 'down', grouped = false, labe
 
   const lines = [`diagram flow=${flow} box=${BOX.width}x${BOX.height} grid=${PITCH.width}x${PITCH.height}`];
   const nodeLine = (node: Model.Patch['nodes'][number], indent = '') =>
-    `${indent}node ${dslId.get(node.id)} ${Dsl.formatString(node.label)} ref=${Dsl.formatString(node.id)}`;
+    `${indent}node ${dslId.get(node.id)} ${DSL.formatString(node.label)} ref=${DSL.formatString(node.id)}`;
 
   const members = new Map<string, Model.Patch['nodes']>();
   for (const node of graph.nodes) {
@@ -94,7 +94,7 @@ export const toDsl = (graph: Model.Patch, { flow = 'down', grouped = false, labe
   if (framed) {
     [...members.entries()].forEach(([name, members], index) => {
       groups.set(`g${index}`, name);
-      lines.push(`group g${index} ${Dsl.formatString(frameLabel(name, labels))} color=${groupColor(name)} {`);
+      lines.push(`group g${index} ${DSL.formatString(frameLabel(name, labels))} color=${groupColor(name)} {`);
       members.forEach((node) => lines.push(nodeLine(node, '  ')));
       lines.push('}');
     });
@@ -158,9 +158,9 @@ export const layout = (graph: Model.Patch, options?: LayoutOptions): Layout => {
     return { positions: {}, frames: [], objects: [], problems: [] };
   }
   const { source, ids, groups } = toDsl(graph, options);
-  const reading = Dsl.read(source);
+  const reading = DSL.read(source);
   const solution = reading.diagram && SemanticEngine.solve(reading.diagram, { restarts: 1 });
-  const { commands, problems } = Dsl.withLayout(reading, solution);
+  const { commands, problems } = DSL.withLayout(reading, solution);
   const objects = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
   const positions: Record<string, Point> = {};
   const frames: Frame[] = [];

@@ -12,26 +12,55 @@ import Snippet from '../../../../../components/Snippet.astro';
 import { Blob } from '@dxos/echo';
 ```
 
-A blob holds bytes, such as an image or a file. The `Blob` object stores the hash, size and type of the bytes and where
-they are; small blobs hold the bytes inline. An object points at a blob with a reference.
+A blob holds bytes, such as an image or a file. Use one to store binary data beside your objects.
+
+In a web app, you usually put a file in object storage and keep a record of it in a database row. In ECHO, that
+record is the `Blob` object. It stores the hash, size and type of the bytes and where they are.
+
+Small blobs hold the bytes inline. An object points at a blob with a reference.
 
 ## Declare a field
 
+To give an object a blob, declare a reference field whose target is `Blob.Blob`.
+
+**Example** (Declaring a photo with an image)
+
 <Snippet file="guide-blob" region="declare" />
+
+`image` is not optional, so every `Photo` points at one blob.
 
 ## Store a blob
 
-`db.createBlob` hashes the bytes and uploads them to the storage backend, and returns a `Blob` object that is not yet in
-the space. Add it, then reference it. Bytes over the backend's size limit reject with `BlobTooLargeError`.
+`db.createBlob` hashes the bytes and stores them with a **blob backend**, the store that keeps a blob's bytes. It
+returns a `Blob` object that is not yet in the space, so you add it and then reference it.
+
+There are two built-in backends, and the `storage` option picks one:
+
+- `inline` keeps the bytes in the `Blob` object itself, up to `Blob.MAX_INLINE_SIZE`, which is 4 MiB.
+- `edge` uploads the bytes to EDGE. A client configured for EDGE uses it by default.
+
+If the bytes are over the backend's size limit, `db.createBlob` rejects with `BlobTooLargeError`.
+
+**Example** (Storing an image and referencing it from a photo)
 
 <Snippet file="guide-blob" region="store" />
 
+`db.createBlob` resolves once the bytes are stored, so `blob` already records their hash and size when `db.add`
+puts it in the space.
+
 ## Read a blob
 
-`db.readBlob` loads the bytes, from the object itself or from the backend, and rejects with `BlobNotAvailableError` when
-it cannot. `db.getBlobUrl` gives a URL to show the blob in a page.
+`db.readBlob` loads the bytes, from the object itself or from the backend. Use it when your code needs the bytes. It
+rejects with `BlobNotAvailableError` when it cannot load them.
+
+`db.getBlobUrl` gives a URL. Use it when you want to show the blob in a page.
+
+**Example** (Reading the bytes and a URL)
 
 <Snippet file="guide-blob" region="read" />
+
+`photo.image.load()` comes first, because the field holds a reference and the three calls take the `Blob` object.
+`url` is `undefined` when no URL can be made. `db.blobExists` checks for the bytes without loading them.
 
 ## Members at a glance
 
@@ -42,7 +71,7 @@ it cannot. `db.getBlobUrl` gives a URL to show the blob in a page.
 | `db.readBlob` `db.blobExists` `db.getBlobUrl` | Read bytes, check them, or get a URL |
 | `MAX_INLINE_SIZE` | The largest blob stored inline |
 
-The full list is in the [API reference](/docs/additional-resources/api-reference/).
+The full list is in the [API reference](/docs/echo/resources/api-reference/).
 
 ## Related
 

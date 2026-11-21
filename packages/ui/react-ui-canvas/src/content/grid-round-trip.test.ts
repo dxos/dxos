@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type ContentMap, Dsl, applyCommands } from '@dxos/diagram';
+import { type ContentMap, DSL, applyCommands } from '@dxos/diagram';
 
 import { SceneHandler } from './handler.ts';
 
@@ -21,8 +21,8 @@ describe('grid round trip', () => {
       '',
     ].join('\n');
     const content: ContentMap = {};
-    applyCommands(content, Dsl.read(source).commands, SceneHandler);
-    const printed = Dsl.print(SceneHandler.read(content).scene);
+    applyCommands(content, DSL.read(source).commands, SceneHandler);
+    const printed = DSL.print(SceneHandler.read(content).scene);
     expect(printed).toContain('grid root');
     expect(printed).toContain('cols=3');
     expect(printed).toContain('gap=24');
@@ -32,7 +32,7 @@ describe('grid round trip', () => {
     expect(printed).toEqual(source);
     // The children's frames are the rule's result, cached: re-solving them gives the same drawing.
     const again: ContentMap = {};
-    applyCommands(again, Dsl.read(printed).commands, SceneHandler);
-    expect(Dsl.print(SceneHandler.read(again).scene)).toEqual(printed);
+    applyCommands(again, DSL.read(printed).commands, SceneHandler);
+    expect(DSL.print(SceneHandler.read(again).scene)).toEqual(printed);
   });
 });
