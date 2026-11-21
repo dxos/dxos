@@ -30,7 +30,7 @@ import { translations } from '@dxos/react-ui/translations';
 
 import * as Protocol from '../../workspace/Protocol.ts';
 import { api } from '../client.ts';
-import { FOLDER_TYPES, ICONS as VSCODE_ICONS } from './vscode-icons.generated.ts';
+import { DEFAULT_FILE_ICON, FILE_ICONS, type Glyph, PACKAGE_ICON, SYMBOL_ICONS } from './vscode-icons.generated.ts';
 
 /**
  * The tree tab: the repository's file tree down to each package, then each package's entrypoints and
@@ -201,46 +201,72 @@ const SYMBOL_GLYPHS: Record<string, { readonly icon: string; readonly className?
   namespace: { icon: 'symbol-namespace' },
 };
 
-/** The VS Code glyph for a row: vscode-icons for the file tree, codicons for declarations. */
-const glyphOf = (node: Protocol.TreeNode, open: boolean): { readonly icon: string; readonly className?: string } => {
-  const opened = open ? '-opened' : '';
+/** Seti's glyph for a file: by its exact name first, then by its longest matching extension, as VS Code resolves it. */
+const fileGlyph = (path: string): Glyph => {
+  const name = path.split('/').at(-1) ?? path;
+  if (FILE_ICONS[name]) {
+    return FILE_ICONS[name];
+  }
+  for (let dot = name.indexOf('.'); dot >= 0; dot = name.indexOf('.', dot + 1)) {
+    const glyph = FILE_ICONS[name.slice(dot)];
+    if (glyph) {
+      return glyph;
+    }
+  }
+  return DEFAULT_FILE_ICON;
+};
+
+/** The VS Code glyph for a row: Seti's for files, codicons for declarations, and none for folders, as Seti draws them. */
+const glyphOf = (node: Protocol.TreeNode): { readonly glyph: Glyph; readonly className?: string } | undefined => {
   switch (node.kind) {
     case 'repo':
-      return { icon: `default-root-folder${opened}` };
-    case 'dir': {
-      const type = FOLDER_TYPES[node.label];
-      return { icon: type ? `folder-type-${type}${opened}` : `default-folder${opened}` };
-    }
+    case 'dir':
+      return undefined;
     case 'package':
-      return { icon: 'file-type-npm' };
+      return { glyph: PACKAGE_ICON };
     case 'entry':
-      return { icon: node.detail?.endsWith('.json') ? 'file-type-json' : 'file-type-typescript-official' };
-    case 'namespace':
-      return SYMBOL_GLYPHS.namespace;
-    default:
-      return SYMBOL_GLYPHS[node.detail ?? ''] ?? { icon: 'symbol-misc' };
+      return { glyph: fileGlyph(node.detail ?? node.label) };
+    default: {
+      const symbol = SYMBOL_GLYPHS[node.kind === 'namespace' ? 'namespace' : (node.detail ?? '')] ?? {
+        icon: 'symbol-misc',
+      };
+      return { glyph: SYMBOL_ICONS[symbol.icon], className: symbol.className };
+    }
   }
 };
 
-/** An icon from the generated subset, inlined so it keeps its own colours (vscode-icons) or takes the row's tint. */
-const VsIcon = ({ icon, className }: { icon: string; className?: string }) => {
-  const glyph = VSCODE_ICONS[icon];
-  return glyph ? (
-    <svg
-      viewBox={`0 0 ${glyph.width} ${glyph.height}`}
-      className={`size-4 ${className ?? ''}`}
-      fill='currentColor'
-      aria-hidden
-      dangerouslySetInnerHTML={{ __html: glyph.body }}
-    />
-  ) : null;
+/**
+ * Seti draws each glyph in the middle half of a 32-unit box and VS Code enlarges it as a font glyph,
+ * so the box is cropped to that middle to match its size beside a 16-unit codicon.
+ */
+const viewBoxOf = (glyph: Glyph): string =>
+  glyph.color
+    ? `${glyph.width * 0.16} ${glyph.height * 0.16} ${glyph.width * 0.68} ${glyph.height * 0.68}`
+    : `0 0 ${glyph.width} ${glyph.height}`;
+
+/** A generated glyph, inlined: Seti's carries its own colour, a codicon takes the row's tint. */
+const VsIcon = ({ glyph, className }: { glyph: Glyph; className?: string }) => (
+  <svg
+    viewBox={viewBoxOf(glyph)}
+    className={`size-4 ${className ?? ''}`}
+    style={glyph.color ? { color: glyph.color } : undefined}
+    fill='currentColor'
+    aria-hidden
+    dangerouslySetInnerHTML={{ __html: glyph.body }}
+  />
+);
+
+/** The row's icon, or nothing for a folder. */
+const RowIcon = ({ node }: { node: Protocol.TreeNode }) => {
+  const icon = glyphOf(node);
+  return icon ? <VsIcon {...icon} /> : null;
 };
 
 /** A row's trailing column: what the node is, muted beside its name. */
 const renderRow = (node: TreeNode<Protocol.TreeNode>) => (
   <Tree.Item node={node}>
     <Tree.ItemIndicator />
-    <Tree.ItemIcon>{node.item && <VsIcon {...glyphOf(node.item, node.open)} />}</Tree.ItemIcon>
+    <Tree.ItemIcon>{node.item && <RowIcon node={node.item} />}</Tree.ItemIcon>
     <Tree.ItemText />
     {/* A fallback module's detail is its path, which is already its label. */}
     <span className='text-fg-muted truncate pe-2 text-xs'>

@@ -282,9 +282,6 @@ catalogs:
     '@iconify-json/codicon':
       specifier: ^1.2.78
       version: 1.2.78
-    '@iconify-json/vscode-icons':
-      specifier: ^1.2.99
-      version: 1.2.99
     '@internationalized/date':
       specifier: ^3.12.3
       version: 3.12.3
@@ -1488,6 +1485,9 @@ catalogs:
     serve:
       specifier: ^14.2.5
       version: 14.2.5
+    seti-ui:
+      specifier: ^1.11.0
+      version: 1.11.0
     sharp:
       specifier: ^0.34.5
       version: 0.34.5
@@ -28567,9 +28567,6 @@ importers:
       '@iconify-json/codicon':
         specifier: 'catalog:'
         version: 1.2.78
-      '@iconify-json/vscode-icons':
-        specifier: 'catalog:'
-        version: 1.2.99
       '@rdfjs/types':
         specifier: 'catalog:'
         version: 2.0.1
@@ -28591,6 +28588,9 @@ importers:
       jsonld-streaming-parser:
         specifier: 'catalog:'
         version: 5.0.1
+      seti-ui:
+        specifier: 'catalog:'
+        version: 1.11.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -32265,9 +32265,6 @@ packages:
 
   '@iconify-json/codicon@1.2.78':
     resolution: {integrity: sha512-/Cdw1qn1v4J3mDHFe+shkMMss1bxH1DWVpks1ZS+lJR91NKWcQxyIucemto5ZAGXY/YbGg8jgF6UUL2PUMZw1w==}
-
-  '@iconify-json/vscode-icons@1.2.99':
-    resolution: {integrity: sha512-1wYd60jxxMXxOj4vj3sXVN99Xjk4tyKjvdqmS+C3D91dGwuXUcwW60tzQwEUt5TPI4icWqFMoUY0GTOhr6syJA==}
 
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
@@ -36007,6 +36004,7 @@ packages:
   '@sapphire/shapeshift@3.9.6':
     resolution: {integrity: sha512-4+Na/fxu2SEepZRb9z0dbsVh59QtwPuBg/UVaDib3av7ZY14b14+z09z6QVn0P6Dv6eOU2NDTsjIi0mbtgP56g==}
     engines: {node: '>=v18'}
+    deprecated: Shapeshift was created when other validation libraries had significant limitations in performance and error reporting. Those advantages have diminished as libraries such as Zod have become faster and improved their error messages, while also gaining broader environment support, a larger community, and custom error printers.
 
   '@sapphire/snowflake@3.5.1':
     resolution: {integrity: sha512-BxcYGzgEsdlG0dKAyOm0ehLGm2CafIrfQTZGWgkfKYbj+pNNsorZ7EotuZukc2MT70E0UbppVbtpBrqpzVzjNA==}
@@ -46178,6 +46176,10 @@ packages:
     resolution: {integrity: sha512-JxHc1weCN68wRY0fhCoXpyK55m/XPHafOmK4UWD7m2CI14GMcFypt4w/0+NV5f/ZMby2F6S2wwA7fgynh9gWSw==}
     engines: {node: '>=0.10.0'}
 
+  seti-ui@1.11.0:
+    resolution: {integrity: sha512-D96IzvRuuVQBig4H2uNFcdaoceX2jPjndSeZYBhMSk26w6TO5FbScKhUv1AVYnWPzcTgqhw4ayOrLjzRWijRLQ==}
+    engines: {atom: '>1.13.0'}
+
   setimmediate@1.0.5:
     resolution: {integrity: sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==}
 
@@ -54484,10 +54486,6 @@ snapshots:
   '@humanwhocodes/retry@0.4.3': {}
 
   '@iconify-json/codicon@1.2.78':
-    dependencies:
-      '@iconify/types': 2.0.0
-
-  '@iconify-json/vscode-icons@1.2.99':
     dependencies:
       '@iconify/types': 2.0.0
 
@@ -70460,6 +70458,8 @@ snapshots:
       is-extendable: 0.1.1
       is-plain-object: 2.0.4
       split-string: 3.1.0
+
+  seti-ui@1.11.0: {}
 
   setimmediate@1.0.5: {}
 

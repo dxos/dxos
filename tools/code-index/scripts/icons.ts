@@ -3,61 +3,41 @@
 //
 
 import codicons from '@iconify-json/codicon/icons.json' with { type: 'json' };
-import vscodeIcons from '@iconify-json/vscode-icons/icons.json' with { type: 'json' };
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 
 /**
- * Writes `src/webui/react/vscode-icons.generated.ts`: the few VS Code icons the tree tab draws,
- * copied out of the iconify packs, because the packs themselves (about 3.4 MB of JSON) are too large
- * to ship to the browser for twenty glyphs. Rerun after changing the lists below or bumping a pack:
+ * Writes `src/webui/react/vscode-icons.generated.ts`: the VS Code glyphs the tree tab draws. Files
+ * take Seti's glyph and colour (VS Code's default file icon theme, built from `seti-ui`), and
+ * declarations take the codicon VS Code's outline shows. Only the handful the tree uses are copied,
+ * since the packs themselves are far larger than the page. Rerun after changing the lists below or
+ * bumping a pack:
  *
  *   pnpm --filter @dxos/code-index icons
  */
 
-/** Folder names the tree shows with vscode-icons' own folder glyph, by the folder type each maps to. */
-export const FOLDER_TYPES: Record<string, string> = {
-  '.github': 'github',
-  '.claude': 'claude',
-  'api': 'api',
-  'app': 'app',
-  'apps': 'app',
-  'assets': 'asset',
-  'cli': 'cli',
-  'client': 'client',
-  'common': 'common',
-  'components': 'component',
-  'config': 'config',
-  'db': 'db',
-  'docs': 'docs',
-  'e2e': 'e2e',
-  'hooks': 'hook',
-  'images': 'images',
-  'lib': 'library',
-  'libs': 'library',
-  'packages': 'package',
-  'plugins': 'plugin',
-  'scripts': 'script',
-  'server': 'server',
-  'services': 'services',
-  'src': 'src',
-  'test': 'test',
-  'testing': 'test',
-  'theme': 'theme',
-  'tools': 'tools',
-};
-
-/** vscode-icons file and folder glyphs, beyond the folder types above. */
-const VSCODE_ICONS = [
-  'default-root-folder',
-  'default-root-folder-opened',
-  'default-folder',
-  'default-folder-opened',
-  'file-type-npm',
-  'file-type-typescript-official',
-  'file-type-json',
-  'file-type-markdown',
+/** File names and extensions the tree can show, looked up in Seti's own mapping; longest match wins at runtime. */
+const FILE_KEYS = [
+  'tsconfig.json',
+  'README.md',
+  'CHANGELOG.md',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.mjs',
+  '.json',
+  '.md',
+  '.css',
+  '.html',
+  '.svg',
+  '.yml',
+  '.yaml',
+  '.sh',
 ];
+
+/** The glyph for a package row; Seti has no package icon, so its npm glyph stands in. */
+const PACKAGE_KEY = '.npmignore';
 
 /** Codicon glyphs for declarations, as VS Code's outline draws them. */
 const CODICONS = [
@@ -71,13 +51,54 @@ const CODICONS = [
   'symbol-misc',
 ];
 
+type Glyph = { readonly body: string; readonly width: number; readonly height: number; readonly color?: string };
+
+const require = createRequire(import.meta.url);
+const seti = dirname(require.resolve('seti-ui/package.json'));
+
+/** Seti's palette: the `@name: #rrggbb;` lines of its variables. */
+const colors = new Map(
+  [...readFileSync(join(seti, 'styles/ui-variables.less'), 'utf8').matchAll(/^@([\w-]+):\s*(#[0-9a-f]{3,6});/gim)].map(
+    ([, name, value]) => [name, value],
+  ),
+);
+
+/** Seti's mapping, `.icon-set("<file or extension>", "<icon>", @<colour>);`; the first rule for a key wins. */
+const mapping = new Map<string, { readonly icon: string; readonly color: string }>();
+for (const [, key, icon, color] of readFileSync(join(seti, 'styles/components/icons/mapping.less'), 'utf8').matchAll(
+  /\.icon-set\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']\s*,\s*@([\w-]+)\s*\)/g,
+)) {
+  if (!mapping.has(key)) {
+    mapping.set(key, { icon, color: colors.get(color) ?? '' });
+  }
+}
+
+/** A Seti SVG reduced to its inner markup and view box, so it can be inlined and coloured. */
+const setiGlyph = (icon: string, color: string): Glyph => {
+  const svg = readFileSync(join(seti, 'icons', `${icon}.svg`), 'utf8');
+  const box = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg);
+  const body = svg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+  return { body, width: Number(box?.[1] ?? 32), height: Number(box?.[2] ?? 32), color };
+};
+
+const files = Object.fromEntries(
+  [...FILE_KEYS, PACKAGE_KEY].map((key) => {
+    const entry = mapping.get(key);
+    if (!entry) {
+      throw new Error(`Seti maps no icon for ${key}`);
+    }
+    return [key, setiGlyph(entry.icon, entry.color)];
+  }),
+);
+const fallback = setiGlyph('default', colors.get('white') ?? '');
+
 type IconSet = {
   readonly width?: number;
   readonly height?: number;
   readonly icons: Record<string, { readonly body: string; readonly width?: number; readonly height?: number }>;
 };
 
-const pick = (set: IconSet, names: readonly string[]) =>
+const pick = (set: IconSet, names: readonly string[]): Record<string, Glyph> =>
   Object.fromEntries(
     names.map((name) => {
       const icon = set.icons[name];
@@ -88,16 +109,6 @@ const pick = (set: IconSet, names: readonly string[]) =>
     }),
   );
 
-const folders = [...new Set(Object.values(FOLDER_TYPES))].flatMap((type) => [
-  `folder-type-${type}`,
-  `folder-type-${type}-opened`,
-]);
-
-const icons = {
-  ...pick(vscodeIcons, [...VSCODE_ICONS, ...folders]),
-  ...pick(codicons, CODICONS),
-};
-
 const output = join(import.meta.dirname, '..', 'src', 'webui', 'react', 'vscode-icons.generated.ts');
 writeFileSync(
   output,
@@ -107,13 +118,21 @@ writeFileSync(
     '//',
     '',
     '// Generated by `tools/code-index/scripts/icons.ts`; do not edit.',
-    '// File and folder glyphs: vscode-icons (https://github.com/vscode-icons/vscode-icons), MIT.',
+    '// File glyphs and colours: Seti UI (https://github.com/jesseweed/seti-ui), MIT, Jesse Weed.',
     '// Symbol glyphs: Codicons (https://github.com/microsoft/vscode-codicons), CC BY 4.0, Microsoft Corporation.',
     '',
-    `export const FOLDER_TYPES: Record<string, string> = ${JSON.stringify(FOLDER_TYPES, null, 2)};`,
+    'export type Glyph = { body: string; width: number; height: number; color?: string };',
     '',
-    `export const ICONS: Record<string, { body: string; width: number; height: number }> = ${JSON.stringify(icons, null, 2)};`,
+    '/** Seti glyphs by file name or extension. */',
+    `export const FILE_ICONS: Record<string, Glyph> = ${JSON.stringify(files, null, 2)};`,
+    '',
+    `export const DEFAULT_FILE_ICON: Glyph = ${JSON.stringify(fallback, null, 2)};`,
+    '',
+    `export const PACKAGE_ICON: Glyph = FILE_ICONS[${JSON.stringify(PACKAGE_KEY)}];`,
+    '',
+    "/** Codicons by name; they are one colour and take the row's tint. */",
+    `export const SYMBOL_ICONS: Record<string, Glyph> = ${JSON.stringify(pick(codicons, CODICONS), null, 2)};`,
     '',
   ].join('\n'),
 );
-console.log(`wrote ${Object.keys(icons).length} icons to ${output}`);
+console.log(`wrote ${Object.keys(files).length} file icons and ${CODICONS.length} symbol icons to ${output}`);
