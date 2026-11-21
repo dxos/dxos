@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": [
+    "app",
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/node-std"
+    },
+    {
+      "path": "../../packages/ui/react-ui"
+    },
+    {
+      "path": "../../packages/ui/ui-theme"
+    },
+    {
+      "path": "../vite-plugin-import-source"
+    }
+  ]
+}

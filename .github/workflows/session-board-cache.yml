@@ -1,0 +1,57 @@
+# Builds the session board's single-file page and uploads it to the `agent-artifacts` R2 bucket, so a session
+# fills it from Markdown (`tools/session-board/src/cli.ts build`) without building it. The board's data is not in the
+# build, so only a change to the page's code needs a new build.
+#
+# Secrets required:
+#   R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY — S3 write on `agent-artifacts` (the pair deploy-apps.yml uses).
+
+name: Session Board Cache
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/session-board/**'
+      - 'packages/ui/react-ui/**'
+      - 'packages/ui/ui-theme/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/session-board-cache.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Only the newest main build is ever pulled, so a newer commit supersedes one in flight.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+jobs:
+  upload:
+    # `refs/main` is the pointer agents pull by default: only main may move it.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build page
+        run: moon run session-board:build-page
+
+      - name: Upload to R2
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: node tools/session-board/src/cli.ts template push --ref main
