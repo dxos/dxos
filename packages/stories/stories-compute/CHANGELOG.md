@@ -1,5 +1,32 @@
 # @dxos/stories-compute
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [0bb1251]
+- Updated dependencies [95565bc]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/assistant@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/agent-runtime@0.18.0
+  - @dxos/storybook-testing@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui-masonry@0.18.0
+  - @dxos/react-ui-trace@0.18.0
+  - @dxos/debug@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/permission@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/types@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

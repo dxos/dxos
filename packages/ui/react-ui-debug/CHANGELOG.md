@@ -1,5 +1,20 @@
 # @dxos/react-ui-debug
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui@0.18.0
+  - @dxos/react-ui-attention@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

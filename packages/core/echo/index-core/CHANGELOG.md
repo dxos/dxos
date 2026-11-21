@@ -1,5 +1,18 @@
 # @dxos/index-core
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/sql-sqlite@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-protocol@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

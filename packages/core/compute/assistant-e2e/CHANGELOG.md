@@ -1,5 +1,34 @@
 # @dxos/assistant-e2e
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [0bb1251]
+- Updated dependencies [95565bc]
+  - @dxos/assistant@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/agent-runtime@0.18.0
+  - @dxos/assistant-toolkit@0.18.0
+  - @dxos/plugin-assistant@0.18.0
+  - @dxos/plugin-inbox@0.18.0
+  - @dxos/plugin-routine@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-sandbox@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/plugin-testing@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/types@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

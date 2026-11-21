@@ -1,5 +1,37 @@
 # @dxos/blade-runner
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/plugin-script@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/debug@0.18.0
+  - @dxos/esbuild-plugins@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/random@0.18.0
+  - @dxos/tracing@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/edge-compute@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/echo-doc@0.18.0
+  - @dxos/echo-host@0.18.0
+  - @dxos/echo-protocol@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/messaging@0.18.0
+  - @dxos/network-manager@0.18.0
+  - @dxos/rpc@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/client-protocol@0.18.0
+  - @dxos/config@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @dxos/echo-memory-sqlite
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/sql-sqlite@0.18.0
+  - @dxos/brain@0.18.0
+  - @dxos/sparql-sqlite@0.18.0
+  - @dxos/echo-memory@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

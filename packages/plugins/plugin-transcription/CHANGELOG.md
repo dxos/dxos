@@ -1,5 +1,46 @@
 # @dxos/plugin-transcription
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [0bb1251]
+- Updated dependencies [95565bc]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/assistant@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/pipeline-transcription@0.18.0
+  - @dxos/plugin-markdown@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/react-ui-audio@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/react-ui-transcription@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/halo-react@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

@@ -1,5 +1,36 @@
 # @dxos/plugin-google
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+  - @dxos/app-framework@0.18.0
+  - @dxos/plugin-inbox@0.18.0
+  - @dxos/plugin-connector@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/markdown@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/extractor@0.18.0
+  - @dxos/extractor-lib@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/pipeline@0.18.0
+  - @dxos/pipeline-email@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/types@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

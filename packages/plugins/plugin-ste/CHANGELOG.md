@@ -1,5 +1,16 @@
 # @dxos/plugin-ste
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

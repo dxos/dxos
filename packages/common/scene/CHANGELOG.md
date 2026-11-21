@@ -1,5 +1,13 @@
 # @dxos/scene
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/animation@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

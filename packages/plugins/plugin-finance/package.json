@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-finance",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "private": true,
   "description": "Finance research: ingests public market news, filings and market data into ECHO feeds and extracts a unified RDF fact store.",
   "homepage": "https://dxos.org",

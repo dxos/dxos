@@ -1,5 +1,42 @@
 # @dxos/plugin-magazine
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/app-framework@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/assistant-toolkit@0.18.0
+  - @dxos/plugin-routine@0.18.0
+  - @dxos/plugin-attention@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-attention@0.18.0
+  - @dxos/react-ui-components@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui-markdown@0.18.0
+  - @dxos/react-ui-masonry@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/react-ui-mosaic@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/markdown@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

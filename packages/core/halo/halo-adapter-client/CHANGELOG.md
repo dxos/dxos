@@ -1,5 +1,22 @@
 # @dxos/halo-adapter-client
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/echo-protocol@0.18.0
+  - @dxos/credentials@0.18.0
+  - @dxos/halo@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/client-protocol@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

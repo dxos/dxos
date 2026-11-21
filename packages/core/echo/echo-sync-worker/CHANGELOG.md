@@ -1,5 +1,13 @@
 # @dxos/echo-sync-worker
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/echo-sqlite@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @dxos/env-tests
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [0bb1251]
+  - @dxos/assistant@0.18.0
+  - @dxos/assistant-toolkit@0.18.0
+  - @dxos/conductor@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-client@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

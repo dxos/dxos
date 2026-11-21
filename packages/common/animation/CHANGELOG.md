@@ -1,5 +1,11 @@
 # @dxos/animation
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/echo@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

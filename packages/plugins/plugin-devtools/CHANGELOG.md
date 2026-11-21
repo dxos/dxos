@@ -1,5 +1,43 @@
 # @dxos/plugin-devtools
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+- Updated dependencies [29101e4]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/app-framework@0.18.0
+  - @dxos/plugin-debug@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/devtools@0.18.0
+  - @dxos/plugin-script@0.18.0
+  - @dxos/cli-util@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/react-ui-introspect@0.18.0
+  - @dxos/react-ui-query@0.18.0
+  - @dxos/react-ui-table@0.18.0
+  - @dxos/react-ui-terminal@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/client-services@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes
