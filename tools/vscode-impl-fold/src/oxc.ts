@@ -100,6 +100,15 @@ export const findBodiesOxc = (filename: string, text: string, containerPattern: 
     }
   };
 
+  /** An open container's block is walked statement by statement; an expression body is itself dispatched. */
+  const visitContainerBody = (body: Node) => {
+    if (body.type === 'BlockStatement') {
+      visitChildren(body);
+    } else {
+      visit(body);
+    }
+  };
+
   const visit = (value: unknown) => {
     if (!isNode(value)) {
       return;
@@ -108,7 +117,7 @@ export const findBodiesOxc = (filename: string, text: string, containerPattern: 
     // A function named like a container stays open, as its language-server symbol of that name would.
     const named = namedFunction(value);
     if (named && containerPattern.test(named.name) && isNode(named.fn.body)) {
-      visitChildren(named.fn.body);
+      visitContainerBody(named.fn.body);
       return;
     }
 
@@ -124,7 +133,7 @@ export const findBodiesOxc = (filename: string, text: string, containerPattern: 
         // A suite's callback stays open so each test inside it folds on its own.
         for (const argument of value.arguments) {
           if (isNode(argument) && FUNCTION_TYPES.has(argument.type) && isNode(argument.body)) {
-            visitChildren(argument.body);
+            visitContainerBody(argument.body);
           } else {
             visit(argument);
           }

@@ -112,6 +112,21 @@ describe('findBodiesOxc', () => {
     ]);
   });
 
+  test('folds the block an expression-bodied container returns', () => {
+    expect(
+      findBodiesOxc(
+        'file.ts',
+        ['const group = () => () => {', '  work();', '};', "describe('suite', () => () => {", '  work();', '});'].join(
+          '\n',
+        ),
+        /^(?:group|describe)$/,
+      ),
+    ).toEqual([
+      { start: 0, end: 1 },
+      { start: 3, end: 4 },
+    ]);
+  });
+
   test('counts lines in UTF-16 offsets past non-ASCII text', () => {
     expect(bodies(["const label = '✓ — 日本語 🎉';", 'function run() {', '  work();', '}'])).toEqual([
       { start: 1, end: 2 },
