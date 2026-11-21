@@ -65,6 +65,12 @@ export type CrawlOptions = {
   readonly filenames?: readonly string[];
 };
 
+/** Whether a stat failed because the path does not exist, rather than because it could not be read. */
+const isAbsent = (error: unknown): boolean => {
+  const code = typeof error === 'object' && error !== null ? Reflect.get(error, 'code') : undefined;
+  return code === 'ENOENT' || code === 'ENOTDIR';
+};
+
 /** Every non-ignored file under `root` with an indexable extension, plus its mtime. */
 export const crawl = (root: string, options?: CrawlOptions): Effect.Effect<Entry[], CrawlError> =>
   Effect.gen(function* () {
@@ -80,13 +86,13 @@ export const crawl = (root: string, options?: CrawlOptions): Effect.Effect<Entry
       paths,
       (path) =>
         Effect.tryPromise({
-          try: () => stat(join(root, path)),
-          catch: (cause) => new CrawlError({ message: `Failed to stat ${path}`, cause }),
-        }).pipe(
-          Effect.map((stats): Entry[] => (stats.isFile() ? [{ path, mtime: Math.floor(stats.mtimeMs) }] : [])),
           // A file listed by git but gone from disk (a race with a delete) is simply not indexed.
-          Effect.catchCause(() => Effect.succeed<Entry[]>([])),
-        ),
+          try: () =>
+            stat(join(root, path)).catch((error: unknown) => (isAbsent(error) ? undefined : Promise.reject(error))),
+          // Anything else (EMFILE while an install holds every descriptor, EACCES) says nothing about
+          // whether the file exists; failing the crawl stops the pass before it removes what it could not see.
+          catch: (cause) => new CrawlError({ message: `Failed to stat ${path}`, cause }),
+        }).pipe(Effect.map((stats): Entry[] => (stats?.isFile() ? [{ path, mtime: Math.floor(stats.mtimeMs) }] : []))),
       { concurrency: 32 },
     );
 

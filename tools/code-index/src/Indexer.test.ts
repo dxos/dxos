@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -283,5 +283,54 @@ describe('Indexer', () => {
         file,
       ).toEqual([]);
     }
+  }, 60_000);
+});
+
+describe('Indexer, when files cannot be read', () => {
+  let root: string;
+  let dir: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-unreadable-'));
+    dir = join(root, 'node_modules', '.code-index');
+    await mkdir(join(root, 'src', 'locked'), { recursive: true });
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;\n');
+    await writeFile(join(root, 'src', 'locked', 'b.ts'), 'export const b = 2;\n');
+    await git(root, 'init', '--quiet');
+    // Tracked, so `git ls-files` lists them whether or not their directory can be read.
+    await git(root, 'add', '-A');
+  }, 60_000);
+
+  afterAll(async () => {
+    await chmod(join(root, 'src', 'locked'), 0o755).catch(() => {});
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const index = () =>
+    EffectEx.runPromise(Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1 }), Store.layer(dir))));
+
+  const paths = () =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.flatMap(Store.Store, (store) => store.listFiles()),
+          Store.layer(dir),
+        ),
+      ),
+    ).then((files) => files.map(({ path }) => path));
+
+  // A stat that fails for any reason but absence (EMFILE while an install holds every descriptor,
+  // EACCES) says nothing about whether the file exists, so it must not read as a deletion.
+  test('a file that cannot be stat-ed fails the pass rather than being removed', async () => {
+    await index();
+    expect(await paths()).toEqual(['src/a.ts', 'src/locked/b.ts']);
+
+    await chmod(join(root, 'src', 'locked'), 0o000);
+    try {
+      await expect(index()).rejects.toThrow(/Failed to stat src\/locked\/b\.ts/);
+    } finally {
+      await chmod(join(root, 'src', 'locked'), 0o755);
+    }
+    expect(await paths()).toEqual(['src/a.ts', 'src/locked/b.ts']);
   }, 60_000);
 });
