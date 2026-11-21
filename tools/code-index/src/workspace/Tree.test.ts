@@ -56,6 +56,7 @@ describe('Tree', () => {
       [
         "export * as Obj from './Obj.ts';",
         "export * from './extra.ts';",
+        "export * from './barrel.ts';",
         "export { thing } from './named.ts';",
         "export { hidden as Surfaced } from './named.ts';",
         "export { Box } from './Box.ts';",
@@ -70,6 +71,8 @@ describe('Tree', () => {
     );
     // Its default export is its own: `export *` from index.ts does not carry it.
     await writeFile(join(src, 'extra.ts'), 'export const extra = 1;\nexport  default class Extra {}\n');
+    // Its default is a re-export alias, which `export *` from index.ts does not carry either.
+    await writeFile(join(src, 'barrel.ts'), "export { thing as default } from './named.ts';\n");
     await writeFile(join(src, 'named.ts'), 'export const thing = 1;\nexport const hidden = 2;\n');
     // A class whose members the tree lists under it.
     await writeFile(
@@ -191,6 +194,7 @@ describe('Tree', () => {
     ]);
     // The module that declares a default export still lists it.
     expect(await childrenOf(`mod:${file('extra.ts')}`)).toContain('Extra');
+    expect(await childrenOf(`mod:${file('barrel.ts')}`)).toContain('default');
   });
 
   test("a namespace's children are its module's exports, each labelled by what it is", async ({ expect }) => {

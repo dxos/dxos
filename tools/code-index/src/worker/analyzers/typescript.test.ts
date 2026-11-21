@@ -758,6 +758,19 @@ describe('members and declaration extents', () => {
     expect(exportsOf('export default () => 1;\n')).toEqual([['default', true]]);
   });
 
+  test('a re-export aliased to default is marked as the default export', () => {
+    const { declares } = analyzeTypeScript({
+      ...context,
+      path: 'src/barrel.ts',
+      source: "export { thing as default, other } from './named.ts';\n",
+      resolve: () => '/repo/src/named.ts',
+    });
+    expect(declares.map((declared) => [declared.name, declared.defaultExport ?? false])).toEqual([
+      ['default', true],
+      ['other', false],
+    ]);
+  });
+
   test('a declaration records the line its statement ends on', () => {
     expect(
       Object.fromEntries(

@@ -1838,6 +1838,8 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'apiDependsOn': alias.typeOnly && alias.origin ? [alias.origin] : [],
       'implDependsOn': !alias.typeOnly && alias.origin ? [alias.origin] : [],
       'aliasOf': alias.origin ? [alias.origin] : [],
+      // `export { x as default } from` is this module's default, which `export *` does not carry on.
+      ...(alias.name === 'default' ? { defaultExport: true } : {}),
     }));
 
   // The namespace is a symbol of this file like any other export — `Ontology` is what an importer
