@@ -52,7 +52,8 @@ const ID_PREFIXES: Record<string, string> = { question: 'Q', decision: 'D', goal
 const GITHUB_REF = /^([\w.-]+)\/([\w.-]+)#(\d+)$/;
 
 /** ISO 8601 to the minute, UTC: `2026-11-21T11:55Z`, seconds allowed. */
-const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?Z$/;
+// Milliseconds at most: `Date.parse` drops finer digits, which would let `.0001Z` follow `.0009Z`.
+const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?Z$/;
 
 /** A list item with the body line it starts on, so a finding about one note points at that note. */
 type Item = { text: string; offset: number };
@@ -132,7 +133,8 @@ const summaryOf = (text: string): { text: string; line: number } | undefined => 
     return undefined;
   }
   const paragraph: string[] = [];
-  for (let index = start; index < lines.length && lines[index].trim() !== ''; index++) {
+  // A heading, fence or table ends the paragraph even without a blank line before it.
+  for (let index = start; index < lines.length && !/^(|#.*|```.*|\|.*)$/.test(lines[index].trim()); index++) {
     paragraph.push(lines[index].trim());
   }
   return { text: paragraph.join(' '), line: start + 1 };

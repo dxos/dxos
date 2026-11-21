@@ -277,3 +277,9 @@ event T-10: [PR-1] is ready for review, with auto-merge on.
   date: 2026-11-21T13:51Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-11: The review findings on [PR-1] are fixed.
+  date: 2026-11-21T14:20Z
+  by: agent:claude-code
+```

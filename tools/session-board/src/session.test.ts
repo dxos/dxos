@@ -7,29 +7,6 @@ import { describe, expect, test } from 'vitest';
 import { parseSession } from './session.ts';
 import { SAMPLE_SESSION } from './testing/sample.ts';
 
-const messages = (text: string, previous?: string) =>
-  parseSession(text, previous === undefined ? {} : { previous: [previous] }).errors.map(
-    ({ line, message }) => `${line}: ${message}`,
-  );
-
-/** The sample with one block's text replaced, to break one rule at a time. */
-const edit = (from: string, to: string) => {
-  expect(SAMPLE_SESSION).toContain(from);
-  return SAMPLE_SESSION.replace(from, to);
-};
-
-/** The sample with decisions appended to its `## Changelog`, each written as its header line and then its fields. */
-const withDecision = (...lines: string[]) => {
-  const blocks = lines
-    .join('\n')
-    .split(/\n(?=decision )/)
-    .map((block) => {
-      const [header, ...fields] = block.split('\n');
-      return ['```mdl', header, '  date: 2026-11-21', '  by: user:alice', ...fields, '```'].join('\n');
-    });
-  return SAMPLE_SESSION.replace('\n## Timeline', `\n${blocks.join('\n\n')}\n\n## Timeline`);
-};
-
 describe('parseSession', () => {
   test('parses the sample', ({ expect }) => {
     const { board, errors } = parseSession(SAMPLE_SESSION, { updated: '2026-11-21T12:00:00.000Z' });
@@ -125,7 +102,10 @@ describe('parseSession', () => {
       expect.stringMatching(/T-2: date must be an ISO 8601/),
     ]);
     // Seconds are later than the same minute, not earlier as their text sorts.
-    expect(messages(edit('  date: 2026-11-21T11:30Z', '  date: 2026-11-21T11:30:30Z'))).toEqual([]);
+    expect(messages(edit('  date: 2026-11-21T11:55Z', '  date: 2026-11-21T11:30:30Z'))).toEqual([]);
+    expect(messages(edit('  date: 2026-11-21T11:55Z', '  date: 2026-11-21T11:30:00.0001Z'))).toEqual([
+      expect.stringMatching(/T-2: date must be an ISO 8601/),
+    ]);
     expect(messages(edit('  date: 2026-11-21T11:55Z', '  date: 2026-11-21T11:30Z'))).toEqual([]);
   });
 
@@ -148,6 +128,13 @@ describe('parseSession', () => {
     expect(messages(appended, SAMPLE_SESSION)).toEqual([]);
   });
 
+  test('ends the summary at the next block', () => {
+    const { board } = parseSession(
+      edit('A script makes the page.\n', 'A script makes the page.\n## Extensions-early\n'),
+    );
+    expect(board?.summary).toBe('The agent keeps the session as mdl. A script makes the page.');
+  });
+
   test('reports a block type the file does not declare', () => {
     const undeclared = edit('| `pr`       | `org.dxos.mdl.pr@1.0`       |\n', '');
     expect(messages(undeclared)).toEqual([
@@ -156,3 +143,26 @@ describe('parseSession', () => {
     ]);
   });
 });
+
+const messages = (text: string, previous?: string) =>
+  parseSession(text, previous === undefined ? {} : { previous: [previous] }).errors.map(
+    ({ line, message }) => `${line}: ${message}`,
+  );
+
+/** The sample with one block's text replaced, to break one rule at a time. */
+const edit = (from: string, to: string) => {
+  expect(SAMPLE_SESSION).toContain(from);
+  return SAMPLE_SESSION.replace(from, to);
+};
+
+/** The sample with decisions appended to its `## Changelog`, each written as its header line and then its fields. */
+const withDecision = (...lines: string[]) => {
+  const blocks = lines
+    .join('\n')
+    .split(/\n(?=decision )/)
+    .map((block) => {
+      const [header, ...fields] = block.split('\n');
+      return ['```mdl', header, '  date: 2026-11-21', '  by: user:alice', ...fields, '```'].join('\n');
+    });
+  return SAMPLE_SESSION.replace('\n## Timeline', `\n${blocks.join('\n\n')}\n\n## Timeline`);
+};

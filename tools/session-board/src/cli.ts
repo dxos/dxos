@@ -85,7 +85,12 @@ const fail = (message: string): never => {
 
 const git = (...args: string[]): string | undefined => {
   try {
-    return execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    // The index listing of this repo is several MB, above the 1 MB default that would make it read as a failure.
+    return execFileSync('git', ['-C', ROOT, ...args], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      maxBuffer: 256 * 1024 * 1024,
+    }).trim();
   } catch {
     return undefined;
   }
@@ -277,21 +282,24 @@ const start = (directory: string) => {
 const repoState = (source: string): string => {
   const exclude = [`:!${relative(ROOT, source)}`, ':!.claude/.status-board'];
   // Contents, not names or HEAD: committing the board reads as no change, and a second edit to a changed file does not.
-  const untracked = (git('ls-files', '--others', '--exclude-standard', '-z', '--', '.', ...exclude) ?? '')
-    .split('\0')
-    .filter(Boolean);
-  const untrackedHashes =
-    untracked.length > 0
+  // Changed and untracked files are hashed by name, so the output stays one line per file however large the edit.
+  const paths = (...args: string[]) => (git(...args, '-z', '--', '.', ...exclude) ?? '').split('\0').filter(Boolean);
+  const changed = [...paths('diff', '--name-only'), ...paths('ls-files', '--others', '--exclude-standard')];
+  const hashes =
+    changed.length > 0
       ? spawnSync('git', ['-C', ROOT, 'hash-object', '--stdin-paths'], {
-          input: untracked.join('\n'),
+          input: changed.join('\n'),
           encoding: 'utf8',
-        }).stdout
-      : '';
+          maxBuffer: 64 * changed.length + 1024,
+        })
+      : undefined;
+  if (hashes && (hashes.error || hashes.status !== 0)) {
+    throw new Error(`git hash-object failed: ${hashes.error?.message ?? hashes.stderr}`);
+  }
   return createHash('sha256')
     .update(git('ls-files', '-s', '--', '.', ...exclude) ?? '')
-    .update(git('diff', '--', '.', ...exclude) ?? '')
-    .update(untracked.join('\n'))
-    .update(untrackedHashes ?? '')
+    .update(changed.join('\n'))
+    .update(hashes?.stdout ?? '')
     .digest('hex')
     .slice(0, 16);
 };
