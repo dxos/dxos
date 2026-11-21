@@ -1,5 +1,20 @@
 # @dxos/plugin-graph
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

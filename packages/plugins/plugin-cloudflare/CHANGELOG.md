@@ -1,5 +1,20 @@
 # @dxos/plugin-cloudflare
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+  - @dxos/app-framework@0.18.0
+  - @dxos/plugin-connector@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/protocols@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

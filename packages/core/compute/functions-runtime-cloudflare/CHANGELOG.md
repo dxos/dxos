@@ -1,5 +1,20 @@
 # @dxos/functions-runtime-cloudflare
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/context@0.18.0
+  - @dxos/debug@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/protocols@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

@@ -1,5 +1,21 @@
 # @dxos/plugin-finance
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+  - @dxos/app-framework@0.18.0
+  - @dxos/plugin-magazine@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/pipeline-rdf@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-memory@0.18.0
+  - @dxos/client@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

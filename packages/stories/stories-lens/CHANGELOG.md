@@ -1,5 +1,25 @@
 # @dxos/stories-lens
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui@0.18.0
+  - @dxos/react-ui-editor@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-doc@0.18.0
+  - @dxos/echo-panproto@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @dxos/react-ui-markdown
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui@0.18.0
+  - @dxos/react-ui-editor@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/ui@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

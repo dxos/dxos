@@ -1,5 +1,12 @@
 # @dxos/halo-react
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/keys@0.18.0
+  - @dxos/halo@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

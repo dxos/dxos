@@ -1,6 +1,6 @@
 {
   "name": "@dxos/session-board",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "private": true,
   "description": "The session board: a terse react-ui page an agent keeps as the user's view of a session, filled from Markdown by a script so no build runs per update.",
   "homepage": "https://dxos.org",

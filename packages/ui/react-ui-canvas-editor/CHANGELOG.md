@@ -1,5 +1,26 @@
 # @dxos/react-ui-canvas-editor
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui@0.18.0
+  - @dxos/react-ui-animation@0.18.0
+  - @dxos/react-ui-canvas@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/animation@0.18.0
+  - @dxos/diagram@0.18.0
+  - @dxos/scene@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

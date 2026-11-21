@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-memory-sqlite",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Local MemoryService implementations: an RDF quad store and goal-rule subscriptions over SQLite.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

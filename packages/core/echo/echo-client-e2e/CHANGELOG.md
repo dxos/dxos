@@ -1,5 +1,31 @@
 # @dxos/echo-client-e2e
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/random@0.18.0
+  - @dxos/sql-sqlite@0.18.0
+  - @dxos/test-utils@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/echo-host@0.18.0
+  - @dxos/echo-panproto@0.18.0
+  - @dxos/echo-protocol@0.18.0
+  - @dxos/index-core@0.18.0
+  - @dxos/teleport@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/perf-harness@0.18.0
+  - @dxos/types@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

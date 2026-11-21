@@ -1,5 +1,29 @@
 # @dxos/client-e2e
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/random-access-storage@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/echo-protocol@0.18.0
+  - @dxos/credentials@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/client-protocol@0.18.0
+  - @dxos/client-services@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/fixtures@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

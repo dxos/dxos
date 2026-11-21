@@ -1,5 +1,14 @@
 # @dxos/echo-query
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/echo@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

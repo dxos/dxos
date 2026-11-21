@@ -1,5 +1,25 @@
 # @dxos/stories-echo
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/plugin-markdown@0.18.0
+  - @dxos/storybook-testing@0.18.0
+  - @dxos/plugin-canvas@0.18.0
+  - @dxos/plugin-explorer@0.18.0
+  - @dxos/plugin-illustrator@0.18.0
+  - @dxos/plugin-kanban@0.18.0
+  - @dxos/plugin-mermaid@0.18.0
+  - @dxos/plugin-preview@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/plugin-table@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/react-ui-table@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/types@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

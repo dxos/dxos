@@ -1,5 +1,26 @@
 # @dxos/agent-code-mode
 
+## 0.18.0
+
+### Patch Changes
+
+- b1e0afd: Code mode shows `console.log`, `info`, `warn`, `error`, `debug` and `dir` output to the model, in the same output as `print`, in every sandbox, and an `eval` that printed and returned nothing now says it ran instead of returning `null` or an empty result. The plain dialect's `describe()` also takes an object's id or an operation's output, such as `{ object }`, and describes the stored object it names.
+- Updated dependencies [0bb1251]
+  - @dxos/assistant@0.18.0
+  - @dxos/agent-runtime@0.18.0
+  - @dxos/assistant-toolkit@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/client-protocol@0.18.0
+  - @dxos/types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

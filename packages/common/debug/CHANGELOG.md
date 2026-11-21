@@ -1,5 +1,11 @@
 # @dxos/debug
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/node-std@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

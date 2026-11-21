@@ -1,5 +1,17 @@
 # @dxos/mcp-server
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-client@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

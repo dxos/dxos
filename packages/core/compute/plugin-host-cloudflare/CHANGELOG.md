@@ -1,5 +1,27 @@
 # @dxos/plugin-host-cloudflare
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [0bb1251]
+- Updated dependencies [95565bc]
+  - @dxos/assistant@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/functions-runtime-cloudflare@0.18.0
+  - @dxos/blob@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/protocols@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

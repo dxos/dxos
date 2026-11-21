@@ -1,5 +1,12 @@
 # @dxos/composer-forensics
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/keys@0.18.0
+  - @dxos/protocols@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

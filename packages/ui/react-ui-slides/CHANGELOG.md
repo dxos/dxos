@@ -1,5 +1,24 @@
 # @dxos/react-ui-slides
 
+## 0.18.0
+
+### Minor Changes
+
+- 29101e4: A presentation can set a footer, drawn on every slide: a left, a center and a right part of inline slide markdown, edited beside the theme in the presentation's properties. The new `<SlideCurrentNo />` and `<SlidesTotal />` tags draw the slide's number and the number of slides, in the footer or anywhere in a slide, counting the slides that are presented. A slide's frontmatter `footer: false` leaves the footer off it; the `cover` and `end` layouts show none unless the slide says `footer: true`.
+
+### Patch Changes
+
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui@0.18.0
+  - @dxos/react-ui-editor@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

@@ -1,5 +1,34 @@
 # @dxos/echo-sqlite-demo
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui@0.18.0
+  - @dxos/react-ui-editor@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui-graph@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/react-ui-masonry@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/react-ui-table@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/random@0.18.0
+  - @dxos/sql-sqlite@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/echo-sqlite@0.18.0
+  - @dxos/echo-sync-worker@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes
