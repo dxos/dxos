@@ -30,8 +30,15 @@ export type PlayerView = (typeof PLAYER_VIEWS)[number];
 export const isPlayerView = (value: unknown): value is PlayerView =>
   typeof value === 'string' && PLAYER_VIEWS.some((view) => view === value);
 
+/**
+ * `page`: the player owns the window (a bundle's `index.html`) — full viewport height, keys on the document.
+ * `embedded`: it fills its container (a Composer article) and answers keys only while focus is inside it.
+ */
+export type PlayerLayout = 'page' | 'embedded';
+
 export type PlayerProps = {
   manifest: Manifest;
+  layout?: PlayerLayout;
   /** The demo to open on, by id; the first otherwise. */
   initialDemo?: string;
   /** Called with the demo's id when the viewer moves to another one, e.g. to keep the page's `#hash` in step. */
@@ -75,6 +82,7 @@ const resolve = (manifest: Manifest, path: string) =>
  */
 export const Player = ({
   manifest,
+  layout = 'page',
   initialDemo,
   onDemoChange,
   initialView,
@@ -100,6 +108,8 @@ export const Player = ({
   const attention = useMemo(() => new Attention.AttentionManager(Registry.make(), [ATTENDABLE_ID]), []);
   const { copied, copy } = useCopy();
   const screenRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const embedded = layout === 'embedded';
 
   const selectDemo = useCallback(
     (next: number) => {
@@ -153,7 +163,7 @@ export const Player = ({
     }),
     [playback, selectDemo, index, demo, tabs, view, changeView, copy, fullscreen, help],
   );
-  useKeyboard(keyboard);
+  useKeyboard(keyboard, embedded ? rootRef : undefined);
 
   const downloads = useMemo<Download[]>(() => {
     const links: Download[] = [];
@@ -189,9 +199,19 @@ export const Player = ({
 
   return (
     <RootAttentionProvider attention={attention}>
-      <div className='flex flex-col bg-base-surface text-fg'>
+      <div
+        ref={rootRef}
+        tabIndex={embedded ? -1 : undefined}
+        className={mx('flex flex-col bg-base-surface text-fg', embedded && 'h-full min-h-0 outline-hidden')}
+      >
         {/* The first screen is a plank and its companion, as in Composer's deck; the details are below the fold. */}
-        <div className='grid grid-cols-1 lg:h-dvh lg:grid-cols-[minmax(0,1fr)_var(--panel-size)]' style={gridStyle}>
+        <div
+          className={mx(
+            'grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_var(--panel-size)]',
+            embedded ? 'h-full overflow-y-auto lg:overflow-hidden' : 'lg:h-dvh',
+          )}
+          style={gridStyle}
+        >
           <Pane.Root classNames='min-w-0'>
             <Pane.Toolbar>
               <Pane.Sigil attendableId={ATTENDABLE_ID} isMenu={false} aria-hidden>

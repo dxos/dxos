@@ -1,7 +1,9 @@
-layer: tool
+layer: library
 language: typescript
 tags:
-  - typecheck
+  - ts-vite-build
+  - ts-test
+  - pack
 
 # The ident (src/components/Ident) is a Remotion project: `studio` previews it, `render` writes its clips to out/.
 tasks:
