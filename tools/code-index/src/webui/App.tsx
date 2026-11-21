@@ -58,6 +58,30 @@ const Island = <Props extends object>(props: { component: ComponentType<Props>; 
   return <div ref={container} class={props.class} />;
 };
 
+/** Green while the server answers, red once it is gone; grey until the first answer or failure. */
+const ConnectionDot = () => {
+  const [connected, setConnected] = createSignal<boolean>();
+  onCleanup(api.watchConnection(setConnected));
+  const label = () =>
+    connected() === undefined ? 'Connecting to server…' : connected() ? 'Server connected' : 'Server disconnected';
+  return (
+    <span
+      data-testid='connection'
+      data-connected={String(connected() ?? false)}
+      class='flex items-center gap-1.5 px-1 text-xs text-fg-muted'
+      title={label()}
+      role='status'
+      aria-label={label()}
+    >
+      <span
+        class={`inline-block size-2 rounded-full bg-current ${
+          connected() === undefined ? 'text-fg-muted' : connected() ? 'text-success-text' : 'text-error-text'
+        }`}
+      />
+    </span>
+  );
+};
+
 const TAB_KEY = 'code-index:tab';
 
 /** The tab last shown in this browser; storage can be absent (a private window), which means the agent tab. */
@@ -257,8 +281,9 @@ export const App = () => {
 
   return (
     <div class='flex h-screen flex-col'>
-      <header class='border-separator shrink-0 border-b px-2 py-1'>
+      <header class='border-separator flex shrink-0 items-center justify-between border-b px-2 py-1'>
         <Island component={TabBarIsland} props={{ value: tab(), onChange: selectTab }} />
+        <ConnectionDot />
       </header>
       {/* The session list belongs to the agent: sessions are agent conversations, and the tree has none. */}
       <div class={tab() === 'agent' ? 'flex dx-grow' : 'hidden'}>

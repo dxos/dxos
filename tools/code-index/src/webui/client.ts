@@ -3,6 +3,7 @@
 //
 
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
@@ -44,6 +45,9 @@ const clientLayer = Layer.effect(Client, make).pipe(
 
 const runtime = ManagedRuntime.make(clientLayer);
 
+/** How long the connection probe waits before reconnecting to a server it lost. */
+const RECONNECT = Duration.seconds(2);
+
 const call = <A, E>(body: (client: Effect.Success<typeof make>) => Effect.Effect<A, E>): Promise<A> =>
   runtime.runPromise(Effect.flatMap(Client, body));
 
@@ -80,6 +84,29 @@ export const api = {
     const fiber = runtime.runFork(
       Effect.flatMap(Client, (client) =>
         client.Watch({ projectId, after }).pipe(Stream.runForEach((entry) => Effect.sync(() => onEntry(entry)))),
+      ),
+    );
+    return () => {
+      runtime.runFork(Fiber.interrupt(fiber));
+    };
+  },
+
+  /**
+   * Reports whether the server is reachable: true once the indexer's status stream delivers, false
+   * when it ends or fails, then reconnects every `RECONNECT` until it delivers again. The stream is
+   * the probe because a server that goes away breaks its open response at once, with no polling.
+   */
+  watchConnection: (onChange: (connected: boolean) => void): (() => void) => {
+    const fiber = runtime.runFork(
+      Effect.flatMap(Client, (client) =>
+        Effect.forever(
+          client.WatchIndex().pipe(
+            Stream.runForEach(() => Effect.sync(() => onChange(true))),
+            Effect.exit,
+            Effect.andThen(Effect.sync(() => onChange(false))),
+            Effect.andThen(Effect.sleep(RECONNECT)),
+          ),
+        ),
       ),
     );
     return () => {
