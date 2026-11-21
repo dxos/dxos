@@ -1,6 +1,6 @@
 # Direct bindings in code mode
 
-Code mode should read and write objects through bindings, not through operations. This holds for the agent's
+Code mode should read and change objects through bindings, not through operations. This holds for the agent's
 `eval` and for MCP's `runScript`, and the model must know why.
 
 ## Problem
@@ -34,35 +34,38 @@ The model still picks operations. In the 2026-11-19 Kai demo, all 15 `eval` call
 `space-update-object` ×2, `space-get-object-link`, and Discord sends. Three causes:
 
 1. The Database skill (`plugin-space/src/skills/DatabaseSkill.ts`) tells the model to read with
-   `space-get-objects`, create with `space-add-object`, and so on. Code mode lists those tools under `ops`, and the
-   model follows the skill.
+   `space-get-objects`, change with `space-update-object`, and so on. Code mode lists those tools under `ops`,
+   and the model follows the skill.
 2. The plain dialect's API reference (`src/dialect-plain.ts`) says nothing about cost. The Effect dialect does
    (`src/docs/operations.md`, "When not to use one").
 3. The facade has gaps that only an operation fills. Nothing reads an object by id or reference (`query` needs a
    typename), and nothing searches text.
 
 MCP scripts are worse off, because `runScript` has no bindings at all. Its scope is `invoke`, `queryOperations`,
-`loadSkill` and `print` (`mcp-server/src/McpServer.ts:614`). On EDGE, compute-service gives the script a host whose
-only method is `invoke`, and each `invoke` goes to operation-service (edge
+`loadSkill` and `print` (`mcp-server/src/McpServer.ts`, `RunScript`). On EDGE, compute-service gives the script a
+host whose only method is `invoke`, and each `invoke` goes to operation-service (edge
 `compute-service/src/entrypoint/compute-service.ts:56`). A script that reads 10 objects and updates 5 opens 15
 contexts.
 
 ## Goals
 
-1. Agent and MCP scripts read and write objects through bindings, against one database: opened once per process
+1. Agent and MCP scripts read and change objects through bindings, against one database: opened once per process
    for the agent, once per script for MCP.
-2. Code mode does not offer an operation that a binding covers, so the model cannot take the slow path.
-3. The API reference tells the model that bindings are local and operations are remote. It maps the Database
+2. Code mode does not offer an operation that a binding fully replaces, so the model cannot take the slow path.
+3. The API reference tells the model that bindings are local and operations are remote, and maps the Database
    skill's verbs to the bindings.
 
 ## Non-goals
 
 - Making EDGE operations cheaper, for example by reusing the caller's context in operation-service. That helps
   every caller but is a larger change, and this design does not block it.
+- Creating and deleting objects through bindings. `space.addObject` files a new object into its default
+  collection, using rules that plugins contribute through the capability manager, and `space.removeObjects`
+  unlinks an object from the root collection and closes its open panels. `add` and `remove` do neither, and an
+  agent on EDGE has no capability manager to ask for the rules. Both operations stay; see open question 2.
 - Diff-based text writes. `update` and `space.updateObject` both replace a whole string today; that is a separate
   change.
-- MCP's `invokeOperation` tool. A client without code mode still needs the CRUD operations, so the tool keeps them.
-- Composer's Effect dialect. It already has the whole ECHO API in scope.
+- MCP's `invokeOperation` tool. A client without code mode still needs every operation, so the tool keeps them.
 
 ## Design
 
@@ -72,13 +75,12 @@ Add two bindings to the plain dialect and to the workerd facade (`FACADE` in `sr
 `src/workerd/prelude.mjs`):
 
 - `await get(idOrRef)`: the stored object, or `undefined`. It replaces `space-get-objects`.
-- `await search(text, typename?)`: a full-text search (`Filter.text`), optionally narrowed by type. It replaces the
-  text form of `space-query-objects`.
+- `await search(text, typename?)`: a full-text search (`Filter.text`), optionally narrowed by type. It does what
+  the text form of `space-query-objects` does.
 
-### 2. Mark the covered operations
+### 2. Mark the replaced operations
 
-Add an operation annotation, next to `IdempotentAnnotation` and `ConsentPreviewAnnotation` in
-`@dxos/compute/Operation`:
+Add an operation annotation, next to `IdempotentAnnotation` in `@dxos/compute/Operation`:
 
 ```ts
 export const ScriptBindingAnnotation = Annotation.make({
@@ -87,104 +89,104 @@ export const ScriptBindingAnnotation = Annotation.make({
 });
 ```
 
-Its value names the binding that replaces the operation. plugin-space annotates four operations:
+Its value names the binding that replaces the operation. plugin-space annotates two operations:
 
-| Operation             | Replaced by    |
-| --------------------- | -------------- |
-| `space.getObjects`    | `get`          |
-| `space.addObject`     | `make` + `add` |
-| `space.updateObject`  | `update`       |
-| `space.removeObjects` | `remove`       |
+| Operation            | Replaced by |
+| -------------------- | ----------- |
+| `space.getObjects`   | `get`       |
+| `space.updateObject` | `update`    |
 
 Code mode leaves annotated operations out:
 
-- Agent: out of `ops` and out of the operations section of the system prompt.
+- Agent: out of `ops` and out of the operations section of the system prompt, in both dialects.
 - MCP script: `invoke` refuses them with a message that names the binding, and `queryOperations` inside a script
-  does not list them.
+  does not list them. Only on a host that gives scripts a database (section 4): elsewhere the operation is still the
+  only way, so it stays.
 
 The `invokeOperation` tool still runs them.
 
 The annotation reaches EDGE without a key list. `Operation.serialize` writes `meta.annotations` into the record,
-and operation-service's `listOperations` returns those records to compute-service.
+`Operation.deserialize` restores it, and operation-service's `listOperations` returns those records to
+compute-service.
 
-No binding covers `space.addRelation`, `space.addType`, `space.queryTypes`, `space.getObjectLink`,
-`space.resolveUrl` or the tag operations, so they stay. `space.queryObjects` also stays for now (open question 2).
+`space.queryObjects` stays: its queue scope (`includeQueues`, `in`) has no binding. So do `space.addObject`,
+`space.removeObjects`, `space.addRelation`, `space.addType`, `space.queryTypes`, `space.getObjectLink`,
+`space.resolveUrl` and the tag operations.
 
 ### 3. Tell the model
 
 The plain dialect's API reference gets one paragraph ahead of the operations section:
 
-> The bindings above run against a database this evaluation already has open: each call is a local read or
-> write. An `ops` call is a remote invocation that opens its own database, and can take seconds. Read and write
-> objects with the bindings. Where a skill names a tool to read, create, update or remove objects, use the binding:
-> read with `get` or `query`, create with `make` then `add`, change with `update`, delete with `remove`.
+> The bindings above run against a database this evaluation already has open: each call is a local read or write.
+> An `ops` call is a remote invocation that opens its own database, and can take seconds. Read and change objects
+> with the bindings, even where a skill names a tool for it: read with `get`, `query` or `search`, and change with
+> `update`. To create or delete an object the user should find in a collection, use the space operations, which
+> file it into its collection or unlink it.
 
-The same paragraph goes into MCP's `runScript` description. Filing an object into a collection, which
-`space.addObject` did with `target`, becomes `update(collection, (c) => { c.objects.push(ref(obj)); })`;
-`src/docs/database.md` shows it.
-
-The Database skill's own text does not change. It is correct for a client that calls tools, and code mode's
-reference overrides it for code.
+MCP's `runScript` description gets the same guidance. The Database skill's own text does not change. It is correct
+for a client that calls tools, and code mode's reference overrides it for code.
 
 ### 4. Bindings for MCP scripts
 
-**Recommended (A): `runScript` uses the plain dialect and code mode's sandboxes.**
+`runScript` keeps the Effect dialect. Four verbs join `invoke`, `queryOperations`, `loadSkill` and `print`, each an
+effect that fails with the same `ToolFailure`:
 
-- `code` becomes the body of an async function, as in the agent's `eval`.
-- The scope is the same facade (`query`, `get`, `search`, `make`, `add`, `update`, `remove`, `flush`, `ref`,
-  `relations`, `children`, `referrers`, `describe`, `print`), plus MCP's own verbs as async functions:
-  `invoke(key, input, { spaceId })`, `queryOperations(...)` and `loadSkill(name)`. `invoke` keeps the skill gate
-  and the space rules.
-- `HostShape` gains an optional `database(spaceId)`. mcp-server builds the bindings from it, so the host only
-  supplies a database and a sandbox.
-- EDGE: compute-service runs the script with `WorkerdSandbox` in place of `isolateScriptSandbox`. Its `database`
-  opens a `FunctionContext` for the script's space once, through its own service bindings as `ProcessObject` does.
-  It refuses a space that is not in `request.spaceIds`, the rule `invoke` applies today. A script that names no
-  space gets no database, and the bindings fail with a message that says so.
-- CLI (`dx mcp serve`): the in-process sandbox runs the same dialect against the profile's client.
-- mcp-server's Effect isolate module (`src/internal/script*.ts`) goes away.
+- `yield* get(idOrRef)`: the object, or `undefined`.
+- `yield* query(typename, props?)`: objects of the type, optionally narrowed by exact property values.
+- `yield* search(text, typename?)`: a full-text search, optionally narrowed by type.
+- `yield* update(idOrRef, patch)`: replaces the patch's fields and returns the object. The write is stored before
+  the effect succeeds.
 
-The cost of A is a changed `runScript` contract. Clients read the tool description in each session, so no client
-code breaks, but recorded MCP conversations must be recorded again.
+They act on the space the `spaceId` argument names. Data travels in `invoke`'s wire form: objects come out as
+snapshots with qualified `{"/": "echo://..."}` envelopes, and an envelope in a patch becomes a reference. So what
+`get` returns can go straight into `invoke`, and the other way round.
 
-**Alternative (B): keep the Effect dialect and add the database verbs as effects** (`yield* query(...)`). The
-contract stays, but mcp-server needs a second isolate facade that repeats `prelude.mjs`: snapshots, `ref` markers,
-mutator diffing. Two facades with the same verbs drift apart.
+The verbs are answered host-side, in `scriptDispatch`, next to the other three. Both sandboxes only forward the
+verb's name and arguments, so there is no second copy of the workerd facade: no held-object map, no `ref` markers,
+no mutator diffing. `update` takes a patch rather than a mutator, because a function cannot cross into the host.
+
+`HostShape` gains an optional `database(spaceId)`. A host without one refuses the verbs with a message that says
+so.
+
+- EDGE: compute-service's script host opens one `FunctionContext` for the script's space, on the first verb that
+  needs it, and closes it when the script ends.
+- CLI (`dx mcp serve`): the space's database from the profile's client.
+
+`runScript` takes `spaceId` from the session's spaces, so the verbs can reach nothing `invoke` could not.
 
 ## Testing
 
 - agent-code-mode: unit tests for `get` and `search`; a producer test that annotated operations are absent from
   `ops` and from the prompt; a workerd test for `get` and `search` across the isolate.
-- plugin-space: the four operations carry the annotation.
-- mcp-server: in-process `runScript` tests in the plain dialect; a script's `invoke` refuses an annotated operation
+- plugin-space: the two operations carry the annotation.
+- mcp-server: in-process `runScript` tests for the four verbs; a script's `invoke` refuses an annotated operation
   while the `invokeOperation` tool still runs it.
-- edge: a compute-service workerd test where one script queries, updates and flushes against one context, and is
-  refused for a space outside `spaceIds`. The Discord agent tests are recorded again, and assert that no turn
-  calls an annotated operation.
-- Model fixtures recorded again: plugin-assistant, assistant-e2e, and edge's discord-agent memos.
+- edge: a compute-service test where one script reads, updates and reads again against one context. The Discord
+  agent tests are recorded again, and assert that no turn calls an annotated operation.
+- Model fixtures recorded again where the prompt changed.
 
 ## Plan
 
 This dxos PR:
 
 1. This design doc.
-2. `ScriptBindingAnnotation` in `@dxos/compute`; plugin-space annotates its four operations.
+2. `ScriptBindingAnnotation` in `@dxos/compute`; plugin-space annotates its two operations.
 3. `get` and `search` in the plain dialect and the workerd facade.
 4. Code mode leaves annotated operations out; the cost paragraph goes into the API reference.
-5. MCP `runScript` on the plain dialect, with `HostShape.database`.
+5. MCP `runScript` verbs, with `HostShape.database`; the CLI host supplies it.
 6. Model fixtures recorded again.
 
 The edge PR, after this one publishes:
 
 1. Bump `@dxos/*`.
-2. compute-service `runScript` on `WorkerdSandbox`, with a `database` that opens one `FunctionContext`.
+2. compute-service's script host supplies `database`, opening one `FunctionContext` per script.
 3. Discord agent memos recorded again; an end-to-end check on dev.
 
 ## Open questions
 
-1. MCP dialect: A (plain, recommended) or B (Effect plus verbs)?
-2. Should `space.queryObjects` be annotated too? Its queue scope (`includeQueues`, `in`) has no binding.
-   Recommended: leave it visible, and say in the reference that `query` and `search` are for objects in the space.
-3. Type discovery (`space-query-types`, `assistant-toolkit-query-types`) was the slowest call in the demo, and no
+1. Type discovery (`space-query-types`, `assistant-toolkit-query-types`) was the slowest call in the demo, and no
    binding replaces it. A `types(query?)` binding over the database registry and the published type source would
    be a follow-up.
+2. Filing as data. If a type's default collection were a fact the database could read, rather than a rule a
+   plugin contributes at runtime, `add` and `remove` could file and unlink, and `space.addObject` and
+   `space.removeObjects` could be annotated too.

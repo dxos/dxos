@@ -809,7 +809,7 @@ export const GetObjects = Operation.make({
   output: Schema.Struct({
     objects: Schema.Array(Schema.Unknown),
   }),
-}).pipe(Operation.mutation('none'));
+}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, 'get'));
 
 export const ResolveUrl = Operation.make({
   meta: {
@@ -872,7 +872,7 @@ export const UpdateObject = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-}).pipe(Operation.mutation('write'));
+}).pipe(Operation.mutation('write'), Operation.annotate(Operation.ScriptBindingAnnotation, 'update'));
 
 export const QueryObjects = Operation.make({
   meta: {

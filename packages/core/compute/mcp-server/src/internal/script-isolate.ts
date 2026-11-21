@@ -80,7 +80,7 @@ const __printer = (maxOutput) => {
   };
 };
 
-const __program = ({ spaceId, print, invoke, queryOperations, loadSkill }) =>
+const __program = ({ spaceId, print, invoke, queryOperations, loadSkill, get, query, search, update }) =>
   Effect.gen(function* () {
 ${code}
   });
@@ -124,6 +124,10 @@ export default {
                 : { skillTokens: [...tokens] },
             ]),
           queryOperations: (...args) => call('queryOperations', args),
+          get: (...args) => call('get', args),
+          query: (...args) => call('query', args),
+          search: (...args) => call('search', args),
+          update: (...args) => call('update', args),
           loadSkill: (...args) =>
             call('loadSkill', args).pipe(
               Effect.tap((listing) =>

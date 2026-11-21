@@ -12,6 +12,7 @@ import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
@@ -20,7 +21,7 @@ import * as ScriptRunner from '@dxos/compute-runtime/script-runner';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Obj, Registry } from '@dxos/echo';
+import { Annotation, type Database, Obj, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,6 +31,7 @@ import { ToolFailure, failure } from './internal/failure.ts';
 import * as iconInternal from './internal/icon.ts';
 import * as identityInternal from './internal/identity.ts';
 import * as inputInternal from './internal/input.ts';
+import * as scriptDatabaseInternal from './internal/script-database.ts';
 import * as scriptIsolateInternal from './internal/script-isolate.ts';
 import * as scriptInternal from './internal/script.ts';
 import * as skillTokenInternal from './internal/skill-token.ts';
@@ -98,6 +100,12 @@ export type HostShape = {
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
    */
   readonly spaceIds?: readonly string[];
+  /**
+   * The database of a space the session may address, which a script's `get`, `query`, `search` and `update` read
+   * and change without invoking an operation. Asked on every such call, so a host that opens one at a cost keeps it
+   * for the script. Omitted, those calls are refused and a script goes through `invoke`.
+   */
+  readonly database?: (spaceId: SpaceId) => Effect.Effect<Database.Database, HostError>;
 };
 
 export class Host extends Context.Service<Host, HostShape>()('@dxos/mcp-server/Host') {}
@@ -624,7 +632,15 @@ export const RunScript = Tool.make('runScript', {
     'returns the rows queryOperations does; `yield* loadSkill(name?)` returns what loadSkill does ' +
     'and unlocks its operations for the rest of the script; ' +
     '`yield* print(...values)` adds a line to the output (non-strings as JSON); `spaceId` is the ' +
-    'spaceId argument, used by invoke when a call names none. A failed call fails the program with ' +
+    'spaceId argument, used by invoke when a call names none. Against the spaceId space: ' +
+    '`yield* get(idOrRef)` returns an object, or undefined; `yield* query(typename, props?)` returns ' +
+    'the objects of a type, narrowed by exact field values; `yield* search(text, typename?)` finds ' +
+    'objects by full-text search; `yield* update(idOrRef, { field: value })` replaces those fields, ' +
+    'stores the change and returns the object. These four read and write the database directly, while ' +
+    'invoke runs an operation remotely and can take seconds: read and change objects with them, even ' +
+    'where a skill names an operation for it. Objects come back as invoke returns them, references as ' +
+    '{"/": "echo://..."} envelopes that update and invoke take as they are. To create or delete an ' +
+    'object, invoke the space operations, which also file it into its collection. A failed call fails the program with ' +
     'a ToolFailure ({ code, message }); recover with `yield* Effect.result(invoke(...))`, whose value ' +
     "is { _tag: 'Success', success } or { _tag: 'Failure', failure }. Run independent calls together " +
     'with `yield* Effect.all([...], { concurrency: 8 })`. Nothing else is in scope: no import, ' +
@@ -682,15 +698,34 @@ export const scriptDispatch = (
   switch (binding) {
     case 'invoke':
       return scriptRequest(args[0], args[1], args[2]).pipe(
-        Effect.flatMap(({ skillTokens, ...request }) =>
-          invokeWithTokens(registry, host, gate, { ...request, spaceId: request.spaceId ?? spaceId }, skillTokens),
-        ),
+        Effect.flatMap(({ skillTokens, ...request }) => {
+          const replacement = scriptBindingOf(registry, host, request.key);
+          return replacement === undefined
+            ? invokeWithTokens(registry, host, gate, { ...request, spaceId: request.spaceId ?? spaceId }, skillTokens)
+            : Effect.fail(
+                failure(
+                  'invalid_request',
+                  `A script does not invoke ${request.key}: use \`yield* ${replacement}(...)\`, which reads and ` +
+                    "changes the script's space without an operation.",
+                ),
+              );
+        }),
       );
     case 'queryOperations':
       return Schema.decodeUnknownEffect(QueryOperations.parametersSchema)(withoutUndefined(args[0] ?? {})).pipe(
         Effect.mapError((error) => failure('invalid_request', `queryOperations: ${String(error)}`)),
         Effect.flatMap((params) => queryOperations(registry, params)),
-        Effect.map(({ operations }) => operations),
+        // What the script would be refused is not offered to it.
+        Effect.map(({ operations }) =>
+          operations.filter(({ key }) => scriptBindingOf(registry, host, key) === undefined),
+        ),
+      );
+    case 'get':
+    case 'query':
+    case 'search':
+    case 'update':
+      return scriptDatabase(host, spaceId).pipe(
+        Effect.flatMap(({ db, spaceId }) => scriptDatabaseInternal.call(db, spaceId, binding, args)),
       );
     case 'loadSkill': {
       const [skill] = args;
@@ -700,6 +735,46 @@ export const scriptDispatch = (
     }
   }
 };
+
+/**
+ * The binding a script uses in place of the operation `key` names, when a binding does all the operation does. None on
+ * a host that gives scripts no database, where the operation is still the only way.
+ */
+const scriptBindingOf = (registry: Registry.Registry, host: HostShape, key: string): string | undefined => {
+  if (host.database === undefined) {
+    return undefined;
+  }
+  const record = viewInternal.lookup(registry, key);
+  return record == null ? undefined : Option.getOrUndefined(Annotation.get(record, Operation.ScriptBindingAnnotation));
+};
+
+/** The database of the script's space, which its `get`, `query`, `search` and `update` act on. */
+const scriptDatabase = (
+  host: HostShape,
+  spaceId: SpaceId | undefined,
+): Effect.Effect<{ db: Database.Database; spaceId: SpaceId }, ToolFailure> =>
+  Effect.gen(function* () {
+    const { database } = host;
+    if (database === undefined) {
+      return yield* Effect.fail(
+        failure('invalid_request', 'This server gives scripts no database: read and change objects with invoke.'),
+      );
+    }
+    const resolved =
+      spaceId === undefined ? undefined : yield* spaceInternal.resolveId(host.spaceIds, spaceId, { required: true });
+    if (resolved === undefined) {
+      return yield* Effect.fail(
+        failure(
+          'invalid_request',
+          'get, query, search and update act on the space runScript names: pass spaceId to runScript.',
+        ),
+      );
+    }
+    const db = yield* database(resolved).pipe(
+      Effect.mapError((error) => failure('operation_failed', `The space's database did not open: ${error.message}`)),
+    );
+    return { db, spaceId: resolved };
+  });
 
 /**
  * {@link invoke} with each of the script's tokens in turn until one is accepted; only a refusal for
