@@ -6,7 +6,15 @@ import { describe, expect, test } from 'vitest';
 
 import { DEFAULT_OPTIONS, type FoldRange, type SymbolNode, selectBodies } from './select.ts';
 
-const symbol = (kind: string, start: number, end: number, children: SymbolNode[] = [], selectionLine = start) => ({
+const symbol = (
+  kind: string,
+  start: number,
+  end: number,
+  children: SymbolNode[] = [],
+  selectionLine = start,
+  name = kind,
+): SymbolNode => ({
+  name,
   kind,
   range: { start, end },
   selectionLine,
@@ -104,6 +112,51 @@ describe('selectBodies', () => {
     ];
     expect(select(source, [symbol('Function', 0, 4, [symbol('Function', 1, 3)])], ranges)).toEqual([
       { start: 0, end: 3 },
+    ]);
+  });
+
+  test('keeps describe blocks open and folds the tests inside them', () => {
+    const source = [
+      /* 0 */ "describe('suite', () => {",
+      /* 1 */ "  test('one', () => {",
+      /* 2 */ '    check();',
+      /* 3 */ '  });',
+      /* 4 */ "  test.describe('nested', () => {",
+      /* 5 */ "    it('two', () => {",
+      /* 6 */ '      check();',
+      /* 7 */ '    });',
+      /* 8 */ '  });',
+      /* 9 */ '});',
+    ].join('\n');
+    const symbols = [
+      symbol(
+        'Function',
+        0,
+        9,
+        [
+          symbol('Function', 1, 3, [], 1, "test('one') callback"),
+          symbol(
+            'Function',
+            4,
+            8,
+            [symbol('Function', 5, 7, [], 5, "it('two') callback")],
+            4,
+            "test.describe('nested') callback",
+          ),
+        ],
+        0,
+        "describe('suite') callback",
+      ),
+    ];
+    const ranges = [
+      { start: 0, end: 8 },
+      { start: 1, end: 2 },
+      { start: 4, end: 7 },
+      { start: 5, end: 6 },
+    ];
+    expect(select(source, symbols, ranges)).toEqual([
+      { start: 1, end: 2 },
+      { start: 5, end: 6 },
     ]);
   });
 

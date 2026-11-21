@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { createHash } from 'node:crypto';
 import * as vscode from 'vscode';
 
 import { DEFAULT_OPTIONS, type FoldRange, type LineRange, type SymbolNode, selectBodies } from './select.ts';
@@ -18,6 +19,7 @@ const FOLDING_KINDS: Record<number, FoldRange['kind']> = {
 };
 
 const toSymbolNode = (symbol: vscode.DocumentSymbol): SymbolNode => ({
+  name: symbol.name,
   kind: vscode.SymbolKind[symbol.kind],
   range: { start: symbol.range.start.line, end: symbol.range.end.line },
   selectionLine: symbol.selectionRange.start.line,
@@ -55,7 +57,20 @@ const findBodies = async (document: vscode.TextDocument): Promise<LineRange[] | 
     lineAt: (line) => document.lineAt(line).text,
     bodyKinds: config.get<string[]>('bodySymbolKinds', [...DEFAULT_OPTIONS.bodyKinds]),
     valueKinds: config.get<string[]>('valueSymbolKinds', [...DEFAULT_OPTIONS.valueKinds]),
+    containerPattern: toPattern(config.get<string>('containerSymbolPattern')),
   });
+};
+
+/** A malformed user pattern falls back to the default rather than disabling every fold. */
+const toPattern = (source: string | undefined): RegExp => {
+  if (source === undefined) {
+    return DEFAULT_OPTIONS.containerPattern;
+  }
+  try {
+    return new RegExp(source);
+  } catch {
+    return DEFAULT_OPTIONS.containerPattern;
+  }
 };
 
 const findBodiesWithRetry = async (document: vscode.TextDocument): Promise<LineRange[] | undefined> => {
@@ -99,28 +114,84 @@ const run = async (action: Action) => {
 
 const isAutoEnabled = () => vscode.workspace.getConfiguration(SECTION).get<boolean>('autoCollapse', false);
 
+type CacheEntry = { hash: string; bodies: LineRange[] };
+
+const CACHE_KEY = 'implFold.bodies';
+const CACHE_LIMIT = 500;
+
+const hashOf = (document: vscode.TextDocument) => createHash('sha1').update(document.getText()).digest('base64');
+
+/** Opening at a definition (F12, search result) must not hide the code it jumped to. */
+const awayFromCursor = (editor: vscode.TextEditor, bodies: LineRange[]) => {
+  const cursorLines = editor.selections.map((selection) => selection.active.line);
+  return bodies.filter((body) => !cursorLines.some((line) => line > body.start && line <= body.end));
+};
+
 export const activate = (context: vscode.ExtensionContext) => {
   // Each document is auto-collapsed once per open, so bodies the user expands stay expanded.
   const collapsed = new Set<string>();
+
+  // VS Code paints a file before its language server answers, so the bodies found last time are applied first to
+  // keep the unfolded flash to a frame; the content hash rules out stale lines.
+  const cache = new Map<string, CacheEntry>(context.globalState.get<[string, CacheEntry][]>(CACHE_KEY, []));
+  const pending = new Map<string, Promise<LineRange[] | undefined>>();
+
+  const remember = (key: string, entry: CacheEntry) => {
+    cache.delete(key);
+    cache.set(key, entry);
+    for (const oldest of cache.keys()) {
+      if (cache.size <= CACHE_LIMIT) {
+        break;
+      }
+      cache.delete(oldest);
+    }
+    void context.globalState.update(CACHE_KEY, [...cache]);
+  };
+
+  /** Shares one provider round trip between the open-time prefetch and the editor that shows the document. */
+  const compute = (document: vscode.TextDocument) => {
+    const key = document.uri.toString();
+    const inFlight = pending.get(key);
+    if (inFlight) {
+      return inFlight;
+    }
+    const version = document.version;
+    const hash = hashOf(document);
+    const result = findBodiesWithRetry(document).then((bodies) => {
+      pending.delete(key);
+      if (bodies && document.version === version) {
+        remember(key, { hash, bodies });
+      }
+      return bodies;
+    });
+    pending.set(key, result);
+    return result;
+  };
 
   const autoCollapse = async (editor: vscode.TextEditor | undefined) => {
     if (!editor || !isAutoEnabled()) {
       return;
     }
-    const key = editor.document.uri.toString();
+    const document = editor.document;
+    const key = document.uri.toString();
     if (collapsed.has(key)) {
       return;
     }
     collapsed.add(key);
-    const bodies = await findBodiesWithRetry(editor.document);
+
+    const cached = cache.get(key);
+    if (cached && cached.hash === hashOf(document)) {
+      await apply(editor, 'editor.fold', awayFromCursor(editor, cached.bodies));
+      void compute(document);
+      return;
+    }
+
+    const bodies = await compute(document);
     if (!bodies) {
       collapsed.delete(key);
       return;
     }
-    // Opening at a definition (F12, search result) must not hide the code it jumped to.
-    const cursorLines = editor.selections.map((selection) => selection.active.line);
-    const hidden = bodies.filter((body) => !cursorLines.some((line) => line > body.start && line <= body.end));
-    await apply(editor, 'editor.fold', hidden);
+    await apply(editor, 'editor.fold', awayFromCursor(editor, bodies));
   };
 
   const statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -148,6 +219,12 @@ export const activate = (context: vscode.ExtensionContext) => {
         // Every editor already open counts as unseen, starting with the one in front.
         collapsed.clear();
         await autoCollapse(vscode.window.activeTextEditor);
+      }
+    }),
+    // A document opens before its editor is shown, so the provider round trip starts that much earlier.
+    vscode.workspace.onDidOpenTextDocument((document) => {
+      if (isAutoEnabled() && !collapsed.has(document.uri.toString())) {
+        void compute(document);
       }
     }),
     vscode.window.onDidChangeActiveTextEditor((editor) => autoCollapse(editor)),

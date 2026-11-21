@@ -71,6 +71,11 @@
             "Field"
           ],
           "description": "Symbol kinds whose body is collapsed only when the value is a function, e.g. `const f = () => { ... }`."
+        },
+        "implFold.containerSymbolPattern": {
+          "type": "string",
+          "default": "^(?:[\\w$]+\\.)*(?:describe|suite|context)\\b",
+          "description": "Regular expression for symbol names that group other bodies (test suites) and stay open while their children collapse. TypeScript names a `describe('x', () => {})` callback `describe('x') callback`."
         }
       }
     }

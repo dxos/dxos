@@ -7,6 +7,7 @@ export type LineRange = { start: number; end: number };
 
 /** Language-agnostic view of a `vscode.DocumentSymbol`; `kind` is the `vscode.SymbolKind` member name. */
 export type SymbolNode = {
+  name: string;
   kind: string;
   range: LineRange;
   /** Line of the symbol's name. */
@@ -22,6 +23,11 @@ export type SelectOptions = {
   bodyKinds: readonly string[];
   /** Symbol kinds whose body is an implementation only when the value is a function (e.g. `const f = () => {}`). */
   valueKinds: readonly string[];
+  /**
+   * Names of function symbols that group other bodies rather than implement one; they stay open and their children
+   * fold instead. tsserver names a `describe('x', () => {})` callback `describe('x') callback`.
+   */
+  containerPattern: RegExp;
 };
 
 export type SelectInput = SelectOptions & {
@@ -33,6 +39,7 @@ export type SelectInput = SelectOptions & {
 export const DEFAULT_OPTIONS: SelectOptions = {
   bodyKinds: ['Function', 'Method', 'Constructor'],
   valueKinds: ['Variable', 'Constant', 'Property', 'Field'],
+  containerPattern: /^(?:[\w$]+\.)*(?:describe|suite|context)\b/,
 };
 
 const FUNCTION_VALUE = /=>|\bfunction\b|\blambda\b/;
@@ -42,7 +49,14 @@ const FUNCTION_VALUE = /=>|\bfunction\b|\blambda\b/;
  * A body is the widest code folding range that starts on or after the symbol's name and ends where the symbol ends,
  * so a multi-line parameter list (which ends early) is never mistaken for it.
  */
-export const selectBodies = ({ symbols, foldingRanges, lineAt, bodyKinds, valueKinds }: SelectInput): LineRange[] => {
+export const selectBodies = ({
+  symbols,
+  foldingRanges,
+  lineAt,
+  bodyKinds,
+  valueKinds,
+  containerPattern,
+}: SelectInput): LineRange[] => {
   const codeRanges = foldingRanges.filter((range) => range.kind === undefined && range.end > range.start);
   const bodies: LineRange[] = [];
 
@@ -77,6 +91,10 @@ export const selectBodies = ({ symbols, foldingRanges, lineAt, bodyKinds, valueK
 
   const visit = (nodes: readonly SymbolNode[]) => {
     for (const symbol of nodes) {
+      if (containerPattern.test(symbol.name)) {
+        visit(symbol.children);
+        continue;
+      }
       const isBody = bodyKinds.includes(symbol.kind);
       const isValue = !isBody && valueKinds.includes(symbol.kind);
       if (isBody || isValue) {
