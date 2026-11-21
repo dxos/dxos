@@ -152,7 +152,14 @@ type CacheEntry = { hash: string; bodies: LineRange[] };
 const CACHE_KEY = 'implFold.bodies';
 const CACHE_LIMIT = 500;
 
-const hashOf = (document: vscode.TextDocument) => createHash('sha1').update(document.getText()).digest('base64');
+/** Covers every input that changes which bodies are chosen, so a settings change invalidates the cache. */
+const hashOf = (document: vscode.TextDocument) => {
+  const config = vscode.workspace.getConfiguration(SECTION, document);
+  const settings = ['parser', 'bodySymbolKinds', 'valueSymbolKinds', 'containerSymbolPattern'].map((name) =>
+    config.get(name),
+  );
+  return createHash('sha1').update(JSON.stringify(settings)).update('\0').update(document.getText()).digest('base64');
+};
 
 /** Opening at a definition (F12, search result) must not hide the code it jumped to. */
 const awayFromCursor = (editor: vscode.TextEditor, bodies: LineRange[]) => {
@@ -165,9 +172,9 @@ export const activate = (context: vscode.ExtensionContext) => {
   const collapsed = new Set<string>();
 
   // VS Code paints a file before its language server answers, so the bodies found last time are applied first to
-  // keep the unfolded flash to a frame; the content hash rules out stale lines.
+  // keep the unfolded flash to a frame; the content-and-settings hash rules out stale lines.
   const cache = new Map<string, CacheEntry>(context.globalState.get<[string, CacheEntry][]>(CACHE_KEY, []));
-  const pending = new Map<string, Promise<LineRange[] | undefined>>();
+  const pending = new Map<string, { version: number; result: Promise<LineRange[] | undefined> }>();
 
   const remember = (key: string, entry: CacheEntry) => {
     cache.delete(key);
@@ -182,22 +189,26 @@ export const activate = (context: vscode.ExtensionContext) => {
   };
 
   /** Shares one provider round trip between the open-time prefetch and the editor that shows the document. */
-  const compute = (document: vscode.TextDocument) => {
+  const compute = (document: vscode.TextDocument): Promise<LineRange[] | undefined> => {
     const key = document.uri.toString();
     const inFlight = pending.get(key);
-    if (inFlight) {
-      return inFlight;
+    // A computation started before an edit describes old line numbers, so only the same version is shared.
+    if (inFlight && inFlight.version === document.version) {
+      return inFlight.result;
     }
     const version = document.version;
     const hash = hashOf(document);
     const result = findBodiesWithRetry(document).then((bodies) => {
-      pending.delete(key);
-      if (bodies && document.version === version) {
-        remember(key, { hash, bodies });
+      if (pending.get(key)?.result === result) {
+        pending.delete(key);
       }
+      if (!bodies || document.version !== version) {
+        return undefined;
+      }
+      remember(key, { hash, bodies });
       return bodies;
     });
-    pending.set(key, result);
+    pending.set(key, { version, result });
     return result;
   };
 

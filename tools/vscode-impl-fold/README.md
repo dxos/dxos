@@ -20,14 +20,15 @@ project. The `.vsix` carries the native binding for the platform it was built on
 `implFold.parser` set to `languageServer`, it uses the language-server path below.
 
 VS Code paints a file before any extension can act on it, so a file's first open still shows it unfolded for a
-frame. The extension also remembers each file's bodies (keyed by content hash) and applies them as soon as the
+frame. The extension also remembers each file's bodies (keyed by its content and the extension settings) and applies them as soon as the
 editor activates.
 
 ## Other languages: the language server
 
 It asks the language's own providers, through `vscode.executeDocumentSymbolProvider` and
 `vscode.executeFoldingRangeProvider`, and folds, for each symbol of a body kind, the widest folding range that starts
-on or after the symbol's name and ends where the symbol ends. Any language with a document-symbol provider works;
+on or after the symbol's name and ends where the symbol ends. Any language whose document-symbol provider returns hierarchical `DocumentSymbol`s works (a flat
+`SymbolInformation` list has no nesting or name line, so it yields nothing);
 TypeScript and JavaScript are the tested case. `implFold.bodySymbolKinds` and `implFold.valueSymbolKinds` take
 `vscode.SymbolKind` names to tune what counts as a body.
 
