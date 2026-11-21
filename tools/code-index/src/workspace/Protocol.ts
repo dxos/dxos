@@ -50,6 +50,50 @@ export class Entity extends Schema.Class<Entity>('code-index/Entity')({
   hint: Schema.optional(Schema.String),
 }) {}
 
+export const TreeNodeKind = Schema.Literals(['repo', 'dir', 'package', 'entry', 'namespace', 'symbol']);
+export type TreeNodeKind = typeof TreeNodeKind.Type;
+
+export class TreeNode extends Schema.Class<TreeNode>('code-index/TreeNode')({
+  id: Schema.String,
+  label: Schema.String,
+  kind: TreeNodeKind,
+  /** Whether the node can have children; a leaf is never asked for them. */
+  branch: Schema.Boolean,
+  /** The declaration kind of a symbol (`function`, `interface`, …), or a package's directory name. */
+  detail: Schema.optional(Schema.String),
+}) {}
+
+export class TreeChildren extends Schema.Class<TreeChildren>('code-index/TreeChildren')({
+  id: Schema.String,
+  children: Schema.Array(TreeNode),
+}) {}
+
+/** The code behind a repository tree node, as its card in the stack shows it. */
+export class TreeSource extends Schema.Class<TreeSource>('code-index/TreeSource')({
+  id: Schema.String,
+  title: Schema.String,
+  /** What the node is: a symbol's declaration kind, or `module`, `package`. */
+  subtitle: Schema.String,
+  /** Repository-relative path of the file the code comes from. */
+  path: Schema.optional(Schema.String),
+  /** 1-based line of the excerpt's first line. */
+  line: Schema.Number,
+  code: Schema.String,
+  /** Lines cut from the end, so the card can say the excerpt is partial. */
+  truncated: Schema.Boolean,
+}) {}
+
+/** A Cmd+P result: the node, and the ids from the top of the tree down to it, so the tree can reveal it. */
+export class TreeHit extends Schema.Class<TreeHit>('code-index/TreeHit')({
+  node: TreeNode,
+  /** Where it lives, for the result row: a symbol's canonical name and package. */
+  description: Schema.String,
+  path: Schema.Array(Schema.String),
+}) {}
+
+/** Id of the tree's root, whose children are the repositories. */
+export const TREE_ROOT = 'root';
+
 export class RequestFailed extends Schema.TaggedError<RequestFailed>('code-index/RequestFailed')('RequestFailed', {
   message: Schema.String,
 }) {}
@@ -76,6 +120,27 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('Describe', {
     payload: { target: Schema.String },
     success: Entity,
+    error: RequestFailed,
+  }),
+
+  /** The children of each named tree node; the tree tab asks for a level ahead of what is open. */
+  Rpc.make('TreeChildren', {
+    payload: { ids: Schema.Array(Schema.String) },
+    success: Schema.Array(TreeChildren),
+    error: RequestFailed,
+  }),
+
+  /** Public symbols and packages whose name contains the query, best match first. */
+  Rpc.make('TreeSearch', {
+    payload: { query: Schema.String },
+    success: Schema.Array(TreeHit),
+    error: RequestFailed,
+  }),
+
+  /** The code behind a tree node, for its card; absent for a node with none (a directory). */
+  Rpc.make('TreeSource', {
+    payload: { id: Schema.String },
+    success: Schema.optional(TreeSource),
     error: RequestFailed,
   }),
 

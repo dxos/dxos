@@ -3,13 +3,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { ComponentType } from 'react';
 import { For, Show, createEffect, createResource, createSignal, on, onCleanup, onMount } from 'solid-js';
 
 import * as IndexState from '../workspace/IndexState.ts';
 import type * as Protocol from '../workspace/Protocol.ts';
 import { Canvas } from './Canvas.tsx';
 import { api } from './client.ts';
+import { ExplorerIsland } from './react/Explorer.tsx';
 import { mount } from './react/Island.ts';
+import { type Tab, TabBarIsland } from './react/TabBar.tsx';
 import { ThreadIsland, type ThreadIslandProps } from './react/Thread.tsx';
 import { currentProject, lastProject, openProject } from './routing.ts';
 import { type Session, openSession } from './session.ts';
@@ -43,6 +46,27 @@ const Chat = (props: { session: Session }) => {
   onCleanup(() => island()?.dispose());
 
   return <div ref={container} class='dx-grow flex flex-col' />;
+};
+
+/** A React island whose props follow Solid's signals: `props` is re-read, and the island re-rendered, on every change. */
+const Island = <Props extends object>(props: { component: ComponentType<Props>; props: Props; class?: string }) => {
+  let container: HTMLDivElement | undefined;
+  const [island, setIsland] = createSignal<ReturnType<typeof mount<Props>>>();
+  onMount(() => container && setIsland(mount(container, props.component)));
+  createEffect(() => island()?.render(props.props));
+  onCleanup(() => island()?.dispose());
+  return <div ref={container} class={props.class} />;
+};
+
+const TAB_KEY = 'code-index:tab';
+
+/** The tab last shown in this browser; storage can be absent (a private window), which means the agent tab. */
+const storedTab = (): Tab => {
+  try {
+    return localStorage.getItem(TAB_KEY) === 'tree' ? 'tree' : 'agent';
+  } catch {
+    return 'agent';
+  }
 };
 
 /** One session in the sidebar: opens on click; the hover button asks before deleting it. */
@@ -202,6 +226,16 @@ export const App = () => {
     },
   );
 
+  const [tab, setTab] = createSignal<Tab>(storedTab());
+  const selectTab = (next: Tab) => {
+    setTab(next);
+    try {
+      localStorage.setItem(TAB_KEY, next);
+    } catch {
+      // Storage refused; the tab still switches, it just is not remembered.
+    }
+  };
+
   const create = async () => {
     const project = await api.createProject();
     await refetch();
@@ -222,40 +256,54 @@ export const App = () => {
   };
 
   return (
-    <div class='flex h-screen'>
-      <Sidebar
-        current={resolved()}
-        projects={projects.latest ?? []}
-        onCreate={() => void create()}
-        onDelete={(projectId) => void remove(projectId)}
+    <div class='flex h-screen flex-col'>
+      <header class='border-separator shrink-0 border-b px-2 py-1'>
+        <Island component={TabBarIsland} props={{ value: tab(), onChange: selectTab }} />
+      </header>
+      {/* The session list belongs to the agent: sessions are agent conversations, and the tree has none. */}
+      <div class={tab() === 'agent' ? 'flex dx-grow' : 'hidden'}>
+        <Sidebar
+          current={resolved()}
+          projects={projects.latest ?? []}
+          onCreate={() => void create()}
+          onDelete={(projectId) => void remove(projectId)}
+        />
+        <div class='flex dx-grow'>
+          {/* `keyed` is load-bearing: a different project is a different session, and re-keying is
+              what disposes the old subscription and opens the new one. */}
+          <Show when={resolved()} keyed fallback={<main class='text-fg-muted p-4 text-sm'>Opening…</main>}>
+            {(projectId) => {
+              const session = openSession(projectId);
+              // A session named after its first prompt is renamed by an event in its log, not a reply.
+              createEffect(
+                on(
+                  () => session.state().title,
+                  () => void refetch(),
+                  { defer: true },
+                ),
+              );
+              return (
+                <main class='flex min-w-0 flex-1'>
+                  <div class='flex min-w-0 flex-1 flex-col'>
+                    <Chat session={session} />
+                  </div>
+                  <Show when={session.state().canvas.length > 0}>
+                    <div class='border-separator flex min-w-0 flex-1 border-l'>
+                      <Canvas canvas={session.state().canvas} onClear={session.clearCanvas} />
+                    </div>
+                  </Show>
+                </main>
+              );
+            }}
+          </Show>
+        </div>
+      </div>
+      {/* Kept mounted while hidden, so the tree keeps what is open and Cmd+P works from either tab. */}
+      <Island
+        component={ExplorerIsland}
+        props={{ onActivate: () => selectTab('tree') }}
+        class={tab() === 'tree' ? 'flex dx-grow' : 'hidden'}
       />
-      {/* `keyed` is load-bearing: a different project is a different session, and re-keying is
-          what disposes the old subscription and opens the new one. */}
-      <Show when={resolved()} keyed fallback={<main class='text-fg-muted p-4 text-sm'>Opening…</main>}>
-        {(projectId) => {
-          const session = openSession(projectId);
-          // A session named after its first prompt is renamed by an event in its log, not a reply.
-          createEffect(
-            on(
-              () => session.state().title,
-              () => void refetch(),
-              { defer: true },
-            ),
-          );
-          return (
-            <main class='flex min-w-0 flex-1'>
-              <div class='flex min-w-0 flex-1 flex-col'>
-                <Chat session={session} />
-              </div>
-              <Show when={session.state().canvas.length > 0}>
-                <div class='border-separator flex min-w-0 flex-1 border-l'>
-                  <Canvas canvas={session.state().canvas} onClear={session.clearCanvas} />
-                </div>
-              </Show>
-            </main>
-          );
-        }}
-      </Show>
     </div>
   );
 };

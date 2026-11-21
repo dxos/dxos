@@ -60,6 +60,15 @@ export const api = {
   /** What a diagram box's `ref` names in the index: an IRI, or a path, package or symbol name. */
   describe: (target: string) => call((client) => client.Describe({ target })),
 
+  /** The children of each named tree node, in one round trip. */
+  treeChildren: (ids: readonly string[]) => call((client) => client.TreeChildren({ ids })),
+
+  /** Cmd+P: public symbols and packages by name, each with its path in the tree. */
+  treeSearch: (query: string) => call((client) => client.TreeSearch({ query })),
+
+  /** The code behind a tree node, or `undefined` when it has none of its own. */
+  treeSource: (id: string) => call((client) => client.TreeSource({ id })),
+
   /** Sends an event. A `UserMessage` starts a turn; anything else is only recorded. */
   dispatch: (projectId: string, event: Events.Event) => call((client) => client.Dispatch({ projectId, event })),
 

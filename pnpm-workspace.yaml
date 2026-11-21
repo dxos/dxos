@@ -133,6 +133,8 @@ catalog:
   '@fontsource/poiret-one': ^5.2.8
   '@hazae41/symbol-dispose-polyfill': ^1.0.2
   '@huggingface/transformers': ^3.8.1
+  '@iconify-json/codicon': ^1.2.78
+  '@iconify-json/vscode-icons': ^1.2.99
   '@internationalized/date': ^3.12.3
   '@ipld/car': ^5.3.3
   '@jitl/quickjs-wasmfile-release-sync': ^0.31.0

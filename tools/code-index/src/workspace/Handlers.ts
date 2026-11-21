@@ -20,6 +20,7 @@ import * as Log from './Log.ts';
 import type * as Models from './Models.ts';
 import * as Protocol from './Protocol.ts';
 import * as Titles from './Titles.ts';
+import * as Tree from './Tree.ts';
 
 /**
  * The server side of the protocol. A `Dispatch` of a `UserMessage` is the one call that does work:
@@ -46,6 +47,7 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
       yield* store.stats().pipe(Effect.ignore, Effect.forkIn(scope));
       // Built on the first `Describe`, so `describe` resolves a box's `ref` exactly as the MCP tool does.
       const mcp = yield* Effect.cached(Server.handlers(store));
+      const tree = yield* Tree.make(store, options.root);
 
       /**
        * One turn at a time per project. The log serializes individual appends, not turns, so two
@@ -146,6 +148,15 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
             ),
             Effect.mapError((cause) => failure(cause.message)),
           ),
+
+        TreeChildren: ({ ids }: { ids: readonly string[] }) =>
+          tree.children(ids).pipe(Effect.mapError((cause) => failure(cause.message))),
+
+        TreeSearch: ({ query }: { query: string }) =>
+          tree.search(query).pipe(Effect.mapError((cause) => failure(cause.message))),
+
+        TreeSource: ({ id }: { id: string }) =>
+          tree.source(id).pipe(Effect.mapError((cause) => failure(cause.message))),
 
         ListProjects: () =>
           log.listProjects().pipe(
