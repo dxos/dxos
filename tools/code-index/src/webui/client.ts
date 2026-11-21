@@ -118,11 +118,21 @@ export const api = {
     };
   },
 
-  /** Subscribes to the indexer's status, current value first; the returned function stops it. */
-  watchIndex: (onStatus: (status: IndexState.Status) => void): (() => void) => {
+  /**
+   * Subscribes to the indexer's status, current value first; the returned function stops it. A stream that
+   * ends or fails (a server restart) is reported to `onDisconnect` and resubscribed every `RECONNECT`.
+   */
+  watchIndex: (onStatus: (status: IndexState.Status) => void, onDisconnect?: () => void): (() => void) => {
     const fiber = runtime.runFork(
       Effect.flatMap(Client, (client) =>
-        client.WatchIndex().pipe(Stream.runForEach((status) => Effect.sync(() => onStatus(status)))),
+        Effect.forever(
+          client.WatchIndex().pipe(
+            Stream.runForEach((status) => Effect.sync(() => onStatus(status))),
+            Effect.exit,
+            Effect.andThen(Effect.sync(() => onDisconnect?.())),
+            Effect.andThen(Effect.sleep(RECONNECT)),
+          ),
+        ),
       ),
     );
     return () => {

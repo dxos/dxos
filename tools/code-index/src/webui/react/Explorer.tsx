@@ -69,11 +69,17 @@ const createLoader = (onNodes: (nodes: readonly Protocol.TreeNode[]) => void, di
   const cache = new Map<string, Promise<readonly Protocol.TreeNode[]>>();
   let pending = new Map<string, (result: Promise<readonly Protocol.TreeNode[]>) => void>();
 
+  // Moves on each invalidate, so a response to a request sent before it cannot overwrite newer rows.
+  let generation = 0;
+
   const flush = () => {
     const batch = pending;
     pending = new Map();
+    const sent = generation;
     const response = api.treeChildren([...batch.keys()], { diff }).then((results) => {
-      onNodes(results.flatMap((result) => result.children));
+      if (sent === generation) {
+        onNodes(results.flatMap((result) => result.children));
+      }
       return new Map(results.map((result) => [result.id, result.children]));
     });
     for (const [id, settle] of batch) {
@@ -101,7 +107,10 @@ const createLoader = (onNodes: (nodes: readonly Protocol.TreeNode[]) => void, di
   };
 
   /** Forgets every loaded level, so the next read of each asks the server again. */
-  const invalidate = () => cache.clear();
+  const invalidate = () => {
+    generation++;
+    cache.clear();
+  };
 
   return { load, invalidate };
 };
@@ -438,12 +447,20 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
   // A finished pass moves the revision; branches read before it reload, so the tree never shows a stale index.
   useEffect(() => {
     let seen: number | undefined;
-    return api.watchIndex(({ revision }) => {
-      if (seen !== undefined && revision !== seen) {
-        model.refresh(registry);
-      }
-      seen = revision;
-    });
+    let reconnected = false;
+    return api.watchIndex(
+      ({ revision }) => {
+        // After a reconnect the server may have restarted, so its revision says nothing about what was loaded.
+        if (reconnected || (seen !== undefined && revision !== seen)) {
+          model.refresh(registry);
+        }
+        reconnected = false;
+        seen = revision;
+      },
+      () => {
+        reconnected = seen !== undefined;
+      },
+    );
   }, [model, registry]);
   const treeRef = useRef<TreeRootHandle>(null);
   const [searching, setSearching] = useState(false);

@@ -166,6 +166,11 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
     let allowance = Number.POSITIVE_INFINITY;
     /** Directories left unwatched, by the budget or by a new directory that did not fit; the timer polls while any are. */
     let uncovered = 0;
+    /**
+     * New directories that did not fit, kept until each gains a watch or is gone: one with no indexed file yet
+     * is not among the directories a re-watch derives, so forgetting it would stop the polling that covers it.
+     */
+    const waiting = new Set<string>();
 
     /** Watches `dir`, and any directory created in it from then on; true unless the watch failed. */
     const add = (dir: string): boolean => {
@@ -186,6 +191,7 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
             if (watchers.size < allowance) {
               add(child);
             } else {
+              waiting.add(child);
               uncovered++;
             }
           }
@@ -212,7 +218,6 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
         budget,
       );
       let room = budget - wanted.size;
-      let dropped = 0;
       for (const [dir, watcher] of watchers) {
         const exists = existsSync(join(options.root, dir));
         if (exists && (wanted.has(dir) || room > 0)) {
@@ -221,12 +226,22 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
         }
         watcher.close();
         watchers.delete(dir);
-        dropped += exists ? 1 : 0;
+        if (exists) {
+          waiting.add(dir);
+        }
       }
       allowance = budget;
-      uncovered = skipped + dropped;
       const before = watchers.size;
       const failed = [...wanted].filter((dir) => !add(dir)).length;
+      for (const dir of waiting) {
+        if (watchers.has(dir) || !existsSync(join(options.root, dir))) {
+          waiting.delete(dir);
+        } else if (room > 0 && add(dir)) {
+          room--;
+          waiting.delete(dir);
+        }
+      }
+      uncovered = skipped + waiting.size;
       if (failed > 0) {
         yield* report({ _tag: 'Failed', message: `${failed} directories could not be watched` });
       }
