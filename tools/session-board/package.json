@@ -24,8 +24,13 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@dxos/deus": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-task": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@phosphor-icons/core": "catalog:",

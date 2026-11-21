@@ -1,12 +1,12 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --conditions=source
 //
 // Copyright 2026 DXOS.org
 //
 
-// Turns a session board's Markdown into a single-file react-ui page, without a bundler.
+// Turns a session's `SESSION.mdl` (`lang/session.mdl`) into a single-file react-ui page, without a bundler.
 //
-//   cli.ts start <board.md>              # make <board.md> the session's board (writes it from a skeleton if absent)
-//   cli.ts build [<board.md>] [--strict] # parse, check, and write the page; exit 1 on an error
+//   cli.ts start <session dir>              # make <dir>/SESSION.mdl the session's board (a skeleton if absent)
+//   cli.ts build [<SESSION.mdl>] [--strict] # parse, check, and write the page; exit 1 on an error
 //   cli.ts hook                          # the Stop hook: build the current board; block once per change
 //   cli.ts template build | push | pull  # the prebuilt page: build it with Vite, or move it through R2
 //
@@ -20,7 +20,7 @@ import { homedir, tmpdir } from 'node:os';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { type Problem, type Sentence, parseBoard } from './parse.ts';
+import { type Problem, type Sentence, parseSession } from './session.ts';
 import { type BoardData } from './types.ts';
 
 const PACKAGE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -35,16 +35,48 @@ const PUBLIC_BASE = process.env.R2_PUBLIC_BASE || 'https://pub-39066a86073446d7b
 const R2_PREFIX = 'session-board';
 const TEMPLATE_SOURCES = ['app', 'src'];
 
-const SKELETON = `# Session title
+/** A new session file: the frontmatter, the Extensions table, and one goal to replace. */
+const skeleton = (slug: string) => `---
+id: org.dxos.session.${slug}
+name: Session title
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Session title
+
 One line that says what this session is for.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| \`question\` | \`org.dxos.mdl.question@1.0\` |
+| \`decision\` | \`org.dxos.mdl.decision@1.0\` |
+| \`goal\`     | \`org.dxos.mdl.goal@1.0\`     |
+| \`pr\`       | \`org.dxos.mdl.pr@1.0\`       |
+| \`event\`    | \`org.dxos.mdl.event@1.0\`    |
 
 ## Questions
 
 ## Goals
 
-- [doing] Write the first goal here.
+\`\`\`mdl
+goal G-1: Write the first goal here.
+  status: started
+\`\`\`
 
 ## Pull requests
+
+## Changelog
+
+## Timeline
+
+\`\`\`mdl
+event T-1: The session started.
+  date: ${new Date().toISOString().slice(0, 16)}Z
+\`\`\`
 `;
 
 const fail = (message: string): never => {
@@ -171,13 +203,18 @@ type BuildResult = {
   warnings: Problem[];
 };
 
-const pagePath = (source: string) => join(STATE_DIR, `${basename(source, '.md')}.html`);
+/** A session's name: its directory, since every session file is called `SESSION.mdl`. */
+const sessionName = (source: string) => basename(dirname(source));
+
+const pagePath = (source: string) => join(STATE_DIR, `${sessionName(source)}.html`);
 
 const build = async (source: string, strict: boolean): Promise<BuildResult> => {
   const text = readFileSync(source, 'utf8');
-  const { board, errors, sentences } = parseBoard(text, {
-    branch: git('branch', '--show-current'),
+  // The committed version, so an edit to the timeline, a question or an answer is caught before it is committed.
+  const previous = git('show', `HEAD:${relative(ROOT, source)}`);
+  const { board, errors, sentences } = parseSession(text, {
     source: relative(ROOT, source),
+    ...(previous === undefined ? {} : { previous }),
   });
   const ste = checkSte(sentences);
   const warnings = strict ? [] : ste;
@@ -214,11 +251,11 @@ const currentSource = (): string | undefined => {
   return existsSync(source) ? source : undefined;
 };
 
-const start = (source: string) => {
-  const absolute = resolve(source);
+const start = (directory: string) => {
+  const absolute = join(resolve(directory), 'SESSION.mdl');
   if (!existsSync(absolute)) {
     mkdirSync(dirname(absolute), { recursive: true });
-    writeFileSync(absolute, SKELETON);
+    writeFileSync(absolute, skeleton(sessionName(absolute)));
     console.log(`wrote ${relative(ROOT, absolute)} from the skeleton`);
   }
   mkdirSync(STATE_DIR, { recursive: true });
@@ -253,7 +290,7 @@ const hook = async () => {
     block(`STATUS BOARD: fix ${relative(ROOT, source)}, then stop again.\n${format(source, result.errors)}`);
     return;
   }
-  const marker = join(STATE_DIR, `${basename(source, '.md')}.hash`);
+  const marker = join(STATE_DIR, `${sessionName(source)}.hash`);
   if (existsSync(marker) && readFileSync(marker, 'utf8').trim() === result.hash) {
     return;
   }
@@ -276,11 +313,13 @@ const main = async () => {
   const ref = refIndex >= 0 ? rest[refIndex + 1] : 'main';
   switch (command) {
     case 'start': {
-      start(args[0] ?? fail('usage: cli.ts start <board.md>'));
+      start(args[0] ?? fail('usage: cli.ts start <session dir>'));
       break;
     }
     case 'build': {
-      const source = args[0] ? resolve(args[0]) : (currentSource() ?? fail('no board; run `cli.ts start <board.md>`'));
+      const source = args[0]
+        ? resolve(args[0])
+        : (currentSource() ?? fail('no session; run `cli.ts start agents/sessions/<date>-<slug>`'));
       const result = await build(source, rest.includes('--strict'));
       if (result.warnings.length > 0) {
         console.error(format(source, result.warnings));
@@ -309,7 +348,7 @@ const main = async () => {
       break;
     }
     default:
-      fail('usage: cli.ts start <board.md> | build [<board.md>] [--strict] | hook | template build|push|pull');
+      fail('usage: cli.ts start <session dir> | build [<SESSION.mdl>] [--strict] | hook | template build|push|pull');
   }
 };
 

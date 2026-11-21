@@ -388,8 +388,8 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, pr-description, land, …).
-- **A status page for a long session** — one Artifact board with questions, goals and PRs, each a short STE
-  line that expands; you write Markdown and `tools/session-board` makes the page, never hand-written HTML →
+- **A status page for a long session** — one Artifact board with questions, goals, PRs and a timeline; you write a
+  `SESSION.mdl` and `tools/session-board` makes the page, never hand-written HTML →
   `status-board` skill (`.agents/skills/status-board/SKILL.md`).
 - **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
   list, and `scripts/ste_check.py` → `simplified-technical-english` skill

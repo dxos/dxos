@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="claude:viewport-fit-sides" content="cover" />
     <title>{{TITLE}}</title>
     <!-- Inline, so the page in an Artifact does not request /favicon.ico. -->
     <link
@@ -12,39 +11,19 @@
     />
     <!-- Paints the theme's ground before the bundle runs, so a dark page does not flash white. -->
     <style>
-      /* The theme's colours are light-dark() pairs, so the scheme must follow the theme: the Artifact frame pins light. */
+      /* Dark always, before the bundle runs: the theme's colours are light-dark() pairs and the Artifact frame pins light. */
       html {
-        color-scheme: light;
+        color-scheme: dark;
       }
       html,
-      body {
+      body,
+      #root {
         margin: 0;
-        min-height: 100%;
-        background: #fafafa;
+        height: 100%;
+        background: #0a0a0a;
       }
       body {
         color: var(--color-fg);
-      }
-      @media (prefers-color-scheme: dark) {
-        html:not([data-theme='light']) {
-          color-scheme: dark;
-        }
-        html:not([data-theme='light']),
-        html:not([data-theme='light']) body {
-          background: #0a0a0a;
-        }
-      }
-      /* The side gutter clears a phone's system bar, as the viewport-fit-sides meta above promises. */
-      #root {
-        padding-left: max(16px, env(safe-area-inset-left, 0px));
-        padding-right: max(16px, env(safe-area-inset-right, 0px));
-      }
-      html[data-theme='dark'],
-      html[data-theme='dark'] body {
-        background: #0a0a0a;
-      }
-      html[data-theme='dark'] {
-        color-scheme: dark;
       }
     </style>
   </head>

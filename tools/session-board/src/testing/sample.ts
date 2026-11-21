@@ -2,43 +2,112 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ParseOptions, parseBoard } from '../parse.ts';
+import { type ParseOptions, parseSession } from '../session.ts';
 import { type BoardData } from '../types.ts';
 
-/** A board as an agent writes it; the stories and tests parse it, so it also exercises the format. */
-export const SAMPLE_MARKDOWN = `# Session board skill
-The agent keeps one terse board. The chat stays short.
+const fence = (body: string) => `\`\`\`mdl\n${body}\n\`\`\``;
 
-## Questions
-- [open] Where do session files go?
-  - Option 1: \`agents/sessions/\`, committed with the work.
-  - Option 2: \`.agents/sessions/\`, beside the project registry.
-- [answered] Can the page use react-ui?
-  - Yes. The page is prebuilt once and filled with data.
-
-## Goals
-- [done] Parse the board Markdown into data.
-  - \`cli.ts build\` writes the page in less than one second.
-  - Errors give the file and line.
-- [doing] Publish the page from the Stop hook.
-  - The hook blocks the stop one time for each change.
-    - An unchanged board does not block.
-- [blocked] Cache the prebuilt page in R2.
-  - The upload needs \`R2_ACCESS_KEY_ID\`.
-- [todo] Add the pull request state from GitHub.
-- [dropped] Render the page in the browser from Markdown.
-
-## Pull requests
-- [draft] dxos/dxos#10450 Add the status board skill.
-  - CI: the Check workflow passes.
-- [merged] dxos/dxos#10391 Cache the spec viewer in R2.
-`;
+/** A `SESSION.mdl` as an agent writes it; the stories and tests parse it, so it also exercises the format. */
+export const SAMPLE_SESSION = [
+  '---',
+  'id: org.dxos.session.2026-11-21-session-board',
+  'name: Session board skill',
+  'version: 1.0',
+  'extends:',
+  '  - org.dxos.spec.session',
+  '---',
+  '',
+  '# Session board skill',
+  '',
+  'The agent keeps the session as mdl. A script makes the page.',
+  '',
+  '## Extensions',
+  '',
+  '| Term       | URI                          |',
+  '| ---------- | ---------------------------- |',
+  '| `question` | `org.dxos.mdl.question@1.0` |',
+  '| `decision` | `org.dxos.mdl.decision@1.0` |',
+  '| `goal`     | `org.dxos.mdl.goal@1.0`     |',
+  '| `pr`       | `org.dxos.mdl.pr@1.0`       |',
+  '| `event`    | `org.dxos.mdl.event@1.0`    |',
+  '',
+  '## Questions',
+  '',
+  fence(
+    [
+      'question Q-1: Must the script get the PR state from GitHub?',
+      '  date: 2026-11-21',
+      '  by: agent:claude-code',
+      '  for: user:alice',
+      '  options:',
+      '    - Yes: the page reads the state through the GitHub connector.',
+      '    - No: the agent writes the state.',
+    ].join('\n'),
+  ),
+  '',
+  fence(
+    [
+      'question Q-2: Is `agents/sessions/` the correct place for session files?',
+      '  date: 2026-11-21',
+      '  by: agent:claude-code',
+      '  for: user:alice',
+    ].join('\n'),
+  ),
+  '',
+  '## Goals',
+  '',
+  fence(
+    [
+      'goal G-1: The script parses `SESSION.mdl` and reports errors with line numbers.',
+      '  status: done',
+      '  notes:',
+      '    - One build takes approximately 0.1 s.',
+    ].join('\n'),
+  ),
+  '',
+  fence(['goal G-2: The page shows the live PR state.', '  status: started', '  blockedBy: [Q-1]'].join('\n')),
+  '',
+  fence(['goal G-3: The timeline is append-only.', '  status: review'].join('\n')),
+  '',
+  fence(['goal G-4: Render the page from Markdown in the browser.', '  status: cancelled'].join('\n')),
+  '',
+  '## Pull requests',
+  '',
+  fence(
+    [
+      'pr PR-1: Build the status board from mdl.',
+      '  ref: dxos/dxos#14647',
+      '  branch: claude/status-board',
+      '  status: landing',
+    ].join('\n'),
+  ),
+  '',
+  fence(['pr PR-2: Cache the spec viewer in R2.', '  ref: dxos/dxos#10391', '  status: merged'].join('\n')),
+  '',
+  '## Changelog',
+  '',
+  fence(
+    [
+      'decision D-1: Yes. Session files are committed with the work.',
+      '  date: 2026-11-21',
+      '  by: user:alice',
+      '  answers: Q-2',
+    ].join('\n'),
+  ),
+  '',
+  '## Timeline',
+  '',
+  fence(['event T-1: The session started.', '  date: 2026-11-21T11:30Z', '  by: user:alice'].join('\n')),
+  '',
+  fence(['event T-2: Opened [PR-1] as a draft.', '  date: 2026-11-21T11:55Z', '  by: agent:claude-code'].join('\n')),
+  '',
+].join('\n');
 
 /** The sample as page data; it is a fixture, so an error in it is a bug in the parser or the sample. */
 export const sampleBoard = (options: ParseOptions = {}): BoardData => {
-  const { board, errors } = parseBoard(SAMPLE_MARKDOWN, options);
+  const { board, errors } = parseSession(SAMPLE_SESSION, options);
   if (!board) {
-    throw new Error(`the sample board does not parse: ${JSON.stringify(errors)}`);
+    throw new Error(`the sample session does not parse: ${JSON.stringify(errors)}`);
   }
   return board;
 };

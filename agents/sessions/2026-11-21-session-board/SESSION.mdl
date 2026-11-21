@@ -1,0 +1,144 @@
+---
+id: org.dxos.session.2026-11-21-session-board
+name: Session board skill
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Session board skill
+
+The agent keeps the session as mdl. A script makes the page. The agent publishes it.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Questions
+
+```mdl
+question Q-1: Is `agents/sessions/<date>-<slug>/` the correct place for session files?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Yes: the session file is committed with the work.
+    - No: use `.agents/sessions/`, beside the project registry.
+```
+
+```mdl
+question Q-2: Must the Stop hook block the stop, or only show a note?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Block: one time for each change, so the agent publishes.
+    - Note: the agent can skip the publish, and the page can be old.
+```
+
+```mdl
+question Q-3: Must the script get the PR state from GitHub?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Yes: the script reads the state on each build.
+    - No: the agent writes the state.
+```
+
+```mdl
+question Q-4: Is a new skill name necessary?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: This work replaces the old `status-board` skill, which wrote HTML by hand.
+```
+
+## Goals
+
+```mdl
+goal G-1: The session file is `SESSION.mdl`, parsed with Deus.
+  status: done
+  notes:
+    - Questions, answers and the timeline are append-only.
+    - The session dialect is `org.dxos.spec.session`.
+```
+
+```mdl
+goal G-2: The page is dark, in the react-ui design system.
+  status: started
+```
+
+```mdl
+goal G-3: Goals and questions use the plugin-projects task UI.
+  status: started
+  notes:
+    - Goals render in `TaskList`, questions in `TaskQuestion`.
+```
+
+```mdl
+goal G-4: An append-only timeline is at the bottom of the page.
+  status: started
+```
+
+```mdl
+goal G-5: The page reads live state through the `mcp` capability.
+  status: backlog
+  notes:
+    - GitHub for PR state, and the DXOS MCP servers.
+```
+
+```mdl
+goal G-6: The agentic review of the PR finds no issues.
+  status: todo
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Build the status board from a session file.
+  ref: dxos/dxos#14647
+  branch: dm/charming-knuth-lw1x6k
+  status: draft
+```
+
+## Changelog
+
+```mdl
+decision D-1: The agent writes the PR state for now. The page reads live state through the `mcp` capability later.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  answers: Q-3
+```
+
+## Timeline
+
+```mdl
+event T-1: The session started.
+  date: 2026-11-21T11:34Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-2: Opened [PR-1] as a draft.
+  date: 2026-11-21T11:55Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-3: Fixed the dark theme text in the Artifact frame.
+  date: 2026-11-21T12:19Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-4: The session file changed from Markdown to `SESSION.mdl`.
+  date: 2026-11-21T12:30Z
+  by: user:dmaretskyi
+```

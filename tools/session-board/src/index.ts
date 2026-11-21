@@ -3,5 +3,5 @@
 //
 
 export * from './Board.tsx';
-export * from './parse.ts';
+export * from './session.ts';
 export * from './types.ts';

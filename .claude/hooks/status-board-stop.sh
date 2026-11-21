@@ -3,4 +3,4 @@
 # (status-board skill). With no board registered it exits before starting node, so it costs nothing.
 ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 [ -f "$ROOT/.claude/.status-board/current" ] || exit 0
-exec node "$ROOT/tools/session-board/src/cli.ts" hook
+exec node --conditions=source "$ROOT/tools/session-board/src/cli.ts" hook

@@ -73,7 +73,14 @@ const singleFile = (): Plugin => ({
     for (const [fileName, output] of Object.entries(bundle)) {
       if (output.type === 'chunk' && output.isEntry) {
         // `</script` inside the code would close the element early.
-        const code = output.code.replaceAll('</script', '<\\/script');
+        // `</script` would close the element early; a literal U+FFFD or control byte makes the Artifact publisher refuse
+        // the page, and inside the bundle's strings and regexes the escape means the same character.
+        const code = output.code
+          .replaceAll('</script', '<\\/script')
+          .replace(
+            /[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffd]/g,
+            (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`,
+          );
         // At the end of the body, where it runs after the board data is parsed.
         source = source
           .replace(new RegExp(`\\s*<script type="module" crossorigin src="[^"]*${fileName}"></script>`), '')

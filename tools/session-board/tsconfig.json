@@ -9,7 +9,22 @@
       "path": "../../packages/common/node-std"
     },
     {
+      "path": "../../packages/reflect/deus"
+    },
+    {
+      "path": "../../packages/sdk/types"
+    },
+    {
       "path": "../../packages/ui/react-ui"
+    },
+    {
+      "path": "../../packages/ui/react-ui-form"
+    },
+    {
+      "path": "../../packages/ui/react-ui-list"
+    },
+    {
+      "path": "../../packages/ui/react-ui-task"
     },
     {
       "path": "../../packages/ui/ui-theme"

@@ -2,135 +2,197 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment } from 'react';
+import React, { useMemo } from 'react';
 
+import { Listbox } from '@dxos/react-ui-list';
+import { TaskHistory, TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import * as Accordion from '@dxos/react-ui/Accordion';
-import { Tag } from '@dxos/react-ui/Tag';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { Tag, type TagHue } from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
+import { Task } from '@dxos/types';
 
-import { type BoardData, type Detail, type Section, type Span, STATES } from './types.ts';
+import { type BoardData, type Goal, type PrStatus, type PullRequest, type TimelineEvent } from './types.ts';
 
-const EMPTY: Record<Section['kind'], string> = {
-  questions: 'No questions now.',
-  goals: 'No goals yet.',
-  prs: 'No pull requests yet.',
-  list: 'Nothing here now.',
+const PR_HUES: Record<PrStatus, TagHue> = {
+  draft: 'neutral',
+  open: 'info',
+  failing: 'error',
+  landing: 'warning',
+  queued: 'warning',
+  merged: 'violet',
+  closed: 'neutral',
 };
 
-const Spans = ({ spans }: { spans: Span[] }) => (
-  <>
-    {spans.map((span, index) => {
-      const text = span.code ? <code className='font-mono text-[0.92em]'>{span.text}</code> : span.text;
-      const content = span.strong ? <strong>{text}</strong> : text;
-      return span.href ? (
-        // A link inside an accordion trigger must not also toggle the item.
-        <Typography.Link key={index} href={span.href} onClick={(event) => event.stopPropagation()}>
-          {content}
-        </Typography.Link>
-      ) : (
-        <Fragment key={index}>{content}</Fragment>
-      );
-    })}
-  </>
+const PR_ICONS: Record<PrStatus, string> = {
+  draft: 'ph--git-pull-request--regular',
+  open: 'ph--git-pull-request--regular',
+  failing: 'ph--x-circle--regular',
+  landing: 'ph--airplane-landing--regular',
+  queued: 'ph--queue--regular',
+  merged: 'ph--git-merge--regular',
+  closed: 'ph--x--regular',
+};
+
+/** A title as plain text: the task list draws titles verbatim, so code ticks and `[ID]` brackets would show. */
+const plain = (text: string): string => text.replace(/`([^`]*)`/g, '$1').replace(/\[([A-Z]+-\d+)\]/g, '$1');
+
+/** A goal as a task, so the row draws with the task list's status glyphs and hues; an open question blocks it. */
+const goalTask = (goal: Goal, questions: BoardData['questions']): Task.Task => {
+  const blocking = questions.filter((question) => goal.blockedBy.includes(question.id) && !question.answer);
+  const description = [
+    ...blocking.map((question) => `- Blocked on **${question.id}**: ${question.text}`),
+    ...goal.notes.map((note) => `- ${note}`),
+  ].join('\n');
+  return Task.make({
+    title: `${goal.id} ${plain(goal.title)}`,
+    status: goal.blocked ? 'blocked' : goal.status,
+    ...(description ? { description } : {}),
+  });
+};
+
+/** The timeline as history entries, which `TaskHistory` renders newest first with relative dates. */
+const historyEntries = (timeline: TimelineEvent[]): Task.HistoryEntry[] =>
+  timeline.map((event) => ({
+    id: event.id,
+    date: new Date(event.date).toISOString(),
+    event: 'updated' as const,
+    description: `${event.id} ${plain(event.title)}`,
+    ...(event.by
+      ? {
+          actor: event.by.startsWith('agent:')
+            ? { role: 'assistant' as const, name: event.by.slice(6) }
+            : { role: 'user' as const, name: event.by.replace(/^user:/, '') },
+        }
+      : {}),
+  }));
+
+const SectionTrigger = ({ icon, label, count }: { icon: string; label: string; count?: string }) => (
+  <Accordion.ItemTrigger icon={icon}>
+    {label}
+    {count && (
+      <Typography.Text asChild tone='muted'>
+        <span> · {count}</span>
+      </Typography.Text>
+    )}
+  </Accordion.ItemTrigger>
 );
 
-const Details = ({ details }: { details: Detail[] }) => (
-  <ul className='list-disc ps-5 space-y-1'>
-    {details.map((detail, index) => (
-      <li key={index}>
-        <Spans spans={detail.spans} />
-        {detail.children && <Details details={detail.children} />}
-      </li>
-    ))}
-  </ul>
+const PrRows = ({ prs }: { prs: PullRequest[] }) => (
+  <Listbox.Root items={prs.map((pr) => ({ value: pr.id, label: pr.title, description: pr.branch }))}>
+    <Listbox.Viewport>
+      <Listbox.Content>
+        {prs.map((pr) => (
+          <Listbox.Item key={pr.id} id={pr.id} data-testid={`pr-${pr.id}`}>
+            <Listbox.ItemIcon icon={PR_ICONS[pr.status]} />
+            <Listbox.ItemText>
+              <Typography.Link href={pr.url}>{pr.ref}</Typography.Link> {plain(pr.title)}
+            </Listbox.ItemText>
+            {pr.branch && <Listbox.ItemDescription>{pr.branch}</Listbox.ItemDescription>}
+            <Tag hue={PR_HUES[pr.status]}>{pr.status}</Tag>
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Viewport>
+  </Listbox.Root>
 );
-
-/** "2/5 done" for a section whose states can close, from the states marked `closed`. */
-const tally = (section: Section): string | undefined => {
-  const states = STATES[section.kind];
-  const stated = section.items.filter((item) => item.state);
-  if (stated.length === 0) {
-    return undefined;
-  }
-  if (section.kind === 'questions') {
-    const open = stated.filter((item) => !states[item.state ?? '']?.closed).length;
-    return open > 0 ? `${open} open` : undefined;
-  }
-  const closed = stated.filter((item) => states[item.state ?? '']?.closed).length;
-  return `${closed}/${stated.length}`;
-};
-
-const BoardSection = ({ section }: { section: Section }) => {
-  const states = STATES[section.kind];
-  const count = tally(section);
-  return (
-    <section className='flex flex-col gap-2' data-testid={`section-${section.id}`}>
-      <div className='flex items-baseline gap-2'>
-        <h2 className='text-base font-medium'>{section.title}</h2>
-        {count && <span className='text-sm text-description'>{count}</span>}
-      </div>
-      {section.items.length === 0 ? (
-        <Typography.Text tone='muted'>{EMPTY[section.kind]}</Typography.Text>
-      ) : (
-        <Accordion.Root>
-          {section.items.map((item, index) => {
-            const style = item.state ? states[item.state] : undefined;
-            return (
-              <Accordion.Item key={index} value={String(index)} disabled={item.details.length === 0}>
-                <Accordion.ItemTrigger>
-                  <span className='flex items-baseline gap-2'>
-                    {item.state && (
-                      <Tag hue={style?.hue ?? 'neutral'} classNames='shrink-0'>
-                        {item.state}
-                      </Tag>
-                    )}
-                    <span>
-                      <Spans spans={item.spans} />
-                    </span>
-                  </span>
-                </Accordion.ItemTrigger>
-                {item.details.length > 0 && (
-                  <Accordion.ItemContent>
-                    <div className='px-3 pb-2 text-sm'>
-                      <Details details={item.details} />
-                    </div>
-                  </Accordion.ItemContent>
-                )}
-              </Accordion.Item>
-            );
-          })}
-        </Accordion.Root>
-      )}
-    </section>
-  );
-};
-
-const formatTime = (iso: string) => `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
 
 export type BoardProps = { board: BoardData };
 
-/** The session board: a terse header, then each section's items, each one line that opens to its details. */
-export const Board = ({ board }: BoardProps) => (
-  <main className='mx-auto flex max-w-3xl flex-col gap-6 py-6'>
-    <header className='flex flex-col gap-1'>
-      <h1 className='text-xl font-semibold'>{board.title}</h1>
-      {board.summary && (
-        <Typography.Text>
-          <Spans spans={board.summary} />
+/**
+ * The session board: open questions, goals as a task list, pull requests and the append-only timeline, each an
+ * accordion section, with when it was built in the footer.
+ */
+export const Board = ({ board }: BoardProps) => {
+  const updated = Typography.useRelativeTime(board.updated);
+  const tasks = useMemo(() => board.goals.map((goal) => goalTask(goal, board.questions)), [board]);
+  const entries = useMemo(() => historyEntries(board.timeline), [board]);
+  const open = board.questions.filter((question) => !question.answer);
+  const done = board.goals.filter((goal) => goal.status === 'done').length;
+  const sections = ['questions', 'goals', 'prs', 'timeline'];
+
+  return (
+    <Panel.Root>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport>
+            <Layout.Container gap='md'>
+              <Layout.Flex column gap='xs'>
+                <Typography.Text asChild>
+                  <h1>{board.title}</h1>
+                </Typography.Text>
+                {board.summary && <Typography.Text tone='muted'>{board.summary}</Typography.Text>}
+              </Layout.Flex>
+              <Accordion.Root border={false} defaultValue={sections}>
+                <Accordion.Item value='questions' data-testid='section-questions'>
+                  <SectionTrigger
+                    icon='ph--question--regular'
+                    label='Questions'
+                    count={open.length > 0 ? `${open.length} open` : undefined}
+                  />
+                  <Accordion.ItemContent>
+                    {board.questions.length === 0 ? (
+                      <Typography.Text tone='muted'>No questions now.</Typography.Text>
+                    ) : (
+                      <Layout.Container gap='md'>
+                        {[...open, ...board.questions.filter((question) => question.answer)].map((question) => (
+                          <TaskQuestion
+                            key={question.id}
+                            thread={{
+                              question: {
+                                text: `${question.id} ${plain(question.text)}`,
+                                ...(question.context ? { context: plain(question.context) } : {}),
+                                options: question.options,
+                              },
+                              ...(question.answer ? { answer: { answer: plain(question.answer) } } : {}),
+                            }}
+                          />
+                        ))}
+                      </Layout.Container>
+                    )}
+                  </Accordion.ItemContent>
+                </Accordion.Item>
+
+                <Accordion.Item value='goals' data-testid='section-goals'>
+                  <SectionTrigger icon='ph--target--regular' label='Goals' count={`${done}/${board.goals.length}`} />
+                  <Accordion.ItemContent>
+                    <TaskList.Root tasks={tasks} columns={['status', 'title']} showMnemonics={false} showDescription>
+                      <TaskList.Viewport>
+                        <TaskList.Content />
+                      </TaskList.Viewport>
+                    </TaskList.Root>
+                  </Accordion.ItemContent>
+                </Accordion.Item>
+
+                <Accordion.Item value='prs' data-testid='section-prs'>
+                  <SectionTrigger icon='ph--git-pull-request--regular' label='Pull requests' />
+                  <Accordion.ItemContent>
+                    {board.prs.length === 0 ? (
+                      <Typography.Text tone='muted'>No pull requests yet.</Typography.Text>
+                    ) : (
+                      <PrRows prs={board.prs} />
+                    )}
+                  </Accordion.ItemContent>
+                </Accordion.Item>
+
+                <Accordion.Item value='timeline' data-testid='section-timeline'>
+                  <SectionTrigger icon='ph--clock--regular' label='Timeline' />
+                  <Accordion.ItemContent>
+                    <TaskHistory entries={entries} limit={entries.length} />
+                  </Accordion.ItemContent>
+                </Accordion.Item>
+              </Accordion.Root>
+            </Layout.Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography.Text tone='subtle' data-testid='updated'>
+          Updated {updated}
         </Typography.Text>
-      )}
-      <Typography.Text tone='muted' classNames='text-sm'>
-        Updated {formatTime(board.updated)}
-        {board.branch && (
-          <>
-            {' · '}
-            <code className='font-mono'>{board.branch}</code>
-          </>
-        )}
-      </Typography.Text>
-    </header>
-    {board.sections.map((section) => (
-      <BoardSection key={section.id} section={section} />
-    ))}
-  </main>
-);
+      </Panel.Footer>
+    </Panel.Root>
+  );
+};

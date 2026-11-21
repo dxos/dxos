@@ -7,7 +7,7 @@ tags:
 tasks:
   # The prebuilt page `src/cli.ts build` fills; `template push` caches it in R2 so a session needs no build.
   build-page:
-    command: node src/cli.ts template build
+    command: node --conditions=source src/cli.ts template build
     deps:
       - vite-plugin-import-source:build
       - ui-theme:build

@@ -18,7 +18,14 @@ import { git, lines } from './git.ts';
 export const WAIVER = 'Spec-Changelog-Skip';
 
 /** Language definitions, review rules, spec reviews and test fixtures are .mdl files but not specs. */
-const EXEMPT = [/^packages\/reflect\/deus\/lang\//, /\/__fixtures__\//, /(^|\/)rules\//, /\.review\.mdl$/];
+// A SESSION.mdl is a log whose goals change state every turn (lang/session.mdl), so it carries no decision per edit.
+const EXEMPT = [
+  /^packages\/reflect\/deus\/lang\//,
+  /\/__fixtures__\//,
+  /(^|\/)rules\//,
+  /\.review\.mdl$/,
+  /(^|\/)SESSION\.mdl$/,
+];
 
 export const DEFAULT_BASE_REF = 'origin/main';
 
