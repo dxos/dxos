@@ -43,10 +43,7 @@ export const call = (
         if (props != null && !isRecord(props)) {
           return yield* Effect.fail(failure('invalid_request', 'query takes its props as an object of field values.'));
         }
-        const filter = yield* typeFilter(db, typename, 'query');
-        // Narrowed by the properties in a second step: the planner takes properties on a type filter, but not inside
-        // the `Filter.or` a stored copy of the type adds.
-        const typed = isRecord(props) ? Query.select(filter).select(Filter.props(props)) : Query.select(filter);
+        const typed = yield* typeQuery(db, typename, isRecord(props) ? props : undefined);
         return wire(yield* run(db, yield* scoped(db, spaceId, typed, options)));
       });
     }
@@ -85,12 +82,9 @@ export const call = (
           return yield* Effect.fail(failure('invalid_request', `No object ${id} in space ${spaceId}.`));
         }
         yield* Effect.try({
-          try: () =>
-            Obj.update(object, (object) => {
-              for (const [key, value] of Object.entries(patch)) {
-                Obj.setValue(object, [key], toRefs(db, value));
-              }
-            }),
+          // Assigned rather than set through `Obj.setValue`, which needs the object's schema: a database a host opens
+          // for a script may not have the type registered, and the agent's `update` assigns the same way.
+          try: () => Obj.update(object, (object) => Object.assign(object, toRefs(db, patch))),
           catch: (error) => failure('invalid_request', `update of ${id} was refused: ${describe(error)}`),
         });
         // Stored before the verb answers, as the operation it replaces does: nothing later flushes for the script.
@@ -137,6 +131,31 @@ const targetId = (target: unknown, spaceId: SpaceId): Effect.Effect<EntityId, To
  * type stored in the space, since objects of a stored type carry its `echo:` id, which the typename does not match.
  */
 const typeFilter = (db: Database.Database, typename: unknown, verb: Verb): Effect.Effect<Filter.Any, ToolFailure> =>
+  Effect.map(storedTypes(db, typename, verb), ({ name, stored }) =>
+    stored.length === 0
+      ? Filter.type(DXN.make(name))
+      : Filter.or(Filter.type(DXN.make(name)), ...stored.map((type) => Filter.type(type))),
+  );
+
+/**
+ * Objects of a typename with these property values. With a stored copy of the type, the properties narrow in a second
+ * step: the planner takes them on a type filter, but not inside the `Filter.or` the copy adds.
+ */
+const typeQuery = (
+  db: Database.Database,
+  typename: unknown,
+  props: Record<string, unknown> | undefined,
+): Effect.Effect<Query.Any, ToolFailure> =>
+  Effect.map(storedTypes(db, typename, 'query'), ({ name, stored }) => {
+    if (stored.length === 0) {
+      return Query.select(Filter.type(DXN.make(name), props));
+    }
+    const filter = Filter.or(Filter.type(DXN.make(name)), ...stored.map((type) => Filter.type(type)));
+    return props === undefined ? Query.select(filter) : Query.select(filter).select(Filter.props(props));
+  });
+
+/** The copies of a type stored in the space, which carry their own `echo:` id. */
+const storedTypes = (db: Database.Database, typename: unknown, verb: Verb) =>
   Effect.gen(function* () {
     if (!Predicate.isString(typename) || !Schema.is(DXN.NameSchema)(typename)) {
       return yield* Effect.fail(failure('invalid_request', `${verb} takes a typename such as 'org.dxos.type.task'.`));
@@ -145,10 +164,7 @@ const typeFilter = (db: Database.Database, typename: unknown, verb: Verb): Effec
       db,
       Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry()),
     );
-    const stored = declared.filter(Type.isType).filter((type) => Type.getDatabase(type) != null);
-    return stored.length === 0
-      ? Filter.type(DXN.make(typename))
-      : Filter.or(Filter.type(DXN.make(typename)), ...stored.map((type) => Filter.type(type)));
+    return { name: typename, stored: declared.filter(Type.isType).filter((type) => Type.getDatabase(type) != null) };
   });
 
 /**

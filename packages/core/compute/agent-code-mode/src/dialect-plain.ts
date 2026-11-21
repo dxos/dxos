@@ -314,25 +314,34 @@ type QueryOptions = {
  * The filter for objects of a typename, as `space.queryObjects` builds it: the bare typename, plus every copy of the
  * type stored in the space, since objects of a stored type carry its `echo:` id, which the typename does not match.
  */
-const typeFilter = (typename: string) =>
-  Effect.gen(function* () {
-    const declared = yield* Database.query(
+const storedTypes = (typename: string) =>
+  Effect.map(
+    Database.query(
       Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry()),
-    ).run;
-    const stored = declared.filter((type) => Type.getDatabase(type) != null);
-    return stored.length === 0
+    ).run,
+    (declared) => declared.filter((type) => Type.getDatabase(type) != null),
+  );
+
+const typeFilter = (typename: string) =>
+  Effect.map(storedTypes(typename), (stored) =>
+    stored.length === 0
       ? Filter.type(DXN.make(typename))
-      : Filter.or(Filter.type(DXN.make(typename)), ...stored.map((type) => Filter.type(type)));
-  });
+      : Filter.or(Filter.type(DXN.make(typename)), ...stored.map((type) => Filter.type(type))),
+  );
 
 /**
- * Objects of a typename with these property values. Narrowed by the properties in a second step: the planner takes
- * properties on a type filter, but not inside the `Filter.or` a stored copy of the type adds.
+ * Objects of a typename with these property values. With a stored copy of the type, the properties narrow in a second
+ * step: the planner takes them on a type filter, but not inside the `Filter.or` the copy adds.
  */
 const typeQuery = (typename: string, props?: Record<string, unknown>) =>
-  Effect.map(typeFilter(typename), (filter) =>
-    props === undefined ? Query.select(filter) : Query.select(filter).select(Filter.props(props)),
-  );
+  Effect.gen(function* () {
+    const stored = yield* storedTypes(typename);
+    if (stored.length === 0) {
+      return Query.select(Filter.type(DXN.make(typename), props));
+    }
+    const filter = Filter.or(Filter.type(DXN.make(typename)), ...stored.map((type) => Filter.type(type)));
+    return props === undefined ? Query.select(filter) : Query.select(filter).select(Filter.props(props));
+  });
 
 /**
  * A query narrowed to what sits under `in`, reading feeds when asked or when `in` is given: a feed's content is reached
