@@ -300,9 +300,16 @@ const SourceCard = ({ node, onClose }: { node: Protocol.TreeNode; onClose: () =>
   }, [node.id]);
 
   return (
-    <Card.Root data-testid='tree-card'>
+    // Unframed: the stack's dividers separate the cards, so a border on each would draw every edge twice.
+    <Card.Root border={false} data-testid='tree-card'>
+      {/* The card names its item as the tree row does: the same icon, so the two read as one thing. */}
       <Card.Header>
-        <Card.Title>{source?.title ?? node.label}</Card.Title>
+        <Card.Title classNames='flex min-w-0 items-center gap-2'>
+          <span className='flex shrink-0' data-testid='tree-card-icon'>
+            <RowIcon node={node} />
+          </span>
+          <span className='truncate font-mono'>{source?.title ?? node.label}</span>
+        </Card.Title>
         <Card.Action system='close' onClick={onClose} data-testid='tree-card-close' />
       </Card.Header>
       <Card.Body>
@@ -312,8 +319,8 @@ const SourceCard = ({ node, onClose }: { node: Protocol.TreeNode; onClose: () =>
           <Card.Text variant='muted'>No source for this item.</Card.Text>
         ) : (
           <>
-            <Card.Text variant='muted'>
-              {source.subtitle} · {source.path}:{source.line}
+            <Card.Text variant='muted' data-testid='tree-card-location'>
+              {[source.packageName, `${source.path}:${source.line}`].filter(Boolean).join(' · ')}
               {source.truncated ? ' · truncated' : ''}
             </Card.Text>
             <SyntaxHighlighter
@@ -471,7 +478,7 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
       </div>
       <ScrollArea.Root classNames='min-w-0 flex-1' orientation='vertical'>
         <ScrollArea.Viewport>
-          <div className='flex flex-col gap-2 p-2' data-testid='tree-stack'>
+          <div className='divide-separator flex flex-col divide-y' data-testid='tree-stack'>
             {stack.length === 0 ? (
               <p className='text-fg-muted p-2 text-sm'>
                 Click an item in the tree, or press ⌘P, to show its code here.

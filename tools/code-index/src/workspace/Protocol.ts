@@ -84,6 +84,8 @@ export class TreeSource extends Schema.Class<TreeSource>('code-index/TreeSource'
   title: Schema.String,
   /** What the node is: a symbol's declaration kind, or `module`, `package`. */
   subtitle: Schema.String,
+  /** The package the code belongs to, by its `package.json` name; absent for a file outside any. */
+  packageName: Schema.optional(Schema.String),
   /** Repository-relative path of the file the code comes from. */
   path: Schema.optional(Schema.String),
   /** 1-based line of the excerpt's first line. */

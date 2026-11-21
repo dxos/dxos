@@ -190,15 +190,21 @@ const bySubpath = (left: Protocol.TreeNode, right: Protocol.TreeNode): number =>
   Number(right.label === '.') - Number(left.label === '.') || left.label.localeCompare(right.label);
 
 const symbolQuery = (symbol: string) => `${DEUS}
-SELECT ?name ?kind ?line ?path ?canonical WHERE {
+SELECT ?name ?kind ?line ?path ?canonical ?packageName WHERE {
   <${symbol}> deus:name ?name ; deus:kind ?kind .
   OPTIONAL { <${symbol}> deus:line ?line }
   OPTIONAL { <${symbol}> deus:canonicalName ?canonical }
   ?file deus:declares <${symbol}> ; deus:path ?path .
+  OPTIONAL { ?file deus:inPackage ?pkg . ?pkg deus:name ?packageName }
 } LIMIT 1`;
 
+// A file's package is the one it is in; a package's is itself.
 const pathQuery = (iri: string) => `${DEUS}
-SELECT ?path ?name WHERE { <${iri}> deus:path|deus:packagePath ?path . OPTIONAL { <${iri}> deus:name ?name } } LIMIT 1`;
+SELECT ?path ?name ?packageName WHERE {
+  <${iri}> deus:path|deus:packagePath ?path .
+  OPTIONAL { <${iri}> deus:name ?name }
+  OPTIONAL { <${iri}> deus:inPackage ?pkg . ?pkg deus:name ?packageName }
+} LIMIT 1`;
 
 /** The most a card shows; a longer declaration or file is cut and marked truncated. */
 const MAX_LINES = 120;
@@ -512,6 +518,7 @@ export const make = (store: Store.Api, root: string) =>
             id,
             title: row.canonical ?? row.name,
             subtitle: row.kind,
+            packageName: row.packageName,
             path: row.path,
             line: first + 1,
             code: lines.slice(first, last + 1).join('\n'),
@@ -533,8 +540,9 @@ export const make = (store: Store.Api, root: string) =>
           const lines = (yield* readLines(path)) ?? [];
           return new Protocol.TreeSource({
             id,
-            title: isModule ? row.path : (row.name ?? row.path),
+            title: isModule ? (row.path.split('/').at(-1) ?? row.path) : (row.name ?? row.path),
             subtitle: isModule ? 'module' : 'package',
+            packageName: isModule ? row.packageName : row.name,
             path,
             line: 1,
             code: lines.slice(0, MAX_LINES).join('\n'),
