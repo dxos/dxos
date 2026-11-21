@@ -5,6 +5,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { basename, join, normalize } from 'node:path';
@@ -107,14 +108,49 @@ const isManifest = (path: string): boolean => path.endsWith('/package.json');
 
 // A named re-export takes the kind of what it resolves to, so `export { DXN } from` reads as the class it is.
 const exportsQuery = (modules: readonly string[]) => `${DEUS}
-SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet WHERE {
+SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members WHERE {
   VALUES ?module { ${values(modules)} }
   ?module deus:declares ?symbol .
   ?symbol deus:exported true ; deus:name ?name ; deus:kind ?declKind .
   OPTIONAL { ?symbol deus:resolvesTo ?real . ?real deus:kind ?realKind }
   OPTIONAL { ?symbol deus:namespaceOf ?target }
   OPTIONAL { ?symbol deus:snippet ?snippet }
+  OPTIONAL { ?symbol deus:members ?members }
 }`;
+
+const membersQuery = (symbols: readonly string[]) => `${DEUS}
+SELECT ?symbol ?members WHERE { VALUES ?symbol { ${values(symbols)} } ?symbol deus:members ?members }`;
+
+/** A member of a class, interface or object type, by its owner and name (`static ` first for a static one). */
+export const MEMBER = 'mem:';
+
+const memberKey = (member: Ontology.MemberFact): string => `${member.static === true ? 'static ' : ''}${member.name}`;
+
+const memberId = (symbol: string, member: Ontology.MemberFact): string => `${MEMBER}${symbol}|${memberKey(member)}`;
+
+/** The members a symbol's `deus:members` literal lists; a literal that does not decode lists none. */
+const parseMembers = (literal: string | undefined): Ontology.MemberFact[] => {
+  if (!literal) {
+    return [];
+  }
+  try {
+    return Schema.decodeUnknownSync(Schema.Array(Ontology.MemberFact))(JSON.parse(literal)).slice();
+  } catch {
+    return [];
+  }
+};
+
+const memberNodes = (symbol: string, literal: string | undefined): Protocol.TreeNode[] =>
+  parseMembers(literal).map(
+    (member) =>
+      new Protocol.TreeNode({
+        id: memberId(symbol, member),
+        label: member.static === true ? `static ${member.name}` : member.name,
+        kind: 'member',
+        branch: false,
+        detail: member.kind,
+      }),
+  );
 
 /**
  * Whether an export is its module's default. The index names `export default class X` by `X`, with
@@ -138,14 +174,57 @@ SELECT ?module ?target WHERE {
 const namespacesQuery = (symbols: readonly string[]) => `${DEUS}
 SELECT ?symbol ?target WHERE { VALUES ?symbol { ${values(symbols)} } ?symbol deus:namespaceOf ?target }`;
 
-/** The `owner/name` of the repository's GitHub remote, or the directory name when it has none. */
-const repositoryName = (root: string): Effect.Effect<string> =>
-  Effect.callback<string>((resume) => {
-    execFile('git', ['remote', 'get-url', 'origin'], { cwd: root }, (error, stdout) => {
-      const match = error ? null : /github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?\s*$/.exec(stdout);
-      resume(Effect.succeed(match?.[1] ?? basename(root)));
-    });
+/** A git command's output, or `undefined` when it fails; the tree degrades rather than erroring on git. */
+const git = (root: string, args: readonly string[]): Effect.Effect<string | undefined> =>
+  Effect.callback<string | undefined>((resume) => {
+    execFile('git', args, { cwd: root, maxBuffer: 64 * 1024 * 1024 }, (error, stdout) =>
+      resume(Effect.succeed(error ? undefined : stdout)),
+    );
   });
+
+/** The `owner/name` of the repository's GitHub remote, or `undefined` when it has none or git failed. */
+const githubName = (root: string): Effect.Effect<string | undefined> =>
+  git(root, ['remote', 'get-url', 'origin']).pipe(
+    Effect.map((stdout) => (stdout ? /github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?\s*$/.exec(stdout)?.[1] : undefined)),
+  );
+
+/** The branch checked out, or the short commit on a detached head. */
+const currentBranch = (root: string): Effect.Effect<string | undefined> =>
+  Effect.gen(function* () {
+    const branch = (yield* git(root, ['branch', '--show-current']))?.trim();
+    return branch || (yield* git(root, ['rev-parse', '--short', 'HEAD']))?.trim() || undefined;
+  });
+
+/** The branch changes are measured against: the remote's default (`origin/HEAD`), else `origin/main`. */
+const baseBranch = (root: string): Effect.Effect<string> =>
+  git(root, ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']).pipe(
+    Effect.map((stdout) => stdout?.trim() || 'origin/main'),
+  );
+
+/**
+ * The repository-relative paths that differ from the base: committed since the merge-base, changed in
+ * the working tree, or untracked. A deleted file is listed too, and simply matches nothing indexed.
+ */
+const changedPaths = (root: string, base: string): Effect.Effect<Set<string>> =>
+  Effect.gen(function* () {
+    const mergeBase = (yield* git(root, ['merge-base', 'HEAD', base]))?.trim();
+    const [diff, untracked] = yield* Effect.all(
+      [
+        mergeBase ? git(root, ['diff', '--name-only', '-z', mergeBase]) : Effect.succeed(undefined),
+        git(root, ['ls-files', '--others', '--exclude-standard', '-z']),
+      ],
+      { concurrency: 'unbounded' },
+    );
+    return new Set([...(diff ?? '').split('\0'), ...(untracked ?? '').split('\0')].filter((path) => path.length > 0));
+  });
+
+/** How long a diff listing is reused: one tree level asks for it once per batch, and a few at once. */
+const CHANGES_TTL_MS = 3_000;
+
+/** Whether a repository-relative path stays in the tree; diff mode keeps only what leads to a change. */
+type Keep = (path: string) => boolean;
+
+const keepAll: Keep = () => true;
 
 /**
  * Every subpath key of a manifest's `exports`, by the repository-relative file it maps to. The
@@ -211,9 +290,12 @@ const bySubpath = (left: Protocol.TreeNode, right: Protocol.TreeNode): number =>
   Number(right.detail === ROOT_ENTRY) - Number(left.detail === ROOT_ENTRY) || left.label.localeCompare(right.label);
 
 const symbolQuery = (symbol: string) => `${DEUS}
-SELECT ?name ?kind ?line ?path ?canonical ?packageName WHERE {
+SELECT ?name ?kind ?line ?endLine ?snippet ?members ?path ?canonical ?packageName WHERE {
   <${symbol}> deus:name ?name ; deus:kind ?kind .
   OPTIONAL { <${symbol}> deus:line ?line }
+  OPTIONAL { <${symbol}> deus:endLine ?endLine }
+  OPTIONAL { <${symbol}> deus:snippet ?snippet }
+  OPTIONAL { <${symbol}> deus:members ?members }
   OPTIONAL { <${symbol}> deus:canonicalName ?canonical }
   ?file deus:declares <${symbol}> ; deus:path ?path .
   OPTIONAL { ?file deus:inPackage ?pkg . ?pkg deus:name ?packageName }
@@ -267,16 +349,45 @@ const commentStart = (lines: readonly string[], start: number): number => {
 /** Resolves node ids to their children, querying the store once per id kind for the whole batch. */
 export const make = (store: Store.Api, root: string) =>
   Effect.gen(function* () {
-    const repository = yield* Effect.cached(repositoryName(root));
+    // Only a name the remote gave is kept: a failed lookup falls back for that request and is tried again.
+    let named: string | undefined;
+    const repository = Effect.gen(function* () {
+      if (named === undefined) {
+        named = yield* githubName(root);
+      }
+      return named ?? basename(root);
+    });
 
-    /** Directories and packages directly under `dir` (`''` for the repository root). */
-    const listing = (packages: readonly Package[], dir: string): Protocol.TreeNode[] => {
+    let changes: { readonly at: number; readonly base: string; readonly keep: Keep } | undefined;
+    /** What diff mode keeps: a changed file, and every directory on the way to one. */
+    const changed = Effect.gen(function* () {
+      if (changes && Date.now() - changes.at < CHANGES_TTL_MS) {
+        return changes;
+      }
+      const base = yield* baseBranch(root);
+      const paths = yield* changedPaths(root, base);
+      const kept = new Set<string>(['']);
+      for (const path of paths) {
+        const parts = path.split('/');
+        for (let index = 1; index <= parts.length; index++) {
+          kept.add(parts.slice(0, index).join('/'));
+        }
+      }
+      changes = { at: Date.now(), base, keep: (path) => kept.has(path) };
+      return changes;
+    });
+
+    /** Directories and packages directly under `dir` (`''` for the repository root), in diff mode only changed ones. */
+    const listing = (packages: readonly Package[], dir: string, keep: Keep = keepAll): Protocol.TreeNode[] => {
       const prefix = dir === '' ? '' : `${dir}/`;
       const byPath = new Map(packages.map((pkg) => [pkg.path, pkg]));
       const names = new Set<string>();
       for (const pkg of packages) {
         if (pkg.path.startsWith(prefix) && pkg.path !== dir) {
-          names.add(pkg.path.slice(prefix.length).split('/')[0]);
+          const name = pkg.path.slice(prefix.length).split('/')[0];
+          if (keep(`${prefix}${name}`)) {
+            names.add(name);
+          }
         }
       }
       return [...names]
@@ -305,7 +416,7 @@ export const make = (store: Store.Api, root: string) =>
      * plain file tree, so modules no entry reaches (a service behind an app's bootstrap) have a
      * place too; then any packages nested in it.
      */
-    const packageChildren = (packages: readonly Package[], requested: readonly Package[]) =>
+    const packageChildren = (packages: readonly Package[], requested: readonly Package[], keep: Keep) =>
       Effect.gen(function* () {
         const rows = requested.length > 0 ? yield* store.select(entriesQuery(requested.map((pkg) => pkg.iri))) : [];
         const result = new Map<string, Protocol.TreeNode[]>();
@@ -316,18 +427,21 @@ export const make = (store: Store.Api, root: string) =>
               const keys = yield* subpathKeys(root, pkg);
               // A package node can sit in more than one graph, so the same entry edge may come back twice.
               const files = new Map(
-                rows.filter((row) => row.pkg === pkg.iri && !isManifest(row.path)).map((row) => [row.file, row]),
+                rows
+                  .filter((row) => row.pkg === pkg.iri && !isManifest(row.path) && keep(row.path))
+                  .map((row) => [row.file, row]),
               );
-              const sources = (yield* store.ask(hasSourcesQuery(pkg)))
-                ? [
-                    new Protocol.TreeNode({
-                      id: `${FOLDER}${pkg.path}/src`,
-                      label: 'src',
-                      kind: 'folder',
-                      branch: true,
-                    }),
-                  ]
-                : [];
+              const sources =
+                keep(`${pkg.path}/src`) && (yield* store.ask(hasSourcesQuery(pkg)))
+                  ? [
+                      new Protocol.TreeNode({
+                        id: `${FOLDER}${pkg.path}/src`,
+                        label: 'src',
+                        kind: 'folder',
+                        branch: true,
+                      }),
+                    ]
+                  : [];
               const entries = [...files.values()]
                 .map(
                   (row) =>
@@ -341,7 +455,7 @@ export const make = (store: Store.Api, root: string) =>
                     }),
                 )
                 .toSorted(bySubpath);
-              result.set(`${PACKAGE}${pkg.iri}`, [...entries, ...sources, ...listing(packages, pkg.path)]);
+              result.set(`${PACKAGE}${pkg.iri}`, [...entries, ...sources, ...listing(packages, pkg.path, keep)]);
             }),
           { concurrency: 8, discard: true },
         );
@@ -387,7 +501,8 @@ export const make = (store: Store.Api, root: string) =>
               id: `${SYMBOL}${row.symbol}`,
               label: row.name,
               kind: namespace ? 'namespace' : 'symbol',
-              branch: namespace,
+              // A class, interface or object type opens onto its members, as a namespace onto its module.
+              branch: namespace || parseMembers(row.members).length > 0,
               detail: namespace ? 'namespace' : (row.realKind ?? row.declKind),
             }),
           );
@@ -417,7 +532,7 @@ export const make = (store: Store.Api, root: string) =>
       });
 
     /** A `src` folder's subfolders, then its modules, each a branch onto its exports. */
-    const folderChildren = (folders: readonly string[]) =>
+    const folderChildren = (folders: readonly string[], keep: Keep) =>
       Effect.forEach(
         folders,
         (folder) =>
@@ -425,7 +540,8 @@ export const make = (store: Store.Api, root: string) =>
             const rows = yield* store.select(sourceFilesQuery(folder));
             const subfolders = new Set<string>();
             const modules = new Map<string, Protocol.TreeNode>();
-            for (const row of rows) {
+            // A path survives diff mode when it changed; its folder does when anything under it did.
+            for (const row of rows.filter((candidate) => keep(candidate.path))) {
               const rest = row.path.slice(folder.length + 1);
               const slash = rest.indexOf('/');
               if (slash >= 0) {
@@ -458,6 +574,19 @@ export const make = (store: Store.Api, root: string) =>
       ).pipe(Effect.map((entries) => new Map(entries)));
 
     /** A namespace export's children are its module's exports, without a row for the module between. */
+    // A symbol that declares members lists them; a namespace's children are its module's (below).
+    const symbolChildren = (symbols: readonly string[]) =>
+      Effect.gen(function* () {
+        const [namespaces, members] = yield* Effect.all(
+          [namespaceChildren(symbols), symbols.length > 0 ? store.select(membersQuery(symbols)) : Effect.succeed([])],
+          { concurrency: 'unbounded' },
+        );
+        for (const row of members) {
+          namespaces.set(`${SYMBOL}${row.symbol}`, memberNodes(row.symbol, row.members));
+        }
+        return namespaces;
+      });
+
     const namespaceChildren = (symbols: readonly string[]) =>
       Effect.gen(function* () {
         const rows = symbols.length > 0 ? yield* store.select(namespacesQuery(symbols)) : [];
@@ -465,17 +594,35 @@ export const make = (store: Store.Api, root: string) =>
         return new Map(rows.map((row) => [`${SYMBOL}${row.symbol}`, modules.get(`${MODULE}${row.target}`) ?? []]));
       });
 
-    const children = (ids: readonly string[]): Effect.Effect<Protocol.TreeChildren[], Store.StoreError> =>
+    /**
+     * The children of each id. In diff mode the file tree keeps only what leads to a change against
+     * the base branch; inside a changed module everything stays, since the module is what changed.
+     */
+    const children = (
+      ids: readonly string[],
+      options: { readonly diff?: boolean } = {},
+    ): Effect.Effect<Protocol.TreeChildren[], Store.StoreError> =>
       Effect.gen(function* () {
         const unique = [...new Set(ids)];
         const tail = (prefix: string) =>
           unique.filter((id) => id.startsWith(prefix)).map((id) => id.slice(prefix.length));
         const name = yield* repository;
+        const diff = options.diff ? yield* changed : undefined;
+        const keep = diff?.keep ?? keepAll;
         const found = new Map<string, Protocol.TreeNode[]>();
 
         if (unique.includes(Protocol.TREE_ROOT)) {
+          // The root says which branch the tree shows, and in diff mode what it is compared with.
+          const branch = yield* currentBranch(root);
+          const base = diff?.base.replace(/^origin\//, '');
           found.set(Protocol.TREE_ROOT, [
-            new Protocol.TreeNode({ id: `${REPO}${name}`, label: name, kind: 'repo', branch: true }),
+            new Protocol.TreeNode({
+              id: `${REPO}${name}`,
+              label: name,
+              kind: 'repo',
+              branch: true,
+              detail: branch && base ? `${branch} vs ${base}` : branch,
+            }),
           ]);
         }
 
@@ -488,11 +635,10 @@ export const make = (store: Store.Api, root: string) =>
         const packageIris = tail(PACKAGE).filter(isIndexIri);
         const packages = dirs.length > 0 || packageIris.length > 0 ? yield* packageList : [];
         for (const dir of dirs) {
-          found.set(dir === '' ? `${REPO}${name}` : `${DIR}${dir}`, listing(packages, dir));
+          found.set(dir === '' ? `${REPO}${name}` : `${DIR}${dir}`, listing(packages, dir, keep));
         }
 
         const requested = packages.filter((pkg) => packageIris.includes(pkg.iri));
-        // A folder path is spliced into a string literal, so only one the tree could have minted is taken.
         // Any repository-relative path the tree could have minted (`[id]`, `(group)` included); `literal` escapes it
         // for the query, so only traversal and control characters are refused.
         const folders = tail(FOLDER).filter(
@@ -501,10 +647,10 @@ export const make = (store: Store.Api, root: string) =>
         );
         const [byPackage, byFolder, byModule, byNamespace] = yield* Effect.all(
           [
-            packageChildren(packages, requested),
-            folderChildren(folders),
+            packageChildren(packages, requested, keep),
+            folderChildren(folders, keep),
             moduleChildren(tail(MODULE).filter(isIndexIri)),
-            namespaceChildren(tail(SYMBOL).filter(isIndexIri)),
+            symbolChildren(tail(SYMBOL).filter(isIndexIri)),
           ],
           { concurrency: 'unbounded' },
         );
@@ -533,28 +679,41 @@ export const make = (store: Store.Api, root: string) =>
     /** The code behind one node; `undefined` for a directory or repository, which have none of their own. */
     const source = (id: string): Effect.Effect<Protocol.TreeSource | undefined, Store.StoreError> =>
       Effect.gen(function* () {
-        if (id.startsWith(SYMBOL)) {
-          const iri = id.slice(SYMBOL.length);
-          if (!isIndexIri(iri)) {
+        const isMember = id.startsWith(MEMBER);
+        if (isMember || id.startsWith(SYMBOL)) {
+          const [iri, key] = isMember ? id.slice(MEMBER.length).split('|') : [id.slice(SYMBOL.length), undefined];
+          if (!iri || !isIndexIri(iri)) {
             return undefined;
           }
           const [row] = yield* store.select(symbolQuery(iri));
           if (!row) {
             return undefined;
           }
+          const member =
+            key === undefined ? undefined : parseMembers(row.members).find((fact) => memberKey(fact) === key);
+          if (isMember && !member) {
+            return undefined;
+          }
           const lines = (yield* readLines(row.path)) ?? [];
-          const declared = Math.max(0, Number(row.line ?? 1) - 1);
+          const declared = Math.max(0, (member?.line ?? Number(row.line ?? 1)) - 1);
           const first = commentStart(lines, declared);
-          const last = declarationEnd(lines, declared);
+          // The recorded end line is exact; a store indexed before it was recorded falls back to the bracket scan.
+          const recordedEnd = member?.endLine ?? (row.endLine === undefined ? undefined : Number(row.endLine));
+          const end = recordedEnd === undefined ? declarationEnd(lines, declared) : recordedEnd - 1;
+          const last = Math.min(end, declared + MAX_LINES - 1);
+          const comment = lines.slice(first, declared);
+          const signature = member?.signature ?? row.snippet;
+          const owner = row.canonical ?? row.name;
           return new Protocol.TreeSource({
             id,
-            title: row.canonical ?? row.name,
-            subtitle: row.kind,
+            title: member ? `${owner}.${member.name}` : owner,
+            subtitle: member?.kind ?? row.kind,
             packageName: row.packageName,
             path: row.path,
             line: first + 1,
             code: lines.slice(first, last + 1).join('\n'),
-            truncated: last - declared + 1 >= MAX_LINES,
+            signature: signature === undefined ? undefined : [...comment, signature].join('\n'),
+            truncated: end > last,
           });
         }
 
@@ -634,6 +793,12 @@ export const make = (store: Store.Api, root: string) =>
      */
     const locate = (id: string): Effect.Effect<string[] | undefined, Store.StoreError> =>
       Effect.gen(function* () {
+        // A member sits under its owner, when the owner is a row; otherwise the owner's place is as close as it gets.
+        if (id.startsWith(MEMBER)) {
+          const owner = `${SYMBOL}${id.slice(MEMBER.length).split('|')[0]}`;
+          const path = yield* locate(owner);
+          return path?.at(-1) === owner ? [...path, id] : path;
+        }
         const name = yield* repository;
         const packages = yield* packageList;
         if (id.startsWith(PACKAGE)) {

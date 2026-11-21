@@ -60,6 +60,7 @@ export const TreeNodeKind = Schema.Literals([
   'file',
   'namespace',
   'symbol',
+  'member',
 ]);
 export type TreeNodeKind = typeof TreeNodeKind.Type;
 
@@ -90,7 +91,10 @@ export class TreeSource extends Schema.Class<TreeSource>('code-index/TreeSource'
   path: Schema.optional(Schema.String),
   /** 1-based line of the excerpt's first line. */
   line: Schema.Number,
+  /** The declaration with its implementation, as the file has it from `line`. */
   code: Schema.String,
+  /** The declaration without implementation (its doc comment and signature, bodies elided); absent for a module. */
+  signature: Schema.optional(Schema.String),
   /** Lines cut from the end, so the card can say the excerpt is partial. */
   truncated: Schema.Boolean,
 }) {}
@@ -136,7 +140,8 @@ export class Rpcs extends RpcGroup.make(
 
   /** The children of each named tree node; the tree tab asks for a level ahead of what is open. */
   Rpc.make('TreeChildren', {
-    payload: { ids: Schema.Array(Schema.String) },
+    /** `diff` keeps only what leads to a change against the base branch. */
+    payload: { ids: Schema.Array(Schema.String), diff: Schema.optional(Schema.Boolean) },
     success: Schema.Array(TreeChildren),
     error: RequestFailed,
   }),

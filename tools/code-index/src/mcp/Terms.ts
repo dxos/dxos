@@ -248,6 +248,16 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'The type of the value a variable or function declares.',
   ),
   typeTerm: prop('deus:Symbol', 'xsd:string', "The symbol's type term as JSON — what the bind-types pass binds."),
+  endLine: prop(
+    'deus:Symbol',
+    'xsd:integer',
+    '1-based line the declaring statement ends on; with deus:line, its whole source.',
+  ),
+  members: prop(
+    'deus:Symbol',
+    'xsd:string',
+    "A class's, interface's or object type's members as JSON: name, kind, line, endLine, one-line signature.",
+  ),
 
   // Argument.
   callee: prop(

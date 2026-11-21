@@ -160,8 +160,8 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
             Effect.mapError((cause) => failure(cause.message)),
           ),
 
-        TreeChildren: ({ ids }: { ids: readonly string[] }) =>
-          tree.children(ids).pipe(Effect.mapError((cause) => failure(cause.message))),
+        TreeChildren: ({ ids, diff }: { ids: readonly string[]; diff?: boolean }) =>
+          tree.children(ids, { diff }).pipe(Effect.mapError((cause) => failure(cause.message))),
 
         TreeLocate: ({ id }: { id: string }) =>
           tree.locate(id).pipe(Effect.mapError((cause) => failure(cause.message))),

@@ -29,6 +29,7 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Theme from '@dxos/react-ui/Theme';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { translations } from '@dxos/react-ui/translations';
 
 import * as Protocol from '../../workspace/Protocol.ts';
@@ -48,7 +49,11 @@ import { DEFAULT_FILE_ICON, FILE_ICONS, type Glyph, PACKAGE_ICON, SYMBOL_ICONS }
 const TREE_ID = 'code-index-tree';
 
 /** Nodes the tree opens on first sight: everything down to, but not into, a package. */
-const openByDefault = (node: Protocol.TreeNode | undefined): boolean => node?.kind === 'repo' || node?.kind === 'dir';
+const openByDefault = (node: Protocol.TreeNode | undefined, diff: boolean): boolean =>
+  node?.kind === 'repo' ||
+  node?.kind === 'dir' ||
+  // A diff is a handful of files, so it opens down to them.
+  (diff && (node?.kind === 'package' || node?.kind === 'folder'));
 
 /** How long the loader collects ids before it sends them as one request. */
 const BATCH_WINDOW_MS = 16;
@@ -60,14 +65,14 @@ const RETRY_LOAD = Duration.seconds(2);
  * Batches every id asked for within `BATCH_WINDOW_MS` into a single `TreeChildren` call. A visible
  * level of the tree asks for all its branches at once, so this is one round trip per level, not per row.
  */
-const createLoader = (onNodes: (nodes: readonly Protocol.TreeNode[]) => void) => {
+const createLoader = (onNodes: (nodes: readonly Protocol.TreeNode[]) => void, diff: boolean) => {
   const cache = new Map<string, Promise<readonly Protocol.TreeNode[]>>();
   let pending = new Map<string, (result: Promise<readonly Protocol.TreeNode[]>) => void>();
 
   const flush = () => {
     const batch = pending;
     pending = new Map();
-    const response = api.treeChildren([...batch.keys()]).then((results) => {
+    const response = api.treeChildren([...batch.keys()], { diff }).then((results) => {
       onNodes(results.flatMap((result) => result.children));
       return new Map(results.map((result) => [result.id, result.children]));
     });
@@ -105,13 +110,13 @@ type ExplorerModel = TreeModel<Protocol.TreeNode> & {
   readonly ensureLoaded: (registry: AtomRegistry.AtomRegistry, ids: readonly string[]) => Promise<void>;
 };
 
-const createModel = (): ExplorerModel => {
+const createModel = (diff: boolean): ExplorerModel => {
   const nodes = new Map<string, Protocol.TreeNode>();
   const load = createLoader((loaded) => {
     for (const node of loaded) {
       nodes.set(node.id, node);
     }
-  });
+  }, diff);
 
   // Kept alive so a branch scrolled away and back does not refetch and flash empty.
   // A failed load is retried, not kept: a kept-alive atom would otherwise hold the failure and show the branch
@@ -129,7 +134,7 @@ const createModel = (): ExplorerModel => {
   // Paths are keyed by their JSON so the same node under two parents keeps its own state.
   const open = Atom.family((key: string) => {
     const path: string[] = JSON.parse(key);
-    return Atom.make(openByDefault(nodes.get(path.at(-1) ?? ''))).pipe(Atom.keepAlive);
+    return Atom.make(openByDefault(nodes.get(path.at(-1) ?? ''), diff)).pipe(Atom.keepAlive);
   });
 
   const currentAtom = Atom.make<string | undefined>(undefined).pipe(Atom.keepAlive);
@@ -192,6 +197,10 @@ const SYMBOL_GLYPHS: Record<string, { readonly icon: string; readonly className?
   interface: { icon: 'symbol-interface', className: 'text-[#007acc] dark:text-[#75beff]' },
   variable: { icon: 'symbol-variable', className: 'text-[#007acc] dark:text-[#75beff]' },
   property: { icon: 'symbol-field', className: 'text-[#007acc] dark:text-[#75beff]' },
+  // Members: an accessor reads as the property it stands for, a constructor as a method.
+  getter: { icon: 'symbol-field', className: 'text-[#007acc] dark:text-[#75beff]' },
+  setter: { icon: 'symbol-field', className: 'text-[#007acc] dark:text-[#75beff]' },
+  constructor: { icon: 'symbol-method', className: 'text-[#652d90] dark:text-[#b180d7]' },
   type: { icon: 'symbol-structure' },
   namespace: { icon: 'symbol-namespace' },
 };
@@ -266,8 +275,13 @@ const languageOf = (path: string | undefined): string => {
   return extension === 'ts' || extension === 'tsx' || extension === 'mts' ? 'typescript' : (extension ?? 'text');
 };
 
+/** What every card in the stack shows of its declaration: the signature alone, or the implementation too. */
+type SourceMode = 'signature' | 'implementation';
+
+const isSourceMode = (value: string): value is SourceMode => value === 'signature' || value === 'implementation';
+
 /** One card in the stack: the item's code, fetched when the card is added. */
-const SourceCard = ({ node, onClose }: { node: Protocol.TreeNode; onClose: () => void }) => {
+const SourceCard = ({ node, mode, onClose }: { node: Protocol.TreeNode; mode: SourceMode; onClose: () => void }) => {
   const [source, setSource] = useState<Protocol.TreeSource | null | undefined>(undefined);
   useEffect(() => {
     let live = true;
@@ -304,14 +318,27 @@ const SourceCard = ({ node, onClose }: { node: Protocol.TreeNode; onClose: () =>
               {[source.packageName, `${source.path}:${source.line}`].filter(Boolean).join(' · ')}
               {source.truncated ? ' · truncated' : ''}
             </Card.Text>
-            <SyntaxHighlighter
-              language={languageOf(source.path)}
-              showLineNumbers
-              startingLineNumber={source.line}
-              scroll='horizontal'
-            >
-              {source.code}
-            </SyntaxHighlighter>
+            {/* A signature is not the file's lines (bodies are elided), so it carries no line numbers; a module has
+                none and always shows its code. */}
+            {mode === 'signature' && source.signature !== undefined ? (
+              <SyntaxHighlighter
+                language={languageOf(source.path)}
+                scroll='horizontal'
+                data-testid='tree-card-signature'
+              >
+                {source.signature}
+              </SyntaxHighlighter>
+            ) : (
+              <SyntaxHighlighter
+                language={languageOf(source.path)}
+                showLineNumbers
+                startingLineNumber={source.line}
+                scroll='horizontal'
+                data-testid='tree-card-code'
+              >
+                {source.code}
+              </SyntaxHighlighter>
+            )}
           </>
         )}
       </Card.Body>
@@ -379,9 +406,12 @@ type ExplorerProps = {
 
 const Explorer = ({ onActivate }: ExplorerProps) => {
   const registry = useContext(RegistryContext);
-  const model = useMemo(() => createModel(), []);
+  // Diff mode is a different tree, not a filter over this one: its own model, loader and open state.
+  const [diff, setDiff] = useState(false);
+  const model = useMemo(() => createModel(diff), [diff]);
   const treeRef = useRef<TreeRootHandle>(null);
   const [searching, setSearching] = useState(false);
+  const [mode, setMode] = useState<SourceMode>('signature');
   // Newest first; an item already in the stack moves back to the top.
   const [stack, setStack] = useState<readonly Protocol.TreeNode[]>([]);
   // The card just pushed, kept until it is scrolled into view; a counter, so pushing the same item again scrolls too.
@@ -460,7 +490,21 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
   return (
     <div className='flex dx-grow'>
       <div className='border-separator flex min-w-0 flex-1 flex-col border-r' data-testid='tree-panel'>
+        <div className='border-separator flex shrink-0 items-center justify-end border-b px-2 py-1'>
+          <ToggleGroup.Root
+            type='single'
+            value={diff ? 'changed' : 'all'}
+            onValueChange={(value) => value !== '' && setDiff(value === 'changed')}
+            aria-label='Tree'
+            data-testid='tree-mode'
+          >
+            <ToggleGroup.Item value='all'>All</ToggleGroup.Item>
+            <ToggleGroup.Item value='changed'>Changed</ToggleGroup.Item>
+          </ToggleGroup.Root>
+        </div>
         <Tree.Root
+          // A new model is a new tree: re-keyed, it starts from that model's open state rather than this one's.
+          key={diff ? 'changed' : 'all'}
           ref={treeRef}
           model={model}
           rootId={Protocol.TREE_ROOT}
@@ -476,25 +520,41 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
           <Tree.Empty icon='ph--tree-structure--regular' />
         </Tree.Root>
       </div>
-      <ScrollArea.Root classNames='min-w-0 flex-1' orientation='vertical'>
-        <ScrollArea.Viewport>
-          <div ref={stackRef} className='divide-separator flex flex-col divide-y' data-testid='tree-stack'>
-            {stack.length === 0 ? (
-              <p className='text-fg-muted p-2 text-sm'>
-                Click an item in the tree, or press ⌘P, to show its code here.
-              </p>
-            ) : (
-              stack.map((node) => (
-                <SourceCard
-                  key={node.id}
-                  node={node}
-                  onClose={() => setStack((current) => current.filter((entry) => entry.id !== node.id))}
-                />
-              ))
-            )}
-          </div>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <div className='flex min-w-0 flex-1 flex-col'>
+        {/* One switch for the whole stack: reading a set of declarations, you want them all at one depth. */}
+        <div className='border-separator flex shrink-0 items-center justify-end border-b px-2 py-1'>
+          <ToggleGroup.Root
+            type='single'
+            value={mode}
+            onValueChange={(value) => isSourceMode(value) && setMode(value)}
+            aria-label='Show'
+            data-testid='tree-stack-mode'
+          >
+            <ToggleGroup.Item value='signature'>Signatures</ToggleGroup.Item>
+            <ToggleGroup.Item value='implementation'>Implementations</ToggleGroup.Item>
+          </ToggleGroup.Root>
+        </div>
+        <ScrollArea.Root classNames='dx-grow' orientation='vertical'>
+          <ScrollArea.Viewport>
+            <div ref={stackRef} className='divide-separator flex flex-col divide-y' data-testid='tree-stack'>
+              {stack.length === 0 ? (
+                <p className='text-fg-muted p-2 text-sm'>
+                  Click an item in the tree, or press ⌘P, to show its code here.
+                </p>
+              ) : (
+                stack.map((node) => (
+                  <SourceCard
+                    key={node.id}
+                    node={node}
+                    mode={mode}
+                    onClose={() => setStack((current) => current.filter((entry) => entry.id !== node.id))}
+                  />
+                ))
+              )}
+            </div>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </div>
       <GoToDialog open={searching} onOpenChange={setSearching} onPick={handlePick} />
     </div>
   );

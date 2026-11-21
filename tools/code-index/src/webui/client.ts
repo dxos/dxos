@@ -65,7 +65,8 @@ export const api = {
   describe: (target: string) => call((client) => client.Describe({ target })),
 
   /** The children of each named tree node, in one round trip. */
-  treeChildren: (ids: readonly string[]) => call((client) => client.TreeChildren({ ids })),
+  treeChildren: (ids: readonly string[], options: { diff?: boolean } = {}) =>
+    call((client) => client.TreeChildren({ ids, diff: options.diff })),
 
   /** Cmd+P: public symbols and packages by name, each with its path in the tree. */
   search: (query: string) => call((client) => client.Search({ query })),

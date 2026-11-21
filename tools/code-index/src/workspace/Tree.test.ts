@@ -70,6 +70,20 @@ describe('Tree', () => {
     // Its default export is its own: `export *` from index.ts does not carry it.
     await writeFile(join(src, 'extra.ts'), 'export const extra = 1;\nexport default class Extra {}\n');
     await writeFile(join(src, 'named.ts'), 'export const thing = 1;\nexport const hidden = 2;\n');
+    // A class whose members the tree lists under it.
+    await writeFile(
+      join(src, 'Box.ts'),
+      [
+        'export class Box {',
+        '  /** How wide it is. */',
+        '  readonly width = 1;',
+        '  grow(by: number): Box {',
+        '    return this;',
+        '  }',
+        '}',
+        '',
+      ].join('\n'),
+    );
     // An app publishes nothing, and its service sits where no entry reaches; the tree shows both through `src`.
     await mkdir(join(root, 'packages', 'app', 'src', 'services'), { recursive: true });
     await writeFile(join(root, 'packages', 'app', 'package.json'), JSON.stringify({ name: '@fixture/app' }));
@@ -257,14 +271,69 @@ describe('Tree', () => {
     expect(labels.indexOf('thing')).toBeLessThan(labels.indexOf('hidden'));
   });
 
-  test("a symbol's source is its declaration with the comment above it", async ({ expect }) => {
+  test("a symbol's source is its declaration with the comment above it, and its signature without the body", async ({
+    expect,
+  }) => {
     const source = await withTree((tree) => tree.source(`sym:${symbol('Obj.ts', 'make')}`));
     expect(source).toMatchObject({
       path: 'packages/lib/src/Obj.ts',
       line: 1,
       code: '/** Makes one. */\nexport const make = () => {\n  return 1;\n};',
+      signature: '/** Makes one. */\nexport const make = () => { /*...*/ };',
       truncated: false,
     });
     expect(await withTree((tree) => tree.source('dir:packages'))).toBeUndefined();
+  });
+
+  test('a class opens onto its members, each with its own source, signature and place in the tree', async ({
+    expect,
+  }) => {
+    const [module] = await withTree((tree) => tree.children([`mod:${file('Box.ts')}`]));
+    expect(module.children).toEqual([expect.objectContaining({ label: 'Box', branch: true })]);
+    const [box] = await withTree((tree) => tree.children([`sym:${symbol('Box.ts', 'Box')}`]));
+    expect(box.children.map((node) => [node.label, node.kind, node.detail])).toEqual([
+      ['width', 'member', 'property'],
+      ['grow', 'member', 'method'],
+    ]);
+    const grow = box.children[1].id;
+    expect(await withTree((tree) => tree.source(grow))).toMatchObject({
+      title: 'Box.grow',
+      line: 4,
+      code: '  grow(by: number): Box {\n    return this;\n  }',
+      signature: 'grow(by: number): Box { … }',
+    });
+    // The member's own doc comment comes with it.
+    expect(await withTree((tree) => tree.source(box.children[0].id))).toMatchObject({
+      code: '  /** How wide it is. */\n  readonly width = 1;',
+    });
+    expect((await withTree((tree) => tree.locate(grow)))?.slice(-3)).toEqual([
+      `mod:${file('Box.ts')}`,
+      `sym:${symbol('Box.ts', 'Box')}`,
+      grow,
+    ]);
+  });
+
+  // Last, since it commits the fixture and changes a file: the tests above read it as indexed.
+  test('diff mode keeps only what leads to a change against the base, and the root names branch and base', async ({
+    expect,
+  }) => {
+    const identity = ['-c', 'user.name=fixture', '-c', 'user.email=fixture@example.com'];
+    await git(root, 'add', '-A');
+    await git(root, ...identity, 'commit', '--quiet', '-m', 'base');
+    await git(root, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
+    await writeFile(join(root, 'packages', 'lib', 'src', 'Obj.ts'), '// changed\n', { flag: 'a' });
+
+    const diff = (id: string) =>
+      withTree((tree) => tree.children([id], { diff: true })).then(([result]) => result.children);
+    const [repo] = await diff(Protocol.TREE_ROOT);
+    expect(repo.detail).toMatch(/ vs main$/);
+    expect((await diff('repo:fixture/repo')).map((node) => node.label)).toEqual(['packages']);
+    expect((await diff('dir:packages')).map((node) => node.label)).toEqual(['@fixture/lib']);
+    expect((await diff(`pkg:${pkg}`)).map((node) => node.label)).toEqual(['./Obj.ts', 'src']);
+    expect((await diff('src:packages/lib/src')).map((node) => node.label)).toEqual(['Obj.ts']);
+    // Without diff the tree is whole, and the root still names the branch.
+    const [whole] = await withTree((tree) => tree.children([Protocol.TREE_ROOT]));
+    expect(whole.children[0].detail).not.toMatch(/ vs /);
+    expect(await childrenOf('dir:packages')).toEqual(['@fixture/app', '@fixture/lib']);
   });
 });
