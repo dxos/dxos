@@ -11,7 +11,7 @@ Decide rewrite vs adopt (xyflow) for an infinite, multi-depth canvas, and pin th
 - [x] **Audit existing board/canvas surfaces** → `packages/ui/react-ui-canvas/docs/AUDIT.md`
   - react-ui-canvas, react-ui-canvas-editor, react-ui-canvas-compute, react-ui-board (Board + Chain), react-ui-diagram, react-ui-graph, react-ui-gameboard, react-ui-dashboard, react-ui-geo, plugin-board/excalidraw/graph/conductor.
 - [x] **External research** (`packages/ui/react-ui-canvas/docs/RESEARCH.md`) — infinitecanvas.tools, Muse boards-in-boards, tldraw hybrid rendering, xyflow sub-flows, JSON Canvas, semantic zoom, d3 usefulness.
-- [x] **Design spec** → `packages/ui/react-ui-canvas/docs/DESIGN.md` (pointer in `agents/superpowers/specs/2026-09-20-infinite-canvas-design.md`) — awaiting user review.
+- [x] **Design spec** → `packages/ui/react-ui-canvas/docs/DESIGN.md` (pointer in `.agents/superpowers/specs/2026-09-20-infinite-canvas-design.md`) — awaiting user review.
 - [x] **Throwaway spike story** demonstrating zoom between depths (`src/experimental/`, verified: fit, pinch zoom, tiers, auto + double-click drill-in, Escape drill-out, select, drag-move); deleted once the engine's `Nested` story covered it.
 
 ## Phase 0b (PR 0): extract `@dxos/diagram`

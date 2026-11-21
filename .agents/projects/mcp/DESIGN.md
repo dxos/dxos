@@ -1,7 +1,7 @@
 # mcp — Design
 
 Companion to [TASKS.md](./TASKS.md). The loop design (Claude ⇔ MCP ⇔ EDGE ⇔ Composer) lives in
-[agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md](../../../agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md);
+[.agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md](../../../.agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md);
 the tool-surface work-stream is the edge repo's `mcp-operations` project. This file holds the
 dxos-side decisions those two don't cover.
 

@@ -8,13 +8,13 @@ Branch `claude/mosaic-ui-worktree-41481d` (PR #12846; #12840 merged).
 ## Phase 1: Survey + Experiment 1 (controller extraction) — PARKED
 
 - [x] **Survey** react-ui-form/card/list/mosaic, Surface system, effect-atom substrate; prior art.
-- [x] **Spec** `agents/superpowers/specs/2026-08-04-declarative-ui-abstraction-design.md`.
+- [x] **Spec** `.agents/superpowers/specs/2026-08-04-declarative-ui-abstraction-design.md`.
 - [x] **Experiment 1**: MailboxController extraction — implemented, 4 headless tests green, findings recorded.
 - [x] **Parked**; code removed from branch after main's atom migration (history: `49de0924`/`a5e7982a`).
 
 ## Phase 2: Scenes direction
 
-- [x] **Spec** `agents/superpowers/specs/2026-08-06-scenes-app-ontology-design.md` — composition DSL,
+- [x] **Spec** `.agents/superpowers/specs/2026-08-06-scenes-app-ontology-design.md` — composition DSL,
       zag machines, MDL grounding, Experiment 2 (walking skeleton) proposal.
 - [ ] **Experiment 2: walking skeleton** (`plugin-scene`: model + XML codec + interpreter +
       dogfood scene + one tabs machine) — awaiting go.
@@ -22,7 +22,7 @@ Branch `claude/mosaic-ui-worktree-41481d` (PR #12846; #12840 merged).
 
 ## Phase 3: Ontology + DEUS descriptive track
 
-- [x] **Ontology outline** `agents/superpowers/specs/2026-08-13-hyperspace-app-ontology.md`
+- [x] **Ontology outline** `.agents/superpowers/specs/2026-08-13-hyperspace-app-ontology.md`
       (Hyperspace/Space/Schema/Feeds; Deck/Plugins/Components).
 - [x] **App dialect** `packages/reflect/deus/lang/app.mdl` (`org.dxos.spec.app`:
       node/deck/plank/companion/surface/menu).

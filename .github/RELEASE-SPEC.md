@@ -1,6 +1,6 @@
 # Release & Change Management
 
-The design of DXOS release and change management: how packages are versioned and published, how apps deploy, and how a future downstream repo will consume unreleased core. Sections 1–5 describe the system as built; [§6 Future plan](#6-future-plan) covers what is designed but not yet implemented. The runbook — which button to press — is the [Releasing](../REPOSITORY_GUIDE.md#releasing) section of the repository guide; changeset authoring is [`agents/instructions/changesets.md`](../agents/instructions/changesets.md). This spec is the _why_.
+The design of DXOS release and change management: how packages are versioned and published, how apps deploy, and how a future downstream repo will consume unreleased core. Sections 1–5 describe the system as built; [§6 Future plan](#6-future-plan) covers what is designed but not yet implemented. The runbook — which button to press — is the [Releasing](../REPOSITORY_GUIDE.md#releasing) section of the repository guide; changeset authoring is [`.agents/instructions/changesets.md`](../.agents/instructions/changesets.md). This spec is the _why_.
 
 ## 1. Goals
 
@@ -39,7 +39,7 @@ Two fixed/lockstep groups plus deploy-only apps:
 - **`format: "oxfmt"`** — pinned rather than left on Changesets' `auto` formatter detection, so a generated `CHANGELOG.md` matches what **Check**'s `oxfmt --check` expects.
 - Otherwise standard: `@changesets/changelog-git` (git-based, not GitHub API-based — `changelog-github` batches a GraphQL lookup across every unreleased changeset's commit in one query, which reliably timed out once the backlog grew past a few dozen changesets), `access: public`, `baseBranch: main`, `updateInternalDependencies: patch`.
 
-**Standard semver at every version.** At `0.x`, breaking rides the **minor** (`0.9.0 → 0.10.0`) and `major` is reserved for the deliberate `1.0.0` cut. A `minor` does **not** cascade the group to `1.0.0`. Bump-level rules live in the [authoring guide](../agents/instructions/changesets.md).
+**Standard semver at every version.** At `0.x`, breaking rides the **minor** (`0.9.0 → 0.10.0`) and `major` is reserved for the deliberate `1.0.0` cut. A `minor` does **not** cascade the group to `1.0.0`. Bump-level rules live in the [authoring guide](../.agents/instructions/changesets.md).
 
 **`major` is gated in CI while pre-1.0.** `scripts/check-changesets.mjs` (the `Check changesets` step) fails the build on any `major` in `.changeset/*.md`. The groups are `fixed`, so one stray `major` versions every package to `1.0.0` in a single release, and nothing surfaces it until `changeset version` runs on `main`. The rule no-ops once both group anchors leave `0.x`; **delete its section of that script as part of the PR that cuts `1.0.0`**, which needs the very `major` it rejects — the script's other rules outlive 1.0.0.
 

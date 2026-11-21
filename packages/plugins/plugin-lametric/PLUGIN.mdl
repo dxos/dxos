@@ -12,7 +12,7 @@ so this plugin pushes to it directly. Local push goes through LaMetric's stock "
 because a custom indicator app cannot be pushed to locally; cloud push, for use off the device's
 network, is a separate mechanism against a published app. Requests go through Tauri's HTTP client
 because neither endpoint is reachable from a web view. Design:
-`agents/superpowers/specs/2026-08-19-lametric-design.md`.
+`.agents/superpowers/specs/2026-08-19-lametric-design.md`.
 
 ## Extensions
 
@@ -27,6 +27,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -231,6 +232,16 @@ test QA-1: Configure a local device and see the display take over
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: The design link points at `.agents/superpowers/`, where the design now lives.
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The repo keeps one agent directory, `.agents/`, because `npx skills` and `.claude/skills` need the dot; the design moved with it.
+```
 
 ## Appendix: Extension Definitions
 

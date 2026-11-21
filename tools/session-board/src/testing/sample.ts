@@ -77,7 +77,7 @@ export const SAMPLE_SESSION = [
   '',
   fence(
     [
-      'question Q-2: Is `agents/sessions/` the correct place for session files?',
+      'question Q-2: Is `.agents/sessions/` the correct place for session files?',
       '  date: 2026-11-21',
       '  by: agent:claude-code',
       '  for: user:alice',

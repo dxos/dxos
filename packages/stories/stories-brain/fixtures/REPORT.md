@@ -179,7 +179,7 @@ already fast; **all** LLM cost lives in batchable enrichment (summarize / facts 
 
 ## 6. Active Topics experiment (2026-07-13)
 
-Spec: `agents/superpowers/specs/2026-07-13-active-topics-experiment-design.md`. Over the private
+Spec: `.agents/superpowers/specs/2026-07-13-active-topics-experiment-design.md`. Over the private
 fixture (495 msgs, `ACTIVE_TOP=8`, owner `rich@braneframe.com`/`rich@dxos.org`): cluster → deterministic
 activity score → LLM confidence → active/suggested split → populate (status/facts/tasks/drafts).
 

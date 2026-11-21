@@ -9,7 +9,7 @@ Group B: plugins + cli) from the workspace graph.
 Adding a changeset does **not** cut a release — it describes your change so it lands in the changelog and
 version bump of whenever the next release is made. Add one when the change is consumer-relevant (a
 changeset is not required for chores). See the authoring guide:
-[`agents/instructions/changesets.md`](../agents/instructions/changesets.md).
+[`.agents/instructions/changesets.md`](../.agents/instructions/changesets.md).
 
 Releases run in GitHub Actions, never locally: `@latest` is published when a human marks the "Version
 Packages" draft PR ready and **merges it**; `@next` snapshots come from a manual dispatch of the same `publish-all.yml`. Apps

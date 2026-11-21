@@ -90,4 +90,4 @@ provides `Trace.writerLayerNoop` by default; pass `{ traceLayer }` to observe ev
 ## Related
 
 - Trace API: `packages/core/compute/compute/src/Trace.ts` (`StatusUpdate`, `emitStatus`)
-- Design spec: `agents/superpowers/specs/2026-07-11-progress-monitor-capability-design.md`
+- Design spec: `.agents/superpowers/specs/2026-07-11-progress-monitor-capability-design.md`

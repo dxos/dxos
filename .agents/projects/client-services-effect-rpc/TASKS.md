@@ -109,7 +109,7 @@ no clean rebase path — reviving this means re-deriving the relevant commits ag
       if no consumers remain — not started.
 - [ ] **Relocate or delete stray plan docs** — `plans/worker-package/*.md` landed on `main` via
       an unrelated PR #12516 squash artifact; per repo convention these belong under
-      `agents/superpowers/{specs,plans}/` or this project's directory, not a root `plans/` folder.
+      `.agents/superpowers/{specs,plans}/` or this project's directory, not a root `plans/` folder.
 
 ## Phase 4: Protobuf-removal pass (this session) — see DESIGN.md §4 for the full spec
 
