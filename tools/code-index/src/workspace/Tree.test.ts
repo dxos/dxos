@@ -68,7 +68,7 @@ describe('Tree', () => {
       ),
     );
     // Its default export is its own: `export *` from index.ts does not carry it.
-    await writeFile(join(src, 'extra.ts'), 'export const extra = 1;\nexport default class Extra {}\n');
+    await writeFile(join(src, 'extra.ts'), 'export const extra = 1;\nexport  default class Extra {}\n');
     await writeFile(join(src, 'named.ts'), 'export const thing = 1;\nexport const hidden = 2;\n');
     // A class whose members the tree lists under it.
     await writeFile(

@@ -746,6 +746,18 @@ describe('members and declaration extents', () => {
     expect(snippet).not.toContain('implementation note');
   });
 
+  test('a default export is marked as one, whatever it is named and however it is written', () => {
+    const exportsOf = (source: string) =>
+      analyzeTypeScript({ ...context, path: 'src/defaults.ts', source, resolve: () => undefined }).declares.map(
+        (declared) => [declared.name, declared.defaultExport ?? false],
+      );
+    expect(exportsOf('export  default class Extra {}\nexport const other = 1;\n')).toEqual([
+      ['Extra', true],
+      ['other', false],
+    ]);
+    expect(exportsOf('export default () => 1;\n')).toEqual([['default', true]]);
+  });
+
   test('a declaration records the line its statement ends on', () => {
     expect(
       Object.fromEntries(

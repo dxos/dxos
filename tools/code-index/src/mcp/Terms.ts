@@ -253,6 +253,11 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'xsd:integer',
     '1-based line the declaring statement ends on; with deus:line, its whole source.',
   ),
+  defaultExport: prop(
+    'deus:Symbol',
+    'xsd:boolean',
+    'The declaration its module exports as default, whatever it is named.',
+  ),
   members: prop(
     'deus:Symbol',
     'xsd:string',

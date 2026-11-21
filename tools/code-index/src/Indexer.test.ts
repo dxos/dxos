@@ -391,13 +391,25 @@ describe('Indexer, when git stops listing a file', () => {
   }, 60_000);
 
   test('a file git now ignores, or that is gone, still leaves the index', async () => {
+    // A quote makes git print the path quoted and escaped; one outside the BMP is two UTF-16 units inside it.
+    await writeFile(join(root, 'src', '😀"c.ts'), 'export const emoji = 5;\n');
     await index();
-    expect(await paths()).toEqual(ALL);
-    // `a"b.ts` comes back from check-ignore quoted and escaped; it must still match the recorded path.
-    await writeFile(join(root, '.gitignore'), 'src/scratch.ts\nsrc/a"b.ts\n');
+    expect(await paths()).toEqual([...ALL, 'src/😀"c.ts']);
+    await writeFile(join(root, '.gitignore'), 'src/scratch.ts\nsrc/a"b.ts\nsrc/😀"c.ts\n');
     await rm(join(root, 'src', 'a.ts'));
     const result = await index();
-    expect(result.removed).toBe(3);
+    expect(result.removed).toBe(4);
     expect(await paths()).toEqual(['src/nested/b.ts']);
   }, 60_000);
+});
+
+describe('Crawler.unquote', () => {
+  test('decodes the C-quoted records git prints for unusual paths, by code point', () => {
+    expect(Crawler.unquote('src/plain.ts')).toBe('src/plain.ts');
+    expect(Crawler.unquote('"src/a\\"b.ts"')).toBe('src/a"b.ts');
+    expect(Crawler.unquote('"src/😀\\"b.ts"')).toBe('src/😀"b.ts');
+    // With core.quotePath on, a non-ASCII byte is an octal escape; the bytes reassemble into the character.
+    expect(Crawler.unquote('"src/\\360\\237\\230\\200.ts"')).toBe('src/😀.ts');
+    expect(Crawler.unquote('"src/tab\\there.ts"')).toBe('src/tab\there.ts');
+  });
 });

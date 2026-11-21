@@ -108,7 +108,7 @@ const isManifest = (path: string): boolean => path.endsWith('/package.json');
 
 // A named re-export takes the kind of what it resolves to, so `export { DXN } from` reads as the class it is.
 const exportsQuery = (modules: readonly string[]) => `${DEUS}
-SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members ?typeTerm ?realTypeTerm ?realSnippet WHERE {
+SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members ?typeTerm ?realTypeTerm ?realSnippet ?defaultExport WHERE {
   VALUES ?module { ${values(modules)} }
   ?module deus:declares ?symbol .
   ?symbol deus:exported true ; deus:name ?name ; deus:kind ?declKind .
@@ -121,6 +121,7 @@ SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet ?members ?type
   OPTIONAL { ?symbol deus:snippet ?snippet }
   OPTIONAL { ?symbol deus:members ?members }
   OPTIONAL { ?symbol deus:typeTerm ?typeTerm }
+  OPTIONAL { ?symbol deus:defaultExport ?defaultExport }
 }`;
 
 /** A row's semantic kind, from the declaration a re-export resolves to when it does. */
@@ -195,12 +196,8 @@ export const semanticKind = (row: {
     : kind;
 };
 
-/**
- * Whether an export is its module's default. The index names `export default class X` by `X`, with
- * no default marker, but a symbol's snippet is its declaring statement, which says so.
- */
-const isDefaultExport = (row: Store.Binding): boolean =>
-  row.name === 'default' || (row.snippet ?? '').startsWith('export default');
+/** Whether an export is its module's default: the parser marks it, since `export default class X` is named `X`. */
+const isDefaultExport = (row: Store.Binding): boolean => row.defaultExport === 'true';
 
 // `reexports` is one edge for every `export … from`; only a bare `export *` is not already a declared symbol.
 const starsQuery = (modules: readonly string[]) => `${DEUS}

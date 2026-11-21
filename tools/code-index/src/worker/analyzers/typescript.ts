@@ -71,6 +71,8 @@ type Declaration = {
   /** The top-level statement, including any `export` wrapper — the snippet span. */
   readonly statement: Node;
   readonly offset: number;
+  /** The module's default export, whatever it is named. */
+  readonly isDefault?: boolean;
 };
 
 const isPrivateMember = (node: Node): boolean =>
@@ -283,7 +285,12 @@ export const declarations = (body: readonly Statement[], prefix = '', inherited 
         return isNode(statement.declaration) ? qualify(declarationsOf(statement.declaration, statement, true)) : [];
       case 'ExportDefaultDeclaration': {
         const declaration = isNode(statement.declaration) ? statement.declaration : undefined;
-        const named = declaration ? qualify(declarationsOf(declaration, statement, true)) : [];
+        // `export default class X` is named `X`, so the default-ness is a fact of its own, not of the name.
+        const named = declaration
+          ? qualify(declarationsOf(declaration, statement, true)).map((entry) =>
+              entry.node === declaration ? { ...entry, isDefault: true } : entry,
+            )
+          : [];
         return named.length > 0
           ? named
           : [
@@ -291,6 +298,7 @@ export const declarations = (body: readonly Statement[], prefix = '', inherited 
                 name: 'default',
                 kind: declaration ? (KINDS[declaration.type] ?? 'variable') : 'variable',
                 exported: true,
+                isDefault: true,
                 node: declaration ?? statement,
                 statement,
                 offset: statement.start,
@@ -1692,6 +1700,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'exported': declaration.exported,
       'line': lineOf(source, declaration.offset),
       'endLine': lineAt(declaration.statement.end),
+      ...(declaration.isDefault === true ? { defaultExport: true } : {}),
       ...((members) => (members.length === 0 ? {} : { members: JSON.stringify(members) }))(
         membersOf(source, declaration.node, lineAt),
       ),

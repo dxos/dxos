@@ -46,7 +46,7 @@ export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}
  * dropped and rebuilt on open: the ledger keys commits by graph IRI, so mixing schemes would leave
  * graphs no row points at and rules matching only half the facts.
  */
-export const VERSION = 8;
+export const VERSION = 9;
 
 /**
  * Name and kind of the synthetic symbol carrying a file's top-level references (`describe(…)`,
@@ -236,6 +236,8 @@ export const endLine = iri('endLine');
  * declaration sees listed, kept as one literal rather than as symbols, which rules and search index.
  */
 export const members = iri('members');
+/** The declaration its module exports as `default`, whatever it is named (`export default class X` is `X`). */
+export const defaultExport = iri('defaultExport');
 
 // Type term properties (`design/TYPES.md`).
 export const typeKind = iri('typeKind');
@@ -497,6 +499,7 @@ export const CONTEXT = {
   typeTerm: 'deus:typeTerm',
   endLine: integer('endLine'),
   members: 'deus:members',
+  defaultExport: boolean('defaultExport'),
   unresolvedReason: 'deus:unresolvedReason',
   pending: 'deus:pending',
   callee: id('callee'),
@@ -613,6 +616,7 @@ export const SymbolNode = Schema.Struct({
   'typeTerm': Schema.optional(Schema.String),
   'endLine': Schema.optional(Schema.Number),
   'members': Schema.optional(Schema.String),
+  'defaultExport': Schema.optional(Schema.Boolean),
 });
 
 export type SymbolNode = typeof SymbolNode.Type;

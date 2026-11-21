@@ -139,9 +139,11 @@ export const unquote = (line: string): string => {
     '\\': 92,
   };
   for (let index = 0; index < body.length; index++) {
-    const char = body[index];
+    // By code point, not code unit: a character outside the BMP is two units, and encoding each alone breaks it.
+    const char = String.fromCodePoint(body.codePointAt(index) ?? 0);
     if (char !== '\\') {
       bytes.push(...Buffer.from(char, 'utf8'));
+      index += char.length - 1;
       continue;
     }
     const next = body[index + 1];
