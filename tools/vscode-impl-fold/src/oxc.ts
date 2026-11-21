@@ -20,6 +20,28 @@ const isNode = (value: unknown): value is Node =>
   'end' in value &&
   typeof value.end === 'number';
 
+const identifierName = (value: unknown): string | undefined =>
+  isNode(value) && value.type === 'Identifier' && typeof value.name === 'string' ? value.name : undefined;
+
+const isFunction = (value: unknown): value is Node => isNode(value) && FUNCTION_TYPES.has(value.type);
+
+/** The name a declaration, binding or member gives to its function, i.e. what its document symbol is called. */
+const namedFunction = (node: Node): { name: string; fn: Node } | undefined => {
+  let name: string | undefined;
+  let fn: unknown;
+  if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
+    name = identifierName(node.id);
+    fn = node;
+  } else if (node.type === 'VariableDeclarator') {
+    name = identifierName(node.id);
+    fn = node.init;
+  } else if (node.type === 'MethodDefinition' || node.type === 'Property' || node.type === 'PropertyDefinition') {
+    name = identifierName(node.key);
+    fn = node.value;
+  }
+  return name !== undefined && isFunction(fn) ? { name, fn } : undefined;
+};
+
 const lineStarts = (text: string): number[] => {
   const starts = [0];
   for (let index = 0; index < text.length; index++) {
@@ -80,6 +102,13 @@ export const findBodiesOxc = (filename: string, text: string, containerPattern: 
 
   const visit = (value: unknown) => {
     if (!isNode(value)) {
+      return;
+    }
+
+    // A function named like a container stays open, as its language-server symbol of that name would.
+    const named = namedFunction(value);
+    if (named && containerPattern.test(named.name) && isNode(named.fn.body)) {
+      visitChildren(named.fn.body);
       return;
     }
 

@@ -57,7 +57,7 @@
             "Method",
             "Constructor"
           ],
-          "description": "Symbol kinds (`vscode.SymbolKind` names) whose body is always collapsed."
+          "description": "Symbol kinds (`vscode.SymbolKind` names) whose body is always collapsed Changing it from the default sends JS/TS files through the language server instead of oxc."
         },
         "implFold.valueSymbolKinds": {
           "type": "array",
@@ -70,7 +70,7 @@
             "Property",
             "Field"
           ],
-          "description": "Symbol kinds whose body is collapsed only when the value is a function, e.g. `const f = () => { ... }`."
+          "description": "Symbol kinds whose body is collapsed only when the value is a function, e.g. `const f = () => { ... }` Changing it from the default sends JS/TS files through the language server instead of oxc."
         },
         "implFold.parser": {
           "type": "string",

@@ -90,6 +90,28 @@ describe('findBodiesOxc', () => {
     ]);
   });
 
+  test('keeps a function named like a container open and folds its children', () => {
+    expect(
+      findBodiesOxc(
+        'file.ts',
+        [
+          /* 0 */ 'function group() {',
+          /* 1 */ '  const run = () => {',
+          /* 2 */ '    work();',
+          /* 3 */ '  };',
+          /* 4 */ '}',
+          /* 5 */ 'const other = () => {',
+          /* 6 */ '  work();',
+          /* 7 */ '};',
+        ].join('\n'),
+        /^group$/,
+      ),
+    ).toEqual([
+      { start: 1, end: 2 },
+      { start: 5, end: 6 },
+    ]);
+  });
+
   test('counts lines in UTF-16 offsets past non-ASCII text', () => {
     expect(bodies(["const label = '✓ — 日本語 🎉';", 'function run() {', '  work();', '}'])).toEqual([
       { start: 1, end: 2 },

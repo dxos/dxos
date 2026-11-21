@@ -19,7 +19,9 @@ tasks:
       - scripts/bundle.ts
     outputs:
       - dist/extension.cjs
-      - dist/*.node
+      # Absent on a platform with no binding installed; the extension then uses the language-server path.
+      - glob: dist/*.node
+        optional: true
 
   # `dist/vscode-impl-fold.vsix`, installable with `code --install-extension`; see README.md.
   package:

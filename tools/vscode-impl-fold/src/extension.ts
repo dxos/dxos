@@ -94,6 +94,15 @@ const findBodiesInProcess = async (document: vscode.TextDocument): Promise<LineR
   if (config.get<string>('parser', 'auto') !== 'auto' || !OXC_LANGUAGES.has(document.languageId)) {
     return undefined;
   }
+  // The AST path has no symbol kinds, so tuned kind settings only take effect through the language server.
+  const sameKinds = (name: string, defaults: readonly string[]) =>
+    JSON.stringify(config.get<string[]>(name, [...defaults])) === JSON.stringify(defaults);
+  if (
+    !sameKinds('bodySymbolKinds', DEFAULT_OPTIONS.bodyKinds) ||
+    !sameKinds('valueSymbolKinds', DEFAULT_OPTIONS.valueKinds)
+  ) {
+    return undefined;
+  }
   const oxc = await loadOxc();
   return oxc?.findBodiesOxc(
     document.fileName,
