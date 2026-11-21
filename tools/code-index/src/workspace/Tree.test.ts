@@ -66,7 +66,8 @@ describe('Tree', () => {
         '\n',
       ),
     );
-    await writeFile(join(src, 'extra.ts'), 'export const extra = 1;\n');
+    // Its default export is its own: `export *` from index.ts does not carry it.
+    await writeFile(join(src, 'extra.ts'), 'export const extra = 1;\nexport default class Extra {}\n');
     await writeFile(join(src, 'named.ts'), 'export const thing = 1;\nexport const hidden = 2;\n');
     // An app publishes nothing, and its service sits where no entry reaches; the tree shows both through `src`.
     await mkdir(join(root, 'packages', 'app', 'src', 'services'), { recursive: true });
@@ -77,6 +78,9 @@ describe('Tree', () => {
       join(root, 'packages', 'app', 'src', 'services', 'Sandbox.ts'),
       'export class SandboxService {}\nconst secret = 1;\n',
     );
+    // A route segment, the kind of folder name a path filter of word characters would refuse.
+    await mkdir(join(root, 'packages', 'app', 'src', 'routes', '[id]'), { recursive: true });
+    await writeFile(join(root, 'packages', 'app', 'src', 'routes', '[id]', 'page.ts'), 'export const page = 1;\n');
     await git(root, 'init', '--quiet');
     await git(root, 'remote', 'add', 'origin', 'git@github.com:fixture/repo.git');
     // The bundled rules derive `publishedBy` and `packagePublic`, which the tree and search read.
@@ -132,10 +136,15 @@ describe('Tree', () => {
     ]);
   });
 
-  test("a package's entries carry the subpath keys its manifest declares, then its src, without its package.json", async ({
+  test("a package's entries are named as module files, the root one first and marked, then its src", async ({
     expect,
   }) => {
-    expect(await childrenOf(`pkg:${pkg}`)).toEqual(['.', './Thing', 'src']);
+    const [entries] = await withTree((tree) => tree.children([`pkg:${pkg}`]));
+    expect(entries.children.map((node) => [node.label, node.kind, node.detail])).toEqual([
+      ['./index.ts', 'entry', '<root>'],
+      ['./Obj.ts', 'entry', undefined],
+      ['src', 'folder', undefined],
+    ]);
   });
 
   test("a package's src is a file tree of its modules, folders first and tests left out", async ({ expect }) => {
@@ -143,11 +152,14 @@ describe('Tree', () => {
     expect(await childrenOf(`pkg:${app}`)).toEqual(['src']);
     const [src] = await withTree((tree) => tree.children(['src:packages/app/src']));
     expect(src.children.map((node) => [node.label, node.kind])).toEqual([
+      ['routes', 'folder'],
       ['services', 'folder'],
       ['main.ts', 'file'],
     ]);
     expect(await childrenOf('src:packages/app/src/services')).toEqual(['Sandbox.ts']);
     expect(await childrenOf(`mod:${appFile('services/Sandbox.ts')}`)).toEqual(['SandboxService']);
+    expect(await childrenOf('src:packages/app/src/routes')).toEqual(['[id]']);
+    expect(await childrenOf('src:packages/app/src/routes/[id]')).toEqual(['page.ts']);
   });
 
   test('an entry lists its exports, splicing in a bare export * but not a named re-export source', async ({
@@ -159,6 +171,8 @@ describe('Tree', () => {
       ['extra', 'symbol'],
       ['thing', 'symbol'],
     ]);
+    // The module that declares a default export still lists it.
+    expect(await childrenOf(`mod:${file('extra.ts')}`)).toContain('Extra');
   });
 
   test("a namespace's children are its module's exports", async ({ expect }) => {

@@ -3,10 +3,12 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as AsyncResult from 'effect/reactivity/AsyncResult';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
+import * as Schedule from 'effect/Schedule';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { I18nProvider } from 'react-aria-components';
 
@@ -69,6 +71,9 @@ const openByDefault = (node: Protocol.TreeNode | undefined): boolean => node?.ki
 /** How long the loader collects ids before it sends them as one request. */
 const BATCH_WINDOW_MS = 16;
 
+/** How long a branch whose children failed to load waits before asking again. */
+const RETRY_LOAD = Duration.seconds(2);
+
 /**
  * Batches every id asked for within `BATCH_WINDOW_MS` into a single `TreeChildren` call. A visible
  * level of the tree asks for all its branches at once, so this is one round trip per level, not per row.
@@ -127,7 +132,11 @@ const createModel = (): ExplorerModel => {
   });
 
   // Kept alive so a branch scrolled away and back does not refetch and flash empty.
-  const children = Atom.family((id: string) => Atom.make(Effect.promise(() => load(id))).pipe(Atom.keepAlive));
+  // A failed load is retried, not kept: a kept-alive atom would otherwise hold the failure and show the branch
+  // empty for as long as the island lives. Successes stay cached by the loader.
+  const children = Atom.family((id: string) =>
+    Atom.make(Effect.tryPromise(() => load(id)).pipe(Effect.retry(Schedule.spaced(RETRY_LOAD)))).pipe(Atom.keepAlive),
+  );
 
   const childIds = Atom.family((id: string) =>
     Atom.make((get) => AsyncResult.getOrElse(get(children(id)), () => []).map((node) => node.id)),
@@ -218,6 +227,11 @@ const fileGlyph = (path: string): Glyph => {
   return DEFAULT_FILE_ICON;
 };
 
+/** A JavaScript or TypeScript source file, which the tree treats as a module. */
+const MODULE_FILE = /\.[cm]?[jt]sx?$/;
+
+const moduleGlyph = { glyph: SYMBOL_ICONS['symbol-namespace'] };
+
 /** The VS Code glyph for a row: Seti's for files, codicons for declarations, and none for folders, as Seti draws them. */
 const glyphOf = (node: Protocol.TreeNode): { readonly glyph: Glyph; readonly className?: string } | undefined => {
   switch (node.kind) {
@@ -227,10 +241,10 @@ const glyphOf = (node: Protocol.TreeNode): { readonly glyph: Glyph; readonly cla
       return undefined;
     case 'package':
       return { glyph: PACKAGE_ICON };
+    // A module reads as one, `{}`, whichever kind of row reaches it; a non-code entry keeps its file glyph.
     case 'entry':
-      return { glyph: fileGlyph(node.detail ?? node.label) };
     case 'file':
-      return { glyph: fileGlyph(node.label) };
+      return MODULE_FILE.test(node.label) ? moduleGlyph : { glyph: fileGlyph(node.label) };
     default: {
       const symbol = SYMBOL_GLYPHS[node.kind === 'namespace' ? 'namespace' : (node.detail ?? '')] ?? {
         icon: 'symbol-misc',
@@ -301,7 +315,7 @@ const SourceCard = ({ node, onClose }: { node: Protocol.TreeNode; onClose: () =>
 
   return (
     // Unframed: the stack's dividers separate the cards, so a border on each would draw every edge twice.
-    <Card.Root border={false} data-testid='tree-card'>
+    <Card.Root border={false} data-testid='tree-card' data-card-id={node.id}>
       {/* The card names its item as the tree row does: the same icon, so the two read as one thing. */}
       <Card.Header>
         <Card.Title classNames='flex min-w-0 items-center gap-2'>
@@ -402,10 +416,23 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
   const [searching, setSearching] = useState(false);
   // Newest first; an item already in the stack moves back to the top.
   const [stack, setStack] = useState<readonly Protocol.TreeNode[]>([]);
-  const push = useCallback(
-    (node: Protocol.TreeNode) => setStack((current) => [node, ...current.filter((entry) => entry.id !== node.id)]),
-    [],
-  );
+  // The card just pushed, kept until it is scrolled into view; a counter, so pushing the same item again scrolls too.
+  const [pushed, setPushed] = useState<{ id: string; count: number }>();
+  const stackRef = useRef<HTMLDivElement>(null);
+  const push = useCallback((node: Protocol.TreeNode) => {
+    setStack((current) => [node, ...current.filter((entry) => entry.id !== node.id)]);
+    setPushed((previous) => ({ id: node.id, count: (previous?.count ?? 0) + 1 }));
+  }, []);
+  useEffect(() => {
+    if (pushed) {
+      stackRef.current
+        ?.querySelector(`[data-card-id="${CSS.escape(pushed.id)}"]`)
+        ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [pushed]);
+
+  // Bumped by every selection, so a search pick still waiting on the server cannot reveal over a newer one.
+  const selection = useRef(0);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -426,6 +453,7 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
 
   const handleSelect = useCallback(
     ({ item, path }: TreeSelectEvent<Protocol.TreeNode>) => {
+      selection.current++;
       registry.set(model.currentAtom, pathKey(path));
       push(item);
     },
@@ -435,14 +463,18 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
   // Search finds the hit; the tree says where it sits, which for a declaration nothing exports is its module.
   const handlePick = useCallback(
     (hit: Protocol.SearchHit) => {
+      const token = ++selection.current;
       setSearching(false);
       push(hit.node);
       void api.treeLocate(hit.node.id).then(async (located) => {
-        if (!located || located.length === 0) {
+        if (!located || located.length === 0 || token !== selection.current) {
           return;
         }
         // Each ancestor's children must be loaded first, or the reveal finds no row and gives up.
         await model.ensureLoaded(registry, [Protocol.TREE_ROOT, ...located.slice(0, -1)]);
+        if (token !== selection.current) {
+          return;
+        }
         const path = [TREE_ID, ...located];
         registry.set(model.currentAtom, pathKey(path));
         treeRef.current?.reveal(path);
@@ -478,7 +510,7 @@ const Explorer = ({ onActivate }: ExplorerProps) => {
       </div>
       <ScrollArea.Root classNames='min-w-0 flex-1' orientation='vertical'>
         <ScrollArea.Viewport>
-          <div className='divide-separator flex flex-col divide-y' data-testid='tree-stack'>
+          <div ref={stackRef} className='divide-separator flex flex-col divide-y' data-testid='tree-stack'>
             {stack.length === 0 ? (
               <p className='text-fg-muted p-2 text-sm'>
                 Click an item in the tree, or press ⌘P, to show its code here.

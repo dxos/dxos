@@ -107,13 +107,21 @@ const isManifest = (path: string): boolean => path.endsWith('/package.json');
 
 // A named re-export takes the kind of what it resolves to, so `export { DXN } from` reads as the class it is.
 const exportsQuery = (modules: readonly string[]) => `${DEUS}
-SELECT ?module ?symbol ?name ?declKind ?realKind ?target WHERE {
+SELECT ?module ?symbol ?name ?declKind ?realKind ?target ?snippet WHERE {
   VALUES ?module { ${values(modules)} }
   ?module deus:declares ?symbol .
   ?symbol deus:exported true ; deus:name ?name ; deus:kind ?declKind .
   OPTIONAL { ?symbol deus:resolvesTo ?real . ?real deus:kind ?realKind }
   OPTIONAL { ?symbol deus:namespaceOf ?target }
+  OPTIONAL { ?symbol deus:snippet ?snippet }
 }`;
+
+/**
+ * Whether an export is its module's default. The index names `export default class X` by `X`, with
+ * no default marker, but a symbol's snippet is its declaring statement, which says so.
+ */
+const isDefaultExport = (row: Store.Binding): boolean =>
+  row.name === 'default' || (row.snippet ?? '').startsWith('export default');
 
 // `reexports` is one edge for every `export … from`; only a bare `export *` is not already a declared symbol.
 const starsQuery = (modules: readonly string[]) => `${DEUS}
@@ -186,8 +194,21 @@ const subpathKeys = (root: string, pkg: Package): Effect.Effect<Map<string, stri
   );
 
 /** `.` first, then the subpaths in order. */
+/** The detail that marks a package's `.` entry, the module a bare `import … from 'pkg'` resolves to. */
+export const ROOT_ENTRY = '<root>';
+
+/**
+ * An entry named as the module file it is, relative to the package's `src` (or the package for a
+ * file outside it): `./Aggregate.ts`, `./index.ts`. The tree is about modules, so a row reads as one.
+ */
+const entryLabel = (pkg: Package, path: string): string => {
+  const inPackage = path.slice(pkg.path.length + 1);
+  return `./${inPackage.startsWith('src/') ? inPackage.slice('src/'.length) : inPackage}`;
+};
+
+/** The root entry first, then the rest by name. */
 const bySubpath = (left: Protocol.TreeNode, right: Protocol.TreeNode): number =>
-  Number(right.label === '.') - Number(left.label === '.') || left.label.localeCompare(right.label);
+  Number(right.detail === ROOT_ENTRY) - Number(left.detail === ROOT_ENTRY) || left.label.localeCompare(right.label);
 
 const symbolQuery = (symbol: string) => `${DEUS}
 SELECT ?name ?kind ?line ?path ?canonical ?packageName WHERE {
@@ -312,10 +333,11 @@ export const make = (store: Store.Api, root: string) =>
                   (row) =>
                     new Protocol.TreeNode({
                       id: `${MODULE}${row.file}`,
-                      label: keys.get(row.path) ?? row.path.slice(pkg.path.length + 1),
+                      label: entryLabel(pkg, row.path),
                       kind: 'entry',
                       branch: true,
-                      detail: row.path.slice(pkg.path.length + 1),
+                      // The root entry is marked; the others' subpath key is their label's own stem.
+                      detail: keys.get(row.path) === '.' ? ROOT_ENTRY : undefined,
                     }),
                 )
                 .toSorted(bySubpath);
@@ -348,6 +370,7 @@ export const make = (store: Store.Api, root: string) =>
 
         const exportRows = yield* store.select(exportsQuery([...stars.keys()]));
         const declared = new Map<string, Map<string, Protocol.TreeNode>>();
+        const defaults = new Set<string>();
         for (const row of exportRows) {
           let nodes = declared.get(row.module);
           if (!nodes) {
@@ -355,6 +378,9 @@ export const make = (store: Store.Api, root: string) =>
             declared.set(row.module, nodes);
           }
           const namespace = row.target !== undefined;
+          if (isDefaultExport(row)) {
+            defaults.add(row.symbol);
+          }
           nodes.set(
             row.symbol,
             new Protocol.TreeNode({
@@ -367,23 +393,24 @@ export const make = (store: Store.Api, root: string) =>
           );
         }
 
-        const collect = (module: string, seen: Set<string>, into: Map<string, Protocol.TreeNode>) => {
+        // `export *` never re-exports a target's `default`, so only the module asked about keeps its own.
+        const collect = (module: string, seen: Set<string>, into: Map<string, Protocol.TreeNode>, viaStar: boolean) => {
           seen.add(module);
           for (const [iri, node] of declared.get(module) ?? []) {
-            if (!into.has(iri)) {
+            if (!into.has(iri) && !(viaStar && defaults.has(iri))) {
               into.set(iri, node);
             }
           }
           for (const target of stars.get(module) ?? []) {
             if (!seen.has(target)) {
-              collect(target, seen, into);
+              collect(target, seen, into, true);
             }
           }
         };
         return new Map(
           modules.map((module) => {
             const into = new Map<string, Protocol.TreeNode>();
-            collect(module, new Set(), into);
+            collect(module, new Set(), into, false);
             return [`${MODULE}${module}`, [...into.values()].toSorted(byLabel)];
           }),
         );
@@ -466,7 +493,12 @@ export const make = (store: Store.Api, root: string) =>
 
         const requested = packages.filter((pkg) => packageIris.includes(pkg.iri));
         // A folder path is spliced into a string literal, so only one the tree could have minted is taken.
-        const folders = tail(FOLDER).filter((path) => /^[\w@.\-/]+$/.test(path));
+        // Any repository-relative path the tree could have minted (`[id]`, `(group)` included); `literal` escapes it
+        // for the query, so only traversal and control characters are refused.
+        const folders = tail(FOLDER).filter(
+          (path) =>
+            path.length > 0 && !path.split('/').includes('..') && ![...path].some((char) => char.charCodeAt(0) < 0x20),
+        );
         const [byPackage, byFolder, byModule, byNamespace] = yield* Effect.all(
           [
             packageChildren(packages, requested),

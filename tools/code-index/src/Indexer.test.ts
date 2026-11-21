@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { parseSync } from 'oxc-parser';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
@@ -339,17 +339,20 @@ describe('Indexer, when git stops listing a file', () => {
   let root: string;
   let dir: string;
 
-  beforeAll(async () => {
+  // A repository per test, each indexed once as its baseline, so no test leans on another's pass.
+  beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), 'code-index-unlisted-'));
     dir = join(root, 'node_modules', '.code-index');
     await mkdir(join(root, 'src', 'nested'), { recursive: true });
     await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;\n');
     await writeFile(join(root, 'src', 'nested', 'b.ts'), 'export const b = 2;\n');
     await writeFile(join(root, 'src', 'scratch.ts'), 'export const scratch = 3;\n');
+    await writeFile(join(root, 'src', 'a"b.ts'), 'export const quoted = 4;\n');
     await git(root, 'init', '--quiet');
   }, 60_000);
 
-  afterAll(async () => {
+  afterEach(async () => {
+    await chmod(join(root, 'src', 'nested'), 0o755).catch(() => {});
     await rm(root, { recursive: true, force: true });
   });
 
@@ -366,22 +369,35 @@ describe('Indexer, when git stops listing a file', () => {
       ),
     ).then((files) => files.map(({ path }) => path));
 
+  const ALL = ['src/a"b.ts', 'src/a.ts', 'src/nested/b.ts', 'src/scratch.ts'];
+
   test('a file that exists and is not ignored stays indexed though the listing omits it', async () => {
     await index();
-    expect(await paths()).toEqual(['src/a.ts', 'src/nested/b.ts', 'src/scratch.ts']);
+    expect(await paths()).toEqual(ALL);
 
     // An embedded repository is listed as one directory entry, so its files drop out of the listing.
     await git(join(root, 'src', 'nested'), 'init', '--quiet');
     const result = await index();
     expect(result.removed).toBe(0);
-    expect(await paths()).toEqual(['src/a.ts', 'src/nested/b.ts', 'src/scratch.ts']);
+    expect(await paths()).toEqual(ALL);
+  }, 60_000);
+
+  test('a file in a directory that cannot be read is kept, since its absence is not established', async () => {
+    await index();
+    await chmod(join(root, 'src', 'nested'), 0o000);
+    const result = await index();
+    expect(result.removed).toBe(0);
+    expect(await paths()).toEqual(ALL);
   }, 60_000);
 
   test('a file git now ignores, or that is gone, still leaves the index', async () => {
-    await writeFile(join(root, '.gitignore'), 'src/scratch.ts\n');
+    await index();
+    expect(await paths()).toEqual(ALL);
+    // `a"b.ts` comes back from check-ignore quoted and escaped; it must still match the recorded path.
+    await writeFile(join(root, '.gitignore'), 'src/scratch.ts\nsrc/a"b.ts\n');
     await rm(join(root, 'src', 'a.ts'));
     const result = await index();
-    expect(result.removed).toBe(2);
+    expect(result.removed).toBe(3);
     expect(await paths()).toEqual(['src/nested/b.ts']);
   }, 60_000);
 });

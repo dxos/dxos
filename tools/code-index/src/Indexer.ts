@@ -11,7 +11,6 @@ import type * as RpcClientError from 'effect/rpc/RpcClientError';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 import type * as WorkerError from 'effect/workers/WorkerError';
-import { existsSync } from 'node:fs';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
@@ -209,7 +208,9 @@ export const run = (
         // A listing that omits files that exist (twice seen to come back empty mid-`pnpm install`,
         // which then emptied the whole index) must not cost the index those files.
         const unlisted = states.filter((state) => !present.has(state.path));
-        const lingering = unlisted.filter((state) => existsSync(join(root, state.path)));
+        const lingering = yield* Effect.filter(unlisted, (state) => Crawler.mayExist(join(root, state.path)), {
+          concurrency: 32,
+        });
         const ignored = yield* Crawler.ignored(
           root,
           lingering.map((state) => state.path),
