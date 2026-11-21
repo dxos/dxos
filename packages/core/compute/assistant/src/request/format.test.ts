@@ -78,7 +78,7 @@ describe('formatSystemPrompt', () => {
       const instructions = yield* Database.add(Instructions.make({ name: 'Draft', text: 'Answer like a pirate.' }));
       const prompt = yield* formatSystemPrompt({ objects: [instructions] });
       expect(prompt).toContain('## Context Objects');
-      expect(prompt).toContain('<label>Draft</label>');
+      expect(prompt).toContain(`- ${Obj.getTypename(instructions)} ${Obj.getURI(instructions)} "Draft"`);
       expect(prompt).not.toContain('## Instructions');
       expect(prompt).not.toContain('Answer like a pirate.');
     }).pipe(Effect.provide(testLayer())),
@@ -109,7 +109,7 @@ describe('formatSystemPrompt', () => {
       const prompt = yield* formatSystemPrompt({ objects: [doc, project] });
       expect(prompt).toContain('## Context Objects');
       expect(prompt).toContain(Obj.getURI(doc));
-      expect(prompt).toContain('<label>Voyage</label>');
+      expect(prompt).toContain(`- ${Obj.getTypename(project)} ${Obj.getURI(project)} "Voyage"`);
       expect(prompt).not.toContain('## Instructions');
     }).pipe(Effect.provide(testLayer())),
   );
@@ -140,7 +140,7 @@ describe('formatBindingChanges', () => {
       // Named as the definition it disables is.
       expect(disabled).toContain('"Dropped"');
       expect(yield* formatSkills([dropped])).toContain('<skill name="Dropped">');
-      expect(objects).toContain('<label>Voyage</label>');
+      expect(objects).toContain(`- ${Obj.getTypename(bound)} ${Obj.getURI(bound)} "Voyage"`);
       expect(objects).not.toContain('Existing');
     }).pipe(Effect.provide(testLayer())),
   );

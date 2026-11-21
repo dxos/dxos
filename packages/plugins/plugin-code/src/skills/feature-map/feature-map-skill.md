@@ -29,11 +29,20 @@ that breaks a feature down sits beneath every spec citing it.
   (`project: null`) with `code-update-spec`.
 - **When you pick up a task that moves a feature**, link it with `code-link-task { task, spec, item }` and keep the
   task's status current: a started task is what marks the feature as being worked on.
-- **Set the status when you observe it**: `prototype` when it works in a demo, `operational` when people can rely on
-  it, and `failing` when it worked before and does not now.
-- **When you finish work that shows a feature working**, make a showcase with
+- **When you plan a milestone from a spec**, file one task per feature it moves, linked to that feature, and one last
+  task that checks the milestone's acceptance against what runs. Each task ends with its feature's code running where
+  it can be checked, so every task moves a status.
+- **Set the status when you observe it**, in the feature's `status` field:
+  - `prototype` when its code runs where it can be checked, set by the task that ships it;
+  - `operational` when the checks people rely on pass against what runs, normally in the milestone's check task;
+  - `failing` when it worked before and does not now.
+- **When a feature's requirements change**, check what runs against the changed requirement before touching code. If
+  it fails, set `failing` and file one task for the fix, linked to the feature. Stop there unless you were asked to fix
+  it too.
+- **When you finish work that shows a feature working**, and always when you set one `operational`, make a showcase with
   `code-create-showcase { name, content, targets?, items?, artifacts? }`. A showcase is a slide deck you can present:
-  `content` is its first slide, markdown saying what you showed and how to reproduce it, and each of `artifacts`
+  `content` is its first slide, markdown saying where the work runs (its URL), how to reproduce it, and the checks you
+  ran as a table of expected against actual. Each of `artifacts`
   becomes a further slide showing that object (uploaded screenshots and videos, diagrams, the PRs the work landed
   in), in the order given. Pass every feature it demonstrates in `items` as `{ spec, item }`, and every task in
   `targets`. An `operational` feature without a showcase is flagged on the map.
