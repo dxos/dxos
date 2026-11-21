@@ -51,6 +51,11 @@ describe('parseSession', () => {
     expect(parseSession(answered).board?.goals[1].blocked).toBe(false);
   });
 
+  test('a superseding decision replaces the answer', ({ expect }) => {
+    const superseded = `${SAMPLE_SESSION}\n\`\`\`mdl\ndecision D-2: No. Use \`.agents/sessions/\`.\n  date: 2026-11-21\n  by: user:alice\n  supersedes: D-1\n\`\`\`\n`;
+    expect(parseSession(superseded).board?.questions[1].answer).toBe('No. Use `.agents/sessions/`.');
+  });
+
   test('rejects unknown states and dangling references', () => {
     expect(messages(edit('  status: review', '  status: later'))).toEqual([
       expect.stringMatching(/G-3: status must be one of todo, backlog/),

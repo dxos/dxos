@@ -6,7 +6,7 @@
 // Turns a session's `SESSION.mdl` (`lang/session.mdl`) into a single-file react-ui page, without a bundler.
 //
 //   cli.ts start <session dir>              # make <dir>/SESSION.mdl the session's board (a skeleton if absent)
-//   cli.ts build [<SESSION.mdl>] [--strict] # parse, check, and write the page; exit 1 on an error
+//   cli.ts build [<SESSION.mdl>] [--strict] [--offline] # parse, check, add PR state from GitHub, write the page
 //   cli.ts hook                          # the Stop hook: build the current board; block once per change
 //   cli.ts template build | push | pull  # the prebuilt page: build it with Vite, or move it through R2
 //
@@ -20,6 +20,7 @@ import { homedir, tmpdir } from 'node:os';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { githubState, mergeState } from './github.ts';
 import { type Problem, type Sentence, parseSession } from './session.ts';
 import { type BoardData } from './types.ts';
 
@@ -208,7 +209,7 @@ const sessionName = (source: string) => basename(dirname(source));
 
 const pagePath = (source: string) => join(STATE_DIR, `${sessionName(source)}.html`);
 
-const build = async (source: string, strict: boolean): Promise<BuildResult> => {
+const build = async (source: string, strict: boolean, offline = false): Promise<BuildResult> => {
   const text = readFileSync(source, 'utf8');
   // The committed version, so an edit to the timeline, a question or an answer is caught before it is committed.
   const previous = git('show', `HEAD:${relative(ROOT, source)}`);
@@ -223,6 +224,11 @@ const build = async (source: string, strict: boolean): Promise<BuildResult> => {
   }
   if (!board || errors.length > 0) {
     return { source, errors, warnings };
+  }
+  if (board.prs.length > 0 && !offline) {
+    const github = await githubState(board.prs, join(STATE_DIR, 'github.json'));
+    board.prs = board.prs.map((pr) => mergeState(pr, github.state.get(pr.ref)));
+    warnings.push(...github.warnings.map((message) => ({ line: 1, message })));
   }
   const template = readFileSync(await resolveTemplate(), 'utf8');
   if (!template.includes('{{BOARD}}')) {
@@ -263,9 +269,20 @@ const start = (directory: string) => {
   console.log(`current board: ${relative(ROOT, absolute)}`);
 };
 
+/** HEAD and the working tree, outside the board's own files, so a change of the work is told from a change of the board. */
+const repoState = (source: string): string =>
+  createHash('sha256')
+    .update(git('rev-parse', 'HEAD') ?? '')
+    .update(git('status', '--porcelain', '--', '.', `:!${relative(ROOT, source)}`, ':!.claude/.status-board') ?? '')
+    .digest('hex')
+    .slice(0, 16);
+
+type Marker = { hash?: string; repo?: string };
+
 /**
- * The Stop hook. An invalid board blocks the stop with its errors; a changed board blocks it once, to publish the
- * page. The hash of the last board it asked to publish is kept beside the page, so an unchanged board never blocks.
+ * The Stop hook. It never blocks a stop that a Stop hook already continued (`stop_hook_active`), so it cannot loop.
+ * Otherwise it blocks once: for an invalid file, for a changed board (to publish it), or for work that changed while
+ * the board did not (to remind the agent to update it). The marker beside the page holds what it last asked about.
  */
 const hook = async () => {
   const input = (() => {
@@ -276,34 +293,40 @@ const hook = async () => {
     }
   })();
   const source = currentSource();
-  if (!source) {
+  if (!source || input.stop_hook_active) {
     return;
   }
   const result = await build(source, false);
   const block = (reason: string) => console.log(JSON.stringify({ decision: 'block', reason }));
+  const name = relative(ROOT, source);
   if (result.errors.length > 0) {
-    // A second block in one stop would loop on a board the agent cannot fix; say it on stderr instead.
-    if (input.stop_hook_active) {
-      console.error(format(source, result.errors));
-      return;
+    block(`STATUS BOARD: fix ${name}, then stop again.\n${format(source, result.errors)}`);
+    return;
+  }
+  const markerFile = join(STATE_DIR, `${sessionName(source)}.json`);
+  // Written only by this hook, so it is not validated again.
+  const marker: Marker = existsSync(markerFile) ? JSON.parse(readFileSync(markerFile, 'utf8')) : {};
+  const repo = repoState(source);
+  writeFileSync(markerFile, JSON.stringify({ hash: result.hash, repo }));
+  if (marker.hash !== result.hash) {
+    const lines = [
+      `STATUS BOARD: ${name} changed. Publish the page with the Artifact tool:`,
+      `file_path=${result.page} (same path as before, so the URL stays; icon "checklist" on the first publish).`,
+      'Then end the turn with one line. Do not repeat the board in the chat.',
+    ];
+    if (result.warnings.length > 0) {
+      lines.push('Fix these findings first if they are real:', format(source, result.warnings));
     }
-    block(`STATUS BOARD: fix ${relative(ROOT, source)}, then stop again.\n${format(source, result.errors)}`);
-    return;
+    block(lines.join('\n'));
+  } else if (marker.repo !== undefined && marker.repo !== repo) {
+    block(
+      [
+        `STATUS BOARD: the work changed but ${name} did not.`,
+        'If a goal, PR or question changed, update it and add a timeline event; the next stop publishes it.',
+        'If nothing on the board changed, end the turn.',
+      ].join('\n'),
+    );
   }
-  const marker = join(STATE_DIR, `${sessionName(source)}.hash`);
-  if (existsSync(marker) && readFileSync(marker, 'utf8').trim() === result.hash) {
-    return;
-  }
-  writeFileSync(marker, `${result.hash}\n`);
-  const lines = [
-    `STATUS BOARD: ${relative(ROOT, source)} changed. Publish the page with the Artifact tool:`,
-    `file_path=${result.page} (same path as before, so the URL stays; icon "checklist" on the first publish).`,
-    'Then end the turn with one line. Do not repeat the board in the chat.',
-  ];
-  if (result.warnings.length > 0) {
-    lines.push('Fix these STE findings first if they are real:', format(source, result.warnings));
-  }
-  block(lines.join('\n'));
 };
 
 const main = async () => {
@@ -320,7 +343,7 @@ const main = async () => {
       const source = args[0]
         ? resolve(args[0])
         : (currentSource() ?? fail('no session; run `cli.ts start agents/sessions/<date>-<slug>`'));
-      const result = await build(source, rest.includes('--strict'));
+      const result = await build(source, rest.includes('--strict'), rest.includes('--offline'));
       if (result.warnings.length > 0) {
         console.error(format(source, result.warnings));
       }
@@ -352,4 +375,16 @@ const main = async () => {
   }
 };
 
+// Node's fetch ignores HTTPS_PROXY unless asked, and a sandbox reaches GitHub only through its proxy.
+if (process.env.HTTPS_PROXY && !process.env.NODE_USE_ENV_PROXY) {
+  const child = spawnSync(
+    process.execPath,
+    [...process.execArgv, '--disable-warning=UNDICI-EHPA', ...process.argv.slice(1)],
+    {
+      stdio: 'inherit',
+      env: { ...process.env, NODE_USE_ENV_PROXY: '1' },
+    },
+  );
+  process.exit(child.status ?? 1);
+}
 await main();

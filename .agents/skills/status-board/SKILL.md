@@ -32,14 +32,16 @@ It extends the changelog dialect, so questions and answers follow the `mdl` skil
 | ------------------ | -------------------- | ---------------------------------------------------------- |
 | `## Questions`     | `question Q-n: text` | `date`, `by`, `for`, `context`, `options` (`- Title: why`) |
 | `## Goals`         | `goal G-n: title`    | `status`, `blockedBy: [Q-n]`, `notes`                      |
-| `## Pull requests` | `pr PR-n: title`     | `ref: owner/repo#n`, `status`, `branch`, `goals`, `notes`  |
+| `## Pull requests` | `pr PR-n: title`     | `ref: owner/repo#n`, `status?`, `goals`, `notes`           |
 | `## Changelog`     | `decision D-n: text` | `date`, `by`, `answers: Q-n`                               |
 | `## Timeline`      | `event T-n: text`    | `date: 2026-11-21T11:55Z`, `by`                            |
 
 - The frontmatter `name` is the page title. The first paragraph after `#` is the summary.
 - Goal states are the task statuses: `todo`, `backlog`, `started`, `review`, `done`, `duplicate`, `blocked`,
   `cancelled`, `failed`. A goal whose `blockedBy` names an open question shows as blocked.
-- PR states: `draft`, `open`, `failing`, `landing` (the `land` skill drives it), `queued`, `merged`, `closed`.
+- PR state and branch come from GitHub on each build (cached for 2 minutes): `draft`, `open`, `failing`, `merged`,
+  `closed`. Write `status` only for what GitHub does not show: `landing` (the `land` skill drives it) and `queued` (the
+  merge queue has it). A lookup that fails keeps the file's state and prints a warning; `--offline` skips it.
 - A title has 12 words or fewer. A note has 25 words or fewer, at most 6 for each block.
 - Ids are `Q-1`, `G-1`, `PR-1`, `D-1`, `T-1`, numbered in the order written.
 
@@ -72,12 +74,13 @@ node --conditions=source tools/session-board/src/cli.ts build
 
 ## 6. The Stop hook
 
-`.claude/hooks/status-board-stop.sh` runs at each Stop. With no current board it does nothing.
+`.claude/hooks/status-board-stop.sh` runs at each Stop. With no current board it does nothing. It never blocks a stop
+that a Stop hook already continued, so it cannot loop. Otherwise it blocks at most once:
 
-- An invalid file blocks the stop with the errors. Fix them.
-- A changed board blocks the stop one time, with `STATUS BOARD: … Publish the page`. Publish it, then end the turn
-  with one line.
-- An unchanged board does not block.
+- An invalid file: the errors. Fix them.
+- A changed board: `STATUS BOARD: … Publish the page`. Publish it, then end the turn with one line.
+- Work that changed (HEAD or the working tree) while the board did not: a reminder. Update the goal, PR or question
+  and add an event, or end the turn if nothing on the board changed.
 
 ## 7. The chat reply
 

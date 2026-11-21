@@ -25,6 +25,10 @@
       body {
         color: var(--color-fg);
       }
+      /* The goals tree is not height-bound here, so its viewport must pass the wheel on to the page it sits in. */
+      .dx-tree-content {
+        overscroll-behavior-y: auto;
+      }
     </style>
   </head>
   <body>

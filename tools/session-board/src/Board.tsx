@@ -114,15 +114,20 @@ export const Board = ({ board }: BoardProps) => {
   const sections = ['questions', 'goals', 'prs', 'timeline'];
 
   return (
-    <Panel.Root>
+    <Panel.Root size='sm' gutter='rail'>
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <Layout.Container gap='md'>
               <Layout.Flex column gap='xs'>
-                <Typography.Text asChild>
-                  <h1>{board.title}</h1>
-                </Typography.Text>
+                <Layout.Flex gap='sm' align='center' justify='between'>
+                  <Typography.Text asChild truncate>
+                    <h1 className='font-medium'>{board.title}</h1>
+                  </Typography.Text>
+                  <Typography.Text tone='subtle' classNames='text-xs shrink-0' data-testid='updated'>
+                    Updated {updated}
+                  </Typography.Text>
+                </Layout.Flex>
                 {board.summary && <Typography.Text tone='muted'>{board.summary}</Typography.Text>}
               </Layout.Flex>
               <Accordion.Root border={false} defaultValue={sections}>
@@ -158,7 +163,13 @@ export const Board = ({ board }: BoardProps) => {
                 <Accordion.Item value='goals' data-testid='section-goals'>
                   <SectionTrigger icon='ph--target--regular' label='Goals' count={`${done}/${board.goals.length}`} />
                   <Accordion.ItemContent>
-                    <TaskList.Root tasks={tasks} columns={['status', 'title']} showMnemonics={false} showDescription>
+                    <TaskList.Root
+                      tasks={tasks}
+                      columns={['status', 'title']}
+                      showMnemonics={false}
+                      showDescription
+                      flush
+                    >
                       <TaskList.Viewport>
                         <TaskList.Content />
                       </TaskList.Viewport>
@@ -188,11 +199,6 @@ export const Board = ({ board }: BoardProps) => {
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
-      <Panel.Footer>
-        <Typography.Text tone='subtle' data-testid='updated'>
-          Updated {updated}
-        </Typography.Text>
-      </Panel.Footer>
     </Panel.Root>
   );
 };

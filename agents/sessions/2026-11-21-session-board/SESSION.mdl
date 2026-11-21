@@ -72,19 +72,19 @@ goal G-1: The session file is `SESSION.mdl`, parsed with Deus.
 
 ```mdl
 goal G-2: The page is dark, in the react-ui design system.
-  status: started
+  status: done
 ```
 
 ```mdl
 goal G-3: Goals and questions use the plugin-projects task UI.
-  status: started
+  status: done
   notes:
     - Goals render in `TaskList`, questions in `TaskQuestion`.
 ```
 
 ```mdl
 goal G-4: An append-only timeline is at the bottom of the page.
-  status: started
+  status: done
 ```
 
 ```mdl
@@ -96,7 +96,23 @@ goal G-5: The page reads live state through the `mcp` capability.
 
 ```mdl
 goal G-6: The agentic review of the PR finds no issues.
-  status: todo
+  status: done
+  notes:
+    - System One found 0 issues for $0.0087.
+```
+
+```mdl
+goal G-7: The Stop hook reminds the agent to keep the board current.
+  status: done
+  notes:
+    - It never blocks a stop that a Stop hook already continued.
+```
+
+```mdl
+goal G-8: The build reads the PR state from GitHub.
+  status: done
+  notes:
+    - The lookup is cached for 2 minutes, so the Stop hook stays fast.
 ```
 
 ## Pull requests
@@ -104,8 +120,6 @@ goal G-6: The agentic review of the PR finds no issues.
 ```mdl
 pr PR-1: Build the status board from a session file.
   ref: dxos/dxos#14647
-  branch: dm/charming-knuth-lw1x6k
-  status: draft
 ```
 
 ## Changelog
@@ -115,6 +129,60 @@ decision D-1: The agent writes the PR state for now. The page reads live state t
   date: 2026-11-21
   by: user:dmaretskyi
   answers: Q-3
+```
+
+```mdl
+decision D-2: Yes.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  answers: Q-1
+```
+
+```mdl
+decision D-3: The Stop hook reminds the agent to keep the board updated, without recursive loops.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  answers: Q-2
+```
+
+```mdl
+decision D-4: Yes. The script gets the PR state from GitHub.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  supersedes: D-1
+```
+
+```mdl
+decision D-5: No. This work replaces the old `status-board` skill under its name.
+  date: 2026-11-21
+  by: user:dmaretskyi
+  answers: Q-4
+```
+
+```mdl
+decision D-6: The hook reminds once when HEAD or the working tree changed but the board did not. Fills in [D-3].
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: A reminder on every stop would fire on turns that only answer a question.
+  rejected:
+    - Remind on every stop: noise on turns with no work.
+```
+
+```mdl
+decision D-7: The hook never blocks a stop that a Stop hook already continued. Fills in [D-3].
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The `stop_hook_active` flag is the only signal that a block would repeat.
+```
+
+```mdl
+decision D-8: GitHub state wins, except `landing` and `queued`, which GitHub does not show. Fills in [D-4].
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The merge queue and the `land` skill are not visible in the pull request API.
 ```
 
 ## Timeline
@@ -141,4 +209,16 @@ event T-3: Fixed the dark theme text in the Artifact frame.
 event T-4: The session file changed from Markdown to `SESSION.mdl`.
   date: 2026-11-21T12:30Z
   by: user:dmaretskyi
+```
+
+```mdl
+event T-5: The user answered [Q-1], [Q-2], [Q-3] and [Q-4].
+  date: 2026-11-21T12:38Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-6: The build reads PR state from GitHub, and the hook reminds once.
+  date: 2026-11-21T12:45Z
+  by: agent:claude-code
 ```

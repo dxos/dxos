@@ -172,6 +172,8 @@ export const parseSession = (text: string, options: ParseOptions = {}): ParseRes
 
   const questions: Question[] = [];
   const answers = new Map<string, string>();
+  /** Each decision about a question, by id, so a later one can supersede it. */
+  const decisions = new Map<string, string>();
   const goals: Goal[] = [];
   const prs: PullRequest[] = [];
   const timeline: TimelineEvent[] = [];
@@ -229,11 +231,15 @@ export const parseSession = (text: string, options: ParseOptions = {}): ParseRes
       }
       case 'decision': {
         const answered = fields.scalars.get('answers');
-        if (answered) {
-          // Only the first decision that answers a question counts (`lang/changelog.mdl` rule 10).
-          if (!answers.has(answered)) {
-            answers.set(answered, title);
-          }
+        const superseded = fields.scalars.get('supersedes');
+        const replaces = superseded ? decisions.get(superseded) : undefined;
+        // The first decision that answers a question counts, until one supersedes it (`lang/changelog.mdl` rule 10).
+        const question = answered ?? replaces;
+        if (question && (!answers.has(question) || replaces === question)) {
+          answers.set(question, title);
+        }
+        if (question) {
+          decisions.set(block.id, question);
         }
         break;
       }
@@ -260,8 +266,9 @@ export const parseSession = (text: string, options: ParseOptions = {}): ParseRes
         if (!match) {
           error(line, `${block.id}: ref must be owner/repo#number`);
         }
+        // Optional: the build reads the state from GitHub, and only `landing` and `queued` need saying.
         const status = fields.scalars.get('status');
-        if (!PR_STATUSES.some((value) => value === status)) {
+        if (status !== undefined && !PR_STATUSES.some((value) => value === status)) {
           error(line, `${block.id}: status must be one of ${PR_STATUSES.join(', ')}`);
         }
         const branch = fields.scalars.get('branch');
