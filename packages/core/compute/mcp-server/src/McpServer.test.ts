@@ -20,7 +20,7 @@ import { describe, test } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Database, Obj, Registry, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Registry, Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -83,7 +83,7 @@ const GetObjects = Operation.make({
   input: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
   output: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
   services: [Database.Service],
-}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, 'get'));
+}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, ['get']));
 
 const TASK_TYPENAME = 'com.example.type.task';
 
@@ -91,10 +91,15 @@ class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
   Schema.Struct({ title: Schema.String, status: Schema.String }),
 ) {}
 
+/** A type a test stores in the space, as `space.addType` would. */
+const MEMO_TYPENAME = 'com.example.type.memo';
+
+class Memo extends Type.makeObject<Memo>(DXN.make(MEMO_TYPENAME, '0.1.0'))(Schema.Struct({ title: Schema.String })) {}
+
 /** A real database holding two tasks, for a script's database verbs to act on. */
 const taskDatabase = async () => {
   const builder = await new EchoTestBuilder().open();
-  const { db } = await builder.createDatabase({ types: [Task] });
+  const { db } = await builder.createDatabase({ types: [Task, Feed.Feed], assignQueuePositions: true });
   const water = db.add(Obj.make(Task, { title: 'Water the plants', status: 'open' }));
   db.add(Obj.make(Task, { title: 'Ship the release', status: 'done' }));
   await db.flush({ secondaryIndexes: true });
@@ -879,6 +884,33 @@ describe('McpServer', () => {
         expect(invocations).to.have.length(0);
         // Changed in the host's database, not in a copy.
         expect(water.status).to.equal('done');
+      } finally {
+        await close();
+      }
+    });
+
+    test('query and search reach objects of a type stored in the space, and what feeds hold', async ({ expect }) => {
+      const { db, close } = await taskDatabase();
+      try {
+        const stored = await db.addType(Memo);
+        db.add(Obj.make(stored, { title: 'Stored memo' }));
+        const inbox = db.add(Feed.make({ name: 'inbox' }));
+        await db.appendToFeed(inbox, [Obj.make(Task, { title: 'Mail about the plants', status: 'open' })]);
+        await db.flush({ secondaryIndexes: true });
+        const host = testHost({ spaceIds: [db.spaceId] });
+        const { result } = run(
+          trim`
+            const memos = yield* query('${MEMO_TYPENAME}', { title: 'Stored memo' });
+            const spaceOnly = yield* query('${TASK_TYPENAME}', { title: 'Mail about the plants' });
+            const withFeeds = yield* query('${TASK_TYPENAME}', { title: 'Mail about the plants' }, { feeds: true });
+            const inInbox = yield* search('plants', '${TASK_TYPENAME}', { in: ['${inbox.id}'] });
+            yield* print(memos.map((memo) => memo.title).join(), spaceOnly.length, withFeeds.length, inInbox.map((task) => task.title).join());
+          `,
+          { host: { ...host, host: { ...host.host, database: () => Effect.succeed(db) } }, spaceId: db.spaceId },
+        );
+        const { output, error } = await result;
+        expect(error).to.be.undefined;
+        expect(output).to.equal('Stored memo 0 1 Mail about the plants');
       } finally {
         await close();
       }

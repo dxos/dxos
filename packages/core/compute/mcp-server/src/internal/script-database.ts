@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { type Database, type Entity, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Query, type Ref, Scope, Type } from '@dxos/echo';
 import { DXN, EID, EntityId, type SpaceId, URI } from '@dxos/keys';
 import { deepMapValues } from '@dxos/util';
 
@@ -38,23 +38,27 @@ export const call = (
         Effect.map((found) => (found === undefined ? undefined : wire(found))),
       );
     case 'query': {
-      const [typename, props] = args;
+      const [typename, props, options] = args;
       return Effect.gen(function* () {
-        const type = yield* typeOf(typename, 'query');
         if (props != null && !isRecord(props)) {
           return yield* Effect.fail(failure('invalid_request', 'query takes its props as an object of field values.'));
         }
-        return wire(yield* run(db, Query.select(Filter.type(type, isRecord(props) ? props : undefined))));
+        const filter = yield* typeFilter(db, typename, 'query');
+        // Narrowed by the properties in a second step: the planner takes properties on a type filter, but not inside
+        // the `Filter.or` a stored copy of the type adds.
+        const typed = isRecord(props) ? Query.select(filter).select(Filter.props(props)) : Query.select(filter);
+        return wire(yield* run(db, yield* scoped(db, spaceId, typed, options)));
       });
     }
     case 'search': {
-      const [text, typename] = args;
+      const [text, typename, options] = args;
       return Effect.gen(function* () {
         if (!Predicate.isString(text) || text.trim().length === 0) {
           return yield* Effect.fail(failure('invalid_request', 'search takes the text to find as a string.'));
         }
         const matches = Query.select(Filter.text(text, { type: 'full-text' }));
-        const query = typename == null ? matches : matches.select(Filter.type(yield* typeOf(typename, 'search')));
+        const typed = typename == null ? matches : matches.select(yield* typeFilter(db, typename, 'search'));
+        const query = yield* scoped(db, spaceId, typed, options);
         // Flushed first, so what the script just wrote is in the full-text index, which lags the primary one.
         yield* flush(db, { secondaryIndexes: true });
         return wire(yield* run(db, query));
@@ -128,11 +132,56 @@ const targetId = (target: unknown, spaceId: SpaceId): Effect.Effect<EntityId, To
   );
 };
 
-/** The type a typename names, as `query` and `search` filter by it. */
-const typeOf = (typename: unknown, verb: Verb): Effect.Effect<DXN.DXN, ToolFailure> =>
-  Predicate.isString(typename) && Schema.is(DXN.NameSchema)(typename)
-    ? Effect.succeed(DXN.make(typename))
-    : Effect.fail(failure('invalid_request', `${verb} takes a typename such as 'org.dxos.type.task'.`));
+/**
+ * The filter for objects of a typename, as `space.queryObjects` builds it: the bare typename, plus every copy of the
+ * type stored in the space, since objects of a stored type carry its `echo:` id, which the typename does not match.
+ */
+const typeFilter = (db: Database.Database, typename: unknown, verb: Verb): Effect.Effect<Filter.Any, ToolFailure> =>
+  Effect.gen(function* () {
+    if (!Predicate.isString(typename) || !Schema.is(DXN.NameSchema)(typename)) {
+      return yield* Effect.fail(failure('invalid_request', `${verb} takes a typename such as 'org.dxos.type.task'.`));
+    }
+    const declared = yield* run(
+      db,
+      Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry()),
+    );
+    const stored = declared.filter(Type.isType).filter((type) => Type.getDatabase(type) != null);
+    return stored.length === 0
+      ? Filter.type(DXN.make(typename))
+      : Filter.or(Filter.type(DXN.make(typename)), ...stored.map((type) => Filter.type(type)));
+  });
+
+/**
+ * A query narrowed to what sits under `options.in`, reading feeds when `options.feeds` asks or when `in` is given: a
+ * feed's content is reached only through its feed.
+ */
+const scoped = (
+  db: Database.Database,
+  spaceId: SpaceId,
+  query: Query.Any,
+  options: unknown,
+): Effect.Effect<Query.Any, ToolFailure> =>
+  Effect.gen(function* () {
+    if (options != null && !isRecord(options)) {
+      return yield* Effect.fail(failure('invalid_request', 'The options are an object: { feeds?, in? }.'));
+    }
+    const named = options?.in ?? [];
+    if (!Array.isArray(named)) {
+      return yield* Effect.fail(failure('invalid_request', 'in takes a list of objects, ids or references.'));
+    }
+    const parents: (Obj.Unknown | Ref.Unknown)[] = [];
+    for (const target of named) {
+      const id = yield* targetId(target, spaceId);
+      const parent = yield* find(db, id);
+      if (!Obj.isObject(parent)) {
+        return yield* Effect.fail(failure('invalid_request', `No object ${id} in space ${spaceId}.`));
+      }
+      parents.push(parent);
+    }
+    const narrowed = parents.length > 0 ? query.select(Filter.childOf(parents)) : query;
+    // Scoped to this space's database: feeds named without a space match nothing in the index.
+    return options?.feeds === true || parents.length > 0 ? narrowed.from(db, { includeFeeds: true }) : narrowed;
+  });
 
 const find = (db: Database.Database, id: EntityId): Effect.Effect<Entity.Unknown | undefined, ToolFailure> =>
   run(db, Query.select(Filter.id(id))).pipe(Effect.map(([found]) => found));

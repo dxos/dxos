@@ -1450,17 +1450,17 @@ export const getConsentPreview = (
 };
 
 /**
- * Names the code-mode binding that does everything the operation does, against the database the code already has open
- * (e.g. `'get'`). Code mode does not offer an annotated operation, since the binding needs no invocation; tool callers
- * still see it.
+ * Names the code-mode bindings that together do everything the operation does, against the database the code already
+ * has open (e.g. `['query', 'search']`). Code mode does not offer an annotated operation, since the bindings need no
+ * invocation; tool callers still see it.
  */
 export const ScriptBindingAnnotation = Annotation.make({
   id: 'org.dxos.operation.script-binding',
-  schema: Schema$.String,
+  schema: Schema$.Array(Schema$.String),
 });
 
-/** The binding that replaces the operation in code mode, when it declares one. */
-export const getScriptBinding = (op: Definition.Any): string | undefined =>
+/** The bindings that replace the operation in code mode, when it declares them. */
+export const getScriptBinding = (op: Definition.Any): readonly string[] | undefined =>
   op.meta.annotations
     ? Option.getOrUndefined(Annotation.getDictionary(op.meta.annotations, ScriptBindingAnnotation))
     : undefined;

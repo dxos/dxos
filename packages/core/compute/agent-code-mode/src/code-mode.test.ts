@@ -37,6 +37,9 @@ const TASK_TYPENAME = 'com.example.type.task';
 /** A type no layer registers, which only a type source supplies. */
 const NOTE_TYPENAME = 'com.example.type.note';
 
+/** A type the test stores in the space, as `space.addType` would. */
+const MEMO_TYPENAME = 'com.example.type.memo';
+
 /** The versioned DXN the effect dialect resolves the type by. */
 const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
 
@@ -678,6 +681,37 @@ describe('code mode reads', () => {
         const replaced = yield* runEvalResult(`await ops['space-get-objects']({ objects: [] });`);
         expect(replaced.ok).toBe(false);
         expect(replaced.output).toContain('is not offered in code. Read and change objects with get, query, search');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+// No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
+describe('code mode queries', () => {
+  it.effect(
+    'query and search reach objects of a type stored in the space, and what feeds hold',
+    Effect.fnUntraced(
+      function* (_) {
+        const { db } = yield* Database.Service;
+        class Memo extends Type.makeObject<Memo>(DXN.make(MEMO_TYPENAME, '0.1.0'))(
+          Schema.Struct({ title: Schema.String }),
+        ) {}
+        const stored = yield* Effect.promise(() => db.addType(Memo));
+        yield* Database.add(Obj.make(stored, { title: 'Stored memo' }));
+        const inbox = yield* Database.add(Feed.make({ name: 'inbox' }));
+        yield* Feed.append(inbox, [Obj.make(Task, { title: 'Mail about the plants', status: 'open' })]);
+        yield* Database.flush({ secondaryIndexes: true });
+
+        const output = yield* runEval(`
+          const memos = await query('${MEMO_TYPENAME}', { title: 'Stored memo' });
+          const spaceOnly = await query('${TASK_TYPENAME}', { title: 'Mail about the plants' });
+          const withFeeds = await query('${TASK_TYPENAME}', { title: 'Mail about the plants' }, { feeds: true });
+          const inInbox = await search('plants', '${TASK_TYPENAME}', { in: ['${inbox.id}'] });
+          print(memos.map((memo) => memo.title).join(), spaceOnly.length, withFeeds.length, inInbox.map((task) => task.title).join());
+        `);
+        expect(output).toEqual('Stored memo 0 1 Mail about the plants');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

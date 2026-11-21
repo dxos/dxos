@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Database, type Entity, Filter, Obj, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN, EntityId } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -34,6 +34,12 @@ export class UnknownObjectTypeError extends Schema.TaggedError<UnknownObjectType
     typename: Schema.String,
     message: Schema.String,
   },
+) {}
+
+/** An object `in` names that the database does not hold: the model's mistake, so an expected failure. */
+export class UnknownParentError extends Schema.TaggedError<UnknownParentError>('UnknownParentError')(
+  'UnknownParentError',
+  { message: Schema.String },
 ) {}
 
 /**
@@ -98,8 +104,12 @@ export const PlainDialect: Dialect = {
       },
 
       /** Objects of `typename`, optionally narrowed by exact property values. */
-      query: (typename: string, props?: Record<string, unknown>) =>
-        run(Database.query(Filter.type(DXN.make(typename), props)).run),
+      query: (typename: string, props?: Record<string, unknown>, options?: QueryOptions) =>
+        run(
+          Effect.gen(function* () {
+            return yield* Database.query(yield* scoped(yield* typeQuery(typename, props), options)).run;
+          }),
+        ),
 
       /** The stored object an id or a reference names, or undefined when there is none. */
       get: (target: unknown) =>
@@ -113,15 +123,14 @@ export const PlainDialect: Dialect = {
         ),
 
       /** Objects whose text matches `text`, by full-text search, optionally of one typename. */
-      search: (text: string, typename?: string) =>
+      search: (text: string, typename?: string, options?: QueryOptions) =>
         run(
           Effect.gen(function* () {
             // Flushed first, so what this evaluation just wrote is in the full-text index, which lags the primary one.
             yield* Database.flush({ secondaryIndexes: true });
             const matches = Query.select(Filter.text(text, { type: 'full-text' }));
-            return yield* Database.query(
-              typename === undefined ? matches : matches.select(Filter.type(DXN.make(typename))),
-            ).run;
+            const typed = typename === undefined ? matches : matches.select(yield* typeFilter(typename));
+            return yield* Database.query(yield* scoped(typed, options)).run;
           }),
         ),
 
@@ -214,28 +223,29 @@ export const PlainDialect: Dialect = {
     - \`await relations(obj, 'out' | 'in', typename?)\`, \`await children(obj)\`,
       \`await referrers(obj, typename?, field?)\` — the relations from or to an object, the objects
       it is the parent of, and the objects whose ref fields point at it.
-    - \`await query(typename, props?)\` — objects of that typename, optionally narrowed by exact
-      property values, e.g. \`await query('example.com/type/Task', { status: 'open' })\`.
+    - \`await query(typename, props?, { feeds?, in? }?)\` — objects of that typename, optionally narrowed by exact
+      property values, e.g. \`await query('com.example.type.task', { status: 'open' })\`. Pass
+      \`{ feeds: true }\` to also match what feeds hold (mail, calendar events), and \`{ in: [obj] }\` to keep only
+      objects under those (a feed, a collection).
     - \`await get(idOrRef)\` — the stored object an id or a reference names: \`ref(obj)\`, a \`Ref\` field, or the
       \`{ "/": uri }\` an operation returns; \`undefined\` when there is none.
-    - \`await search(text, typename?)\` — objects whose text matches, by full-text search, optionally of one
-      typename.
+    - \`await search(text, typename?, { feeds?, in? }?)\` — objects whose text matches, by full-text search,
+      optionally of one typename, with the same options as \`query\`.
     - \`await make(typename, props)\` — a new object; it is not stored until you add it.
     - \`await add(obj)\` / \`await remove(obj)\` — store or delete an object.
     - \`update(obj, (obj) => { obj.field = value; })\` — the only way to change a stored object.
     - \`await flush()\` — waits for pending writes to land; call it before printing a final
       confirmation.
     - \`ref(obj)\` — a reference to an object you hold. A \`Ref<typename>\` field takes one, never
-      an id or a URI string: \`await make('example.com/type/Task', { title: 'Review', owner: ref(person) })\`.
+      an id or a URI string: \`await make('com.example.type.task', { title: 'Review', owner: ref(person) })\`.
       Where an operation's input takes references, pass \`ref(obj)\` too.
 
     These bindings run against a database this evaluation already has open, so each call is a local read or write.
     An \`ops\` call is a remote invocation that opens its own database, and can take seconds. Read and change
     objects with the bindings, even where a skill names a tool for it: read with \`get\`, \`query\` or \`search\`,
-    and change with \`update\`. Two cases still take an operation, when it is listed: content held in a feed (mail,
-    calendar events), which only the space operation that queries objects reaches, with \`includeQueues\`; and
-    creating or deleting an object the user should find in a collection, which the space operations that add and
-    remove objects file into its collection, or unlink.
+    and change with \`update\`. One case still takes an operation, when it is listed: creating or deleting an object
+    the user should find in a collection, which the space operations that add and remove objects file into its
+    collection, or unlink.
 
     ${renderTypes(types?.filter(({ kind }) => kind === 'object'))}
 
@@ -291,6 +301,71 @@ const objectIdOf = (value: unknown): EntityId | undefined => {
   );
   return ids.length === 1 ? ids[0] : undefined;
 };
+
+/** What `query` and `search` take after their filters: whether to read feeds, and the objects to read under. */
+type QueryOptions = {
+  /** Also match what feeds hold (mail, calendar events), which a query of the space's objects does not reach. */
+  readonly feeds?: boolean;
+  /** Only objects under these (a feed, a collection): objects, references or ids. */
+  readonly in?: readonly unknown[];
+};
+
+/**
+ * The filter for objects of a typename, as `space.queryObjects` builds it: the bare typename, plus every copy of the
+ * type stored in the space, since objects of a stored type carry its `echo:` id, which the typename does not match.
+ */
+const typeFilter = (typename: string) =>
+  Effect.gen(function* () {
+    const declared = yield* Database.query(
+      Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry()),
+    ).run;
+    const stored = declared.filter((type) => Type.getDatabase(type) != null);
+    return stored.length === 0
+      ? Filter.type(DXN.make(typename))
+      : Filter.or(Filter.type(DXN.make(typename)), ...stored.map((type) => Filter.type(type)));
+  });
+
+/**
+ * Objects of a typename with these property values. Narrowed by the properties in a second step: the planner takes
+ * properties on a type filter, but not inside the `Filter.or` a stored copy of the type adds.
+ */
+const typeQuery = (typename: string, props?: Record<string, unknown>) =>
+  Effect.map(typeFilter(typename), (filter) =>
+    props === undefined ? Query.select(filter) : Query.select(filter).select(Filter.props(props)),
+  );
+
+/**
+ * A query narrowed to what sits under `in`, reading feeds when asked or when `in` is given: a feed's content is reached
+ * only through its feed.
+ */
+const scoped = (query: Query.Any, options: QueryOptions | undefined) =>
+  Effect.gen(function* () {
+    const parents = yield* Effect.forEach(options?.in ?? [], parentOf);
+    const narrowed = parents.length > 0 ? query.select(Filter.childOf(parents)) : query;
+    if (options?.feeds !== true && parents.length === 0) {
+      return narrowed;
+    }
+    // Scoped to this space's database: feeds named without a space match nothing in the index.
+    const { db } = yield* Database.Service;
+    return narrowed.from(db, { includeFeeds: true });
+  });
+
+/** An object `in` names: an object or reference as it is, an id as the stored object. */
+const parentOf = (target: unknown): Effect.Effect<Obj.Unknown | Ref.Unknown, UnknownParentError, Database.Service> =>
+  Effect.gen(function* () {
+    if (Obj.isObject(target) || Ref.isRef(target)) {
+      return target;
+    }
+    const id = idOf(target);
+    const found = id === undefined ? undefined : yield* findById(id);
+    return Obj.isObject(found)
+      ? found
+      : yield* Effect.fail(
+          new UnknownParentError({
+            message: `in takes objects, references or ids; ${JSON.stringify(target)} is none.`,
+          }),
+        );
+  });
 
 /** The id that an id, a URI, a `{ "/": uri }` envelope or an object (`objectIdOf`) names. */
 const idOf = (target: unknown): EntityId | undefined => {

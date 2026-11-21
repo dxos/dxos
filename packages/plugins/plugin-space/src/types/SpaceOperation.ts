@@ -809,7 +809,7 @@ export const GetObjects = Operation.make({
   output: Schema.Struct({
     objects: Schema.Array(Schema.Unknown),
   }),
-}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, 'get'));
+}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, ['get']));
 
 export const ResolveUrl = Operation.make({
   meta: {
@@ -872,7 +872,7 @@ export const UpdateObject = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-}).pipe(Operation.mutation('write'), Operation.annotate(Operation.ScriptBindingAnnotation, 'update'));
+}).pipe(Operation.mutation('write'), Operation.annotate(Operation.ScriptBindingAnnotation, ['update']));
 
 export const QueryObjects = Operation.make({
   meta: {
@@ -912,7 +912,7 @@ export const QueryObjects = Operation.make({
       description: 'True when `limit` cut the result short, so a caller never reads a capped page as the whole set.',
     }),
   }),
-}).pipe(Operation.mutation('none'));
+}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, ['query', 'search']));
 
 export const AddTag = Operation.make({
   meta: {

@@ -121,7 +121,7 @@ const ReadTicket = Operation.make({
   },
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.String,
-}).pipe(Operation.annotate(Operation.ScriptBindingAnnotation, 'get'));
+}).pipe(Operation.annotate(Operation.ScriptBindingAnnotation, ['get']));
 
 /** The scenario's operations, made per test with the record of what each was asked to do. */
 const makeHandlers = () => {

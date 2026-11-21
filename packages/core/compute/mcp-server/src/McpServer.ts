@@ -633,16 +633,17 @@ export const RunScript = Tool.make('runScript', {
     'and unlocks its operations for the rest of the script; ' +
     '`yield* print(...values)` adds a line to the output (non-strings as JSON); `spaceId` is the ' +
     'spaceId argument, used by invoke when a call names none. Against the spaceId space: ' +
-    '`yield* get(idOrRef)` returns an object, or undefined; `yield* query(typename, props?)` returns ' +
-    'the objects of a type, narrowed by exact field values; `yield* search(text, typename?)` finds ' +
-    'objects by full-text search; `yield* update(idOrRef, { field: value })` replaces those fields, ' +
+    '`yield* get(idOrRef)` returns an object, or undefined; `yield* query(typename, props?, options?)` ' +
+    'returns the objects of a type, narrowed by exact field values; `yield* search(text, typename?, ' +
+    'options?)` finds objects by full-text search; both take `{ feeds: true }` to also match what feeds ' +
+    'hold (mail, calendar events) and `{ in: [idOrRef] }` to keep only objects under those (a feed, a ' +
+    'collection); `yield* update(idOrRef, { field: value })` replaces those fields, ' +
     'stores the change and returns the object. These four read and write the database directly, while ' +
     'invoke runs an operation remotely and can take seconds: read and change objects with them, even ' +
     'where a skill names an operation for it. Objects come back as invoke returns them, references as ' +
-    '{"/": "echo://..."} envelopes that update and invoke take as they are. Two cases still take invoke: ' +
-    'content held in a feed (mail, calendar events), which only the space query operation reaches, with ' +
-    'includeQueues; and creating or deleting an object, which the space operations also file into its ' +
-    'collection or unlink. A failed call fails the program with ' +
+    '{"/": "echo://..."} envelopes that update and invoke take as they are. Creating or deleting an object ' +
+    'still takes invoke: the space operations also file it into its collection, or unlink it. A failed call ' +
+    'fails the program with ' +
     'a ToolFailure ({ code, message }); recover with `yield* Effect.result(invoke(...))`, whose value ' +
     "is { _tag: 'Success', success } or { _tag: 'Failure', failure }. Run independent calls together " +
     'with `yield* Effect.all([...], { concurrency: 8 })`. Nothing else is in scope: no import, ' +
@@ -707,8 +708,9 @@ export const scriptDispatch = (
             : Effect.fail(
                 failure(
                   'invalid_request',
-                  `A script does not invoke ${request.key}: use \`yield* ${replacement}(...)\`, which reads and ` +
-                    "changes the script's space without an operation.",
+                  `A script does not invoke ${request.key}: use ` +
+                    replacement.map((binding) => `\`yield* ${binding}(...)\``).join(' or ') +
+                    ", which read and change the script's space without an operation.",
                 ),
               );
         }),
@@ -742,7 +744,7 @@ export const scriptDispatch = (
  * The binding a script uses in place of the operation `key` names, when a binding does all the operation does. None on
  * a host that gives scripts no database, where the operation is still the only way.
  */
-const scriptBindingOf = (registry: Registry.Registry, host: HostShape, key: string): string | undefined => {
+const scriptBindingOf = (registry: Registry.Registry, host: HostShape, key: string): readonly string[] | undefined => {
   if (host.database === undefined) {
     return undefined;
   }

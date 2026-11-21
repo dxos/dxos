@@ -75,8 +75,12 @@ Add two bindings to the plain dialect and to the workerd facade (`FACADE` in `sr
 `src/workerd/prelude.mjs`):
 
 - `await get(idOrRef)`: the stored object, or `undefined`. It replaces `space-get-objects`.
-- `await search(text, typename?)`: a full-text search (`Filter.text`), optionally narrowed by type. It does what
-  the text form of `space-query-objects` does.
+- `await search(text, typename?, options?)`: a full-text search (`Filter.text`), optionally narrowed by type.
+
+`query` and `search` take `{ feeds?, in? }`, which `space.queryObjects` takes as `includeQueues` and `in`: `feeds`
+also matches what feeds hold (mail, calendar events), and `in` keeps only objects under the given ones (a feed, a
+collection). A typename also matches every copy of the type stored in the space by `space.addType`, since objects of a
+stored type carry its `echo:` id, which the bare typename does not match. Both are what `space.queryObjects` does.
 
 ### 2. Mark the replaced operations
 
@@ -85,16 +89,17 @@ Add an operation annotation, next to `IdempotentAnnotation` in `@dxos/compute/Op
 ```ts
 export const ScriptBindingAnnotation = Annotation.make({
   id: 'org.dxos.operation.script-binding',
-  schema: Schema.String,
+  schema: Schema.Array(Schema.String),
 });
 ```
 
-Its value names the binding that replaces the operation. plugin-space annotates two operations:
+Its value names the bindings that replace the operation. plugin-space annotates three operations:
 
-| Operation            | Replaced by |
-| -------------------- | ----------- |
-| `space.getObjects`   | `get`       |
-| `space.updateObject` | `update`    |
+| Operation            | Replaced by       |
+| -------------------- | ----------------- |
+| `space.getObjects`   | `get`             |
+| `space.updateObject` | `update`          |
+| `space.queryObjects` | `query`, `search` |
 
 Code mode leaves annotated operations out:
 
@@ -109,9 +114,8 @@ The annotation reaches EDGE without a key list. `Operation.serialize` writes `me
 `Operation.deserialize` restores it, and operation-service's `listOperations` returns those records to
 compute-service.
 
-`space.queryObjects` stays: its queue scope (`includeQueues`, `in`) has no binding. So do `space.addObject`,
-`space.removeObjects`, `space.addRelation`, `space.addType`, `space.queryTypes`, `space.getObjectLink`,
-`space.resolveUrl` and the tag operations.
+`space.addObject` and `space.removeObjects` stay (see Non-goals), and so do `space.addRelation`, `space.addType`,
+`space.queryTypes`, `space.getObjectLink`, `space.resolveUrl` and the tag operations, which no binding does.
 
 ### 3. Tell the model
 
@@ -120,10 +124,8 @@ The plain dialect's API reference gets one paragraph ahead of the operations sec
 > These bindings run against a database this evaluation already has open, so each call is a local read or write.
 > An `ops` call is a remote invocation that opens its own database, and can take seconds. Read and change objects
 > with the bindings, even where a skill names a tool for it: read with `get`, `query` or `search`, and change with
-> `update`. Two cases still take an operation, when it is listed: content held in a feed (mail, calendar events),
-> which only the space operation that queries objects reaches, with `includeQueues`; and creating or deleting an
-> object the user should find in a collection, which the space operations that add and remove objects file into
-> its collection, or unlink.
+> `update`. One case still takes an operation, when it is listed: creating or deleting an object the user should
+> find in a collection, which the space operations that add and remove objects file into its collection, or unlink.
 
 The Database skill's text still tells the model to read with `space-get-objects`. So `ops` answers a name it does not
 bind with an error that names the bindings, instead of the bare "is not a function".
@@ -137,8 +139,11 @@ for a client that calls tools, and code mode's reference overrides it for code.
 effect that fails with the same `ToolFailure`:
 
 - `yield* get(idOrRef)`: the object, or `undefined`.
-- `yield* query(typename, props?)`: objects of the type, optionally narrowed by exact property values.
-- `yield* search(text, typename?)`: a full-text search, optionally narrowed by type.
+- `yield* query(typename, props?, options?)`: objects of the type, optionally narrowed by exact property values.
+- `yield* search(text, typename?, options?)`: a full-text search, optionally narrowed by type.
+
+Both take the agent's `{ feeds?, in? }`, with `in` naming objects by id or reference.
+
 - `yield* update(idOrRef, patch)`: replaces the patch's fields and returns the object. The write is stored before
   the effect succeeds.
 

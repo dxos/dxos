@@ -246,7 +246,13 @@ const dispatch = async (state: HostState, binding: string, args: readonly unknow
         await call<Promise<HostObject[]>>('referrers', target(args[0]), args[1] ?? undefined, args[2] ?? undefined)
       ).map(remember);
     case 'query': {
-      const found = await call<Promise<HostObject[]>>('query', args[0], args[1] ?? undefined);
+      // Revived, since `in` names objects the code holds.
+      const found = await call<Promise<HostObject[]>>(
+        'query',
+        args[0],
+        args[1] ?? undefined,
+        revive(args[2] ?? undefined),
+      );
       return found.map(remember);
     }
     case 'get': {
@@ -254,7 +260,9 @@ const dispatch = async (state: HostState, binding: string, args: readonly unknow
       return found === undefined ? undefined : remember(found);
     }
     case 'search':
-      return (await call<Promise<HostObject[]>>('search', args[0], args[1] ?? undefined)).map(remember);
+      return (
+        await call<Promise<HostObject[]>>('search', args[0], args[1] ?? undefined, revive(args[2] ?? undefined))
+      ).map(remember);
     case 'make':
       return remember(await call<Promise<HostObject>>('make', args[0], revive(args[1])));
     case 'add':
