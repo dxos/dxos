@@ -87,6 +87,8 @@ export const UpdateTask = Operation.make({
     description:
       'Patch task fields: title, description, status, priority, estimate, assignee, delegate. Null clears a field. ' +
       'The assignee answers for the task; the delegate is the agent doing the work for them. ' +
+      '`status: done` on a task a person answers for is stored as `review` until they accept it; the returned ' +
+      'task carries the stored status. ' +
       'Pass `remoteSession` with a harness session id to delegate the task to that coding-agent session, ' +
       'creating the session record in the space if it is not there yet. A session works for a person: ' +
       'when the task has no person as its assignee, also pass `assignee: { identityDid, name }` with the ' +
@@ -498,7 +500,9 @@ export const CreateMilestone = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.createMilestone'),
     name: 'Create Milestone',
-    description: 'Create a milestone in a task set, appended to the milestone sequence.',
+    description:
+      'Create a milestone in a task set, appended to the milestone sequence. ' +
+      'Returns `{ milestone }`, the object itself: pass `Ref.make(milestone)` where a ref is wanted.',
     icon: 'ph--flag-banner--regular',
   },
   services: [Database.Service],

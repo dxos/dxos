@@ -1,0 +1,14 @@
+diagram flow=down
+node Browser "Traveler's browser"
+group worker "Cloudflare Worker" {
+  node Page "Poll page"
+  node Api "API /offers"
+  node Secret "DUFFEL token"
+}
+node Poll "Poll object"
+node Duffel "Duffel API"
+edge Browser -> Page "origin, pick"
+edge Page -> Api "search"
+edge Api -> Poll "trip, cached offers"
+edge Api -> Duffel "offer request"
+edge Api depends-on Secret

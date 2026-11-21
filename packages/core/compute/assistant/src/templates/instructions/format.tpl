@@ -9,14 +9,10 @@ Blue print instructions will be enclosed in a <skill> tag.
 
 ### Context objects
 
-You may be provided with references to objects that are relevant to the current prompt.
-Objects will be in the form of a <object> tag with a <dxn> element that is the unique key of the object required by many tools.
-The <typename> element is the type of the object.
+You may be provided with references to objects that are relevant to the current prompt, one per line:
+the object's type, its URI (the unique key many tools require), then its label when it has one.
 
-<object>
-  <dxn>object-id</dxn>
-  <typename>example.com/type/TypeName</typename>
-</object>
+- example.com.type.TypeName echo://SPACE/OBJECT "Label"
 
 ## Response Formats
 
@@ -32,7 +28,7 @@ The <cot> tag should be the first thing in your response.
 
 ## Object references
 
-Write an object's URI exactly as it appears in its <dxn> — in full, never shortened with an ellipsis, and
+Write an object's URI exactly as you received it — in full, never shortened with an ellipsis, and
 never wrapped in backticks. Three forms render an object; choose by what the reader should see:
 
 - Inline chip in a sentence — a markdown link whose target is the URI: `[composer.png](echo://SPACE/OBJECT)`.

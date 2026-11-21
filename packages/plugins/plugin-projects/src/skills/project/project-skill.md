@@ -132,7 +132,9 @@ a value that already starts with `echo:`; that produces `echo:///echo://…`, wh
   `milestone: {"/": "echo:///<milestone-id>"}`; omit it for the backlog); pass `parentTask` to
   file a sub-task under its parent, which then lists it in its own `subtasks`. Reorder or re-parent
   a task with `tasks-move`; move it, with its sub-tasks, to another project with `tasks-move-to-set`
-  (the target project's `taskSet`). Never edit a task set's `tasks` array by hand.
+  (the target project's `taskSet`). Never edit a task set's `tasks` array by hand. Create every task
+  with `tasks-create`: one made with `space-add-object` is in the space but in no task set, so no task
+  list shows it and it cannot be delegated.
   Task `status` is `backlog`|`todo`|`started`|`review`|`blocked`|`done`|`failed`|`cancelled`|`duplicate`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.
@@ -367,7 +369,9 @@ spaceId }`. Report the new project id.
    visual change. Attach it to the task (`tasks-add-artifact`) before setting `review`, so the
    reviewer finds it on the task. Work with nothing to check (a question answered, data filed,
    a merged change) goes straight to `done`. Move a `review` task to `done` once the review is
-   through, e.g. its PR merged.
+   through, e.g. its PR merged. A task a person answers for (a delegated task) is the exception:
+   `done` on it is stored as `review` whatever you send, and only that person closes it, so set
+   `review` and move on rather than retrying `done`.
 5. **Before claiming done** — reconcile the ledger against reality: every `done` task is
    actually complete, every `review` task has its reviewable output attached, and no completed
    work is still `todo` or `started`.

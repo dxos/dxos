@@ -115,18 +115,13 @@ const formatCurrentDate = (now: DateTime.DateTime): string =>
  * The context objects as the system prompt carries them, under `## Context Objects`; `undefined` for none.
  */
 export const formatObjects = (objects: readonly Obj.Unknown[]): string | undefined => {
+  // One line per object: typename, URI, then the label, so the model only loads an object when it
+  // needs the contents, not just to learn what the reference is.
   const defs = objects.map((object) => {
-    // Carry the label so the model only tool-loads an object when it needs the contents,
-    // not just to learn what the reference is.
     const label = Obj.getLabel(object);
-    return trim`
-      <object>
-        <dxn>${Obj.getURI(object)}</dxn>
-        <typename>${Obj.getTypename(object)}</typename>${label ? `\n  <label>${label}</label>` : ''}
-      </object>
-    `;
+    return `- ${Obj.getTypename(object)} ${Obj.getURI(object)}${label ? ` ${JSON.stringify(label)}` : ''}`;
   });
-  return defs.length > 0 ? ['## Context Objects', ...defs].join('\n\n') : undefined;
+  return defs.length > 0 ? ['## Context Objects', defs.join('\n')].join('\n\n') : undefined;
 };
 
 /** The skills and objects bound to a conversation at some point of a turn. */

@@ -32,6 +32,8 @@ Use `Effect.exit` around `Operation.invoke`, and `Effect.result` around `Databas
 
 ## Mistakes that cost a call
 
+- Splitting one step over several calls. Each call is a fresh program, so resolve what you need, invoke,
+  check the result and print it in the same call.
 - Calling a helper these docs do not show: it fails as `is not a function`. Read the docs instead.
 - Using `import` or `require`: the modules are already in scope.
 - Writing the `Effect.gen` wrapper yourself: your code already is its body.
@@ -39,7 +41,8 @@ Use `Effect.exit` around `Operation.invoke`, and `Effect.result` around `Databas
 - Passing an id or URI string where a `Ref<typename>` is expected.
 - Loading a ref as `yield* ref.load` or `yield* Database.get(ref)`: neither exists, and the failure
   reads as `is not iterable`. Use `yield* Database.load(ref)`.
-- Resolving a DXN the system prompt does not list.
+- Resolving a DXN the system prompt does not list, or an object id as one (`dxn:echo:///…`): `Database.resolve`
+  takes type and operation DXNs. Load an object by id with `Filter.id` (`queries.md`).
 - Guessing the shape of a value: print it first, since `print` shows its real fields (`printing.md`).
 - Printing an object with `JSON.stringify`: it hides the object's relations and referrers. Print the
   object itself.

@@ -11,6 +11,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     operations: 'src/operations/index.ts',
     ArchitectureSpace: 'src/samples/architecture/ArchitectureSpace.ts',
+    AvailabilityPollSpace: 'src/samples/availability-poll/AvailabilityPollSpace.ts',
     DemoSpace: 'src/samples/demo/DemoSpace.ts',
     FieldstoneSpace: 'src/samples/fieldstone/FieldstoneSpace.ts',
     IncidentSpace: 'src/samples/incident/IncidentSpace.ts',
