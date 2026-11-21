@@ -47,6 +47,15 @@ describe('Watch', () => {
     ]);
   });
 
+  test('within the watch budget every directory is watched; past it, the busiest ones are, and the rest counted', () => {
+    const paths = ['README.md', 'packages/a/src/x.ts', 'packages/a/src/y.ts', 'packages/a/src/z.ts', 'packages/b/y.ts'];
+    expect(Watch.budgeted(paths, 10)).toEqual({ watched: Watch.directories(paths), skipped: 0 });
+    const { watched, skipped } = Watch.budgeted(paths, 2);
+    // `packages/a/src` holds three files and the root one; the empty ancestors and `packages/b` wait for the poll.
+    expect([...watched].sort()).toEqual(['.', 'packages/a/src']);
+    expect(skipped).toBe(3);
+  });
+
   test('indexes on start, then again when a file appears', async () => {
     const paths = await EffectEx.runPromise(
       Effect.gen(function* () {

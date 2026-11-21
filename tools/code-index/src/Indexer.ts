@@ -4,6 +4,7 @@
 // @import-as-namespace
 //
 
+import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import type * as RpcClientError from 'effect/rpc/RpcClientError';
@@ -203,7 +204,26 @@ export const run = (
             touches.push({ path: entry.path, mtime });
           }
         });
-        return { entries, changed, touches, removed: states.filter((state) => !present.has(state.path)) };
+        // Unlisted is not deleted: only a file gone from disk, or one git now ignores, leaves the index.
+        // A listing that omits files that exist (twice seen to come back empty mid-`pnpm install`,
+        // which then emptied the whole index) must not cost the index those files.
+        const unlisted = states.filter((state) => !present.has(state.path));
+        const lingering = yield* Effect.filter(unlisted, (state) => Crawler.mayExist(join(root, state.path)), {
+          concurrency: 32,
+        });
+        const ignored = yield* Crawler.ignored(
+          root,
+          lingering.map((state) => state.path),
+        );
+        const kept = lingering.filter((state) => !ignored.has(state.path));
+        if (kept.length > 0) {
+          yield* Console.error(
+            `code-index · git listed ${entries.length} files but not ${kept.length} that exist and are not ignored ` +
+              `(e.g. ${kept[0].path}); keeping them`,
+          );
+        }
+        const keptPaths = new Set(kept.map((state) => state.path));
+        return { entries, changed, touches, removed: unlisted.filter((state) => !keptPaths.has(state.path)) };
       }),
     );
     yield* report({ phase: 'scan', ms: scanMs, scanned: entries.length, changed: changed.length });

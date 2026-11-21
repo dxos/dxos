@@ -50,6 +50,65 @@ export class Entity extends Schema.Class<Entity>('code-index/Entity')({
   hint: Schema.optional(Schema.String),
 }) {}
 
+/** `dir` is a directory on the way to a package; `folder` and `file` are a package's own `src` tree. */
+export const TreeNodeKind = Schema.Literals([
+  'repo',
+  'dir',
+  'package',
+  'entry',
+  'folder',
+  'file',
+  'namespace',
+  'symbol',
+  'member',
+]);
+export type TreeNodeKind = typeof TreeNodeKind.Type;
+
+export class TreeNode extends Schema.Class<TreeNode>('code-index/TreeNode')({
+  id: Schema.String,
+  label: Schema.String,
+  kind: TreeNodeKind,
+  /** Whether the node can have children; a leaf is never asked for them. */
+  branch: Schema.Boolean,
+  /** The declaration kind of a symbol (`function`, `interface`, …), or a package's directory name. */
+  detail: Schema.optional(Schema.String),
+}) {}
+
+export class TreeChildren extends Schema.Class<TreeChildren>('code-index/TreeChildren')({
+  id: Schema.String,
+  children: Schema.Array(TreeNode),
+}) {}
+
+/** The code behind a repository tree node, as its card in the stack shows it. */
+export class TreeSource extends Schema.Class<TreeSource>('code-index/TreeSource')({
+  id: Schema.String,
+  title: Schema.String,
+  /** What the node is: a symbol's declaration kind, or `module`, `package`. */
+  subtitle: Schema.String,
+  /** The package the code belongs to, by its `package.json` name; absent for a file outside any. */
+  packageName: Schema.optional(Schema.String),
+  /** Repository-relative path of the file the code comes from. */
+  path: Schema.optional(Schema.String),
+  /** 1-based line of the excerpt's first line. */
+  line: Schema.Number,
+  /** The declaration with its implementation, as the file has it from `line`. */
+  code: Schema.String,
+  /** The declaration without implementation (its doc comment and signature, bodies elided); absent for a module. */
+  signature: Schema.optional(Schema.String),
+  /** Lines cut from the end, so the card can say the excerpt is partial. */
+  truncated: Schema.Boolean,
+}) {}
+
+/** A Cmd+P result: the node it names, addressed as the tree addresses it so `TreeLocate` can place it. */
+export class SearchHit extends Schema.Class<SearchHit>('code-index/SearchHit')({
+  node: TreeNode,
+  /** Where it lives, for the result row: a symbol's canonical name and package, or a path. */
+  description: Schema.String,
+}) {}
+
+/** Id of the tree's root, whose children are the repositories. */
+export const TREE_ROOT = 'root';
+
 export class RequestFailed extends Schema.TaggedError<RequestFailed>('code-index/RequestFailed')('RequestFailed', {
   message: Schema.String,
 }) {}
@@ -76,6 +135,35 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('Describe', {
     payload: { target: Schema.String },
     success: Entity,
+    error: RequestFailed,
+  }),
+
+  /** The children of each named tree node; the tree tab asks for a level ahead of what is open. */
+  Rpc.make('TreeChildren', {
+    /** `diff` keeps only what leads to a change against the base branch. */
+    payload: { ids: Schema.Array(Schema.String), diff: Schema.optional(Schema.Boolean) },
+    success: Schema.Array(TreeChildren),
+    error: RequestFailed,
+  }),
+
+  /** Where a node sits in the tree: ids from below the root down to it, or to its nearest shown ancestor. */
+  Rpc.make('TreeLocate', {
+    payload: { id: Schema.String },
+    success: Schema.optional(Schema.Array(Schema.String)),
+    error: RequestFailed,
+  }),
+
+  /** Packages, files and exported declarations whose name contains the query, best match first. */
+  Rpc.make('Search', {
+    payload: { query: Schema.String },
+    success: Schema.Array(SearchHit),
+    error: RequestFailed,
+  }),
+
+  /** The code behind a tree node, for its card; absent for a node with none (a directory). */
+  Rpc.make('TreeSource', {
+    payload: { id: Schema.String },
+    success: Schema.optional(TreeSource),
     error: RequestFailed,
   }),
 

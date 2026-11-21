@@ -3,6 +3,7 @@
 //
 
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
@@ -44,6 +45,9 @@ const clientLayer = Layer.effect(Client, make).pipe(
 
 const runtime = ManagedRuntime.make(clientLayer);
 
+/** How long the connection probe waits before reconnecting to a server it lost. */
+const RECONNECT = Duration.seconds(2);
+
 const call = <A, E>(body: (client: Effect.Success<typeof make>) => Effect.Effect<A, E>): Promise<A> =>
   runtime.runPromise(Effect.flatMap(Client, body));
 
@@ -59,6 +63,19 @@ export const api = {
 
   /** What a diagram box's `ref` names in the index: an IRI, or a path, package or symbol name. */
   describe: (target: string) => call((client) => client.Describe({ target })),
+
+  /** The children of each named tree node, in one round trip. */
+  treeChildren: (ids: readonly string[], options: { diff?: boolean } = {}) =>
+    call((client) => client.TreeChildren({ ids, diff: options.diff })),
+
+  /** Cmd+P: public symbols and packages by name, each with its path in the tree. */
+  search: (query: string) => call((client) => client.Search({ query })),
+
+  /** Where a node sits in the tree, as the path `Tree.Root.reveal` takes below its root id. */
+  treeLocate: (id: string) => call((client) => client.TreeLocate({ id })),
+
+  /** The code behind a tree node, or `undefined` when it has none of its own. */
+  treeSource: (id: string) => call((client) => client.TreeSource({ id })),
 
   /** Sends an event. A `UserMessage` starts a turn; anything else is only recorded. */
   dispatch: (projectId: string, event: Events.Event) => call((client) => client.Dispatch({ projectId, event })),
@@ -78,11 +95,44 @@ export const api = {
     };
   },
 
-  /** Subscribes to the indexer's status, current value first; the returned function stops it. */
-  watchIndex: (onStatus: (status: IndexState.Status) => void): (() => void) => {
+  /**
+   * Reports whether the server is reachable: true once the indexer's status stream delivers, false
+   * when it ends or fails, then reconnects every `RECONNECT` until it delivers again. The stream is
+   * the probe because a server that goes away breaks its open response at once, with no polling.
+   */
+  watchConnection: (onChange: (connected: boolean) => void): (() => void) => {
     const fiber = runtime.runFork(
       Effect.flatMap(Client, (client) =>
-        client.WatchIndex().pipe(Stream.runForEach((status) => Effect.sync(() => onStatus(status)))),
+        Effect.forever(
+          client.WatchIndex().pipe(
+            Stream.runForEach(() => Effect.sync(() => onChange(true))),
+            Effect.exit,
+            Effect.andThen(Effect.sync(() => onChange(false))),
+            Effect.andThen(Effect.sleep(RECONNECT)),
+          ),
+        ),
+      ),
+    );
+    return () => {
+      runtime.runFork(Fiber.interrupt(fiber));
+    };
+  },
+
+  /**
+   * Subscribes to the indexer's status, current value first; the returned function stops it. A stream that
+   * ends or fails (a server restart) is reported to `onDisconnect` and resubscribed every `RECONNECT`.
+   */
+  watchIndex: (onStatus: (status: IndexState.Status) => void, onDisconnect?: () => void): (() => void) => {
+    const fiber = runtime.runFork(
+      Effect.flatMap(Client, (client) =>
+        Effect.forever(
+          client.WatchIndex().pipe(
+            Stream.runForEach((status) => Effect.sync(() => onStatus(status))),
+            Effect.exit,
+            Effect.andThen(Effect.sync(() => onDisconnect?.())),
+            Effect.andThen(Effect.sleep(RECONNECT)),
+          ),
+        ),
       ),
     );
     return () => {

@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
-import { type FSWatcher, existsSync, statSync, watch } from 'node:fs';
+import { type FSWatcher, existsSync, readdirSync, statSync, watch } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -81,6 +81,53 @@ export type Options = {
 /** Whether a changed path, relative to the root, could be a source file the indexer reads. */
 export const relevant = (path: string): boolean => !path.split(/[\\/]/).some((segment) => IGNORED.includes(segment));
 
+/**
+ * The descriptors a process may hold and still spawn. On macOS each directory watch is a descriptor, and
+ * once a Bun process holds about 10,240 (measured with Bun 1.3.11: 10,200 watches fine, 10,300 not) no
+ * child it spawns works: `git ls-files` comes back empty, and a pass read that as every file gone.
+ */
+export const SPAWN_DESCRIPTOR_LIMIT = 10_000;
+
+/** Descriptors kept free for what the server opens after a re-watch (Vite watches each module it serves). */
+export const DESCRIPTOR_HEADROOM = 1_500;
+
+/**
+ * The most directories this watcher may hold now: what the limit leaves once every other descriptor the
+ * process has open is counted. Not a constant, since the dev server's own watches grow as the page loads.
+ * Where `/dev/fd` cannot be read, the whole limit, as before.
+ */
+const watchBudget = (held: number): number => {
+  let open: number;
+  try {
+    open = readdirSync('/dev/fd').length;
+  } catch {
+    return SPAWN_DESCRIPTOR_LIMIT - DESCRIPTOR_HEADROOM;
+  }
+  return Math.max(0, SPAWN_DESCRIPTOR_LIMIT - DESCRIPTOR_HEADROOM - (open - held));
+};
+
+/** How often a pass runs when some directories go unwatched, so a change in one is still picked up. */
+export const UNWATCHED_POLL_MS = 30_000;
+
+/**
+ * The directories to watch within `max`: those holding the most indexed files first, since a change is
+ * likeliest there, then the root and its ancestors' order as tie-break. `skipped` counts the rest.
+ */
+export const budgeted = (paths: readonly string[], max: number): { watched: Set<string>; skipped: number } => {
+  const all = directories(paths);
+  if (all.size <= max) {
+    return { watched: all, skipped: 0 };
+  }
+  const files = new Map<string, number>();
+  for (const path of paths) {
+    files.set(dirname(path), (files.get(dirname(path)) ?? 0) + 1);
+  }
+  const ranked = [...all].toSorted(
+    (left, right) => (files.get(right) ?? 0) - (files.get(left) ?? 0) || left.length - right.length,
+  );
+  return { watched: new Set(ranked.slice(0, max)), skipped: all.size - max };
+};
+
 /** Every directory holding an indexed file, and its ancestors up to the root (`.`), which see new subdirectories. */
 export const directories = (paths: readonly string[]): Set<string> => {
   const found = new Set<string>(['.']);
@@ -115,6 +162,16 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
       }),
     );
 
+    /** How many watches the last re-watch allowed; a directory appearing between re-watches stays within it. */
+    let allowance = Number.POSITIVE_INFINITY;
+    /** Directories left unwatched, by the budget or by a new directory that did not fit; the timer polls while any are. */
+    let uncovered = 0;
+    /**
+     * New directories that did not fit, kept until each gains a watch or is gone: one with no indexed file yet
+     * is not among the directories a re-watch derives, so forgetting it would stop the polling that covers it.
+     */
+    const waiting = new Set<string>();
+
     /** Watches `dir`, and any directory created in it from then on; true unless the watch failed. */
     const add = (dir: string): boolean => {
       if (watchers.has(dir)) {
@@ -127,10 +184,16 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
           }
           Queue.offerUnsafe(changes, undefined);
           // Watched at once, not after the pass: a directory created empty would otherwise go
-          // unwatched until something else changed, missing the files written into it.
+          // unwatched until something else changed, missing the files written into it. Past the
+          // allowance it is left to the poll instead, so a burst of new directories cannot exhaust it.
           const child = name === null ? undefined : join(dir, name);
           if (child && statSync(join(options.root, child), { throwIfNoEntry: false })?.isDirectory()) {
-            add(child);
+            if (watchers.size < allowance) {
+              add(child);
+            } else {
+              waiting.add(child);
+              uncovered++;
+            }
           }
         });
         watcher.on('error', () => {
@@ -144,20 +207,49 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
       }
     };
 
-    // Directories that hold indexed files gain a watch; one is dropped only once it is gone, since
-    // an empty directory may be about to receive files.
+    // Directories that hold indexed files gain a watch. One already watched is kept while the budget has
+    // room, even with no indexed file yet, since an empty directory may be about to receive files; one is
+    // dropped once it is gone, or when the budget needs its descriptor back.
+    let announced = false;
     const rewatch = Effect.gen(function* () {
+      const budget = watchBudget(watchers.size);
+      const { watched: wanted, skipped } = budgeted(
+        (yield* store.fileStates()).map((state) => state.path),
+        budget,
+      );
+      let room = budget - wanted.size;
       for (const [dir, watcher] of watchers) {
-        if (!existsSync(join(options.root, dir))) {
-          watcher.close();
-          watchers.delete(dir);
+        const exists = existsSync(join(options.root, dir));
+        if (exists && (wanted.has(dir) || room > 0)) {
+          room -= wanted.has(dir) ? 0 : 1;
+          continue;
+        }
+        watcher.close();
+        watchers.delete(dir);
+        if (exists) {
+          waiting.add(dir);
         }
       }
-      const wanted = directories((yield* store.fileStates()).map((state) => state.path));
+      allowance = budget;
       const before = watchers.size;
       const failed = [...wanted].filter((dir) => !add(dir)).length;
+      for (const dir of waiting) {
+        if (watchers.has(dir) || !existsSync(join(options.root, dir))) {
+          waiting.delete(dir);
+        } else if (room > 0 && add(dir)) {
+          room--;
+          waiting.delete(dir);
+        }
+      }
+      uncovered = skipped + waiting.size;
       if (failed > 0) {
         yield* report({ _tag: 'Failed', message: `${failed} directories could not be watched` });
+      }
+      if (uncovered > 0 && !announced) {
+        announced = true;
+        yield* Console.log(
+          `code-index · watching ${watchers.size} directories, polling for the other ${uncovered} every ${UNWATCHED_POLL_MS / 1000}s`,
+        );
       }
       // A file written between the pass's crawl and a new watch raised no event; one more pass sees it.
       if (watchers.size > before) {
@@ -196,6 +288,19 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
     );
 
     yield* pass;
+    // The dev server keeps opening watches as the page loads modules, so the budget is checked again
+    // on a timer, not only after a pass: this watcher gives descriptors back before the process runs out.
+    // While any directory goes unwatched the same tick runs a pass, which catches a change in it.
+    yield* Effect.forever(
+      Effect.sleep(UNWATCHED_POLL_MS).pipe(
+        Effect.andThen(Effect.sync(() => uncovered > 0 && Queue.offerUnsafe(changes, undefined))),
+        Effect.andThen(
+          rewatch.pipe(
+            Effect.catchCause((cause) => report({ _tag: 'Failed', message: `watch failed\n${Cause.pretty(cause)}` })),
+          ),
+        ),
+      ),
+    ).pipe(Effect.forkScoped);
     return yield* Effect.forever(
       Effect.gen(function* () {
         yield* Queue.take(changes);

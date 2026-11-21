@@ -46,7 +46,7 @@ export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}
  * dropped and rebuilt on open: the ledger keys commits by graph IRI, so mixing schemes would leave
  * graphs no row points at and rules matching only half the facts.
  */
-export const VERSION = 6;
+export const VERSION = 10;
 
 /**
  * Name and kind of the synthetic symbol carrying a file's top-level references (`describe(…)`,
@@ -229,6 +229,15 @@ export const deprecated = iri('deprecated');
 export const hasType = iri('hasType');
 /** The symbol's type term as JSON, literal freshness included — what the cross-file pass binds. */
 export const typeTerm = iri('typeTerm');
+/** The line the declaring statement ends on, so its whole source can be read back (`deus:line` is where it starts). */
+export const endLine = iri('endLine');
+/**
+ * A class's, interface's or object type's members as JSON (`MemberFact[]`): what a reader opening the
+ * declaration sees listed, kept as one literal rather than as symbols, which rules and search index.
+ */
+export const members = iri('members');
+/** The declaration its module exports as `default`, whatever it is named (`export default class X` is `X`). */
+export const defaultExport = iri('defaultExport');
 
 // Type term properties (`design/TYPES.md`).
 export const typeKind = iri('typeKind');
@@ -488,6 +497,9 @@ export const CONTEXT = {
   constructedByPath: 'deus:constructedByPath',
   hasType: id('hasType'),
   typeTerm: 'deus:typeTerm',
+  endLine: integer('endLine'),
+  members: 'deus:members',
+  defaultExport: boolean('defaultExport'),
   unresolvedReason: 'deus:unresolvedReason',
   pending: 'deus:pending',
   callee: id('callee'),
@@ -602,9 +614,25 @@ export const SymbolNode = Schema.Struct({
   'deprecated': Schema.optional(Schema.Boolean),
   'hasType': Schema.optional(Schema.String),
   'typeTerm': Schema.optional(Schema.String),
+  'endLine': Schema.optional(Schema.Number),
+  'members': Schema.optional(Schema.String),
+  'defaultExport': Schema.optional(Schema.Boolean),
 });
 
 export type SymbolNode = typeof SymbolNode.Type;
+
+/** One entry of a symbol's `deus:members`: a property, method or accessor as its owner declares it. */
+export const MemberFact = Schema.Struct({
+  name: Schema.String,
+  /** `property`, `method`, `getter`, `setter` or `constructor`. */
+  kind: Schema.String,
+  line: Schema.Number,
+  endLine: Schema.Number,
+  /** The member as written, on one line, with a body replaced by `{ … }`. */
+  signature: Schema.String,
+  static: Schema.optional(Schema.Boolean),
+});
+export type MemberFact = typeof MemberFact.Type;
 
 const positionalFields = (prefix: string) =>
   Object.fromEntries(
