@@ -16,6 +16,8 @@ on:
       - 'packages/ui/react-ui/**'
       - 'packages/ui/ui-theme/**'
       - 'packages/ui/react-ui-task/**'
+      - 'packages/ui/react-ui-list/**'
+      - 'packages/ui/react-ui-form/**'
       - 'packages/reflect/deus/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/session-board-cache.yml'
@@ -46,8 +48,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # A published page must not be built from entries that any CI job can write to the shared caches.
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          remote-cache: 'false'
+          cache-scope: 'publish'
 
       - name: Build page
         run: moon run session-board:build-page

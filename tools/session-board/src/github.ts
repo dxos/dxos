@@ -69,7 +69,7 @@ export const githubState = async (
   const now = Date.now();
   await Promise.all(
     prs.map(async ({ ref }) => {
-      const cached = cache[ref];
+      const cached = Object.hasOwn(cache, ref) ? cache[ref] : undefined;
       if (cached && now - cached.fetchedAt < TTL_MS) {
         state.set(ref, cached.pr);
         return;
@@ -79,10 +79,8 @@ export const githubState = async (
         cache[ref] = { fetchedAt: now, pr };
         state.set(ref, pr);
       } catch (error) {
+        // An expired entry is not used: it could undo a state the file already records, such as `merged`.
         warnings.push(`${ref}: ${error instanceof Error ? error.message : String(error)}; using the state in the file`);
-        if (cached) {
-          state.set(ref, cached.pr);
-        }
       }
     }),
   );

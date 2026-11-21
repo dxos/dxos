@@ -30,10 +30,10 @@ It extends the changelog dialect, so questions and answers follow the `mdl` skil
 
 | Section            | Block                | Fields                                                     |
 | ------------------ | -------------------- | ---------------------------------------------------------- |
-| `## Questions`     | `question Q-n: text` | `date`, `by`, `for`, `context`, `options` (`- Title: why`) |
 | `## Goals`         | `goal G-n: title`    | `status`, `blockedBy: [Q-n]`, `notes`                      |
 | `## Pull requests` | `pr PR-n: title`     | `ref: owner/repo#n`, `status?`, `goals`, `notes`           |
-| `## Changelog`     | `decision D-n: text` | `date`, `by`, `answers: Q-n`                               |
+| `## Changelog`     | `question Q-n: text` | `date`, `by`, `for`, `context`, `options` (`- Title: why`) |
+| `## Changelog`     | `decision D-n: text` | `date`, `by`, `answers: Q-n` or `supersedes: D-n`          |
 | `## Timeline`      | `event T-n: text`    | `date: 2026-11-21T11:55Z`, `by`                            |
 
 - The frontmatter `name` is the page title. The first paragraph after `#` is the summary.
@@ -42,7 +42,8 @@ It extends the changelog dialect, so questions and answers follow the `mdl` skil
 - PR state and branch come from GitHub on each build (cached for 2 minutes): `draft`, `open`, `failing`, `merged`,
   `closed`. Write `status` only for what GitHub does not show: `landing` (the `land` skill drives it) and `queued` (the
   merge queue has it). A lookup that fails keeps the file's state and prints a warning; `--offline` skips it.
-- A title has 12 words or fewer. A note has 25 words or fewer, at most 6 for each block.
+- A goal or PR title has 12 words or fewer, a question or event 25 or fewer. A note has 25 words or fewer, at most 6
+  for each block. Each block goes in its own section; the build rejects one that is not.
 - Ids are `Q-1`, `G-1`, `PR-1`, `D-1`, `T-1`, numbered in the order written.
 
 ## 3. Append-only

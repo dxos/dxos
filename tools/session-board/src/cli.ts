@@ -59,8 +59,6 @@ One line that says what this session is for.
 | \`pr\`       | \`org.dxos.mdl.pr@1.0\`       |
 | \`event\`    | \`org.dxos.mdl.event@1.0\`    |
 
-## Questions
-
 ## Goals
 
 \`\`\`mdl
@@ -179,6 +177,11 @@ const checkSte = (sentences: Sentence[]): Problem[] => {
     input: lines.map((sentence) => sentence.text).join('\n\n'),
     encoding: 'utf8',
   });
+  // A checker that did not run is reported, so a strict build cannot pass without the check.
+  if (result.error || (result.status !== 0 && result.status !== 1)) {
+    const reason = result.error?.message ?? (result.stderr.trim() || `exit code ${result.status}`);
+    return [{ line: 1, message: `STE check did not run: ${reason}` }];
+  }
   const problems: Problem[] = [];
   for (const match of (result.stdout ?? '').matchAll(/^(ERROR|WARNING)\s+stdin:par(\d+)\s+(.*)$/gm)) {
     const sentence = lines[Number(match[2]) - 1];
@@ -211,12 +214,13 @@ const pagePath = (source: string) => join(STATE_DIR, `${sessionName(source)}.htm
 
 const build = async (source: string, strict: boolean, offline = false): Promise<BuildResult> => {
   const text = readFileSync(source, 'utf8');
-  // The committed version, so an edit to the timeline, a question or an answer is caught before it is committed.
-  const previous = git('show', `HEAD:${relative(ROOT, source)}`);
-  const { board, errors, sentences } = parseSession(text, {
-    source: relative(ROOT, source),
-    ...(previous === undefined ? {} : { previous }),
-  });
+  // The PR's base catches an edit already committed on the branch; the last commit catches one about to be.
+  const path = relative(ROOT, source);
+  const base = git('merge-base', 'origin/main', 'HEAD');
+  const previous = [base && git('show', `${base}:${path}`), git('show', `HEAD:${path}`)].filter(
+    (version): version is string => typeof version === 'string',
+  );
+  const { board, errors, sentences } = parseSession(text, { source: path, previous });
   const ste = checkSte(sentences);
   const warnings = strict ? [] : ste;
   if (strict) {
@@ -270,13 +274,27 @@ const start = (directory: string) => {
 };
 
 /** The tracked and changed files, outside the board's own files, so a change of the work is told from a change of the board. */
-const repoState = (source: string): string =>
-  createHash('sha256')
-    // The index's content hashes rather than HEAD, so committing the board itself reads as no change of the work.
-    .update(git('ls-files', '-s', '--', '.', `:!${relative(ROOT, source)}`) ?? '')
-    .update(git('status', '--porcelain', '--', '.', `:!${relative(ROOT, source)}`, ':!.claude/.status-board') ?? '')
+const repoState = (source: string): string => {
+  const exclude = [`:!${relative(ROOT, source)}`, ':!.claude/.status-board'];
+  // Contents, not names or HEAD: committing the board reads as no change, and a second edit to a changed file does not.
+  const untracked = (git('ls-files', '--others', '--exclude-standard', '-z', '--', '.', ...exclude) ?? '')
+    .split('\0')
+    .filter(Boolean);
+  const untrackedHashes =
+    untracked.length > 0
+      ? spawnSync('git', ['-C', ROOT, 'hash-object', '--stdin-paths'], {
+          input: untracked.join('\n'),
+          encoding: 'utf8',
+        }).stdout
+      : '';
+  return createHash('sha256')
+    .update(git('ls-files', '-s', '--', '.', ...exclude) ?? '')
+    .update(git('diff', '--', '.', ...exclude) ?? '')
+    .update(untracked.join('\n'))
+    .update(untrackedHashes ?? '')
     .digest('hex')
     .slice(0, 16);
+};
 
 type Marker = { hash?: string; repo?: string };
 

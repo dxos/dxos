@@ -20,46 +20,6 @@ The agent keeps the session as mdl. A script makes the page. The agent publishes
 | `pr`       | `org.dxos.mdl.pr@1.0`       |
 | `event`    | `org.dxos.mdl.event@1.0`    |
 
-## Questions
-
-```mdl
-question Q-1: Is `agents/sessions/<date>-<slug>/` the correct place for session files?
-  date: 2026-11-21
-  by: agent:claude-code
-  for: user:dmaretskyi
-  options:
-    - Yes: the session file is committed with the work.
-    - No: use `.agents/sessions/`, beside the project registry.
-```
-
-```mdl
-question Q-2: Must the Stop hook block the stop, or only show a note?
-  date: 2026-11-21
-  by: agent:claude-code
-  for: user:dmaretskyi
-  options:
-    - Block: one time for each change, so the agent publishes.
-    - Note: the agent can skip the publish, and the page can be old.
-```
-
-```mdl
-question Q-3: Must the script get the PR state from GitHub?
-  date: 2026-11-21
-  by: agent:claude-code
-  for: user:dmaretskyi
-  options:
-    - Yes: the script reads the state on each build.
-    - No: the agent writes the state.
-```
-
-```mdl
-question Q-4: Is a new skill name necessary?
-  date: 2026-11-21
-  by: agent:claude-code
-  for: user:dmaretskyi
-  context: This work replaces the old `status-board` skill, which wrote HTML by hand.
-```
-
 ## Goals
 
 ```mdl
@@ -132,6 +92,44 @@ pr PR-1: Build the status board from a session file.
 ```
 
 ## Changelog
+
+```mdl
+question Q-1: Is `agents/sessions/<date>-<slug>/` the correct place for session files?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Yes: the session file is committed with the work.
+    - No: use `.agents/sessions/`, beside the project registry.
+```
+
+```mdl
+question Q-2: Must the Stop hook block the stop, or only show a note?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Block: one time for each change, so the agent publishes.
+    - Note: the agent can skip the publish, and the page can be old.
+```
+
+```mdl
+question Q-3: Must the script get the PR state from GitHub?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  options:
+    - Yes: the script reads the state on each build.
+    - No: the agent writes the state.
+```
+
+```mdl
+question Q-4: Is a new skill name necessary?
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: This work replaces the old `status-board` skill, which wrote HTML by hand.
+```
 
 ```mdl
 decision D-1: The agent writes the PR state for now. The page reads live state through the `mcp` capability later.

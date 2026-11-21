@@ -8,7 +8,7 @@ extends:
 
 The session dialect. A `SESSION.mdl` is an agent's record of one working session, kept for the person who reads it
 instead of the chat: the questions only they can answer, the goals and their state, the pull requests, and an
-append-only timeline. The status-board skill renders it as a page.
+append-only timeline. The status-board skill renders it as a page, with the open questions first.
 
 A session file is a log, not a spec, so the changelog dialect's rule 1 (every change adds a decision) does not apply
 to it. Its questions and their answers are the changelog dialect's `question` and `decision`, and stay append-only.
@@ -28,16 +28,17 @@ Sections, in this order:
 
 | Section             | Blocks                                             |
 | ------------------- | -------------------------------------------------- |
-| `## Questions`      | `question Q-n`                                     |
 | `## Goals`          | `goal G-n`                                         |
 | `## Pull requests`  | `pr PR-n`                                          |
-| `## Changelog`      | `decision D-n`, each answering a question          |
+| `## Changelog`      | `question Q-n`, and `decision D-n`: a session decision, an answer (`answers: Q-n`), or a new answer (`supersedes: D-n`) |
 | `## Timeline`       | `event T-n`, oldest first                          |
 
 ## Rules
 
-1. **Terse.** A block's title has 12 words or fewer; a `notes` item has 25 or fewer, and a block has at most 6.
-2. **A question is open until a decision answers it.** A goal whose `blockedBy` names an open question renders as
+1. **Terse.** A goal or PR title has 12 words or fewer, a question or event 25 or fewer; a `notes` item has 25 or
+   fewer, and a block has at most 6. A decision has no word limit, because it records what a person said.
+2. **A question is open until a decision answers it.** A later decision replaces that answer only by naming it in
+   `supersedes`. A goal whose `blockedBy` names an open question renders as
    blocked, whatever its `status`.
 3. **The timeline is append-only.** An event is never edited or removed, ids are monotonic (`T-1`, `T-2`, …), and dates
    never go backwards.
@@ -66,7 +67,7 @@ ext pr
   desc: A pull request the session opened or drives. The title is the PR's effect, in one line.
   fields:
     ref: Identifier             # owner/repo#number
-    status: draft | open | failing | landing | queued | merged | closed
+    status?: draft | open | failing | landing | queued | merged | closed  # GitHub's state wins; write landing or queued
     branch?: Identifier         # the head branch
     goals?: RefList             # the goals the PR serves
     notes?: ProseList

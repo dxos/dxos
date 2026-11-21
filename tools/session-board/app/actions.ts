@@ -82,12 +82,14 @@ export const useLandActions = (): { landing: Record<string, boolean>; onLandChan
         return;
       }
       const { db, comments } = capabilities;
-      // The anchor is taken first, while the click is still the viewer's own gesture.
-      const anchor = comments ? await comments.anchorFor(element) : undefined;
+      // The anchor is taken first, while the click is still the viewer's own gesture; without one, the choice still lands.
+      const anchor = comments ? await comments.anchorFor(element).catch(() => undefined) : undefined;
       await db.doc(`${LAND_COLLECTION}/${pr.id}`).set({ land, ref: pr.ref, at: new Date().toISOString() });
-      if (comments && anchor && (await comments.canSendToClaude()) === 'available') {
-        await comments.sendToClaude({ anchor, text: landRequest(pr, land) });
+      if (!comments || !anchor || (await comments.canSendToClaude()) !== 'available') {
+        console.warn(`session-board: ${pr.id} is recorded, but no comment could be sent to Claude`);
+        return;
       }
+      await comments.sendToClaude({ anchor, text: landRequest(pr, land) });
     },
     [capabilities],
   );

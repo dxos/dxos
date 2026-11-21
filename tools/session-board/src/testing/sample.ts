@@ -31,29 +31,6 @@ export const SAMPLE_SESSION = [
   '| `pr`       | `org.dxos.mdl.pr@1.0`       |',
   '| `event`    | `org.dxos.mdl.event@1.0`    |',
   '',
-  '## Questions',
-  '',
-  fence(
-    [
-      'question Q-1: Must the script get the PR state from GitHub?',
-      '  date: 2026-11-21',
-      '  by: agent:claude-code',
-      '  for: user:alice',
-      '  options:',
-      '    - Yes: the page reads the state through the GitHub connector.',
-      '    - No: the agent writes the state.',
-    ].join('\n'),
-  ),
-  '',
-  fence(
-    [
-      'question Q-2: Is `agents/sessions/` the correct place for session files?',
-      '  date: 2026-11-21',
-      '  by: agent:claude-code',
-      '  for: user:alice',
-    ].join('\n'),
-  ),
-  '',
   '## Goals',
   '',
   fence(
@@ -85,6 +62,27 @@ export const SAMPLE_SESSION = [
   fence(['pr PR-2: Cache the spec viewer in R2.', '  ref: dxos/dxos#10391', '  status: merged'].join('\n')),
   '',
   '## Changelog',
+  '',
+  fence(
+    [
+      'question Q-1: Must the script get the PR state from GitHub?',
+      '  date: 2026-11-21',
+      '  by: agent:claude-code',
+      '  for: user:alice',
+      '  options:',
+      '    - Yes: the page reads the state through the GitHub connector.',
+      '    - No: the agent writes the state.',
+    ].join('\n'),
+  ),
+  '',
+  fence(
+    [
+      'question Q-2: Is `agents/sessions/` the correct place for session files?',
+      '  date: 2026-11-21',
+      '  by: agent:claude-code',
+      '  for: user:alice',
+    ].join('\n'),
+  ),
   '',
   fence(
     [
