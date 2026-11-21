@@ -117,7 +117,7 @@ goal G-8: The build reads the PR state from GitHub.
 
 ```mdl
 goal G-9: A Land switch on each PR starts or stops the `land` skill.
-  status: review
+  status: done
   notes:
     - The switch writes `prs/<PR id>` in the artifact database and sends a comment to Claude.
     - The skill keeps the database in step when the session starts or stops the `land` skill.
@@ -128,6 +128,7 @@ goal G-9: A Land switch on each PR starts or stops the `land` skill.
 ```mdl
 pr PR-1: Build the status board from a session file.
   ref: dxos/dxos#14647
+  status: landing
 ```
 
 ## Changelog
@@ -265,4 +266,10 @@ event T-7: CI found the new block types missing in the mdl editor grammar. Fixed
 event T-8: The PR rows have a Land switch for editors.
   date: 2026-11-21T13:10Z
   by: agent:claude-code
+```
+
+```mdl
+event T-9: The Land switch asked to land [PR-1]. The switch layout is fixed first.
+  date: 2026-11-21T13:46Z
+  by: user:dmaretskyi
 ```

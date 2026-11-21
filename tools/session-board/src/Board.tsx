@@ -138,20 +138,23 @@ const PrRows = ({ prs, landing = {}, onLandChange }: PrRowsProps) => {
                   <Typography.Link href={pr.url}>{pr.ref}</Typography.Link> {plain(pr.title)}
                 </Listbox.ItemText>
                 {pr.branch && <Listbox.ItemDescription>{pr.branch}</Listbox.ItemDescription>}
-                <Tag hue={PR_HUES[pr.status]}>{pr.status}</Tag>
-                {onLandChange && !SETTLED.has(pr.status) && (
-                  <Input.Switch
-                    label='Land'
-                    checked={land}
-                    data-testid={`land-${pr.id}`}
-                    onCheckedChange={({ checked }) => {
-                      const element = rows.current.get(pr.id);
-                      if (element) {
-                        void onLandChange(pr, checked, element);
-                      }
-                    }}
-                  />
-                )}
+                {/* One trailing cell, so the tag and the switch share a centre line and a gap. */}
+                <Layout.Flex gap='sm' align='center'>
+                  <Tag hue={PR_HUES[pr.status]}>{pr.status}</Tag>
+                  {onLandChange && !SETTLED.has(pr.status) && (
+                    <Input.Switch
+                      label='Land'
+                      checked={land}
+                      data-testid={`land-${pr.id}`}
+                      onCheckedChange={({ checked }) => {
+                        const element = rows.current.get(pr.id);
+                        if (element) {
+                          void onLandChange(pr, checked, element);
+                        }
+                      }}
+                    />
+                  )}
+                </Layout.Flex>
               </Listbox.Item>
             );
           })}
