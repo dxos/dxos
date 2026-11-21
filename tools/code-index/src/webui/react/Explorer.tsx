@@ -26,6 +26,7 @@ import { translations as searchTranslations } from '@dxos/react-ui-search/transl
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Card from '@dxos/react-ui/Card';
 import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations } from '@dxos/react-ui/translations';
@@ -45,25 +46,6 @@ import { DEFAULT_FILE_ICON, FILE_ICONS, type Glyph, PACKAGE_ICON, SYMBOL_ICONS }
  */
 
 const TREE_ID = 'code-index-tree';
-
-const ICONS: Record<string, string> = {
-  repo: 'ph--git-branch--regular',
-  dir: 'ph--folder--regular',
-  package: 'ph--package--regular',
-  entry: 'ph--sign-in--regular',
-  folder: 'ph--folder--regular',
-  file: 'ph--file-code--regular',
-  namespace: 'ph--brackets-curly--regular',
-  function: 'ph--function--regular',
-  class: 'ph--cube--regular',
-  interface: 'ph--shapes--regular',
-  type: 'ph--shapes--regular',
-  enum: 'ph--list-numbers--regular',
-  variable: 'ph--hash--regular',
-};
-
-const iconOf = (node: Protocol.TreeNode): string =>
-  ICONS[node.kind === 'symbol' ? (node.detail ?? '') : node.kind] ?? 'ph--dot--regular';
 
 /** Nodes the tree opens on first sight: everything down to, but not into, a package. */
 const openByDefault = (node: Protocol.TreeNode | undefined): boolean => node?.kind === 'repo' || node?.kind === 'dir';
@@ -161,7 +143,7 @@ const createModel = (): ExplorerModel => {
       return {
         id,
         label: node?.label ?? id,
-        icon: node ? iconOf(node) : undefined,
+        icon: node ? glyphOf(node)?.icon : undefined,
         // Reading the children of every visible branch is what fetches one level ahead of what is open.
         parentOf: node?.branch ? get(childIds(id)) : undefined,
         testId: `tree-${node?.kind ?? 'node'}`,
@@ -204,10 +186,12 @@ const createModel = (): ExplorerModel => {
 /** Codicons are one colour; VS Code tints each declaration kind, light theme first, then dark. */
 const SYMBOL_GLYPHS: Record<string, { readonly icon: string; readonly className?: string }> = {
   function: { icon: 'symbol-method', className: 'text-[#652d90] dark:text-[#b180d7]' },
+  method: { icon: 'symbol-method', className: 'text-[#652d90] dark:text-[#b180d7]' },
   class: { icon: 'symbol-class', className: 'text-[#d67e00] dark:text-[#ee9d28]' },
   enum: { icon: 'symbol-enum', className: 'text-[#d67e00] dark:text-[#ee9d28]' },
   interface: { icon: 'symbol-interface', className: 'text-[#007acc] dark:text-[#75beff]' },
   variable: { icon: 'symbol-variable', className: 'text-[#007acc] dark:text-[#75beff]' },
+  property: { icon: 'symbol-field', className: 'text-[#007acc] dark:text-[#75beff]' },
   type: { icon: 'symbol-structure' },
   namespace: { icon: 'symbol-namespace' },
 };
@@ -230,55 +214,38 @@ const fileGlyph = (path: string): Glyph => {
 /** A JavaScript or TypeScript source file, which the tree treats as a module. */
 const MODULE_FILE = /\.[cm]?[jt]sx?$/;
 
-const moduleGlyph = { glyph: SYMBOL_ICONS['symbol-namespace'] };
+const MODULE_GLYPH: Glyph = { icon: SYMBOL_ICONS['symbol-namespace'] };
 
-/** The VS Code glyph for a row: Seti's for files, codicons for declarations, and none for folders, as Seti draws them. */
-const glyphOf = (node: Protocol.TreeNode): { readonly glyph: Glyph; readonly className?: string } | undefined => {
+/**
+ * The VS Code glyph for a node, as a sprite icon and its colour class: Seti's for files, codicons for
+ * declarations, and none for folders, as Seti draws them. The tree and the Cmd+P palette both use it,
+ * so a thing looks the same wherever it is listed.
+ */
+export const glyphOf = (node: Protocol.TreeNode): Glyph | undefined => {
   switch (node.kind) {
     case 'repo':
     case 'dir':
     case 'folder':
       return undefined;
     case 'package':
-      return { glyph: PACKAGE_ICON };
+      return PACKAGE_ICON;
     // A module reads as one, `{}`, whichever kind of row reaches it; a non-code entry keeps its file glyph.
     case 'entry':
     case 'file':
-      return MODULE_FILE.test(node.label) ? moduleGlyph : { glyph: fileGlyph(node.label) };
+      return MODULE_FILE.test(node.label) ? MODULE_GLYPH : fileGlyph(node.label);
     default: {
       const symbol = SYMBOL_GLYPHS[node.kind === 'namespace' ? 'namespace' : (node.detail ?? '')] ?? {
         icon: 'symbol-misc',
       };
-      return { glyph: SYMBOL_ICONS[symbol.icon], className: symbol.className };
+      return { icon: SYMBOL_ICONS[symbol.icon], className: symbol.className };
     }
   }
 };
 
-/**
- * Seti draws each glyph in the middle half of a 32-unit box and VS Code enlarges it as a font glyph,
- * so the box is cropped to that middle to match its size beside a 16-unit codicon.
- */
-const viewBoxOf = (glyph: Glyph): string =>
-  glyph.color
-    ? `${glyph.width * 0.16} ${glyph.height * 0.16} ${glyph.width * 0.68} ${glyph.height * 0.68}`
-    : `0 0 ${glyph.width} ${glyph.height}`;
-
-/** A generated glyph, inlined: Seti's carries its own colour, a codicon takes the row's tint. */
-const VsIcon = ({ glyph, className }: { glyph: Glyph; className?: string }) => (
-  <svg
-    viewBox={viewBoxOf(glyph)}
-    className={`size-4 ${className ?? ''}`}
-    style={glyph.color ? { color: glyph.color } : undefined}
-    fill='currentColor'
-    aria-hidden
-    dangerouslySetInnerHTML={{ __html: glyph.body }}
-  />
-);
-
 /** The row's icon, or nothing for a folder. */
 const RowIcon = ({ node }: { node: Protocol.TreeNode }) => {
-  const icon = glyphOf(node);
-  return icon ? <VsIcon {...icon} /> : null;
+  const glyph = glyphOf(node);
+  return glyph ? <Icon.Icon icon={glyph.icon} classNames={glyph.className} /> : null;
 };
 
 /** A row's trailing column: what the node is, muted beside its name. */
@@ -391,7 +358,8 @@ const GoToDialog = ({
                   key={hit.node.id}
                   value={hit.node.id}
                   label={hit.node.label}
-                  icon={iconOf(hit.node)}
+                  icon={glyphOf(hit.node)?.icon}
+                  iconClassNames={glyphOf(hit.node)?.className}
                   suffix={hit.description}
                   onSelect={() => onPick(hit)}
                 />

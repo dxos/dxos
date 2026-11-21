@@ -57,6 +57,7 @@ describe('Tree', () => {
         "export * as Obj from './Obj.ts';",
         "export * from './extra.ts';",
         "export { thing } from './named.ts';",
+        "export { hidden as Surfaced } from './named.ts';",
         '',
       ].join('\n'),
     );
@@ -110,11 +111,11 @@ describe('Tree', () => {
       ),
     );
 
-  const withSearch = <A, E>(body: (search: ReturnType<typeof Search.make>) => Effect.Effect<A, E>) =>
+  const withSearch = <A, E>(body: (search: Effect.Success<ReturnType<typeof Search.make>>) => Effect.Effect<A, E>) =>
     EffectEx.runPromise(
       Effect.scoped(
         Effect.provide(
-          Effect.flatMap(Store.Store, (store) => body(Search.make(store))),
+          Effect.flatMap(Store.Store, (store) => Effect.flatMap(Search.make(store), body)),
           Store.layer(dir),
         ),
       ),
@@ -169,6 +170,7 @@ describe('Tree', () => {
     expect(entry.children.map((node) => [node.label, node.kind])).toEqual([
       ['Obj', 'namespace'],
       ['extra', 'symbol'],
+      ['Surfaced', 'symbol'],
       ['thing', 'symbol'],
     ]);
     // The module that declares a default export still lists it.
@@ -236,9 +238,19 @@ describe('Tree', () => {
     ]);
   });
 
+  test('search finds a name a renaming re-export introduces, and labels a namespace member Module.Noun', async ({
+    expect,
+  }) => {
+    const [surfaced] = await withSearch((search) => search.search('surfaced'));
+    expect(surfaced?.node).toMatchObject({ label: 'Surfaced', kind: 'symbol' });
+    expect(surfaced?.description).toBe('@fixture/lib');
+    const [make] = await withSearch((search) => search.search('make'));
+    expect(make?.node.label).toBe('Obj.make');
+  });
+
   test('search ranks an exact name first, and published declarations ahead of internal ones', async ({ expect }) => {
     const hits = await withSearch((search) => search.search('make'));
-    expect(hits[0]?.node).toMatchObject({ label: 'make', kind: 'symbol', detail: 'variable' });
+    expect(hits[0]?.node).toMatchObject({ label: 'Obj.make', kind: 'symbol', detail: 'variable' });
     // Both contain `n` mid-name, so they share a tier: the published `thing` goes ahead of the internal `hidden`.
     const labels = (await withSearch((search) => search.search('n'))).map((hit) => hit.node.label);
     expect(labels).toContain('hidden');
