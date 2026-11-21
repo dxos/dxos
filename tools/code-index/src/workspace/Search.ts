@@ -172,7 +172,9 @@ export const make = (store: Store.Api) =>
         if (needle.length === 0) {
           return [];
         }
-        const entries = (yield* Ref.get(current))?.entries ?? (yield* first);
+        // Read again after waiting: a refresh may have installed a newer list while the first build ran.
+        const entries =
+          (yield* Ref.get(current))?.entries ?? (yield* Effect.andThen(first, Ref.get(current)))?.entries ?? [];
         const ranked: { readonly rank: number; readonly hit: Protocol.SearchHit }[] = [];
         for (const entry of entries) {
           const score = rank(entry, needle);
