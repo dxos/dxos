@@ -65,6 +65,29 @@ export type CrawlOptions = {
   readonly filenames?: readonly string[];
 };
 
+/**
+ * The paths git ignores, of those given. `check-ignore` exits 1 when it ignores none of them,
+ * which is an answer, not a failure.
+ */
+export const ignored = (root: string, paths: readonly string[]): Effect.Effect<Set<string>, CrawlError> =>
+  paths.length === 0
+    ? Effect.succeed(new Set())
+    : Effect.callback<Set<string>, CrawlError>((resume) => {
+        const child = execFile(
+          'git',
+          ['check-ignore', '--stdin', '-z'],
+          { cwd: root, maxBuffer: 64 * 1024 * 1024 },
+          (error, stdout) => {
+            if (error && error.code !== 1) {
+              resume(Effect.fail(new CrawlError({ message: `git check-ignore failed in ${root}`, cause: error })));
+              return;
+            }
+            resume(Effect.succeed(new Set(stdout.split('\0').filter((path) => path.length > 0))));
+          },
+        );
+        child.stdin?.end(paths.join('\0'));
+      });
+
 /** Whether a stat failed because the path does not exist, rather than because it could not be read. */
 const isAbsent = (error: unknown): boolean => {
   const code = typeof error === 'object' && error !== null ? Reflect.get(error, 'code') : undefined;

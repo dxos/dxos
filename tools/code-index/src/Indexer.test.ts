@@ -334,3 +334,54 @@ describe('Indexer, when files cannot be read', () => {
     expect(await paths()).toEqual(['src/a.ts', 'src/locked/b.ts']);
   }, 60_000);
 });
+
+describe('Indexer, when git stops listing a file', () => {
+  let root: string;
+  let dir: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-unlisted-'));
+    dir = join(root, 'node_modules', '.code-index');
+    await mkdir(join(root, 'src', 'nested'), { recursive: true });
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;\n');
+    await writeFile(join(root, 'src', 'nested', 'b.ts'), 'export const b = 2;\n');
+    await writeFile(join(root, 'src', 'scratch.ts'), 'export const scratch = 3;\n');
+    await git(root, 'init', '--quiet');
+  }, 60_000);
+
+  afterAll(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const index = () =>
+    EffectEx.runPromise(Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1 }), Store.layer(dir))));
+
+  const paths = () =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.flatMap(Store.Store, (store) => store.listFiles()),
+          Store.layer(dir),
+        ),
+      ),
+    ).then((files) => files.map(({ path }) => path));
+
+  test('a file that exists and is not ignored stays indexed though the listing omits it', async () => {
+    await index();
+    expect(await paths()).toEqual(['src/a.ts', 'src/nested/b.ts', 'src/scratch.ts']);
+
+    // An embedded repository is listed as one directory entry, so its files drop out of the listing.
+    await git(join(root, 'src', 'nested'), 'init', '--quiet');
+    const result = await index();
+    expect(result.removed).toBe(0);
+    expect(await paths()).toEqual(['src/a.ts', 'src/nested/b.ts', 'src/scratch.ts']);
+  }, 60_000);
+
+  test('a file git now ignores, or that is gone, still leaves the index', async () => {
+    await writeFile(join(root, '.gitignore'), 'src/scratch.ts\n');
+    await rm(join(root, 'src', 'a.ts'));
+    const result = await index();
+    expect(result.removed).toBe(2);
+    expect(await paths()).toEqual(['src/nested/b.ts']);
+  }, 60_000);
+});
