@@ -17,40 +17,55 @@ import { loadTopology } from '@dxos/react-ui-geo/data';
 npm install @dxos/react-ui-geo
 ```
 
-`Globe` draws the countries itself on a canvas, so it needs no tile server, works offline and sends no requests to a
-third party. For a street map, use [`Map`](/docs/tile/api/react-ui-geo/map/). The package's strings come from
-`@dxos/react-ui-geo/translations`.
+`Globe` is a globe of countries drawn on a canvas. It draws the outlines from data in the package, so it needs no tile
+server, works offline and sends no requests to a third party. For a street map, use
+[`Map`](/docs/tile/api/react-ui-geo/map/).
+
+Add the package's strings from `@dxos/react-ui-geo/translations` to the `resourceExtensions` of `Theme.Provider`.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Globe.Root` | Holds the zoom, rotation and translation; its `ref` gives a `GlobeController` |
-| `Globe.Viewport` | Measures its space and sizes the canvas to it |
-| `Globe.Canvas` | Draws the `topology`, and `features`: `points` and the `lines` between them |
-| `Globe.Zoom` | Zoom in and out buttons |
-| `Globe.Action` | A start button, for a spin or a tour |
+| `Globe.Root` | The root, which holds the center, zoom, rotation and translation. Its `ref` gives a `GlobeController` |
+| `Globe.Viewport` | The frame that measures its space and sizes the canvas to it |
+| `Globe.Canvas` | The canvas, which draws the `topology` and the `features`. The features are `points` and the `lines` between them |
+| `Globe.Zoom` | The zoom in and zoom out buttons |
+| `Globe.Action` | The start and toggle buttons, for a spin or a tour |
 | `Globe.Panel` | A panel at a corner of the viewport |
 | `Globe.Debug` | The globe's state, for development |
 
-The hooks act on the controller: `useDrag` turns the globe as the user drags, `useWheel` zooms with the wheel,
-`useSpinner` turns it on its own, `useTour` flies from point to point, and `useGlobeZoomHandler` connects the zoom
-buttons.
+The hooks act on the controller:
+
+- `useDrag` turns the globe as the user drags.
+- `useWheel` zooms with the wheel.
+- `useSpinner` turns the globe on its own.
+- `useTour` flies from point to point.
+- `useGlobeZoomHandler` connects the zoom buttons.
 
 ## `Globe.Canvas`
 
+`Globe.Canvas` draws the country outlines, and the points and lines you pass as `features`.
+
 | Prop | Type | Effect |
 | --- | --- | --- |
-| `topology` | `Topology` | Country outlines from `loadTopology`; `110m` is the smallest |
-| `features` | `{ points, lines }` | Places as `lat` and `lng`, and lines from a `source` to a `target` |
-| `projection` | `'orthographic' | 'mercator' | ...` | A globe by default |
-| `styles` | `StyleSet` | Colors for each layer; the theme's by default |
+| `topology` | `Topology` | Sets the country outlines, from `loadTopology`. `110m` is the smallest |
+| `features` | `{ points, lines, selected }` | Sets the places, as `lat` and `lng`, and the lines from a `source` to a `target`. `selected` places draw above the rest |
+| `projection` | `'orthographic' \| 'mercator' \| 'transverse-mercator' \| 'equirectangular' \| GeoProjection` | Sets the projection, by name or as a d3 projection. `'orthographic'`, a globe, by default |
+| `fit` | `'contain' \| 'cover'` | Sets how the whole sphere sits in the canvas at zoom 1. The projection's own scale by default |
+| `styles` | `StyleSet` | Sets the colors for each layer. The theme's colors by default |
 
 ## A trip on a globe
 
-`useTour` flies from point to point and draws the arc it travels. It stops after a lap, or when the user drags, so this
-example starts the next lap after a pause:
+`useTour` flies from point to point and draws the arc it travels. It returns whether the tour is running, and a
+setter that starts or stops it. The tour stops by itself after one pass over the points. With `loop`, the pass ends
+back at the first point.
+
+**Example** (Flying a trip around the world, lap after lap)
 
 <Snippet file="tile-guide-map" region="globe" lang="tsx" />
 
-The story at the top of this page runs this example.
+`LEGS` joins each stop in `TRIP` to the next, as the `lines` of `features`. A drag does not stop a tour, so the
+`onUpdate` of `useDrag` calls `setRunning(false)` when a drag starts, and the `useEffect` starts the tour again.
+
+The story at the top of this page flies the same trip.

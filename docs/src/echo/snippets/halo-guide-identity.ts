@@ -39,14 +39,15 @@ const watch = Identity.identity.pipe(
 // #endregion read
 
 // #region service
-// The synchronous methods, for code outside Effect.
-const service = Effect.gen(function* () {
-  const identity = yield* Identity.Service;
-  const unsubscribe = identity.subscribe((current) =>
+// Take the service once. Its methods need no Effect to call.
+const listen = Effect.gen(function* () {
+  const identityService = yield* Identity.Service;
+  // Calls back at once with the current value, then on each change.
+  const unsubscribe = identityService.subscribe((current) =>
     console.log(Option.isSome(current) ? 'signed in' : 'signed out'),
   );
   // An Atom of the same value, for Atom-driven code.
-  const atom = Identity.atom(identity);
+  const atom = Identity.atom(identityService);
   return { unsubscribe, atom };
 });
 // #endregion service
@@ -69,13 +70,6 @@ const rename = Identity.updateProfile({
 const me = await Effect.runPromise(signIn.pipe(Effect.provide(halo)));
 console.log(me.did, me.displayName);
 // #endregion create
-
-// #region personal-space
-const personalSpace = Effect.gen(function* () {
-  const id = yield* Identity.personalSpaceId;
-  return Option.getOrUndefined(id);
-});
-// #endregion personal-space
 
 // #region devices
 const listDevices = Effect.gen(function* () {
@@ -155,7 +149,8 @@ const edgeIdentity = Identity.getEdgeIdentity;
 // #region errors
 const safeRename = rename.pipe(
   Effect.catchTag('IdentityError', (error) =>
-    Effect.sync(() => console.error('Could not rename:', error.message)),
+    // The failure that IdentityError wraps.
+    Effect.sync(() => console.error('Could not rename:', error.context.error)),
   ),
 );
 // #endregion errors
@@ -169,11 +164,10 @@ export {
   edgeIdentity,
   joinIdentity,
   listDevices,
-  personalSpace,
+  listen,
   restore,
   revoke,
   safeRename,
-  service,
   watch,
   watchDevices,
   whoAmI,

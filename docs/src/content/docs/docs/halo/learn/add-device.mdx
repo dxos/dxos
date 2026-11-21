@@ -11,31 +11,41 @@ By the end of this page Alice's phone joins her identity, and shows her name, he
 
 ## Background
 
-Each device has its own key. Adding a device is the same handshake as inviting a person, with a device invitation
-instead of a space invitation: the device already in the identity is the host, and the new device the guest. At the end,
-the host writes a delegation that makes the new device a member of the identity's group.
+Alice opens the contact book on her phone, and it asks for her name as if she were new. The phone is a device of its
+own, with its own key, and a device that already has the identity has to let it in.
 
-The new device then syncs the identity's personal space and every space the identity is in, from the other device or
-through EDGE. Nothing about the identity has to be typed in again.
+Adding a device is the same handshake as inviting a person, with a device invitation in place of a space invitation.
+The **host** is the device already in the identity, which starts the invitation. The **guest** is the new device,
+which redeems it. At the end, the host writes a delegation, a signed statement that makes the new device's key a
+member of the identity's group.
+
+The new device then syncs every space the identity is in, from the other device or through EDGE, DXOS's always-online
+peer. We don't type in anything about the identity again.
 
 ## Steps
 
 <Steps>
 
-1. **Share your identity.** `Identity.share` starts a device invitation on the device you have. **Add a device** on the
-   Devices tab calls this and shows the code.
+1. **Share your identity.** On the Devices tab, **Add a device** calls `handleAdd`. `Identity.share` starts a device
+   invitation on the device we have, and `Invitation.code` returns its code.
 
    <Snippet file="halo-tutorial/app/Devices" region="share" lang="tsx" />
 
-2. **Join from the new device.** On the new device, before it has an identity, `Identity.join` redeems the code. The
-   handshake and its authorization code are the same as for a space, so the welcome screen hands the flow to the same
-   guest panel as **Join**. **Join your other device** calls this.
+   `Identity.share` takes the same options as `Space.share`, and `shared-secret` matters more here. Without it, anyone
+   who saw the invitation code could add a device of their own to Alice's identity.
+
+2. **Join from the new device.** The phone has no identity yet, so we start from its welcome screen. **Join your
+   other device** opens the `Guest` panel from [Invite people](/docs/halo/learn/invite-people/), which calls
+   `handleJoin` with the pasted code.
 
    <Snippet file="halo-tutorial/app/Welcome" region="join" lang="tsx" />
 
-3. **List your devices.** `useDevices` returns the identity's devices and re-renders when one joins or comes online. It
-   follows `Identity.devices`. Each device has a key, a kind, whether it is online, and whether it is the device the code
-   runs on. The Devices tab shows them.
+   `Identity.join` returns a flow, as `Space.join` does. The handshake and its authorization code are the same as for
+   a space, so `Guest` needs no changes.
+
+3. **List your devices.** The Devices tab reads its list from `useDevices`, which follows the `Identity.devices`
+   stream. Each device carries its `key`, its `kind` and its `presence`. `current` is true for the device the code
+   runs on.
 
    <Snippet file="halo-tutorial/app/Devices" region="list" lang="tsx" />
 
@@ -43,7 +53,7 @@ through EDGE. Nothing about the identity has to be typed in again.
 
 ## Try it
 
-Alice's laptop has her identity, her spaces and her contacts; her phone has nothing.
+Alice's laptop has her identity, her spaces and her contacts. Her phone has nothing.
 
 1. On the laptop, open **Devices**, press **Add a device** and copy the code.
 2. On the phone, press **Join your other device**, paste it and press **Join**.

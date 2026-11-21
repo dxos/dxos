@@ -39,8 +39,8 @@ export const translations = [
         'heading-level.label_other': 'Heading level {{count}}',
 
         'view-mode.label': 'Editor view',
-        'view-mode.preview.label': 'Markdown',
-        'view-mode.source.label': 'Plain text',
+        'view-mode.preview.label': 'Preview',
+        'view-mode.source.label': 'Source',
         'view-mode.readonly.label': 'Read only',
       },
     },

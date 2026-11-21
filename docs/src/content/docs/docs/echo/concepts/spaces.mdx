@@ -4,44 +4,69 @@ description: The unit of sharing and replication, how a space is stored, and the
 ---
 
 import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
 
-A space is a database that a set of peers share and replicate, and it is the unit of sharing: a person shares a whole
+A space is a database that a set of peers share and replicate. It is the unit of sharing: a person shares a whole
 space, not single objects.
 
 ## Model
 
+A shared folder is the nearest thing you already use. You invite people to the folder, and each of them syncs
+everything in it. A space works the same way for objects:
+
+- A **peer** is a client that takes part in a space, such as a browser tab on one member's device.
+- A **replica** is one peer's full copy of the space's data.
+
 Every object belongs to exactly one space, and `space.db` is the database that holds them. A device usually holds many
-spaces at once, and each space has its own members.
+spaces at once, and each space has its own members, the identities that HALO has admitted to it.
+
+**Example** (Creating a space and adding an object)
 
 <Snippet file="concept-spaces" region="database" />
 
+`db.add` returns without an `await`, because the write goes to this peer's replica and not to a server.
+
 ### Storage
 
-A device keeps each space in local storage: the browser's storage in a web app, files on disk in Node. In a browser the
-client runs the database in a worker, apart from the page. It keeps an index of every space, and queries read from the
-index as well as from the objects the page holds.
+A device keeps each space in local storage, in a [SQLite](https://www.sqlite.org/) database. In a web app, SQLite
+runs in a worker, apart from the page, and keeps its file in the browser's storage. In Node, the database is a file on
+disk.
 
-A write is finished, and visible to queries in the same tab, when the call returns. `db.flush` waits until pending
-writes are on disk, and optionally until the index has them too.
+Opening a space does not load its objects. A client loads an object when a query returns it or when you load a
+reference to it. The client holds in memory the objects it asked for, not the whole space.
+
+The client keeps an index of every space, and queries read from the index as well as from the objects the client has
+loaded. The client compiles a query to SQL, so SQLite filters, orders and limits the matches, and only the results
+come back to your code. A few queries still run in memory, such as queries over changes, tags and keys.
+
+`db.flush` waits until pending writes are on disk and in the index.
 
 ### Replication
 
-There is no server that owns a space. Each member holds a full copy of the space's data and exchanges changes with the
-other members directly, over [WebRTC](https://en.wikipedia.org/wiki/WebRTC), or through [EDGE](/docs/edge/concepts/replication/), the DXOS sync
+No server owns a space. Peers exchange changes with each other directly, over
+[WebRTC](https://en.wikipedia.org/wiki/WebRTC), or through [EDGE](/docs/edge/concepts/replication/), the DXOS sync
 service. [MESH](/docs/mesh/concepts/transports/) carries both.
-Reads and writes work offline, and the changes merge when the device reconnects, by the rules in
-[Changes and branches](/docs/echo/concepts/changes/).
 
 ### The Hypergraph
 
-The **Hypergraph** is every space this device holds, as one graph. `client.graph` queries across spaces and finds a
-space's database by id. It also holds the **registry**: the types and objects registered in code, which a query without
-`from` searches along with the database.
+The **Hypergraph** is every space this device holds, as one graph. You reach it as `client.graph`, which queries
+across spaces and finds a space's database by id.
+
+The **registry** is the set of types and objects registered in code, and the Hypergraph holds it. A query reads the
+registry only when its `from` names `Scope.registry()`. By default, without `from`, a query reads the database it
+runs on.
+
+**Example** (Querying every space, and finding one database)
 
 <Snippet file="concept-spaces" region="hypergraph" />
 
+`from('all-accessible-spaces')` is the step that widens `everyone` from one database to every space. `same` is the
+database of `space`, which `getDatabase` finds from the space's id alone.
+
 A reference can point into another space. It stores the qualified EID, `echo://<spaceId>/<objectId>`, and resolves if
 this device holds or can reach that space.
+
+**Example** (Referencing an object in another space)
 
 <Snippet file="concept-spaces" region="cross-space" />
 
@@ -50,18 +75,22 @@ in advance, such as a search across everything a person has.
 
 ### Access
 
-HALO decides who is a member of a space and what each member can do, with access control built on
-[Keyhive](https://www.inkandswitch.com/keyhive/notebook/). [Spaces and membership](/docs/halo/concepts/spaces-membership/)
-covers members and roles, and [Invitations](/docs/halo/concepts/invitations/) covers how a peer joins.
+HALO decides who is a member of a space and what each member can do. Its access control is built on
+[Keyhive](https://www.inkandswitch.com/keyhive/notebook/). See
+[Spaces and membership](/docs/halo/concepts/spaces-membership/) for members and roles, and
+[Invitations](/docs/halo/concepts/invitations/) for how a peer joins.
 
 ## Behavior
 
-- Each member holds a full replica, so reads and writes work offline and merge when the peer reconnects.
-- Several members can write to the same space at the same time. Their changes merge without a central authority.
-- A reference into a space this device does not hold resolves to nothing: `tryLoad` returns `undefined`.
+- A write is finished, and visible to queries in the same client, when the call returns.
+  <SpecCite item="org.dxos.echo.query#F-2.1" />
+- Reads and writes work offline, because each peer works on its own replica. The changes merge when the peer
+  reconnects, by the rules in [Changes and branches](/docs/echo/concepts/changes/).
+- Several peers can write to the same space at the same time. Their changes merge without a central authority.
+- A reference into a space this device does not hold resolves to nothing, and `tryLoad` returns `undefined`.
 
 ## Limits
 
-- An object cannot move to another space. Copy it into the other space and remove the original.
+- An object cannot move to another space. Instead, copy it into the other space and remove the original.
 - Sharing is per space. To share some objects and not others, put them in different spaces and link them with
   references.

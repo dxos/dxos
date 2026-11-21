@@ -1,0 +1,29 @@
+---
+// Starlight's header icons, after an "Open app" button that the home page and every docs page carry (spec F-13.10).
+import Default from '@astrojs/starlight/components/SocialIcons.astro';
+---
+
+<a class="open-app" href="https://app.drawing.sh/" data-app-link>Open app</a>
+<Default />
+
+<script>
+  import { linkApp } from '../../src/landing/app-links.ts';
+
+  linkApp();
+</script>
+
+<style>
+  .open-app {
+    padding: 0.3rem 0.8rem;
+    border-radius: 0.5rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    text-decoration: none;
+    font-size: var(--sl-text-sm);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .open-app:hover {
+    background: var(--accent-hover);
+  }
+</style>

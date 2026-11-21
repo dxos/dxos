@@ -150,9 +150,6 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
       roles: [AppSurface.Article, AppSurface.ObjectProperties],
     }),
-    AppCapability.spaceTemplates(
-      () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),
-    ),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },

@@ -63,7 +63,7 @@ import { isNonNullable } from '@dxos/util';
 /** Ids of the templates contributed as `AppCapabilities.SpaceTemplate` by the plugins below. */
 const TEMPLATES = {
   aiBriefing: 'org.dxos.plugin.magazine.template.ai-briefing',
-  architecture: 'org.dxos.plugin.canvas.template.architecture',
+  architecture: 'org.dxos.plugin-debug.template.architecture',
   demo: 'org.dxos.plugin-debug.template.demo',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',

@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as TestClock from 'effect/testing/TestClock';
 import { expect } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';
@@ -200,6 +201,7 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
       'states the enabled skills, and the model finds, enables and calls the rest from code',
       Effect.fnUntraced(
         function* (_) {
+          yield* TestClock.setTime(Date.UTC(2026, 10, 19, 12));
           const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
           yield* session.submitPrompt('Score "Write the docs", then note it.');
           yield* session.waitForCompletion();
@@ -208,9 +210,13 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           // One system prompt for the whole turn, so the prompt cache holds across its calls.
           expect(new Set(systems).size).toBe(1);
           const [system] = systems;
+          expect(system).toContain('Today is Thursday, 2026-11-19 (UTC).');
           expect(system).toContain('The skills enabled in this conversation are stated in this prompt');
           expect(system).toContain(querySkillsCall);
-          expect(system).toContain("find them, and their fields, with the Skill Manager's `queryTypes`");
+          // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
+          expect(system).toContain(
+            "find them, and their fields, with the Skill Manager's `assistant-toolkit-query-types`, which searches every registered type",
+          );
           // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
           expect(system).toContain('Score titles before ranking them');
           expect(system).toContain('Scores a title for urgency');

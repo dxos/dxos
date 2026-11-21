@@ -1,0 +1,18 @@
+---
+// One drawing per relation word, rendered at build time.
+import { prerendered } from '../util/prerendered.ts';
+
+const { relations } = await prerendered();
+---
+
+<div class="relations">
+  {
+    relations.map(({ code, text, svg }) => (
+      <div class="relation">
+        <code>{code}</code>
+        <p>{text}</p>
+        <Fragment set:html={svg} />
+      </div>
+    ))
+  }
+</div>

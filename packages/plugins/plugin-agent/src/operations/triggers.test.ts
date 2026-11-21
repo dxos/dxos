@@ -41,7 +41,14 @@ import {
   TriggerOperation,
 } from '#types';
 
-import { TEST_MEMBERS, createLocalAgent, makeTestBrain, noChannelBackends, testSpaceLayer } from '../brain/testing.ts';
+import {
+  TEST_MEMBERS,
+  createLocalAgent,
+  inlineBrainHooks,
+  makeTestBrain,
+  noChannelBackends,
+  testSpaceLayer,
+} from '../brain/testing.ts';
 import { AgentNamespace } from '../namespace.ts';
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry } from '../triggers.ts';
@@ -325,7 +332,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, BrainSkill.hooks) },
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, inlineBrainHooks) },
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
@@ -671,7 +678,7 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, BrainSkill.hooks) },
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, inlineBrainHooks) },
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       aiService: ScriptedLanguageModel.scriptedAiService(makePostedScript(postedRefs)),
     }),

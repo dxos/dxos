@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, withContext } from '@dxos/errors';
@@ -147,6 +147,8 @@ export type UseAppOptions = {
    */
   verboseStatus?: boolean;
   fallback?: FC<FallbackProps>;
+  /** Rendered in place of the app until its shell mounts. */
+  placeholder?: ReactNode;
 };
 
 /**
@@ -204,6 +206,7 @@ export const useApp = ({
   debounce = 0,
   timeout = 30_000,
   verboseStatus = false,
+  placeholder,
 }: UseAppOptions) => {
   const plugins = useDefaultValue(pluginsProp, () => []);
   const defaults = useDefaultValue(defaultsProp, () => []);
@@ -476,6 +479,8 @@ export const useApp = ({
 
   const progressRef = useRef(startupProgress);
   progressRef.current = startupProgress;
+  const placeholderRef = useRef(placeholder);
+  placeholderRef.current = placeholder;
 
   const surfaces = useMemo(() => new SurfaceManager(manager.capabilities, manager), [manager]);
 
@@ -492,6 +497,7 @@ export const useApp = ({
                   debounce={debounce}
                   progress={progressRef.current}
                   verboseStatus={verboseStatus}
+                  placeholder={placeholderRef.current}
                 />
               </SurfaceManagerProvider>
             </RegistryContext.Provider>

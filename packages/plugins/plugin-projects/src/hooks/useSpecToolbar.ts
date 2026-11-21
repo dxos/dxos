@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { runSlashCommand, slashCommandsOf } from '../components/SpecDocumentEditor/slash-commands.ts';
+import { runSlashCommand, slashCommandsOf } from '../extensions/slash-commands.ts';
 import { ProjectsNamespace } from '../namespace.ts';
 
 /** Fills the host's toolbar with a section's actions; the returned function takes them back out. */

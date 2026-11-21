@@ -25,7 +25,7 @@ export const SpacePicker = ({
   const [creating, setCreating] = useState(false);
 
   // #region create
-  /** Creates a space called `name`, waits until it opens, and selects it. */
+  /** Creates a space called `name`, waits until it is ready, and selects it. */
   const handleCreate = (name: string) =>
     Effect.gen(function* () {
       const space = yield* Space.create({ name });

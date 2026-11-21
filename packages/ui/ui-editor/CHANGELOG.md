@@ -1,5 +1,118 @@
 # @dxos/ui-editor
 
+## 0.17.0
+
+### Minor Changes
+
+- 09d8716: Pending text can now stream in a whole paragraph with blank lines around it or an inline correction that replaces a range, and its confirm/cancel buttons float above the preview once the text settles. The typewriter cursor stays at the end of streamed text, and a menu now closes when a click outside it lands on an element that is redrawn.
+- 4be51c3: Plugin `workerd` (EDGE) builds no longer bundle editor extensions, CLI commands, local-client layer specs, UI state or defuddle's DOM build: those modules now list `['browser', 'node', 'tauri']`, and markdown's Scroll To Anchor operation registers only in the browser. `@dxos/ui-editor/hunks` exports the word-level diff helpers (`cherryPickHunk`, `revertHunk`, `computeWordHunks`) without a CodeMirror dependency; **Breaking:** `@dxos/ui-editor/headless` no longer exports `cherryPickHunk` and `revertHunk`; import them from `@dxos/ui-editor/hunks` (or the package root) instead.
+- bdb73fb: `diffView` takes `orientation: 'changes'` to read the editor's document as the newer version, with a line-first diff that stays precise on long documents, and `collapseUnchanged` to fold unchanged runs. Smart links on a lattice route about six times faster with the same result, and dragging a node no longer re-runs the graph's arrangement.
+- 9f2cacf: A spec's text is the only store for its blocks. plugin-projects draws each block of a kind its dialects define as a form over that kind's schema, offers a slash command per kind, and reads and writes blocks with `ProjectOperation.GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock`. The Specs tab's spec picker nests a spec beneath the specs whose `Ref<spec>` fields cite it. In plugin-code a feature is a `feat` block: the board and the feature companion read the blocks through `ProjectHooks.useSpecBlocks`, and tasks and showcases name a feature by its block key through `SpecItem.Implements` and `Showcase.Demonstrates` with `item`. A migration folds existing feature objects into their specs' text.
+
+  The Specs tab has one toolbar, and every Markdown editor's toolbar groups its tools into Format and Insert, which show their buttons while there is room and fold into menus before anything moves into ⋮. A guided tour step opens the folded group that holds its control. Shared form and picker parts gained what the block forms use: inline labels, header grids, typed array rows, lookups of several values, option details and hues.
+
+  Breaking:
+
+  - plugin-code's feature operations (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `GetFeatures`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`) are removed. Use the block operations, `CodeOperation.CreateSpec` with `breaks`, `UpdateSpec`, `LinkTask` and `CreateShowcase` with `items`.
+  - The feature embeds, `/feature`, the feature article and the spec codec are removed; a spec syncs with its file as text.
+  - `@feature` code links are no longer stored on features.
+  - A read-only Boolean form field is no longer dimmed, and a `Select` shown as a tag is filled in its option's hue.
+
+### Patch Changes
+
+- 73ed632: Collaborator cursors now reach a peer that joins a document after the others last moved. `SpaceAwarenessProvider` queries for peers only once its listener is registered, answers a peer's first post with its own state, and re-sends its state every 15 seconds for peers whose connection came up after its last post. Remote state is kept per session (each open editor), so a person with a document open on two devices or in two tabs shows one caret, from whichever session moved last, instead of the two overwriting each other. A session is dropped when it closes, or within a minute of its last post.
+
+  An empty editor shows one placeholder at a time: the commands hint ("Press / for commands") replaces the editor's placeholder instead of rendering beside it. `createBasicExtensions` uses the new `emptyPlaceholder`, which gives way while a `placeholder` hint shows. Placeholders also sort after other widgets at their position, so a collaborator's caret in an empty document draws where the document starts rather than after the placeholder text. `placeholderWidget` builds that decoration for other extensions.
+
+  On macOS, `setupPage` gives each Playwright WebKit context its own home directory, so each context gets its own OPFS. Before this, two peers in one test shared one identity.
+
+- 0590c11: New Demo space template: sixteen chess games at every stage, a world map of every Cloudflare data centre with a globe tour from Los Angeles to Sydney, a voxel creeper, a voxel town, and a spacetime scene of three race cars and a fire truck. `@dxos/plugin-spacetime` is now public, with a `SpacetimePresets` entry that builds a preset model (fire truck, race car, taxi) as a stored mesh. A game now has an optional `description`, which chess keeps set to the current FEN so tables and cards show each position; chess cards draw their board full width again, and the move list drops its focus ring. A map's `coordinates` are its globe tour route; the globe gets a light street-map palette, small dark-blue markers, a red tour route and a margin at rest, and flat-map pins shrink to 60%. The DXOS Architecture template's metrics sheet gains a pie of the busiest plugins' PR share. Refs to the same object from different clients in one page no longer share a cached atom, so each client resolves a ref through its own database (previously every client's editor bound to whichever client loaded the object first). Replicated comments now show up on every peer: the editor retries an anchor whose cursor cites edits not yet received, and comment sync re-reads anchors when a thread arrives after its anchor. Many clients editing one document replicate much faster: sync no longer rebuilds Automerge changes on every message to check a peer's initial heads (patched `@automerge/automerge-repo`), and a query from objects to typed relations on them (`select(...).targetOf(Type)`, as comment threads use) re-runs only when those objects, relations of that type, or the relations' endpoints change, rather than on every write in the space. A masonry grid now has the same gap on all four sides: inside a padded `Masonry.Content` it adds the gap above and below as well as at the sides, and a non-scrolling grid (`scroll={false}`) adds none, leaving the perimeter to its host. Padding of `p-3` is now the equivalent `p-trim-md` token. A toolbar now insets both ends by the same gap, whether the edge item is a labelled control or an icon-only button, plugin-theme registers the menu translations so the overflow button reads "More", and a project's pipeline toggle reads "Hide pipeline" while the chart is shown.
+- b8e76f9: Peers' avatars now act on what they view. Clicking an avatar opens the object's viewers with that row highlighted, each with Go to (open the object where the peer has it open in the tree, such as under a collection) or Jump (reveal the peer's selection or viewport, once the object is open). A peer with the object open in several tabs or on several devices is one row whose Jump goes to the session that moved last; a toggle in the list's toolbar lists their sessions under it, each named by its device ("Chrome on macOS"), with a dot for whether it moved in the last minute. A "See everyone in this space" button opens a Members companion listing every online peer by the object they view. Revealing an anchor moved from `CommentConfig.scrollToAnchor` to a per-type `AppCapabilities.Locator`, and `LayoutOperation.ScrollIntoView` drops `cursor`. New devices no longer get a placeholder label, and `getDeviceLabel` (from `@dxos/client/halo`) treats the old placeholders as no label, so devices are named from their platform and OS. A graph node that leaves and comes back, such as a peer who visits Settings, is expanded again, so its row keeps Go to and Jump. Jump goes to a peer's caret only once they have placed one, otherwise to the top of their viewport, and the avatars open the viewers list from the keyboard too.
+- 3d22d48: You can follow a peer around a space. Follow sits next to Jump and Go to on a peer's row and follows whichever of their sessions moved last; with the sessions toggle on, each session row has a Follow that stays on that session. While you follow, your deck shows theirs: the same planks in their order, scrolled to the plank at the front of theirs, with each plank keeping their top line at the top and the companions they have open. With no planks reported, it opens the object they attend, at the path they opened it from. None of it moves your caret or focus, and they send their location every 100 ms instead of every second. A plank your deck has no URL binding for (a type from a plugin you lack) is left out, and your deck scrolls to the nearest plank of theirs it holds instead. Scrolling, clicking or typing in a plank, attending an object outside what you show of them, going back or forward in history, or pressing Escape stops it, and so does the leader being gone from the space for five seconds. A follow pauses while you cannot open what they attend and picks up again once you can. The Members tab shows a dot while you follow, and the leader's row sits first in its list with Stop. A `Locator` reveal takes `follow` to scroll without moving the caret and answers whether it revealed the anchor, so a follower whose editor mounts late still lands on the leader's line, a deck companion's `badge` atom can hold `true` to draw a dot, and `LayoutOperation.Set` takes `focus: false` to focus no plank and a `workspace` to set the planks in, as `Open` does. View state can now be followed: a `ViewState` aspect declared with `follow: 'write'` has its values for the space and each open object sent with presence, and a follower writes the leader's into its own view state; one declared `follow: 'reveal'` is sent for the follow to apply. The deck reports its front plank as the space's `ViewLocation` and its open companions as `AppCapabilities.Companions`, and the follow applies them with `LayoutOperation.ScrollIntoView` and `UpdateCompanion`. A project's view state is followed, so a follower sees the leader's tab, spec and chart; so is a presentation's slide, and a drawing's camera in tldraw, excalidraw and the 2D canvas, which a drawing variant takes as `camera` and reports with `onCameraChange`. The 2D canvas editor applies a host camera that changes while it is open. A project's view state is now keyed by its EID, so the tab each project last showed resets once. `GraphPath.getEidFromPath` names the object a graph path points at. A schema form's boolean field carries its JSON path as `data-testid`, as text fields do. Leading shows too, in amber on every screen: the Members tab's dot appears on both sides, a follower's leader row rises to the top of Members and carries Stop, and a leader sees its followers under "Following you". Every plank heading, companions included, washes in amber over a one-pixel underline while you follow or are followed, through a new `AppCapabilities.LayoutAccent` the deck applies, and those people's avatars ring in amber. A deck companion takes a `badgeHue` for its rail dot.
+- 39f6b21: The `changes` orientation of `diffView` tints an inserted line once rather than twice, so syntax colours on added lines stay legible.
+- a8e68c5: A spec's features are embedded in its document as `![name](echo:///id)`, drawn as editable sections, and the text decides which features the spec holds and in what order. `/feature` at the end of a paragraph makes it a feature, and moving, deleting or undoing an embed does the same to the feature. Every feature gets a block id (`F-n`) and every requirement an id under it as soon as it exists, and ids are kept when features move. The local and GitHub file syncs read and write `feat` blocks through the new `SpecDocumentCodec` capability, and export rewrites only the blocks that changed. Breaking: `Feature` is now 0.4.0, and its `specs` field moved to meta foreign keys (`Feature.getSources`, `Feature.getBlockId`), with a migration. `deus changelog check` reads a fence holding several decisions as one entry each. `StubWidget` no longer accepts another widget's DOM, which kept a kept-alive widget from rendering twice.
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [caa28b3]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [d338edb]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [b0113a1]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [1054c31]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [b15e5c3]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [392bed0]
+- Updated dependencies [c9c3867]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/nlp@0.17.0
+  - @dxos/ui@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/display-name@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

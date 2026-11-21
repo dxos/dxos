@@ -130,7 +130,7 @@ GridRoot.displayName = GRID_NAME;
 
 const GRID_CONTENT_NAME = 'GridContent';
 
-type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit' | 'remoteSelections'> & {
+type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'gridId' | 'mode' | 'onEdit' | 'remoteSelections'> & {
   getCells?: NaturalDxGrid['getCells'];
   activeRefs?: string;
   /**

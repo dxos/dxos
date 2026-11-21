@@ -207,6 +207,35 @@ export const GlowTinted: Story = {
   },
 };
 
+/**
+ * 8. The same slide in a deck that picked another font. The name is the product's wordmark, set at a size and a place
+ * measured for the brand's display face, so it stays in Poiret One while the rest of the slide takes the deck's font.
+ */
+export const GlowDeckFont: Story = {
+  decorators: [
+    (Story: ComponentType) => (
+      <SlideThemeProvider settings={{ font: 'space-grotesk' }}>
+        <Story />
+      </SlideThemeProvider>
+    ),
+  ],
+  args: { content: glowSlide('#000000') },
+  play: async ({ canvasElement }) => {
+    const name = await query(canvasElement, '[data-layout="cover"] [data-variant="title"] h1');
+    const link = await query(canvasElement, '[data-layout="cover"] [data-variant="title"] a');
+    const slideRoot = await query(canvasElement, '[data-slide]');
+
+    // 1. The deck's font is Space Grotesk, for its headings and its text alike.
+    await expect(getComputedStyle(slideRoot).getPropertyValue('--slide-font-heading')).toContain('Space Grotesk');
+    await expect(getComputedStyle(link).fontFamily).toContain('Space Grotesk');
+
+    // 2. The name is in Poiret One all the same, and that face is there to draw it, not only named.
+    await expect(getComputedStyle(name).fontFamily).toMatch(/^"?Poiret One/);
+    await waitFor(async () => expect(await document.fonts.load("244px 'Poiret One'", 'composer')).not.toHaveLength(0));
+    await expect(document.fonts.check("244px 'Poiret One'", 'composer')).toBe(true);
+  },
+};
+
 /** 4. The art fills a column of its own, bleeding to the slide's edges, with the words in the column beside it. */
 export const Column: Story = {
   args: {

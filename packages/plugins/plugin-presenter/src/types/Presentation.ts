@@ -9,7 +9,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import * as Variant from '@dxos/plugin-studio/Variant';
-import { SlideTheme, splitSlides } from '@dxos/react-ui-slides/dialect';
+import { SlideFooter, SlideTheme, splitSlides } from '@dxos/react-ui-slides/dialect';
 import { Text } from '@dxos/schema';
 
 import { PresenterNamespace } from '../namespace.ts';
@@ -68,6 +68,8 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     slides: Schema.Array(Ref.Ref(Slide)).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included; edited by `PresentationProperties`. */
     theme: Schema.optional(SlideTheme.Settings).pipe(Annotation.FormInputAnnotation.set(false)),
+    /** Drawn on every slide, linked objects included, unless the slide's frontmatter says otherwise; edited by `PresentationProperties`. */
+    footer: Schema.optional(SlideFooter.Settings).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'indigo' }),
@@ -99,12 +101,18 @@ export const makeSlide = (content: Obj.Unknown, props: Omit<Partial<Slide>, 'con
 /**
  * Creates a presentation with one owned markdown slide per string.
  */
-type MakeProps = { name?: string; description?: string; theme?: SlideTheme.Settings };
+type MakeProps = {
+  name?: string;
+  description?: string;
+  theme?: SlideTheme.Settings;
+  footer?: SlideFooter.Settings;
+};
 
 export const make = ({
   name,
   description,
   theme,
+  footer,
   slides = [],
 }: MakeProps & { slides?: string[] } = {}): Presentation => {
   const owned = slides.map((content) => makeSlide(Text.make({ content })));
@@ -112,6 +120,7 @@ export const make = ({
     name,
     description,
     theme,
+    footer,
     slides: owned.map((slide) => Ref.make(slide)),
   });
   // Parent is set after the refs exist because setParent warns when the parent holds no ref.

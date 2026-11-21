@@ -1,5 +1,11 @@
 # @dxos/beast
 
+## 0.17.0
+
+### Patch Changes
+
+- @dxos/log@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

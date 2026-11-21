@@ -4,4 +4,4 @@
 
 // @import-as-namespace
 
-export * from './components/SpecDocumentEditor/slash-commands.ts';
+export * from './extensions/slash-commands.ts';

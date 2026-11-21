@@ -30,7 +30,7 @@ import { AgentNamespace } from '../namespace.ts';
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
 import { BRAIN_SCENARIO as SCENARIO } from './scenario.ts';
-import { createLocalAgent, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
+import { createLocalAgent, inlineBrainHooks, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -129,7 +129,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, BrainSkill.hooks) },
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, inlineBrainHooks) },
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
   ),

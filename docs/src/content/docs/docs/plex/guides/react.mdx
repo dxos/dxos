@@ -12,42 +12,87 @@ import Snippet from '../../../../../components/Snippet.astro';
 import * as Hooks from '@dxos/app-framework/Hooks';
 ```
 
-A plugin's components read capabilities, invoke operations and read settings through hooks. They work in any component
-under the app's plugin manager, which every surface is.
+By the end of this guide, your component reads capabilities, invokes operations and reads settings. A plugin's
+components reach the rest of the app through the hooks on this page.
+
+The hooks work in any component under the app's plugin manager, which every surface is.
 
 ## Read capabilities from a component
 
-`useCapability` returns a singleton capability, and `useCapabilities` every contribution to a multi capability. Both
-re-render when contributions change. `useOptionalCapability` returns `undefined` when no plugin provides it.
+`useCapability` returns a singleton capability. `useCapabilities` returns every contribution to a multi capability.
+Both re-render the component when contributions change.
+
+`useOptionalCapability` returns `undefined` when no plugin provides the capability. Use it when your component can
+work without one.
+
+**Example** (Counting the contributed surfaces)
 
 <Snippet file="app-framework-guide-react" region="capabilities" lang="tsx" />
 
 ## Invoke operations from a component
 
-`useOperation` binds an operation to a callback; its argument maps the callback's arguments to the operation's input.
-`useOperationInvoker` returns the invoker, whose `invokePromise` returns the operation's output.
+`useOperation` binds an operation to a callback. Its argument maps the callback's arguments to the operation's input.
+
+`useOperationInvoker` returns the invoker. Its `invokePromise` resolves to `{ data, error }`, which holds the
+operation's output or the error it failed with. Use it when your component needs that output.
+
+**Example** (Opening an item in two ways)
 
 <Snippet file="app-framework-guide-react" region="invoke" lang="tsx" />
 
+`OpenButton` starts the operation and moves on. `OpenAndWait` awaits `invokePromise`, so the code after the `await`
+runs once the item is open. The promise does not reject, so check `error` before you use `data`.
+
 ## Read plugin settings and translations
 
-`useAtomCapability` reads an atom capability, such as a plugin's settings, and re-renders when it changes.
-`useAtomCapabilityState` also returns a setter. `useTranslation` from `@dxos/react-ui/Hooks` takes the plugin's
-namespace.
+`useAtomCapability` reads a capability whose value is an [atom](/docs/plex/resources/glossary/#atom), such as a
+plugin's settings, and re-renders when it changes. An atom is a reactive value that code subscribes to.
+
+`useAtomCapabilityState` also returns a setter. Use it when the component changes the value.
+
+`useTranslation` from `@dxos/react-ui/Hooks` takes the plugin's namespace.
+
+**Example** (Toggling a setting from a button)
 
 <Snippet file="app-framework-guide-react" region="settings" lang="tsx" />
+
+`setSettings` takes a function of the current value, so `CompactToggle` flips `compact` and keeps the other settings.
+`t` reads the label from the plugin's namespace, `com.example.plugin.notes`.
 
 `@dxos/app-toolkit/Hooks` adds hooks for app state, such as `useActiveSpace`, `useAppGraph` and `useLayout`.
 
 ## The reactivity rules
 
+In React, a component re-renders when its props or state change. A field of an ECHO object is neither, so a plugin's
+component follows three rules:
+
 - Reading an ECHO object's field in render does not subscribe the component. Use `useObject` for a snapshot that does,
-  and `useQuery` for a list. See the ECHO [React guide](/docs/echo/guides/react/).
+  and `useQuery` for a list. See ECHO's [React](/docs/echo/guides/react/) guide.
 - Write objects inside `Obj.update`, from an event handler or an operation, never during render.
-- A component never assumes it is the only view of an object. The same object can be open in another plank, on another
+- Never assume your component is the only view of an object. The same object can be open in another plank, on another
   device, or in the assistant's hands.
 
+**Example** (Reading a snapshot and writing from a handler)
+
 <Snippet file="app-framework-guide-react" region="reactivity" lang="tsx" />
+
+`NoteTitle` renders from `snapshot` and writes to `note`. The snapshot is for reading, and the write goes to the
+object, inside `Obj.update`.
+
+## Members at a glance
+
+| Member | Summary |
+| --- | --- |
+| `useCapability` `useCapabilities` | Read a singleton capability, or every contribution to a multi capability |
+| `useOptionalCapability` `useOptionalCapabilities` | Read a capability that may have no provider |
+| `useAtomCapability` `useAtomCapabilityState` | Read an atom capability, with or without a setter |
+| `useOptionalAtomCapability` | Read an atom capability that may have no provider |
+| `useOperation` | Bind an operation to a callback |
+| `useOperationInvoker` | Get the invoker, to run an operation and read its output |
+| `ToolkitHooks.useActiveSpace` `useAppGraph` `useLayout` | Read app state, from `@dxos/app-toolkit/Hooks` |
+| `UiHooks.useTranslation` | Read a string by its key, from `@dxos/react-ui/Hooks` |
+
+The full list is in the [API reference](/docs/plex/resources/api-reference/).
 
 ## Related
 
