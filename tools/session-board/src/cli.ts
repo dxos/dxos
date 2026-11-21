@@ -269,10 +269,11 @@ const start = (directory: string) => {
   console.log(`current board: ${relative(ROOT, absolute)}`);
 };
 
-/** HEAD and the working tree, outside the board's own files, so a change of the work is told from a change of the board. */
+/** The tracked and changed files, outside the board's own files, so a change of the work is told from a change of the board. */
 const repoState = (source: string): string =>
   createHash('sha256')
-    .update(git('rev-parse', 'HEAD') ?? '')
+    // The index's content hashes rather than HEAD, so committing the board itself reads as no change of the work.
+    .update(git('ls-files', '-s', '--', '.', `:!${relative(ROOT, source)}`) ?? '')
     .update(git('status', '--porcelain', '--', '.', `:!${relative(ROOT, source)}`, ':!.claude/.status-board') ?? '')
     .digest('hex')
     .slice(0, 16);
