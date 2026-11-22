@@ -1,6 +1,7 @@
 ---
 title: 'The shift'
 layout: 'default'
+class: 'studio-lines-tight'
 ---
 
 # The agentic future needs a new kind of cloud
@@ -9,17 +10,17 @@ layout: 'default'
 
 <Cell>
 
-- **Data:** trapped in silos, with no shared truth
+- **Data:** trapped in silos, with no shared truth and no common access control
 
 </Cell>
 <Cell>
 
-- 897 apps in the average enterprise; 29% are connected.
+- Cloudflare OS: "Agents need to understand the context of the company."
 
 </Cell>
 <Cell>
 
-- **Generation without rails:** more apps, more silos, nobody to operate them
+- **The hidden cost of free software:** generated apps still have to be secured, operated and maintained
 
 </Cell>
 <Cell>
@@ -71,8 +72,8 @@ Notes. 2:00
 - Each step absorbs more of the application layer.
 - The signals. Salesforce's Claudeforce: Benioff, "Here, the UI is the AI"; Patrick Stokes, "The value of Salesforce is not in our UI itself. It's not the application." Agents are joining teams: Buzz, Multica, YC's "multiplayer AI". DeepSeek names long-term memory as the bottleneck. And Matthew on the Q2 call: "the agentic future needs a new kind of cloud."
 - The issues: five themes on the slide, seven points underneath. Each sets up a layer on the next slide.
-  - Data = silos and access + no shared truth.
-  - Generation without rails.
+  - Data = silos + no shared truth + access control (the keys quote is from the Cloudflare OS post; it continues: "Keys often provide broad, long-lived access that is difficult to constrain, share safely, and audit.").
+  - The hidden cost of free software = generation without rails. Code is free to write; it is not free to secure, operate and maintain.
   - Closed systems.
   - Teams = collaboration.
   - Control = beyond chat + every mode (desktop, phone, voice, video).

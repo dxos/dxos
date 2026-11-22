@@ -525,3 +525,11 @@
   font-size: 38px !important;
   line-height: 1.35 !important;
 }
+
+/*
+ * A slide whose frontmatter says `class: studio-lines-tight` sets its bullets closer than the deck's relaxed 1.625,
+ * so a slide of two-line bullets clears the footer without shrinking its type.
+ */
+.studio-lines-tight :is(li, p) {
+  line-height: 1.35;
+}
