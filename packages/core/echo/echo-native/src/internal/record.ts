@@ -4,7 +4,7 @@
 
 // A copy of echo-sqlite's module of the same name, which its package does not export; see the report.
 
-import { Entity, Obj, Relation, Type } from '@dxos/echo';
+import { Entity, Lens, Obj, Relation, Type } from '@dxos/echo';
 import { ATTR_DELETED, ATTR_PARENT } from '@dxos/echo/internal';
 import { EID, type SpaceId } from '@dxos/keys';
 
@@ -97,7 +97,13 @@ export const toRecord = (
   const isRelation = Relation.isRelation(entity);
   return {
     id: entity.id,
-    kind: Type.isType(entity) ? Entity.Kind.Type : isRelation ? Entity.Kind.Relation : Entity.Kind.Object,
+    kind: Type.isType(entity)
+      ? Entity.Kind.Type
+      : Lens.isStored(entity)
+        ? Entity.Kind.Lens
+        : isRelation
+          ? Entity.Kind.Relation
+          : Entity.Kind.Object,
     typeDxn: Entity.getTypeURI(entity) ?? '',
     deleted,
     parentId: parent?.id ?? null,

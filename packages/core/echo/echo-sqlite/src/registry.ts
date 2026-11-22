@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Database, Entity, type Filter, Query, Registry, Type } from '@dxos/echo';
+import { type Database, Entity, type Filter, Lens, Query, Registry, Type } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { filterMatchEntity } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
@@ -21,9 +21,10 @@ export class SimpleRegistry implements Registry.Registry {
   readonly changed = new Event<void>();
   readonly #invalidated = new Event<ReadonlySet<string>>();
   readonly #entities = new Map<string, Entity.Unknown>();
+  readonly #lenses = new Lens.LensSet();
 
   constructor(initial: readonly Entity.Unknown[] = []) {
-    initial.forEach((entity) => this.#entities.set(entity.id, entity));
+    initial.forEach((entity) => this.#put(entity));
     this.changed.on(() => this.#invalidated.emit(new Set()));
   }
 
@@ -32,12 +33,12 @@ export class SimpleRegistry implements Registry.Registry {
   }
 
   add(entities: readonly Entity.Unknown[]): void {
-    entities.forEach((entity) => this.#entities.set(entity.id, entity));
+    entities.forEach((entity) => this.#put(entity));
     this.changed.emit();
   }
 
   remove(id: string): boolean {
-    const removed = this.#entities.delete(id);
+    const removed = this.#entities.delete(id) || this.#lenses.remove(id);
     if (removed) {
       this.changed.emit();
     }
@@ -46,6 +47,7 @@ export class SimpleRegistry implements Registry.Registry {
 
   clear(): void {
     this.#entities.clear();
+    this.#lenses.clear();
     this.changed.emit();
   }
 
@@ -75,6 +77,27 @@ export class SimpleRegistry implements Registry.Registry {
 
   list(): Entity.Unknown[] {
     return [...this.#entities.values()];
+  }
+
+  lenses(): readonly Lens.Any[] {
+    return this.#lenses.values();
+  }
+
+  lensBetween(source: string, target: string): Lens.Any | undefined {
+    return Lens.between(this.lenses(), source, target);
+  }
+
+  lensesFrom(source: string): readonly Lens.Any[] {
+    return Lens.lensesFrom(this.lenses(), source);
+  }
+
+  /** Lenses are kept apart, so lists and queries never see them. */
+  #put(entity: Entity.Unknown): void {
+    if (Lens.isLens(entity)) {
+      this.#lenses.add(entity);
+    } else {
+      this.#entities.set(entity.id, entity);
+    }
   }
 
   query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) => {

@@ -200,7 +200,7 @@ export class AutomergeDataSource implements IndexDataSource {
           }
 
           if (doc.branches) {
-            for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
+            for (const url of DatabaseDirectory.getUserBranchDocUrls(doc)) {
               if (!isValidAutomergeUrl(url)) {
                 continue;
               }

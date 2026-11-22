@@ -37,6 +37,9 @@ export class Timeframe implements Equatable {
       .join(', ')})`;
   }
 
+  /**
+   * True when both timeframes hold the same sequence number for exactly the same feeds.
+   */
   equals(object: Timeframe): boolean {
     return this.size() === object.size() && this.frames().every(([key, seq]) => object.get(key) === seq);
   }

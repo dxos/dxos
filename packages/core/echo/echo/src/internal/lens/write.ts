@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Obj, Text } from '@dxos/echo';
-
+import * as Obj from '../../Obj.ts';
+import * as Text from '../../Text.ts';
 import { setOverlay } from './overlay.ts';
 import { type Write } from './types.ts';
 
