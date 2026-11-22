@@ -107,7 +107,7 @@ export const theme = {
     p: 'text-[48px]',
     a: 'text-(color:--slide-accent) underline',
     // Color alone marks bold text, so the weight a browser gives <strong> is reset.
-    strong: `font-normal ${headingColor}`,
+    strong: `font-normal ${subheadingColor}`,
     blockquote: 'my-[16px] ps-12 border-l-[8px] border-(--slide-accent) text-[56px] italic',
     img: 'max-w-full max-h-full object-contain',
 
