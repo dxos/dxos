@@ -281,6 +281,10 @@ export const runTurn = (
 ): Effect.Effect<Message.Message[], AgentError, Database.Service | Trace.TraceService> =>
   Effect.gen(function* () {
     const started = Date.now();
+    const trace = yield* Trace.TraceService;
+    // The session opens inside the pool's own context, which holds no trace service.
+    const emitPhase = (...args: Parameters<typeof Trace.emitRequestPhase>) =>
+      Trace.emitRequestPhase(...args).pipe(Effect.provideService(Trace.TraceService, trace));
     const device = options.device?.();
     const host = chat.session?.host;
     if (host !== undefined && device !== undefined && host !== device) {
@@ -336,7 +340,12 @@ export const runTurn = (
         () =>
           Effect.gen(function* () {
             opened = true;
+            // Opening a session takes seconds, and a line stuck on 'preparing' reads as a hang.
+            yield* emitPhase('building-toolkit');
             const tools = options.tools ? yield* options.tools(chat) : undefined;
+            if (servers && servers.length > 0) {
+              yield* emitPhase('connecting-mcp', { detail: String(servers.length) });
+            }
             const connections =
               options.connections && servers ? yield* options.connections(chat, servers, tools?.token) : [];
             const stream = yield* options.connect(cwd, tools?.token);
@@ -371,6 +380,9 @@ export const runTurn = (
 
       produced.push(prompt);
       yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(prompt, turn, source, { resumed }));
+
+      // The wait for the agent's first update is the model working; 'generating' follows from streamed text.
+      yield* Trace.emitRequestPhase('contacting-provider');
 
       const events = yield* Queue.unbounded<TurnEvent>();
       const projection = new Projection.TurnProjection();
