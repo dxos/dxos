@@ -19,6 +19,7 @@
   "sortPackageJson": false,
   "ignorePatterns": [
     "*.tpl",
+    "**/*.md",
     "**/*.mdx",
     ".agents/reviews/**",
     ".store/**",
@@ -60,6 +61,12 @@
       ],
       "options": {
         "printWidth": 80
+      }
+    },
+    {
+      "files": ["packages/plugins/plugin-debug/src/samples/cloudflare/slides/**"],
+      "options": {
+        "embeddedLanguageFormatting": "off"
       }
     }
   ]

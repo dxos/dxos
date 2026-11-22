@@ -14,7 +14,10 @@ class: 'studio-code-compact'
 ::right::
 
 ```ts
-class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+class Person extends Type.makeObject<Person>(
+  // URI and version.
+  DXN.make('com.example.type.person', '0.1.0'),
+)(
   Schema.Struct({
     name: Schema.String,
     org: Schema.optional(Ref.Ref(Organization)),
@@ -23,13 +26,19 @@ class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person',
 
 const alice = db.add(Obj.make(Person, { name: 'Alice' }));
 
-// A reference to an object that already exists.
-Obj.update(alice, (p) => {
-  p.org = Ref.make(acme);
+const [acme] = db.find('Acme');
+
+// Reactive updates.
+Obj.update(alice, (obj) => {
+  obj.org = Ref.make(acme);
 });
 
-// Graph traversal: who does Alice manage?
-await db.query(Query.select(Filter.id(alice.id)).sourceOf(HasManager).target()).run();
+    // Graph traversal.    
+await db
+  .query(
+    Query.select(Filter.id(alice)).sourceOf(HasManager).target(),
+  )
+  .run();
 ```
 
 <!--
