@@ -5,7 +5,9 @@
 import { assert, describe, expect, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import { vi } from 'vitest';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
 import * as ActivationEvent from './activation-event.ts';
@@ -236,6 +238,60 @@ describe('Plugin module authoring', () => {
       const entries = CapabilityManager.expandContributions([contribution]);
       expect(entries).toHaveLength(2);
       expect(entries.map((entry) => entry.implementation)).toEqual([{ entry: 'a' }, { entry: 'b' }]);
+    });
+  });
+
+  describe('fromManifest', () => {
+    it("links a body's stylesheets before it imports the body", async () => {
+      const events: string[] = [];
+      const body = {
+        default: Capability.makeModule(() => Effect.succeed([Capability.contribute(Total, { total: 1 })])),
+      };
+      const { make } = Plugin.fromManifest(
+        {
+          plugin: { key: testMeta.profile.key, name: 'Test' },
+          modules: [
+            {
+              id: 'Total',
+              url: '/assets/total.js',
+              css: ['/assets/total.css', './shared.css'],
+              requires: [],
+              provides: [{ identifier: Total.identifier, arity: 'single' }],
+            },
+          ],
+        },
+        {
+          '/assets/total.js': async () => {
+            events.push('import');
+            return body;
+          },
+        },
+      );
+      const manager = makeManager();
+      const [module] = make().modules;
+      const activated = EffectEx.runPromise(
+        module
+          .activate()
+          .pipe(
+            Effect.provideService(Capability.Service, manager.capabilities),
+            Effect.provideService(Plugin.Service, manager),
+            Effect.scoped,
+          ),
+      );
+
+      const getLinks = () => Array.from(document.head.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'));
+      await vi.waitFor(() => expect(getLinks()).toHaveLength(2));
+      const links = getLinks();
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(
+        ['/assets/total.css', '/assets/shared.css'].map((path) => new URL(path, document.baseURI).href),
+      );
+      expect(events).toEqual([]);
+      // jsdom fetches no stylesheet, so the test reports each one loaded.
+      links.forEach((link) => link.dispatchEvent(new Event('load')));
+
+      await activated;
+      expect(events).toEqual(['import']);
+      links.forEach((link) => link.remove());
     });
   });
 
