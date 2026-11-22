@@ -19,7 +19,6 @@
   "sortPackageJson": false,
   "ignorePatterns": [
     "*.tpl",
-    "**/*.md",
     "**/*.mdx",
     ".agents/reviews/**",
     ".store/**",

@@ -135,7 +135,14 @@ export const makeStudioDeck = (drawings: ReadonlyMap<string, Drawing.Drawing>): 
   Presentation.make({
     name: 'DXOS',
     description: DESCRIPTION,
-    theme: { accent: '#2d6fff', heading: '#06c5fd', subheading: '#ff7a45', font: 'space-grotesk', monoFont: 'fira' },
+    theme: {
+      accent: '#2d6fff',
+      heading: '#06c5fd',
+      subheading: '#ff7a45',
+      foreground: '#b3b8c0',
+      font: 'geist',
+      monoFont: 'fira',
+    },
     footer: { left: 'DXOS', right: '<SlideCurrentNo />/<SlidesTotal />' },
     slides: SLIDES.map(({ id, markdown }) =>
       markdown.replaceAll(PLACEHOLDER, (placeholder, diagram: string) => {

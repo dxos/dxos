@@ -24,7 +24,7 @@ class Person extends Type.makeObject<Person>(
   }),
 ) {}
 
-const alice = db.add(Obj.make(Person, { 
+const alice = db.add(Obj.make(Person, {
   name: 'Alice',
   email: 'alice@example.com',
 }));
@@ -36,7 +36,7 @@ Obj.update(alice, (obj) => {
   obj.org = Ref.make(acme);
 });
 
-// Graph traversal.    
+// Graph traversal.
 const objects = await db.query(
   Query.select(
     Filter.id(alice)).sourceOf(HasManager).target()
