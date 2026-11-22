@@ -15,6 +15,7 @@ import { AppCapabilities } from '../../app-framework/index.ts';
 // (e.g., a storybook, a test, or a minimal app config) rather than throwing.
 const emptySnapshotAtom = Atom.make<Progress.Snapshot>({ updatedAt: '', tasks: [] });
 const noMonitorAtom = Atom.make<Progress.TaskProgress | undefined>(undefined);
+const noMonitorsAtom = Atom.make<readonly Progress.TaskProgress[]>([]);
 
 /** All active progress providers (aggregate). */
 export const useProgressMonitors = (): readonly Progress.TaskProgress[] => {
@@ -33,6 +34,7 @@ export const useProgressMonitor = (name: string): Progress.TaskProgress | undefi
  * The monitors keyed `<uri>#<suffix>` for the object at `uri`; pass its absolute URI, the form producers key by.
  */
 export const useObjectProgressMonitors = (uri: string | undefined): readonly Progress.TaskProgress[] => {
-  const monitors = useProgressMonitors();
-  return useMemo(() => (uri ? monitors.filter((monitor) => monitor.name.startsWith(`${uri}#`)) : []), [monitors, uri]);
+  const registry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const atom = useMemo(() => (registry && uri ? registry.objectMonitorsAtom(uri) : noMonitorsAtom), [registry, uri]);
+  return useAtomValue(atom);
 };

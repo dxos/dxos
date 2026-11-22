@@ -65,4 +65,29 @@ describe('makeRegistry', () => {
     expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
     expect(registry.get(progress.monitorAtom('sync/a'))).toBeUndefined();
   });
+
+  test('objectMonitorsAtom notifies only when its own object monitors change', () => {
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const atom = progress.objectMonitorsAtom('dxn:a');
+    expect(progress.objectMonitorsAtom('dxn:a')).toBe(atom);
+
+    let notifications = -1;
+    const unsubscribe = registry.subscribe(atom, () => notifications++, { immediate: true });
+    const other = progress.register('dxn:b#run', { label: 'B' });
+    other.advance(1);
+    other.advance(1);
+    expect(registry.get(atom)).toHaveLength(0);
+    expect(notifications).toBe(0);
+
+    const own = progress.register('dxn:a#run', { label: 'A' });
+    expect(registry.get(atom).map((task) => task.name)).toEqual(['dxn:a#run']);
+    expect(notifications).toBe(1);
+    other.advance(1);
+    expect(notifications).toBe(1);
+    own.fail('boom');
+    expect(registry.get(atom)[0].status).toBe('error');
+    expect(notifications).toBe(2);
+    unsubscribe();
+  });
 });
