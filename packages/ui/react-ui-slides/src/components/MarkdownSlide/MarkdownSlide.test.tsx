@@ -47,6 +47,20 @@ describe('MarkdownSlide', () => {
     expect(markup).not.toContain('--slide-subheading:');
   });
 
+  test('bold text takes the subheading color at the body’s weight', ({ expect }) => {
+    const markup = render('- **ECHO** holds the data');
+    const classes = markup.match(/<li [^>]*>\s*<strong [^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('text-[color:var(--slide-subheading,var(--slide-accent))]');
+    expect(classes.split(' ')).toContain('font-normal');
+  });
+
+  test('bold text in a flow card is its title, in the card’s color and a bold weight', ({ expect }) => {
+    const markup = render('<List variant="flow">\n\n1. **Chat** A model\n\n</List>');
+    const classes = markup.match(/<ol [^>]*data-variant="flow"[^>]*>\s*<li [^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('[&amp;_strong]:text-[color:inherit]');
+    expect(classes).toContain('[&amp;_strong]:font-bold');
+  });
+
   test('root carries the default theme variables', ({ expect }) => {
     expect(render('# Title')).toMatch(/data-slide="true"[^>]*style="[^"]*--slide-accent:var\(--color-accent-text\)/);
   });
