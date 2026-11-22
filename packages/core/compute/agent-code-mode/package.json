@@ -32,6 +32,11 @@
       "source": "./src/WorkerSandboxBrowserEntry.ts",
       "types": "./dist/types/src/WorkerSandboxBrowserEntry.d.ts",
       "import": "./dist/lib/WorkerSandboxBrowserEntry.mjs"
+    },
+    "./workerd-echo-runtime": {
+      "source": "./src/WorkerdEchoRuntime.ts",
+      "types": "./dist/types/src/WorkerdEchoRuntime.d.ts",
+      "import": "./dist/lib/WorkerdEchoRuntime.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

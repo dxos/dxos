@@ -108,6 +108,38 @@ export const EffectDialect: Dialect = {
     Stay on the objects the request names or the conversation is attached to: reading or changing
     others the request did not ask about spends calls and risks unasked-for writes.
 
+    ${EFFECT_API}
+
+    ${renderTypes(types, ({ dxn }) => dxn)}
+
+    ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
+
+    ${renderEffectTools(operations)}
+  `,
+};
+
+/** The code a printed object's hints show, in this dialect: each fetches the group it counts. */
+const EFFECT_HINTS: HintSyntax = {
+  relations: (id, relation, direction) =>
+    `yield* Database.query(Query.select(Filter.id('${id}')).${direction === 'out' ? 'sourceOf' : 'targetOf'}('${relation}')).run`,
+  children: (id) => `yield* Database.query(Query.select(Filter.id('${id}')).children()).run`,
+  referrers: (id, type, field) =>
+    `yield* Database.query(Query.select(Filter.id('${id}')).referencedBy('${type}'${field === undefined ? '' : `, '${field}'`})).run`,
+};
+
+/** The `DOCS` entries generated per evaluation from what the turn can resolve. */
+const CATALOG_DOCS: readonly DocEntry[] = [
+  { name: 'catalog/types.md', covers: 'Every type this workspace can resolve: its DXN, kind and fields.' },
+  { name: 'catalog/operations.md', covers: 'Every operation this turn can resolve: its DXN, description and input.' },
+];
+
+const DOC_ENTRIES: readonly DocEntry[] = [...STATIC_DOCS, ...CATALOG_DOCS];
+
+/**
+ * The dialect's API reference: what is in scope and how types and operations are reached. Exported for MCP's
+ * `runScript`, which runs this dialect too, so a client is told about the same API the agent is.
+ */
+export const EFFECT_API = trim`
     ### In scope
 
     - \`Database\`, \`Filter\`, \`Query\`, \`Order\`, \`Obj\`, \`Relation\`, \`Ref\`, \`Type\`, \`DXN\`,
@@ -141,31 +173,7 @@ export const EffectDialect: Dialect = {
 
     Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
     a function\` and costs a call.
-
-    ${renderTypes(types, ({ dxn }) => dxn)}
-
-    ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
-
-    ${renderEffectTools(operations)}
-  `,
-};
-
-/** The code a printed object's hints show, in this dialect: each fetches the group it counts. */
-const EFFECT_HINTS: HintSyntax = {
-  relations: (id, relation, direction) =>
-    `yield* Database.query(Query.select(Filter.id('${id}')).${direction === 'out' ? 'sourceOf' : 'targetOf'}('${relation}')).run`,
-  children: (id) => `yield* Database.query(Query.select(Filter.id('${id}')).children()).run`,
-  referrers: (id, type, field) =>
-    `yield* Database.query(Query.select(Filter.id('${id}')).referencedBy('${type}'${field === undefined ? '' : `, '${field}'`})).run`,
-};
-
-/** The `DOCS` entries generated per evaluation from what the turn can resolve. */
-const CATALOG_DOCS: readonly DocEntry[] = [
-  { name: 'catalog/types.md', covers: 'Every type this workspace can resolve: its DXN, kind and fields.' },
-  { name: 'catalog/operations.md', covers: 'Every operation this turn can resolve: its DXN, description and input.' },
-];
-
-const DOC_ENTRIES: readonly DocEntry[] = [...STATIC_DOCS, ...CATALOG_DOCS];
+`;
 
 /**
  * The catalog files of `DOCS`, from the same renderers as the prompt. Built from the registry the

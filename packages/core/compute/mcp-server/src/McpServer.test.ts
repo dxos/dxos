@@ -20,7 +20,7 @@ import { Database, Feed, Obj, Registry, Type } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { DXN, EntityId, SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import * as McpServer from './McpServer.ts';
@@ -82,6 +82,9 @@ const GetObjects = Operation.make({
 }).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, ['get']));
 
 const TASK_TYPENAME = 'com.example.type.task';
+
+/** The DXN a script resolves the type by. */
+const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
 
 class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
   Schema.Struct({ title: Schema.String, status: Schema.String }),
@@ -643,7 +646,7 @@ describe('McpServer', () => {
 
   describe('runScript', () => {
     /**
-     * Runs `code` against a real database holding two tasks, its `ops` calls reaching {@link testHost}. Read what a
+     * Runs `code` against a real database holding two tasks, its operation calls reaching {@link testHost}. Read what a
      * test needs before the database closes.
      */
     const run = async (
@@ -677,12 +680,13 @@ describe('McpServer', () => {
     const codeProjectToken = async () => [(await tokenFor(testRegistry(), 'codeProject')) ?? ''];
 
     // The point of code mode: a loop the caller would otherwise spend one round trip per item on.
-    test('a loop runs operations through ops and the skill gate, in the script space', async ({ expect }) => {
+    test('a loop invokes operations through the skill gate, in the script space', async ({ expect }) => {
       const { output, error, stats, invocations, spaceId } = await run(
         trim`
+          const createTask = yield* Database.resolve('${KEY}');
           for (const title of ['a', 'b', 'c']) {
-            const { ok } = await ops['${KEY}']({ title });
-            print(\`\${title} \${ok}\`);
+            const { ok } = yield* Operation.invoke(createTask, { title });
+            yield* print(\`\${title} \${ok}\`);
           }
         `,
         { skillTokens: await codeProjectToken() },
@@ -696,32 +700,28 @@ describe('McpServer', () => {
       );
     });
 
-    test('a call without its skill token throws, saying where the token goes', async ({ expect }) => {
+    test('a call without its skill token fails the program, saying where the token goes', async ({ expect }) => {
       const { output, error, invocations } = await run(
-        trim`
-          try {
-            await ops['${KEY}']({ title: 'x' });
-          } catch (error) {
-            print(error.message);
-          }
-        `,
+        `yield* Operation.invoke(yield* Database.resolve('${KEY}'), { title: 'x' });`,
       );
-      expect(error).to.be.undefined;
-      expect(output).to.include('skill_not_loaded');
+      expect(error).to.include('skill_not_loaded');
       expect(output).to.include("Call loadSkill with skill: 'codeProject'");
-      expect(output).to.include("pass it in runScript's skillTokens");
+      expect(output).to.include("pass the skill's token in runScript's skillTokens");
       expect(invocations).to.have.length(0);
     });
 
     // A token is checked against the gate's derivation, so a forged one opens nothing.
     test('a token the gate did not issue is refused', async ({ expect }) => {
-      const { error, invocations } = await run(`await ops['${KEY}']({ title: 'x' });`, { skillTokens: ['forged'] });
+      const { error, invocations } = await run(
+        `yield* Operation.invoke(yield* Database.resolve('${KEY}'), { title: 'x' });`,
+        { skillTokens: ['forged'] },
+      );
       expect(error).to.include('skill_not_loaded');
       expect(invocations).to.have.length(0);
     });
 
     test('an uncaught failure is the last line, after what was printed', async ({ expect }) => {
-      const { output, error } = await run(`print('before'); throw new Error('boom');`);
+      const { output, error } = await run(`yield* print('before'); throw new Error('boom');`);
       expect(output).to.equal('before\nError: boom');
       expect(error).to.equal('Error: boom');
     });
@@ -731,7 +731,7 @@ describe('McpServer', () => {
       const { error, invocations } = await run(
         trim`
           let after;
-          await ops['${KEY}']({ title: 'x', after });
+          yield* Operation.invoke(yield* Database.resolve('${KEY}'), { title: 'x', after });
         `,
         { skillTokens: await codeProjectToken() },
       );
@@ -739,44 +739,40 @@ describe('McpServer', () => {
       expect(invocations[0]?.input).to.deep.equal({ title: 'x' });
     });
 
-    test('the plain bindings read and change the space database without an operation', async ({ expect }) => {
+    test('the DXOS API reads and changes the space database without an operation', async ({ expect }) => {
       const { output, error, stats, invocations, waterStatus } = await run(
         trim`
-          const open = await query('${TASK_TYPENAME}', { status: 'open' });
-          const found = await search('release', '${TASK_TYPENAME}');
-          const task = await get(open[0].id);
-          update(task, (task) => { task.status = 'done'; });
-          await flush();
-          const missing = await get('${EntityId.random()}');
-          print(\`\${open.length}|\${found.map((row) => row.title).join()}|\${task.title}|\${missing === undefined}\`);
+          const Task = yield* Database.resolve('${TASK_DXN}');
+          const open = yield* Database.query(Filter.type(Task, { status: 'open' })).run;
+          const all = yield* Database.query(Filter.type(Task)).run;
+          Obj.update(open[0], (task) => { task.status = 'done'; });
+          yield* Database.flush();
+          yield* print(\`\${open.length}|\${all.length}|\${open[0].title}\`);
         `,
       );
       expect(error).to.be.undefined;
-      expect(output).to.equal('1|Ship the release|Water the plants|true');
+      expect(output).to.equal('1|2|Water the plants');
       expect(stats?.calls).to.equal(0);
       expect(invocations).to.have.length(0);
       // Changed in the host's database, not in a copy.
       expect(waterStatus).to.equal('done');
     });
 
-    test('an operation a binding replaces is not in ops, while the tool still runs it', async ({ expect }) => {
+    test('an operation the API replaces does not resolve, while the tool still runs it', async ({ expect }) => {
       const skill = makeSkill({ key: 'org.dxos.skill.codeProject', operations: [CreateTask, GetObjects] });
       const registry = testRegistry({ operations: [CreateTask, GetObjects], skills: [skill] });
       const { output, error, invocations } = await run(
         trim`
-          try {
-            await ops['${GET_OBJECTS_KEY}']({ objects: [] });
-          } catch (error) {
-            print(error.message);
-          }
-          print(typeof ops['${KEY}']);
+          yield* Database.resolve('${KEY}');
+          yield* print('offered');
+          yield* Database.resolve('${GET_OBJECTS_KEY}');
+          yield* print('never');
         `,
         { registry },
       );
-      expect(error).to.be.undefined;
-      const [refusal, offered] = output.split('\n');
-      expect(refusal).to.include('is not offered in code');
-      expect(offered).to.equal('function');
+      expect(output.split('\n')[0]).to.equal('offered');
+      expect(output).not.to.include('never');
+      expect(error).not.to.be.undefined;
       expect(invocations).to.have.length(0);
 
       // The tool still lists and runs it, for a client that is not writing code.
@@ -787,23 +783,23 @@ describe('McpServer', () => {
     });
 
     test('a program that outruns its budget is abandoned with an error', async ({ expect }) => {
-      const { error } = await run(`await new Promise(() => {});`, { timeout: 50 });
+      const { error } = await run(`yield* Effect.never;`, { timeout: 50 });
       expect(error).to.include('abandoned');
     });
 
     test('a host that gives scripts no database runs none', async ({ expect }) => {
-      const { error } = await run(`print('never');`, { withoutDatabase: true });
+      const { error } = await run(`yield* print('never');`, { withoutDatabase: true });
       expect(error).to.include('gives them no database');
     });
 
     test('a space outside the session is refused before the program runs', async ({ expect }) => {
-      const { output, error } = await run(`print('never');`, { spaceId: SPACE_B });
+      const { output, error } = await run(`yield* print('never');`, { spaceId: SPACE_B });
       expect(error).to.include('space_not_in_context');
       expect(output).not.to.include('never');
     });
 
     // EDGE's MCP router runs no code: it hands the request to compute-service, which governs the script's calls.
-    test('a host that names a runner hands it the script as a plain-dialect request', async ({ expect }) => {
+    test('a host that names a runner hands it the script as an Effect-dialect request', async ({ expect }) => {
       const requests: Operation.ScriptRequest[] = [];
       const runner: Operation.ScriptRunner = {
         run: (request) =>
@@ -819,7 +815,7 @@ describe('McpServer', () => {
             testRegistry(),
             host,
             GATE,
-            { code: "print('x');", spaceId, skillTokens: ['token'] },
+            { code: "yield* print('x');", spaceId, skillTokens: ['token'] },
             { runner, timeout: 5_000, maxOutput: 100 },
           ),
         );
@@ -827,7 +823,7 @@ describe('McpServer', () => {
       expect(await run(SPACE_A)).to.deep.equal({ output: 'ran there', stats: { calls: 2, callMs: 7 } });
       expect(requests).to.deep.equal([
         {
-          source: Operation.inlineScript("print('x');", { dialect: Operation.ScriptDialects.Plain }),
+          source: Operation.inlineScript("yield* print('x');", { dialect: Operation.ScriptDialects.Effect }),
           spaceId: SPACE_A,
           skillTokens: ['token'],
           timeoutMs: 5_000,
@@ -840,11 +836,11 @@ describe('McpServer', () => {
       expect(requests).to.have.length(1);
     });
 
-    test('nothing outside the bindings is in scope by name', async ({ expect }) => {
+    test('nothing outside the API is in scope by name', async ({ expect }) => {
       const { output } = await run(
-        'print([typeof invoke, typeof registry, typeof host, typeof Effect, typeof ops, typeof get].join());',
+        'yield* print([typeof invoke, typeof registry, typeof host, typeof ops, typeof Database, typeof Effect].join());',
       );
-      expect(output).to.equal('undefined,undefined,undefined,undefined,object,function');
+      expect(output).to.equal('undefined,undefined,undefined,undefined,object,object');
     });
   });
 
@@ -1259,7 +1255,7 @@ describe('McpServer.toolsLayer', () => {
       const called = await send(handler, 'tools/call', {
         name: 'runScript',
         arguments: {
-          code: `print((await ops['${KEY}']({ title: 'x' })).ok);`,
+          code: `yield* print((yield* Operation.invoke(yield* Database.resolve('${KEY}'), { title: 'x' })).ok);`,
           spaceId: db.spaceId,
           skillTokens: [loaded.result.structuredContent.skillToken],
         },
@@ -1273,7 +1269,7 @@ describe('McpServer.toolsLayer', () => {
 
       const failed = await send(handler, 'tools/call', {
         name: 'runScript',
-        arguments: { code: `print('before'); throw new Error('boom');`, spaceId: db.spaceId },
+        arguments: { code: `yield* print('before'); throw new Error('boom');`, spaceId: db.spaceId },
       });
       expect(failed.result.isError).to.equal(true);
       expect(failed.result.content[0].text).to.match(/^before\nError: boom\n---\n0 calls · /);

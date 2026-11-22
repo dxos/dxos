@@ -67,6 +67,17 @@ export type SandboxInit = {
   readonly code: string;
   /** Selects the dialect the worker rebuilds its bindings from. */
   readonly dialect: string;
+  /**
+   * The names the dialect binds in the code's scope, for a runtime that compiles the code before it builds the
+   * bindings: workerd has no `eval`, so its program is a module written ahead of loading.
+   */
+  readonly names: readonly string[];
+  /**
+   * How each side's writes reach the other. `heads`: the writer reports the root's heads and the reader waits for them.
+   * `flush`: the writer flushes and the host refreshes its documents from the store, for services that can neither
+   * report heads nor wait for them (EDGE's), which write through to a store and push no client's writes to another.
+   */
+  readonly handover: 'heads' | 'flush';
   /** Which database to open, named the way the host's own client names it. */
   readonly space: { readonly spaceId: string; readonly spaceKey: string; readonly rootUrl: string };
   /** Every registered type, as schema rather than as the class the worker cannot receive. */

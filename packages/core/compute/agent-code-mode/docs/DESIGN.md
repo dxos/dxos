@@ -134,57 +134,79 @@ overrides it for code.
 A string assigned over a string in `update` is written as a diff (`Text.update`), as `markdown.update` writes it, so
 replacing a document's text keeps cursors and merges with concurrent edits.
 
-### 4. MCP scripts run the plain dialect
+### 4. MCP scripts run the Effect dialect
 
-`runScript` runs code mode's plain dialect, through code mode's runner: the `Operation.ScriptRunner` that
-`@dxos/compute` defines for scripts (`Operation.inlineScript(code, { dialect: 'plain' })`). An MCP script and the
-agent's `eval` are then one language over one set of bindings, documented by one reference.
-
-It is not the Effect dialect, because that dialect cannot run on EDGE:
-
-1. Workers do not compile code from a string (`new Function`, `eval`), so EDGE runs a script in a Worker Loader
-   isolate, never in its own process.
-2. That isolate holds no database. The Effect dialect hands code live ECHO objects and the `@dxos/echo` modules
-   (`Database.query(...).run` returns live objects; `Obj.update` changes them), and neither crosses the isolate's
-   boundary. The plain dialect's bindings are functions over plain data, which is what crosses: `WorkerdSandbox`
-   answers each one on the host. The EDGE agent runs the plain dialect for the same reason.
+`runScript` runs code mode's Effect dialect, through code mode's runner: the `Operation.ScriptRunner` that
+`@dxos/compute` defines for scripts (`Operation.inlineScript(code, { dialect: 'effect' })`). A script is written
+against the DXOS API itself, as the agent's `eval` is in Composer, and the tool's description embeds the dialect's
+own reference (`EFFECT_API`).
 
 What a script gets, against the space the `spaceId` argument names:
 
-- The plain bindings: `print`, `describe`, `relations`, `children`, `referrers`, `query`, `get`, `search`, `make`,
-  `add`, `remove`, `update`, `flush`, `ref`.
-- `ops`: every operation an opted-in skill names, except those a binding replaces, under its key and its tool
-  name. A call runs exactly as `invokeOperation` does: the same input codec, skill gate, space rules and
-  `{"/": "echo://..."}` envelopes. The gate takes the `skillTokens` argument, and a call whose skill is not loaded
-  throws, naming the skill to load.
+- The dialect's names: `Database`, `Filter`, `Query`, `Order`, `Obj`, `Relation`, `Ref`, `Type`, `DXN`,
+  `Operation`, `Effect`, `print` and `DOCS`, with live objects from the space's database.
+- Every operation an opted-in skill names, except those the API replaces, as a stand-in definition that
+  `Database.resolve(key)` answers. `Operation.invoke` runs it exactly as `invokeOperation` does: the same input codec,
+  skill gate and space rules. The gate takes the `skillTokens` argument; a call whose skill is not loaded fails the
+  program, saying first where the token goes, since code mode cuts a long failure line.
 
 A script has no `loadSkill` or `queryOperations`: the client calls those tools before it writes the script.
 
 How it runs:
 
 - `ScriptOptions.sandbox` is a code mode `Sandbox`: `Sandbox.inProcess` for `dx mcp serve --code-mode`, and on EDGE
-  the `WorkerdSandbox` isolate the agent already uses.
+  `WorkerdEchoSandbox` (below).
 - A host that runs no code names a `runner` instead, an `Operation.ScriptRunner` in another runtime, and `runScript`
-  hands it the plain-dialect request. EDGE's MCP router does this: its runner sends the request to compute-service,
-  which answers it with `runScript` and `WorkerdSandbox`.
+  hands it the Effect-dialect request. EDGE's MCP router does this: its runner sends the request to compute-service,
+  which answers it with `runScript` and `WorkerdEchoSandbox`.
 - The runner's database is the host's `database(spaceId)`: on EDGE one `FunctionContext` over the caller's working
   set, opened for the script and closed when it ends; on the CLI the space the profile's client holds open.
-- mcp-server depends on agent-code-mode for the runner, the dialect and its reference text. MCP's own script
-  sandboxes, its isolate module and its Effect verbs are removed.
 
-This changes `runScript`'s contract: a script is the body of an async function, not of an `Effect.gen`. A client's
-existing Effect scripts fail to compile, and the tool's description gives the new form.
+This changes `runScript`'s contract: its own `invoke` verb is gone, and an operation's failure fails the program
+rather than being a `ToolFailure` to recover.
+
+### 5. The Effect dialect on workerd
+
+The Effect dialect hands code live ECHO objects and the `@dxos/echo` modules, so the code must run where a database
+is. Workers do not compile code from a string (`new Function`, `eval`), so EDGE runs it in a Worker Loader isolate,
+and `WorkerdSandbox`'s isolate holds no database: it only forwards plain-dialect calls home.
+
+`WorkerdEchoSandbox` puts the database in the isolate. It is `WorkerSandbox`, which Composer runs in a Web Worker,
+with the thread swapped for an isolate:
+
+1. The isolate runs code mode's worker runtime (`WorkerdEchoRuntime`): its own `EchoClient`, connected to the host's
+   ECHO services, and the dialect's real bindings.
+2. The worker protocol's `MessagePort` is replaced by `WorkerdBridge`: two functions passed over Workers RPC, one per
+   direction, each sending batches with one call in flight so messages stay in order.
+3. The model's code is compiled into the program module the sandbox writes for each evaluation, a fresh isolate
+   each time, since there is no `eval`. `SandboxInit.names` carries the names it destructures.
+4. The isolate has no network (`globalOutbound: null`) and no bindings. The host's ECHO services serve any space,
+   and code holding live objects can reach its own client, so the sandbox serves the isolate only its evaluation's
+   space and the calls a client of one database makes; reindexing, statistics and garbage collection are refused.
+5. EDGE's data service writes through to db-service and pushes no client's writes to another, and it can neither
+   report nor wait for heads. With `WorkerSandbox.Options.refresh`, each side flushes and the host refreshes its
+   documents (on EDGE, the script container's `refreshWorkingSet`), in place of the heads handover.
+
+A deployment bundles `@dxos/agent-code-mode/workerd-echo-runtime` for workerd, with the Automerge wasm it imports, and
+hands the modules to the sandbox. EDGE builds it with its own worker bundler, which carries the workerd workarounds
+ECHO needs.
+
+The cost is per evaluation: workerd compiles the runtime (about 2 MB of JavaScript and 3.5 MB of wasm) into a fresh
+isolate, and the client loads each document the code touches from the host. The agent on EDGE keeps the plain
+dialect until that cost is measured against its turns.
 
 ## Testing
 
 - agent-code-mode: unit tests for `get` and `search`; a producer test that annotated operations are absent from
-  `ops` and from the prompt; a workerd test for `get` and `search` across the isolate.
+  `ops` and from the prompt; a workerd test for `get` and `search` across the isolate; `WorkerdEchoSandbox` run
+  in-process through its program module and bridge, against a real database (Effect code, `Operation.invoke`, a
+  program that does not compile, a query naming another space).
 - plugin-space: the two operations carry the annotation.
-- mcp-server: `runScript` tests on a real database for the plain bindings and `ops` (skill gate, envelopes); an
-  annotated operation is absent from `ops` while the `invokeOperation` tool still runs it.
-- edge: mcp-space-service and mcp-router scripts in the plain dialect, run in the `WorkerdSandbox` isolate; one
-  script reads and updates, a second reads the change back. The Discord agent tests are recorded again.
-- Model fixtures recorded again where the prompt changed.
+- mcp-server: `runScript` tests on a real database for the Effect dialect and `Operation.invoke` (skill gate,
+  tokens); an annotated operation does not resolve while the `invokeOperation` tool still runs it.
+- edge: mcp-space-service and mcp-router scripts in the Effect dialect, run in a real Worker Loader isolate through
+  `WorkerdEchoSandbox`; one script reads and updates, a second reads the change back.
+- Model fixtures recorded again where the prompt changed; extracting `EFFECT_API` leaves the prompt byte-identical.
 
 ## Plan
 
@@ -194,15 +216,16 @@ This dxos PR:
 2. `ScriptBindingAnnotation` in `@dxos/compute`; plugin-space annotates its two operations.
 3. `get` and `search` in the plain dialect and the workerd facade.
 4. Code mode leaves annotated operations out; the cost paragraph goes into the API reference.
-5. MCP `runScript` runs the plain dialect through code mode's runner, with `HostShape.database`; the CLI host
+5. `WorkerdEchoSandbox` and its runtime entry; `WorkerSandbox` takes the space and a `refresh` handover.
+6. MCP `runScript` runs the Effect dialect through code mode's runner, with `HostShape.database`; the CLI host
    supplies it.
-6. Model fixtures recorded again.
+7. Model fixtures recorded again.
 
 The edge PR, after this one publishes:
 
 1. Bump `@dxos/*`.
-2. compute-service runs `runScript` in `WorkerdSandbox` and supplies `database`, opening one `FunctionContext` per
-   script.
+2. compute-service bundles the workerd runtime and runs `runScript` in `WorkerdEchoSandbox`, serving the script
+   container's ECHO services and refreshing them as the handover.
 3. Discord agent memos recorded again; an end-to-end check on dev.
 
 ## Open questions

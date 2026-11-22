@@ -19,8 +19,8 @@ import * as EffectStdio from 'effect/Stdio';
 
 import {
   Runner as CodeModeRunner,
-  PLAIN_API,
-  PlainDialect,
+  EFFECT_API,
+  EffectDialect,
   type Sandbox,
   type SandboxOperation,
 } from '@dxos/agent-code-mode';
@@ -29,7 +29,8 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Annotation, Database, Obj, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { SpaceId } from '@dxos/keys';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
@@ -623,7 +624,7 @@ export type ScriptOptions = {
     }
   | {
       /**
-       * Hands the script, as a plain-dialect request, to a runner in another runtime, which governs its calls
+       * Hands the script, as an Effect-dialect request, to a runner in another runtime, which governs its calls
        * itself: EDGE's MCP router runs no code and hands it to compute-service.
        */
       readonly runner: Operation.ScriptRunner;
@@ -634,18 +635,17 @@ const DEFAULT_SCRIPT_TIMEOUT = Duration.seconds(60);
 const DEFAULT_SCRIPT_MAX_OUTPUT = 16_000;
 
 const RUN_SCRIPT_DESCRIPTION = trim`
-  Runs a JavaScript program against one space and returns what it printed. Use it instead of a chain of
+  Runs a program written against the DXOS API in one space and returns what it printed. Use it instead of a chain of
   invokeOperation calls when a task touches many objects or needs a loop, a filter or a join.
 
-  \`code\` is the body of an async function: write \`await\` statements directly, without the wrapper. Nothing
-  outside the bindings below is in scope: no import, require or fetch. They act on the space \`spaceId\` names.
+  \`code\` is the body of an \`Effect.gen\` generator: write \`yield*\` statements directly, without the wrapper.
+  Nothing outside the names below is in scope: no import, require or fetch. They act on the space \`spaceId\` names.
 
-  ${PLAIN_API}
+  ${EFFECT_API}
 
-  \`await ops[key](input)\` runs an operation exactly as invokeOperation does: the keys and input schemas
-  queryOperations returns, the same skill gate and space, and \`{"/": "echo://..."}\` references, which \`get\`
-  takes. Pass the skillTokens loadSkill returned for the skills whose operations the script calls. A failed call
-  throws; catch it with try/catch.
+  \`yield* Operation.invoke(yield* Database.resolve(key), input)\` runs an operation exactly as invokeOperation
+  does: the keys and input schemas queryOperations returns, the same skill gate and space. Pass the skillTokens
+  loadSkill returned for the skills whose operations the script calls.
 
   Only printed values reach you: print the fields you need, not whole objects. The answer is the printed text, with
   the failure as its last line when the program threw (the call is then an error), then a trailer after \`---\`
@@ -656,7 +656,7 @@ export const RunScript = Tool.make('runScript', {
   description: RUN_SCRIPT_DESCRIPTION,
   parameters: Schema.Struct({
     code: Schema.String.annotate({
-      description: 'The body of an async function, without the wrapper. Print anything you need to see.',
+      description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
     }),
     spaceId: SpaceId.annotate({
       description:
@@ -667,7 +667,7 @@ export const RunScript = Tool.make('runScript', {
       Schema.Array(Schema.String).annotate({
         description:
           'skillTokens loadSkill returned earlier in this conversation, for the skills whose operations the ' +
-          'script calls through ops.',
+          'script invokes.',
       }),
     ),
   }),
@@ -686,7 +686,7 @@ export const RunScript = Tool.make('runScript', {
 export const ScriptServerToolkit = Toolkit.make(QueryOperations, InvokeOperation, LoadSkill, RunScript);
 
 /**
- * Answers one `runScript` call: the program runs in code mode's plain dialect through code mode's runner, the
+ * Answers one `runScript` call: the program runs in code mode's Effect dialect through code mode's runner, the
  * `Operation.ScriptRunner` scripts run through, against the database of the space it names. A host whose options name
  * a `runner` instead hands it the request, and that runner answers it, wherever it runs, with this function.
  */
@@ -707,7 +707,7 @@ export const runScript = (
       return failed('A script runs against one space: pass spaceId.');
     }
     const request: Operation.ScriptRequest = {
-      source: Operation.inlineScript(code, { dialect: Operation.ScriptDialects.Plain }),
+      source: Operation.inlineScript(code, { dialect: Operation.ScriptDialects.Effect }),
       spaceId: resolved,
       skillTokens,
       timeoutMs: Duration.toMillis(Duration.fromInputUnsafe(timeout)),
@@ -728,10 +728,10 @@ export const runScript = (
     const runner = CodeModeRunner.make({
       sandbox: options.sandbox,
       runtime: Context.make(Database.Service, Database.makeService(db)).pipe(
-        Context.add(Operation.Service, SCRIPT_OPERATION_SERVICE),
+        Context.add(Operation.Service, scriptOperationService(operations)),
       ),
       operations,
-      dialects: { plain: PlainDialect },
+      dialects: { effect: EffectDialect },
     });
     const result = yield* runner.run(request);
     return { ...result, stats: { ...stats } };
@@ -748,9 +748,10 @@ export const runScript = (
 const failed = (message: string): ScriptResult => ({ output: `Error: ${message}`, error: message });
 
 /**
- * The operations a script reaches through `ops`: every one an opted-in skill names, under its key and its tool name,
- * except those a binding replaces. Each call runs as `invokeOperation` runs it, presenting the script's tokens to the
- * skill gate, and is counted into `stats`.
+ * The operations a script resolves by key: every one an opted-in skill names, except those the API replaces. Each is a
+ * stand-in definition naming the record's key, which `Database.resolve` answers and `Operation.invoke` runs through
+ * {@link scriptOperationService} as `invokeOperation` runs it, presenting the script's tokens to the skill gate. Each
+ * call is counted into `stats`.
  */
 const scriptOperations = (
   registry: Registry.Registry,
@@ -782,6 +783,7 @@ const scriptOperations = (
             key,
             ...(record.description === undefined ? {} : { description: record.description }),
             parameters: record.inputSchema ?? {},
+            ...standInDefinition(key, name, record.description),
             invoke: (input: unknown) =>
               invokeWithTokens(registry, host, gate, { key, input: toWireInput(input), spaceId }, skillTokens).pipe(
                 Effect.timed,
@@ -790,12 +792,13 @@ const scriptOperations = (
                   return output;
                 }),
                 Effect.ensuring(Effect.sync(() => stats.calls++)),
-                // Raised in the program, which reads the message: a call it may retry with a token says how.
+                // Raised in the program, which reads the message: a call it may retry with a token says how, first,
+                // since code mode cuts a long failure line.
                 Effect.mapError(
                   ({ code, message }) =>
                     new Error(
                       code === 'skill_not_loaded'
-                        ? `${message} In a script, pass it in runScript's skillTokens.`
+                        ? `In a script, pass the skill's token in runScript's skillTokens. ${message}`
                         : message,
                     ),
                 ),
@@ -808,7 +811,31 @@ const scriptOperations = (
   );
 
 /**
- * An operation's input in `invokeOperation`'s wire form: a `ref(obj)` becomes its `{"/": uri}` envelope and an object
+ * A definition carrying only an operation record's key: the record is all an MCP server holds, and the real definition
+ * lives with its handler wherever the operation runs. Its input and output are left undecoded here, since the
+ * operation's own handler decodes them. None for a key that is not an NSID, which `Database.resolve` cannot name.
+ */
+const standInDefinition = (
+  key: string,
+  name: string,
+  description: string | undefined,
+): { definition?: Operation.Definition.Any } => {
+  const dxn = DXN.tryMake(`dxn:${key}`);
+  return dxn === undefined
+    ? {}
+    : {
+        definition: Operation.make({
+          // The record's own key; the literal lives where the operation is declared, which is what the rule protects.
+          // eslint-disable-next-line @dxos/rules/operation-key-shape
+          meta: { key: dxn, name, ...(description === undefined ? {} : { description }) },
+          input: Schema.Unknown,
+          output: Schema.Unknown,
+        }),
+      };
+};
+
+/**
+ * An operation's input in `invokeOperation`'s wire form: a reference becomes its `{"/": uri}` envelope and an object
  * its snapshot, which is what JSON makes of them, and an `undefined` field is dropped, as a tool call's JSON drops it.
  */
 const toWireInput = (input: unknown): Record<string, unknown> | undefined => {
@@ -841,13 +868,35 @@ const invokeWithTokens = (
 };
 
 /**
- * What `Operation.invoke` resolves inside a script, which the plain dialect never calls: its operations go through
- * `ops`, and so through the skill gate.
+ * What `Operation.invoke` resolves inside a script: the script's operations by key, each through the skill gate. An
+ * operation the script was not offered fails the program, naming the way it is reached instead.
  */
-const SCRIPT_OPERATION_SERVICE: Operation.OperationService = {
-  invoke: () => Effect.die(new Error('A script calls operations through ops.')),
-  schedule: () => Effect.die(new Error('A script calls operations through ops.')),
-  invokePromise: async () => ({ error: new Error('A script calls operations through ops.') }),
+const scriptOperationService = (operations: readonly SandboxOperation[]): Operation.OperationService => {
+  const byKey = new Map(operations.flatMap(({ key, invoke }) => (key === undefined ? [] : [[key, invoke] as const])));
+  const run = (op: Operation.Definition.Any, input: unknown): Effect.Effect<unknown> => {
+    const key = viewInternal.nsid(String(op.meta.key));
+    const invoke = byKey.get(key);
+    return invoke === undefined
+      ? Effect.die(
+          new Error(
+            `${key} is not offered in a script: read and change objects through Database and Obj, and invoke only ` +
+              'the operations queryOperations lists for the skills you loaded.',
+          ),
+        )
+      : invoke(input);
+  };
+  return {
+    invoke: (op, ...[input]) =>
+      run(op, input).pipe(Effect.flatMap(Schema.decodeUnknownEffect(op.output)), Effect.orDie),
+    schedule: () => Effect.die(new Error('A script cannot schedule an operation; invoke it instead.')),
+    invokePromise: (op, ...[input]) =>
+      EffectEx.runPromise(
+        run(op, input).pipe(Effect.flatMap(Schema.decodeUnknownEffect(op.output)), Effect.orDie),
+      ).then(
+        (data) => ({ data }),
+        (error: unknown) => ({ error: error instanceof Error ? error : new Error(String(error)) }),
+      ),
+  };
 };
 
 //

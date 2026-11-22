@@ -66,6 +66,16 @@ export const settle = (db: Database.Database): Effect.Effect<Heads, WireError> =
     catch: (cause) => new WireError({ message: 'Could not write the changes to hand over.', cause }),
   });
 
+/**
+ * Writes this side's changes for a reader that refreshes its documents from the store instead of waiting on heads,
+ * which services that write through to a store can neither report nor wait for. Hands over no heads.
+ */
+export const flush = (db: Database.Database): Effect.Effect<Heads, WireError> =>
+  Effect.tryPromise({
+    try: () => db.flush(),
+    catch: (cause) => new WireError({ message: 'Could not write the changes to hand over.', cause }),
+  }).pipe(Effect.as({}));
+
 /** Waits until this replica carries `heads`. */
 export const catchUp = (db: Database.Database, heads: Heads): Effect.Effect<void, WireError> =>
   db instanceof DatabaseImpl && Object.keys(heads).length > 0

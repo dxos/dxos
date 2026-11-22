@@ -15,7 +15,7 @@ import { type ClientServicesHandlers, Rpc, makeClientServicesHandlers } from '@d
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, JsonSchema, Type } from '@dxos/echo';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import type { BindingsContext } from './Dialect.ts';
@@ -48,9 +48,16 @@ export type EchoAccess = Pick<ClientServicesHandlers, 'DataService' | 'QueryServ
 
 export type Options = {
   /**
-   * Host-side ECHO services, resolved per evaluation so the served set follows the host lifecycle.
+   * Host-side ECHO services for the space the code runs against, resolved per evaluation so the served set follows
+   * the host lifecycle.
    */
-  readonly echo: () => EchoAccess;
+  readonly echo: (spaceId: SpaceId) => EchoAccess;
+  /**
+   * For services that write through to a store and push no client's writes to another (EDGE's): brings every document
+   * the host's database and the worker hold up to date with the store. Given, each side's writes are handed over by a
+   * flush and this refresh rather than by heads, which such services can neither report nor wait for.
+   */
+  readonly refresh?: () => Promise<void>;
   /**
    * Module the worker runs. Defaults to the entry beside this one, under the extension this module
    * was itself loaded under — a worker starts from a real file, not through a bundler.
@@ -88,13 +95,15 @@ export const make = (options: Options): Sandbox.Sandbox => ({
       }
       // The host's services can be unavailable (a client mid-reconnect); that is this call's failure.
       const echo = yield* Effect.try({
-        try: () => options.echo(),
+        try: () => options.echo(db.spaceId),
         catch: (error) =>
           new Sandbox.EvaluationError({ message: `No ECHO services for the worker: ${describe(error)}` }),
       });
       const init: SandboxInit = {
         code,
         dialect: dialect.name,
+        names: Object.keys(dialect.bindings(context)),
+        handover: options.refresh === undefined ? 'heads' : 'flush',
         space,
         types: registrySnapshot(db),
         skills: context.skills,
@@ -107,6 +116,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
         })),
       };
 
+      const refresh = options.refresh === undefined ? undefined : refreshing(options.refresh);
       const settled = yield* Deferred.make<unknown, Sandbox.EvaluationError>();
       // What the code wrote, reported with its result; waited on after the budget, not within it.
       let written: Wire.Heads = {};
@@ -124,7 +134,8 @@ export const make = (options: Options): Sandbox.Sandbox => ({
           SandboxHostRpcs.toLayer({
             'Sandbox.print': ({ values }) => Effect.sync(() => context.print(...values)),
             'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
-            'Sandbox.invokeDefinition': ({ key, input, heads }) => invokeDefinition(context, key, input, heads),
+            'Sandbox.invokeDefinition': ({ key, input, heads }) =>
+              invokeDefinition(context, key, input, heads, options.refresh),
             'Sandbox.complete': ({ value, failure, heads }) =>
               Effect.sync(() => {
                 written = heads;
@@ -172,7 +183,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
 
       const evaluation = Effect.raceFirst(Deferred.await(settled), stopped);
       // The turn carries on against this database, so it waits for what the code wrote either way.
-      const caughtUp = Effect.suspend(() => Wire.catchUp(db, written)).pipe(
+      const caughtUp = Effect.suspend(() => (refresh === undefined ? Wire.catchUp(db, written) : refresh)).pipe(
         Effect.catch((error) =>
           Effect.sync(() => log.warn('code-mode worker writes not yet visible to the host', { error })),
         ),
@@ -234,8 +245,21 @@ const invokeOperation = (
   );
 };
 
+/** {@link Options.refresh} as an effect, failing as a hand-over does. */
+const refreshing = (refresh: () => Promise<void>): Effect.Effect<void, Wire.WireError> =>
+  Effect.tryPromise({
+    try: refresh,
+    catch: (cause) => new Wire.WireError({ message: "The other side's changes could not be read.", cause }),
+  });
+
 /** Runs the worker's `Operation.invoke` through the turn's `Operation.Service`, as the Effect dialect does in-process. */
-const invokeDefinition = (context: BindingsContext, key: string, input: unknown, heads: Wire.Heads) => {
+const invokeDefinition = (
+  context: BindingsContext,
+  key: string,
+  input: unknown,
+  heads: Wire.Heads,
+  refresh: Options['refresh'],
+) => {
   const definition = context.operations.find(
     (candidate) => candidate.definition !== undefined && String(candidate.definition.meta.key) === key,
   )?.definition;
@@ -243,10 +267,14 @@ const invokeDefinition = (context: BindingsContext, key: string, input: unknown,
     return Effect.succeed({ _tag: 'Error' as const, message: `Unknown operation: ${key}` });
   }
   const { db } = Context.get(context.runtime, Database.Service);
-  return Wire.catchUp(db, heads).pipe(
+  // Read the worker's writes before resolving what it named; afterwards write the operation's, and with `refresh` push
+  // them to the worker, whose reply arrives after the documents it sent on the same channel.
+  const catchUp = refresh === undefined ? Wire.catchUp(db, heads) : refreshing(refresh);
+  const settle = refresh === undefined ? Wire.settle(db) : Wire.flush(db).pipe(Effect.tap(() => refreshing(refresh)));
+  return catchUp.pipe(
     Effect.andThen(Wire.decode(input, db)),
     Effect.flatMap((decoded) => Operation.invoke(definition, toRefs(definition.input.ast, decoded))),
-    Effect.flatMap((value) => Wire.settle(db).pipe(Effect.map((heads) => ({ value: Wire.encode(value, db), heads })))),
+    Effect.flatMap((value) => settle.pipe(Effect.map((heads) => ({ value: Wire.encode(value, db), heads })))),
     Effect.provide(context.runtime),
     Effect.match({
       onSuccess: ({ value, heads }) => ({ _tag: 'Ok' as const, value, heads }),

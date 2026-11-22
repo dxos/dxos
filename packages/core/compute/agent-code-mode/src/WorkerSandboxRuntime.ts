@@ -68,9 +68,26 @@ const connect = (port: MessagePort) =>
 /** The client both halves of the protocol are reached through. */
 type SandboxClient = Effect.Success<ReturnType<typeof connect>>;
 
+/**
+ * Runs the model's code with the dialect's bindings in scope. The default compiles it here; a runtime with no `eval`
+ * (workerd) passes the program it compiled ahead of loading, which binds the same {@link SandboxInit.names}.
+ */
+export type Execute = (bindings: Record<string, unknown>) => Promise<unknown>;
+
+/** Compiles the code as the body of an async function over the bindings' names. */
+const compile =
+  (code: string): Execute =>
+  (bindings) => {
+    const names = Object.keys(bindings);
+    return new AsyncFunction(...names, `'use strict';\n${code}`)(...names.map((name) => bindings[name]));
+  };
+
 /** Everything from connecting ECHO to running the model's code; its outcome is what the host waits on. */
-const evaluate = (client: SandboxClient, init: SandboxInit) =>
+const evaluate = (client: SandboxClient, init: SandboxInit, execute: Execute) =>
   Effect.gen(function* () {
+    // Each side's writes reach the other as the host's services allow; see `SandboxInit.handover`.
+    const settle = init.handover === 'heads' ? Wire.settle : Wire.flush;
+
     const echo = new EchoClient({});
     // The worker is simply another client of the host's services — the same connection the tab makes.
     echo.connectToService({ dataService: client, queryService: client });
@@ -132,7 +149,7 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
 
     // Heads travel both ways so neither side reads the other's writes before they arrive.
     const invokeDefinition = (key: string, input: unknown) =>
-      Wire.settle(db).pipe(
+      settle(db).pipe(
         Effect.flatMap((heads) => client['Sandbox.invokeDefinition']({ key, input: Wire.encode(input, db), heads })),
         Effect.flatMap((outcome): Effect.Effect<unknown, OperationFailed | Wire.WireError> =>
           outcome._tag === 'Ok'
@@ -162,9 +179,8 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
       },
     });
 
-    const names = Object.keys(bindings);
     return yield* Effect.tryPromise({
-      try: () => new AsyncFunction(...names, `'use strict';\n${init.code}`)(...names.map((name) => bindings[name])),
+      try: () => execute(bindings),
       catch: (error: unknown) => new ModelCodeFailed({ message: describe(error) }),
     }).pipe(
       Effect.match({
@@ -176,7 +192,7 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
         onFailure: (error: ModelCodeFailed) => ({ value: undefined, failure: error.message }),
       }),
       // The turn carries on against the host's database, so it waits for what the code wrote.
-      Effect.flatMap((result) => Wire.settle(db).pipe(Effect.map((heads) => ({ ...result, heads })))),
+      Effect.flatMap((result) => settle(db).pipe(Effect.map((heads) => ({ ...result, heads })))),
     );
   });
 
@@ -188,10 +204,10 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
  * timeout. A failure BEFORE the channel exists cannot be reported this way; the entry turns that
  * into whatever its platform's host watches for (an exit code, a message on the worker itself).
  */
-export const runSandboxWorker = (port: MessagePort, init: SandboxInit) =>
+export const runSandboxWorker = (port: MessagePort, init: SandboxInit, execute: Execute = compile(init.code)) =>
   Effect.gen(function* () {
     const client = yield* connect(port);
-    const exit = yield* Effect.exit(evaluate(client, init));
+    const exit = yield* Effect.exit(evaluate(client, init, execute));
     yield* client['Sandbox.complete'](
       Exit.isSuccess(exit) ? exit.value : { value: undefined, failure: Cause.pretty(exit.cause), heads: {} },
     );

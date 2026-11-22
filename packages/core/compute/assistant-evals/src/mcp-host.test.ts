@@ -139,8 +139,9 @@ describe('startMcpHost', () => {
           const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
           const skillToken = yield* McpServer.skillGate().issue(definition.key);
           const code = [
+            `const createTask = yield* Database.resolve('${KEY}');`,
             "for (const title of ['Ship', 'Test']) {",
-            `  print((await ops['${KEY}']({ title })).id);`,
+            '  yield* print((yield* Operation.invoke(createTask, { title })).id);',
             '}',
           ].join('\n');
           yield* Stream.runDrain(

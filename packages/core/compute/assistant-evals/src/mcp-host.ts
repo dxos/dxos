@@ -224,13 +224,13 @@ const RUN_SCRIPT_TOOL = {
     properties: {
       code: {
         type: 'string',
-        description: 'The body of an async function, without the wrapper. Print anything you need to see.',
+        description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
       },
       spaceId: { type: 'string', description: 'The space the script reads and changes, and its operations run in.' },
       skillTokens: {
         type: 'array',
         items: { type: 'string' },
-        description: 'skillTokens loadSkill returned earlier, for the skills whose operations the script calls.',
+        description: 'skillTokens loadSkill returned earlier, for the skills whose operations the script invokes.',
       },
     },
     required: ['code', 'spaceId'],
