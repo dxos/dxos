@@ -52,9 +52,33 @@ describe('Stylesheet', () => {
     expect(links()).toHaveLength(1);
   });
 
-  test('fails when the stylesheet does not load', async ({ expect }) => {
-    const pending = EffectEx.runPromise(Stylesheet.load('/assets/missing.css'));
+  test('callers that need one stylesheet wait on the same link', async ({ expect }) => {
+    const settled: string[] = [];
+    const first = EffectEx.runPromise(Stylesheet.load('/assets/body.css')).then(() => settled.push('first'));
+    const second = EffectEx.runPromise(Stylesheet.load('./body.css', '/assets/body.js')).then(() =>
+      settled.push('second'),
+    );
+    expect(links()).toHaveLength(1);
+
+    await Promise.resolve();
+    expect(settled).toEqual([]);
+
+    settle('load');
+    await Promise.all([first, second]);
+    expect(settled).toEqual(['first', 'second']);
+  });
+
+  test('fails every caller when the stylesheet does not load, and retries on the next call', async ({ expect }) => {
+    const first = EffectEx.runPromise(Stylesheet.load('/assets/missing.css'));
+    const second = EffectEx.runPromise(Stylesheet.load('/assets/missing.css'));
     settle('error');
-    await expect(pending).rejects.toBeInstanceOf(Stylesheet.StylesheetLoadError);
+    await expect(first).rejects.toBeInstanceOf(Stylesheet.StylesheetLoadError);
+    await expect(second).rejects.toBeInstanceOf(Stylesheet.StylesheetLoadError);
+    expect(links()).toHaveLength(0);
+
+    const retry = EffectEx.runPromise(Stylesheet.load('/assets/missing.css'));
+    expect(links()).toHaveLength(1);
+    settle('load');
+    await retry;
   });
 });
