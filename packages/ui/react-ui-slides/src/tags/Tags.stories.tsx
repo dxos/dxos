@@ -930,6 +930,42 @@ export const HeadingColors: Story = {
 };
 
 /**
+ * Bold text is set in the heading color at the body's weight, so color alone marks it. A flow card is the exception:
+ * there bold is the card's title, which keeps the card's color and a bold weight.
+ */
+export const StrongText: Story = {
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# Bold text',
+      '',
+      '- **ECHO** holds the data',
+      '- **Agents** act on it',
+      '',
+      '<List variant="flow">',
+      '',
+      '1. **Chat** A model in a separate window',
+      '2. **Cowork** Claude working inside your existing apps',
+      '',
+      '</List>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const heading = await query(canvasElement, '[data-slide] h1');
+    const item = await query(canvasElement, '[data-slide] ul > li');
+    const strong = await query(canvasElement, '[data-slide] ul > li strong');
+    await expect(getComputedStyle(strong).color).toBe(getComputedStyle(heading).color);
+    await expect(getComputedStyle(strong).color).not.toBe(getComputedStyle(item).color);
+    await expect(getComputedStyle(strong).fontWeight).toBe(getComputedStyle(item).fontWeight);
+
+    const card = await query(canvasElement, 'ol[data-variant="flow"] > li');
+    const title = await query(canvasElement, 'ol[data-variant="flow"] > li strong');
+    await expect(getComputedStyle(title).color).toBe(getComputedStyle(card).color);
+    await expect(getComputedStyle(title).fontWeight).toBe('700');
+  },
+};
+
+/**
  * `<List variant="flow">` lays the items out as a row of cards with an arrow in each gap, and `active` marks the
  * one the story has reached. The item's own markdown names its parts: emphasis is the label, strong is the title.
  */
