@@ -43,6 +43,8 @@ export type WorkerHandle = {
   readonly stopped: Promise<string | undefined>;
   /** Stops the thread outright, whatever it is running. */
   readonly terminate: () => void;
+  /** For a worker that is a security boundary: what of the host's services it is served instead of all of them. */
+  readonly limit?: (echo: EchoAccess) => EchoAccess;
 };
 
 /** What the worker's own ECHO client connects to: the host services a tab would connect to. */
@@ -74,7 +76,7 @@ export type Options = {
    */
   readonly entry?: URL;
   /** Spawns the worker, for a runtime whose worker is not `node:worker_threads`. */
-  readonly spawn?: (entry: URL, init: SandboxInit) => Promise<WorkerHandle>;
+  readonly spawn?: (entry: URL | undefined, init: SandboxInit) => Promise<WorkerHandle>;
 };
 
 /**
@@ -134,7 +136,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
       let written: Wire.Heads = {};
 
       const handle = yield* Effect.acquireRelease(
-        Effect.promise(() => (options.spawn ?? spawnNodeWorker)(options.entry ?? defaultEntry(), init)),
+        Effect.promise(() => (options.spawn ?? spawnNodeWorker)(options.entry, init)),
         ({ terminate }) => Effect.sync(terminate),
       );
 
@@ -142,7 +144,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
         handle.port,
         SandboxRpcs,
         Layer.merge(
-          makeClientServicesHandlers({ services: () => echo }),
+          makeClientServicesHandlers({ services: () => handle.limit?.(echo) ?? echo }),
           SandboxHostRpcs.toLayer({
             'Sandbox.print': ({ values }) => Effect.sync(() => context.print(...values)),
             'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
@@ -376,10 +378,10 @@ const defaultEntry = (): URL => {
  * Imported here rather than at the top of the module so that loading this file does not pull
  * `node:worker_threads` into a browser bundle; a browser deployment passes its own `spawn`.
  */
-const spawnNodeWorker = async (entry: URL, init: SandboxInit): Promise<WorkerHandle> => {
+const spawnNodeWorker = async (entry: URL | undefined, init: SandboxInit): Promise<WorkerHandle> => {
   const { MessageChannel, Worker } = await import('node:worker_threads');
   const channel = new MessageChannel();
-  const instance = new Worker(entry, {
+  const instance = new Worker(entry ?? defaultEntry(), {
     workerData: { init, port: channel.port2 },
     transferList: [channel.port2],
   });

@@ -37,9 +37,6 @@ const TASK_TYPENAME = 'com.example.type.task';
 /** A type no layer registers, which only a type source supplies. */
 const NOTE_TYPENAME = 'com.example.type.note';
 
-/** A type the test stores in the space, as `space.addType` would. */
-const MEMO_TYPENAME = 'com.example.type.memo';
-
 /** The versioned DXN the effect dialect resolves the type by. */
 const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
 
@@ -651,72 +648,6 @@ describe('code mode types', () => {
         // Not a valid typename: the same typed failure, not a defect.
         const invalid = yield* runEvalResult(`await make('com.example.type.note#ABC123', {});`);
         expect(invalid).toEqual({ output: 'Error: Unknown object type: com.example.type.note#ABC123', ok: false });
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-});
-
-// No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
-describe('code mode reads', () => {
-  it.effect(
-    'get reads an object by id, reference or envelope, and search finds it by its text',
-    Effect.fnUntraced(
-      function* (_) {
-        const missing = EntityId.random();
-        const output = yield* runEval(`
-          const task = await make('${TASK_TYPENAME}', { title: 'Water the plants', status: 'open' });
-          await add(task);
-          await flush();
-          const byId = await get(task.id);
-          const byRef = await get(ref(task));
-          const byEnvelope = await get({ '/': 'echo:///' + task.id });
-          const found = await search('plants', '${TASK_TYPENAME}');
-          print(byId.title, byRef.id === task.id, byEnvelope.id === task.id, await get('${missing}'), found.length);
-        `);
-        expect(output).toEqual('Water the plants true true undefined 1');
-
-        // An operation a binding replaces is not bound, and calling it by the name a skill gives says what to use.
-        const replaced = yield* runEvalResult(`await ops['space-get-objects']({ objects: [] });`);
-        expect(replaced.ok).toBe(false);
-        expect(replaced.output).toContain('is not offered in code. Read and change objects with get, query, search');
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-});
-
-// No model in the loop, so not tagged `model-fixture`: it runs with every `moon run :test`.
-describe('code mode queries', () => {
-  it.effect(
-    'query and search reach objects of a type stored in the space, and what feeds hold',
-    Effect.fnUntraced(
-      function* (_) {
-        const { db } = yield* Database.Service;
-        class Memo extends Type.makeObject<Memo>(DXN.make(MEMO_TYPENAME, '0.1.0'))(
-          Schema.Struct({ title: Schema.String }),
-        ) {}
-        const stored = yield* Effect.promise(() => db.addType(Memo));
-        yield* Database.add(Obj.make(stored, { title: 'Stored memo' }));
-        const inbox = yield* Database.add(Feed.make({ name: 'inbox' }));
-        yield* Feed.append(inbox, [Obj.make(Task, { title: 'Mail about the plants', status: 'open' })]);
-        yield* Database.flush({ secondaryIndexes: true });
-
-        const output = yield* runEval(`
-          const memos = await query('${MEMO_TYPENAME}', { title: 'Stored memo' });
-          const spaceOnly = await query('${TASK_TYPENAME}', { title: 'Mail about the plants' });
-          const withFeeds = await query('${TASK_TYPENAME}', { title: 'Mail about the plants' }, { feeds: true });
-          const inInbox = await search('plants', '${TASK_TYPENAME}', { in: ['${inbox.id}'] });
-          print(memos.map((memo) => memo.title).join(), spaceOnly.length, withFeeds.length, inInbox.map((task) => task.title).join());
-        `);
-        expect(output).toEqual('Stored memo 0 1 Mail about the plants');
-
-        // A guessed typename in an old form says what one looks like instead of failing on the DXN parser.
-        const guessed = yield* runEvalResult(`await search('plants', 'dxos.org/type/Document');`);
-        expect(guessed.ok).toBe(false);
-        expect(guessed.output).toContain("'dxos.org/type/Document' is not a typename");
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

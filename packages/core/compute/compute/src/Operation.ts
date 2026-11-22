@@ -1450,20 +1450,18 @@ export const getConsentPreview = (
 };
 
 /**
- * Names the code-mode bindings that together do everything the operation does, against the database the code already
- * has open (e.g. `['query', 'search']`). Code mode does not offer an annotated operation, since the bindings need no
- * invocation; tool callers still see it.
+ * Marks an operation the database API does entirely (reading, querying or updating objects) against the database the
+ * code already holds. Code mode does not offer it, since the API needs no invocation; tool callers still see it.
  */
-export const ScriptBindingAnnotation = Annotation.make({
-  id: 'org.dxos.operation.script-binding',
-  schema: Schema$.Array(Schema$.String),
+export const ReplacedByDatabaseAnnotation = Annotation.make({
+  id: 'org.dxos.operation.replaced-by-database',
+  schema: Schema$.Literal(true),
 });
 
-/** The bindings that replace the operation in code mode, when it declares them. */
-export const getScriptBinding = (op: Definition.Any): readonly string[] | undefined =>
-  op.meta.annotations
-    ? Option.getOrUndefined(Annotation.getDictionary(op.meta.annotations, ScriptBindingAnnotation))
-    : undefined;
+/** Whether code mode leaves the operation out for the database API; see {@link ReplacedByDatabaseAnnotation}. */
+export const isReplacedByDatabase = (op: Definition.Any): boolean =>
+  op.meta.annotations !== undefined &&
+  Option.isSome(Annotation.getDictionary(op.meta.annotations, ReplacedByDatabaseAnnotation));
 
 /**
  * Operation service interface - provides unified access to operation invocation and scheduling.

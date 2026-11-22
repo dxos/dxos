@@ -582,8 +582,8 @@ export const invokeHosted = (
 //
 // A task that touches many objects costs one `invokeOperation` round trip per object, each of them
 // spent in the client's context. `runScript` lets the caller write that loop once instead, in code
-// mode's plain dialect: the agent's own bindings over the space's database, with the operations the
-// skills name under `ops`, through the same skill gate and space rules. Only what it prints comes back.
+// mode's Effect dialect: the DXOS API over the space's database, with the operations the skills name
+// through the same skill gate and space rules. Only what it prints comes back.
 //
 
 /** What one `runScript` call produced: what it printed, why it failed when it did, and its operation calls. */
@@ -617,8 +617,8 @@ export type ScriptOptions = {
 } & (
   | {
       /**
-       * Runs the script here, against the host's `database`: code mode's `Sandbox.inProcess` is not a boundary,
-       * `WorkerdSandbox` is.
+       * Runs the script here, against the host's `database`: code mode's `Sandbox.inProcess` is not a boundary, a
+       * `WorkerSandbox` spawning `WorkerSandboxWorkerd` isolates is.
        */
       readonly sandbox: Sandbox.Sandbox;
     }
@@ -770,20 +770,22 @@ const scriptOperations = (
       return records.flatMap((record): SandboxOperation[] => {
         const name = viewInternal.toolNameOf(record);
         const key = viewInternal.nsid(Operation.getKey(record) ?? '');
+        // A key `Database.resolve` cannot name is not reachable from a script.
+        const dxn = DXN.tryMake(`dxn:${key}`);
         if (
           name == null ||
+          dxn === undefined ||
           !owners.has(name) ||
-          Option.isSome(Annotation.get(record, Operation.ScriptBindingAnnotation))
+          Option.isSome(Annotation.get(record, Operation.ReplacedByDatabaseAnnotation))
         ) {
           return [];
         }
         return [
           {
             name,
-            key,
             ...(record.description === undefined ? {} : { description: record.description }),
             parameters: record.inputSchema ?? {},
-            ...standInDefinition(key, name, record.description),
+            definition: standInDefinition(dxn, name, record.description),
             invoke: (input: unknown) =>
               invokeWithTokens(registry, host, gate, { key, input: toWireInput(input), spaceId }, skillTokens).pipe(
                 Effect.timed,
@@ -813,26 +815,16 @@ const scriptOperations = (
 /**
  * A definition carrying only an operation record's key: the record is all an MCP server holds, and the real definition
  * lives with its handler wherever the operation runs. Its input and output are left undecoded here, since the
- * operation's own handler decodes them. None for a key that is not an NSID, which `Database.resolve` cannot name.
+ * operation's own handler decodes them.
  */
-const standInDefinition = (
-  key: string,
-  name: string,
-  description: string | undefined,
-): { definition?: Operation.Definition.Any } => {
-  const dxn = DXN.tryMake(`dxn:${key}`);
-  return dxn === undefined
-    ? {}
-    : {
-        definition: Operation.make({
-          // The record's own key; the literal lives where the operation is declared, which is what the rule protects.
-          // eslint-disable-next-line @dxos/rules/operation-key-shape
-          meta: { key: dxn, name, ...(description === undefined ? {} : { description }) },
-          input: Schema.Unknown,
-          output: Schema.Unknown,
-        }),
-      };
-};
+const standInDefinition = (key: DXN.DXN, name: string, description: string | undefined): Operation.Definition.Any =>
+  Operation.make({
+    // The record's own key; the literal lives where the operation is declared, which is what the rule protects.
+    // eslint-disable-next-line @dxos/rules/operation-key-shape
+    meta: { key, name, ...(description === undefined ? {} : { description }) },
+    input: Schema.Unknown,
+    output: Schema.Unknown,
+  });
 
 /**
  * An operation's input in `invokeOperation`'s wire form: a reference becomes its `{"/": uri}` envelope and an object
@@ -872,7 +864,11 @@ const invokeWithTokens = (
  * operation the script was not offered fails the program, naming the way it is reached instead.
  */
 const scriptOperationService = (operations: readonly SandboxOperation[]): Operation.OperationService => {
-  const byKey = new Map(operations.flatMap(({ key, invoke }) => (key === undefined ? [] : [[key, invoke] as const])));
+  const byKey = new Map(
+    operations.flatMap(({ definition, invoke }) =>
+      definition === undefined ? [] : [[viewInternal.nsid(String(definition.meta.key)), invoke] as const],
+    ),
+  );
   const run = (op: Operation.Definition.Any, input: unknown): Effect.Effect<unknown> => {
     const key = viewInternal.nsid(String(op.meta.key));
     const invoke = byKey.get(key);

@@ -73,13 +73,13 @@ const RemoveObjects = Operation.make({
 
 const GET_OBJECTS_KEY = 'com.example.operation.space.getObjects';
 
-/** Replaced by a script's `get`: a script is refused it, while the tool still runs it. */
+/** Replaced by the database API: a script does not reach it, while the tool still runs it. */
 const GetObjects = Operation.make({
   meta: { key: DXN.make(GET_OBJECTS_KEY), name: 'Get Objects', description: 'Reads objects by reference.' },
   input: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
   output: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
   services: [Database.Service],
-}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ScriptBindingAnnotation, ['get']));
+}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ReplacedByDatabaseAnnotation, true));
 
 const TASK_TYPENAME = 'com.example.type.task';
 

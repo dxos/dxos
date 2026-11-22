@@ -355,9 +355,9 @@ export const projectOperations = Effect.fnUntraced(function* (
   const handlers = yield* skillToolkit.handlers;
   return Record.toEntries(skillToolkit.toolkit.tools).flatMap(([name, tool]): SandboxOperation[] => {
     const definition = operationBehind(tool);
-    // A binding does all this operation does against the database the code already holds, without the invocation's
-    // round trip, so code mode does not offer it.
-    if (definition !== undefined && Operation.getScriptBinding(definition) !== undefined) {
+    // The database API does all this operation does against the database the code already holds, without the
+    // invocation's round trip, so code mode does not offer it.
+    if (definition !== undefined && Operation.isReplacedByDatabase(definition)) {
       return [];
     }
     return [

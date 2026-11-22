@@ -5,29 +5,27 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { QueryAST } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 
-import * as Sandbox from './Sandbox.ts';
 import * as WorkerdBridge from './WorkerdBridge.ts';
-import * as WorkerSandbox from './WorkerSandbox.ts';
+import type * as WorkerSandbox from './WorkerSandbox.ts';
 import { type SandboxInit } from './WorkerSandboxProtocol.ts';
 
 /** The module of a {@link Runtime} that the program imports `serve` from. */
 export const RUNTIME_MODULE = 'runtime.js';
 
-/** The module this sandbox writes for each evaluation: the isolate's entrypoint, with the model's code compiled in. */
+/** The module the spawner writes for each evaluation: the isolate's entrypoint, with the model's code compiled in. */
 const PROGRAM_MODULE = 'program.js';
 
 /** A module as the Worker Loader takes it. */
 export type Module = { readonly js: string } | { readonly wasm: ArrayBuffer };
 
 /**
- * `WorkerdEchoRuntime.ts`, bundled for workerd by the deployment: {@link RUNTIME_MODULE} and every module it imports
+ * `WorkerSandboxWorkerdEntry`, bundled for workerd by the deployment: {@link RUNTIME_MODULE} and every module it imports
  * (its chunks, the Automerge wasm) under the names it imports them by.
  */
 export type Runtime = {
@@ -45,7 +43,7 @@ export type Entrypoint = {
   ) => Promise<void>;
 };
 
-/** The isolate this sandbox asks the loader for. */
+/** The isolate the spawner asks the loader for. */
 export type WorkerCode = {
   compatibilityDate: string;
   compatibilityFlags: string[];
@@ -63,46 +61,11 @@ export type WorkerLoader = {
   readonly get: (id: string, load: () => Promise<WorkerCode>) => { readonly getEntrypoint: () => Entrypoint };
 };
 
-export type Options = {
+export type SpawnOptions = {
   /** The `worker_loaders` binding this deployment was given. */
   readonly loader: WorkerLoader;
   readonly runtime: Runtime;
-  /**
-   * The host's ECHO services for the space the code runs against. The isolate reaches only that space through them,
-   * whatever else they could serve.
-   */
-  readonly echo: (spaceId: SpaceId) => WorkerSandbox.EchoAccess;
-  /** See `WorkerSandbox.Options.refresh`; required by services that cannot report heads, as EDGE's cannot. */
-  readonly refresh?: () => Promise<void>;
-  /** See `WorkerSandbox.Options.workingSet`. */
-  readonly workingSet?: (spaceId: SpaceId) => WorkerSandbox.WorkingSet | undefined;
 };
-
-/**
- * Runs the model's code in a Worker Loader isolate against its own ECHO client, so a dialect gets its real bindings —
- * live objects, `Database.query`, `Obj.update` — rather than the snapshot facade `WorkerdSandbox` marshals.
- *
- * This is `WorkerSandbox` with the thread swapped for an isolate: the same runtime and protocol, carried over Workers
- * RPC by {@link WorkerdBridge} instead of a `MessagePort`, with the code compiled into the program module, since
- * workerd has no `eval`. As with `WorkerdSandbox`, the isolate is a SECURITY boundary: it has no network
- * (`globalOutbound: null`) and no bindings, and reaches only the two functions it is called with. What those serve is
- * limited here to the evaluation's space and to the calls a client of one database makes.
- *
- * The price is the runtime: every evaluation loads its own copy of ECHO and Automerge into a fresh isolate, and loads
- * each document the code touches from the host.
- */
-export const make = (options: Options): Sandbox.Sandbox =>
-  WorkerSandbox.make({
-    echo: (spaceId) => scope(options.echo(spaceId), spaceId),
-    // Named so the sandbox does not derive a file next to its own module, which a bundle in workerd has no URL for.
-    entry: new URL(`workerd:${RUNTIME_MODULE}`),
-    spawn: (_entry, init) => spawn(options, init),
-    ...(options.refresh !== undefined && { refresh: options.refresh }),
-    ...(options.workingSet !== undefined && { workingSet: options.workingSet }),
-  });
-
-/** Installs {@link make} as the ambient sandbox. */
-export const layer = (options: Options): Layer.Layer<Sandbox.Service> => Layer.succeed(Sandbox.Service, make(options));
 
 /** The date the program is written against; the runtime bundle's own needs come in as flags. */
 const COMPATIBILITY_DATE = '2026-03-17';
@@ -118,46 +81,67 @@ export const COMPATIBILITY_FLAGS: readonly string[] = [
   'no_handle_cross_request_promise_resolution',
 ];
 
-const spawn = async ({ loader, runtime }: Options, init: SandboxInit): Promise<WorkerSandbox.WorkerHandle> => {
-  // The host's end waits for the isolate to attach before its first batch, since the server greets the worker as soon
-  // as it opens, which may be before the isolate has started.
-  let attached: (deliver: WorkerdBridge.Send) => void = () => {};
-  const delivery = new Promise<WorkerdBridge.Send>((resolve) => {
-    attached = resolve;
-  });
-  let detach: () => void = () => {};
-  const detached = new Promise<void>((resolve) => {
-    detach = resolve;
-  });
-  const end = WorkerdBridge.makeEnd(async (batch) => (await delivery)(batch));
+/**
+ * A `WorkerSandbox` spawner for a Cloudflare Worker Loader isolate running {@link Runtime}, as `WorkerSandboxBrowser`'s
+ * is for a Web Worker: `WorkerSandbox.make({ echo, spawn: WorkerSandboxWorkerd.spawn({ loader, runtime }) })`.
+ *
+ * Three things differ from a thread. The isolate cannot be handed a `MessagePort`, so the worker protocol travels over
+ * two Workers RPC functions ({@link WorkerdBridge}). Workerd has no `eval`, so the model's code is compiled into the
+ * program module written for each evaluation, a fresh isolate each time. And the isolate is a SECURITY boundary — no
+ * network (`globalOutbound: null`), no bindings — so the handle limits the host's services to the evaluation's space
+ * and to the calls a client of one database makes, whatever else they could serve; no caller can leave that out.
+ *
+ * The price is the runtime: every evaluation loads its own copy of ECHO and Automerge, and loads each document the code
+ * touches from the host.
+ */
+export const spawn =
+  ({ loader, runtime }: SpawnOptions) =>
+  async (_entry: URL | undefined, init: SandboxInit): Promise<WorkerSandbox.WorkerHandle> => {
+    // The host's end waits for the isolate to attach before its first batch, since the server greets the worker as soon
+    // as it opens, which may be before the isolate has started.
+    let attached: (deliver: WorkerdBridge.Send) => void = () => {};
+    const delivery = new Promise<WorkerdBridge.Send>((resolve) => {
+      attached = resolve;
+    });
+    let detach: () => void = () => {};
+    const detached = new Promise<void>((resolve) => {
+      detach = resolve;
+    });
+    const end = WorkerdBridge.makeEnd(async (batch) => (await delivery)(batch));
 
-  // A fresh id per evaluation: the loader caches isolates by id, and one program must never observe another's state.
-  const isolate = loader.get(`code-mode-${crypto.randomUUID()}`, async () => ({
-    compatibilityDate: COMPATIBILITY_DATE,
-    compatibilityFlags: [...(runtime.compatibilityFlags ?? COMPATIBILITY_FLAGS)],
-    mainModule: PROGRAM_MODULE,
-    modules: { ...runtime.modules, [PROGRAM_MODULE]: { js: program(init) } },
-    env: {},
-    globalOutbound: null,
-  }));
+    // A fresh id per evaluation: the loader caches isolates by id, and one program must never observe another's state.
+    const isolate = loader.get(`code-mode-${crypto.randomUUID()}`, async () => ({
+      compatibilityDate: COMPATIBILITY_DATE,
+      compatibilityFlags: [...(runtime.compatibilityFlags ?? COMPATIBILITY_FLAGS)],
+      mainModule: PROGRAM_MODULE,
+      modules: { ...runtime.modules, [PROGRAM_MODULE]: { js: program(init) } },
+      env: {},
+      globalOutbound: null,
+    }));
 
-  const run = isolate.getEntrypoint().run(
-    init,
-    async (batch) => end.receive(batch),
-    (deliver) => {
-      attached(deliver);
-      return detached;
-    },
-  );
-  // Ends once the runtime has reported, so only a failure says anything: a program that does not load (the model's
-  // code does not parse), or a runtime that failed before its channel opened.
-  const stopped = run.then(
-    () => new Promise<string | undefined>(() => {}),
-    (error: unknown) => describe(error),
-  );
-  // An isolate cannot be killed: this releases its channel home, and the sandbox has already stopped answering it.
-  return { port: end.port, stopped, terminate: () => detach() };
-};
+    const run = isolate.getEntrypoint().run(
+      init,
+      async (batch) => end.receive(batch),
+      (deliver) => {
+        attached(deliver);
+        return detached;
+      },
+    );
+    // Ends once the runtime has reported, so only a failure says anything: a program that does not load (the model's
+    // code does not parse), or a runtime that failed before its channel opened.
+    const stopped = run.then(
+      () => new Promise<string | undefined>(() => {}),
+      (error: unknown) => describe(error),
+    );
+    const spaceId = SpaceId.make(init.space.spaceId);
+    return {
+      port: end.port,
+      stopped,
+      // An isolate cannot be killed: this releases its channel home, and the sandbox has already stopped answering it.
+      terminate: () => detach(),
+      limit: (echo) => limitToSpace(echo, spaceId),
+    };
+  };
 
 /**
  * The isolate's entrypoint: the model's code is the body of the function `serve` runs with the dialect's bindings, which
@@ -185,7 +169,7 @@ const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
  * live objects, through which it can reach its own client and ask for any of it. Reindexing, index configuration,
  * statistics and garbage collection are refused outright.
  */
-const scope = (access: WorkerSandbox.EchoAccess, spaceId: SpaceId): WorkerSandbox.EchoAccess => {
+const limitToSpace = (access: WorkerSandbox.EchoAccess, spaceId: SpaceId): WorkerSandbox.EchoAccess => {
   const data = access.DataService;
   const query = access.QueryService;
   const outside = (other: string | undefined) =>

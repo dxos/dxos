@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-// The isolate is simulated in-process: the loader below evaluates the program module the sandbox writes, with its two
+// The isolate is simulated in-process: the loader below evaluates the program module the spawner writes, with its two
 // imports supplied, and calls it as workerd would. Everything past the loader is real — the bridge, code mode's worker
 // runtime, its ECHO client, the dialect's bindings and the host's services — so what this covers is the protocol across
-// the boundary. The edge tests run the same sandbox in a real Worker Loader isolate.
+// the boundary. The edge tests run the same spawner in a real Worker Loader isolate.
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -22,9 +22,9 @@ import { DXN, SpaceId } from '@dxos/keys';
 import { EffectDialect } from './dialect-effect.ts';
 import { type SandboxOperation } from './Dialect.ts';
 import { evaluate } from './eval-tool.ts';
-import { serve } from './WorkerdEchoRuntime.ts';
-import * as WorkerdEchoSandbox from './WorkerdEchoSandbox.ts';
-import type * as WorkerSandbox from './WorkerSandbox.ts';
+import * as WorkerSandbox from './WorkerSandbox.ts';
+import * as WorkerSandboxWorkerd from './WorkerSandboxWorkerd.ts';
+import { serve } from './WorkerSandboxWorkerdEntry.ts';
 
 class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
   Schema.Struct({ title: Schema.String, status: Schema.String }),
@@ -71,10 +71,10 @@ const hostOperations: Operation.OperationService = {
  * The program module, run as workerd would run it: its imports are the two names it is given, and its default export is
  * the entrypoint the loader calls.
  */
-const instantiate = (source: string): new () => WorkerdEchoSandbox.Entrypoint => {
+const instantiate = (source: string): new () => WorkerSandboxWorkerd.Entrypoint => {
   const body = source
     .replace(`import { WorkerEntrypoint } from 'cloudflare:workers';`, '')
-    .replace(`import { serve } from './${WorkerdEchoSandbox.RUNTIME_MODULE}';`, '')
+    .replace(`import { serve } from './${WorkerSandboxWorkerd.RUNTIME_MODULE}';`, '')
     .replace('export default class', 'return class');
   // The test's stand-in for module loading, which compiles the program as workerd would compile the module.
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
@@ -88,8 +88,8 @@ const setup = async () => {
   const peer = await builder.createPeer({ types: [Task] });
   const db = await peer.createDatabase();
 
-  const loaded: WorkerdEchoSandbox.WorkerCode[] = [];
-  const loader: WorkerdEchoSandbox.WorkerLoader = {
+  const loaded: WorkerSandboxWorkerd.WorkerCode[] = [];
+  const loader: WorkerSandboxWorkerd.WorkerLoader = {
     get: (_id, load) => ({
       getEntrypoint: () => ({
         run: async (init, post, attach) => {
@@ -109,9 +109,11 @@ const setup = async () => {
   let refreshes = 0;
   // A host's working set, as compute-service keeps one for a script's caller: what the isolate's database reports.
   const reports: Parameters<WorkerSandbox.WorkingSet['put']>[0][] = [];
-  const sandbox = WorkerdEchoSandbox.make({
-    loader,
-    runtime: { modules: { [WorkerdEchoSandbox.RUNTIME_MODULE]: { js: '' } } },
+  const sandbox = WorkerSandbox.make({
+    spawn: WorkerSandboxWorkerd.spawn({
+      loader,
+      runtime: { modules: { [WorkerSandboxWorkerd.RUNTIME_MODULE]: { js: '' } } },
+    }),
     echo: () => ({ DataService: peer.host.dataService, QueryService: peer.host.queryService }),
     refresh: async () => {
       refreshes++;
@@ -137,7 +139,7 @@ const setup = async () => {
   return { db, run, loaded, reports, refreshes: () => refreshes };
 };
 
-describe('workerd echo sandbox', () => {
+describe('worker sandbox in a workerd isolate', () => {
   test('runs the Effect dialect against its own ECHO client, writing through to the host', async () => {
     const { db, run, refreshes } = await setup();
     db.add(Obj.make(Task, { title: 'Write the docs', status: 'open' }));
@@ -203,11 +205,11 @@ describe('workerd echo sandbox', () => {
     const { run, loaded } = await setup();
     await run(`yield* print('hello');`);
     const [code] = loaded;
-    expect(code.mainModule).not.toEqual(WorkerdEchoSandbox.RUNTIME_MODULE);
-    expect(Object.keys(code.modules).sort()).toEqual([code.mainModule, WorkerdEchoSandbox.RUNTIME_MODULE].sort());
+    expect(code.mainModule).not.toEqual(WorkerSandboxWorkerd.RUNTIME_MODULE);
+    expect(Object.keys(code.modules).sort()).toEqual([code.mainModule, WorkerSandboxWorkerd.RUNTIME_MODULE].sort());
     expect(code.globalOutbound).toBeNull();
     expect(code.env).toEqual({});
-    expect(code.compatibilityFlags).toEqual([...WorkerdEchoSandbox.COMPATIBILITY_FLAGS]);
+    expect(code.compatibilityFlags).toEqual([...WorkerSandboxWorkerd.COMPATIBILITY_FLAGS]);
   });
 
   test('reports code that does not compile as a failed evaluation', async () => {

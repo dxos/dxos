@@ -12,8 +12,8 @@ export default defineConfig({
     WorkerSandboxEntry: 'src/WorkerSandboxEntry.ts',
     WorkerSandboxBrowserWorker: 'src/WorkerSandboxBrowserWorker.ts',
     WorkerSandboxBrowserEntry: 'src/WorkerSandboxBrowserEntry.ts',
-    // What a deployment bundles for workerd and hands `WorkerdEchoSandbox` as its runtime.
-    WorkerdEchoRuntime: 'src/WorkerdEchoRuntime.ts',
+    // What a deployment bundles for workerd and hands `WorkerSandboxWorkerd.spawn` as its runtime.
+    WorkerSandboxWorkerdEntry: 'src/WorkerSandboxWorkerdEntry.ts',
   },
   test: {
     node: true,

@@ -12,12 +12,12 @@ import type { SandboxInit } from './WorkerSandboxProtocol.ts';
 import { type Execute, runSandboxWorker } from './WorkerSandboxRuntime.ts';
 
 /**
- * The runtime inside a `WorkerdEchoSandbox` isolate: code mode's worker runtime, with its own ECHO client and the
- * dialects' real bindings, as `WorkerSandbox` runs it on a thread.
+ * The `WorkerSandbox` entry for a Cloudflare Worker Loader isolate, as `WorkerSandboxBrowserEntry` is for a Web Worker:
+ * code mode's worker runtime, with its own ECHO client and the dialects' real bindings.
  *
- * A deployment bundles this module for workerd, with the Automerge wasm it imports, and hands the output to the sandbox
- * as its runtime. The program the sandbox writes for each evaluation imports {@link serve} from it and passes the
- * model's code, compiled as that program's own function, since workerd has no `eval`.
+ * A deployment bundles this module for workerd, with the Automerge wasm it imports, and hands the output to
+ * `WorkerSandboxWorkerd.spawn` as its runtime. The program the spawner writes for each evaluation imports {@link serve}
+ * from it and passes the model's code, compiled as that program's own function, since workerd has no `eval`.
  *
  * The channel home is two functions the host passes in: `post` carries this side's messages, and `attach` hands the
  * host the function that carries its own. `attach` stays pending while the evaluation runs, which keeps that function

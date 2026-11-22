@@ -112,7 +112,7 @@ const AddNote = Operation.make({
   output: Schema.String,
 });
 
-/** Replaced by the `get` binding, so code mode must not offer it although its skill is enabled. */
+/** Replaced by the database API, so code mode must not offer it although its skill is enabled. */
 const ReadTicket = Operation.make({
   meta: {
     key: DXN.make('com.example.operation.readTicket'),
@@ -121,7 +121,7 @@ const ReadTicket = Operation.make({
   },
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.String,
-}).pipe(Operation.annotate(Operation.ScriptBindingAnnotation, ['get']));
+}).pipe(Operation.annotate(Operation.ReplacedByDatabaseAnnotation, true));
 
 /** The scenario's operations, made per test with the record of what each was asked to do. */
 const makeHandlers = () => {
@@ -232,7 +232,7 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
           expect(system).toContain('Score titles before ranking them');
           expect(system).toContain('Scores a title for urgency');
-          // An operation a binding replaces is left out, though its skill is enabled.
+          // An operation the database API replaces is left out, though its skill is enabled.
           expect(system).not.toContain('Reads a ticket by reference');
           expect(system).not.toContain('Write notes in lower case');
           // No types, and no skill that is not enabled.
