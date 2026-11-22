@@ -12,23 +12,29 @@ import agentsDiagram from './diagrams/agents.dx?raw';
 import appDiagram from './diagrams/app.dx?raw';
 import architectureDiagram from './diagrams/architecture.dx?raw';
 import echoDiagram from './diagrams/echo.dx?raw';
-import hyperspaceDiagram from './diagrams/hyperspace.dx?raw';
 import pluginsDiagram from './diagrams/plugins.dx?raw';
 import reactDiagram from './diagrams/react.dx?raw';
+import runtimeDiagram from './diagrams/runtime.dx?raw';
+import spacesDiagram from './diagrams/spaces.dx?raw';
 import superagentDiagram from './diagrams/superagent.dx?raw';
 import agents from './slides/agents.md?raw';
 import app from './slides/app.md?raw';
+import appendix from './slides/appendix.md?raw';
 import architecture from './slides/architecture.md?raw';
+import composer from './slides/composer.md?raw';
 import cover from './slides/cover.md?raw';
-import demo from './slides/demo.md?raw';
 import echo from './slides/echo.md?raw';
-import evolution from './slides/evolution.md?raw';
-import hyperspace from './slides/hyperspace.md?raw';
-import plugins from './slides/plugins.md?raw';
-import problem from './slides/problem.md?raw';
+import fit from './slides/fit.md?raw';
+import model from './slides/model.md?raw';
+import proofs from './slides/proofs.md?raw';
+import proposal from './slides/proposal.md?raw';
 import react from './slides/react.md?raw';
+import runtime from './slides/runtime.md?raw';
+import spaces from './slides/spaces.md?raw';
 import stack from './slides/stack.md?raw';
+import status from './slides/status.md?raw';
 import superagent from './slides/superagent.md?raw';
+import thesis from './slides/thesis.md?raw';
 
 /** A diagram the deck draws: its text, written as intent (`diagram kind=grid`), and the id a slide embeds it by. */
 export type Diagram = { id: string; source: string };
@@ -38,13 +44,14 @@ export type Slide = { id: string; markdown: string };
 
 /** The diagrams, each drawn once and listed in the order the slides show them; a slide embeds one by naming it (`<Surface ref="{{echo}}" />`). */
 export const DIAGRAMS: readonly Diagram[] = [
+  { id: 'runtime', source: runtimeDiagram },
+  { id: 'spaces', source: spacesDiagram },
+  { id: 'plugins', source: pluginsDiagram },
   { id: 'react', source: reactDiagram },
   { id: 'agents', source: agentsDiagram },
   { id: 'superagent', source: superagentDiagram },
   { id: 'echo', source: echoDiagram },
-  { id: 'hyperspace', source: hyperspaceDiagram },
   { id: 'app', source: appDiagram },
-  { id: 'plugins', source: pluginsDiagram },
   { id: 'architecture', source: architectureDiagram },
 ];
 
@@ -52,17 +59,23 @@ export const DIAGRAMS: readonly Diagram[] = [
 export const SLIDES: readonly Slide[] = [
   { id: 'cover', markdown: cover },
   { id: 'stack', markdown: stack },
-  { id: 'evolution', markdown: evolution },
+  { id: 'thesis', markdown: thesis },
+  { id: 'fit', markdown: fit },
+  { id: 'echo', markdown: echo },
+  { id: 'spaces', markdown: spaces },
+  { id: 'model', markdown: model },
+  { id: 'runtime', markdown: runtime },
+  { id: 'composer', markdown: composer },
+  { id: 'app', markdown: app },
+  { id: 'proofs', markdown: proofs },
+  { id: 'status', markdown: status },
+  { id: 'proposal', markdown: proposal },
+  // Slides of the earlier deck, kept behind the proposal for questions.
+  { id: 'appendix', markdown: appendix },
+  { id: 'architecture', markdown: architecture },
   { id: 'react', markdown: react },
   { id: 'agents', markdown: agents },
   { id: 'superagent', markdown: superagent },
-  { id: 'problem', markdown: problem },
-  { id: 'echo', markdown: echo },
-  { id: 'hyperspace', markdown: hyperspace },
-  { id: 'plugins', markdown: plugins },
-  { id: 'app', markdown: app },
-  { id: 'architecture', markdown: architecture },
-  { id: 'demo', markdown: demo },
 ];
 
 /** Where a slide embeds a diagram: the diagram's id in braces, replaced with a reference to its drawing. */

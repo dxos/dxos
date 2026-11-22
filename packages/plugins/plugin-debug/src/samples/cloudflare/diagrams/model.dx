@@ -1,0 +1,31 @@
+diagram kind=grid size=800x880 rows="1fr 168" gap=32 padding=32
+
+group space-section padding=16 border=true {
+  group space-inner "Space" cols=2 gap=24 {
+    group kinds-col gap=16 {
+      node objects "Objects" kind=card icon=graph iconTone=accent {
+        item "Typed, with relations."
+        item "One Automerge document each."
+      }
+      node feeds "Feeds" kind=card icon=queue iconTone=file {
+        item "Append-only logs."
+        item "Ordered at the edge."
+      }
+      node blobs "Blobs" kind=card icon=files iconTone=violet {
+        item "Content-addressed."
+        item "Stored in R2."
+      }
+    }
+    group graph-col alignContent=center {
+      node space-graph kind=graph border=true extra=0.4 data-fill=0.5 pitch=24 seed=1 size=24 width=320 height=320 root=9 depth=4 tones="violet | green | amber | blue"
+    }
+  }
+}
+
+group engine-row "One engine" cols=3 gap=16 {
+  node browser "Browser" kind=card icon=browser
+  node node-box "Node" kind=card icon=terminal-window
+  node durable "Durable Object" kind=card icon=cloud
+}
+
+edge objects#e3 -- space-graph path=line stroke=dashed

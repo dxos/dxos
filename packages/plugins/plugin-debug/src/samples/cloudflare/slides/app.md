@@ -1,9 +1,9 @@
 ---
-title: 'User Interface'
+title: 'Composer: modular components'
 layout: 'default'
 ---
 
-# User Interface
+# Composer: modular components
 
 <Surface ref="{{app}}" />
 

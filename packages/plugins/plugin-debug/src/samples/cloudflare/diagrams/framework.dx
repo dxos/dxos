@@ -1,0 +1,37 @@
+diagram kind=grid size=1600x880 gap=32 padding=48 autoCols=1200 justifyContent=center
+
+group app-section cols="256 1fr" gap=24 {
+  node app-label "Super app" kind=heading icon=app-window tone=violet
+  node application "One open application" kind=card icon=app-window iconTone=violet {
+    item "A team's tools and its agents in one place."
+    item "Built by the enterprise, extended by plugins."
+  }
+}
+
+group framework-section cols="256 1fr" gap=24 {
+  node framework-label "PLEX" kind=heading icon=puzzle-piece tone=sheet
+  node framework "The application framework" kind=card icon=puzzle-piece iconTone=sheet {
+    item "Apps are built from plugins."
+    item "Types, operations, skills and UI."
+  }
+}
+
+group data-section cols="256 1fr" gap=24 {
+  node data-label "ECHO" kind=heading icon=database tone=accent
+  node data "The shared data" kind=card icon=database iconTone=accent {
+    item "Graph, feeds and blobs."
+    item "For apps, people and agents."
+  }
+}
+
+group runtime-section cols="256 1fr" gap=24 {
+  node runtime-label "Cloudflare OS" kind=heading icon=cloud tone=message
+  node runtime "The runtime" kind=card icon=cloud iconTone=message {
+    item "Agents, compute and policy."
+    item "Durable Objects, Dynamic Workers, Gatekeepers."
+  }
+}
+
+edge application#s3 -> framework#n3 "built with" head=triangle path=ortho
+edge framework#s3 -> data#n3 "stores in" head=triangle path=ortho
+edge data#s3 -> runtime#n3 "runs on" head=triangle path=ortho
