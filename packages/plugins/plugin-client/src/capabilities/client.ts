@@ -35,7 +35,7 @@ export class ClientInitError extends BaseError.extend('ClientInitError', 'Client
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({
-    client: hostClient,
+    client: hostClientOption,
     onClientInitialized,
     onClientInitializationError,
     onSpacesAvailable,
@@ -45,6 +45,7 @@ export default Capability.makeModule(
   }: ClientCapabilityOptions) {
     const capabilityManager = yield* Capability.Service;
     const pluginManager = yield* Plugin.Service;
+    const hostClient = typeof hostClientOption === 'function' ? hostClientOption() : hostClientOption;
 
     log(hostClient ? 'adopting host client' : 'creating client');
     const client = hostClient ?? new Client(options);

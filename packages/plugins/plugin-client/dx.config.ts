@@ -6,6 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as WorkerCapabilities from '@dxos/app-framework/WorkerCapabilities';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -205,6 +206,12 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
         () => import('./src/capabilities/trace-progress.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+      // The client services, hosted by the dedicated worker for every tab.
+      Capability.workerModule(
+        'WorkerServices',
+        { requires: [WorkerCapabilities.Host], provides: [Capabilities.LayerSpec] },
+        () => import('./src/capabilities/worker-services.ts', { with: { type: 'module-url' } }),
+      ),
     ],
   },
 );
