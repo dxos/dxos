@@ -776,7 +776,7 @@ const scriptOperations = (
           name == null ||
           dxn === undefined ||
           !owners.has(name) ||
-          Option.isSome(Annotation.get(record, Operation.ReplacedByDatabaseAnnotation))
+          Option.isSome(Annotation.get(record, Operation.HiddenInCodeModeAnnotation))
         ) {
           return [];
         }

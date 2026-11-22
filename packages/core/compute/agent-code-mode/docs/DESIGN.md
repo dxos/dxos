@@ -16,13 +16,13 @@ client in a Web Worker (`WorkerSandbox`).
 
 ## Design
 
-### 1. Mark the operations the database API replaces
+### 1. Hide the operations the database API replaces
 
-`Operation.ReplacedByDatabaseAnnotation` marks an operation the database API does entirely. plugin-space marks
-`space.getObjects`, `space.updateObject` and `space.queryObjects`; plugin-markdown marks `markdown.open`. Code mode
-leaves marked operations out of the model's operations (both dialects), and an MCP script cannot resolve them. The
-`invokeOperation` tool still runs them for clients that do not write code. The annotation travels in the serialized
-operation record, so EDGE's hosted toolkit sees it with no key list.
+`Operation.hiddenInCodeMode` (`HiddenInCodeModeAnnotation`) hides an operation from code mode: the model's operations
+leave it out (both dialects), and an MCP script cannot resolve it. The `invokeOperation` tool still runs it for clients
+that do not write code. plugin-space hides `space.getObjects`, `space.updateObject` and `space.queryObjects`, and
+plugin-markdown `markdown.open`, because the database API does each of them entirely. The annotation travels in the
+serialized operation record, so EDGE's hosted toolkit sees it with no key list.
 
 `space.addObject` and `space.removeObjects` stay: they file and unlink objects using rules plugins contribute at
 runtime, which the database does not hold.

@@ -79,7 +79,7 @@ const GetObjects = Operation.make({
   input: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
   output: Schema.Struct({ objects: Schema.Array(Schema.Unknown) }),
   services: [Database.Service],
-}).pipe(Operation.mutation('none'), Operation.annotate(Operation.ReplacedByDatabaseAnnotation, true));
+}).pipe(Operation.mutation('none'), Operation.hiddenInCodeMode);
 
 const TASK_TYPENAME = 'com.example.type.task';
 

@@ -1450,18 +1450,25 @@ export const getConsentPreview = (
 };
 
 /**
- * Marks an operation the database API does entirely (reading, querying or updating objects) against the database the
- * code already holds. Code mode does not offer it, since the API needs no invocation; tool callers still see it.
+ * Marks an operation code mode does not offer, while tool callers (MCP's `invokeOperation`) still see it. Used for an
+ * operation the database API does entirely (reading, querying or updating objects): the code already holds the
+ * database, so the API needs no invocation.
  */
-export const ReplacedByDatabaseAnnotation = Annotation.make({
-  id: 'org.dxos.operation.replaced-by-database',
+export const HiddenInCodeModeAnnotation = Annotation.make({
+  id: 'org.dxos.operation.hidden-in-code-mode',
   schema: Schema$.Literal(true),
 });
 
-/** Whether code mode leaves the operation out for the database API; see {@link ReplacedByDatabaseAnnotation}. */
-export const isReplacedByDatabase = (op: Definition.Any): boolean =>
+/**
+ * Pipeable combinator that hides an operation from code mode — see {@link HiddenInCodeModeAnnotation}. Apply at the
+ * definition site: `Operation.make({ ... }).pipe(Operation.hiddenInCodeMode)`.
+ */
+export const hiddenInCodeMode = annotate(HiddenInCodeModeAnnotation, true);
+
+/** Whether code mode leaves the operation out; see {@link HiddenInCodeModeAnnotation}. */
+export const isHiddenInCodeMode = (op: Definition.Any): boolean =>
   op.meta.annotations !== undefined &&
-  Option.isSome(Annotation.getDictionary(op.meta.annotations, ReplacedByDatabaseAnnotation));
+  Option.isSome(Annotation.getDictionary(op.meta.annotations, HiddenInCodeModeAnnotation));
 
 /**
  * Operation service interface - provides unified access to operation invocation and scheduling.

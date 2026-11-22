@@ -92,7 +92,7 @@ export const Open = Operation.make({
   output: Schema.Struct({
     content: Schema.String,
   }),
-}).pipe(Operation.annotate(Operation.ReplacedByDatabaseAnnotation, true));
+}).pipe(Operation.hiddenInCodeMode);
 
 export const GetSelection = Operation.make({
   meta: {
