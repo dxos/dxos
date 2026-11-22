@@ -26,23 +26,24 @@ class Person extends Type.makeObject<Person>(
 
 const alice = db.add(Obj.make(Person, { name: 'Alice'}));
 const bob = db.add(Obj.make(Person, { name: 'Bob' }));
+
 const [acme] = db.find({ type: Organization, text: 'Acme' });
-
-// Reactive updates.
-Obj.update(alice, (obj) => {
-  obj.org = Ref.make(acme);
-});
-
-// A typed relation: Bob manages Alice.
-db.add(Relation.make(HasManager, {
-  [Relation.Source]: alice, [Relation.Target]: bob,
-}));
 
 // Graph traversal: Alice's managers.
 const objects = await db.query(
   Query.select(
     Filter.id(alice)).sourceOf(HasManager).target()
   ).run();
+
+// Reactive updates.
+Obj.update(alice, (obj) => {
+  obj.org = Ref.make(acme);
+});
+
+// Typed relations.
+db.add(Relation.make(HasManager, {
+  [Relation.Source]: alice, [Relation.Target]: bob,
+}));
 ```
 
 <!--

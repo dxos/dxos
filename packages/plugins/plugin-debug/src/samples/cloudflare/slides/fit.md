@@ -1,5 +1,5 @@
 ---
-title: 'What we add'
+title: 'Opportunity'
 layout: 'default'
 accent: 'rgb(246,130,31)'
 class: 'studio-bullets-compact'
@@ -16,9 +16,9 @@ class: 'studio-bullets-compact'
 </Card>
 <Cell colSpan="2">
 
-- One hub that unifies teams and agents across the enterprise
-- Where Claude Cowork is heading, but open and extensible
-- What WeChat did for consumers, for work
+- One **hub that unifies** teams and agents across the enterprise.
+- Where Claude Cowork is heading, but open and extensible.
+- What WeChat did for consumers, for work.
 
 </Cell>
 <Card icon="puzzle-piece" tone="success">
@@ -28,9 +28,9 @@ class: 'studio-bullets-compact'
 </Card>
 <Cell colSpan="2">
 
-- What iOS did for mobile: one framework redefined how apps are built
-- Quality enforced: standard components, one look and feel
-- OS-like services for every app: access, search, sharing, undo
+- What iOS did for mobile: one framework redefined how apps are built.
+- OS-level services for every app: **AI**, access, search, sharing.
+- Manages the user's objectives, context and activities.
 
 </Cell>
 <Card icon="database" tone="info">
@@ -40,9 +40,9 @@ class: 'studio-bullets-compact'
 </Card>
 <Cell colSpan="2">
 
-- One virtual view of all the data: private, team, organization, external
-- One semantic model for apps and agents, with access control for both
-- Syncs with external systems of record on demand
+- One virtual view of the enterprise: private, team, organization, external.
+- One **semantic model** for apps and agents, with access control for both.
+- Continuous sync with external systems of record.
 
 </Cell>
 <Card icon="cloud">
@@ -52,9 +52,9 @@ class: 'studio-bullets-compact'
 </Card>
 <Cell colSpan="2">
 
-- The edge: secure, fast, scales on demand, pay for what you use
-- Without the complexity of AWS or Google Cloud
-- Every model through one API, frontier and open-weight
+- The EDGE: secure, fast, scales on demand, pay for what you use.
+- Without the complexity of AWS or Google Cloud.
+- Open and **extensible**.
 
 </Cell>
 
@@ -76,6 +76,7 @@ Notes. 1:45
   - Cloudflare OS gives each app its own database; ECHO gives every app and agent the same graph.
 - PLEX. The precedent is iOS. One framework (UIKit) redefined how apps were built. It enforced quality: standard components, one look and feel. And it gave every app the OS-level services for free: permissions, notifications, sharing, search, payments. Result: an ecosystem that did $1.4 trillion in billings and sales in 2025. [Earlier analogy, if useful: Visual Basic, components plus built-in data.]
   - PLEX does that for enterprise apps: plugins composed from standard components, with access, search, sharing, history and undo provided underneath. And agents build parts too.
+  - Quality enforced: standard components, one look and feel
 - Super app. One hub that unifies teams and agents across the enterprise. This is where Claude Cowork is heading: VentureBeat called it "a shared, persistent workspace where context, files, and tasks live beyond a single user session". The labs will absorb the apps. Ours is the same destination, but open and extensible, and not tied to one model vendor. The consumer precedent is WeChat: one app, millions of mini programs. [Check the figure before citing a number.]
 - People have tried the hub before (portals, intranets, Notes, Wave). What is different now: code is cheap, and agents need one place and one data model to be useful.
 - This is our reading of where your posts point. Correct it where we're wrong.

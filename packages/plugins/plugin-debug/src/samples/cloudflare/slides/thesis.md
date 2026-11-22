@@ -20,7 +20,7 @@ class: 'studio-lines-tight'
 </Cell>
 <Cell>
 
-- **The hidden cost of free software:** generated apps still have to be secured, operated and maintained
+- **The cost of free software:** generated apps still have to be secured, operated and maintained
 
 </Cell>
 <Cell>
@@ -74,7 +74,7 @@ Notes. 2:30
   - Then: what is canonical? The record in a database, what somebody said in a chat thread, or what the model picked up in training. Those disagree, and today nothing says which one wins.
   - Agent Memory is the right answer for recall: "a managed service that extracts information from agent conversations and makes it available when it's needed". We would use it. Your post is candid about what is open: "context rot remains an unsolved problem", and querying the data directly is "likely" to come "down the road". Memory is what an agent remembers; the record is what the organization holds. They are complementary.
   - And access control. Most companies have ad hoc policy: per app, per integration, per key. Your post: "handing over API keys to people and agents is dangerous and does not scale." "Keys often provide broad, long-lived access that is difficult to constrain, share safely, and audit."
-- 2. The hidden cost of free software.
+- 2. The cost of free software.
   - Why vibe coding doesn't work on its own. Code is now free to write. It is not free to secure, operate and maintain. Every generated app is another silo, and somebody has to own it. Veracode tested 100+ models: generated code had security flaws in 45% of cases.
   - Why SaaS hasn't gone away. Chad Fowler: "Companies will still pay other companies to host important software, secure it, operate it, maintain authoritative data, track regulatory changes, connect to external networks, and answer the phone when something breaks." What goes away is every customer running the same app.
   - His rule: "Standardize the slow layers. Generate the fast layers." Your post agrees: "Security had to be part of the platform", not left to each person building an app.
