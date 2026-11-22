@@ -381,7 +381,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             blocks: [ContentBlock.Text.make({ text, disposition: 'synthetic' })],
           });
           yield* sessionStore.enqueueMessage(feed, message);
-          unseenWriteIds.add(message.id);
+          noteUnseenWrite(message.id);
           yield* ctx.setAlarm(0);
         });
 
@@ -498,6 +498,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // later one re-reads the feed from scratch.
         const unseenWriteIds = new Set<string>();
         let unseenWriteWakes = 0;
+        // Each write earns the full retry budget: one an earlier write used up would make a new prompt give up on its first read.
+        const noteUnseenWrite = (id: string) => {
+          unseenWriteIds.add(id);
+          unseenWriteWakes = 0;
+        };
 
         const pendingWork = (state: PendingState): boolean =>
           isAgentWorkPending({
@@ -695,7 +700,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               const message = Message.make({ sender: { role: 'user' }, blocks: [...content] });
               yield* sessionStore.enqueueMessage(feed, message);
               selfQueued.add(message.id);
-              unseenWriteIds.add(message.id);
+              noteUnseenWrite(message.id);
               Queue.offerUnsafe(wake, undefined);
               yield* ctx.setAlarm(0);
             }),
@@ -704,7 +709,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             log('agent onInput received', { backlog: toolResults.length });
             const message = makeInputMessage(input);
             // Recorded before the write, which yields: a completion check running meanwhile must see the prompt as owed.
-            unseenWriteIds.add(message.id);
+            noteUnseenWrite(message.id);
             yield* sessionStore.enqueueMessage(feed, message, inputThread(input));
             markWork('agent.prompt-queued');
             Queue.offerUnsafe(wake, undefined);
