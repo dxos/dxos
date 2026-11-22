@@ -9,7 +9,7 @@ layout: 'default'
 
 <Cell>
 
-**Data:** trapped in silos, with no shared truth
+- **Data:** trapped in silos, with no shared truth
 
 </Cell>
 <Cell>
@@ -19,7 +19,7 @@ layout: 'default'
 </Cell>
 <Cell>
 
-**Generation without rails:** more apps, more silos, nobody to operate them
+- **Generation without rails:** more apps, more silos, nobody to operate them
 
 </Cell>
 <Cell>
@@ -29,7 +29,7 @@ Chad Fowler: "Standardize the slow layers. Generate the fast layers."
 </Cell>
 <Cell>
 
-**Closed systems:** whoever owns the interface owns the data
+- **Closed systems:** whoever owns the interface owns the data
 
 </Cell>
 <Cell>
@@ -39,7 +39,7 @@ Salesforce put its CRM inside Claude. Benioff: "the UI is the AI."
 </Cell>
 <Cell>
 
-**Teams:** agents as trusted collaborators, not one user's assistant
+- **Teams:** agents as trusted collaborators, not one user's assistant
 
 </Cell>
 <Cell>
@@ -49,7 +49,7 @@ Block's Buzz, Multica, and YC's call for "multiplayer AI".
 </Cell>
 <Cell>
 
-**Control:** direct, review and undo, on any device or by voice
+- **Control:** direct, review and undo, on any device or by voice
 
 </Cell>
 <Cell>
