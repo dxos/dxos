@@ -29,7 +29,7 @@ layout: 'default'
 </Cell>
 <Cell>
 
-- **Closed systems:** whoever owns the interface owns the data
+- **Closed systems:** whoever owns the interface controls the data
 
 </Cell>
 <Cell>
