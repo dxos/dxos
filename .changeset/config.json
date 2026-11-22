@@ -204,6 +204,7 @@
       "@dxos/rpc-tunnel-e2e",
       "@dxos/scene",
       "@dxos/schema",
+      "@dxos/session-board",
       "@dxos/shell",
       "@dxos/solid-ui",
       "@dxos/solid-ui-geo",
