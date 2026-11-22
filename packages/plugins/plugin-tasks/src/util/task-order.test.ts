@@ -78,13 +78,30 @@ describe('groupTasks', () => {
     expect(groupTasks([make({ title: 'One' })], 'none', { ns })).to.be.undefined;
   });
 
-  test('status groups follow the status table, a task with none reading as todo', ({ expect }) => {
+  test('status groups follow the board order, a task with none reading as todo', ({ expect }) => {
     const unset = Task.make({ title: 'Unset' });
     const done = make({ title: 'Done', status: 'done' });
     const groups = groupTasks([done, unset], 'status', { ns }) ?? [];
     const nonEmpty = groups.filter((group) => group.tasks.length > 0);
     expect(nonEmpty.map(({ id }) => id)).to.deep.eq(['status-todo', 'status-done']);
     expect(titles(nonEmpty[0].tasks)).to.deep.eq(['Unset']);
+  });
+
+  test('status groups run in board order: review, failed, started, todo, blocked, backlog, done, cancelled, duplicate', ({
+    expect,
+  }) => {
+    const groups = groupTasks([], 'status', { ns }) ?? [];
+    expect(groups.map(({ id }) => id)).to.deep.eq([
+      'status-review',
+      'status-failed',
+      'status-started',
+      'status-todo',
+      'status-blocked',
+      'status-backlog',
+      'status-done',
+      'status-cancelled',
+      'status-duplicate',
+    ]);
   });
 
   test('priority groups run urgent first, unset last', ({ expect }) => {
