@@ -1,33 +1,64 @@
 ---
 title: 'The shift'
-layout: 'two-cols-header'
+layout: 'default'
 ---
 
-# The application layer is being absorbed
+# The agentic future needs a new kind of cloud
 
-::left::
+<Grid cols="2">
 
-### Signals
+<Cell>
 
-- The Labs are absorbing the entire app layer.
-- Salesforce put its CRM inside Claude. Benioff: "the UI is the AI."
-- Cloudflare: "the agentic future needs a new kind of cloud."
-- Agents are joining teams: Block's Buzz, Multica, and YC's call for "multiplayer AI".
-- DeepSeek's design for a super agent: always on, delegation, with memory the open problem.
+**Data:** trapped in silos, with no shared truth
 
-::right::
+</Cell>
+<Cell>
 
-### Issues
+897 apps in the average enterprise; 29% are connected.
 
-<v-clicks>
+</Cell>
+<Cell>
 
-- **Data:** trapped in silos, with no shared truth
-- **Generation without rails:** more apps, more silos, nobody to operate them
-- **Closed systems:** whoever owns the interface owns the data
-- **Teams:** agents as trusted collaborators, not one user's assistant
-- **Control:** direct, review and undo, on any device or by voice
+**Generation without rails:** more apps, more silos, nobody to operate them
 
-</v-clicks>
+</Cell>
+<Cell>
+
+Chad Fowler: "Standardize the slow layers. Generate the fast layers."
+
+</Cell>
+<Cell>
+
+**Closed systems:** whoever owns the interface owns the data
+
+</Cell>
+<Cell>
+
+Salesforce put its CRM inside Claude. Benioff: "the UI is the AI."
+
+</Cell>
+<Cell>
+
+**Teams:** agents as trusted collaborators, not one user's assistant
+
+</Cell>
+<Cell>
+
+Block's Buzz, Multica, and YC's call for "multiplayer AI".
+
+</Cell>
+<Cell>
+
+**Control:** direct, review and undo, on any device or by voice
+
+</Cell>
+<Cell>
+
+DeepSeek's super agent: always on, delegating; people can follow only 3 to 5 sessions.
+
+</Cell>
+
+</Grid>
 
 <!--
 Notes. 2:00
