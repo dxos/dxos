@@ -3,12 +3,13 @@ title: 'ECHO: the shared data'
 layout: 'default'
 ---
 
-# ECHO: the shared data
+# ECHO DB: The Enterprise Data Model
 
 <Surface ref="{{spaces}}" />
 
 <!--
 Notes. 1:15
+- like WSDL (overlay)
 - A space is one team's or one project's graph. It is the unit of access and of replication.
 - A space holds three kinds of data.
   - Graph: typed objects with first-class relations. One Automerge document each.

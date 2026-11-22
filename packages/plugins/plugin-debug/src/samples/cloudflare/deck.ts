@@ -27,7 +27,6 @@ import echo from './slides/echo.md?raw';
 import fit from './slides/fit.md?raw';
 import model from './slides/model.md?raw';
 import proofs from './slides/proofs.md?raw';
-import proposal from './slides/proposal.md?raw';
 import react from './slides/react.md?raw';
 import runtime from './slides/runtime.md?raw';
 import spaces from './slides/spaces.md?raw';
@@ -64,14 +63,13 @@ export const SLIDES: readonly Slide[] = [
   { id: 'echo', markdown: echo },
   { id: 'spaces', markdown: spaces },
   { id: 'model', markdown: model },
-  { id: 'runtime', markdown: runtime },
   { id: 'composer', markdown: composer },
   { id: 'app', markdown: app },
+  { id: 'runtime', markdown: runtime },
   { id: 'proofs', markdown: proofs },
-  { id: 'status', markdown: status },
-  { id: 'proposal', markdown: proposal },
-  // Slides of the earlier deck, kept behind the proposal for questions.
+  // Kept behind the demo for questions.
   { id: 'appendix', markdown: appendix },
+  { id: 'status', markdown: status },
   { id: 'architecture', markdown: architecture },
   { id: 'react', markdown: react },
   { id: 'agents', markdown: agents },

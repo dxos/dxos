@@ -38,7 +38,7 @@ group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
   }
 }
 
-group services "Sync" gap=12 {
+group services "Services" gap=12 {
   node calendar "Calendar" kind=card icon=calendar-blank tone=event variant=simple
   node email "Email" kind=card icon=envelope tone=message variant=simple
   node linear "Linear" kind=card icon=list-checks tone=file variant=simple

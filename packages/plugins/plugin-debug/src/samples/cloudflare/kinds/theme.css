@@ -519,3 +519,9 @@
   font-size: 64px !important;
   line-height: 1.2 !important;
 }
+
+.studio-bullets-compact li,
+.studio-bullets-compact li * {
+  font-size: 38px !important;
+  line-height: 1.35 !important;
+}
