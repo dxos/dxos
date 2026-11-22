@@ -237,9 +237,25 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
       return Effect.succeed(definition);
     }
     const target = typeof ref === 'string' ? fromLegacyEchoDXN(ref) : ref;
-    return schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
+    const resolved = schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
+    // A type a source serves on demand (on EDGE, the published types) reaches the registry only once it is asked for,
+    // which `Database.resolve` does not do; asked here first, it then resolves as a registered type.
+    return typeof target === 'string' && DXN.isDXN(target)
+      ? Effect.gen(function* () {
+          const { db } = yield* Database.Service;
+          yield* Effect.promise(() => resolveTypeOf(db, target));
+          return yield* resolved;
+        })
+      : resolved;
   };
 };
+
+/**
+ * A type by its DXN, as the database's resolver finds one: in the registry, else from the type sources that serve
+ * types on demand, which register what they return. Undefined when neither has it.
+ */
+export const resolveTypeOf = async (db: Database.Database, uri: URI.URI): Promise<unknown> =>
+  db.graph.createRefResolver({ context: { space: db.spaceId } }).resolveType?.(uri);
 
 const bareKey = (key: string): string => key.replace(/^dxn:/, '');
 

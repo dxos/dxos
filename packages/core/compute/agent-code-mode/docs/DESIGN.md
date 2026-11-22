@@ -186,6 +186,15 @@ with the thread swapped for an isolate:
 5. EDGE's data service writes through to db-service and pushes no client's writes to another, and it can neither
    report nor wait for heads. With `WorkerSandbox.Options.refresh`, each side flushes and the host refreshes its
    documents (on EDGE, the script container's `refreshWorkingSet`), in place of the heads handover.
+6. The isolate's database opens over the caller's working set (`WorkerSandbox.Options.workingSet`, served over the
+   same channel), so a script reads the writes of the calls before it that the index does not hold yet. It saves the
+   working set when it flushes and takes it again after each operation, as compute-service's own script database
+   does around a call.
+7. The host's registered types are sent with the evaluation. A type the host resolves only on demand (on EDGE, every
+   published type) comes from a type source the isolate registers, which asks the host. `Database.resolve` of a type
+   DXN asks the database's type sources first, since its own lookup does not.
+8. With the flush handover, the worker closes its client once it has flushed and before it reports, so the host's
+   final refresh never waits on a subscriber that has gone. Every refresh is bounded as a heads catch-up is.
 
 A deployment bundles `@dxos/agent-code-mode/workerd-echo-runtime` for workerd, with the Automerge wasm it imports, and
 hands the modules to the sandbox. EDGE builds it with its own worker bundler, which carries the workerd workarounds

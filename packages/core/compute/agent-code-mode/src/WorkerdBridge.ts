@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import { log } from '@dxos/log';
+
 /** Sends one batch of messages to the other end: a Workers RPC call, or a plain function in-process. */
 export type Send = (batch: unknown[]) => Promise<void>;
 
@@ -86,7 +88,10 @@ class BridgePort extends EventTarget implements MessagePort {
         this.#sending = false;
         this.#pump();
       },
-      () => this.close(),
+      (error: unknown) => {
+        log.warn('code-mode bridge lost the other end; closing', { error, dropped: batch.length });
+        this.close();
+      },
     );
   }
 }

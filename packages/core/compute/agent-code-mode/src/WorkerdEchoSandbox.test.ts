@@ -24,12 +24,20 @@ import { type SandboxOperation } from './Dialect.ts';
 import { evaluate } from './eval-tool.ts';
 import { serve } from './WorkerdEchoRuntime.ts';
 import * as WorkerdEchoSandbox from './WorkerdEchoSandbox.ts';
+import type * as WorkerSandbox from './WorkerSandbox.ts';
 
 class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
   Schema.Struct({ title: Schema.String, status: Schema.String }),
 ) {}
 
 const TASK_DXN = String(DXN.make('com.example.type.task', '0.1.0'));
+
+/** Never registered with the peer: the host resolves it only through a type source. */
+class Note extends Type.makeObject<Note>(DXN.make('com.example.type.note', '0.1.0'))(
+  Schema.Struct({ text: Schema.String }),
+) {}
+
+const NOTE_DXN = String(DXN.make('com.example.type.note', '0.1.0'));
 
 const Score = Operation.make({
   meta: { key: DXN.make('com.example.operation.score'), name: 'Score' },
@@ -99,6 +107,8 @@ const setup = async () => {
   };
 
   let refreshes = 0;
+  // A host's working set, as compute-service keeps one for a script's caller: what the isolate's database reports.
+  const reports: Parameters<WorkerSandbox.WorkingSet['put']>[0][] = [];
   const sandbox = WorkerdEchoSandbox.make({
     loader,
     runtime: { modules: { [WorkerdEchoSandbox.RUNTIME_MODULE]: { js: '' } } },
@@ -106,6 +116,12 @@ const setup = async () => {
     refresh: async () => {
       refreshes++;
     },
+    workingSet: () => ({
+      get: async () => ({ rows: [] }),
+      put: async (report) => {
+        reports.push(report);
+      },
+    }),
   });
   const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, hostOperations));
 
@@ -118,7 +134,7 @@ const setup = async () => {
       ),
     );
 
-  return { db, run, loaded, refreshes: () => refreshes };
+  return { db, run, loaded, reports, refreshes: () => refreshes };
 };
 
 describe('workerd echo sandbox', () => {
@@ -146,6 +162,32 @@ describe('workerd echo sandbox', () => {
     ]);
     // No heads cross: the host refreshed its documents once the code had flushed.
     expect(refreshes()).toBeGreaterThan(0);
+  });
+
+  // The next call's database opens from the working set, so it reads what this script wrote before the index does.
+  test("reports the code's writes to the host's working set", async () => {
+    const { run, reports } = await setup();
+    const output = await run(`
+      const Task = yield* Database.resolve('${TASK_DXN}');
+      const created = yield* Database.add(Obj.make(Task, { title: 'Remember me', status: 'open' }));
+      yield* print(created.id);
+    `);
+    const rows = reports.flatMap(({ rows }) => rows);
+    expect(rows.map(({ objectId }) => objectId)).toContain(output);
+    expect(rows.find(({ objectId }) => objectId === output)?.objectJson).toContain('Remember me');
+  });
+
+  // As EDGE's published types reach a script: not registered, but resolved on demand by the host's type source.
+  test('resolves a type the host serves from a type source rather than its registry', async () => {
+    const { db, run } = await setup();
+    const unregister = db.graph.registerTypeSource(async (uri) => (String(uri) === NOTE_DXN ? Note : undefined));
+    onTestFinished(unregister);
+    const output = await run(`
+      const Note = yield* Database.resolve('${NOTE_DXN}');
+      const note = yield* Database.add(Obj.make(Note, { text: 'resolved on demand' }));
+      yield* print(Obj.getTypename(note), note.text);
+    `);
+    expect(output).toEqual('com.example.type.note resolved on demand');
   });
 
   test('invokes an operation on the host through Operation.invoke', async () => {

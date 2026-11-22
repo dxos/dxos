@@ -74,6 +74,8 @@ export type Options = {
   readonly echo: (spaceId: SpaceId) => WorkerSandbox.EchoAccess;
   /** See `WorkerSandbox.Options.refresh`; required by services that cannot report heads, as EDGE's cannot. */
   readonly refresh?: () => Promise<void>;
+  /** See `WorkerSandbox.Options.workingSet`. */
+  readonly workingSet?: (spaceId: SpaceId) => WorkerSandbox.WorkingSet | undefined;
 };
 
 /**
@@ -96,6 +98,7 @@ export const make = (options: Options): Sandbox.Sandbox =>
     entry: new URL(`workerd:${RUNTIME_MODULE}`),
     spawn: (_entry, init) => spawn(options, init),
     ...(options.refresh !== undefined && { refresh: options.refresh }),
+    ...(options.workingSet !== undefined && { workingSet: options.workingSet }),
   });
 
 /** Installs {@link make} as the ambient sandbox. */

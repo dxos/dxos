@@ -15,14 +15,16 @@ import { type ClientServicesHandlers, Rpc, makeClientServicesHandlers } from '@d
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, JsonSchema, Type } from '@dxos/echo';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import type { EchoClient } from '@dxos/echo-client';
+import { PublicKey, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { resolveTypeOf } from './dialect-effect.ts';
 import type { BindingsContext } from './Dialect.ts';
 import { toRefs } from './refs.ts';
 import * as Sandbox from './Sandbox.ts';
 import * as Wire from './Wire.ts';
-import { SandboxHostRpcs, type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
+import { SandboxHostRpcs, type SandboxInit, SandboxRpcs, type SandboxType } from './WorkerSandboxProtocol.ts';
 
 /**
  * A spawned worker: the host's end of its channel, and the one other thing the host needs.
@@ -46,6 +48,9 @@ export type WorkerHandle = {
 /** What the worker's own ECHO client connects to: the host services a tab would connect to. */
 export type EchoAccess = Pick<ClientServicesHandlers, 'DataService' | 'QueryService'>;
 
+/** A working set a database opens from and reports to, as `EchoClient.constructDatabase` takes it. */
+export type WorkingSet = NonNullable<Parameters<EchoClient['constructDatabase']>[0]['workingSet']>;
+
 export type Options = {
   /**
    * Host-side ECHO services for the space the code runs against, resolved per evaluation so the served set follows
@@ -58,6 +63,11 @@ export type Options = {
    * flush and this refresh rather than by heads, which such services can neither report nor wait for.
    */
   readonly refresh?: () => Promise<void>;
+  /**
+   * The working set the host keeps for the space, if any: the worker's database opens over it, so it reads the writes
+   * of the calls before it that the index does not hold yet, and reports its own writes to it.
+   */
+  readonly workingSet?: (spaceId: SpaceId) => WorkingSet | undefined;
   /**
    * Module the worker runs. Defaults to the entry beside this one, under the extension this module
    * was itself loaded under — a worker starts from a real file, not through a bundler.
@@ -99,11 +109,13 @@ export const make = (options: Options): Sandbox.Sandbox => ({
         catch: (error) =>
           new Sandbox.EvaluationError({ message: `No ECHO services for the worker: ${describe(error)}` }),
       });
+      const workingSet = options.workingSet?.(db.spaceId);
       const init: SandboxInit = {
         code,
         dialect: dialect.name,
         names: Object.keys(dialect.bindings(context)),
         handover: options.refresh === undefined ? 'heads' : 'flush',
+        workingSet: workingSet !== undefined,
         space,
         types: registrySnapshot(db),
         skills: context.skills,
@@ -136,6 +148,12 @@ export const make = (options: Options): Sandbox.Sandbox => ({
             'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
             'Sandbox.invokeDefinition': ({ key, input, heads }) =>
               invokeDefinition(context, key, input, heads, options.refresh),
+            // A host without one reports an empty set and drops reports; the worker asks only when told it has one.
+            'Sandbox.workingSetGet': () =>
+              workingSet === undefined ? Effect.succeed({ rows: [] }) : Effect.promise(() => workingSet.get()),
+            'Sandbox.workingSetPut': ({ report }) =>
+              workingSet === undefined ? Effect.void : Effect.promise(() => workingSet.put(report)),
+            'Sandbox.resolveType': ({ uri }) => resolveType(context, uri),
             'Sandbox.complete': ({ value, failure, heads }) =>
               Effect.sync(() => {
                 written = heads;
@@ -245,12 +263,29 @@ const invokeOperation = (
   );
 };
 
-/** {@link Options.refresh} as an effect, failing as a hand-over does. */
+/** How long a refresh may take, as long as a heads catch-up may wait: each runs after the code's budget. */
+const REFRESH_TIMEOUT = Duration.seconds(5);
+
+/** {@link Options.refresh} as an effect, failing as a hand-over does, and bounded as one is. */
 const refreshing = (refresh: () => Promise<void>): Effect.Effect<void, Wire.WireError> =>
   Effect.tryPromise({
     try: refresh,
     catch: (cause) => new Wire.WireError({ message: "The other side's changes could not be read.", cause }),
-  });
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: REFRESH_TIMEOUT,
+      orElse: () => Effect.fail(new Wire.WireError({ message: "The other side's changes were not read in time." })),
+    }),
+  );
+
+/** A type the host's database resolves, by its DXN, as the worker rebuilds it; null for none the worker can rebuild. */
+const resolveType = (context: BindingsContext, uri: string) => {
+  const { db } = Context.get(context.runtime, Database.Service);
+  return Effect.tryPromise(() => resolveTypeOf(db, URI.make(uri))).pipe(
+    Effect.map((entity) => describeType(entity) ?? null),
+    Effect.orElseSucceed(() => null),
+  );
+};
 
 /** Runs the worker's `Operation.invoke` through the turn's `Operation.Service`, as the Effect dialect does in-process. */
 const invokeDefinition = (
@@ -289,18 +324,25 @@ const invokeDefinition = (
  */
 const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
   db.registry.list().flatMap((entity) => {
-    // A relation's kind and endpoints do not survive the JSON-schema round trip — the worker would
-    // rebuild it as an object type — so it stays out of the worker rather than resolving as the wrong kind.
-    if (!Type.isType(entity) || Type.isRelation(entity)) {
-      return [];
-    }
-    const typename = Type.getTypename(entity);
-    const version = Type.getVersion(entity);
-    const skills = Skill.annotatedSkillKeys(entity);
-    return typename === undefined || version === undefined
-      ? []
-      : [{ typename, version, jsonSchema: JsonSchema.toJsonSchema(entity), ...(skills.length > 0 && { skills }) }];
+    const type = describeType(entity);
+    return type === undefined ? [] : [type];
   });
+
+/**
+ * A type as the worker rebuilds it. A relation's kind and endpoints do not survive the JSON-schema round trip — the
+ * worker would rebuild it as an object type — so it stays out of the worker rather than resolving as the wrong kind.
+ */
+const describeType = (entity: unknown): SandboxType | undefined => {
+  if (!Type.isType(entity) || Type.isRelation(entity)) {
+    return undefined;
+  }
+  const typename = Type.getTypename(entity);
+  const version = Type.getVersion(entity);
+  const skills = Skill.annotatedSkillKeys(entity);
+  return typename === undefined || version === undefined
+    ? undefined
+    : { typename, version, jsonSchema: JsonSchema.toJsonSchema(entity), ...(skills.length > 0 && { skills }) };
+};
 
 /**
  * The space as the worker's client must name it to open the same database.

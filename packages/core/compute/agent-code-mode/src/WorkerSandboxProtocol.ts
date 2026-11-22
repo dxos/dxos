@@ -52,7 +52,25 @@ export const SandboxHostRpcs = RpcGroup.make(
     }),
     success: Schema.Void,
   }),
+  // The host's working set for the space (`WorkingSetService`), which the worker's database opens from and reports
+  // to, so it reads the writes the index does not hold yet. Rows carry document bytes, which a port clones as they are.
+  Rpc.make('Sandbox.workingSetGet', {
+    success: Schema.Any,
+  }),
+  Rpc.make('Sandbox.workingSetPut', {
+    payload: Schema.Struct({ report: Schema.Any }),
+    success: Schema.Void,
+  }),
+  // A type the worker's registry does not hold, resolved by the host as its own database resolves it (on EDGE, from
+  // the published types), as the {@link SandboxType} the worker rebuilds it from; null when the host has none.
+  Rpc.make('Sandbox.resolveType', {
+    payload: Schema.Struct({ uri: Schema.String }),
+    success: Schema.NullOr(Schema.Any),
+  }),
 );
+
+/** A registered type as schema rather than as the class a worker cannot receive. */
+export type SandboxType = SandboxInit['types'][number];
 
 /**
  * The whole contract the worker speaks: the client services it would speak anywhere, plus the few
@@ -78,6 +96,8 @@ export type SandboxInit = {
    * report heads nor wait for them (EDGE's), which write through to a store and push no client's writes to another.
    */
   readonly handover: 'heads' | 'flush';
+  /** Whether the host keeps a working set for the space, which the worker's database then opens over. */
+  readonly workingSet: boolean;
   /** Which database to open, named the way the host's own client names it. */
   readonly space: { readonly spaceId: string; readonly spaceKey: string; readonly rootUrl: string };
   /** Every registered type, as schema rather than as the class the worker cannot receive. */
