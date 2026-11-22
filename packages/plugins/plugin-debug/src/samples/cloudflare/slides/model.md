@@ -24,19 +24,21 @@ class Person extends Type.makeObject<Person>(
   }),
 ) {}
 
-const alice = db.add(Obj.make(Person, {
-  name: 'Alice',
-  email: 'alice@example.com',
-}));
-
-const [acme] = db.find('Acme');
+const alice = db.add(Obj.make(Person, { name: 'Alice'}));
+const bob = db.add(Obj.make(Person, { name: 'Bob' }));
+const [acme] = db.find({ type: Organization, text: 'Acme' });
 
 // Reactive updates.
 Obj.update(alice, (obj) => {
   obj.org = Ref.make(acme);
 });
 
-// Graph traversal.
+// A typed relation: Bob manages Alice.
+db.add(Relation.make(HasManager, {
+  [Relation.Source]: alice, [Relation.Target]: bob,
+}));
+
+// Graph traversal: Alice's managers.
 const objects = await db.query(
   Query.select(
     Filter.id(alice)).sourceOf(HasManager).target()
@@ -45,7 +47,7 @@ const objects = await db.query(
 
 <!--
 Notes. 1:00
-- The code: define a type with a reference to an Organization, add an object, set the reference, traverse a relation.
+- The code: define a type with a reference to an Organization, add two objects, set the reference, relate them, traverse the relation.
 - One schema, four uses: the TypeScript type, validation on every write, the form in the UI, and the tool an agent gets.
 - Queries compile to SQL against a local index. The same engine runs in the browser, in Node and in a Durable Object.
 - Merge is per object. There are no transactions across objects; [what we do for references and uniqueness].
