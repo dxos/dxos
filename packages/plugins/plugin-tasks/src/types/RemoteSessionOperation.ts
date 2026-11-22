@@ -93,7 +93,7 @@ export const RecordSession = Operation.make({
       ),
     ),
   }),
-}).pipe(Operation.mutation('write'));
+}).pipe(Operation.mutation('write'), Operation.hookInvocable);
 
 /** Reads the sessions in a space, newest first, so a reader can find stale `running` ones. */
 export const ListSessions = Operation.make({

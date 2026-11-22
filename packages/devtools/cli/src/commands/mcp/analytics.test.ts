@@ -46,6 +46,50 @@ describe('MCP analytics', () => {
     expectEveryEventNamed(expect, calls);
   });
 
+  // The synthesized `$exception` otherwise reads only "Tool invokeOperation returned an error".
+  test('carries the failure and the operation it ran onto a failed dispatch', ({ expect }) => {
+    const { calls, capture } = recordingCapture();
+    const correlator = makeCorrelator(capture);
+    const invoke = (id: number, key: string) =>
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id,
+        method: 'tools/call',
+        params: { name: 'invokeOperation', arguments: { key, input: {} } },
+      });
+    const failed = (id: number, text: string) =>
+      JSON.stringify({ jsonrpc: '2.0', id, result: { isError: true, content: [{ type: 'text', text }] } });
+
+    correlator.observeRequest(invoke(1, 'org.example.operation.tasks.create'));
+    correlator.observeResponse(failed(1, 'operation_failed: org.example.operation.tasks.create failed: NotFound: x'));
+    correlator.observeRequest(invoke(2, 'org.example.operation.tasks.recordSession'));
+    correlator.observeResponse(failed(2, 'skill_not_loaded: call loadSkill first.'));
+    correlator.observeRequest(invoke(3, 'org.example.operation.tasks.list'));
+    correlator.observeResponse(failed(3, 'something unstructured'));
+    correlator.observeRequest(invoke(4, 'org.example.operation.tasks.list'));
+    correlator.observeResponse(JSON.stringify({ jsonrpc: '2.0', id: 4, result: { content: [] } }));
+
+    expect(calls.toolCall.map(({ operationKey, error }) => ({ operationKey, error }))).to.deep.equal([
+      {
+        operationKey: 'org.example.operation.tasks.create',
+        error: {
+          type: 'operation_failed',
+          message: 'org.example.operation.tasks.create failed: NotFound: x',
+          expected: false,
+        },
+      },
+      {
+        operationKey: 'org.example.operation.tasks.recordSession',
+        error: { type: 'skill_not_loaded', message: 'call loadSkill first.', expected: true },
+      },
+      {
+        operationKey: 'org.example.operation.tasks.list',
+        error: { type: 'tool_error', message: 'something unstructured', expected: false },
+      },
+      { operationKey: 'org.example.operation.tasks.list', error: undefined },
+    ]);
+  });
+
   test('attributes a stateless tool call to the client its request metadata names', ({ expect }) => {
     const { calls, capture } = recordingCapture();
     const correlator = makeCorrelator(capture);
@@ -268,6 +312,8 @@ describe('MCP analytics', () => {
     correlator.observeResponse(JSON.stringify({ jsonrpc: '2.0', id: 7, error: { code: -32603, message: 'boom' } }));
 
     expect(calls.toolCall[0]).to.include({ toolName: 'whoami', isError: true });
+    expect(calls.toolCall[0].error).to.deep.equal({ type: 'rpc_error', message: 'boom', expected: false });
+    expect(calls.toolCall[0].operationKey).to.be.undefined;
     expectEveryEventNamed(expect, calls);
   });
 

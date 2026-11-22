@@ -9,6 +9,7 @@ import * as EffectStdio from 'effect/Stdio';
 import * as Stream from 'effect/Stream';
 import { randomUUID } from 'node:crypto';
 
+import { McpServer } from '@dxos/mcp-server';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
 const MAX_PENDING_REQUESTS = 512;
@@ -43,7 +44,7 @@ export type RpcMessage = {
   id?: string | number;
   method?: string;
   error?: unknown;
-  result?: { isError?: boolean };
+  result?: { isError?: boolean; content?: unknown };
   params?: {
     name?: string;
     arguments?: Record<string, unknown>;
@@ -161,19 +162,55 @@ const correlateRequests = (
           break;
         }
         case 'tools/call': {
+          const toolName = request.params?.name ?? 'unknown';
+          const isError = message.error !== undefined || message.result?.isError === true;
+          const operationKey = toolName === McpServer.InvokeOperation.name ? request.params?.arguments?.key : undefined;
+          const error = isError ? toolError(message) : undefined;
           capture.captureToolCall({
             sessionId: context.sessionId,
             ...metaAttribution(request.params),
-            toolName: request.params?.name ?? 'unknown',
+            toolName,
             parameters: request.params?.arguments,
             durationMs: Date.now() - request.startedAt,
-            isError: message.error !== undefined || message.result?.isError === true,
+            isError,
+            ...(error ? { error } : {}),
+            ...(typeof operationKey === 'string' ? { operationKey } : {}),
           });
           break;
         }
       }
     },
   };
+};
+
+/**
+ * Why a failed call failed: a JSON-RPC error is the server's own fault, while an `isError` result
+ * carries the text of a `ToolFailure`, whose code says whether the caller was to blame.
+ */
+const toolError = (message: RpcMessage): ObservabilityExtension.McpToolError | undefined => {
+  if (message.error !== undefined) {
+    const text = isRecord(message.error) ? nonEmptyString(message.error.message) : undefined;
+    return { type: 'rpc_error', message: text ?? JSON.stringify(message.error), expected: false };
+  }
+  const text = resultText(message.result?.content);
+  if (text === undefined) {
+    return undefined;
+  }
+  const parsed = McpServer.parseFailure(text);
+  return parsed
+    ? { type: parsed.code, message: parsed.message, expected: McpServer.isCallerFault(parsed.code) }
+    : { type: 'tool_error', message: text, expected: false };
+};
+
+/** The text blocks of a tool result, joined; undefined when it has none. */
+const resultText = (content: unknown): string | undefined => {
+  const text = (Array.isArray(content) ? content : [])
+    .flatMap((block) =>
+      isRecord(block) && block.type === 'text' && typeof block.text === 'string' ? [block.text] : [],
+    )
+    .join('\n')
+    .trim();
+  return text.length > 0 ? text : undefined;
 };
 
 /** A response succeeded when it carries a result object and no error. */

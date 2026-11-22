@@ -18,9 +18,14 @@ const SESSION = { sessionId: 'session-1', clientName: 'claude-code', clientVersi
 
 const captured: { event: string; distinctId?: string; properties?: Record<string, unknown> }[] = [];
 const mcpCaptured: Record<string, unknown>[] = [];
+let clientOptions: { before_send?: (event: { event: string; properties?: Record<string, unknown> }) => unknown } = {};
 
 vi.mock('@posthog/mcp', () => ({
   PostHogMCP: class {
+    constructor(_apiKey: string, options: typeof clientOptions) {
+      clientOptions = options;
+    }
+
     capture(message: { distinctId?: string; event: string; properties?: Record<string, unknown> }) {
       captured.push(message);
     }
@@ -107,6 +112,54 @@ describe('posthog node extension', () => {
       $mcp_server_name: 'dxos-cli',
       $mcp_server_version: '1.2.3',
     });
+  });
+
+  test('reports a failed dispatch classed by its failure and grouped by its operation', async () => {
+    mcpCaptured.length = 0;
+    const extension = await make(DID);
+
+    api(extension, 'mcp').captureToolCall({
+      ...SESSION,
+      toolName: 'invokeOperation',
+      durationMs: 3,
+      isError: true,
+      operationKey: 'org.example.operation.tasks.create',
+      error: { type: 'operation_failed', message: 'create failed: NotFound: x', expected: false },
+    });
+
+    const [call] = mcpCaptured;
+    expect(call).to.include({ errorType: 'operation_failed' });
+    expect(call.error).to.be.instanceOf(Error).that.includes({
+      name: 'operation_failed',
+      message: 'create failed: NotFound: x',
+    });
+    expect(call.properties).to.include({
+      $mcp_operation_key: 'org.example.operation.tasks.create',
+      $exception_fingerprint: 'mcp:invokeOperation:org.example.operation.tasks.create:operation_failed',
+    });
+    expect(call.properties).to.not.have.property('$dx_mcp_expected_error');
+  });
+
+  // The `$exception` sibling carries the tool call's custom properties, which is what marks it.
+  test('files no exception for a call failed by its own input, and keeps every other event', async () => {
+    mcpCaptured.length = 0;
+    const extension = await make(DID);
+
+    api(extension, 'mcp').captureToolCall({
+      ...SESSION,
+      toolName: 'invokeOperation',
+      durationMs: 1,
+      isError: true,
+      error: { type: 'skill_not_loaded', message: 'call loadSkill first.', expected: true },
+    });
+
+    const properties = mcpCaptured[0].properties as Record<string, unknown>;
+    expect(properties).to.include({ $dx_mcp_expected_error: true });
+    const beforeSend = clientOptions.before_send;
+    expect(beforeSend).to.be.a('function');
+    expect(beforeSend?.({ event: '$exception', properties })).to.be.null;
+    expect(beforeSend?.({ event: '$mcp_tool_call', properties })).to.not.be.null;
+    expect(beforeSend?.({ event: '$exception', properties: { $exception_list: [] } })).to.not.be.null;
   });
 
   test('names a tool call that carries no client as the unknown client', async () => {

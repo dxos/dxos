@@ -239,6 +239,29 @@ describe('McpServer', () => {
       expect(invocations).to.have.length(0);
     });
 
+    // A hook fires a fixed payload with no model to load the skill, so a token can never be on it.
+    test('dispatches a hook-invocable operation without a skill token', async ({ expect }) => {
+      const Heartbeat = Operation.make({
+        meta: { key: DXN.make('com.example.operation.tasks.heartbeat'), name: 'Heartbeat' },
+        input: Schema.Struct({ sessionId: Schema.String }),
+        output: Schema.Struct({ ok: Schema.Boolean }),
+      }).pipe(Operation.mutation('write'), Operation.hookInvocable);
+      const registry = testRegistry({
+        operations: [CreateTask, Heartbeat],
+        skills: [makeSkill({ key: 'org.dxos.skill.codeProject', operations: [CreateTask, Heartbeat] })],
+      });
+      const { invocations, result } = runInvoke(
+        { key: 'com.example.operation.tasks.heartbeat', input: { sessionId: 's-1' } },
+        { registry, gate: GATE },
+      );
+      expect((await result)._tag).to.equal('Success');
+      expect(invocations).to.have.length(1);
+
+      // The exemption is the operation's, not the skill's: its siblings stay gated.
+      const sibling = runInvoke({ input: { title: 'x' }, spaceId: SPACE_A }, { registry, gate: GATE });
+      expect(failureOf(await sibling.result).code).to.equal('skill_not_loaded');
+    });
+
     test("another skill's token does not unlock an operation", async ({ expect }) => {
       const registry = twoSkillRegistry();
       const databaseToken = await tokenFor(registry, 'database');
@@ -477,6 +500,35 @@ describe('McpServer', () => {
       expect(failureOf(await result).code).to.equal('invalid_request');
       expect(failureOf(await result).message).to.include('titel');
       expect(invocations).to.have.length(0);
+    });
+  });
+
+  describe('failures', () => {
+    test('parses the code back out of the text a failure crosses the wire as', ({ expect }) => {
+      const { message } = McpServer.failure('skill_not_loaded', 'Call loadSkill first.');
+      expect(McpServer.parseFailure(message)).to.deep.equal({
+        code: 'skill_not_loaded',
+        message: 'Call loadSkill first.',
+      });
+      expect(McpServer.parseFailure('not_a_code: whatever')).to.be.undefined;
+      expect(McpServer.parseFailure('no separator')).to.be.undefined;
+    });
+
+    test("blames the caller for its own input, never the server's faults", ({ expect }) => {
+      expect(McpServer.isCallerFault('invalid_request')).to.be.true;
+      expect(McpServer.isCallerFault('skill_not_loaded')).to.be.true;
+      expect(McpServer.isCallerFault('space_not_in_context')).to.be.true;
+      expect(McpServer.isCallerFault('operation_failed')).to.be.false;
+    });
+
+    test("a host error keeps the cause's tag, which is all that names its class downstream", ({ expect }) => {
+      class NotFound extends Schema.TaggedError<NotFound>()('NotFound', { message: Schema.String }) {}
+      expect(McpServer.hostError(new NotFound({ message: 'no such object' })).message).to.equal(
+        'NotFound: no such object',
+      );
+      expect(McpServer.hostError(new TypeError('x is undefined')).message).to.equal('TypeError: x is undefined');
+      expect(McpServer.hostError(new Error('plain')).message).to.equal('plain');
+      expect(McpServer.hostError('text').message).to.equal('text');
     });
   });
 
