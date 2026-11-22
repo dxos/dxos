@@ -57,6 +57,31 @@ export const startServer = (connection: Connection): void => {
   let roots: string[] = [];
   let watchRegistered = false;
 
+  /**
+   * Every checkout sees the workspace folders beside it, so a key naming another open repository resolves to its
+   * file rather than to GitHub.
+   */
+  const linkPeers = () => {
+    const open = roots.flatMap((root) => {
+      const workspace = workspaces.get(root);
+      return workspace ? [workspace] : [];
+    });
+    for (const workspace of workspaces.values()) {
+      workspace.peers = open.filter((peer) => peer !== workspace);
+    }
+  };
+
+  const checkoutAt = (root: string): DiskWorkspace => {
+    const existing = workspaces.get(root);
+    if (existing) {
+      return existing;
+    }
+    const workspace = new DiskWorkspace(root);
+    workspaces.set(root, workspace);
+    linkPeers();
+    return workspace;
+  };
+
   /** The checkout that holds a document: the innermost workspace folder, else one rooted at the file's directory. */
   const workspaceOf = (uri: string): DiskWorkspace | undefined => {
     if (!uri.startsWith('file:')) {
@@ -66,12 +91,7 @@ export const startServer = (connection: Connection): void => {
     const root =
       roots.filter((candidate) => file.startsWith(candidate)).sort((left, right) => right.length - left.length)[0] ??
       dirname(file);
-    let workspace = workspaces.get(root);
-    if (!workspace) {
-      workspace = new DiskWorkspace(root);
-      workspaces.set(root, workspace);
-    }
-    return workspace;
+    return checkoutAt(root);
   };
 
   const withDocument = <T>(uri: string, run: (workspace: DiskWorkspace, document: Document) => T): T | undefined => {
@@ -126,6 +146,8 @@ export const startServer = (connection: Connection): void => {
   });
 
   connection.onInitialized(() => {
+    // Scanning every folder up front, not on its first open document, is what lets a key into another one resolve.
+    roots.forEach(checkoutAt);
     if (watchRegistered) {
       void connection.client.register(DidChangeWatchedFilesNotification.type, {
         watchers: [{ globPattern: '**/*.mdl' }],
