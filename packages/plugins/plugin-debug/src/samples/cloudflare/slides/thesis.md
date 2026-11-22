@@ -7,7 +7,7 @@ layout: 'two-cols-header'
 
 ::left::
 
-### The signals
+### Signals
 
 - The Labs are absorbing the entire app layer.
 - Salesforce put its CRM inside Claude. Benioff: "the UI is the AI."
@@ -17,15 +17,19 @@ layout: 'two-cols-header'
 
 ::right::
 
-### The open problems
+<v-clicks>
+
+### Issues
 
 - **Silos and access:** data is trapped per app; an agent reaches only a slice
 - **No shared truth:** apps and agents disagree on basic facts; memory doesn't last
 - **Generation without rails:** more apps, more silos; no enterprise wants to operate its own critical software
 - **Closed systems:** whoever owns the interface ends up owning the data
 - **Collaboration:** trusted agents working inside a team, not one user's assistant
-- **Beyond chat:** a place to direct, review and undo what agents do
-- **Every mode:** laptop, phone, voice; online or off
+- **Beyond chat:** the means to direct, review and undo what agents do
+- **Multi-modal:** desktop, phone, voice, video
+
+</v-clicks>
 
 <!--
 Notes. 2:00

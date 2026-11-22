@@ -106,6 +106,8 @@ export const theme = {
 
     p: 'text-[48px]',
     a: 'text-(color:--slide-accent) underline',
+    // Strong text takes the heading's color: weight alone does not set a lead-in apart from its sentence.
+    strong: `font-bold ${headingColor}`,
     blockquote: 'my-[16px] ps-12 border-l-[8px] border-(--slide-accent) text-[56px] italic',
     img: 'max-w-full max-h-full object-contain',
 
@@ -165,7 +167,8 @@ export const theme = {
           '[&_em]:not-italic [&_em]:uppercase [&_em]:tracking-wide [&_em]:text-[28px] [&_em]:opacity-60 ' +
           '[&_em]:before:content-["·"] [&_em]:before:mx-2 ' +
           '[&_strong]:block [&_strong]:mt-5 [&_strong]:mb-3 [&_strong]:text-[44px] [&_strong]:leading-tight ' +
-          '[&_strong]:font-(family-name:--slide-font-heading) ' +
+          // The title is the card's own ink: the heading color marks emphasis in prose, not a card's name.
+          '[&_strong]:font-(family-name:--slide-font-heading) [&_strong]:text-[color:inherit] ' +
           '[&[data-active]]:border-4 [&[data-active]]:border-(--slide-accent) ' +
           '[&[data-active]]:before:text-(color:--slide-accent) [&[data-active]]:before:opacity-100 ' +
           '[&[data-active]_em]:text-(color:--slide-accent) [&[data-active]_em]:opacity-100 ' +
