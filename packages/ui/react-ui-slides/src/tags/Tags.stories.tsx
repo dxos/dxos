@@ -930,6 +930,52 @@ export const HeadingColors: Story = {
 };
 
 /**
+ * Bold text is set in the subheading color at the body's weight, so color alone marks it. A flow card is the
+ * exception: there bold is the card's title, which keeps the card's color and a bold weight. The deck here gives each
+ * heading level a color of its own, which shows that bold follows the second.
+ */
+export const StrongText: Story = {
+  render: (props: MarkdownSlideProps) => (
+    <SlideThemeProvider settings={{ heading: '#CA6346', subheading: '#336288' }}>
+      <TestContainer {...props} />
+    </SlideThemeProvider>
+  ),
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# Bold text',
+      '',
+      '## Takes the subheading color',
+      '',
+      '- **ECHO** holds the data',
+      '- **Agents** act on it',
+      '',
+      '<List variant="flow">',
+      '',
+      '1. **Chat** A model in a separate window',
+      '2. **Cowork** Claude working inside your existing apps',
+      '',
+      '</List>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const color = async (selector: string) => getComputedStyle(await query(canvasElement, selector)).color;
+    await expect(await color('[data-slide] h1')).toBe('rgb(202, 99, 70)');
+    await expect(await color('[data-slide] h2')).toBe('rgb(51, 98, 136)');
+
+    const item = await query(canvasElement, '[data-slide] ul > li');
+    const strong = await query(canvasElement, '[data-slide] ul > li strong');
+    await expect(getComputedStyle(strong).color).toBe('rgb(51, 98, 136)');
+    await expect(getComputedStyle(strong).fontWeight).toBe(getComputedStyle(item).fontWeight);
+
+    const card = await query(canvasElement, 'ol[data-variant="flow"] > li');
+    const title = await query(canvasElement, 'ol[data-variant="flow"] > li strong');
+    await expect(getComputedStyle(title).color).toBe(getComputedStyle(card).color);
+    await expect(getComputedStyle(title).fontWeight).toBe('700');
+  },
+};
+
+/**
  * `<List variant="flow">` lays the items out as a row of cards with an arrow in each gap, and `active` marks the
  * one the story has reached. The item's own markdown names its parts: emphasis is the label, strong is the title.
  */
