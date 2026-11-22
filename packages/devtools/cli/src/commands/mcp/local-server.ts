@@ -97,7 +97,7 @@ export const makeLocalServer = Effect.fn(function* (
     host: {
       spaceIds,
       invoke: (request) => invoke({ handlerSet, handlers, ambient }, request),
-      // The client holds every space open already, so a script's database verbs cost no more than a query here.
+      // The client holds every space open already, so a script's bindings cost no more than a query here.
       database: (spaceId) => {
         const space = client.spaces.get(spaceId);
         return space === undefined

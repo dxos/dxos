@@ -10,7 +10,7 @@ export * as WorkerdSandbox from './WorkerdSandbox.ts';
 export * as Wire from './Wire.ts';
 export { type BindingsContext, type Dialect, type SandboxOperation } from './Dialect.ts';
 export { EffectDialect } from './dialect-effect.ts';
-export { PlainDialect } from './dialect-plain.ts';
+export { PLAIN_API, PlainDialect } from './dialect-plain.ts';
 export { EVAL_TOOL_NAME, EvalTool, type EvaluateOptions, evaluate, makeEvalToolkit } from './eval-tool.ts';
 export { describeTypes } from '@dxos/assistant/Describe';
 export { type CodeModeOptions, makeCodeModeTurnProducer, projectOperations } from './producer.ts';

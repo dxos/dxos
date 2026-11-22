@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
 import { type IncomingMessage, type ServerResponse } from 'node:http';
 
+import { Sandbox } from '@dxos/agent-code-mode';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { type Registry } from '@dxos/echo';
@@ -62,7 +63,10 @@ export type StartMcpHostOptions = {
    * upload tool at all — which is what the deployed worker's own tool, not this one, is for.
    */
   readonly uploads?: LocalUpload.Stage;
-  /** Serves `runScript` too, evaluated in process, as `dx mcp serve --code-mode` does. */
+  /**
+   * Serves `runScript` too, evaluated in process against the `Database.Service` in {@link context}, as
+   * `dx mcp serve --code-mode` does.
+   */
   readonly codeMode?: boolean;
 };
 
@@ -220,16 +224,16 @@ const RUN_SCRIPT_TOOL = {
     properties: {
       code: {
         type: 'string',
-        description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
+        description: 'The body of an async function, without the wrapper. Print anything you need to see.',
       },
-      spaceId: { type: 'string', description: 'The space invoke uses when a call names none.' },
+      spaceId: { type: 'string', description: 'The space the script reads and changes, and its operations run in.' },
       skillTokens: {
         type: 'array',
         items: { type: 'string' },
-        description: 'skillTokens loadSkill returned earlier, for the skills whose operations the script invokes.',
+        description: 'skillTokens loadSkill returned earlier, for the skills whose operations the script calls.',
       },
     },
-    required: ['code'],
+    required: ['code', 'spaceId'],
   },
 };
 
@@ -287,23 +291,26 @@ const dispatch = async (
         return yield* McpServer.invoke(registry, host, args as Parameters<typeof McpServer.invoke>[2], gate);
       }
       case RUN_SCRIPT_TOOL.name: {
-        if (!codeMode || typeof args.code !== 'string') {
-          return yield* Effect.fail(McpServer.failure('invalid_request', `${name} takes a code string.`));
+        if (!codeMode || typeof args.code !== 'string' || !SpaceId.isValid(args.spaceId)) {
+          return yield* Effect.fail(McpServer.failure('invalid_request', `${name} takes a code string and a spaceId.`));
         }
+        // The harness's database is in `context`, so the host runs scripts against it, as `dx mcp serve
+        // --code-mode` runs them against its client's: the eval grades the path a real client takes.
         const host = yield* McpServer.host({ skills, spaceIds });
-        // Through the script API, as `dx mcp serve --code-mode` runs it: the eval grades the same
-        // path a real client takes, request shape included.
-        const runner = McpServer.scriptRunner(registry, host, gate, { sandbox: McpServer.inProcessScriptSandbox });
-        const answer = yield* runner
-          .run({
-            source: Operation.inlineScript(args.code, { dialect: Operation.ScriptDialects.Effect }),
-            ...(SpaceId.isValid(args.spaceId) ? { spaceId: args.spaceId } : {}),
+        const result = yield* McpServer.runScript(
+          registry,
+          host,
+          gate,
+          {
+            code: args.code,
+            spaceId: args.spaceId,
             skillTokens: Array.isArray(args.skillTokens)
               ? args.skillTokens.filter((token): token is string => typeof token === 'string')
               : [],
-          })
-          .pipe(Effect.mapError((error) => McpServer.failure('operation_failed', error.message)));
-        return new ScriptAnswer(answer);
+          },
+          { sandbox: Sandbox.inProcess },
+        );
+        return new ScriptAnswer(result);
       }
       default:
         return yield* Effect.fail(McpServer.failure('invalid_request', `Unknown tool: ${name}`));

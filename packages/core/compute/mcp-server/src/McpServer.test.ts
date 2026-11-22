@@ -5,18 +5,14 @@
 import * as McpProtocol from 'effect/ai/McpProtocol';
 import * as McpServer$ from 'effect/ai/McpServer';
 import type * as Context from 'effect/Context';
-import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as HttpRouter from 'effect/http/HttpRouter';
 import * as Layer from 'effect/Layer';
 import type * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
-import { mkdtemp, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { describe, test } from 'vitest';
 
+import { Sandbox } from '@dxos/agent-code-mode';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
@@ -90,11 +86,6 @@ const TASK_TYPENAME = 'com.example.type.task';
 class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
   Schema.Struct({ title: Schema.String, status: Schema.String }),
 ) {}
-
-/** A type a test stores in the space, as `space.addType` would. */
-const MEMO_TYPENAME = 'com.example.type.memo';
-
-class Memo extends Type.makeObject<Memo>(DXN.make(MEMO_TYPENAME, '0.1.0'))(Schema.Struct({ title: Schema.String })) {}
 
 /** A real database holding two tasks, for a script's database verbs to act on. */
 const taskDatabase = async () => {
@@ -203,60 +194,6 @@ const runInvoke = (
     ),
   };
 };
-
-/**
- * The isolate module run in Node as a Worker Loader would run it: written to disk beside an
- * `effect.js` that re-exports the real library, imported, and fetched with an `env.HOST` that
- * answers through `scriptCallOutcome` — the same seam EDGE's host serves.
- */
-const nodeIsolate = ({
-  registry,
-  host,
-  gate,
-  spaceId,
-}: {
-  registry: Registry.Registry;
-  host: McpServer.HostShape;
-  gate: McpServer.SkillGate;
-  spaceId?: SpaceId;
-}): McpServer.ScriptSandbox =>
-  McpServer.isolateScriptSandbox({
-    evaluate: ({ mainModule, timeout }) =>
-      Effect.promise(async () => {
-        const dir = await mkdtemp(join(tmpdir(), 'mcp-script-'));
-        const effectModule = ['Cause', 'Data', 'Effect', 'Exit']
-          .map((name) => `export * as ${name} from '${import.meta.resolve(`effect/${name}`)}';`)
-          .join('\n');
-        await writeFile(join(dir, McpServer.SCRIPT_EFFECT_MODULE), effectModule);
-        await writeFile(join(dir, 'main.js'), mainModule);
-        const isolate: { default: { fetch: (request: Request, env: unknown) => Promise<Response> } } = await import(
-          pathToFileURL(join(dir, 'main.js')).href
-        );
-        const env = {
-          HOST: {
-            call: (binding: unknown, args: unknown) =>
-              EffectEx.runPromise(McpServer.scriptCallOutcome(registry, host, gate, { binding, args }, { spaceId })),
-          },
-        };
-        // The runner, not the module, bounds the program, as compute-service does by abandoning its fetch.
-        const answer = isolate.default.fetch(new Request('http://script/'), env).then((response) => response.json());
-        const abandoned = new Promise<McpServer.ScriptResult>((resolve) => {
-          setTimeout(
-            () => resolve({ output: '', error: 'Script did not finish in time; it was abandoned.' }),
-            Duration.toMillis(timeout),
-          ).unref();
-        });
-        return Promise.race([answer, abandoned]);
-      }),
-  });
-
-const SANDBOXES: {
-  name: string;
-  make: (context: Parameters<typeof nodeIsolate>[0]) => McpServer.ScriptSandbox;
-}[] = [
-  { name: 'in-process', make: () => McpServer.inProcessScriptSandbox },
-  { name: 'isolate module', make: nodeIsolate },
-];
 
 describe('McpServer', () => {
   describe('invokeOperation', () => {
@@ -704,258 +641,142 @@ describe('McpServer', () => {
     });
   });
 
-  describe.each(SANDBOXES)('runScript ($name)', ({ make }) => {
-    const run = (
+  describe('runScript', () => {
+    /**
+     * Runs `code` against a real database holding two tasks, its `ops` calls reaching {@link testHost}. Read what a
+     * test needs before the database closes.
+     */
+    const run = async (
       code: string,
       options: {
         registry?: Registry.Registry;
-        host?: ReturnType<typeof testHost>;
         skillTokens?: readonly string[];
         spaceId?: SpaceId;
         timeout?: number;
+        withoutDatabase?: boolean;
       } = {},
     ) => {
-      const registry = options.registry ?? testRegistry();
-      const host = options.host ?? testHost();
-      return {
-        invocations: host.invocations,
-        result: EffectEx.runPromise(
+      const { db, water, close } = await taskDatabase();
+      try {
+        const { host, invocations } = testHost({ spaceIds: [db.spaceId] });
+        const result = await EffectEx.runPromise(
           McpServer.runScript(
-            registry,
-            host.host,
+            options.registry ?? testRegistry(),
+            options.withoutDatabase ? host : { ...host, database: () => Effect.succeed(db) },
             GATE,
-            { code, spaceId: options.spaceId, skillTokens: options.skillTokens },
-            {
-              sandbox: make({ registry, host: host.host, gate: GATE, spaceId: options.spaceId }),
-              timeout: options.timeout,
-            },
+            { code, spaceId: options.spaceId ?? db.spaceId, skillTokens: options.skillTokens },
+            { sandbox: Sandbox.inProcess, ...(options.timeout === undefined ? {} : { timeout: options.timeout }) },
           ),
-        ),
-      };
+        );
+        return { ...result, invocations, spaceId: db.spaceId, waterStatus: water.status };
+      } finally {
+        await close();
+      }
     };
 
+    const codeProjectToken = async () => [(await tokenFor(testRegistry(), 'codeProject')) ?? ''];
+
     // The point of code mode: a loop the caller would otherwise spend one round trip per item on.
-    test('a program runs operations through the skill gate, defaulting to the call space', async ({ expect }) => {
-      const { invocations, result } = run(
+    test('a loop runs operations through ops and the skill gate, in the script space', async ({ expect }) => {
+      const { output, error, stats, invocations, spaceId } = await run(
         trim`
-          yield* loadSkill('codeProject');
           for (const title of ['a', 'b', 'c']) {
-            const { ok } = yield* invoke('${KEY}', { title });
-            yield* print(title, ok);
+            const { ok } = await ops['${KEY}']({ title });
+            print(\`\${title} \${ok}\`);
           }
         `,
-        { spaceId: SPACE_A },
+        { skillTokens: await codeProjectToken() },
       );
-      const { output, error, stats } = await result;
       expect(error).to.be.undefined;
       expect(output).to.equal('a true\nb true\nc true');
-      // One loadSkill and three invokes, each counted by the sandbox that ran the program.
-      expect(stats?.calls).to.equal(4);
+      expect(stats?.calls).to.equal(3);
       expect(stats?.callMs).to.be.at.least(0);
       expect(invocations.map(({ input, spaceId }) => ({ input, spaceId }))).to.deep.equal(
-        ['a', 'b', 'c'].map((title) => ({ input: { title }, spaceId: SPACE_A })),
+        ['a', 'b', 'c'].map((title) => ({ input: { title }, spaceId })),
       );
     });
 
-    test('independent calls run together through Effect.all', async ({ expect }) => {
-      const { invocations, result } = run(
+    test('a call without its skill token throws, saying where the token goes', async ({ expect }) => {
+      const { output, error, invocations } = await run(
         trim`
-          yield* loadSkill('codeProject');
-          const results = yield* Effect.all(
-            ['a', 'b'].map((title) => invoke('${KEY}', { title })),
-            { concurrency: 2 },
-          );
-          yield* print(results.length);
+          try {
+            await ops['${KEY}']({ title: 'x' });
+          } catch (error) {
+            print(error.message);
+          }
         `,
-        { spaceId: SPACE_A },
       );
-      const { output, stats } = await result;
-      expect(output).to.equal('2');
-      expect(stats?.calls).to.equal(3);
-      expect(invocations).to.have.length(2);
-    });
-
-    test('an ungoverned call fails with a typed ToolFailure the program can recover from', async ({ expect }) => {
-      const { invocations, result } = run(
-        trim`
-          const attempt = yield* Effect.result(invoke('${KEY}', { title: 'x' }));
-          yield* print(attempt._tag, attempt.failure.code);
-        `,
-        { spaceId: SPACE_A },
-      );
-      const { output, error } = await result;
       expect(error).to.be.undefined;
-      expect(output).to.equal('Failure skill_not_loaded');
+      expect(output).to.include('skill_not_loaded');
+      expect(output).to.include("Call loadSkill with skill: 'codeProject'");
+      expect(output).to.include("pass it in runScript's skillTokens");
       expect(invocations).to.have.length(0);
     });
 
-    test('an unrecovered failure is the error, with what was printed before it', async ({ expect }) => {
-      const { result } = run(
-        trim`
-          yield* print('before');
-          yield* invoke('${KEY}', { title: 'x' });
-        `,
-        { spaceId: SPACE_A },
-      );
-      const { output, error } = await result;
-      expect(output).to.equal('before');
-      expect(error).to.include("Call loadSkill with skill: 'codeProject'");
-    });
-
-    test('a token loadSkill issued to an earlier tool call opens its operations in the program', async ({ expect }) => {
-      const token = await tokenFor(testRegistry(), 'codeProject');
-      const { invocations, result } = run(`yield* invoke('${KEY}', { title: 'x' }, { spaceId: '${SPACE_A}' });`, {
-        skillTokens: token === undefined ? [] : [token],
-      });
-      expect((await result).error).to.be.undefined;
-      expect(invocations[0]?.spaceId).to.equal(SPACE_A);
-    });
-
-    // A token is checked against the gate's secret, so a forged one opens nothing.
+    // A token is checked against the gate's derivation, so a forged one opens nothing.
     test('a token the gate did not issue is refused', async ({ expect }) => {
-      const { invocations, result } = run(`yield* invoke('${KEY}', { title: 'x' });`, {
-        skillTokens: ['forged'],
-        spaceId: SPACE_A,
-      });
-      expect((await result).error).to.include('skill_not_loaded');
+      const { error, invocations } = await run(`await ops['${KEY}']({ title: 'x' });`, { skillTokens: ['forged'] });
+      expect(error).to.include('skill_not_loaded');
       expect(invocations).to.have.length(0);
     });
 
-    test('queryOperations returns the rows the tool does', async ({ expect }) => {
-      const { result } = run(`yield* print((yield* queryOperations({ query: 'create task' })).map((row) => row.key));`);
-      expect(JSON.parse((await result).output)).to.deep.equal([KEY]);
-    });
-
-    test('a thrown error is reported with what was printed before it', async ({ expect }) => {
-      const { result } = run(`yield* print('before'); throw new Error('boom');`);
-      expect(await result).to.deep.include({ output: 'before', error: 'boom' });
-    });
-
-    test('a returned value is the output when nothing was printed', async ({ expect }) => {
-      const { result } = run(`return { answer: 42 };`);
-      expect(JSON.parse((await result).output)).to.deep.equal({ answer: 42 });
+    test('an uncaught failure is the last line, after what was printed', async ({ expect }) => {
+      const { output, error } = await run(`print('before'); throw new Error('boom');`);
+      expect(output).to.equal('before\nError: boom');
+      expect(error).to.equal('Error: boom');
     });
 
     // Found by the code-mode eval: a pagination loop passes `{ after: undefined }` on its first call.
     test('an undefined input field is dropped, as JSON would drop it', async ({ expect }) => {
-      const { invocations, result } = run(
+      const { error, invocations } = await run(
         trim`
-          yield* loadSkill('codeProject');
           let after;
-          yield* invoke('${KEY}', { title: 'x', after });
+          await ops['${KEY}']({ title: 'x', after });
         `,
-        { spaceId: SPACE_A },
+        { skillTokens: await codeProjectToken() },
       );
-      expect((await result).error).to.be.undefined;
+      expect(error).to.be.undefined;
       expect(invocations[0]?.input).to.deep.equal({ title: 'x' });
     });
 
-    test('malformed invoke arguments fail with the call signature', async ({ expect }) => {
-      const { result } = run(`yield* invoke(42);`);
-      expect((await result).error).to.include('invoke(42, input?, { spaceId }?) was called wrongly');
-    });
-
-    test('a program that outruns its budget is abandoned with an error', async ({ expect }) => {
-      const { result } = run(`yield* Effect.never;`, { timeout: 50 });
-      expect((await result).error).to.include('abandoned');
-    });
-
-    test('get, query, search and update act on the space database without invoking an operation', async ({
-      expect,
-    }) => {
-      const { db, water, close } = await taskDatabase();
-      try {
-        const host = testHost({ spaceIds: [db.spaceId] });
-        const { invocations, result } = run(
-          trim`
-            const open = yield* query('${TASK_TYPENAME}', { status: 'open' });
-            const found = yield* search('release', '${TASK_TYPENAME}');
-            const task = yield* get(open[0].id);
-            const updated = yield* update(task, { status: 'done' });
-            const missing = yield* get('${EntityId.random()}');
-            yield* print(open.length, found.map((row) => row.title).join(), task.title, updated.status, missing);
-          `,
-          { host: { ...host, host: { ...host.host, database: () => Effect.succeed(db) } }, spaceId: db.spaceId },
-        );
-        const { output, error, stats } = await result;
-        expect(error).to.be.undefined;
-        expect(output).to.equal('1 Ship the release Water the plants done undefined');
-        expect(stats?.calls).to.equal(5);
-        expect(invocations).to.have.length(0);
-        // Changed in the host's database, not in a copy.
-        expect(water.status).to.equal('done');
-      } finally {
-        await close();
-      }
-    });
-
-    test('query and search reach objects of a type stored in the space, and what feeds hold', async ({ expect }) => {
-      const { db, close } = await taskDatabase();
-      try {
-        const stored = await db.addType(Memo);
-        db.add(Obj.make(stored, { title: 'Stored memo' }));
-        const inbox = db.add(Feed.make({ name: 'inbox' }));
-        await db.appendToFeed(inbox, [Obj.make(Task, { title: 'Mail about the plants', status: 'open' })]);
-        await db.flush({ secondaryIndexes: true });
-        const host = testHost({ spaceIds: [db.spaceId] });
-        const { result } = run(
-          trim`
-            const memos = yield* query('${MEMO_TYPENAME}', { title: 'Stored memo' });
-            const spaceOnly = yield* query('${TASK_TYPENAME}', { title: 'Mail about the plants' });
-            const withFeeds = yield* query('${TASK_TYPENAME}', { title: 'Mail about the plants' }, { feeds: true });
-            const inInbox = yield* search('plants', '${TASK_TYPENAME}', { in: ['${inbox.id}'] });
-            yield* print(memos.map((memo) => memo.title).join(), spaceOnly.length, withFeeds.length, inInbox.map((task) => task.title).join());
-          `,
-          { host: { ...host, host: { ...host.host, database: () => Effect.succeed(db) } }, spaceId: db.spaceId },
-        );
-        const { output, error } = await result;
-        expect(error).to.be.undefined;
-        expect(output).to.equal('Stored memo 0 1 Mail about the plants');
-      } finally {
-        await close();
-      }
-    });
-
-    test('without a database from the host, the verbs are refused and invoke still runs every operation', async ({
-      expect,
-    }) => {
-      const skill = makeSkill({ key: 'org.dxos.skill.codeProject', operations: [GetObjects] });
-      const registry = testRegistry({ operations: [GetObjects], skills: [skill] });
-      const { invocations, result } = run(
+    test('the plain bindings read and change the space database without an operation', async ({ expect }) => {
+      const { output, error, stats, invocations, waterStatus } = await run(
         trim`
-          yield* loadSkill('codeProject');
-          yield* invoke('${GET_OBJECTS_KEY}', { objects: [] });
-          yield* get('x');
+          const open = await query('${TASK_TYPENAME}', { status: 'open' });
+          const found = await search('release', '${TASK_TYPENAME}');
+          const task = await get(open[0].id);
+          update(task, (task) => { task.status = 'done'; });
+          await flush();
+          const missing = await get('${EntityId.random()}');
+          print(\`\${open.length}|\${found.map((row) => row.title).join()}|\${task.title}|\${missing === undefined}\`);
         `,
-        { registry, spaceId: SPACE_A },
       );
-      expect((await result).error).to.include('This server gives scripts no database');
-      expect(invocations.map(({ key }) => key)).to.deep.equal([GET_OBJECTS_KEY]);
+      expect(error).to.be.undefined;
+      expect(output).to.equal('1|Ship the release|Water the plants|true');
+      expect(stats?.calls).to.equal(0);
+      expect(invocations).to.have.length(0);
+      // Changed in the host's database, not in a copy.
+      expect(waterStatus).to.equal('done');
     });
 
-    test('a script is refused an operation a binding replaces, and is not offered it', async ({ expect }) => {
+    test('an operation a binding replaces is not in ops, while the tool still runs it', async ({ expect }) => {
       const skill = makeSkill({ key: 'org.dxos.skill.codeProject', operations: [CreateTask, GetObjects] });
       const registry = testRegistry({ operations: [CreateTask, GetObjects], skills: [skill] });
-      const host = testHost();
-      const { invocations, result } = run(
+      const { output, error, invocations } = await run(
         trim`
-          yield* loadSkill('codeProject');
-          const attempt = yield* Effect.result(invoke('${GET_OBJECTS_KEY}', { objects: [] }));
-          yield* print(attempt.failure.message);
-          yield* print((yield* queryOperations({ keys: ['${GET_OBJECTS_KEY}', '${KEY}'] })).map((row) => row.key).join());
+          try {
+            await ops['${GET_OBJECTS_KEY}']({ objects: [] });
+          } catch (error) {
+            print(error.message);
+          }
+          print(typeof ops['${KEY}']);
         `,
-        {
-          registry,
-          // Never asked here: a host that offers a database is what makes the binding the way.
-          host: { ...host, host: { ...host.host, database: () => Effect.fail(McpServer.hostError('unused')) } },
-          spaceId: SPACE_A,
-        },
+        { registry },
       );
-      const { output, error } = await result;
       expect(error).to.be.undefined;
       const [refusal, offered] = output.split('\n');
-      expect(refusal).to.include('use `yield* get(...)`');
-      expect(offered).to.equal(KEY);
+      expect(refusal).to.include('is not offered in code');
+      expect(offered).to.equal('function');
       expect(invocations).to.have.length(0);
 
       // The tool still lists and runs it, for a client that is not writing code.
@@ -965,9 +786,85 @@ describe('McpServer', () => {
       expect((await tool.result)._tag).to.equal('Success');
     });
 
+    test('a program that outruns its budget is abandoned with an error', async ({ expect }) => {
+      const { error } = await run(`await new Promise(() => {});`, { timeout: 50 });
+      expect(error).to.include('abandoned');
+    });
+
+    test('a host that gives scripts no database runs none', async ({ expect }) => {
+      const { error } = await run(`print('never');`, { withoutDatabase: true });
+      expect(error).to.include('gives them no database');
+    });
+
+    test('a space outside the session is refused before the program runs', async ({ expect }) => {
+      const { output, error } = await run(`print('never');`, { spaceId: SPACE_B });
+      expect(error).to.include('space_not_in_context');
+      expect(output).not.to.include('never');
+    });
+
+    // EDGE's MCP router runs no code: it hands the request to compute-service, which governs the script's calls.
+    test('a host that names a runner hands it the script as a plain-dialect request', async ({ expect }) => {
+      const requests: Operation.ScriptRequest[] = [];
+      const runner: Operation.ScriptRunner = {
+        run: (request) =>
+          Effect.sync(() => {
+            requests.push(request);
+            return { output: 'ran there', stats: { calls: 2, callMs: 7 } };
+          }),
+      };
+      const { host } = testHost({ spaceIds: [SPACE_A] });
+      const run = (spaceId: SpaceId) =>
+        EffectEx.runPromise(
+          McpServer.runScript(
+            testRegistry(),
+            host,
+            GATE,
+            { code: "print('x');", spaceId, skillTokens: ['token'] },
+            { runner, timeout: 5_000, maxOutput: 100 },
+          ),
+        );
+
+      expect(await run(SPACE_A)).to.deep.equal({ output: 'ran there', stats: { calls: 2, callMs: 7 } });
+      expect(requests).to.deep.equal([
+        {
+          source: Operation.inlineScript("print('x');", { dialect: Operation.ScriptDialects.Plain }),
+          spaceId: SPACE_A,
+          skillTokens: ['token'],
+          timeoutMs: 5_000,
+          maxOutput: 100,
+        },
+      ]);
+
+      // The session's spaces are checked before the script leaves.
+      expect((await run(SPACE_B)).error).to.include('space_not_in_context');
+      expect(requests).to.have.length(1);
+    });
+
     test('nothing outside the bindings is in scope by name', async ({ expect }) => {
-      const { result } = run(`yield* print(typeof invoke, typeof registry, typeof host, typeof ledger);`);
-      expect((await result).output).to.equal('function undefined undefined undefined');
+      const { output } = await run(
+        'print([typeof invoke, typeof registry, typeof host, typeof Effect, typeof ops, typeof get].join());',
+      );
+      expect(output).to.equal('undefined,undefined,undefined,undefined,object,function');
+    });
+  });
+
+  describe('formatScriptAnswer', () => {
+    test('prints the output, then the trailer', ({ expect }) => {
+      expect(McpServer.formatScriptAnswer({ output: 'a\nb', stats: { calls: 3, callMs: 41 } }, 52.4)).to.equal(
+        'a\nb\n---\n3 calls · 41 ms in calls · 52 ms total',
+      );
+    });
+
+    test('a failure a runner only reported is added after the output', ({ expect }) => {
+      expect(McpServer.formatScriptAnswer({ output: '', error: 'runner unavailable' }, 3)).to.equal(
+        'Error: runner unavailable\n---\n3 ms total',
+      );
+    });
+
+    test('a script that made no count reports only the total', ({ expect }) => {
+      expect(McpServer.formatScriptAnswer({ output: 'Error: offline', error: 'Error: offline' }, 3)).to.equal(
+        'Error: offline\n---\n3 ms total',
+      );
     });
   });
 
@@ -1338,13 +1235,14 @@ describe('McpServer.toolsLayer', () => {
 
   test('code mode adds runScript, accepting the skillToken the loadSkill tool issued', async ({ expect }) => {
     const registry = testRegistry();
-    const { host, invocations } = testHost();
+    const { db, close } = await taskDatabase();
+    const { host, invocations } = testHost({ spaceIds: [db.spaceId] });
     const { handler, dispose } = HttpRouter.toWebHandler(
-      McpServer.toolsLayer({ script: { sandbox: McpServer.inProcessScriptSandbox } }).pipe(
+      McpServer.toolsLayer({ script: { sandbox: Sandbox.inProcess } }).pipe(
         Layer.provide(
           Layer.succeed(McpServer.RegistrySource, McpServer.RegistrySource.of({ registry: Effect.succeed(registry) })),
         ),
-        Layer.provide(Layer.succeed(McpServer.Host, host)),
+        Layer.provide(Layer.succeed(McpServer.Host, { ...host, database: () => Effect.succeed(db) })),
         Layer.provide(
           McpServer$.layerHttp({ name: 'test', version: '0.0.0', path: '/mcp', protocols: [McpProtocol.v2026_07_28] }),
         ),
@@ -1361,8 +1259,8 @@ describe('McpServer.toolsLayer', () => {
       const called = await send(handler, 'tools/call', {
         name: 'runScript',
         arguments: {
-          code: `yield* print((yield* invoke('${KEY}', { title: 'x' })).ok);`,
-          spaceId: SPACE_A,
+          code: `print((await ops['${KEY}']({ title: 'x' })).ok);`,
+          spaceId: db.spaceId,
           skillTokens: [loaded.result.structuredContent.skillToken],
         },
       });
@@ -1375,7 +1273,7 @@ describe('McpServer.toolsLayer', () => {
 
       const failed = await send(handler, 'tools/call', {
         name: 'runScript',
-        arguments: { code: `yield* print('before'); yield* Effect.fail('boom');`, spaceId: SPACE_A },
+        arguments: { code: `print('before'); throw new Error('boom');`, spaceId: db.spaceId },
       });
       expect(failed.result.isError).to.equal(true);
       expect(failed.result.content[0].text).to.match(/^before\nError: boom\n---\n0 calls · /);
@@ -1385,6 +1283,7 @@ describe('McpServer.toolsLayer', () => {
       expect(descriptor.inputSchema.properties).to.have.property('code');
     } finally {
       await dispose();
+      await close();
     }
   });
 

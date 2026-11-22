@@ -49,6 +49,45 @@ export class UnknownParentError extends Schema.TaggedError<UnknownParentError>('
 ) {}
 
 /**
+ * The plain dialect's bindings and what they cost, as the API reference lists them. Shared with MCP's `runScript`,
+ * which runs this dialect too, so a client is told about the same bindings the agent is.
+ */
+export const PLAIN_API = trim`
+    - \`print(...values)\` — adds a line to this call's output. Strings go through verbatim. An
+      object prints as a card: its type, id, label and fields, refs as \`→ type id "label"\`. Print
+      the object itself, never \`JSON.stringify\` it. Anything else prints as JSON, long strings and
+      arrays cut with a \`…[+N chars]\` / \`… N more\` marker.
+    - \`print(await describe(obj))\` — the card plus counts of the object's relations, children and
+      referrers, with the call that fetches each — the only way to see that those exist.
+    - \`await relations(obj, 'out' | 'in', typename?)\`, \`await children(obj)\`,
+      \`await referrers(obj, typename?, field?)\` — the relations from or to an object, the objects
+      it is the parent of, and the objects whose ref fields point at it.
+    - \`await query(typename, props?, { feeds?, in? }?)\` — objects of that typename, optionally narrowed by exact
+      property values, e.g. \`await query('com.example.type.task', { status: 'open' })\`. Pass
+      \`{ feeds: true }\` to also match what feeds hold (mail, calendar events), and \`{ in: [obj] }\` to keep only
+      objects under those (a feed, a collection).
+    - \`await get(idOrRef)\` — the stored object an id or a reference names: \`ref(obj)\`, a \`Ref\` field, or the
+      \`{ "/": uri }\` an operation returns; \`undefined\` when there is none.
+    - \`await search(text, typename?, { feeds?, in? }?)\` — objects whose text matches, by full-text search,
+      optionally of one typename, with the same options as \`query\`.
+    - \`await make(typename, props)\` — a new object; it is not stored until you add it.
+    - \`await add(obj)\` / \`await remove(obj)\` — store or delete an object.
+    - \`update(obj, (obj) => { obj.field = value; })\` — the only way to change a stored object.
+    - \`await flush()\` — waits for pending writes to land; call it before printing a final
+      confirmation.
+    - \`ref(obj)\` — a reference to an object you hold. A \`Ref<typename>\` field takes one, never
+      an id or a URI string: \`await make('com.example.type.task', { title: 'Review', owner: ref(person) })\`.
+      Where an operation's input takes references, pass \`ref(obj)\` too.
+
+    These bindings run against a database this evaluation already has open, so each call is a local read or write.
+    An \`ops\` call is a remote invocation that opens its own database, and can take seconds. Read and change
+    objects with the bindings, even where a skill names a tool for it: read with \`get\`, \`query\` or \`search\`,
+    and change with \`update\`. One case still takes an operation, when it is listed: creating or deleting an object
+    the user should find in a collection, which the space operations that add and remove objects file into its
+    collection, or unlink.
+`;
+
+/**
  * Plain async JavaScript over a small facade: `await query(...)`, `update(obj, mutator)`,
  * `await ops.thing(input)`.
  *
@@ -185,8 +224,7 @@ export const PlainDialect: Dialect = {
       add: (obj: Obj.Unknown) => run(Database.add(obj)),
       remove: (obj: Obj.Unknown) => run(Database.remove(obj)),
       flush: () => run(Database.flush()),
-      update: (obj: Obj.Unknown, mutator: (obj: any) => void) =>
-        Obj.update(obj, (obj) => mutator(diffingStrings(obj))),
+      update: (obj: Obj.Unknown, mutator: (obj: any) => void) => Obj.update(obj, (obj) => mutator(diffingStrings(obj))),
 
       ops: guardOperations(
         Object.fromEntries(
@@ -196,7 +234,8 @@ export const PlainDialect: Dialect = {
             // which is not an identifier, so `ops.researchOrg` would otherwise have to be bracketed.
             // Also under the operation's key, with and without `dxn:`, since the Skill Manager says an
             // operation is called by its key or its tool name.
-            const key = operation.definition === undefined ? undefined : String(operation.definition.meta.key);
+            const key =
+              operation.key ?? (operation.definition === undefined ? undefined : String(operation.definition.meta.key));
             const keys = key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])];
             return [operation.name, camelCase(operation.name), ...keys].map((name) => [name, invoke] as const);
           }),
@@ -221,38 +260,7 @@ export const PlainDialect: Dialect = {
 
     ### API
 
-    - \`print(...values)\` — adds a line to this call's output. Strings go through verbatim. An
-      object prints as a card: its type, id, label and fields, refs as \`→ type id "label"\`. Print
-      the object itself, never \`JSON.stringify\` it. Anything else prints as JSON, long strings and
-      arrays cut with a \`…[+N chars]\` / \`… N more\` marker.
-    - \`print(await describe(obj))\` — the card plus counts of the object's relations, children and
-      referrers, with the call that fetches each — the only way to see that those exist.
-    - \`await relations(obj, 'out' | 'in', typename?)\`, \`await children(obj)\`,
-      \`await referrers(obj, typename?, field?)\` — the relations from or to an object, the objects
-      it is the parent of, and the objects whose ref fields point at it.
-    - \`await query(typename, props?, { feeds?, in? }?)\` — objects of that typename, optionally narrowed by exact
-      property values, e.g. \`await query('com.example.type.task', { status: 'open' })\`. Pass
-      \`{ feeds: true }\` to also match what feeds hold (mail, calendar events), and \`{ in: [obj] }\` to keep only
-      objects under those (a feed, a collection).
-    - \`await get(idOrRef)\` — the stored object an id or a reference names: \`ref(obj)\`, a \`Ref\` field, or the
-      \`{ "/": uri }\` an operation returns; \`undefined\` when there is none.
-    - \`await search(text, typename?, { feeds?, in? }?)\` — objects whose text matches, by full-text search,
-      optionally of one typename, with the same options as \`query\`.
-    - \`await make(typename, props)\` — a new object; it is not stored until you add it.
-    - \`await add(obj)\` / \`await remove(obj)\` — store or delete an object.
-    - \`update(obj, (obj) => { obj.field = value; })\` — the only way to change a stored object.
-    - \`await flush()\` — waits for pending writes to land; call it before printing a final
-      confirmation.
-    - \`ref(obj)\` — a reference to an object you hold. A \`Ref<typename>\` field takes one, never
-      an id or a URI string: \`await make('com.example.type.task', { title: 'Review', owner: ref(person) })\`.
-      Where an operation's input takes references, pass \`ref(obj)\` too.
-
-    These bindings run against a database this evaluation already has open, so each call is a local read or write.
-    An \`ops\` call is a remote invocation that opens its own database, and can take seconds. Read and change
-    objects with the bindings, even where a skill names a tool for it: read with \`get\`, \`query\` or \`search\`,
-    and change with \`update\`. One case still takes an operation, when it is listed: creating or deleting an object
-    the user should find in a collection, which the space operations that add and remove objects file into its
-    collection, or unlink.
+    ${PLAIN_API}
 
     ${renderTypes(types?.filter(({ kind }) => kind === 'object'))}
 

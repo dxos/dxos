@@ -63,8 +63,6 @@ contexts.
   collection, using rules that plugins contribute through the capability manager, and `space.removeObjects`
   unlinks an object from the root collection and closes its open panels. `add` and `remove` do neither, and an
   agent on EDGE has no capability manager to ask for the rules. Both operations stay; see open question 2.
-- Diff-based text writes. `update` and `space.updateObject` both replace a whole string today; that is a separate
-  change.
 - MCP's `invokeOperation` tool. A client without code mode still needs every operation, so the tool keeps them.
 
 ## Design
@@ -104,11 +102,10 @@ Its value names the bindings that replace the operation. plugin-space annotates 
 Code mode leaves annotated operations out:
 
 - Agent: out of `ops` and out of the operations section of the system prompt, in both dialects.
-- MCP script: `invoke` refuses them with a message that names the binding, and `queryOperations` inside a script
-  does not list them. Only on a host that gives scripts a database (section 4): elsewhere the operation is still the
-  only way, so it stays.
+- MCP script: out of `ops` (section 4).
 
-The `invokeOperation` tool still runs them.
+`ops` answers a name it does not bind with an error that names the bindings. The `invokeOperation` tool still runs
+the annotated operations.
 
 The annotation reaches EDGE without a key list. `Operation.serialize` writes `meta.annotations` into the record,
 `Operation.deserialize` restores it, and operation-service's `listOperations` returns those records to
@@ -130,49 +127,63 @@ The plain dialect's API reference gets one paragraph ahead of the operations sec
 The Database skill's text still tells the model to read with `space-get-objects`. So `ops` answers a name it does not
 bind with an error that names the bindings, instead of the bare "is not a function".
 
-MCP's `runScript` description gets the same guidance. The Database skill's own text does not change. It is correct
-for a client that calls tools, and code mode's reference overrides it for code.
+MCP's `runScript` description carries the same API reference, read from the plain dialect, with this paragraph. The
+Database skill's own text does not change. It is correct for a client that calls tools, and code mode's reference
+overrides it for code.
 
-### 4. Bindings for MCP scripts
+A string assigned over a string in `update` is written as a diff (`Text.update`), as `markdown.update` writes it, so
+replacing a document's text keeps cursors and merges with concurrent edits.
 
-`runScript` keeps the Effect dialect. Four verbs join `invoke`, `queryOperations`, `loadSkill` and `print`, each an
-effect that fails with the same `ToolFailure`:
+### 4. MCP scripts run the plain dialect
 
-- `yield* get(idOrRef)`: the object, or `undefined`.
-- `yield* query(typename, props?, options?)`: objects of the type, optionally narrowed by exact property values.
-- `yield* search(text, typename?, options?)`: a full-text search, optionally narrowed by type.
+`runScript` runs code mode's plain dialect, through code mode's runner: the `Operation.ScriptRunner` that
+`@dxos/compute` defines for scripts (`Operation.inlineScript(code, { dialect: 'plain' })`). An MCP script and the
+agent's `eval` are then one language over one set of bindings, documented by one reference.
 
-Both take the agent's `{ feeds?, in? }`, with `in` naming objects by id or reference.
+It is not the Effect dialect, because that dialect cannot run on EDGE:
 
-- `yield* update(idOrRef, patch)`: replaces the patch's fields and returns the object. The write is stored before
-  the effect succeeds.
+1. Workers do not compile code from a string (`new Function`, `eval`), so EDGE runs a script in a Worker Loader
+   isolate, never in its own process.
+2. That isolate holds no database. The Effect dialect hands code live ECHO objects and the `@dxos/echo` modules
+   (`Database.query(...).run` returns live objects; `Obj.update` changes them), and neither crosses the isolate's
+   boundary. The plain dialect's bindings are functions over plain data, which is what crosses: `WorkerdSandbox`
+   answers each one on the host. The EDGE agent runs the plain dialect for the same reason.
 
-They act on the space the `spaceId` argument names. Data travels in `invoke`'s wire form: objects come out as
-snapshots with qualified `{"/": "echo://..."}` envelopes, and an envelope in a patch becomes a reference. So what
-`get` returns can go straight into `invoke`, and the other way round.
+What a script gets, against the space the `spaceId` argument names:
 
-The verbs are answered host-side, in `scriptDispatch`, next to the other three. Both sandboxes only forward the
-verb's name and arguments, so there is no second copy of the workerd facade: no held-object map, no `ref` markers,
-no mutator diffing. `update` takes a patch rather than a mutator, because a function cannot cross into the host.
+- The plain bindings: `print`, `describe`, `relations`, `children`, `referrers`, `query`, `get`, `search`, `make`,
+  `add`, `remove`, `update`, `flush`, `ref`.
+- `ops`: every operation an opted-in skill names, except those a binding replaces, under its key and its tool
+  name. A call runs exactly as `invokeOperation` does: the same input codec, skill gate, space rules and
+  `{"/": "echo://..."}` envelopes. The gate takes the `skillTokens` argument, and a call whose skill is not loaded
+  throws, naming the skill to load.
 
-`HostShape` gains an optional `database(spaceId)`. A host without one refuses the verbs with a message that says
-so.
+A script has no `loadSkill` or `queryOperations`: the client calls those tools before it writes the script.
 
-- EDGE: compute-service's script host opens one `FunctionContext` for the script's space, on the first verb that
-  needs it, and closes it when the script ends.
-- CLI (`dx mcp serve`): the space's database from the profile's client.
+How it runs:
 
-`runScript` takes `spaceId` from the session's spaces, so the verbs can reach nothing `invoke` could not.
+- `ScriptOptions.sandbox` is a code mode `Sandbox`: `Sandbox.inProcess` for `dx mcp serve --code-mode`, and on EDGE
+  the `WorkerdSandbox` isolate the agent already uses.
+- A host that runs no code names a `runner` instead, an `Operation.ScriptRunner` in another runtime, and `runScript`
+  hands it the plain-dialect request. EDGE's MCP router does this: its runner sends the request to compute-service,
+  which answers it with `runScript` and `WorkerdSandbox`.
+- The runner's database is the host's `database(spaceId)`: on EDGE one `FunctionContext` over the caller's working
+  set, opened for the script and closed when it ends; on the CLI the space the profile's client holds open.
+- mcp-server depends on agent-code-mode for the runner, the dialect and its reference text. MCP's own script
+  sandboxes, its isolate module and its Effect verbs are removed.
+
+This changes `runScript`'s contract: a script is the body of an async function, not of an `Effect.gen`. A client's
+existing Effect scripts fail to compile, and the tool's description gives the new form.
 
 ## Testing
 
 - agent-code-mode: unit tests for `get` and `search`; a producer test that annotated operations are absent from
   `ops` and from the prompt; a workerd test for `get` and `search` across the isolate.
 - plugin-space: the two operations carry the annotation.
-- mcp-server: in-process `runScript` tests for the four verbs; a script's `invoke` refuses an annotated operation
-  while the `invokeOperation` tool still runs it.
-- edge: a compute-service test where one script reads, updates and reads again against one context. The Discord
-  agent tests are recorded again, and assert that no turn calls an annotated operation.
+- mcp-server: `runScript` tests on a real database for the plain bindings and `ops` (skill gate, envelopes); an
+  annotated operation is absent from `ops` while the `invokeOperation` tool still runs it.
+- edge: mcp-space-service and mcp-router scripts in the plain dialect, run in the `WorkerdSandbox` isolate; one
+  script reads and updates, a second reads the change back. The Discord agent tests are recorded again.
 - Model fixtures recorded again where the prompt changed.
 
 ## Plan
@@ -183,13 +194,15 @@ This dxos PR:
 2. `ScriptBindingAnnotation` in `@dxos/compute`; plugin-space annotates its two operations.
 3. `get` and `search` in the plain dialect and the workerd facade.
 4. Code mode leaves annotated operations out; the cost paragraph goes into the API reference.
-5. MCP `runScript` verbs, with `HostShape.database`; the CLI host supplies it.
+5. MCP `runScript` runs the plain dialect through code mode's runner, with `HostShape.database`; the CLI host
+   supplies it.
 6. Model fixtures recorded again.
 
 The edge PR, after this one publishes:
 
 1. Bump `@dxos/*`.
-2. compute-service's script host supplies `database`, opening one `FunctionContext` per script.
+2. compute-service runs `runScript` in `WorkerdSandbox` and supplies `database`, opening one `FunctionContext` per
+   script.
 3. Discord agent memos recorded again; an end-to-end check on dev.
 
 ## Open questions

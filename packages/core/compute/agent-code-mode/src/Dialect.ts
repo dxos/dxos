@@ -17,6 +17,11 @@ import { trim } from '@dxos/util';
 export type SandboxOperation = {
   /** Name it is bound under, i.e. the tool name derived from the operation key. */
   readonly name: string;
+  /**
+   * The operation's key, which `ops` binds too. Defaults to `definition`'s; a caller that holds only an operation's
+   * record, not its definition (an MCP server), names it here.
+   */
+  readonly key?: string;
   readonly description?: string;
   /** JSON schema of the operation's input, rendered into the model's API reference. */
   readonly parameters: unknown;

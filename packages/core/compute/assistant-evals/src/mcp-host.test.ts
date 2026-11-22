@@ -13,6 +13,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, SpaceId } from '@dxos/keys';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -117,35 +118,44 @@ describe('startMcpHost', () => {
 
   test('code mode serves runScript, whose loop reaches the invoker once per item', async ({ expect }) => {
     const { invocations, context } = stubInvoker();
+    const builder = await new EchoTestBuilder().open();
+    const { db } = await builder.createDatabase();
 
-    await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const registry = makeRegistry({ initial: [...Operation.serializable([CreateTask]), definition.make()] });
-        const { url } = yield* startMcpHost({
-          skills: [definition],
-          spaceIds: [SPACE],
-          context: () => context,
-          registry: () => registry,
-          codeMode: true,
-        });
-        const toolkit = yield* McpToolkit.make({ url, protocol: 'http' });
-        expect(Object.keys(toolkit.toolkit.tools)).to.include('runScript');
+    try {
+      await EffectEx.runPromise(
+        Effect.gen(function* () {
+          const registry = makeRegistry({ initial: [...Operation.serializable([CreateTask]), definition.make()] });
+          const { url } = yield* startMcpHost({
+            skills: [definition],
+            spaceIds: [db.spaceId],
+            // The harness's database rides in its context, which is what the script runs against.
+            context: () => Context.add(context, Database.Service, Database.makeService(db)),
+            registry: () => registry,
+            codeMode: true,
+          });
+          const toolkit = yield* McpToolkit.make({ url, protocol: 'http' });
+          expect(Object.keys(toolkit.toolkit.tools)).to.include('runScript');
 
-        const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
-        const code = [
-          "yield* loadSkill('tasks');",
-          "for (const title of ['Ship', 'Test']) {",
-          `  yield* print((yield* invoke('${KEY}', { title })).id);`,
-          '}',
-        ].join('\n');
-        yield* Stream.runDrain(
-          yield* handlers.handle('runScript', { code, spaceId: SPACE }).pipe(Effect.provide(toolkit.layer)),
-        );
+          const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
+          const skillToken = yield* McpServer.skillGate().issue(definition.key);
+          const code = [
+            "for (const title of ['Ship', 'Test']) {",
+            `  print((await ops['${KEY}']({ title })).id);`,
+            '}',
+          ].join('\n');
+          yield* Stream.runDrain(
+            yield* handlers
+              .handle('runScript', { code, spaceId: db.spaceId, skillTokens: [skillToken] })
+              .pipe(Effect.provide(toolkit.layer)),
+          );
 
-        expect(invocations.map(({ input }) => input)).to.deep.equal([{ title: 'Ship' }, { title: 'Test' }]);
-        expect(invocations.every(({ spaceId }) => spaceId === SPACE)).to.equal(true);
-      }).pipe(Effect.scoped),
-    );
+          expect(invocations.map(({ input }) => input)).to.deep.equal([{ title: 'Ship' }, { title: 'Test' }]);
+          expect(invocations.every(({ spaceId }) => spaceId === db.spaceId)).to.equal(true);
+        }).pipe(Effect.scoped),
+      );
+    } finally {
+      await builder.close();
+    }
   });
 
   test('the latency probe times the same surface from the outside', async ({ expect }) => {
