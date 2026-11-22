@@ -1,6 +1,6 @@
 ---
 title: 'Demo'
-layout: 'two-cols'
+layout: 'center'
 ---
 
 <Box variant="brand">
@@ -10,14 +10,6 @@ layout: 'two-cols'
 # composer
 
 </Box>
-
-::right::
-
-1. **Sync is real**, and it runs on Cloudflare.
-2. **Who changed what**: history by person and by agent.
-3. **One schema** for people and agents.
-4. **Scoped access**: the token the agent never holds.
-5. **It works with Cloudflare OS.**
 
 <!--
 Notes. 15 to 20 minutes
