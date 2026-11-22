@@ -47,10 +47,10 @@ describe('MarkdownSlide', () => {
     expect(markup).not.toContain('--slide-subheading:');
   });
 
-  test('bold text takes the heading color at the body’s weight', ({ expect }) => {
+  test('bold text takes the subheading color at the body’s weight', ({ expect }) => {
     const markup = render('- **ECHO** holds the data');
     const classes = markup.match(/<li [^>]*>\s*<strong [^>]*class="([^"]*)"/)?.[1] ?? '';
-    expect(classes).toContain('text-[color:var(--slide-heading,var(--slide-accent))]');
+    expect(classes).toContain('text-[color:var(--slide-subheading,var(--slide-accent))]');
     expect(classes.split(' ')).toContain('font-normal');
   });
 

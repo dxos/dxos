@@ -930,14 +930,22 @@ export const HeadingColors: Story = {
 };
 
 /**
- * Bold text is set in the heading color at the body's weight, so color alone marks it. A flow card is the exception:
- * there bold is the card's title, which keeps the card's color and a bold weight.
+ * Bold text is set in the subheading color at the body's weight, so color alone marks it. A flow card is the
+ * exception: there bold is the card's title, which keeps the card's color and a bold weight. The deck here gives each
+ * heading level a color of its own, which shows that bold follows the second.
  */
 export const StrongText: Story = {
+  render: (props: MarkdownSlideProps) => (
+    <SlideThemeProvider settings={{ heading: '#CA6346', subheading: '#336288' }}>
+      <TestContainer {...props} />
+    </SlideThemeProvider>
+  ),
   args: {
     content: slide(
       { layout: 'default' },
       '# Bold text',
+      '',
+      '## Takes the subheading color',
       '',
       '- **ECHO** holds the data',
       '- **Agents** act on it',
@@ -951,11 +959,13 @@ export const StrongText: Story = {
     ),
   },
   play: async ({ canvasElement }) => {
-    const heading = await query(canvasElement, '[data-slide] h1');
+    const color = async (selector: string) => getComputedStyle(await query(canvasElement, selector)).color;
+    await expect(await color('[data-slide] h1')).toBe('rgb(202, 99, 70)');
+    await expect(await color('[data-slide] h2')).toBe('rgb(51, 98, 136)');
+
     const item = await query(canvasElement, '[data-slide] ul > li');
     const strong = await query(canvasElement, '[data-slide] ul > li strong');
-    await expect(getComputedStyle(strong).color).toBe(getComputedStyle(heading).color);
-    await expect(getComputedStyle(strong).color).not.toBe(getComputedStyle(item).color);
+    await expect(getComputedStyle(strong).color).toBe('rgb(51, 98, 136)');
     await expect(getComputedStyle(strong).fontWeight).toBe(getComputedStyle(item).fontWeight);
 
     const card = await query(canvasElement, 'ol[data-variant="flow"] > li');
