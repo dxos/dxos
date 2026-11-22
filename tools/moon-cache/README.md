@@ -32,12 +32,39 @@ leaves uploads to CI (moon treats a run with `CI` set as CI). A worktree often h
 or a dev server rewriting `dist/` while a build is archived, and an entry uploaded from that state
 reaches every job that shares the hash.
 
-### Evicting a bad entry
+### Entries that restore nothing
+
+moon fails a task whose declared output is missing after it runs, but it accepts an output directory
+that exists and is **empty**. It archives that as an entry with no files and later hydrates it as a
+success that restores nothing, so every job that shares the hash fails downstream (TS7016 on a
+`dist/types` that is not there, `UNRESOLVED_IMPORT` on a generated file) and a re-run hydrates the
+same entry. A missing blob is not this problem: moon notices it and rebuilds.
+
+CI repairs such an entry on its own. `.github/actions/setup` puts `ci/moon` first on PATH, a shim
+that runs the real moon and then `ci/verify-hydration.mjs`. For every task the run restored from a
+cache, that script checks each declared output (globs excepted) is a file or a directory with a file
+in it. A task that fails the check is rebuilt with `moon run <target> --force`, which keeps the hash
+and overwrites the remote entry, and a command that failed is run once more. The job log carries a
+`moon cache` warning naming the task, its hash and the missing path.
+
+The retry happens only when every task that failed depends on a rebuilt one. That is a heuristic, not
+proof of cause: a flaky test downstream of a rebuilt task can still pass on the retry. A failure in a
+task that does not depend on any rebuilt task always keeps the first run's verdict.
+
+If a task leaves the output empty even when built from scratch, the script reports an error and fails
+the step without retrying, since every later job would hydrate the same empty entry: make the task
+write a file there, or declare the output as a glob if it may be empty. A rebuild that itself fails
+also fails the step, since moon archives only a task that succeeded and the bad entry stays.
+
+### Evicting a bad entry by hand
 
 bazel-remote has no delete. To replace a bad entry, re-run the task with `--force` in CI, for example
 `moon run util:build --force`. That run skips hydration, builds the outputs again and overwrites the
-action-cache entry for the same hash. To drop an entry outright, an operator deletes its file under
-the server's `ac/` directory on the droplet.
+action-cache entry for the same hash. `--force` also rebuilds every upstream task, since hashing the
+target needs them in the graph (`moon exec --upstream none` gives a different hash). It does **not**
+replace a local CAS manifest, which moon writes only when none exists for the hash: delete
+`.moon/cache/manifests/<first two hex digits>/<the rest>` first. To drop a remote entry outright, an
+operator deletes its file under the server's `ac/` directory on the droplet.
 
 A manifest in the local shared cache is not replaced this way: in a worktree, `--force` logs the new
 file count but the existing manifest stays, so the next cache hit restores the bad entry. A manifest

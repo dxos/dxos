@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# CI's `moon`: the real one, plus a check that tasks restored from the cache got their outputs back.
+# `.github/actions/setup` puts this directory first on PATH; why it exists: tools/moon-cache/README.md.
+set -euo pipefail
+
+shim_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+real=$(PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -vxF "$shim_dir" | paste -sd: -) command -v moon || true)
+if [ -z "$real" ]; then
+  echo "moon shim: no moon on PATH besides $shim_dir" >&2
+  exit 127
+fi
+
+# Only these subcommands hydrate task outputs; everything else (query, setup, task) passes straight through.
+case "${1:-}" in
+  run | exec | ci)
+    MOON_REAL_BIN="$real" exec node "$shim_dir/verify-hydration.mjs" "$@"
+    ;;
+  *)
+    exec "$real" "$@"
+    ;;
+esac
