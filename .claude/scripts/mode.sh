@@ -185,6 +185,9 @@ RESPONSE RULES (re-injected every turn; these govern the reply, not the work).
   a-or-b, never a bare open question.
 - Lead with the direct answer or result. No preamble, no restatement of the
   request, no summary of what you are about to do.
+- End with direct, concise, context-free next steps: inline every path,
+  command, URL and value. Never refer back into the body ("as above", "with
+  those settings") — the closing steps must work if they are all that is read.
 EOF
     if [ "$(current)" = 'terse' ]; then
       cat <<'EOF'
