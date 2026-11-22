@@ -14,7 +14,7 @@ layout: 'default'
 </Cell>
 <Cell>
 
-897 apps in the average enterprise; 29% are connected.
+- 897 apps in the average enterprise; 29% are connected.
 
 </Cell>
 <Cell>
@@ -24,7 +24,7 @@ layout: 'default'
 </Cell>
 <Cell>
 
-Chad Fowler: "Standardize the slow layers. Generate the fast layers."
+- Chad Fowler: "Standardize the slow layers. Generate the fast layers."
 
 </Cell>
 <Cell>
@@ -34,7 +34,7 @@ Chad Fowler: "Standardize the slow layers. Generate the fast layers."
 </Cell>
 <Cell>
 
-Salesforce put its CRM inside Claude. Benioff: "the UI is the AI."
+- Salesforce put its CRM inside Claude. Benioff: "the UI is the AI."
 
 </Cell>
 <Cell>
@@ -44,7 +44,7 @@ Salesforce put its CRM inside Claude. Benioff: "the UI is the AI."
 </Cell>
 <Cell>
 
-Block's Buzz, Multica, and YC's call for "multiplayer AI".
+- Block's Buzz, Multica, and YC's call for "multiplayer AI".
 
 </Cell>
 <Cell>
@@ -54,7 +54,7 @@ Block's Buzz, Multica, and YC's call for "multiplayer AI".
 </Cell>
 <Cell>
 
-DeepSeek's super agent: always on, delegating; people can follow only 3 to 5 sessions.
+- DeepSeek's super agent: always on, delegating; people can follow only 3 to 5 sessions.
 
 </Cell>
 

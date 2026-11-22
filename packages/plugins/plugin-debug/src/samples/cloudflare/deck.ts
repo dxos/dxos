@@ -140,7 +140,7 @@ export const makeStudioDeck = (drawings: ReadonlyMap<string, Drawing.Drawing>): 
       heading: '#06c5fd',
       subheading: '#ff7a45',
       foreground: '#b3b8c0',
-      font: 'geist',
+      font: 'space-grotesk',
       monoFont: 'fira',
     },
     footer: { left: 'DXOS', right: '<SlideCurrentNo />/<SlidesTotal />' },
