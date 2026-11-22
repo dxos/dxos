@@ -171,6 +171,9 @@ export const EFFECT_API = trim`
     \`Ref.make(obj)\` of an object you hold — never an id or a URI string. A failed load or operation
     fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
 
+    A skill may name tools for reading, querying or updating objects; in code those are hidden, so do
+    that with \`Database\` and \`Obj\` instead.
+
     Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
     a function\` and costs a call.
 `;
