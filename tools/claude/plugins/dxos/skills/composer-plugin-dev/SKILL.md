@@ -46,9 +46,14 @@ before writing code. In an existing plugin, change only the dependency pins.
 
 Pin `package.json`:
 
-- `@dxos/*`: `<version>` exactly, with no `^` or `~`, even where the guide shows another form. A
-  range can resolve two packages to different snapshots. The example needs `app-framework`,
-  `app-graph` and `app-toolkit`; add a package when you import from it.
+- `@dxos/*`: each package's snapshot of `<commit>`, exactly, with no `^` or `~`, even where the
+  guide shows another form. SDK packages share `<version>`; `@dxos/plugin-*` and `@dxos/cli` are
+  versioned apart, so look each up. The example needs `app-framework`, `app-graph` and
+  `app-toolkit`; add a package when you import from it.
+
+  ```bash
+  npm view @dxos/<name> versions --json | grep -o '[^"]*-next-<commit>'
+  ```
 - `effect`, `react`, `react-dom`: the exact version the pinned `@dxos/app-framework` declares
   (`~19.3.1` → `19.3.1`):
 

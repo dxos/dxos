@@ -6,10 +6,13 @@ Take these steps only when the user asks to publish the plugin or install it fro
 
 ## 1. Log in with dx
 
-Install the `dx` CLI of the pinned snapshot, `version` in `.dxos/target.json`:
+Install the `dx` CLI from the pinned snapshot's commit, the `<commit>` that ends `version` in
+`.dxos/target.json`. The CLI is versioned apart from the SDK, so look up its own version,
+`<cli-version>`:
 
 ```bash
-npm install --prefix .dxos/cli @dxos/cli@<version>
+npm view @dxos/cli versions --json | grep -o '[^"]*-next-<commit>'
+npm install --prefix .dxos/cli @dxos/cli@<cli-version>
 node .dxos/cli/node_modules/@dxos/cli/bin/dx.js --version
 ```
 

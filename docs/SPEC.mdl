@@ -7247,7 +7247,7 @@ decision D-375: The `/echo` page's HTML lists every chunk the editor demo import
 ```
 
 ```mdl
-decision D-376: A plugin pins every `@dxos/*` package to the newest npm `@next` snapshot to load into Composer Preview, and Publishing a plugin says so first, ahead of a release's npm version and a pkg.pr.new build of one commit. `publish-all.yml` publishes a `@next` snapshot from `main` every Monday at 07:00 UTC, the hour Composer Preview deploys, and a manual dispatch still publishes one on demand. The `composer-plugin-dev` skill, which the coding-agent prompts install, pins to `@next` and installs without `--legacy-peer-deps`.
+decision D-376: A plugin pins every `@dxos/*` package to the newest npm `@next` snapshot to load into Composer Preview, and Publishing a plugin says so first, ahead of a release's npm version and a pkg.pr.new build of one commit. `publish-all.yml` publishes a `@next` snapshot from `main` every Monday at 07:00 UTC, the hour Composer Preview deploys, and a manual dispatch still publishes one on demand. Every run versions both release groups, so each `@dxos/*` package has a snapshot of the run's commit; plugins and the CLI keep their own version numbers, and a plugin pins each package to its snapshot of one commit. The `composer-plugin-dev` skill, which the coding-agent prompts install, pins to `@next` and installs without `--legacy-peer-deps`.
   date: 2026-11-23
   by: user:wittjosiah
   affects: [app-framework-publishing, plex-build-with-agent]

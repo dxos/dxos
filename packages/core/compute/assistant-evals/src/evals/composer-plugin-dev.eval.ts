@@ -242,7 +242,7 @@ const personaReply = (session: string, agentMessage: string) =>
 
 const DIMENSIONS = {
   'skill-fired': 'The agent loaded composer-plugin-dev on its own.',
-  'pinned': 'Every @dxos/* dependency is pinned to one exact npm version, such as the @next snapshot.',
+  'pinned': 'Every @dxos/* dependency is pinned exactly to a snapshot of one commit, such as @next, or to one release.',
   'builds': 'The plugin builds and its manifest names its key.',
   'loads': 'Served from the dev server, the plugin is enabled and active in the target.',
   'navtree-group': 'F-1.1: the space navtree holds a clock-named group with a page under it.',
@@ -644,8 +644,10 @@ const gradeBuild = async (
   await boot(tab.page);
   const specs = Object.entries({ ...pkg.dependencies, ...pkg.devDependencies })
     .filter(([name]) => name.startsWith('@dxos/'))
-    .map(([, spec]) => /^\d+\.\d+\.\d+(-[\w.-]+)?$/.exec(String(spec))?.[0]);
-  mark('pinned', specs.length > 0 && specs.every((version) => version !== undefined && version === specs[0]));
+    // Plugins are versioned apart from the SDK, so one snapshot's packages share its `-next-<commit>`, not a number.
+    .map(([, spec]) => /^\d+\.\d+\.\d+(-[\w.-]+)?$/.exec(String(spec)))
+    .map((match) => match?.[1] ?? match?.[0]);
+  mark('pinned', specs.length > 0 && specs.every((snapshot) => snapshot !== undefined && snapshot === specs[0]));
 
   progress.stage = 'build';
   const built = run('npx', ['vite', 'build'], workdir);

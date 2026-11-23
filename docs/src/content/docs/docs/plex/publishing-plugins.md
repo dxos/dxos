@@ -497,6 +497,8 @@ load the plugin into:
 
 - For Composer Preview, use the newest `@next` snapshot. Preview deploys `main` every day, and `@next` is published
   from `main` every Monday. `npm view @dxos/app-framework@next version` prints it as `<version>-next-<commit>`.
+  `@dxos/plugin-*` packages are versioned apart from the SDK, so pin each to its own snapshot of the same commit, which
+  `npm view <package> versions` lists.
 - For a release, use its npm version.
 - For one particular commit of `main`, use its pkg.pr.new build, `https://pkg.pr.new/@dxos/<package>@<commit>`.
 
