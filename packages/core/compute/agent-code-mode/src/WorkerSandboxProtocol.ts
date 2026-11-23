@@ -12,6 +12,25 @@ import type { JsonSchema } from '@dxos/echo';
 /** Document id to Automerge heads. */
 const DocumentHeads = Schema.Record(Schema.String, Schema.mutable(Schema.Array(Schema.String)));
 
+/** A database's `WorkingSetReport`, checked because a worker in an isolate is untrusted code. */
+const WorkingSetReport = Schema.Struct({
+  rows: Schema.mutable(
+    Schema.Array(
+      Schema.Struct({
+        documentId: Schema.String,
+        heads: Schema.mutable(Schema.Array(Schema.String)),
+        bytes: Schema.Uint8Array,
+        objectId: Schema.optionalKey(Schema.String),
+        objectJson: Schema.optionalKey(Schema.String),
+        createdAt: Schema.optionalKey(Schema.Number),
+        updatedAt: Schema.optionalKey(Schema.Number),
+        directoryJson: Schema.optionalKey(Schema.String),
+      }),
+    ),
+  ),
+  base: DocumentHeads,
+});
+
 /**
  * What the worker needs from the host beyond ECHO itself.
  *
@@ -58,7 +77,7 @@ export const SandboxHostRpcs = RpcGroup.make(
     success: Schema.Any,
   }),
   Rpc.make('Sandbox.workingSetPut', {
-    payload: Schema.Struct({ report: Schema.Any }),
+    payload: Schema.Struct({ report: WorkingSetReport }),
     success: Schema.Void,
   }),
   // A type the worker's registry does not hold, resolved by the host as its own database resolves it (on EDGE, from

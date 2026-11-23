@@ -710,6 +710,18 @@ describe('McpServer', () => {
       expect(invocations).to.have.length(0);
     });
 
+    // As `DOCS['errors.md']` tells the model: a failed operation is a defect, which `Effect.exit` contains.
+    test('a script contains a failed call with Effect.exit and carries on', async ({ expect }) => {
+      const { output, error } = await run(
+        trim`
+          const exit = yield* Effect.exit(Operation.invoke(yield* Database.resolve('${KEY}'), { title: 'x' }));
+          yield* print(exit._tag, String(exit.cause).includes('skill_not_loaded'));
+        `,
+      );
+      expect(error).to.be.undefined;
+      expect(output).to.equal('Failure true');
+    });
+
     // A token is checked against the gate's derivation, so a forged one opens nothing.
     test('a token the gate did not issue is refused', async ({ expect }) => {
       const { error, invocations } = await run(

@@ -40,6 +40,7 @@ import { type DocEntry, STATIC_DOCS, loadDocs } from './docs/index.ts';
  */
 export const EffectDialect: Dialect = {
   name: 'effect',
+  database: true,
 
   operations: (operations) =>
     [renderOperationList(operations), renderEffectTools(operations)].filter((part) => part !== '').join('\n\n'),
@@ -242,11 +243,12 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
     const target = typeof ref === 'string' ? fromLegacyEchoDXN(ref) : ref;
     const resolved = schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
     // A type a source serves on demand (on EDGE, the published types) reaches the registry only once it is asked for,
-    // which `Database.resolve` does not do; asked here first, it then resolves as a registered type.
+    // which `Database.resolve` does not do; asked here first, it then resolves as a registered type. A lookup that fails
+    // leaves `Database.resolve` to report what it finds.
     return typeof target === 'string' && DXN.isDXN(target)
       ? Effect.gen(function* () {
           const { db } = yield* Database.Service;
-          yield* Effect.promise(() => resolveTypeOf(db, target));
+          yield* Effect.tryPromise(() => resolveTypeOf(db, target)).pipe(Effect.ignore);
           return yield* resolved;
         })
       : resolved;

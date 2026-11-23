@@ -18,9 +18,10 @@ client in a Web Worker (`WorkerSandbox`).
 
 ### 1. Hide the operations the database API replaces
 
-`Operation.hiddenInCodeMode` (`HiddenInCodeModeAnnotation`) hides an operation from code mode: the model's operations
-leave it out (both dialects), and an MCP script cannot resolve it. The `invokeOperation` tool still runs it for clients
-that do not write code. plugin-space hides `space.getObjects`, `space.updateObject` and `space.queryObjects`, and
+`Operation.hiddenInCodeMode` (`HiddenInCodeModeAnnotation`) hides an operation from code that holds the database: a
+dialect with that API (`Dialect.database`, set by the Effect dialect) leaves it out of the model's operations, and an
+MCP script cannot resolve it. The plain dialect, which has no such API, keeps it, and the `invokeOperation` tool still
+runs it for clients that do not write code. plugin-space hides `space.getObjects`, `space.updateObject` and `space.queryObjects`, and
 plugin-markdown `markdown.open`, because the database API does each of them entirely. The annotation travels in the
 serialized operation record, so EDGE's hosted toolkit sees it with no key list.
 
@@ -39,7 +40,9 @@ dialect's real bindings. Three things differ from a thread:
    model's code as the body of a function over the dialect's names (`SandboxInit.names`).
 3. The isolate is a security boundary: no network (`globalOutbound: null`), no bindings. The host's services serve any
    space, and code holding live objects can reach its own client, so the spawner's handle limits them
-   (`WorkerHandle.limit`) to the evaluation's space and the calls one database makes.
+   (`WorkerHandle.limit`) to the calls one database makes, on subscriptions the isolate opened on the evaluation's
+   space. A subscription's documents stay in that space with a data service that reads and writes them there, as
+   EDGE's does. The working set the isolate reports is decoded before the host stores it.
 
 EDGE's data service writes through to db-service, pushes no client's writes to another, and can neither report nor
 wait for heads. So `WorkerSandbox` takes three host hooks:

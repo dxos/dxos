@@ -75,6 +75,12 @@ export interface Dialect {
 
   /** Names bound in the code's scope, built per evaluation. */
   readonly bindings: (context: BindingsContext) => Record<string, unknown>;
+
+  /**
+   * Whether the code reads and changes objects itself, so the operations marked `Operation.hiddenInCodeMode` are left
+   * out of its operations.
+   */
+  readonly database?: boolean;
 }
 
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */

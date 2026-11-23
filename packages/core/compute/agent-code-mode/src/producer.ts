@@ -27,7 +27,6 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
@@ -173,11 +172,8 @@ const runCodeModeTurn = ({
               const enabled = skills.filter(
                 (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
               );
-              // The Effect dialect does what an operation hidden in code mode does through `Database` and `Obj`; the
-              // plain dialect has no such API, so it keeps them.
               const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(
-                ({ definition }) =>
-                  dialect.name !== EffectDialect.name || !definition || !Operation.isHiddenInCodeMode(definition),
+                ({ definition }) => !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition),
               );
               labelCall = labelEvalCall(operations);
               const evalOptions = {

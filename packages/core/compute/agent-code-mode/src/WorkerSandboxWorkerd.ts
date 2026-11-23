@@ -77,13 +77,15 @@ const COMPATIBILITY_FLAGS = ['nodejs_compat', 'nodejs_als', 'no_handle_cross_req
 
 /**
  * A `WorkerSandbox` spawner for a Cloudflare Worker Loader isolate running {@link Runtime}, as `WorkerSandboxBrowser`'s
- * is for a Web Worker: `WorkerSandbox.make({ echo, spawn: WorkerSandboxWorkerd.spawn({ loader, runtime }) })`.
+ * is for a Web Worker: `WorkerSandbox.make({ echo, refresh, spawn: WorkerSandboxWorkerd.spawn({ loader, runtime }) })`,
+ * with `refresh`, since the isolate hands over by flush.
  *
  * Three things differ from a thread. The isolate cannot be handed a `MessagePort`, so the worker protocol travels over
  * two Workers RPC functions ({@link WorkerdBridge}). Workerd has no `eval`, so the model's code is compiled into the
  * program module written for each evaluation, a fresh isolate each time. And the isolate is a SECURITY boundary — no
- * network (`globalOutbound: null`), no bindings — so the handle limits the host's services to the evaluation's space
- * and to the calls a client of one database makes, whatever else they could serve; no caller can leave that out.
+ * network (`globalOutbound: null`), no bindings — so the handle limits the host's services to the calls a client of one
+ * database makes, on subscriptions it opened on the evaluation's space; no caller can leave that out. A subscription's
+ * documents stay in that space with a data service that reads and writes them there, as EDGE's does.
  *
  * The price is the runtime: every evaluation loads its own copy of ECHO and Automerge, and loads each document the code
  * touches from the host.
@@ -167,15 +169,28 @@ const limitToSpace = (access: WorkerSandbox.EchoAccess, spaceId: SpaceId): Worke
   const outside = (other: string | undefined) =>
     new Error(`Space ${other ?? '(none)'} is outside this sandbox, which reaches only space ${spaceId}.`);
   const refused = (call: string) => new Error(`${call} is not available inside the sandbox.`);
+  // A subscription id is the client's to choose, and a service looks it up among every subscriber's, so the isolate may
+  // name only the ones it opened here on this space.
+  const subscriptions = new Set<string>();
+  const notOwn = (subscriptionId: string) =>
+    new Error(`Subscription ${subscriptionId} was not opened inside this sandbox.`);
   return {
     DataService: {
-      'DataService.subscribe': (request, options) =>
-        request.spaceId === spaceId
-          ? data['DataService.subscribe'](request, options)
-          : Stream.fail(outside(request.spaceId)),
-      // Bound to the space its subscription was opened on, which `subscribe` checked.
-      'DataService.updateSubscription': (request, options) => data['DataService.updateSubscription'](request, options),
-      'DataService.update': (request, options) => data['DataService.update'](request, options),
+      'DataService.subscribe': (request, options) => {
+        if (request.spaceId !== spaceId) {
+          return Stream.fail(outside(request.spaceId));
+        }
+        subscriptions.add(request.subscriptionId);
+        return data['DataService.subscribe'](request, options);
+      },
+      'DataService.updateSubscription': (request, options) =>
+        subscriptions.has(request.subscriptionId)
+          ? data['DataService.updateSubscription'](request, options)
+          : Effect.fail(notOwn(request.subscriptionId)),
+      'DataService.update': (request, options) =>
+        subscriptions.has(request.subscriptionId)
+          ? data['DataService.update'](request, options)
+          : Effect.fail(notOwn(request.subscriptionId)),
       'DataService.createDocument': (request, options) =>
         request.spaceId === spaceId
           ? data['DataService.createDocument'](request, options)
@@ -188,9 +203,9 @@ const limitToSpace = (access: WorkerSandbox.EchoAccess, spaceId: SpaceId): Worke
         data['DataService.subscribeIndexStatus'](request, options),
       'DataService.subscribeIndexActivity': (request, options) =>
         data['DataService.subscribeIndexActivity'](request, options),
-      'DataService.getDocumentHeads': (request, options) => data['DataService.getDocumentHeads'](request, options),
-      'DataService.waitUntilHeadsReplicated': (request, options) =>
-        data['DataService.waitUntilHeadsReplicated'](request, options),
+      // Name any document; the isolate hands over by flush, which needs neither.
+      'DataService.getDocumentHeads': () => Effect.fail(refused('getDocumentHeads')),
+      'DataService.waitUntilHeadsReplicated': () => Effect.fail(refused('waitUntilHeadsReplicated')),
       'DataService.subscribeSpaceSyncState': (request, options) =>
         request.spaceId === spaceId
           ? data['DataService.subscribeSpaceSyncState'](request, options)
