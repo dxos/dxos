@@ -48,6 +48,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
+  EdgeReplicationRefusedError,
   type ListenHandle,
   RpcClosedError,
   type WorkingSetRow,
@@ -903,6 +904,18 @@ export class SpaceProxy implements Space, CustomInspectable {
       };
 
       ctx.onDispose(this._db.subscribeToAutomergeSyncState(ctx, checkSyncState));
+
+      // A refused connection never syncs, so fail now rather than at the timeout.
+      const edgeStatus = this._clientServices.services.EdgeAgentService?.queryEdgeStatus();
+      edgeStatus?.subscribe(
+        ({ status }) => {
+          if (status?.refusal) {
+            reject(new EdgeReplicationRefusedError({ message: status.refusal.message || undefined }));
+          }
+        },
+        (err) => err && log.catch(err),
+      );
+      ctx.onDispose(() => edgeStatus?.close());
       // TODO(dmaretskyi): Still need polling, otherwise this gets stuck.
       scheduleTaskInterval(
         ctx,

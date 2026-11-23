@@ -90,6 +90,15 @@ export class EdgeClientTooOldError extends EdgeCallFailedError {
   }
 }
 
+/**
+ * EDGE refused to replicate for this connection, e.g. because its identity has no Hub Account. Retrying does not
+ * help: the refusal lasts until the identity's standing changes.
+ */
+export class EdgeReplicationRefusedError extends BaseError.extend(
+  'EdgeReplicationRefusedError',
+  'EDGE refused replication.',
+) {}
+
 const getRetryAfterMillis = (response: Response) => {
   const retryAfter = Number(response.headers.get('Retry-After'));
   return Number.isNaN(retryAfter) || retryAfter === 0 ? undefined : retryAfter * 1000;

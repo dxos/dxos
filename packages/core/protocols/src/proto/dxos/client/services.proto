@@ -11,6 +11,7 @@ import "dxos/client/invitation.proto";
 import "dxos/devtools/swarm.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
+import "dxos/edge/messenger.proto";
 import "dxos/error.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
@@ -336,6 +337,9 @@ message EdgeStatus {
 
   int32 messages_sent = 6;
   int32 messages_received = 7;
+
+  /** Set while EDGE refuses this connection's replication messages, e.g. for an identity with no Hub Account. */
+  optional dxos.edge.messenger.ServiceRefusal refusal = 8;
 }
 
 message QueryEdgeStatusResponse {
