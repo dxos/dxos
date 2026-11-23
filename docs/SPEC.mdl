@@ -7246,6 +7246,17 @@ decision D-375: The `/echo` page's HTML lists every chunk the editor demo import
     - Preloading every demo's chunks, which would compete with the editor demo for bandwidth, as D-373 keeps the hidden demos from doing for the CPU.
 ```
 
+```mdl
+decision D-376: A plugin pins every `@dxos/*` package to the newest npm `@next` snapshot to load into Composer Preview, and Publishing a plugin says so first, ahead of a release's npm version and a pkg.pr.new build of one commit. `publish-all.yml` publishes a `@next` snapshot from `main` every Monday at 07:00 UTC, the hour Composer Preview deploys, and a manual dispatch still publishes one on demand. The `composer-plugin-dev` skill, which the coding-agent prompts install, pins to `@next` and installs without `--legacy-peer-deps`.
+  date: 2026-11-23
+  by: user:wittjosiah
+  affects: [app-framework-publishing, plex-build-with-agent]
+  why: Production deploys and `@latest` npm publishing now run, so a plugin can install the SDK from npm. A weekly `@next` keeps that within a week of `main`, which Composer Preview runs, while manual `@next` publishes stay possible.
+  rejected:
+    - Pinning to `@latest`, which tracks Preview less closely than a weekly `@next`.
+    - Pinning to the newest pkg.pr.new commit of `main`, as the skill did before npm publishing ran.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

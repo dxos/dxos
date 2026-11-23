@@ -492,12 +492,13 @@ export default Plugin.define(meta).pipe(
 );
 ```
 
-`package.json` names what the build needs. Pin every `@dxos/*` package to the build of the Composer you load the
-plugin into:
+`package.json` names what the build needs. Pin every `@dxos/*` package to the one version closest to the Composer you
+load the plugin into:
 
+- For Composer Preview, use the newest `@next` snapshot. Preview deploys `main` every day, and `@next` is published
+  from `main` every Monday. `npm view @dxos/app-framework@next version` prints it as `<version>-next-<commit>`.
 - For a release, use its npm version.
-- For a build of an unreleased commit of `main`, use its pkg.pr.new build,
-  `https://pkg.pr.new/@dxos/<package>@<commit>`.
+- For one particular commit of `main`, use its pkg.pr.new build, `https://pkg.pr.new/@dxos/<package>@<commit>`.
 
 At runtime, the plugin uses Composer's own copies of `react`, `react-dom` and `effect`, so match those versions too.
 In the file below, `<the host's version>` stands for the version Composer runs:
