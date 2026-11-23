@@ -261,6 +261,20 @@ const DIMENSIONS = {
 /** The pass/fail dimensions; speed and cost are graded on a curve and never crash. */
 const CORRECTNESS = Object.keys(DIMENSIONS).filter((name) => name !== 'speed' && name !== 'cost') as Dimension[];
 
+/**
+ * What a `@dxos/*` spec pins: a commit, for an npm `-next-<commit>` snapshot or a pkg.pr.new build, else an exact
+ * release. Plugins are versioned apart from the SDK, so one snapshot's packages share a commit, not a number.
+ */
+const pinOf = (spec: string): string | undefined => {
+  const commit =
+    /^\d+\.\d+\.\d+-next-([0-9a-f]{7,40})$/.exec(spec)?.[1] ??
+    /^https:\/\/pkg\.pr\.new\/(?:dxos\/dxos\/)?@dxos\/[\w-]+@([0-9a-f]{7,40})$/.exec(spec)?.[1];
+  if (commit) {
+    return `commit:${commit.slice(0, 7)}`;
+  }
+  return /^\d+\.\d+\.\d+(-[\w.]+)?$/.test(spec) ? `release:${spec}` : undefined;
+};
+
 /** 1 at or under `target`, 0 at or over `ceiling`, linear between. */
 const curve = (value: number, { target, ceiling }: { target: number; ceiling: number }): number =>
   Math.min(1, Math.max(0, (ceiling - value) / (ceiling - target)));
@@ -642,12 +656,10 @@ const gradeBuild = async (
   const pkg = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
   progress.stage = 'boot';
   await boot(tab.page);
-  const specs = Object.entries({ ...pkg.dependencies, ...pkg.devDependencies })
+  const pins = Object.entries({ ...pkg.dependencies, ...pkg.devDependencies })
     .filter(([name]) => name.startsWith('@dxos/'))
-    // Plugins are versioned apart from the SDK, so one snapshot's packages share its `-next-<commit>`, not a number.
-    .map(([, spec]) => /^\d+\.\d+\.\d+(-[\w.-]+)?$/.exec(String(spec)))
-    .map((match) => match?.[1] ?? match?.[0]);
-  mark('pinned', specs.length > 0 && specs.every((snapshot) => snapshot !== undefined && snapshot === specs[0]));
+    .map(([, spec]) => pinOf(String(spec)));
+  mark('pinned', pins.length > 0 && pins.every((pin) => pin !== undefined && pin === pins[0]));
 
   progress.stage = 'build';
   const built = run('npx', ['vite', 'build'], workdir);
