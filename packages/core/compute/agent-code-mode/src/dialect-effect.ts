@@ -4,6 +4,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { describeInput, describeTypes } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
@@ -71,7 +72,7 @@ export const EffectDialect: Dialect = {
     return {
       // The namespaces the code is written against, exactly as a module would import them.
       Effect,
-      Database: { ...Database, resolve: resolveWith(operations) },
+      Database: { ...Database, resolve: resolveWith(operations), load },
       // A type named by its typename alone (`'org.dxos.type.document'`), as printed objects name it, filters as its DXN.
       Filter: {
         ...Filter,
@@ -82,7 +83,12 @@ export const EffectDialect: Dialect = {
       Order,
       Obj,
       Relation,
-      Ref,
+      // Operations return references, and code wraps what it is handed: a reference made of one is that reference.
+      Ref: {
+        ...Ref,
+        make: (target: Ref.Ref<Obj.Unknown> | Parameters<typeof Ref.make>[0]) =>
+          Ref.isRef(target) ? target : Ref.make(target),
+      },
       Type,
       DXN,
       Operation,
@@ -191,8 +197,9 @@ export const EFFECT_API = trim`
     \`Ref.make(obj)\` of an object you hold — never an id or a URI string. An object you know only by
     its URI (\`echo://…\`, as an operation's output or your context names it) is
     \`yield* Database.resolve(uri)\`. A \`Ref\` field loads with \`yield* Database.load(task.owner)\`; its
-    URI is \`ref.uri\`. An operation returns its listed \`output\`, with live objects in it. A failed load
-    or operation fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
+    URI is \`ref.uri\`. In an operation's listed \`output\`, a typename (\`object: org.dxos.type.document\`) is
+    that object, ready to use, and a \`Ref<typename>\` is a reference: pass it on as it is, or load it to read it.
+    A failed load or operation fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
 
     \`yield*\` works only directly in this body, not inside a callback such as \`.map((x) => …)\`: loop
     with \`for … of\`. \`await\` does not compile here: \`yield*\` the Effect instead. This is Effect 4: \`Effect.catch\`, \`Effect.catchCause\` and \`Effect.result\`
@@ -254,6 +261,13 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
     ),
   );
   return (ref: URI.URI | Ref.Ref<Obj.Unknown>, schema?: Type.AnyEntity) => {
+    if (typeof ref !== 'string' && !Ref.isRef(ref)) {
+      return Effect.fail(
+        new ArgumentError({
+          message: `\`Database.resolve\` takes a DXN or URI string, or a Ref; this is ${describeKind(ref)}.`,
+        }),
+      );
+    }
     const definition = typeof ref === 'string' ? definitions.get(bareKey(ref)) : undefined;
     if (definition !== undefined) {
       return Effect.succeed(definition);
@@ -304,6 +318,29 @@ const compareVersions = (left: string, right: string): number => {
 };
 
 const bareKey = (key: string): string => key.replace(/^dxn:/, '');
+
+/**
+ * `Database.load`, which also takes the object a reference would load: an operation's output holds objects, and code
+ * loads what it is handed. Anything but a reference or an object fails saying what it was, not as a missing method.
+ */
+const load = <T>(ref: Ref.Ref<T> | T, options?: Parameters<typeof Database.load>[1]) =>
+  Ref.isRef(ref)
+    ? Database.load(ref, options)
+    : Obj.isObject(ref)
+      ? Effect.succeed(ref)
+      : Effect.fail(
+          new ArgumentError({
+            message: `\`Database.load\` takes a Ref, such as a \`Ref<…>\` field; this is ${describeKind(ref)}.`,
+          }),
+        );
+
+/** A value code passed that a binding cannot take: the model's mistake, reported as one rather than as a defect. */
+class ArgumentError extends Schema.TaggedError<ArgumentError>('ArgumentError')('ArgumentError', {
+  message: Schema.String,
+}) {}
+
+const describeKind = (value: unknown): string =>
+  value === null || value === undefined ? String(value) : `a ${typeof value}`;
 
 const renderEffectOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations

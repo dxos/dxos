@@ -814,4 +814,33 @@ describe('code mode output', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'Database.load takes an object it is handed and Ref.make a reference, and either says what else it got',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* seedTasks();
+        // An operation's output holds objects and references; models load the one and wrap the other.
+        const handed = yield* runEval(
+          [
+            `const [task] = yield* Database.query(Filter.type('${TASK_TYPENAME}')).run;`,
+            'const ref = Ref.make(task);',
+            'yield* print((yield* Database.load(task)) === task, Ref.make(ref) === ref, (yield* Database.load(ref)) === task);',
+          ].join('\n'),
+          EffectDialect,
+        );
+        expect(handed).toEqual('true true true');
+
+        const load = yield* runEvalResult('yield* Database.load(undefined);', EffectDialect);
+        expect(load.ok).toBe(false);
+        expect(load.output).toContain('`Database.load` takes a Ref, such as a `Ref<…>` field; this is undefined.');
+        // A helper that does not exist, as a model wrote it: it failed reading `.uri` of undefined.
+        const resolve = yield* runEvalResult('yield* Database.resolve(Obj.getDXN);', EffectDialect);
+        expect(resolve.ok).toBe(false);
+        expect(resolve.output).toContain('`Database.resolve` takes a DXN or URI string, or a Ref; this is undefined.');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

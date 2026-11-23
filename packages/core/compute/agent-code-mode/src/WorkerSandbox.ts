@@ -315,7 +315,14 @@ const invokeDefinition = (
   const settle = refresh === undefined ? Wire.settle(db) : Wire.flush(db).pipe(Effect.tap(() => refresh));
   return catchUp.pipe(
     Effect.andThen(Wire.decode(input, db)),
-    Effect.flatMap((decoded) => Operation.invoke(definition, toRefs(definition.input.ast, decoded))),
+    // A reference to an object of another type fails here, before the operation runs, naming both types.
+    Effect.flatMap((decoded) =>
+      Effect.try({
+        try: () => toRefs(definition.input.ast, decoded),
+        catch: (error) => new Sandbox.EvaluationError({ message: describe(error) }),
+      }),
+    ),
+    Effect.flatMap((input) => Operation.invoke(definition, input)),
     Effect.flatMap((value) => settle.pipe(Effect.map((heads) => ({ value: Wire.encode(value, db), heads })))),
     Effect.provide(context.runtime),
     Effect.match({

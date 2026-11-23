@@ -5,13 +5,17 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { toObjectURI, toRefs } from './refs.ts';
 
 class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
   Schema.Struct({ title: Schema.String }),
+) {}
+
+class Note extends Type.makeObject<Note>(DXN.make('com.example.type.note', '0.1.0'))(
+  Schema.Struct({ text: Schema.String }),
 ) {}
 
 const Input = Schema.Struct({ task: Ref.Ref(Task), tasks: Schema.Array(Ref.Ref(Task)), note: Schema.String });
@@ -41,6 +45,20 @@ describe('toRefs', () => {
     expect(toObjectURI(`dxn:echo:@:${id}`)).toEqual(`echo:///${id}`);
     expect(toObjectURI('dxn:org.dxos.type.document:0.1.0')).toBeUndefined();
     expect(toObjectURI('a note')).toBeUndefined();
+  });
+
+  test('an object of the type a reference targets becomes that reference; one of another type throws', ({ expect }) => {
+    const task = Obj.make(Task, { title: 'Draw' });
+    const value = toRefs(Input.ast, { task, tasks: [], note: 'x' });
+    const field = typeof value === 'object' && value !== null ? Reflect.get(value, 'task') : undefined;
+    expect(Ref.isRef(field) && field.target).toBe(task);
+    // As a drawing's canvas passed where the drawing goes: the operation would fail inside, far from the argument.
+    const note = Obj.make(Note, { text: 'Draw' });
+    expect(() => toRefs(Input.ast, { task: note, tasks: [], note: 'x' })).toThrow(
+      'A Ref<com.example.type.task> goes here, and this object is a com.example.type.note.',
+    );
+    // A reference that takes any object takes it.
+    expect(Ref.isRef(toRefs(Ref.Ref(Obj.Unknown).ast, note))).toBe(true);
   });
 
   test("an object's bare id where a reference goes names it in this space", ({ expect }) => {
