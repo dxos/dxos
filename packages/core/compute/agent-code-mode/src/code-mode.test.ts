@@ -424,12 +424,11 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
-    'print without yield* says why nothing came back',
+    'print without yield* still prints, once the program ends',
     Effect.fnUntraced(
       function* (_) {
-        const output = yield* runEval("print('hello');", EffectDialect);
-        expect(output).toContain('write `yield* print(...)`');
-        expect(yield* runEval("yield* print('hello');", EffectDialect)).toEqual('hello');
+        expect(yield* runEval("print('hello');", EffectDialect)).toEqual('hello');
+        expect(yield* runEval("print('later'); yield* print('first');", EffectDialect)).toEqual('first\nlater');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -765,15 +764,12 @@ describe('code mode output', () => {
     'a program that printed and returned nothing says it ran',
     Effect.fnUntraced(
       function* (_) {
+        // The operation it ran is named, so a model reading the empty result does not run it again.
         const { output, ok } = yield* runEvalResult('const score = await ops.score({ title: "abc" });');
         expect(ok).toBe(true);
-        expect(output).toEqual(
-          'No output: the code ran without error but printed nothing. Print the values you need to see.',
-        );
+        expect(output).toMatch(/^No output: the code ran without error but printed nothing\. Print the values/);
+        expect(output).toContain(`It ran ${SCORE_KEY}; what they did is done, so do not run them again.`);
         expect(yield* runEval('return null;')).toEqual('null');
-        expect(yield* runEval("print('hello');", EffectDialect)).toMatch(
-          /^No output: .* `print` is an effect: write `yield\* print\(\.\.\.\)`\.$/,
-        );
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

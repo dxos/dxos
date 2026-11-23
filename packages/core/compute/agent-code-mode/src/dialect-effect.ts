@@ -52,6 +52,21 @@ export const EffectDialect: Dialect = {
 
   bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
     const describe = makeDescriber({ syntax: EFFECT_HINTS, skills });
+    // A `print(...)` the code builds without `yield*` would show nothing, and a model told its program printed nothing
+    // runs it again, repeating whatever it wrote; such a print runs when the program ends instead.
+    const unyielded = new Set<Effect.Effect<void>>();
+    const printEffect = (...values: unknown[]): Effect.Effect<void> => {
+      const effect: Effect.Effect<void> = Effect.suspend(() => {
+        unyielded.delete(effect);
+        return Effect.forEach(values, describe).pipe(
+          Effect.map((lines) => print(...lines)),
+          Effect.provideContext(runtime),
+        );
+      });
+      unyielded.add(effect);
+      return effect;
+    };
+    const run = RuntimeProvider.runPromise(Effect.succeed(runtime));
     return {
       // The namespaces the code is written against, exactly as a module would import them.
       Effect,
@@ -74,11 +89,7 @@ export const EffectDialect: Dialect = {
 
       // Described against the code's own database, so a printed object carries the relations, children
       // and referrers around it — what the model cannot see by reading its fields.
-      print: (...values: unknown[]) =>
-        Effect.forEach(values, describe).pipe(
-          Effect.map((lines) => print(...lines)),
-          Effect.provideContext(runtime),
-        ),
+      print: printEffect,
       console: printingConsole(print),
 
       /** Supplied by `wrap`, not by the model: the static half of `DOCS`. */
@@ -91,7 +102,8 @@ export const EffectDialect: Dialect = {
       }),
 
       /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
-      runEffect: RuntimeProvider.runPromise(Effect.succeed(runtime)),
+      runEffect: <A, E>(effect: Effect.Effect<A, E>) =>
+        run(effect.pipe(Effect.ensuring(Effect.suspend(() => Effect.forEach([...unyielded], (left) => left))))),
     };
   },
 
@@ -352,6 +364,8 @@ const renderOperationList = (operations: readonly SandboxOperation[]): string =>
               definition.input.ast._tag === 'Unknown' ? undefined : describeInput(definition.input),
               // What `Operation.invoke` returns, so the code reads the field that holds the result.
               definition.output.ast._tag === 'Unknown' ? undefined : describeInput(definition.output),
+              // The skills' instructions name an operation by its tool name.
+              operation.name,
             ),
           ]
         : [];

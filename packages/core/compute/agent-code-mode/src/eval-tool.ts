@@ -149,7 +149,12 @@ export const evaluate = Effect.fnUntraced(function* ({
   }
 
   if (printer.isEmpty()) {
-    printer.print(dialect.name === 'effect' ? `${NO_OUTPUT}${unyieldedPrintHint(code)}` : NO_OUTPUT);
+    const ran = ranOperations(invocations);
+    printer.print(
+      ran.length === 0
+        ? NO_OUTPUT
+        : `${NO_OUTPUT} It ran ${ran.join(', ')}; what they did is done, so do not run them again.`,
+    );
   }
 
   return printer.output();
@@ -397,26 +402,22 @@ const EFFECT_4_NAMES: Record<string, string> = { catchAll: 'catch', catchAllCaus
  * repeats them: a second document of the same name.
  */
 const keptHint = (invocations: readonly ContentBlock.Invocation[]): string => {
-  const ran = [
-    ...new Set(invocations.flatMap(({ operationKey, error }) => (error === undefined ? [operationKey] : []))),
-  ];
+  const ran = ranOperations(invocations);
   return ran.length === 0
     ? ''
     : `\nHint: these operations ran before the failure, and what they did was kept: ${ran.join(', ')}. Check for it before you run them again.`;
 };
+
+/** The operations a program ran to completion, each once. */
+const ranOperations = (invocations: readonly ContentBlock.Invocation[]): string[] => [
+  ...new Set(invocations.flatMap(({ operationKey, error }) => (error === undefined ? [operationKey] : []))),
+];
 
 /**
  * What a program that printed nothing and returned nothing is told: an empty result reads as a call that did not run,
  * and a model that runs it again repeats whatever it wrote.
  */
 const NO_OUTPUT = 'No output: the code ran without error but printed nothing. Print the values you need to see.';
-
-/**
- * A pointer for an Effect-dialect program that printed nothing because it called `print` without
- * `yield*`, which builds the effect and drops it.
- */
-const unyieldedPrintHint = (code: string): string =>
-  /(?<!yield\*\s*)\bprint\(/.test(code) ? ' `print` is an effect: write `yield* print(...)`.' : '';
 
 /**
  * A failure's message cut to what the model can act on.

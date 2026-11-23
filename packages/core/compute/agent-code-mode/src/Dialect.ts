@@ -127,17 +127,18 @@ const hasAbridgedUnion = ({ fields }: SandboxType): boolean => fields.some(({ ty
 
 /**
  * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
- * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path, and `output`,
- * given, is what the call returns.
+ * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path, `output`,
+ * given, is what the call returns, and `tool`, given, is the tool name the skills' instructions use for it.
  */
 export const renderOperation = (
   operation: SandboxOperation,
   call: (name: string) => string,
   input: string = JSON.stringify(operation.parameters),
   output?: string,
+  tool?: string,
 ): string =>
   trim`
-    - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
+    - \`${call(operation.name)}\`${tool === undefined ? '' : ` (\`${tool}\`)`} — ${operation.description ?? 'No description.'}
       input: ${input}
   ` + (output === undefined ? '' : `\n  output: ${output}`);
 
