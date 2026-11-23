@@ -9,7 +9,11 @@ import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
 import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import {
+  ServiceRefusal_Reason,
+  ServiceRefusalSchema,
+  TextMessageSchema,
+} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth.ts';
@@ -187,6 +191,28 @@ describe('EdgeClient', () => {
     await sendMessage(textMessage('to the newest socket'));
     await expect.poll(() => received).toEqual(['to the newest socket']);
     expect(openConnectionCount()).toBe(1);
+  });
+
+  // An identity with no Hub Account keeps its socket for signaling, so a refusal must not reach replicators or the socket.
+  test('a service refusal is not forwarded and leaves the connection usable', async () => {
+    const { endpoint, cleanup, sendMessage } = await createTestEdgeWsServer(wsServerPort++);
+    onTestFinished(cleanup);
+
+    const { client, identity } = await openNewClient(endpoint);
+    const forwarded: (string | undefined)[] = [];
+    client.onMessage((message) => forwarded.push(message.serviceId));
+    await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
+
+    await sendMessage(
+      protocol.createMessage(ServiceRefusalSchema, {
+        serviceId: 'subduction-replicator:space',
+        payload: { reason: ServiceRefusal_Reason.ACCOUNT_REQUIRED, message: 'Account required.' },
+      }),
+    );
+    await sendMessage(protocol.createMessage(TextMessageSchema, { serviceId: 'after', payload: { message: 'after' } }));
+    await expect.poll(() => forwarded).toEqual(['after']);
+    await client.send(Context.default(), textMessage('still sends', identity));
+    expect(client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
   });
 
   test.skipIf(!process.env.EDGE_ENDPOINT)('connect to local edge server', async () => {
