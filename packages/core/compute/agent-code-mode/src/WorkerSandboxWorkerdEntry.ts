@@ -30,13 +30,13 @@ export const serve = async (
   execute: Execute,
 ): Promise<void> => {
   installPerformanceShim();
-  const end = WorkerdBridge.makeEnd(post);
+  const port = new WorkerdBridge.Port(post);
   // Settles only when the host ends the evaluation; a rejection means the host went away first, which the host already
   // learns from this call failing.
-  attach(async (batch) => end.receive(batch)).catch((error) =>
+  attach(async (batch) => port.receive(batch)).catch((error) =>
     log.warn('code-mode isolate lost the channel home', { error }),
   );
-  await EffectEx.runPromise(Effect.scoped(runSandboxWorker(end.port, init, execute)));
+  await EffectEx.runPromise(Effect.scoped(runSandboxWorker(port, init, execute)));
 };
 
 /**

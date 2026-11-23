@@ -105,11 +105,7 @@ export type HostShape = {
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
    */
   readonly spaceIds?: readonly string[];
-  /**
-   * The database of a space the session may address, which a script's `get`, `query`, `search` and `update` read
-   * and change without invoking an operation. Asked on every such call, so a host that opens one at a cost keeps it
-   * for the script. Omitted, those calls are refused and a script goes through `invoke`.
-   */
+  /** The database of a space the session may address, which a script runs against; omitted, scripts do not run. */
   readonly database?: (spaceId: SpaceId) => Effect.Effect<Database.Database, HostError>;
 };
 
@@ -699,9 +695,6 @@ export const runScript = (
 ): Effect.Effect<ScriptResult> =>
   Effect.gen(function* () {
     const { timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT } = options;
-    if (spaceId === undefined) {
-      return failed('A script runs against one space: pass spaceId.');
-    }
     const resolved = yield* spaceInternal.resolveId(host.spaceIds, spaceId, { required: true });
     if (resolved === undefined) {
       return failed('A script runs against one space: pass spaceId.');
@@ -881,14 +874,13 @@ const scriptOperationService = (operations: readonly SandboxOperation[]): Operat
         )
       : invoke(input);
   };
+  const call = <O>(op: Operation.Definition<any, O, any>, input: unknown) =>
+    run(op, input).pipe(Effect.flatMap(Schema.decodeUnknownEffect(op.output)), Effect.orDie);
   return {
-    invoke: (op, ...[input]) =>
-      run(op, input).pipe(Effect.flatMap(Schema.decodeUnknownEffect(op.output)), Effect.orDie),
+    invoke: (op, ...[input]) => call(op, input),
     schedule: () => Effect.die(new Error('A script cannot schedule an operation; invoke it instead.')),
     invokePromise: (op, ...[input]) =>
-      EffectEx.runPromise(
-        run(op, input).pipe(Effect.flatMap(Schema.decodeUnknownEffect(op.output)), Effect.orDie),
-      ).then(
+      EffectEx.runPromise(call(op, input)).then(
         (data) => ({ data }),
         (error: unknown) => ({ error: error instanceof Error ? error : new Error(String(error)) }),
       ),
@@ -1515,7 +1507,6 @@ export type Options = {
 /**
  * A {@link Host} over the definitions' live operations: input decoded against the live schema,
  * invocation through the ambient `Operation.Service` with the target space as `InvokeOptions.spaceId`.
- * With an ambient `Database.Service`, scripts run against that space's database.
  */
 export const host = ({
   skills,
@@ -1523,8 +1514,6 @@ export const host = ({
 }: Pick<Options, 'skills' | 'spaceIds'>): Effect.Effect<HostShape, never, Operation.Service> =>
   Effect.gen(function* () {
     const invoker = yield* Operation.Service;
-    // The caller's database, when it holds one: a script reads and changes that space through it.
-    const ambient = Option.getOrUndefined(yield* Effect.serviceOption(Database.Service));
     // One definition per operation whatever the number of skills naming it.
     const operations = new Map<string, Operation.Definition.Any>();
     for (const definition of skills) {
@@ -1534,14 +1523,6 @@ export const host = ({
     }
     return {
       spaceIds,
-      ...(ambient === undefined
-        ? {}
-        : {
-            database: (spaceId: SpaceId) =>
-              ambient.db.spaceId === spaceId
-                ? Effect.succeed(ambient.db)
-                : Effect.fail(hostError(`This host holds no database for space ${spaceId}.`)),
-          }),
       invoke: ({ key, input, spaceId }) =>
         Effect.gen(function* () {
           const operation = operations.get(viewInternal.nsid(key));

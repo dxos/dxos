@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { QueryAST } from '@dxos/echo';
-import { SpaceId } from '@dxos/keys';
+import { EID, SpaceId } from '@dxos/keys';
 
 import * as WorkerdBridge from './WorkerdBridge.ts';
 import type * as WorkerSandbox from './WorkerSandbox.ts';
@@ -30,8 +30,6 @@ export type Module = { readonly js: string } | { readonly wasm: ArrayBuffer };
  */
 export type Runtime = {
   readonly modules: Readonly<Record<string, Module>>;
-  /** What the bundle needs from the runtime; defaults to {@link COMPATIBILITY_FLAGS}. */
-  readonly compatibilityFlags?: readonly string[];
 };
 
 /** What the isolate's program exports. */
@@ -75,11 +73,7 @@ const COMPATIBILITY_DATE = '2026-03-17';
  * storage, and the flag every EDGE worker pins (past its default date a promise settled from another request's context
  * has its continuation dropped, which the code would see as a hung `await`).
  */
-export const COMPATIBILITY_FLAGS: readonly string[] = [
-  'nodejs_compat',
-  'nodejs_als',
-  'no_handle_cross_request_promise_resolution',
-];
+const COMPATIBILITY_FLAGS = ['nodejs_compat', 'nodejs_als', 'no_handle_cross_request_promise_resolution'];
 
 /**
  * A `WorkerSandbox` spawner for a Cloudflare Worker Loader isolate running {@link Runtime}, as `WorkerSandboxBrowser`'s
@@ -107,12 +101,12 @@ export const spawn =
     const detached = new Promise<void>((resolve) => {
       detach = resolve;
     });
-    const end = WorkerdBridge.makeEnd(async (batch) => (await delivery)(batch));
+    const port = new WorkerdBridge.Port(async (batch) => (await delivery)(batch));
 
     // A fresh id per evaluation: the loader caches isolates by id, and one program must never observe another's state.
     const isolate = loader.get(`code-mode-${crypto.randomUUID()}`, async () => ({
       compatibilityDate: COMPATIBILITY_DATE,
-      compatibilityFlags: [...(runtime.compatibilityFlags ?? COMPATIBILITY_FLAGS)],
+      compatibilityFlags: COMPATIBILITY_FLAGS,
       mainModule: PROGRAM_MODULE,
       modules: { ...runtime.modules, [PROGRAM_MODULE]: { js: program(init) } },
       env: {},
@@ -121,7 +115,7 @@ export const spawn =
 
     const run = isolate.getEntrypoint().run(
       init,
-      async (batch) => end.receive(batch),
+      async (batch) => port.receive(batch),
       (deliver) => {
         attached(deliver);
         return detached;
@@ -131,11 +125,11 @@ export const spawn =
     // code does not parse), or a runtime that failed before its channel opened.
     const stopped = run.then(
       () => new Promise<string | undefined>(() => {}),
-      (error: unknown) => describe(error),
+      (error: unknown) => (error instanceof Error ? error.message : String(error)),
     );
     const spaceId = SpaceId.make(init.space.spaceId);
     return {
-      port: end.port,
+      port,
       stopped,
       // An isolate cannot be killed: this releases its channel home, and the sandbox has already stopped answering it.
       terminate: () => detach(),
@@ -153,15 +147,13 @@ const program = ({ code, names }: SandboxInit): string =>
     `import { serve } from './${RUNTIME_MODULE}';`,
     'export default class extends WorkerEntrypoint {',
     '  run(init, post, attach) {',
-    `    return serve(init, post, attach, async ({ ${names.filter((name) => IDENTIFIER.test(name)).join(', ')} }) => {`,
+    `    return serve(init, post, attach, async ({ ${names.join(', ')} }) => {`,
     code,
     '    });',
     '  }',
     '}',
     '',
   ].join('\n');
-
-const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
 /**
  * The services as the isolate may use them: the calls a client of one database makes, on that database's space.
@@ -234,9 +226,13 @@ const targetSpaces = (encoded: string): string[] => {
   QueryAST.visit(decoded.value, (node) => {
     if (node.type === 'from' && node.from._tag === 'scope') {
       for (const scope of node.from.scopes) {
+        // As db-service routes a query: a space scope by its id, a feed scope by the space its feed belongs to. A scope
+        // that names no space targets the owning one, which a service with no database of its own cannot pick.
         if (scope._tag === 'space') {
-          // A scope with no space targets the owning one, which a service with no database of its own cannot pick.
           spaces.add(scope.spaceId ?? '');
+        } else if (scope._tag === 'feed') {
+          const feed = EID.tryParse(scope.feedUri);
+          spaces.add((feed && EID.getSpaceId(feed)) ?? '');
         }
       }
     }
@@ -250,12 +246,4 @@ const parseJson = (text: string): unknown => {
   } catch {
     return undefined;
   }
-};
-
-const describe = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message.length > 0 ? error.message : String(error);
-  }
-  const text = String(error);
-  return text.length > 0 && text !== '[object Object]' ? text : 'Unknown failure.';
 };

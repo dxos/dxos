@@ -209,7 +209,7 @@ describe('worker sandbox in a workerd isolate', () => {
     expect(Object.keys(code.modules).sort()).toEqual([code.mainModule, WorkerSandboxWorkerd.RUNTIME_MODULE].sort());
     expect(code.globalOutbound).toBeNull();
     expect(code.env).toEqual({});
-    expect(code.compatibilityFlags).toEqual([...WorkerSandboxWorkerd.COMPATIBILITY_FLAGS]);
+    expect(code.compatibilityFlags).toContain('nodejs_compat');
   });
 
   test('reports code that does not compile as a failed evaluation', async () => {

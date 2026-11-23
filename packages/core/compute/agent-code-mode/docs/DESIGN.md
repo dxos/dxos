@@ -59,7 +59,7 @@ builds it with its own worker bundler. Each evaluation pays for loading that run
 
 `runScript` runs code mode's Effect dialect through code mode's runner, the `Operation.ScriptRunner` scripts run
 through (`Operation.inlineScript(code, { dialect: 'effect' })`). The tool description embeds the dialect's reference
-(`EFFECT_API`, extracted without changing the agent's prompt). Each operation an opted-in skill names is a stand-in
+(`EFFECT_API`, shared with the agent's prompt). Each operation an opted-in skill names is a stand-in
 definition that `Database.resolve(key)` answers; `Operation.invoke` runs it as `invokeOperation` does, through the
 skill gate with the script's `skillTokens`.
 

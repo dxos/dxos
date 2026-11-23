@@ -8,13 +8,14 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
 import { type IncomingMessage, type ServerResponse } from 'node:http';
 
 import { Sandbox } from '@dxos/agent-code-mode';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import { type Registry } from '@dxos/echo';
+import { Database, type Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
@@ -294,12 +295,13 @@ const dispatch = async (
         if (!codeMode || typeof args.code !== 'string' || !SpaceId.isValid(args.spaceId)) {
           return yield* Effect.fail(McpServer.failure('invalid_request', `${name} takes a code string and a spaceId.`));
         }
-        // The harness's database is in `context`, so the host runs scripts against it, as `dx mcp serve
-        // --code-mode` runs them against its client's: the eval grades the path a real client takes.
+        // The harness's database is in `context`, so scripts run against it, as `dx mcp serve --code-mode` runs them
+        // against its client's: the eval grades the path a real client takes.
         const host = yield* McpServer.host({ skills, spaceIds });
+        const database = yield* Effect.serviceOption(Database.Service);
         const result = yield* McpServer.runScript(
           registry,
-          host,
+          Option.isSome(database) ? { ...host, database: () => Effect.succeed(database.value.db) } : host,
           gate,
           {
             code: args.code,

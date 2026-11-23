@@ -9,34 +9,19 @@ import { log } from '@dxos/log';
 /** Sends one batch of messages to the other end: a Workers RPC call, or a plain function in-process. */
 export type Send = (batch: unknown[]) => Promise<void>;
 
-/** One end of a channel whose messages travel as {@link Send} calls. */
-export type End = {
-  /** What the worker protocol drives, as it would drive a `MessagePort`. */
-  readonly port: MessagePort;
-  /** Delivers a batch the other end sent, as `message` events on {@link port}. */
-  readonly receive: (batch: readonly unknown[]) => void;
-};
-
 /**
- * One end of a message channel carried over function calls rather than a real `MessagePort`.
+ * One end of a message channel carried over function calls rather than a real `MessagePort`, shaped as `MessagePort` for
+ * the worker protocol's client and runner, which only post and listen for `message`.
  *
  * A Worker Loader isolate cannot be handed a port, but it can be handed a function, which crosses as an RPC stub. Each
  * end sends in batches with one call in flight, so messages arrive in the order they were posted whatever the transport
- * does with concurrent calls, and a burst costs one round trip rather than one per message.
+ * does with concurrent calls, and a burst costs one round trip rather than one per message. {@link Port.receive}
+ * dispatches what the other end sent as real `MessageEvent`s.
  *
  * A failed send closes this end: the channel's only failure mode is the other side going away, which the sandbox
  * learns about separately.
  */
-export const makeEnd = (send: Send): End => {
-  const port = new BridgePort(send);
-  return { port, receive: (batch) => port.receive(batch) };
-};
-
-/**
- * Shaped as `MessagePort` for the worker protocol's client and runner, which only post and listen for `message`. The
- * events it dispatches are real `MessageEvent`s, so listeners read `event.data` as from a port.
- */
-class BridgePort extends EventTarget implements MessagePort {
+export class Port extends EventTarget implements MessagePort {
   onmessage: MessagePort['onmessage'] = null;
   onmessageerror: MessagePort['onmessageerror'] = null;
   #queue: unknown[] = [];

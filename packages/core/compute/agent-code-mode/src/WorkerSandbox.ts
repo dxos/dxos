@@ -16,7 +16,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, JsonSchema, Type } from '@dxos/echo';
 import type { EchoClient } from '@dxos/echo-client';
-import { PublicKey, type SpaceId, URI } from '@dxos/keys';
+import { DXN, PublicKey, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { resolveTypeOf } from './dialect-effect.ts';
@@ -92,8 +92,9 @@ export type Options = {
  * bindings, including a synchronous loop no in-process timeout can interrupt. A long evaluation
  * also cannot stall the turn's thread, because it was never on it.
  *
- * It is NOT a security boundary: a worker shares the host's permissions and can reach the network
- * and the filesystem. It bounds time and isolates crashes, not authority.
+ * A thread or Web Worker is NOT a security boundary: it shares the host's permissions and can reach
+ * the network and the filesystem, so it bounds time and isolates crashes, not authority. A Worker
+ * Loader isolate (`WorkerSandboxWorkerd`) is one, and its handle limits what it is served.
  */
 export const make = (options: Options): Sandbox.Sandbox => ({
   evaluate: ({ code, dialect, context, timeout }) =>
@@ -140,16 +141,17 @@ export const make = (options: Options): Sandbox.Sandbox => ({
         ({ terminate }) => Effect.sync(terminate),
       );
 
+      const served = handle.limit?.(echo) ?? echo;
       const server = Rpc.serve(
         handle.port,
         SandboxRpcs,
         Layer.merge(
-          makeClientServicesHandlers({ services: () => handle.limit?.(echo) ?? echo }),
+          makeClientServicesHandlers({ services: () => served }),
           SandboxHostRpcs.toLayer({
             'Sandbox.print': ({ values }) => Effect.sync(() => context.print(...values)),
             'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
             'Sandbox.invokeDefinition': ({ key, input, heads }) =>
-              invokeDefinition(context, key, input, heads, options.refresh),
+              invokeDefinition(context, key, input, heads, refresh),
             // A host without one reports an empty set and drops reports; the worker asks only when told it has one.
             'Sandbox.workingSetGet': () =>
               workingSet === undefined ? Effect.succeed({ rows: [] }) : Effect.promise(() => workingSet.get()),
@@ -282,6 +284,9 @@ const refreshing = (refresh: () => Promise<void>): Effect.Effect<void, Wire.Wire
 
 /** A type the host's database resolves, by its DXN, as the worker rebuilds it; null for none the worker can rebuild. */
 const resolveType = (context: BindingsContext, uri: string) => {
+  if (!DXN.isDXN(uri)) {
+    return Effect.succeed(null);
+  }
   const { db } = Context.get(context.runtime, Database.Service);
   return Effect.tryPromise(() => resolveTypeOf(db, URI.make(uri))).pipe(
     Effect.map((entity) => describeType(entity) ?? null),
@@ -295,7 +300,7 @@ const invokeDefinition = (
   key: string,
   input: unknown,
   heads: Wire.Heads,
-  refresh: Options['refresh'],
+  refresh: Effect.Effect<void, Wire.WireError> | undefined,
 ) => {
   const definition = context.operations.find(
     (candidate) => candidate.definition !== undefined && String(candidate.definition.meta.key) === key,
@@ -306,8 +311,8 @@ const invokeDefinition = (
   const { db } = Context.get(context.runtime, Database.Service);
   // Read the worker's writes before resolving what it named; afterwards write the operation's, and with `refresh` push
   // them to the worker, whose reply arrives after the documents it sent on the same channel.
-  const catchUp = refresh === undefined ? Wire.catchUp(db, heads) : refreshing(refresh);
-  const settle = refresh === undefined ? Wire.settle(db) : Wire.flush(db).pipe(Effect.tap(() => refreshing(refresh)));
+  const catchUp = refresh === undefined ? Wire.catchUp(db, heads) : refresh;
+  const settle = refresh === undefined ? Wire.settle(db) : Wire.flush(db).pipe(Effect.tap(() => refresh));
   return catchUp.pipe(
     Effect.andThen(Wire.decode(input, db)),
     Effect.flatMap((decoded) => Operation.invoke(definition, toRefs(definition.input.ast, decoded))),
