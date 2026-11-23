@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { toRefs } from './refs.ts';
+import { toObjectURI, toRefs } from './refs.ts';
 
 class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
   Schema.Struct({ title: Schema.String }),
@@ -30,6 +30,17 @@ describe('toRefs', () => {
     expect(Ref.isRef(field('task'))).toBe(true);
     const tasks = field('tasks');
     expect(Array.isArray(tasks) && tasks.every((entry) => Ref.isRef(entry) && entry.uri === URI_OF_TASK)).toBe(true);
+  });
+
+  test('the forms models write for an object name its URI', ({ expect }) => {
+    const id = '01M82XEH98BVZ36GZVT2NPZS6K';
+    expect(toObjectURI(URI_OF_TASK)).toEqual(URI_OF_TASK);
+    expect(toObjectURI(`dxn:${URI_OF_TASK}`)).toEqual(URI_OF_TASK);
+    expect(toObjectURI(id)).toEqual(`echo:///${id}`);
+    expect(toObjectURI(`echo://${id}`)).toEqual(`echo:///${id}`);
+    expect(toObjectURI(`dxn:echo:@:${id}`)).toEqual(`echo:///${id}`);
+    expect(toObjectURI('dxn:org.dxos.type.document:0.1.0')).toBeUndefined();
+    expect(toObjectURI('a note')).toBeUndefined();
   });
 
   test("an object's bare id where a reference goes names it in this space", ({ expect }) => {

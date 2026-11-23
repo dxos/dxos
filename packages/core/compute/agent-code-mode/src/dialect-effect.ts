@@ -9,7 +9,7 @@ import { describeInput, describeTypes } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, URI } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { DXN, EntityId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { type HintSyntax, makeDescriber } from './describe.ts';
@@ -24,6 +24,7 @@ import {
   renderTypes,
 } from './Dialect.ts';
 import { type DocEntry, STATIC_DOCS, loadDocs } from './docs/index.ts';
+import { toObjectURI } from './refs.ts';
 
 /**
  * The repo's own ECHO API, written as an Effect program: `yield* Database.query(Filter.type(...)).run`.
@@ -242,25 +243,8 @@ const operationKey = (definition: Operation.Definition.Any): string => String(de
  * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
  * Every other DXN — a type, an object — goes to the real resolver.
  */
-/**
- * An object's legacy ECHO DXN (`dxn:echo:<space>:<id>`, `@` or nothing for this space), or an object URI behind a
- * `dxn:` it does not take (`dxn:echo://…`), which models still write.
- */
-const LEGACY_ECHO_DXN = /^dxn:echo:(?:([A-Z0-9]+|@):)?([0-9A-Z]{26})$/;
-
-/** The object URI a legacy ECHO DXN names, since no resolver reads that form any more; any other string as is. */
-export const fromLegacyEchoDXN = (ref: string): URI.URI => {
-  if (ref.startsWith('dxn:echo://')) {
-    return URI.make(ref.slice('dxn:'.length));
-  }
-  const match = LEGACY_ECHO_DXN.exec(ref);
-  if (!match) {
-    // An object's bare id (`obj.id`, as a printed object shows it) names it in this space.
-    return URI.make(EntityId.isValid(ref) ? `echo:///${ref}` : ref);
-  }
-  const [, space, id] = match;
-  return URI.make(space === undefined || space === '@' ? `echo:///${id}` : `echo://${space}/${id}`);
-};
+/** The object URI a string names in a form models write (see {@link toObjectURI}); any other string as is. */
+export const fromLegacyEchoDXN = (ref: string): URI.URI => URI.make(toObjectURI(ref) ?? ref);
 
 const resolveWith = (operations: readonly SandboxOperation[]) => {
   // Keyed without the `dxn:` prefix: the Skill Manager reports an operation by its registry key, which may omit it.

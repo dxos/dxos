@@ -13,20 +13,42 @@ const MAX_DEPTH = 8;
 const takesRef = (ast: SchemaAST.AST): boolean =>
   Ref.isRefType(ast) || (SchemaAST.isUnion(ast) && ast.types.some((type) => Ref.isRefType(type)));
 
+/** An object's legacy ECHO DXN, `dxn:echo:<space>:<id>`, `@` or nothing for this space. */
+const LEGACY_ECHO_DXN = /^dxn:echo:(?:([A-Z0-9]+|@):)?([0-9A-Z]{26})$/;
+
+/**
+ * The URI of the object a string names, in the forms models write: its URI (`echo://…`, as the agent's context names
+ * the agent), its bare id (`obj.id`, as a printed object shows it), a URI missing the slash of this space
+ * (`echo://<id>`), a URI behind a `dxn:` it does not take, or a legacy ECHO DXN. Undefined for anything else.
+ */
+export const toObjectURI = (text: string): string | undefined => {
+  const bare = text.startsWith('dxn:echo://') ? text.slice('dxn:'.length) : text;
+  // Before the EID check, which reads `echo://<id>` as a URI whose space is the id.
+  const id = /^echo:\/\/([0-9A-Z]{26})$/.exec(bare)?.[1] ?? (EntityId.isValid(bare) ? bare : undefined);
+  if (id !== undefined) {
+    return `echo:///${id}`;
+  }
+  if (EID.tryParse(bare) !== undefined) {
+    return bare;
+  }
+  const match = LEGACY_ECHO_DXN.exec(bare);
+  if (!match) {
+    return undefined;
+  }
+  const [, space, legacyId] = match;
+  return space === undefined || space === '@' ? `echo:///${legacyId}` : `echo://${space}/${legacyId}`;
+};
+
 /**
  * The input with every object that sits where its schema expects a reference replaced by a reference to
  * it. Code holds objects, and passing one for a `Ref<…>` field is the call agents get wrong first; the
- * object names its target exactly, so the reference is the one the caller meant. An object's URI
- * (`echo://…`, as the agent's context names the agent) or its bare id names it as exactly, so either is taken too.
+ * object names its target exactly, so the reference is the one the caller meant. A string that names an
+ * object ({@link toObjectURI}) names it as exactly, so it is taken too.
  */
 export const toRefs = (ast: SchemaAST.AST, value: unknown, depth = 0): unknown => {
-  if (typeof value === 'string' && takesRef(ast)) {
-    if (EID.tryParse(value) !== undefined) {
-      return Ref.fromURI(URI.make(value));
-    }
-    if (EntityId.isValid(value)) {
-      return Ref.fromURI(URI.make(`echo:///${value}`));
-    }
+  const uri = typeof value === 'string' && takesRef(ast) ? toObjectURI(value) : undefined;
+  if (uri !== undefined) {
+    return Ref.fromURI(URI.make(uri));
   }
   if (depth > MAX_DEPTH || value === null || typeof value !== 'object') {
     return value;
