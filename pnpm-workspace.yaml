@@ -729,7 +729,6 @@ onlyBuiltDependencies:
   - geckodriver
   - msgpackr-extract
   - node-datachannel
-  - onnxruntime-node
   - oxc-resolver
   - sharp
   - sodium-native
