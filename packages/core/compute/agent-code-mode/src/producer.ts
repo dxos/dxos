@@ -27,6 +27,7 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
+import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
@@ -172,7 +173,12 @@ const runCodeModeTurn = ({
               const enabled = skills.filter(
                 (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
               );
-              const operations = yield* projectOperations([lookups, ...skills], mcps);
+              // The Effect dialect does what an operation hidden in code mode does through `Database` and `Obj`; the
+              // plain dialect has no such API, so it keeps them.
+              const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(
+                ({ definition }) =>
+                  dialect.name !== EffectDialect.name || !definition || !Operation.isHiddenInCodeMode(definition),
+              );
               labelCall = labelEvalCall(operations);
               const evalOptions = {
                 dialect,
@@ -353,12 +359,7 @@ export const projectOperations = Effect.fnUntraced(function* (
 ) {
   const skillToolkit = yield* createToolkit({ skills, opaqueToolkits });
   const handlers = yield* skillToolkit.handlers;
-  // Hidden in code mode: typically the database API does all the operation does, without its round trip.
-  const offered = Record.toEntries(skillToolkit.toolkit.tools).filter(([, tool]) => {
-    const definition = operationBehind(tool);
-    return definition === undefined || !Operation.isHiddenInCodeMode(definition);
-  });
-  return offered.map(([name, tool]): SandboxOperation => ({
+  return Record.toEntries(skillToolkit.toolkit.tools).map(([name, tool]): SandboxOperation => ({
     name,
     description: tool.description,
     parameters: Tool.getJsonSchema(tool),

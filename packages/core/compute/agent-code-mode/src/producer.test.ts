@@ -232,8 +232,9 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
           expect(system).toContain('Score titles before ranking them');
           expect(system).toContain('Scores a title for urgency');
-          // An operation the database API replaces is left out, though its skill is enabled.
-          expect(system).not.toContain('Reads a ticket by reference');
+          // An operation the database API replaces is left out of the Effect dialect, though its skill is enabled; the
+          // plain dialect has no database API to replace it with.
+          expect(system.includes('Reads a ticket by reference')).toBe(dialect !== EffectDialect);
           expect(system).not.toContain('Write notes in lower case');
           // No types, and no skill that is not enabled.
           expect(system).not.toContain('com.example.type.ticket');
