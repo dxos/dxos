@@ -218,7 +218,7 @@ const limitToSpace = (access: WorkerSandbox.EchoAccess, spaceId: SpaceId): Worke
  * refused rather than passed on for a service to interpret.
  */
 const targetSpaces = (encoded: string): string[] => {
-  const decoded = Schema.decodeUnknownOption(QueryAST.Query)(parseJson(encoded));
+  const decoded = Schema.decodeUnknownOption(Schema.fromJsonString(QueryAST.Query))(encoded);
   if (decoded._tag === 'None') {
     return [];
   }
@@ -238,12 +238,4 @@ const targetSpaces = (encoded: string): string[] => {
     }
   });
   return [...spaces];
-};
-
-const parseJson = (text: string): unknown => {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return undefined;
-  }
 };

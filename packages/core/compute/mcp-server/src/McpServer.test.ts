@@ -90,7 +90,7 @@ class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
   Schema.Struct({ title: Schema.String, status: Schema.String }),
 ) {}
 
-/** A real database holding two tasks, for a script's database verbs to act on. */
+/** A real database holding two tasks, for a script to act on. */
 const taskDatabase = async () => {
   const builder = await new EchoTestBuilder().open();
   const { db } = await builder.createDatabase({ types: [Task, Feed.Feed], assignQueuePositions: true });
