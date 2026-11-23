@@ -66,11 +66,13 @@ test.describe('Tour tests', () => {
 
     // The tour's backdrop takes every click, so leave the way a boot onto Home does.
     const documentUrl = host.page.url();
-    await host.page.goto(documentUrl.replace(/\/object\/.*$/, '/home'));
+    // `commit`, not `load`: boot navigates again while loading, which Firefox reports as an aborted `goto`, and
+    // `waitForBoot` already waits for the URL to settle.
+    await host.page.goto(documentUrl.replace(/\/object\/.*$/, '/home'), { waitUntil: 'commit' });
     await host.waitForBoot(new RegExp(`/w/${host.workspaceId}/home`));
     await expect(host.page.getByTestId('supportPlugin.startTour')).toBeVisible();
 
-    await host.page.goto(documentUrl);
+    await host.page.goto(documentUrl, { waitUntil: 'commit' });
     await host.waitForBoot(new RegExp(new URL(documentUrl).pathname));
     // The editor, not a toolbar button: the reopened Help companion narrows the toolbar until its buttons collapse.
     await Markdown.waitForMarkdownTextbox(host.page);
