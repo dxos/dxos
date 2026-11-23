@@ -11,8 +11,8 @@ import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Message,
-  ServiceRefusalSchema,
   ServiceRefusal_Reason,
+  ServiceRefusalSchema,
   TextMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
@@ -215,7 +215,7 @@ describe('EdgeClient', () => {
     await client.send(Context.default(), textMessage('still sends', identity));
 
     reconnectTrigger.reset();
-    closeConnection();
+    await closeConnection();
     await reconnectTrigger.wait();
     expect(client.status.refusal).toBeUndefined();
   });
