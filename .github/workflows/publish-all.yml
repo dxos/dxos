@@ -8,8 +8,10 @@ name: Publish
 #     publishes the bumped packages to npm @latest with provenance, then tags and releases each version group.
 #     The human gate is merging the PR — nobody runs changeset/publish locally, and the PR is maintained by
 #     dxos-bot's PAT so Check runs on it like any other PR.
-#   - manual workflow_dispatch (→ @next): cut a SNAPSHOT pre-release — `changeset version --snapshot next`
-#     then `changeset publish --tag next`. Ephemeral versions, no commit, no git tags, no `pre` mode.
+#   - Monday 07:00 UTC schedule, or a manual workflow_dispatch (→ @next): cut a SNAPSHOT pre-release —
+#     `changeset version --snapshot next` then `changeset publish --tag next`. Ephemeral versions, no commit,
+#     no git tags, no `pre` mode. The weekly run keeps @next within a week of main, which Composer Preview
+#     deploys daily, so a plugin built against @next runs on Preview.
 #
 # Apps deploy via deploy-apps.yml (which also cuts the versioned Composer production release), never here.
 #
@@ -19,6 +21,9 @@ on:
   push:
     branches:
       - main
+  # Weekly @next snapshot, at the hour deploy-apps.yml deploys Composer Preview.
+  schedule:
+    - cron: '0 7 * * 1'
   workflow_dispatch: {} # Manual dispatch = a @next snapshot pre-release (pick the commit via the ref selector).
 
 permissions:
@@ -63,7 +68,7 @@ jobs:
   # after shipping the others; checking first costs seconds instead of a partial release.
   preflight:
     needs: detect
-    if: needs.detect.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.detect.outputs.release == 'true' || github.event_name != 'push'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -81,10 +86,11 @@ jobs:
 
   publish:
     needs: [detect, preflight]
-    if: needs.detect.outputs.release == 'true' || github.event_name == 'workflow_dispatch'
-    # GitHub keeps one pending run per group and cancels it when a newer one arrives.
+    if: needs.detect.outputs.release == 'true' || github.event_name != 'push'
+    # GitHub keeps one pending run per group and cancels it when a newer one arrives, so @next queues apart:
+    # a snapshot must never cancel a waiting release. The two can overlap, since @next publishes only snapshots.
     concurrency:
-      group: publish-npm
+      group: ${{ github.event_name == 'push' && 'publish-npm' || 'publish-npm-next' }}
       cancel-in-progress: false
     # GitHub-hosted runner required for npm provenance (sigstore attestation).
     runs-on: ubuntu-24.04
@@ -111,20 +117,23 @@ jobs:
           cache-scope: publish
           verify-integrity: 'true'
 
-      # @next (dispatch): stamp ephemeral snapshot versions for packages with pending changesets, then
-      # mirror them into version.ts / tauri.conf.json — before the build, so it builds the snapshot version.
-      # No commit, no lockfile rewrite; the bump is throwaway.
+      # @next (schedule or dispatch): stamp ephemeral snapshot versions, then mirror them into version.ts /
+      # tauri.conf.json — before the build, so it builds the snapshot version. No commit, no lockfile rewrite;
+      # the bump is throwaway. The patch to each group's anchor versions both groups even with no changeset
+      # pending, so every package has a snapshot of this commit.
       - name: Version (snapshot)
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push'
         run: |
-          # Changesets v3 makes `changeset version` exit 1 when nothing is pending, so gate on the
-          # presence of a changeset file to keep an empty @next dispatch a no-op rather than a failure.
-          if ls .changeset/*.md 2>/dev/null | grep -qv '^\.changeset/README\.md$'; then
-            pnpm exec changeset version --snapshot next
-            node scripts/sync-versions.mjs
-          else
-            echo 'No pending changesets — skipping snapshot version.'
-          fi
+          cat > .changeset/next-snapshot.md <<'EOF'
+          ---
+          '@dxos/app-framework': patch
+          '@dxos/cli': patch
+          ---
+
+          Snapshot of main.
+          EOF
+          pnpm exec changeset version --snapshot next
+          node scripts/sync-versions.mjs
 
       - name: Build
         run: moon run :build
@@ -163,7 +172,7 @@ jobs:
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
 
       - name: Publish the CLI (@next snapshot)
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push'
         run: moon run cli:publish -- --tag next
         env:
           NODE_ENV: production
@@ -183,10 +192,10 @@ jobs:
           # Carries both the tag push (the checkout persists no credentials) and the Releases API calls.
           GH_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
 
-      # @next (dispatch): publish the snapshot versions under the `next` dist-tag. --no-git-tag: snapshots
-      # are ephemeral and never tagged. No-op when no changesets are pending.
+      # @next (schedule or dispatch): publish the snapshot versions under the `next` dist-tag. --no-git-tag: snapshots
+      # are ephemeral and never tagged.
       - name: Publish @next (snapshot)
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'push'
         run: pnpm exec changeset publish --tag next --no-git-tag
         env:
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.

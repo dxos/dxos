@@ -492,12 +492,15 @@ export default Plugin.define(meta).pipe(
 );
 ```
 
-`package.json` names what the build needs. Pin every `@dxos/*` package to the build of the Composer you load the
-plugin into:
+`package.json` names what the build needs. Pin every `@dxos/*` package to the one version closest to the Composer you
+load the plugin into:
 
+- For Composer Preview, use the newest `@next` snapshot. Preview deploys `main` every day, and `@next` is published
+  from `main` every Monday. `npm view @dxos/app-framework@next version` prints it as `<version>-next-<commit>`.
+  `@dxos/plugin-*` packages are versioned apart from the SDK, so pin each to its own snapshot of the same commit, which
+  `npm view <package> versions` lists.
 - For a release, use its npm version.
-- For a build of an unreleased commit of `main`, use its pkg.pr.new build,
-  `https://pkg.pr.new/@dxos/<package>@<commit>`.
+- For one particular commit of `main`, use its pkg.pr.new build, `https://pkg.pr.new/@dxos/<package>@<commit>`.
 
 At runtime, the plugin uses Composer's own copies of `react`, `react-dom` and `effect`, so match those versions too.
 In the file below, `<the host's version>` stands for the version Composer runs:
@@ -579,8 +582,8 @@ is what it does:
 - It marks links as read with an operation that people and the assistant both run.
 
 Stash is defined entirely in `dx.config.ts`, with one file per module body. The file below is a shortened version of
-the one the learning path builds. It writes the key inline, and it leaves out the `author` field and the translations
-and App Graph modules:
+the one the learning path builds. It writes the key inline, and it leaves out the `author` field and the App Graph
+module:
 
 ```ts
 // dx.config.ts
@@ -599,6 +602,12 @@ export default Plugin.config({
     tags: ['labs'],
   },
   modules: [
+    AppCapability.translations(
+      () =>
+        import('./src/translations.ts', {
+          with: { type: 'module-url' },
+        }),
+    ),
     AppCapability.schema(
       () =>
         import('./src/capabilities/schema.ts', {
@@ -678,6 +687,36 @@ export const make = (
 import { StashedLink } from '../types/StashedLink.ts';
 
 export default [StashedLink];
+```
+
+Composer names a type from the plugin's translations, keyed by its typename. Without them, the create menu and the
+navigation tree show the typename itself, `com.example.type.stashedLink`, and the create menu's add button has no
+label:
+
+```ts
+// src/translations.ts
+import { Type } from '@dxos/echo';
+import type * as Theme from '@dxos/react-ui/Theme';
+
+import { StashedLink } from './types/StashedLink.ts';
+
+export default [
+  {
+    'en-US': {
+      'com.example.plugin.stash': {
+        'plugin.name': 'Stash',
+      },
+      [Type.getTypename(StashedLink)]: {
+        'typename.label': 'Stashed link',
+        'typename.label_zero': 'Stashed links',
+        'typename.label_one': 'Stashed link',
+        'typename.label_other': 'Stashed links',
+        'object-name.placeholder': 'New link',
+        'add-object.label': 'Add link',
+      },
+    },
+  },
+] as const satisfies Theme.Resource[];
 ```
 
 The create menu belongs to the Space plugin. It lists every `CreateObjectEntry` contribution, so Stash contributes
