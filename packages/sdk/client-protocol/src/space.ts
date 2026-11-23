@@ -77,6 +77,7 @@ export interface SpaceInternal {
   /**
    * Waits until the space is fully synced with EDGE.
    * @throws If the EDGE sync is disabled.
+   * @throws EdgeReplicationRefusedError if EDGE refuses replication, e.g. for an identity with no Hub Account.
    */
   syncToEdge(opts?: {
     onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
