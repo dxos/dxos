@@ -141,22 +141,6 @@ message SwarmResponse {
 }
 
 //
-// EDGE's notice that it will not serve a message, sent on the refused message's `service_id` instead of no reply.
-// Clients log it; it does not end the connection, which still carries swarm and signal messages.
-//
-message ServiceRefusal {
-  enum Reason {
-    REASON_UNSPECIFIED = 0;
-    // The identity has no Hub Account, so its socket carries only swarm and signal messages.
-    ACCOUNT_REQUIRED = 1;
-  }
-
-  Reason reason = 1;
-  // Human-readable explanation, for logs.
-  string message = 2;
-}
-
-//
 // Text message.
 //
 message TextMessage {
