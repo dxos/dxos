@@ -5,7 +5,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { build } from 'vite';
+import { build, createServer } from 'vite';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { composerPlugin } from './index.ts';
@@ -52,6 +52,34 @@ describe('composerPlugin', () => {
 
     const code = readFileSync(join(root, 'dist', 'index.mjs'), 'utf8');
     expect(code).not.toMatch(/from\s*["']react/);
+  });
+
+  test('a dev-served entry installs the refresh shim before its imports run', async ({ expect }) => {
+    // The check @vitejs/plugin-react appends to every JSX module.
+    writeFileSync(
+      join(root, 'src', 'component.ts'),
+      `if (!window.$RefreshReg$) throw new Error("can't detect preamble");\nexport default 'component';\n`,
+    );
+    writeFileSync(
+      join(root, 'src', 'plugin.ts'),
+      `import component from './component.ts';\nexport default component;\n`,
+    );
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      appType: 'custom',
+      server: { middlewareMode: true },
+      plugins: composerPlugin({ entry: 'src/plugin.ts', vendor: false }),
+    });
+    Object.assign(globalThis, { window: {} });
+    try {
+      const { default: loaded } = await server.ssrLoadModule('/src/plugin.ts');
+      expect(loaded).toBe('component');
+    } finally {
+      Reflect.deleteProperty(globalThis, 'window');
+      await server.close();
+    }
   });
 
   test('a chunk that declares its own `Map` still loads its CommonJS requires', async ({ expect }) => {
