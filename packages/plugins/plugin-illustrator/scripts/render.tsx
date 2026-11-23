@@ -3,28 +3,23 @@
 //
 
 //
-// PNG renderings of standalone SVGs (`toSvgFile`), rasterized by headless Chromium for judges that read images.
+// PNG renderings of standalone SVGs (`toSvgFile`), for judges that read images and for the files beside a render.
 //
 
-import { chromium } from '@playwright/test';
 import type * as DecisionModel from 'effect/ai/DecisionModel';
+import sharp from 'sharp';
+
+/** Twice the SVG's CSS-pixel size, as a 2x screenshot would be; librsvg treats 72 DPI as 1:1. */
+const DENSITY = 144;
 
 /**
- * Rasterizes SVGs to PNG images with one browser. `CHROMIUM_PATH` overrides the executable, for a
- * sandbox whose preinstalled Chromium does not match this Playwright release.
+ * Rasterizes one SVG with librsvg (via sharp), which `toSvgFile` targets with fallbacks for the
+ * custom properties and `color-mix` it cannot resolve, so no headless browser has to start.
  */
-export const toPngs = async (svgs: readonly string[]): Promise<DecisionModel.Image[]> => {
-  const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
-  try {
-    const page = await browser.newPage();
-    const pngs: DecisionModel.Image[] = [];
-    for (const svg of svgs) {
-      await page.setContent(`<html><body style="margin:0">${svg}</body></html>`);
-      const png = await page.locator('svg').first().screenshot();
-      pngs.push({ mediaType: 'image/png', data: png.toString('base64') });
-    }
-    return pngs;
-  } finally {
-    await browser.close();
-  }
-};
+export const toPng = (svg: string): sharp.Sharp => sharp(Buffer.from(svg), { density: DENSITY }).png();
+
+/** Rasterizes SVGs to PNG images. */
+export const toPngs = (svgs: readonly string[]): Promise<DecisionModel.Image[]> =>
+  Promise.all(
+    svgs.map(async (svg) => ({ mediaType: 'image/png', data: (await toPng(svg).toBuffer()).toString('base64') })),
+  );

@@ -180,22 +180,21 @@ rendered diagram, its DSL and its scores side by side, is
 
 ## 3. Render
 
-The renderer runs straight from source under vite-node (`scripts/vite.render.config.ts`), so it needs
-no build, only `node_modules`. In the cloud sandbox without them, run
+The renderer runs straight from source under node + tsx (`--conditions=source`), so it needs no
+build, only `node_modules`, and rasterizes the PNG with sharp (librsvg), not a browser. In the cloud sandbox without them, run
 `bash .config/claude-code-setup.sh` first and put proto on the path
-(`export PATH="$HOME/.proto/shims:$HOME/.proto/bin:$PATH"`); see `cloud-sandbox`. If the run fails with
-`Failed to load url @dxos/protocols`, that package's generated code is missing: run
-`moon run protocols:build` once (≈ 1 minute, in the background) and render again.
+(`export PATH="$HOME/.proto/shims:$HOME/.proto/bin:$PATH"`); see `cloud-sandbox`. If the run fails to
+resolve `@dxos/protocols` or `@dxos/vendor-kbn-handlebars`, their generated code is missing: run
+`moon run protocols:build` (and `vendor-kbn-handlebars:build`) once, in the background, and render again.
 
 Write the `.dx` in the scratchpad and pass its absolute path:
 
 ```bash
-CHROMIUM_PATH=/opt/pw-browsers/chromium moon run plugin-illustrator:render-diagrams -- /abs/path/to/compute-core.dx
+moon run plugin-illustrator:render-diagrams -- /abs/path/to/compute-core.dx
 ```
 
-It writes `compute-core.dx.svg` and `compute-core.png` beside the source, in about 10 seconds, and
-changes nothing in the repo. `CHROMIUM_PATH` is the cloud sandbox's pre-installed browser; omit it
-locally.
+It writes `compute-core.dx.svg` and `compute-core.png` beside the source, in a few seconds, and
+changes nothing in the repo.
 
 The report line per diagram is the first verdict:
 

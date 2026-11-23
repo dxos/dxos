@@ -11,10 +11,9 @@
 // Passing `.mmd` or `.dx` (semantic DSL) paths renders just those files instead of the corpus, and writes a
 // `.png` beside each so the drawing can be looked at; `--layering down` (or a comma list of `down`, `up`,
 // `free`) restricts the candidate layerings the mermaid engine chooses among.
-// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.dx …]` (vite-node from source; bun cannot load elkjs).
+// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.dx …]` (node + tsx from source; bun cannot load elkjs).
 //
 
-import { chromium } from '@playwright/test';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
@@ -27,6 +26,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { DrawingFile } from '#model';
 
 import { type Reply } from './emit-worker.ts';
+import { toPng } from './render.tsx';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
 
@@ -37,7 +37,17 @@ const LAYERING = process.argv.includes('--layering')
 
 const PLAIN = process.argv.includes('--plain');
 
-const RAW_LOADER = fileURLToPath(new URL('./raw-loader.mjs', import.meta.url));
+/**
+ * Worker entry: `--import tsx` in a worker's `execArgv` leaves `.ts` to node's strip-only mode, which rejects
+ * the parameter properties in ECHO's source, so the worker registers tsx itself before loading anything.
+ * The `?raw` loader goes after tsx, since hooks run last-registered first.
+ */
+const WORKER_BOOT = `
+  import(${JSON.stringify(import.meta.resolve('tsx/esm/api'))})
+    .then(({ register }) => register())
+    .then(() => import(${JSON.stringify(new URL('./raw-loader.mjs', import.meta.url).href)}))
+    .then(() => import(${JSON.stringify(new URL('./emit-worker.ts', import.meta.url).href)}));
+`;
 
 /** The `.dx.svg` for a compiled diagram, built in memory as the app would store it; the same input gives the same bytes. */
 const toDxSvg = (
@@ -74,10 +84,7 @@ const makeWorkerPool = (size: number) => {
     }
   };
   const workers = Array.from({ length: size }, () => {
-    // The worker runs under plain node, so it loads TypeScript and `?raw` imports through these hooks.
-    const worker = new Worker(new URL('./emit-worker.ts', import.meta.url), {
-      execArgv: ['--conditions=source', '--import', 'tsx', '--import', RAW_LOADER],
-    });
+    const worker = new Worker(WORKER_BOOT, { eval: true, execArgv: ['--conditions=source'] });
     worker.on('message', (reply: Reply) => {
       const task = running.get(worker);
       running.delete(worker);
@@ -153,13 +160,7 @@ const compileSource = async ({
 
 /** A raster beside the SVG, because a drawing is judged by looking at it and chat and PR bodies want an image. */
 const writePng = async (svgs: { svg: string; path: string }[]) => {
-  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
-  const page = await browser.newPage({ deviceScaleFactor: 2 });
-  for (const { svg, path } of svgs) {
-    await page.setContent(svg);
-    await page.locator('svg').first().screenshot({ path });
-  }
-  await browser.close();
+  await Promise.all(svgs.map(({ svg, path }) => toPng(svg).toFile(path)));
 };
 
 if (process.argv.includes('--scoreboard')) {
