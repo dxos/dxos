@@ -10,7 +10,6 @@ import { Keyring } from '@dxos/keyring';
 import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
-  type Message,
   ServiceRefusal_Reason,
   ServiceRefusalSchema,
   TextMessageSchema,
@@ -194,14 +193,14 @@ describe('EdgeClient', () => {
     expect(openConnectionCount()).toBe(1);
   });
 
-  // An identity with no Hub Account keeps its socket for signaling, so the refusal is status, not a closed connection.
-  test('a service refusal sets status, is not forwarded, and clears on reconnect', async () => {
-    const { endpoint, cleanup, sendMessage, closeConnection } = await createTestEdgeWsServer(wsServerPort++);
+  // An identity with no Hub Account keeps its socket for signaling, so a refusal must not reach replicators or the socket.
+  test('a service refusal is not forwarded and leaves the connection usable', async () => {
+    const { endpoint, cleanup, sendMessage } = await createTestEdgeWsServer(wsServerPort++);
     onTestFinished(cleanup);
 
-    const { client, identity, reconnectTrigger } = await openNewClient(endpoint);
-    const forwarded: Message[] = [];
-    client.onMessage((message) => forwarded.push(message));
+    const { client, identity } = await openNewClient(endpoint);
+    const forwarded: (string | undefined)[] = [];
+    client.onMessage((message) => forwarded.push(message.serviceId));
     await expect.poll(() => client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
 
     await sendMessage(
@@ -210,14 +209,10 @@ describe('EdgeClient', () => {
         payload: { reason: ServiceRefusal_Reason.ACCOUNT_REQUIRED, message: 'Account required.' },
       }),
     );
-    await expect.poll(() => client.status.refusal?.reason).toBe(ServiceRefusal_Reason.ACCOUNT_REQUIRED);
-    expect(forwarded).toHaveLength(0);
+    await sendMessage(protocol.createMessage(TextMessageSchema, { serviceId: 'after', payload: { message: 'after' } }));
+    await expect.poll(() => forwarded).toEqual(['after']);
     await client.send(Context.default(), textMessage('still sends', identity));
-
-    reconnectTrigger.reset();
-    await closeConnection();
-    await reconnectTrigger.wait();
-    expect(client.status.refusal).toBeUndefined();
+    expect(client.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
   });
 
   test.skipIf(!process.env.EDGE_ENDPOINT)('connect to local edge server', async () => {

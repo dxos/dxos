@@ -24,7 +24,7 @@ import {
   EdgeStatus_ConnectionState,
   EdgeStatusSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Message, type ServiceRefusal, ServiceRefusalSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Message, ServiceRefusalSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { trace } from '@dxos/tracing';
 import { markMilestone } from '@dxos/util';
 
@@ -142,11 +142,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private _ready = new Trigger();
   /** Set when EDGE refused this SDK as outdated; a retry would carry the same version, so none is made. */
   #refusal: EdgeClientTooOldError | undefined = undefined;
-  /**
-   * Set when EDGE refuses this socket's replication messages. Sends still go through, since the socket keeps
-   * serving swarm and signal messages; cleared on each new connection, which EDGE re-evaluates.
-   */
-  #serviceRefusal: ServiceRefusal | undefined = undefined;
+  /** Whether this connection has logged a `ServiceRefusal`; EDGE re-evaluates on each new connection. */
+  #serviceRefusalLogged = false;
 
   constructor(
     private _identity: EdgeIdentity,
@@ -179,7 +176,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
       rateBytesDown: this._currentConnection?.downloadRate ?? 0,
       messagesSent: this._currentConnection?.messagesSent ?? 0,
       messagesReceived: this._currentConnection?.messagesReceived ?? 0,
-      refusal: this.#serviceRefusal,
     });
   }
 
@@ -424,7 +420,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
         onConnected: () => {
           if (this._isActive(connection)) {
             markMilestone('network.connected');
-            this.#serviceRefusal = undefined;
+            this.#serviceRefusalLogged = false;
             this._ready.wake();
             this._notifyReconnected();
           } else {
@@ -537,20 +533,22 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
   }
 
-  /** Records a {@link ServiceRefusal}, returning whether `message` was one; it is not forwarded to listeners. */
+  /**
+   * Logs a `ServiceRefusal` once per connection, returning whether `message` was one. It is not forwarded,
+   * since replicators would try to decode it as their own payload.
+   */
   #receiveServiceRefusal(message: Message): boolean {
     if (!message.payload || !bufWkt.anyIs(message.payload, ServiceRefusalSchema)) {
       return false;
     }
-    const refusal = bufWkt.anyUnpack(message.payload, ServiceRefusalSchema);
-    if (refusal && refusal.reason !== this.#serviceRefusal?.reason) {
+    if (!this.#serviceRefusalLogged) {
+      this.#serviceRefusalLogged = true;
+      const refusal = bufWkt.anyUnpack(message.payload, ServiceRefusalSchema);
       log.warn('EDGE refused replication on this connection', {
         serviceId: message.serviceId,
-        reason: refusal.reason,
-        message: refusal.message,
+        reason: refusal?.reason,
+        message: refusal?.message,
       });
-      this.#serviceRefusal = refusal;
-      this.statusChanged.emit(this.status);
     }
     return true;
   }

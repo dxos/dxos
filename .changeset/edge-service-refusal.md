@@ -1,5 +1,5 @@
 ---
-'@dxos/client': minor
+'@dxos/edge-client': patch
 ---
 
-`space.internal.syncToEdge()` now fails at once with `EdgeReplicationRefusedError` when EDGE refuses replication for the identity (for example, an identity with no Hub Account), instead of timing out after 60 seconds. The refusal is also reported on the EDGE connection status as `EdgeStatus.refusal`.
+When EDGE refuses replication for the connection's identity (for example, an identity with no Hub Account), the EDGE client logs one warning saying so, instead of passing the refusal to replicators. Swarm and signaling on the same connection keep working.
