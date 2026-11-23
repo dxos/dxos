@@ -582,8 +582,8 @@ is what it does:
 - It marks links as read with an operation that people and the assistant both run.
 
 Stash is defined entirely in `dx.config.ts`, with one file per module body. The file below is a shortened version of
-the one the learning path builds. It writes the key inline, and it leaves out the `author` field and the translations
-and App Graph modules:
+the one the learning path builds. It writes the key inline, and it leaves out the `author` field and the App Graph
+module:
 
 ```ts
 // dx.config.ts
@@ -602,6 +602,12 @@ export default Plugin.config({
     tags: ['labs'],
   },
   modules: [
+    AppCapability.translations(
+      () =>
+        import('./src/translations.ts', {
+          with: { type: 'module-url' },
+        }),
+    ),
     AppCapability.schema(
       () =>
         import('./src/capabilities/schema.ts', {
@@ -681,6 +687,36 @@ export const make = (
 import { StashedLink } from '../types/StashedLink.ts';
 
 export default [StashedLink];
+```
+
+Composer names a type from the plugin's translations, keyed by its typename. Without them, the create menu and the
+navigation tree show the typename itself, `com.example.type.stashedLink`, and the create menu's add button has no
+label:
+
+```ts
+// src/translations.ts
+import { Type } from '@dxos/echo';
+import type * as Theme from '@dxos/react-ui/Theme';
+
+import { StashedLink } from './types/StashedLink.ts';
+
+export default [
+  {
+    'en-US': {
+      'com.example.plugin.stash': {
+        'plugin.name': 'Stash',
+      },
+      [Type.getTypename(StashedLink)]: {
+        'typename.label': 'Stashed link',
+        'typename.label_zero': 'Stashed links',
+        'typename.label_one': 'Stashed link',
+        'typename.label_other': 'Stashed links',
+        'object-name.placeholder': 'New link',
+        'add-object.label': 'Add link',
+      },
+    },
+  },
+] as const satisfies Theme.Resource[];
 ```
 
 The create menu belongs to the Space plugin. It lists every `CreateObjectEntry` contribution, so Stash contributes

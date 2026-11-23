@@ -7257,6 +7257,16 @@ decision D-376: A plugin pins every `@dxos/*` package to the newest npm `@next` 
     - Pinning to the newest pkg.pr.new commit of `main`, as the skill did before npm publishing ran.
 ```
 
+```mdl
+decision D-377: The Tournament bracket example has the person pick a game and choose players from the space's members, and each match is a game between two members. Publishing a plugin's data example keeps its translations module, which names the type in the create menu and the navigation tree. Amends [D-184].
+  date: 2026-11-23
+  by: user:wittjosiah
+  affects: [plex-build-with-agent, app-framework-publishing]
+  why: A control run of the tournament prompt built a bracket of typed-in names, which a game in the space cannot seat. Its type showed as its typename with no create-menu label, because the guide's example, which the skill follows, left the translations out.
+  rejected:
+    - A skill rule that a plugin's people are space members, which would misfire for plugins where a name is free text.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
