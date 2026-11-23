@@ -75,6 +75,12 @@ export interface Dialect {
 
   /** Names bound in the code's scope, built per evaluation. */
   readonly bindings: (context: BindingsContext) => Record<string, unknown>;
+
+  /**
+   * Whether the code reads and changes objects itself, so the operations marked `Operation.hiddenInCodeMode` are left
+   * out of its operations.
+   */
+  readonly database?: boolean;
 }
 
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */
@@ -121,16 +127,20 @@ const hasAbridgedUnion = ({ fields }: SandboxType): boolean => fields.some(({ ty
 
 /**
  * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
- * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path.
+ * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path, `output`,
+ * given, is what the call returns, and `tool`, given, is the tool name the skills' instructions use for it.
  */
 export const renderOperation = (
   operation: SandboxOperation,
   call: (name: string) => string,
   input: string = JSON.stringify(operation.parameters),
-): string => trim`
-  - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
-    input: ${input}
-`;
+  output?: string,
+  tool?: string,
+): string =>
+  trim`
+    - \`${call(operation.name)}\`${tool === undefined ? '' : ` (\`${tool}\`)`} — ${operation.description ?? 'No description.'}
+      input: ${input}
+  ` + (output === undefined ? '' : `\n  output: ${output}`);
 
 /**
  * The `console` bound in the code's scope: its output methods print into the call's output, since the model writes

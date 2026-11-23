@@ -32,7 +32,7 @@ const isFatal = (data: unknown): data is BrowserWorkerMessage =>
  */
 export const spawn =
   (createWorker: () => Worker) =>
-  async (_entry: URL, init: SandboxInit): Promise<WorkerSandbox.WorkerHandle> => {
+  async (_entry: URL | undefined, init: SandboxInit): Promise<WorkerSandbox.WorkerHandle> => {
     const worker = createWorker();
     const channel = new MessageChannel();
 

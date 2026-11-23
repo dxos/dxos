@@ -6120,12 +6120,12 @@ importers:
 
   packages/core/compute/mcp-server:
     dependencies:
+      '@dxos/agent-code-mode':
+        specifier: workspace:*
+        version: link:../agent-code-mode
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
-      '@dxos/compute-runtime':
-        specifier: workspace:*
-        version: link:../compute-runtime
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
