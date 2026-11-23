@@ -169,8 +169,10 @@ export const EFFECT_API = trim`
     \`\`\`
 
     \`Obj.update\` is the only way to change a stored object. A \`Ref<typename>\` field takes
-    \`Ref.make(obj)\` of an object you hold — never an id or a URI string. A failed load or operation
-    fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
+    \`Ref.make(obj)\` of an object you hold — never an id or a URI string. An object you know only by
+    its URI (\`echo://…\`, as an operation's output or your context names it) is
+    \`yield* Database.resolve(uri)\`. A failed load or operation fails the whole program;
+    \`DOCS['errors.md']\` shows how to contain one.
 
     A skill may name tools for reading, querying or updating objects; in code those are hidden, so do
     that with \`Database\` and \`Obj\` instead.
@@ -194,6 +196,8 @@ const renderCatalog = ({
     # Types
 
     Resolve one with \`yield* Database.resolve('<dxn>')\`. \`README.md\` shows how to list every key.
+    These are the types registered here; a host may serve more on demand, which the Skill Manager's
+    \`queryTypes\` finds.
 
     ${renderTypes(types, ({ dxn }) => dxn)}
   `,
@@ -310,7 +314,8 @@ const renderOperationList = (operations: readonly SandboxOperation[]): string =>
             renderOperation(
               operation,
               () => `yield* Database.resolve('${operationKey(definition)}')`,
-              describeInput(definition.input),
+              // A worker's stand-in definition carries no input schema; the operation's JSON schema does.
+              definition.input.ast._tag === 'Unknown' ? undefined : describeInput(definition.input),
             ),
           ]
         : [];

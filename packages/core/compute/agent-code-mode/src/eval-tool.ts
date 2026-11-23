@@ -137,7 +137,9 @@ export const evaluate = Effect.fnUntraced(function* ({
     // A tool failure reaches the model as a failed result, not a failed turn, so it can still
     // read the message and write different code.
     log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
-    printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
+    printer.fail(
+      `Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}${keptHint(invocations)}`,
+    );
     return yield* Effect.fail(printer.output());
   }
 
@@ -373,7 +375,34 @@ const hintFor = (message: string): string => {
   if (undefinedName) {
     return `\nHint: each eval call is a fresh program, so \`${undefinedName}\` from an earlier call does not exist here. Resolve or load it again in this call.`;
   }
+  const effect3Name = /Effect\.(catchAll|catchAllCause|either) is not a function/.exec(message)?.[1];
+  if (effect3Name) {
+    return `\nHint: this is Effect 4, where \`Effect.${EFFECT_4_NAMES[effect3Name]}\` replaces \`Effect.${effect3Name}\`.`;
+  }
+  const missing = /Entity not found: \{"uri":"(dxn:[^"]+)"\}/.exec(message)?.[1];
+  if (missing?.startsWith('dxn:echo:')) {
+    return "\nHint: an object resolves by its URI as it is, without `dxn:`: `yield* Database.resolve('echo://<space>/<id>')`.";
+  }
+  if (missing) {
+    return "\nHint: resolve a DXN exactly as `DOCS['catalog/types.md']` or `DOCS['catalog/operations.md']` lists it, a type's with its version (`dxn:org.dxos.type.document:0.1.0`); the Skill Manager's `queryTypes` and `queryOperations` find the ones not listed there.";
+  }
   return '';
+};
+
+/** The Effect 3 names a model reaches for, and what Effect 4 calls them. */
+const EFFECT_4_NAMES: Record<string, string> = { catchAll: 'catch', catchAllCause: 'catchCause', either: 'result' };
+
+/**
+ * What already ran when a program failed. An operation's effects stay, so a model that runs the whole program again
+ * repeats them: a second document of the same name.
+ */
+const keptHint = (invocations: readonly ContentBlock.Invocation[]): string => {
+  const ran = [
+    ...new Set(invocations.flatMap(({ operationKey, error }) => (error === undefined ? [operationKey] : []))),
+  ];
+  return ran.length === 0
+    ? ''
+    : `\nHint: these operations ran before the failure, and what they did was kept: ${ran.join(', ')}. Check for it before you run them again.`;
 };
 
 /**

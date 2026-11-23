@@ -53,19 +53,45 @@ const ScoreOperation: SandboxOperation = {
   invoke: () => Effect.die(new Error('Reached through Operation.invoke, not the tool.')),
 };
 
+/** Answers in JSON, as an operation EDGE's plugin host runs does: the task it finds, as `Obj.toJSON` writes it. */
+const Find = Operation.make({
+  meta: { key: DXN.make('com.example.operation.find'), name: 'Find' },
+  input: Schema.Struct({ title: Schema.String }),
+  output: Schema.Any,
+});
+
+const FindOperation: SandboxOperation = {
+  ...ScoreOperation,
+  name: 'find',
+  description: 'Finds a task',
+  parameters: { type: 'object', properties: { title: { type: 'string' } }, required: ['title'] },
+  definition: Find,
+};
+
 /** The turn's `Operation.Service`, which the isolate's `Operation.invoke` runs through on the host. */
-const hostOperations: Operation.OperationService = {
-  invoke: (op, ...[input]) =>
-    String(op.meta.key) === String(Score.meta.key)
-      ? Schema.decodeUnknownEffect(Score.input)(input).pipe(
-          Effect.map(({ title }) => title.length),
-          Effect.flatMap(Schema.decodeUnknownEffect(op.output)),
-          Effect.orDie,
-        )
-      : Effect.die(new Error(`No handler: ${String(op.meta.key)}`)),
+const hostOperations = (db: Database.Database): Operation.OperationService => ({
+  invoke: (op, ...[input]) => {
+    const key = String(op.meta.key);
+    if (key === String(Score.meta.key)) {
+      return Schema.decodeUnknownEffect(Score.input)(input).pipe(
+        Effect.map(({ title }) => title.length),
+        Effect.flatMap(Schema.decodeUnknownEffect(op.output)),
+        Effect.orDie,
+      );
+    }
+    if (key === String(Find.meta.key)) {
+      return Schema.decodeUnknownEffect(Find.input)(input).pipe(
+        Effect.flatMap(({ title }) => Effect.promise(() => db.query(Filter.type(Task, { title })).run())),
+        Effect.map(([task]) => ({ task: Obj.toJSON(task) })),
+        Effect.flatMap(Schema.decodeUnknownEffect(op.output)),
+        Effect.orDie,
+      );
+    }
+    return Effect.die(new Error(`No handler: ${key}`));
+  },
   schedule: () => Effect.die(new Error('not used')),
   invokePromise: () => Promise.resolve({ error: new Error('not used') }),
-};
+});
 
 /**
  * The program module, run as workerd would run it: its imports are the two names it is given, and its default export is
@@ -125,12 +151,12 @@ const setup = async () => {
       },
     }),
   });
-  const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, hostOperations));
+  const runtime = Context.make(Database.Service, { db }).pipe(Context.add(Operation.Service, hostOperations(db)));
 
   /** What the code printed, or its failure, as the model would read either. */
   const run = (code: string) =>
     EffectEx.runPromise(
-      evaluate({ code, dialect: EffectDialect, sandbox, runtime, operations: [ScoreOperation] }).pipe(
+      evaluate({ code, dialect: EffectDialect, sandbox, runtime, operations: [ScoreOperation, FindOperation] }).pipe(
         Effect.result,
         Effect.map((result) => (Result.isSuccess(result) ? result.success : result.failure)),
       ),
@@ -199,6 +225,33 @@ describe('worker sandbox in a workerd isolate', () => {
       yield* print('score', score);
     `);
     expect(output).toEqual('score 3');
+  });
+
+  test("hands the code an operation's JSON object as the live object it names", async ({ expect }) => {
+    const { db, run } = await setup();
+    db.add(Obj.make(Task, { title: 'Write the docs', status: 'open' }));
+    await db.flush();
+
+    const output = await run(`
+      const { task } = yield* Operation.invoke(yield* Database.resolve('${String(Find.meta.key)}'), { title: 'Write the docs' });
+      Obj.update(task, (task) => { task.status = 'done'; });
+      yield* Database.flush();
+      yield* print(Obj.isObject(task), Ref.isRef(Ref.make(task)));
+    `);
+    expect(output).toEqual('true true');
+    // The host's copy follows the isolate's write as the services sync it; this host's `refresh` does nothing.
+    const [task] = await db.query(Filter.type(Task)).run();
+    await expect.poll(() => task.status).toEqual('done');
+  });
+
+  // The worker's definitions are stand-ins without an input schema, so the catalog writes the operation's own.
+  test("lists each operation's input in the catalog the code reads", async ({ expect }) => {
+    const { run } = await setup();
+    const output = await run(`
+      const line = DOCS['catalog/operations.md'].split('\\n').findIndex((text) => text.includes('operation.find'));
+      yield* print(DOCS['catalog/operations.md'].split('\\n')[line + 1]);
+    `);
+    expect(output).toContain('"title"');
   });
 
   test('loads the program beside the runtime, in an isolate with no network and no bindings', async ({ expect }) => {

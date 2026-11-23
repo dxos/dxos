@@ -339,6 +339,56 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
     ),
   );
 
+  // Found on EDGE: a program that created a document and then failed was run again whole, creating a second one.
+  it.effect(
+    'a failure after an operation ran says what it did was kept',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult(
+          `yield* Operation.invoke(yield* Database.resolve('${SCORE_KEY}'), { title: 'a' }); throw new Error('boom');`,
+          EffectDialect,
+        );
+        expect(ok).toBe(false);
+        expect(output).toContain(`these operations ran before the failure, and what they did was kept: ${SCORE_KEY}`);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'an Effect 3 name points at its Effect 4 one',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult(
+          'yield* Effect.void.pipe(Effect.catchAll(() => Effect.void));',
+          EffectDialect,
+        );
+        expect(ok).toBe(false);
+        expect(output).toContain('`Effect.catch` replaces `Effect.catchAll`');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a DXN that does not resolve points at the catalogs, and an object URI at resolving it as it is',
+    Effect.fnUntraced(
+      function* (_) {
+        const type = yield* runEvalResult("yield* Database.resolve('dxn:com.example.type.task');", EffectDialect);
+        expect(type.output).toContain("a type's with its version");
+        const object = yield* runEvalResult(
+          "yield* Database.resolve('dxn:echo://BAHIPVPJFD7F34K4TWS4SPMTK2KQ2TEDX/01M82XEH98BVZ36GZVT2NPZS6K');",
+          EffectDialect,
+        );
+        expect(object.output).toContain('an object resolves by its URI as it is, without `dxn:`');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   it.effect(
     'print without yield* says why nothing came back',
     Effect.fnUntraced(
