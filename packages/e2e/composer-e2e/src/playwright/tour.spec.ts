@@ -69,10 +69,12 @@ test.describe('Tour tests', () => {
     await host.page.goto(documentUrl.replace(/\/object\/.*$/, '/home'));
     await host.waitForBoot(new RegExp(`/w/${host.workspaceId}/home`));
     await expect(host.page.getByTestId('supportPlugin.startTour')).toBeVisible();
+    await expect(Support.card(host.page)).not.toBeVisible();
 
-    await host.page.goto(documentUrl);
-    await host.waitForBoot(new RegExp(new URL(documentUrl).pathname));
-    await expect(host.page.getByTestId('editor.toolbar.strong')).toBeVisible();
+    // With the tour gone nothing blocks the navtree, and a click needs no second boot.
+    await host.navigateToObject();
+    await expect(host.page).toHaveURL(new RegExp(new URL(documentUrl).pathname));
+    await expect(host.page.getByTestId('composer.markdownRoot')).toBeVisible();
     await expect(Support.card(host.page)).not.toBeVisible();
 
     await Support.startGlobal(host.page);
