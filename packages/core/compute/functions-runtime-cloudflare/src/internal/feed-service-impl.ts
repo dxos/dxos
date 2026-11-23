@@ -51,14 +51,29 @@ export class FeedServiceImpl implements FeedService.Handlers {
     return EffectStream.fromEffect(this['FeedService.queryFeed'](request));
   }
 
-  /** The queue service reports no block ids; readers identify these blocks by their positions instead. */
+  /**
+   * Passes on the block ids and predecessors the queue service reports, which a writer needs to confirm a fork; a
+   * service that reports none leaves readers to identify the blocks by their positions.
+   */
   ['FeedService.insertIntoFeed'](
     request: FeedProtocol.InsertIntoFeedRequest,
   ): Effect.Effect<FeedProtocol.InsertIntoFeedResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
-        using _ = await this._queueService.insertIntoQueue(this._ctx, request);
-        return {};
+        using result = await this._queueService.insertIntoQueue(this._ctx, request);
+        // Copied out of the RPC result, which is released when this scope ends.
+        const blocks = 'blocks' in result ? result.blocks : undefined;
+        const predecessors = 'predecessors' in result ? result.predecessors : undefined;
+        return {
+          ...(Array.isArray(blocks) ? { blocks: blocks.filter((block) => typeof block === 'string') } : {}),
+          ...(Array.isArray(predecessors)
+            ? {
+                predecessors: predecessors.filter(
+                  (predecessor) => predecessor === null || typeof predecessor === 'string',
+                ),
+              }
+            : {}),
+        };
       },
       catch: (error) => {
         const { subspaceTag, spaceId, feedId } = request;

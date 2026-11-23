@@ -10,7 +10,10 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import { Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -20,8 +23,10 @@ import { type Message } from '@dxos/types';
 
 import { type InvitationRenderer, NotificationsPanel } from '#components';
 import { loadLink } from '#materializer';
-import { MESSENGER_COMPANION, meta } from '#meta';
 import { MessengerCapabilities } from '#types';
+
+import { MESSENGER_COMPANION } from '../../constants.ts';
+import { MessengerNamespace } from '../../namespace.ts';
 
 const renderInvitation: InvitationRenderer = ({ data, sender }) => (
   <Surface.Surface type={AppSurface.SpaceInvitation} data={{ ...data, sender }} limit={1} />
@@ -37,7 +42,7 @@ export type MessengerCompanionProps = {
 };
 
 export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MessengerNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const client = Hooks.useCapability(ClientCapabilities.Client);
   const containers = Hooks.useOptionalAtomCapability(MessengerCapabilities.NotificationsContainers);
@@ -50,12 +55,26 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
         return;
       }
 
+      // A notification can name the companion its object opens with (`~comments`, say), so it lands on what it is about.
+      const companion = message.properties?.companion;
       void EffectEx.runPromise(
         loadLink(client, ref).pipe(
           Effect.flatMap((object) =>
-            Effect.promise(() =>
-              invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] }),
-            ),
+            Effect.promise(async () => {
+              // The owning plugin knows where an object lives; a spec, say, opens as part of its project, showing that spec.
+              const db = Obj.getDatabase(object);
+              const { data } = db
+                ? await invokePromise(NavigationOperation.ResolveNavigationTargets, {
+                    query: { uri: EID.make({ spaceId: db.spaceId, entityId: object.id }) },
+                  })
+                : { data: undefined };
+              const target = data?.targets[0];
+              await invokePromise(LayoutOperation.Open, {
+                subject: [target?.path ?? GraphPath.getObjectPathFromObject(object)],
+                viewState: target?.viewState,
+                variant: typeof companion === 'string' ? companion : undefined,
+              });
+            }),
           ),
         ),
       ).catch((error) => log.warn('failed to open notification link', { error }));

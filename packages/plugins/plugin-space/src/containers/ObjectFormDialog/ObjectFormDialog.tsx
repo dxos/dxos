@@ -30,11 +30,11 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Theme from '@dxos/react-ui/Theme';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
-import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
+import { makeCreateObjectEntryForDatabaseType } from '../../util/index.ts';
 import { type ObjectFormHandle, getSpaceDisplayName } from '../../util/index.ts';
 
 export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'mode' | 'schema'> & {
@@ -82,7 +82,7 @@ const ObjectFormDialogBody = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: ObjectFormDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
   // reactively, so entries pop in as their chunks arrive.

@@ -9,7 +9,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../namespace.ts';
 
 export type ForeignKeysProps = {
   keys: Key.ForeignKey[];
@@ -37,7 +37,7 @@ type KeyItemProps = {
 };
 
 const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
 
   const handleDelete = useCallback(() => {
     onDelete?.(forignKey);

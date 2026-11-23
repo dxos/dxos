@@ -13,6 +13,7 @@
     "vitest.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src"
   ],
   "references": [

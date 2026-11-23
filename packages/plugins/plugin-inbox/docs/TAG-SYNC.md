@@ -119,7 +119,7 @@ below, not by a conflict policy.
 4. Persist `nextHeads` in a single `Obj.update` on the cursor — but only if the push fully drained
    with nothing `pending` (see
    [What an op's outcome does to the base](#what-an-ops-outcome-does-to-the-base)). This holds on
-   capped runs too; the delta token joins the same update only on an uncapped run.
+   capped runs too, and so does the delta token once the run has handled all of its delta chunk.
 
 Capturing at step 2 rather than at the end of the run is what keeps the two failure modes from
 appearing:
@@ -187,23 +187,32 @@ rather than written as it is captured, and the block becomes a single combined w
 
 ```ts
 if (pending.length === 0) {
-  const nextToken = capped ? undefined : source.nextToken?.();
+  const nextToken = deltaDrained ? source.nextToken?.() : undefined;
   Cursor.writeSyncState(binding, { token: nextToken, tagHeads: nextHeads });
 }
 ```
 
-A capped run writes the heads alone. That is the safe direction: the next run re-reads, from the
-unadvanced token, a delta the base already holds, and re-applying it is idempotent absent concurrent
-local edits. With one, a replayed `add X` re-applies X over a local removal made between the runs,
-and the removal is lost — not a regression, since without a base the additive path never pushed
-removals at all. An initial backfill never replays: the token is written only by an uncapped run, so
-it stays undefined until backfill completes. Withholding the
-heads instead is not safe for memory: a backfill caps every run, so the base would never exist, and
-every run's additive reconcile would re-push — and load in full — every message synced so far. On
-EDGE that grew until the operation-service isolate ran out of memory.
+A capped run writes both too, once it has handled its whole delta chunk. The delta's messages lead
+the stream, so a run that took any backfill message took or dropped all of them, and the next run
+reads from past the chunk. A run that read the forward date window instead (no usable token, or a
+filter) keeps the token until it is uncapped, since only `max` resumes that window. A run that
+leaves the token where it was (the cap or the time budget cut the delta, a pending push, below, or a
+crash) re-reads, from the unadvanced token, a delta the base already holds, and re-applying it is
+idempotent absent concurrent local edits. With one, a replayed `add X` re-applies X over a local
+removal made between the runs, and the removal is lost — not a regression, since without a base the
+additive path never pushed removals at all. The replay's messages are not committed twice: the
+cursor records the delta ids it handled under the held token (`deltaIds`) and drops them on the
+replay. Withholding the heads instead is not safe for memory: a backfill caps every run, so the base
+would never exist, and every run's additive reconcile would re-push — and load in full — every
+message synced so far. On EDGE that grew until the operation-service isolate ran out of memory.
 
 With anything `pending`, neither field is written — the run requests `runAgain` and both the token and
 the base stay where they were, so the next run re-reads the same delta and re-derives the same diff.
+
+While the delta has more chunks, a run also holds the backward window, so the backfill cannot list an
+imported message by date before the delta has seen it. A pending push keeps the token, so a delta with
+more chunks keeps the backfill waiting until the push settles; the `mail sync run finished` log
+reports this as `backfillHeld`.
 
 The damaging order is token-then-heads. The next run reads its delta from the _advanced_ token, so
 the previous run's pulled changes are invisible to it, while `base` is the _stale_ heads from before
@@ -384,8 +393,8 @@ and only the first may advance `nextHeads`:
 | Permanent rejection — message deleted (404), label gone, insufficient scope | `settled`      | No retry can succeed. Advancing past it is the only terminating choice; the local tag stays as the user left it and simply never reaches the provider. Logged at `warn` with the op. |
 | Transient — 429, 5xx, timeout                                               | `pending`      | Retrying is expected to succeed.                                                                                                                                                     |
 
-**`nextHeads` is persisted only when `pending` is empty**, capped or not; the delta token advances
-only on an uncapped run. A run with any
+**`nextHeads` is persisted only when `pending` is empty**, capped or not, and the delta token with
+it. A run with any
 pending op leaves the base where it was and requests `runAgain`, so the whole diff — including the
 ops that did settle — recomputes next run. Re-pushing a settled op is a no-op at both providers, so
 the duplication is the acceptable half of the trade; the alternative, advancing past a transient

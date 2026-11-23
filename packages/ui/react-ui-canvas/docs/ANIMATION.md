@@ -1,6 +1,9 @@
 # react-ui-canvas — Animation
 
 Status: phases 1 and 2 built (2026-10-15); §12 records what was built and where it differs from the design below.
+Superseded in part (2026-10-27) by plugin-animator: a View no longer holds a timeline (decisions 2 and 3, §12).
+Superseded in part (2026-10-30) by COMMON-CORE R-68: the engine plays no timeline; the host draws the document as a
+shot samples it, and keys are the scene editor's (§5.3–§5.5 and §5.8 describe the retired engine timeline).
 Phases 3 and 4 are still design. Extends `DESIGN.md` (data model §4, layers §4b, prototypes §4c). Source
 material: the data-flow sample in `packages/plugins/plugin-canvas/src/samples/molecules/` and the frame renderer
 `scripts/render-story.mjs`, built for PR dxos/dxos#13992.
@@ -67,8 +70,8 @@ Each of these cost a render or a fix in the sample. The design removes the cause
 | #   | Decision                                                                                                       | Why                                                                                                                       |
 | --- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **A composite object is a scene.** Its definition is a scene in the store; its instances are `instance` nodes. | Scenes already nest, render as previews or live layers, and drill. A second container type would duplicate all of that.   |
-| 2   | **Animation data lives on the scene**, as `Scene.timeline`.                                                    | The scene is the unit the store saves, the projection emits and the undo log covers. One scene, one timeline.             |
-| 3   | **Sampling is a pure function**, `sampleView(scene, t) → Scene`.                                               | The surface, hit testing, the properties form and export all take a `Scene`. None of them learns about time.              |
+| 2   | ~~**Animation data lives on the scene**, as `Scene.timeline`.~~ Superseded: the host holds it (§12).           | The scene is the unit the store saves, the projection emits and the undo log covers. One scene, one timeline.             |
+| 3   | **Sampling is a pure function**, `sampleView(scene, timeline, t) → Scene`.                                     | The surface, hit testing, the properties form and export all take a `Scene`. None of them learns about time.              |
 | 4   | **One clock per view**, an atom holding the time; nothing else reads `performance.now()` or rAF timestamps.    | §2.1 items 1 to 3.                                                                                                        |
 | 5   | **Editing at a time is an intent rewrite.** An animated projection turns a `move` at time t into a keyframe.   | Decision 11 of `DESIGN.md` already routes every edit through `apply`. The surface does not change.                        |
 | 6   | **Generators are node types** with a `GeneratorDef` on top of `NodeDef`.                                       | They get the palette, the properties form, ports, layers and selection for free.                                          |
@@ -81,61 +84,64 @@ Each of these cost a render or a fix in the sample. The design removes the cause
 
 ### 4.1 Model
 
-A **composite** is a scene marked as a definition. An **instance** is a node that draws a composite at its own
-place and size.
+Composite objects are the engine's **Objects**: a View record with `kind: 'composite'`, placed by `instance` nodes.
+The model, Group and Ungroup, the library and isolation are specified in `SPEC.mdl` (Ontology, `type:View`,
+`type:BuiltinNode`, [F-9]); the reasoning is in `VIEWS.md`. What is particular to animation:
 
 ```ts
-Scene = { id, name?, nodes, links, kind?: 'scene' | 'composite', timeline?: Timeline };
-
 Instance = NodeBase & {
   type: 'instance';
-  composite: ViewId; // the definition
-  overrides?: Record<NodeId, Partial<Node>>; // per inner node, shallow per field as §4c resolves prototypes
+  composite: ViewId; // the Object
+  overrides?: Record<NodeId, Partial<Node>>; // per inner node, shallow per field as DESIGN.md §4c resolves prototypes
+  fit?: 'fit' | 'fill' | 'none';
   time?: { offset: number; rate?: number; loop?: boolean }; // the instance's clock against its parent's (§5.7)
 };
 ```
 
-- The instance's `size` scales the composite's content bounds to fit, so resizing an instance scales it uniformly
-  (an option on the instance chooses `fit`, `fill` or `none`).
 - Overrides reuse the instance-prototype rule of `DESIGN.md` §4c: an unset value is read from the definition, and
-  `resetOverride` clears one. Identity, links and the inner scene's structure are never overridden. Changing the
+  `resetOverride` clears one. Identity, links and the inner structure are never overridden. Changing the
   structure means editing the definition, which changes every instance.
-- A composite's own ports are the ports of the inner nodes marked `exposed: true`, drawn on the instance's frame
+- **A node places a composite by naming one** (`composite`), whatever its own type: the generic `instance`, and a
+  type of its own that declares a `template` (plugin-uml's `class`), which keeps its type and its typed fields and
+  draws through the composite all the same. `isInstanceNode` tests for the field, not the type name.
+- **A part says how it follows the frame** (`constrain: { x, y }` over `min | max | stretch | center | scale`, on a
+  node or a link). An instance whose composite constrains any axis re-solves its parts into its frame rather than
+  scaling them, so a card's footer stays on its floor and its body grows; `scale`, what an axis means when it says
+  nothing, keeps the part's proportion of that axis. A composite no part of which is constrained still draws through
+  one transform, under the instance's `fit`, as it always did. The solve inverts exactly (`unsolvePartBounds`), which
+  is what lets a part be edited where it is drawn and stored in the definition's own coordinates.
+- **A part may show a field of the instance** (`bind: 'attributes'`): the part draws the instance's value and typing
+  in it writes that value back, so a tool keeps typed data on the shape while the composite says how it is laid out.
+- **A tool declares its composite in the DSL**, not in code: `NodeDef.template` is scene-DSL source
+  (`composite <id> { element … constrain=stretch,max }`), compiled once per drawing under `template:<type>`. One
+  definition per tool, so restyling any instance of it reaches them all.
+- An Object's own ports are the ports of the inner nodes marked `exposed: true`, drawn on the instance's frame
   where the inner node meets it. Links from outside attach to those.
-- `Frame` (a portal to a child scene) stays as it is. A frame is a place to drill into; an instance is a symbol you
-  repeat. Converting one to the other is a menu action that swaps the node type and keeps the scene.
+- A `view` node is a place to drill into; an Instance is a symbol you repeat.
 
 ### 4.2 Actions
 
-| Action              | Effect                                                                                                                                                                                                                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Group as object** | Creates a composite scene from the selection: the nodes and the links wholly inside it move into it, re-centred on their bounds. One instance replaces them in place. Links that crossed the selection edge reattach to exposed ports, created on the fly. One undoable intent (`compose {ids}`). |
-| **Duplicate**       | Copies the instance node. Both share the definition.                                                                                                                                                                                                                                              |
-| **Make unique**     | Copies the definition scene and points this instance at the copy.                                                                                                                                                                                                                                 |
-| **Ungroup**         | Replaces the instance with the definition's nodes, overrides applied, at the instance's place. The definition remains while other instances use it.                                                                                                                                               |
-| **Place**           | Drags a composite from the Objects panel onto the canvas, creating an instance.                                                                                                                                                                                                                   |
-| **Edit**            | Opens the definition in isolation (§4.3). Double-clicking an instance does the same.                                                                                                                                                                                                              |
+| Action          | Effect                                                                                                                                                                                                                                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Group**       | `SPEC.mdl` [F-9.2]. Keyed tracks of the grouped nodes move into the Object.                                                                                                                                                                                             |
+| **Ungroup**     | `SPEC.mdl` [F-9.3]: the tracks come back out, mapped through the Instance's transform.                                                                                                                                                                                  |
+| **Duplicate**   | Copies the instance node. Both share the definition.                                                                                                                                                                                                                    |
+| **Make unique** | Copies the definition and points this instance at the copy; disabled for an anonymous Object.                                                                                                                                                                           |
+| **Place**       | Drags an Object from the Objects panel onto the canvas, creating an instance.                                                                                                                                                                                           |
+| **Edit**        | Enters the Instance in place: its parts become what the editor acts on, the drawing around them is faded and locked, and Escape leaves. The camera does not move and no view is opened; the Objects panel still opens the definition in isolation (`SPEC.mdl` [F-1.8]). |
 
-The palette lists composites under a "Objects" group, so the existing palette drop path places them.
+### 4.2a Where an edit made in place is written
+
+One rule, so no modifier is needed: **a part's text belongs to the Instance** (`overrides`, or the bound field when
+the part is bound), and **its style, its geometry and which parts there are belong to the definition**, so they reach
+every Instance of it. Typing a part back to the definition's own text clears the override again. Geometry is written
+through the part's own constraint, so a part dragged inside a stretched Instance lands where it was dragged in every
+other one.
 
 ### 4.3 Objects panel
 
-`ObjectsPanel` sits beside `LayersPanel` in the inspector dock and is built the same way: a `Panel` with a toolbar
-and an `OrderedList` of rows.
-
-- **Rows.** One per composite in the document: a thumbnail (the canvas2d preview tier), the name (renamed in place
-  on a double-click, as a layer is), and the number of instances.
-- **Toolbar.** Group selection as object, place, duplicate definition, delete (disabled while instances exist,
-  with a menu item to delete them too).
-- **Selecting a row** opens the composite in isolation. The view drills into the definition scene as it drills into
-  a frame, and the breadcrumbs show `Objects › <name>`. The camera fits the composite's bounds; the canvas behind
-  dims to a plain surface, so the object reads as if inside its own frame. Escape or the breadcrumb returns to the
-  scene and the camera the user left.
-- **Selecting an instance** on the canvas highlights its row; selecting a row while instances are selected offers
-  "swap to this object".
-
-Because the isolated view is a normal `Canvas` on the composite scene, everything else works there: editing,
-layers, and the composite's own timeline (§5.7).
+`SPEC.mdl` `component:ObjectsInspector`. In isolation the canvas is a normal `Canvas` on the Object, so editing
+and the Object's own timeline (§5.7) work there.
 
 ## 5. Timeline
 
@@ -481,10 +487,10 @@ generators follow in phase 2.
 | `Scene.kind`, `Scene.timeline`, `instance`, `path`, `generator` nodes, `style.opacity`, `exposed`  | `src/model/types.ts`                                                                                                        |
 | Easing, keys, `sampleView`, camera keys                                                            | `src/model/timeline.ts` (+ `timeline.test.ts`)                                                                              |
 | `animate(projection, clock)` and the intent rewrite                                                | `src/model/animate.ts` (+ `animate.test.ts`)                                                                                |
-| Clock atoms; the one rAF loop                                                                      | `src/model/clock.ts`, `src/hooks/useClock.ts`; `CanvasAtoms.clock`, `autoKey`, `isolation`                                  |
+| Clock atoms; the one rAF loop                                                                      | `@dxos/animation` `clock.ts`, `@dxos/react-ui-animation` `useClock`; `CanvasAtoms.clock`, `autoKey`, `isolation`            |
 | Compose, ungroup, make unique (`copyComposite` + `retargetInstance`), instance ports and transform | `src/utils/compose.ts` (+ `compose.test.ts`)                                                                                |
 | `ObjectsPanel`, `Canvas.Objects`, isolation (`Objects › name`)                                     | `src/components/inspectors/ObjectsInspector/`, `Canvas.tsx`                                                                 |
-| `Canvas.Timeline` (collapsed bar) and the space , . [ ] K keys                                     | `src/components/panels/TimelinePanel/`, `src/model/keys.ts`, `useSceneKeys.ts`                                              |
+| `Canvas.Timeline` (collapsed bar) and the space , . [ ] K keys                                     | `@dxos/react-ui-animation` `TimelineBar`, `src/model/keys.ts`, `useSceneKeys.ts`                                            |
 | Generator contract, motion library, runner, compile, worker, host, check                           | `src/generator/` (+ `generator.test.ts`); subpaths `@dxos/react-ui-canvas/motion`, `@dxos/react-ui-canvas/generator-worker` |
 | Generator layer per scene layer, `data-frame-time`                                                 | `SceneLayer.tsx` (`GeneratedShapes`), `src/hooks/useGeneratorFrames.ts`                                                     |
 | Export by seeking                                                                                  | `scripts/render-story.mjs` (`--mode auto` finds an exposed clock; `Canvas.Root exportable`)                                 |
@@ -542,3 +548,13 @@ by `generator.test.ts` and plugin-canvas `operations.test.ts`, and the view stil
 plugin-canvas adds an `image` node type to the palette (key `I`): a picture linked by `src` (a web URL; anything else,
 such as a `javascript:` or `data:` URL in shared content, draws the placeholder), with a description and a fit
 (`contain`, `cover`, `fill`), all edited in the properties panel.
+
+### 12.1 The timeline moved to the host (2026-10-27)
+
+plugin-animator owns every animation (its F-2.3): a canvas is animated by an `Animation` shot over its scene, so a
+View stores no timeline and there is no `timeline` intent. `Canvas.Root` takes the timeline as a prop with an
+`onTimelineChange` callback; the animated projection, the time commands and the generator worker read the host's
+timeline, and keys an edit makes leave through the callback rather than the projection, so they are the host's to
+undo. `sampleView(scene, timeline, t)` takes the timeline as an argument. A composite object no longer carries an
+animation of its own: Group and Ungroup move no tracks, and a deleted node's tracks stay with the host, where they
+key nothing.

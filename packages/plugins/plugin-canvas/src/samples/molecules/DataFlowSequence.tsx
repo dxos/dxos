@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { FrameHeader } from '@dxos/react-ui-canvas/scene';
+import { FrameHeader } from '@dxos/react-ui-canvas';
 
 import { DataFlowView, type DataFlowViewProps } from './DataFlowView.tsx';
 import { useTween } from './tween.ts';

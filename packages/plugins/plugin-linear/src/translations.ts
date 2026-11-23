@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from '#meta';
+import { LinearNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [LinearNamespace.key]: {
         'plugin.name': 'Linear',
         'sync-now.label': 'Sync now',
         'sync-toast.success.label': 'Sync complete',

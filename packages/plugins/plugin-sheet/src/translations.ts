@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Sheet } from '#types';
+
+import { SheetNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete sheet',
         'object-deleted.label': 'Sheet deleted',
       },
-      [meta.profile.key]: {
+      [SheetNamespace.key]: {
         'plugin.name': 'Sheets',
         'cell.placeholder': 'Cell value...',
 
@@ -74,6 +75,7 @@ export const translations = [
         'chart-type.map.label': 'Map',
         'chart-type.timeline.label': 'Timeline',
         'invalid-range.message': 'Invalid range',
+        'unknown-chart-type.message': 'No plugin draws "{{type}}" charts',
 
         'timeline-actions.label': 'Timeline actions',
         'timeline-spine.label': 'Spine',

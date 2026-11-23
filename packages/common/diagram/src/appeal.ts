@@ -12,6 +12,8 @@
 import type * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
 
+import { Shape } from '@dxos/scene';
+
 import * as Architecture from './architecture.ts';
 import * as Diagnostics from './diagnostics.ts';
 import * as Layout from './layout.ts';
@@ -21,7 +23,7 @@ import type * as Scene from './scene.ts';
 import type * as Score from './score.ts';
 import * as View from './view.ts';
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 type Rect = View.Box['rect'];
 
 /** Everything an evaluator reads: the scene, its geometry and its defect report, computed once. */

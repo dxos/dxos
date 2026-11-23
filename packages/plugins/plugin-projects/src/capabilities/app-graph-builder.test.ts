@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import { setupGraphBuilder } from '@dxos/app-graph/testing';
+import { makeGraphBuilderHost } from '@dxos/app-toolkit/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
@@ -17,9 +18,9 @@ import { invariant } from '@dxos/invariant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
+import { ARTIFACTS_SEGMENT } from '../paths.ts';
 import {
   ARTIFACTS_SECTION_TYPE,
-  ARTIFACTS_SEGMENT,
   createProjectActionExtension,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
@@ -49,7 +50,7 @@ describe('project app graph builder', () => {
 
   test('contributes a virtual Artifacts branch to a project node', async ({ expect }) => {
     const project = Project.make({ name: 'Test' });
-    const nodes = await getSubjectChildren(project, await EffectEx.runPromise(createProjectArtifactsExtension()));
+    const nodes = await getSubjectChildren(project, createProjectArtifactsExtension());
 
     const artifacts = nodes.find((node) => node.type === ARTIFACTS_SECTION_TYPE);
     invariant(artifacts);
@@ -67,7 +68,7 @@ describe('project app graph builder', () => {
     const project = Project.make({ name: 'Test' });
     const actions = await getSubjectActions(
       { branch: 'artifacts', project },
-      await EffectEx.runPromise(createProjectArtifactsActionExtension()),
+      createProjectArtifactsActionExtension(),
       ARTIFACTS_SECTION_TYPE,
     );
 
@@ -76,17 +77,34 @@ describe('project app graph builder', () => {
     ]);
     expect(actions[0].properties.disposition).toEqual('list-item-primary');
   });
+
+  test('read-only, the Artifacts branch offers no add-artifact action', async ({ expect }) => {
+    const project = Project.make({ name: 'Test' });
+    const actions = await getSubjectActions(
+      { branch: 'artifacts', project },
+      createProjectArtifactsActionExtension(),
+      ARTIFACTS_SECTION_TYPE,
+      { readOnly: true },
+    );
+
+    expect(actions).toEqual([]);
+  });
 });
 
 const SUBJECT_ID = 'subject';
 
+type Extensions = Effect.Effect<AppGraphBuilder.BuilderExtension[], never, Capability.Service>;
+
+type SubjectOptions = {
+  type?: string;
+  readOnly?: boolean;
+};
+
 /** Graph holding one node whose data is `subject`, so the extension's match runs against it. */
-const setupSubject = async (
-  subject: unknown,
-  extensions: AppGraphBuilder.BuilderExtension[],
-  type = 'test',
-  space: unknown = { id: 'SPACE' },
-) => {
+const setupSubject = async (subject: unknown, extensions: Extensions, { type = 'test', readOnly }: SubjectOptions) => {
+  const host = makeGraphBuilderHost({ readOnly });
+
+  const space = { id: 'SPACE' };
   const rootExtensions = await EffectEx.runPromise(
     AppGraphBuilder.createExtension({
       id: 'testRoot',
@@ -95,17 +113,19 @@ const setupSubject = async (
       connector: () => Effect.succeed([{ id: SUBJECT_ID, type, data: subject, properties: { space } }]),
     }),
   );
-  const context = setupGraphBuilder({ extensions: [...rootExtensions, ...extensions] });
+  const subjectExtensions = await host.build(extensions);
+  const context = host.setup([...rootExtensions, ...subjectExtensions]);
   await context.expand(GraphNode.RootId);
   return context;
 };
 
-const getSubjectActions = async (subject: unknown, extensions?: AppGraphBuilder.BuilderExtension[], type?: string) => {
-  const context = await setupSubject(
-    subject,
-    extensions ?? (await EffectEx.runPromise(createProjectActionExtension())),
-    type,
-  );
+const getSubjectActions = async (
+  subject: unknown,
+  extensions: Extensions = createProjectActionExtension(),
+  type?: string,
+  options?: Omit<SubjectOptions, 'type'>,
+) => {
+  const context = await setupSubject(subject, extensions, { ...options, type });
 
   // Actions are their own relation, materialized lazily like connections.
   await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'action');
@@ -114,8 +134,8 @@ const getSubjectActions = async (subject: unknown, extensions?: AppGraphBuilder.
   return context.registry.get(context.graph.actions(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID)));
 };
 
-const getSubjectChildren = async (subject: unknown, extensions: AppGraphBuilder.BuilderExtension[]) => {
-  const context = await setupSubject(subject, extensions);
+const getSubjectChildren = async (subject: unknown, extensions: Extensions) => {
+  const context = await setupSubject(subject, extensions, {});
   await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID));
   return context.registry.get(context.graph.connections(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'child'));
 };

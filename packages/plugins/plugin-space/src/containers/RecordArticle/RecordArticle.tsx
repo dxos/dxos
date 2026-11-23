@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import { Obj, Type } from '@dxos/echo';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -20,6 +23,8 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -29,11 +34,12 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
-import { meta } from '#meta';
 import { SpaceSurface } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
+
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const { actions, onAction } = useMenuActions(attendableId);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
@@ -48,6 +54,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
           .find((t) => Type.getTypename(t) === typename)
       : undefined);
   const icon = schema && Type.getDatabase(schema) != null ? 'ph--cube--regular' : undefined;
+  const onFindPlugin = useFindPlugin(schema);
 
   // Keyed by the record, not this article, so the Related companion shares the same filter.
   const relatedObjects = useRelatedObjects(db, subject, { references: true, relations: true });
@@ -62,6 +69,17 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
+            {onFindPlugin && (
+              <Banner.Root valence='info' icon='ph--puzzle-piece--regular'>
+                <Banner.Title>{t('plugin-disabled.title')}</Banner.Title>
+                <Banner.Body>{t('plugin-disabled.message')}</Banner.Body>
+                <Layout.Flex>
+                  <Button.Root variant='primary' onClick={onFindPlugin} data-testid='spacePlugin.findPlugin'>
+                    {t('find-plugin.label')}
+                  </Button.Root>
+                </Layout.Flex>
+              </Banner.Root>
+            )}
             <ToolkitObjectCard.Root>
               <ToolkitObjectCard.Header subject={subject} icon={icon} />
               <Card.Body>
@@ -107,6 +125,31 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 //
 
 /**
+ * Opens the plugin registry filtered by the type's name when the type is static but no enabled plugin
+ * contributes it (the registry keeps a disabled plugin's types); undefined otherwise.
+ */
+const useFindPlugin = (schema: Type.AnyEntity | undefined): (() => void) | undefined => {
+  const { invokePromise } = AppHooks.useOperationInvoker();
+  const registryAvailable = ToolkitHooks.usePluginRegistryAvailable();
+  const contributed = AppHooks.useCapabilities(AppCapabilities.Schema);
+  const missing = useMemo(() => {
+    if (!schema || Type.getDatabase(schema) != null) {
+      return false;
+    }
+    const uri = Type.getURI(schema);
+    return !contributed.flat().some((type) => Type.getURI(type) === uri);
+  }, [schema, contributed]);
+  const typename = schema ? Type.getTypename(schema) : undefined;
+  const onFindPlugin = useCallback(() => {
+    if (typename) {
+      void invokePromise(SettingsOperation.OpenPluginRegistry, { filter: typename.split('.').at(-1) ?? typename });
+    }
+  }, [invokePromise, typename]);
+
+  return missing && registryAvailable ? onFindPlugin : undefined;
+};
+
+/**
  * Toolbar actions for the record, sourced from its own app-graph node (`disposition: 'toolbar'`).
  *
  * The record view is type-agnostic, so it must not know which actions a given type affords. Any plugin
@@ -132,7 +175,7 @@ const useMenuActions = (
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
-      void runAction(action, { caller: meta.profile.key });
+      void runAction(action, { caller: SpaceNamespace.key });
     },
     [runAction],
   );

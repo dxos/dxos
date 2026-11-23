@@ -13,6 +13,8 @@
 // participant's activation bar reads as the decoration it is rather than a route through a node.
 //
 
+import { Shape } from '@dxos/scene';
+
 import * as Diagnostics from './diagnostics.ts';
 import * as Layout from './layout.ts';
 import type * as Scene from './scene.ts';
@@ -158,7 +160,7 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
   const top = hasGroups ? GRID : 0;
 
   // The timeline, drawn into one list of elements while a cursor walks down the rows.
-  const elements: Scene.Element[] = [];
+  const elements: Shape.Element[] = [];
   const stacks = new Map<string, Bar[]>(columns.map((node) => [node.id, []]));
   const closed: { node: string; bar: Bar; end: number }[] = [];
   /** Last row each participant took part in, so an activation nobody returns from still ends. */
@@ -437,7 +439,7 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
     }
   }
   // Bars paint before the messages that meet them, deepest last so a nested bar sits on top.
-  const bars: Scene.Element[] = closed
+  const bars: Shape.Element[] = closed
     .sort((left, right) => left.bar.depth - right.bar.depth)
     .map(({ node, bar, end: barEnd }) => ({
       kind: 'rect',
@@ -512,7 +514,7 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
   }
   for (const node of columns) {
     const x = (xOf.get(node.id) ?? 0) - headW / 2;
-    const lifeline: Scene.Polyline = {
+    const lifeline: Shape.Polyline = {
       kind: 'line',
       id: 'lifeline',
       points: [
@@ -523,7 +525,7 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
       guide: true,
       color: 'grey',
     };
-    const head: Scene.Element[] =
+    const head: Shape.Element[] =
       node.role === 'actor'
         ? actor(node, headW, headH)
         : [
@@ -565,14 +567,14 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
 };
 
 /** A stick figure with its name under it, in the head's box, so its lifeline starts where a box's would. */
-const actor = (node: Semantic.Node, w: number, h: number): Scene.Element[] => {
+const actor = (node: Semantic.Node, w: number, h: number): Shape.Element[] => {
   const cx = w / 2;
   const figureH = h - TEXT_FONT.lineH - 4;
   const head = figureH * 0.22;
   const neck = head * 2;
   const hip = figureH * 0.68;
   const color = node.color ? { color: node.color } : {};
-  const limb = (id: string, points: Scene.Point[]): Scene.Polyline => ({
+  const limb = (id: string, points: Shape.Point[]): Shape.Polyline => ({
     kind: 'line',
     id,
     points,

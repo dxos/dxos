@@ -1,0 +1,88 @@
+---
+spec: github:dxos/dxos/packages/ui/react-ui-canvas/POST-M4.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SceneEnginePostM4
+
+POST-M4 is a set of QA flows, so each is judged on whether automation runs it. `create.spec.ts` and
+`scene.spec.ts` automate the core of PM4-2, PM4-3 and PM4-5, and `route.test.ts` covers the geometry
+of PM4-6. PM4-4 and PM4-7 are manual and nothing runs them. `demo.spec.ts` drives most flows for a
+recording but asserts nothing, so it does not count.
+
+Of 7 items: 0 done, 0 untested, 4 partial, 1 diverged, 2 missing. Findings:
+
+- **PM4-1 has been reversed.** The code sizes a toolbar or palette create in grid cells (scene units),
+  and `create.spec.ts` asserts that its screen size scales with zoom — the opposite of this flow and of
+  SPEC F-3.7.
+- **Depth is never automated.** No test drills into a portal for PM4-1, PM4-3 or PM4-4.
+- **Smart links are only unit-tested.** No browser test draws one or moves a linked node.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict PM4-1: The automated test asserts the opposite: a toolbar create is the default size in scene units, so its screen size scales with zoom.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/hooks/canvas/useDocumentCommands.ts#useDocumentCommands, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/shapes.ts#nominalSize, github:dxos/dxos/packages/ui/react-ui-canvas/src/hooks/canvas/useNodeDrop.ts#useNodeDrop]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/playwright/create.spec.ts]
+  note: |
+    `create.spec.ts` "a toolbar create is the default size in scene units whatever the zoom" expects width = nominal size x zoom. The code sizes a dropped or toolbar create as `nominalSize(def.defaultSize, cell)`, with no division by camera zoom. The depth step is not automated either.
+```
+
+```mdl
+verdict PM4-2: create.spec.ts checks a 240x160 sweep within a cell and that a motionless press creates nothing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/hooks/canvas/usePointerMachine.ts#usePointerMachine]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/playwright/create.spec.ts]
+  note: |
+    The wide-box and click-without-moving steps are automated. The small 120x80 box step is not.
+```
+
+```mdl
+verdict PM4-3: Snapping after a hard zoom-out is automated; drilled-in snapping and G hiding the grid are not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/hooks/canvas/useSceneSnap.ts#sceneSnap]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/playwright/create.spec.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/playwright/scene.spec.ts]
+  note: |
+    `create.spec.ts` covers the zoom-out nudge and `scene.spec.ts` the move and resize landing on the major grid. No test drags inside a portal, checks edges against drawn lines, or presses G and asserts the grid disappears.
+```
+
+```mdl
+verdict PM4-4: The zoom readout after a drill-in is not exercised by any test.
+  status: missing
+  note: |
+    The flow is marked manual. No Playwright or unit test reads the toolbar percentage across a drill-in; searched `src/playwright` and `*.test.ts`.
+```
+
+```mdl
+verdict PM4-5: Body-to-body linking and hover-only ports are automated; port precedence and refused ends are not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/hooks/canvas/usePointerMachine.ts#usePointerMachine]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/playwright/scene.spec.ts]
+  note: |
+    `scene.spec.ts` checks that ports show only on the hovered node (with no tool picked, not with L) and that the line tool links two bodies without adding a node. No test drops near a port to check it wins, or drops on a node whose ports all refuse the end.
+```
+
+```mdl
+verdict PM4-6: route.test.ts checks the stub geometry and the same-side double-back; drawing with O and live re-routing are not automated.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/route.ts#smartPoints, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/route.ts#linkPath]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/route.test.ts]
+  note: |
+    The geometry steps are unit-tested through `smartPoints`. No browser test draws a smart link or moves a linked node; `demo.spec.ts` does both but asserts nothing.
+```
+
+```mdl
+verdict PM4-7: Text size at depth and the fontSize override are not exercised by any test.
+  status: missing
+  note: |
+    The flow is marked manual. `properties.test.ts` only lists `fontSize` among the editable fields; nothing checks the rendered text size or that the size class is dropped.
+```

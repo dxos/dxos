@@ -127,7 +127,7 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
     <Layout.Flex
       column
       gap='lg'
-      classNames='p-3 w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'
+      classNames='p-trim-md w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'
     >
       <Form.Root<TerraFormValues>
         schema={FORM_SCHEMA}

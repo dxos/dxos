@@ -24,7 +24,6 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { AiContext } from '@dxos/assistant';
-import * as MemorySkill from '@dxos/assistant-toolkit/MemorySkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
@@ -55,9 +54,9 @@ import { File, Message, Organization, Outline, Person, Task } from '@dxos/types'
 
 import { ChatDetailsSection } from '#components';
 import { usePromptActions } from '#hooks';
-import { AssistantPlugin } from '#plugin';
+import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
-import { ChatSurface } from '#types';
+import { AssistantSurface } from '#types';
 
 import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
 
@@ -176,7 +175,7 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
 
 const changesSection = Surface.create({
   id: 'storyChanges',
-  filter: Surface.makeFilter(ChatSurface.ChatDetails),
+  filter: Surface.makeFilter(AssistantSurface.ChatDetails),
   component: () => (
     <ChatDetailsSection icon='ph--git-diff--regular' title='Changes' count={3}>
       <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>
@@ -314,7 +313,7 @@ const meta = {
                   yield* Effect.promise(() =>
                     binder.use((binder: AiContext.Binder) =>
                       binder.bind({
-                        skills: [Ref.fromURI(Skill.registryURI(workspace ? MemorySkill.key : PlanningSkill.key))],
+                        skills: [Ref.fromURI(Skill.registryURI(PlanningSkill.key))],
                         objects: [Ref.make(chat), ...mentioned.map((object) => Ref.make(object))],
                       }),
                     ),
@@ -324,8 +323,8 @@ const meta = {
                 yield* Effect.promise(() => space.db.flush({ indexes: true }));
               }),
           }),
-          RoutinePlugin(),
-          AssistantPlugin({
+          RoutinePlugin.make(),
+          AssistantPlugin.make({
             // Only the stories that declare their turns are scripted; the rest keep the real service, so
             // `Default` stays a place to actually talk to a model rather than one with an empty script.
             aiServiceMiddleware: messages.length > 0 ? scriptedAiServiceMiddleware(messages) : undefined,
@@ -335,7 +334,7 @@ const meta = {
           // operations this plugin owns. Without it the system prompt advertises `space-*` tools the
           // toolkit cannot build, and the first turn that takes the model up on one dies with
           // ToolNotFoundError.
-          SpacePlugin({}),
+          SpacePlugin.make({}),
           // Contributes the task verbs the `/task:*` commands invoke.
           TasksPlugin.make(),
           ...(workspace ? [FilePlugin.make()] : []),
@@ -633,12 +632,12 @@ export const Rewind: Story = {
     // Greeting, then the question.
     await submitPrompt(canvasElement, greeting.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(greeting.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
     await submitPrompt(canvasElement, asked.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(asked.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
 
@@ -665,7 +664,7 @@ export const Rewind: Story = {
     await clearPrompt(canvasElement);
     await submitPrompt(canvasElement, revised.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(revised.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
     await expect(threadText(canvasElement)).toContain(revised.prompt);

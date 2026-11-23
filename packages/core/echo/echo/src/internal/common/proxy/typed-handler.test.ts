@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
@@ -15,6 +16,7 @@ import { Ref } from '../../Ref/index.ts';
 import { SchemaAstId, SchemaId, getSchema } from '../types/index.ts';
 import { foreignKey, getMeta } from '../types/meta.ts';
 import { makeObject } from './make-object.ts';
+import { getProxyTarget } from './proxy-utils.ts';
 import { change, subscribe } from './reactive.ts';
 
 describe('nested schemas', () => {
@@ -27,6 +29,47 @@ describe('nested schemas', () => {
     change(object, (o) => {
       expect(() => (o.nested.value = 'one' as any)).to.throw();
     });
+  });
+});
+
+describe('nested record layout', () => {
+  const schema = Schema.Struct({ outer: Schema.Struct({ inner: Schema.Struct({ value: Schema.Number }) }) });
+
+  // A per-record prototype or a deleted property turns the record into a V8 dictionary (~0.5 KiB each), which for
+  // a value with many nested records (an operation's JSON Schema) is most of the object's heap.
+  test('nested records share one prototype and keep their metadata as own properties', () => {
+    const first = makeObject(schema, { outer: { inner: { value: 1 } } });
+    const second = makeObject(schema, { outer: { inner: { value: 2 } } });
+    const records = [first.outer, first.outer.inner, second.outer, second.outer.inner].map((record) =>
+      getProxyTarget<object>(record),
+    );
+    const [prototype] = records.map((record) => Object.getPrototypeOf(record));
+    for (const record of records) {
+      expect(Object.getPrototypeOf(record)).toBe(prototype);
+      expect(Object.hasOwn(record, SchemaAstId)).toBe(true);
+    }
+    expect(Object.getPrototypeOf(getProxyTarget<object>(first))).not.toBe(prototype);
+  });
+
+  test('nested records stay reactive and inspectable', () => {
+    const object = makeObject(schema, { outer: { inner: { value: 1 } } });
+    let calls = 0;
+    subscribe(object, () => calls++);
+    change(object, (mutable) => {
+      mutable.outer.inner.value = 2;
+    });
+    expect(object.outer.inner.value).toBe(2);
+    expect(calls).toBeGreaterThan(0);
+    expect(Object.getPrototypeOf(object.outer)).toBe(Object.prototype);
+    expect(inspect(object.outer)).toMatch(/^Typed /);
+  });
+
+  test('nested arrays print without their hidden owner', () => {
+    const schema = Schema.Struct({ secret: Schema.String, items: Schema.Array(Schema.Number) });
+    const object = makeObject(schema, { secret: 'root-only', items: [1, 2] });
+    const printed = inspect(object.items, { showHidden: true });
+    expect(printed).toMatch(/^Typed /);
+    expect(printed).not.toContain('root-only');
   });
 });
 

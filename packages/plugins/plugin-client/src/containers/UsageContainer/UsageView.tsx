@@ -11,7 +11,7 @@ import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
+import { ClientNamespace } from '../../namespace.ts';
 
 export type UsageViewState = 'loading' | 'ready' | 'error' | 'unavailable';
 
@@ -173,7 +173,7 @@ const STATE_MESSAGES = {
  * collapsible raw-response viewer. Pure — all data via props.
  */
 export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ClientNamespace.key);
   const [rawExpanded, setRawExpanded] = useState(false);
 
   const { schema, values, empty } = useMemo(() => {

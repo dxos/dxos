@@ -8,10 +8,6 @@ export default defineConfig({
   entry: {
     'ns/OsrmEvents': 'src/OsrmEvents.ts',
     'index': 'src/index.ts',
-    'OsrmPlugin': 'src/OsrmPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
-    'meta': 'src/meta.ts',
     'services': 'src/services/index.ts',
   },
   test: { node: true },

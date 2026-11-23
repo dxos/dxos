@@ -9,8 +9,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
 import { type Goal } from '#types';
+
+import { AgentNamespace } from '../../namespace.ts';
 
 export type ProfileGoal = Pick<Goal.Goal, 'id' | 'title' | 'description' | 'horizon' | 'status'>;
 
@@ -42,7 +43,7 @@ export const GOAL_ICONS: Record<Goal.Status, string> = {
 
 /** What an agent knows about a person or team: their goals and the facts about them. */
 export const ProfileGraph = ({ goals, facts }: ProfileGraphProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   if (goals.length === 0 && facts.length === 0) {
     return <Status.Empty>{t('profile-graph-empty.message')}</Status.Empty>;
   }

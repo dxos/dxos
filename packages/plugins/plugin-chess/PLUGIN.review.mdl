@@ -1,0 +1,369 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-chess/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ChessPlugin
+
+The spec describes a modelled design: a `Board` of typed squares with a `status`, a `Game` with a
+lifecycle (`waiting`/`active`/`finished`) and a winner, a Lobby, `ChessEngine` and `GameStore`
+services, and pure `getLegalMoves`/`validateMove`/`applyMove` ops composed by `submitMove`. The code
+is built differently. The chess state is a `Chess.State` holding only `pgn` and `fen`, referenced
+as the variant of plugin-game's generic `Game` (`name`, `description`, `players`, `variant`).
+chess.js is called directly for rules, check, mate and stalemate. The board UI is
+`@dxos/react-ui-gameboard`, wrapped by plugin-chess's `Chessboard`. Drops go to
+`ChessModel.makeMove` and write the PGN directly. They do not go through an operation.
+
+What exists works: games start from the standard position, illegal moves are rejected with no
+write, promotion has a selector, check/mate/stalemate/draw are shown in the move history, and the
+`Move` (`org.dxos.operation.chess.move`) and `Play` operations are registered. Nothing of the Lobby,
+join flow, resignation, game status or winner exists. Test coverage is thin: `plugin.test.ts`
+checks module activation and `Print`, and `react-ui-gameboard`'s `chess.test.ts` checks only that a
+piece map builds. No test covers `Move`, `Play` or any acceptance scenario.
+
+Of 49 items: 0 done, 8 untested, 2 partial, 18 diverged, 21 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Color: There is no Color type; sides are chess.js 'w'/'b' and the gameboard's Player union.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/types.ts#Player]
+  note: `react-ui-gameboard` declares `type Player = 'black' | 'white'`; plugin-game's `Game.Player.role` is a free string.
+```
+
+```mdl
+verdict PieceKind: Piece kinds are two-letter codes such as 'WK' and 'BP', not pawn..king literals.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/chess.ts#ChessPiece]
+  note: `ChessPiece` merges colour and kind into one code; there is no separate kind type.
+```
+
+```mdl
+verdict Piece: A piece is a PieceRecord with an id, a ChessPiece code and a location, not { kind, color }.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/types.ts#PieceRecord]
+  note: Colour and kind are not separate fields.
+```
+
+```mdl
+verdict Square: Squares are [row, col] Locations or algebraic strings, with no piece field.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/types.ts#Location, github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/chess.ts#posToLocation]
+  note: Pieces are held in a separate `PieceMap` keyed by location, not on the square.
+```
+
+```mdl
+verdict Move: The Move operation takes a SAN string; the board's Move has from, to, piece and promotion.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/types.ts#Move, github:dxos/dxos/packages/plugins/plugin-chess/src/types/ChessOperation.ts#Move]
+  note: `from`/`to` are `Location`s, not `Square`s, and promotion is a piece code; the operation input is a free-form move string such as "e4".
+```
+
+```mdl
+verdict Board: The persisted state is Chess.State with only pgn and fen; turn, status and history are derived by chess.js.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/types/Chess.ts#State]
+  note: No `squares`, `turn`, `status` or `moves` fields exist; the PGN is the move history and chess.js derives the rest.
+```
+
+```mdl
+verdict Player: plugin-game's Player has role and optional name, with no id.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/types/Game.ts#Player]
+  note: `role` is a variant-defined string (white/black for chess), not a `Color`; there is no player id.
+```
+
+```mdl
+verdict GameStatus: No waiting/active/finished status exists.
+  status: missing
+  note: Searched plugin-chess, plugin-game and react-ui-gameboard; game-over is computed by `chess.isGameOver()` on demand.
+```
+
+```mdl
+verdict Game: The Game is plugin-game's generic object with name, description, players and a variant ref; no board, status or winner.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/types/Game.ts#Game, github:dxos/dxos/packages/plugins/plugin-chess/src/types/Chess.ts#State]
+  note: The chess position lives in the referenced `Chess.State`; `description` holds the current FEN. No `status` or `winner`.
+```
+
+```mdl
+verdict Lobby: No Lobby component exists.
+  status: missing
+  note: Searched plugin-chess, plugin-game and react-ui-gameboard for Lobby, joinGame and spectate; games are created from the navtree via plugin-game's variant provider.
+```
+
+```mdl
+verdict Gameboard: The board is the Chessboard composite with a move-history Info panel and orientation flip, but no playerId, selection highlights or resign.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Chessboard.tsx#Chessboard, github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx#Info, github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/Gameboard.tsx#Gameboard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Chessboard.stories.tsx, github:dxos/dxos/packages/plugins/plugin-chess/src/containers/ChessArticle/ChessArticle.stories.tsx]
+  note: |
+    Moves are drag-and-drop (`onDrop` → `ChessModel.makeMove`), not select-then-submit; there is no
+    `selected`/`highlights` state, no `playerId` and no `onResign`. A promotion selector overlays the board.
+```
+
+```mdl
+verdict ChessEngine: There is no engine service; chess.js is instantiated inline wherever rules are needed.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/chess.ts#ChessModel, github:dxos/dxos/packages/plugins/plugin-chess/src/operations/move.ts]
+  note: No lazy loading, no `validate`/`legalMoves`/`applyMove` API and no `EngineNotReady` error.
+```
+
+```mdl
+verdict GameStore: No GameStore service; games are ECHO objects read and written directly.
+  status: missing
+  note: No `create`/`load`/`save`/`list` service; `GameUtil.loadGame` loads a Game and its variant, and writes use `Obj.update`.
+```
+
+```mdl
+verdict getLegalMoves: No getLegalMoves operation exists.
+  status: missing
+  note: The board asks `ChessModel.isValidMove` per hovered target during a drag; nothing returns a list of target squares.
+```
+
+```mdl
+verdict validateMove: No standalone validateMove operation exists.
+  status: missing
+  note: Validation happens inside chess.js (`move()` throws) and `ChessModel.isValidMove`; there are no `IllegalMove`/`WrongTurn`/`GameOver` errors.
+```
+
+```mdl
+verdict applyMove: No pure applyMove operation exists.
+  status: missing
+  note: `ChessModel.makeMove` mutates the in-memory model, and the `Move` handler mutates and persists in one step.
+```
+
+```mdl
+verdict startGame: As the spec notes, no startGame operation exists; games come from plugin-game's create flow.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/capabilities/game-variant.ts]
+  note: The chess `GameVariant` supplies an input schema (name, optional PGN) and `createVariant`; plugin-game builds the Game. No operation key.
+```
+
+```mdl
+verdict playEngineMove: Play plays a random legal move for the requested side and persists the PGN.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/types/ChessOperation.ts#Play, github:dxos/dxos/packages/plugins/plugin-chess/src/operations/play.ts]
+  walkthrough:
+    - The operation declares a chess Game ref and optional side in, pgn and move out. github:dxos/dxos/packages/plugins/plugin-chess/src/types/ChessOperation.ts#Play
+    - The handler replays the PGN, picks a random legal move if it is that side's turn, and writes PGN and FEN. github:dxos/dxos/packages/plugins/plugin-chess/src/operations/play.ts
+  note: The key and shape match. The "engine" is a uniform random choice from `chess.moves()`. No test invokes it.
+```
+
+```mdl
+verdict submitMove: The Move operation applies a SAN move to a Game ref and returns the PGN; it has no player or typed errors.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/types/ChessOperation.ts#Move, github:dxos/dxos/packages/plugins/plugin-chess/src/operations/move.ts]
+  note: |
+    Key `org.dxos.operation.chess.move` matches, but the input is `{ game: Ref, move: string }` and the output
+    `{ pgn }`, not `{ game, player, move } → Game`. An illegal move throws chess.js's "Invalid move" before any
+    write, so it is atomic; there is no player-turn check and no `WrongTurn`/`GameOver` error. Not tested.
+```
+
+```mdl
+verdict resignGame: No resign operation or action exists.
+  status: missing
+  note: Searched plugin-chess and plugin-game for resign; there is no winner field to set.
+```
+
+```mdl
+verdict F-1.1: A new Chess.State with no PGN replays to chess.js's standard starting position.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/types/Chess.ts#make, github:dxos/dxos/packages/plugins/plugin-chess/src/types/Chess.ts#fen]
+  note: No test asserts the starting position.
+```
+
+```mdl
+verdict F-1.2: chess.js starts with white to move.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/chess.ts#ChessModel]
+  note: Inherited from chess.js; no test.
+```
+
+```mdl
+verdict F-2.1: Moves are validated by chess.js, but without distinct WrongTurn or GameOver errors or a player check.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/chess.ts#ChessModel.isValidMove, github:dxos/dxos/packages/plugins/plugin-chess/src/operations/move.ts]
+  note: The UI refuses invalid drops and the `Move` op throws "Invalid move"; nothing ties a move to the submitting player.
+```
+
+```mdl
+verdict F-2.2: A valid move updates the PGN and chess.js advances the turn.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Chessboard.tsx#Chessboard, github:dxos/dxos/packages/plugins/plugin-chess/src/operations/move.ts]
+  note: Both the drop handler and the `Move` op write the new PGN; no test checks it.
+```
+
+```mdl
+verdict F-2.3: Check is detected by chess.js and shown as a label; there is no Board.status to set.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx#Info]
+  note: The History panel labels "check" from `model.game.isCheck()`; nothing persists a status.
+```
+
+```mdl
+verdict F-2.4: Checkmate and stalemate are derived and labelled, not stored as Board.status.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx#Info]
+  note: `isCheckmate()`/`isStalemate()`/draw drive a label in the History panel only.
+```
+
+```mdl
+verdict F-3.1: No Lobby lists open games.
+  status: missing
+  note: No Lobby component; games appear as ordinary objects in the navtree.
+```
+
+```mdl
+verdict F-3.2: Creating a game sets no waiting status and assigns no player to white.
+  status: missing
+  note: plugin-game's create flow builds the Game from the variant; there is no status and no creator-as-white assignment.
+```
+
+```mdl
+verdict F-3.3: No join flow exists.
+  status: missing
+  note: No join action, no status transition, no black assignment.
+```
+
+```mdl
+verdict F-3.4: No navigation on game activation exists.
+  status: missing
+  note: There is no active status to trigger it.
+```
+
+```mdl
+verdict F-4.1: Only the hovered drop target is marked valid during a drag; selection does not highlight legal targets.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/Square.tsx#Square]
+  note: `Square` sets a `validMove` border when `model.isValidMove` accepts the dragged piece over it; no list of targets is shown on select.
+```
+
+```mdl
+verdict F-4.2: A drop calls ChessModel.makeMove and writes the PGN directly, not via submitMove.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Chessboard.tsx#Chessboard, github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/chess.ts#ChessModel.makeMove]
+  note: The UI path never invokes the `Move` operation.
+```
+
+```mdl
+verdict F-4.3: A promotion selector overlays the board when a pawn can promote and records the chosen piece.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/Gameboard.tsx#Gameboard, github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/Chessboard.tsx#Chessboard, github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/chess.ts#ChessModel.canPromote]
+  walkthrough:
+    - The Gameboard root holds the promoting piece when the model reports canPromote on a drop. github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/Gameboard.tsx#Gameboard
+    - The Chessboard renders the promotion selector and passes the chosen piece back as the move's promotion. github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/Chessboard.tsx#Chessboard
+  note: No test drives a promotion.
+```
+
+```mdl
+verdict F-4.4: Game over is labelled (checkmate, stalemate or draw) and offers New game, but there is no result overlay or winner.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx#Info, github:dxos/dxos/packages/plugins/plugin-chess/src/containers/ChessArticle/ChessArticle.tsx#ChessArticle]
+  note: Moves after the end fail only because chess.js has no legal moves; the board is not explicitly disabled.
+```
+
+```mdl
+verdict F-5.1: The board validates through ChessModel, not by calling submitMove and validateMove.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Chessboard/chess.ts#ChessModel.makeMove]
+  note: `makeMove` returns false for an invalid move before the PGN is written; no operation runs.
+```
+
+```mdl
+verdict F-5.2: An invalid move leaves the state unchanged: the drop returns false and the Move op throws before writing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Chessboard.tsx#Chessboard, github:dxos/dxos/packages/plugins/plugin-chess/src/operations/move.ts]
+  note: No test submits an invalid move.
+```
+
+```mdl
+verdict F-5.3: Selecting a square does not call getLegalMoves; there is no highlights state.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-gameboard/src/components/Gameboard/Square.tsx#Square]
+  note: Validity is checked per hovered square during a drag (see F-4.1).
+```
+
+```mdl
+verdict F-6.1: There is no startGame or Lobby; a game created from the navtree is written to ECHO as a Game plus Chess.State.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/capabilities/game-variant.ts]
+  note: Creation is plugin-game's generic flow; there is no Lobby list to appear in.
+```
+
+```mdl
+verdict F-6.2: Moves are written to the ECHO Chess.State, which ECHO replicates like any object.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/operations/move.ts, github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Chessboard.tsx#Chessboard]
+  note: No test covers replication of a move.
+```
+
+```mdl
+verdict F-6.3: The board re-syncs its model when the ECHO pgn changes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess/src/components/Chessboard/Chessboard.tsx#Chessboard]
+  note: An effect on `useObject(state, 'pgn')` calls `model.update(pgn)` on an external change; no multi-peer test.
+```
+
+```mdl
+verdict T-1: No test checks the starting position.
+  status: missing
+  note: `chess.test.ts` in react-ui-gameboard only checks that a piece map builds from a PGN.
+```
+
+```mdl
+verdict T-2: No test moves a piece of the wrong side.
+  status: missing
+  note: There is no WrongTurn error to assert.
+```
+
+```mdl
+verdict T-3: No test creates and joins a game.
+  status: missing
+  note: The Lobby and join flow do not exist.
+```
+
+```mdl
+verdict T-4: No test checks legal-move highlights.
+  status: missing
+  note: Selection highlights do not exist (see F-4.1).
+```
+
+```mdl
+verdict T-5: No test drives a pawn promotion.
+  status: missing
+  note: The promotion selector exists but is not exercised by a test or a play function in the stories.
+```
+
+```mdl
+verdict T-6: No test submits e2→e4 and checks the persisted state.
+  status: missing
+  note: No test invokes the `Move` operation.
+```
+
+```mdl
+verdict T-7: No test submits an illegal move.
+  status: missing
+  note: No test invokes the `Move` operation with an illegal move.
+```
+
+```mdl
+verdict T-8: No test checks getLegalMoves or highlights for e2.
+  status: missing
+  note: Neither `getLegalMoves` nor a highlights state exists.
+```
+
+```mdl
+verdict QA-1: No automation plays the opening; the recorded pass was a human run.
+  status: missing
+  note: No e2e test creates a game and invokes `org.dxos.operation.chess.move`.
+```

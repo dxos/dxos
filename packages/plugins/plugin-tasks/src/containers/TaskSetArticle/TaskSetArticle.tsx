@@ -39,20 +39,41 @@ import {
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { Task, TaskSet } from '@dxos/types';
+import { type Milestone, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
-import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
-import { ALL_STATUSES, STATUS_TERMS, filterTasks, foldStatuses, groupTasks, sortTasks } from '../../util/index.ts';
+import {
+  useDelegateActions,
+  useDescriptionComponents,
+  useMarkdownExtensions,
+  useTaskActions,
+  useTaskErrorToast,
+  useTaskMembers,
+  useTaskUpdate,
+} from '../../hooks/index.ts';
+import {
+  ALL_STATUSES,
+  STATUS_TERMS,
+  filterTasks,
+  foldStatuses,
+  groupTasks,
+  sortTasks,
+  withinScope,
+} from '../../util/index.ts';
 import { useAttachFile } from '../TaskArticle/TaskAttachments.tsx';
 import { TaskFilter } from './TaskFilter.tsx';
+import { TaskMilestoneFilter } from './TaskMilestoneFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
   /** Whether rows render their task's description beneath the title. */
   showDescription?: boolean;
+  /** Ids of the tasks to show, with the tasks filed under them; every task in the set when absent. */
+  scope?: readonly string[];
+  /** Runs on each task the footer creates, before it is shown; a scoped host uses it to bring the task into scope. */
+  onTaskCreated?: (task: Task.Task) => Promise<void>;
 };
 
 /**
@@ -66,14 +87,22 @@ export const TaskSetArticle = ({
   role,
   attendableId,
   subject: taskSet,
-  showDescription = true,
+  showDescription = false,
+  scope,
+  onTaskCreated,
 }: TaskSetArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const db = Obj.getDatabase(taskSet);
-  const allTasks = useTasks(taskSet);
+  const setTasks = useTasks(taskSet);
+  const scopeKey = scope?.join(',');
+  const allTasks = useMemo(
+    () => (scopeKey === undefined ? setTasks : withinScope(setTasks, new Set(scopeKey.split(',')))),
+    [setTasks, scopeKey],
+  );
   // The toolbar's filter, as the mailbox composes its own: the query editor's text is what the
   // reader edits, its parse is what the list is narrowed by. The status menu is a second view over
   // the same text — its choice lives in the text's `status:` terms — so there is one value, persisted
@@ -92,7 +121,7 @@ export const TaskSetArticle = ({
     return new QueryBuilder(tags).build(text).filter ?? Filter.nothing();
   }, [rest, tags]);
   // Order and grouping persist beside the query, per device and per set, for the same reason.
-  const { sort = TaskSetView.DEFAULT_SORT, group = 'none' } = useViewState(TaskSetView.aspect, taskSet.id);
+  const { sort = TaskSetView.DEFAULT_SORT, group = 'none', milestone } = useViewState(TaskSetView.aspect, taskSet.id);
   const { update: updateView } = useViewStateActions(TaskSetView.aspect, taskSet.id);
   const handleSortChange = useCallback(
     (sort: TaskSetView.Sort) => updateView((view) => ({ ...view, sort })),
@@ -102,9 +131,15 @@ export const TaskSetArticle = ({
     (group: TaskSetView.GroupField) => updateView((view) => ({ ...view, group })),
     [updateView],
   );
+  const handleMilestoneChange = useCallback(
+    (milestone: string | undefined) => updateView((view) => ({ ...view, milestone })),
+    [updateView],
+  );
+  const milestones = useMilestones(taskSet);
   const { tasks, groups } = useArrangedTasks(taskSet, allTasks, {
     filter,
     statuses,
+    milestone,
     sort,
     group,
     ns: meta.profile.key,
@@ -112,6 +147,9 @@ export const TaskSetArticle = ({
   // Dragging writes the set's own order, so it is offered only while that is the order shown: under a
   // sort the row would not land where it was dropped, and a group header is not a parent.
   const arranged = sort.field !== 'manual' || !!groups;
+  // A scoped list roots a branch at its first kept task, so a drop placed against the rows shown could detach that
+  // task from a parent outside the scope.
+  const movable = !readonly && !arranged && scope === undefined;
   // Row order as rendered, so the article's arrow keys walk the rows the reader sees.
   const rows = useMemo(() => (groups ? groups.flatMap((group) => group.tasks) : tasks), [groups, tasks]);
   const handleStatusesChange = useCallback(
@@ -120,8 +158,10 @@ export const TaskSetArticle = ({
     [setFilterText],
   );
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
-  const { checked, onTaskCheck } = useCheckedTasks(taskSet);
+  const { checked, onTaskCheck } = useCheckedTasks(taskSet, readonly);
 
+  const handleUpdate = useTaskUpdate(spaceId);
+  const showError = useTaskErrorToast();
   const { invokePromise } = Hooks.useOperationInvoker();
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
@@ -129,19 +169,33 @@ export const TaskSetArticle = ({
   // Reports a failed create, so the pane keeps the draft, and the files left unattached, which the
   // pane keeps rather than dropping.
   const handleCreate = useCallback<TaskCreateHandler>(
-    async (props, files = []) => {
+    async ({ status, ...props }, files = []) => {
+      const finished = status === 'done';
       const { data, error } = await invokePromise(
         TaskOperation.CreateTask,
-        { taskSet: Ref.make(taskSet), ...props },
+        { taskSet: Ref.make(taskSet), ...props, status: finished ? undefined : status },
         { spaceId },
       );
       if (error || !data) {
         return { error: error ?? new Error('Task was not created.') };
       }
-      if (files.length === 0) {
+      if (files.length === 0 && !onTaskCreated && !finished) {
         return;
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (finished) {
+        if (task) {
+          await handleUpdate(task, { status });
+        } else {
+          showError(new Error('The new task was not found to sign off.'));
+        }
+      }
+      if (task && onTaskCreated) {
+        await onTaskCreated(task);
+      }
+      if (files.length === 0) {
+        return;
+      }
       if (!task || !attachFile) {
         return { rejectedFiles: files };
       }
@@ -153,14 +207,10 @@ export const TaskSetArticle = ({
       }
       return { rejectedFiles };
     },
-    [invokePromise, taskSet, spaceId, attachFile, db],
+    [invokePromise, handleUpdate, showError, taskSet, spaceId, attachFile, db, onTaskCreated],
   );
 
-  const handleUpdate = Hooks.useOperation(
-    TaskOperation.UpdateTask,
-    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
-    { spaceId },
-  );
+  const members = useTaskMembers(spaceId);
 
   const handleDelete = Hooks.useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
@@ -205,6 +255,7 @@ export const TaskSetArticle = ({
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
   // whatever any plugin adds to it.
   const contributed = useTaskActions();
+  const getDelegateActions = useDelegateActions();
   const getTaskActions = useCallback(
     (task: Task.Task) => [
       createMenuAction(`add-sub-task-${task.id}`, () => handleAddSubTask(task), {
@@ -272,6 +323,10 @@ export const TaskSetArticle = ({
       onClear={handleClearFilter}
       editorRef={filterEditorRef}
     >
+      {/* Kept while a milestone is selected, so a selection whose milestone was removed can still be cleared. */}
+      {(milestones.length > 0 || milestone !== undefined) && (
+        <TaskMilestoneFilter milestones={milestones} value={milestone} onChange={handleMilestoneChange} />
+      )}
       <TaskSortMenu value={sort} onChange={handleSortChange} />
       <TaskGroupMenu value={group} onChange={handleGroupChange} />
     </TaskFilter>
@@ -287,17 +342,19 @@ export const TaskSetArticle = ({
       hierarchical
       selectable
       showDescription={showDescription}
-      showEstimates
+      members={members}
+      db={db}
       descriptionComponents={descriptionComponents}
       checked={checked}
       collapsed={collapsed}
       selected={currentId}
-      getTaskActions={getTaskActions}
+      getTaskActions={readonly ? undefined : getTaskActions}
+      getDelegateActions={readonly ? undefined : getDelegateActions}
       onTaskCheck={onTaskCheck}
       onCollapsedChange={setCollapsed}
-      onTaskCreate={handleCreate}
-      onTaskUpdate={handleUpdate}
-      onTaskMove={arranged ? undefined : handleMove}
+      onTaskCreate={readonly ? undefined : handleCreate}
+      onTaskUpdate={readonly ? undefined : handleUpdate}
+      onTaskMove={movable ? handleMove : undefined}
       onTaskSelect={handleOpen}
     >
       <Panel.Root role={role}>
@@ -310,17 +367,21 @@ export const TaskSetArticle = ({
             <TaskList.Content />
           </TaskList.Viewport>
         </Panel.Body>
-        {/* Framed as the chat prompt is: inset from the panel's edges, in a bordered box of its own surface. */}
-        <Panel.Footer classNames='p-2 dx-grow bg-base-surface'>
-          <TaskList.Editor
-            createOnly
-            showDescription
-            acceptFiles={!!attachFile}
-            descriptionExtensions={descriptionExtensions}
-            classNames='py-2 dx-group-surface border border-separator-subtle rounded-sm'
-            placeholder={t('task-create.placeholder')}
-          />
-        </Panel.Footer>
+        {/* Framed as the chat prompt is, in a box of its own surface. Padded on the block axis only, and ringed
+            rather than bordered, because either one on the inline axis would inset the pane's grid from the rows'
+            and its fields would no longer sit under the columns they edit. */}
+        {!readonly && (
+          <Panel.Footer classNames='py-2 dx-grow bg-base-surface'>
+            <TaskList.Editor
+              createOnly
+              showDescription
+              acceptFiles={!!attachFile}
+              descriptionExtensions={descriptionExtensions}
+              classNames='py-2 dx-group-surface ring-1 ring-inset ring-separator-subtle rounded-sm'
+              placeholder={t('task-create.placeholder')}
+            />
+          </Panel.Footer>
+        )}
       </Panel.Root>
     </TaskList.Root>
   );
@@ -398,14 +459,14 @@ const useFilterQuery = (
  * Offered only when a plugin contributes a {@link TasksCapabilities.TaskAction}: the checkbox marks
  * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
  */
-const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
+const useCheckedTasks = (taskSet: TaskSet.TaskSet, readonly: boolean) => {
   const actions = Hooks.useCapabilities(TasksCapabilities.TaskAction);
   const ids = useSelection(taskSet.id, 'multi');
   const { toggle } = useSelectionActions(taskSet.id);
   const checked = useMemo(() => new Set(ids), [ids]);
   const handleTaskCheck = useCallback((task: Task.Task) => toggle(task.id), [toggle]);
 
-  return actions.length > 0
+  return !readonly && actions.length > 0
     ? { checked, onTaskCheck: handleTaskCheck }
     : { checked: undefined, onTaskCheck: undefined };
 };
@@ -432,6 +493,7 @@ const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
 type ArrangeOptions = {
   filter: Filter.Any | undefined;
   statuses: readonly Task.Status[] | undefined;
+  milestone: string | undefined;
   sort: TaskSetView.Sort;
   group: TaskSetView.GroupField;
   /** Namespace of the group labels for tasks with no value. */
@@ -446,7 +508,7 @@ type ArrangeOptions = {
 const useArrangedTasks = (
   taskSet: TaskSet.TaskSet,
   tasks: readonly Task.Task[],
-  { filter, statuses, sort, group, ns }: ArrangeOptions,
+  { filter, statuses, milestone, sort, group, ns }: ArrangeOptions,
 ): { tasks: readonly Task.Task[]; groups?: TaskGroup[] } => {
   // A set, so the match is a lookup per task rather than a scan of the status list, and one the
   // atom below can depend on by identity.
@@ -460,7 +522,7 @@ const useArrangedTasks = (
         // (`status:`, `priority:`) or the task's tags, and a property-level subscription would miss
         // every term but the ones listed here.
         tasks.forEach((task) => get(Obj.atom(task)));
-        const sorted = sortTasks(filterTasks(tasks, { filter, statuses: statusSet }), sort);
+        const sorted = sortTasks(filterTasks(tasks, { filter, statuses: statusSet, milestone }), sort);
         if (group === 'none') {
           return { tasks: sorted };
         }
@@ -469,9 +531,21 @@ const useArrangedTasks = (
         const milestones = group === 'milestone' ? TaskSet.resolveMilestones(taskSet) : [];
         return { tasks: sorted, groups: groupTasks(sorted, group, { milestones, ns }) };
       }),
-    [taskSet, tasks, filter, statusSet, sort, group, ns],
+    [taskSet, tasks, filter, statusSet, milestone, sort, group, ns],
   );
 
+  return useAtomValue(atom);
+};
+
+const useMilestones = (taskSet: TaskSet.TaskSet): readonly Milestone.Milestone[] => {
+  const atom = useMemo(
+    () =>
+      Atom.make((get) => {
+        get(Obj.atomProperty(taskSet, 'milestones'));
+        return TaskSet.resolveMilestones(taskSet);
+      }),
+    [taskSet],
+  );
   return useAtomValue(atom);
 };
 

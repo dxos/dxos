@@ -8,9 +8,10 @@ import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { type Point } from '@dxos/scene';
 
 import { useViewport, useWheel } from '../../hooks/index.ts';
-import { type Camera, type Point } from '../../model/index.ts';
+import { type Camera } from '../../model/index.ts';
 import { panBy, screenToScene, zoomAt } from '../../utils/index.ts';
 import { GridComponent, type GridProps } from './Grid.tsx';
 

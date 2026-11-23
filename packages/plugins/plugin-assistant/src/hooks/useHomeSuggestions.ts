@@ -8,8 +8,9 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Space } from '@dxos/react-client/echo';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import { AssistantNamespace } from '../namespace.ts';
 
 const FALLBACK_SUGGESTION_KEYS = [
   'space-home.suggestion-magazine.label',
@@ -22,7 +23,7 @@ const FALLBACK_SUGGESTION_KEYS = [
  * or error). Undefined while nothing is cached and the request is in flight.
  */
 export const useHomeSuggestions = (space?: Space): readonly string[] | undefined => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const cache = Hooks.useOptionalAtomCapability(AssistantCapabilities.HomeSuggestionsCache);
   const fallbacks = useMemo(() => FALLBACK_SUGGESTION_KEYS.map((key) => t(key)), [t]);

@@ -13,8 +13,9 @@ import {
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
 import { CodeCapabilities } from '#types';
+
+import { CodeNamespace } from '../../namespace.ts';
 
 export type CodeToolbarProps = Pick<ActionToolbarProps, 'attendableId'> & {
   state: CodeCapabilities.ProjectBuildState | undefined;
@@ -67,13 +68,13 @@ const createToolbarActions = ({
   Atom.make(() => ({
     nodes: [
       createMenuAction('build', onBuild, {
-        label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: meta.profile.key }],
+        label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: CodeNamespace.key }],
         icon: 'ph--lightning--regular',
         disabled: anyBusy,
         testId: 'code-toolbar.build',
       }),
       createMenuAction('run', onRun, {
-        label: [runBusy ? 'action.run.busy.label' : 'action.run.label', { ns: meta.profile.key }],
+        label: [runBusy ? 'action.run.busy.label' : 'action.run.label', { ns: CodeNamespace.key }],
         icon: 'ph--play--regular',
         disabled: anyBusy || !canRun,
         testId: 'code-toolbar.run',

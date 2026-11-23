@@ -9,19 +9,18 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ExcalidrawPlugin } from '#plugin';
+import * as ExcalidrawPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), ExcalidrawPlugin()] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), ExcalidrawPlugin.make()] });
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+const moduleId = (name: string) => `${ExcalidrawPlugin.meta.profile.key}.module.${name}`;
 
 describe('ExcalidrawPlugin', () => {
   // Boot imports start-gated module bodies (the harness fires the plugin's start event), which
   // can exceed the default 15s under vite-node transform load.
   test('modules activate on the event that gates them', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), ExcalidrawPlugin()],
+      plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), ExcalidrawPlugin.make()],
     });
 
     expect(harness.manager.getActive()).not.toContain(moduleId('drawing-variant'));

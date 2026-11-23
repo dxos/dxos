@@ -1,6 +1,6 @@
 {
   "name": "@dxos/edge-compute",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "EDGE compute: function deploy, scripts, and Edge implementations of Remote* runtime interfaces.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,6 +37,11 @@
       "source": "./src/native/index.ts",
       "types": "./dist/types/src/native/index.d.ts",
       "import": "./dist/lib/native.mjs"
+    },
+    "./plugin-loader": {
+      "source": "./src/plugin-loader/index.ts",
+      "types": "./dist/types/src/plugin-loader/index.d.ts",
+      "import": "./dist/lib/plugin-loader.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -50,6 +55,9 @@
       ],
       "native": [
         "dist/types/src/native/index.d.ts"
+      ],
+      "plugin-loader": [
+        "dist/types/src/plugin-loader/index.d.ts"
       ]
     }
   },
@@ -80,6 +88,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
+    "es-module-lexer": "catalog:",
     "esbuild": "catalog:",
     "esbuild-wasm": "catalog:",
     "iso-did": "catalog:"

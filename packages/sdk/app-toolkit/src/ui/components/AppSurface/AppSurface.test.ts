@@ -78,6 +78,29 @@ describe('AppSurface', () => {
       const objectB = Obj.make(TypeB, { value: 1 });
       expect(filter.bindings[0].guard({ subject: objectB })).toBe(false);
     });
+
+    test('a throwing predicate excludes the candidate instead of throwing', ({ expect }) => {
+      const filter = AppSurface.object(AppSurface.CardContent, TypeA, () => {
+        throw new Error('predicate failed');
+      });
+      const objectA = Obj.make(TypeA, { name: 'a' });
+      expect(filter.bindings[0].guard({ subject: objectA })).toBe(false);
+    });
+  });
+
+  describe('formInput', () => {
+    test('a throwing predicate excludes the candidate instead of throwing', ({ expect }) => {
+      const filter = AppSurface.formInputBySchema(() => {
+        throw new Error('predicate failed');
+      });
+      expect(filter.bindings[0].guard({ prop: 'name', schema: Schema.String })).toBe(false);
+    });
+
+    test('rejects data without the form-input shape', ({ expect }) => {
+      const filter = AppSurface.formInput(() => true);
+      expect(filter.bindings[0].guard({ subject: 'x' })).toBe(false);
+      expect(filter.bindings[0].guard({ prop: 'name', schema: Schema.String })).toBe(true);
+    });
   });
 
   describe('component(token, id)', () => {

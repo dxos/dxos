@@ -10,7 +10,7 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
+import { ClientNamespace } from '../../namespace.ts';
 
 export type RecoveryCodeDialogProps = {
   code: string;
@@ -18,7 +18,7 @@ export type RecoveryCodeDialogProps = {
 
 // TODO(burdon): Should have cancel button.
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ClientNamespace.key);
   const [confirmation, setConfirmation] = useState(false);
 
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);

@@ -1,0 +1,45 @@
+---
+title: Toolbar
+description: A row of controls that is one tab stop, with arrow keys between its items.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+<TilePreview id="sizes" />
+
+```ts
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+```
+
+A toolbar is a row of buttons, inputs, selects and toggle groups. It is one tab stop, and the arrow keys move between its
+items. See [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/).
+
+<Snippet file="tile-components" region="sizes" lang="tsx" />
+
+## Parts
+
+| Part                  | What it is                                                                     |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `Toolbar.Root`        | The row. Any TILE control inside it joins its arrow-key order                  |
+| `Toolbar.Separator`   | A rule, or with `variant='gap'` a spacer that pushes the items after it to the end |
+| `Toolbar.Text`        | A label or count in the row                                                    |
+| `Toolbar.Link`        | A link that joins the arrow-key order                                          |
+| `Toolbar.ToggleGroup` | A set of toggles where one or several are on                                   |
+
+## `Toolbar.Root`
+
+`Toolbar.Root` takes these props:
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `size` | `Size` | Sets the size of every control in the toolbar |
+| `orientation` | `'horizontal' \| 'vertical'` | Sets the axis the arrow keys move along |
+| `loop` | `boolean` | Wraps from the last item to the first. `true` by default |
+| `disabled` | `boolean` | Disables every control |
+| `inactive` | `boolean` | Dims the controls without disabling them |
+
+## Toolbars built from actions
+
+In a PLEX plugin, you usually build a toolbar from the app's actions with `@dxos/react-ui-menu`, so other plugins can
+add to it. See [ActionToolbar](/docs/tile/api/react-ui-menu/action-toolbar/).

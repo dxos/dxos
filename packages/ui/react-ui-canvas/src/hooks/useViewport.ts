@@ -4,7 +4,7 @@
 
 import { type RefObject, useLayoutEffect, useState } from 'react';
 
-import { type Size } from '../model/index.ts';
+import { type Size } from '@dxos/scene';
 
 /**
  * Content size of an element, tracked with a ResizeObserver. Measured in a layout effect so the

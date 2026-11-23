@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { StateEffect } from '@codemirror/state';
+import { type Extension, StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { log } from '@dxos/log';
@@ -63,6 +63,53 @@ export const scrollToLine = (view: EditorView, options: ScrollToProps) => {
 export type CrawlerOptions = {
   /** Threshold in px to trigger scroll from bottom. */
   overScroll?: number;
+};
+
+// One per overScroll: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const crawlerThemes = new Map<string, Extension>();
+
+const crawlerTheme = (overScroll: number): Extension => {
+  const key = String(overScroll);
+  let theme = crawlerThemes.get(key);
+  if (!theme) {
+    theme = EditorView.theme({
+      '.cm-scroller': {
+        overflowY: 'scroll',
+        // Browser scroll-anchoring: when widgets above the viewport resize (e.g. tool blocks
+        // expanding their TogglePanel), the browser picks a stable element near the viewport
+        // top and adjusts `scrollTop` so the user's view doesn't jump. Auto-scroll's pinning
+        // logic still has the final word when pinned (forces scrollTop to scrollHeight).
+        overflowAnchor: 'auto',
+      },
+      '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
+        display: 'none',
+      },
+      '.cm-scroller::-webkit-scrollbar-thumb': {
+        background: 'transparent',
+        transition: 'background 0.15s',
+      },
+      '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
+        background: 'var(--color-scrollbar-thumb)',
+      },
+      // Spacer below the last text line. Implemented as a real block pseudo-element
+      // (rather than `padding-bottom` on `.cm-content`) so it materializes in the
+      // scroller's `scrollHeight` regardless of how `padding` is reset by the base
+      // theme or downstream classes — this is what gives auto-scroll its head-room
+      // so the last line stays `overScroll` px above the viewport bottom.
+      '.cm-content::after': {
+        content: '""',
+        display: 'block',
+        height: `${overScroll}px`,
+      },
+      '.cm-scroll-button': {
+        position: 'absolute',
+        bottom: '0.5rem',
+        right: '1rem',
+      },
+    });
+    crawlerThemes.set(key, theme);
+  }
+  return theme;
 };
 
 /**
@@ -161,41 +208,7 @@ export const crawler = ({ overScroll = 0 }: CrawlerOptions = {}) => {
     }),
 
     // Styles.
-    EditorView.theme({
-      '.cm-scroller': {
-        overflowY: 'scroll',
-        // Browser scroll-anchoring: when widgets above the viewport resize (e.g. tool blocks
-        // expanding their TogglePanel), the browser picks a stable element near the viewport
-        // top and adjusts `scrollTop` so the user's view doesn't jump. Auto-scroll's pinning
-        // logic still has the final word when pinned (forces scrollTop to scrollHeight).
-        overflowAnchor: 'auto',
-      },
-      '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
-        display: 'none',
-      },
-      '.cm-scroller::-webkit-scrollbar-thumb': {
-        background: 'transparent',
-        transition: 'background 0.15s',
-      },
-      '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-        background: 'var(--color-scrollbar-thumb)',
-      },
-      // Spacer below the last text line. Implemented as a real block pseudo-element
-      // (rather than `padding-bottom` on `.cm-content`) so it materializes in the
-      // scroller's `scrollHeight` regardless of how `padding` is reset by the base
-      // theme or downstream classes — this is what gives auto-scroll its head-room
-      // so the last line stays `overScroll` px above the viewport bottom.
-      '.cm-content::after': {
-        content: '""',
-        display: 'block',
-        height: `${overScroll}px`,
-      },
-      '.cm-scroll-button': {
-        position: 'absolute',
-        bottom: '0.5rem',
-        right: '1rem',
-      },
-    }),
+    crawlerTheme(overScroll),
   ];
 };
 

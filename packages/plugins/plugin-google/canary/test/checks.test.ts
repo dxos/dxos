@@ -1,0 +1,145 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
+
+import { GoogleOperation } from '#types';
+
+import {
+  type Invocation,
+  type SpaceSnapshot,
+  checkMessages,
+  classifyError,
+  groupInvocations,
+  runChecks,
+} from '../checks.ts';
+
+const MINUTE = 60_000;
+const SINCE = Date.parse('2026-10-26T00:00:00Z');
+const NOW = SINCE + 60 * MINUTE;
+const KEY = GoogleOperation.GoogleMailSync.meta.key;
+const WINDOW = { now: NOW, since: SINCE, hungAfter: 10 * MINUTE };
+
+/** An invocation every ten minutes across the window, each ending a minute later. */
+const invocations = (end: Partial<NonNullable<Invocation['end']>> = {}, pid = 'run-2'): Invocation[] =>
+  Array.from({ length: 6 }, (_, index) => {
+    const startedAt = SINCE + index * 10 * MINUTE + MINUTE;
+    const outcome = { key: KEY, outcome: 'success' as const, timestamp: startedAt + MINUTE };
+    return {
+      pid: `run-${index}`,
+      startedAt,
+      end: `run-${index}` === pid ? { ...outcome, ...end } : outcome,
+    };
+  });
+
+const seeded = [
+  { gmailId: 'g1', subject: 'Re: forecast', sender: 'phillip.allen@enron.com' },
+  { gmailId: 'g2', subject: 'Re: travel', sender: 'a@enron.com' },
+];
+
+const healthy = (): SpaceSnapshot => ({
+  invocations: invocations(),
+  messages: [
+    { gmailId: 'g1', subject: 'Re:  forecast', sender: 'Phillip.Allen@enron.com' },
+    { gmailId: 'g2', subject: 'Re: travel', sender: 'a@enron.com' },
+  ],
+  triggers: [{ id: 'trigger-1', enabled: true }],
+});
+
+const failed = (snapshot: SpaceSnapshot) =>
+  runChecks(snapshot, seeded, WINDOW).checks.flatMap((check) => (check.ok ? [] : [check.id]));
+
+describe('runChecks', () => {
+  test('passes a healthy window', ({ expect }) => {
+    const report = runChecks(healthy(), seeded, WINDOW);
+    expect(report.checks.map((check) => [check.id, check.ok])).toEqual([
+      ['S1', true],
+      ['S2', true],
+    ]);
+    expect(report.runs).toEqual({ invocations: 6, failed: 0 });
+  });
+
+  test('a run-again yield is not a failure, a failed invocation is classified', ({ expect }) => {
+    const yielded = invocations({ outcome: 'failure', errorCode: Process.RUN_AGAIN_ERROR_CODE });
+    expect(failed({ ...healthy(), invocations: yielded })).toEqual([]);
+    const report = runChecks(
+      { ...healthy(), invocations: invocations({ outcome: 'failure', error: 'RepoClosedError' }) },
+      seeded,
+      WINDOW,
+    );
+    expect(report.checks[1].failures).toEqual([expect.objectContaining({ class: 'REPO_CLOSED', pid: 'run-2' })]);
+  });
+
+  test('an invocation open past hungAfter fails S2; one still running or before the window does not', ({ expect }) => {
+    const open = (pid: string) =>
+      invocations().map((invocation) => (invocation.pid === pid ? { ...invocation, end: undefined } : invocation));
+    expect(failed({ ...healthy(), invocations: open('run-1') })).toEqual(['S2']);
+    expect(failed({ ...healthy(), invocations: open('run-5') })).toEqual([]);
+    const old = {
+      pid: 'old',
+      startedAt: SINCE - MINUTE,
+      end: { key: KEY, outcome: 'failure' as const, timestamp: SINCE },
+    };
+    expect(failed({ ...healthy(), invocations: [old, ...invocations()] })).toEqual([]);
+  });
+
+  test('missing mail is OFF with no enabled trigger, STALL when runs failed, DATA otherwise', ({ expect }) => {
+    const missing = { ...healthy(), messages: [healthy().messages[0]] };
+    const arrival = (snapshot: SpaceSnapshot) => runChecks(snapshot, seeded, WINDOW).checks[0].failures;
+    expect(arrival(missing)).toEqual([expect.objectContaining({ class: 'DATA', gmailId: 'g2' })]);
+    expect(arrival({ ...missing, invocations: invocations({ outcome: 'failure', error: 'boom' }) })).toEqual([
+      expect.objectContaining({ class: 'STALL', gmailId: 'g2' }),
+    ]);
+    expect(arrival({ ...missing, triggers: [{ id: 't', enabled: false }] })).toEqual([
+      expect.objectContaining({ class: 'OFF', gmailId: 'g2' }),
+    ]);
+  });
+
+  test('a copy synced twice or with the wrong sender fails S1', ({ expect }) => {
+    const wrong = { gmailId: 'g1', subject: 'Re: forecast', sender: 'someone.else@enron.com' };
+    expect(failed({ ...healthy(), messages: [...healthy().messages, wrong] })).toEqual(['S1']);
+    expect(failed({ ...healthy(), messages: [wrong, healthy().messages[1]] })).toEqual(['S1']);
+  });
+});
+
+describe('checkMessages', () => {
+  test('compares content only where Gmail gave it, and flags a duplicate', ({ expect }) => {
+    const snapshot = { ...healthy(), messages: [...healthy().messages, healthy().messages[1]] };
+    const result = checkMessages('F1', 'all synced', snapshot, [{ gmailId: 'g1' }, { gmailId: 'g2' }], false);
+    expect(result.failures).toEqual([
+      expect.objectContaining({ class: 'DATA', gmailId: 'g2', message: 'synced 2 times' }),
+    ]);
+  });
+});
+
+describe('groupInvocations', () => {
+  test('pairs the mail sync start and end by pid and ignores other operations', ({ expect }) => {
+    const message = (pid: string, type: string, timestamp: number, data: object): Trace.MessageData => ({
+      meta: { pid },
+      isEphemeral: false,
+      events: [{ type, timestamp, data }],
+    });
+    expect(
+      groupInvocations([
+        message('a', Trace.OperationStart.key, 1, { key: KEY }),
+        message('b', Trace.OperationStart.key, 2, { key: 'dxn:org.dxos.operation.other' }),
+        message('a', Trace.OperationEnd.key, 3, { key: KEY, outcome: 'success' }),
+      ]),
+    ).toEqual([{ pid: 'a', startedAt: 1, end: { key: KEY, outcome: 'success', timestamp: 3 } }]);
+  });
+});
+
+describe('classifyError', () => {
+  test.for([
+    ['InvocationDeadlineError: Operation did not complete within 60000ms', 'DEADLINE'],
+    ['invalid_grant', 'AUTH'],
+    ['HTTP 429', 'RATE'],
+    ['something else', 'UNKNOWN'],
+  ] as const)('%s is %s', ([error, expected], { expect }) => {
+    expect(classifyError(error)).toBe(expected);
+  });
+});

@@ -11,7 +11,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
+import { ExplorerNamespace } from '../namespace.ts';
 
 /**
  * Offers a "Neighborhood" companion on any ECHO object. The matched node is passed through as the
@@ -28,7 +28,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'neighborhood',
-              label: ['neighborhood-companion.label', { ns: meta.profile.key }],
+              label: ['neighborhood-companion.label', { ns: ExplorerNamespace.key }],
               icon: 'ph--share-network--regular',
               data: 'neighborhood',
               position: Position.last,

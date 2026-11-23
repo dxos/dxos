@@ -6,14 +6,15 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useContext, useMemo } from 'react';
+import React, { type CSSProperties, createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
+import { Dnd, type DndContainerHandler, type DndData, type DndTileData } from '@dxos/react-ui-dnd';
+import * as Card from '@dxos/react-ui/Card';
 import * as Focus from '@dxos/react-ui/Focus';
 import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
@@ -22,8 +23,9 @@ import { translations } from '#translations';
 
 import { useEventHandlerAdapter } from '../../hooks/index.ts';
 import { TestColumn, TestItem } from '../../testing/index.ts';
+import { Mosaic, type MosaicTileProps } from '../Mosaic/index.ts';
 import { Board } from './Board.tsx';
-import { type BoardModel } from './BoardContext.ts';
+import { type BoardModel, useBoard } from './BoardContext.ts';
 import { DefaultBoardColumn } from './Column.tsx';
 
 random.seed(999);
@@ -271,4 +273,153 @@ export const Spec: Story = {
     const items = within(columns[2]).queryAllByTestId('board-item');
     await expect(items).toHaveLength(0);
   },
+};
+
+//
+// Docs
+//
+
+type Task = { id: string; title: string };
+
+type TaskList = { id: string; name: string; tasks: Task[] };
+
+const TASK_LISTS: TaskList[] = [
+  {
+    id: 'todo',
+    name: 'To do',
+    tasks: [
+      { id: '1', title: 'Write the blog post' },
+      { id: '2', title: 'Record the demo' },
+    ],
+  },
+  {
+    id: 'doing',
+    name: 'Doing',
+    tasks: [
+      { id: '3', title: 'Update the docs' },
+      { id: '4', title: 'Fix the login bug' },
+    ],
+  },
+  { id: 'done', name: 'Done', tasks: [{ id: '5', title: 'Ship the beta' }] },
+];
+
+const isTaskList = (value: unknown): value is TaskList =>
+  typeof value === 'object' && value !== null && 'tasks' in value;
+
+const isTask = (value: unknown): value is Task =>
+  typeof value === 'object' && value !== null && 'title' in value && !('tasks' in value);
+
+/** `list` with the dragged item after the tile it was dropped on, in a placeholder's gap, or at the end. */
+const place = <T extends { id: string }>(list: T[], source: DndTileData<T>, target?: DndData): T[] => {
+  const rest = list.filter((item) => item.id !== source.id);
+  const index =
+    target?.type === 'tile'
+      ? rest.findIndex((item) => item.id === target.id) + 1
+      : target?.type === 'placeholder'
+        ? Math.floor(Number(target.location))
+        : rest.length;
+  const at = Math.min(Math.max(index, 0), rest.length);
+  return [...rest.slice(0, at), source.data, ...rest.slice(at)];
+};
+
+const SetTasksContext = createContext<(id: string, update: (tasks: Task[]) => Task[]) => void>(() => {});
+
+const TaskCard = ({ data: task, location, draggable }: MosaicTileProps<Task>) => (
+  <Mosaic.Tile id={task.id} data={task} location={location} draggable={draggable}>
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>{task.title}</Card.Title>
+      </Card.Header>
+    </Card.Root>
+  </Mosaic.Tile>
+);
+
+const TaskColumn = ({ data: list, location, draggable }: MosaicTileProps<TaskList>) => {
+  const { model } = useBoard<TaskList, Task>();
+  const setTasks = useContext(SetTasksContext);
+  const count = useAtomValue(model.items(list)).length;
+  const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
+  const eventHandler = useMemo<DndContainerHandler<Task>>(
+    () => ({
+      id: `column-${list.id}`,
+      canDrop: ({ source }) => isTask(source.data),
+      onTake: ({ source }, take) =>
+        void take(source.data).then(
+          (taken) => taken && setTasks(list.id, (tasks) => tasks.filter((task) => task.id !== source.id)),
+        ),
+      onDrop: ({ source, target }) => setTasks(list.id, (tasks) => place(tasks, source, target)),
+    }),
+    [list.id, setTasks],
+  );
+
+  return (
+    <Board.Column.Root
+      data={list}
+      location={location}
+      draggable={draggable}
+      dragHandle={dragHandle}
+      classNames='grid grid-rows-[var(--dx-rail-action)_1fr]'
+    >
+      <Board.Column.Header label={`${list.name} (${count})`} dragHandleRef={setDragHandle} />
+      <Board.Column.Body data={list} eventHandler={eventHandler} Tile={TaskCard} />
+    </Board.Column.Root>
+  );
+};
+
+// Narrower columns than the theme's card width, so three fit in a small frame; `CSSProperties` has no key for a custom property.
+const NARROW_COLUMNS = { '--spacing-card-default-width': '9rem' } as CSSProperties;
+
+const TaskStory = () => {
+  const registry = useContext(RegistryContext);
+  const [lists] = useState(() => Atom.make(TASK_LISTS));
+  const model = useMemo<BoardModel<TaskList, Task>>(() => {
+    const tasks = Atom.family((id: string) =>
+      Atom.make((get) => get(lists).find((list) => list.id === id)?.tasks ?? []),
+    );
+    return {
+      getColumnId: (list) => list.id,
+      getItemId: (task) => task.id,
+      isColumn: isTaskList,
+      isItem: isTask,
+      columns: lists,
+      items: (list) => tasks(list.id),
+      getColumns: () => registry.get(lists),
+      getItems: (list) => registry.get(tasks(list.id)),
+    };
+  }, [registry, lists]);
+
+  const setTasks = useCallback(
+    (id: string, update: (tasks: Task[]) => Task[]) =>
+      registry.set(
+        lists,
+        registry.get(lists).map((list) => (list.id === id ? { ...list, tasks: update(list.tasks) } : list)),
+      ),
+    [registry, lists],
+  );
+
+  const columnHandler = useMemo<DndContainerHandler<TaskList>>(
+    () => ({
+      id: 'columns',
+      canDrop: ({ source }) => isTaskList(source.data),
+      onDrop: ({ source, target }) => registry.set(lists, place(registry.get(lists), source, target)),
+    }),
+    [registry, lists],
+  );
+
+  return (
+    <SetTasksContext.Provider value={setTasks}>
+      <div className='fixed inset-0 flex dx-base-surface' style={NARROW_COLUMNS}>
+        <Dnd.Root>
+          <Board.Root model={model}>
+            <Board.Content eventHandler={columnHandler} Tile={TaskColumn} />
+          </Board.Root>
+        </Dnd.Root>
+      </div>
+    </SetTasksContext.Provider>
+  );
+};
+
+/** The docs' board: three columns of tasks in plain atoms; drag a card within or across columns, or a column by its handle. */
+export const Docs: Story = {
+  render: () => <TaskStory />,
 };

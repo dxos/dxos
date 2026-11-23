@@ -112,6 +112,15 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
   Obj.setParent(chat, subject);
 };
 
+/** The subject a companion chat accompanies: its ECHO parent, when that names the chat in {@link CompanionChatAnnotation}. */
+export const getCompanionSubject = (chat: Chat): Obj.Unknown | undefined => {
+  const subject = Obj.getParent(chat);
+  const chats = subject
+    ? Annotation.get(subject, CompanionChatAnnotation).pipe(Option.getOrElse((): readonly Ref.Ref<Chat>[] => []))
+    : [];
+  return chats.some((ref) => ref.uri === Ref.make(chat).uri) ? subject : undefined;
+};
+
 /**
  * Starts a chat on a default session config — a project's, say — copied rather than referenced, so
  * a model later picked in the chat is the chat's own. A chat already carrying a config keeps it.

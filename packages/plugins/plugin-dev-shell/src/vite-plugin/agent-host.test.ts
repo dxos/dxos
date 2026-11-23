@@ -9,9 +9,9 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Chat } from '@dxos/assistant';
+import { Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as AcpAgent from '@dxos/plugin-claude/AcpAgent';
@@ -27,7 +27,7 @@ import { type AgentHost, startAgentHost } from './testing.ts';
 const FAKE_AGENT = new URL('../testing/fake-acp-agent.mjs', import.meta.url);
 
 const TestLayer = Layer.mergeAll(
-  TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+  TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
   Layer.succeed(Trace.TraceService, { write: () => {} }),
 );
 
@@ -79,7 +79,7 @@ describe('dev shell agent host', () => {
           workspace: () => client.helper.defaultFolder.pipe(Effect.map((folder) => folder ?? path.join(root, 'work'))),
         };
         yield* AcpAgent.runTurn(options, { chat, feed }, { prompt: 'hello from the page' });
-        const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(feed);
         return {
           messages: messages.map((message) => [message.sender.role, Message.extractText(message)]),
           session: AcpAgent.sessionIdOf(chat, 'claude-code'),

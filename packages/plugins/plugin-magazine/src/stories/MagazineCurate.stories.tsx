@@ -33,7 +33,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { MagazinePlugin } from '#plugin';
+import * as MagazinePlugin from '#meta';
 import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
@@ -160,10 +160,10 @@ const meta: Meta<typeof DefaultStory> = {
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Text.Text],
           onClientInitialized: seedRegisterMagazine,
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
         RoutinePlugin.make(),
-        MagazinePlugin(),
+        MagazinePlugin.make(),
         AgentRuntimePlugin(),
       ],
     }),

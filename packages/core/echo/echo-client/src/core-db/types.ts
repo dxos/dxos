@@ -106,18 +106,6 @@ export type LoadObjectOptions = {
   diskOnly?: boolean;
 };
 
-export type AddCoreOptions = {
-  /**
-   * Where to place the object in the Automerge document tree.
-   * Root document is always loaded with the space.
-   * Linked documents are loaded lazily.
-   * Placing large number of objects in the root document may slow down the initial load.
-   *
-   * @default 'linked-doc'
-   */
-  placeIn?: 'linked-doc' | 'root-doc';
-};
-
 export type SpaceDocumentHeads = {
   /**
    * DocumentId => Heads.

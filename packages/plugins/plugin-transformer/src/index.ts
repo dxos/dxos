@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as TransformerPlugin from './TransformerPlugin.ts';
+/** The plugin definition, resolved per runtime through the `#meta` import condition. */
+export * as TransformerPlugin from '#meta';

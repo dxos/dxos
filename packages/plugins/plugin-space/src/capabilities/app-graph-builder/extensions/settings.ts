@@ -8,11 +8,14 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
+import { type Space } from '@dxos/client/echo';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { SpaceSchema } from '#types';
+
+import { SpaceNamespace } from '../../../namespace.ts';
 
 //
 // Extension Factory
@@ -27,15 +30,16 @@ import { SpaceSchema } from '#types';
  * plugin (general, members) and by other plugins (automation, functions).
  */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
+  const readOnly = yield* ReadOnly.atom;
   const sectionExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsSection',
-    match: AppNodeMatcher.whenSpace,
+    match: ReadOnly.unless<Space>(readOnly, AppNodeMatcher.whenSpace),
     connector: (space) =>
       Effect.succeed([
         AppNode.makeSection({
           id: SpaceSchema.SETTINGS_SECTION_ID,
           type: SpaceSchema.SETTINGS_SECTION_TYPE,
-          label: ['settings-section.label', { ns: meta.profile.key }],
+          label: ['settings-section.label', { ns: SpaceNamespace.key }],
           icon: 'ph--sliders--regular',
           iconHue: 'emerald',
           space,
@@ -55,10 +59,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
       Effect.succeed([
         AppGraphNode.make({
           id: 'settings',
-          type: `${meta.profile.key}.general`,
-          data: `${meta.profile.key}.general`,
+          type: `${SpaceNamespace.key}.general`,
+          data: `${SpaceNamespace.key}.general`,
           properties: {
-            label: ['space-settings-properties.label', { ns: meta.profile.key }],
+            label: ['space-settings-properties.label', { ns: SpaceNamespace.key }],
             icon: 'ph--brackets-curly--regular',
             iconHue: 'emerald',
             space,
@@ -81,10 +85,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           : [
               AppGraphNode.make({
                 id: 'members',
-                type: `${meta.profile.key}.members`,
-                data: `${meta.profile.key}.members`,
+                type: `${SpaceNamespace.key}.members`,
+                data: `${SpaceNamespace.key}.members`,
                 properties: {
-                  label: ['members-panel.label', { ns: meta.profile.key }],
+                  label: ['members-panel.label', { ns: SpaceNamespace.key }],
                   icon: 'ph--users--regular',
                   iconHue: 'emerald',
                   space,

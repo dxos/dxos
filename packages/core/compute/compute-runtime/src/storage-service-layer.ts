@@ -56,8 +56,9 @@ export const layer = (
         return keys.filter((key) => key.startsWith(keyPrefix));
       }),
 
+    // Suspended, so the keys are read when it runs: a clear built up front still removes what is written after.
     clear: () =>
-      Effect.forEach([...knownKeys], (key) => prefixed.remove(key)).pipe(
+      Effect.suspend(() => Effect.forEach([...knownKeys], (key) => prefixed.remove(key))).pipe(
         Effect.tap(() => Effect.sync(() => knownKeys.clear())),
         Effect.asVoid,
         Effect.orDie,

@@ -15,9 +15,9 @@ import { openExternalUrl } from '@dxos/util';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { useDiscordPresence } from '#hooks';
-import { meta } from '#meta';
 import { SupportOperation, SupportService } from '#types';
 
+import { SupportNamespace } from '../../namespace.ts';
 import { useScreenshotAttachment } from './useScreenshotAttachment.ts';
 
 type Toast = {
@@ -41,10 +41,10 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
 
   return useCallback(
     async (values) => {
-      const namespace = { ns: meta.profile.key };
+      const namespace = { ns: SupportNamespace.key };
       const showToast = (toast: Toast) =>
         invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.${toast.id}`,
+          id: `${SupportNamespace.key}.${toast.id}`,
           icon: toast.icon,
           duration: toast.duration,
           title: [toast.title, namespace],
@@ -105,7 +105,7 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
 };
 
 export const SupportSubmitAction = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const config = useConfig();
   const endpoint = SupportService.supportEndpoint(config);
   const discordPresence = useDiscordPresence(endpoint);

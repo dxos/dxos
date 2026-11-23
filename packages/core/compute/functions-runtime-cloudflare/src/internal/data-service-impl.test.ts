@@ -94,6 +94,35 @@ describe('DataServiceImpl', () => {
     expect(requested).toEqual([['written']]);
   });
 
+  test('a passive add without heads is fetched, since the client holds nothing to show', async ({ expect }) => {
+    const subscriptionId = 'test-subscription';
+    const requested: string[][] = [];
+    const impl = new DataServiceImpl({} as EdgeFunctionEnv.TraceContext, {
+      ...emptyDataService(),
+      getDocuments: async (_ctx, _spaceId, documentIds) => {
+        requested.push(documentIds);
+        return Object.assign([] as EdgeFunctionEnv.RawDocument[], { [Symbol.dispose]: () => {} });
+      },
+    });
+    const registered = new Trigger();
+    void EffectEx.runPromise(
+      Stream.runForEach(impl['DataService.subscribe']({ subscriptionId, spaceId: SpaceId.random() }), () =>
+        Effect.sync(() => registered.wake()),
+      ),
+    );
+    await registered.wait({ timeout: 1000 });
+
+    // How a space root's directory handle subscribes before the host's first send.
+    await EffectEx.runPromise(
+      impl['DataService.updateSubscription']({ subscriptionId, add: [{ id: 'root', passive: true }] }),
+    );
+    // Re-sent after a dropped subscription by a handle that took a send without JSON and has not loaded yet.
+    await EffectEx.runPromise(
+      impl['DataService.updateSubscription']({ subscriptionId, add: [{ id: 'root', heads: [], passive: true }] }),
+    );
+    expect(requested).toEqual([['root'], ['root']]);
+  });
+
   test('a document created from bytes is created empty, then takes the bytes as its first change', async ({
     expect,
   }) => {

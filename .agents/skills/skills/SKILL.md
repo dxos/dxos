@@ -73,9 +73,7 @@ plugin-my-domain/
 │   │       ├── update.ts
 │   │       └── index.ts
 │   └── capabilities/
-│       └── skill-definition/
-│           ├── index.ts          # Lazy export
-│           └── skill-definition.ts  # Contributes to AppCapabilities.SkillDefinition
+│       └── skill-definition.ts   # Module body; contributes to AppCapabilities.SkillDefinition
 ```
 
 ### Where skills are registered (Composer)
@@ -83,12 +81,12 @@ plugin-my-domain/
 1. **Capability module** — contributes the skill to the app:
 
 ```ts
-// capabilities/skill-definition/skill-definition.ts
+// src/capabilities/skill-definition.ts
 import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { MarkdownSkill } from '../../skills';
+import { MarkdownSkill } from '../skills';
 
 const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
   Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, MarkdownSkill)]),
@@ -97,17 +95,19 @@ const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof A
 export default skillDefinition;
 ```
 
-2. **Plugin** — registers the capability module:
+2. **Plugin** — lists the module in `dx.config.ts`; the body is a `module-url` dynamic import:
 
 ```ts
-// MarkdownPlugin.tsx
-import { SkillDefinition } from './capabilities';
-
-export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  // ...other modules
-  Plugin.make,
-);
+// dx.config.ts
+const config: Plugin.PluginConfig = Plugin.config({
+  plugin: { key: MarkdownNamespace.key, name: 'Markdown' },
+  modules: [
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    // ...other modules
+  ],
+});
 ```
 
 3. **Composer** — plugin must be in the app's plugin list (`packages/apps/composer-app/src/plugin-defs.tsx`). If the plugin is imported there, its skills are available.

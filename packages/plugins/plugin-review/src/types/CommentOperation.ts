@@ -115,6 +115,42 @@ export const AddMessage = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * Sends a comment to the subject's subscribers, other than its author, through the notifications inbox.
+ * Does nothing when no inbox sender is loaded.
+ */
+export const SendNotifications = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.review.sendNotifications'),
+    name: 'Send Comment Notifications',
+    icon: 'ph--bell-ringing--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    subject: Ref.Ref(Obj.Unknown).annotate({ description: 'The object the comment thread is anchored to.' }),
+    thread: Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread.' }),
+    messageId: Obj.ID.annotate({ description: 'The comment to send.' }),
+  }),
+  output: Schema.Void,
+});
+
+/**
+ * Subscribes the current identity to an object's comments, or unsubscribes it.
+ */
+export const SetSubscription = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.review.setSubscription'),
+    name: 'Set Comment Subscription',
+    icon: 'ph--bell--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    subject: Obj.Unknown,
+    subscribed: Schema.Boolean,
+  }),
+  output: Schema.Void,
+});
+
 export const DeleteMessageOutput = Schema.Struct({
   message: Type.getSchema(Message.Message).annotate({ description: 'The deleted comment message.' }),
 }).mapFields(Struct.map(Schema.optional));

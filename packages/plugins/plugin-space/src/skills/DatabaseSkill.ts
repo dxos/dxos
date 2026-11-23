@@ -21,6 +21,7 @@ export const operations = [
   SpaceOperation.AddObject,
   SpaceOperation.AddRelation,
   SpaceOperation.AddType,
+  SpaceOperation.GetObjectLink,
   SpaceOperation.GetObjects,
   SpaceOperation.QueryObjects,
   SpaceOperation.QueryTypes,
@@ -47,6 +48,8 @@ export const make = (): Skill.Skill =>
         - Query before you write: an object the user refers to usually exists already.
         - Given a Composer link, resolve it with the ${Operation.toolName(SpaceOperation.ResolveUrl)} tool
           to get references to the objects it shows.
+        - To point someone at an object somewhere that cannot follow a reference (a chat, an email),
+          send the link the ${Operation.toolName(SpaceOperation.GetObjectLink)} tool returns.
         - Query by typename to narrow, by text to search, or by neither to list everything.
         - Query returns identifiers only unless you pass includeContent; read the ones you need with
           the ${Operation.toolName(SpaceOperation.GetObjects)} tool, passing every reference in one

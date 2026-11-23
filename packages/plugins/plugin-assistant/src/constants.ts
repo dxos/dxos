@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DXN } from '@dxos/keys';
+
+import { AssistantNamespace } from './namespace.ts';
 /** Stable id used by `plugin-connector` to look up the Anthropic provider entry. */
 export const ANTHROPIC_PROVIDER_ID = 'anthropic';
 
@@ -26,3 +29,14 @@ export const BROWSER_MCP_ENDPOINT = {
   url: 'https://playwright-mcp-example.dxos.workers.dev/sse',
   protocol: 'sse',
 } as const;
+
+export const ASSISTANT_DIALOG = DXN.make(`${AssistantNamespace.key}.assistantDialog`);
+
+/** Companion variant identifier for the assistant chat panel. */
+export const ASSISTANT_COMPANION_VARIANT = 'assistant-chat';
+
+/** Segment of the assistant panel within a space's settings section. */
+export const SPACE_SETTINGS_ID = 'assistant';
+
+/** Node type, and surface data, of the assistant panel within a space's settings section. */
+export const SPACE_SETTINGS_TYPE = `${AssistantNamespace.key}.space-settings`;

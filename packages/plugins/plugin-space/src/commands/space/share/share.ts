@@ -34,7 +34,7 @@ export const handler = Effect.fn(function* ({
   host: string;
 }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
 
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);

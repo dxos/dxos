@@ -14,9 +14,9 @@ import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 
 import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#hooks';
-import { meta } from '#meta';
 import { DeckOperation, DeckSchema } from '#types';
 
+import { DeckNamespace } from '../../namespace.ts';
 import { RESOLVE_TIMEOUT_MS } from '../../url/index.ts';
 import { isCompanionOpen } from '../../util/index.ts';
 
@@ -148,7 +148,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       // Only actions whose `data` is a function are runnable graph actions; the menu-action view type
       // (AttentionSigilAction) is widened, so narrow at this runtime-checked boundary.
       if (typeof action.data === 'function') {
-        void runAction(action as AppGraphNode.Action, { parent: node, caller: meta.profile.key });
+        void runAction(action as AppGraphNode.Action, { parent: node, caller: DeckNamespace.key });
       }
     },
     [node, runAction],

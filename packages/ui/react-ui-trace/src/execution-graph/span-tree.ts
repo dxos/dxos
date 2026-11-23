@@ -33,6 +33,7 @@ export interface SpanMeta {
   readonly triggerId?: string;
   readonly toolCallId?: string;
   readonly runtimeName?: string;
+  readonly thread?: string;
   /** Set on the span that groups the invocations of one run; see {@link buildSpanTree}. */
   readonly run?: boolean;
 }
@@ -86,7 +87,14 @@ const computeMeta = (rawMeta: Trace.Meta): SpanMeta => ({
   triggerId: rawMeta.trigger ? EID.getEntityId(EID.parse(rawMeta.trigger.uri)) : undefined,
   toolCallId: rawMeta.toolCallId,
   runtimeName: rawMeta.runtimeName,
+  thread: rawMeta.thread,
 });
+
+/**
+ * Key of the span an event belongs to: a process running several light threads at once (`meta.thread`) has one
+ * open span per thread.
+ */
+const spanKey = (pid: string, thread: string | undefined): string => (thread === undefined ? pid : `${pid}/${thread}`);
 
 interface MutableSpan {
   id: string;
@@ -143,12 +151,14 @@ export interface BuildSpanTreeOptions {
  *   1. Flatten messages into events and sort them chronologically.
  *   2. For each event:
  *      - Begin events (`OperationStart`, `Trace.AgentRequestBegin`) open a new span whose parent
- *        is the currently-open span of the event's `meta.parentPid`, or the root if there is
- *        none. The begin event itself becomes the first event of the new span.
+ *        is the currently-open span of the event's `meta.parentPid` (in `meta.parentThread`, when
+ *        set), or the root if there is none. The begin event itself becomes the first event of
+ *        the new span.
  *      - End events (`OperationEnd`, `Trace.AgentRequestEnd`) close the currently-open span for
- *        the event's `meta.pid` and become its last event.
- *      - Other events attach to the currently-open span for their `meta.pid`, or to the
- *        root span if no span is currently open for that pid (or the event has no pid).
+ *        the event's `meta.pid` and `meta.thread` and become its last event.
+ *      - Other events attach to the currently-open span for their `meta.pid` and `meta.thread`
+ *        (an event with no thread falls back to the pid's most recent open span), or to the
+ *        root span if none is open (or the event has no pid).
  *   3. Group the invocations of each run under one span (see {@link groupRuns}).
  *   4. Sort each span's children by their earliest event timestamp.
  */
@@ -163,10 +173,13 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
 
   const root = makeMutableSpan(ROOT_SPAN_ID, {});
 
-  // Currently-open span for each pid.
+  // Currently-open span for each pid and thread (see `spanKey`).
   // A process may host multiple sequential spans (e.g. successive agent requests), so we
   // track the active one and start a new span on the next begin event.
   const openSpans = new Map<string, MutableSpan>();
+  // Most recently opened span of a pid that is still open, whatever its thread.
+  const latestOpen = (pid: string): MutableSpan | undefined =>
+    [...openSpans.values()].findLast((span) => span.meta.pid === pid);
 
   // Most-recent span for each pid, open OR already closed. Used as the parent fallback for a
   // child process whose parent span has already ended — e.g. a delegated sub-agent runs
@@ -208,24 +221,33 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
       const parentPid = event.meta.parentPid;
       // Prefer the parent's currently-open span; fall back to its most-recent (closed) span so a
       // child process whose parent has already ended still nests under it (delegated sub-agents).
-      const parent = (parentPid && (openSpans.get(parentPid) ?? lastSpanByPid.get(parentPid))) || root;
+      const parent =
+        (parentPid &&
+          (openSpans.get(spanKey(parentPid, event.meta.parentThread)) ??
+            latestOpen(parentPid) ??
+            lastSpanByPid.get(parentPid))) ||
+        root;
       const span = makeMutableSpan(allocSpanId(pid), computeMeta(event.meta));
       span.events.push(event);
       noteTimestamp(span, event.timestamp);
       parent.children.push(span);
       allSpans.push(span);
-      // The new span supersedes any previously-open span for this pid.
-      openSpans.set(pid, span);
+      // The new span supersedes any previously-open span for this pid and thread; re-inserting keeps
+      // `latestOpen` in open order.
+      const key = spanKey(pid, event.meta.thread);
+      openSpans.delete(key);
+      openSpans.set(key, span);
       lastSpanByPid.set(pid, span);
       continue;
     }
 
     if (END_EVENT_TYPES.has(event.type)) {
-      const span = openSpans.get(pid);
+      const key = spanKey(pid, event.meta.thread);
+      const span = openSpans.get(key);
       if (span) {
         span.events.push(event);
         noteTimestamp(span, event.timestamp);
-        openSpans.delete(pid);
+        openSpans.delete(key);
       } else {
         // End event without a matching begin — attach to root so the event isn't lost.
         root.events.push(event);
@@ -234,8 +256,9 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
       continue;
     }
 
-    // Non-boundary event: attach to the currently-open span for this pid if any.
-    const open = openSpans.get(pid);
+    // Non-boundary event: attach to the currently-open span for this pid and thread if any.
+    const open =
+      openSpans.get(spanKey(pid, event.meta.thread)) ?? (event.meta.thread === undefined ? latestOpen(pid) : undefined);
     if (open) {
       open.events.push(event);
       noteTimestamp(open, event.timestamp);

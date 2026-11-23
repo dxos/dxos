@@ -10,10 +10,12 @@ import * as Schedule from 'effect/Schedule';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { type SourceKey, formatSourceKey, parseSourceKey } from '@dxos/deus/review';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import type * as SpecSession from '@dxos/plugin-projects/SpecSession';
 
-import { type SourceKey, formatSourceKey, parseSourceKey, resolvePath } from '#sync';
+import { resolvePath } from '#sync';
 import { CodeCapabilities } from '#types';
 
 const UNAVAILABLE = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} });
@@ -84,8 +86,7 @@ export const fileKey = (key: SourceKey): string => formatSourceKey(key, false);
 /** How often the branch, its pull request and HEAD are re-read; a commit or a checkout moves them. */
 const GIT_REFRESH = '10 seconds';
 
-/** What diff mode compares the spec with: where its branch forked from the base, or the last commit. */
-export type DiffAgainst = 'base' | 'head';
+export type DiffAgainst = SpecSession.DiffAgainst;
 
 /**
  * The git status of the repository holding `path`, re-read periodically; undefined where the host cannot run git or
@@ -136,9 +137,6 @@ export const useTextAt = (path: string | undefined, rev: string | undefined): st
 
 export type SpecDiffState = {
   git?: FileSystem.GitStatus;
-  /** What the spec is compared with; undefined outside diff mode. */
-  diff?: DiffAgainst;
-  setDiff: (diff: DiffAgainst | undefined) => void;
   /** The text diff mode compares with; undefined outside diff mode and while it loads. */
   baseText?: string;
   /** Whether diff mode can be offered: the checkout runs git, or a base was given. */
@@ -152,13 +150,12 @@ export type SpecDiffState = {
  */
 export const useSpecDiff = (
   key: SourceKey | undefined,
-  { base, defaultDiff }: { base?: string; defaultDiff?: DiffAgainst } = {},
+  { base, diff }: { base?: string; diff?: DiffAgainst } = {},
 ): SpecDiffState => {
   const path = useResolvedPath(key);
   const git = useGitStatus(path);
-  const [diff, setDiff] = useState<DiffAgainst | undefined>(defaultDiff);
   const rev = diff === 'base' ? git?.mergeBase : diff === 'head' ? git?.head : undefined;
   const gitBase = useTextAt(path, rev);
   const baseText = diff === undefined ? undefined : rev ? gitBase : diff === 'base' ? base : undefined;
-  return { git, diff, setDiff, baseText, available: git !== undefined || base !== undefined };
+  return { git, baseText, available: git !== undefined || base !== undefined };
 };

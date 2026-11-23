@@ -10,7 +10,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { type Hue } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { ReviewNamespace } from '../../namespace.ts';
 
 export type SuggestionAuthorRow = {
   /** The author's identity DID. */
@@ -34,7 +34,7 @@ export type SuggestionAuthorsProps = {
  * (overlay, change bars, cards) for this user only — the branches themselves are untouched.
  */
 export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ReviewNamespace.key);
   if (authors.length === 0) {
     return null;
   }

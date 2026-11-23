@@ -1,0 +1,42 @@
+---
+title: Overview
+description: What SAGE is, and where it runs.
+welcome:
+  section: SAGE
+  tagline: Autonomous agents with their own identity, tools and skills.
+  background: sage
+---
+
+SAGE runs AI agents as durable processes. An agent is a model in a loop that calls typed operations as its tools,
+enables skills when a task needs them, and can have an identity of its own. It hibernates while it waits, hands work
+to sub-agents, and wakes on messages, triggers or rules over what it knows, without polling a model. People and agents
+plan the work in shared specs, which record who decided what and can be checked against the code.
+
+Four words carry the section:
+
+- An **operation** is a typed action that an app defines once, for its UI and for agents alike.
+- A **skill** is a set of instructions with the operations that one kind of work needs.
+- A **trigger** is an object that starts an operation on a schedule or an event.
+- A **spec** is a text that says what a piece of software should do, for people and agents both.
+
+## Where SAGE runs
+
+Composer is the workspace app that DXOS builds on this stack. Its assistant is the chat panel where a person works
+with a model.
+
+| Where                    | What runs                                                                   | Page                                       |
+| ------------------------ | --------------------------------------------------------------------------- | ------------------------------------------ |
+| Composer's assistant     | Chats in a space, with the skills and objects a person adds to them        | [Agents](/docs/sage/concepts/agents/)      |
+| Agents on EDGE           | An agent's chats and triggers, while every device is offline               | [Agents](/docs/sage/concepts/agents/)      |
+| The MCP server           | A space's operations and skills, for any MCP client such as a coding agent | [MCP](/docs/sage/concepts/mcp/)            |
+
+Each action an agent takes is an [operation](/docs/edge/concepts/operations/), run as a
+[process](/docs/edge/concepts/processes/). An agent's chats and memory are objects in the user's spaces, so they sync,
+and the user can read and edit them like anything else they own.
+
+A chat names the model it uses, hosted or local. An agent that runs on EDGE uses a hosted one.
+
+## Where to go next
+
+Read [Why SAGE?](/docs/sage/why-sage/) for what sets its agents apart, then [Agents](/docs/sage/concepts/agents/)
+for how one runs.

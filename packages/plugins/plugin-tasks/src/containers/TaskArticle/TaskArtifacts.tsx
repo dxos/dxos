@@ -11,7 +11,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type Task } from '@dxos/types';
 
-import { meta } from '#meta';
+import { TasksNamespace } from '../../namespace.ts';
 
 export type TaskArtifactsProps = {
   task: Task.Task;
@@ -22,7 +22,7 @@ export type TaskArtifactsProps = {
  * Absent rather than empty for a task with no artifacts.
  */
 export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   // The property, not the whole task: the query re-emits on membership only, so an artifact recorded
   // on the open task would otherwise not reach the grid until the reader selected away and back.
   const [artifacts] = useObject(task, 'artifacts');

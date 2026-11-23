@@ -18,7 +18,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 import { hues } from '@dxos/ui-types';
 
-import { meta } from '#meta';
+import { MarkdownNamespace } from '../namespace.ts';
 
 const getLabel = (object: Obj.Unknown): Theme.Label => {
   const typename = Obj.getTypename(object);
@@ -46,7 +46,7 @@ const insertLink = (view: EditorView, head: number, label: string, uri: string, 
 };
 
 export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MarkdownNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const notCurrent = useCallback((object: Obj.Unknown) => object.id !== current?.id, [current?.id]);
   const search = ObjectCombobox.useSearch(db, { filter: notCurrent });
@@ -86,7 +86,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
 
         const createItem: EditorMenuItem = {
           id: 'create-object',
-          label: ['add-object.label', { ns: meta.profile.key }],
+          label: ['add-object.label', { ns: MarkdownNamespace.key }],
           icon: 'ph--plus--regular',
           onSelect: ({ view, head }) => {
             void invokePromise?.(SpaceOperation.OpenObjectForm, {

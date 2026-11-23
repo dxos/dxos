@@ -70,18 +70,18 @@ edge Code -> Diagram
 
 ## Pipeline
 
-A diagram is text until a variant stores it. `Dsl.read` parses the text and collects the semantic
+A diagram is text until a variant stores it. `DSL.read` parses the text and collects the semantic
 statements into a `Semantic.Diagram`. The engine for its kind lays it out as `Scene.Command[]`, and
 the variant's builder writes those as records into the drawing's canvas. `Diagnostics` reads the
 scene back and reports what is wrong with the layout, which is what lets an agent fix its own drawing.
 The figure is itself a data-flow diagram ([F-3]).
 
-![The author's .dx source flows to Dsl.read, a Semantic.Diagram to the engine for its kind, Scene.Command[] to the variant builder, records into the Drawing.Canvas store, the scene to Diagnostics, and the report back to the author.](spec/diagrams/pipeline.dx.svg)
+![The author's .dx source flows to DSL.read, a Semantic.Diagram to the engine for its kind, Scene.Command[] to the variant builder, records into the Drawing.Canvas store, the scene to Diagnostics, and the report back to the author.](spec/diagrams/pipeline.dx.svg)
 
 ```diagram
 diagram kind=dataflow
 node Author "Author or agent" role=external
-node Read "Dsl.read" ref="packages/common/diagram/src/dsl/parse.ts"
+node Read "DSL.read" ref="packages/common/diagram/src/dsl/parse.ts"
 node Layout "Engine by kind" ref="packages/common/diagram/src/dsl/compile.ts"
 node Apply "Variant builder" ref="packages/common/diagram/src/content.ts"
 node Store "Drawing.Canvas" role=store ref="packages/plugins/plugin-illustrator/src/types/Drawing.ts"
@@ -144,10 +144,14 @@ type Diagram
   desc: >
     The semantic statements of a document, before any coordinate exists (`Semantic.Diagram`). The
     `kind` picks the engine; `timeline` keeps messages, notes and fragments in source order for a
-    sequence diagram.
+    sequence diagram, and `members` keeps what each container holds in source order for a grid
+    diagram, whose frame is `size` and whose outermost tracks are `rule`.
   fields:
     kind: DiagramKind
     flow: 'down' | 'up' | 'right' | 'left'
+    size?: Size
+    rule?: GridRule
+    members?: Map<string, string[]>
     nodes: Node[]
     groups: Group[]
     edges: Edge[]
@@ -157,7 +161,7 @@ type Diagram
 ```mdl
 type DiagramKind
   desc: What a diagram depicts, which decides its layout ([F-1]).
-  literals: structure | sequence | dataflow
+  literals: structure | sequence | dataflow | grid
 ```
 
 ```mdl
@@ -169,7 +173,7 @@ type Step
 ## Components
 
 ```mdl
-component Dsl
+component DSL
   desc: >
     The `.dx` language (`src/dsl/`): a Lezer grammar, `read` (text to commands plus a semantic
     diagram), `parse` (laid out synchronously, for an editor), `compile` (the full search), `print`
@@ -223,7 +227,7 @@ component ContentHandler
 component MermaidDialects
   desc: >
     DEPRECATED. `Mermaid.compile` (flowchart), `Uml.compile` (classDiagram) and
-    `MermaidEngine.compile` compile mermaid source. They still work, and `Dsl.convert` turns a
+    `MermaidEngine.compile` compile mermaid source. They still work, and `DSL.convert` turns a
     mermaid source into DSL text, but nothing new is written in mermaid ([F-4]).
 ```
 
@@ -231,6 +235,7 @@ component MermaidDialects
 
 ```mdl
 feat F-1: Diagram kinds
+  uses: [Diagram, DSL]
 
   req F-1.1: `diagram kind=` selects the engine: `structure` (the default), `sequence` or `dataflow`. Every kind reads the same `node`, `edge` and `group` statements.
 
@@ -238,11 +243,12 @@ feat F-1: Diagram kinds
 
   req F-1.3: `note`, `fragment` and `else` are contextual keywords. Where they do not start a statement or a section they are ordinary names, so a document that uses one as an id parses, and the printer leaves it unquoted.
 
-  req F-1.4: `Dsl.parse` and `Dsl.compile` give the same result for a sequence diagram; neither searches.
+  req F-1.4: `DSL.parse` and `DSL.compile` give the same result for a sequence diagram; neither searches.
 ```
 
 ```mdl
 feat F-2: Sequence diagrams
+  uses: [Diagnostics]
 
   req F-2.1: Participants are the nodes, in declaration order from left to right; the members of a `group` stay adjacent and are framed together.
 
@@ -285,40 +291,61 @@ feat F-3: Data-flow diagrams
 
 ```mdl
 feat F-4: Mermaid is deprecated
+  uses: [DSL]
 
   req F-4.1: The `generate` operation and the mermaid compilers are marked deprecated and keep working.
 
   req F-4.2: The agent skills teach the `.dx` DSL and do not ask for mermaid. The UML skill calls `generate` only when the user asks for class members in the boxes, which the DSL cannot show yet.
 
-  req F-4.3: `Dsl.convert` stays, as the way an existing mermaid source becomes DSL text.
+  req F-4.3: `DSL.convert` stays, as the way an existing mermaid source becomes DSL text.
 
-  req F-4.4: Neither `Dsl.compile` nor `draw` needs mermaid input. The semantic engine's internal search over the mermaid engine's placements is not author-facing and stays.
+  req F-4.4: Neither `DSL.compile` nor `draw` needs mermaid input. The semantic engine's internal search over the mermaid engine's placements is not author-facing and stays.
+```
+
+```mdl
+feat F-5: Shared trunks
+
+  req F-5.1: `edge A -> B, C bus` fans out of A through one port and one trunk; `edge B, C -> A bus` gathers into A with one arrowhead; `bus=<name>` joins separate edges.
+
+  req F-5.2: Edges out of one node (from one side, when the side is pinned) that carry the same label and style are one property with several targets: they share one port and one trunk that fans out, as a `bus` does, without the author writing `bus`.
+
+  req F-5.3: Edges into one node that carry the same label and style gather into one trunk the same way. An edge that already fans out with others is not gathered again.
+
+  req F-5.4: A shared label is drawn once, on the trunk; unlabelled edges and edges with different labels are routed on their own.
+
+  req F-5.5: A trunk the router cannot draw falls back to separate edges, with a warning on the first edge.
+
+  req F-5.6: A trunk's hub is placed upstream of its spokes along the flow, and the trunk leaves the hub on the side that faces them; a spoke enters from the facing side unless that costs a detour. A side the author pinned overrides both.
+
+  req F-5.7: A trunk's spokes sit side by side as peers; a spoke with edges of its own sits at an end of the set, so the others stay together.
+
+  req F-5.8: When two trunks feed the same spokes, one whose hub nothing else feeds is placed on the far side of the spokes, mirroring the other, so each trunk has its own gutter.
 ```
 
 ## The `draw` call
 
 What happens when an agent calls `draw`. The figure is itself a sequence diagram ([F-2]).
 
-![The agent calls the Draw op with a source; the op calls Dsl.compile, which calls SequenceEngine.solve for kind=sequence and SemanticEngine.compile otherwise; if there are no errors the op applies the commands through the variant builder; it then has Diagnostics analyze the scene and returns the scene and report to the agent.](spec/diagrams/draw.dx.svg)
+![The agent calls the Draw op with a source; the op calls DSL.compile, which calls SequenceEngine.solve for kind=sequence and SemanticEngine.compile otherwise; if there are no errors the op applies the commands through the variant builder; it then has Diagnostics analyze the scene and returns the scene and report to the agent.](spec/diagrams/draw.dx.svg)
 
 ```diagram
 diagram kind=sequence
 node Agent "Agent" role=actor
 node Op "Draw op" ref="packages/plugins/plugin-illustrator/src/operations/draw.ts"
-node Dsl "Dsl.compile" ref="packages/common/diagram/src/dsl/compile.ts"
+node DSL "DSL.compile" ref="packages/common/diagram/src/dsl/compile.ts"
 node Engine "Layout engine" ref="packages/common/diagram/src/sequence-engine.ts"
 node Variant "Variant builder" ref="packages/plugins/plugin-illustrator/src/types/IllustratorCapabilities.ts"
 node Diag "Diagnostics" ref="packages/common/diagram/src/diagnostics.ts"
 edge Agent calls Op "draw(source)"
-edge Op calls Dsl "compile"
+edge Op calls DSL "compile"
 fragment alt "kind=sequence" {
-  edge Dsl calls Engine "SequenceEngine.solve"
-  edge Engine returns Dsl "commands"
+  edge DSL calls Engine "SequenceEngine.solve"
+  edge Engine returns DSL "commands"
 } else "structure, dataflow" {
-  edge Dsl calls Engine "SemanticEngine.compile"
-  edge Engine returns Dsl "commands, issues"
+  edge DSL calls Engine "SemanticEngine.compile"
+  edge Engine returns DSL "commands, issues"
 }
-edge Dsl returns Op "commands, problems"
+edge DSL returns Op "commands, problems"
 fragment opt "no errors" {
   edge Op calls Variant "apply(commands)"
   edge Variant returns Op "upserted"
@@ -499,3 +526,173 @@ decision D-13: Deprecation keeps mermaid working: the `generate` operation and t
   rejected:
     - Removing mermaid now: it would drop class-member diagrams with no replacement.
 ```
+
+```mdl
+decision D-14: Links from a common property share a common port and trunk: edges from one node with the same label fan out of one port and one trunk, edges into one node with the same label gather the same way, the label is drawn once on the trunk, and a group the router cannot draw falls back to separate edges with a warning.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-5.2, F-5.3, F-5.4, F-5.5]
+```
+
+```mdl
+decision D-15: Edges join a property trunk only when label, relation, arrowheads, stroke, colour and the hub's pinned side all match, and fanning out claims an edge before gathering in does. Fills in [D-14].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.2, F-5.3]
+  why: The trunk is drawn in its first edge's style, so only edges that would look the same can share it; an edge can sit in one trunk only, and the source owns the property.
+  rejected:
+    - Key on label alone: a dashed and a solid edge would merge and one style would be lost.
+```
+
+```mdl
+decision D-16: A diagram with a property or `bus` trunk keeps the mermaid engine's placements as search seeds but not its own layout as a candidate. Fills in [D-14].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.2]
+  why: The mermaid engine draws no trunks, so its layout winning would silently undo them.
+```
+
+```mdl
+decision D-17: The hub of a trunk sits above its spokes in a downward flow (upstream of them in any flow), and its trunk leaves toward them.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-18: The placer charges a spoke no bend for its junction and a backward-flow cost for lying level with its hub; the router tries the hub's centre lines as junctions, pins the trunk to the side facing every spoke, and makes the spokes' facing side a preference. Inheritance buses keep their hard sides. Fills in [D-17].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.6]
+  why: Edges are placed one at a time, so without the discount every fan prices its outer spokes' bends and the hub drifts level with them; a trunk only drops straight when the hub's own centre is a junction candidate.
+  rejected:
+    - Hard spoke sides: two trunks into the same targets then compete for one gutter and the second loops around the outside.
+```
+
+```mdl
+decision D-19: A trunk's spokes are peers placed together under it with no detour into any of them, and similar spokes sit next to each other with an unlike one (Canvas, beside TLDraw and Excalidraw) at the end.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-5.7]
+```
+
+```mdl
+decision D-20: A second trunk into the same targets mirrors the first from the other side: Canvas above Scene2D and Scene3D, Shot below them.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-5.8]
+```
+
+```mdl
+decision D-21: Similarity is read from structure: a spoke with edges beyond its trunk is unlike the others. The placer charges each extra cell a trunk's spokes spread over, each such spoke between two others, and a set split across rows as its widest spread. Fills in [D-19].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.7]
+  why: The engine has no notion of what nodes mean, but leaves versus nodes that lead on is visible in the graph and matched the example.
+  rejected:
+    - Skipping a set split across rows: the placer then escaped the cost by dropping the unlike spoke a row.
+```
+
+```mdl
+decision D-22: Only a trunk whose hub nothing else feeds is mirrored, at most one per set of spokes, by reading its edges against the flow during placement. Fills in [D-20].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.8]
+  why: A hub with its own inputs has to stay downstream of them; the far side has one gutter, so a third trunk keeps the usual side.
+```
+
+```mdl
+decision D-23: Agents author the coordinate-free statements (`diagram`, `group`, `node`, `edge`) only. The text that states positions (`scene`, `layout`, `element`) is a print of the records for a person to read or diff, and no agent skill teaches it.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-1, Diagram]
+  why: An agent writes `node Store below PM` from understanding and cannot write `rect box 1312,-417 304x64` from understanding; two authored vocabularies for one drawing is the cost a weaker model pays most.
+  rejected:
+    - Agents author the positioned text too: it would need the relations and containers the intent statements have, and the agent two vocabularies.
+```
+
+```mdl
+decision D-24: A fourth kind, `diagram kind=grid size=WxH`, reads a group as a grid of tracks (`cols`, `rows`, `gap`, `padding`), lets groups nest, and lets a node name a component (`kind=card`) and carry its fields. It places nothing: it lowers to the grid boxes `@dxos/scene` solves where the drawing is rendered, a labelled group becoming a heading over its members. Fills in [D-5] and [D-23].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, DiagramKind, Diagram, GridEngine]
+  why: The nine studio slides were already grids of components, written as `object { grid … rect … kind= }`; said as intent they lose the object wrapper, the styled heading boxes, the wrapper grids and the arrow ids, and a test holds each to the same boxes in the same frames.
+  rejected:
+    - One statement form for intent and positions alike: positions belong to the records ([D-23]).
+    - A layout rule on a group inside a searched kind: the search places one level of frames, so a nested rule needs the placer changed; left for when a diagram needs both.
+    - A second solver for the tracks: the rule would then be solved in two places that can disagree.
+
+decision D-25: A grid diagram's group also states the size of its unstated tracks (`autoCols`, `autoRows`), where the tracks sit (`justifyContent`, `alignContent`) and the frame it draws (`border`, `fill`, `stroke`, `color`); an edge states how it runs (`path`). An empty group draws nothing and holds its cell, so it is the spacer and the place an edge ends. Extends [D-24].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: The grid boxes gained these four track attributes and the arrow its path, and the nine slides use them; a kind that could not say them could no longer say the slides.
+  rejected:
+    - A frame attribute that also encloses the heading: a framed group around the labelled one says it with what the kind already has.
+    - A textless, borderless node for a spacer: an empty group already holds a cell and can end an edge.
+
+decision D-26: A grid diagram's text is read back out of a drawing (`Dsl.printIntent`), not stored beside it. The function infers the diagram from the grid boxes, prints it, lowers its own text and compares what the two draw; it returns the text or the reasons there is none, never text that draws something else. Upholds [D-23]: the records stay the store and the intent stays what is authored.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: An agent that wrote a drawing as intent read it back as boxes, so it authored in one form and edited in another. A stored copy of the text would disagree with the records as soon as someone moved a box.
+  rejected:
+    - An optional source field on the drawing: two copies of one drawing, with no rule for which wins after an edit on the canvas.
+    - Printing the nearest diagram when the drawing holds more than the kind can say: the text would then draw a different picture, silently.
+    - Inferring rows and columns from hand-placed boxes: that is a guess with tolerances, not a reading.
+
+decision D-27: A grid diagram's group may pack its members (`layout=pack`, `packSeed`, `packMin`, `packMax`), a node says whether it draws its border (`border`), and an edge may end on a port of a group's frame (`frame#w2`). Extends [D-25].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: The grid boxes gained a packing layout and the slides use it, give their space graphs a border, and wire a card to a port on a framed pane; `Dsl.printIntent` refused the Composer slide until a port on a group resolved.
+```
+
+```mdl
+decision D-28: A grid diagram's node may state the size it keeps in its cell (`width`, `height`), centred there; an axis left out fills the cell, and in a packed group the larger is the diameter of its circle. The names are not `size`, which a component may give a field of its own.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: A group's tracks decide every member's size, and one member that should be larger or smaller than its cell had no way to say so; in a packing the seed chose which member was large.
+  rejected:
+    - A weight on the node that the packing ranks by: it says which member is largest, not how large.
+```
+
+```mdl
+decision D-29: A box a contributed component draws is written `custom <id> kind=<name>` in the box form. A shape word (`rect`, `ellipse`, `diamond`, `triangle`, `grid`) with `kind=` is an error, and so is a node that states both `kind` and `shape`.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: `rect s0 kind=graph` said a rectangle where a component draws something else; the record keeps the box as a rect carrying the component's name, which is storage and not what the text should say.
+  rejected:
+    - The component's name as the statement (`graph s0`): the set of statement words would be open, so a misspelt component would read as an unknown statement and not as a box.
+```
+
+```mdl
+decision D-30: A node that names a component may end in braces listing the component's rows (`item "…"` with attributes of its own). The rows are the component's content: they are stored as one list on the node's record (`data.items`), have no ids, and are not placed by anything. The box form writes them the same way after a `custom` box.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-1, Diagram, GridEngine]
+  why: A list inside a component had no spelling but a string the component parsed for itself (`chips="a~b | c~d"`), and prose that wraps (`body=`) has a height no solver can know; rows of one line each are a list the text says and a height that can be counted.
+  rejected:
+    - Rows as child nodes the card places: a `group` places things and a `node` is a leaf, and a card that placed nodes would be a group drawn by a component.
+    - The word `text` for a row: it is already an element, with an id and a position.
+
+decision D-31: The language's namespace is exported as `DSL`, not `Dsl` (`import { DSL } from '@dxos/diagram'`); the component is named the same.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DSL]
+  why: DSL is an initialism and is written in capitals everywhere else it is named (the docs, the companion, the skill), so the one spelling in code was the odd one.
+  rejected:
+    - Keeping `Dsl` as an alias: a moved name leaves no re-export behind, so every call site changes with it.
+```
+

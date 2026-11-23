@@ -1,0 +1,108 @@
+---
+title: ActivationEvent
+description: Declare activation events and use the built-in ones.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+```
+
+An activation event is a named moment in an app's life, and a module waits for one before it loads. `ActivationEvent`
+declares events and combines them, and `ActivationEvents` holds the built-in ones.
+
+## Declare an activation event
+
+`ActivationEvent.make` declares an event from an NSID, a reverse-domain name whose last segment is camelCase.
+
+`ActivationEvent.pluginStart` returns a plugin's own start event. The plugin manager fires it the first time one of
+the plugin's surfaces renders, and when a person turns the plugin on after startup. Use it for a module that matters
+only once the plugin is in use.
+
+**Example** (Declaring an event and getting a plugin's start event)
+
+<Snippet file="app-framework-guide-activation-event" region="declare" />
+
+`SearchStart` is derived from the plugin's key alone, so another plugin can wait for it without importing the search
+plugin.
+
+## Order modules with events and requirements
+
+A module's `activatesOn` names the event the module waits for. It can name one event, or combine several with
+`ActivationEvent.oneOf` and `ActivationEvent.allOf`.
+
+**Example** (Activating on the first of two events)
+
+<Snippet file="app-framework-guide-activation-event" region="activates-on" />
+
+`ActivationEvent.oneOf` takes any number of events and returns one value for `activatesOn`. With
+`ActivationEvent.allOf` in its place, `IndexModule` would wait until both events had fired.
+
+Requirements order modules within an event. A module that requires a capability activates after the module that
+provides it, and registration order does not matter.
+
+**Example** (Ordering a module after its provider)
+
+<Snippet file="app-framework-guide-activation-event" region="requires" />
+
+Leaving `activatesOn` out is the same as naming `ActivationEvents.Idle`. `QueryModule` therefore activates once the
+app is idle and `IndexModule` has contributed `Index`, whichever comes later.
+
+`Plugin.activate` fires an event from a module. Use it when your plugin has to load another plugin's modules on
+demand, for example when a person opens the create dialog.
+
+**Example** (Firing an event from a module)
+
+<Snippet file="app-framework-guide-activation-event" region="fire" />
+
+`requestIndex` is an Effect that needs `Plugin.Service`, which every module body has. Running it fires
+`IndexRequested`, and `IndexModule` loads.
+
+## The built-in events
+
+`ActivationEvents` holds the built-in events:
+
+| Event | When it fires |
+| --- | --- |
+| `ActivationEvents.Startup` | Once, while the app boots. Only modules needed for the first paint belong here. |
+| `ActivationEvents.Idle` | After the first paint, when the app is idle. The default for a module with no `activatesOn`. |
+| `ActivationEvents.SurfacesRequested(role)` | The first time a surface of that role is rendered. |
+| `ActivationEvents.CommandsRequested` | When the command palette or CLI asks for commands. |
+| `ActivationEvents.SpaceTemplatesRequested` | When the app is about to list space templates, such as in the create space dialog. |
+| `ActivationEvents.PluginAssetsRequested` | When a tool asks for plugin assets, such as a spec. |
+
+**Example** (Naming three built-in events)
+
+<Snippet file="app-framework-guide-activation-event" region="builtin" />
+
+`ActivationEvents.SurfacesRequested` is a function, unlike the other two. It takes a role's NSID and returns the
+event for that role.
+
+A module maker, such as `AppCapability.surface`, is a function that makes a module for one capability. It sets the
+right event for that capability, so most plugins never name one.
+
+## Members at a glance
+
+| Member | Summary |
+| --- | --- |
+| `make` | Declare an event from an NSID |
+| `pluginStart` | A plugin's own start event |
+| `oneOf` `allOf` | Wait for the first of several events, or for all of them |
+| `Plugin.activate` | Fire an event from a module |
+| `ActivationEvents.Startup` `Idle` | The two events the app fires as it starts |
+| `ActivationEvents.SurfacesRequested` | The event for the first render of a role |
+| `ActivationEvents.CommandsRequested` `SpaceTemplatesRequested` `PluginAssetsRequested` | Events fired when something first asks for commands, space templates or plugin assets |
+
+The full list is in the [API reference](/docs/plex/resources/api-reference/).
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Plugin](/docs/plex/guides/plugin/) | Defining modules. |
+| [Capability](/docs/plex/guides/capability/) | Requirements between modules. |

@@ -1,0 +1,304 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-wnfs/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: WnfsPlugin
+
+The BlobBackend is solid: `createWnfsBlobBackend` implements put/get/has/getUrl under the `wnfs`
+scheme, registers on the Hypergraph, never throws on reads, and is unit-tested with mocked helpers.
+The WNFS helpers (`upload`, `loadWnfs`, `wnfsUrl`) and `MixedBlockstore` match the spec's behaviour
+but have no tests at all. The forest pointer is stored in a `WnfsStateAnnotation` on space
+properties, not the `properties.wnfs` path the scenarios name. The spec's types (Cid, WnfsPath,
+FileInfo, BlockstoreState) are not declared as types in code.
+
+Of 39 items: 8 done, 20 untested, 5 partial, 0 diverged, 6 missing. Findings:
+
+- **Blockstore ignores HTTP status.** `putCarRemote` clears the queue on a non-2xx response and
+  `get` caches an error body as a block (flushBlockQueue, F-3.6).
+- **No test reaches real WNFS or the blockstore.** T-1 and T-4 to T-7 are unautomated.
+- **Instances is keyed by forest CID** while its type says `SpaceId`, bridged with `as any`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Cid: CIDs are plain strings from multiformats CIDv1 sha2-256; there is no Cid type.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/upload.ts#upload]
+  note: `upload` builds `CID.create(1, Raw.code, sha256)` and stores `cid.toString()`; no named type and no test.
+```
+
+```mdl
+verdict WnfsPath: wnfs:// URLs are strings built by wnfsUrl; there is no WnfsPath type.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/wnfs-url.ts#wnfsUrl]
+  note: Paths are `spaces/<spaceId>/files/<cid>` via `filePath`. No test.
+```
+
+```mdl
+verdict FileInfo: upload returns { name, type, url, cid } inline; only url reaches PutResponse.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/upload.ts#upload]
+  note: No declared type. The backend test mocks `upload` with this shape but nothing tests the real helper.
+```
+
+```mdl
+verdict BlockstoreState: MixedBlockstore keeps isConnected, queue and apiHost privately; no state is exposed.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/blockstore.ts#MixedBlockstore]
+  note: The fields are ES-private (`#isConnected`, `#queue`, `#apiHost`); there is no readable state object or `queueLength`. No test.
+```
+
+```mdl
+verdict WnfsInstances: Instances is a record cache of loaded directory/forest pairs, keyed in practice by forest CID.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/types/WnfsCapabilities.ts#Instances, github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/load.ts#loadWnfs]
+  note: The type declares `Record<SpaceId, …>` but `loadWnfs` keys it by `privateForestCid` through `as any`. No test.
+```
+
+```mdl
+verdict WnfsInstance: A loaded instance is an inline { directory, forest } pair.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/types/WnfsCapabilities.ts#Instances]
+  note: No named type. No test.
+```
+
+```mdl
+verdict wnfsUrl: wnfsUrl joins percent-encoded segments under wnfs://.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/wnfs-url.ts#wnfsUrl]
+  note: No test.
+```
+
+```mdl
+verdict getPathFromUrl: getPathFromUrl strips wnfs:// and decodes the segments.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/wnfs-url.ts#getPathFromUrl]
+  note: No test.
+```
+
+```mdl
+verdict wnfsBlobPut: put resolves the space, wraps bytes in a File named name ?? contentHash, uploads and returns { uri }.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+```
+
+```mdl
+verdict wnfsBlobGet: get loads the WNFS instance and reads the URI path, returning undefined on any failure.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend, github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/wnfs-url.ts#readWnfsFile]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+```
+
+```mdl
+verdict wnfsBlobHas: has is readBytes(...) !== undefined.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+```
+
+```mdl
+verdict wnfsBlobGetUrl: getUrl reads the bytes and returns an object URL, or undefined on failure.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend, github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/wnfs-url.ts#getBlobUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+```
+
+```mdl
+verdict uploadFile: upload writes bytes at a CID-derived path, stores the forest, then updates the forest CID annotation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/upload.ts#upload, github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/common.ts#store]
+  note: Uses sha256 for blocks as specified. Errors are untyped throws (no SpaceNotFound/BlockstoreError). The forest pointer lives in `WnfsStateAnnotation`, not `properties.wnfs`. No test.
+```
+
+```mdl
+verdict flushBlockQueue: The queue is debounced 5 s, flushed as a CAR POST and persisted to IndexedDB, but a non-2xx response still clears it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/blockstore.ts#MixedBlockstore]
+  note: `putCarRemote` never checks `response.ok`, so a server error drops the queued blocks instead of raising NetworkError; only a thrown fetch keeps them. No test.
+```
+
+```mdl
+verdict F-1.1: put writes the file into the private directory and blockstore and returns { uri }.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend, github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/upload.ts#upload]
+  walkthrough:
+    - The backend wraps the bytes in a File and calls upload. github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend
+    - upload writes the file and stores the updated forest. github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/upload.ts#upload
+  note: The backend test mocks `upload`, so the WNFS write itself is untested.
+```
+
+```mdl
+verdict F-1.2: After the write the forest CID is saved to the space properties annotation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/upload.ts#upload, github:dxos/dxos/packages/plugins/plugin-wnfs/src/annotations.ts#WnfsStateAnnotation]
+  note: Stored as the `org.dxos.plugin.wnfs.state` annotation rather than a `wnfs` property. No test.
+```
+
+```mdl
+verdict F-1.3: The uri is a wnfs:// URL that core Blob stores as external data.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/wnfs-url.ts#wnfsUrl, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#externalData]
+  note: Core embedding of an external URI is tested with a stand-in backend in echo-client, but nothing tests that this backend returns a wnfs:// URL.
+```
+
+```mdl
+verdict F-2.1: The backend registers under scheme wnfs and core dispatches external URIs by scheme.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts, github:dxos/dxos/packages/plugins/plugin-wnfs/src/types/WnfsCapabilities.ts#WNFS_SCHEME, github:dxos/dxos/packages/core/echo/echo/src/Hypergraph.ts#Hypergraph]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/blob/blob.test.ts]
+```
+
+```mdl
+verdict F-2.2: get and has load or reuse the WnfsInstance and read the bytes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend, github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/load.ts#loadWnfs]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+  note: The test mocks `loadWnfs`, so instance reuse is covered by F-4.3, which is untested.
+```
+
+```mdl
+verdict F-2.3: getUrl wraps the bytes in a blob: object URL.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/wnfs-url.ts#getBlobUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+```
+
+```mdl
+verdict F-2.4: get/has/getUrl return undefined/false on a closed space or failure; put rejects via invariant.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+  note: Tests cover get and has; the getUrl and put failure paths are not exercised.
+```
+
+```mdl
+verdict F-3.1: put saves the block to IndexedDB and appends it to the queue.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/blockstore.ts#MixedBlockstore.put]
+  note: No test.
+```
+
+```mdl
+verdict F-3.2: Online flushes batch the queued blocks into a CAR POST to /blob/file.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/blockstore.ts#MixedBlockstore]
+  note: Debounced 5 s via `#flushQueueInt`; no test.
+```
+
+```mdl
+verdict F-3.3: Offline, the flush returns early and the queue stays persisted in IndexedDB.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/blockstore.ts#MixedBlockstore]
+  note: The queue is saved on every add regardless of connectivity. No test.
+```
+
+```mdl
+verdict F-3.4: The online event sets isConnected and triggers the flush.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/blockstore.ts#MixedBlockstore.open]
+  note: No test.
+```
+
+```mdl
+verdict F-3.5: get returns a locally cached block without a network request.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/blockstore.ts#MixedBlockstore.get]
+  note: No test.
+```
+
+```mdl
+verdict F-3.6: A missing block is fetched from EDGE and cached, but the response status is not checked.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/blockstore.ts#MixedBlockstore.get]
+  note: `get` caches whatever body comes back, so a 404 or 500 error body is stored as the block. No test.
+```
+
+```mdl
+verdict F-4.1: A space with no WNFS state gets a new PrivateForest and PrivateDirectory stored and recorded.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/load.ts#loadWnfs]
+  note: `createWnfsDir` inside `loadWnfs`; no test.
+```
+
+```mdl
+verdict F-4.2: A space with a forest CID loads forest and directory from the blockstore.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/load.ts#loadWnfs]
+  note: `loadWnfsDir`; no test.
+```
+
+```mdl
+verdict F-4.3: A cached instance for the current forest CID is returned without reloading.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/load.ts#loadWnfs]
+  note: No test.
+```
+
+```mdl
+verdict F-4.4: Legacy snake_case properties are deleted and the legacy wnfs key moves to the annotation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/helpers/load.ts#loadWnfs]
+  note: Snake_case keys are deleted only when both are present; a fresh forest is then created, so old files are not carried over. The current schema is an annotation, not camelCase properties. No test.
+```
+
+```mdl
+verdict T-1: No test uploads through Blob.fromBytes with storage wnfs.
+  status: missing
+  note: `blob-backend.test.ts` mocks `upload`; nothing checks the URI, the forest CID or IndexedDB.
+```
+
+```mdl
+verdict T-2: getUrl returning a blob: URL is tested with a mocked helper; the img src step is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+  note: The test mocks `getBlobUrl`, so no previously uploaded blob is resolved.
+```
+
+```mdl
+verdict T-3: get and has failure paths are tested; getUrl on a closed space is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.ts#createWnfsBlobBackend]
+  tests: [github:dxos/dxos/packages/plugins/plugin-wnfs/src/capabilities/blob-backend.test.ts]
+  note: `get` with an unknown space and `has` with a throwing load are covered; `getUrl` with a closed space is not.
+```
+
+```mdl
+verdict T-4: No test covers offline queuing.
+  status: missing
+  note: No test file exercises `MixedBlockstore`.
+```
+
+```mdl
+verdict T-5: No test covers the reconnect flush.
+  status: missing
+  note: No test file exercises `MixedBlockstore`.
+```
+
+```mdl
+verdict T-6: No test covers new-space initialization.
+  status: missing
+  note: No test calls the real `loadWnfs`.
+```
+
+```mdl
+verdict T-7: No test covers the instance cache hit.
+  status: missing
+  note: No test calls the real `loadWnfs`.
+```
+
+```mdl
+verdict QA-1: The upload-and-resolve QA test is not automated.
+  status: missing
+  note: No Playwright or composer-qa automation runs it.
+```

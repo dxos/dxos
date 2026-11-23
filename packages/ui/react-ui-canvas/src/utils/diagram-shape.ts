@@ -8,8 +8,7 @@
 // edit has moved a connector's end off the route the layout gave it does the canvas route it itself, in the same style.
 //
 
-import { Diagnostics, Scene as Dsl, SvgFile, UmlGrid } from '@dxos/diagram';
-
+import { Diagnostics, Scene as DSL, SvgFile, UmlGrid } from '@dxos/diagram';
 import {
   type Bounds,
   type DiagramConnector,
@@ -17,8 +16,11 @@ import {
   type Link,
   type Node,
   type Point,
+  Shape,
   isDiagramNode,
-} from '../model/index.ts';
+  isHullNode,
+} from '@dxos/scene';
+
 import { nodeBounds } from './shapes.ts';
 
 /** How far (scene px) a route's end may sit from its node's outline and still be the route the layout gave it. */
@@ -45,12 +47,12 @@ const shownText = (node: DiagramNode, hideLabel: boolean): string | undefined =>
  * The node's DSL elements in scene coordinates: its element over the node's frame, carrying the node's label unless
  * the node has a heading, which then carries it from the frame's top-left corner.
  */
-export const diagramNodeElements = (node: DiagramNode, { hideLabel = false } = {}): Dsl.Element[] => {
+export const diagramNodeElements = (node: DiagramNode, { hideLabel = false } = {}): Shape.Element[] => {
   const bounds = nodeBounds(node);
   const text = shownText(node, hideLabel);
   const own = node.heading ? undefined : text;
   const { element, heading } = node;
-  const shape: Dsl.Element | undefined =
+  const shape: Shape.Element | undefined =
     element.kind === 'circle'
       ? {
           ...element,
@@ -64,7 +66,7 @@ export const diagramNodeElements = (node: DiagramNode, { hideLabel = false } = {
           ? undefined
           : { ...element, x: bounds.x, y: bounds.y, w: element.w === undefined ? undefined : bounds.width, text: own }
         : { ...element, x: bounds.x, y: bounds.y, w: bounds.width, h: bounds.height, text: own };
-  const title: Dsl.Element | undefined =
+  const title: Shape.Element | undefined =
     heading && text !== undefined
       ? {
           kind: 'text',
@@ -82,7 +84,7 @@ export const diagramNodeElements = (node: DiagramNode, { hideLabel = false } = {
 
 /** The node as `SvgFile` draws its elements, in scene coordinates. */
 export const diagramNodeMarkup = (node: DiagramNode, options: { hideLabel?: boolean } = {}): SvgFile.Markup[] => {
-  const object: Dsl.WorldObject = { id: node.id, elements: diagramNodeElements(node, options) };
+  const object: DSL.WorldObject = { id: node.id, elements: diagramNodeElements(node, options) };
   return object.elements.flatMap(
     (element) => SvgFile.elementMarkup(object, element, new Map(), SvgFile.markerIds(node.id)) ?? [],
   );
@@ -111,7 +113,7 @@ export const diagramRoute = (
       ? { points: [...route], laid }
       : { points: UmlGrid.rerouteConnector(from, to, obstacles.map(rectOf)), laid };
   }
-  const object: Dsl.WorldObject = { id: 'connector', elements: [] };
+  const object: DSL.WorldObject = { id: 'connector', elements: [] };
   const targets = new Map([
     ['connector/source', from],
     ['connector/target', to],
@@ -125,7 +127,7 @@ export const diagramRoute = (
 };
 
 /** Where a caption goes on a route the canvas made: beside the longest run, centred on it. */
-const placeCaption = (points: readonly Point[], text: string, weight: Dsl.Weight): Point => {
+const placeCaption = (points: readonly Point[], text: string, weight: Shape.Weight): Point => {
   const runs = points.slice(1).map((end, index) => ({ start: points[index], end }));
   const longest = runs.reduce((best, run) =>
     Math.hypot(run.end.x - run.start.x, run.end.y - run.start.y) >
@@ -145,7 +147,7 @@ const placeCaption = (points: readonly Point[], text: string, weight: Dsl.Weight
  * The connector's DSL elements along `route`: the `-path` polyline and arrow `SvgFile.connectorElements` splits a route
  * into, and the caption where the layout placed it (or beside the longest run of a route the canvas made).
  */
-export const diagramLinkElements = (link: Link, connector: DiagramConnector, route: DiagramRoute): Dsl.Element[] => {
+export const diagramLinkElements = (link: Link, connector: DiagramConnector, route: DiagramRoute): Shape.Element[] => {
   const caption = connector.caption;
   const weight = caption?.weight ?? 's';
   const text = link.text || undefined;
@@ -183,13 +185,19 @@ export const diagramLinkMarkup = (
   route: DiagramRoute,
   markers: SvgFile.MarkerIds,
 ): SvgFile.Markup[] => {
-  const object: Dsl.WorldObject = { id: link.id, elements: diagramLinkElements(link, connector, route) };
+  const object: DSL.WorldObject = { id: link.id, elements: diagramLinkElements(link, connector, route) };
   return object.elements.flatMap((element) => SvgFile.elementMarkup(object, element, new Map(), markers) ?? []);
 };
 
 /** Whether a node is a diagram group's backdrop (a tinted box), which sits under the shapes it groups. */
 export const isDiagramBackdrop = (node: Node): boolean => isDiagramNode(node) && node.element.fill === 'tint';
 
-/** Whether a re-routed connector keeps clear of a node: a box does, a group's backdrop or a caption it may cross. */
+/**
+ * Whether a re-routed connector keeps clear of a node: a box does; a hull, a group's backdrop or a caption it may
+ * cross.
+ */
 export const isRouteObstacle = (node: Node): boolean =>
-  node.style?.guide !== true && !isDiagramBackdrop(node) && !(isDiagramNode(node) && node.element.kind === 'text');
+  node.style?.guide !== true &&
+  !isHullNode(node) &&
+  !isDiagramBackdrop(node) &&
+  !(isDiagramNode(node) && node.element.kind === 'text');

@@ -12,12 +12,15 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as CrawlState from '@dxos/crawler/CrawlState';
-import { Database, DXN, Feed, Ref } from '@dxos/echo';
+import { Annotation, Database, DXN, Ref } from '@dxos/echo';
+import * as MemoryService from '@dxos/echo-memory/MemoryService';
 import { Connection } from '@dxos/link';
-import * as FactFeed from '@dxos/plugin-agent/FactFeed';
+import { Topic } from '@dxos/pipeline-discord';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import { Person } from '@dxos/types';
 
 import { DISCORD_PROVIDER_ID, DISCORD_USER_PROVIDER_ID } from '../constants.ts';
+import * as DiscordService from './DiscordService.ts';
 
 /**
  * Discovery only — list Discord text channels across every guild the
@@ -91,14 +94,14 @@ export const BACK_INDEX_PAGE_SIZE = 25;
  * Crawl steps (a page each) one invocation runs by default: EDGE bounds an invocation to a minute, and each page may
  * cost a model request.
  */
-export const DEFAULT_BACK_INDEX_STEPS = 2;
+export const DEFAULT_BACK_INDEX_STEPS = 4;
 
 /** How often the back-index trigger runs by default: every two minutes. */
 export const DEFAULT_BACK_INDEX_CRON = '*/2 * * * *';
 
 const CrawlConfigFields = {
-  connection: Ref.Ref(Connection.Connection).annotate({
-    description: 'The Discord connection whose token (from the space) reads the channels.',
+  applicationId: Schema.String.annotate({
+    description: "The Discord app (bot) installed in the server; its host reads the channels with the bot's token.",
   }),
   channels: Schema.Array(Schema.String).annotate({ description: 'Top-level Discord channel ids to crawl.' }),
   descendThreads: Schema.optional(
@@ -119,24 +122,24 @@ const CrawlConfigFields = {
 
 /**
  * One bounded run of a Discord back-index: reconciles the crawl's frontier with `channels`, reads up to `maxSteps`
- * pages from the targets' cursors with the space's Discord token, extracts each page's facts in one model request and
- * appends them to the fact feed `facts`. Every bit of progress lives in the {@link CrawlState.CrawlState} `state`, so
- * a trigger invoking it on a schedule continues where the last run stopped, and a message read again unchanged costs
- * no model call. Writes the run's status, outcome and error into `state` rather than failing, so they persist.
+ * pages from the targets' cursors as the bot `applicationId` through {@link DiscordService.DiscordService}, runs them
+ * through `DiscordPipeline`'s stages and puts the facts it extracts into the space's memory. Every bit of progress
+ * lives in the {@link CrawlState.CrawlState} `state`, so a trigger invoking it on a schedule continues where the last
+ * run stopped, and a message read again unchanged costs no model call. Writes the run's status, outcome and error into `state` rather than failing, so they persist.
  */
 export const CrawlDiscordChannels = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.discord.crawlChannels'),
     name: 'Crawl Discord Channels',
-    description: 'Back-index Discord channels into a fact feed, a bounded number of pages per run.',
+    description: "Back-index Discord channels into the space's memory, a bounded number of pages per run.",
     icon: 'ph--bulldozer--regular',
   },
-  services: [AiService.AiService, Credential.CredentialsService, Database.Service],
-  types: [CrawlState.CrawlState, Connection.Connection, FactFeed.FactItem],
+  services: [AiService.AiService, Database.Service, DiscordService.DiscordService, MemoryService.MemoryService],
+  // Registered with the invocation's database, which the pipeline writes Topics and question askers (Persons) to.
+  types: [CrawlState.CrawlState, Person.Person, Topic.Topic],
   input: Schema.Struct({
     ...CrawlConfigFields,
     state: Ref.Ref(CrawlState.CrawlState).annotate({ description: 'The durable state of this crawl.' }),
-    facts: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed extracted facts are appended to.' }),
   }),
   output: Schema.Struct({
     done: Schema.Boolean,
@@ -148,16 +151,27 @@ export const CrawlDiscordChannels = Operation.make({
 });
 
 /**
- * Creates or updates a Discord back-index: its {@link CrawlState.CrawlState}, its fact feed, and the remote timer
- * trigger that runs {@link CrawlDiscordChannels} on EDGE. With `trigger`, that back-index is reconfigured in place
- * (the trigger's input names its state and feed); without, all three are created. Crawling is configured here and
- * nowhere else: an agent's brain only consumes the resulting fact feed.
+ * On the Discord connection that set a back-index up: refs to its trigger and crawl state, which make them the
+ * connection's ECHO children, shown under it and deleted with it.
+ */
+export const BackIndexAnnotation = Annotation.make({
+  id: 'org.dxos.discord.backIndex',
+  schema: Schema.Struct({
+    trigger: Ref.Ref(Trigger.Trigger),
+    state: Ref.Ref(CrawlState.CrawlState),
+  }),
+});
+
+/**
+ * Creates or updates a Discord back-index: its {@link CrawlState.CrawlState} and the remote timer trigger that runs
+ * {@link CrawlDiscordChannels} on EDGE, which puts the facts it extracts into the space's memory. With `trigger`, that
+ * back-index is reconfigured in place (the trigger's input names its state); without, both are created.
  */
 export const ConfigureBackIndex = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.discord.configureBackIndex'),
     name: 'Configure Discord Back-Index',
-    description: 'Create or update the crawl state, fact feed and schedule of a Discord back-index.',
+    description: 'Create or update the crawl state and schedule of a Discord back-index.',
     icon: 'ph--bulldozer--regular',
   },
   services: [Database.Service],
@@ -166,7 +180,12 @@ export const ConfigureBackIndex = Operation.make({
     trigger: Schema.optional(
       Ref.Ref(Trigger.Trigger).annotate({ description: 'The back-index to reconfigure; a new one when absent.' }),
     ),
-    name: Schema.optional(Schema.String.annotate({ description: 'Names a new crawl state and fact feed.' })),
+    name: Schema.optional(Schema.String.annotate({ description: 'Names a new crawl state.' })),
+    connection: Schema.optional(
+      Ref.Ref(Connection.Connection).annotate({
+        description: 'The Discord connection that sets it up; the trigger and crawl state become its children.',
+      }),
+    ),
     cron: Schema.optional(
       Schema.String.annotate({ description: `How often it runs; \`${DEFAULT_BACK_INDEX_CRON}\` when absent.` }),
     ),
@@ -175,6 +194,5 @@ export const ConfigureBackIndex = Operation.make({
   output: Schema.Struct({
     trigger: Ref.Ref(Trigger.Trigger),
     state: Ref.Ref(CrawlState.CrawlState),
-    facts: Ref.Ref(Feed.Feed),
   }),
 });

@@ -1,0 +1,55 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-higgsfield/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: HiggsfieldPlugin
+
+The plugin matches the spec closely. The connector joins a key id and secret into one
+`AccessToken.token` and fails with a typed error when either part is blank. Two GenerationServices
+(image and video) share one `HiggsfieldProvider`, contributed with `contributeAll` on
+`StudioEvents.Start`; the provider polls the status URL verbatim, retries 5xx, stops on 4xx and on
+`failed`/`nsfw`/`canceled`, and times out. Unit tests cover the connector, provider and both services
+against mocked fetch. QA-1 has no end-to-end automation: the skipped-by-default live integration test
+drives the provider directly, not the studio `Generate` operation.
+
+Of 3 items: 2 done, 0 untested, 1 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict HiggsfieldConnector: The two-part form is joined into one AccessToken with a Connection, and blanks fail as a typed error.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-higgsfield/src/capabilities/connector.ts#createHiggsfieldConnectorEntry, github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-credential.ts#joinCredential]
+  tests: [github:dxos/dxos/packages/plugins/plugin-higgsfield/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict HiggsfieldGenerationService: Image and video services share one provider; enqueue, polling, terminal states and retries match the spec.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-higgsfield/src/capabilities/generation-service.ts, github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-service.ts#makeHiggsfieldImageService, github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-service.ts#makeHiggsfieldVideoService, github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-provider.ts#HiggsfieldProvider]
+  tests: [github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-provider.test.ts, github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-service.test.ts]
+  walkthrough:
+    - The capability contributes both services together on StudioEvents.Start. github:dxos/dxos/packages/plugins/plugin-higgsfield/src/capabilities/generation-service.ts
+    - The image and video services set defaults and model options, and the video service resolves the reference artifact's cover. github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-service.ts#makeHiggsfieldVideoService
+    - The provider posts to the model path with a Key credential and polls the status URL to a terminal state. github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-provider.ts#HiggsfieldProvider
+```
+
+```mdl
+verdict QA-1: Only the generation step runs in automation, against the provider, and the live test is skipped without keys.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-service.ts#makeHiggsfieldImageService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-higgsfield/src/services/higgsfield-provider.integration.test.ts]
+  note: |
+    The live integration test generates one image with the default model through the proxy-wired provider, but it is
+    skipped unless `HIGGSFIELD_API_KEY` is set, and it does not run the connect step, create an Artifact or call the
+    studio `Generate` operation.
+```

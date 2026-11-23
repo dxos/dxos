@@ -20,9 +20,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { useConnector } from '#hooks';
-import { meta } from '#meta';
 
 import { connectionDeckSubject } from '../../constants.ts';
+import { ConnectorNamespace } from '../../namespace.ts';
 
 const EMPTY_SCHEMA = Schema.Struct({});
 const EMPTY_VALUES = {};
@@ -37,7 +37,7 @@ export type ConnectorCompanionProps = AppSurface.ArticleProps<Cursor.Cursor>;
  * picks the first.
  */
 export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ConnectorNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   // Subscribe so mutable fields (sync status, options) re-render; field reads use the live object.

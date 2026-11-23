@@ -22,7 +22,7 @@ const ImportTestLayer = Layer.mergeAll(TestLayer, NodeServices.layer);
 describe('space import', () => {
   it('should import a json archive as a new space', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       const { space, path } = yield* exportFixture('json');
 
       yield* importSpace({ file: path, tags: [] });
@@ -35,7 +35,7 @@ describe('space import', () => {
 
   it('should import a binary archive as a new space', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       const { space, path } = yield* exportFixture('binary');
 
       yield* importSpace({ file: path, tags: [] });
@@ -65,7 +65,7 @@ const lastOutput = Effect.fn(function* () {
 /** Exports a named space and returns the archive path, so import has a real archive to read. */
 const exportFixture = Effect.fn(function* (format: Format) {
   const fs = yield* FileSystem.FileSystem;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   yield* Effect.tryPromise(() => client.halo.createIdentity());
   const space = yield* Effect.tryPromise(() => client.spaces.create());
   yield* Effect.tryPromise(() => space.waitUntilReady());

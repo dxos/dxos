@@ -13,7 +13,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, spaceIdWithDefault, spaceLayer, withTypes } from '@dxos/cli-util';
-import { ClientService, ConfigService } from '@dxos/client';
+import { ClientService, ConfigService, fromClient } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent, TriggerDispatcher } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, type Key } from '@dxos/echo';
@@ -100,7 +100,7 @@ const createTriggerRuntime = Effect.fn((spaceId: Option.Option<Key.SpaceId>, pro
     log.info('Starting local trigger runtime...');
 
     const resolvedSpaceId = yield* spaceIdWithDefault(spaceId);
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     const config = yield* ConfigService;
     const dbService = yield* Database.Service;
 
@@ -111,7 +111,7 @@ const createTriggerRuntime = Effect.fn((spaceId: Option.Option<Key.SpaceId>, pro
       profile,
     }).pipe(
       // Provide required services
-      Layer.provide(Layer.succeed(ClientService, client)),
+      Layer.provide(fromClient(client)),
       Layer.provide(Layer.succeed(ConfigService, config)),
       Layer.provide(Layer.succeed(Database.Service, dbService)),
       Layer.provide(BunServices.layer),

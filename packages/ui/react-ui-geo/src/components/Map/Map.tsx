@@ -389,10 +389,11 @@ const MapMarkers = ({ selected, markers, lines, onSelect }: MapMarkersProps) => 
                 iconUrl: 'https://media.dxos.network/marker-icon.png',
                 iconRetinaUrl: 'https://media.dxos.network/marker-icon-2x.png',
                 shadowUrl: 'https://media.dxos.network/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41],
+                // 60% of Leaflet's default pin, so dense clusters (a city's data centres) stay readable.
+                iconSize: [15, 25],
+                iconAnchor: [7.5, 25],
+                popupAnchor: [0.5, -20],
+                shadowSize: [25, 25],
               })
             }
           >

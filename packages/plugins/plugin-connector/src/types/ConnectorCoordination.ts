@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type { Database, Key, Obj, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 
-import { meta } from '#meta';
+import { ConnectorNamespace } from '../namespace.ts';
 
 /** Result of {@link ConnectorCoordinator.createConnection}: OAuth draft (`oauth-started`), custom dialog or login-hint dialog (`dialog-opened`), or unused sync persist (`connection-created`). */
 export type CreateConnectionResult =
@@ -101,5 +101,5 @@ export type ConnectorCoordinator = {
 };
 
 export const ConnectorCoordinator = Capability.makeSingleton<ConnectorCoordinator>()(
-  `${meta.profile.key}.capability.connectorCoordinator`,
+  `${ConnectorNamespace.key}.capability.connectorCoordinator`,
 );

@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { type Person } from '@dxos/types';
 
-import { meta } from '#meta';
+import { InboxNamespace } from '../../namespace.ts';
 
 export type RelatedContactsProps = {
   contacts: Person.Person[];
@@ -19,7 +19,7 @@ export type RelatedContactsProps = {
 };
 
 export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
   if (!contacts.length) {
     return null;
   }

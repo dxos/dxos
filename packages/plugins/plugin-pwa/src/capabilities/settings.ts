@@ -6,25 +6,18 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { Settings } from '#types';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
-      schema: Settings.Settings,
-      defaultValue: () => ({}),
-    });
+import { PwaNamespace } from '../namespace.ts';
+import { settingsAtom } from '../settings-store.ts';
 
-    return [
-      Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
-        schema: Settings.Settings,
-        atom: settingsAtom,
-      }),
-    ];
-  }),
+export default Capability.makeModule(() =>
+  Effect.sync(() => [
+    Capability.contribute(AppCapabilities.Settings, {
+      prefix: PwaNamespace.key,
+      schema: Settings.Settings,
+      atom: settingsAtom,
+    }),
+  ]),
 );

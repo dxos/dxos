@@ -14,7 +14,7 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
+import { AgentNamespace } from '../../namespace.ts';
 
 //
 // Root
@@ -35,7 +35,7 @@ type AgentStateRootProps = PropsWithChildren<{
 
 /** The agent's state panel: tabs over its identity, counts and conversations. */
 const AgentStateRoot = ({ role, actions, defaultView = 'identity', children }: AgentStateRootProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const [view, setView] = useState<AgentStateView>(defaultView);
   return (
     <Tabs.Root
@@ -105,7 +105,7 @@ type AgentStateIdentityProps = {
 
 /** Who the agent is and the base skills it brings to every conversation. */
 const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <AgentStateSection view='identity' label={t('agent-state-identity.heading')}>
       <Listbox.Root
@@ -168,7 +168,7 @@ type AgentStateSummaryProps = { counts: AgentStateCounts };
 
 /** How much the agent knows and is tracking. */
 const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const rows = [
     {
       id: 'facts',
@@ -252,7 +252,7 @@ type AgentStateConversationsProps = { channels: readonly AgentStateChannel[] };
 
 /** Each conversation the agent holds and the mode it is in there. */
 const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <AgentStateSection view='conversations' label={t('agent-state-conversations.heading')}>
       {channels.length === 0 && <Status.Empty>{t('agent-state-conversations-empty.message')}</Status.Empty>}

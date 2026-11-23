@@ -76,7 +76,7 @@ export type VisualizationVariant = {
   focusable?: boolean;
   /** Track the cursor in model coordinates for boid avoidance (swarm only). */
   trackPointer?: boolean;
-  /** Emit `onNodeHover` for preview popovers (every variant except plexus). */
+  /** Emit `onNodeHover` for preview popovers (every variant except plexus and swarm). */
   emitsHover?: boolean;
 };
 
@@ -178,7 +178,7 @@ const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefi
 };
 
 /** Drop the package prefix from a typename for display: `org.dxos.type.Person` → `Person`. */
-const shortTypename = (typename: string): string => {
+export const shortTypename = (typename: string): string => {
   const last = typename.split('.').pop() ?? typename;
   return last.charAt(0).toUpperCase() + last.slice(1);
 };
@@ -414,12 +414,13 @@ const DEFINITIONS: Record<VisualizationVariantId, VisualizationVariant> = {
     value: 'swarm',
     icon: 'ph--microscope--regular',
     label: 'Swarm',
-    edgeOpacity: 0.3,
     trackPointer: true,
-    emitsHover: true,
+    // Boids never sit still under the pointer, so a hover card would flicker open and shut.
+    emitsHover: false,
     applyNode: applyNodeSwarm,
     // Swarm in SVG: a per-tick projector mirroring force's emit-positions pattern.
-    createProjector: (ctx, { prev }) => new GraphSwarmProjector<SpaceGraphNode>(ctx, undefined, undefined, prev),
+    // Boids carry no link force, so links only add clutter (and per-tick path writes).
+    createProjector: (ctx, { prev }) => new GraphSwarmProjector<SpaceGraphNode>(ctx, { edges: false }, undefined, prev),
     // Match the force variant's shape so identity-by-id transitions read continuously.
     // The tail is a SINGLE `<path>` traced through head + history points; its stroke
     // uses a per-boid `<linearGradient>` that fades head → tail. Done this way (rather

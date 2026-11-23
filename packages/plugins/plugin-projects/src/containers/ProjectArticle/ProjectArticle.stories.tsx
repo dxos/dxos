@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
@@ -18,6 +19,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
+import * as Spec from '@dxos/compute/Spec';
+import { mdlSpec } from '@dxos/deus/extension';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -29,6 +32,7 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import { DialectSamples, SoftwareConfigPlugin, VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -38,6 +42,7 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -45,6 +50,7 @@ import { Text } from '@dxos/schema';
 import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
+import { type ProjectView } from '#types';
 
 import { ProjectArticle } from './ProjectArticle.tsx';
 
@@ -62,6 +68,64 @@ const TASK_OPEN_QUESTION = 'Which spaces count as internal?';
 const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 const OTHER_PROJECT_NAME = 'Project 2';
+const SPEC_NAME = 'Inbox and agents';
+const SPEC_CONTENT = [
+  'An inbox that sorts itself, and agents that answer what they can.',
+  '',
+  'Mail syncs from each provider into the space, where the agents read it.',
+  '',
+  '```mdl',
+  'feat k7q2x: Sorted inbox',
+  '  status: in-progress',
+  '  desc: Mail lands in the folder its sender and subject suggest.',
+  "  req m3pza: A message from a known sender goes to that sender's folder.",
+  '  req w8rtn: A message the rules cannot place stays in the inbox.',
+  '```',
+  '',
+  '```mdl',
+  'feat p4m8d: Agent replies',
+  '  status: planned',
+  '  desc: An agent drafts a reply to each message it can answer.',
+  '  req h2vqc: A draft waits in the thread until someone sends it.',
+  '```',
+  '',
+  '```mdl',
+  'type Message: One email in the inbox',
+  '  fields:',
+  '    subject: string',
+  '    sender: string',
+  '```',
+  '',
+  '```mdl',
+  'type Folder: Where sorted mail lands',
+  '  fields:',
+  '    name: string',
+  '```',
+  '',
+  '```mdl',
+  'op Sort: Moves a message to its folder',
+  '  desc: Reads the message, picks a folder by its rules, and moves it there.',
+  '  input:',
+  '    message: Message   # the message to sort',
+  '  output: Folder',
+  '```',
+].join('\n');
+const INBOX_SPEC: { content: string; dialects: readonly string[] } = {
+  content: SPEC_CONTENT,
+  dialects: ['org.dxos.spec.software'],
+};
+/** The project's first spec; a story's `beforeEach` swaps it before the client seeds the project. */
+let firstSpec = INBOX_SPEC;
+const TALK_SPEC_NAME = 'Launch talk';
+const NEW_SPEC_NAME = 'Launch video';
+const TALK_SPEC_CONTENT = [
+  'A ten-minute talk that introduces Composer to people who have not used it.',
+  '',
+  'It opens on a space someone already works in, then shows the same space on a second device.',
+  '',
+  'It ends by asking the audience to try it on their own notes.',
+].join('\n');
+const RENAMED_SPEC_NAME = 'Launch keynote';
 const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
@@ -95,7 +159,7 @@ const createProject = (space: Space, storyGeneration: number) => {
   }
 
   // The project names its repository, which is what makes a `#nnn` reference in its documents
-  // resolve (plugin-github reads `project.repo`).
+  // resolve (plugin-github reads the project's first repository).
   const repo = space.db.add(Repo.make({ name: 'dxos', owner: 'dxos', url: 'https://github.com/dxos/dxos' }));
   const instructions = Instructions.make({
     [Obj.Parent]: project,
@@ -103,10 +167,10 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
   const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
   Obj.update(project, (project) => {
-    project.repo = Ref.make(repo);
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
+  Repo.setRepositories(project, [Ref.make(repo)]);
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
   // An exchange in the log, written by the verbs that write it in the app rather than by hand: the
@@ -168,7 +232,16 @@ const createProject = (space: Space, storyGeneration: number) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  // A second project, so a task row's `Move to…` has somewhere to go.
+  // The project's specs, which put the Specs tab and the overview's summary lines on the article.
+  const spec = space.db.add(
+    Spec.make({ name: SPEC_NAME, content: firstSpec.content, dialects: [...firstSpec.dialects] }),
+  );
+  const talk = space.db.add(Spec.make({ name: TALK_SPEC_NAME, content: TALK_SPEC_CONTENT }));
+  Obj.update(project, (project) => {
+    project.specs.push(Ref.make(spec), Ref.make(talk));
+  });
+
+  // A second project, so a task row's `Move to…` has somewhere to go; it has no spec.
   const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
 
   seeded = { generation: storyGeneration, space, project, taskSet, task, destination };
@@ -211,33 +284,46 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
     async () => {
       window.dispatchEvent(new Event('resize'));
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      await expect(canvas.queryByText(text)).toBeTruthy();
+      // An artifact's name can show twice: in the card's title and in its form body.
+      await expect(canvas.queryAllByText(text).length).toBeGreaterThan(0);
     },
     { timeout: 10_000 },
   );
 };
 
+const openConfigGroup = async (canvas: ReturnType<typeof within>, id: string) => {
+  await userEvent.click(
+    await canvas.findByTestId(`projectsPlugin.config.${id}.disclosure`, undefined, { timeout: 10_000 }),
+  );
+};
+
 /** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */
-const showTab = async (canvas: ReturnType<typeof within>, tab: 'overview' | 'tasks') => {
+const showTab = async (canvas: ReturnType<typeof within>, tab: ProjectView.Tab) => {
   await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
+};
+
+/** A spec opens on its source, so a story about its forms picks Preview. */
+const showSpecForms = async (canvas: ReturnType<typeof within>) => {
+  await showTab(canvas, 'spec');
+  await userEvent.click(await canvas.findByTestId('editor.toolbar.viewMode', undefined, { timeout: 10_000 }));
+  await userEvent.click(await screen.findByText('Preview'));
 };
 
 type StoryArgs = {
   role: string;
   attendableId: string;
+  /** The seeded project the article opens. */
+  projectName?: string;
 };
 
-const DefaultStory = ({ role, attendableId }: StoryArgs) => {
+const DefaultStory = ({ role, attendableId, projectName = PROJECT_NAME }: StoryArgs) => {
   const [space] = useSpaces();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
-  const project = projects.find((entry) => entry.name === PROJECT_NAME);
+  const project = projects.find((entry) => entry.name === projectName);
   if (!space?.db || !project) {
     return <Loading data={{ db: !!space?.db, project: !!project }} />;
   }
 
-  // `AttendableContainer` marks the subtree with `data-attendable-id`, which is what the deck's
-  // plank does in the app: without it nothing ever attends `attendableId`, so the article's toolbar
-  // renders permanently unattended.
   // `AttendableContainer` marks the subtree with `data-attendable-id`, which is what the deck's
   // plank does in the app: without it nothing ever attends `attendableId`, so the article's toolbar
   // renders permanently unattended.
@@ -290,7 +376,7 @@ const meta = {
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
-        // Contributes the `#123` decoration (`project.repo` is what it resolves against), the link
+        // Contributes the `#123` decoration, the link
         // chips, and the resolver behind a chip's hover card; PreviewPlugin owns the popover and the
         // fixture source answers the resolver without the network.
         GitHubPlugin.make(),
@@ -299,6 +385,7 @@ const meta = {
         ClientPlugin.make({
           types: [
             Project.Project,
+            Spec.Spec,
             Instructions.Instructions,
             Skill.Skill,
             Text.Text,
@@ -322,6 +409,9 @@ const meta = {
         }),
         StorybookPlugin.make({}),
         MockDeckOperationsPlugin(),
+        // A second plugin's extension package, beside plugin-projects' Software one.
+        SoftwareConfigPlugin.make(),
+        VideoPackagePlugin.make(),
       ],
       // Both start events at setup, so the markdown extensions and the link resolver are live before
       // the first render.
@@ -337,6 +427,7 @@ const meta = {
     translations: [
       ...translations,
       ...reactUiTranslations,
+      ...editorTranslations,
       ...formTranslations,
       ...routineTranslations,
       ...tasksTranslations,
@@ -347,6 +438,7 @@ const meta = {
   beforeEach: () => {
     seeded = undefined;
     generation += 1;
+    firstSpec = INBOX_SPEC;
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -358,6 +450,419 @@ export const Default: Story = {
   args: {
     role: 'article',
     attendableId: 'test',
+  },
+};
+
+/**
+ * A project with a spec: the overview lists its specs, each folded under its name, and its Spec tab shows the spec's
+ * document. The toolbar holds the Specs tab's tools only, the editor's among them, and the document draws none of its own.
+ */
+export const WithSpec: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
+    await waitFor(() => expect(within(specs).getAllByRole('option')).toHaveLength(2), { timeout: 10_000 });
+    const spec = await within(specs).findByRole('group', { name: SPEC_NAME }, { timeout: 10_000 });
+    await expect(within(spec).queryByRole('textbox', { name: 'Name' })).toBeNull();
+    await showTab(canvas, 'spec');
+    await expect(
+      canvas.findByTestId('projectsPlugin.spec.document', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
+    await expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull();
+
+    await expect(canvas.queryByTestId('projectsPlugin.addArtifact')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.overflow')).toBeNull();
+    // With no plugin contributing a view for its dialects, a spec shows its text alone, with no view toggle.
+    await expect(canvas.queryByTestId('projectsPlugin.specView.document')).toBeNull();
+
+    await expect(canvas.findByTestId('editor.toolbar.viewMode', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.getAllByRole('toolbar')).toHaveLength(1);
+  },
+};
+
+/**
+ * A spec's blocks show as forms over their kinds' schemas: a feature's title, status and requirements. Editing a
+ * requirement in its form rewrites that requirement's line of the spec's text and nothing else.
+ */
+export const SpecBlockForms: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+    await showSpecForms(canvas);
+    // The editor is rebuilt as the spec packages' extensions arrive, so each element is read from the settled editor.
+    const featureCard = () => {
+      const card = canvas.queryAllByTestId('spec-block').find((element) => element.dataset.kind === 'feat');
+      if (!card) {
+        throw new Error('no feature card');
+      }
+      return card;
+    };
+    await waitFor(() => expect(featureCard()).toHaveTextContent('Sorted inbox'), { timeout: 30_000 });
+    await expect(featureCard()).toHaveTextContent('F-1.2');
+    await expect(canvas.getAllByTestId('spec-block').map((element) => element.dataset.kind)).toEqual([
+      'feat',
+      'feat',
+      'type',
+      'type',
+      'op',
+    ]);
+    // A pressed card's typed map row names its type in a combobox over the spec's types.
+    const op = () => canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'op')!;
+    await userEvent.click(within(op()).getByTestId('spec-block.name'));
+    await waitFor(() => expect([...op().querySelectorAll('input')].map((input) => input.value)).toContain('Message'), {
+      timeout: 5_000,
+    });
+
+    // Each requirement is a bound editor of its own, labelled by its position.
+    const requirement = () => {
+      const view = [...featureCard().querySelectorAll<HTMLElement>('.cm-content')]
+        .map((content) => EditorView.findFromDOM(content))
+        .find((candidate) => candidate?.state.doc.toString().startsWith('A message from a known sender'));
+      if (!view) {
+        throw new Error('no requirement editor');
+      }
+      return view;
+    };
+    await waitFor(requirement, { timeout: 10_000 });
+    const view = requirement();
+    view.dispatch({ changes: { from: view.state.doc.length, insert: ' Always.' }, userEvent: 'input.type' });
+    const text = () => project.specs[0]?.target?.content.target?.content ?? '';
+    await waitFor(
+      () =>
+        expect(text()).toContain("  req m3pza: A message from a known sender goes to that sender's folder. Always.\n"),
+      { timeout: 5_000 },
+    );
+    await expect(text()).toContain('  req w8rtn: A message the rules cannot place stays in the inbox.\n');
+
+    // Typing keeps the field focused while each keystroke rewrites the spec's text around it.
+    view.focus();
+    view.dispatch({ selection: { anchor: view.state.doc.length } });
+    await userEvent.keyboard(' Twice.');
+    await waitFor(() => expect(text()).toContain("sender's folder. Always. Twice.\n"), { timeout: 5_000 });
+
+    // A requirement added and written keeps its text when another field of the block changes.
+    await userEvent.click(within(featureCard()).getByTestId('req.add'));
+    const added = await waitFor(() => {
+      const content = featureCard().querySelector<HTMLElement>('[data-testid="req[2].text"] .cm-content');
+      const editor = content && EditorView.findFromDOM(content);
+      if (!editor) {
+        throw new Error('no added requirement');
+      }
+      return editor;
+    });
+    added.dispatch({
+      changes: { from: 0, to: added.state.doc.length, insert: 'A muted sender is archived.' },
+      userEvent: 'input.type',
+    });
+    await waitFor(() => expect(text()).toContain(': A muted sender is archived.\n'), { timeout: 5_000 });
+    await userEvent.click(within(featureCard()).getByTestId('status'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Prototype' }));
+    await waitFor(() => expect(text()).toContain('  status: prototype\n'), { timeout: 5_000 });
+    await expect(text()).toContain(': A muted sender is archived.\n');
+
+    // A card is a block the keys stop on: Enter goes into its first field and Escape comes back out to the card.
+    const frame = () => featureCard().closest<HTMLElement>('.dx-focus-item')!;
+    frame().focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(featureCard().querySelector('.cm-content')).toBe(document.activeElement));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(frame()));
+
+    // A type's name, heading its card, is a field of its form: renaming the block keeps the card and the focus in it.
+    const type = () => canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'type')!;
+    const card = type();
+    const name = EditorView.findFromDOM(
+      within(card).getByTestId('spec-block.name').querySelector<HTMLElement>('.cm-content')!,
+    )!;
+    name.focus();
+    name.dispatch({ selection: { anchor: 0, head: name.state.doc.length } });
+    await userEvent.keyboard('Email');
+    await waitFor(() => expect(text()).toContain('type Email: One email in the inbox'), { timeout: 5_000 });
+    await expect(type()).toBe(card);
+    await expect(name.hasFocus).toBe(true);
+
+    // A name the header cannot carry is not written, and leaving the field shows the block's name again.
+    name.dispatch({ selection: { anchor: 0, head: name.state.doc.length } });
+    await userEvent.keyboard('{Backspace}');
+    frame().focus();
+    await waitFor(() => expect(name.state.doc.toString()).toBe('Email'));
+    await expect(text()).toContain('type Email: One email in the inbox');
+  },
+};
+
+/**
+ * A spec in one dialect, drawn as forms: every kind the dialect defines draws a card, and every reference in the sample
+ * names a block it holds or something outside the spec, so nothing is flagged.
+ */
+const dialectStory = ({ content, dialects, kinds }: DialectSamples.Sample): Story => ({
+  ...Default,
+  beforeEach: () => {
+    firstSpec = { content, dialects };
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showSpecForms(canvas);
+    await canvas.findAllByTestId('spec-block', undefined, { timeout: 30_000 });
+    // The editor draws only the blocks near its viewport, so each is read on the way down.
+    const scroller = canvasElement.querySelector<HTMLElement>('.cm-scroller')!;
+    const seen = new Set<string>();
+    const flagged: string[] = [];
+    for (let top = 0; top <= scroller.scrollHeight; top += scroller.clientHeight / 2) {
+      scroller.scrollTop = top;
+      // CodeMirror measures on a frame and draws the widgets it brought into view on the next.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      for (const card of canvas.queryAllByTestId('spec-block')) {
+        seen.add(card.dataset.kind!);
+        card.querySelectorAll('.text-error-fg').forEach((element) => flagged.push(element.textContent ?? ''));
+      }
+    }
+    scroller.scrollTop = 0;
+    await expect([...seen]).toEqual(expect.arrayContaining([...kinds]));
+    await expect(flagged).toEqual([]);
+  },
+});
+
+export const AppDialect = dialectStory(DialectSamples.samples.app);
+export const ChangelogDialect = dialectStory(DialectSamples.samples.changelog);
+export const CodeDialect = dialectStory(DialectSamples.samples.code);
+export const CoreDialect = dialectStory(DialectSamples.samples.core);
+export const FeaturesDialect = dialectStory(DialectSamples.samples.features);
+export const PluginDialect = dialectStory(DialectSamples.samples.plugin);
+export const QaDialect = dialectStory(DialectSamples.samples.qa);
+export const ReviewDialect = dialectStory(DialectSamples.samples.review);
+export const SqlDialect = dialectStory(DialectSamples.samples.sql);
+
+/**
+ * A spec opens on its source, where a feature reads by its label as in its form and its keys cannot be edited. Enter
+ * in a requirement starts the next one, with a fresh key, ready for its text.
+ */
+export const SpecKeyLabels: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+    await showTab(canvas, 'spec');
+    const document = () => canvas.getByTestId('projectsPlugin.spec.document');
+    const labels = () =>
+      [...document().querySelectorAll('[data-testid="spec-block.key-label"]')].map((element) => element.textContent);
+    await waitFor(() => expect(labels()).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-2', 'F-2.1']), { timeout: 30_000 });
+    await expect(canvas.queryAllByTestId('spec-block')).toHaveLength(0);
+    await expect(document().textContent).not.toContain('k7q2x');
+
+    const view = EditorView.findFromDOM(document().querySelector<HTMLElement>('.cm-content')!)!;
+    const text = () => project.specs[0]?.target?.content.target?.content ?? '';
+    const end = view.state.doc.toString().indexOf('stays in the inbox.') + 'stays in the inbox.'.length;
+    view.focus();
+    view.dispatch({ selection: { anchor: end } });
+    await userEvent.keyboard('{Enter}A muted sender is archived.');
+    await waitFor(() => expect(text()).toMatch(/\n {2}req [a-z][a-z2-9]{4}: A muted sender is archived\.\n/), {
+      timeout: 5_000,
+    });
+    await waitFor(() => expect(labels()).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-1.3', 'F-2', 'F-2.1']));
+  },
+};
+
+/** Each tab's tools follow the tabs: the agent and the chart on Tasks; the Overview adds artifacts in their section. */
+export const ToolbarByTab: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    const artifacts = await canvas.findByTestId('projectsPlugin.artifacts', undefined, { timeout: 10_000 });
+    await expect(within(artifacts).getByTestId('projectsPlugin.addArtifact')).toBeTruthy();
+    await expect(canvas.getAllByTestId('projectsPlugin.addArtifact')).toHaveLength(1);
+    await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.createChat')).toBeNull();
+
+    await showTab(canvas, 'tasks');
+    await expect(
+      canvas.findByTestId('projectsPlugin.delegateTasks', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.getByTestId('projectsPlugin.pipeline')).toBeTruthy();
+    await expect(canvas.queryByTestId('projectsPlugin.addArtifact')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.specPicker')).toBeNull();
+  },
+};
+
+/**
+ * The overview's specs list edits each spec in place, unfolded: a new name is the one the Specs tab shows. Its add
+ * creates a spec, open for its name.
+ */
+export const SpecForms: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
+    const talk = await within(specs).findByRole('group', { name: TALK_SPEC_NAME }, { timeout: 10_000 });
+    await userEvent.click(within(talk).getByRole('button', { name: TALK_SPEC_NAME }));
+    const name = await within(talk).findByRole('textbox', { name: 'Name' });
+    await userEvent.clear(name);
+    await userEvent.type(name, RENAMED_SPEC_NAME);
+    await expect(within(specs).findByRole('group', { name: RENAMED_SPEC_NAME })).resolves.toBeTruthy();
+
+    await userEvent.click(canvas.getByTestId('specs.add'));
+    const created = await within(specs).findByRole('group', { name: 'Untitled' }, { timeout: 10_000 });
+    await userEvent.type(within(created).getByRole('textbox', { name: 'Name' }), NEW_SPEC_NAME);
+    await expect(within(specs).findByRole('group', { name: NEW_SPEC_NAME })).resolves.toBeTruthy();
+
+    await showTab(canvas, 'spec');
+    await pickSpec(canvas, RENAMED_SPEC_NAME);
+    await pickSpec(canvas, NEW_SPEC_NAME);
+  },
+};
+
+/** The Spec tab opens on the spec's `.mdl` document, which holds its text and no front matter: the name is the spec's. */
+export const SpecDocument: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await expectSpecShown(canvas, SPEC_NAME);
+    const document = canvas.getByTestId('projectsPlugin.spec.document');
+    await waitFor(() => expect(document.textContent).toContain('sorts itself'), { timeout: 10_000 });
+    await expect(document.textContent).not.toContain(`name: ${SPEC_NAME}`);
+  },
+};
+
+/** The Specs tab shows one spec at a time; the dropdown in its toolbar lists every spec, switches between them and adds one. */
+export const SpecPicker: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await expectSpecShown(canvas, SPEC_NAME);
+
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+    const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
+    await expect(within(menu).getByText(SPEC_NAME)).toBeTruthy();
+    await userEvent.click(within(menu).getByText(TALK_SPEC_NAME));
+    await expectSpecShown(canvas, TALK_SPEC_NAME);
+    // Add spec asks for a name, then shows the new spec.
+    await userEvent.click(canvas.getByTestId('projectsPlugin.specPicker'));
+    await userEvent.click(
+      within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText('Add spec'),
+    );
+    await userEvent.click(await screen.findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
+    await userEvent.paste(NEW_SPEC_NAME);
+    await userEvent.click(screen.getByTestId('save-button'));
+    await expectSpecShown(canvas, NEW_SPEC_NAME);
+  },
+};
+
+/** Waits for the Specs tab to show the spec named `name`: the picker names it and its document is drawn. */
+const expectSpecShown = async (canvas: ReturnType<typeof within>, name: string) => {
+  await waitFor(
+    () => {
+      canvas.getByTestId('projectsPlugin.spec.document');
+      return expect(canvas.getByTestId('projectsPlugin.specPicker').textContent).toContain(name);
+    },
+    { timeout: 10_000 },
+  );
+};
+
+/** Opens the spec picker and shows the spec named `name`. */
+const pickSpec = async (canvas: ReturnType<typeof within>, name: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+  await userEvent.click(within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(name));
+  await expectSpecShown(canvas, name);
+};
+
+/** Adds a spec named `name` from the picker, which then shows it. */
+const addSpec = async (canvas: ReturnType<typeof within>, name: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+  await userEvent.click(within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText('Add spec'));
+  const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+  await userEvent.click(await within(dialog).findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
+  await userEvent.paste(name);
+  await userEvent.click(screen.getByTestId('save-button'));
+  await expectSpecShown(canvas, name);
+};
+
+/** Opens the Extensions menu and returns the item of the package labelled `label`. */
+const findPackage = async (canvas: ReturnType<typeof within>, label: string) => {
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.specExtensions', undefined, { timeout: 10_000 }));
+  const item = within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(label);
+  return item.closest<HTMLElement>('[role="menuitemcheckbox"]') ?? item;
+};
+
+/**
+ * Another plugin's package adds no views, only its slash commands, which write its blocks' structure in place, and its
+ * block types, which the lint then knows.
+ */
+export const VideoPackage: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await addSpec(canvas, NEW_SPEC_NAME);
+    await userEvent.click(await findPackage(canvas, 'Video'));
+    // A multi-select stays open; closed, it hands focus back to its trigger, so the editor is focused after.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull(), { timeout: 5_000 });
+    await expect(canvas.queryByTestId('projectsPlugin.specView.document')).toBeNull();
+
+    const content = await waitFor(
+      () => {
+        const element = canvas.getByTestId('projectsPlugin.spec.document').querySelector<HTMLElement>('.cm-content');
+        if (!element) {
+          throw new Error('no editor content');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
+    const view = EditorView.findFromDOM(content);
+    if (!view) {
+      throw new Error('no editor');
+    }
+    view.focus();
+    view.dispatch({ selection: { anchor: view.state.doc.length } });
+    await userEvent.keyboard('{Enter}/scen');
+    await waitFor(() => expect(document.querySelector('.cm-tooltip-autocomplete')).not.toBeNull(), {
+      timeout: 5_000,
+    });
+    // Completion ignores an Enter that lands within its interaction delay of opening.
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(view.state.doc.toString()).toContain('scene SC-1: '), { timeout: 5_000 });
+    // The lint reads the package's block types from the editor, so its blocks are not flagged as unknown.
+    await expect(view.state.facet(mdlSpec).types).toContain('scene');
+  },
+};
+
+/** A project without a spec: its Spec tab offers to add one through the object form, and the new spec takes its place. */
+export const WithoutSpec: Story = {
+  args: { ...Default.args, projectName: OTHER_PROJECT_NAME },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    // The project's name comes first; each spec row has a name of its own.
+    await waitFor(() => expect(canvas.getAllByTestId('name')[0]).toHaveTextContent(OTHER_PROJECT_NAME), {
+      timeout: 10_000,
+    });
+    await expect(
+      canvas.findByText('This project has no specs yet.', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.queryByRole('listbox', { name: 'Specs' })).toBeNull();
+
+    await showTab(canvas, 'spec');
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.addSpec', undefined, { timeout: 10_000 }));
+    const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+    await userEvent.click(await within(dialog).findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
+    await userEvent.paste(NEW_SPEC_NAME);
+    await userEvent.click(screen.getByTestId('save-button'));
+    await expectSpecShown(canvas, NEW_SPEC_NAME);
+    await expect(canvas.queryByTestId('projectsPlugin.spec.empty')).toBeNull();
   },
 };
 
@@ -382,11 +887,12 @@ export const Sections: Story = {
     const canvas = within(canvasElement);
     await seedContent();
 
-    // Header form: the project name renders as the editable name field's value. Identity/space
-    // setup runs async, so allow more than testing-library's default 1s timeout.
-    await expect(canvas.findByDisplayValue(PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // Header form: identity/space setup runs async, so allow more than testing-library's default 1s timeout.
+    // The project's name comes first; each spec row has a name of its own.
+    await waitFor(() => expect(canvas.getAllByTestId('name')[0]).toHaveTextContent(PROJECT_NAME), { timeout: 10_000 });
 
-    // Instructions: the owned Instructions markdown editor mounts.
+    // Instructions: the owned Instructions markdown editor mounts once the folded Agent group opens.
+    await openConfigGroup(canvas, 'agent');
     await waitFor(() => expect(canvasElement.querySelector('.cm-editor')).toBeTruthy(), { timeout: 10_000 });
 
     // Artifacts: the section heading renders, and the seeded artifact's label resolves.
@@ -406,16 +912,27 @@ export const Sections: Story = {
   },
 };
 
-/** The contributed action's label, as written in `capabilities/task-action.ts`. */
-const TASK_ACTION_LABEL = 'Assign to agent';
+export const Config: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+
+    const software = await canvas.findByTestId('projectsPlugin.config.software', undefined, { timeout: 10_000 });
+    await expect(within(software).findByText('Repositories (1)')).resolves.toBeTruthy();
+
+    await openConfigGroup(canvas, 'software');
+    await userEvent.click(await within(software).findByLabelText('Delete', undefined, { timeout: 10_000 }));
+    await waitFor(() => expect(Repo.getRepositories(project)).toHaveLength(0), { timeout: 10_000 });
+  },
+};
+
+const TASK_ACTION_LABEL = 'Default agent';
 
 /** The copy action's label, as written in `capabilities/task-action.ts`. */
 const COPY_PROMPT_LABEL = 'Copy prompt';
 
 /**
- * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
- * row shows it, and running it invokes the operation that opens a chat carrying the task.
- *
  * Asserted on the database rather than on any UI the chat might get, since the point is that the
  * contribution reached the row and the row reached the operation.
  */
@@ -428,16 +945,21 @@ export const TaskAction: Story = {
     await showTab(canvas, 'tasks');
     const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
 
-    // Scoped to this task's own row — every row carries a menu, so the seeded task has to be found
-    // through its title rather than by picking the first trigger on the page.
     const row = title.closest('[data-testid="taskList.item"]');
     await expect(row).toBeTruthy();
 
-    // Two actions on the row (the contributed one plus the list's own delete), so they collapse into
-    // the overflow menu rather than rendering as a bare button.
-    const trigger = await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, {
-      timeout: 10_000,
-    });
+    const trigger = await waitFor(
+      () => {
+        const control = (row as HTMLElement).querySelector<HTMLElement>(
+          '[data-testid="taskList.item.assignee"], [data-testid="taskList.item.assignee.unset"]',
+        );
+        if (!control) {
+          throw new Error('No assignee control on the row.');
+        }
+        return control;
+      },
+      { timeout: 10_000 },
+    );
     await userEvent.click(trigger);
 
     // Every item resolves to a label: a key rendered raw (`delete-task.label`) means the container
@@ -656,6 +1178,25 @@ export const TaskLink: Story = {
   },
 };
 
+export const OpenMilestone: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { space, taskSet } = await seedContent();
+    const milestone = space.db.add(Milestone.make({ [Obj.Parent]: taskSet, name: MILESTONE_NAME }));
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.milestones.push(Ref.make(milestone));
+    });
+    const MILESTONE_TASK = 'Filed under the milestone';
+    addTask(space, taskSet, MILESTONE_TASK, milestone);
+
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.milestone.open', undefined, { timeout: 10_000 }));
+    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('aria-selected', 'true');
+    await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(canvas.queryByText(TASK_TITLE)).toBeNull(), { timeout: 10_000 });
+  },
+};
+
 /**
  * Every section stays live after its first paint. Each step below mutates the seeded objects the
  * way the operation verbs do and asserts the DOM follows — the failure this guards against is a
@@ -694,11 +1235,14 @@ export const Updates: Story = {
     addTask(space, taskSet, MILESTONE_TASK, milestone);
     // Its task is only a row: the task list does not group by milestone, so no backlog split appears.
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText('Backlog', { ignore: 'script, style, option' })).toBeNull(), {
+      timeout: 10_000,
+    });
 
-    // The milestone renders in its own Overview section.
+    // The milestone renders in its own Overview section, with its progress counted from its tasks.
     await showTab(canvas, 'overview');
     await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('0/1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // A rename reaches the row, which holds its own subscription.
     Obj.update(milestone, (milestone) => {
@@ -719,7 +1263,7 @@ export const Updates: Story = {
     Obj.update(project, (project) => {
       project.artifacts = project.artifacts.filter((ref) => ref.target?.id !== artifact.id);
     });
-    await waitFor(() => expect(canvas.queryByText(ADDED_ARTIFACT)).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryAllByText(ADDED_ARTIFACT)).toHaveLength(0), { timeout: 10_000 });
     await findPainted(canvas, ARTIFACT_TITLE);
   },
 };

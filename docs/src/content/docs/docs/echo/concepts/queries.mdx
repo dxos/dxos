@@ -1,0 +1,81 @@
+---
+title: Queries
+description: Filters, the shape of a query, traversal, and results that stay live.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+A query selects entities from one or more sources and keeps its results current as the data changes. Your app reads
+data the same way whether it was written here or by another peer.
+
+## Model
+
+In a client-server app, you fetch a list, and you fetch it again when you think it has changed. With ECHO, you
+describe the entities you want once, and the results follow the data.
+
+You build that description from two parts:
+
+- A **filter** is a predicate. It says which entities match, by type, field values, text or time.
+- A **query** is the shape around filters. It says which entities to start from, which references or relations to
+  follow, and how to order, limit and group the results.
+
+**Example** (Building a filter and two queries)
+
+<Snippet file="concept-queries" region="shape" />
+
+`employers` follows each Ada's `employer` reference forwards. `staff` follows the same field backwards, from Acme to
+the people who point at it, so the query never loads a person to check where they work.
+
+[Querying](/docs/echo/learn/querying/) builds queries like these for the tutorial app.
+
+You can follow a reference forwards with `reference` and backwards with `referencedBy`. For relations, `sourceOf`
+selects the relations that start at the selection, and `targetOf` selects the ones that end at it.
+
+A query can also **aggregate**. It can count the results, sum a field, find the minimum or maximum, or group the
+results by a field.
+
+**Example** (Counting the people in a space)
+
+<Snippet file="concept-queries" region="aggregate" />
+
+`people` holds the count, because an aggregate returns one record in place of the list of people.
+
+A query reads from **sources**, which you choose with `Scope`: this space, the code-shipped registry of types, or a
+[feed](/docs/echo/concepts/feeds/). By default, without `from`, a query reads the database it runs on.
+
+**Example** (Reading types from two sources)
+
+<Snippet file="concept-queries" region="scope" />
+
+## Behavior
+
+- A query is live. Its results change when matching data changes, here or on another peer. ECHO notifies subscribers
+  only when the results change. <SpecCite item="org.dxos.echo.query#F-2.3" />
+
+  To follow the results, subscribe to the query:
+
+  <Snippet file="concept-queries" region="live" />
+
+  `{ fire: true }` calls the subscriber straight away with the current results. Without it, the first call comes with
+  the first change.
+
+- When you write locally, the write shows in the results, and reaches subscribers, before the writing call returns.
+  <SpecCite item="org.dxos.echo.query#F-2.1" />
+- Results combine what this client has loaded with answers from the index and from EDGE. Each source has its own
+  state, which is pending until it first answers, and the results grow as sources answer. A live query never ends.
+  There is no point after which its results stop changing. <SpecCite item="org.dxos.echo.query#F-3.3" />
+- If you give a query no order, it returns entities by id. <SpecCite item="org.dxos.echo.query#F-2.4" />
+- A traversal checks each step against the objects this client has loaded, so a hit whose reference has since changed
+  here is dropped. <SpecCite item="org.dxos.echo.query#F-7.2" />
+
+## Limits
+
+- A result from the index or from EDGE is checked against the object only when this client has loaded the object.
+  Until the object loads, you see the result as the source reported it. <SpecCite item="org.dxos.echo.query#F-5.2" />
+- If you page with `skip`, the source that answers decides which rows are on the page. A local write can remove a row
+  from your page, but it never pulls the next row in. If you order by a property and set only a `limit`, a local match
+  that sorts inside those rows joins them. <SpecCite item="org.dxos.echo.query#F-9.2" /> <SpecCite item="org.dxos.echo.query#F-9.3" />
+- An aggregate from a remote source is adjusted for local changes. However, a minimum or maximum that a local
+  removal would change is marked unverified until the source answers again.
+  <SpecCite item="org.dxos.echo.query#F-8.3" />

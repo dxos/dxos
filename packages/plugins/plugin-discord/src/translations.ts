@@ -4,8 +4,9 @@
 
 import { Type } from '@dxos/echo';
 
-import { meta } from '#meta';
 import { DiscordChannel } from '#types';
+
+import { DiscordNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -17,7 +18,7 @@ export const translations = [
         'typename.label_other': 'Discord channels',
         'object-name.placeholder': 'New Discord channel',
       },
-      [meta.profile.key]: {
+      [DiscordNamespace.key]: {
         'plugin.name': 'Discord',
         'sync-now.label': 'Sync now',
         'sync-this-chat.label': 'Sync this chat',
@@ -42,6 +43,34 @@ export const translations = [
         'discord-setup-channels.label': 'Channels',
         'discord-setup-bound-other.label': 'Another agent',
         'discord-setup-connect-channel.label': 'Connect',
+        'discord-setup-index.label': 'Index into memory',
+        'discord-setup-unindex.label': 'Stop indexing',
+        'discord-setup-indexed.label': 'Indexed',
+        'discord-setup-index-name.label': 'Discord back-index',
+        'discord-index-servers.label': 'Servers to index into memory',
+        'discord-index-error.label': 'Error: {{error}}',
+        'discord-index-server-indexed.label': 'Indexed',
+        'discord-index-server-on.label': 'Index this server',
+        'discord-index-server-off.label': 'Stop indexing this server',
+        'discord-index-channels.label': 'Channels to index',
+        'discord-index-channel-pending.label': 'Waiting',
+        'discord-index-channel-active.label': 'Crawling',
+        'discord-index-channel-done.label': 'Up to date',
+        'discord-index-channel-error.label': 'Error: {{error}}',
+        'discord-index-run.label': 'Back-index',
+        'discord-index-history.label': 'Crawl back',
+        'discord-index-history.description':
+          "How far back the first crawl reads each channel's history. Later runs read only new messages.",
+        'discord-index-history-all.label': 'Whole history',
+        'discord-index-days.label': '{{count}} days',
+        'discord-index-interval.label': 'Check every',
+        'discord-index-interval.description': 'How often the back-index reads the next pages and new messages.',
+        'discord-index-not-run.label': 'Not run yet.',
+        'discord-index-totals.label': '{{messages}} messages read · {{status}} · last run {{at}}',
+        'discord-index-pause.label': 'Pause',
+        'discord-index-check-now.label': 'Check now',
+        'discord-index-restart.label': 'Restart',
+        'discord-index-resume.label': 'Resume',
         'discord-setup-disconnect.label': 'Disconnect',
         'discord-channel.label': 'Discord',
         'discord-channel.description': 'The bot that posts here and the Discord channels it listens in.',

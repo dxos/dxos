@@ -16,11 +16,12 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
+
 export const ImportSpaceDialog = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const [importing, setImporting] = useState<string>();
@@ -41,11 +42,11 @@ export const ImportSpaceDialog = () => {
       } catch (error) {
         log.catch(error);
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}/import-space-failed`,
+          id: `${SpaceNamespace.key}/import-space-failed`,
           icon: 'ph--warning--regular',
-          title: ['import-space-failed.title', { ns: meta.profile.key }],
+          title: ['import-space-failed.title', { ns: SpaceNamespace.key }],
           description: error instanceof Error ? error.message : String(error),
-          closeLabel: ['dismiss.label', { ns: meta.profile.key }],
+          closeLabel: ['dismiss.label', { ns: SpaceNamespace.key }],
         });
         return;
       } finally {

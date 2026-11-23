@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ClientPlugin } from '#plugin';
+import * as ClientPlugin from '#meta';
 import { translations } from '#translations';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog.tsx';
@@ -29,7 +29,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [ProcessManagerPlugin.make(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ClientPlugin.make({})],
     }),
   ],
   parameters: {

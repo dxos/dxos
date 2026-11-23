@@ -20,9 +20,9 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 
 import { useInputSurfaceLookup } from '#hooks';
-import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { getSpaceDisplayName } from '../../util/index.ts';
 
 /** Display-ready option for the create object search list. */
@@ -194,7 +194,7 @@ type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel' | 'a
 
 /** The draft form's body: its fields, then Cancel and Create; Enter in a single-line field creates. */
 const CreateObjectFormContent = ({ onCancel, actionsContainer }: CreateObjectFormContentProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const {
     form: { canSave, onSave },
   } = useFormContext(CreateObjectFormContent.displayName);
@@ -240,7 +240,7 @@ type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
 };
 
 const SelectType = ({ options, onChange }: SelectTypeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
 
   const { results, handleSearch } = useSearchListResults({
     items: options,
@@ -293,7 +293,7 @@ type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces'> & {
 };
 
 const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
 
   const sortedSpaces = useMemo(
     () =>

@@ -1,6 +1,6 @@
 # Agent feed messages — TASKS
 
-Branch: `dm/agent-feed-messages`. Design: [DESIGN.md](./DESIGN.md).
+Branch: `dm/agent-feed-messages`. Design: [agent-feed-messages.md](../../../packages/core/echo/echo/docs/feeds/agent-feed-messages.md).
 
 ## Phase 1 — SessionStore + feed types (@dxos/assistant) — DONE
 
@@ -53,7 +53,7 @@ Branch: `dm/agent-feed-messages`. Design: [DESIGN.md](./DESIGN.md).
 - [x] Stories (`ChatQueue.stories.tsx`: Default/Empty/Long/ReadOnly +
       TestCancel play) and 8 new projection tests in thread.test.ts.
 
-## Phase 4 — analysis only (done in DESIGN.md §3)
+## Phase 4 — analysis only (done in agent-feed-messages.md §3)
 
 - [x] Chat + Agent move to @dxos/assistant; Chat as primary session anchor —
       written up, not implemented.
@@ -95,7 +95,7 @@ reload`, both of which are model-fixture tagged and therefore SKIPPED by a
 ## Follow-ups (tracked, not scheduled)
 
 - [ ] Fold `tool_result` events into the feed.
-- [ ] Chat/Agent move implementation (DESIGN.md §3 sequencing).
+- [ ] Chat/Agent move implementation (agent-feed-messages.md §3 sequencing).
 - [ ] A synchronous `SessionStore` scan issued from OUTSIDE the process while a
       turn is in flight blocks (found by a test that read the feed mid-turn).
       Worth understanding at the echo level; the app is unaffected because its

@@ -9,6 +9,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Tour from '@dxos/app-toolkit/Tour';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Account from '@dxos/plugin-client/Account';
@@ -31,6 +32,7 @@ export default Capability.makeModule(
     const seenToursAtom = yield* HelpCapabilities.SeenTours;
     const stateAtom = yield* HelpCapabilities.State;
     const toursAtom = yield* Capability.atom(AppCapabilities.Tour);
+    const readOnly = yield* ReadOnly.atom;
 
     const subjectIdAtom = Atom.make<string | undefined>(attention.getCurrent()[0]);
     const unsubscribeAttention = attention.subscribeCurrent((current) => registry.set(subjectIdAtom, current[0]));
@@ -38,7 +40,7 @@ export default Capability.makeModule(
     const nextTourAtom = Atom.make((get) => {
       const subjectId = get(subjectIdAtom);
       const state = get(stateAtom);
-      if (!subjectId || state.running) {
+      if (!subjectId || state.running || get(readOnly)) {
         return undefined;
       }
 

@@ -19,7 +19,7 @@ import { migrateToSettingsSpace, readSpacesOrder } from './settings-space.ts';
 describe('settings space migration', () => {
   it.effect('designates the legacy space and carries its ordering across', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       // The ordering object is an Expando; the app registers it via its schema module.
       yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
@@ -45,7 +45,7 @@ describe('settings space migration', () => {
 
   it.effect('is idempotent and never overwrites an existing designation', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       // The ordering object is an Expando; the app registers it via its schema module.
       yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
@@ -70,7 +70,7 @@ describe('settings space migration', () => {
 
   it.effect('recovers a legacy space discovered after the settings space', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
 
@@ -97,7 +97,7 @@ describe('settings space migration', () => {
 
   it.effect('creates the ordering object for a profile with nothing to migrate', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       // The ordering object is an Expando; the app registers it via its schema module.
       yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));

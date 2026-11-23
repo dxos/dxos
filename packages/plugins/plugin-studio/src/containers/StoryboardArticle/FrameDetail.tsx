@@ -9,9 +9,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
 import { type Frame } from '#types';
 
+import { StudioNamespace } from '../../namespace.ts';
 import { MediaArtifactForm } from '../MediaArtifactArticle/MediaArtifactForm.tsx';
 
 export type FrameDetailProps = {
@@ -29,7 +29,7 @@ export type FrameDetailProps = {
  * companion's.
  */
 export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(StudioNamespace.key);
   // The snapshot re-renders this on frame changes; the ref is read live so the resolved artifact is
   // the live object — the surface filter checks the subject's type, which a snapshot fails.
   const [snapshot] = useObject(frame);

@@ -4,47 +4,59 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { Parser, Writer } from 'n3';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { Fact, Mapping } from '@dxos/echo-memory';
 import { SqlSparqlEngine } from '@dxos/sparql-sqlite';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
 import { buildSparql } from '../internal/sparql/query-builder.ts';
-import { type Fact } from '../types/index.ts';
-import * as Mapping from '../types/Mapping.ts';
 import * as FactStoreLive from './fact-store-live.ts';
+import { FactStore } from './fact-store.ts';
 
-const fact = (id: string, over: Partial<Fact> = {}): Fact => ({
-  id,
-  assertion: {
-    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
-    predicate: 'travelsTo',
-    object: { kind: 'entity', entity: 'paris' },
-    validFrom: '2026-06-01T00:00:00.000Z',
-  },
-  factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
-  attribution: {
-    agent: 'alice',
-    source: 'dxn:q:m1',
-    generatedAtTime: '2026-06-06T00:00:00.000Z',
-    span: { start: 3, end: 10 },
-  },
-  recordedAt: '2026-06-06T12:00:00.000Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: 'h1',
-  ...over,
-});
+const fact = (id: string, over: Partial<Fact.Encoded> = {}): Fact.Fact =>
+  Fact.make({
+    id,
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
+      predicate: 'travelsTo',
+      object: { kind: 'entity', entity: 'paris' },
+      validFrom: '2026-06-01T00:00:00.000Z',
+    },
+    factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
+    attribution: {
+      agent: 'alice',
+      source: 'dxn:q:m1',
+      generatedAtTime: '2026-06-06T00:00:00.000Z',
+      span: { start: 3, end: 10 },
+    },
+    recordedAt: '2026-06-06T12:00:00.000Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: 'h1',
+    ...over,
+  });
 
 /** A fact as stored: named graphs key statements by predicate IRI, which reads back on the fact. */
-const stored = (written: Fact): Fact => ({
-  ...written,
-  assertion: { ...written.assertion, predicateIri: Mapping.predicateOf(written) },
-});
+const stored = (written: Fact.Fact): Fact.Fact =>
+  Fact.make({
+    ...written,
+    assertion: { ...written.assertion, predicateIri: Mapping.predicateOf(written) },
+  });
 
-const termOf = (found: Fact) =>
+/** A TriG document's quads as sorted N-Quads lines, since the export's statement order is the engine's. */
+const quadSet = (trig: string): string[] =>
+  new Parser({ format: 'application/trig' })
+    .parse(trig)
+    .map((quad) =>
+      new Writer({ format: 'N-Quads' }).quadToString(quad.subject, quad.predicate, quad.object, quad.graph),
+    )
+    .sort();
+
+const termOf = (found: Fact.Fact) =>
   found.assertion.subject.kind === 'entity' ? found.assertion.subject.entity : found.assertion.subject.literal;
 
 const withFile = <A, E>(run: (path: string) => Effect.Effect<A, E>): Effect.Effect<A, E> =>
@@ -81,6 +93,56 @@ describe('FactStoreLive', () => {
           expect(facts.map((found) => found.id).sort()).toEqual(['f1', 'f2']);
           expect(facts.find((found) => found.id === 'f1')).toEqual(stored(fact('f1')));
           expect(cursor).toBe('hashA');
+        }),
+      );
+    }),
+  );
+
+  it.effect(
+    'a TriG export imports into an empty store as the same facts and ontology',
+    Effect.fnUntraced(function* () {
+      const source = FactStoreLive.makeMemory();
+      yield* source.putFacts([fact('f1'), fact('f2', { sourceHash: 'h2' })]);
+      const trig = yield* source.exportTrig();
+      expect(trig).toContain('@prefix sx:');
+      expect(trig).not.toContain('semantic#seed');
+
+      const target = FactStoreLive.makeMemory();
+      const read = yield* target.importTrig(trig);
+      expect(read).toBeGreaterThan(0);
+      expect((yield* target.query({})).map((found) => found.id).sort()).toEqual(['f1', 'f2']);
+      expect(yield* target.query({})).toEqual(yield* source.query({}));
+      expect(yield* target.predicates()).toEqual(yield* source.predicates());
+      // A second import adds nothing, since quads are a set.
+      yield* target.importTrig(trig);
+      expect(quadSet(yield* target.exportTrig())).toEqual(quadSet(trig));
+    }),
+  );
+
+  it.effect(
+    'importTrig fails on a malformed document and leaves the store as it was',
+    Effect.fnUntraced(function* () {
+      const store = FactStoreLive.makeMemory();
+      yield* store.putFacts([fact('f1')]);
+      const before = yield* store.exportTrig();
+      const exit = yield* store.importTrig('<urn:a> <urn:b> .').pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(quadSet(yield* store.exportTrig())).toEqual(quadSet(before));
+    }),
+  );
+
+  it.effect(
+    'layerFile persists facts across layer lifetimes',
+    Effect.fnUntraced(function* () {
+      yield* withFile((path) =>
+        Effect.gen(function* () {
+          yield* Effect.flatMap(FactStore, (store) => store.putFacts([fact('f1')])).pipe(
+            Effect.provide(FactStoreLive.layerFile(path)),
+          );
+          const facts = yield* Effect.flatMap(FactStore, (store) => store.query({})).pipe(
+            Effect.provide(FactStoreLive.layerFile(path)),
+          );
+          expect(facts.map((found) => found.id)).toEqual(['f1']);
         }),
       );
     }),
@@ -165,6 +227,46 @@ describe('FactStoreLive', () => {
       const selected = yield* store.select(buildSparql({ source: 'dxn:q:m1' }));
       expect(selected.map((found) => termOf(found)).sort()).toEqual(['alice', 'bob']);
       expect(yield* store.select(buildSparql({ source: 'dxn:q:none' }))).toEqual([]);
+    }),
+  );
+
+  it.effect(
+    'answers any SELECT with its solutions, and refuses anything but a SELECT',
+    Effect.fnUntraced(function* () {
+      const store = FactStoreLive.makeMemory();
+      yield* store.putFacts([
+        fact('f1', {
+          assertion: {
+            subject: { kind: 'entity', entity: 'alice', label: 'Alice', type: 'person' },
+            predicate: 'works for',
+            object: { kind: 'entity', entity: 'acme', label: 'Acme', type: 'org' },
+          },
+        }),
+      ]);
+      const people = yield* store.rows(`
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT DISTINCT ?person ?label ?nickname WHERE {
+          GRAPH ?g { ?person a <https://schema.org/Person> . OPTIONAL { ?person rdfs:label ?label } }
+          OPTIONAL { ?person <urn:none> ?nickname }
+        }`);
+      expect(people).toHaveLength(1);
+      const [row] = people;
+      expect(row.person.termType).toBe('NamedNode');
+      expect(row.person.value).toContain('alice');
+      expect(row.label).toEqual({ termType: 'Literal', value: 'Alice' });
+      // An unbound variable is absent, so a row serializes without `undefined`s.
+      expect('nickname' in row).toBe(false);
+
+      const counted = yield* store.rows('SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?g { ?s ?p ?o } }');
+      expect(counted[0]?.n?.termType).toBe('Literal');
+
+      const update = yield* store.rows('DELETE WHERE { GRAPH ?g { ?s ?p ?o } }').pipe(Effect.flip);
+      expect(update).toBeInstanceOf(SemanticIndexError);
+      // `select` runs the same engine, so it refuses an update too rather than deleting the store.
+      const selected = yield* store.select('DELETE WHERE { GRAPH ?g { ?s ?p ?o } }').pipe(Effect.flip);
+      expect(selected).toBeInstanceOf(SemanticIndexError);
+      expect(yield* store.query({})).toHaveLength(1);
+      expect(yield* store.rows('this is not sparql').pipe(Effect.flip)).toBeInstanceOf(SemanticIndexError);
     }),
   );
 

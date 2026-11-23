@@ -4,16 +4,17 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import { nudge } from './nudge.ts';
-import type * as Scene from './scene.ts';
 import { type Rect } from './uml-grid.ts';
 
-const orthogonal = (points: readonly Scene.Point[]) =>
+const orthogonal = (points: readonly Shape.Point[]) =>
   points.slice(1).every((point, index) => point.x === points[index].x || point.y === points[index].y);
 
 /** Whether two orthogonal polylines share a collinear stretch of positive length. */
-const overlapping = (first: readonly Scene.Point[], second: readonly Scene.Point[]) => {
-  const segments = (points: readonly Scene.Point[]) =>
+const overlapping = (first: readonly Shape.Point[], second: readonly Shape.Point[]) => {
+  const segments = (points: readonly Shape.Point[]) =>
     points.slice(1).map((end, index) => [points[index], end] as const);
   return segments(first).some(([a0, a1]) =>
     segments(second).some(([b0, b1]) => {
@@ -32,7 +33,7 @@ const overlapping = (first: readonly Scene.Point[], second: readonly Scene.Point
   );
 };
 
-const onBorder = (point: Scene.Point, rect: Rect) =>
+const onBorder = (point: Shape.Point, rect: Rect) =>
   ((point.y === rect.y || point.y === rect.y + rect.h) && point.x >= rect.x && point.x <= rect.x + rect.w) ||
   ((point.x === rect.x || point.x === rect.x + rect.w) && point.y >= rect.y && point.y <= rect.y + rect.h);
 

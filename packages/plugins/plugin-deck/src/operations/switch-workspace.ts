@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { DeckCapabilities } from '#types';
 
 import { Navigation, RESOLVE_TIMEOUT_MS, applyWorkspace, navigate, navigateDeck } from '../url/index.ts';
-import { firstOpenableChild, openableChildren, withViewTransition } from '../util/index.ts';
+import { firstOpenableChild, openableChildren } from '../util/index.ts';
 
 /**
  * The workspace's last URL, if it had planks. It is remembered for the session but never persisted, so a
@@ -94,9 +94,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      const { activeDeck } = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-      const entering = activeDeck !== input.subject;
-      yield* entering ? withViewTransition(applyWorkspace(input.subject)) : applyWorkspace(input.subject);
+      yield* applyWorkspace(input.subject);
       const workspace = GraphPath.getWorkspaceToken(input.subject);
       if (!workspace) {
         return;

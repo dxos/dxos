@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
+import { ScriptNamespace } from '../namespace.ts';
 
 export type FormatActionProperties = { type: 'format' };
 
@@ -39,7 +39,7 @@ export const createFormat = (script: Script.Script): ActionGraphProps => {
       }
     },
     {
-      label: ['format.label', { ns: meta.profile.key }],
+      label: ['format.label', { ns: ScriptNamespace.key }],
       icon: 'ph--magic-wand--regular',
     },
   );

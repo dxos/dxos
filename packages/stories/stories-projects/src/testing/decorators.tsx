@@ -27,7 +27,9 @@ import { translations as tasksTranslations } from '@dxos/plugin-tasks/translatio
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TagIndex, Text } from '@dxos/schema';
-import { StoryAiPlugin, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
+import * as ModuleSurfacesPlugin from '@dxos/storybook-testing/ModuleSurfacesPlugin';
+import * as StoryAiPlugin from '@dxos/storybook-testing/StoryAiPlugin';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { moduleSurfaces } from '../modules/index.ts';
@@ -80,7 +82,7 @@ export type DecoratorsProps = {
  * display label; without the owning plugin the article's skill rows and picker render empty.
  */
 export const createDecorators = ({ mailboxName, messages, ai, plugins = [], types = [] }: DecoratorsProps) =>
-  createStoryDecorators({
+  StoryHarness.decorators({
     // Skill-definition modules ride the assistant's start event, and nothing here opens assistant UI
     // or materializes a toolkit — without firing it the article's skill rows resolve to blank labels.
     setupEvents: [AppActivationEvents.AssistantStart],
@@ -117,16 +119,16 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
       await space.db.flush({ indexes: true });
     },
     plugins: [
-      SpacePlugin({}),
-      InboxPlugin(),
+      SpacePlugin.make({}),
+      InboxPlugin.make(),
       ProjectsPlugin.make(),
       // Both declared in Projects' `dependsOn`, so the manager refuses to resolve it without them.
       AssistantPlugin.make(),
       TasksPlugin.make(),
       RoutinePlugin.make(),
-      makeModuleSurfacesPlugin('org.dxos.plugin.projects.story.modules', moduleSurfaces),
+      ModuleSurfacesPlugin.make('org.dxos.plugin.projects.story.modules', moduleSurfaces),
       ...(ai
-        ? [StoryAiPlugin({ ai: ai === 'ollama' ? 'ollama' : () => mockAiService({ text: 'A concise summary.' }) })]
+        ? [StoryAiPlugin.make({ ai: ai === 'ollama' ? 'ollama' : () => mockAiService({ text: 'A concise summary.' }) })]
         : []),
       ...plugins,
     ],

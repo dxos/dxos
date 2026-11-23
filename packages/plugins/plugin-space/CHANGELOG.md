@@ -1,5 +1,237 @@
 # @dxos/plugin-space
 
+## 0.17.0
+
+### Minor Changes
+
+- 92ef425: A link can name an action that runs on the object it opens, so a public link to a presentation opens already presenting. The URL carries the action as `?action=<name>`, its DXN without the `dxn:` prefix. Plugins contribute actions with `AppCapabilities.LinkAction`, each scoped to internal or public links and to the objects it applies to; `@dxos/app-toolkit/LinkAction` adds the action to a link (`withAction`), finds it (`find`) and strips it (`withoutAction`). The deck runs the action once the object is open, and the boot loader stays up until it has run, for 10 seconds at most.
+- c9c3867: Add `ExportOperation.Print` and `ExportOperation.Save` with a per-type `AppCapabilities.Exporter` capability. Objects whose type contributes an exporter get "Print…" and "Save as file…" on their article menu. Markdown saves `.md`, sheets save `.csv`, tables save `.dx.json`, and 2D canvas drawings save `.svg`. Print opens the browser print dialog, which can save a PDF. `@dxos/util` gains `printHtml`, `htmlTable` and `escapeHtml`.
+- 6cd526c: A space can be published as a read-only copy at a public link, republished or unpublished, and forked from the link into Composer. `SpaceOperation` gains `PublishSpace`, `UnpublishSpace` and `ForkPublication`, and a space gains a `description`. A published space carries `AppAnnotation.PublicationAnnotation` on its properties; `@dxos/plugin-space/PublicationLink` builds the viewer, fork and archive links, and `@dxos/plugin-space/PublicationManifest` is the manifest the viewer host reads. A host contributes `AppCapabilities.ReadOnly` to make the app read-only: plugins read it with `ReadOnly.atom`, `ReadOnly.unless` and `ReadOnly.isActive` from `@dxos/app-toolkit/ReadOnly`, or `Hooks.useReadOnly` and `Hooks.unlessReadOnly` in components, and drop the controls, actions and background work that write. `useObjectMenuItems`, `ObjectForm` and `TableToolbar` take a `readonly` option.
+- 97de470: A space can now be migrated off its hypercore control feed onto an Automerge space root that EDGE mints, with `space.internal.migrateSpaceRoot()` or the new "Credential storage → Migrate" button in Composer's space settings. Every other member adopts that same root the next time it opens the space, and `space.internal.data.spaceRootUrl` reports the root a device has adopted. `EdgeHttpClient` gains `migrateSpaceRoot` and `getSpaceRoot`.
+
+### Patch Changes
+
+- 2ffc301: Leaner agent turn prompts. A turn keeps the system prompt it started with: a skill, operation or object bound or unbound mid-turn is announced in a notice instead, in `AiSession` and in code mode, so the prompt cache holds across the turn. Skill definitions are named (`<skill name="…">`). Turns before the last five are compacted: their tool results, reasoning and stats are dropped, and each tool call is kept as a note of its input. The stats block records prompt-cache reads and writes (`cacheReadTokens`, `cacheWriteTokens`). `Dialect` gains `operations`. `queryObjects` names every result by `dxn`, `typename` and `label`, and `includeContent` adds the object's fields beside them.
+- df16fba: Popups (menus, selects, comboboxes, popovers) no longer draw a focus ring; the highlighted item shows where focus is. In the chat prompt, the placeholder is shortened to "/ for skills, @ for content", "Add an object" is renamed "Add object", and switching between the tasks and context drawers closes the open drawer before the other opens. The search and add-to-collection dialogs keep their input's inner padding. The prompt's command completions render as a react-ui-list Listbox in a popover above the editor, at most 8 rows tall, whose arrow keys stop at the first and last command instead of wrapping; Escape closes it and leaves focus in the editor. An editor no longer moves focus to its host on an Escape CodeMirror already acted on.
+
+  A polyline locked while its vertices are being edited loses its vertex handles, Delete no longer removes a vertex from it, and a vertex drag the lock lands in the middle of neither previews nor commits a change.
+
+- 2176f79: A follower now lands where the leader is scrolled in any article inside a `ScrollArea`, with no follow code in its plugin, and an article comes back where you left it when its plank remounts. Plugins can opt a viewport out with `follow={false}` on `ScrollArea.Viewport`, follow only some fields of a `ViewState` aspect with `follow: { policy: 'write', fields }`, and mark a section with `HomeSection.Root`'s `anchor` so a follower at another width keeps it at the top.
+- 38ebf5e: Tables and sheets show other people's selected cells and ranges. Each one is outlined in the person's member hue and tagged with their name, the same name and color their Markdown cursor shows. A selection stays on its rows when anyone sorts, filters or inserts rows, and focusing a header or a table's draft row clears yours for everyone else. Selecting a commented sheet cell opens its thread only when you move to it, not when someone else's edit shifts its row.
+
+  `react-ui-grid` adds `GridSelectionModel`, the selection state both tables and sheets now use, with cells named by row and column id through a `GridAddressing`. `Grid.Root` takes an `awareness` channel and `Grid.Content` takes `addressing`. `useGridAwareness` creates that channel, a `@dxos/protocols/Awareness` channel on `awareness.selection.<id>` whose value is the selection's corner cells by id, and the grid shows one selection per member. The sheet's cursor and range now come from this model.
+
+  `dx-grid` draws `remoteSelections`, and its `dx-grid-cells-select` event carries the `range` with its plane. It adds `getSelection()`, `getFocusedCell()` and `moveSelection(range, { focus })`, and `refocus(axis, delta)` now moves the selection with focus.
+
+  In the Database section, a type that has a view (such as a table) now shows its caret before it is first expanded. A member who joins a space can now open a table from its type there.
+
+- 1a06754: `queryTypes` called with both `typenames` and `limit` now returns the named types. It used to apply `limit` to the whole sorted type list before picking out the named ones, so a named type sorting past the limit came back as `{ types: [] }`.
+- f071de2: The record view and Related panel find related objects by querying the record's references and relations directly, instead of watching every object in the space.
+- 9c5af4a: The rename popover for an object now holds its edits until Save, and shows Cancel and Save beneath the form. `ObjectProperties` takes an optional `onClose` that makes it a transient editor rather than a live pane: Save writes every edit at once and calls it, Cancel discards them and calls it. Without `onClose` the component is unchanged, so every properties pane that hosts it still writes each change as it is made. `Form.Viewport` takes a `footer` alongside `scroll`, which pins the actions below the scrolling fields so a form longer than its pane keeps Save in reach.
+- 4514d15: An object that no collection lists is now reachable through the object that owns it, so its plank resolves. A presenter slide is the case this fixes: the collection holds the presentation, not the slide, so the walk up the collection tree found nothing, the slide's URL (`object/<id>`) resolved to no path, and the plank it opened from the nav tree sat on "Loading…" for good.
+- b8e76f9: Peers' avatars now act on what they view. Clicking an avatar opens the object's viewers with that row highlighted, each with Go to (open the object where the peer has it open in the tree, such as under a collection) or Jump (reveal the peer's selection or viewport, once the object is open). A peer with the object open in several tabs or on several devices is one row whose Jump goes to the session that moved last; a toggle in the list's toolbar lists their sessions under it, each named by its device ("Chrome on macOS"), with a dot for whether it moved in the last minute. A "See everyone in this space" button opens a Members companion listing every online peer by the object they view. Revealing an anchor moved from `CommentConfig.scrollToAnchor` to a per-type `AppCapabilities.Locator`, and `LayoutOperation.ScrollIntoView` drops `cursor`. New devices no longer get a placeholder label, and `getDeviceLabel` (from `@dxos/client/halo`) treats the old placeholders as no label, so devices are named from their platform and OS. A graph node that leaves and comes back, such as a peer who visits Settings, is expanded again, so its row keeps Go to and Jump. Jump goes to a peer's caret only once they have placed one, otherwise to the top of their viewport, and the avatars open the viewers list from the keyboard too.
+- 3d22d48: You can follow a peer around a space. Follow sits next to Jump and Go to on a peer's row and follows whichever of their sessions moved last; with the sessions toggle on, each session row has a Follow that stays on that session. While you follow, your deck shows theirs: the same planks in their order, scrolled to the plank at the front of theirs, with each plank keeping their top line at the top and the companions they have open. With no planks reported, it opens the object they attend, at the path they opened it from. None of it moves your caret or focus, and they send their location every 100 ms instead of every second. A plank your deck has no URL binding for (a type from a plugin you lack) is left out, and your deck scrolls to the nearest plank of theirs it holds instead. Scrolling, clicking or typing in a plank, attending an object outside what you show of them, going back or forward in history, or pressing Escape stops it, and so does the leader being gone from the space for five seconds. A follow pauses while you cannot open what they attend and picks up again once you can. The Members tab shows a dot while you follow, and the leader's row sits first in its list with Stop. A `Locator` reveal takes `follow` to scroll without moving the caret and answers whether it revealed the anchor, so a follower whose editor mounts late still lands on the leader's line, a deck companion's `badge` atom can hold `true` to draw a dot, and `LayoutOperation.Set` takes `focus: false` to focus no plank and a `workspace` to set the planks in, as `Open` does. View state can now be followed: a `ViewState` aspect declared with `follow: 'write'` has its values for the space and each open object sent with presence, and a follower writes the leader's into its own view state; one declared `follow: 'reveal'` is sent for the follow to apply. The deck reports its front plank as the space's `ViewLocation` and its open companions as `AppCapabilities.Companions`, and the follow applies them with `LayoutOperation.ScrollIntoView` and `UpdateCompanion`. A project's view state is followed, so a follower sees the leader's tab, spec and chart; so is a presentation's slide, and a drawing's camera in tldraw, excalidraw and the 2D canvas, which a drawing variant takes as `camera` and reports with `onCameraChange`. The 2D canvas editor applies a host camera that changes while it is open. A project's view state is now keyed by its EID, so the tab each project last showed resets once. `GraphPath.getEidFromPath` names the object a graph path points at. A schema form's boolean field carries its JSON path as `data-testid`, as text fields do. Leading shows too, in amber on every screen: the Members tab's dot appears on both sides, a follower's leader row rises to the top of Members and carries Stop, and a leader sees its followers under "Following you". Every plank heading, companions included, washes in amber over a one-pixel underline while you follow or are followed, through a new `AppCapabilities.LayoutAccent` the deck applies, and those people's avatars ring in amber. A deck companion takes a `badgeHue` for its rail dot.
+- 7e07e49: Peers viewing the same object show up again. Each plank header shows an avatar for every other member viewing it, the navtree glyph counts them, and a space's row counts the peers viewing the space itself. Avatars keep one order for a given set of peers. Their rings match the attention glyph: accent for a peer attending the object, neutral gray for one who only has it open. Leaving a workspace clears your presence on what it showed. The avatar `current` status now rings with `--color-accent-bg` instead of `--color-focus`.
+- e67aa80: `ColorPicker.HueGrid` is a hue-only variant of the color picker whose value is a theme hue's name, and `HuePicker` now opens it in a popover, so every hue fits the grid and the reset button no longer covers a swatch; `HuePicker`'s `onReset` takes no event. `NumberInput` gains `stepper='start'` (the pair before the input), `stepper='split'` (decrement before the input, increment after), `stepperOnHover` (the stepper sits opposite the number and shows only while the row is hovered or focused), `align='end'` for right-aligned figures, and `slider`, a button that opens a slider over `min`..`max`. The space's Database section hides a type whose plugin is disabled (its objects stay reachable), and an object whose plugin is disabled offers a "Find plugin" button that opens the plugin registry filtered by its type. The dev-server variant of the "Composer Plugin" project template has its own id and label, so it no longer appears as a duplicate of plugin-projects' template.
+- Updated dependencies [c9a38c1]
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [2ffc301]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [710da43]
+- Updated dependencies [d338edb]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [c8d6d86]
+- Updated dependencies [f142d06]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [1ac444f]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [cfc5c42]
+- Updated dependencies [7a8b279]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [6a37f4b]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [1054c31]
+- Updated dependencies [416201f]
+- Updated dependencies [3aef671]
+- Updated dependencies [13bc40d]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2176f79]
+- Updated dependencies [2bba392]
+- Updated dependencies [38ebf5e]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [22f759a]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [b15e5c3]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [1a1012b]
+- Updated dependencies [92ef425]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [0ad95b7]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [9c5af4a]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [fba77f7]
+- Updated dependencies [02254b0]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [3d06043]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [3d22d48]
+- Updated dependencies [7e07e49]
+- Updated dependencies [6cd526c]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [101f620]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+- Updated dependencies [fe3aaf6]
+  - @dxos/types@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/cli-util@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/react-ui-masonry@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-table@0.17.0
+  - @dxos/halo@0.17.0
+  - @dxos/react-ui-pickers@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/halo-react@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/shell@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/react-ui-query@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-settings@0.17.0
+  - @dxos/plugin-status-bar@0.17.0
+  - @dxos/extractor@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/migrations@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/react-ui-dashboard@0.17.0
+  - @dxos/react-ui-dnd@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/display-name@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/progress@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

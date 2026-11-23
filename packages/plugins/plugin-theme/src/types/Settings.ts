@@ -41,5 +41,12 @@ export const Settings = Schema.Struct({
       [HueAnnotationId]: true,
     }),
   ),
+  focus: Schema.optional(
+    Accent.annotate({
+      title: 'Focus color',
+      description: 'The hue of the outline around the focused or current item.',
+      [HueAnnotationId]: true,
+    }),
+  ),
 }).mapFields(Struct.map(Schema.mutableKey));
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

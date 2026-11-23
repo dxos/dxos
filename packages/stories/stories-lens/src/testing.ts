@@ -35,11 +35,11 @@ export const control = <T extends HTMLElement>(root: HTMLElement, label: string)
   throw new Error(`Field "${label}" has no control.`);
 };
 
-/** The value shown on a select field's trigger — the schema value (`in-progress`). */
+/** The text on a select field's trigger: the option's title, else its schema value (`in-progress`). */
 export const selectValue = (root: HTMLElement, label: string): string => control(root, label).textContent ?? '';
 
 /**
- * Choose an option in a select field, by its schema value.
+ * Choose an option in a select field, by the text it shows.
  *
  * The options render in a portal outside the story canvas, so they are found on `document.body`.
  */

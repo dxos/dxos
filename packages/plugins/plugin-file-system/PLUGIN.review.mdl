@@ -1,7 +1,7 @@
 ---
 spec: github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl
-commit: 6583de2d32521afaaa701ae02adb29d67b372011
-date: 2026-10-23
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
 by: agent:claude-code
 ---
 
@@ -33,14 +33,15 @@ Other notes:
 - Opening a folder writes to disk (`.composer/meta.json`, `.composer/filemap.json`, and an
   `org.dxos.dxn` xattr on every markdown file).
 - Closing a workspace leaves its mirror ECHO space behind.
-- Of 40 items, 7 are done, 14 untested, 10 partial, 3 diverged and 6 missing. Only one test file exercises
-  spec items: `app-graph-builder.test.ts` covers the data types, nested-directory expansion (F-4.2) and graph
-  sync on state replacement (part of F-3.1). `plugin.test.ts` builds the plugin with all seven modules but checks
-  only that `OperationHandler` activates. Nothing tests open, close, refresh, save-to-disk, ordering, settings, or
-  the `FileSystem` service.
-- The new `FileSystem` service matches its interface on both backends (Tauri fs and the dev route `/__dx/fs`) but
-  has no test of its own: plugin-code's `sync.test.ts` replaces it with an in-memory stand-in, and the dev route has
-  no test. As its note says, the plugin's own workspace code does not use it yet.
+- Of 40 items: 8 done, 13 untested, 10 partial, 3 diverged, 6 missing. Two test files exercise spec items:
+  `app-graph-builder.test.ts` covers the data types, nested-directory expansion (F-4.2) and graph sync on state
+  replacement (part of F-3.1), and composer-app's `file-system.test.ts` covers the dev route's path rules for the
+  `FileSystem` service. `plugin.test.ts` builds the plugin with all seven modules but checks only that
+  `OperationHandler` activates. Nothing tests open, close, refresh, save-to-disk, ordering or settings.
+- The `FileSystem` service matches its interface on both backends (Tauri fs and the dev route `/__dx/fs`) and now
+  also carries an optional `git` member the spec does not list. Only the dev route's root and `.mdl` rules are tested;
+  plugin-code's `sync.test.ts` replaces the client with an in-memory stand-in. As its note says, the plugin's own
+  workspace code does not use it yet.
 - No scenario or QA test is exercised end to end. T-1 and T-4 are partly exercised: the graph test asserts the
   navtree shape that their `then:` clauses describe, from seeded state. T-2, T-3, T-5, T-6 and QA-1 are run by
   nothing (QA-1 is blocked to agents, since the plugin loads only under Tauri).
@@ -57,14 +58,14 @@ Other notes:
 verdict FileSystemPlugin: The plugin adds exactly the seven listed modules, under the spec's id.
   status: done
   evidence:
-    [github:dxos/dxos/packages/plugins/plugin-file-system/src/plugin.tsx#FileSystemPlugin,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#AppGraphBuilder,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#Markdown,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#OperationHandler,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#PluginAsset,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#ReactSurface,
+    [github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
      github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/index.ts#State,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#Translations]
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-file-system/src/plugin.test.ts]
   note: |
     The module list and order match `plugin.tsx`. Two module descriptions are loose: `Markdown` is a save-to-disk
@@ -131,8 +132,8 @@ verdict WorkspaceSettings: The settings form edits icon and hue and can remove t
 ```
 
 ```mdl
-verdict FileSystem: Both backends implement available, read, write, remove, list and roots as specified; no test exercises either one.
-  status: untested
+verdict FileSystem: Both backends implement available, read, write, remove, list and roots; the dev route's path rules are tested.
+  status: done
   evidence:
     [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#FileSystem,
      github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#get,
@@ -140,13 +141,16 @@ verdict FileSystem: Both backends implement available, read, write, remove, list
      github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#tauriFileSystem,
      github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#devFileSystem,
      github:dxos/dxos/packages/apps/composer-app/src/vite/file-system.ts#fileSystemPlugin]
+  tests: [github:dxos/dxos/packages/apps/composer-app/src/vite/file-system.test.ts]
+  walkthrough:
+    - The service type declares the six operations and an optional git member. github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#FileSystem
+    - get() picks the Tauri backend under Tauri and the dev route otherwise, once. github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#get
+    - The dev server route reads inside the workspace and DX_FS_ROOTS and writes only .mdl files. github:dxos/dxos/packages/apps/composer-app/src/vite/file-system.ts#fileSystemPlugin
   note: |
-    Exported as `@dxos/plugin-file-system/FileSystem`; `get()` picks Tauri when `isTauri()`, else the dev route, lazily.
-    The dev route reads inside the workspace root and `DX_FS_ROOTS`, writes and removes only `.mdl`, and creates parent
-    directories. Small differences: `list` also skips `dist` and `target` (not only dot-dirs and node_modules) and the
-    dev route caps a listing at 5000 files; the Tauri `roots()` always returns `[]`; the object carries an extra `kind`.
-    The plugin's own workspace code does not use the service, as the note says. plugin-code's `sync.test.ts` uses an
-    in-memory stand-in, so neither backend is tested.
+    `file-system.test.ts` tests the route's root containment, symlink and `.mdl`-only rules, not the client or the Tauri
+    backend. Small differences: `list` also skips `dist` and `target`; the Tauri `roots()` always returns `[]`; the
+    service now carries an optional `git` member the spec does not list. The plugin's own workspace code does not use
+    the service, as the note says.
 ```
 
 ```mdl
@@ -329,7 +333,7 @@ verdict F-5.1: The registered Markdown extension is a save-to-disk listener; the
   status: diverged
   evidence:
     [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/markdown-extension.ts#extensionProvider,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#Markdown]
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts]
   note: The outcome the requirement wants (same editor surface) holds, but not because of the extension. The `ExtensionProvider` is a `listener` that writes edits back to disk. Reword the requirement.
 ```
 

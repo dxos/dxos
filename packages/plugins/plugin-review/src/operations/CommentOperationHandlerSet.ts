@@ -19,6 +19,8 @@ export const handlers = OperationHandlerSet.lazy([
   CommentOperation.Restore.pipe(Operation.lazyHandler(() => import('./restore.ts'))),
   CommentOperation.RestoreMessage.pipe(Operation.lazyHandler(() => import('./restore-message.ts'))),
   CommentOperation.Select.pipe(Operation.lazyHandler(() => import('./select.ts'))),
+  CommentOperation.SendNotifications.pipe(Operation.lazyHandler(() => import('./send-notifications.ts'))),
   CommentOperation.SetAgentConfig.pipe(Operation.lazyHandler(() => import('./set-agent-config.ts'))),
   CommentOperation.SetResolved.pipe(Operation.lazyHandler(() => import('./set-resolved.ts'))),
+  CommentOperation.SetSubscription.pipe(Operation.lazyHandler(() => import('./set-subscription.ts'))),
 ]);

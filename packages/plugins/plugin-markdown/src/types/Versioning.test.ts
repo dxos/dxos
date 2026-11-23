@@ -10,8 +10,13 @@ import { Branch, Version } from '@dxos/versioning';
 import * as Markdown from './Markdown.ts';
 
 describe('Versioning schema', () => {
-  test('document accepts an optional history struct', () => {
+  test('a made document starts with an empty history, so its first entry is an insert, not an assignment', () => {
     const doc = Markdown.make({ content: 'hello' });
+    expect(doc.history).toEqual({ branches: [], versions: [] });
+  });
+
+  test('a document without a history still accepts one', () => {
+    const doc = Obj.make(Markdown.Document, { content: Markdown.make().content });
     expect(doc.history).toBeUndefined();
 
     Obj.update(doc, (doc) => {

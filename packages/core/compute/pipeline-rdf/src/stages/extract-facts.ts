@@ -6,6 +6,7 @@ import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
+import { Fact, Graph, Hash, Ontology, Vocabularies } from '@dxos/echo-memory';
 import { Stage } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from '../errors.ts';
@@ -17,16 +18,13 @@ import {
   extractChunk,
   extractTranscript,
 } from '../internal/stages/extract.ts';
-import { hashText } from '../internal/stages/reconcile.ts';
 import {
-  type EntityTerm,
-  type ExtractDocument,
-  type ExtractOptions,
-  type Fact,
-  Graph,
-  type KnownEntity,
-  Ontology,
-} from '../types/index.ts';
+  DEFAULT_DECISION_MODEL,
+  DEFAULT_EXTRACTION_MODEL,
+  type Report as SystemOneReport,
+  extractSystemOne,
+} from '../internal/stages/system-one.ts';
+import { type ExtractDocument, type ExtractOptions, type KnownEntity } from '../types/index.ts';
 
 const EMAIL = /^(?:mailto:)?([^\s@]+@[^\s@]+\.[^\s@]+)$/i;
 const URL_PATTERN = /^https?:\/\/\S+$/i;
@@ -49,7 +47,7 @@ export const normalizeEntityId = (label: string) => {
   }
   const normalized = trimmed.toLowerCase();
   const value = normalized.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  return value || `entity-${hashText(normalized)}`;
+  return value || `entity-${Hash.text(normalized)}`;
 };
 
 /**
@@ -83,13 +81,18 @@ const indexEntities = (entities: ReadonlyArray<KnownEntity>): Map<string, KnownE
  * The term for a mention: a known entity's stable IRI when the mention names one, else its slug, which the store keeps
  * local to the mention's graph.
  */
-const entityTerm = (surface: string, type: EntityTerm['type'], known: ReadonlyMap<string, KnownEntity>): EntityTerm => {
+const entityTerm = (
+  surface: string,
+  type: Fact.EntityTerm['type'],
+  known: ReadonlyMap<string, KnownEntity>,
+): Fact.EntityTerm => {
   const entity = known.get(nameKey(surface));
   const kind = type ?? entity?.type;
   return {
     kind: 'entity',
-    entity: entity?.iri ?? normalizeEntityId(surface),
-    label: surface.trim(),
+    entity: Fact.EntityKey.make(entity?.iri ?? normalizeEntityId(surface)),
+    // A known entity keeps its own name, so every mention of it reads the same whichever form the text used.
+    label: entity?.label ?? surface.trim(),
     ...(kind ? { type: kind } : {}),
   };
 };
@@ -98,6 +101,7 @@ const entityTerm = (surface: string, type: EntityTerm['type'], known: ReadonlyMa
 type FactContext = {
   readonly recordedAt: string;
   readonly ontology: Ontology.Ontology;
+  readonly closed: boolean;
   readonly known: ReadonlyMap<string, KnownEntity>;
 };
 
@@ -108,13 +112,21 @@ const factContext = (options: ExtractOptions | undefined) =>
     const recordedAt = new Date(yield* Clock.currentTimeMillis).toISOString();
     return {
       recordedAt,
-      ontology: options?.ontology ?? Ontology.DEFAULT,
+      ontology: options?.ontology ?? Vocabularies.DEFAULT,
+      closed: options?.closed ?? false,
       known: indexEntities(options?.entities ?? []),
     } satisfies FactContext;
   });
 
+const LLM_EXTRACTOR: Fact.Fact['extractor'] = { id: 'default', model: DEFAULT_MODEL, version: '1' };
+
 /** A candidate the model emitted, as a {@link Fact} attributed to `doc`; `undefined` when it is ungrounded. */
-const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactContext): Fact | undefined => {
+const toFact = (
+  candidate: ExtractedFact,
+  doc: ExtractDocument,
+  context: FactContext,
+  extractor: Fact.Fact['extractor'] = LLM_EXTRACTOR,
+): Fact.Fact | undefined => {
   // Drop ungrounded propositions before they become facts.
   if (!isGrounded(candidate.subject) || !isGrounded(candidate.object)) {
     return undefined;
@@ -132,10 +144,14 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
   // A listed predicate is stored under its IRI and label; any other is minted in the ontology's namespace and
   // keeps the definition the extractor gave it.
   const listed = context.ontology.find(candidate.predicate);
+  // A closed ontology conforms the graph to its vocabularies, so a model that mints anyway loses the proposition.
+  if (!listed && context.closed) {
+    return undefined;
+  }
   const predicate = listed ?? context.ontology.resolve(candidate.predicate);
   return {
     // Replaced by the statement's id once the facts are placed in their graphs.
-    id: '',
+    id: Fact.FactId.make(''),
     assertion: {
       subject: entityTerm(candidate.subject, candidate.subjectType, context.known),
       predicate: listed?.label ?? candidate.predicate.trim(),
@@ -154,24 +170,29 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
     },
     ...(illocution ? { illocution } : {}),
     attribution: {
-      ...(doc.author ? { agent: normalizeEntityId(doc.author) } : {}),
-      source: doc.source,
+      ...(doc.agent
+        ? { agent: Fact.EntityKey.make(doc.agent) }
+        : doc.author
+          ? { agent: Fact.EntityKey.make(normalizeEntityId(doc.author)) }
+          : {}),
+      ...(doc.agent && doc.author ? { agentLabel: doc.author } : {}),
+      source: Fact.SourceUri.make(doc.source),
       generatedAtTime: doc.date ?? context.recordedAt,
     },
     recordedAt: context.recordedAt,
-    extractor: { id: 'default', model: DEFAULT_MODEL, version: '1' },
-    sourceHash: hashText(doc.text),
+    extractor,
+    sourceHash: Hash.text(doc.text),
   };
 };
 
 /** Place one document's facts in their graphs: statements that share provenance and the model's graph label share one. */
 const placeFacts = (
   doc: ExtractDocument,
-  labelled: ReadonlyArray<readonly [Fact, string]>,
+  labelled: ReadonlyArray<readonly [Fact.Fact, string]>,
   ontology: Ontology.Ontology,
-): Fact[] => {
+): Fact.Fact[] => {
   const labels = new Map(labelled);
-  const hash = hashText(doc.text);
+  const hash = Hash.text(doc.text);
   return Graph.assign(
     labelled.map(([fact]) => fact),
     { name: (fact) => `${doc.source}#${hash}#${labels.get(fact) ?? ''}`, ontology },
@@ -186,11 +207,19 @@ const placeFacts = (
 export const extractDocFacts = (
   doc: ExtractDocument,
   options?: ExtractOptions,
-): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
+): Effect.Effect<Fact.Fact[], SemanticIndexError, AiService.AiService> =>
+  options?.extractor === 'system-one'
+    ? extractSystemOneDocFacts(doc, options).pipe(Effect.map(({ facts }) => facts))
+    : extractLlmDocFacts(doc, options);
+
+const extractLlmDocFacts = (
+  doc: ExtractDocument,
+  options?: ExtractOptions,
+): Effect.Effect<Fact.Fact[], SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     const context = yield* factContext(options);
     // The graph label the model gave each statement.
-    const labelled: Array<readonly [Fact, string]> = [];
+    const labelled: Array<readonly [Fact.Fact, string]> = [];
     for (const chunkText of chunk(doc.text)) {
       const payload = yield* extractChunk({ ...doc, text: chunkText }, options);
       for (const candidate of payload.facts) {
@@ -201,6 +230,39 @@ export const extractDocFacts = (
       }
     }
     return placeFacts(doc, labelled, context.ontology);
+  });
+
+/** What System One extraction of one document produced, with how each claim was routed. */
+export type SystemOneDocFacts = { readonly facts: Fact.Fact[]; readonly report: SystemOneReport };
+
+export type { SystemOneReport };
+
+/**
+ * {@link extractDocFacts} through System One: its facts record `extractor.id` `system-one`, and those of the claims it
+ * handed to the LLM `system-one-fallback`, so the two paths can be compared in one store.
+ */
+export const extractSystemOneDocFacts = (
+  doc: ExtractDocument,
+  options?: ExtractOptions,
+): Effect.Effect<SystemOneDocFacts, SemanticIndexError, AiService.AiService> =>
+  Effect.gen(function* () {
+    const context = yield* factContext(options);
+    const { candidates, report } = yield* extractSystemOne(doc, options);
+    const systemOne: Fact.Fact['extractor'] = {
+      id: 'system-one',
+      model: `${options?.systemOne?.extractionModel ?? DEFAULT_EXTRACTION_MODEL}+${options?.systemOne?.decisionModel ?? DEFAULT_DECISION_MODEL}`,
+      version: '1',
+    };
+    const fallback: Fact.Fact['extractor'] = {
+      id: 'system-one-fallback',
+      model: options?.model ?? DEFAULT_MODEL,
+      version: '1',
+    };
+    const labelled = candidates.flatMap(({ fact: candidate, via }) => {
+      const fact = toFact(candidate, doc, context, via === 'system-one' ? systemOne : fallback);
+      return fact ? [[fact, `${via}:${candidate.graph ?? ''}`] as const] : [];
+    });
+    return { facts: placeFacts(doc, labelled, context.ontology), report };
   });
 
 /**
@@ -292,10 +354,35 @@ export const extractTranscriptFacts = (
   docs: readonly ExtractDocument[],
   options?: ExtractOptions & { readonly maxTranscriptChars?: number },
 ): Effect.Effect<DocumentFacts[], SemanticIndexError, AiService.AiService> =>
+  options?.extractor === 'system-one'
+    ? // System One reads one message at a time; the messages before it in the batch resolve its references.
+      Effect.forEach(docs, (doc, index) =>
+        extractDocFacts(withContext(doc, docs.slice(Math.max(0, index - CONTEXT_MESSAGES), index)), options).pipe(
+          Effect.map((facts) => ({ doc, facts })),
+        ),
+      )
+    : extractLlmTranscriptFacts(docs, options);
+
+/** How many earlier messages of a batch System One reads alongside each message. */
+const CONTEXT_MESSAGES = 5;
+
+/** Appends the batch window to any context the caller supplied, which predates the window. */
+const withContext = (doc: ExtractDocument, earlier: readonly ExtractDocument[]): ExtractDocument => {
+  if (earlier.length === 0) {
+    return doc;
+  }
+  const window = earlier.map((message) => `${message.author ?? 'unknown'}: ${message.text}`).join('\n');
+  return { ...doc, context: doc.context ? `${doc.context}\n${window}` : window };
+};
+
+const extractLlmTranscriptFacts = (
+  docs: readonly ExtractDocument[],
+  options?: ExtractOptions & { readonly maxTranscriptChars?: number },
+): Effect.Effect<DocumentFacts[], SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     const context = yield* factContext(options);
     const tagged = docs.map((doc, index): TaggedDoc => ({ tag: `m${index + 1}`, doc }));
-    const labelled = new Map<TaggedDoc, Array<readonly [Fact, string]>>(tagged.map((entry) => [entry, []]));
+    const labelled = new Map<TaggedDoc, Array<readonly [Fact.Fact, string]>>(tagged.map((entry) => [entry, []]));
     for (const transcript of packTranscripts(tagged, options?.maxTranscriptChars ?? DEFAULT_MAX_TRANSCRIPT_CHARS)) {
       const label = transcript.docs.map(({ doc }) => doc.source).join(',');
       const payload = yield* extractTranscript(transcript.text, label, options);
@@ -320,13 +407,13 @@ export const extractTranscriptFacts = (
 export const extractFacts = (
   docs: readonly ExtractDocument[],
   options?: ExtractOptions,
-): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
+): Effect.Effect<Fact.Fact[], SemanticIndexError, AiService.AiService> =>
   Effect.forEach(docs, (doc) => extractDocFacts(doc, options)).pipe(Effect.map((arrays) => arrays.flat()));
 
 /** Output of the fact stages: the source document together with the facts derived from it. */
 export type DocumentFacts = {
   readonly doc: ExtractDocument;
-  readonly facts: readonly Fact[];
+  readonly facts: readonly Fact.Fact[];
 };
 
 /**
@@ -349,11 +436,11 @@ export const extractFactsStage = (
  * The ontology a stage extracts with, grown by the predicates each document mints, so the next document is shown
  * them and reuses them instead of minting a variant. It lives as long as the stage.
  */
-export const growingOntology = (initial: Ontology.Ontology = Ontology.DEFAULT) => {
+export const growingOntology = (initial: Ontology.Ontology = Vocabularies.DEFAULT) => {
   let ontology = initial;
   return {
     current: () => ontology,
-    learn: (facts: readonly Fact[]) => {
+    learn: (facts: readonly Fact.Fact[]) => {
       ontology = ontology.include(Graph.mintedPredicates(facts, ontology));
     },
   };

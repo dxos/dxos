@@ -12,6 +12,10 @@
     flex-direction: column;
     gap: var(--dx-gap-size);
   }
+  /* A compact set (a vector's axes) sits under its legend as a field's control sits under its label. */
+  .dx-fieldset[data-compact]:not(.dx-container) {
+    gap: 0;
+  }
   /* A grid set (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
   .dx-fieldset.dx-container {
     row-gap: inherit;
@@ -28,7 +32,8 @@
     row-gap: calc(var(--dx-gap-size) / 2);
     padding: var(--dx-gap-size);
     border: 1px solid var(--color-separator);
-    border-radius: var(--radius-md, 0.375rem);
+    /* A group inset in a form reads as part of its rows, so it takes the control radius rather than a card's. */
+    border-radius: var(--radius-sm, 0.25rem);
   }
   /* The set spans no `full` lines, so an inheriting grid inside it (a Collapsible Content) spans the set's tracks. */
   .dx-fieldset.dx-container[data-inset] > .dx-container[data-gutter='inherit'] {
@@ -88,6 +93,10 @@
     font-size: var(--text-lg);
     line-height: var(--text-lg--line-height);
     color: var(--color-fg);
+  }
+  /* Sections stand apart: each after the first leaves a wider gap above its heading than the rows inside it. */
+  .dx-fieldset:has(> .dx-fieldset-legend[data-variant='section']):not(:first-child) {
+    margin-block-start: calc(var(--dx-gap-size) * 3);
   }
   /* The section's subtitle reads at the body size in the description colour, as a settings row's description does. */
   .dx-fieldset-legend[data-variant='section'] + .dx-field-helper {

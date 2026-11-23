@@ -15,7 +15,7 @@ import * as Role from '../../../common/Role.ts';
 import { Capability, Plugin } from '../../../core/index.ts';
 import { createTestApp } from '../../../testing/harness.ts';
 import { render } from '../../../testing/react.tsx';
-import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent.tsx';
+import { SurfaceComponent, useIsSurfaceAvailable, useSurfaceContributions, useSurfaces } from './SurfaceComponent.tsx';
 import { getMountedSurfaces, setSurfaceDebug } from './SurfaceDebug.tsx';
 import { surfaceMetrics } from './SurfaceMetrics.ts';
 import { SurfaceProfilerProvider } from './SurfaceProfilerContext.tsx';
@@ -187,6 +187,20 @@ describe('SurfaceComponent demand activation', () => {
       act(() => bump());
       expect(view.getByTestId('gated-available').textContent).toBe('true');
     });
+  });
+
+  test("a caller subscribed to the role's contributions re-checks once the gated module contributes", async ({
+    expect,
+  }) => {
+    await using harness = await createTestApp({ plugins: [GatedPlugin()] });
+    const Probe = () => {
+      const isSurfaceAvailable = useIsSurfaceAvailable();
+      useSurfaceContributions(RoleGated);
+      return <span data-testid='gated-watched'>{String(isSurfaceAvailable({ type: RoleGated }))}</span>;
+    };
+    const view = render(harness, <Probe />);
+    // No re-render is forced: the contribution arriving is what renders the probe again.
+    await vi.waitFor(() => expect(view.getByTestId('gated-watched').textContent).toBe('true'));
   });
 });
 

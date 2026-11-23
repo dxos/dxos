@@ -1,0 +1,77 @@
+---
+title: Agents
+description: A model in a loop, acting in a space, with an identity of its own when it is given one.
+---
+
+import Diagram from '../../../../../components/Diagram.astro';
+
+An agent is a model in a loop. Each turn it reads the chat, calls operations, reads their results and answers. A SAGE
+agent runs as a durable process, so it keeps going while no one is watching, and it can have an identity of its own.
+
+## Model
+
+SAGE runs the loop as a process, and keeps the agent and its chats as objects in the space:
+
+- An **agent** object holds a name, instructions, the skills it starts with, and a switch that turns its automation on
+  or off. It can also hold the DID of an identity. Its chats are children of it in the space.
+- A **chat** is the conversation an agent works in. It holds a feed of messages, the model and settings for the
+  session, the skills enabled in it, the objects added to it, and the tasks of the agent's plan.
+
+A chat with no agent is a plain chat, such as one with Composer's assistant. The assistant is the chat panel in
+Composer, where a person works with a model directly.
+
+### Turns
+
+A chat runs as an agent [process](/docs/edge/concepts/processes/), and a message is input to that process. A **turn**
+is what the process runs for that message. In a turn, it calls the model, invokes the
+[operations](/docs/sage/concepts/tools/) the model asks for, feeds the results back, and repeats until the model
+answers.
+
+Between turns the process is idle. It hibernates while it waits on a timer or a sub-agent.
+
+The diagram follows one turn from top to bottom. Each column is a party to the turn, and each arrow is a message or a
+call:
+
+<Diagram name="sage-turn" alt="A person writes in a chat; the agent process calls the model, the model asks for an operation, the process invokes it on the space's ECHO objects, returns the result, and the model answers in the chat." />
+
+### Identity
+
+An agent can have a HALO identity of its own, named by a DID. EDGE creates the identity, and the agent object records
+the DID. Composer asks for one when it creates an agent only while its "Create identities for agents" setting is on,
+and the setting is off by default.
+
+With an identity, the agent owns a space of its own, and an admin can admit it to a shared space as a member, as
+they would a person. The DID lets content name the agent as its author, apart from the person who asked and from
+other agents. See HALO's [Identities and devices](/docs/halo/concepts/identities-devices/).
+
+An agent's identity is not an agent device. An agent device is a device of a person's identity, of kind
+`agent-managed`, whose key EDGE holds. See EDGE's [Identity services](/docs/edge/concepts/identity-services/).
+
+### Delegation
+
+**Delegation** is an agent handing tasks in its plan to sub-agents. Each sub-agent runs as a child process, and the
+parent's turn ends when its own reply is done. When a child finishes, the parent wakes, reads the child's result,
+updates the task and posts what it found.
+
+### Outside loops
+
+An agent loop from elsewhere, such as the Claude Agent SDK, can run in a **host**, which is a local Node process on a
+device. It brings its own tools and loop, and DXOS keeps its output as messages in the chat's feed, like any other
+agent's.
+
+## Behavior
+
+- By default, an agent's chats run on EDGE, so it answers messages and fires its triggers while every device is
+  offline. A plain chat runs in the app.
+- An agent sees the objects added to its chat and anything it can query in the space. It changes them only through
+  operations.
+- If you turn an agent off, its triggers turn off too.
+
+## Limits
+
+- An agent can do only what its operations do. If no operation it can reach changes a kind of object, the agent cannot
+  change it.
+- An agent without an identity has no DID. No space can admit it as a member, and nothing can name it as an author.
+- An outside agent loop runs only on the device that hosts it, and only while that device is online.
+- An agent on EDGE uses a hosted model. Local models are reachable only from the device that runs them. See
+  [Models](/docs/sage/concepts/models/).

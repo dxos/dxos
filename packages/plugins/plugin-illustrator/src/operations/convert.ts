@@ -6,9 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
-import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { CreatedFrom } from '@dxos/types';
 
 import { convertByScene } from '#model';
 import { Drawing, DrawingOperation, IllustratorCapabilities, IllustratorError } from '#types';
@@ -23,7 +25,7 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
         return yield* Effect.fail(new IllustratorError.SameVariant({ context: { variant: variantId } }));
       }
       const variants = yield* Capability.getAll(IllustratorCapabilities.VariantProvider);
-      const to = variants.find((entry) => entry.id === variantId);
+      const to = IllustratorCapabilities.findVariant(variants, variantId);
       if (!to) {
         return yield* Effect.fail(new UnknownDrawingVariantError(variantId));
       }
@@ -43,13 +45,34 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
         // A hidden canvas no drawing references is orphaned; one another drawing still uses must stay.
         const sharing = yield* Database.query(Filter.type(Drawing.Drawing, { canvas: Ref.make(source) })).run;
         if (sharing.length === 0) {
-          yield* Database.remove(source);
+          // A typed canvas owns other objects (a scene canvas its layouts, say), which its variant removes with it.
+          if (from.canvasType !== undefined && from.removeCanvas) {
+            yield* from.removeCanvas(source);
+          } else {
+            yield* Database.remove(source);
+          }
         }
       } else {
-        result = Drawing.make({ name: drawing.name, canvas: target });
-        // Filed beside the source, else where a new drawing goes by default, so it shows in the navigator.
+        // The source stays, so the copy records it as what it was made from; a replaced source is removed instead.
+        yield* Database.add(
+          CreatedFrom.make({
+            [Relation.Source]: target,
+            [Relation.Target]: source,
+            reason: 'conversion',
+            createdAt: new Date().toISOString(),
+          }),
+        );
+        // Filed beside the source, else by default, so it shows in the navigator; plugin-space files it, since on EDGE
+        // this plugin's bundle has no default-parent rule.
         const [beside] = yield* Database.query(ContainerModel.containing(drawing)).run;
-        yield* ContainerModel.add({ object: result, target: beside ?? (yield* DefaultParent.resolve(result)) });
+        const { db } = yield* Database.Service;
+        const added = yield* Operation.invoke(
+          SpaceOperation.AddObject,
+          { object: Drawing.make({ name: drawing.name, canvas: target }), target: beside && Ref.make(beside) },
+          { spaceId: db.spaceId },
+        );
+        invariant(Obj.instanceOf(Drawing.Drawing, added.object), 'Expected a Drawing.');
+        result = added.object;
       }
 
       const { scene: converted, unmanaged } = to.builder.read(target);

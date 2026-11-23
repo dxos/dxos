@@ -7,13 +7,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    IbkrPlugin: 'src/IbkrPlugin.ts',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
-    meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
     skills: 'src/skills/index.ts',
     translations: 'src/translations.ts',
     Ibkr: 'src/types/Ibkr.ts',

@@ -1,0 +1,430 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-assistant/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: AssistantPlugin
+
+The core chat loop is solid and broadly tested: chat creation with default skill bindings, streaming,
+automatic naming after the first prompt, `BindChatContext`, skill binding from the registry and slash
+commands, trace capture, and the struggle-report hook (`AnalyzeTurn`) all have node tests. The spec's
+data model has drifted. `Chat` has no `messages` array: it holds a ref to an ECHO `Feed` of
+`@dxos/types` `Message` objects, which carry `sender` and content `blocks` rather than `role` and
+`content`. `ModelProvider` is an open DXN, not a three-value literal. `ToggleTracePanelDebug` is now
+`SetTracePanelDebug`, which takes a required `state` and no longer flips. `CreateChat` returns an
+unfiled chat and has no `db` or `addToSpace` input.
+
+The clearest gap is `OnCreateSpace`. The assistant contributes no `SpaceCapabilities.OnCreateSpace`, so
+F-6.2 is missing. `EnsureCompanionChat`, `RunPromptInNewChat`, the code-mode turn producer and the
+resolver fallback chain are implemented but no test drives them. No scenario except T-1 (partly) has
+automation.
+
+Of 55 items: 17 done, 17 untested, 4 partial, 7 diverged, 10 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ModelProvider: An open DXN validated by DXN.Schema, not the edge | ollama | lmstudio literal.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/Settings.ts#ModelProvider, github:dxos/dxos/packages/plugins/plugin-assistant/src/types/Settings.ts#ModelProviders]
+  note: Third-party providers define their own DXN; the known ones come from the `@dxos/ai` provider registry.
+```
+
+```mdl
+verdict ChatView: The four literals normal, summary, thinking and debug, defined in react-ui-assistant.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-assistant/src/types.ts#ChatView]
+  note: No test checks the schema.
+```
+
+```mdl
+verdict ModelDefaults: Struct with optional edge, ollama and lmstudio model names.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/Settings.ts#ModelDefaults]
+  note: No test.
+```
+
+```mdl
+verdict Settings: All seven spec fields exist, plus defaultAgent and traceProcessEnvironments.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/Settings.ts#Settings]
+  note: The two extra fields are not in the spec. No test decodes the schema.
+```
+
+```mdl
+verdict Chat: Chat holds name, a Feed ref, instructions, session and tasks; there is no messages array.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/compute/assistant/src/types/Chat.ts#Chat]
+  note: Messages live in the referenced ECHO `Feed`, not on the chat object.
+```
+
+```mdl
+verdict Message: Message has sender, created and content blocks, not role, content and timestamp.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Message.ts#Message]
+  note: "`sender` is an `Actor` (with a role), `blocks` is an array of `ContentBlock`, and `created` replaces `timestamp`."
+```
+
+```mdl
+verdict SkillForm: Struct with key, name and optional description, used as the skill create-object form.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/AssistantOperation.ts#SkillForm, github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/create-object.ts]
+  note: No test.
+```
+
+```mdl
+verdict ChatPanel: ChatArticle provides toolbar, thread and prompt and takes companionTo; there is no clearHistory action.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.tsx#ChatArticle, github:dxos/dxos/packages/plugins/plugin-assistant/src/hooks/useChatToolbarActions.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.stories.tsx]
+  note: |
+    The view type is per chat (`chat.viewType`, falling back to `settings.chatView`) and switched from the toolbar.
+    There are no `toolbar` / `empty` slots and no clear-history action. The stories send messages in play functions.
+```
+
+```mdl
+verdict TracePanel: The panel shows a space's processes and trace feed, not one chat's trace, and reads debug from settings.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.tsx#TracePanel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.stories.tsx]
+  note: Props are space-article props; there is no `chat` prop and no internal toggle action.
+```
+
+```mdl
+verdict AssistantSettings: Schema-driven form over Settings with select fields for provider and per-provider models.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/AssistantSettings/AssistantSettings.tsx#AssistantSettings]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/AssistantSettings/AssistantSettings.stories.tsx]
+```
+
+```mdl
+verdict CreateChat: Creates a Chat with a stored Feed and default bindings, returned unfiled; no db or addToSpace input.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/AssistantOperation.ts#CreateChat, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/create-chat.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/plugin.test.ts]
+  walkthrough:
+    - The definition takes name, instructions and an optional feed, with Database.Service supplying the space. github:dxos/dxos/packages/plugins/plugin-assistant/src/types/AssistantOperation.ts#CreateChat
+    - The handler adds the feed, makes the chat and binds the default skills; the caller files the chat. github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/create-chat.ts
+  note: The caller adds the chat with `SpaceOperation.AddObject`; the spec's `addToSpace` flag no longer exists.
+```
+
+```mdl
+verdict UpdateChatName: Asks claude-haiku for a title from the first prompt or the feed history and writes chat.name.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/AssistantOperation.ts#UpdateChatName, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/update-chat-name.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/chat-name.node.test.ts]
+  note: Takes an optional `prompt` input the spec does not list.
+```
+
+```mdl
+verdict AnalyzeTurn: TurnReviewSkill's async end-request hook reviews the turn and reports a struggle.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/skills/turn-review/TurnReviewSkill.ts#AnalyzeTurn, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/analyze-turn.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/analyze-turn.test.ts]
+  note: The spec gives no key; the code declares the op in the skill module.
+```
+
+```mdl
+verdict SetCurrentChat: Stores the chat URI per companion in state, or creates and caches a transient chat when none is given.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/AssistantOperation.ts#SetCurrentChat, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/set-current-chat.ts]
+  note: "`current-chat.test.ts` tests reading the stored URI back, not the handler."
+```
+
+```mdl
+verdict RunPromptInNewChat: The handler creates and files a chat, binds objects and space skills, then runs or opens the prompt.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts]
+  note: Defined in plugin-routine as the spec says. Skill keys match only `Skill` objects in the space, not registry skills. No test.
+```
+
+```mdl
+verdict EnsureCompanionChat: Returns the latest persisted child chat, else a cached transient one, else creates a transient one; binds context each time.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/AssistantOperation.ts#EnsureCompanionChat, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/ensure-companion-chat.ts]
+  note: Input is only `companionTo`; the database comes from `Database.Service`. No test invokes it.
+```
+
+```mdl
+verdict OnCreateSpace: The assistant contributes no OnCreateSpace capability.
+  status: missing
+  note: "`SpaceCapabilities.OnCreateSpace` exists in plugin-space, but only plugin-onboarding contributes one; `plugin.ts` adds no such module here."
+```
+
+```mdl
+verdict ToggleTracePanelDebug: Replaced by SetTracePanelDebug, which takes a required state and does not toggle.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/types/AssistantOperation.ts#SetTracePanelDebug, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/set-trace-panel-debug.ts]
+  note: The key matches (`setTracePanelDebug`), but omitting `state` is now a schema error; the definition's comment says the flip raced. No test.
+```
+
+```mdl
+verdict F-1.1: A Chat create-object entry and CreateChat create chats in any space.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/create-chat.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/plugin.test.ts]
+```
+
+```mdl
+verdict F-1.2: The chat model streams the agent's response into the thread.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/chat-model.ts#ChatModel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/streaming.node.test.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/chat-model.scripted.node.test.ts]
+```
+
+```mdl
+verdict F-1.3: Messages are written to the chat's ECHO Feed and replicate with the space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/assistant/src/types/Chat.ts#Chat]
+  note: Persistence follows from the Feed; no test checks history survives reload or reaches another peer.
+```
+
+```mdl
+verdict F-1.4: The chat is named after the first prompt a person sends, not after "enough messages".
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/chat-model.ts#ChatModel, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/update-chat-name.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/chat-name.node.test.ts]
+  note: "`#nameAfter` schedules `UpdateChatName` once, for an unnamed chat, on a non-synthetic request."
+```
+
+```mdl
+verdict F-2.1: The graph builder adds an assistant companion to objects that are not themselves chats.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx#ChatCompanion]
+  note: "`app-graph-builder.test.ts` covers prompt nodes only, not the `companionChat` extension."
+```
+
+```mdl
+verdict F-2.2: EnsureCompanionChat returns a transient chat, and ChatCompanion persists it on first submit.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/ensure-companion-chat.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx#ChatCompanion]
+  walkthrough:
+    - EnsureCompanionChat creates and caches a transient chat when no persisted one exists. github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/ensure-companion-chat.ts
+    - ChatCompanion adds the chat with SpaceOperation.AddObject when the user first submits. github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx#ChatCompanion
+  note: No test.
+```
+
+```mdl
+verdict F-2.3: BindChatContext merges every applicable SubjectContext contribution and binds the result.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/bind-chat-context.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/subject-context.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/bind-chat-context.test.ts]
+  note: The call from `EnsureCompanionChat` is not itself tested.
+```
+
+```mdl
+verdict F-3.1: Skills carry instructions and tool definitions (the assistant skill is one).
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/skills/assistant/AssistantSkill.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/skills/assistant/skill.node.test.ts]
+  note: The Skill type itself is in `@dxos/compute`.
+```
+
+```mdl
+verdict F-3.2: Most listed skills are contributed, but Discord and Linear are not in this plugin's list.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/skill-definition.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/plugin.test.ts]
+  note: |
+    The contribution adds Assistant, PluginManager (when the registry plugin is present), Browser, Database,
+    ChatContext, WebSearch, Agent, Planning, Memory, Automation, SkillManager, Delegation, Alarm and TurnReview.
+```
+
+```mdl
+verdict F-3.3: Binding a skill to the chat adds its instructions and tools to later requests.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/hooks/useSkillRegistry.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/commands/skill-commands.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/hooks/useSkillRegistry.test.tsx, github:dxos/dxos/packages/plugins/plugin-assistant/src/commands/skill-commands.test.ts]
+```
+
+```mdl
+verdict F-3.4: RunPromptInNewChat binds the given skill keys, matched against Skill objects in the space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts]
+  note: Registry-only skills (not stored in the space) are silently skipped. No test.
+```
+
+```mdl
+verdict F-4.1: Edge and local (Ollama, built-in, LM Studio) model resolvers are contributed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/edge-model-resolver.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/local-model-resolver.ts]
+  note: "`plugin.test.ts` resolves a model through the AI service but not per provider."
+```
+
+```mdl
+verdict F-4.2: AssistantSettings offers the provider and a default model per provider.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/AssistantSettings/AssistantSettings.tsx#AssistantSettings]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/AssistantSettings/AssistantSettings.stories.tsx]
+```
+
+```mdl
+verdict F-4.3: Resolvers are layered over each other with an empty fallback resolver last.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/ai-service.ts]
+  note: Each contributed resolver is provided the previous one, so a model one does not know falls through. No test covers an unavailable provider.
+```
+
+```mdl
+verdict F-5.1: The assistant skill's tools are LayoutOperation.Open and NavigationOperation.ResolveNavigationTargets.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/skills/assistant/AssistantSkill.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/skills/assistant/skill.node.test.ts]
+```
+
+```mdl
+verdict F-5.2: The contributed WebSearchSkill wraps WebSearchToolkit from assistant-toolkit.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/skill-definition.ts, github:dxos/dxos/packages/core/compute/assistant-toolkit/src/skills/websearch/toolkit.ts#WebSearchToolkit]
+  tests: [github:dxos/dxos/packages/core/compute/assistant-toolkit/src/skills/websearch/skill.test.ts]
+```
+
+```mdl
+verdict F-5.3: Tool calls dispatch operations through the compute runtime and return results to the model.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/agent-service.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/plugin.test.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/skills/assistant/skill.node.test.ts]
+```
+
+```mdl
+verdict F-5.4: composerTurnProducer uses the host's codeModeTurnProducer unless disableCodeMode is set.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/turn-producers.ts#composerTurnProducer]
+  note: Without the plugin option it falls back to the AiSession producer. No test.
+```
+
+```mdl
+verdict F-5.5: The producer is chosen at spawn: a contributed AgentTurnProducer wins, then code mode, then AiSession.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/turn-producers.ts#composerTurnProducer, github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/turn-producers.ts#resolveTurnProducer]
+  note: A chat whose session names another harness runs on that agent instead. No test.
+```
+
+```mdl
+verdict F-6.1: Chat, Skill, Feed, Message, Memory, Agent and Sequence are registered; Plan and Routine are not in this list.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/schema-defs.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/AssistantPlugin.workerd.test.ts]
+  note: The list also registers AiContext.Binding, Alarm, SessionLink, HasSubject, Instructions and Text. `CompanionChatAnnotation` is in `@dxos/assistant` as the spec says.
+```
+
+```mdl
+verdict F-6.2: No OnCreateSpace provisioning exists in this plugin.
+  status: missing
+  note: Searched `plugin-assistant/src` for `OnCreateSpace`; only a story's `onCreateSpace` client hook matches.
+```
+
+```mdl
+verdict F-6.3: AiContext.Binding is registered and used to bind objects and skills to a conversation.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/schema-defs.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/bind-chat-context.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/bind-chat-context.test.ts]
+```
+
+```mdl
+verdict F-7.1: Agent, trigger and operation runs produce trace spans that the trace panel renders.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.tsx#TracePanel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/testing/trace-timeline.node.test.ts]
+```
+
+```mdl
+verdict F-7.2: The debug view is set explicitly with SetTracePanelDebug; there is no toggle.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/set-trace-panel-debug.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.tsx#TracePanel]
+  note: The panel reads `settings.tracePanelDebug`; callers must pass the new value. No test.
+```
+
+```mdl
+verdict F-8.1: AnalyzeTurn does nothing unless reportStruggles is on and telemetry is enabled.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/analyze-turn.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/analyze-turn.test.ts]
+```
+
+```mdl
+verdict F-8.2: The chat model binds TurnReviewSkill before a request when opted in; its end-request hook is async.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/chat-model.ts#ChatModel, github:dxos/dxos/packages/plugins/plugin-assistant/src/skills/turn-review/TurnReviewSkill.ts#AnalyzeTurn]
+  walkthrough:
+    - ChatModel binds the skill from the registry in `#ensureTurnReview` when reportStruggles is set. github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/chat-model.ts#ChatModel
+    - The skill declares AnalyzeTurn as an async end-request hook. github:dxos/dxos/packages/plugins/plugin-assistant/src/skills/turn-review/TurnReviewSkill.ts#AnalyzeTurn
+  note: No test checks the binding or that the request settles before the review.
+```
+
+```mdl
+verdict F-8.3: A prompting or tooling struggle uploads the trajectory and captures agent_struggle with its metadata.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/analyze-turn.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/review/turn-review.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/analyze-turn.test.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/review/turn-review.test.ts]
+```
+
+```mdl
+verdict F-8.4: Review failures are caught with catchCause and logged as a warning.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/analyze-turn.ts]
+  note: No test makes the review fail.
+```
+
+```mdl
+verdict T-1: Stories send a message and see a reply; no test checks the chat object in the space.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-assistant/src/containers/ChatArticle/ChatArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-assistant/src/chat-model/streaming.node.test.ts]
+  note: The `Send` story and the streaming tests cover sending and the response; persistence to the space is not asserted.
+```
+
+```mdl
+verdict T-2: No test invokes EnsureCompanionChat.
+  status: missing
+  note: Searched the package tests for `EnsureCompanionChat`.
+```
+
+```mdl
+verdict T-3: No test binds WebSearch on a chat and checks the tool list.
+  status: missing
+  note: "`useSkillRegistry.test.tsx` binds a space skill, not WebSearch, and does not check tools."
+```
+
+```mdl
+verdict T-4: No test switches provider and checks routing.
+  status: missing
+  note: Searched the package tests and stories.
+```
+
+```mdl
+verdict T-5: No test runs RunPromptInNewChat in the background.
+  status: missing
+  note: Searched the package tests for `RunPromptInNewChat`.
+```
+
+```mdl
+verdict T-7: No test toggles the trace debug view, and the operation no longer toggles.
+  status: missing
+  note: "`SetTracePanelDebug` requires `state`, so \"invoked with no argument\" is a schema error."
+```
+
+```mdl
+verdict QA-1: Manual QA only; no automation.
+  status: missing
+  note: No composer-app Playwright spec covers chat creation.
+```
+
+```mdl
+verdict QA-2: Manual QA only; no automation.
+  status: missing
+  note: No test drives companion provisioning end to end.
+```
+
+```mdl
+verdict QA-3: Manual QA only; no automation.
+  status: missing
+  note: "`chat-model/prompt.test.ts` covers prompt assembly in part, but nothing runs this QA flow."
+```

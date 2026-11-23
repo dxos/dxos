@@ -11,8 +11,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { SampleItem } from '#types';
+
+import { SampleNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -31,7 +32,7 @@ export const translations = [
       },
 
       // Plugin-specific translations.
-      [meta.profile.key]: {
+      [SampleNamespace.key]: {
         'plugin.name': 'Sample',
         'create-sample-item.label': 'Create sample item',
         'archive-item.label': 'Archive item',

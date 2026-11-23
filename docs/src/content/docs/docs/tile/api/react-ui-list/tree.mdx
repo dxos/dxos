@@ -1,0 +1,71 @@
+---
+title: Tree
+description: Nested rows from a tree model.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-list/tree" height="22rem" />
+
+```ts
+import { Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+```
+
+```sh
+npm install @dxos/react-ui-list @effect/atom-react
+```
+
+A tree is a list of nested rows that open and close. `Tree` reads its rows from a model and reports what the user
+does to them.
+
+The model keeps each row's open and current state in an atom.
+
+Wrap your app in `RegistryProvider` from `@effect/atom-react`. This is best practice, because your app then controls
+the registry that the tree reads. Without a provider, the tree reads the library's default registry.
+
+Each part handles keyboard navigation and the current and selected states. Each part also sets its own spacing, so put
+the tree in a panel's body with no padding around it.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Tree.Root` | The root, which takes the `model` and an `id`. It reports `onOpenChange` and `onSelect` |
+| `Tree.Label` | The tree's name |
+| `Tree.Content` | The scroll area for the rows. Its child can render each row |
+| `Tree.Item` | One row, or a section header |
+| `Tree.ItemIndicator` | The caret that opens a branch |
+| `Tree.ItemIcon` | The row's icon |
+| `Tree.ItemText` | The row's label |
+| `Tree.ItemCount` | A count badge |
+| `Tree.ItemActions` | The controls at the row's end. They show on a row that is hovered, focused, selected or holding an open menu |
+| `Tree.ItemGroup` | A section header |
+| `Tree.ItemGroupLabel` | The section header's label |
+| `Tree.Empty` | The placeholder shown while there are no rows |
+
+## Show nested rows
+
+`createStaticTreeModel` makes a model over data you already hold. You tell it how to find an item's children and what
+to show for the item.
+
+**Example** (Holding folders in memory)
+
+<Snippet file="tile-guide-lists" region="data" lang="tsx" />
+
+Each `Folder` keeps its children in `items`.
+
+When the user opens a row or selects it, the tree calls `onOpenChange` or `onSelect`. Write the new state to the row's
+atom, and the tree draws it.
+
+**Example** (Drawing the folders as a tree)
+
+<Snippet file="tile-guide-lists" region="tree" lang="tsx" />
+
+<TilePreview id="folder-tree" height="14rem" />
+
+`getChildren` returns a folder's `items`, and `getProps` gives each row its label and icon. `handleOpenChange` and
+`handleSelect` write `open` and `current` to the atom that `model.stateAtom` returns for the row's path.
+
+A tree over App Graph, such as Composer's navigation, gets its model from the graph instead.

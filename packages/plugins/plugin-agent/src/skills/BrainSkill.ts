@@ -8,10 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Harness from '@dxos/assistant/Harness';
+import type * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Database, DXN, Ref } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 import { Space } from '@dxos/halo';
 import { trim } from '@dxos/util';
 
@@ -73,7 +74,9 @@ export const make = (): Skill.Skill =>
         recorded as facts; call ${tool(MemoryOperation.Recall)} when you need what someone said elsewhere.
         It searches every fact recorded in this space — from every conversation, document and seeded source, and
         the facts you recorded yourself — with your goals. A query matches facts containing all of its words; when it matches
-        nothing you get everything about the subject instead, marked \`queryMatched: false\`. Someone not
+        nothing you get everything about the subject instead, marked \`queryMatched: false\`. Called without a
+        subject it returns your current facts and live goals (not superseded, retracted or expired facts, nor
+        dropped goals), which is what to read when asked what you know; a \`limit\` caps the facts, not the goals. Someone not
         found under one name may be under another they go by: their handle, nickname or full name.
 
         A message starting with "${WAKE_HEADER}" is not from the person you are talking to: you sent it to
@@ -82,6 +85,12 @@ export const make = (): Skill.Skill =>
         mention the header.
       `,
     }),
-    // Fires after every turn: the turn's facts are recorded first, so a trigger sees what was just said.
-    hooks: [{ spec: { _tag: 'end-request' }, function: Ref.make(Operation.serialize(RunTriggers)) }],
   });
+
+/**
+ * Fires after every turn: the turn's facts are recorded first, so a trigger sees what was just said. In the background,
+ * since recording takes a model call or two: the next prompt's turn starts without waiting for it.
+ */
+export const hooks: Hook.Declaration[] = [
+  { key: 'org.dxos.hook.agent.runTriggers', event: 'end-request', skill: key, operation: RunTriggers, async: true },
+];

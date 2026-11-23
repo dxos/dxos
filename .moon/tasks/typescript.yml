@@ -1,7 +1,13 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   lint:
-    command: pnpm exec oxlint --config .oxlintrc.json $projectSource
+    command: oxlint --config .oxlintrc.json $projectSource
+    # Type-aware lint reads each dependency's `dist`, and a package's own `#` imports resolve into its own `dist`,
+    # so it waits for those builds rather than racing their output.
+    deps:
+      - '^:build'
+      - target: '~:build'
+        optional: true
     inputs:
       - /.oxlintrc.json
       - /package.json
@@ -13,7 +19,7 @@ tasks:
       runFromWorkspaceRoot: true
 
   lint-fix:
-    script: 'pnpm exec oxlint --config .oxlintrc.json --fix $projectSource && pnpm exec oxlint --config .oxlintrc.json --fix $projectSource'
+    script: 'oxlint --config .oxlintrc.json --fix $projectSource && oxlint --config .oxlintrc.json --fix $projectSource'
     inputs:
       - /.oxlintrc.json
       - /package.json

@@ -10,7 +10,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
-import { meta } from '#meta';
+import { RegistryNamespace } from '../../namespace.ts';
 
 export type PluginFailureBadgeProps = {
   failure: PluginManager.PluginFailure;
@@ -26,7 +26,7 @@ export type PluginFailureBadgeProps = {
  * from "the plugin crashed".
  */
 export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RegistryNamespace.key);
 
   return (
     <Popover.Root>

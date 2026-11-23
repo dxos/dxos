@@ -9,14 +9,14 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { DeckPlugin } from '#plugin';
+import * as DeckPlugin from '#meta';
 import { DeckCapabilities } from '#types';
 
-await Harness.preload({ plugins: [DeckPlugin()] });
+await Harness.preload({ plugins: [DeckPlugin.make()] });
 
 describe('LayoutOperation.UpdateComplementary', () => {
   test('selecting a panel expands the sidebar, and collapsing keeps the panel', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin.make()] });
     const readState = () => harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.State));
 
     await harness.runPromise(Operation.invoke(LayoutOperation.UpdateComplementary, { subject: 'trace' }));

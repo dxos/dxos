@@ -5,7 +5,7 @@
 import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
-import { type NodeDef } from '@dxos/react-ui-canvas/scene';
+import { type NodeDef } from '@dxos/react-ui-canvas';
 
 import type { ComputeGraphController } from '../graph/index.ts';
 

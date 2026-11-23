@@ -1,0 +1,337 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-kanban/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: KanbanPlugin
+
+The data model matches the spec: `Kanban` (`org.dxos.type.kanban@0.2.0`) holds an `Arrangement` and a
+`spec` union of view and items variants. Layout, drag and drop, and add-card are exercised by the board
+model browser test, the arrangement unit tests and a Playwright smoke spec against the mutable-schema
+story. The four ops are registered with undo mappings, but no test invokes them. The gaps that matter:
+`deleteCardField` is never invoked from the UI (the article has no remove-field action), so F-4.3 is only
+reachable via undo plumbing; the AI skill contributes instructions with an empty tool list, so an agent cannot
+create boards or move cards (F-7.2); and the items variant has no add-card and a no-op remove, so the two
+variants do not share card management. The settings component is named `KanbanProperties`. Scenarios T-1,
+T-5, T-6 and T-7 have no automation. `deus review items` lists only the first test of the QA block, so
+QA-2 (showcase clip) has no verdict here.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ArrangementColumnEntry: A struct of ordered card ids and an optional hidden flag.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#Arrangement]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/util/arrangement.test.ts]
+  note: The entry schema is a module-private const inside Kanban.ts; it is cited through `Arrangement`.
+```
+
+```mdl
+verdict Arrangement: order plus a record of column entries keyed by column value.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#Arrangement]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/util/arrangement.test.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx]
+```
+
+```mdl
+verdict KanbanViewSpec: kind 'view' with a Ref to a View.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#KanbanViewSpec]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx]
+```
+
+```mdl
+verdict KanbanItemsSpec: kind 'items' with pivotField and an items ref array.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#KanbanItemsSpec]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx, github:dxos/dxos/packages/plugins/plugin-kanban/src/util/items-atom.test.ts]
+```
+
+```mdl
+verdict KanbanSpec: A Schema union of the two variants, discriminated by kind.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#KanbanSpec, github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#isKanbanItems]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx]
+```
+
+```mdl
+verdict Kanban: The ECHO type is org.dxos.type.kanban 0.2.0 with name, arrangement and spec.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#Kanban, github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#make, github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#makeItems]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx, github:dxos/dxos/packages/plugins/plugin-kanban/src/KanbanPlugin.workerd.test.ts]
+  note: It also has an optional `description` the spec does not list.
+```
+
+```mdl
+verdict KanbanSettings: The type is KanbanSettingsSchema and the component is KanbanProperties; both work, neither is tested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanSchema.ts#KanbanSettingsSchema, github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanProperties/KanbanProperties.tsx#KanbanProperties]
+  note: |
+    The spec uses `KanbanSettings` for both a type and a component, and the checker accepts one verdict per id, so this
+    verdict judges both. The schema holds an optional `hideUncategorized`; the component, named `KanbanProperties`, shows a
+    column-field picker for view boards and the hide toggle for both. No test or story renders either.
+```
+
+```mdl
+verdict KanbanViewSettings: KanbanViewSettingsSchema adds columnFieldId to the common settings.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanSchema.ts#KanbanViewSettingsSchema]
+  note: No test covers it.
+```
+
+```mdl
+verdict CreateKanbanInput: CreateKanbanSchema has optional name, typename and initialPivotColumn.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanSchema.ts#CreateKanbanSchema, github:dxos/dxos/packages/plugins/plugin-kanban/src/capabilities/create-object.ts]
+  note: Without a typename the create entry makes an items-variant board. No test exercises the create entry.
+```
+
+```mdl
+verdict KanbanArticle: Branches on spec.kind and wires add, remove and move; there is no deleteCardField action.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.tsx#KanbanArticle, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanItemEventHandler.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanColumnEventHandler.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.stories.tsx]
+  note: |
+    The view variant queries by typename and creates cards; the items variant passes no `onCardAdd` and a no-op
+    `onCardRemove`. No action invokes `DeleteCardField`.
+```
+
+```mdl
+verdict deleteCard: Removes the card from its database and returns it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanOperation.ts#DeleteCard, github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/delete-card.ts]
+  walkthrough:
+    - The operation declares a card input and a { card } output. github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanOperation.ts#DeleteCard
+    - The handler calls db.remove on the card's database. github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/delete-card.ts
+  note: The workerd test checks only that the op is registered; no test invokes it.
+```
+
+```mdl
+verdict deleteCardField: Deletes a field projection via ProjectionModel and returns field, props and index.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanOperation.ts#DeleteCardField, github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/delete-card-field.ts]
+  walkthrough:
+    - The operation declares view and fieldId and an undo-friendly output. github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanOperation.ts#DeleteCardField
+    - The handler builds a ProjectionModel for the view's type and deletes the projection. github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/delete-card-field.ts
+  note: No test invokes it, and nothing in the UI calls it.
+```
+
+```mdl
+verdict restoreCard: Re-adds the card snapshot to its database.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanOperation.ts#RestoreCard, github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/restore-card.ts]
+  note: No test invokes it.
+```
+
+```mdl
+verdict restoreCardField: Re-inserts the field projection at its index.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/KanbanOperation.ts#RestoreCardField, github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/restore-card-field.ts]
+  note: No test invokes it.
+```
+
+```mdl
+verdict F-1.1: Columns follow arrangement.order, after the uncategorized column, with cards in ids order.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/util/arrangement.ts#computeColumnStructure, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/util/arrangement.test.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx]
+  note: The uncategorized column is always placed first, ahead of `order`.
+```
+
+```mdl
+verdict F-1.2: getItems returns a column's cards in the stored id order.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/util/arrangement.ts#computeItemArrangement]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/util/arrangement.test.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx]
+```
+
+```mdl
+verdict F-1.3: hideUncategorized sets the column entry's hidden flag, and computeColumnStructure drops hidden columns.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanProperties/KanbanProperties.tsx#KanbanProperties, github:dxos/dxos/packages/plugins/plugin-kanban/src/util/arrangement.ts#computeColumnStructure]
+  walkthrough:
+    - The properties panel writes hidden on the uncategorized arrangement entry. github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanProperties/KanbanProperties.tsx#KanbanProperties
+    - computeColumnStructure drops any column whose entry is hidden. github:dxos/dxos/packages/plugins/plugin-kanban/src/util/arrangement.ts#computeColumnStructure
+  note: Tests check that `hidden` is parsed, not that the column is dropped.
+```
+
+```mdl
+verdict F-2.1: Dropping a card in another column sets its pivot field and rewrites the arrangement.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanItemEventHandler.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+```
+
+```mdl
+verdict F-2.2: Dropping within a column reorders its ids.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanItemEventHandler.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+```
+
+```mdl
+verdict F-2.3: Dragging a column header rewrites arrangement.order and the pivot options.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanColumnEventHandler.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+```
+
+```mdl
+verdict F-3.1: Add card makes an object of the card schema with the pivot field set to the column value.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.tsx#KanbanArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+  note: View variant only; the items variant hides the add button.
+```
+
+```mdl
+verdict F-3.2: Removing a card invokes DeleteCard (view variant only).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.tsx#KanbanArticle, github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/delete-card.ts]
+  note: The items variant's remove handler is a no-op. No test removes a card.
+```
+
+```mdl
+verdict F-3.3: An UndoMapping pairs DeleteCard with RestoreCard.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/capabilities/undo-mappings.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/restore-card.ts]
+  note: No test undoes a delete.
+```
+
+```mdl
+verdict F-4.1: The picker lists the projection's SingleSelect fields for view boards.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanProperties/KanbanProperties.tsx#KanbanProperties, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useSingleSelectFields.ts]
+  note: No test renders the properties panel.
+```
+
+```mdl
+verdict F-4.2: Choosing a column field writes view.projection.pivotFieldId.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanProperties/KanbanProperties.tsx#KanbanProperties]
+  note: No test switches the pivot field.
+```
+
+```mdl
+verdict F-4.3: The ops and their undo mapping exist, but no UI removes a column field.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/delete-card-field.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/operations/restore-card-field.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/capabilities/undo-mappings.ts]
+  note: Searched `src/` for `DeleteCardField`; it is referenced only by the handler set, undo mapping and types.
+```
+
+```mdl
+verdict F-5.1: The view variant queries the database by the View's type (and tag).
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.tsx#KanbanArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+```
+
+```mdl
+verdict F-5.2: The items variant derives its items from spec.items refs.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/util/items-atom.ts#makeItemsAtom, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useItemsProjection.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/util/items-atom.test.ts, github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx]
+```
+
+```mdl
+verdict F-5.3: Both variants use KanbanBoard and the same arrangement logic, but the items variant cannot add or remove cards.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/containers/KanbanArticle/KanbanArticle.tsx#KanbanArticle, github:dxos/dxos/packages/plugins/plugin-kanban/src/components/KanbanBoard/KanbanBoard.tsx]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx]
+  note: Arrangement and drag-and-drop are shared; add and remove are wired only for the view variant.
+```
+
+```mdl
+verdict F-6.1: Mutations go through ECHO objects and change callbacks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useEchoChangeCallback.ts]
+  note: Replication is ECHO's; no test checks a second peer.
+```
+
+```mdl
+verdict F-6.2: Column and item atoms re-derive from ECHO subscriptions.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/hooks/useKanbanBoardModel.browser.test.tsx]
+  note: The test mutates the local objects; it does not use a second peer.
+```
+
+```mdl
+verdict F-6.3: The type declares spec.view through ViewAnnotation; hiding it from the browser is space-plugin behaviour.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/types/Kanban.ts#Kanban]
+  note: No test in this package checks that the View is hidden.
+```
+
+```mdl
+verdict F-7.1: A Kanban skill is contributed, but with instructions only and no tools.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-kanban/src/skills/KanbanSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-kanban/src/capabilities/skill-definition.ts]
+  note: `Skill.toolDefinitions({ tools: [] })`; one sentence of instructions.
+```
+
+```mdl
+verdict F-7.2: The skill gives an agent no way to create boards, place cards or update fields.
+  status: missing
+  note: The skill's tool list is empty and the plugin registers no create or move operation.
+```
+
+```mdl
+verdict T-1: No test creates a kanban from a type and pivot column.
+  status: missing
+  note: Searched the package tests and Playwright spec; the create-object entry is not exercised.
+```
+
+```mdl
+verdict T-2: The smoke spec drags a card to another column and checks the UI, not the pivot field or replication.
+  status: partial
+  note: The pivot field value, the Arrangement write and peer replication are not asserted.
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+```
+
+```mdl
+verdict T-3: The smoke spec reorders cards in a column and checks the rendered order, not Arrangement ids.
+  status: partial
+  note: The test drags the first card below the second, not C above A, and does not read Arrangement.
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+```
+
+```mdl
+verdict T-4: The smoke spec adds an item and checks the column count, not the pivot value or position.
+  status: partial
+  note: Neither the new card's pivot field nor its position at the column bottom is asserted.
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+```
+
+```mdl
+verdict T-5: No test deletes and restores a card.
+  status: missing
+  note: deleteCard and restoreCard are never invoked by a test.
+```
+
+```mdl
+verdict T-6: No test toggles Hide uncategorized.
+  status: missing
+  note: KanbanProperties is not rendered by any test or story.
+```
+
+```mdl
+verdict T-7: No test switches the pivot column field.
+  status: missing
+  note: Nothing writes pivotFieldId in a test.
+```
+
+```mdl
+verdict QA-1: Only the add-card step is automated, by the smoke spec against a story.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-kanban/src/playwright/smoke.spec.ts]
+  note: Board creation, delete and restore are not automated.
+```

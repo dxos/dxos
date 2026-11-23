@@ -5,11 +5,22 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { nodeBase } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { CLASSIC_LOOK, type NodeRegistry, nodeBase } from '../model/index.ts';
-import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
-import { cornerRadius, frameClasses, hueClasses, resolveStyle } from './style.ts';
+import { CLASSIC_LOOK, type NodeRegistry } from '../model/index.ts';
+import {
+  fieldName,
+  fieldValue,
+  fieldValues,
+  isMultiline,
+  nodeParts,
+  nodeTitle,
+  partText,
+  partValues,
+} from './parts.ts';
+import { cornerRadius, frameClasses, hueClasses, resolveStyle, textColor } from './style.ts';
 
 // These pin the canvas's original classes, so they draw in its classic look rather than the default theme's.
 const classicFrame = (node: Parameters<typeof frameClasses>[0], selected: boolean, hovered = false) =>
@@ -56,6 +67,26 @@ describe('parts', () => {
     expect(nodeTitle(registry, note)).toBe('Note');
   });
 
+  test("a kind's own field is named under data, and written beside the rest of the node's data", ({ expect }) => {
+    // A plugin kind as the engine draws one: its fields under `data`, its parts naming them there.
+    const kinds: NodeRegistry = {
+      ...registry,
+      list: { ...registry.list, parts: [{ field: 'data.title' }, { field: 'data.items', lines: true }] },
+    };
+    const node = { ...rect, type: 'list', data: { title: 'Todo', items: ['buy milk'], done: 1 } };
+    expect(partText(kinds, node, 'data.items')).toBe('buy milk');
+    expect(nodeTitle(kinds, node)).toBe('Todo');
+    expect(partValues(kinds, node, 'data.items', 'a\n b')).toEqual({
+      data: { title: 'Todo', items: ['a', 'b'], done: 1 },
+    });
+    expect(fieldValue(node, 'data.done')).toBe(1);
+    expect(fieldValue(node, 'data.missing')).toBeUndefined();
+    // A node with no data yet gets one.
+    expect(fieldValues(rect, 'data.title', 'New')).toEqual({ data: { title: 'New' } });
+    expect(fieldValues(rect, 'label', 'New')).toEqual({ label: 'New' });
+    expect([fieldName('data.items'), fieldName('label')]).toEqual(['items', 'label']);
+  });
+
   test('lists and bodies are multi-line; labels are not', ({ expect }) => {
     const [label] = nodeParts(registry, rect);
     const [body] = nodeParts(registry, note);
@@ -69,6 +100,17 @@ describe('parts', () => {
     expect(classicFrame(rect, false, true)[2]).toBe('border-focus/50');
     const styled = { ...rect, style: { hue: 'teal', rounded: true, fill: false, border: false } };
     expect(classicFrame(styled, false)).toEqual(['', 'text-teal-fg', 'border-transparent', '', 'rounded-2xl']);
+    // A text colour of its own wins over the hue's, and leaves the fill and the border the hue's.
+    const coloured = { ...rect, style: { hue: 'teal', textHue: 'red' as const } };
+    expect(classicFrame(coloured, false)[1]).toBe('text-red-500');
+    expect(classicFrame(coloured, false)[2]).toBe(classicFrame({ ...rect, style: { hue: 'teal' } }, false)[2]);
+    // Its tone runs light to dark; unset, it is the middle one.
+    const toned = (textTone: 1 | 2 | 3) =>
+      classicFrame({ ...rect, style: { textHue: 'blue' as const, textTone } }, false)[1];
+    expect([toned(1), toned(2), toned(3)]).toEqual(['text-blue-300', 'text-blue-500', 'text-blue-700']);
+    // A name that is no style hue colours nothing.
+    expect(textColor('nope')).toBeUndefined();
+    expect(textColor(undefined)).toBeUndefined();
     // A guide is dashed and unfilled whatever fill and border say.
     const guide = { ...rect, style: { guide: true, border: false } };
     expect(classicFrame(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm']);

@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { TrajectoryStore } from '@dxos/assistant';
 import type * as AgentService from '@dxos/compute/AgentService';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { Message } from '@dxos/types';
 
@@ -86,8 +87,7 @@ export const waitForMessage = (
   Effect.gen(function* () {
     const deadline = Date.now() + timeout;
     do {
-      const items = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-      const match = items.filter(Obj.instanceOf(Message.Message)).find(predicate);
+      const match = (yield* TrajectoryStore.messages(feed)).find(predicate);
       if (match) {
         return match;
       }

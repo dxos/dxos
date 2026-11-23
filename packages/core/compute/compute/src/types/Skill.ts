@@ -18,7 +18,6 @@ import { type Text } from '@dxos/schema';
 
 import * as Operation from '../Operation.ts';
 import * as Template from './Template.ts';
-import * as Trigger from './Trigger.ts';
 
 /**
  * Skill schema defines the structure for AI assistant skills.
@@ -28,7 +27,8 @@ import * as Trigger from './Trigger.ts';
  * Follows the Agent Skills spec (https://agentskills.io/specification) as closely as it can, so a skill
  * means the same here as in any other harness. Add a field the spec lacks only with a strong reason,
  * and say what it is. Credentials and MCP servers do not belong here: a server is a connection, which
- * the space owns and each conversation can turn off.
+ * the space owns and each conversation can turn off. Nor do hooks: a plugin contributes those beside its
+ * skills (`@dxos/compute/Hook`).
  *
  * The registry `key` and `version` are stored in the object meta — access them via
  * `Obj.getMeta(skill).key` and `Obj.getMeta(skill).version`.
@@ -70,66 +70,12 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     agentCanEnable: Schema.optional(Schema.Boolean).annotate({
       description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
     }),
-
-    /**
-     * Hooks triggered automatically at certain points in the agent's lifecycle.
-     */
-    hooks: Schema.optional(Schema.Array(Schema.suspend(() => Hook))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--student--regular', hue: 'amber' }),
     Annotation.UserType.set(),
   ),
 ) {}
-
-/**
- * Controls when the hook is triggered.
- */
-export const HookSpec = Schema.Union([
-  /**
-   * Triggered when the agent is about to start a request.
-   * A request is a series of agent/tool turns that the model drives.
-   */
-  Schema.TaggedStruct('begin-request', {}),
-  /**
-   * Triggered when the agent has completed a request.
-   * A request is a series of agent/tool turns that the model drives.
-   */
-  Schema.TaggedStruct('end-request', {}),
-]);
-
-/**
- * Allows hooking into the agent's lifecycle.
- * NOTE: Intentionally similar to Trigger, perhaps we should merge them.
- */
-export const Hook = Schema.Struct({
-  /**
-   * What to do when the hook is triggered.
-   *
-   * Can be a Ref to a PersistentOperation.
-   */
-  function: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ title: 'Function' })),
-
-  /**
-   * Controls when the hook is triggered.
-   */
-  spec: HookSpec,
-
-  /**
-   * Passed as the input data to the function.
-   * Must match the function's input schema.
-   */
-  input: Trigger.InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-
-  /**
-   * Run in the background (end-request only): the request settles without waiting for the hook, and
-   * the agent process awaits it before it finishes. For work the user should not wait on, e.g.
-   * reviewing the turn that just ended.
-   */
-  async: Schema.optional(Schema.Boolean.annotate({ title: 'Run in background' })),
-});
-
-export type Hook = Schema.Schema.Type<typeof Hook>;
 
 /**
  * Create a new Skill.

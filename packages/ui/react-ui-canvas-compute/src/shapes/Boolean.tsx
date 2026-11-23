@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { type CSSProperties, type FC } from 'react';
 
-import { DEFAULT_GRID, type NodeDef } from '@dxos/react-ui-canvas/scene';
+import { type NodeDef } from '@dxos/react-ui-canvas';
+import { DEFAULT_GRID, MAJOR_GRID } from '@dxos/scene';
 
 import { createRowPorts, defineComputeNode, getRowPoints } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
@@ -30,7 +31,7 @@ type CreateGateProps = CreateShapeProps<GateShape> & { type: GateType };
 
 const createGate = (props: CreateGateProps): GateShape =>
   createShape<GateShape>({
-    size: { width: 64, height: 64 },
+    size: { width: MAJOR_GRID, height: MAJOR_GRID },
     ...props,
   });
 
@@ -146,7 +147,7 @@ const AndSymbol = createSymbol(({ startX, endX, top, bottom }) => {
 export const AndShape = GateShape;
 export type AndShape = GateShape;
 
-export const createAnd = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
+export const createAnd = (props: Omit<CreateGateProps, 'type'>) => {
   return createGate({ ...props, type: 'and' });
 };
 export const andNodeDef = defineGate({
@@ -180,7 +181,7 @@ const OrSymbol = createSymbol(({ startX, endX, top, mid, bottom }) => {
 export const OrShape = GateShape;
 export type OrShape = GateShape;
 
-export const createOr = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
+export const createOr = (props: Omit<CreateGateProps, 'type'>) => {
   return createGate({ ...props, type: 'or' });
 };
 export const orNodeDef = defineGate({
@@ -217,7 +218,7 @@ const NotSymbol = createSymbol(({ startX, endX, top, mid, bottom }) => {
 export const NotShape = GateShape;
 export type NotShape = GateShape;
 
-export const createNot = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
+export const createNot = (props: Omit<CreateGateProps, 'type'>) => {
   return createGate({ ...props, type: 'not' });
 };
 export const notNodeDef = defineGate({

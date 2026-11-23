@@ -1,0 +1,230 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-sequencer/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SequencerPlugin
+
+The code covers almost all of the spec. `Score`, `Track`, `Sequence`, `Note` and `Instrument`
+exist as schemas, and `ScoreArticle` composes `TrackList` and `SequenceGrid`. The article adds and
+removes tracks (removal cascades to their sequences), mutes, toggles and paints notes, and plays
+through a Tone.js `ScorePlayer` that skips muted tracks and loops. The spec's `Note.data` field is
+missing. `Track.color` is `hue` in the code, and the default pitch range is A0 to C8 (21 to 108),
+not 36 to 84. Playback loops over the score-level `loopStart`/`loopEnd` range. Without that range,
+the visual playhead loops over the active sequence and the audio loops over the longest sequence.
+
+Test coverage is the main gap. The only tests are `viewport.test.ts` (CellGrid hit-testing) and
+`lead-sheet.test.ts` (the text format). No story has a play test, and no test runs a scenario, so
+nearly every behaviour is `untested`.
+
+Of 27 items: 0 done, 18 untested, 2 partial, 3 diverged, 4 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Note: Note has pitch, startTime, duration, velocity and articulation, but no data field.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Note.ts#Note]
+  note: The opaque per-note `data?: object` field is missing. `pitch` is `Schema.Number`, not an int with a 0..127 range check.
+```
+
+```mdl
+verdict Track: Track names color as hue and defaults the pitch range to 21..108, not 36..84; it adds patches.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Track.ts#Track]
+  note: |
+    `color` (hex) is `hue` (a design-system palette name resolved by `hueToHex`). The comments and `SequenceGrid`
+    fall back to A0 (21) and C8 (108), not C2 (36) and C6 (84). `patches` (sound mappings) is extra. `instrumentRef`
+    and `muted` match.
+```
+
+```mdl
+verdict Sequence: Sequence matches the spec and adds a stable id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Sequence.ts#Sequence]
+  note: The fields match, with an extra `id` for selection. Notes outside `length` are clipped in render and playback. No test exercises the schema.
+```
+
+```mdl
+verdict Instrument: Instrument is an ECHO type org.dxos.type.instrument with family, tuning, reference and calibration.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Instrument.ts#Instrument, github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Instrument.ts#Tuning, github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Instrument.ts#NoteCalibration]
+  note: The shape matches the spec. No test creates an Instrument or reads its calibration.
+```
+
+```mdl
+verdict Score: Score is an ECHO type with tempo, time signature, key, tracks and sequences, plus a loop range.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Score.ts#Score, github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Score.ts#make]
+  note: `loopStart`/`loopEnd` are extra. `make` defaults `timeSignature` to '4/4'. No test exercises `make`.
+```
+
+```mdl
+verdict SequenceGrid: The piano-roll grid renders notes high-to-low on CellGrid, with playhead, toggle and resize callbacks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/SequenceGrid/SequenceGrid.tsx#SequenceGrid, github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/CellGrid/CellGrid.tsx#CellGrid]
+  note: |
+    The props match. The grid exposes the `onNoteToggle` and `onNoteResize` callbacks and leaves the mutation to the
+    caller, so there is no `addNote`/`removeNote`/`updateNote` action. The story has no play test.
+```
+
+```mdl
+verdict TrackList: TrackList lists tracks with select, mute, add and remove callbacks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/TrackList/TrackList.tsx#TrackList]
+  note: The callbacks are named `onSelect`, `onMute`, `onAdd` and `onRemove`, and the list takes `tracks` rather than `score`. The story has no play test.
+```
+
+```mdl
+verdict ScoreArticle: ScoreArticle composes a toolbar, TrackList and the selected SequenceGrid, and plays the score.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle]
+  note: The story has no play test. The toolbar also has tempo, loop, import/export and tool modes.
+```
+
+```mdl
+verdict F-1.1: Score is a CreateObjectEntry, so the navtree + menu creates one.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/capabilities/create-object.ts]
+  note: No test creates a Score through the space create flow.
+```
+
+```mdl
+verdict F-1.2: Score.make defaults tempo to 120 with empty tracks and sequences.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/Score.ts#make]
+  note: It also sets `timeSignature: '4/4'`. No test checks the defaults.
+```
+
+```mdl
+verdict F-2.1: Adding a track pushes a track with a new id and a default name, plus an empty sequence.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle]
+  note: `handleAddTrack` pushes `newTrack(index)` and `newSequence(track.id)`. No test covers it.
+```
+
+```mdl
+verdict F-2.2: Removing a track splices it and every sequence with its trackId.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle]
+  note: `handleRemoveTrack` walks both arrays backwards and splices matches. No test covers it.
+```
+
+```mdl
+verdict F-2.3: Muting sets Track.muted, and ScorePlayer skips muted tracks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle, github:dxos/dxos/packages/plugins/plugin-sequencer/src/audio/ScorePlayer.ts#ScorePlayer]
+  walkthrough:
+    - The article's mute handler writes `muted` on the track. github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle
+    - The player skips notes of a muted track when it schedules parts. github:dxos/dxos/packages/plugins/plugin-sequencer/src/audio/ScorePlayer.ts#ScorePlayer
+  note: No test covers mute or scheduling.
+```
+
+```mdl
+verdict F-3.1: Clicking an empty cell adds a note with duration beatsPerCell and velocity 0.8.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle, github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/SequenceGrid/SequenceGrid.tsx#SequenceGrid]
+  note: `handleToggleNote` pushes `{ pitch, startTime, duration: duration ?? beatsPerCell }`. No test covers it.
+```
+
+```mdl
+verdict F-3.2: Clicking a cell with a note removes that note.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle]
+  note: `handleToggleNote` splices the note at the existing index. No test covers it.
+```
+
+```mdl
+verdict F-3.3: A drag reports set or unset per cell, which paints notes along the drag.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/SequenceGrid/SequenceGrid.tsx#SequenceGrid, github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/CellGrid/input/pointer.ts]
+  note: The grid reports `set`/`unset` for drag gestures in toggle mode. Paint is not limited to one row. No test covers it.
+```
+
+```mdl
+verdict F-3.4: The ruler and pitch headers are drawn outside the scrolled cell area, so they stay visible.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/CellGrid/CellGrid.tsx#CellGrid, github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/CellGrid/headers/Ruler.tsx#Ruler, github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/CellGrid/headers/TrackHeader.tsx#TrackHeader]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/CellGrid/state/viewport.test.ts]
+  note: `viewport.test.ts` checks that hit-testing ignores the header region and that the visible range follows scroll. Nothing checks that the headers stay in place while the grid scrolls or zooms.
+```
+
+```mdl
+verdict F-4.1: Play starts the Tone.js transport at Score.tempo and a rAF playhead advances at tempo/60 beats per second.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle, github:dxos/dxos/packages/plugins/plugin-sequencer/src/audio/ScorePlayer.ts#ScorePlayer]
+  walkthrough:
+    - The player loads the score, sets the transport tempo and schedules every track. github:dxos/dxos/packages/plugins/plugin-sequencer/src/audio/ScorePlayer.ts#ScorePlayer
+    - The article starts the player and advances the playhead from elapsed time. github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle
+  note: The player plays every unmuted track, not only the active sequence. No test covers playback.
+```
+
+```mdl
+verdict F-4.2: The playhead loops over the score's loopStart..loopEnd, not always 0..Sequence.length.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle, github:dxos/dxos/packages/plugins/plugin-sequencer/src/audio/ScorePlayer.ts#ScorePlayer]
+  note: |
+    With no loop range, the visual playhead wraps at the active sequence's length, but the transport wraps at the longest
+    sequence. With `loopStart` set, both loop to that start, not to 0. No test covers looping.
+```
+
+```mdl
+verdict F-4.3: Stop calls player.stop and sets the playhead to null, which removes the overlay.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle, github:dxos/dxos/packages/plugins/plugin-sequencer/src/components/SequenceGrid/SequenceGrid.tsx#SequenceGrid]
+  note: No test covers it.
+```
+
+```mdl
+verdict F-5.1: Selecting a track shows its first sequence and creates an empty one if none exists.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle]
+  note: `findSequenceForTrack` picks the first match, and an effect pushes `newSequence` when none exists. No test covers it.
+```
+
+```mdl
+verdict F-5.2: SequenceGrid re-renders from the new active sequence's notes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/containers/ScoreArticle/ScoreArticle.tsx#ScoreArticle]
+  note: The grid gets `activeSequence` by props and re-derives cells from its notes. No test covers it.
+```
+
+```mdl
+verdict T-1: No test checks the defaults of a new Score.
+  status: missing
+  note: Searched `src/**/*.test.ts` and stories for a play test; only viewport and lead-sheet tests exist.
+```
+
+```mdl
+verdict T-2: No test toggles a cell on and off.
+  status: missing
+  note: Searched as for T-1.
+```
+
+```mdl
+verdict T-3: No test removes a track and checks the cascade.
+  status: missing
+  note: Searched as for T-1.
+```
+
+```mdl
+verdict T-4: No test advances time and checks the loop.
+  status: missing
+  note: Searched as for T-1.
+```
+
+```mdl
+verdict QA-1: The Read and Write ops exist, but no automation runs the read-write-read round trip.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/ScoreOperation.ts#Read, github:dxos/dxos/packages/plugins/plugin-sequencer/src/types/ScoreOperation.ts#Write, github:dxos/dxos/packages/plugins/plugin-sequencer/src/util/score-leadsheet.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sequencer/src/util/lead-sheet.test.ts]
+  note: `lead-sheet.test.ts` round-trips the text format through `parseLeadSheet`/`formatLeadSheet`, not through the ops on a Score. The QA test is manual and unverified.
+```

@@ -17,7 +17,9 @@ import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as LinkAction from '@dxos/app-toolkit/LinkAction';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
@@ -31,9 +33,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ArchivedAnnotation, isArchivable } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
-import { SpaceCapabilities, SpaceOperation } from '#types';
+import { PublicationLink, SpaceCapabilities, SpaceOperation, type SpaceSchema } from '#types';
 
+import { SpaceNamespace } from '../../../namespace.ts';
 import { resolveCollectionObjectPath } from '../../../util/index.ts';
 import {
   ADD_TO_COLLECTION_LABEL,
@@ -82,13 +84,17 @@ const getMembers = (get: Atom.AtomContext, refs: readonly Ref.Ref<Obj.Unknown>[]
 
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin,
+  publication,
 }: {
   shareableLinkOrigin: string;
+  publication?: SpaceSchema.PublicationOptions;
 }) {
   const capabilities = yield* Capability.Service;
   // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
   // `Capability.get`, establishing a dependency that heals once the capability lands.
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
+  const readOnly = yield* ReadOnly.atom;
+  const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
 
   return yield* Effect.all([
     // Content section group — created alongside collections so the group always
@@ -101,7 +107,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           AppNode.makeGroup({
             id: GraphPath.GroupSegments.content,
             type: GraphPath.GroupTypes.content,
-            label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
+            label: ['nav-tree-group-content.label', { ns: SpaceNamespace.key }],
             icon: 'ph--files--regular',
             space,
             position: 200,
@@ -132,7 +138,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
-              label: ['collections-section.label', { ns: meta.profile.key }],
+              label: ['collections-section.label', { ns: SpaceNamespace.key }],
               icon: 'ph--folder--regular',
               iconHue: 'indigo',
               role: 'branch',
@@ -147,13 +153,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    // Root collection objects under the Collections virtual node. Shares the `object` urlKey with the
-    // nested-collection `objects` connector below so an object is addressed the same way wherever it
-    // sits in the collection tree (the key names the *collection subgraph*, not the container's type;
-    // the database subgraph addresses the same object under `db`).
+    // Root collection objects under the Collections virtual node. Declares no URL binding: a static one
+    // over the same path would also claim nested objects, as `<collection>+<object>`, so the `objects`
+    // binding below addresses an object by its own id at every depth, the root included.
     AppGraphBuilder.createExtension({
       id: 'collections',
-      url: { key: 'object', kind: 'item', path: [GraphPath.GroupSegments.content, GraphPath.Segments.collections] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -255,8 +259,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Object actions.
     AppGraphBuilder.createExtension({
       id: 'objectActions',
-      match: (node) => {
-        return node.data != null &&
+      match: (node, get) => {
+        return !get(readOnly) &&
+          node.data != null &&
           Obj.getDatabase(node.data) &&
           Obj.isObject(node.data) &&
           Obj.getTypename(node.data) === node.type
@@ -277,6 +282,13 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
         const container = AppNode.getListOf(Option.getOrUndefined(get(appGraph.graph.node(parentId))));
 
+        const [client] = get(clientAtom);
+        const db = Obj.getDatabase(object);
+        const space = publication && db && client?.spaces.get(db.spaceId);
+        const published = space
+          ? AppAnnotation.getPublication(get(Obj.atom(space.properties)), space.id) !== undefined
+          : false;
+
         return Effect.succeed(
           constructObjectActions({
             object,
@@ -284,6 +296,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             deletable,
             navigable: ephemeralState.navigableCollections,
             shareableLinkOrigin,
+            publication: published ? publication : undefined,
             container,
             parent: container ? get(Obj.parentAtom(object)) : undefined,
             archived: isArchivable(object)
@@ -297,9 +310,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Action on the collections section header to add an object to the space's root collection.
     AppGraphBuilder.createExtension({
       id: 'collectionsSectionActions',
-      match: (node) => {
+      match: (node, get) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+        return !get(readOnly) && node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       actions: (space) =>
         Effect.succeed([
@@ -338,6 +351,7 @@ const constructObjectActions = ({
   deletable = true,
   navigable = false,
   shareableLinkOrigin,
+  publication,
   container,
   parent,
   archived,
@@ -345,6 +359,7 @@ const constructObjectActions = ({
   object: Obj.Unknown;
   nodeId: string;
   shareableLinkOrigin: string;
+  publication?: SpaceSchema.PublicationOptions;
   deletable?: boolean;
   navigable?: boolean;
   container?: ContainerModel.Container;
@@ -481,7 +496,12 @@ const constructObjectActions = ({
                   return;
                 }
                 // The title lets the Composer Worker give the link a named preview in messengers.
-                const url = UrlPath.withTitle(new URL(path.value, shareableLinkOrigin), Obj.getLabel(object));
+                const url = LinkAction.withAction(
+                  UrlPath.withTitle(new URL(path.value, shareableLinkOrigin), Obj.getLabel(object)),
+                  yield* Capability.getAll(AppCapabilities.LinkAction),
+                  'internal',
+                  object,
+                );
                 yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),
             properties: {
@@ -489,6 +509,42 @@ const constructObjectActions = ({
               icon: 'ph--link--regular',
               disposition: 'list-item',
               testId: 'spacePlugin.copyLink',
+            },
+          }),
+        ]
+      : []),
+    ...(publication && !Obj.instanceOf(Collection.Collection, object)
+      ? [
+          AppGraphNode.makeAction({
+            id: 'copyPublicLink',
+            data: () =>
+              Effect.gen(function* () {
+                const builder = yield* Capability.get(AppCapabilities.AppGraph);
+                const path = UrlResolution.getShareableLinkPath(builder, nodeId);
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const space = client.spaces.get(db.spaceId);
+                const published = space && AppAnnotation.getPublication(space.properties, space.id);
+                if (Option.isNone(path) || !published) {
+                  log.warn('object has no public link', { nodeId, published: !!published });
+                  return;
+                }
+                const url = LinkAction.withAction(
+                  PublicationLink.viewerUrl(
+                    publication.viewerOrigin,
+                    published.publicId,
+                    PublicationLink.objectPathOf(path.value),
+                  ),
+                  yield* Capability.getAll(AppCapabilities.LinkAction),
+                  'public',
+                  object,
+                );
+                yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
+              }),
+            properties: {
+              label: ['copy-public-link.label', { ns: SpaceNamespace.key }],
+              icon: 'ph--globe--regular',
+              disposition: 'list-item',
+              testId: 'spacePlugin.copyPublicLink',
             },
           }),
         ]

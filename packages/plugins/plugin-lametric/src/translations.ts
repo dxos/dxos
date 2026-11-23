@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { LaMetricNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [LaMetricNamespace.key]: {
         'plugin.name': 'LaMetric',
         'device-connected.label': 'LaMetric connected',
         'settings-address.label': 'Device address',

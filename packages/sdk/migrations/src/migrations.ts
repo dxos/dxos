@@ -7,21 +7,18 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Annotation, Obj } from '@dxos/echo';
+import { Annotation, type Migration as EchoMigration, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type MaybePromise } from '@dxos/util';
 
 import { MigrationVersionAnnotation } from './annotations.ts';
-import { MigrationBuilder } from './migration-builder.ts';
 
-export type MigrationContext = {
-  space: Space;
-  builder: MigrationBuilder;
-};
-
+/**
+ * One version step of a space's migration history.
+ */
 export type Migration = {
   version: string;
-  next: (context: MigrationContext) => MaybePromise<void>;
+  /** Run in order by `db.runMigrations`; empty for a step that only records the version. */
+  migrations: readonly EchoMigration.Migration[];
 };
 
 export class Migrations {
@@ -69,9 +66,7 @@ export class Migrations {
       if (targetIndex > currentIndex) {
         const migrations = this.migrations.slice(currentIndex, targetIndex);
         for (const migration of migrations) {
-          const builder = new MigrationBuilder(space);
-          await migration.next({ space, builder });
-          await builder._commit();
+          await space.db.runMigrations([...migration.migrations]);
           Obj.update(space.properties, (properties) => {
             Annotation.set(properties, MigrationVersionAnnotation, migration.version);
           });

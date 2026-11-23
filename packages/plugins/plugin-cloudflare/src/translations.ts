@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from '#meta';
+import { CloudflareNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [CloudflareNamespace.key]: {
         'plugin.name': 'Cloudflare',
       },
     },

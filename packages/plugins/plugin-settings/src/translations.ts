@@ -4,12 +4,12 @@
 
 import * as Translations from '@dxos/app-toolkit/Translations';
 
-import { meta } from '#meta';
+import { SettingsNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [SettingsNamespace.key]: {
         'plugin-settings.label': 'Plugin Settings',
       },
     },

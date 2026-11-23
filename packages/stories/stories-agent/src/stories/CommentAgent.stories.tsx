@@ -10,9 +10,8 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, type Obj, Ref } from '@dxos/echo';
-import * as CanvasType from '@dxos/plugin-canvas/Canvas';
+import { addCanvasDrawing, canvasDrawingSchemas } from '@dxos/plugin-canvas/Architecture';
 import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { translations as illustratorTranslations } from '@dxos/plugin-illustrator/translations';
@@ -25,14 +24,16 @@ import { translations as reviewTranslations } from '@dxos/plugin-review/translat
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { type Space } from '@dxos/react-client/echo';
 import * as Panel from '@dxos/react-ui/Panel';
-import { Cell, type ModuleLayout, UpdateCompanionStubPlugin, addToRootCollection } from '@dxos/storybook-testing';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
+import * as StoryStagePlugin from '@dxos/storybook-testing/StoryStagePlugin';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { StorySettingsToolbar } from '../modules/index.ts';
 import {
   type DecoratorsProps,
   FAKE_REPLY,
-  ModuleContainer,
   createDecorators,
   defaultEdgeEnvironment,
   edgeFake,
@@ -54,9 +55,9 @@ const meta: Meta<StoryArgs> = {
       <Panel.Header>
         <StorySettingsToolbar />
       </Panel.Header>
-      {/* `ModuleContainer` pins itself to its nearest positioned ancestor, so the body is that ancestor. */}
+      {/* `ModuleContainer.Root` pins itself to its nearest positioned ancestor, so the body is that ancestor. */}
       <Panel.Body classNames='relative'>
-        <ModuleContainer columns={parameters.columns} />
+        <ModuleContainer.Root columns={parameters.columns} />
       </Panel.Body>
     </Panel.Root>
   ),
@@ -88,12 +89,11 @@ const commentPlugins = (agentRunner?: AppCapabilities.CommentAgentRunner) => [
   IllustratorPlugin.make(),
   CanvasPlugin.make(),
   ReviewPlugin.make({ agentRunner }),
-  UpdateCompanionStubPlugin(),
+  StoryStagePlugin.make(),
 ];
 
 const commentTypes = [
-  Drawing.Drawing,
-  Drawing.Canvas,
+  ...canvasDrawingSchemas,
   MarkdownType.Document,
   Thread.Thread,
   Message.Message,
@@ -104,8 +104,8 @@ const commentTypes = [
  * The object's article, its comments companion and, with the real agent, the assistant's trace, each in its own module.
  * Filing the object in the root collection gives it the app-graph node the article toolbar's comment action attaches to.
  */
-const commentLayout = (space: Space, object: Obj.Unknown, trace: boolean): ModuleLayout => {
-  addToRootCollection(space, [object]);
+const commentLayout = (space: Space, object: Obj.Unknown, trace: boolean): ModuleContainer.Layout => {
+  StoryHarness.addToRootCollection(space, [object]);
   return [
     [Cell.article(object)],
     [Cell.companion(object, 'comments')],
@@ -199,8 +199,7 @@ const canvasSubject: SubjectFactory = ({ trace }) =>
   makeSubject({
     trace,
     create: (space) => {
-      const canvas = space.db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA }));
-      return space.db.add(Drawing.make({ name: 'Architecture', canvas }));
+      return addCanvasDrawing(space.db, { name: 'Architecture', commands: [] });
     },
     prepare: async ({ db, invoker, subject }) => {
       await invoker.invokePromise(

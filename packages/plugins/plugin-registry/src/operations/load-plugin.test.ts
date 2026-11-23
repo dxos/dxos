@@ -11,11 +11,12 @@ import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
+import * as RegistryPlugin from '#meta';
 import { RegistryOperation } from '#operations';
-import { RegistryPlugin } from '#plugin';
 
-await Harness.preload({ plugins: [RegistryPlugin()] });
+import { RegistryNamespace } from '../namespace.ts';
+
+await Harness.preload({ plugins: [RegistryPlugin.make()] });
 
 const REMOTE_URL = 'https://example.com/hello/manifest.json';
 const remoteMeta = Plugin.makeMeta({ key: DXN.make('org.example.plugin.hello'), name: 'Hello' });
@@ -32,8 +33,8 @@ const remoteLoader = (id: string) =>
 describe('RegistryOperation.LoadPlugin', () => {
   test('loads a plugin by URL and enables it', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin()],
-      enabled: [meta.profile.key],
+      plugins: [RegistryPlugin.make()],
+      enabled: [RegistryNamespace.key],
       pluginLoader: remoteLoader,
     });
 
@@ -46,8 +47,8 @@ describe('RegistryOperation.LoadPlugin', () => {
 
   test('loads a plugin without enabling it when asked', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin()],
-      enabled: [meta.profile.key],
+      plugins: [RegistryPlugin.make()],
+      enabled: [RegistryNamespace.key],
       pluginLoader: remoteLoader,
     });
 
@@ -62,8 +63,8 @@ describe('RegistryOperation.LoadPlugin', () => {
 
   test('fails for a URL that does not load', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin()],
-      enabled: [meta.profile.key],
+      plugins: [RegistryPlugin.make()],
+      enabled: [RegistryNamespace.key],
       pluginLoader: remoteLoader,
     });
 

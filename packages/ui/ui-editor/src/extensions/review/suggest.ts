@@ -19,13 +19,13 @@ import { ChangeBarMarker, changeBars } from './change-bar.ts';
 import {
   type DiffHunk,
   type GroupPolicy,
-  type Hunk,
   computeCharHunks,
   diffHunks,
   groupHunks,
   pairMarkupHunks,
   rebaseHunksWith,
 } from './diff.ts';
+import { type Hunk } from './hunks.ts';
 
 /** One author's proposed revision of the editor's document (the base). */
 export type SuggestionSource = {

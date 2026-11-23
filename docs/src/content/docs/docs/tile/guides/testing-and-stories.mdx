@@ -1,0 +1,51 @@
+---
+title: Testing and stories
+description: Storybook stories and tests for TILE components.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this guide you have a story for a TILE component, with the theme and the translations it needs.
+
+A story is one state of a component, rendered on its own in [Storybook](https://storybook.js.org) with no app around
+it. A component that takes its data as props is easy to show this way. DXOS writes a story for each component, and
+runs the stories as tests.
+
+## A story
+
+A story needs the theme provider, react-ui's translations and the component's own. `withTheme` from
+`@dxos/react-ui/testing` wraps the story in `Theme.Provider` with `Theme.defaultTx`, and passes the story's
+`translations` parameter as its resources. Use it on every story of a TILE component.
+
+The component here is `ContactList` from [TILE in a PLEX plugin](/docs/tile/guides/tile-in-a-plex-plugin/). It is a
+list of contacts that shows a hint when it has none:
+
+<Snippet file="tile-guides" region="story" lang="tsx" />
+
+`Default` and `NoContacts` are two stories, because each export after the default is one. Write a story per state,
+rather than one story with every state at once. A change to the empty list then shows in `NoContacts` and nowhere
+else.
+
+`withTheme` also passes Storybook's `theme` global to the provider as `themeMode`. A component that calls
+`useThemeMode` then gets the mode that the switcher in Storybook's toolbar chose.
+
+## The Storybook setup
+
+Your app's Storybook needs the same Vite setup as the app. Add `ThemePlugin` and `IconsPlugin` from
+[Installation](/docs/tile/learn/installation/), and put the two stylesheet imports in its preview file.
+
+## Helpers and tests
+
+`@dxos/react-ui/testing` also exports the helpers DXOS's own stories use:
+
+| Export                        | Use                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| `withTheme`                   | The theme provider for a story                                           |
+| `withLayout`                  | A frame around the story, with `classNames` for its size and padding     |
+| `withSizes`, `SIZE_ARG_TYPES` | The story at the size its `size` arg names, and the control that picks it |
+| `Loading`                     | A loading placeholder for a story                                        |
+| `ThrowError`                  | A component that throws after a delay, for trying an error boundary      |
+
+A story can also test behavior. A play function is code that Storybook runs in the browser after it renders the
+story. For example, a play function can open a dialog, press a key, and check where focus went. Target elements by
+`data-testid`, which TILE parts pass through to their element.

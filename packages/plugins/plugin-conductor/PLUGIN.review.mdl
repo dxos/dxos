@@ -1,0 +1,415 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-conductor/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ConductorPlugin
+
+The plugin itself is thin: it contributes a create-object entry, the schemas and one surface
+(`CanvasArticle`). The behaviour lives in `@dxos/conductor` (types, node kernels, the fiber executor) and
+`@dxos/react-ui-canvas-compute` (shapes, the scene projection and `ComputeGraphController`). The types,
+the pull-based executor, `ValueBag`/`NotExecuted` semantics, the `if` router and the canvas
+editing round-trip are solid and tested (`fiber-compiler.test.ts`, `scene.test.ts`, the playwright
+`scene.spec.ts`). The data and AI nodes are the weak part: `database` and `text-to-image` throw
+`Not implemented`, `thread` and `reducer` have no kernel, the feed branch of `append` is dead code,
+and the GPT node ignores its `model` and `tools` inputs. The biggest divergence is `invokeGpt`, which
+takes a `prompt`/`history`/`conversation` bag and returns messages, text and a token stream instead of
+reading a `Ref<Thread>` and returning one `Message`. `CanvasArticle` has moved to the scene engine, so
+its declared state no longer matches. None of the declared op errors (`MissingValue`,
+`InvalidExpression`, `ModelUnavailable`, ...) exist as typed errors; failures are `invariant`s, thrown
+`Error`s or `orDie`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ComputeValueType: The four literals match.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/types/graph.ts#ComputeValueType]
+  note: No test asserts the literal set or exercises an `object` valueType.
+```
+
+```mdl
+verdict NodeType: Every literal exists, but the input and output node types are DXN strings.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#NodeType, github:dxos/dxos/packages/core/compute/conductor/src/nodes/system.ts#NODE_INPUT, github:dxos/dxos/packages/core/compute/conductor/src/nodes/system.ts#NODE_OUTPUT]
+  note: The 28 named node types match; `input` and `output` are `dxn:node:input` and `dxn:node:output` in code. No test enumerates the set.
+```
+
+```mdl
+verdict ComputeNode: The schema extends GraphNode with every declared field.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/types/graph.ts#ComputeNode]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/types/model.test.ts, github:dxos/dxos/packages/core/compute/conductor/src/workflow/workflow.test.ts]
+```
+
+```mdl
+verdict ComputeEdge: The schema extends GraphEdge with input and output properties.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/types/graph.ts#ComputeEdge]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/scene/scene.test.ts]
+```
+
+```mdl
+verdict ComputeGraph: The ECHO object holds the graph plus optional input and output nodes.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/types/graph.ts#ComputeGraph, github:dxos/dxos/packages/core/compute/conductor/src/types/graph.ts#ComputeGraphSpec]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/workflow/workflow.test.ts]
+```
+
+```mdl
+verdict ValueBag: A tagged record of value effects with make, get, unwrap and map helpers.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/types/compute.ts#ValueBag]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/types/compute.test.ts]
+```
+
+```mdl
+verdict CanvasArticle: Renders the board as article or section, but on the scene engine with a different state model.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-conductor/src/containers/CanvasArticle/CanvasArticle.tsx#CanvasArticle, github:dxos/dxos/packages/plugins/plugin-conductor/src/capabilities/react-surface.ts]
+  note: |
+    Props (`role`, `subject`, `attendableId`) match. State is now an ECHO view store, canvas atoms, a compute
+    projection and history over `Canvas.Root`; there is no `CanvasGraphModel`, `ShapeRegistry` or
+    `ComputeShapeLayout`, and the toolbar is the engine's own `Canvas.Tools`, not an injected slot. No test renders it.
+```
+
+```mdl
+verdict evalConstant: The constant kernel returns the node's value, with no MissingValue error.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  note: The `constant` entry emits `node.value` as `result`; an unset value flows on as `undefined` rather than failing with `MissingValue`. No test runs a constant node.
+```
+
+```mdl
+verdict jsonTransform: The json-transform kernel evaluates JSONPath, with no InvalidExpression error.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/jsonpath.test.ts]
+  note: The kernel calls `JSONPath` and returns its match array; a bad expression surfaces as whatever `jsonpath-plus` throws, not a typed `InvalidExpression`. `jsonpath.test.ts` tests the library, not the node.
+```
+
+```mdl
+verdict boolAnd: The and kernel returns a truthy AND of a and b.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/playwright/scene.spec.ts]
+```
+
+```mdl
+verdict boolOr: The or kernel returns a truthy OR of a and b.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/playwright/scene.spec.ts]
+```
+
+```mdl
+verdict boolNot: The not kernel returns the falsiness of its input.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  note: Only the basic circuit uses a `not` node, and no test runs it.
+```
+
+```mdl
+verdict ifRoute: The if kernel routes the value to true or false and fails the other port with NotExecuted.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry, github:dxos/dxos/packages/core/compute/conductor/src/types/schema.ts#IfOutput]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.test.ts]
+```
+
+```mdl
+verdict ifElseSelect: The if-else kernel returns trueValue or falseValue on the condition.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  note: The fiber test titled `if-else` builds an `if` node (`g4`), not an `if-else` node.
+```
+
+```mdl
+verdict appendToQueue: Appending works for View collections only; the feed branch is dead code.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry, github:dxos/dxos/packages/core/compute/conductor/src/types/schema.ts#AppendInput]
+  note: |
+    The `append` kernel only takes the feed path for a `dxn:queue:` prefix, which canonical EIDs no longer carry
+    (its own TODO says so), so feed appends fall into the ECHO branch and fail. Space mismatch is an `invariant`
+    and unsupported containers throw a plain `Error`. No test runs it.
+```
+
+```mdl
+verdict createQueue: The make-queue kernel adds a new Feed and returns a Ref to it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  note: Works as declared, but `make-queue` has no shape in the canvas palette and no test runs it.
+```
+
+```mdl
+verdict invokeGpt: The GPT node takes a prompt bag and returns messages, text and a token stream, not a Thread in and a Message out.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/gpt/gpt.ts#gptNode, github:dxos/dxos/packages/core/compute/conductor/src/nodes/gpt/gpt.ts#GptInput, github:dxos/dxos/packages/core/compute/conductor/src/nodes/gpt/gpt.ts#GptOutput]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/tests/gpt.test.ts, github:dxos/dxos/packages/core/compute/conductor/src/nodes/gpt/gpt.test.ts]
+  note: |
+    Input is `prompt`, `systemPrompt`, `context`, `history` or a `conversation` Feed ref; there is no `thread: Ref<Thread>`.
+    The `model` input is ignored (always `Model.DEFAULT_EDGE`) and tools resolve against an empty resolver.
+    No `ModelUnavailable` error; AI failures propagate untyped. `tests/gpt.test.ts` runs only with `DX_RUN_SLOW_TESTS=1`.
+```
+
+```mdl
+verdict invokeFunction: The function kernel loads and deserialises the PersistentOperation and invokes it, without typed errors.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/workflow/workflow.test.ts]
+  note: A missing reference throws a plain `Error` and invocation failures `orDie`, so neither `FunctionNotFound` nor `InvocationFailed` exists. The only test covers the missing-reference load failure, not a successful invocation.
+```
+
+```mdl
+verdict F-1.1: The Create object entry makes a CanvasBoard and adds it through SpaceOperation.AddObject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-conductor/src/capabilities/create-object.ts, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/types/schema.ts#make]
+  note: `plugin.test.ts` checks only module activation; nothing invokes the create entry.
+```
+
+```mdl
+verdict F-1.2: Nodes render as draggable, resizable shapes on the panning scene canvas.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-conductor/src/containers/CanvasArticle/CanvasArticle.tsx#CanvasArticle, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/scene/echo-store.ts#createEchoStore]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/playwright/scene.spec.ts, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/scene/echo-store.test.ts]
+```
+
+```mdl
+verdict F-1.3: A link drawn between ports becomes a ComputeEdge through the compute projection.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/scene/projection.ts#createComputeProjection]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/scene/scene.test.ts]
+```
+
+```mdl
+verdict F-1.4: Deleting a link removes the edge, but downstream nodes keep their last value until the next run.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/scene/projection.ts#createComputeProjection, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/graph/controller.ts#ComputeGraphController.exec]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/scene/scene.test.ts]
+  note: The projection deletes the edge (tested in `scene.test.ts`), but the controller only re-executes on a forced output or a run button, so the disconnected node's runtime value is not cleared on delete.
+```
+
+```mdl
+verdict F-2.1: The palette lists most node types, but not make-queue.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/registry.ts#computeNodeDefs, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/registry.ts#computeNodeRegistry]
+  note: `computeNodeDefs` covers every NodeType except `make-queue` (and the system input/output), and adds `trigger`. No test checks the palette contents.
+```
+
+```mdl
+verdict F-2.2: The constant shape edits its value and picks its valueType.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/shapes/Constant.tsx#ConstantComponent]
+  note: The `TypeSelect` in the box status sets the type; no test drives the editor.
+```
+
+```mdl
+verdict F-2.3: The template shape has a text box, and the kernel interpolates handlebar variables.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/shapes/Template.tsx#TemplateComponent, github:dxos/dxos/packages/core/compute/conductor/src/nodes/template/text.ts#applyTextTemplate, github:dxos/dxos/packages/core/compute/conductor/src/nodes/template/json.ts#applyObjectTemplate]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/template/json.test.ts, github:dxos/dxos/packages/core/compute/conductor/src/tests/gpt.test.ts]
+```
+
+```mdl
+verdict F-2.4: The function shape binds an operation from a typed Script id, not by selecting from the space.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/shapes/Function.tsx#FunctionShapeComponent]
+  note: The user types a Script DXN; the shape finds the PersistentOperation whose `source` is that Script. There is no picker over the space's operations, and no test.
+```
+
+```mdl
+verdict F-3.1: Changing a trigger node re-runs every dependent node through the cached pull executor.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/graph/controller.ts#ComputeGraphController.setOutput, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/graph/controller.ts#ComputeGraphController.exec, github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.ts#GraphExecutor.getAllDependantNodes]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/playwright/scene.spec.ts]
+  walkthrough:
+    - A control sets a forced output and schedules a run from that node. github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/graph/controller.ts#ComputeGraphController.setOutput
+    - The run collects every node downstream of the trigger and computes each. github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/graph/controller.ts#ComputeGraphController.exec
+    - The executor resolves dependants and caches each node's compute, so upstream nodes run first, once. github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.ts#GraphExecutor.getAllDependantNodes
+```
+
+```mdl
+verdict F-3.2: The executor is pull-based, but the controller eagerly runs every downstream node.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.ts#GraphExecutor.computeOutputs, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/graph/controller.ts#ComputeGraphController.exec]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.test.ts]
+  note: '`GraphExecutor` computes a node only when an output is pulled and caches it, but `ComputeGraphController.exec` computes every node downstream of the triggers whether or not anything consumes it.'
+```
+
+```mdl
+verdict F-3.3: A NotExecuted output fails downstream reads with NotExecuted rather than throwing.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.ts#GraphExecutor.computeOutput, github:dxos/dxos/packages/core/compute/conductor/src/types/compute.ts#NotExecuted]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.test.ts]
+```
+
+```mdl
+verdict F-3.4: Each ValueBag port is its own cached effect, so ports resolve independently.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/types/compute.ts#ValueBag, github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.ts#GraphExecutor.computeOutputs]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/types/compute.test.ts, github:dxos/dxos/packages/core/compute/conductor/src/tests/streaming.test.ts, github:dxos/dxos/packages/core/compute/conductor/src/tests/gpt.test.ts]
+```
+
+```mdl
+verdict F-4.1: The GPT node gets AiService from the space layer, but its model and tools inputs are ignored.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/gpt/gpt.ts#gptNode, github:dxos/dxos/packages/plugins/plugin-conductor/src/containers/CanvasArticle/CanvasArticle.tsx#CanvasArticle]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/tests/gpt.test.ts]
+  note: '`systemPrompt` is honoured; `model` is never read (always `Model.DEFAULT_EDGE`) and tools run through `ToolResolverService.layerEmpty`.'
+```
+
+```mdl
+verdict F-4.2: The GPT node streams tokens to its tokenStream port and the shape renders them.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/gpt/gpt.ts#gptNode, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/shapes/Gpt.tsx#GptComponent]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/tests/gpt.test.ts]
+```
+
+```mdl
+verdict F-4.3: A function node can hold a Ref to any PersistentOperation, but the UI only binds Script-sourced ones.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/types/graph.ts#ComputeNode, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/shapes/Function.tsx#FunctionShapeComponent]
+  note: The kernel accepts any `PersistentOperation` ref; the only way to set one is the Script-id text box. No test invokes a function node.
+```
+
+```mdl
+verdict F-5.1: The queue kernel resolves a Feed by EID and returns its messages.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/shapes/feed-def.ts#feedNodeDef]
+  note: No test runs the `queue` node.
+```
+
+```mdl
+verdict F-5.2: Append writes to View collections; feed appends are unreachable.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  note: See appendToQueue; the feed branch keys on a `dxn:queue:` prefix that current EIDs never have.
+```
+
+```mdl
+verdict F-5.3: The database node throws Not implemented.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  note: The `database` kernel has `VoidOutput` and its exec throws `Not implemented`; nothing exposes the space as a tool.
+```
+
+```mdl
+verdict F-5.4: The thread node has no kernel and its shape renders an empty list.
+  status: missing
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/shapes/Thread.tsx#ThreadComponent]
+  note: The `thread` registry entry declares outputs but no `exec`, and `ThreadComponent` iterates a hard-coded empty `items` array.
+```
+
+```mdl
+verdict F-6.1: The if node routes the value to the true or false port.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.test.ts]
+```
+
+```mdl
+verdict F-6.2: The if-else node selects one of two values.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  note: Used in the control circuit, but no test runs it.
+```
+
+```mdl
+verdict F-6.3: The reducer node has an input schema but no kernel, so it produces nothing.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry, github:dxos/dxos/packages/core/compute/conductor/src/types/schema.ts#ReducerInput]
+  note: The `reducer` entry declares `values` in and `result` out with no `exec`; the controller only computes its inputs.
+```
+
+```mdl
+verdict F-6.4: And, Or and Not kernels implement the boolean combinators.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/nodes/registry.ts#registry]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/playwright/scene.spec.ts]
+  note: The logic-circuit playwright test exercises And and Or; Not is untested.
+```
+
+```mdl
+verdict F-7.1: ComputeGraph and CanvasBoard are ECHO objects and replicate as such.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/conductor/src/types/graph.ts#ComputeGraph, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/types/schema.ts#CanvasBoard, github:dxos/dxos/packages/plugins/plugin-conductor/src/capabilities/schema.ts]
+  note: '`canvas-board.test.ts` round-trips a board through one database; no test replicates between peers.'
+```
+
+```mdl
+verdict F-7.2: The article re-syncs the controller when the graph object changes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-conductor/src/containers/CanvasArticle/CanvasArticle.tsx#CanvasArticle]
+  note: '`useGraphController` subscribes to the compute graph and calls `controller.graph.sync()`; the layout reads through the ECHO store. No multi-peer test.'
+```
+
+```mdl
+verdict F-7.3: In the section role the scene renders inside an aspect-square container.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-conductor/src/containers/CanvasArticle/CanvasArticle.tsx#CanvasArticle, github:dxos/dxos/packages/plugins/plugin-conductor/src/capabilities/react-surface.ts]
+  note: No test renders the section role.
+```
+
+```mdl
+verdict T-1: No test creates a graph through the Create Object menu.
+  status: missing
+  note: '`plugin.test.ts` checks module activation only; `canvas-board.test.ts` loads a fixture board rather than creating one.'
+```
+
+```mdl
+verdict T-2: No test checks a constant value reaching a text node.
+  status: missing
+  note: The template playwright test checks the Text shape's chrome, not the value it receives.
+```
+
+```mdl
+verdict T-3: The logic playwright test toggles switches through AND and OR to a beacon.
+  status: partial
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/playwright/scene.spec.ts]
+  note: It asserts only the beacon after the OR, from both-off to both-on; it never reads the AND output or the true/false case.
+```
+
+```mdl
+verdict T-4: No test runs a json-transform node.
+  status: missing
+  note: '`jsonpath.test.ts` calls the `jsonpath-plus` library directly.'
+```
+
+```mdl
+verdict T-5: GPT tests run a prompt into a GPT node and check non-empty text, without a thread node.
+  status: partial
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/tests/gpt.test.ts]
+  note: The input is a prompt from the graph input node, not a thread node; `ModelUnavailable` is not tested; the suite runs only with `DX_RUN_SLOW_TESTS=1`.
+```
+
+```mdl
+verdict T-6: No test runs make-queue, append and queue together.
+  status: missing
+  note: Searched the conductor and react-ui-canvas-compute tests for `make-queue` and `append`.
+```
+
+```mdl
+verdict T-7: No multi-peer test of the canvas.
+  status: missing
+  note: No test opens one board from two peers.
+```
+
+```mdl
+verdict T-8: The fiber test checks NotExecuted on the false port of an if node, not a text node's rendering.
+  status: partial
+  tests: [github:dxos/dxos/packages/core/compute/conductor/src/compiler/fiber-compiler.test.ts]
+  note: The `if-else` fiber test asserts the untaken port fails with `NotExecuted`; nothing checks a downstream text node renders nothing.
+```
+
+```mdl
+verdict QA-1: The QA test is human-only and no automation runs it.
+  status: missing
+  note: The spec itself marks every step human; no playwright or vitest drives the create-wire-read loop in Composer.
+```

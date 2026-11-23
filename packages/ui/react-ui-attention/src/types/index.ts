@@ -6,8 +6,11 @@
 // operation handlers and app-graph builders running under node or bun can use them without pulling
 // the components.
 
+export * as Activity from './Activity.ts';
 export * as Attention from './Attention.ts';
+export * as ScrollPosition from './ScrollPosition.ts';
 export * as Selection from './Selection.ts';
+export * as ViewLocation from './ViewLocation.ts';
 export * as ViewState from './ViewState.ts';
 
 // The view-state backends: Effect atoms over the definitions above, with no React of their own, so

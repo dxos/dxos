@@ -49,10 +49,9 @@ Design: [DESIGN.md](./DESIGN.md).
 - [ ] ArrowUp/ArrowDown jump to first/last (carried from the legacy pager, never requested); reconsider.
 - [ ] `Panel.Header` + `Toolbar.Root` stand in for a `Panel.Toolbar` that does not exist; adopt one if it lands.
 - [ ] `Button.Root iconOnly` stands in for `IconButton` (not exported where needed); switch when available.
-- [ ] Opening an owned slide warns "equally specific URL bindings address one node": plugin-space's
-      `collections` and `objects` app-graph extensions share the `object` URL key and path, and both claim the
-      nested node `…/collections/<presentation>/<slide>`. Not presenter's binding; fix in plugin-space (and teach
-      `resolveCollectionObjectPath` about container-annotated objects so slide deep links resolve).
+- [x] Opening an owned slide warned "equally specific URL bindings address one node": plugin-space's
+      `collections` extension no longer binds the `object` key, so `objects` alone addresses every depth.
+- [ ] Teach `resolveCollectionObjectPath` about container-annotated objects so slide deep links resolve.
 - [ ] Navtree connector rebuilds children on every owned-slide keystroke; derive a heading-only atom.
 - [ ] Tighten the "no settings module" test (checks a substring).
 
@@ -71,7 +70,7 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **Print stylesheet** — `Deck/print.css`, imported by `Deck`; scoped by `html[data-printing-deck]`, prints every slide.
 - [x] **Object image embeds** — `![label](echo:///<id>)` renders the object like `<Surface ref>`, keeping main's reveal-era syntax (#14152) and plugin-debug's presenter sample working.
 - [x] **Themes** — `default`, `light`, `dark`, `serif` via `--slide-*` variables; `theme:` headmatter, Presentation `theme` setting with color/font overrides; story `plugins/plugin-presenter/components/SlideTheme`.
-- [x] **Slide grid** — the Presentation article shows every slide as a thumbnail (`SlideGrid`, react-ui-list `Listbox` tiles in a `Viewport`), no pager; drag a thumbnail to reorder sections, double-click to present from it (D-51).
+- [x] **Slide grid** — the Presentation article shows every slide as a thumbnail (`SlideGallery`, react-ui-list `Listbox` tiles in a `Viewport`), no pager; drag a thumbnail to reorder sections, double-click to present from it (D-51).
 - [ ] Theme-driven Tailwind utilities for plugin-contributed themes (a `SlideTheme` capability) if a second source of themes appears.
 - [ ] `class:` frontmatter only works with Tailwind utilities that are already generated (the markdown is not scanned); consider a safelist.
 - [ ] Known deck conversion losses: per-colour tints behind the ECHO/HALO/MESH/EDGE images (needs a tint layer separate from `backgroundOpacity`), fixed image heights, and the dropped hidden FADE slide.

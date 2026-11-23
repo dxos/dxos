@@ -66,7 +66,8 @@ export const rebind = Effect.fnUntraced(function* (binder: AiContext.Binder, key
 
 /**
  * An editable copy of `source` owned by the agent: the instruction text is copied into a new space
- * Text so edits never touch the compiled skill; tools and hooks are kept as the original declares them.
+ * Text so edits never touch the compiled skill; tools are kept as the original declares them. The copy
+ * keeps the original's key, so the hooks scoped to it still fire.
  */
 export const fork = Effect.fnUntraced(function* (source: Skill.Skill, agent: Agent.Agent) {
   const text = yield* Database.load(source.instructions.source).pipe(Effect.orDie);
@@ -77,7 +78,6 @@ export const fork = Effect.fnUntraced(function* (source: Skill.Skill, agent: Age
     description: source.description,
     tools: [...source.tools],
     agentCanEnable: source.agentCanEnable,
-    hooks: source.hooks ? [...source.hooks] : undefined,
     instructions: Template.make({ source: text.content, inputs: [...(source.instructions.inputs ?? [])] }),
   });
 });

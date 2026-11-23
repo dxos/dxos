@@ -24,7 +24,7 @@ describe('spaces list', () => {
 
   it('should list spaces', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.spaces.create());
       yield* handler({ wait: Option.none() });

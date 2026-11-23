@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import type * as Scene from './scene.ts';
 import { ascii, coordinates, extract, rows } from './view.ts';
 
@@ -89,7 +91,7 @@ describe('view', () => {
   });
 
   test('connectors with the same element id in different objects stay distinct', ({ expect }) => {
-    const edge = (id: string, from: Scene.Point, to: Scene.Point, text: string): Scene.WorldObject => ({
+    const edge = (id: string, from: Shape.Point, to: Shape.Point, text: string): Scene.WorldObject => ({
       id,
       elements: [
         { kind: 'arrow', id: 'edge', start: from, end: to },

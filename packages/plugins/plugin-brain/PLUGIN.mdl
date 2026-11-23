@@ -8,16 +8,15 @@ The Facts layer for Composer: a per-space semantic index of RDF `Fact` tuples (s
 object with factuality, attribution, and provenance) extracted from user content by upstream
 pipelines (e.g. `plugin-inbox`'s `EnrichMailbox` over a mailbox feed).
 
-The plugin owns the provider side of the `FactStore` seam defined in `@dxos/pipeline-rdf`: it
-contributes a shared per-space `FactStoreRegistry` plus a space-affinity operation `LayerSpec` that
-provides the `FactStore` service to any operation declaring it. Consumers (such as `plugin-inbox`'s
-`EnrichMailbox` and `GenerateReply`) depend only on the `FactStore` `Context.Tag` from
-`@dxos/pipeline-rdf` — never on this plugin's package — so the store implementation can move from
-in-memory to a persistent backend without touching consumers.
+The facts live in the space's memory (`MemoryService` from `@dxos/echo-memory`), which the client services host
+runs and persists; the plugin's operations declare `MemoryService` and read and write it. For code that still
+works through the `FactStore` seam of `@dxos/pipeline-rdf` (the email fact pipeline, stories), the plugin
+contributes a `FactStoreRegistry` and a space-affinity `LayerSpec` providing `FactStore`, both over the same space
+memory, so every reader sees what every writer wrote.
 
 On top of the store, the plugin contributes:
 
-- Two visible operations, `QueryFacts` and `SummarizeSubject`, exposed to the assistant through the
+- Three visible operations, `QueryFacts`, `QuerySparql` and `SummarizeSubject`, exposed to the assistant through the
   `org.dxos.skill.brain` skill. Skill instructions describe HOW to use the tools (entity-slug
   conventions, confidence filtering, iterative narrowing) — task-specific behavior lives in the
   operations themselves.
@@ -38,6 +37,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -53,7 +53,7 @@ type Fact
 type SemanticQueryInput
   desc: |
     The structured (browser-safe) query surface over the triple store. Mirrors
-    SemanticQuery from @dxos/pipeline-rdf; no raw SPARQL is exposed to the LLM.
+    SemanticQuery from @dxos/pipeline-rdf; raw SPARQL goes through op:querySparql instead.
   fields:
     subjectEntity?: string     # Entity slug the fact's subject must match
     predicate?: string         # Exact predicate string
@@ -61,6 +61,7 @@ type SemanticQueryInput
     source?: string            # Source DXN the fact was extracted from
     minConfidence?: number     # 0..1 lower bound on factuality confidence
     limit?: number             # Maximum facts returned (default 50)
+    offset?: number            # Matching facts to skip, for windowed reads (default 0)
 ```
 
 ```mdl
@@ -88,14 +89,26 @@ type SummaryResult
 ```
 
 ```mdl
+type AgentTrim
+  desc: |
+    How every fact tool bounds what it returns to the model: at most 50 rows and 500
+    characters per value. When anything is cut, the response carries a `note` saying the
+    output was truncated ("Output truncated: showing N of M rows.") and that the model must
+    read the rest in windows with LIMIT/OFFSET (limit/offset for QueryFacts); a SPARQL query
+    without a LIMIT is also told to add one.
+  fields:
+    note?: string              # Present only when rows or values were cut
+```
+
+```mdl
 type FactStoreRegistry
   desc: |
-    Contributed capability (BrainCapabilities.FactStoreRegistry). One shared FactStore
-    instance per space, created lazily; layerFor wraps the same instance so operation
-    layers and direct consumers (React components) observe identical state.
+    Contributed capability (BrainCapabilities.FactStoreRegistry), once the client is initialized. Each space's
+    memory (client.memory) as a FactStore; subscribe fires whenever the space's store applies a batch.
   fields:
     forSpace: (spaceId) => FactStoreApi
     layerFor: (spaceId) => Layer<FactStore>
+    subscribe: (spaceId, listener) => () => void
 ```
 
 ## Operations
@@ -104,15 +117,33 @@ type FactStoreRegistry
 op queryFacts
   key: org.dxos.operation.brain.queryFacts
   desc: |
-    Runs a structured SemanticQuery against the space FactStore and returns compact
+    Runs a structured SemanticQuery against the space memory and returns compact
     facts for LLM consumption. Visible; listed as a tool of the brain skill.
   input:
     query: SemanticQueryInput
-  output: { facts: CompactFact[] }
-  requires: [FactStore]
-  effects: [factstore:read]
+  output: { facts: CompactFact[], total: number, note?: string }
+  requires: [MemoryService]
+  effects: [memory:read]
   errors:
-    SemanticIndexError: the underlying triple-store query failed
+    MemoryError: the memory could not answer the query
+  note: The output is trimmed for the model (type:AgentTrim); `total` counts every match.
+```
+
+```mdl
+op querySparql
+  key: org.dxos.operation.brain.querySparql
+  desc: |
+    Runs a raw SPARQL SELECT against the space memory and returns its solutions, each
+    bound variable rendered as text (IRIs as `<iri>`, blank nodes as `_:id`, literals
+    verbatim). Visible; listed as a tool of the brain skill.
+  input:
+    sparql: string             # A SPARQL SELECT; should carry LIMIT and OFFSET
+  output: { rows: Record<string, string>[], total: number, note?: string }
+  requires: [MemoryService]
+  effects: [memory:read]
+  errors:
+    MemoryError: the query is not a SELECT (an update included) or fails to run
+  note: The output is trimmed for the model (type:AgentTrim); `total` counts every solution.
 ```
 
 ```mdl
@@ -127,10 +158,10 @@ op summarizeSubject
     subject: string            # Entity slug or label (normalized to slug before query)
     focus?: string             # Optional angle, e.g. "commitments", "recent activity"
   output: SummaryResult
-  requires: [FactStore, AiService]
-  effects: [factstore:read, llm]
+  requires: [MemoryService, AiService]
+  effects: [memory:read, llm]
   errors:
-    SemanticIndexError: the underlying triple-store query failed
+    MemoryError: the memory could not answer the query
   note: Returns { summary: '', factCount: 0 } when no facts match; never invents content.
 ```
 
@@ -141,8 +172,8 @@ component FactsCompanion
   desc: |
     Companion surface over an article subject rendering the space's facts via the FactViewer
     component (src/components/FactViewer, exported via ./components).
-    Facts are read from the shared per-space store (FactStoreRegistry.forSpace). v0 shows
-    all space facts (the store is per-space, matching its granularity) with FactViewer's
+    Facts are read from the space's memory (client.memory), refreshed whenever its store applies a batch. v0 shows
+    all space facts (the memory is per-space, matching its granularity) with FactViewer's
     text filter; subject-scoped filtering by source DXN is roadmap.
   props:
     subject: Obj.Any           # The companioned ECHO object
@@ -153,29 +184,61 @@ component FactsCompanion
   emits: {}
 ```
 
+```mdl
+component MemoryArticle
+  desc: |
+    The space's memory, opened from Memory under the space's settings: its fact store imported from or
+    exported to TriG, a SPARQL editor, and every SPARQL query run against the store, an agent's included,
+    shown live with its results as it runs.
+  state:
+    statements: number          # Statements across the store's named graphs; refreshed on store writes
+    log: SparqlQueryRecord[]    # The registry's query log for the space, newest last
+    pinned?: number             # The query the viewer picked; unset follows the newest
+  actions:
+    import: File -> void        # Reads a .trig/.ttl file into the store
+    export: () -> void          # Downloads the store as memory-<space>.trig
+    run: string -> void         # Runs a SELECT; its result arrives through the log
+  layout: |
+    [n statements | Import TriG | Export TriG | status]
+    [SPARQL editor ............................ Run]
+    [#7 #6 #5 …  (query history, newest first)     ]
+    [Live query #7 · 12 rows
+     SELECT …
+     ?p        ?n
+     uses      1204 ...                            ]
+```
+
+```mdl
+component PipelineCompanion
+  desc: |
+    The run that filled the space's memory, as the memory records it (a JSON state in the `pipeline` graph,
+    written beside the facts by `facts-cli trig`): a diagram of its sources with their first and last message,
+    its stages in order, the facts written and the model each stage called with its calls and cost, drawn on a
+    read-only canvas (`Scene2DView`); then the run's time, counters and cost, and its busiest channels with
+    their cursor.
+  state:
+    pipelines: Pipeline.State[]   # Every run the store records, newest first; refreshed on store writes
+```
+
 ## Features
 
 ```mdl
-feat F-1: Per-space FactStore provisioning
+feat F-1: Facts in the space's memory
+  uses: [FactStoreRegistry]
 
   req F-1.1:
-    when: the plugin activates
-    then: a single FactStoreRegistry is contributed (BrainCapabilities.FactStoreRegistry)
-          together with a space-affinity LayerSpec providing FactStore
+    when: an operation of this plugin runs with a space context
+    then: it reads and writes the space's MemoryService, which the client services host runs, so its facts persist
+          and every page sees them
 
   req F-1.2:
-    when: forSpace(spaceId) is called repeatedly for the same space
-    then: the same FactStore instance is returned (lazily created on first use)
+    when: an operation declaring FactStore runs with a space context
+    then: the plugin's LayerSpec gives it a FactStore over the space's memory
 
   req F-1.3:
-    when: an operation declaring the FactStore service runs with a space context
-    then: the LayerSpec injects the registry's store for that space — the SAME instance
-          forSpace returns, so UI reads observe operation writes
-
-  req F-1.4:
-    when: the store backend changes (in-memory → persistent)
-    then: no consumer changes: only the registry's store construction is touched
-    tags: [roadmap]
+    when: the client is initialized
+    then: a FactStoreRegistry is contributed whose stores are the space memories, and whose subscribe fires on every
+          batch the space's store applies
 ```
 
 ```mdl
@@ -183,8 +246,8 @@ feat F-2: Assistant access via the brain skill
 
   req F-2.1:
     when: the plugin activates
-    then: the org.dxos.skill.brain skill is contributed with tools QueryFacts and
-          SummarizeSubject
+    then: the org.dxos.skill.brain skill is contributed with tools QueryFacts,
+          QuerySparql and SummarizeSubject
 
   req F-2.2:
     when: the skill instructions are rendered
@@ -194,10 +257,21 @@ feat F-2: Assistant access via the brain skill
   req F-2.3:
     when: the assistant invokes QueryFacts
     then: results are compact single-line facts bounded by limit (default 50)
+
+  req F-2.4:
+    when: the assistant invokes QuerySparql with a SELECT
+    then: the solutions are returned as rows of text; any other query form is refused
+          with SemanticIndexError and the store is unchanged
+
+  req F-2.5:
+    when: a fact tool's result exceeds 50 rows or a value exceeds 500 characters
+    then: the response is trimmed and carries a note telling the model the output was
+          cut and to read the rest in windows with LIMIT/OFFSET (type:AgentTrim)
 ```
 
 ```mdl
 feat F-3: FactViewer companion surface
+  uses: [FactsCompanion]
 
   req F-3.1:
     when: an article subject is companioned in a space with a FactStore
@@ -223,6 +297,45 @@ feat F-4: Consumers resolve FactStore through the seam
           participants
 ```
 
+```mdl
+feat F-5: Memory view, TriG transfer and live queries
+  uses: [MemoryArticle, FactStoreRegistry]
+
+  req F-5.1:
+    when: a space's settings are opened
+    then: they list Memory, which opens the MemoryArticle over that space's store
+
+  req F-5.2:
+    when: a TriG (or Turtle) file is imported
+    then: its quads are added to the space's store, the statement count updates, and the facts
+          it holds answer QueryFacts and QuerySparql like facts the store extracted itself
+
+  req F-5.3:
+    when: Export TriG is clicked
+    then: the store's statements, their graph metadata and its ontology download as one TriG
+          document that imports into an empty store as the same facts
+
+  req F-5.4:
+    when: an agent runs QuerySparql (or a SELECT is run from the view)
+    then: the query appears in the view as it starts, marked running, and its row count and first
+          rows replace the marker when it ends
+```
+
+```mdl
+feat F-6: Pipeline state beside the memory
+  uses: [PipelineCompanion]
+
+  req F-6.1:
+    when: a crawl's facts are exported as TriG where its crawl.db and trace.jsonl lie
+    then: the export carries the run's state: each channel's cursor, item count and first and last message,
+          each stage's model calls, tokens and catalog cost, the run's start and end, and the facts written
+
+  req F-6.2:
+    when: the Pipeline panel is opened over a memory holding a run's state
+    then: it draws the run as a diagram of channels, stages, model and facts, and lists its time, counters,
+          cost and busiest channels in human-readable form
+```
+
 ## Acceptance
 
 ```mdl
@@ -243,6 +356,17 @@ scenario T-2: QueryFacts returns matching facts
     - the entity query returns facts where alice is subject or object
     - the confidence query excludes facts below the bound
     - results are CompactFact-shaped and bounded by limit
+```
+
+```mdl
+scenario T-6: QuerySparql runs raw SELECTs and trims for the model
+  given: a memory FactStore seeded with facts
+  when: QuerySparql runs a SELECT, an update, and a SELECT with more than 50 solutions
+  then:
+    - the SELECT returns its solutions as text rows
+    - the update fails with SemanticIndexError and every fact remains
+    - the large result returns 50 rows with a truncation note; without a LIMIT the note
+      says to add one
 ```
 
 ```mdl
@@ -312,6 +436,152 @@ test QA-1: Query and summarize facts already in the store
       expect: FactViewer lists the space's facts, filterable by entity/predicate text
       note: NO `invoke` — FactsCompanion is a read-only React surface, not backed by an operation.
 ```
+
+```mdl
+test QA-2: An agent turns a community's memory into sheets with charts, a deck and a summary
+  desc: Import the Cloudflare Developers Discord's facts as TriG, then ask the Composer assistant what its memory says, without telling it which skills to use; the Memory view shows each query as the agent runs it.
+  actors: human
+  covers: [F-5.1, F-5.2, F-5.4, F-2.4]
+  status: unverified
+  given:
+    - an identity exists, with a model the assistant can reach
+    - a TriG export of a crawl's fact store (`moon run plugin-discord:facts -- trig <out.trig> --facts <facts.db>`)
+  steps:
+    - name: Import the community's memory
+      do: Open the space's settings, open Memory, click Import TriG and pick the export.
+      expect: the toolbar reports the quads imported and the statement count matches the export
+    - name: Ask the agent what its memory says
+      do: Open a chat beside Memory and ask for the five most interesting things about the community, each as a sheet with a chart, then a presentation and a summary.
+      expect: Memory shows the agent's SPARQL queries one after another, each with its rows, as the agent explores
+    - name: Read what it made
+      do: Open the sheets, the presentation and the document the agent created.
+      expect: each sheet holds the rows a query returned and a chart of them; the deck and the summary describe the same five findings
+      note: The findings are the model's; nothing in the flow names them.
+
+test QA-3: A project's tasks each come back from the agent with an artifact drawn from the space memory
+  desc: |
+    In a new space, create a project from the Community Findings template: five tasks that each name the artifact
+    their answer goes in (four sheets with charts and a docs-gap brief) and a deck task that presents them. Import the
+    Cloudflare Developers Discord's facts as TriG, hand every task to the agent, and open each task with the artifact
+    filed on it. Recorded as autocue/community-findings.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, with a model the assistant can reach
+    - a TriG export of a crawl's fact store (`moon run plugin-discord:facts -- trig <out.trig> --facts <facts.db>`)
+  steps:
+    - name: Create the project
+      do: In a new space, add a Project and pick the "Community Findings" template.
+      expect: the project opens with six tasks, all To do, "Present the findings" last and depending on the other five
+    - name: Import the community's memory
+      do: Open Memory in the context sidebar and import the TriG.
+      expect: the toolbar reports the quads imported
+    - name: Hand every task to the agent
+      do: Tick every task and Delegate to agent.
+      expect: every task is started and held by one agent session
+    - name: Wait for the agent
+      do: Wait while the agent queries the memory and works the tasks in order.
+      expect: every task in review, each with an artifact of the type it names filed on it and on the project
+    - name: Open each task's artifact
+      do: Open a chart task, its sheet and the Charts companion, then the brief and the deck.
+      expect: each chart draws only the rows it should (no catch-all bar, no partial weeks); no artifact names a person
+```
+
+## Changelog
+
+```mdl
+decision D-1: An agent tool runs a raw SPARQL query against the fact store, and the fact tools' responses to the agent are trimmed with a note that makes the model use LIMIT and windowed reads.
+  date: 2026-11-14
+  by: user:dmaretskyi
+  affects: [querySparql, queryFacts, AgentTrim, F-2.4, F-2.5]
+```
+
+```mdl
+decision D-2: `QuerySparql` accepts only a SELECT, renders each bound term as text, and fails with `SemanticIndexError` on anything else. Fills in [D-1].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [querySparql, F-2.4]
+  why: The store's `rows` already refuses updates with that error, so the tool reads and never writes; text terms keep rows small and pasteable back into SPARQL.
+```
+
+```mdl
+decision D-3: Every fact tool returns at most 50 rows and 500 characters per value; a cut response carries a note naming N of M rows and how to page, and QueryFacts gains `offset` and `total` so it pages the same way. Fills in [D-1].
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [AgentTrim, queryFacts, F-2.5]
+  why: 50 rows matches QueryFacts' default limit and keeps one tool result within a few thousand tokens.
+  rejected:
+    - A total character budget alone: it cuts rows unpredictably and gives the model no window to resume from.
+```
+
+```mdl
+decision D-4: A space's memory moves in and out of Composer as TriG, from a Memory view under the space's settings that also shows every SPARQL query run against the store, live.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [MemoryArticle, F-5]
+  why: TriG is Turtle with named graphs, which a fact needs since each fact is a graph; plain Turtle would drop the graph and with it the fact's provenance.
+```
+
+```mdl
+decision D-5: A memory imported as TriG carries the state of the run that produced it, and a Pipeline panel draws it as a canvas diagram with the run's counters, cost, time, models and cursors. Fills in [D-4].
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [PipelineCompanion, F-6]
+  why: Keeping the state in the store means the panel reads one source, the memory, whether the run was a local crawl or Composer's own.
+```
+
+```mdl
+decision D-6: Brain's facts live in the space's MemoryService, which replaces the per-tab in-memory FactStore registry.
+  date: 2026-11-17
+  by: user:dmaretskyi
+  affects: [F-1, queryFacts, querySparql, summarizeSubject, FactsCompanion]
+```
+
+```mdl
+decision D-7: The operations declare MemoryService and fail with MemoryError; FactStoreRegistry and the FactStore LayerSpec stay, both over the space memory, for the email pipeline and the stories that read through a FactStore. Fills in [D-6].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1, FactStoreRegistry, queryFacts, querySparql, summarizeSubject]
+  supersedes: D-2
+  why: The registry's readers (the facts companion's tests, nine story modules) need no change when its stores are the memory, and one memory means a story's reads see what operations wrote.
+```
+
+```mdl
+decision D-8: The Memory view's query log is kept per space memory, and `QuerySparql` records each query it runs in it, so an agent's queries still show live now that the operation reads MemoryService rather than a logged FactStore. Fills in [D-4].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [MemoryArticle, querySparql, FactStoreRegistry]
+  why: An operation sees only the space's MemoryService, which the client hands out once per space, so that instance is the key that joins the agent's queries to the view.
+```
+
+```mdl
+decision D-9: A project template holds a small project whose every task expects an artifact, an analysis of a community's memory; the user assigns the tasks to the agent, which queries the memory and attaches an artifact to each task. It is a project template, not a space template.
+  date: 2026-11-20
+  by: user:dmaretskyi
+  affects: [QA-3]
+```
+
+```mdl
+decision D-10: The Community Findings template holds five analysis tasks (four sheets with charts and a docs-gap brief) and a deck task that depends on them, binds the Brain, Sheet, Presenter and Markdown skills to the project, and ships without the memory. Fills in [D-9].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-3]
+  why: Sheets with charts are the artifact asked for most, and a brief and a deck show other kinds; the memory comes from a private fixture and is imported per space.
+  rejected: Naming the template after Cloudflare, since nothing in the tasks needs a particular community.
+```
+
+```mdl
+decision D-11: A chart draws only the rows it should: the product chart leaves out questions that name no product and counts them in a note, and the weekly chart leaves out the partial first and last weeks of the crawl and lists them below. Fills in [D-10].
+  date: 2026-11-20
+  by: user:dmaretskyi
+  affects: [QA-3]
+```
+
 
 Extension block types used in this document are defined below using
 the core `ext` primitive — the only construct the base language provides.

@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/sql/SqlClient';
 
 import { RegisterService } from '@dxos/client-protocol';
@@ -52,8 +53,10 @@ import {
   InboxService,
   InvitationsService,
   LoggingService,
+  MemoryService,
   NetworkService,
   QueryService,
+  RdfStoreService,
   SpacesService,
   SqlService,
   SystemService,
@@ -99,6 +102,7 @@ import { LoggingServiceLayer } from '../logging/index.ts';
 import { IMetadataStoreService, SqliteMetadataStoreLayer } from '../metadata/index.ts';
 import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
+import { MemoryHostLayer, RdfHostLayer, SpaceMemories, SpaceMemoriesLayer } from '../rdf/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
 import { SqlServiceLayer } from '../sql/index.ts';
@@ -534,6 +538,39 @@ export const EdgeSubductionReplicatorSpec = LayerSpec.make(
   () => EchoEdgeSubductionReplicatorLayer(),
 );
 
+/**
+ * Hands the identity manager the edge services its HALO needs to adopt a root edge holds and to
+ * replicate the HALO documents; they depend on the identity, so they cannot be constructor arguments.
+ */
+export const IdentityEdgeServicesSpec = (options: ServiceStackServices) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [
+        IdentityContract.ManagerService,
+        EdgeHttpClientService,
+        // Read with `Effect.serviceOption`, so it is required only where it is also provided.
+        ...(subductionEnabled(options) ? [EdgeAutomergeReplicatorService] : []),
+      ],
+      provides: [],
+      eager: true,
+    },
+    () =>
+      Layer.effectDiscard(
+        Effect.gen(function* () {
+          const identityManager = yield* IdentityContract.ManagerService;
+          const edgeHttpClient = yield* EdgeHttpClientService;
+          const echoEdgeReplicator = yield* Effect.serviceOption(EdgeAutomergeReplicatorService);
+          yield* Effect.promise(() =>
+            identityManager.setEdgeServices({
+              edgeHttpClient,
+              echoEdgeReplicator: Option.getOrUndefined(echoEdgeReplicator),
+            }),
+          );
+        }),
+      ),
+  );
+
 export const EdgeSubductionReplicatorRegistrationSpec = LayerSpec.make(
   {
     affinity: 'application',
@@ -554,7 +591,12 @@ export const FeedSyncerSpec = LayerSpec.make(
   () =>
     FeedSyncerLayer({
       peerId: '',
-      syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+      syncNamespaces: [
+        FeedProtocol.WellKnownNamespaces.data,
+        FeedProtocol.WellKnownNamespaces.trace,
+        // A space's memory replicates through its fact feed, which EDGE's memory follows as a replica.
+        FeedProtocol.WellKnownNamespaces.facts,
+      ],
     }),
 );
 
@@ -806,6 +848,31 @@ export const SqlServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(SqlService.Rpcs, SqlService.Tag),
 );
 
+export const SpaceMemoriesSpec = LayerSpec.make(
+  { affinity: 'application', requires: [EchoHostService, SqlClient.SqlClient], provides: [SpaceMemories] },
+  () => SpaceMemoriesLayer,
+);
+
+export const RdfStoreServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SpaceMemories], provides: [RdfStoreService.Tag] },
+  () => RdfHostLayer,
+);
+
+export const MemoryServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SpaceMemories], provides: [MemoryService.Tag] },
+  () => MemoryHostLayer,
+);
+
+export const MemoryServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [MemoryService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(MemoryService.Rpcs, MemoryService.Tag),
+);
+
+export const RdfStoreServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [RdfStoreService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(RdfStoreService.Rpcs, RdfStoreService.Tag),
+);
+
 export const LocalBlobStoreSpec = LayerSpec.make(
   { affinity: 'application', requires: [SqlClient.SqlClient], provides: [LocalBlobStoreService] },
   () => LocalBlobStoreLayer,
@@ -884,6 +951,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
 
   ...(options.disableP2pReplication ? [] : [MeshReplicatorSpec, MeshReplicatorRegistrationSpec]),
   ...(subductionEnabled(options) ? [EdgeSubductionReplicatorSpec, EdgeSubductionReplicatorRegistrationSpec] : []),
+  ...(options.edgeAvailable ? [IdentityEdgeServicesSpec(options)] : []),
   FeedSyncerSpec,
 
   RpcRouterSpec,
@@ -915,6 +983,11 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   LoggingServiceRegistrationSpec,
   SqlServiceSpec,
   SqlServiceRegistrationSpec,
+  SpaceMemoriesSpec,
+  RdfStoreServiceSpec,
+  RdfStoreServiceRegistrationSpec,
+  MemoryServiceSpec,
+  MemoryServiceRegistrationSpec,
   LocalBlobStoreSpec,
   BlobReplicationSpec(options),
   BlobStoreServiceSpec,

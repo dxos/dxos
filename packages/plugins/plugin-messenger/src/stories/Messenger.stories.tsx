@@ -45,10 +45,11 @@ import { Message, Organization } from '@dxos/types';
 
 import { NotificationsPanel } from '#components';
 import { loadLink, makeSender, startInboxMaterializer } from '#materializer';
-import { MESSENGER_COMPANION } from '#meta';
-import { MessengerPlugin } from '#plugin';
+import * as MessengerPlugin from '#meta';
 import { translations } from '#translations';
 import { MessengerCapabilities, Notifications } from '#types';
+
+import { MESSENGER_COMPANION } from '../constants.ts';
 
 /** Stands in for EDGE: both clients' inboxes are routed through it. */
 const inboxRelay = new MemoryEdgeInbox();
@@ -130,7 +131,7 @@ const SenderColumn = () => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        <Layout.Flex column gap='md' classNames='p-3'>
+        <Layout.Flex column gap='md' classNames='p-trim-md'>
           <Select.Root
             items={options}
             value={recipientDid ? [recipientDid] : []}
@@ -276,7 +277,7 @@ const ClientPlugins = ({ index, children }: PropsWithChildren<{ index: number }>
   <ClientPluginManager
     id={`messenger-client-${index}`}
     clientOptions={{ onClientInitialized: setupProfile }}
-    plugins={() => [...CorePlugins.make(), SpacePlugin({}), StorybookPlugin.make({}), MessengerPlugin()]}
+    plugins={() => [...CorePlugins.make(), SpacePlugin.make({}), StorybookPlugin.make({}), MessengerPlugin.make()]}
   >
     {children}
   </ClientPluginManager>
@@ -330,7 +331,7 @@ const InviterColumn = () => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        <Layout.Flex column gap='md' classNames='p-3'>
+        <Layout.Flex column gap='md' classNames='p-trim-md'>
           <Button.Root
             variant='primary'
             icon='ph--user-plus--regular'

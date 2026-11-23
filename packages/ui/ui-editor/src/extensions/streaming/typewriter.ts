@@ -324,27 +324,25 @@ const typewriterCursor = (bufferField: StateField<BufferState>): Extension => {
   }>({
     create: () => ({ visible: false, insertAt: 0, lastNonWsAt: 0 }),
     update: (value, tr) => {
-      const { text, head, insertAt } = tr.state.field(bufferField);
-      const pending = text.length - head;
-      if (pending > 0) {
-        // Track the last position where a non-whitespace character was inserted.
-        let lastNonWsAt = tr.changes.mapPos(Math.min(value.lastNonWsAt, tr.startState.doc.length));
-        if (tr.docChanged) {
-          tr.changes.iterChanges((_fromA, _toA, _fromB, _toB, inserted) => {
-            const chunk = inserted.sliceString(0);
-            if (chunk.trim().length > 0) {
-              lastNonWsAt = _fromB + chunk.length;
-            }
-          });
+      // Tracked on every change, since the chunk that drains the buffer is the one the lingering cursor must follow.
+      let lastNonWsAt = tr.changes.mapPos(Math.min(value.lastNonWsAt, tr.startState.doc.length));
+      tr.changes.iterChanges((_fromA, _toA, fromB, _toB, inserted) => {
+        const chunk = inserted.sliceString(0);
+        if (chunk.trim().length > 0) {
+          lastNonWsAt = fromB + chunk.trimEnd().length;
         }
+      });
+
+      const { text, head, insertAt } = tr.state.field(bufferField);
+      if (text.length > head) {
         return { visible: true, insertAt, lastNonWsAt };
       }
       for (const effect of tr.effects) {
         if (effect.is(hideCursor)) {
-          return { ...value, visible: false };
+          return { ...value, visible: false, lastNonWsAt };
         }
       }
-      return value;
+      return { ...value, lastNonWsAt };
     },
   });
 

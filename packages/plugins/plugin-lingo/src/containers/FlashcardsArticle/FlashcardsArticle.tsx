@@ -13,9 +13,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { Flashcard } from '#components';
-import { meta } from '#meta';
 import { LingoOperation, type Vocabulary, Word } from '#types';
 
+import { LingoNamespace } from '../../namespace.ts';
 import { useDeckWords } from '../useDeckWords.ts';
 
 export type FlashcardsArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vocabulary>;
@@ -25,7 +25,7 @@ export type FlashcardsArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vo
  * to the word's Leitner schedule so a session can be abandoned mid-way without losing progress.
  */
 export const FlashcardsArticle = ({ role, subject: deck, attendableId }: FlashcardsArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(LingoNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // `ActionToolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
   // permanently disabled; fall back to the subject's URI when the surface supplies none.
@@ -65,7 +65,7 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
         { word: Ref.make(word), correct },
         {
           spaceId: Obj.getDatabase(word)?.spaceId,
-          notify: { error: ['record-review-error.message', { ns: meta.profile.key }] },
+          notify: { error: ['record-review-error.message', { ns: LingoNamespace.key }] },
         },
       );
     },
@@ -84,7 +84,7 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
         .action(
           'restart',
           {
-            label: ['restart.label', { ns: meta.profile.key }],
+            label: ['restart.label', { ns: LingoNamespace.key }],
             icon: 'ph--arrow-counter-clockwise--regular',
             disposition: 'toolbar',
             testId: 'lingo.flashcards.restart',

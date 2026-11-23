@@ -1,0 +1,25 @@
+---
+title: Tabs
+description: "Views the user switches between with a row of tabs."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/tabs" height="14.75rem" narrow />
+
+```ts
+import * as Tabs from '@dxos/react-ui/Tabs';
+```
+
+Tabs are views the user switches between with a row of tabs. The tabs sit above the content, or beside it when
+vertical. Arrow keys move along the tabs.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Tabs.Root` | The root, which holds the selected tab |
+| `Tabs.List` | The row of tabs |
+| `Tabs.Trigger` | One tab |
+| `Tabs.Indicator` | An underline that slides to the selected tab |
+| `Tabs.Content` | The view for one tab |

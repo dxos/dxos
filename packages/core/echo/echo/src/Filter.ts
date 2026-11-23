@@ -505,9 +505,15 @@ export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', 
  */
 export type FeedCursorRange = {
   /** Read after this cursor. Defaults to the start of the feed ({@link Feed.START}). */
-  begin?: Feed.Cursor;
+  begin?: Feed.Cursor | Feed.LocalCursor;
   /** Read up to but not including this cursor. Defaults to the end of the feed. */
   end?: Feed.Cursor;
+  /**
+   * The order the cursors are positions in: `edge`, the position the authority assigned
+   * ({@link Feed.getCursor}), or `local`, a walk's local cursor ({@link Feed.getLocalCursor}).
+   * Defaults to `local` in a walk scope and `edge` elsewhere.
+   */
+  positions?: 'local' | 'edge';
 };
 
 /**
@@ -537,6 +543,7 @@ export const feedCursor = (range: FeedCursorRange = {}): Any =>
     type: 'feed-cursor',
     ...(range.begin !== undefined ? { begin: range.begin } : {}),
     ...(range.end !== undefined ? { end: range.end } : {}),
+    ...(range.positions !== undefined ? { positions: range.positions } : {}),
   });
 
 export type ChildOfOptions = {

@@ -5,6 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 
 import {
+  type PendingTextAnchor,
   appendPendingText,
   cancelPendingText,
   setPendingAnchor,
@@ -22,7 +23,7 @@ import {
  * state so the mechanism can be exercised without a CodeMirror component.
  */
 export type PendingTextSink = {
-  begin(options?: { anchor?: number; placeholder?: string }): void;
+  begin(options?: Partial<PendingTextAnchor>): void;
   /** Set the volatile in-flight tail. */
   interim(text: string): void;
   /** Append finalized text to the buffer. */
@@ -34,8 +35,8 @@ export type PendingTextSink = {
 
 /** Sink that drives the `pendingText` extension in a live editor via its state effects. */
 export const editorPendingTextSink = (view: EditorView): PendingTextSink => ({
-  begin: ({ anchor = view.state.selection.main.head, placeholder } = {}) =>
-    view.dispatch({ effects: setPendingAnchor.of({ anchor, placeholder }) }),
+  begin: ({ anchor = view.state.selection.main.head, ...options } = {}) =>
+    view.dispatch({ effects: setPendingAnchor.of({ anchor, ...options }) }),
   interim: (text) => view.dispatch({ effects: setPendingInterim.of(text) }),
   appendFinal: (text) => view.dispatch({ effects: appendPendingText.of(text) }),
   replaceFinal: (text) => view.dispatch({ effects: setPendingFinal.of(text) }),
@@ -135,7 +136,7 @@ export class PendingTextStreamer {
   }
 
   /** Begin a session; nothing is revealed until the initial buffer elapses (or the first push, if 0). */
-  start(options: { placeholder?: string; anchor?: number } = {}): void {
+  start(options: Partial<PendingTextAnchor> = {}): void {
     this.#started = true;
     this.#final = '';
     this.#queue = [];

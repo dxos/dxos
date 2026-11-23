@@ -1,0 +1,63 @@
+---
+title: The TILE component
+description: What a TILE component is, and the contacts screen the learning path builds, running.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+In this learning path we build one screen: a list of contacts beside the selected person's details, with a toolbar to
+add, edit and delete them. This page explains what a TILE component is, and shows the screen finished.
+
+## What a TILE component is
+
+A component library often gives you one `Dialog` component, and you shape it with props. A TILE component is a
+namespace of parts instead:
+
+- A **part** is one element of the component, such as `Dialog.Trigger`, `Dialog.Content` or `Dialog.Title`.
+- A **namespace** is the object that holds a component's parts, such as `Dialog`. You import each namespace from its
+  own entry point of `@dxos/react-ui`, such as `@dxos/react-ui/Dialog`.
+
+`Dialog.Root` holds the state, and each other part renders one element. You put the parts together in JSX, in the
+shape you want, and leave out the ones you don't need:
+
+<Snippet file="tile-components" region="dialog" lang="tsx" />
+
+<TilePreview id="dialog" />
+
+`Dialog.Trigger` wraps the button that opens the dialog. Each button in the footer sits in a `Dialog.CloseTrigger`,
+so Cancel and Save both close it.
+
+Every part takes its look from the **theme**, which is TILE's stylesheets and the tokens they are built from. A
+**token** is a named color or size. A part writes its props, such as `variant='primary'`, onto its element as
+attributes, and the stylesheets style them with tokens.
+
+The same component therefore follows light and dark mode, and matches the rest of the app. To adjust one part, pass
+`classNames`. `Theme.Provider` wraps the app and gives the parts their built-in strings and their icons.
+
+The parts also handle the keyboard, focus and ARIA attributes. A dialog traps focus and closes on Escape without code
+of yours.
+
+[Composite components](/docs/tile/concepts/composite-components/) covers parts and the state machines behind them.
+[Theme and tokens](/docs/tile/concepts/theme-and-tokens/) covers the tokens and `classNames`.
+
+## The finished screen
+
+This is the screen at the end of the path, before its last page moves the contacts into
+[ECHO](/docs/echo/overview/), DXOS's database. Select a contact, edit it, delete it or add one:
+
+<TilePreview id="learn-icons" height="22rem" />
+
+Each page of the path builds one piece of it. From Lay out a screen on, each page keeps its version of the screen in a
+folder of its own:
+
+| Page | Folder | What it adds |
+| --- | --- | --- |
+| [Installation](/docs/tile/learn/installation/) | `src/` | A Vite app with TILE's theme, icons and dark mode, and its first buttons |
+| [Lay out a screen](/docs/tile/learn/lay-out-a-screen/) | `src/layout/` | The list beside the detail, with a toolbar |
+| [Inputs and actions](/docs/tile/learn/inputs-and-actions/) | `src/inputs/` | An editor for the selected contact |
+| [Overlays](/docs/tile/learn/overlays/) | `src/overlays/` | An edit dialog, a delete confirmation, a tooltip and a toast |
+| [Icons and translations](/docs/tile/learn/icons-and-translations/) | `src/icons/` | Icons, an Add button, and the screen's strings in a resource |
+| [Connect to ECHO](/docs/tile/learn/connect-to-echo/) | `src/echo/` | The contacts as ECHO objects that sync, and a form built from their schema |
+
+Every page before Connect to ECHO keeps the contacts in React state, so the only new thing on each page is TILE.

@@ -12,10 +12,16 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { DatabaseImpl } from '@dxos/echo-client';
+import { EchoTestBuilder, hidingQueryService, makeTestWorkingSet } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
-import { type EdgeFunctionEnv, type FunctionProtocol, makeInProcessClient } from '@dxos/protocols';
+import {
+  type EdgeFunctionEnv,
+  type FunctionProtocol,
+  type WorkingSetService,
+  makeInProcessClient,
+} from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
 import { makeOperationServiceLayer, wrapFunctionHandler } from './protocol.ts';
@@ -130,6 +136,41 @@ describe('ECHO flush on exit', () => {
     const reopened = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
     return { error, notes: await reopened.query(Filter.id(id)).run() };
   };
+
+  // Declares no services: an operation that only edits the object its input names needs none, and the context still
+  // gives it the database the ref is resolved from.
+  const RenamesNote = Operation.make({
+    meta: { key: DXN.make('com.example.operation.renamesNote'), name: 'Renames Note' },
+    input: Schema.Struct({ note: Ref.Ref(Note) }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ note }) {
+        const target = yield* Effect.promise(() => note.load());
+        Obj.update(target, (target) => {
+          target.title = 'renamed';
+        });
+      }),
+    ),
+  );
+
+  test('persists edits made by an operation that declares no Database.Service', async ({ expect }) => {
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    db.graph.registry.add([Note]);
+    const note = db.add(Obj.make(Note, { title: 'draft' }));
+    await db.flush();
+
+    await wrapFunctionHandler(RenamesNote, { types: [Note] }).handler({
+      data: { note: { '/': `echo:///${note.id}` } },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+
+    const reopened = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
+    reopened.graph.registry.add([Note]);
+    const [renamed] = await reopened.query(Filter.id(note.id)).run();
+    expect((renamed as { title?: string } | undefined)?.title).toBe('renamed');
+  });
 
   test('persists writes made before Operation.runAgain', async ({ expect }) => {
     const { error, notes } = await runAndReopen(false);
@@ -387,7 +428,268 @@ const scheduleWith = async (
  * A live peer with its host services bridged in-process, the way `createFunctionContext` bridges
  * the EDGE bindings — so the runtime builds its own client and graph exactly as the worker does.
  */
-const openPeer = async () => {
+// A bundle's nested call to another plugin's operation sends the objects in its input as references (EDGE-PLUGINS
+// D-71); where the operation's schema takes a live object, the callee loads it.
+describe('object references in the input', () => {
+  const Note = Type.makeObject(DXN.make('com.example.type.note', '0.1.0'))(Schema.Struct({ title: Schema.String }));
+
+  const TakesObject = Operation.make({
+    meta: { key: DXN.make('com.example.operation.takesObject'), name: 'Takes Object' },
+    services: [Database.Service],
+    input: Schema.Struct({ object: Obj.Unknown }),
+    output: Schema.Struct({ title: Schema.String }),
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ object }) {
+        return { title: Obj.instanceOf(Note, object) ? object.title : 'not a note' };
+      }),
+    ),
+  );
+
+  test('loads a referenced object where the schema takes a live one', async ({ expect }) => {
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    db.graph.registry.add([Note]);
+    const note = db.add(Obj.make(Note, { title: 'Referenced' }));
+    await db.flush();
+
+    const result = await wrapFunctionHandler(TakesObject, { types: [Note], resolveObjectReferences: true }).handler({
+      data: { object: { '/': Obj.getURI(note).toString() } },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+    expect(result).toEqual({ title: 'Referenced' });
+  });
+});
+
+describe('working set', () => {
+  const Note = Type.makeObject(DXN.make('com.example.type.note', '0.1.0'))(Schema.Struct({ title: Schema.String }));
+
+  const CreatesNote = Operation.make({
+    meta: { key: DXN.make('com.example.operation.createsNote'), name: 'Creates Note' },
+    services: [Database.Service],
+    input: Schema.Struct({ id: Schema.String, title: Schema.String }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ id, title }) {
+        yield* Database.add(Obj.make(Note, { id, title }));
+      }),
+    ),
+  );
+
+  /** The shape plugin-space's `queryObjects` uses: a flush, a type filter as a union, and a window. */
+  const listNotes = Effect.gen(function* () {
+    yield* Database.flush();
+    const notes = yield* Database.query(Query.select(Filter.or(Filter.type(Note))).limit(11)).run;
+    return notes.map((note) => note.title).sort();
+  });
+
+  const ListsNotes = Operation.make({
+    meta: { key: DXN.make('com.example.operation.listsNotes'), name: 'Lists Notes' },
+    services: [Database.Service],
+    input: Schema.Struct({}),
+    output: Schema.Struct({ titles: Schema.Array(Schema.String) }),
+  }).pipe(Operation.withHandler(() => listNotes.pipe(Effect.map((titles) => ({ titles })))));
+
+  const RenamesNote = Operation.make({
+    meta: { key: DXN.make('com.example.operation.renamesNote'), name: 'Renames Note' },
+    services: [Database.Service],
+    input: Schema.Struct({ id: Schema.String, title: Schema.String }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ id, title }) {
+        const note = (yield* Database.query(Filter.type(Note)).run).find((note) => note.id === id);
+        if (!note) {
+          return yield* Effect.die(new Error('note not found'));
+        }
+        Obj.update(note, (note) => {
+          note.title = title;
+        });
+      }),
+    ),
+  );
+
+  const CreatesThenLists = Operation.make({
+    meta: { key: DXN.make('com.example.operation.createsThenLists'), name: 'Creates Then Lists' },
+    services: [Database.Service],
+    input: Schema.Struct({ title: Schema.String }),
+    output: Schema.Struct({ titles: Schema.Array(Schema.String) }),
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ title }) {
+        yield* Database.add(Obj.make(Note, { title }));
+        // No flush first: one that waits for the index stops counting this write as unindexed, which this index hides.
+        const notes = yield* Database.query(Filter.type(Note)).run;
+        return { titles: notes.map((note) => note.title).sort() };
+      }),
+    ),
+  );
+
+  const setup = async () => {
+    const { peer, services } = await openPeer({ hideFromIndex: (id) => id !== undefined });
+    const db = await peer.createDatabase();
+    const context = (workingSetService?: WorkingSetService) => ({
+      services: { ...services, workingSetService },
+      spaceId: db.spaceId,
+      spaceKey: db.spaceKey.toHex(),
+      spaceRootUrl: db.rootUrl,
+    });
+    return { peer, db, context };
+  };
+
+  test('an invocation queries what the invocation before it created, while the index does not hold it', async ({
+    expect,
+  }) => {
+    const { context } = await setup();
+    const workingSet = makeTestWorkingSet();
+    const id = EntityId.random();
+
+    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
+      data: { id, title: 'fresh' },
+      context: context(workingSet.service),
+    });
+    expect(workingSet.objects()).toContain(id);
+
+    const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
+      data: {},
+      context: context(workingSet.service),
+    });
+    expect(listed).toEqual({ titles: ['fresh'] });
+
+    // Without the working set the same query reads only the index, which hides every object here.
+    const unseeded = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({ data: {}, context: context() });
+    expect(unseeded).toEqual({ titles: [] });
+  });
+
+  // Loading the callee's objects also needs the caller's copy of the space root to be current, which a host's refresh
+  // ensures on EDGE; this runtime has none, so the test stops at the ids the caller takes.
+  test("a nested call starts once the caller's write is in the working set, and the caller then takes the callee's", async ({
+    expect,
+  }) => {
+    const { db, context } = await setup();
+    db.graph.registry.add([Note]);
+    const workingSet = makeTestWorkingSet();
+    const callerId = EntityId.random();
+    const calleeId = EntityId.random();
+
+    const Callee = Operation.make({
+      meta: { key: DXN.make('com.example.operation.callee'), name: 'Callee', deployedId: 'fn-callee' },
+      input: Schema.Struct({}),
+      output: Schema.Void,
+    });
+    const WritesThenCalls = Operation.make({
+      meta: { key: DXN.make('com.example.operation.writesThenCalls'), name: 'Writes Then Calls' },
+      services: [Database.Service, Operation.Service],
+      input: Schema.Struct({}),
+      output: Schema.Struct({ unindexed: Schema.Array(Schema.String) }),
+    }).pipe(
+      Operation.withHandler(() =>
+        Effect.gen(function* () {
+          yield* Database.add(Obj.make(Note, { id: callerId, title: 'caller' }));
+          yield* Operation.invoke(Callee, {});
+          const { db: database } = yield* Database.Service;
+          return { unindexed: database instanceof DatabaseImpl ? [...database.unindexedWrites()] : [] };
+        }),
+      ),
+    );
+
+    let heldAtCall: string[] = [];
+    const functionsService: EdgeFunctionEnv.FunctionsService = {
+      query: async () => Object.assign([], disposable),
+      invoke: async () => {
+        heldAtCall = workingSet.objects();
+        // The callee writes through a database of its own and sends its document to the same working set.
+        const note = db.add(Obj.make(Note, { id: calleeId, title: 'callee' }));
+        await db.flush();
+        const [row] = db.exportWorkingSet({ maxBytes: 1024 * 1024 }).filter((row) => row.objectId === note.id);
+        workingSet.rows.set(row.documentId, row);
+        return { _kind: 'success' as const, data: undefined, ...disposable };
+      },
+    };
+    const { services, ...rest } = context(workingSet.service);
+
+    const result = await wrapFunctionHandler(WritesThenCalls, { types: [Note] }).handler({
+      data: {},
+      context: { ...rest, services: { ...services, functionsService } },
+    });
+    expect(heldAtCall).toContain(callerId);
+    expect(result).toEqual({ unindexed: expect.arrayContaining([callerId, calleeId]) });
+  });
+
+  test('an operation changes what the one before it created, and the next reads the change, while the index hides them', async ({
+    expect,
+  }) => {
+    const { context } = await setup();
+    const workingSet = makeTestWorkingSet();
+    const id = EntityId.random();
+    const run = (operation: typeof CreatesNote | typeof RenamesNote, data: { id: string; title: string }) =>
+      wrapFunctionHandler(operation, { types: [Note] }).handler({ data, context: context(workingSet.service) });
+
+    await run(CreatesNote, { id, title: 'draft' });
+    await run(RenamesNote, { id, title: 'final' });
+    const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
+      data: {},
+      context: context(workingSet.service),
+    });
+    expect(listed).toEqual({ titles: ['final'] });
+  });
+
+  test("an operation queries its own write together with the previous operation's, while the index hides both", async ({
+    expect,
+  }) => {
+    const { context } = await setup();
+    const workingSet = makeTestWorkingSet();
+
+    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
+      data: { id: EntityId.random(), title: 'first' },
+      context: context(workingSet.service),
+    });
+    const listed = await wrapFunctionHandler(CreatesThenLists, { types: [Note] }).handler({
+      data: { title: 'second' },
+      context: context(workingSet.service),
+    });
+    expect(listed).toEqual({ titles: ['first', 'second'] });
+  });
+
+  test('what the host stored before a handler failed reaches the working set', async ({ expect }) => {
+    const { context } = await setup();
+    const workingSet = makeTestWorkingSet();
+    const id = EntityId.random();
+
+    const WritesThenFails = Operation.make({
+      meta: { key: DXN.make('com.example.operation.writesThenFails'), name: 'Writes Then Fails' },
+      services: [Database.Service],
+      input: Schema.Struct({}),
+      output: Schema.Void,
+    }).pipe(
+      Operation.withHandler(() =>
+        Effect.gen(function* () {
+          yield* Database.add(Obj.make(Note, { id, title: 'stored' }));
+          yield* Database.flush();
+          return yield* Effect.die(new Error('failed after the write'));
+        }),
+      ),
+    );
+
+    await expect(
+      wrapFunctionHandler(WritesThenFails, { types: [Note] }).handler({
+        data: {},
+        context: context(workingSet.service),
+      }),
+    ).rejects.toThrow('failed after the write');
+    expect(workingSet.objects()).toEqual([id]);
+
+    const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
+      data: {},
+      context: context(workingSet.service),
+    });
+    expect(listed).toEqual({ titles: ['stored'] });
+  });
+});
+
+/** `hideFromIndex` drops matching objects from every index answer, standing in for an index that has not caught up. */
+const openPeer = async ({ hideFromIndex }: { hideFromIndex?: (id: string | undefined) => boolean } = {}) => {
   const builder = new EchoTestBuilder();
   await builder.open();
   onTestFinished(async () => {
@@ -399,7 +701,10 @@ const openPeer = async () => {
   const services: FunctionProtocol.Context['services'] = await EffectEx.runPromise(
     Effect.all({
       dataService: makeInProcessClient(DataService.Rpcs, peer.host.dataService),
-      queryService: makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
+      queryService: makeInProcessClient(
+        QueryService.Rpcs,
+        hideFromIndex ? hidingQueryService(peer.host.queryService, hideFromIndex) : peer.host.queryService,
+      ),
       queueService: makeInProcessClient(FeedService.Rpcs, peer.host.feedService),
     }).pipe(Effect.provideService(Scope.Scope, scope)),
   );

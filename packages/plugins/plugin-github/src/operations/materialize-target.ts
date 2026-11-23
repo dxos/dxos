@@ -3,30 +3,51 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
+import { Database, Obj, Ref } from '@dxos/echo';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { GitHubOperation } from '#types';
 
-import { GITHUB_SOURCE } from '../constants.ts';
+import { type RepoDescriptor, ensureRepo } from './repo.ts';
+import { ensureIssueSet } from './sync.ts';
 
-const fkFor = (id: string) => ({ source: GITHUB_SOURCE, id });
+const RepoMetadata = Schema.Struct({
+  owner: Schema.String,
+  name: Schema.String,
+  url: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  defaultBranch: Schema.optional(Schema.String),
+});
 
 /**
- * Find-or-create the empty local root Project for a GitHub repo so a `Cursor`
- * can reference it as its `spec.target`. Idempotent: keyed by the repo's
- * GitHub foreign id (`remoteTarget.id`), it returns the existing Project
- * when one already carries that key. The repo's data is filled in lazily by the
- * sync operation; here we only stamp the foreign key + a display name.
+ * The repository a picked target names: discovery passes the coordinates in `metadata`; a target
+ * without them (from before discovery carried them) splits its `owner/name` label.
+ */
+export const toTargetDescriptor = (target: ConnectorSpec.RemoteTarget): RepoDescriptor | undefined => {
+  const metadata = Schema.decodeUnknownOption(RepoMetadata)(target.metadata);
+  if (metadata._tag === 'Some') {
+    return { ...metadata.value, id: target.id };
+  }
+  const [owner, name, ...rest] = target.name.split('/');
+  return owner && name && rest.length === 0
+    ? { id: target.id, owner, name, description: target.description }
+    : undefined;
+};
+
+/**
+ * Find or create the `Repo` a binding targets, keyed by its GitHub id, and the `TaskSet` that mirrors
+ * its issues, which shares that key. Idempotent: a second binding of the same repository reuses both.
  */
 const handler: Operation.WithHandler<typeof GitHubOperation.MaterializeGitHubTarget> =
   GitHubOperation.MaterializeGitHubTarget.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ connection, remoteTarget }) {
-        if (!remoteTarget) {
-          return yield* Effect.die(new Error('GitHub materializeTarget requires a remoteTarget (repo descriptor).'));
+        const descriptor = remoteTarget ? toTargetDescriptor(remoteTarget) : undefined;
+        if (!descriptor) {
+          return yield* Effect.die(new Error('GitHub materializeTarget requires an owner/name repository target.'));
         }
         // TODO(wittjosiah): the operation should just depend on `Database.Service` and
         //   have it provided by the OperationInvoker — composer's invoker is wired
@@ -38,20 +59,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.MaterializeGitHubTar
         }
 
         return yield* Effect.gen(function* () {
-          const existing = yield* Database.query(
-            Query.select(Filter.foreignKeys(TaskSet.TaskSet, [fkFor(remoteTarget.id)])),
-          ).run;
-          if (existing.length > 0) {
-            return { target: Ref.make(existing[0]) };
-          }
-
-          const created = yield* Database.add(
-            TaskSet.make({
-              [Obj.Meta]: { keys: [fkFor(remoteTarget.id)] },
-              name: remoteTarget.name,
-            }),
-          );
-          return { target: Ref.make(created) };
+          const repo = yield* ensureRepo(descriptor);
+          yield* ensureIssueSet(repo, descriptor.id);
+          return { target: Ref.make(repo) };
         }).pipe(Effect.provide(Database.layer(db)));
       }),
     ),

@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as MeetingRecorderPlugin from './MeetingRecorderPlugin.ts';
+export * as MeetingRecorderPlugin from '#meta';
 export * from '#types';

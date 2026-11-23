@@ -1,0 +1,194 @@
+---
+title: Identity
+description: Create, follow, recover and share an identity.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Identity } from '@dxos/halo';
+```
+
+`Identity` manages the user on this device. Use it for the identity itself, its profile, its devices, its recovery
+credentials and its access to services.
+
+Every function is an Effect or a Stream that needs `Identity.Service`. Run one with `Effect.runPromise` once the
+service is provided.
+
+## Get the service
+
+`layerClient` from `@dxos/halo-adapter-client` provides `Identity.Service` and `Space.Service` from a `Client`.
+
+**Example** (Building the HALO layer from a client)
+
+<Snippet file="halo-guide-identity" region="layer" />
+
+`halo` is an Effect layer. You pass it to `Effect.provide` before you run any Effect from this page.
+
+## Read the identity
+
+`Identity.getSnapshot` reads the identity once, as an `Option` that is empty before an identity exists. Use it when
+you need the value now and no updates.
+
+`Identity.identity` is a stream that emits the current value, then each change. Use it when your code has to follow
+the identity.
+
+**Example** (Reading the identity once, and following it)
+
+<Snippet file="halo-guide-identity" region="read" />
+
+`whoAmI` returns an `Option` of the display name, so its caller has to handle the case where no identity exists yet.
+`watch` logs "no identity yet" in that case, and keeps running, because the stream does not end.
+
+Code that works with callbacks can take the service once and call its methods directly. `subscribe` calls back
+straight away with the current value, then on each change, and returns a function that stops it. `Identity.atom` gives
+the same value as an Effect `Atom`.
+
+**Example** (Subscribing through the service)
+
+<Snippet file="halo-guide-identity" region="service" />
+
+`unsubscribe` and `atom` outlive `listen`. Once you have them, the rest of your code needs no Effect to use them.
+
+## Create an identity and update its profile
+
+`Identity.create` makes the identity with this device as its first member, and stores the device's key on the device.
+Use it when `getSnapshot` is empty. It fails when the device already has an identity.
+
+`Identity.updateProfile` writes a new profile in place of the old one. Use it to change the display name or the
+profile data, such as an avatar. It clears a field you leave out, so pass `data` again when you change only the name.
+
+**Example** (Creating an identity on first run, and renaming it)
+
+<Snippet file="halo-guide-identity" region="create" />
+
+`signIn` is safe to run on every start, because it calls `create` only when `getSnapshot` is empty. `rename` sets the
+name and the data together. The last lines provide the `halo` layer and run `signIn`.
+
+## Devices
+
+`Identity.getDevicesSnapshot` lists the identity's devices once, and `Identity.devices` streams the list. Each device
+has a key, a kind, a presence and, when set, a label.
+
+**Example** (Listing devices once, and following the list)
+
+<Snippet file="halo-guide-identity" region="devices" />
+
+`device.label` is set only when someone gave the device a label, so `listDevices` falls back to its key.
+
+To add a device, `Identity.share` starts a device invitation and `Identity.join` accepts it on the new device. Both
+return an [`Invitation.Flow`](/docs/halo/api/invitation/). `Identity.invitations` streams the device invitations this
+device has open.
+
+With no options, `share` admits any device that has the invitation code. Pass `authMethod: 'shared-secret'` so that
+the new device also has to enter a code this device shows.
+
+**Example** (Adding a device with an invitation)
+
+<Snippet file="halo-guide-identity" region="share" />
+
+`joinIdentity` runs on the new device, with the code that `addDevice` logged on a device that already has the
+identity.
+
+## Recovery credentials
+
+A recovery key is a key kept off every device, and a recovery credential is the signed record that registers one with
+the identity.
+
+<Aside type="caution" title="Account required">
+  Recovery needs a DXOS account. EDGE stores recovery credentials only for identities linked to an account, and for now
+  you can create an account only through [Composer](https://composer.space).
+</Aside>
+
+- `Identity.createRecoveryCredential` with no options makes a recovery key and returns it as a recovery code. Pass
+  `externalKey` to register a passkey instead.
+- `Identity.recover` gets the identity back on a new device. It takes a recovery code, a passkey assertion, the token
+  from a DXOS account's sign-in email, or the proof from an OAuth sign-in. EDGE checks it, and the identity's agent
+  device signs the credential that admits the device.
+- `Identity.revokeRecoveryCredential` revokes a recovery credential by its lookup key, the public value that names
+  it. HALO refuses to revoke the last active one.
+
+**Example** (Creating, using and revoking a recovery code)
+
+<Snippet file="halo-guide-identity" region="recovery" />
+
+`backup` gets `recoveryCode` only this once, because HALO keeps only the public half of the recovery key. `restore`
+runs on a new device. `revoke` needs a `lookupKey`, which [Credentials](#credentials) shows how to read.
+
+A passkey signs a challenge before `recover`. `requestRecoveryChallenge` gets the challenge from EDGE:
+
+<Snippet file="halo-guide-identity" region="challenge" />
+
+[Passkey recovery](/docs/halo/guides/passkey-recovery/) walks through the whole ceremony.
+
+## Credentials
+
+`Identity.credentials` streams the credentials the identity holds. A recovery credential carries its kind, label,
+lookup key and whether it has been revoked.
+
+**Example** (Finding the active recovery credentials)
+
+<Snippet file="halo-guide-identity" region="credentials" />
+
+`activeRecovery` returns the `recovery` field of each match. Each result has the `lookupKey` that
+`revokeRecoveryCredential` takes.
+
+## Service access and API tokens
+
+- `Identity.grantServiceAccess` writes a credential that gives the identity access to a service on EDGE or on Hub,
+  the EDGE service that keeps DXOS accounts. See [Identity services](/docs/edge/concepts/identity-services/).
+- `Identity.createApiToken` mints a token a CLI or a server can use to act as the identity. The token's secret is
+  returned once, so store it straight away.
+- `Identity.getEdgeIdentity` is the identity as EDGE authenticates it. Use it for an HTTP or WebSocket client.
+
+**Example** (Granting service access and minting an API token)
+
+<Snippet file="halo-guide-identity" region="access" />
+
+`connect` grants the identity the `compute` capability on `hub.example.com`. It then mints a token labeled `CI` that
+expires in 30 days.
+
+## Members at a glance
+
+| Member                                                          | Summary                                  |
+| --------------------------------------------------------------- | ---------------------------------------- |
+| `Service`                                                       | The Effect service                       |
+| `getSnapshot` `identity` `atom`                                 | The identity, read once, as a stream or as an Atom |
+| `create` `updateProfile`                                        | Make the identity and edit its profile   |
+| `getDevicesSnapshot` `devices`                                  | The identity's devices                   |
+| `share` `join` `invitations`                                    | Device invitations                       |
+| `createRecoveryCredential` `recover` `revokeRecoveryCredential` | Recovery                                 |
+| `requestRecoveryChallenge`                                      | The challenge a passkey signs            |
+| `credentials`                                                   | The credentials the identity holds       |
+| `grantServiceAccess` `createApiToken` `getEdgeIdentity`         | Access to EDGE and Hub services          |
+
+The full list is in the [API reference](/docs/halo/resources/api-reference/).
+
+## Errors
+
+Every function that can fail fails with `IdentityError`. Handle it by its tag:
+
+<Snippet file="halo-guide-identity" region="errors" />
+
+`error.message` says only that an identity operation failed, so `safeRename` logs `error.context.error` instead.
+
+`@dxos/halo` also exports four errors that name why Keyhive refuses a delegation or a revocation. None of them is in
+the error type of a function on this page, which is `IdentityError`:
+
+| Error                    | Raised when                                                              |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `NotAuthorizedError`     | The acting member lacks the access, such as revoking without seniority   |
+| `UnknownPrincipalError`  | The identity, device or group named is not known                         |
+| `InvalidSignatureError`  | A signed operation fails verification                                    |
+| `MissingDependencyError` | An operation refers to earlier operations that have not arrived          |
+
+## Related
+
+- [Your profile](/docs/halo/learn/your-profile/), [Add a device](/docs/halo/learn/add-device/) and
+  [Recover an identity](/docs/halo/learn/recover-identity/) in the learning path.
+- [Identities and devices](/docs/halo/concepts/identities-devices/) and
+  [Recovery and credentials](/docs/halo/concepts/recovery-credentials/)

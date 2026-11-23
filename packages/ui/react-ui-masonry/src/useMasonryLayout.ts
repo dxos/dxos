@@ -83,6 +83,8 @@ export type UseMasonryLayoutOptions = {
   maxColumnWidthPx?: number;
   /** Centre capped columns in the container (see `layout`). */
   centered?: boolean;
+  /** Pad the top and bottom by the gap (see `layout`). */
+  perimeter?: boolean;
   /**
    * Scope for remembered tile heights, e.g. the collection's URI. Omit when ids are not stable and
    * unique across the app (the default index ids are not) — heights are then per-instance, and a
@@ -103,6 +105,7 @@ export const useMasonryLayout = ({
   gapPx,
   maxColumnWidthPx,
   centered,
+  perimeter,
   cacheKey,
 }: UseMasonryLayoutOptions): MasonryLayout => {
   const heights = useRef(new Map<string, number>());
@@ -258,14 +261,14 @@ export const useMasonryLayout = ({
     });
 
     return {
-      ...layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx, centered }),
+      ...layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx, centered, perimeter }),
       measured: measuredIds.size === ids.length,
       cachedAtFirstLayout: cachedAtFirstLayout.current,
       knownIds,
     };
     // `version` re-runs layout when a measured height changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids, columnCount, containerWidth, gapPx, maxColumnWidthPx, centered, columnWidth, cacheKey, version]);
+  }, [ids, columnCount, containerWidth, gapPx, maxColumnWidthPx, centered, perimeter, columnWidth, cacheKey, version]);
 
   return { ...result, getTileRef, nodes };
 };

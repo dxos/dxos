@@ -89,7 +89,7 @@
     --dx-avatar-ring: var(--color-neutral-border);
   }
   .dx-avatar[data-status='current'] {
-    --dx-avatar-ring: var(--color-focus);
+    --dx-avatar-ring: var(--color-accent-bg);
   }
   .dx-avatar[data-status='internal'] {
     --dx-avatar-ring: var(--color-separator);

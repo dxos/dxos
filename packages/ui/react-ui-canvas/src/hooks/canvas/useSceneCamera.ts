@@ -4,9 +4,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { type ElementId, type Size } from '@dxos/scene';
+
 import { type CanvasAtoms } from '../../engine/index.ts';
-import { type Camera, type ElementId, type Size } from '../../model/index.ts';
-import { animateCamera } from '../../utils/index.ts';
+import { type Camera } from '../../model/index.ts';
+import { type CameraAnimation, animateCamera } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 
 /** Quiet time after the last wheel step before the canvas takes pointer events again. */
@@ -53,7 +55,7 @@ export const useSceneCamera = (
   );
 
   // Cleared as well as called: a cancelled frame never runs the completion callback that would.
-  const cancelRef = useRef<() => void>(undefined);
+  const animationRef = useRef<CameraAnimation>(undefined);
   const targetRef = useRef<Camera>(undefined);
   const [opening, setOpening] = useState<ElementId>();
   const [navigating, setNavigating] = useState(false);
@@ -82,9 +84,9 @@ export const useSceneCamera = (
   useEffect(() => () => clearTimeout(settleRef.current), []);
 
   const cancelAnimation = useCallback(() => {
-    if (cancelRef.current) {
-      cancelRef.current();
-      cancelRef.current = undefined;
+    if (animationRef.current) {
+      animationRef.current.cancel();
+      animationRef.current = undefined;
       targetRef.current = undefined;
       setNavigation(false);
     }
@@ -93,30 +95,31 @@ export const useSceneCamera = (
 
   const animateTo = useCallback(
     (target: Camera, done?: () => void, duration?: number) => {
-      const continuing = cancelRef.current !== undefined;
+      // A move already under way hands on its speed, so a retarget carries on rather than starting over.
+      const velocity = animationRef.current?.velocity();
       cancelAnimation();
       setNavigation(true);
       targetRef.current = target;
-      cancelRef.current = animateCamera(
+      animationRef.current = animateCamera(
         registry.get(atoms.camera),
         target,
         viewport,
         setCamera,
         () => {
-          cancelRef.current = undefined;
+          animationRef.current = undefined;
           targetRef.current = undefined;
           setNavigation(false);
           done?.();
         },
         duration,
-        continuing,
+        velocity,
       );
     },
     [registry, atoms.camera, viewport, setCamera, cancelAnimation, setNavigation],
   );
 
   const isNavigating = useCallback(() => navigatingRef.current, []);
-  const isAnimating = useCallback(() => cancelRef.current !== undefined, []);
+  const isAnimating = useCallback(() => animationRef.current !== undefined, []);
   const cameraTarget = useCallback(() => targetRef.current ?? registry.get(atoms.camera), [registry, atoms.camera]);
 
   return {

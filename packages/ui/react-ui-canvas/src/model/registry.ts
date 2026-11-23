@@ -6,7 +6,7 @@
 // Node and link type definitions (decision 12): what a type's schema is, what it renders, where its
 // ports are, how it may be manipulated, and how the palette presents it. Per type, not per instance, so
 // the data stays small and ports come for free; a node may still carry its own `ports`. A host composes
-// its own registry (and with `createViewSchema` its scene schema) from the built-ins and its types.
+// its own registry from the built-ins and its types.
 //
 // A type may be built on a prototype (`extends`): it inherits every definition field it leaves unset, so
 // shapes that look and behave alike share one definition and differ only where they say so. Prototypes
@@ -14,13 +14,11 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import { type ComponentType } from 'react';
+import type { ComponentType } from 'react';
 
-import { type FormFieldMap } from '@dxos/react-ui-form';
-
-import { type PartEditing, type PartField } from '../utils/index.ts';
-import { type ViewStore } from './store.ts';
+import type { FormFieldMap } from '@dxos/react-ui-form';
 import {
+  type InstanceNode,
   type LinkType,
   type Node,
   type NodeBase,
@@ -28,13 +26,18 @@ import {
   type Point,
   type Port,
   type Size,
-  type View,
-} from './types.ts';
+} from '@dxos/scene';
+
+import { type PartEditing, type PartField } from '../utils/index.ts';
+import { type DrawnLists } from './lists.ts';
+import { templateCompositeId } from './template.ts';
+import { type RenderList2D } from './types.ts';
 
 export type NodeViewProps = {
   node: Node;
-  scene: View;
-  store: ViewStore;
+  scene: RenderList2D;
+  /** The lists the view may draw from (a portal's scene, an instance's parts). */
+  lists: DrawnLists;
   registry: NodeRegistry;
   /** Effective screen zoom of the layer (camera zoom × portal scales), for level-of-detail choices. */
   zoom: number;
@@ -66,7 +69,9 @@ export type NodeDef = {
   key?: string;
   /** Tools panel group; types without one share the default group. */
   group?: string;
-  /** The type's schema; the host's scene schema is the union of its registry's (`createViewSchema`). */
+  /** Adjacent tools of a group that name the same fold share one button in the tools panel, which opens to pick among them. */
+  fold?: string;
+  /** The type's schema, which validates the node's own fields. */
   schema: Schema.Codec<NodeBase, unknown>;
   component: ComponentType<NodeViewProps>;
   /** A new node of the type with its default content, for the palette tool and drop-on-canvas. */
@@ -98,6 +103,18 @@ export type NodeDef = {
    */
   createFromPoints?: (props: CreateProps, points: readonly Point[], closed: boolean) => Node;
   /**
+   * The line a type drawn vertex by vertex makes is a curve through the points placed: every segment lands bent, with
+   * a control to drag in its edit mode.
+   */
+  curved?: boolean;
+  /**
+   * The tool draws in one stroke rather than vertex by vertex: it samples the pointer while it is pressed, and
+   * `createFromPoints` makes the node from the samples when it is released. `'shape'` reads the stroke first: one
+   * drawn round a shape the canvas has (a rectangle, an ellipse, a triangle, a diamond) lands as that shape on the
+   * grid, and any other as the line it is.
+   */
+  freehand?: 'stroke' | 'shape';
+  /**
    * What the node's edit mode (a double-click on it, or Enter with it selected alone) edits: `'label'`, the default, its
    * text part in place; `'vertices'`, the unit-space `points` of a type drawn vertex by vertex, each shown as a point to
    * drag, with its move and resize handles hidden. Enter, Escape or a press outside the node leaves either.
@@ -123,8 +140,21 @@ export type NodeDef = {
   palette?: boolean;
   /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
   bare?: boolean;
+  /**
+   * The frame draws its border but no fill unless the node's style asks for one: the border is the type's own
+   * outline (a ring round what it draws), so it is the frame's, and turning it on or off moves nothing inside it.
+   * Being part of the drawing, it keeps its colour while the node is selected or hovered.
+   */
+  outline?: boolean;
   /** The type draws past its frame (a stroke centred on the frame's edge), so the frame does not clip it. */
   unclipped?: boolean;
+  /**
+   * The type's shape as a composite object, written in the scene DSL (`composite <id> { element … }`): the tool draws
+   * an Instance of it rather than a node its view paints, so its parts are edited in place and a part may say how it
+   * follows the frame (`constrain`). One definition per tool per drawing, so a style edit on any instance reaches
+   * them all, while each instance's own text stays its own.
+   */
+  template?: string;
 };
 
 /**
@@ -161,7 +191,22 @@ export const createNodeRegistry = (
   };
   return Object.fromEntries(
     Object.entries(types).map(([type, spec]) => {
-      const { extends: _, ...resolved } = inherit(spec, [type]);
+      // The chain holds prototype names only: a type and a prototype are different namespaces, so a `card` type built
+      // on the `card` prototype is ordinary inheritance, not a cycle.
+      const { extends: _, ...inherited } = inherit(spec, []);
+      // A template type places an Instance of its own composite, so it needs no `create` of its own; one it declares
+      // anyway still wins, for a tool that seeds its instance with more than the composite says.
+      const resolved: NodeDefSpec =
+        inherited.template !== undefined && !inherited.create
+          ? {
+              ...inherited,
+              create: (props: CreateProps): InstanceNode => ({
+                type: 'instance',
+                ...props,
+                composite: templateCompositeId(type),
+              }),
+            }
+          : inherited;
       const { name, icon, schema, component, create, defaultSize } = resolved;
       if (!name || !icon || !schema || !component || !create || !defaultSize) {
         throw new Error(`Node type ${type} is missing a required field`);

@@ -6,7 +6,10 @@ import React from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import { useIdentity } from '@dxos/halo-react';
 import { type Space, getSpace } from '@dxos/react-client/echo';
+import { useGridAwareness } from '@dxos/react-ui-grid';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { ComputeGraphContextProvider, Sheet as SheetComponent, useComputeGraph } from '#components';
@@ -45,14 +48,24 @@ const SheetArticleInner = ({
   ignoreAttention,
 }: SheetArticleProps & { space: Space }) => {
   const graph = useComputeGraph(space);
+  const readonly = ToolkitHooks.useReadOnly();
+  // A slide shows the sheet as a picture: the used range fitted to the slide, with no status bar and no one's selection.
+  const slide = role === AppSurface.Slide.role;
+  const identity = useIdentity();
+  const awareness = useGridAwareness({ id: sheet.id, messenger: slide ? undefined : space, identity });
   if (!graph) {
     return null;
   }
 
-  // A slide shows the sheet as a picture: the used range fitted to the slide, with no status bar.
-  const slide = role === AppSurface.Slide.role;
   return (
-    <SheetComponent.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
+    <SheetComponent.Root
+      graph={graph}
+      sheet={sheet}
+      attendableId={attendableId!}
+      ignoreAttention={ignoreAttention}
+      readonly={readonly}
+      awareness={awareness}
+    >
       <Panel.Root
         classNames={
           role === AppSurface.Section.role ? 'aspect-square w-full max-h-full min-h-0' : slide && 'bg-transparent'
@@ -65,7 +78,7 @@ const SheetArticleInner = ({
           </Panel.Header>
         )}
         <Panel.Body asChild>
-          <SheetComponent.Content fit={slide} />
+          <SheetComponent.Content fit={slide ? 'contain' : undefined} />
         </Panel.Body>
         {!slide && (
           <Panel.Footer>

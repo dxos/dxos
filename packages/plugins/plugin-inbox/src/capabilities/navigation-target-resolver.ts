@@ -9,9 +9,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as NavigationResolver from '@dxos/app-toolkit/NavigationResolver';
 import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
-import { meta } from '#meta';
 import { Mailbox } from '#types';
 
+import { InboxNamespace } from '../namespace.ts';
 import { getMailboxPath } from '../paths.ts';
 
 export default Capability.makeModule(
@@ -23,7 +23,7 @@ export default Capability.makeModule(
         getLabel: (mailbox) => mailbox.name ?? '',
         pages: [
           {
-            path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
+            path: SettingsPath.getPluginSettingsSectionPath(InboxNamespace.key),
             label: 'Inbox settings',
             type: 'settings',
           },

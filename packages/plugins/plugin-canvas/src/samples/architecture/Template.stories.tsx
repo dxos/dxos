@@ -17,15 +17,15 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
-import * as Presentation from '@dxos/plugin-presenter/Presentation';
-import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
-import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
-import { CanvasPlugin } from '#plugin';
+import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 
 import { canvasViewAspect } from '../../containers/CanvasArticle/view-state.ts';
-import * as ArchitectureSpace from './ArchitectureSpace.ts';
 import {
   type DiagramSet,
   architectureDiagrams,
@@ -34,38 +34,34 @@ import {
   DIAGRAM_COMMANDS as files,
   loadDiagramSet,
 } from './index.ts';
+import { Partial } from './partial.ts';
 
 type StoryArgs = {
   /** The template document opened as the article. */
-  document?: 'Composer' | 'DXOS' | 'EDGE';
-  /** Opens the template's ECHO presentation instead of a document. */
-  deck?: boolean;
+  document?: 'Composer' | 'DXOS' | 'EDGE' | 'ECHO design';
   /** The diagram stories' drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */
   readonly?: boolean;
 };
 
-const definition = ArchitectureSpace.make();
+const definition = SampleSpace.make({
+  space: { name: 'Architecture' },
+  partials: { architecture: Partial },
+  build: (partials) => partials.architecture(),
+});
 
-// The space is seeded by the template's own definition, as `SpaceOperation.ApplyTemplate` applies it.
-const withTemplate = createStoryDecorators<StoryArgs>(({ args }) => ({
+// The space is seeded by the partial alone, as a template that applies it would seed it.
+const withTemplate = StoryHarness.decorators<StoryArgs>(({ args }) => ({
   types: [...definition.schemas],
   plugins: [
     IllustratorPlugin.make(),
-    CanvasPlugin(),
+    CanvasPlugin.make(),
     MarkdownPlugin.make(),
     MermaidPlugin.make(),
-    PresenterPlugin.make(),
+    SheetPlugin.make(),
   ],
   onInit: async ({ space }) => {
     await EffectEx.runPromise(SampleSpace.applyTo(definition, space));
     await space.db.flush();
-    if (args.deck) {
-      const [deck] = await space.db.query(Filter.type(Presentation.Presentation)).run();
-      if (!deck) {
-        throw new Error('The template seeded no presentation.');
-      }
-      return [[Cell.article(deck)]];
-    }
     const documents = await space.db.query(Filter.type(Markdown.Document)).run();
     const document = documents.find((document) => Obj.getLabel(document) === args.document);
     if (!document) {
@@ -89,11 +85,11 @@ const ReadonlyView = ({ canvas, readonly, children }: ReadonlyViewProps) => {
 
 // One drawing per diagram of the set; the overview opens as the article and its drill-down boxes open the others.
 const withDiagrams = (set: DiagramSet) =>
-  createStoryDecorators<StoryArgs>(({ args }) => {
+  StoryHarness.decorators<StoryArgs>(({ args }) => {
     const canvas = Promise.withResolvers<URI.URI>();
     return {
       types: [Drawing.Drawing, Drawing.Canvas],
-      plugins: [IllustratorPlugin.make(), CanvasPlugin()],
+      plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
       onInit: async ({ space }) => {
         const root = await loadDiagramSet(space.db, set);
         await space.db.flush();
@@ -111,7 +107,7 @@ const withDiagrams = (set: DiagramSet) =>
 
 const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-canvas/samples/Template',
-  render: () => <ModuleContainer />,
+  render: () => <ModuleContainer.Root />,
   parameters: { layout: 'fullscreen', translations },
 };
 
@@ -121,7 +117,7 @@ type Story = StoryObj<typeof meta>;
 
 const documentArgs: Pick<Story, 'decorators' | 'argTypes'> = {
   decorators: withTemplate,
-  argTypes: { document: { control: 'inline-radio', options: ['Composer', 'DXOS', 'EDGE'] } },
+  argTypes: { document: { control: 'inline-radio', options: ['Composer', 'DXOS', 'EDGE', 'ECHO design'] } },
 };
 
 /** The Composer document, which links DXOS and EDGE and embeds the Composer architecture. */
@@ -149,29 +145,56 @@ export const Dxos: Story = { ...documentArgs, args: { document: 'DXOS' } };
 /** The EDGE document, embedding the EDGE architecture. */
 export const Edge: Story = { ...documentArgs, args: { document: 'EDGE' } };
 
-/** The ECHO deck, presented: types, the CRDT, spaces, queries, feeds, replication, migration and agents. */
-export const Echo: Story = {
-  ...documentArgs,
-  args: { deck: true },
-  play: async ({ canvasElement }) => {
-    await expect(
-      await within(canvasElement).findByRole('heading', { name: 'ECHO' }, { timeout: 30_000 }),
-    ).toBeInTheDocument();
-  },
-};
+/** The ECHO design document: eight chapters embedding three ECHO diagrams and the benchmarks sheet. */
+export const EchoDesign: Story = { ...documentArgs, args: { document: 'ECHO design' } };
 
-/** Opens once the overview's drill-down boxes are frames onto their diagrams. */
+/**
+ * Opens once the overview's drill-down boxes are frames onto their diagrams; pinching into the first box drills into
+ * its diagram (the breadcrumbs name it), and pinching out comes back to the overview.
+ */
 const play =
   (set: DiagramSet): Story['play'] =>
   async ({ canvasElement }) => {
-    await expect(
-      await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 60_000 }),
-    ).toBeInTheDocument();
+    const view = await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 60_000 });
+    await expect(view).toBeInTheDocument();
     for (const box of Object.keys(set.drills[set.root])) {
       await waitFor(() => expect(canvasElement.querySelector(`[data-node-id="${box}/box"]`)).not.toBeNull(), {
         timeout: 10_000,
       });
     }
+
+    const [[box, target]] = Object.entries(set.drills[set.root]);
+    const frame = canvasElement.querySelector(`[data-node-id="${box}/box"]`);
+    const crumb = () =>
+      [...canvasElement.querySelectorAll('nav button')].find((button) => button.textContent === set.names[target]);
+    // A pinch is a ctrl+wheel; a plain synthetic wheel reads as a trackpad pan. The view drills once the camera has
+    // settled, so each burst of pinches is followed by a pause.
+    const pinchUntil = async (deltaY: number, at: { clientX: number; clientY: number }, done: () => boolean) => {
+      for (let burst = 0; burst < 30 && !done(); burst++) {
+        for (let tick = 0; tick < 3; tick++) {
+          view.dispatchEvent(
+            new WheelEvent('wheel', { deltaY, ctrlKey: true, bubbles: true, cancelable: true, ...at }),
+          );
+        }
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+    };
+    const rect = frame?.getBoundingClientRect();
+    await expect(rect).toBeDefined();
+    if (rect) {
+      await pinchUntil(-40, { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 }, () =>
+        Boolean(crumb()),
+      );
+    }
+    await expect(crumb()).toBeDefined();
+
+    const viewRect = view.getBoundingClientRect();
+    await pinchUntil(
+      40,
+      { clientX: viewRect.left + viewRect.width / 2, clientY: viewRect.top + viewRect.height / 2 },
+      () => !crumb(),
+    );
+    await expect(crumb()).toBeUndefined();
   };
 
 const composer = architectureDiagrams(files);

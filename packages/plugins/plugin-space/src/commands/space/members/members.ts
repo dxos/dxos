@@ -16,7 +16,7 @@ import { mapMembers, printMembers } from './util.ts';
 
 export const handler = Effect.fn(function* ({ spaceId }: { spaceId: Option.Option<string> }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
 
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);

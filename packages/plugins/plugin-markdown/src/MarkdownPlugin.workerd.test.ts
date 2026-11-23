@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 
+import * as MarkdownPlugin from '#meta';
 import { Markdown, MarkdownOperation } from '#types';
-
-import * as MarkdownPlugin from './MarkdownPlugin.ts';
 
 describe('MarkdownPlugin in workerd', () => {
   test('activates headless and contributes operations and types', async ({ expect }) => {

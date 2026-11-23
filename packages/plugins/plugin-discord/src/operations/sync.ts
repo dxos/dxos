@@ -16,11 +16,11 @@ import { Cursor } from '@dxos/link';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
-import { meta } from '#meta';
 import { DiscordOperation } from '#types';
 
 import { DEFAULT_DAYS, DISCORD_SOURCE } from '../constants.ts';
 import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors.ts';
+import { DiscordNamespace } from '../namespace.ts';
 import { snowflakeForTimestamp } from '../services/discord-message.ts';
 import { makeDiscordLayerFromToken, resolveDiscordToken } from '../services/index.ts';
 
@@ -228,9 +228,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               Cursor.advance(binding, newestId);
               yield* Effect.ignore(
                 Operation.invoke(LayoutOperation.AddToast, {
-                  id: `${meta.profile.key}.sync-success`,
+                  id: `${DiscordNamespace.key}.sync-success`,
                   icon: 'ph--check--regular',
-                  title: ['sync-toast.success.label', { ns: meta.profile.key }],
+                  title: ['sync-toast.success.label', { ns: DiscordNamespace.key }],
                 }),
               );
               return outcome.success;
@@ -239,9 +239,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               Cursor.recordError(binding, message);
               yield* Effect.ignore(
                 Operation.invoke(LayoutOperation.AddToast, {
-                  id: `${meta.profile.key}.sync-error`,
+                  id: `${DiscordNamespace.key}.sync-error`,
                   icon: 'ph--warning--regular',
-                  title: ['sync-toast.error.label', { ns: meta.profile.key }],
+                  title: ['sync-toast.error.label', { ns: DiscordNamespace.key }],
                   description: message,
                 }),
               );

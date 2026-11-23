@@ -45,6 +45,16 @@ export type ChatEvent =
       type: 'rewind';
       id: string;
     }
+  /** Fork the conversation at this answer: a thread of its own that stays apart from main. */
+  | {
+      type: 'fork';
+      id: string;
+    }
+  /** Show a fork in place of main; the host owns which thread its chat model shows. */
+  | {
+      type: 'open-fork';
+      thread: string;
+    }
   /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
   | {
       type: 'remove-prompt';
@@ -74,6 +84,10 @@ export type ChatEvent =
   | {
       type: 'update-prompt';
       text: string;
+    }
+  /** Put the cursor in the prompt. */
+  | {
+      type: 'focus-prompt';
     }
   | {
       type: 'scroll-to-bottom';

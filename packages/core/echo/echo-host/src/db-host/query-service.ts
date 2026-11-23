@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
 
-import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized } from '@dxos/async';
+import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Query } from '@dxos/echo';
@@ -83,6 +83,9 @@ export type QueryDebounceOptions = {
   cost?: (query: QueryAST.Query, measured: number) => number;
 };
 
+/** Longest stretch (ms) a batch runs queries before yielding, so answers and incoming requests are not held for the whole batch. */
+const QUERY_SLICE_MS = 16;
+
 export const DEFAULT_QUERY_DEBOUNCE: QueryDebounceOptions = {
   factor: 4,
   minCost: 16,
@@ -115,9 +118,9 @@ type ActiveQuery = {
   /** `performance.now()` before which an invalidated query is left dirty rather than re-run. */
   debouncedUntil: number;
 
-  sendResults: (results: QueryService.QueryResult[], truncated?: 'paths' | 'manifest') => void;
+  sendResults: (results: QueryService.QueryResult[], executionTime: number, truncated?: 'paths' | 'manifest') => void;
   /** Reports a re-run whose result matched the last one sent. */
-  sendUnchanged: () => void;
+  sendUnchanged: (executionTime: number) => void;
   onError: (err: Error) => void;
 
   close: () => Promise<void>;
@@ -361,20 +364,22 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       oneShot: request.reactivity === QueryReactivity.ONE_SHOT,
       cost: 0,
       debouncedUntil: 0,
-      sendResults: (results, truncated) => {
+      sendResults: (results, executionTime, truncated) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, results, ...(truncated && { truncated }) });
+        onResults({ queryId: request.queryId, results, executionTime, ...(truncated && { truncated }) });
       },
-      sendUnchanged: () => {
+      sendUnchanged: (executionTime) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, unchanged: true });
+        onResults({ queryId: request.queryId, unchanged: true, executionTime });
       },
       onError,
       close: async () => {
+        // Cleared first so a batch that has not reached this query yet skips it instead of running a closed executor.
+        queryEntry.open = false;
         onClose();
         await queryEntry.executor.close();
         this._queries.delete(queryEntry);
@@ -430,13 +435,24 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     }
     this.#stats.totalDebounced += deferred.length;
 
-    // Cheap queries finish before expensive ones start: the worker serializes statements, so running
-    // them together would delay the cheap results and charge the expensive run's time to them.
+    // One at a time, cheapest first: SQLite runs synchronously, so interleaved queries would all finish with the
+    // slowest and each run's measured time would include the others' statements.
     ready.sort((left, right) => left.cost - right.cost);
-    const cheap = ready.filter((query) => query.cost < this.#debounce.minCost);
-    const expensive = ready.filter((query) => query.cost >= this.#debounce.minCost);
-    await Promise.all(cheap.map((query) => this.#runQuery(query)));
-    await Promise.all(expensive.map((query) => this.#runQuery(query)));
+    let sliceStart = performance.now();
+    let executing = 0;
+    for (const query of ready) {
+      if (!query.open) {
+        continue;
+      }
+      const queryStart = performance.now();
+      await this.#runQuery(query);
+      executing += performance.now() - queryStart;
+      // Without a turn the whole batch is one task, and its answers and the requests queued behind it wait for the last query.
+      if (performance.now() - sliceStart >= QUERY_SLICE_MS) {
+        await yieldBehindQueuedTasks();
+        sliceStart = performance.now();
+      }
+    }
     const dirtyCount = ready.length;
 
     this.#scheduleWake(deferred);
@@ -448,8 +464,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       (this.#stats.averageQueriesActive * (this.#stats.totalExecutionBatches - 1) + activeCount) /
       this.#stats.totalExecutionBatches;
 
+    // Judged on time spent in queries: the wall-clock `duration` also counts the slice yields, which wait behind
+    // whatever else the worker is doing (indexing at boot) and make a batch of fast queries look slow.
     const duration = performance.now() - begin;
-    if (duration >= SLOW_WORK_MS) {
+    if (executing >= SLOW_WORK_MS) {
       const slowest = ready.reduce<ActiveQuery | undefined>(
         (max, query) => (max && max.cost >= query.cost ? max : query),
         undefined,
@@ -457,12 +475,13 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       log.warn('slow query batch', {
         dirty: dirtyCount,
         active: activeCount,
+        executing,
         duration,
         slowest: slowest && Query.pretty(Query.fromAst(slowest.executor.query)),
         slowestCost: slowest?.cost,
       });
     } else {
-      log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration });
+      log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, executing, duration });
     }
   }
 
@@ -483,10 +502,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         const results = await query.executor.getResults();
         countWork('echo.queryResultsSent');
         countWork('echo.queryResultRows', results.length);
-        query.sendResults(results, query.executor.truncated);
+        query.sendResults(results, performance.now() - begin, query.executor.truncated);
       } else if (!query.oneShot) {
         // A client that holds local writes against this query waits for a re-run to know its answer is current.
-        query.sendUnchanged();
+        query.sendUnchanged(finishedAt - begin);
       }
     } catch (err) {
       log.catch(err, {

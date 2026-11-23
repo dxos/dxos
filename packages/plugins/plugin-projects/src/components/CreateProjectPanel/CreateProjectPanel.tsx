@@ -13,8 +13,9 @@ import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { meta } from '#meta';
 import { ProjectCapabilities } from '#types';
+
+import { ProjectsNamespace } from '../../namespace.ts';
 
 export type CreateProjectPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to ProjectCapabilities.Template. */
@@ -34,7 +35,7 @@ type CreateProjectValues = Schema.Schema.Type<typeof CreateProjectValues>;
  * which plugin-projects' CreateObjectEntry `createObject` resolves to run the template's `scaffold`.
  */
 export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templatesProp }: CreateProjectPanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const [name, setName] = useState('');
   const capabilityTemplates = Hooks.useCapabilities(ProjectCapabilities.Template);
 

@@ -6,9 +6,10 @@ import { type Alarm } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
+import type * as Reducer from '@dxos/compute/Reducer';
 import { type Database } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
-import { type ChatThreadController } from '@dxos/react-ui-assistant';
+import { type ChatThreadController, type ThreadLane } from '@dxos/react-ui-assistant';
 import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
@@ -39,6 +40,7 @@ export type ChatContextValue = {
   chat?: Chat.Chat;
   /** Undefined while the chat model is still opening; the chat renders from the feed meanwhile. */
   chatModel?: ChatModel;
+  readonly?: boolean;
   /** Whether the conversation has begun; a boolean, so it changes once rather than per message. */
   started: boolean;
   /** How many prompts wait behind the running turn; a count, so it changes per enqueue rather than per block. */
@@ -57,6 +59,10 @@ export type ChatThreadContextValue = {
   messages: Message.Message[];
   /** How many rows at the end of `messages` are prompts the agent has not taken up yet. */
   tail: number;
+  /** The lane of each row shown in a lane's gutter, when the chat ran several requests at once. */
+  lanes?: ReadonlyMap<string, ThreadLane>;
+  /** The chat's forks, shown as markers at the messages they fork at. */
+  forks?: readonly Reducer.Lane[];
   /** Alarms still waiting to fire, earliest first. */
   alarms: Alarm.Alarm[];
   /** Alarms that have woken the agent since the last user prompt. */

@@ -4,16 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type SourceKey, parseGitHubRemote, repoId } from '@dxos/deus/review';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
-
-import { type SourceKey, repoId } from './spec-key.ts';
-
-/** `owner/repo` from a GitHub remote URL (`git@github.com:o/r.git`, `https://github.com/o/r`). */
-export const parseGitHubRemote = (url: string): string | undefined =>
-  url
-    .match(/github\.com[:/]([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/)
-    ?.slice(1, 3)
-    .join('/');
 
 /** The `origin` remote's URL in a git config file, else the first remote's. */
 export const parseGitConfigRemote = (config: string): string | undefined => {

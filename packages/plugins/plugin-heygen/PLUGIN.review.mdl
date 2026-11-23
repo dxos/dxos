@@ -1,0 +1,57 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-heygen/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: HeyGenPlugin
+
+The plugin is built as specified: a headless connector entry with a token form, and a `kind: 'video'`
+GenerationService that enqueues on `POST /v3/videos` and polls `GET /v3/videos/{id}` through the edge
+CORS proxy, with `fieldOptions` loaders for avatars and voices. `HeyGenProvider` is unit-tested against a
+mocked fetch (enqueue, poll, failure, missing key, list endpoints). The connector entry has no test, and
+nothing automates QA-1. The only drift is the activation events: the connector activates on
+`ConnectorEvents.Start` and the service on `StudioEvents.Start`, not `SetupConnectors` / `Startup`.
+
+Of 4 items: 2 done, 1 untested, 0 partial, 0 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict HeyGenConnector: The connector entry trims the key and stores an AccessToken and Connection; no test covers it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-heygen/src/capabilities/connector.ts#createHeyGenConnectorEntry, github:dxos/dxos/packages/plugins/plugin-heygen/dx.config.ts]
+  note: |
+    `onSubmit` trims, rejects an empty key and returns `{ kind: 'complete', accessToken, connection }`. The module activates
+    on `ConnectorEvents.Start` rather than the `SetupConnectors` event the spec names. No test file exercises the entry.
+```
+
+```mdl
+verdict HeyGenGenerationService: An async video service enqueues on /v3/videos and polls to a single video/mp4 variant.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-service.ts#makeHeyGenGenerationService, github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-provider.ts#HeyGenProvider]
+  tests: [github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-provider.test.ts]
+  walkthrough:
+    - The service wires the provider to the edge CORS proxy and maps the polled URL to one video/mp4 variant. github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-service.ts#makeHeyGenGenerationService
+    - The provider posts the avatar body with X-Api-Key, polls until completed or failed, and raises MissingApiKey or ProviderFailure. github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-provider.ts#HeyGenProvider
+```
+
+```mdl
+verdict HeyGenFieldOptions: fieldOptions lists the account's own avatars and voices for the studio comboboxes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-service.ts#makeHeyGenGenerationService, github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-provider.ts#HeyGenProvider.listAvatars, github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-provider.ts#HeyGenProvider.listVoices]
+  tests: [github:dxos/dxos/packages/plugins/plugin-heygen/src/services/heygen-provider.test.ts]
+```
+
+```mdl
+verdict QA-1: No automated test connects a key and generates a video end to end.
+  status: missing
+  note: The QA test is manual (`status: unverified`); no e2e or integration test in the repo runs the connect, create and generate steps.
+```

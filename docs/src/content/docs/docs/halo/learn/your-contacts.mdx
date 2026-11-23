@@ -1,0 +1,59 @@
+---
+title: Your contacts
+description: List everyone you share a space with, and remove someone from a space.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the contact book lists everyone you share a space with, once each, with the spaces you share.
+You can also remove someone from a space.
+
+## Background
+
+A **contact** is anyone who shares a space with you. In most apps, a contact list is a table of its own, and the app
+has to keep it up to date. The contact book keeps no list of its own. Instead, it reads each space's members and
+merges them by DID, because a member's DID is the same in every space.
+
+A **member** is an identity with an [access level](/docs/halo/concepts/spaces-membership/), which is `pull`, `read`,
+`edit` or `admin`. Everyone in the contact book joined through an invitation or made the space, so everyone is an
+admin, and an admin can remove anyone.
+
+Removing a member is a **revocation**. It is a signed statement that undoes the delegation, the signed statement
+that let the member in. The space's **group key**, which encrypts its changes, changes with it, so the removed member
+cannot read anything written after. We remove a member in step 2.
+
+To change a member's access level instead, see the [Space](/docs/halo/api/space/) API page.
+
+## Steps
+
+<Steps>
+
+1. **List your contacts.** The Contacts tab shows one row for each person. `useContacts` builds the rows. It follows
+   `Space.spaces` and each ready space's `Space.members`, merges the members by DID, and leaves you out.
+
+   <Snippet file="halo-tutorial/app/Contacts" region="contacts" lang="tsx" />
+
+2. **Remove someone from a space.** The **×** beside a space in a contact's row calls `handleRemove`.
+   `Space.removeMember` revokes that person's membership of that one space, and the space leaves their row.
+
+   <Snippet file="halo-tutorial/app/Contacts" region="remove" lang="tsx" />
+
+   `handleRemove` takes the person out of one space only. They stay in your contacts for as long as you share another.
+
+</Steps>
+
+## Try it
+
+Alice, Bob and Carol are all in Book club, and Alice and Carol are in Climbing. Open Contacts on any device. Alice
+sees Bob with Book club, and Carol with Book club and Climbing.
+
+Remove Carol from Climbing on Alice's device, and Climbing leaves her row.
+
+<HaloEmbed stage="contacts" scene="book" />
+
+## What you can do now
+
+You can list everyone you share a space with and remove someone from a space. Next,
+[Add a device](/docs/halo/learn/add-device/) puts the same contacts on your phone.

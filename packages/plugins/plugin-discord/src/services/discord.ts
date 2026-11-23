@@ -6,14 +6,18 @@ import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Redacted from 'effect/Redacted';
+import * as Schema from 'effect/Schema';
 
 import * as Credential from '@dxos/compute/Credential';
 import { Database, Error, type Ref } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { DISCORD_API_BASE, DISCORD_USER_PROVIDER_ID } from '../constants.ts';
+import { DISCORD_API_BASE } from '../constants.ts';
 import { DISCORD_BOT_USER_AGENT, makeEdgeProxyHttpClientLayer } from './proxy-http-client.ts';
 
 /** Where the Discord REST client sends requests: the API base and whether the CORS proxy carries them. */
@@ -34,7 +38,91 @@ export const DiscordEndpoint = Context.Reference<Endpoint>('@dxos/plugin-discord
   defaultValue: () => ({ baseUrl: DISCORD_API_BASE, via: 'proxy' }),
 });
 
+/** A Discord API request as plain data: `path` is relative to the API base, which the host chooses. */
+export type HttpRequest = {
+  readonly method: string;
+  readonly path: string;
+  readonly headers: Readonly<Record<string, string>>;
+  /** Base64, so a binary upload crosses unchanged. */
+  readonly body?: string;
+};
+
+export const HttpResponse = Schema.Struct({
+  status: Schema.Number,
+  statusText: Schema.String,
+  headers: Schema.Record(Schema.String, Schema.String),
+  /** Base64. */
+  body: Schema.String,
+});
+export interface HttpResponse extends Schema.Schema.Type<typeof HttpResponse> {}
+
+export interface DiscordHttpService {
+  // The global Error: `Error` here names `@dxos/echo`'s error namespace.
+  readonly fetch: (request: HttpRequest) => Effect.Effect<unknown, globalThis.Error>;
+}
+
+/**
+ * Sends Discord API requests for a host that holds the network path to Discord itself (EDGE's discord-service, which
+ * also points its own test stack at a fake Discord). Optional: without it the client fetches the {@link DiscordEndpoint}.
+ */
+export class DiscordHttp extends Context.Service<DiscordHttp, DiscordHttpService>()(
+  '@dxos/plugin-discord/DiscordHttp',
+) {}
+
 type TokenKind = 'Bot' | 'Bearer';
+
+const toBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+};
+
+const fromBase64 = (text: string): Uint8Array<ArrayBuffer> => {
+  const binary = atob(text);
+  const bytes = new Uint8Array(new ArrayBuffer(binary.length));
+  for (let index = 0; index < binary.length; index++) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+};
+
+/** Sends each request through {@link DiscordHttp}, with the path below `baseUrl` that dfx addressed. */
+const hostFetchLayer = (http: DiscordHttpService, baseUrl: string, tokenKind: TokenKind): Layer.Layer<never> => {
+  const hostFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const request = new Request(input, init);
+    if (!request.url.startsWith(baseUrl)) {
+      throw new TypeError(`Not a Discord API request: ${request.url}`);
+    }
+    const headers: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+    if (tokenKind === 'Bearer' && headers.authorization?.startsWith('Bot ')) {
+      headers.authorization = `Bearer ${headers.authorization.slice(4)}`;
+    }
+    const body = request.body === null ? undefined : toBase64(new Uint8Array(await request.arrayBuffer()));
+    const response = await EffectEx.runPromise(
+      http
+        .fetch({
+          method: request.method,
+          path: request.url.slice(baseUrl.length),
+          headers,
+          ...(body === undefined ? {} : { body }),
+        })
+        .pipe(Effect.flatMap((value) => Schema.decodeUnknownEffect(HttpResponse)(value))),
+    );
+    // A null-body status (204, 304) refuses a body, even an empty one.
+    const nullBody = response.status === 204 || response.status === 304;
+    return new Response(nullBody ? null : fromBase64(response.body), {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+  };
+  return Layer.succeed(FetchHttpClient.Fetch, hostFetch);
+};
 
 /** dfx always writes `Bot <token>`; a user OAuth token must travel as `Bearer <token>`. */
 const directFetchLayer = (tokenKind: TokenKind): Layer.Layer<never> => {
@@ -61,16 +149,32 @@ const makeRestLayer = (token: string, tokenKind: TokenKind): Layer.Layer<Discord
   Layer.unwrap(
     Effect.gen(function* () {
       const endpoint = yield* DiscordEndpoint;
-      const fetchLayer =
-        endpoint.via === 'direct'
+      const http = yield* Effect.serviceOption(DiscordHttp);
+      const fetchLayer = Option.isSome(http)
+        ? hostFetchLayer(http.value, endpoint.baseUrl, tokenKind)
+        : endpoint.via === 'direct'
           ? directFetchLayer(tokenKind)
           : makeEdgeProxyHttpClientLayer(tokenKind === 'Bearer' ? { tokenKind } : undefined);
+      const fetch = yield* FetchHttpClient.Fetch.pipe(Effect.provide(fetchLayer));
       return DiscordRESTMemoryLive.pipe(
         Layer.provide(DiscordConfig.layer({ token: Redacted.make(token), rest: { baseUrl: endpoint.baseUrl } })),
-        Layer.provide(FetchHttpClient.layer.pipe(Layer.provide(fetchLayer))),
+        Layer.provide(pinnedFetchClient(fetch)),
       );
     }),
   );
+
+/**
+ * The fetch HTTP client with `fetch` provided on every request. `FetchHttpClient` reads `Fetch` from the calling
+ * fiber, whose context wins over the layer's, so a caller with its own `Fetch` would otherwise route Discord requests
+ * past the proxy and its bearer rewrite.
+ */
+const pinnedFetchClient = (fetch: typeof globalThis.fetch): Layer.Layer<HttpClient.HttpClient> =>
+  Layer.effect(
+    HttpClient.HttpClient,
+    Effect.map(HttpClient.HttpClient, (client) =>
+      HttpClient.transformResponse(client, Effect.provideService(FetchHttpClient.Fetch, fetch)),
+    ),
+  ).pipe(Layer.provide(FetchHttpClient.layer));
 
 /**
  * Build a `DiscordREST` layer pinned to a specific bot token.
@@ -130,20 +234,3 @@ export const makeDiscordUserLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Error.EntityNotFoundError, Credential.CredentialsService> =>
   Layer.unwrap(Effect.map(resolveConnectionToken(connectionRef), makeDiscordUserLayerFromToken));
-
-/**
- * Build a `DiscordREST` layer from a persisted {@link Connection} ref with the token kind its connector issues: a
- * Discord user OAuth connection's token is a bearer token, any other a bot token.
- */
-export const makeDiscordConnectionLayer = (
-  connectionRef: Ref.Ref<Connection.Connection>,
-): Layer.Layer<DiscordREST, Error.EntityNotFoundError, Credential.CredentialsService> =>
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const connection = yield* Database.load(connectionRef);
-      const token = yield* resolveConnectionToken(connectionRef);
-      return connection.connectorId === DISCORD_USER_PROVIDER_ID
-        ? makeDiscordUserLayerFromToken(token)
-        : makeDiscordLayerFromToken(token);
-    }),
-  );

@@ -1,0 +1,23 @@
+---
+title: Editable
+description: "Text that turns into a field when the user edits it."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/editable" height="8.25rem" narrow />
+
+```ts
+import * as Editable from '@dxos/react-ui/Editable';
+```
+
+`Editable` is text that turns into a field when the user edits it. `Editable.Preview` and `Editable.Input` share one
+place, so switching between them moves nothing.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Editable.Root` | The root, which holds the value and the editing state |
+| `Editable.Preview` | The text, and the control that starts editing |
+| `Editable.Input` | The field shown while editing, with a save button |

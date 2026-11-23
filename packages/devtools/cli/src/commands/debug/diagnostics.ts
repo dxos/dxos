@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { ClientService } from '@dxos/client';
 
 export const handler = Effect.fn(function* (options: { humanize: boolean; truncate: boolean }) {
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const data = yield* Effect.tryPromise(() => client.diagnostics(options));
   yield* Console.log(JSON.stringify(data, null, 2));
 });

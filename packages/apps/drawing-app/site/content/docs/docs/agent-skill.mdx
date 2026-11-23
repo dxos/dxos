@@ -1,0 +1,48 @@
+---
+title: The agent skill
+description: Install the drawing skill so your coding agent can draw diagrams of your code.
+---
+
+The `drawing` skill teaches a coding agent the `.dx` language and the `drawing` command. Install it once, then ask
+for diagrams in plain words.
+
+## Install
+
+Run this in your project:
+
+```bash
+npx skills add dxos/dxos --skill drawing
+```
+
+`npx skills add` adds the skill to your project. Commit it, or ignore it, as you would any other agent configuration.
+It works with Claude Code, Cursor, Codex and any agent that reads `SKILL.md`.
+
+## Ask for a diagram
+
+Ask the way you would ask a colleague:
+
+> Draw how a request moves through our services, and put it in the README.
+
+> Add a diagram of the data model to the design doc.
+
+The agent then:
+
+1. Reads the code (imports, manifests, service configs, schemas), so each arrow is something it can point to.
+2. Cuts the system to what a reader needs: about 14 boxes and 3 groups at most.
+3. Writes the `.dx` in a scratch folder, outside your project.
+4. Renders it to where the picture belongs, such as `docs/arch.dx.svg`, and reads the layout report.
+5. Fixes any defect the report names with the smallest [layout hint](/docs/language/hints/), and renders again.
+
+You keep only the `.dx.svg`. It carries its source, so a later "add the cache to that diagram" starts from the
+same text.
+
+## Open it on a canvas
+
+Ask the agent to open the diagram in the app. It runs [`drawing open`](/docs/cli/#open), which prints a link that
+opens the diagram on an editable canvas. Anyone with the link can open it. The link expires 30 days after it was last
+opened.
+
+## The CLI without installing
+
+The skill runs the CLI through `npx`, so nothing else needs installing. See [The CLI](/docs/cli/) for the commands
+it uses.

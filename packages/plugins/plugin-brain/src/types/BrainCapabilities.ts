@@ -8,17 +8,14 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
+import { BrainNamespace } from '../namespace.ts';
 
-/**
- * The per-space in-memory FactStore registry shared between fact-writing operations and
- * fact-reading surfaces. See `../capabilities/fact-store`.
- */
-export const FactStoreRegistry = Capability.makeSingleton<import('../capabilities/fact-store.ts').FactStoreRegistry>()(
-  `${meta.profile.key}.capability.factStoreRegistry`,
-);
+/** Each space's memory as a FactStore, for surfaces and stories that read through one. */
+export const FactStoreRegistry = Capability.makeSingleton<
+  import('../capabilities/fact-store-registry.ts').FactStoreRegistry
+>()(`${BrainNamespace.key}.capability.factStoreRegistry`);
 
 /** Writable atom holding the fact-analysis {@link BrainSettings.Settings} (model/provider/strict). */
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./BrainSettings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${BrainNamespace.key}.capability.settings`,
 );

@@ -3,10 +3,12 @@
 //
 
 import { Type } from '@dxos/echo';
+import { translations as rdfTranslations } from '@dxos/react-ui-rdf/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { AgentChannels, AgentEmail, Goal } from '#types';
+
+import { AgentNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -32,7 +34,7 @@ export const translations = [
         'typename.label_other': 'Goals',
         'object-name.placeholder': 'New goal',
       },
-      [meta.profile.key]: {
+      [AgentNamespace.key]: {
         'plugin.name': 'Agent',
         'email-channel.label': 'Email address',
         'email-channel.description':
@@ -149,15 +151,7 @@ export const translations = [
         'agent-knowledge-predicate-count.label_one': '{{count}} fact',
         'agent-knowledge-predicate-count.label_other': '{{count}} facts',
         'agent-knowledge-goals.label': 'Goals',
-        'entity-card-type.label': 'type',
-        'entity-card-name.label': 'name',
-        'entity-card-more.label': '+{{count}}',
-        'entity-card-more.description': '{{count}} more',
-        'entity-card-statements.label_one': '{{count}} statement',
-        'entity-card-statements.label_other': '{{count}} statements',
         'entity-browser-filter.placeholder': 'Filter',
-        'entity-browser-actions.label': 'Column actions',
-        'entity-browser-close.label': 'Close column',
         'agent-knowledge-goals-empty.message': 'No goals yet.',
         'agent-knowledge-watch.label': 'Tell {{recipient}}: {{message}}',
         'agent-knowledge-watch-unnamed.label': 'them',
@@ -197,4 +191,5 @@ export const translations = [
       },
     },
   },
+  ...rdfTranslations,
 ] as const satisfies Theme.Resource[];

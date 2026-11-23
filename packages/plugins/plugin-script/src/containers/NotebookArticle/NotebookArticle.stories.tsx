@@ -16,7 +16,7 @@ import { useQuery } from '@dxos/echo-react';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { ExplorerPlugin } from '@dxos/plugin-explorer/testing';
+import * as ExplorerPlugin from '@dxos/plugin-explorer/ExplorerPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
@@ -62,8 +62,8 @@ const meta: Meta<typeof NotebookArticle> = {
               defaultSpace.db.add(Operation.serialize(AgentOperation.RunInstructions));
             }),
         }),
-        AssistantPlugin(),
-        RoutinePlugin(),
+        AssistantPlugin.make(),
+        RoutinePlugin.make(),
         ExplorerPlugin.make(),
         MarkdownPlugin.make(),
       ],

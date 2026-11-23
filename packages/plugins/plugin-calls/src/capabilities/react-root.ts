@@ -8,12 +8,13 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { Call } from '#components';
-import { meta } from '#meta';
+
+import { CallsNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     return Capability.contribute(Capabilities.ReactRoot, {
-      id: meta.profile.key,
+      id: CallsNamespace.key,
       root: Call.Audio,
     });
   }),

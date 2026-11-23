@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Appeal, Diagnostics, Dsl, type Scene, type Semantic, SemanticEngine, UmlGrid } from '@dxos/diagram';
+import { Appeal, Diagnostics, DSL, type Scene, type Semantic, SemanticEngine, UmlGrid } from '@dxos/diagram';
 import { diagram as diagramLanguage } from '@dxos/diagram/extension';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { useTextEditor } from '@dxos/react-ui-editor';
@@ -53,7 +53,7 @@ const withoutHints = (diagram: Semantic.Diagram): Semantic.Diagram => ({
   busLabels: new Map(),
 });
 
-type Compiled = { objects: Scene.WorldObject[]; problems: readonly Dsl.Problem[]; ms: number };
+type Compiled = { objects: Scene.WorldObject[]; problems: readonly DSL.Problem[]; ms: number };
 
 /** Compiles a source a moment after typing stops; the last good result stays up while it runs. */
 const useCompiled = (source: string, strip: boolean): Compiled | undefined => {
@@ -64,12 +64,12 @@ const useCompiled = (source: string, strip: boolean): Compiled | undefined => {
       const started = performance.now();
       const run = strip
         ? Effect.promise(async () => {
-            const reading = Dsl.read(source);
+            const reading = DSL.read(source);
             return reading.diagram
-              ? Dsl.withLayout(reading, await SemanticEngine.compile(withoutHints(reading.diagram)))
-              : Dsl.withLayout(reading);
+              ? DSL.withLayout(reading, await SemanticEngine.compile(withoutHints(reading.diagram)))
+              : DSL.withLayout(reading);
           })
-        : Dsl.compile(source);
+        : DSL.compile(source);
       void EffectEx.runPromise(run).then(
         ({ commands, problems }) => {
           if (!cancelled) {
@@ -165,7 +165,7 @@ const Scores = ({ title, compiled }: { title: string; compiled?: Compiled }) => 
     ['area', `${metrics.width} × ${metrics.height}`],
   ];
   return (
-    <div className='p-3 space-y-3 text-xs' data-testid='constraints.scores'>
+    <div className='p-trim-md space-y-3 text-xs' data-testid='constraints.scores'>
       <div className='text-sm font-medium'>{title}</div>
       <Layout.Grid cols={['fill', 'min']} gap='xs' classNames='font-mono'>
         {rows.map(([label, value]) => (

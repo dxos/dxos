@@ -21,6 +21,46 @@ export type RenderNode<NodeData = any> = (group: D3Selection<SVGGElement>, node:
 
 const createLine = line<Point>();
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Class of the visible edge shape (a `<line>` or a `<path>`). */
+const EDGE_SHAPE_CLASS = 'dx-edge-shape';
+
+/** Class of the wide transparent edge shape that receives clicks. */
+const EDGE_CLICK_CLASS = 'dx-click';
+
+/** Below this movement (px) a coordinate write is skipped, so a settled graph does no DOM work per tick. */
+const EPSILON = 0.01;
+
+/**
+ * Arrowhead drawn into a straight edge's `<polyline>`; matches the `marker-arrow-*` chevron
+ * (12 marker units scaled by the 0.5px edge stroke).
+ */
+const ARROW_LENGTH = 6;
+const ARROW_HALF_WIDTH = 3;
+
+type EdgeTag = 'line' | 'polyline' | 'path';
+
+type NodeEntry<NodeData> = {
+  element: SVGGElement;
+  node: GraphLayoutNode<NodeData>;
+  /** Mutated in place; avoids building and re-parsing a `translate(...)` string per node per tick. */
+  translate?: SVGTransform;
+  x?: number;
+  y?: number;
+};
+
+type EdgeEntry<NodeData, EdgeData> = {
+  group: SVGGElement;
+  edge: GraphLayoutEdge<NodeData, EdgeData>;
+  /** Visible shape plus the optional click target; `<path>` when the projector supplies `edge.path`, else `<line>`. */
+  shapes: SVGGeometryElement[];
+  coords?: [number, number, number, number];
+  pathData?: string;
+};
+
+type Subgraph<NodeData> = { id: string; nodes: GraphLayoutNode<NodeData>[] };
+
 /** Duration for edge opacity transitions on enter / exit (ms). Matches node enter/exit timing. */
 const EDGE_FADE_MS = 300;
 
@@ -102,6 +142,11 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
   // them in the `update` set instead of `enter`.
   #firstRender = true;
 
+  // Per-tick work iterates these instead of re-selecting the DOM; rebuilt on every topology render.
+  #nodeEntries: NodeEntry<NodeData>[] = [];
+  #edgeEntries: EdgeEntry<NodeData, EdgeData>[] = [];
+  #subgraphs: Subgraph<NodeData>[] = [];
+
   override render(layout: GraphLayout<NodeData, EdgeData>) {
     // The SVG group ref is unset between mount cycles and before the container has sized;
     // skip the render rather than throw — the projector will emit again on the next tick.
@@ -145,51 +190,29 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
     // Subgraphs (aka components)
     //
 
-    const scale = 100;
-    const offsetDistance = 24 * scale;
-
     if (this._options.subgraphs) {
-      // TODO(burdon): Cache components in layout.
       // TODO(burdon): Separate force system for each subgraph.
-      const components = this._options.subgraphs
-        ? findConnectedComponents({
-            nodes: layout.graph?.nodes ?? [],
-            edges: (layout.graph?.edges ?? []).map(({ source, target }) => ({ source: source.id, target: target.id })),
-          })
-            .filter((component) => component.length > 2)
-            .map((component, i) => ({ id: `subgraph-${i}`, component }))
-        : [];
+      const nodesById = new Map((layout.graph?.nodes ?? []).map((node) => [node.id, node]));
+      this.#subgraphs = findConnectedComponents({
+        nodes: layout.graph?.nodes ?? [],
+        edges: (layout.graph?.edges ?? []).map(({ source, target }) => ({ source: source.id, target: target.id })),
+      })
+        .filter((component) => component.length > 2)
+        .map((component, i) => ({
+          id: `subgraph-${i}`,
+          nodes: component.flatMap((id) => nodesById.get(id) ?? []),
+        }));
 
       root
         .selectAll('g.dx-subgraphs')
         .data([{ id: 'subgraphs' }])
         .join('g')
         .classed('dx-subgraphs', true)
-        .selectAll<SVGPathElement, { id: string }>('path')
-        .data(components)
-        .join(
-          (enter) => enter.append('path').classed('dx-subgraph', true),
-          (update) => {
-            return update.attr('d', ({ component }) => {
-              const points: Point[] =
-                layout.graph?.nodes.filter((node) => component.includes(node.id)).map((node) => [node.x, node.y]) ?? [];
+        .selectAll<SVGPathElement, Subgraph<NodeData>>('path')
+        .data(this.#subgraphs, (subgraph) => subgraph.id)
+        .join((enter) => enter.append('path').classed('dx-subgraph', true));
 
-              // https://d3js.org/d3-polygon
-              const hullPoints = polygonHull(points);
-
-              // https://www.npmjs.com/package/js-clipper
-              const co = new Clipper.ClipperOffset();
-              const solution = [];
-              const clipperPath = hullPoints.map(([x, y]) => ({ X: x * scale, Y: y * scale }));
-              co.AddPath(clipperPath, Clipper.JoinType.jtRound, Clipper.EndType.etClosedPolygon);
-              co.Execute(solution, offsetDistance);
-              if (solution.length > 0) {
-                const offset = solution[0].map(({ X, Y }) => [X / scale, Y / scale]);
-                return createLine([...offset, offset[0]]);
-              }
-            });
-          },
-        );
+      this.#updateSubgraphs();
     }
 
     //
@@ -213,6 +236,8 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
     //
     // Nodes
     //
+
+    const nodeEntries: NodeEntry<NodeData>[] = [];
 
     nodeGroup
       .selectAll<SVGCircleElement, GraphLayoutNode<NodeData>>('g.dx-node')
@@ -244,11 +269,17 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
       // Apply update (transform / attributes / labels) to enter+update so the first render
       // also populates `data-*` attributes and transforms — not just subsequent ticks.
       .call(updateNode, this.options)
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .each((node, i, elements) => {
+        nodeEntries.push({ element: elements[i] as SVGGElement, node, x: node.x, y: node.y });
+      });
+    this.#nodeEntries = nodeEntries;
 
     //
     // Edges
     //
+
+    const edgeEntries: EdgeEntry<NodeData, EdgeData>[] = [];
 
     edgeGroup
       .selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('g.dx-edge')
@@ -258,8 +289,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
           enter
             .append('g')
             .attr('data-id', (d) => d.id)
-            .classed('dx-edge', true)
-            .call(createEdge, this.options),
+            .classed('dx-edge', true),
         (update) => update,
         // Exit fade: edges removed by a topology change (e.g. variant switch from cluster
         // back to force replaces hierarchy edges with data edges) ease out rather than pop.
@@ -273,9 +303,19 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
               select(this).remove();
             }),
       )
-      // Apply edge updates (paths / attributes) to enter+update — see note on nodes above.
-      .call(updateEdge, this.options, nodeGroup)
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      // Apply edge attributes to enter+update — see note on nodes above.
+      .call(updateEdge, this.options)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .each((edge, i, groups) => {
+        const group = groups[i] as SVGGElement;
+        const shapes = Array.from(group.children).filter(
+          (child): child is SVGGeometryElement => child instanceof SVGGeometryElement,
+        );
+        const entry: EdgeEntry<NodeData, EdgeData> = { group, edge, shapes };
+        writeEdge(entry, this.options);
+        edgeEntries.push(entry);
+      });
+    this.#edgeEntries = edgeEntries;
   }
 
   /**
@@ -283,46 +323,42 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
    * and the subgraph hull pass; just writes `transform` per node and `d` per edge.
    * Called per simulation tick / animation frame.
    */
-  override applyPositions(layout: GraphLayout<NodeData, EdgeData>) {
+  override applyPositions(_layout: GraphLayout<NodeData, EdgeData>) {
     if (!this.root) {
       return;
     }
 
-    const root = select(this.root);
-
-    // Transforms only — no attribute callback, no label measurement.
     const applyNode = this.options.applyNode;
-    root
-      .select('g.dx-nodes')
-      .selectAll<SVGGElement, GraphLayoutNode<NodeData>>('g.dx-node')
-      .attr('transform', (d) => (d.x != null && d.y != null ? `translate(${d.x},${d.y})` : null))
-      .each(
-        applyNode
-          ? function (d) {
-              // Per-tick consumer hook (e.g. swarm trail). Group transform is already up to date,
-              // so node-local coords land in the same frame as the head position.
-              applyNode(this, d);
-            }
-          : () => {},
-      );
+    for (const entry of this.#nodeEntries) {
+      const { element, node } = entry;
+      if (node.x != null && node.y != null && (moved(entry.x, node.x) || moved(entry.y, node.y))) {
+        entry.x = node.x;
+        entry.y = node.y;
+        entry.translate ??= getTranslate(element);
+        entry.translate.setTranslate(node.x, node.y);
+      }
+      // Per-tick consumer hook (e.g. swarm trail). Group transform is already up to date,
+      // so node-local coords land in the same frame as the head position.
+      applyNode?.(element, node);
+    }
 
-    // Edge geometry — either precomputed (`edge.path`) or derived from endpoint positions.
-    root
-      .select('g.dx-edges')
-      .selectAll<SVGGElement, GraphLayoutEdge<NodeData, EdgeData>>('g.dx-edge')
-      .selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path')
-      .attr('d', function () {
-        // NOTE: `d` is stale after layout is switched so get the datum from the parent element.
-        const edge = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
-        if (edge.path) {
-          return edge.path;
-        }
-        const { source, target } = edge;
-        if (!source.initialized || !target.initialized) {
-          return null;
-        }
-        return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
-      });
+    for (const entry of this.#edgeEntries) {
+      writeEdge(entry, this.options);
+    }
+
+    this.#updateSubgraphs();
+  }
+
+  /** Hulls follow their nodes, so they are recomputed whenever positions change. */
+  #updateSubgraphs() {
+    if (!this.root || !this._options.subgraphs) {
+      return;
+    }
+
+    select(this.root)
+      .select('g.dx-subgraphs')
+      .selectAll<SVGPathElement, Subgraph<NodeData>>('path')
+      .attr('d', ({ nodes }) => createHull(nodes));
   }
 
   /**
@@ -333,7 +369,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
     if (!this.root) {
       return;
     }
-    select(this.root).selectAll('g.dx-edges').selectAll('path').call(createBullets(this.root, node.id));
+    select(this.root).selectAll('g.dx-edges').selectAll(`.${EDGE_SHAPE_CLASS}`).call(createBullets(this.root, node.id));
   }
 }
 
@@ -447,8 +483,13 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
   // Hidden state: drive pointer-events + the hover opacity via the `dx-hidden` class;
   // tween the actual opacity attribute on a named transition so it doesn't fight the
   // CSS hover transition (different namespaces, different durations).
-  group.classed('dx-hidden', (d) => d.hidden ?? false);
-  group
+  // Only nodes whose hidden state flipped get a transition; restarting it on every node each render
+  // interrupts in-flight fades and schedules hundreds of no-op tweens.
+  const toggled = group.filter(function (d) {
+    return (this as Element).classList.contains('dx-hidden') !== (d.hidden ?? false);
+  });
+  toggled.classed('dx-hidden', (d) => d.hidden ?? false);
+  toggled
     .transition('hide')
     .ease(easeCubicOut)
     .duration(NODE_HIDE_MS)
@@ -537,46 +578,12 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
 };
 
 /**
- * Create edge elements.
- * @param group
- * @param options
- * @param nodes
- */
-const createEdge: D3Callable = <NodeData = any, EdgeData = any>(
-  group: D3Selection,
-  options: GraphRendererOptions<NodeData, EdgeData>,
-) => {
-  if (options.onLinkClick) {
-    // Shadow path with wide stroke for click handler.
-    group
-      .append('path')
-      .classed('dx-click', true)
-      .on('click', (event: MouseEvent) => {
-        const edge = select<SVGLineElement, GraphLayoutEdge<NodeData, EdgeData>>(
-          event.target as SVGLineElement,
-        ).datum();
-        options.onLinkClick(edge, event);
-      });
-  }
-
-  group
-    .append('path')
-    .attr('pointer-events', 'none')
-    .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
-    .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined));
-};
-
-/**
- * Update edge elements.
- * @param group
- * @param options
+ * Update edge attributes (classes and data attributes); geometry is written by {@link writeEdge}.
  */
 const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
   group: D3Selection,
   options: GraphRendererOptions<NodeData, EdgeData>,
-  nodeGroup: D3Selection,
 ) => {
-  // Custom attributes.
   try {
     group.each((d, i, edges) => {
       const edge = select(edges[i]);
@@ -594,25 +601,189 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
   } catch (error: any) {
     log.error('updateEdge', { error: error?.message });
   }
+};
 
-  // Optional transition.
-  const groupOrTransition: D3Selection = options.transition
-    ? (group.transition(options.transition()) as unknown as D3Selection)
-    : group;
+/**
+ * Create the edge's shapes: `<path>` for projector-supplied geometry, otherwise `<line>`, or
+ * `<polyline>` when it carries arrowheads. Line and polyline geometry are plain attributes, whereas
+ * a path's `d` is a CSS property, so every `d` write forces a style recalc — the dominant per-tick
+ * cost for straight-edge layouts. Arrowheads are drawn into the polyline rather than as markers,
+ * since painting a marker per edge cost several times the edge itself.
+ */
+const createEdgeShapes = <NodeData, EdgeData>(
+  entry: EdgeEntry<NodeData, EdgeData>,
+  options: GraphRendererOptions<NodeData, EdgeData>,
+  tag: EdgeTag,
+) => {
+  entry.shapes.forEach((shape) => shape.remove());
+  entry.shapes = [];
+  entry.coords = undefined;
+  entry.pathData = undefined;
 
-  groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path').attr('d', function () {
-    // NOTE: `d` is stale after layout is switched so get the datum from the parent element.
-    const edge = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
-    if (edge.path) {
-      return edge.path;
+  if (options.onLinkClick) {
+    const click = document.createElementNS(SVG_NS, tag);
+    click.classList.add(EDGE_CLICK_CLASS);
+    // Inline so the edge stroke rules (including per-color ones) can't make the hit area visible or thin.
+    click.style.stroke = 'transparent';
+    click.style.strokeWidth = '8px';
+    click.style.pointerEvents = 'stroke';
+    click.addEventListener('click', (event: MouseEvent) => {
+      // The group's datum is current even after a layout switch rebinds it.
+      options.onLinkClick(select<SVGGElement, GraphLayoutEdge<NodeData, EdgeData>>(entry.group).datum(), event);
+    });
+    entry.shapes.push(click);
+  }
+
+  const shape = document.createElementNS(SVG_NS, tag);
+  shape.classList.add(EDGE_SHAPE_CLASS);
+  shape.setAttribute('pointer-events', 'none');
+  // Straight edges stay hidden until their first endpoints are written; see writeEdge.
+  if (tag !== 'path') {
+    entry.shapes.forEach((click) => click.setAttribute('visibility', 'hidden'));
+    shape.setAttribute('visibility', 'hidden');
+  } else {
+    if (options.arrows?.start) {
+      shape.setAttribute('marker-start', 'url(#marker-arrow-start)');
     }
-    const { source, target } = edge;
-    if (!source.initialized || !target.initialized) {
-      return;
+    if (options.arrows?.end) {
+      shape.setAttribute('marker-end', 'url(#marker-arrow-end)');
     }
+  }
+  entry.shapes.push(shape);
+  entry.group.append(...entry.shapes);
+};
 
-    return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
-  });
+/** Write edge geometry, touching the DOM only when it changed. */
+const writeEdge = <NodeData, EdgeData>(
+  entry: EdgeEntry<NodeData, EdgeData>,
+  options: GraphRendererOptions<NodeData, EdgeData>,
+) => {
+  const { edge } = entry;
+  const tag: EdgeTag = edge.path != null ? 'path' : options.arrows?.start || options.arrows?.end ? 'polyline' : 'line';
+  if (entry.shapes.length === 0 || entry.shapes[0].tagName !== tag) {
+    createEdgeShapes(entry, options, tag);
+  }
+
+  const path = edge.path;
+  if (path != null) {
+    if (entry.pathData !== path) {
+      entry.pathData = path;
+      entry.shapes.forEach((shape) => shape.setAttribute('d', path));
+    }
+    return;
+  }
+
+  const { source, target } = edge;
+  if (!source.initialized || !target.initialized) {
+    // A zero-length line would still draw its markers, so hide it until both ends are placed.
+    if (entry.coords) {
+      entry.coords = undefined;
+      entry.shapes.forEach((shape) => shape.setAttribute('visibility', 'hidden'));
+    }
+    return;
+  }
+
+  const [[x1, y1], [x2, y2]] = getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r);
+  const previous = entry.coords;
+  if (
+    previous &&
+    !moved(previous[0], x1) &&
+    !moved(previous[1], y1) &&
+    !moved(previous[2], x2) &&
+    !moved(previous[3], y2)
+  ) {
+    return;
+  }
+
+  if (!previous) {
+    entry.shapes.forEach((shape) => shape.removeAttribute('visibility'));
+  }
+  entry.coords = [x1, y1, x2, y2];
+  if (tag === 'polyline') {
+    const points = createArrowPoints(x1, y1, x2, y2, options.arrows?.start, options.arrows?.end);
+    entry.shapes.forEach((shape) => shape.setAttribute('points', points));
+    return;
+  }
+
+  for (const shape of entry.shapes) {
+    shape.setAttribute('x1', String(x1));
+    shape.setAttribute('y1', String(y1));
+    shape.setAttribute('x2', String(x2));
+    shape.setAttribute('y2', String(y2));
+  }
+};
+
+/**
+ * Polyline points for a segment with chevron arrowheads (wing → tip → wing at each end), so a
+ * single stroked shape inherits the edge's color and hover styles.
+ */
+const createArrowPoints = (x1: number, y1: number, x2: number, y2: number, start?: boolean, end?: boolean) => {
+  const length = Math.hypot(x2 - x1, y2 - y1) || 1;
+  const ux = (x2 - x1) / length;
+  const uy = (y2 - y1) / length;
+  const wings = (x: number, y: number, direction: number) => {
+    const bx = x - ux * ARROW_LENGTH * direction;
+    const by = y - uy * ARROW_LENGTH * direction;
+    return [
+      `${bx - uy * ARROW_HALF_WIDTH},${by + ux * ARROW_HALF_WIDTH}`,
+      `${bx + uy * ARROW_HALF_WIDTH},${by - ux * ARROW_HALF_WIDTH}`,
+    ];
+  };
+
+  const head = `${x1},${y1}`;
+  const tail = `${x2},${y2}`;
+  const points: string[] = [];
+  if (start) {
+    const [left, right] = wings(x1, y1, -1);
+    points.push(left, head, right);
+  }
+  points.push(head, tail);
+  if (end) {
+    const [left, right] = wings(x2, y2, 1);
+    points.push(left, tail, right);
+  }
+  return points.join(' ');
+};
+
+/** The group's single translate transform, created if the attribute was never set. */
+const getTranslate = (element: SVGGElement): SVGTransform => {
+  const list = element.transform.baseVal;
+  const first = list.numberOfItems > 0 ? list.getItem(0) : undefined;
+  if (list.numberOfItems === 1 && first?.type === SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+    return first;
+  }
+  const svg = element.ownerSVGElement;
+  const transform = svg ? svg.createSVGTransform() : list.createSVGTransformFromMatrix(new DOMMatrix());
+  return list.initialize(transform);
+};
+
+const moved = (previous: number | undefined, next: number) => previous == null || Math.abs(previous - next) > EPSILON;
+
+/** Rounded, padded outline around a subgraph's nodes. */
+const createHull = <NodeData>(nodes: GraphLayoutNode<NodeData>[]): string | null => {
+  // Clipper works in integers, so coordinates are scaled up before the offset and back down after.
+  const scale = 100;
+  const offsetDistance = 24 * scale;
+  const points: Point[] = nodes.filter((node) => node.x != null && node.y != null).map((node) => [node.x, node.y]);
+
+  // https://d3js.org/d3-polygon
+  const hullPoints = polygonHull(points);
+  if (!hullPoints) {
+    return null;
+  }
+
+  // https://www.npmjs.com/package/js-clipper
+  const co = new Clipper.ClipperOffset();
+  const solution = [];
+  const clipperPath = hullPoints.map(([x, y]) => ({ X: x * scale, Y: y * scale }));
+  co.AddPath(clipperPath, Clipper.JoinType.jtRound, Clipper.EndType.etClosedPolygon);
+  co.Execute(solution, offsetDistance);
+  if (solution.length === 0) {
+    return null;
+  }
+
+  const offset: Point[] = solution[0].map(({ X, Y }) => [X / scale, Y / scale]);
+  return createLine([...offset, offset[0]]);
 };
 
 /**
@@ -647,7 +818,7 @@ const applyHoverHighlight = (root: SVGGElement | null, focusedId: string | null)
     .selectAll<SVGGElement, GraphLayoutEdge>('g.dx-edge')
     .each(function (edge) {
       // Visible edge path — exclude the wider transparent click target when present.
-      const path = select(this).select<SVGPathElement>('path:not(.dx-click)');
+      const path = select(this).select<SVGGeometryElement>(`.${EDGE_SHAPE_CLASS}`);
       if (!on) {
         path.style('stroke', null).style('stroke-width', null).style('opacity', null);
         return;

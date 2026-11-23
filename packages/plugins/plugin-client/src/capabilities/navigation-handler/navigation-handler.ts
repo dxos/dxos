@@ -11,11 +11,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 import { ClientCapabilities, CliLogin } from '#types';
 
 import { CLI_LOGIN_DIALOG } from '../../constants.ts';
+import { ClientNamespace } from '../../namespace.ts';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
@@ -88,9 +88,9 @@ export default Capability.makeModule(
               return;
             }
             yield* Operation.invoke(LayoutOperation.AddToast, {
-              id: `${meta.profile.key}/navigation-failed`,
-              title: ['navigation-failed-toast.title', { ns: meta.profile.key }],
-              description: ['navigation-failed-toast.description', { ns: meta.profile.key }],
+              id: `${ClientNamespace.key}/navigation-failed`,
+              title: ['navigation-failed-toast.title', { ns: ClientNamespace.key }],
+              description: ['navigation-failed-toast.description', { ns: ClientNamespace.key }],
               icon: 'ph--warning--regular',
             }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
           }),

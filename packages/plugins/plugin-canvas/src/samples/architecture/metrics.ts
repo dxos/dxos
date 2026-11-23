@@ -36,11 +36,17 @@ export const PLUGIN_METRICS: ReadonlyArray<
 
 const COLUMNS = 'ABCDE';
 
+/** The plugins the PR-share pie covers: the busiest, so a slice stays wide enough to read. */
+const PIE_PLUGINS = 8;
+
 /** Column widths: the plugin names take the room the longest one needs; the counts need far less than the grid's 180px default. */
 const PLUGIN_COLUMN_SIZE = 270;
 const COUNT_COLUMN_SIZE = 120;
 
-/** Plugin size and activity as a sheet, charted as horizontal bars: plugins down the y axis, one series per measure. */
+/**
+ * Plugin size and activity as a sheet, charted as horizontal bars (plugins down the y axis, one series per measure)
+ * and as a pie of the busiest plugins' share of merged PRs.
+ */
 export const makePluginMetrics = (): Sheet.Sheet => {
   const rows = [HEADER, ...PLUGIN_METRICS];
   const range = `A1:${COLUMNS[HEADER.length - 1]}${rows.length}`;
@@ -64,6 +70,13 @@ export const makePluginMetrics = (): Sheet.Sheet => {
         grid: true,
         horizontal: true,
         stacked: true,
+      },
+      {
+        name: `PR share, top ${PIE_PLUGINS} plugins`,
+        // A pie draws its range's first series, so the range is the plugin names and their PRs alone.
+        range: `A1:B${PIE_PLUGINS + 1}`,
+        type: 'pie',
+        header: true,
       },
     ],
   });

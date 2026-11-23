@@ -14,6 +14,8 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as ComputeSqlService from '@dxos/compute/SqlService';
 import { ConfigService } from '@dxos/config';
 import { Database, Hypergraph } from '@dxos/echo';
+import * as MemoryService from '@dxos/echo-memory/MemoryService';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
 import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
@@ -75,7 +77,7 @@ const SqlLayerSpec = LayerSpec.make(
     Layer.effect(
       ComputeSqlService.SqlService,
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const rpc = client.services.rpc;
         return ComputeSqlService.SqlService.of({
           execute: ({ params, ...request }) =>
@@ -103,7 +105,7 @@ const ConfigLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return Layer.succeed(ConfigService, client.config);
       }),
     ),
@@ -122,7 +124,7 @@ const EdgeHttpClientLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return Layer.succeed(EdgeHttpClientService, client.edge.http);
       }),
     ),
@@ -145,11 +147,48 @@ const DatabaseLayerSpec = LayerSpec.make(
     Layer.unwrap(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for Database layer');
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const space = client.spaces.get(context.space);
         invariant(space, `space not found on client: ${context.space}`);
         yield* Effect.promise(() => space.waitUntilReady());
         return Database.layer(space.db);
+      }),
+    ),
+);
+
+/** The space's RDF store, kept by the client services host in its own database and replicated through its fact feed. */
+const RdfStoreLayerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService],
+    provides: [RdfStore.RdfStore],
+  },
+  (context) =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for RdfStore layer');
+        const client = yield* ClientService.client;
+        return Layer.succeed(RdfStore.RdfStore, client.rdf(context.space));
+      }),
+    ),
+);
+
+/**
+ * The space's {@link MemoryService.MemoryService}, run by the client services host beside the space's store, so every
+ * page and operation shares one rule evaluator per space.
+ */
+const MemoryLayerSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [ClientService],
+    provides: [MemoryService.MemoryService],
+  },
+  (context) =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        invariant(context.space, 'space context required for MemoryService layer');
+        const client = yield* ClientService.client;
+        return Layer.succeed(MemoryService.MemoryService, client.memory(context.space));
       }),
     ),
 );
@@ -169,7 +208,7 @@ const HypergraphLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return Hypergraph.layer(client.graph);
       }),
     ),
@@ -216,7 +255,7 @@ const IdentityLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return layerIdentity(client);
       }),
     ),
@@ -235,7 +274,7 @@ const SpaceLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return layerSpace(client);
       }),
     ),
@@ -249,6 +288,8 @@ export default Capability.makeModule(() =>
       SqlLayerSpec,
       EdgeHttpClientLayerSpec,
       DatabaseLayerSpec,
+      RdfStoreLayerSpec,
+      MemoryLayerSpec,
       HypergraphLayerSpec,
       AccessTokenResolverLayerSpec,
       CredentialsLayerSpec,

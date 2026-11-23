@@ -80,10 +80,16 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cells = {};
     }
 
-    if (plane === 'grid' && this.model.features.dataEditable === false) {
-      Object.values<DxGridCellValue>(cells).forEach((cell) => {
-        cell.readonly = 'text-select';
-      });
+    if (this.model.features.dataEditable === false) {
+      if (plane === 'grid') {
+        Object.values<DxGridCellValue>(cells).forEach((cell) => {
+          cell.readonly = 'text-select';
+        });
+      } else if (plane === 'frozenColsStart') {
+        Object.values<DxGridCellValue>(cells).forEach((cell) => {
+          cell.readonly ||= 'text-select';
+        });
+      }
     }
 
     return cells;
@@ -112,6 +118,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const { props } = this.getFieldProjection(field.id);
 
     const cell: DxGridCellValue = {
+      // A list is the one value whose text routinely outruns the column, and reading it as one long
+      // line defeats the point, so the focused cell wraps downward rather than sideways.
+      focusUnfurl: props.type === 'array' ? 'block' : undefined,
       get value() {
         const value = SchemaEx.getValue(obj, field.path);
         if (value == null) {
@@ -119,7 +128,11 @@ export class TablePresentation<T extends TableRow = TableRow> {
         }
 
         if (props.type === 'array') {
-          return '';
+          // A list of values prints as one line and wraps when the cell is focused (`focusUnfurl`
+          // below); an array of objects has no text form, so it stays blank.
+          return Array.isArray(value) && value.every((item) => typeof item !== 'object')
+            ? value.map((item) => String(item)).join(', ')
+            : '';
         }
 
         switch (props.format) {

@@ -18,9 +18,9 @@ import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 import { Event } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Segment, Trip, TripOperation } from '#types';
 
+import { TripNamespace } from '../namespace.ts';
 import { getPlanningWindowDays } from '../operations/extractor/config.ts';
 
 /**
@@ -71,7 +71,7 @@ export default Capability.makeModule(
         return Effect.succeed([
           AppNode.makeCompanion({
             variant: 'segment',
-            label: ['segment.companion.label', { ns: meta.profile.key }],
+            label: ['segment.companion.label', { ns: TripNamespace.key }],
             icon: 'ph--ticket--regular',
             data: segment ?? 'segment',
           }),
@@ -89,7 +89,7 @@ export default Capability.makeModule(
             id: `${trip.id}-${TripOperation.MergeTrip.meta.key}`,
             data: () => Operation.invoke(TripOperation.MergeTrip, { trip }),
             properties: {
-              label: ['trip.merge.label', { ns: meta.profile.key }],
+              label: ['trip.merge.label', { ns: TripNamespace.key }],
               icon: 'ph--arrows-merge--regular',
               disposition: 'list-item',
             },
@@ -143,14 +143,14 @@ export default Capability.makeModule(
                   {
                     spaceId: db.spaceId,
                     notify: {
-                      success: ['trip.plan-from-calendar-success.title', { ns: meta.profile.key }],
-                      error: ['trip.plan-from-calendar-error.title', { ns: meta.profile.key }],
+                      success: ['trip.plan-from-calendar-success.title', { ns: TripNamespace.key }],
+                      error: ['trip.plan-from-calendar-error.title', { ns: TripNamespace.key }],
                     },
                   },
                 );
               }),
             properties: {
-              label: ['trip.plan-from-calendar.label', { ns: meta.profile.key }],
+              label: ['trip.plan-from-calendar.label', { ns: TripNamespace.key }],
               icon: 'ph--airplane-takeoff--regular',
               disposition: 'list-item',
             },

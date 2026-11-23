@@ -15,7 +15,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import { isFeedOwnerSchema } from '@dxos/schema';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from '../../namespace.ts';
 
 /** Mirrors the foreign keys stamped by the agent skill's automation compiler (`sync-automation`). */
 const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
@@ -28,7 +28,7 @@ export type AgentPropertiesProps = {
 };
 
 export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentPropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   const db = Obj.getDatabase(agent);
 
   // Build a filter matching objects of any schema annotated as a feed.

@@ -1,0 +1,24 @@
+---
+title: Typography
+description: "Text that lines up with the controls beside it."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/typography" height="20rem" narrow />
+
+```ts
+import * as Typography from '@dxos/react-ui/Typography';
+```
+
+`Typography` is text that lines up with the controls beside it. It centers the first line in a block, so the text sits
+level with an icon or control however many lines it wraps to.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Typography.Text` | A paragraph, or another text element with `asChild` |
+| `Typography.Link` | A link |
+| `Typography.Crawl` | Lines that scroll up one at a time in a one-line window |
+| `Typography.Timestamp` | A date or time |

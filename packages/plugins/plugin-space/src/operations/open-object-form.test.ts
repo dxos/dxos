@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -14,20 +13,18 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { PublicKey } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
-import { ComplexMap } from '@dxos/util';
 
-import { SpacePlugin } from '#plugin';
+import * as SpacePlugin from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import type { ObjectFormHandle } from '../util/index.ts';
 import { TestObject } from './testing.ts';
 
-await Harness.preload({ plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin({})] });
+await Harness.preload({ plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin.make({})] });
 
 /**
  * `OpenObjectForm` returns what the dialog produced, which means the handler has to stay suspended
@@ -88,7 +85,10 @@ const makeStubLayoutPlugin = (onOpen: (handle: ObjectFormHandle) => void): Plugi
           Effect.succeed([
             // Read by the handler to decide whether a new collection is navigated to; normally
             // contributed by the space plugin's `state.ts`, which needs a layout to activate.
-            Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
+            Capability.contribute(
+              SpaceCapabilities.EphemeralState,
+              SpaceCapabilities.makeEphemeralState('local-session'),
+            ),
             Capability.contribute(
               Capabilities.OperationHandler,
               OperationHandlerSet.make(
@@ -109,19 +109,9 @@ const makeStubLayoutPlugin = (onOpen: (handle: ObjectFormHandle) => void): Plugi
     Plugin.make,
   )();
 
-const ephemeralState = () =>
-  Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    sdkMigrationRunning: {},
-    navigableCollections: false,
-    viewersByObject: {},
-    viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
-    mergePreview: undefined,
-    lastMergeAt: undefined,
-  }).pipe(Atom.keepAlive);
-
 const setup = async (onOpen: (handle: ObjectFormHandle) => void) => {
   const harness = await Harness.createComposerTestApp({
-    plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin({}), makeStubLayoutPlugin(onOpen)],
+    plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin.make({}), makeStubLayoutPlugin(onOpen)],
   });
 
   const client = harness.get(ClientCapabilities.Client);

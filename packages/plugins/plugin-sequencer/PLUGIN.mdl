@@ -184,6 +184,7 @@ component ScoreArticle
 
 ```mdl
 feat F-1: Create Score
+  uses: [Score]
 
   req F-1.1: User can create a new Score from the navtree.
   req F-1.2: New Score has tempo=120, no tracks, no sequences.
@@ -191,6 +192,7 @@ feat F-1: Create Score
 
 ```mdl
 feat F-2: Manage Tracks
+  uses: [Score, Track]
 
   req F-2.1:
     when: user adds a track
@@ -207,6 +209,7 @@ feat F-2: Manage Tracks
 
 ```mdl
 feat F-3: Edit Sequence Notes
+  uses: [Note, Sequence, SequenceGrid]
 
   req F-3.1:
     when: user clicks an empty cell in SequenceGrid
@@ -227,6 +230,7 @@ feat F-3: Edit Sequence Notes
 
 ```mdl
 feat F-4: Playback
+  uses: [Score, Sequence, SequenceGrid]
 
   req F-4.1:
     when: user presses play
@@ -243,6 +247,7 @@ feat F-4: Playback
 
 ```mdl
 feat F-5: Sequence Selection
+  uses: [Sequence, SequenceGrid, TrackList]
 
   req F-5.1:
     when: user clicks a track in TrackList
@@ -344,7 +349,9 @@ test QA-1: Read and write a score as lead-sheet text
       do: Right-click "QA Score" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$given.score], target: $given.collection }
       expect: the row leaves the navtree
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Fill a step grid in a new score. Recorded light at 60 fps with no ident, captions or

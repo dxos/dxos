@@ -9,12 +9,11 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { SupportNamespace } from '../../namespace.ts';
 import { Key } from './Key.tsx';
 
 export const ShortcutsList = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
   // TODO(burdon): Get shortcuts from TextEditor.
   // A command registered without a label is shown by its shortcut rather than dropped.
   const label = (binding: { label?: string; hotkey: string }) =>

@@ -5,6 +5,7 @@
 export * from './change-bar.ts';
 export * from './comments.ts';
 export * from './diff.ts';
+export * from './hunks.ts';
 export * from './suggest.ts';
 export * from './suggestions-overlay.ts';
 export * from './track-changes.ts';

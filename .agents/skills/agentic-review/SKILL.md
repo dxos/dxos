@@ -64,16 +64,25 @@ nothing beyond `node:*` and `bun:*`, and can also be run by hand. Tests:
   scripts/check-pr.ts     # CI: a finalized review exists, issues addressed, drift ≤ 20%
   lib/system-one/          # budget, source segmentation, context fetchers, questions, checker
   lib/                     # mdl, frontmatter, git, discovery, diagnostics, resolution, review-doc, store, supersede
-  rules/                   # seed rules (repo-wide non-negotiables)
+.agents/rules/             # this repo's own rules (outside the skill, see below)
 ```
 
+**One engine, many repos.** This skill's canonical copy is
+[`dxos/dxos:.agents/skills/agentic-review`](https://github.com/dxos/dxos/blob/main/.agents/skills/agentic-review); other repos install it
+with `npx skills add dxos/dxos --skill agentic-review`, which records it in `skills-lock.json`. The
+skill folder holds only the engine, so it is identical everywhere: each repo keeps its rules in its
+own `.mdl` files (`.agents/rules/` for the repo-wide ones), never inside the skill, because a
+reinstall replaces the whole folder. In a repo that installed the skill, do not edit it in place:
+change it in `dxos/dxos` first, then update the copy. `scripts/skills-sync.ts` in `dxos/dxos`
+detects a copy that was edited in place and produces the patch to take upstream.
+
 Rules are **`rule` blocks** inside `.mdl` documents (the repo's structured
-markdown format; see `packages/reflect/deus/lang/core.mdl`). A `.mdl` file can
+markdown format; see [`core.mdl`](https://github.com/dxos/dxos/blob/main/packages/reflect/deus/lang/core.mdl)). A `.mdl` file can
 define many things — `type`, `feat`, `test`, and so on — and a `rule` is just one
 more block type. The harness scans every `.mdl` file, extracts the `rule` blocks,
-and ignores the rest, so descriptor documents (`SPEC.mdl`, `PLUGIN.mdl`) define no
+and ignores the rest, so descriptor documents (a spec, a plugin descriptor) define no
 rules and are passed over. Put rules wherever they belong — colocated in a
-package's `.mdl`, or in a shared document like `rules/non-negotiables.mdl`. The
+package's `.mdl`, or in a shared document like `.agents/rules/non-negotiables.mdl`. The
 run store lives at `.agents/reviews/<short-sha>/` (slug = `git rev-parse --short
 HEAD`). Prepare writes STAGING.md / groups for the subagent loop; finalize keeps
 only `REVIEW.md` and deletes the intermediates. A finalized `REVIEW.md` is, in order:
@@ -138,8 +147,9 @@ subagent workflow above (see the callout at the top).
 decision model that returns calibrated probabilities for typed questions. It is
 orders of magnitude cheaper than a subagent (input tokens only, $0.042 per
 million) but cannot explore, so each rule's `context` field decides what it is
-shown. Needs `TYPESAFE_API_KEY`: use it from the shell when it is already exported, otherwise
-it is `op://CI/Typesafe AI Test Key/credential` in 1Password (see the `1password` skill).
+shown. Needs `TYPESAFE_API_KEY`: use it from the shell when it is already exported (check that it
+is set before calling it missing, as [PR mode](#pr-mode-fast-review--ci) shows). Otherwise it is
+`op://eng-dev/ai.typesafe/credential` in 1Password (see the `1password` skill).
 
 ```sh
 bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only
@@ -168,7 +178,7 @@ How it works:
   is kept in `system-one.json`, a local dump that is gitignored and never committed.
 - **Scale.** A 202-file change against about a hundred rules took under four
   minutes and $2.73, reported 312 violations and routed 13% of pairs onward
-  (`.agents/projects/architecture-rules/TRIAL.md`).
+  ([`TRIAL.md`](https://github.com/dxos/dxos/blob/main/.agents/projects/architecture-rules/TRIAL.md)).
 - **Cost ceiling.** `--max-cost=<usd>` (default 5): predicted from the plan before any call, and
   enforced per request while running. Over it, the run is refused with exit 2.
 - **Failures.** A request that fails leaves its pairs unanswered, and they are
@@ -180,7 +190,7 @@ How it works:
   location and any context the model asked for.
 
 Calibration against the hunks the mined rules cite is in
-`.agents/projects/architecture-rules/dataset/CALIBRATION.md`: rules a reader can
+[`CALIBRATION.md`](https://github.com/dxos/dxos/blob/main/.agents/projects/architecture-rules/dataset/CALIBRATION.md): rules a reader can
 judge from the code alone separate cleanly, and rules that depend on context do
 only when that context is fetched.
 
@@ -238,7 +248,7 @@ latest):
 
 ```sh
 bun .agents/skills/agentic-review/scripts/unresolved.ts
-bun .agents/skills/agentic-review/scripts/unresolved.ts --path=packages/core/echo
+bun .agents/skills/agentic-review/scripts/unresolved.ts --path=packages/foo
 bun .agents/skills/agentic-review/scripts/unresolved.ts --rule=no-casts
 bun .agents/skills/agentic-review/scripts/unresolved.ts --path='**/foo.ts' --rule=no-sleep-in-test
 ```
@@ -254,7 +264,7 @@ only checks the committed store, so CI needs no API key and spends nothing.
 ```sh
 [ -n "$(printenv TYPESAFE_API_KEY)" ] && echo exported || echo unset   # check the environment first
 bun .agents/skills/agentic-review/scripts/fast.ts            # key already exported
-TYPESAFE_API_KEY='op://CI/Typesafe AI Test Key/credential' op run -- bun .agents/skills/agentic-review/scripts/fast.ts  # only with OP_SERVICE_ACCOUNT_TOKEN set
+TYPESAFE_API_KEY='op://eng-dev/ai.typesafe/credential' op run -- bun .agents/skills/agentic-review/scripts/fast.ts  # only with OP_SERVICE_ACCOUNT_TOKEN set
 bun .agents/skills/agentic-review/scripts/fast.ts --dry-run  # plan and price only
 ```
 
@@ -313,7 +323,7 @@ rule no-sleep-in-test: No sleep in tests
   changed set (`--pr-only` / incremental).
 - **`scope`** — `dir` (default) resolves globs relative to the `.mdl` file's
   directory, so a package rule targets its own tree; `repo` resolves from the
-  repo root (used by the shared seed rules).
+  repo root (used by the rules in `.agents/rules/`).
 - **`grep`** — an optional JS-regex pre-filter tested against file contents; a
   file is reviewed only if it matches. Omit to review every selected file the
   globs hit. Values are literal (no YAML quoting) — write `grep: @dxos/`, not
@@ -327,7 +337,7 @@ rule no-sleep-in-test: No sleep in tests
 - **`context`** — what a non-agentic checker must be shown beside the code, as a
   list: `diff`, `imports`, `importers`, `siblings`, `package`, `public-api`,
   `similar`, `test`, `pr` (table in
-  `.agents/projects/architecture-rules/DESIGN.md`). Declare the smallest set a
+  [`DESIGN.md`](https://github.com/dxos/dxos/blob/main/.agents/projects/architecture-rules/DESIGN.md)). Declare the smallest set a
   reader who cannot open other files needs; leave it out when the file is enough.
 - **`system-one`** — `on` (default) | `off`. `off` when no fetcher can supply what
   the rule needs, so only an agentic reviewer applies it.
@@ -337,7 +347,7 @@ rule no-sleep-in-test: No sleep in tests
 
 A document that uses the `rule` type should declare it in an `## Extensions`
 section (`` `rule` `` → `org.dxos.mdl.rule@1.0`); see
-`rules/non-negotiables.mdl` for a complete example with an inline `ext`
+`.agents/rules/non-negotiables.mdl` for a complete example with an inline `ext`
 definition.
 
 ## Notes

@@ -8,15 +8,18 @@ import React, {
   type KeyboardEventHandler,
   type ReactNode,
   forwardRef,
+  useEffect,
   useMemo,
+  useState,
 } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { ScrollScope, useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -25,8 +28,7 @@ import * as Popover from '@dxos/react-ui/Popover';
 import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { DeckNamespace } from '../../namespace.ts';
 import { Pane } from '../Pane/index.ts';
 import { PlankLoading } from './PlankLoading.tsx';
 
@@ -75,13 +77,46 @@ export type PlankProps = Util.ThemedClassName<{
   popoverAnchorId?: string;
   /** Extra Article surface data merged over the computed defaults (e.g. companionTo/variant/path). */
   articleData?: Partial<AppSurface.ArticleData>;
+  /** The EID the article's scroll is kept under, so a follower restores it; none for a companion. */
+  scrollContextId?: string;
   /** Error fallback for the content surface. */
   fallback?: SurfaceProps['fallback'];
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
+  /** A palette hue the heading washes in; see `Pane.Toolbar`. */
+  accent?: string;
   // TODO(burdon): Why is this required?
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
 }>;
+
+/**
+ * False for the first commit after a plank changes subject, so its shell paints before the new article renders: the
+ * article's render and layout cost more than the rest of the plank, and an open should show at once. A plank's first
+ * subject renders at once: a newly mounted plank arrives with a whole new deck (a workspace switch), where a second
+ * layout pass for the article lengthened the switch's frames. A hidden page has no frames to wait for.
+ */
+const useArticleReady = (id: string): boolean => {
+  const [readyId, setReadyId] = useState(id);
+  useEffect(() => {
+    if (readyId === id) {
+      return;
+    }
+    if (document.visibilityState === 'hidden') {
+      setReadyId(id);
+      return;
+    }
+    // A task queued from the next frame runs once that frame, the shell's, has painted.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const frame = requestAnimationFrame(() => {
+      timer = setTimeout(() => setReadyId(id));
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [id, readyId]);
+  return readyId === id;
+};
 
 /**
  * A higher-level deck pane bound to a graph {@link Node}: renders the node's sigil, title and content
@@ -106,21 +141,24 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       pending,
       popoverAnchorId,
       articleData,
+      scrollContextId,
       fallback,
       headless,
+      accent,
       onKeyDown,
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(DeckNamespace.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
     // Each plank is a focus area of the shell; its companion follows it.
     const landmark = Main.useMainLandmark(1, onKeyDown);
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
+    const articleReady = useArticleReady(node.id);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
     const label = Theme.toLocalizedString(
-      node.properties?.label ?? (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
+      node.properties?.label ?? (pending ? (['pending.heading', { ns: DeckNamespace.key }] as const) : ''),
       t,
     );
     const data = useMemo<AppSurface.ArticleData>(
@@ -135,13 +173,45 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       [attendableId, node.id, node.data, node.properties, popoverAnchorId, articleData],
     );
 
+    // The article already on screen is held for the commit the shell paints alone, so the plank's content
+    // is never empty between two subjects. Dropping it leaves the editor and its toolbar out of the DOM for
+    // the frames in between — measured at ~90ms, which is the flicker on every move between articles — and
+    // tears down what was there, so what returns measures its container again from scratch.
+    //
+    // Recorded after the commit, not during render: a render React discards never reaches the screen, and
+    // holding its article would show one that was never displayed.
+    // The scroll context travels with the article, so a held article never reports its scroll under the next one's.
+    const current = articleReady && node.data !== undefined ? { key: node.id, data, scrollContextId } : undefined;
+    const [held, setHeld] = useState(current);
+    useEffect(() => {
+      if (current) {
+        setHeld((previous) =>
+          previous?.key === current.key &&
+          previous.data === current.data &&
+          previous.scrollContextId === current.scrollContextId
+            ? previous
+            : current,
+        );
+      }
+      // The identity of `current` changes with `data`, which is already memoized on what it is built from.
+    }, [current?.key, current?.data, current?.scrollContextId]);
+    const shown = current ?? held;
+
     // Anchor the sigil's popover only when this plank's menu is the active popover target.
-    const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = popoverAnchorId === `${DeckNamespace.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     return (
-      <Pane.Root {...landmark} ref={ref} classNames={classNames} {...attentionAttrs} data-testid='deck.plank'>
+      <Pane.Root
+        {...landmark}
+        ref={ref}
+        classNames={classNames}
+        {...attentionAttrs}
+        // Right-clicking anywhere in the plank (its heading or its content) lists its node's actions.
+        {...(node.data === undefined ? {} : AppNode.contextMenuProps(node.id, DeckNamespace.key))}
+        data-testid='deck.plank'
+      >
         {!headless && (
-          <Pane.Toolbar>
+          <Pane.Toolbar accent={accent}>
             <ActionRoot>
               {actions && actions.length > 0 ? (
                 <AttentionSigil.Root
@@ -213,20 +283,19 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           </Pane.Toolbar>
         )}
         <Pane.Content>
-          {node.data === undefined ? (
-            // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
-            // no Article to ask for. The same shell stands in until the Article's own module lands,
-            // so the plank does not change under the reader on the way there.
+          {shown === undefined ? (
+            // Nothing has resolved for this plank yet; from the second subject on, the one before is held.
             PLANK_LOADING
           ) : (
-            <Surface.Surface
-              key={node.id}
-              type={AppSurface.Article}
-              data={data}
-              limit={1}
-              fallback={fallback}
-              placeholder={PLANK_LOADING}
-            />
+            <ScrollScope key={shown.key} contextId={shown.scrollContextId}>
+              <Surface.Surface
+                type={AppSurface.Article}
+                data={shown.data}
+                limit={1}
+                fallback={fallback}
+                placeholder={PLANK_LOADING}
+              />
+            </ScrollScope>
           )}
         </Pane.Content>
       </Pane.Root>

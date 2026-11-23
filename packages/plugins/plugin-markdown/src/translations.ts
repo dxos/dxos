@@ -7,8 +7,9 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Markdown } from '#types';
+
+import { MarkdownNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -24,7 +25,7 @@ export const translations = [
         'delete-object.label': 'Delete document',
         'object-deleted.label': 'Document deleted',
       },
-      [meta.profile.key]: {
+      [MarkdownNamespace.key]: {
         'plugin.name': 'Editor',
         'document-tour.label': 'Take the document tour',
         'add-object.label': 'Add object',

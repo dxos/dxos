@@ -58,7 +58,7 @@ runs:
                 sha,
                 state,
                 context: name,
-                description: state === 'success' ? 'Passed or unaffected, on test node (2/2)' : 'Failed on test node (2/2); see its log',
+                description: state === 'success' ? 'Passed or unaffected, on the advisory job' : 'Failed on the advisory job; see its log',
               });
             } catch (err) {
               core.warning(`Could not post the ${name} status (${state}): ${err.message}`);

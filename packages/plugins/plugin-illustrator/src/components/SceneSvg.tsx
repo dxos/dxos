@@ -6,14 +6,15 @@ import React, { type MouseEvent, useId, useMemo } from 'react';
 
 import { Diagnostics, Scene, SvgFile } from '@dxos/diagram';
 import type * as Util from '@dxos/react-ui/Util';
+import { Shape } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-const FONT_SIZE = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].size;
-const LINE_H = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;
+const FONT_SIZE = (weight: Shape.Weight) => Diagnostics.LABEL_TYPE[weight].size;
+const LINE_H = (weight: Shape.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 
-const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): SvgFile.Rect => {
+const rectOf = (object: Scene.WorldObject, element: Shape.Box | Shape.Portal): SvgFile.Rect => {
   const { x = 0, y = 0 } = object.origin ?? {};
   const scale = object.scale ?? 1;
   return { x: x + element.x * scale, y: y + element.y * scale, w: element.w * scale, h: element.h * scale };
@@ -21,13 +22,13 @@ const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): S
 
 const center = (rect: SvgFile.Rect): Point => ({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 });
 
-const strokeDash: Partial<Record<Scene.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
+const strokeDash: Partial<Record<Shape.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
 
 const CHAR_EM = Diagnostics.CHAR_EM;
 
 const RADIUS = 8;
 
-const colorClass = (color?: Scene.Color) => (color ? SvgFile.COLOR_CLASS[color] : undefined);
+const colorClass = (color?: Shape.Color) => (color ? SvgFile.COLOR_CLASS[color] : undefined);
 
 const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
 
@@ -38,7 +39,7 @@ type MultilineTextProps = {
   cx: number;
   cy: number;
   text: string;
-  weight: Scene.Weight;
+  weight: Shape.Weight;
   className?: string;
 };
 
@@ -66,7 +67,7 @@ const MultilineText = ({ cx, cy, text, weight, className }: MultilineTextProps) 
 type BoxLabelProps = {
   rect: SvgFile.Rect;
   text: string;
-  weight: Scene.Weight;
+  weight: Shape.Weight;
 };
 
 /** A box's label, set by `Diagnostics.layoutLabel` so it stays inside the box and the label check agrees. */
@@ -93,11 +94,11 @@ const BoxLabel = ({ rect, text, weight }: BoxLabelProps) => {
 };
 
 /** Per-instance marker fragment ids (multiple SceneSvgs may share a page). */
-type MarkerIds = Record<Scene.Marker, string>;
+type MarkerIds = Record<Shape.Marker, string>;
 
 type ElementProps = {
   object: Scene.WorldObject;
-  element: Scene.Element;
+  element: Shape.Element;
   registry: Map<string, SvgFile.Rect>;
   markers: MarkerIds;
 };
@@ -178,7 +179,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       const arrow = element.id.endsWith('-path')
         ? object.elements.find((other) => other.kind === 'arrow' && other.id === element.id.slice(0, -'-path'.length))
         : undefined;
-      const derived = arrow?.kind === 'arrow' ? Scene.markersOf(arrow) : undefined;
+      const derived = arrow?.kind === 'arrow' ? Shape.markersOf(arrow) : undefined;
       const start = derived?.start;
       // The route takes its arrow's relation dash unless the polyline sets its own stroke.
       const stroke = element.stroke ?? (derived?.dashed ? 'dashed' : undefined);
@@ -245,7 +246,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       }
       const [start, end] = [points[points.length - 2], points[points.length - 1]];
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
-      const { start: tail, end: head, dashed } = Scene.markersOf(element);
+      const { start: tail, end: head, dashed } = Shape.markersOf(element);
       // On a routed connector the source marker is drawn by its `-path` polyline instead.
       const routed = object.elements.some(
         (other) => (other.kind === 'line' || other.kind === 'curve') && other.id === `${element.id}-path`,

@@ -50,6 +50,7 @@ export const Markdown = {
 
   getCollaboratorCursors: (page: Page) => page.locator('.cm-collab-selectionCaret'),
   getCollaboratorCursorsWithLocator: (locator: Locator) => locator.locator('.cm-collab-selectionCaret'),
+  getCollaboratorNamesWithLocator: (locator: Locator) => locator.locator('.cm-collab-selectionName'),
 
   getMarkdownLineText: (page: Page) =>
     Markdown.getMarkdownTextbox(page)

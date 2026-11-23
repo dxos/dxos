@@ -28,7 +28,7 @@ export type ImportArgs = {
 /** Reads an archive of either format from disk and creates a new space from it, or merges it into `into`. */
 export const handler = Effect.fn(function* ({ file, tags, into = Option.none() }: ImportArgs) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 

@@ -166,8 +166,8 @@ describe('checkPendingMigration', () => {
     savedNamespace = Migrations.namespace;
     savedMigrations = Migrations.migrations;
     Migrations.define('test', [
-      { version: '1970-01-01', next: async () => {} },
-      { version: TARGET, next: async () => {} },
+      { version: '1970-01-01', migrations: [] },
+      { version: TARGET, migrations: [] },
     ]);
   });
 

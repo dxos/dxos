@@ -4,7 +4,12 @@
     "allowSyntheticDefaultImports": true,
     "rootDir": ".",
     "outDir": "../../dist",
-    "types": ["@cloudflare/workers-types"]
+    "types": [
+      "@cloudflare/workers-types"
+    ]
   },
-  "files": ["./_worker.ts"]
+  "files": [
+    "./_worker.ts",
+    "./preview-image/modules.d.ts"
+  ]
 }

@@ -82,6 +82,227 @@ describe('dsl round trip', () => {
     expect(print(toScene(commands))).toEqual('object A @ 0,0 {\n  rect box 0,0 10x10\n}\n');
   });
 
+  test('a fraction says a value a decimal cannot', ({ expect }) => {
+    // A layout that divides a run of 772 by three produces 230.66666666666666, which is not that number: printing
+    // it loses the quotient, and the text no longer says what the drawing means. The fraction is read back exactly.
+    const source = 'object A @ 0,0 {\n  rect box 0,0 300x692/3 "Third"\n}\n';
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [element] = toScene(commands).objects[0].elements;
+    expect(element.kind === 'rect' && element.h).toBeCloseTo(692 / 3, 12);
+    // Printing normalizes to a decimal: the grammar accepts a fraction so it can be written, but emitting one
+    // would produce text an older parser rejects, and the DSL has no version to negotiate that on.
+    expect(roundTrip(source)).toEqual('object A @ 0,0 {\n  rect box 0,0 300x230.66666666666666 "Third"\n}\n');
+  });
+
+  test('a value a decimal says exactly stays a decimal', ({ expect }) => {
+    // Only the repeating values are worth a fraction: binary holds a half and a quarter, so printing them as `1/2`
+    // would churn every ordinary coordinate for nothing.
+    const source = 'object A @ 0,0 {\n  rect box 0,0 10.5x20.25\n}\n';
+    expect(parse(source).problems).toEqual([]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('an arrow states its own bends, so a routed connector can be written down', ({ expect }) => {
+    // A connector routed by hand or by a layout kept its bends on the record alone. Printing the drawing lost them
+    // and the connector snapped back to a straight run between its ends.
+    const source = 'object A @ 0,0 {\n  arrow link a -> b via 10,20 30,20 head=triangle\n}\n';
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [element] = toScene(commands).objects[0].elements;
+    expect(element.kind === 'arrow' && element.route).toEqual([
+      { x: 10, y: 20 },
+      { x: 30, y: 20 },
+    ]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('an arrow routes through points, not grid cells or half a coordinate', ({ expect }) => {
+    // A semantic edge's waypoint may pin one coordinate or name a cell, because an engine routes it; an arrow says
+    // where its route actually runs, so neither has a meaning and both are reported rather than half-read.
+    expect(parse('object A @ 0,0 {\n  arrow link a -> b via cell(1,2)\n}\n').problems).toHaveLength(1);
+    expect(parse('object A @ 0,0 {\n  arrow link a -> b via 10,_\n}\n').problems).toHaveLength(1);
+  });
+
+  test("a kind's field escapes a name the element already claims", ({ expect }) => {
+    // `substrate` keeps a numeric `fill` and `fill` is also the style attribute, so without an escape the reader
+    // resolves it against `none|solid|pattern|tint` and rejects the value. The prefix escapes itself, so a field
+    // genuinely called `data-fill` is written `data-data-fill` and still reads back as its own name.
+    // The element's own attributes print first, then the kind's, each by name: the order is what makes the text
+    // stable, not the order the fields happened to be written in.
+    const source =
+      'object A @ 0,0 {\n  custom box 0,0 10x10 kind=substrate fill=solid data-data-fill=on data-fill=0.55\n}\n';
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [element] = toScene(commands).objects[0].elements;
+    expect(element.kind === 'rect' && [element.type, element.fill, element.data]).toEqual([
+      'substrate',
+      'solid',
+      { 'fill': 0.55, 'data-fill': 'on' },
+    ]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('a box a component draws is written `custom`, and only so', ({ expect }) => {
+    // Nested in a grid it states no frame, as any placed box does; `custom` is still an id anywhere else.
+    const source = [
+      'object A @ 0,0 {',
+      '  grid root 0,0 400x200 cols=2 {',
+      '    custom s0 kind=graph width=120 seed=7',
+      '    rect custom "Plain"',
+      // A component's rows follow it in braces; `item` is still an id anywhere else.
+      '    custom types "Types" kind=card {',
+      '      item "Effect Schema types"',
+      '      item "Registered with ECHO" icon=database',
+      '    }',
+      '    rect item "Also plain"',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const elements = toScene(commands).objects[0].elements;
+    const summary = elements.map((element) => [element.kind, element.id, Reflect.get(element, 'type')]);
+    expect(summary).toEqual([
+      ['grid', 'root', undefined],
+      ['rect', 's0', 'graph'],
+      ['rect', 'custom', undefined],
+      ['rect', 'types', 'card'],
+      ['rect', 'item', undefined],
+    ]);
+    expect(Reflect.get(elements[3], 'data')).toEqual({
+      items: [{ text: 'Effect Schema types' }, { text: 'Registered with ECHO', icon: 'database' }],
+    });
+    expect(roundTrip(source)).toEqual(source);
+
+    const messages = (text: string) => parse(text).problems.map(({ message }) => message);
+    expect(messages('object A @ 0,0 {\n  rect s0 0,0 10x10 kind=graph\n}\n')).toEqual([
+      'A box a component draws is written `custom s0 kind=graph`, not `rect`.',
+    ]);
+    expect(messages('object A @ 0,0 {\n  custom s0 0,0 10x10\n}\n')).toEqual([
+      '`custom` is drawn by a component; say which with `kind=<name>`.',
+    ]);
+  });
+
+  test("a kind's field escapes a reserved name, and one the DSL cannot spell is left out", ({ expect }) => {
+    // `text` is an element keyword, so `text=hello` is not an attribute the grammar can read; `font.size` is not a
+    // name token at all, and a prefix leaves it just as unparseable, so it goes the way a list does.
+    const printed = print({
+      objects: [
+        {
+          id: 'A',
+          origin: { x: 0, y: 0 },
+          scale: 1,
+          elements: [
+            {
+              kind: 'rect',
+              id: 'box',
+              x: 0,
+              y: 0,
+              w: 10,
+              h: 10,
+              type: 'card',
+              data: { 'text': 'hello', 'font.size': 12, 'half': 1 / 2 },
+            },
+          ],
+        },
+      ],
+    });
+    expect(printed).toContain('data-text=hello');
+    expect(printed).not.toContain('font.size');
+    expect(parse(printed).problems).toEqual([]);
+    const [element] = toScene(parse(printed).commands).objects[0].elements;
+    expect(element.kind === 'rect' && element.data).toEqual({ text: 'hello', half: 0.5 });
+  });
+
+  test('a grid holds what it places, in braces', ({ expect }) => {
+    // Containment is structural in the text and `parent` in the model: nesting is the spelling, not a second
+    // shape. A child written inside the braces drops the attribute, since saying it twice lets the two disagree.
+    const source = [
+      'object A @ 0,0 {',
+      '  grid root 0,0 900x300 cols=3 gap=24 {',
+      '    rect a "One"',
+      '    rect b "Two"',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [grid, a, b] = toScene(commands).objects[0].elements;
+    expect(grid.kind).toEqual('grid');
+    expect([a.id, 'parent' in a && a.parent]).toEqual(['a', 'root']);
+    expect([b.id, 'parent' in b && b.parent]).toEqual(['b', 'root']);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('a grid states its cell size and where the run sits, and reads them back', ({ expect }) => {
+    // The two rules a column of cards needs beside its children: one row height whatever the count, and the space
+    // left over put either side of them.
+    const source = [
+      'object A @ 0,0 {',
+      '  grid root 0,0 300x900 gap=16 autoRows=176 alignContent=center {',
+      '    rect a "One"',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [grid] = toScene(commands).objects[0].elements;
+    expect(grid.kind === 'grid' && [grid.autoRows, grid.alignContent]).toEqual([176, 'center']);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('a box packs what it holds, and reads the rule back', ({ expect }) => {
+    // The other layout a box may state: the children are placed by a packing, so the text says the seed and the
+    // range of sizes rather than a coordinate per child.
+    const source = [
+      'object A @ 0,0 {',
+      '  grid field 0,0 400x400 gap=8 layout=pack packSeed=7 packMin=40 packMax=80 {',
+      '    rect a',
+      '    rect b',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [field] = toScene(commands).objects[0].elements;
+    expect(field.kind === 'grid' && [field.layout, field.packSeed, field.packMin, field.packMax]).toEqual([
+      'pack',
+      7,
+      40,
+      80,
+    ]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('an arrow states the path it runs, and reads it back', ({ expect }) => {
+    // The canvas has had orthogonal links all along; what the text could not say was which one a connector is.
+    const source = [
+      'object A @ 0,0 {',
+      '  rect a 0,0 10x10',
+      '  rect b 100,0 10x10',
+      '  arrow a-b a -> b path=ortho',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const arrow = toScene(commands).objects[0].elements.find((element) => element.kind === 'arrow');
+    expect(arrow?.kind === 'arrow' && arrow.path).toEqual('ortho');
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('a flat `parent` is read, and printed back as nesting', ({ expect }) => {
+    // Accepting both costs nothing and a program patching one attribute to reparent a box is a real use; there is
+    // still only ONE canonical output, which is what the round trip is proved against.
+    const flat = 'object A @ 0,0 {\n  grid root 0,0 900x300 cols=2\n  rect a 0,0 0x0 parent=root\n}\n';
+    expect(roundTrip(flat)).toEqual('object A @ 0,0 {\n  grid root 0,0 900x300 cols=2 {\n    rect a\n  }\n}\n');
+  });
+
   test('whitespace is insignificant', ({ expect }) => {
     const dense = 'object A @ 0,0 {rect box 0,0 10x10 "hi" color=red}';
     const loose = 'object   A\n  @ 0 , 0\n{\n  rect\n    box\n    0,0\n    10x10\n    "hi"\n    color=red\n}\n';
@@ -183,6 +404,7 @@ describe('dsl diagnostics', () => {
   }
 
   test('a syntax error is located', ({ expect }) => {
+    // A box with a point and no size: legal to the grammar now, and reported because nothing can give it one.
     const { problems } = parse('object A @ 0,0 {\n  rect box 0,0\n}\n');
     expect(problems.length).toBeGreaterThan(0);
     expect(problems[0].to).toBeGreaterThan(problems[0].from);

@@ -7,6 +7,10 @@ import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
+import type * as WorkerProtocol from '../WorkerProtocol.ts';
+
+type DisplaceIssuer = WorkerProtocol.DisplaceIssuer;
+
 /** Asks whichever worker currently owns a storage lock to tear itself down and release it. */
 const STOP_ACTION = 'stop';
 /** Asks the tab owning that worker to terminate it, once it has ignored {@link STOP_ACTION}. */
@@ -25,7 +29,12 @@ const TerminateRequestSchema = Schema.Struct({
 export type TerminateRequest = Schema.Schema.Type<typeof TerminateRequestSchema>;
 
 const DisplaceMessageSchema = Schema.Union([
-  Schema.Struct({ action: Schema.Literal(STOP_ACTION) }),
+  // The issuer fields are optional so a `stop` from a worker that predates them still decodes.
+  Schema.Struct({
+    action: Schema.Literal(STOP_ACTION),
+    issuerId: Schema.optional(Schema.String),
+    issuerName: Schema.optional(Schema.String),
+  }),
   Schema.Struct({ action: Schema.Literal(TERMINATE_ACTION), ...TerminateRequestSchema.fields }),
 ]);
 
@@ -49,10 +58,11 @@ export class DisplaceChannel {
   readonly #channel: BroadcastChannel;
 
   /**
-   * Called when another worker posts `stop`. Assignable because what a stop means to this worker
-   * changes as it starts up — before the storage lock is granted there is nothing to stand down from.
+   * Called when another worker posts `stop`, with whatever that worker said about itself. Assignable
+   * because what a stop means to this worker changes as it starts up — before the storage lock is
+   * granted there is nothing to stand down from.
    */
-  onStop: () => void = () => {};
+  onStop: (issuer: DisplaceIssuer) => void = () => {};
 
   /**
    * Called when a newer worker escalates. `issuerId` is that worker's id, so a tab can tell an
@@ -72,7 +82,7 @@ export class DisplaceChannel {
       }
       switch (message.action) {
         case STOP_ACTION:
-          this.onStop();
+          this.onStop({ workerId: message.issuerId, name: message.issuerName });
           break;
         case TERMINATE_ACTION: {
           const { issuerId, storageLockKey, graceTimeout } = message;
@@ -83,8 +93,13 @@ export class DisplaceChannel {
     };
   }
 
-  postStop(): void {
-    this.#channel.postMessage({ action: STOP_ACTION } satisfies DisplaceMessage);
+  /** `issuer` names the sender, so the worker it displaces can report who ended it. */
+  postStop(issuer: DisplaceIssuer = {}): void {
+    this.#channel.postMessage({
+      action: STOP_ACTION,
+      issuerId: issuer.workerId,
+      issuerName: issuer.name,
+    } satisfies DisplaceMessage);
   }
 
   postTerminate(request: TerminateRequest): void {

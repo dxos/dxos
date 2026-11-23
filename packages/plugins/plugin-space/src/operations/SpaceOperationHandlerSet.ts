@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
+import * as ExportOperation from '@dxos/app-toolkit/ExportOperation';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -13,6 +14,8 @@ import { SpaceOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
   CollectionOperation.OpenAddToCollection.pipe(Operation.lazyHandler(() => import('./open-add-to-collection.ts'))),
+  ExportOperation.Print.pipe(Operation.lazyHandler(() => import('./print.ts'))),
+  ExportOperation.Save.pipe(Operation.lazyHandler(() => import('./save.ts'))),
   SpaceOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag.ts'))),
   SpaceOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects.ts'))),
   SpaceOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects.ts'))),
@@ -31,7 +34,9 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.DeleteField.pipe(Operation.lazyHandler(() => import('./delete-field.ts'))),
   SpaceOperation.DuplicateObject.pipe(Operation.lazyHandler(() => import('./duplicate-object.ts'))),
   SpaceOperation.ExportSpace.pipe(Operation.lazyHandler(() => import('./export-space.ts'))),
+  SpaceOperation.ForkPublication.pipe(Operation.lazyHandler(() => import('./publication/fork-publication.ts'))),
   SpaceOperation.FindDuplicates.pipe(Operation.lazyHandler(() => import('./find-duplicates.ts'))),
+  SpaceOperation.GetObjectLink.pipe(Operation.lazyHandler(() => import('./get-object-link.ts'))),
   SpaceOperation.GetShareLink.pipe(Operation.lazyHandler(() => import('./get-share-link.ts'))),
   SpaceOperation.ImportSpace.pipe(Operation.lazyHandler(() => import('./import-space.ts'))),
   SpaceOperation.Join.pipe(Operation.lazyHandler(() => import('./join.ts'))),
@@ -41,9 +46,11 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.Open.pipe(Operation.lazyHandler(() => import('./open.ts'))),
   SpaceOperation.OpenObjectForm.pipe(Operation.lazyHandler(() => import('./open-object-form.ts'))),
   SpaceOperation.OpenCreateSpace.pipe(Operation.lazyHandler(() => import('./open-create-space.ts'))),
+  SpaceOperation.OpenDeleteSpace.pipe(Operation.lazyHandler(() => import('./open-delete-space.ts'))),
   SpaceOperation.OpenImportSpace.pipe(Operation.lazyHandler(() => import('./open-import-space.ts'))),
   SpaceOperation.OpenMembers.pipe(Operation.lazyHandler(() => import('./open-members.ts'))),
   SpaceOperation.OpenSettings.pipe(Operation.lazyHandler(() => import('./open-settings.ts'))),
+  SpaceOperation.PublishSpace.pipe(Operation.lazyHandler(() => import('./publication/publish-space.ts'))),
   SpaceOperation.RemoveAllObjects.pipe(Operation.lazyHandler(() => import('./remove-all-objects.ts'))),
   SpaceOperation.RemoveObjects.pipe(Operation.lazyHandler(() => import('./remove-objects.ts'))),
   SpaceOperation.Rename.pipe(Operation.lazyHandler(() => import('./rename.ts'))),
@@ -54,4 +61,5 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.SetArchived.pipe(Operation.lazyHandler(() => import('./set-archived.ts'))),
   SpaceOperation.Share.pipe(Operation.lazyHandler(() => import('./share.ts'))),
   SpaceOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot.ts'))),
+  SpaceOperation.UnpublishSpace.pipe(Operation.lazyHandler(() => import('./publication/unpublish-space.ts'))),
 ]);

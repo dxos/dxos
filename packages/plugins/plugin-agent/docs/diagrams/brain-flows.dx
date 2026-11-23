@@ -12,7 +12,7 @@ group compile "Goals (compile)" {
 }
 group evaluate "Evaluate" compact {
   node Rules "GoalRules" ref="packages/core/compute/brain/src/GoalRules.ts"
-  node Thread "Private thread" ref="packages/plugins/plugin-agent/docs/THREADS.md"
+  node Thread "Private thread" ref="packages/core/echo/echo/docs/feeds/private-threads.md"
   node Check "checkAction" ref="packages/core/compute/brain/src/GoalRules.ts"
   node Act "Channels" ref="packages/plugins/plugin-agent/src/operations/send-message.ts"
   node GoalFeed "Goal feed" ref="packages/plugins/plugin-agent/src/types/BrainService.ts"

@@ -1,0 +1,57 @@
+---
+title: Overview
+description: What TILE is, the core and component packages, and where to start.
+welcome:
+  section: TILE
+  tagline: Design system and UI components.
+  background: tile
+---
+
+import TileGrid from '../../../../components/TileGrid.astro';
+
+TILE is a design system for React apps. It gives you accessible, themed UI components in `@dxos/react-ui`, and in
+`@dxos/ui-theme` the tokens and build plugin behind them. A **token** is a named color or size that the components
+read in place of a fixed value. TILE needs neither [ECHO](/docs/echo/overview/), DXOS's database, nor
+[PLEX](/docs/plex/overview/), its plugin framework, so you can use it in any React app.
+
+Each demo below is a TILE component package running in this page, on sample data and with no database. You can drag
+the cards, edit the cells and move the boxes. The demos follow the page's light or dark mode, and each card's header
+opens the component's API page.
+
+<TileGrid />
+
+## Core and component packages
+
+TILE comes as a core and the component packages built on it:
+
+| Package                               | What it holds                                                                                       |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `@dxos/react-ui`                      | The components, such as buttons, inputs, overlays, menus, layout, status and icons, and the theme provider |
+| `@dxos/ui-theme`                      | The color and size tokens, the cascade layers, and the Vite plugin that generates the styles        |
+| The other `@dxos/react-ui-*` packages | Lists, forms, menus, editors, tables and more, built on the core                                    |
+
+The API section documents the core first. Each component package then has a group of its own, with one page per
+component, such as [Board](/docs/tile/api/react-ui-mosaic/board/) in `@dxos/react-ui-mosaic`.
+
+[Composer](/composer), DXOS's local-first workspace, and its plugins draw their UI with TILE.
+[TILE in a PLEX plugin](/docs/tile/guides/tile-in-a-plex-plugin/) says what changes when your components run inside
+a plugin.
+
+## How these pages are organized
+
+- **Start here** has two more pages. [Why TILE?](/docs/tile/why-tile/) makes the case for the design, and
+  [Build with a coding agent](/docs/tile/build-with-a-coding-agent/) gives your agent the skills DXOS uses.
+- **Learning path** builds a contacts screen step by step, starting at
+  [The TILE component](/docs/tile/learn/the-tile-component/). Its [Installation](/docs/tile/learn/installation/) page
+  adds TILE to a Vite app.
+- **Core concepts** describe one idea each: [Theme and tokens](/docs/tile/concepts/theme-and-tokens/),
+  [Composite components](/docs/tile/concepts/composite-components/), [Layout](/docs/tile/concepts/layout/),
+  [Density and sizes](/docs/tile/concepts/density-and-sizes/),
+  [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/) and
+  [Translations and icons](/docs/tile/concepts/translations-and-icons/).
+- **API** opens each page with the component running.
+- **Guides** cover one job each: [Custom themes and dark mode](/docs/tile/guides/custom-themes/),
+  [TILE in a PLEX plugin](/docs/tile/guides/tile-in-a-plex-plugin/) and
+  [Testing and stories](/docs/tile/guides/testing-and-stories/).
+- **Resources** has the [Glossary](/docs/tile/resources/glossary/), the generated
+  [API reference](/docs/tile/resources/api-reference/) and [llms.txt](/docs/tile/resources/llms-txt/) for agents.

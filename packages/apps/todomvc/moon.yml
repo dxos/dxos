@@ -8,6 +8,8 @@ tasks:
   bundle:
     deps:
       - shell:bundle
+    inputs:
+      - public/**/*
   # The bundle Playwright serves; see composer-app's `bundle-e2e` for why this is a target of its own.
   bundle-e2e:
     extends: bundle

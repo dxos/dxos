@@ -1,0 +1,310 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-blogger/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: BloggerPlugin
+
+The data model, operations and sync are solid and well tested. `AddPublication` and `AddPost` run
+through the operation invoker in `operations.test.ts`, and every reconciliation branch of `SyncPosts`
+(push, update, revert, pull, `getDraft` fallback) is covered in `sync.test.ts` against a stub
+publisher, matching scenarios T-1 to T-7. The weakest area is the navtree and toolbar wiring: the
+Publications section, the "+ Publication" / "+ Post" actions, the comments companion and the Sync
+enablement rule are implemented but no test drives them. The biggest divergence is `PostArticle`: it
+renders only the body document; the name + outline form the spec places on top is not rendered there.
+Both types use the `indigo` hue where the spec says `amber`.
+
+Of 38 items: 23 done, 9 untested, 4 partial, 0 diverged, 2 missing (QA-1, QA-2).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Post: Fields and typename match; the icon hue is indigo, not amber.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.ts#Post, github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.ts#makePost]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.test.ts]
+  note: "`IconAnnotation` sets `hue: 'indigo'`; the spec's annotations say `amber`. Outline and body are owned via `SetParent`."
+```
+
+```mdl
+verdict Publication: Fields, typename and ConnectorAuthAnnotation match; the icon hue is indigo, not amber.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.ts#Publication, github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.ts#makePublication]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.test.ts]
+  note: "`IconAnnotation` sets `hue: 'indigo'`; the spec says `amber` (the navtree nodes do use `amber`)."
+```
+
+```mdl
+verdict PublisherDraft: A plain Schema.Struct with the six spec fields.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Publisher.ts#PublisherDraft]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Publisher.test.ts]
+```
+
+```mdl
+verdict PublisherDraftInput: A TypeScript type with text, title? and scheduledAt?.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Publisher.ts#PublisherDraftInput]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+  note: A type alias, not a schema; the sync tests pass it to the stub's create and update calls.
+```
+
+```mdl
+verdict PublicationArticle: Toolbar with toggle, + Post, Sync, graph actions and a ⋮ Delete with AlertDialog; gallery or instructions body.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx#PublicationArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.stories.tsx]
+  note: It also renders an `ObjectForm` (name) above the body, which the spec's layout does not show.
+```
+
+```mdl
+verdict PostArticle: Renders only the body document with a qualified attendable id; no outline form.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PostArticle/PostArticle.tsx#PostArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PostArticle/PostArticle.stories.tsx]
+  note: |
+    The component returns one markdown `Surface` for `subject.content`, with `qualifyId(attendableId, doc.id)` as its
+    attendable id. Its JSDoc claims a name + outline form on top, but nothing renders one, and there is no
+    `AttendableContainer` wrapper. The story checks only that the body text is visible.
+```
+
+```mdl
+verdict PostCard: Reactive card with title, description and a status icon and label.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/components/PostCard/PostCard.tsx#PostCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/components/PostCard/PostCard.stories.tsx]
+```
+
+```mdl
+verdict PublisherService: Interface with identity fields and five Promise methods taking Ref<Connection>, plus both error classes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Publisher.ts#PublisherService, github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Publisher.ts#PublisherError, github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Publisher.ts#MissingCredentialError, github:dxos/dxos/packages/plugins/plugin-blogger/src/types/BloggerCapabilities.ts#PublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Publisher.test.ts]
+  note: Contributed as a `Capability.makeSingleton`; methods return Promises, which `tryPublisher` bridges into Effect.
+```
+
+```mdl
+verdict AddPublication: The operation creates a Publication with empty instructions and no posts and files it via DefaultParent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/definitions.ts#AddPublication, github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/add-publication.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/operations.test.ts]
+  walkthrough:
+    - The definition takes an optional name and a Database or Collection target and returns a Ref. github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/definitions.ts#AddPublication
+    - The handler builds the Publication and adds it under the target with DefaultParent. github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/add-publication.ts
+```
+
+```mdl
+verdict AddPost: The operation creates a draft Post, files it under the target and appends it to publication.posts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/definitions.ts#AddPost, github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/add-post.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/operations.test.ts]
+  walkthrough:
+    - The definition takes the publication ref, an optional name and a target. github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/definitions.ts#AddPost
+    - The handler builds the Post, adds it under the target, then pushes its ref onto the publication. github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/add-post.ts
+```
+
+```mdl
+verdict SyncPosts: The operation resolves a publisher by id or first, then reconciles all four cases.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/definitions.ts#SyncPosts, github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync-posts.ts#runSyncPosts, github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync-support.ts#resolvePublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+  walkthrough:
+    - The definition takes publication, connection and an optional publisherId. github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/definitions.ts#SyncPosts
+    - The handler picks the service from Capability.getAll, preferring publisherId, and pre-loads post bodies. github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync-support.ts#resolvePublisherService
+    - runSyncPosts pushes, updates, reverts and pulls by the foreign key for the service source. github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync-posts.ts#runSyncPosts
+  note: The tests call `runSyncPosts` directly; the handler's service resolution and pre-loading are not tested.
+```
+
+```mdl
+verdict F-1.1: A Publications section is added to each space's content group only while the space has a Publication, with Publication branch nodes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts]
+  note: "`publicationsSection` returns no node when the query is empty; `publicationNodes` adds the branches. No test drives the graph builder."
+```
+
+```mdl
+verdict F-1.2: The section's "add-publication" action invokes AddPublication with the space database.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts]
+  note: No test runs the action.
+```
+
+```mdl
+verdict F-1.3: Publication nodes list their Posts as children and carry an "add-post" action invoking AddPost.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts]
+  note: The `publicationActions` extension also adds a Delete action. No test.
+```
+
+```mdl
+verdict F-1.4: A NavigationTargetResolver maps a Publication to the Publications section path.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/capabilities/navigation-target-resolver.ts, github:dxos/dxos/packages/plugins/plugin-blogger/src/paths.ts#getPublicationsPath]
+  note: Done through a navigation resolver rather than a create-menu `targetNodeId` default; no test checks where a new Publication lands.
+```
+
+```mdl
+verdict F-2.1: The article defaults to a Masonry gallery of PostCard tiles.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx#PublicationArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.stories.tsx]
+```
+
+```mdl
+verdict F-2.2: The toggle swaps the gallery for the instructions markdown Surface.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx#PublicationArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.stories.tsx]
+  note: The `Instructions` story clicks the toggle and checks the tiles are gone.
+```
+
+```mdl
+verdict F-2.3: The toolbar "+ Post" invokes AddPost against the open Publication.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx#PublicationArticle]
+  note: No story clicks `publication.toolbar.addPost`.
+```
+
+```mdl
+verdict F-2.4: Delete sits in the ⋮ menu and confirms in an AlertDialog before RemoveObjects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx#PublicationArticle]
+  note: No test opens the menu or the dialog.
+```
+
+```mdl
+verdict F-3.1: AddPost creates a Post with outline, empty body and status draft.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.ts#makePost, github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/add-post.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/operations.test.ts, github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.test.ts]
+```
+
+```mdl
+verdict F-3.2: PostArticle renders the body only; the outline form is not shown.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PostArticle/PostArticle.tsx#PostArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PostArticle/PostArticle.stories.tsx]
+  note: The body markdown Surface is there; the name + outline form on top is missing from the component.
+```
+
+```mdl
+verdict F-3.3: PostCard shows a status icon and a translated draft/published label.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/components/PostCard/PostCard.tsx#PostCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/components/PostCard/PostCard.stories.tsx]
+```
+
+```mdl
+verdict F-4.1: postComments adds a comments companion on the body doc and postContentDoc adds a hidden body-doc node.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PostArticle/PostArticle.tsx#PostArticle]
+  walkthrough:
+    - The graph builder adds the comments companion and a hidden node keyed by the body doc id. github:dxos/dxos/packages/plugins/plugin-blogger/src/capabilities/app-graph-builder.ts
+    - PostArticle gives the editor the matching qualified attendable id. github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PostArticle/PostArticle.tsx#PostArticle
+  note: No test resolves the comment action on the body editor.
+```
+
+```mdl
+verdict F-5.1: Publication.instructions is a Text.Text created empty with the Publication.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.ts#makePublication]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.test.ts]
+```
+
+```mdl
+verdict F-6.1: Publication carries a ConnectorAuthAnnotation from registered publishers; graph actions are merged into the toolbar.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/types/Blog.ts#Publication, github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx#PublicationArticle]
+  note: "`resolvePublicationConnectorIds` reads the `PublisherService` capability atom; no test checks the Connect action appears or hides."
+```
+
+```mdl
+verdict F-6.2: Unlinked posts get createDraft, a foreign key and status published.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync-posts.ts#runSyncPosts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-6.3: Linked posts with a remote copy get updateDraft; those without revert to draft with the key cleared.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync-posts.ts#runSyncPosts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-6.4: Unlinked remote drafts become new published Posts, using getDraft when the list omits the body.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync-posts.ts#runSyncPosts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-6.5: Sync is disabled unless a publisher exists and a Connection's token source matches it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-blogger/src/containers/PublicationArticle/PublicationArticle.tsx#PublicationArticle]
+  note: "`canSync` checks `publishers[0]` and a matching `accessToken.target.source`; no story checks the disabled state."
+```
+
+```mdl
+verdict T-1: operations.test.ts invokes AddPublication and checks name, empty posts, Text instructions and a query hit.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict T-2: operations.test.ts invokes AddPost with a Collection target and checks every then clause.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict T-3: sync.test.ts checks create, foreign key and published status for an unlinked post.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+  note: Runs `runSyncPosts` with a stub service rather than invoking the operation.
+```
+
+```mdl
+verdict T-4: sync.test.ts checks update-only calls and an unchanged key.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-5: sync.test.ts checks no calls, cleared keys and draft status.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-6: sync.test.ts checks the pulled post's body, key and status.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-7: sync.test.ts checks one getDraft call and the fetched body.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-blogger/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict QA-1: No automation drives the navtree create flow.
+  status: missing
+  note: No composer-app Playwright spec covers blogger; the operation tests cover T-1 and T-2 headlessly.
+```
+
+```mdl
+verdict QA-2: No automation drives sync against a connected publisher.
+  status: missing
+  note: "`sync.test.ts` covers the reconciliation with a stub, not the toolbar Sync or a real connection."
+```

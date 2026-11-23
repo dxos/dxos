@@ -28,7 +28,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
-import { MeetingPlugin } from '#plugin';
+import * as MeetingPlugin from '#meta';
 import { Meeting } from '#types';
 
 type StoryArgs = {
@@ -193,7 +193,7 @@ const meta = {
         InboxPlugin.make(),
         CallsPlugin.make(),
         TranscriptionPlugin.make(),
-        MeetingPlugin(),
+        MeetingPlugin.make(),
         MarkdownPlugin.make(),
         PreviewPlugin.make(),
       ],

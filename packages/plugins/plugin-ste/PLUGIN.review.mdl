@@ -1,0 +1,99 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-ste/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: StePlugin
+
+The plugin is complete and well tested for what a program can check. `SteSkill.make` builds an
+agent-enableable skill with the STE rules as instructions and the Verify tool. `SteOperation.Verify`
+is a pure handler over `SteCheck.check`. `SteCheck.test.ts` covers sentence length by mode, the banned
+forms, the six-sentence paragraph limit, code and URL skipping and `unknownWords`. `plugin.test.ts`
+checks that the skill registers on `AssistantStart` and that the operation runs through the harness.
+
+The one gap is the model's behaviour (F-1.2): the instructions tell the assistant to run Verify
+before it answers, but no eval checks that it does. The QA test is manual.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict SteSkill: The skill carries the STE rules, the Verify tool and agentCanEnable.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/skills/SteSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-ste/src/capabilities/skill-definition.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/plugin.test.ts]
+```
+
+```mdl
+verdict Verify: The operation checks text with mode and vocabulary options and returns passed, errors, warnings and unknownWords.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/operations/SteOperation.ts#Verify, github:dxos/dxos/packages/plugins/plugin-ste/src/operations/verify.ts, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#check]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/plugin.test.ts, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.test.ts]
+  walkthrough:
+    - The operation declares the input options and the report shape. github:dxos/dxos/packages/plugins/plugin-ste/src/operations/SteOperation.ts#Verify
+    - The handler runs the check and sets passed when there are no errors. github:dxos/dxos/packages/plugins/plugin-ste/src/operations/verify.ts
+    - The checker applies the ste_check.py rules. github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#check
+```
+
+```mdl
+verdict F-1.1: The skill definition activates with the plugin on AssistantStart.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/capabilities/skill-definition.ts, github:dxos/dxos/packages/plugins/plugin-ste/dx.config.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/plugin.test.ts]
+```
+
+```mdl
+verdict F-1.2: The instructions tell the assistant to run Verify before it answers; no eval checks it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/skills/SteSkill.ts#make]
+  note: No assistant eval or memoized-conversation test uses the STE skill; searched `packages/` for `SteSkill` outside the plugin.
+```
+
+```mdl
+verdict F-2.1: Sentence limits are 20 (procedural) and 25 (descriptive) words; mixed warns.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#check, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#countWords]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.test.ts]
+```
+
+```mdl
+verdict F-2.2: Semicolons, contractions, banned modals, have + participle, passives and progressives are errors.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#check, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#BANNED_MODALS, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#CONTRACTION, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#HAVE_PARTICIPLE, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#BE_ING]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.test.ts, github:dxos/dxos/packages/plugins/plugin-ste/src/plugin.test.ts]
+```
+
+```mdl
+verdict F-2.3: More than six sentences in a paragraph is an error.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#check]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.test.ts]
+```
+
+```mdl
+verdict F-2.4: Code blocks, inline code, URLs and quoted text are skipped.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#check, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#FENCE]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.test.ts]
+  note: The test covers code and URLs; quoted text is skipped in code but not asserted.
+```
+
+```mdl
+verdict F-2.5: Unapproved words are returned in unknownWords, not as errors.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#check, github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.ts#parseWordList]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/check/SteCheck.test.ts]
+```
+
+```mdl
+verdict QA-1: Human-only QA; no automation runs it.
+  status: missing
+  note: Status `unverified` in the spec; no eval drives the rewrite journey.
+```

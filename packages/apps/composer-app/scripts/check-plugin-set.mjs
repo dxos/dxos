@@ -16,7 +16,8 @@
  * build emits five HTML entries and `devtools.html` IS the devtools app — its graph carries
  * plugin-devtools in every environment, which a whole-directory scan reports as a leak.
  *
- * What counts as evidence: a plugin's BODY module (`src/plugin.tsx` and its platform variants),
+ * What counts as evidence: a plugin's BODY module (`src/plugin.tsx` and its platform variants, or
+ * `dx.config.ts` for a `Plugin.config` plugin),
  * which is what `#plugin` resolves to and what `Plugin.lazy` imports on first enable. That module is
  * package-internal — nothing outside a plugin imports another plugin's body — so its presence means
  * the plugin itself entered the graph, not that a shipped plugin borrowed a helper from it.
@@ -55,6 +56,8 @@ const allPlugins = readdirSync(pluginsDir).filter((name) => name.startsWith('plu
  * (`import(\`./plugin-x.js\`)`), and missing that form silently understates the graph.
  */
 const SPECIFIER = /(?:\bfrom|\bimport)\s*\(?\s*["'`]([^"'`]+\.js)["'`]/g;
+// Plugin manifests name each module body by URL (`url: "/assets/x.js"`), loaded on activation.
+const MANIFEST_URL = /\burl"?\s*:\s*["'`](\/?assets\/[^"'`]+\.js)["'`]/g;
 
 /** Entry script + modulepreload closure of an HTML page, as emitted hrefs. */
 const pageEntries = (html) =>
@@ -71,7 +74,7 @@ const reachable = (hrefs) => {
     }
     seen.add(chunk);
     const source = readFileSync(path.join(outDir, chunk), 'utf8');
-    for (const [, specifier] of source.matchAll(SPECIFIER)) {
+    for (const [, specifier] of [...source.matchAll(SPECIFIER), ...source.matchAll(MANIFEST_URL)]) {
       queue.push(
         specifier.startsWith('.')
           ? path.normalize(path.join(path.dirname(chunk), specifier))
@@ -96,6 +99,19 @@ const chunks = reachable(pageEntries('index.html'));
 // parent is the stable part. Platform variants (`plugin.node.ts`, `plugin.workerd.ts`) count too —
 // none of them belongs in a browser bundle, and matching them makes a mis-resolved condition visible.
 const BODY_MODULE = /(?:^|\/)plugins\/(plugin-[a-z0-9-]+)\/src\/plugin(?:\.[a-z]+)?\.tsx?$/;
+// A `Plugin.config` plugin has no `src/plugin.tsx`: its `dx.config.ts` is the body. Other plugins'
+// `dx.config.ts` is metadata their `meta.ts` re-exports, so it does not count.
+const CONFIG_MODULE = /(?:^|\/)plugins\/(plugin-[a-z0-9-]+)\/dx\.config\.ts$/;
+const configPlugins = new Set(
+  allPlugins.filter((name) => {
+    const file = path.join(pluginsDir, name, 'dx.config.ts');
+    return existsSync(file) && /Plugin\.config[<(]/.test(readFileSync(file, 'utf8'));
+  }),
+);
+const bodyOf = (source) => {
+  const config = source.match(CONFIG_MODULE);
+  return config && configPlugins.has(config[1]) ? config : source.match(BODY_MODULE);
+};
 
 // `<plugin-name>` -> the reachable chunks whose sourcemap names its body module.
 const found = new Map();
@@ -109,7 +125,7 @@ for (const chunk of chunks) {
   maps++;
   const { sources = [] } = JSON.parse(readFileSync(mapFile, 'utf8'));
   for (const source of sources) {
-    const match = source.match(BODY_MODULE);
+    const match = bodyOf(source);
     if (!match) {
       continue;
     }

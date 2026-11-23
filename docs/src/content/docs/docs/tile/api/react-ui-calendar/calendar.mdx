@@ -1,0 +1,91 @@
+---
+title: Calendar
+description: A scrolling date picker and a week of events.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-calendar/calendar" height="28rem" />
+
+```ts
+import { Calendar, type CalendarEvent } from '@dxos/react-ui-calendar';
+```
+
+```sh
+npm install @dxos/react-ui-calendar
+```
+
+A calendar shows dates for the user to pick from or to plan. `Calendar` draws them in two ways:
+
+- `Calendar.Grid` is a scrolling grid of weeks. Use it when the user picks a day or a range.
+- `Calendar.Week` is a week of hours with events in it. Use it when the user plans a week.
+
+Both sit inside `Calendar.Root`, which holds the date the calendar shows.
+
+Add the package's strings from `@dxos/react-ui-calendar/translations` to the `resourceExtensions` of `Theme.Provider`.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Calendar.Root` | The root, which holds the date in view and the first day of the week (`weekStartsOn`) |
+| `Calendar.Toolbar` | The row that names the month in view and jumps back to today |
+| `Calendar.Grid` | Weeks of days that scroll. `rows` sets how many show |
+| `Calendar.Week` | A week of hours, with each event in its day's column. Overlapping events share the column |
+
+## `Calendar.Grid`
+
+`Calendar.Grid` shows weeks of days that scroll, and reports the day or the range the user picks.
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `rows` | `number` | Sets how many weeks show |
+| `dates` | `DateMarker[]` | Marks days, each with a border for its `tag` |
+| `initialDate` | `Date` | Sets the day scrolled into view. Today by default |
+| `scrollMargin` | `number` | Sets how many weeks stay above a day scrolled into view. `2` by default |
+| `onSelect` | `({ date }) => void` | The user picked a day, with a click or an arrow key |
+| `onSelectRange` | `({ range }) => void` | The user picked a range, with a drag or Shift and an arrow key |
+
+## `Calendar.Week`
+
+`Calendar.Week` draws a week of hours, with each event in its day's column. An event is an `id`, a `title`, a `start`
+and an `end`.
+
+`Calendar.Week` reports gestures and holds no events of its own, so you apply each change to your state.
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `date` | `Date` | Sets the week to show, from any day in it. Today by default |
+| `events` | `CalendarEvent[]` | Sets the events to draw |
+| `onEventCreate` | `({ start, end }) => void` | The user dragged out an empty slot |
+| `onEventUpdate` | `({ id, start, end }) => void` | The user moved an event or dragged its edge |
+
+## Pick a day
+
+`Calendar.Grid` scrolls through the weeks, and `Calendar.Toolbar` names the month in view. The user clicks a day to
+pick it, or drags across days to pick a range. `onSelect` reports the day, and `onSelectRange` reports the range.
+
+**Example** (Showing six weeks under a toolbar)
+
+<Snippet file="tile-guide-calendar" region="picker" lang="tsx" />
+
+<TilePreview id="calendar-picker" />
+
+`rows` sets the grid to six weeks. The two handlers put the day or the range into `picked`, which the line under the
+grid shows.
+
+## Plan a week
+
+In `Calendar.Week`, the user drags an empty slot to add an event, drags an event to move it, or drags its edge to
+resize it. The week calls `onEventCreate` or `onEventUpdate`, and you change the events you hold.
+
+**Example** (Keeping a week of events in state)
+
+<Snippet file="tile-guide-calendar" region="week" lang="tsx" />
+
+<TilePreview id="calendar-week" height="28rem" />
+
+`onEventCreate` appends an event with the `start` and `end` of the slot the user dragged out. `onEventUpdate`
+replaces the `start` and `end` of the event with the same `id`.

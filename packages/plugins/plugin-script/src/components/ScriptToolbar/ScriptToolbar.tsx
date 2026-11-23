@@ -24,7 +24,8 @@ import {
   createTemplateSelect,
   useDeployDeps,
 } from '#hooks';
-import { meta } from '#meta';
+
+import { ScriptNamespace } from '../../namespace.ts';
 
 export type ScriptToolbarProps = Pick<ActionToolbarProps, 'attendableId'> & {
   script: Script.Script;
@@ -33,7 +34,7 @@ export type ScriptToolbarProps = Pick<ActionToolbarProps, 'attendableId'> & {
 
 export const ScriptToolbar = Util.composable<HTMLDivElement, ScriptToolbarProps>(
   ({ script, attendableId, role, state, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(ScriptNamespace.key);
     const options = useDeployDeps({ script });
     const menuCreator = useMemo(
       () => createToolbarActions({ state, script, t, ...options }),

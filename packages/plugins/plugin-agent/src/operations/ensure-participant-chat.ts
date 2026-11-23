@@ -4,18 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { Message, Person } from '@dxos/types';
+import { Person } from '@dxos/types';
 
 import { AgentOperation, ChatParticipant, Mode } from '#types';
 
-import { loadAgentBindings } from './ensure-channel-chat.ts';
+import { loadAgentObjects } from './ensure-channel-chat.ts';
 import { AgentOperationError } from './errors.ts';
-import { BASE_SKILL_KEYS, skillRef } from './modes.ts';
+import { sessionSkills } from './modes.ts';
 
 /** Loaded on demand: the context runtime is heavy and only needed when a chat is first created. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
@@ -39,7 +40,7 @@ const latestOf = Effect.fnUntraced(function* (chats: readonly Chat.Chat[]) {
         const feed = yield* Database.load(chat.feed);
         // A chat hosted on EDGE may not have its messages on this device yet, and would read as empty.
         yield* Feed.sync(feed, { shouldPush: false }).pipe(Effect.timeoutOption(FEED_SYNC_TIMEOUT), Effect.exit);
-        const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(feed);
         // Compared as instants: an ISO timestamp may carry any offset.
         const last = messages.reduce((newest, message) => Math.max(newest, Date.parse(message.created) || 0), 0);
         return { chat, last };
@@ -86,12 +87,12 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   }
 
   // Read before the new chat exists: the primary chat's objects carry the agent's working context.
-  const bindings = yield* loadAgentBindings(agent);
-  const skills = yield* Effect.forEach(BASE_SKILL_KEYS, (key) => skillRef(agent, key));
+  const agentObjects = yield* loadAgentObjects(agent);
+  const skills = yield* sessionSkills(agent);
 
   const primary = yield* Agent.loadChat(agent);
   const location = remote ?? primary?.remote;
-  const feed = yield* Database.add(Feed.make());
+  const feed = yield* Database.add(TrajectoryStore.makeFeed());
   const draft = Chat.make({
     [Obj.Meta]: { keys: [key] },
     [Obj.Parent]: agent,
@@ -116,8 +117,8 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   const AiContext = yield* Effect.promise(aiContextRuntime);
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
   // The agent itself is in context, so the model can name it when a tool asks for "the agent you run as".
-  const agentBound = bindings.objects.some((ref) => ref.uri === Obj.getURI(agent));
-  const objects = [...bindings.objects, ...(agentBound ? [] : [Ref.make<Obj.Unknown>(agent)]), Ref.make(chat)];
+  const agentBound = agentObjects.some((ref) => ref.uri === Obj.getURI(agent));
+  const objects = [...agentObjects, ...(agentBound ? [] : [Ref.make<Obj.Unknown>(agent)]), Ref.make(chat)];
   yield* Effect.promise(() => binder.bind({ skills, objects }));
   return chat;
 }, Effect.scoped);

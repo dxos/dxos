@@ -8,12 +8,8 @@ export default defineConfig({
   entry: {
     TasksOperationHandlerSet: 'src/operations/TasksOperationHandlerSet.ts',
     index: 'src/index.ts',
-    TasksPlugin: 'src/TasksPlugin.ts',
-    plugin: 'src/plugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
-    meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
     Journal: 'src/types/Journal.ts',

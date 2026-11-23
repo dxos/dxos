@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Model } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -139,10 +139,24 @@ const TemplateSelect = () => {
   // template rather than on any: each contributing module activates on its own, so the samples can
   // register a beat before the story's own, and a one-shot on the first arrival would open nothing.
   const [opened, setOpened] = useState(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   UiHooks.useAsyncEffect(async () => {
     if (!opened && !busy.current && templates.some(({ id }) => id === templateId)) {
       setOpened(true);
-      await handleSelect(templateId);
+      try {
+        await handleSelect(templateId);
+      } catch (err) {
+        // Unmounting tears down the runtime and interrupts the create; only a mounted toolbar's failure is real.
+        if (mounted.current) {
+          log.catch(err);
+        }
+      }
     }
   }, [opened, templates, templateId, handleSelect]);
 

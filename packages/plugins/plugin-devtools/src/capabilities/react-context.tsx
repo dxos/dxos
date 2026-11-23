@@ -10,12 +10,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import { DevtoolsContextProvider } from '@dxos/devtools';
 
-import { meta } from '#meta';
+import { DevtoolsNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactContext, {
-      id: meta.profile.key,
+      id: DevtoolsNamespace.key,
       context: ({ children }) => (
         <Surface.ProfilerProvider>
           <DevtoolsContextProvider>{children}</DevtoolsContextProvider>

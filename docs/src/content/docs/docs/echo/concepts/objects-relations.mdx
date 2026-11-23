@@ -1,0 +1,90 @@
+---
+title: Objects and relations
+description: Typed records in one space, the entities that join them, and the fields ECHO manages.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+An object is a typed record, like a document or a row in other databases. It always belongs to one space. A relation
+joins two objects, and you use one when the link has data of its own.
+
+## Model
+
+In a document database, a record is a JSON document, and nothing checks its shape unless you write the check. An ECHO
+object has the fields its [type](/docs/echo/concepts/types/) declares. Field values are strings, numbers, booleans and
+`null`, records and arrays of those, and [references](/docs/echo/concepts/references/) to other objects and
+relations.
+
+**Example** (Making an organization and a person)
+
+<Snippet file="concept-objects" region="make" />
+
+`employer` holds a reference to `acme`, not a copy of it. The key under `Obj.Meta` is a **foreign key**, the id this
+person has in another system. It goes in the object's **metadata**, which is the data ECHO keeps about an object and
+not in its fields.
+
+Every object also carries **managed fields**, which ECHO keeps beside the fields the type declares:
+
+| Field | How to read it |
+| --- | --- |
+| Id, unique and stable | `obj.id` |
+| Type | `Obj.getTypename(obj)` |
+| Foreign keys and tags | `Obj.getKeys(obj, source)`, `Obj.getMeta(obj)` |
+| Label | `Obj.getLabel(obj)` |
+| Whether it was removed | `Obj.isDeleted(obj)` |
+
+**Example** (Reading the managed fields)
+
+<Snippet file="concept-objects" region="managed" />
+
+`Obj.getKeys` takes a source, so it returns only the keys that came from `crm.example.com`. `tags` is empty because
+nothing has tagged `ada`.
+
+A **relation** joins a source and a target, and can have fields of its own. Person's `employer` field and a WorksAt
+relation record the same fact in two ways:
+
+- A reference field belongs to its object. It is the simplest choice when the link is part of the record, one value or
+  a list.
+- A relation is stored on its own. It can carry data about the link, such as a role, and you can add or remove it
+  without writing to either end.
+
+**Example** (Recording a job as a relation)
+
+<Snippet file="concept-objects" region="relation" />
+
+`job` has an id and a type of its own. Removing it ends the job and leaves `ada` and `acme` as they were.
+
+An **entity** is an object or a relation. Queries, references and metadata work the same way for both, so these docs
+say "entity" where a sentence holds for either.
+
+A **parent** is the object that another object belongs to. Removing the parent removes the child. The parent holds a
+reference to each child in one of its fields. `Obj.setParent` sets the link, and `Obj.getParent` reads it.
+
+## Behavior
+
+- `Obj.make` creates an object with an id and the DXN of its type. <SpecCite item="org.dxos.echo#F-3.1" />
+- When you change an object's field, the change notifies `Obj.subscribe` listeners and re-runs live queries.
+  <SpecCite item="org.dxos.echo#F-3.2" />
+- An object read from a database is live, so its fields show the latest value. `Obj.getSnapshot` returns a
+  **snapshot**, an immutable copy that does not change.
+
+  To keep the values as they are now, take a snapshot:
+
+  <Snippet file="concept-objects" region="snapshot" />
+
+- If you serialize an object and read it back, it keeps its id, type, metadata and references.
+  <SpecCite item="org.dxos.echo#F-3.4" />
+- Removing an object marks it as deleted. The object stays in the change history until the next
+  [epoch](/docs/echo/resources/glossary#epoch), so a peer that wrote while offline can still merge its changes.
+
+  To remove an object, pass it to `db.remove`:
+
+  <Snippet file="concept-objects" region="remove" />
+
+## Limits
+
+- The top level of an object is always a record, never a single number or string.
+- A relation needs both ends. You set its source and target when you make it, and they do not change.
+- Only an object can be a child. A relation can be a parent, with `Relation.setParent`, so that an object is removed
+  along with the relation it belongs to.

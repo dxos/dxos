@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { waitFor, within } from 'storybook/test';
 
 import * as Chat from '@dxos/assistant/Chat';
-import { type Database, Filter, Query } from '@dxos/echo';
+import { type Database, Filter } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Goal from '@dxos/plugin-agent/Goal';
@@ -14,24 +14,25 @@ import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { HasSubject, Message, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {
-  ModuleContainer,
   type Participant,
   PARTICIPANTS,
   PLAYGROUND_MODEL,
   type PlaygroundRefs,
+  chatMessages,
   createDecorators,
   setupPlayground,
   storyParameters,
   submitPrompt,
 } from '../testing/index.ts';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/AgentConversation',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     ...storyParameters,
     translations: [...storyParameters.translations, ...agentTranslations],
@@ -96,7 +97,7 @@ const assistantMessages = async (db: Database.Database, participant: Participant
   if (!feed) {
     return [];
   }
-  const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
+  const messages = await chatMessages(db, feed);
   return messages.filter(({ sender }) => sender.role === 'assistant');
 };
 

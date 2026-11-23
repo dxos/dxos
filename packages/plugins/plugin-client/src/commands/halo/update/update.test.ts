@@ -14,7 +14,7 @@ import { handler } from './update.ts';
 describe('halo update', () => {
   test('should update identity display name', ({ expect }) =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* handler({ displayName: 'Updated Name' });
       const logger = yield* TestConsole.TestConsole;

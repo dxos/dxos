@@ -1,7 +1,6 @@
 /*
- * AttentionGlyph: a rounded square three quarters of the icon size (12px at md), transparent with an accent mark at
- * rest, tinted when it contains the attended item and filled with the accent when attended. The mark (presence dots
- * or the syncing spinner) fills the square; the spinner turns at half Icon's speed, as a background activity.
+ * AttentionGlyph: a rounded square three quarters of the icon size (12px at md). Treatment hues arrive as
+ * `--dx-attention-glyph-*` variables; only the slot named by `data-moving` animates.
  */
 
 @layer dx-components {
@@ -18,22 +17,80 @@
       background-color 150ms,
       color 150ms;
   }
-  .dx-attention-glyph[data-contains-attended] {
+  .dx-attention-glyph[data-fill='contains-attended'] {
     background: var(--color-attention-contains);
   }
-  .dx-attention-glyph[data-attended] {
+  .dx-attention-glyph[data-fill='attended'] {
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
+  .dx-attention-glyph[data-fill='hue'] {
+    background: color-mix(
+      in srgb,
+      var(--dx-attention-glyph-fill-hue) var(--dx-attention-glyph-fill-opacity),
+      transparent
+    );
+  }
 
-  .dx-attention-glyph-mark,
-  .dx-attention-glyph > .dx-icon {
+  .dx-attention-glyph > svg {
     width: 100%;
     height: 100%;
+    overflow: visible;
   }
-  .dx-attention-glyph[data-syncing] > .dx-icon {
-    color: var(--color-fg-subtle);
-    animation-duration: 2s;
+
+  .dx-attention-glyph [data-part='mark'] {
+    color: var(--dx-attention-glyph-mark);
+    fill: currentColor;
+  }
+  .dx-attention-glyph [data-part='edge'] {
+    stroke: var(--dx-attention-glyph-edge);
+    stroke-width: 1;
+    stroke-linecap: round;
+  }
+  .dx-attention-glyph[data-edge='dashed'] [data-part='edge'] {
+    stroke-dasharray: 3 3;
+  }
+  .dx-attention-glyph[data-corner='dot'] [data-part='corner'] {
+    fill: var(--dx-attention-glyph-corner);
+  }
+  .dx-attention-glyph[data-corner='ring'] [data-part='corner'] {
+    stroke: var(--dx-attention-glyph-corner);
+    stroke-width: 1;
+  }
+  .dx-attention-glyph[data-fill='attended'] [data-part='mark'] {
+    color: var(--color-accent-fg);
+  }
+  .dx-attention-glyph[data-fill='attended'] [data-part='edge'] {
+    stroke: var(--color-accent-fg);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dx-attention-glyph[data-moving='fill'] {
+      animation: dx-attention-glyph-fill 1.6s ease-in-out infinite;
+    }
+    .dx-attention-glyph[data-moving='mark'] [data-part='mark'],
+    .dx-attention-glyph[data-moving='corner'] [data-part='corner'] {
+      animation: dx-attention-glyph-pulse 1.4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes dx-attention-glyph-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes dx-attention-glyph-fill {
+    0%,
+    100% {
+      background: color-mix(in srgb, var(--dx-attention-glyph-fill-hue) 12%, transparent);
+    }
+    50% {
+      background: color-mix(in srgb, var(--dx-attention-glyph-fill-hue) 45%, transparent);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

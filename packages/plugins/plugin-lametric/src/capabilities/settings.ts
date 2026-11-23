@@ -8,8 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { LaMetricCapabilities, Settings } from '#types';
+
+import { LaMetricNamespace } from '../namespace.ts';
 
 /** The device is not built for rapid updates, so changes inside this window are coalesced. */
 const DEFAULT_MIN_PUSH_INTERVAL_MS = 5_000;
@@ -17,7 +18,7 @@ const DEFAULT_MIN_PUSH_INTERVAL_MS = 5_000;
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: LaMetricNamespace.key,
       schema: Settings.Settings,
       defaultValue: () => ({ minPushIntervalMs: DEFAULT_MIN_PUSH_INTERVAL_MS }),
     });
@@ -25,7 +26,7 @@ export default Capability.makeModule(() =>
     return [
       Capability.contribute(LaMetricCapabilities.SettingsAtom, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+        prefix: LaMetricNamespace.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),

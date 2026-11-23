@@ -17,13 +17,19 @@ import { SpaceOperation } from '#types';
 const EXCLUDED_TYPES = [Type.Type, View.View, Instructions.Instructions, Skill.Skill, Feed.Feed];
 const excludedTypenames = EXCLUDED_TYPES.map((type) => Type.getTypename(type));
 
+const NOT_FOUND_HINT =
+  'Not registered where this ran: a type another plugin contributes may still exist. ' +
+  "Look it up with the Skill Manager's queryTypes, which searches every registered type.";
+
 const handler: Operation.WithHandler<typeof SpaceOperation.QueryTypes> = SpaceOperation.QueryTypes.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ typenames, limit }) {
       const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
         .run;
+      const requested = typenames && typenames.length > 0 ? new Set(typenames) : undefined;
       const sorted = [...types]
         .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
+        .filter((schema) => requested === undefined || requested.has(Type.getTypename(schema)))
         .sort((left, right) =>
           `${Type.getTypename(left)}:${Type.getVersion(left)}`.localeCompare(
             `${Type.getTypename(right)}:${Type.getVersion(right)}`,
@@ -31,17 +37,19 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryTypes> = SpaceOp
         );
       const bounded = limit === undefined ? sorted : sorted.slice(0, limit);
 
-      if (typenames && typenames.length > 0) {
-        const requested = new Set(typenames);
+      if (requested) {
+        // An empty answer reads as "no such type"; on a host that runs this apart from other plugins (an EDGE plugin
+        // bundle) the type may well exist, so say which were not found and where to look.
+        const found = new Set(sorted.map((schema) => Type.getTypename(schema)));
+        const notFound = [...requested].filter((typename) => !found.has(typename));
         return {
-          types: bounded
-            .filter((schema) => requested.has(Type.getTypename(schema)))
-            .map((schema) => ({
-              typename: Type.getTypename(schema),
-              version: Type.getVersion(schema),
-              kind: Type.isRelation(schema) ? 'relation' : 'record',
-              jsonSchema: JsonSchema.toJsonSchema(schema),
-            })),
+          types: bounded.map((schema) => ({
+            typename: Type.getTypename(schema),
+            version: Type.getVersion(schema),
+            kind: Type.isRelation(schema) ? 'relation' : 'record',
+            jsonSchema: JsonSchema.toJsonSchema(schema),
+          })),
+          ...(notFound.length > 0 ? { notFound, hint: NOT_FOUND_HINT } : {}),
         };
       }
 

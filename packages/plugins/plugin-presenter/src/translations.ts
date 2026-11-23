@@ -4,9 +4,11 @@
 
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
+import { Text } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { Presentation } from '#types';
+
+import { PresenterNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,16 +24,35 @@ export const translations = [
         'delete-object.label': 'Delete presentation',
         'object-deleted.label': 'Presentation deleted',
       },
-      [meta.profile.key]: {
+      // `Text` is an SDK type with no plugin of its own, so nothing names it and the UI falls back to its typename.
+      // Named here because a slide's own content is one; move it if a plugin ever takes ownership of the type.
+      [Type.getTypename(Text.Text)]: {
+        'typename.label': 'Text',
+        'typename.label_zero': 'Text',
+        'typename.label_one': 'Text',
+        'typename.label_other': 'Text',
+      },
+      [Type.getTypename(Presentation.Slide)]: {
+        'typename.label': 'Slide',
+        'typename.label_zero': 'Slides',
+        'typename.label_one': 'Slide',
+        'typename.label_other': 'Slides',
+        'object-name.placeholder': 'New slide',
+        'rename-object.label': 'Rename slide',
+        'delete-object.label': 'Delete slide',
+        'object-deleted.label': 'Slide deleted',
+      },
+      [PresenterNamespace.key]: {
         'plugin.name': 'Presenter',
         'toggle-presentation.label': 'Present',
         'slide-pending.label': 'Loading…',
         'theme-group.label': 'Theme',
+        'footer-group.label': 'Footer',
         'theme-color.placeholder': 'From theme',
         'default-font.placeholder': '{{font}} (default)',
         'add-slide.label': 'Add slide',
         'add-slide-layout.label': 'Layout of new slides',
-        'slide-grid.label': 'Slides',
+        'slide-gallery.label': 'Slides',
         'grid-size-small.label': 'Small thumbnails',
         'grid-size-large.label': 'Large thumbnails',
         'add-section.label': 'Add to presentation',
@@ -70,13 +91,17 @@ export const translations = [
         'background-image.label': 'Image URL',
         'background-video.label': 'Video URL',
         'slide-notes.label': 'Speaker notes',
-        'preview-mode.label': 'Preview',
-        'preview-split.label': 'Preview below the editor',
-        'preview-companion.label': 'Preview in the companion',
+        'preview-split.label': 'Show the preview',
+        'close-preview.label': 'Close the preview',
         'previous-slide.label': 'Previous slide',
         'next-slide.label': 'Next slide',
         'present-from-here.label': 'Present from this slide',
         'slide-preview.label': 'Slide',
+        'slide-position.label': '{{index}} / {{count}}',
+        'no-notes.label': 'No speaker notes for this slide.',
+        'next-slide-notes.label': 'Next: {{title}}',
+        'speaker-notes-window.title': 'Speaker notes: {{name}}',
+        'open-speaker-notes.label': 'Open speaker notes',
       },
     },
   },

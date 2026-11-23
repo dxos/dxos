@@ -115,6 +115,7 @@ component DebugPanel
 
 ```mdl
 feat DebugPanel
+  uses: [DebugPanelViewState]
   desc: |
     A status-bar button shows the debug panel: docked (the default) it toggles the deck's bottom
     drawer via `LayoutOperation.UpdateDrawer`, so the planks reflow above it, its height is dragged
@@ -143,6 +144,18 @@ feat SpaceObjectsBrowser
 ```mdl
 feat Wireframe
   desc: Overlay labelled borders around every article and section surface.
+```
+
+```mdl
+feat DeckTemplate
+  desc: |
+    The DXOS Architecture space template. It applies plugin-canvas's architecture partial (Composer and EDGE as
+    nested drawings, with their documents and sheets) and the DXOS Deck, which is its presentation. The deck is
+    one presentation whose slides are markdown files, in the order `SLIDES` lists them. A slide embeds a
+    diagram by naming it (`<Surface ref="{{echo}}" />`); each diagram is a canvas drawing built from the `.dx`
+    text that `DIAGRAMS` lists for it, named after the slide that shows it. The plugin contributes the
+    element kinds the drawings are drawn by (card, feed card, chip, heading, plank, app frame and its parts) to
+    the canvas; the graph kind is plugin-canvas's own.
 ```
 
 ```mdl
@@ -486,6 +499,42 @@ test QA-9: Hello Worker — the agent finishes the spec, plans the work and ship
     - name: Watch the Worker ship
       do: Wait for the agent's implementation tasks.
       expect: every task but the claim done or in review, and the Worker URL and its response filed on the project
+
+test QA-10: Ride Check — spec, diagram, deploy, edit a feature card, redeploy
+  desc: |
+    The Ride Check template as a demo of the whole loop. The space holds a written spec, a feature map with one card
+    per card on the page and three tasks. The take creates the space, reads the feature map and the spec, draws the
+    architecture, shows the deployed page, then adds a gust rule to the Go / no-go card, redeploys and reloads the
+    same URL. Recorded in two halves: autocue/ride-check.mjs in Composer and autocue/ride-check-redeploy.mjs on the
+    page and the terminal, spliced into one cut.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug, Code and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
+    - the Worker is deployed at its v1 (ride-check/prepare.sh), with the gust rule committed but not deployed
+  steps:
+    - name: Create a space from the Ride Check template
+      do: Add a space and pick the "Ride Check" template.
+      expect: the space opens with the "Ride Check" project in the navtree
+    - name: Open the feature map
+      do: Open the project's Features tab.
+      expect: four planned cards, "Go / no-go", "Hourly forecast", "Best window", "Daylight"
+    - name: Open the spec
+      do: Open "Go / no-go" and its spec row.
+      expect: the spec renders in Composer with F-1 to F-4 written
+    - name: Draw the architecture
+      do: Run "Draw the architecture" (the agent, or the Drawing skill's draw operation with the diagram source).
+      expect: a drawing of the browser, the Worker with its four cards, and Open-Meteo, filed on the project
+    - name: Open the live page
+      do: Open the Worker URL for a place with calm wind and gusts over 30 km/h.
+      expect: the verdict reads GO and lists no gusts
+    - name: Add the gust rule to the card
+      do: On "Go / no-go", add the subfeature "Gust rule — warn above 30 km/h".
+      expect: the card shows three subfeatures
+    - name: Redeploy and reload
+      do: Deploy the gust-rule commit and reload the same URL.
+      expect: the verdict reads MAYBE with "Gusts up to N km/h" and a highlighted Gusts row
 ```
 
 ## Changelog
@@ -507,4 +556,64 @@ decision D-2: The take assigns all three planning tasks to one chat and never sh
   affects: [QA-9]
   why: One chat keeps the spec it wrote in its context when it plans and builds; the claim URL is a bearer credential for the account.
   rejected: Stopping before the deploy, as the take did before, which would not show the Worker answering.
+```
+
+```mdl
+decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-forecast page built with DXOS UI on live Open-Meteo data, in place of [QA-9]'s JSON greeting.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-10]
+  why: Every step of the loop has to change something a viewer can see; a greeting endpoint gives the deploy and the edit nothing to show.
+  rejected: Rewriting Hello Worker in place, which its eval, QA-9 and the showcase speaking track still describe.
+```
+
+```mdl
+decision D-4: The nine studio diagrams, their deck and the element kinds they draw with live here as the DXOS Deck template ([DeckTemplate]). Each diagram has one source, its `.dx` text.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: They are a presentation, not part of the canvas; plugin-canvas held them only while the diagram language was being built against them.
+  rejected:
+    - Adding them to plugin-canvas's DXOS Architecture template, which would keep presentation kinds in the canvas plugin.
+```
+
+```mdl
+decision D-5: Every slide of the DXOS Deck is a markdown file, the diagram slides included; a slide's title is its first heading and its notes are a comment in the file. Refines [D-4].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: A title or a note is then changed in the slide's own file, and a slide with no diagram (the cover, the stack) is written the same way as one with.
+
+decision D-6: A row named down a slide's left edge is a `heading` element: a glyph over a title, in a tone, with no panel behind them. The row's cards take the same tone on their glyphs (`iconTone`). Refines [D-4].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+  why: A group's own label is a heading over its members, at one size and with no glyph; a row label beside its cards needed a size and a colour of its own, which a plain node cannot state.
+  rejected:
+    - A `fontSize` on a plain node: it gives the size but no glyph, and adds a field to the language for one slide.
+    - A fourth card variant: a heading draws no card.
+```
+
+```mdl
+decision D-7: The DXOS Deck is the Cloudflare sample: its slides, diagrams and element kinds are one folder, `src/samples/cloudflare`. It lands in a change of its own, apart from the diagram language it is drawn with. Refines [D-4].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [DeckTemplate]
+```
+
+```mdl
+decision D-8: The DXOS Deck is merged into the DXOS Architecture space template and replaces the presentation that template had. The template moves from plugin-canvas into this plugin; there is no separate DXOS Deck template. Refines [D-4].
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [DeckTemplate]
+```
+
+```mdl
+decision D-9: The merged template is `org.dxos.plugin-debug.template.architecture`. Its space lists the Architecture collection first, then a Deck collection holding the presentation and a folder of its diagrams. Fills in [D-8].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DeckTemplate]
+  why: The architecture partial builds its own collection and is shared with the Alien Labs template, so the deck keeps the collection it already had rather than being inserted into that one.
 ```

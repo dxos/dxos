@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as UmlPlugin from './UmlPlugin.ts';
+export * as UmlPlugin from '#meta';
 export * from '#skills';
 export * from '#types';

@@ -4,8 +4,9 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import { compact } from './compact.ts';
-import type * as Scene from './scene.ts';
 
 const GEOMETRY = {
   cell: { w: 192, h: 96 },
@@ -15,7 +16,7 @@ const GEOMETRY = {
   frameGap: 32,
 };
 
-const at = (col: number, row: number): Scene.Point => ({ x: col * GEOMETRY.pitch.x, y: row * GEOMETRY.pitch.y });
+const at = (col: number, row: number): Shape.Point => ({ x: col * GEOMETRY.pitch.x, y: row * GEOMETRY.pitch.y });
 
 describe('compact', () => {
   test('pulls a detached package up to the package it connects to', ({ expect }) => {

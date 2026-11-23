@@ -17,8 +17,11 @@ import { type Actor, type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 import { stringToFallback } from '@dxos/util';
 
+import { estimateTokens, formatTokens } from '../../tokens.ts';
 import { translationKey } from '../../translations.ts';
-import { type DeliveryStatus, getDelivery, isUnread } from '../../types.ts';
+import { type DeliveryStatus, type ForkMarker, type ThreadLane, getDelivery, isUnread } from '../../types.ts';
+import { TOKENS_GUTTER } from '../../widgets/index.ts';
+import { LaneHeader } from '../ThreadCard/index.ts';
 
 //
 // Context
@@ -29,6 +32,12 @@ const MESSAGE_CHROME_NAME = 'MessageChrome';
 type MessageChromeContextValue = {
   /** Soft-fork the thread from the given prompt; the rewind button renders only when present. */
   onRewind?: (id: string) => void;
+  /** Fork the conversation at the given answer; the fork button renders only when present. */
+  onFork?: (id: string) => void;
+  /** The forks that start at a message, shown under it; main leaves their messages out. */
+  getForks?: (message: Message.Message) => readonly ForkMarker[] | undefined;
+  /** Opens a fork from its marker. */
+  onOpenFork?: (thread: string) => void;
   /** While an answer is streaming the toolbars stay hidden — still in flow, never revealed. */
   streaming?: boolean;
   /** Show synthetic context panels (off in the summary view). */
@@ -43,6 +52,10 @@ type MessageChromeContextValue = {
   showAuthors?: boolean;
   /** Resolves a prompt's sender to a profile (e.g. a space member); the sender's own fields are the fallback. */
   getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
+  /** The lane a message belongs to, when the chat ran several at once; its gutter wears the lane's colour. */
+  getLane?: (message: Message.Message) => ThreadLane | undefined;
+  /** Reserve a gutter beside each block for its estimated token count. */
+  showTokens?: boolean;
 };
 
 /** How a prompt's author is shown. */
@@ -147,11 +160,24 @@ export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps)
 
 PromptToolbar.displayName = 'PromptToolbar';
 
-/** The controls under an answer: copy, and when the answer finished. */
+/** The controls under an answer: copy, fork from here, and when the answer finished. */
 export const AssistantToolbar = memo(({ classNames, message }: MessageToolbarProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const { onFork } = useMessageChromeContext('AssistantToolbar');
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
+      {onFork && (
+        <Button.Root
+          icon='ph--git-fork--regular'
+          iconOnly
+          label={t('fork.label')}
+          variant='ghost'
+          size='sm'
+          data-testid='chat.fork'
+          onClick={() => onFork(message.id)}
+        />
+      )}
       <Time message={message} />
       <MessageId message={message} />
       {/* Pushed to the far end: the cost of the turn is a footnote, not a control. */}
@@ -161,9 +187,6 @@ export const AssistantToolbar = memo(({ classNames, message }: MessageToolbarPro
 });
 
 AssistantToolbar.displayName = 'AssistantToolbar';
-
-/** Thousands abbreviated to one decimal, so the count stays one glance wide as a turn grows. */
-const formatTokens = (tokens: number): string => (tokens >= 1_000 ? `${(tokens / 1_000).toFixed(1)}k` : String(tokens));
 
 /**
  * What the turn cost, beside what it produced — the toolbar is where a reader looks for a message's
@@ -323,15 +346,25 @@ const reveal =
 
 // Bleeds into the gutter by its own inset, so a selection highlight frames the text rather than
 // ending flush against it while the text keeps the column's alignment.
-const Row = ({ children, classNames, streaming }: PropsWithChildren<{ classNames?: string; streaming?: boolean }>) => (
+const Row = ({
+  children,
+  classNames,
+  streaming,
+  lane,
+}: PropsWithChildren<{ classNames?: string; streaming?: boolean; lane?: string }>) => (
   <div
     className={mx('group/message relative -mx-2 px-2 py-2 rounded-md', classNames)}
     data-streaming={streaming || undefined}
+    data-lane={lane}
     data-testid='feed.message'
   >
     {children}
   </div>
 );
+
+/** A row standing for a lane working in the background (its card), which frames itself. */
+const isLaneRow = (message: Message.Message): boolean =>
+  message.blocks.length === 1 && message.blocks[0]._tag === 'text' && /^<lane>/.test(message.blocks[0].text);
 
 const promptReveal = mx('justify-end', reveal);
 
@@ -340,6 +373,7 @@ const promptReveal = mx('justify-end', reveal);
  * of machinery alone (a synthetic prompt, a tool run) would otherwise reserve a blank toolbar line.
  */
 const hasToolbar = (message: Message.Message): boolean =>
+  !isLaneRow(message) &&
   message.blocks.some(
     (block) =>
       block._tag === 'stats' || (block._tag === 'text' && block.disposition !== 'synthetic' && !!block.text.trim()),
@@ -355,17 +389,30 @@ const hasToolbar = (message: Message.Message): boolean =>
  * bubble's edge.
  */
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
-  const { streaming, userHue, showAuthors } = useMessageChromeContext(MESSAGE_CHROME_NAME);
+  const { streaming, userHue, showAuthors, getLane, getForks, onOpenFork, showTokens } =
+    useMessageChromeContext(MESSAGE_CHROME_NAME);
+  const forks = getForks?.(message);
   const prompt = isPrompt(message);
   const delivery = prompt ? getDelivery(message) : undefined;
   const author = useAuthor(message.sender);
   const showAuthor = prompt && showAuthors && !!author;
   const hue = showAuthor ? author.hue : userHue;
+  // The gutter runs down every row of a lane, so the requests a chat ran side by side read apart.
+  const lane = getLane?.(message);
 
   return (
-    <Row classNames={mx(selected && 'bg-hover-surface')} streaming={streaming}>
+    <Row
+      classNames={mx(
+        selected && 'bg-hover-surface',
+        lane && mx('border-s-2 rounded-s-none ps-3', getStyles(lane.hue).border),
+      )}
+      streaming={streaming}
+      lane={lane?.id}
+    >
+      {lane?.first === message.id && <LaneHeader lane={lane} classNames='pb-2' />}
       {prompt ? (
-        <div className='min-w-0 flex flex-col items-end'>
+        <div className={mx('relative min-w-0 flex flex-col items-end', showTokens && TOKENS_GUTTER)}>
+          {showTokens && <PromptTokens message={message} />}
           <div className='max-w-[70%] min-w-0'>
             <SyntheticContext message={message} />
             {showAuthor && !author.self && author.name && (
@@ -405,9 +452,25 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
           </div>
         </div>
       ) : (
-        <div className='min-w-0'>
+        // The answer's labels are widgets inside its editor, so the gutter is the editor's own padding.
+        <div className={mx('min-w-0', showTokens && '[&_.cm-content]:pe-14!')}>
           {children}
           {hasToolbar(message) && <AssistantToolbar classNames={reveal} message={message} />}
+        </div>
+      )}
+      {forks && forks.length > 0 && (
+        <div className='flex flex-wrap gap-1 pt-1' data-testid='chat.forks'>
+          {forks.map((fork) => (
+            <Button.Root
+              key={fork.id}
+              icon='ph--git-fork--regular'
+              label={fork.label}
+              variant='ghost'
+              size='sm'
+              data-testid='chat.fork-marker'
+              onClick={() => onOpenFork?.(fork.id)}
+            />
+          ))}
         </div>
       )}
     </Row>
@@ -415,3 +478,17 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
 };
 
 MessageChrome.displayName = MESSAGE_CHROME_NAME;
+
+/** A prompt's estimated token count, level with the top of its bubble in the gutter the answers share. */
+const PromptTokens = ({ message }: { message: Message.Message }) => {
+  const tokens = estimateTokens(message.blocks);
+  return tokens > 0 ? (
+    <span
+      className='absolute top-2 end-0 w-12 text-end text-xs leading-6 text-fg-subtle tabular-nums select-none'
+      data-testid='assistant.tokens'
+      aria-hidden
+    >
+      {formatTokens(tokens)}
+    </span>
+  ) : null;
+};

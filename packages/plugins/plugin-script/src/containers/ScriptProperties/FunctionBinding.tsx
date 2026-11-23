@@ -16,12 +16,12 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
+import { ScriptNamespace } from '../../namespace.ts';
 
 export type FunctionBindingProps = { object: Script.Script };
 
 export const FunctionBinding = ({ object }: FunctionBindingProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ScriptNamespace.key);
   const client = useClient();
   const db = Obj.getDatabase(object);
 

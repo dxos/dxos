@@ -5,25 +5,29 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database, Ref, Relation } from '@dxos/echo';
-import * as Feature from '@dxos/plugin-projects/Feature';
+import * as Spec from '@dxos/compute/Spec';
+import { Database, Obj, Ref, Relation, Text } from '@dxos/echo';
+import * as FeatureMap from '@dxos/plugin-code/FeatureMap';
+import * as SpecItem from '@dxos/plugin-code/SpecItem';
 
 import { type ProjectResult } from './project.ts';
-import { SPEC_PATH } from './spec.ts';
+import { type SpecResult } from './spec.ts';
 import { type TasksResult } from './tasks.ts';
 
 //
-// The project's feature map: one feature per spec block the finished spec will have, all `planned` — the template is a
-// plan to run. Each feature needs the one before it. Only the diagram task is seeded against one; the agent links the
-// implementation tasks it files, so the map fills in as the plan does.
+// The feature map: a spec that names the project and holds the spec document, with one feature per spec block the
+// finished document will have, all `planned` — the template is a plan to run. Each feature needs the one before it.
+// Only the diagram task is seeded against one; the agent links the implementation tasks it files, so the map fills in
+// as the plan does.
 //
 
 export type FeatureSeed = {
   readonly name: string;
   readonly description: string;
-  /** The spec block it is described by; F-1 is seeded, the agent writes the rest. */
+  /** The spec block it is described by; F-1 is in the text, the others are written from this seed. */
   readonly feat: string;
-  readonly subfeatures?: readonly Feature.Subfeature[];
+  /** Its parts, each added as a feature on the spec that breaks this one down. */
+  readonly subfeatures?: readonly { readonly name: string; readonly status: string }[];
   /** Indexes into the template's task list. */
   readonly tasks: readonly number[];
 };
@@ -60,44 +64,73 @@ export const FEATURES: readonly FeatureSeed[] = [
   },
 ];
 
-export type FeaturesInput = { tasks: TasksResult; project: ProjectResult };
+export type FeaturesInput = { tasks: TasksResult; project: ProjectResult; spec: SpecResult };
 
-export type FeaturesResult = { features: Feature.Feature[] };
+export type FeaturesResult = { map: Spec.Spec; breakdowns: Spec.Spec[] };
 
 export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput> = SampleSpace.partial('features', {
-  schemas: [Feature.Feature, Feature.DependsOn, Feature.Implements],
-  run: ({ tasks, project }: FeaturesInput) =>
+  schemas: [Spec.Spec, SpecItem.Implements],
+  run: ({ tasks, project, spec }: FeaturesInput) =>
     Effect.gen(function* () {
-      const projectRef = Ref.make(project.project);
-      const features: Feature.Feature[] = [];
+      // The imported spec is the map, which the project that tracks its tasks owns; its feat blocks are the cards.
+      const map = spec.spec;
+      const breakdowns = new Map<string, Spec.Spec>();
       for (const seed of FEATURES) {
-        features.push(
-          yield* Database.add(
-            Feature.make({
-              name: seed.name,
-              description: seed.description,
+        if (seed.subfeatures) {
+          const content = SpecItem.writeFeatures(
+            '',
+            seed.subfeatures.map(({ name, status }, index) => ({
+              key: `F-${index + 1}`,
+              title: name,
+              fields: { status },
+            })),
+          );
+          breakdowns.set(
+            seed.feat,
+            yield* Database.add(Spec.make({ name: seed.name, dialects: [FeatureMap.SOFTWARE_DIALECT], content })),
+          );
+        }
+      }
+      // Made by this template, so a text that will not load is a bug, not an outcome.
+      const text = yield* Database.load(map.content).pipe(Effect.orDie);
+      const content = SpecItem.writeFeatures(
+        text.content,
+        FEATURES.map((seed, index) => {
+          const breakdown = breakdowns.get(seed.feat);
+          return {
+            key: seed.feat,
+            title: seed.name,
+            prose: seed.description,
+            fields: {
               status: 'planned',
-              specs: [`${SPEC_PATH}#${seed.feat}`],
-              subfeatures: seed.subfeatures?.map((subfeature) => ({ ...subfeature })),
-              project: projectRef,
+              ...(index > 0 && { depends: [FEATURES[index - 1].feat] }),
+              ...(breakdown && { spec: `echo:///${breakdown.id}` }),
+            },
+          };
+        }),
+      );
+      Obj.update(text, (text) => {
+        Text.update(text, 'content', content);
+      });
+      Obj.update(map, (map) => {
+        map.dialects.splice(0, map.dialects.length, FeatureMap.SOFTWARE_DIALECT);
+      });
+      Obj.update(project.project, (project) => {
+        project.specs.push(Ref.make(map), ...[...breakdowns.values()].map((breakdown) => Ref.make(breakdown)));
+      });
+
+      for (const seed of FEATURES) {
+        for (const taskIndex of seed.tasks) {
+          yield* Database.add(
+            SpecItem.makeImplements({
+              [Relation.Source]: tasks.tasks[taskIndex],
+              [Relation.Target]: map,
+              item: seed.feat,
             }),
-          ),
-        );
-      }
-
-      for (const [index, feature] of features.entries()) {
-        if (index > 0) {
-          yield* Database.add(
-            Feature.makeDependsOn({ [Relation.Source]: feature, [Relation.Target]: features[index - 1] }),
-          );
-        }
-        for (const taskIndex of FEATURES[index].tasks) {
-          yield* Database.add(
-            Feature.makeImplements({ [Relation.Source]: tasks.tasks[taskIndex], [Relation.Target]: feature }),
           );
         }
       }
 
-      return { features };
+      return { map, breakdowns: [...breakdowns.values()] };
     }),
 });

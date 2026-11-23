@@ -4,6 +4,7 @@
 
 import { type DataService } from '@dxos/protocols/rpc';
 
+/** Per-peer replication state of a space. */
 export type SpaceSyncState = DataService.SpaceSyncState;
 export namespace SpaceSyncState {
   export type PeerState = DataService.SpaceSyncState.PeerState;
@@ -13,11 +14,11 @@ export * from './automerge/index.ts';
 export * from './client/index.ts';
 export * from './errors.ts';
 export {
-  type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type BindOptions,
   type BranchStore,
   type DecodedAutomergePrimaryValue,
+  type ExportWorkingSetOptions,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
   type ItemsUpdatedEvent,

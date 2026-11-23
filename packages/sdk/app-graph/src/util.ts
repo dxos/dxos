@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Equal from 'effect/Equal';
 import * as Atom from 'effect/reactivity/Atom';
 
 import { shallowEqual } from '@dxos/util';
@@ -59,7 +60,7 @@ export const nodeArgsUnchanged = (prev: readonly Node.NodeArg<any>[], next: read
       prevNode.id === nextNode.id &&
       prevNode.type === nextNode.type &&
       shallowEqual(prevNode.data, nextNode.data) &&
-      shallowEqual(prevNode.properties, nextNode.properties) &&
+      Equal.equals(prevNode.properties ?? {}, nextNode.properties ?? {}) &&
       nodeArgsUnchanged(prevNode.nodes ?? [], nextNode.nodes ?? []) &&
       nodeArgsUnchanged(prevNode.actions ?? [], nextNode.actions ?? [])
     );

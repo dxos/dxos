@@ -18,6 +18,7 @@ import {
   foreignKey,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
@@ -187,6 +188,28 @@ describe('without database', () => {
   });
 });
 
+const Progress = Type.makeObject(DXN.make('com.example.type.progress', '0.1.0'))(
+  Schema.Struct({
+    lastError: Schema.String.pipe(Schema.optional),
+    spec: Schema.Union([
+      Schema.Struct({ kind: Schema.tagDefaultOmit('external'), token: Schema.String.pipe(Schema.optional) }),
+      Schema.Struct({ kind: Schema.Literal('feed'), feed: Schema.String }),
+    ]),
+    items: Schema.Array(Schema.Struct({ note: Schema.String.pipe(Schema.optional) })),
+    nested: Schema.Struct({ note: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+  }),
+);
+
+/** A union whose first member's tag may be omitted. */
+const Tagged = Type.makeObject(DXN.make('com.example.type.tagged', '0.1.0'))(
+  Schema.Struct({
+    spec: Schema.Union([
+      Schema.Struct({ kind: Schema.Literal('a').pipe(Schema.optional), token: Schema.String.pipe(Schema.optional) }),
+      Schema.Struct({ kind: Schema.Literal('b'), feed: Schema.String }),
+    ]),
+  }),
+);
+
 describe('Reactive Object with ECHO database', () => {
   let builder: EchoTestBuilder;
 
@@ -229,6 +252,84 @@ describe('Reactive Object with ECHO database', () => {
     expect(() => db.add(Obj.make(TestSchema.Example, { string: 'foo' }))).to.throw();
   });
 
+  describe('writes to an object of a type rebuilt from JSON Schema', () => {
+    // A stored type is rebuilt from JSON Schema, as a type published to EDGE's type registry is: its optional keys come
+    // back `optionalKey` and its union tags as one-member unions.
+    const setup = async () => {
+      const { db } = await builder.createDatabase();
+      const Stored = await db.addType(Progress);
+      return db.add(
+        Obj.make(Stored, {
+          lastError: 'boom',
+          spec: { kind: 'external', token: 'a' },
+          items: [{ note: 'a' }],
+          nested: { note: 'a' },
+        }),
+      );
+    };
+
+    test('clears an optional key at any depth', async () => {
+      const object = await setup();
+      Obj.update(object, (object) => {
+        object.lastError = undefined;
+        if (object.spec.kind === 'external') {
+          object.spec.token = undefined;
+        }
+        object.items[0].note = undefined;
+        if (object.nested) {
+          object.nested.note = undefined;
+        }
+      });
+
+      const snapshot = Obj.getSnapshot(object);
+      expect(snapshot).not.to.have.property('lastError');
+      expect(snapshot.spec).to.deep.eq({ kind: 'external' });
+      expect(snapshot.items).to.deep.eq([{}]);
+      expect(snapshot.nested).to.deep.eq({});
+    });
+
+    test('selects the member whose tag may be omitted when the tag is absent', async () => {
+      const { db } = await builder.createDatabase();
+      const Stored = await db.addType(Tagged);
+      const object = db.add(Obj.make(Stored, { spec: { token: 'a' } }));
+      Obj.update(object, (object) => {
+        Reflect.set(object.spec, 'token', 'b');
+      });
+      expect(object.spec).to.deep.eq({ token: 'b' });
+    });
+
+    test('rejects a wrong value, naming the field', async () => {
+      const object = await setup();
+      expect(() => Obj.update(object, (object) => Reflect.set(object, 'lastError', 42))).to.throw(
+        'Schema validation failed — lastError: Expected string',
+      );
+      expect(() => Obj.update(object, (object) => Reflect.set(object.spec, 'token', 42))).to.throw(
+        'Schema validation failed — spec.token: Expected string',
+      );
+    });
+
+    test('rejects clearing a required key or a union tag', async () => {
+      const object = await setup();
+      expect(() => Obj.update(object, (object) => Reflect.set(object, 'spec', undefined))).to.throw(
+        /^Schema validation failed — spec: /,
+      );
+      // `tagDefaultOmit` leaves the tag optional after the round trip, yet it selects the member every other key needs.
+      expect(() => Obj.update(object, (object) => Reflect.set(object.spec, 'kind', undefined))).to.throw(
+        /^Schema validation failed — spec\.kind: /,
+      );
+      expect(object.spec).to.deep.eq({ kind: 'external', token: 'a' });
+    });
+  });
+
+  test('rejects clearing a union tag declared optional', async () => {
+    const { db } = await builder.createDatabase({ types: [Tagged] });
+    const object = db.add(Obj.make(Tagged, { spec: { kind: 'a' } }));
+    expect(() => Obj.update(object, (object) => Reflect.set(object.spec, 'kind', undefined))).to.throw(
+      "Schema validation failed — spec.kind: a union member's tag cannot be cleared",
+    );
+    expect(object.spec.kind).to.eq('a');
+  });
+
   test('existing proxy objects can be added to the database', async () => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
 
@@ -243,9 +344,8 @@ describe('Reactive Object with ECHO database', () => {
   test('object with nested reactive records can be added to the database', async () => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
 
-    // A nested struct value is a reactive record whose target prototype carries the per-object
-    // instance state (not `Object.prototype`); ingestion must accept it rather than reject it as a
-    // class instance.
+    // A nested struct value is a reactive record whose target prototype is the shared typed behaviour
+    // prototype (not `Object.prototype`); ingestion must accept it rather than reject it as a class instance.
     const obj = db.add(
       Obj.make(TestSchema.Example, {
         string: 'foo',
@@ -255,6 +355,16 @@ describe('Reactive Object with ECHO database', () => {
     );
     expect(obj.nested?.field).to.eq('bar');
     expect(obj.nestedArray?.map((item) => item.field)).to.deep.eq(['a', 'b']);
+
+    // Only the root swaps handler on `db.add`; its nested records must still read and write through the database.
+    Obj.update(obj, (obj) => {
+      invariant(obj.nested && obj.nestedArray);
+      obj.nested.field = 'baz';
+      obj.nestedArray[1].field = 'c';
+    });
+    expect(obj.nested?.field).to.eq('baz');
+    expect(obj.nestedArray?.map((item) => item.field)).to.deep.eq(['a', 'c']);
+    expect(Obj.getSnapshot(obj).nested?.field).to.eq('baz');
   });
 
   test('existing proxy objects can be passed to create', async () => {

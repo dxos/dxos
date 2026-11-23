@@ -14,7 +14,7 @@ export class UnknownRecipientError extends BaseError.extend(
 /** The relay did not accept the message (e.g., EDGE is unreachable or the sender is rate limited). */
 export class MessageSendError extends BaseError.extend('MessageSendError', 'The message could not be sent.') {}
 
-/** Failures of `MessengerCapabilities.Sender.send`. */
+/** Failures of the messenger's `AppCapabilities.InboxSender`. */
 export type InboxSendError =
   | UnknownRecipientError
   | MessageSendError

@@ -6,12 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Role from '@dxos/app-framework/Role';
-import type * as Project from '@dxos/compute/Project';
 import { ViewState } from '@dxos/react-ui-attention/types';
 
-/** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
-export const Tab = Schema.Literals(['overview', 'tasks', 'features']);
+/** Overview is everything the project owns; `spec` is the Specs tab, one of its specs at a time; Tasks gives the ledger the whole panel. */
+export const Tab = Schema.Literals(['overview', 'spec', 'tasks']);
 export type Tab = Schema.Schema.Type<typeof Tab>;
 
 /** The pipeline chart's axis: `time` fits the run to the pane, `unit` steps per event and scrolls. */
@@ -30,23 +28,20 @@ export const State = Schema.Struct({
   axis: Schema.optional(Axis),
   /** Optional for the same reason as `axis`; absent reads as `title`. */
   legend: Schema.optional(Legend),
+  /** The id of the spec the Specs tab shows; absent, or naming a spec since removed, reads as the first. */
+  spec: Schema.optional(Schema.String),
 });
 export type State = Schema.Schema.Type<typeof State>;
 
 /**
  * A project article's view state — the selected tab and whether the pipeline chart is open — keyed
- * by the project's id and persisted (localStorage) so reopening a project restores where the reader
- * left it.
+ * by the project's EID and persisted (localStorage) so reopening a project restores where the reader
+ * left it. A follower takes the leader's.
  */
 export const aspect: ViewState.Aspect<State> = ViewState.define<State>({
   key: 'org.dxos.plugin.projects.project',
   backend: 'local',
   schema: State,
   defaultValue: () => ({ tab: 'overview', pipeline: false }),
+  follow: 'write',
 });
-
-/**
- * Settings other plugins add to a project's overview, such as where its code lives on this device;
- * rendered inside the overview's form, so a contribution can use `Form.FieldSet`.
- */
-export const Settings: Role.Role<{ project: Project.Project }> = Role.make('org.dxos.plugin.projects.role.settings');

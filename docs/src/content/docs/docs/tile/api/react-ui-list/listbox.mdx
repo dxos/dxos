@@ -1,0 +1,63 @@
+---
+title: Listbox
+description: A flat list the user picks from.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-list/listbox" height="22rem" />
+
+```ts
+import { Listbox } from '@dxos/react-ui-list';
+```
+
+```sh
+npm install @dxos/react-ui-list
+```
+
+`Listbox` is a flat list the user picks one row from. It is the core [Listbox](/docs/tile/api/listbox/) with a
+simpler selection:
+
+- With `value` and `onValueChange`, the user picks one row.
+- Without them, the list is only for display.
+
+`Listbox.Root` takes one `value` where the core root takes an array, and `Listbox.Item` takes an option's `id` where
+the core item takes the option. The other parts are the core parts.
+
+Use this `Listbox` when the user picks at most one row. Use the core one when the user selects several rows.
+
+Each part handles keyboard navigation and the current and selected states. Each part also sets its own spacing, so put
+the list in a panel's body with no padding around it.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Listbox.Root` | The root, which takes the options as `items`. `value`, `onValueChange` and `onDeselect` make the list selectable |
+| `Listbox.Label` | The list's name |
+| `Listbox.Viewport` | A scroll area, for a list that scrolls by itself |
+| `Listbox.Content` | The list element |
+| `Listbox.Item` | One row, for the option whose value is `id` |
+| `Listbox.ItemIcon` | The row's icon |
+| `Listbox.ItemText` | The row's label. The option's `label` by default |
+| `Listbox.ItemDescription` | A second line under the label. The option's `description` by default |
+| `Listbox.ItemIndicator` | The check shown while the row is selected |
+| `Listbox.ItemGroup` | A group of rows |
+| `Listbox.ItemGroupLabel` | The group's name |
+| `Listbox.Empty` | The placeholder shown while there are no items |
+
+## Pick from a list
+
+Each option has a `value`, a `label` and an optional `description`. Inside each `Listbox.Item`, the parts read the
+option, so `Listbox.ItemText` shows the option's label without being told.
+
+**Example** (Picking a person)
+
+<Snippet file="tile-guide-lists" region="listbox" lang="tsx" />
+
+<TilePreview id="people-listbox" height="12rem" />
+
+`Listbox.Item` gets only the option's value, as its `id`. `Listbox.ItemText` and `Listbox.ItemDescription` take no
+props, and `onValueChange` keeps the picked value in state.

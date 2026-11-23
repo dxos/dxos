@@ -1,0 +1,89 @@
+---
+import { NARRATIVES } from '../demos/narratives.ts';
+
+interface Props {
+  /** The demo's id in `DEMOS`. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const narrative = NARRATIVES[id];
+---
+
+<h3>{narrative.title}</h3>
+<p set:html={narrative.plugins} />
+<!-- The demo runs on its own page so that its CSS stays off the docs pages; see `pages/embed/demo.astro`. -->
+<div class="demo-embed dx-wide not-content" role="status">
+  <span>Loading live demo…</span>
+  <iframe data-src={`/embed/demo/?id=${id}`} title={narrative.title}></iframe>
+</div>
+
+<script>
+  import { DEMO_READY, DEMO_TIMEOUT } from '../demos/frames.ts';
+
+  const waiting = [...document.querySelectorAll<HTMLIFrameElement>('.demo-embed > iframe[data-src]')];
+  const visibleFraction = (frame: HTMLIFrameElement) => {
+    const rect = frame.getBoundingClientRect();
+    return Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)) / rect.height;
+  };
+  const inView = (frame: HTMLIFrameElement) => visibleFraction(frame) > 0;
+  const mostInView = () => [...waiting].sort((a, b) => visibleFraction(b) - visibleFraction(a))[0];
+
+  const load = (frame: HTMLIFrameElement) => {
+    waiting.splice(waiting.indexOf(frame), 1);
+    frame.addEventListener('load', () => frame.closest('.demo-embed')?.removeAttribute('role'), { once: true });
+    frame.src = frame.dataset.src!;
+  };
+
+  const loadRest = () => {
+    observer.disconnect();
+    window.removeEventListener('message', onReady);
+    clearTimeout(timeout);
+    [...waiting].forEach(load);
+  };
+  const onReady = (event: MessageEvent) => {
+    if (event.source === first?.contentWindow && event.data?.type === DEMO_READY) {
+      loadRest();
+    }
+  };
+
+  const observer = new IntersectionObserver(() => {
+    if (first && !inView(first) && waiting.some(inView)) {
+      load(mostInView());
+    }
+  });
+  waiting.forEach((frame) => observer.observe(frame));
+
+  const first = waiting.length > 0 ? (waiting.some(inView) ? mostInView() : waiting[0]) : undefined;
+  const timeout = setTimeout(loadRest, DEMO_TIMEOUT);
+  window.addEventListener('message', onReady);
+  if (first) {
+    load(first);
+  }
+</script>
+
+<style>
+  .demo-embed {
+    display: grid;
+    width: 100%;
+    height: 32rem;
+    margin-block: 1rem 2rem;
+    border-radius: var(--c-radius);
+    overflow: hidden;
+  }
+
+  .demo-embed > * {
+    grid-area: 1 / 1;
+  }
+
+  .demo-embed > span {
+    place-self: center;
+    color: var(--sl-color-gray-3);
+  }
+
+  .demo-embed > iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+</style>

@@ -79,7 +79,7 @@ export const Default: Story = {};
 
 /**
  * `#123` resolves to an issue or pull request in the repository the host names — the decoration
- * plugin-github contributes, which the project article wires up from `Project.repo`.
+ * plugin-github contributes, which resolves it against the project's first repository.
  */
 export const WithReferences: Story = {
   args: {

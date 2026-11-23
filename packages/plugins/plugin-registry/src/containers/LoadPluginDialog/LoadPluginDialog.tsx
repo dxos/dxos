@@ -13,12 +13,13 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { RegistryOperation, describeLoadError } from '#operations';
+
+import { RegistryNamespace } from '../../namespace.ts';
 
 export const LoadPluginDialog = () => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(RegistryNamespace.key);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

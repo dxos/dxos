@@ -6,17 +6,18 @@ import { describe, test } from 'vitest';
 
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { RegistryPlugin } from '#plugin';
+import * as RegistryPlugin from '#meta';
 
-await Harness.preload({ plugins: [RegistryPlugin()] });
+import { RegistryNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [RegistryPlugin.make()] });
+
+const moduleId = (name: string) => `${RegistryNamespace.key}.module.${name}`;
 
 describe('RegistryPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin()],
+      plugins: [RegistryPlugin.make()],
     });
 
     // CLI commands activate on demand; the harness fires that wave on the app's behalf.

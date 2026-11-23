@@ -1,0 +1,51 @@
+---
+id: org.dxos.fixture.worker
+name: Worker review fixture
+version: 0.1.0
+extends:
+  - org.dxos.spec.worker
+  - org.dxos.spec.sql
+---
+
+A fixture spec for `deus review` over the worker and SQL dialects. `Feed` is both a type and a table,
+which is why those kinds are judged as `table:Feed`.
+
+```mdl
+type Feed: A feed of a space.
+  fields:
+    id: string
+```
+
+```mdl
+binding SCHEDULER: The namespace of `actor:Scheduler`.
+  type: DurableObjectNamespace<Scheduler>
+```
+
+```mdl
+actor Scheduler: One space's trigger dispatcher.
+  binding: SCHEDULER
+  key: the space id
+  storage: kv
+  keyspaces: [schedulerState]
+```
+
+```mdl
+route listFeeds: Lists a space's feeds.
+  method: GET
+  path: /feeds/:spaceId
+  auth: none
+```
+
+```mdl
+keyspace schedulerState: A space's triggers.
+  store: Scheduler storage
+  keys:
+    triggers: Trigger[]
+```
+
+```mdl
+table Feed: One feed of a space.
+  store: feed store (feed_migrations)
+  columns:
+    id: TEXT PRIMARY KEY
+```

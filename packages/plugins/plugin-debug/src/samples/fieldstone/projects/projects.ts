@@ -168,10 +168,9 @@ export const makeProjects = Effect.fnUntraced(function* ({ team, taskSets, artif
       description: seed.description,
       status: 'active',
       taskSet: Ref.make(taskSets[key]),
-      repo: Ref.make(repo),
-      repositories: [Ref.make(repo)],
       artifacts: seed.artifacts.map((artifact) => Ref.make(artifacts[artifact])),
     });
+    Repo.setRepositories(project, [Ref.make(repo)]);
     const instructions = Instructions.make({
       name: 'Instructions',
       text: seed.instructions(inboxCrm),

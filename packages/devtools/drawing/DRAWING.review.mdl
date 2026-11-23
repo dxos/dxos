@@ -1,0 +1,37 @@
+---
+spec: github:dxos/dxos/packages/devtools/drawing/DRAWING.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: drawing.sh
+
+The spec has one item, a QA test of the agent-first path. `autocue/agent-demo.mjs` (tagged
+`@mdl ... test QA-1`) drives a real signed-in Claude Code through it as a recorded demo:
+`agent-demo.sh` installs the skill, the agent draws `arch.dx`, and `dx drawing import` puts it in a
+space Composer has joined. It skips the "ask for a change" step and asserts none of the `expect`
+clauses (it waits on prompts and previews), and it runs by hand, not in CI.
+
+Of 1 item: 0 done, 0 untested, 1 partial, 0 diverged, 0 missing. The finding that matters: QA-1's
+change step (grouping Stripe and Postmark) is not driven, and no step checks its expected output.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QA-1: The autocue demo drives install, draw and import with the real agent, but skips the change step and checks no expectation.
+  status: partial
+  evidence: [github:dxos/dxos/packages/devtools/drawing/autocue/agent-demo.sh]
+  tests: [github:dxos/dxos/packages/devtools/drawing/autocue/agent-demo.mjs]
+  note: |
+    `agent-demo.sh` runs `npx skills add ... --skill drawing`; `agent-demo.mjs` asks for `arch.dx`, prints its
+    source and runs `dx drawing import arch.dx.svg`, then opens it in Composer. There is no "Group Stripe and
+    Postmark" step, no check that `SKILL.md`, `arch.dx.svg` or a Drawing named "arch" exists, and the script needs
+    a signed-in `claude`, so it runs as a manual recording rather than in CI.
+```

@@ -14,9 +14,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { Video } from '@dxos/types';
 
 import { Pending, Transcript } from '#components';
-import { meta } from '#meta';
 import { VideoOperation } from '#types';
 
+import { VideoNamespace } from '../../namespace.ts';
 import { extractVideoId } from '../../util/index.ts';
 
 // TODO(burdon): Use AppSurface.Section.
@@ -30,7 +30,7 @@ export type TranscriptSectionProps = {
  * the transcript is generated. The transcript is generated on demand when missing.
  */
 export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(VideoNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [video] = useObject(subject);
   const uri = Obj.getURI(subject);
@@ -66,7 +66,7 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
       { video: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['transcribe-error.message', { ns: meta.profile.key }] },
+        notify: { error: ['transcribe-error.message', { ns: VideoNamespace.key }] },
       },
     )
       .then(({ error }) => {

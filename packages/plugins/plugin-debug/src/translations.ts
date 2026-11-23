@@ -5,16 +5,37 @@
 import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { DebugNamespace } from './namespace.ts';
 
 export const translations = [
   // The R0 log companion and status popover render `@dxos/react-ui-debug`, so its namespace must be registered.
   ...logPanelTranslations,
   {
     'en-US': {
-      [meta.profile.key]: {
+      [DebugNamespace.key]: {
         'plugin.name': 'Debug',
         'debug.label': 'Debug',
+        'refresh.label': 'Refresh',
+        'kms-panel.title': 'KMS',
+        'kms-panel.source.label': 'Source',
+        'kms-panel.account.label': 'Account',
+        'kms-panel.scopes.label': 'Scopes',
+        'kms-panel.custody.label': 'Custody',
+        'kms-panel.managed.label': 'Held by KMS',
+        'kms-panel.inline.label': 'Stored in the space',
+        'kms-panel.health.label': 'kms-service',
+        'kms-panel.no-edge.label': 'No EDGE configured',
+        'kms-panel.resolve.label': 'Resolves',
+        'trigger-panel.title': 'Trigger manager',
+        'trigger-panel.error.label': 'Error',
+        'trigger-panel.enabled.label': 'Enabled',
+        'trigger-panel.spec.label': 'Spec',
+        'trigger-panel.registered.label': 'Runs on',
+        'trigger-panel.not-registered.label': 'Not registered',
+        'trigger-panel.next.label': 'Next run',
+        'trigger-panel.cooldown.label': 'Cooldown until',
+        'trigger-panel.retry.label': 'Retry',
+        'trigger-panel.last.label': 'Last result',
         'generate-objects.label': 'Generate Objects',
         'create-space-from-template.label': 'Create space from template: {{label}}',
         'space-objects.label': 'Database',

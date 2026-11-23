@@ -12,7 +12,7 @@ import {
   CancellableInvitation,
   INVITATION_TIMEOUT,
 } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
+import { type Context, ContextDisposedError } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Hook from '@dxos/effect/Hook';
@@ -37,6 +37,14 @@ import * as InvitationsContract from '../../contracts/invitations.ts';
 import * as Events from '../../Events.ts';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata/index.ts';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
+
+/**
+ * Whether a host invitation can no longer be redeemed; a multi-use invitation stays open after a SUCCESS.
+ */
+const hasEnded = ({ state, multiUse }: Invitation): boolean =>
+  state === Invitation_State.CANCELLED ||
+  state === Invitation_State.EXPIRED ||
+  (state === Invitation_State.SUCCESS && !multiUse);
 
 /**
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and
@@ -86,6 +94,17 @@ export class InvitationsManager {
     ctx: Context,
     options: Partial<Invitation> & Pick<Invitation, 'kind'>,
   ): Promise<CancellableInvitation> {
+    return this._hostInvitation(ctx, options, { restored: false });
+  }
+
+  /**
+   * @param restored - The invitation was loaded from the metadata store, so it is already persisted.
+   */
+  private async _hostInvitation(
+    ctx: Context,
+    options: Partial<Invitation> & Pick<Invitation, 'kind'>,
+    { restored }: { restored: boolean },
+  ): Promise<CancellableInvitation> {
     if (options.invitationId) {
       const existingInvitation = this._createInvitations.get(options.invitationId);
       if (existingInvitation) {
@@ -108,28 +127,46 @@ export class InvitationsManager {
 
     this._createInvitations.set(invitation.invitationId, observableInvitation);
     this.invitationCreated.emit(invitation);
-    // onComplete is called on cancel, expiration, or redemption of a single-use invitation
+    // onComplete is called on cancel, expiration, or redemption of a single-use invitation, and when `ctx` is
+    // disposed. A restored invitation's `ctx` is the stack's, so disposal there is a shutdown: it must stay
+    // persisted to be hosted again on the next start.
     this._onInvitationComplete(observableInvitation, async () => {
-      this._createInvitations.delete(observableInvitation.get().invitationId);
-      this.removedCreated.emit(observableInvitation.get());
-      if (observableInvitation.get().persistent) {
-        await this._safeDeleteInvitation(observableInvitation.get());
+      const current = observableInvitation.get();
+      this._createInvitations.delete(current.invitationId);
+      this.removedCreated.emit(current);
+      if (current.persistent && (!restored || hasEnded(current))) {
+        await this._safeDeleteInvitation(current);
       }
     });
 
-    try {
-      await this._persistIfRequired(handler, stream, invitation);
-    } catch (err) {
-      log.catch(err);
-      await observableInvitation.cancel();
-      return observableInvitation;
+    if (!restored) {
+      try {
+        await this._persistIfRequired(handler, stream, invitation);
+      } catch (err) {
+        log.catch(err);
+        await observableInvitation.cancel();
+        return observableInvitation;
+      }
     }
 
-    this._invitationsHandler.handleInvitationFlow(invitationCtx, stream, handler, observableInvitation.get());
+    this._invitationsHandler.handleInvitationFlow(invitationCtx, stream, handler, observableInvitation.get(), {
+      // A redeemed single-use invitation must not be re-hosted on the next start.
+      beforeSingleUseComplete: async () => {
+        if (observableInvitation.get().persistent) {
+          await this._metadataStore.removeInvitation(observableInvitation.get().invitationId);
+        }
+      },
+    });
 
     return observableInvitation;
   }
 
+  /**
+   * Re-hosts the invitations saved in the metadata store.
+   *
+   * An invitation whose resource is not ready yet (e.g. its space has not loaded its member state) is
+   * re-hosted in the background once it is, so it is not part of the returned set.
+   */
   async loadPersistentInvitations(ctx: Context): Promise<{ invitations: Invitation[] }> {
     if (this._persistentInvitationsLoaded) {
       const invitations = this.getCreatedInvitations().filter((i) => i.persistent);
@@ -137,16 +174,32 @@ export class InvitationsManager {
     }
     try {
       const persistentInvitations = this._metadataStore.getInvitations();
-      // get saved persistent invitations, filter and remove from storage those that have expired.
+      // Expired invitations are removed from storage by the metadata store.
       const freshInvitations = persistentInvitations.filter((invitation) => !hasInvitationExpired(invitation));
 
-      const loadTasks = freshInvitations.map((persistentInvitation) => {
-        invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation(ctx, { ...persistentInvitation, persistent: false });
-      });
-      const cInvitations = await Promise.all(loadTasks);
+      const loaded = await Promise.all(
+        freshInvitations.map(async (persistentInvitation) => {
+          invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
+          const handler = this.getInvitationHandler(persistentInvitation);
+          if (handler.checkCanInviteNewMembers() != null && handler.waitUntilReady) {
+            this._restoreWhenReady(ctx, (readyCtx) => handler.waitUntilReady?.(readyCtx), persistentInvitation);
+            return undefined;
+          }
 
-      return { invitations: cInvitations.map((invitation) => invitation.get()) };
+          try {
+            const invitation = await this._hostInvitation(ctx, persistentInvitation, { restored: true });
+            return invitation.get();
+          } catch (err) {
+            log.warn('failed to restore persistent invitation', {
+              invitationId: persistentInvitation.invitationId,
+              error: String(err),
+            });
+            return undefined;
+          }
+        }),
+      );
+
+      return { invitations: loaded.filter((invitation) => invitation != null) };
     } catch (err) {
       log.catch(err);
       return { invitations: [] };
@@ -154,6 +207,29 @@ export class InvitationsManager {
       this._persistentInvitationsLoadedEvent.emit();
       this._persistentInvitationsLoaded = true;
     }
+  }
+
+  private _restoreWhenReady(
+    ctx: Context,
+    waitUntilReady: (ctx: Context) => Promise<void> | undefined,
+    persistentInvitation: Invitation,
+  ): void {
+    const { invitationId } = persistentInvitation;
+    log('deferring persistent invitation until ready', { invitationId });
+    void (async () => {
+      try {
+        await waitUntilReady(ctx);
+        if (ctx.disposed || this._createInvitations.has(invitationId)) {
+          return;
+        }
+        await this._hostInvitation(ctx, persistentInvitation, { restored: true });
+      } catch (err) {
+        if (err instanceof ContextDisposedError || ctx.disposed) {
+          return;
+        }
+        log.warn('failed to restore persistent invitation', { invitationId, error: String(err) });
+      }
+    })();
   }
 
   /**

@@ -14,7 +14,7 @@ import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../namespace.ts';
 
 export type RenameCallback = { initialValue: string; onRename: (name: string) => void };
 export type RenameSubject = Space | Entity.Unknown | RenameCallback;
@@ -47,12 +47,12 @@ export type RenamePopoverProps = { subject: RenameSubject };
 //   so any plugin can use the rename popover without depending on plugin-space.
 
 /**
- * Rename popover anchored to a navtree row: an object's basic properties (name, description, tags), which write as they
- * change; a space or a callback subject keeps the inline name field.
+ * Rename popover anchored to a navtree row: an object's basic properties (name, description), held until Save;
+ * a space or a callback subject keeps the inline name field.
  */
 export const RenamePopover = ({ subject }: RenamePopoverProps) =>
   !isRenameCallback(subject) && Obj.isObject(subject) ? (
-    <ObjectProperties object={subject} classNames='max-h-[min(var(--available-height),32rem)]' />
+    <ObjectPropertiesPopover object={subject} />
   ) : (
     <RenameField subject={subject} />
   );
@@ -60,10 +60,33 @@ export const RenamePopover = ({ subject }: RenamePopoverProps) =>
 RenamePopover.displayName = 'RenamePopover';
 
 /**
+ * The object form, which dismisses the popover on either button. Edits are held until Save, so dismissing any other
+ * way (click-outside, Escape) discards them, as Cancel does — a Save the reader can bypass by clicking away would
+ * leave them unsure which of the two wrote.
+ */
+const ObjectPropertiesPopover = ({ object }: { object: Obj.Unknown }) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const close = useCallback(() => {
+    void invokePromise(LayoutOperation.UpdatePopover, { anchorId: '', state: false });
+  }, [invokePromise]);
+
+  return (
+    <ObjectProperties
+      object={object}
+      showTags={false}
+      onClose={close}
+      classNames='max-h-[min(var(--available-height),32rem)]'
+    />
+  );
+};
+
+ObjectPropertiesPopover.displayName = 'ObjectPropertiesPopover';
+
+/**
  * Inline name field. Commits on Enter or when dismissed; Escape cancels.
  */
 const RenameField = ({ subject }: RenamePopoverProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const space = !isRenameCallback(subject) && isSpace(subject);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [name, setNameState] = useState(() => getName(subject));

@@ -4,21 +4,36 @@
 
 import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { Dsl, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
-import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { DSL, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
+import { Collection, Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
+import { CreatedFrom } from '@dxos/types';
 
 import { SvgBuilder, bindArrowEnds, makeBuilder } from '#model';
 import { Drawing, IllustratorCapabilities, IllustratorError } from '#types';
 
 import { UnknownDrawingVariantError } from '../util/load-drawing.ts';
 import convertHandler from './convert.ts';
+
+/** A drawing's canvas, loaded and narrowed to the base canvas every variant here stores. */
+const loadCanvas = async (drawing: Drawing.Drawing): Promise<Drawing.Canvas> => {
+  const canvas = await drawing.canvas.load();
+  if (!Drawing.isCanvas(canvas)) {
+    throw new Error('Expected a base canvas.');
+  }
+  return canvas;
+};
 
 const SOURCE = 'flowchart LR\n  A[Client] --> B[Server]';
 
@@ -57,7 +72,9 @@ describe('convert', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Drawing.Drawing, Drawing.Canvas, Collection.Collection] }));
+    ({ db } = await builder.createDatabase({
+      types: [Drawing.Drawing, Drawing.Canvas, Collection.Collection, CreatedFrom.CreatedFrom],
+    }));
   });
 
   afterEach(async () => {
@@ -75,19 +92,47 @@ describe('convert', () => {
     drawing: Drawing.Drawing,
     variant: string,
     { copy = false, converters = [] }: { copy?: boolean; converters?: IllustratorCapabilities.DrawingConverter[] } = {},
-  ) =>
-    convertHandler
+  ) => {
+    const manager = capabilities(converters);
+    // A copy is filed by plugin-space, so nested invocations run `SpaceOperation.AddObject` through its own handler.
+    const operations: Operation.OperationService = {
+      invoke: (operation, ...args) => {
+        const input = args[0];
+        const handle: Effect.Effect<unknown, unknown, Capability.Service | Database.Service> =
+          operation.meta.key === SpaceOperation.AddObject.meta.key && Schema.is(SpaceOperation.AddObject.input)(input)
+            ? OperationHandlerSet.getHandler(SpaceOperationHandlerSet.handlers, SpaceOperation.AddObject).pipe(
+                Effect.flatMap((addObject) => addObject.handler(input)),
+              )
+            : Effect.fail(new Operation.NoHandlerError(operation.meta.key));
+        return handle.pipe(
+          Effect.flatMap((output) =>
+            Schema.is(operation.output)(output) ? Effect.succeed(output) : Effect.die('unexpected output'),
+          ),
+          Effect.orDie,
+          Effect.provideService(Capability.Service, manager),
+          Effect.provide(Database.layer(db)),
+        );
+      },
+      schedule: () => Effect.void,
+      invokePromise: async () => ({ error: new Error('unused') }),
+    };
+    return convertHandler
       .handler({ drawing: Ref.make(drawing), variant, ...(copy ? {} : { replace: true }) })
-      .pipe(Effect.provideService(Capability.Service, capabilities(converters)), Effect.provide(Database.layer(db)));
+      .pipe(
+        Effect.provideService(Capability.Service, manager),
+        Effect.provideService(Operation.Service, operations),
+        Effect.provide(Database.layer(db)),
+      );
+  };
 
   test('replays the scene onto a fresh canvas of the target variant and drops the old canvas', async ({ expect }) => {
     const drawing = await addSvgDrawing();
-    const original = await drawing.canvas.load();
+    const original = await loadCanvas(drawing);
     const before = SvgBuilder.read(original).scene.objects;
 
     const result = await EffectEx.runPromise(run(drawing, FAKE_SCHEMA));
 
-    const canvas = await drawing.canvas.load();
+    const canvas = await loadCanvas(drawing);
     expect(canvas.id).not.toBe(original.id);
     expect(canvas.schema).toBe(FAKE_SCHEMA);
     expect(result.scene.objects).toEqual(bindArrowEnds(before));
@@ -113,7 +158,7 @@ describe('convert', () => {
 
   test('refuses to drop shapes drawn outside the scene and leaves the drawing untouched', async ({ expect }) => {
     const drawing = await addSvgDrawing();
-    const canvas = await drawing.canvas.load();
+    const canvas = await loadCanvas(drawing);
     Obj.update(canvas, (canvas) => {
       canvas.content['hand-drawn'] = { kind: 'freehand' };
     });
@@ -126,21 +171,21 @@ describe('convert', () => {
 
   test('keeps the old canvas while another drawing still references it', async ({ expect }) => {
     const drawing = await addSvgDrawing();
-    const shared = await drawing.canvas.load();
+    const shared = await loadCanvas(drawing);
     const other = db.add(Drawing.make({ name: 'Other', canvas: shared }));
 
     await EffectEx.runPromise(run(drawing, FAKE_SCHEMA));
 
-    const converted = await drawing.canvas.load();
+    const converted = await loadCanvas(drawing);
     expect(converted.id).not.toBe(shared.id);
-    expect((await other.canvas.load()).id).toBe(shared.id);
+    expect((await loadCanvas(other)).id).toBe(shared.id);
     const canvases = await db.query(Filter.type(Drawing.Canvas)).run();
     expect(canvases.map(({ id }) => id).sort()).toEqual([shared.id, converted.id].sort());
   });
 
   test('binds each laid-out arrow end to the box it touches', async ({ expect }) => {
     const { commands } = await EffectEx.runPromise(
-      Dsl.compile('group g {\n  node A\n  node B\n}\nnode C\nedge A -> B\nedge B -> C\n'),
+      DSL.compile('group g {\n  node A\n  node B\n}\nnode C\nedge A -> B\nedge B -> C\n'),
     );
     const objects = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
     const arrows = bindArrowEnds(objects).flatMap(({ elements }) =>
@@ -155,7 +200,7 @@ describe('convert', () => {
 
   test('by default converts into a new drawing beside the source, which is left as it was', async ({ expect }) => {
     const drawing = await addSvgDrawing();
-    const original = await drawing.canvas.load();
+    const original = await loadCanvas(drawing);
     const folder = db.add(Collection.make({ objects: [Ref.make(drawing)] }));
     await db.flush();
 
@@ -163,9 +208,20 @@ describe('convert', () => {
     const copy = await result.drawing.load();
     expect(copy.id).not.toBe(drawing.id);
     expect(copy.name).toBe(drawing.name);
-    expect((await copy.canvas.load()).schema).toBe(FAKE_SCHEMA);
-    expect((await drawing.canvas.load()).id).toBe(original.id);
+    expect((await loadCanvas(copy)).schema).toBe(FAKE_SCHEMA);
+    expect((await loadCanvas(drawing)).id).toBe(original.id);
     expect(folder.objects.map((ref) => ref.target?.id)).toContain(copy.id);
+  });
+
+  test('a copy records the canvas it was converted from', async ({ expect }) => {
+    const drawing = await addSvgDrawing();
+    const original = await loadCanvas(drawing);
+    const result = await EffectEx.runPromise(run(drawing, FAKE_SCHEMA, { copy: true }));
+    const converted = await loadCanvas(await result.drawing.load());
+    const relations = await db.query(Query.select(Filter.id(converted.id)).sourceOf(CreatedFrom.CreatedFrom)).run();
+    expect(relations).toHaveLength(1);
+    expect(Relation.getTarget(relations[0])).toBe(original);
+    expect(relations[0].reason).toBe('conversion');
   });
 
   test("uses a converter registered for the pair over the scene replay, so a variant's own mapping wins", async ({

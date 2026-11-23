@@ -40,7 +40,7 @@ const SideBySideStory = () => {
   }
 
   return (
-    <div className='dx-cover grid grid-cols-3 gap-3 p-3 overflow-hidden'>
+    <div className='dx-cover grid grid-cols-3 gap-3 p-trim-md overflow-hidden'>
       <CanonicalTaskPanel task={task} />
       <LensedGtdPanel task={task} />
       <RawInspector task={task} />
@@ -60,7 +60,7 @@ const CollaborationStory = () => {
   }
 
   return (
-    <div className='grid grid-rows-2 gap-3 p-3 h-full overflow-hidden'>
+    <div className='grid grid-rows-2 gap-3 p-trim-md h-full overflow-hidden'>
       {index === 0 ? <CanonicalTaskPanel task={task} /> : <LensedGtdPanel task={task} />}
       <RawInspector task={task} />
     </div>
@@ -132,12 +132,12 @@ export const Spec: Story = {
     // Completing it through the lens writes `status` on the base object — visible in both other panes.
     await userEvent.click(control(lensed, 'Done'));
     await waitFor(async () => {
-      await expect(selectValue(canonical, 'Status')).toBe('done');
+      await expect(selectValue(canonical, 'Status')).toBe('Done');
       await expect(find('inspector-properties')).toHaveTextContent('"status": "done"');
     });
 
     // A canonical edit shows through the lens, in the other direction.
-    await selectOption(canonical, 'Status', 'todo');
+    await selectOption(canonical, 'Status', 'Todo');
     await waitFor(async () => {
       await expect(control(lensed, 'Done')).not.toBeChecked();
       await expect(selectValue(lensed, 'Stage')).toBe('todo');

@@ -7,17 +7,16 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, Obj } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { type ComplexMap, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../namespace.ts';
 
 export * as Settings from './Settings.ts';
 
-export const SPACE_DIRECTORY_HANDLE = `${meta.profile.key}.directory`;
+export const SPACE_DIRECTORY_HANDLE = `${SpaceNamespace.key}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
 
@@ -28,6 +27,19 @@ export const SPACE_TYPE = 'org.dxos.type.space';
  * is on `properties.space`.
  */
 export const SPACE_HOME_NODE_TYPE = 'org.dxos.space.home';
+
+/** Type of a peer's hidden graph node; plugins contribute actions on a peer (go to them, follow them) here. */
+export const PEER_NODE_TYPE = 'org.dxos.space.peer';
+
+/** Data of a {@link PEER_NODE_TYPE} node. */
+export const PeerNodeData = Schema.Struct({
+  spaceId: Schema.String,
+  identityKey: Schema.String,
+  /** Set on a session's node under its peer's; the peer's own node acts on its most recently moved session. */
+  sessionId: Schema.optional(Schema.String),
+});
+
+export type PeerNodeData = Schema.Schema.Type<typeof PeerNodeData>;
 
 /** Type for the per-space virtual "Settings" section. Single source of truth is `AppNodeMatcher.SETTINGS_SECTION_TYPE`. */
 export const SETTINGS_SECTION_TYPE = AppNodeMatcher.SETTINGS_SECTION_TYPE;
@@ -79,11 +91,59 @@ export type SpacePluginOptions = {
    * Whether to send observability events.
    */
   observability?: boolean;
+
+  /** Enables publishing spaces to the read-only viewer, and forking publications back in. */
+  publication?: PublicationOptions;
 };
 
+export type PublicationOptions = {
+  /** Origin of the read-only viewer, e.g. `https://view.composer.space`. */
+  viewerOrigin: string;
+  /** Where publications are read from; defaults to `/publications` on the viewer origin. */
+  publicationsUrl?: string;
+};
+
+/** One session's view of an object: a tab or app instance of a peer. */
 export type ObjectViewerProps = {
   lastSeen: number;
+  /** When the session last opened the object, came back to it, or moved its anchor there. */
+  movedAt: number;
   currentlyAttended: boolean;
+  device?: SessionDevice;
+  /** Where the peer is in the object, for each object open in their deck; see `ViewLocation` in react-ui-attention. */
+  location?: PeerLocation;
+};
+
+/** The device a session runs on, from its HALO device profile; the receiver names it. */
+export type SessionDevice = {
+  /** A label someone gave the device. */
+  label?: string;
+  /** The browser, or `App` for the native and mobile apps. */
+  platform?: string;
+  os?: string;
+  kind?: 'browser' | 'native' | 'mobile' | 'agent' | 'unknown';
+};
+
+/** Whom a session follows: a peer's most recently moved session, or one session of theirs. */
+export type FollowTarget = {
+  spaceId: string;
+  identityKey: string;
+  sessionId?: string;
+};
+
+/** A peer's caret and top of view in an object, as anchors in the object type's own format. */
+export type PeerLocation = {
+  selection?: string;
+  viewport?: string;
+};
+
+/** A session's deck in one space: the graph paths of its planks there, in order. */
+export type PeerDeck = {
+  planks: string[];
+  /** The plank it is scrolled to: the viewport of the space's own location. */
+  front?: string;
+  /** The session's values of each followed view state aspect, by aspect key, then by the context's EID. */
+  viewState?: Record<string, Record<string, unknown>>;
 };
 
 export type ObjectId = string;
@@ -92,12 +152,7 @@ export type PluginState = {
   /**
    * Which objects are currently being viewed by which peers.
    */
-  viewersByObject: Record<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
-
-  /**
-   * Which peers are currently viewing which objects.
-   */
-  viewersByIdentity: ComplexMap<PublicKey, Set<ObjectId>>;
+  viewersByObject: Record<ObjectId, Record<string, Record<string, ObjectViewerProps>>>;
 
   /**
    * Cached space names, used when spaces are closed or loading.
@@ -185,6 +240,7 @@ const SPACE_FORM_LAYOUT_CREATE = trim`
 // TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
   name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
   icon: Schema.optional(Schema.String.annotate({ title: 'Icon', [IconAnnotationId]: true })),
   hue: Schema.optional(Schema.String.annotate({ title: 'Color', [HueAnnotationId]: true })),
   private: Schema.optional(Schema.Boolean.annotate({ title: 'Private space' })),

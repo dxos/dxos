@@ -24,14 +24,16 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Menu from '@dxos/react-ui/Menu';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
+
+import { SpaceNamespace } from '../../namespace.ts';
+import { PublishingSettings } from './PublishingSettings.tsx';
 
 const SpaceFormSchema = SpaceSchema.SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const [edgeReplication, setEdgeReplication] = useState(
@@ -57,10 +59,13 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         void toggleEdgeReplication(newValues.edgeReplication ?? false);
       }
 
-      if (changed['name'] || changed['icon'] || changed['hue']) {
+      if (changed['name'] || changed['description'] || changed['icon'] || changed['hue']) {
         Obj.update(space.properties, (obj) => {
           if (changed['name'] && newValues.name !== undefined) {
             obj.name = newValues.name;
+          }
+          if (changed['description']) {
+            obj.description = newValues.description?.trim() ? newValues.description : undefined;
           }
           if (changed['icon']) {
             obj.icon = newValues.icon;
@@ -79,12 +84,20 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
   const defaultValues = useMemo(
     () => ({
       name: space.properties.name,
+      description: space.properties.description,
       icon: space.properties.icon,
       hue: space.properties.hue,
       private: isPrivate,
       edgeReplication,
     }),
-    [space.properties.name, space.properties.icon, space.properties.hue, isPrivate, edgeReplication],
+    [
+      space.properties.name,
+      space.properties.description,
+      space.properties.icon,
+      space.properties.hue,
+      isPrivate,
+      edgeReplication,
+    ],
   );
 
   // The default space is the fallback target for unscoped content, so it cannot be deleted until
@@ -104,6 +117,23 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
+              classNames='w-64 max-w-full min-w-0'
+            />
+          </Form.Field>
+        );
+      },
+      description: ({ type, label, getValue, onValueChange }) => {
+        const handleChange = useCallback(
+          ({ target: { value } }: ChangeEvent<HTMLTextAreaElement>) => onValueChange(type, value),
+          [onValueChange, type],
+        );
+        return (
+          <Form.Field label={label} description={t('space-description.description')}>
+            <Input.Textarea
+              value={getValue() ?? ''}
+              onChange={handleChange}
+              placeholder={t('space-description.placeholder')}
+              autoResize
               classNames='w-64 max-w-full min-w-0'
             />
           </Form.Field>
@@ -168,6 +198,25 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
   const handleResetHome = useCallback(() => AppSpace.resetHomeVisibility(space), [space]);
 
+  const [spaceRootUrl, setSpaceRootUrl] = useState(space.internal.data.spaceRootUrl);
+  const [migrating, setMigrating] = useState(false);
+  // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
+  const handleMigrateSpaceRoot = useCallback(async () => {
+    setMigrating(true);
+    try {
+      setSpaceRootUrl(await space.internal.migrateSpaceRoot());
+    } catch (err) {
+      log.catch(err, { stage: 'migrate space root', spaceId: space.id });
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `${space.id}-migrate-space-root-failed`,
+        title: t('migrate-space-root-failed.message'),
+        icon: 'ph--warning--regular',
+      });
+    } finally {
+      setMigrating(false);
+    }
+  }, [space, invokePromise, t]);
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
   const handleDelete = useCallback(async () => {
@@ -202,10 +251,12 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         <Form.Content>
           <Form.FieldSet
             label={t('space-properties-settings-verbose.label')}
-            description={t('space-properties-settings.description', { ns: meta.profile.key })}
+            description={t('space-properties-settings.description', { ns: SpaceNamespace.key })}
           >
             <Form.Fields />
           </Form.FieldSet>
+
+          <PublishingSettings space={space} />
 
           <Form.FieldSet label={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Field standalone label={t('space-id.title')} description={t('space-id.description')}>
@@ -230,6 +281,23 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             </Form.Field>
             <Form.Field standalone label={t('repair-space.title')} description={t('repair-space.description')}>
               <Button.Root onClick={handleRepair}>{t('repair-space.label')}</Button.Root>
+            </Form.Field>
+            <Form.Field
+              standalone
+              label={t('migrate-space-root.title')}
+              description={t('migrate-space-root.description')}
+            >
+              <Button.Root
+                disabled={migrating || spaceRootUrl !== undefined}
+                onClick={handleMigrateSpaceRoot}
+                data-testid='spaceSettings.migrateSpaceRoot'
+              >
+                {spaceRootUrl !== undefined
+                  ? t('migrate-space-root.migrated.label')
+                  : migrating
+                    ? t('migrate-space-root.pending.label')
+                    : t('migrate-space-root.label')}
+              </Button.Root>
             </Form.Field>
             <Form.Field standalone label={t('reset-home.title')} description={t('reset-home.description')}>
               <Button.Root onClick={handleResetHome}>{t('reset-home.label')}</Button.Root>

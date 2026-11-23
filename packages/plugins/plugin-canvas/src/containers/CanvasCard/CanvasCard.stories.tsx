@@ -8,21 +8,30 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { DSL } from '@dxos/diagram';
+import { EXEMPLARS } from '@dxos/diagram/testing';
+import { Obj, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_CELL } from '@dxos/react-ui-canvas';
+import { nodeKey } from '@dxos/react-ui-canvas/headless';
 import * as Card from '@dxos/react-ui/Card';
-import { Cell, ModuleContainer, type ResolvedCellProps, createStoryDecorators } from '@dxos/storybook-testing';
+import { toEcho } from '@dxos/scene';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
+import { trim } from '@dxos/util';
 
-import { createCanvas, nodeKey, rootOf } from '#model';
-import { CanvasPlugin } from '#plugin';
+import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
+import { Canvas as CanvasFormat } from '#types';
+
+import types from '../../capabilities/schema.ts';
+import { addTestCanvas } from '../../testing/canvas.ts';
 
 // Dispatched through the illustrator's card surface, as a stack or popover shows it, so the story covers the variant
 // dispatch as well as the card.
-const DrawingCard = ({ object }: ResolvedCellProps) => (
+const DrawingCard = ({ object }: ModuleContainer.ResolvedCellProps) => (
   <Card.Root classNames='w-80'>
     <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
   </Card.Root>
@@ -41,26 +50,51 @@ const node = (scene: string, id: string, type: string, x: number, y: number, lab
   },
 });
 
-const meta: Meta<typeof ModuleContainer> = {
-  title: 'plugins/plugin-canvas/containers/CanvasCard',
-  render: ModuleContainer,
-  decorators: createStoryDecorators({
-    types: [Drawing.Drawing, Drawing.Canvas],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin()],
+/** A 2D canvas of three shapes, as a card shows it. */
+const shapesDrawing = () =>
+  StoryHarness.decorators({
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
-      const canvas = space.db.add(createCanvas());
-      const root = rootOf(canvas.content);
-      invariant(root);
-      Obj.update(canvas, (canvas) => {
-        canvas.content[nodeKey('a')] = node(root, 'a', 'rect', -320, -160, 'DXOS');
-        canvas.content[nodeKey('b')] = node(root, 'b', 'ellipse', 320, -160, 'ECHO');
-        canvas.content[nodeKey('c')] = node(root, 'c', 'rect', 0, 192, 'EDGE');
+      const canvas = addTestCanvas(space.db, (content, root) => {
+        content[nodeKey('a')] = node(root, 'a', 'rect', -320, -160, 'DXOS');
+        content[nodeKey('b')] = node(root, 'b', 'ellipse', 320, -160, 'ECHO');
+        content[nodeKey('c')] = node(root, 'c', 'rect', 0, 192, 'EDGE');
       });
       const drawing = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
       await space.db.flush();
       return [[Cell.article(drawing, { component: DrawingCard })]];
     },
-  }),
+  });
+
+/** A canvas over scenes written in `.dx`, as a card shows it. */
+const sceneDrawing = (text: string) =>
+  StoryHarness.decorators({
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
+    onInit: async ({ space }) => {
+      const stored = toEcho(DSL.readScenes(text).document);
+      [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()].forEach((object) =>
+        space.db.add(object),
+      );
+      const model = stored.models.values().next().value;
+      const canvas = space.db.add(
+        Obj.make(CanvasFormat.Canvas, {
+          settings: {},
+          ...(model ? { model: Ref.make(model) } : {}),
+          layouts: [...stored.layouts.values()].map((layout) => Ref.make(layout)),
+          scenes: [Ref.make(stored.root)],
+        }),
+      );
+      const drawing = space.db.add(Drawing.make({ name: 'Scene canvas', canvas }));
+      await space.db.flush();
+      return [[Cell.article(drawing, { component: DrawingCard })]];
+    },
+  });
+
+const meta: Meta<typeof ModuleContainer.Root> = {
+  title: 'plugins/plugin-canvas/containers/CanvasCard',
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -73,10 +107,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The drawing alone: no palette, panels, toolbars or grid. */
-export const Default: Story = {};
+export const Default: Story = { decorators: shapesDrawing() };
 
 /** The default story, driven: its steps run as a play test. */
 export const Test: Story = {
+  decorators: shapesDrawing(),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
@@ -86,4 +121,20 @@ export const Test: Story = {
     }
     await expect(canvasElement.querySelector('[role="toolbar"]')).toBeNull();
   },
+};
+
+/** A 2D canvas's card: its open scene (A → B → C) fitted, with no grid, panels or toolbars. */
+export const Scene2D: Story = { decorators: sceneDrawing(EXEMPLARS.links) };
+
+/** A 3D canvas's card: the cube from its authored camera, with no grid, panels or toolbars. */
+export const Scene3D: Story = {
+  decorators: sceneDrawing(trim`
+    scene cube dim=3d layout=cube name="Cube" {
+      camera target=0,1,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
+    }
+
+    layout cube dim=3d {
+      element box cube @ 0,1,0 scale=2 hue=blue surface=solid
+    }
+  `),
 };

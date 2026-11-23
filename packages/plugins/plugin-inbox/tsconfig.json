@@ -47,6 +47,9 @@
       "path": "../../common/markdown"
     },
     {
+      "path": "../../common/permission"
+    },
+    {
       "path": "../../common/random"
     },
     {

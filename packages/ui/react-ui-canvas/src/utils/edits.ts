@@ -1,0 +1,212 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+//
+// Edits of a scene as the engine draws it (COMMON-CORE C.2): what a gesture or a command makes of the open render list.
+// The draw state previews them, and what a gesture leaves on release reaches the host as layout intents, so none of
+// these is ever stored as such.
+//
+
+import {
+  type Bounds,
+  type ElementId,
+  type Link,
+  type LinkType,
+  type Node,
+  type NodeId,
+  type Point,
+  endpointNode,
+  isHullNode,
+  isViewNode,
+} from '@dxos/scene';
+
+import { type LinkValues, type NodeValues, type RenderList2D } from '../model/index.ts';
+import { encloseIn, hullDescendants, insertInStack } from './hull.ts';
+import { layoutView } from './layout.ts';
+import { sortByZ } from './order.ts';
+import { nodeBounds, resizeNode } from './shapes.ts';
+
+/** A change to the open scene; the same scene back when there is nothing to change. */
+export type SceneEdit = (scene: RenderList2D) => RenderList2D;
+
+/** The edits applied in order, as one change (one undo step). */
+export const chainEdits =
+  (edits: readonly SceneEdit[]): SceneEdit =>
+  (scene) =>
+    edits.reduce((current, edit) => edit(current), scene);
+
+/**
+ * Moves the unlocked nodes of `ids` by `delta`. A hull stands nowhere of its own, so moving one is moving the nodes
+ * inside it, and its border follows them.
+ */
+export const moveNodes =
+  (ids: readonly NodeId[], delta: Point): SceneEdit =>
+  (scene) => {
+    const nodes = { ...scene.nodes };
+    const hulls = ids.filter((id) => scene.nodes[id] !== undefined && isHullNode(scene.nodes[id]));
+    // Through every hull inside it: what a hull holds is all of it, however deep.
+    const all = Object.values(scene.nodes);
+    const inside = hulls.flatMap((hull) => hullDescendants(all, hull).map(({ id }) => id));
+    let changed = false;
+    for (const id of new Set([...ids, ...inside])) {
+      const node = nodes[id];
+      if (node && !node.locked) {
+        nodes[id] = { ...node, center: { x: node.center.x + delta.x, y: node.center.y + delta.y } };
+        changed = true;
+      }
+    }
+    return changed ? { ...scene, nodes } : scene;
+  };
+
+/** Gives an unlocked node the frame `bounds`. */
+export const resizeTo =
+  (id: NodeId, bounds: Bounds): SceneEdit =>
+  (scene) => {
+    const node = scene.nodes[id];
+    return !node || node.locked ? scene : { ...scene, nodes: { ...scene.nodes, [id]: resizeNode(node, bounds) } };
+  };
+
+/** Adds a link whose node ends exist; a link never joins a node to itself, and free ends need nothing. */
+export const insertLink =
+  (link: Link): SceneEdit =>
+  (scene) => {
+    const nodes = [link.source, link.target].map(endpointNode);
+    if (nodes.some((id) => id !== undefined && scene.nodes[id] === undefined)) {
+      return scene;
+    }
+    if (nodes[0] !== undefined && nodes[0] === nodes[1]) {
+      return scene;
+    }
+    return { ...scene, links: { ...scene.links, [link.id]: link } };
+  };
+
+/**
+ * Adds a node; an object's parts hold no view, as a view inside an object would be a place with no single path. A
+ * hull takes the nodes its frame is drawn round, those wholly inside it, as the Hull command takes a selection
+ * ({@link encloseIn}); round nothing, it stands empty where it was drawn.
+ */
+export const insertNode =
+  (node: Node): SceneEdit =>
+  (scene) => {
+    if (scene.kind === 'composite' && isViewNode(node)) {
+      return scene;
+    }
+    if (!isHullNode(node)) {
+      return { ...scene, nodes: { ...scene.nodes, [node.id]: node } };
+    }
+    const frame = nodeBounds(node);
+    const holds = (other: Node) => {
+      const bounds = nodeBounds(other);
+      return (
+        bounds.x >= frame.x &&
+        bounds.y >= frame.y &&
+        bounds.x + bounds.width <= frame.x + frame.width &&
+        bounds.y + bounds.height <= frame.y + frame.height
+      );
+    };
+    const taken = Object.values(scene.nodes).filter((other) => !other.locked && !isViewNode(other) && holds(other));
+    const held = encloseIn(
+      scene,
+      node,
+      taken.map(({ id }) => id),
+    );
+    if (held) {
+      return held;
+    }
+    // Round nothing, it still goes under everything, so a press on a shape it overlaps reaches the shape.
+    const [lowest] = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
+    return lowest === undefined || node.z < lowest.z
+      ? { ...scene, nodes: { ...scene.nodes, [node.id]: node } }
+      : insertInStack(scene, node, 0);
+  };
+
+/** Removes the nodes and links of `ids`, and every link that loses an end with them. */
+export const deleteElements =
+  (ids: readonly ElementId[]): SceneEdit =>
+  (scene) => {
+    const removed = new Set(ids);
+    // What a deleted hull held is held by the hull that one stood in, if it stays: its shapes are where they were.
+    const holder = (parent: string | undefined): string | undefined => {
+      const seen = new Set<string>();
+      let current = parent;
+      while (current !== undefined && removed.has(current) && !seen.has(current)) {
+        seen.add(current);
+        current = scene.nodes[current]?.parent;
+      }
+      return current !== undefined && removed.has(current) ? undefined : current;
+    };
+    const nodes = Object.fromEntries(
+      Object.entries(scene.nodes)
+        .filter(([id]) => !removed.has(id))
+        .map(([id, node]): [string, Node] => {
+          if (node.parent === undefined || !removed.has(node.parent)) {
+            return [id, node];
+          }
+          const { parent: _parent, ...rest } = node;
+          const next = holder(node.parent);
+          return [id, next === undefined ? rest : { ...rest, parent: next }];
+        }),
+    );
+    const links = Object.fromEntries(
+      Object.entries(scene.links).filter(
+        ([id, link]) =>
+          !removed.has(id) &&
+          !removed.has(endpointNode(link.source) ?? '') &&
+          !removed.has(endpointNode(link.target) ?? ''),
+      ),
+    );
+    return { ...scene, nodes, links };
+  };
+
+/** Puts a node or link at `z` in the stacking order. */
+export const reorderElement =
+  (id: ElementId, z: string): SceneEdit =>
+  (scene) => {
+    const node = scene.nodes[id];
+    if (node) {
+      return node.z === z ? scene : { ...scene, nodes: { ...scene.nodes, [id]: { ...node, z } } };
+    }
+    const link = scene.links[id];
+    if (link) {
+      return link.z === z ? scene : { ...scene, links: { ...scene.links, [id]: { ...link, z } } };
+    }
+    return scene;
+  };
+
+/** Sets a node's or link's fields (a label, text, geometry, control points); its `id` and `type` never change. */
+export const updateElement =
+  (id: ElementId, values: NodeValues | LinkValues): SceneEdit =>
+  (scene) => {
+    const node = scene.nodes[id];
+    if (node) {
+      return { ...scene, nodes: { ...scene.nodes, [id]: Object.assign({}, node, values, { id, type: node.type }) } };
+    }
+    const link = scene.links[id];
+    if (link) {
+      return { ...scene, links: { ...scene.links, [id]: Object.assign({}, link, values, { id, type: link.type }) } };
+    }
+    return scene;
+  };
+
+/**
+ * Draws a link another way: its `type` changes and everything else about it stays, between the same ends. A spline
+ * starts with no control points of its own, and any other type keeps none.
+ */
+export const retypeLink =
+  (id: ElementId, type: LinkType): SceneEdit =>
+  (scene) => {
+    const link = scene.links[id];
+    if (!link || link.type === type) {
+      return scene;
+    }
+    const { points: _points, ...rest }: Link & { points?: readonly Point[] } = link;
+    const next: Link = type === 'spline' ? { ...rest, type, points: [] } : { ...rest, type };
+    return { ...scene, links: { ...scene.links, [id]: next } };
+  };
+
+/** Arranges the scene, or just `ids` when the selection is what was asked to be tidied. */
+export const arrangeScene =
+  (ids?: readonly ElementId[]): SceneEdit =>
+  (scene) =>
+    layoutView(scene, ids);

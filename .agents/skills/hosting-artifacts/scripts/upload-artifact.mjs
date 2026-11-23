@@ -10,6 +10,7 @@
 // Usage:
 //   upload-artifact.mjs <file> [slug]        # key: demos/<YYYY-MM-DD>-<slug>/<basename>
 //   upload-artifact.mjs <file> --key <key>   # explicit key
+//   upload-artifact.mjs <file> --key <key> --cache-control <value>
 //   upload-artifact.mjs --delete <key>
 //   upload-artifact.mjs --list [prefix]
 
@@ -26,16 +27,19 @@ for (const root of new Set([ROOT, ROOT.split(`${sep}.claude${sep}worktrees${sep}
   // `.env` is `op inject -i .env.tpl -o .env` output (`export NAME="value"`); never committed.
   for (const file of [join(root, '.secrets', 'r2.env'), join(root, '.env')].filter((file) => existsSync(file))) {
     for (const [, name, value] of readFileSync(file, 'utf8').matchAll(
-      /^(?:export )?((?:CLOUDFLARE_)?R2_[A-Z_]+)=(.*)$/gm,
+      /^(?:export )?((?:DX_)?(?:CLOUDFLARE_)?R2_[A-Z_]+)=(.*)$/gm,
     )) {
       process.env[name] ||= value.trim().replace(/^"(.*)"$/, '$1');
     }
   }
 }
 
-// `.env.tpl` (resolved by `op inject`) names the same keys with a CLOUDFLARE_ prefix.
-process.env.R2_ACCESS_KEY_ID ||= process.env.CLOUDFLARE_R2_ACCESS_KEY_ID ?? '';
-process.env.R2_SECRET_ACCESS_KEY ||= process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? '';
+// The same keys travel under three names: bare in CI (the repo secrets), CLOUDFLARE_-prefixed in `.env.tpl`
+// (resolved by `op inject`), and DX_CLOUDFLARE_-prefixed in a developer's shell profile.
+process.env.R2_ACCESS_KEY_ID ||=
+  process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || process.env.DX_CLOUDFLARE_R2_ACCESS_KEY_ID || '';
+process.env.R2_SECRET_ACCESS_KEY ||=
+  process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || process.env.DX_CLOUDFLARE_R2_SECRET_ACCESS_KEY || '';
 
 // Another bucket in the same account (e.g. the Composer media bucket) is chosen with R2_BUCKET / R2_PUBLIC_BASE.
 const ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '950816f3f59b079880a1ae33fb0ec320';
@@ -53,11 +57,15 @@ const CONTENT_TYPES = {
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.json': 'application/json',
+  '.mjs': 'text/javascript; charset=utf-8',
   '.ndjson': 'application/x-ndjson',
   '.txt': 'text/plain',
+  '.html': 'text/html; charset=utf-8',
   '.md': 'text/markdown',
   '.log': 'text/plain',
   '.zip': 'application/zip',
+  '.vsix': 'application/vsix',
+  '.cjs': 'text/javascript; charset=utf-8',
   '.gz': 'application/gzip',
   '.cpuprofile': 'application/json',
 };
@@ -108,9 +116,14 @@ const fail = (message) => {
   process.exit(1);
 };
 
-const request = async ({ method, key, body = '', contentType, query }) => {
+const request = async ({ method, key, body = '', contentType, cacheControl, query }) => {
   const payloadHash = sha256(body);
-  const headers = contentType ? { 'content-type': contentType } : {};
+  const headers = {
+    ...(contentType ? { 'content-type': contentType } : {}),
+    // R2 stores and replays this verbatim, so it is the only control over how long an edge keeps an
+    // overwritten key's old body. Signed like any other header, so it cannot be stripped in transit.
+    ...(cacheControl ? { 'cache-control': cacheControl } : {}),
+  };
   const signed = sign({ method, key, payloadHash, headers, query });
   const response = await fetch(signed.url, { method, headers: signed.headers, body: body.length ? body : undefined });
   if (!response.ok) {
@@ -152,12 +165,20 @@ const main = async () => {
   }
 
   const file = args[0] ?? fail('usage: upload-artifact.mjs <file> [slug] | --key <key>');
-  const keyIndex = args.indexOf('--key');
+  // A flag whose operand is missing would otherwise read as an absent flag, uploading under a generated
+  // key or with no cache-control and still reporting success.
+  const operand = (flag) => {
+    const index = args.indexOf(flag);
+    if (index < 0) {
+      return undefined;
+    }
+    const value = args[index + 1];
+    return value && !value.startsWith('--') ? value : fail(`${flag} needs a value`);
+  };
+  const cacheControl = operand('--cache-control');
   const name = basename(file);
   const key =
-    keyIndex > 0
-      ? args[keyIndex + 1]
-      : `demos/${new Date().toISOString().slice(0, 10)}-${slugify(args[1] ?? 'artifact')}/${name}`;
+    operand('--key') ?? `demos/${new Date().toISOString().slice(0, 10)}-${slugify(args[1] ?? 'artifact')}/${name}`;
 
   const body = await readFile(file);
   const contentType = CONTENT_TYPES[extname(file).toLowerCase()];
@@ -165,20 +186,34 @@ const main = async () => {
     fail(`unknown extension "${extname(file)}" — pass a known type or add it to CONTENT_TYPES.`);
   }
 
-  await request({ method: 'PUT', key, body, contentType });
+  await request({ method: 'PUT', key, body, contentType, cacheControl });
 
   const localMd5 = createHash('md5').update(body).digest('hex');
   // A CDN in front of the bucket (a custom domain caches for hours) keeps serving an overwritten key's old
-  // body, so the URL carries the content's version: each upload gets a URL no edge has cached.
-  const url = `${PUBLIC_BASE}/${key}?v=${localMd5.slice(0, 8)}`;
+  // body AND its old headers, so the URL carries a version of everything being verified: re-uploading the
+  // same bytes under a new cache-control would otherwise be checked against the cached response of the old
+  // one. Each segment is encoded because a `#` or a space in a key is signed literally in the PUT but would
+  // otherwise truncate or shift this GET's path onto a different object.
+  const version = createHash('md5')
+    .update(`${localMd5}\n${contentType}\n${cacheControl ?? ''}`)
+    .digest('hex')
+    .slice(0, 8);
+  const url = `${PUBLIC_BASE}/${key.split('/').map(encodeURIComponent).join('/')}?v=${version}`;
 
   // Verify with a GET through the public URL rather than trusting the PUT: a HEAD can answer from a different
   // cache entry than the body a viewer downloads, and a wrong type or truncated body is invisible until then.
   const head = await fetch(url, { method: 'GET' });
-  await head.body?.cancel();
+  // The CDN compresses text (HTML, JSON, SVG) on the way out, dropping its length, ETag and ranges, so text is checked
+  // by its decoded body; media and archives, which can be large, are checked by headers without downloading them.
+  const text = /^(text\/|application\/(json|x-ndjson)|image\/svg\+xml)/.test(contentType);
+  const downloaded = text ? Buffer.from(await head.arrayBuffer()) : undefined;
+  if (!text) {
+    await head.body?.cancel();
+  }
   const served = {
     status: head.status,
     type: head.headers.get('content-type'),
+    cacheControl: head.headers.get('cache-control'),
     length: Number(head.headers.get('content-length')),
     etag: head.headers.get('etag')?.replaceAll('"', ''),
     ranges: head.headers.get('accept-ranges'),
@@ -187,9 +222,16 @@ const main = async () => {
   const problems = [
     served.status !== 200 && `public URL returned ${served.status}`,
     served.type !== contentType && `served content-type is ${served.type}, expected ${contentType}`,
-    served.length !== body.length && `served ${served.length} bytes, uploaded ${body.length}`,
-    served.etag !== localMd5 && `ETag ${served.etag} does not match local md5 ${localMd5}`,
-    served.ranges !== 'bytes' && 'no Accept-Ranges: bytes — a viewer will not be able to seek',
+    cacheControl &&
+      served.cacheControl !== cacheControl &&
+      `served cache-control is ${served.cacheControl}, expected ${cacheControl}`,
+    ...(text
+      ? [createHash('md5').update(downloaded).digest('hex') !== localMd5 && 'served body does not match the upload']
+      : [
+          served.length !== body.length && `served ${served.length} bytes, uploaded ${body.length}`,
+          served.etag !== localMd5 && `ETag ${served.etag} does not match local md5 ${localMd5}`,
+          served.ranges !== 'bytes' && 'no Accept-Ranges: bytes — a viewer will not be able to seek',
+        ]),
   ].filter(Boolean);
 
   if (problems.length > 0) {

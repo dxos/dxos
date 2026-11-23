@@ -14,13 +14,14 @@ import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client
 import { HaloProvider } from '@dxos/halo-react';
 import { ClientProvider } from '@dxos/react-client';
 
-import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
+
+import { ClientNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactContext, {
-      id: meta.profile.key,
+      id: ClientNamespace.key,
       context: ({ children }: { children?: ReactNode }) => {
         const client = Hooks.useCapability(ClientCapabilities.Client);
         // Wrap the tree with the HALO services (via the client adapter) so `@dxos/halo-react`

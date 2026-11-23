@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-discord",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "DXOS plugin that integrates Discord as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -37,19 +24,16 @@
       "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/DiscordPlugin.workerd.mjs",
+      "node": "./dist/lib/DiscordPlugin.node.mjs",
+      "default": "./dist/lib/DiscordPlugin.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -99,9 +83,16 @@
       "types": "./dist/types/src/types/DiscordOperation.d.ts",
       "import": "./dist/lib/DiscordOperation.mjs"
     },
+    "./DiscordService": {
+      "source": "./src/types/DiscordService.ts",
+      "types": "./dist/types/src/types/DiscordService.d.ts",
+      "import": "./dist/lib/DiscordService.mjs"
+    },
     "./DiscordPlugin": {
-      "source": "./src/DiscordPlugin.ts",
-      "types": "./dist/types/src/DiscordPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/DiscordPlugin.workerd.mjs",
+      "node": "./dist/lib/DiscordPlugin.node.mjs",
       "import": "./dist/lib/DiscordPlugin.mjs"
     },
     "./DiscordSource": {
@@ -142,6 +133,9 @@
       "DiscordOperation": [
         "dist/types/src/types/DiscordOperation.d.ts"
       ],
+      "DiscordService": [
+        "dist/types/src/types/DiscordService.d.ts"
+      ],
       "DiscordTargetOptions": [
         "dist/types/src/types/DiscordTargetOptions.d.ts"
       ]
@@ -166,6 +160,7 @@
     "@dxos/crawler": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -193,6 +188,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-memory-sqlite": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -201,6 +197,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "fast-xml-parser": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

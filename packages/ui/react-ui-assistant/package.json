@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-assistant",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Assistant chat thread on the virtualized feed.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -52,7 +52,8 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "tokenx": "catalog:"
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",

@@ -16,7 +16,8 @@ import { getObjectCore } from './echo-handler/index.ts';
 export const toCursor = (accessor: Doc.Accessor, pos: number, assoc = 0): A.Cursor => {
   const doc = accessor.handle.doc();
   const value = getDeep(doc, accessor.path);
-  if (typeof value === 'string' && value.length <= pos) {
+  // An unset string has no characters to anchor to; its caret is at the end, as `fromCursor` reads it.
+  if (value === undefined || (typeof value === 'string' && value.length <= pos)) {
     return 'end';
   }
 

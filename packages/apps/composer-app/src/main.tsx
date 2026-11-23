@@ -41,6 +41,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, markMilestone, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
+import { WorkerLeaderContentionError } from '@dxos/worker-framework';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
 import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
@@ -51,6 +52,7 @@ import {
   PARAM_MODEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
+  type PrespawnedWorker,
   type Profiler,
   WorkerLogProcessor,
   defaultStorageIsEmpty,
@@ -74,6 +76,7 @@ import {
   startupProfiler,
   translations,
 } from './util/index.ts';
+import { consumeTakeover, showPausedPage } from './util/paused.ts';
 import { watchWindowCorners } from './util/window-corners.ts';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
@@ -101,6 +104,8 @@ const verboseStatus =
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
+// Injected by the `define` block in vite.config.ts: when this build was made (or the dev server started).
+declare const __DX_BUILD_TIME__: number;
 
 // Session id for the agent debug port when the dev server was launched with the debug-port flag.
 // Always '' in production builds, so the port cannot be auto-started on a deployed origin.
@@ -163,14 +168,46 @@ if (import.meta.env?.DEV) {
   }
 }
 
-// Cross-tab reload coordination for persistent worker failures (dev only — see
-// `onPersistentWorkerFailure` below). The sessionStorage guard makes each tab escalate at most
-// once per tab session, so a failure that reloads don't fix cannot loop the reloads.
-const DEV_RELOAD_CHANNEL = 'dxos-dev-worker-reload';
-const DEV_RELOAD_GUARD_KEY = 'dxos.composer.dev-worker-reload';
-if (import.meta.env?.DEV) {
-  new BroadcastChannel(DEV_RELOAD_CHANNEL).onmessage = () => window.location.reload();
-}
+/**
+ * A device-level switch: `?<param>=1` turns it on and `?<param>=0` off, recorded under `key` so the choice
+ * outlives the URL it was given on; a device that never chose gets `defaultValue`.
+ */
+const readStickyFlag = (param: string, key: string, defaultValue = false): boolean => {
+  const value = new URLSearchParams(window.location.search).get(param);
+  const given = value === '1' || value === '0' ? value : undefined;
+  try {
+    if (given) {
+      localStorage.setItem(key, given);
+    }
+    const stored = localStorage.getItem(key);
+    return stored === null ? defaultValue : stored === '1';
+  } catch {
+    // Without storage the choice cannot be kept, but the URL's still holds for this load.
+    return given ? given === '1' : defaultValue;
+  }
+};
+
+/** The client opens from its boot cache instead of waiting for the worker; `?boot-cache=0` opts a device out. */
+const BOOT_CACHE = readStickyFlag('boot-cache', 'dxos.composer.boot-cache', true);
+
+/** A boot-cached client starts its worker once the page is idle rather than at load; needs {@link BOOT_CACHE}. */
+// TODO(dmaretskyi): Slated for removal unless a larger app shows a gain: on the seeded perf space it cut ~0.3 s of blocking but delayed the account node ~3.3 s, with no gain to first content.
+const DEFER_WORKER = BOOT_CACHE && readStickyFlag('defer-worker', 'dxos.composer.defer-worker');
+
+/** The longest a deferred worker waits for the page to go idle. */
+const WORKER_DEFER_CAP_MS = 2_000;
+
+const whenIdle = (timeout: number): Promise<void> =>
+  new Promise((resolve) => {
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => resolve(), { timeout });
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+
+/** Stands in for the prespawned worker when the worker is deferred, so nothing spawns at load. */
+const NOT_PRESPAWNED: PrespawnedWorker = { take: () => undefined, dispose: () => {} };
 
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
@@ -237,7 +274,9 @@ const main = async () => {
   startupMark('main:start');
   // Spawned ahead of the imports and config below, so the worker's script evaluates in parallel
   // with them instead of after `client.initialize` elects this tab; config reaches it on `init`.
-  const prespawnedWorker = prespawnWorker({ create: createDedicatedWorker, leaderLockKey: LEADER_LOCK_KEY });
+  const prespawnedWorker = DEFER_WORKER
+    ? NOT_PRESPAWNED
+    : prespawnWorker({ create: createDedicatedWorker, leaderLockKey: LEADER_LOCK_KEY });
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   // Registered before any lazy route can be reached, since a chunk missing after a deploy fails
@@ -559,17 +598,22 @@ const main = async () => {
       }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-    // Stale mixed-generation workers (tabs from before a dev-server restart) present as an endless
-    // boot spinner with only a console warning; in dev, force every same-origin tab through one
-    // coordinated reload so all generations converge. Production relies on the fatal dialog via the
-    // startup timeout (tagged for telemetry — see ResetDialog).
+    // Contention means another tab keeps taking the worker; other persistent failures rely on the
+    // fatal dialog via the startup timeout (see ResetDialog).
     onPersistentWorkerFailure: (error) => {
       log.error('worker connection failing persistently', { error });
-      if (import.meta.env?.DEV && !sessionStorage.getItem(DEV_RELOAD_GUARD_KEY)) {
-        sessionStorage.setItem(DEV_RELOAD_GUARD_KEY, '1');
-        new BroadcastChannel(DEV_RELOAD_CHANNEL).postMessage('reload');
-        window.location.reload();
+      if (WorkerLeaderContentionError.is(error)) {
+        showPausedPage('contention', { version: __DX_BUILD_TIME__ });
       }
+    },
+    // One tab owns the worker; every hand-over between tabs goes through the paused page, so the
+    // user decides which tab continues instead of tabs taking it from each other.
+    workerTakeover: {
+      generation: { id: String(__DX_BUILD_TIME__), time: __DX_BUILD_TIME__ },
+      takeover: consumeTakeover(),
+      onTakeoverRequired: () => showPausedPage('unresponsive', { version: __DX_BUILD_TIME__ }),
+      onLockStolen: () => showPausedPage('stolen', { version: __DX_BUILD_TIME__ }),
+      onSuperseded: (newer) => showPausedPage('superseded', { version: __DX_BUILD_TIME__, otherVersion: newer.time }),
     },
   });
 
@@ -580,9 +624,17 @@ const main = async () => {
   // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
-  const client = new Client({ config, services });
+  const client = new Client({
+    config,
+    services,
+    bootCache: BOOT_CACHE
+      ? { servicesGate: DEFER_WORKER ? () => whenIdle(WORKER_DEFER_CAP_MS) : undefined }
+      : undefined,
+  });
   void client
     .initialize()
+    // A boot-cached client initializes before its worker connects, and the worker is still to be taken then.
+    .then(() => client.waitUntilServicesReady())
     .catch((err) => log.error('client services failed to open', { error: err }))
     // A follower tab never takes the worker, which would otherwise hold its place on the storage lock.
     .finally(() => prespawnedWorker.dispose());
@@ -620,6 +672,7 @@ const main = async () => {
     // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
     isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
+    isPreview: getEnvString(config, 'DX_ENVIRONMENT') === 'preview',
     isPwa,
     isTauri,
     isPopover,

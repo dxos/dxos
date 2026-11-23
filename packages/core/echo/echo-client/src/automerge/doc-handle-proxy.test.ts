@@ -136,6 +136,77 @@ describe('DocHandleProxy', () => {
     expect(handle._getPendingChanges()).toEqual(A.saveSince(handle.doc(), A.getHeads(stored)));
   });
 
+  test("a directory handle with no bytes is shown by the host's first send, and keeps its JSON", async () => {
+    const stored = A.from<{ links: Record<string, string> }>({ links: { a: 'automerge:a' } });
+    const handle = new DocHandleProxy<{ links: Record<string, string> }>({
+      documentId: DOCUMENT_ID,
+      directory: true,
+      onDelete: () => {},
+    });
+    expect(handle._subscription()).toEqual({ passive: true });
+    const events: unknown[] = [];
+    handle.on('passive', (event) => events.push(event));
+
+    const json = JSON.stringify({ links: { a: 'automerge:a' } });
+    handle._integratePassiveUpdate(A.save(stored), { heads: A.getHeads(stored), json });
+    await handle.whenPassiveShown();
+    expect(events).toEqual([]);
+    expect(handle.state).toBe('passive');
+    expect(handle.passiveHeads).toEqual(A.getHeads(stored));
+    expect(handle.passiveJson).toBe(json);
+    expect(handle._subscription()).toEqual({ heads: A.getHeads(stored), passive: true });
+    expect(handle.doc().links).toEqual({ a: 'automerge:a' });
+  });
+
+  test("a change of the host's own that arrives while the client's send is in flight is held once the send is acknowledged", () => {
+    // A created document: EDGE stores the client's first change after an empty first change of its own.
+    const handle = new DocHandleProxy<{ text: string }>({ initialValue: { text: 'fresh' }, onDelete: () => {} });
+    handle._setDocumentId(DOCUMENT_ID);
+    const sent = handle._getPendingChanges();
+    expect(sent).toBeDefined();
+    const host = A.loadIncremental(A.emptyChange(A.init<{ text: string }>()), sent ?? new Uint8Array());
+
+    handle._integrateHostUpdate(A.save(host));
+    handle._confirmSync();
+
+    expect(handle._isAcknowledged()).toBe(true);
+    expect(handle._getPendingChanges()).toBeUndefined();
+    expect(handle.doc().text).toBe('fresh');
+  });
+
+  test('a write made while a send is in flight is sent next, and the host holds everything once that is acknowledged', () => {
+    const handle = new DocHandleProxy<{ text: string; more?: string }>({
+      initialValue: { text: 'fresh' },
+      onDelete: () => {},
+    });
+    handle._setDocumentId(DOCUMENT_ID);
+    const sent = handle._getPendingChanges();
+    const host = A.loadIncremental(A.emptyChange(A.init<{ text: string; more?: string }>()), sent ?? new Uint8Array());
+    handle.change((doc: { text: string; more?: string }) => {
+      doc.more = 'later';
+    });
+
+    handle._integrateHostUpdate(A.save(host));
+    handle._confirmSync();
+    expect(handle._isAcknowledged()).toBe(false);
+
+    const next = handle._getPendingChanges();
+    expect(next).toBeDefined();
+    handle._confirmSync();
+    expect(handle._isAcknowledged()).toBe(true);
+    expect(A.loadIncremental(host, next ?? new Uint8Array()).more).toBe('later');
+  });
+
+  test('a directory handle waiting on a document the host cannot produce fails its wait', async () => {
+    const handle = new DocHandleProxy<{ links: Record<string, string> }>({
+      documentId: DOCUMENT_ID,
+      directory: true,
+      onDelete: () => {},
+    });
+    handle._failPassiveWait(DOCUMENT_ID);
+    await expect(handle.whenPassiveShown()).rejects.toSatisfy(DocumentUnavailableError.is);
+  });
+
   test('a document the host cannot produce fails its waiters', async () => {
     const handle = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
     const ready = handle.whenReady();

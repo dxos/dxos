@@ -47,9 +47,8 @@ import {
 } from '@dxos/ui-editor';
 import * as Position from '@dxos/util/Position';
 
-import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
-import { meta as pluginMeta } from '#meta';
+import DeckConfig, { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
@@ -166,7 +165,7 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
             <Listbox.Item
               key={message.id}
               id={message.id}
-              classNames='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
+              classNames='rounded-sm border border-separator p-trim-md text-start hover:bg-hover-surface'
               data-testid='story.launcher.row'
             >
               {message.title}
@@ -330,7 +329,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     ],
     activate: storyDeckState,
   }),
-  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Plugin.getModule(DeckConfig, 'OperationHandler')),
   Plugin.addModule(
     Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
       Effect.succeed(

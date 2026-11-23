@@ -85,6 +85,9 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
+      "path": "../../plugins/plugin-jmap"
+    },
+    {
       "path": "../../plugins/plugin-markdown"
     },
     {

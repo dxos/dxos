@@ -38,6 +38,28 @@ export class LegacyTask extends Type.makeObject<LegacyTask>(DXN.make('org.dxos.t
   }),
 ) {}
 
+/**
+ * A task as stored before `delegate`: delegating set the agent as `assignee` and the person as a
+ * reviewer. Kept solely so {@link migrations} can read existing data; never constructed by the app.
+ */
+export class ReviewedTask extends Type.makeObject<ReviewedTask>(DXN.make('org.dxos.type.task', '0.6.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    description: Schema.optional(Schema.String),
+    subtasks: Schema.optional(Schema.Array(Ref.Ref(Task.Task))),
+    dependsOn: Schema.optional(Schema.Array(Ref.Ref(Task.Task))),
+    status: Schema.optional(Task.Status),
+    priority: Schema.optional(Task.Priority),
+    estimate: Schema.optional(Task.Estimate),
+    assignee: Schema.optional(Actor.Actor),
+    reviewers: Schema.optional(Schema.Array(Actor.Actor)),
+    milestone: Schema.optional(Ref.Ref(Milestone.Milestone)),
+    history: Schema.optional(Schema.Array(Task.HistoryEntry)),
+    artifacts: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))),
+    attachments: Schema.optional(Schema.Array(Ref.Ref(File.File))),
+  }),
+) {}
+
 /** A task set as stored before sub-tasks moved out of it: `tasks` held every task, flat. */
 export class LegacyTaskSet extends Type.makeObject<LegacyTaskSet>(DXN.make('org.dxos.type.taskSet', '0.3.0'))(
   Schema.Struct({
@@ -157,7 +179,32 @@ const isSameSpace = (db: Database.Database, ref: Ref.Ref<Obj.Unknown>): boolean 
 };
 
 /**
- * `org.dxos.type.task` 0.5.0 → 0.6.0: `parentTask` becomes the parent's ordered `subtasks`, and each
+ * Who holds a task once `reviewers` is gone. An agent assignee with a person reviewing it was a
+ * delegation, so the person answers for the task and the agent works it.
+ */
+const holdersOf = ({
+  assignee,
+  reviewers,
+}: Pick<ReviewedTask, 'assignee' | 'reviewers'>): Pick<Task.Task, 'assignee' | 'delegate'> => {
+  const reviewer = reviewers?.find((actor) => Task.owner({ assignee: actor }) !== undefined);
+  if (assignee?.role === 'assistant' && reviewer) {
+    return { assignee: { ...reviewer }, delegate: { ...assignee } };
+  }
+  return assignee ? { assignee } : {};
+};
+
+/**
+ * `org.dxos.type.task` 0.6.0 → 0.7.0: `reviewers` gives way to `delegate` (see {@link holdersOf}).
+ * Runs first, so the hierarchy pass finds every already-migrated task at the current version.
+ */
+export const delegateMigration = Migration.define({
+  from: ReviewedTask,
+  to: Task.Task,
+  transform: async ({ assignee, reviewers, ...rest }) => ({ ...rest, ...holdersOf({ assignee, reviewers }) }),
+});
+
+/**
+ * `org.dxos.type.task` 0.5.0 → 0.7.0: `parentTask` becomes the parent's ordered `subtasks`, and each
  * sub-task's ECHO parent moves from the set to its parent task — across sets too, so a sub-task
  * filed in another set than its parent joins the parent's. Runs before {@link taskSetMigration},
  * which needs the parent edges this writes.
@@ -167,9 +214,10 @@ export const taskMigration = Migration.define({
   to: Task.Task,
   transform: async (from, { db }) => {
     const plan = await planFor(db, from.id);
-    const { parentTask: _parentTask, ...rest } = from;
+    const { parentTask: _parentTask, assignee, reviewers, ...rest } = from;
     return {
       ...rest,
+      ...holdersOf({ assignee, reviewers }),
       // By URI: a child not yet migrated is still the legacy type, which a typed ref cannot name.
       subtasks: (plan.children.get(from.id) ?? []).map((child) => Ref.fromURI(Obj.getURI(child))),
     };
@@ -226,5 +274,5 @@ const isListedSubtask = (task: Task.Task): boolean => {
   return parent !== undefined && (parent.subtasks ?? []).some((ref) => Task.refEntityId(ref) === task.id);
 };
 
-/** In order: the task pass writes the parent edges the set pass reads. */
-export const migrations: Migration.Migration[] = [taskMigration, taskSetMigration];
+/** In order: the hierarchy pass needs current-version tasks, and writes the parent edges the set pass reads. */
+export const migrations: Migration.Migration[] = [delegateMigration, taskMigration, taskSetMigration];

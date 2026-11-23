@@ -43,3 +43,9 @@ export class MailboxSummaryNotFoundError extends BaseError.extend('MailboxSummar
 
 /** A mail-sync run failed. The provider-agnostic harness wraps each provider's error into this one type (as `cause`). */
 export class MailSyncError extends BaseError.extend('MailSyncError', 'Mail sync failed.') {}
+
+/** The mailbox has no provider that can send its mail (no connected account, and no provider claims it). */
+export class MailNotSendableError extends BaseError.extend(
+  'MailNotSendableError',
+  'Mailbox is not connected to an email account.',
+) {}

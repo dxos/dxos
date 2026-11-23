@@ -7,7 +7,7 @@ import { type DocumentId, interpretAsDocumentId, isValidAutomergeUrl } from '@au
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { DatabaseDirectory, SpaceDocVersion, backingJson } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion, backingJson, directoryJson } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import {
   type DataSourceCursor,
@@ -52,6 +52,14 @@ const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean 
 
 export type AutomergeDataSourceOptions = {
   isBranchDocument?: (documentId: DocumentId) => boolean;
+  /**
+   * Stores a space root's directory JSON at heads its document is saved at, so the root can be opened from it
+   * without loading Automerge. Called for each changed document `isSpaceRoot` names.
+   */
+  directories?: {
+    isSpaceRoot: (documentId: DocumentId) => boolean;
+    store: (documentId: DocumentId, snapshot: { heads: A.Heads; json: string }) => Promise<void>;
+  };
 };
 
 /**
@@ -63,6 +71,7 @@ export class AutomergeDataSource implements IndexDataSource {
 
   readonly #automergeHost: AutomergeHost;
   readonly #isBranchDocument: ((documentId: DocumentId) => boolean) | undefined;
+  readonly #directories: AutomergeDataSourceOptions['directories'];
 
   /**
    * Heads for every document, captured once per `IndexEngine.update` pass. `listDocumentHeads()` is
@@ -83,6 +92,7 @@ export class AutomergeDataSource implements IndexDataSource {
   constructor(automergeHost: AutomergeHost, options?: AutomergeDataSourceOptions) {
     this.#automergeHost = automergeHost;
     this.#isBranchDocument = options?.isBranchDocument;
+    this.#directories = options?.directories;
   }
 
   beginPass(): void {
@@ -228,6 +238,16 @@ export class AutomergeDataSource implements IndexDataSource {
               heads: atSavedHeads && backingJson(doc, structure, data) !== undefined ? docHeads : undefined,
               version: readHeads,
             });
+          }
+
+          const directories = this.#directories;
+          const json = atSavedHeads && directories?.isSpaceRoot(documentId) ? directoryJson(doc) : undefined;
+          if (directories && json !== undefined) {
+            yield* Effect.promise(() =>
+              directories
+                .store(documentId, { heads: readHeads, json })
+                .catch((err) => log.warn('directory snapshot not stored', { documentId, err })),
+            );
           }
 
           markRead(spaceId);

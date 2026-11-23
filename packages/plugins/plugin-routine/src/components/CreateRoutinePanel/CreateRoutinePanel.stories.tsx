@@ -66,7 +66,7 @@ const withRoutinePlugins = () =>
             yield* Effect.promise(() => space.waitUntilReady());
           }),
       }),
-      RoutinePlugin(),
+      RoutinePlugin.make(),
     ],
   });
 

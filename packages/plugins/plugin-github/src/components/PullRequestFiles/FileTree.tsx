@@ -8,8 +8,7 @@ import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { meta } from '#meta';
-
+import { GitHubNamespace } from '../../namespace.ts';
 import { DiffStat } from './DiffStat.tsx';
 import { type FileNode } from './files.ts';
 
@@ -28,7 +27,7 @@ export type FileTreeProps = {
  * trailing edge, and the file on screen as the current row.
  */
 export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange }: FileTreeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   // The model is rebuilt whenever the selection moves, so the reader's collapses live outside it.
   const [closed, setClosed] = useState<ReadonlySet<string>>(() => new Set());
 

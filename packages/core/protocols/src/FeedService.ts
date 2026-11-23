@@ -103,6 +103,11 @@ export const InsertIntoFeedResponse = Schema.Struct({
    * absent from a store that does not stamp block ids.
    */
   blocks: Schema.optional(mutableArray(Schema.String)),
+  /**
+   * Id of the predecessor of each block in {@link blocks}, `null` for the first block of a feed: the
+   * head of its branch, or the fork point of a base block. Lets a writer stamp what a read would.
+   */
+  predecessors: Schema.optional(mutableArray(Schema.NullOr(Schema.String))),
 });
 export interface InsertIntoFeedResponse extends Schema.Schema.Type<typeof InsertIntoFeedResponse> {}
 
@@ -111,6 +116,11 @@ export const DeleteFromFeedRequest = Schema.Struct({
   spaceId: Schema.String,
   feedId: Schema.String,
   objectIds: Schema.optional(mutableArray(Schema.String)),
+  /**
+   * The branch of each object in {@link objectIds}, in the same order, so its tombstone lands on that branch;
+   * `null` (or absent) for the root branch.
+   */
+  branches: Schema.optional(mutableArray(Schema.NullOr(Schema.String))),
 });
 export interface DeleteFromFeedRequest extends Schema.Schema.Type<typeof DeleteFromFeedRequest> {}
 

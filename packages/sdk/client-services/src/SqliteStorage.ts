@@ -519,6 +519,7 @@ export const wipeSqliteStorage: Effect.Effect<void, SqlError.SqlError, SqlClient
   // Feed store (queue feeds, blocks, etc.).
   yield* sql`DELETE FROM feeds`;
   yield* sql`DELETE FROM blocks`;
+  yield* sql`DELETE FROM branches`;
   yield* sql`DELETE FROM subscriptions`;
   yield* sql`DELETE FROM cursor_tokens`;
   yield* sql`DELETE FROM sync_state`;

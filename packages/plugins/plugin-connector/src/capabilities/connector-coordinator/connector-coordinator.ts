@@ -26,13 +26,13 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import * as Binding from '../../Binding.ts';
 import { ConnectorCommandError } from '../../commands/errors.ts';
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants.ts';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors.ts';
+import { ConnectorNamespace } from '../../namespace.ts';
 import * as SyncTemplate from '../../SyncTemplate.ts';
 import { autoSyncConnection } from './auto-sync.ts';
 import { createSingleCursor } from './create-single-cursor.ts';
@@ -137,10 +137,10 @@ const runOnTokenCreated = (
 const reportOAuthRejected = (invoker: Operation.OperationService, descriptionKey: string): Effect.Effect<void, never> =>
   Effect.ignore(
     invoker.invoke(LayoutOperation.AddToast, {
-      id: `${meta.profile.key}.oauth-rejected`,
+      id: `${ConnectorNamespace.key}.oauth-rejected`,
       icon: 'ph--warning--regular',
-      title: ['oauth-rejected.title', { ns: meta.profile.key }],
-      description: [descriptionKey, { ns: meta.profile.key }],
+      title: ['oauth-rejected.title', { ns: ConnectorNamespace.key }],
+      description: [descriptionKey, { ns: ConnectorNamespace.key }],
     }),
   );
 
@@ -148,9 +148,9 @@ const reportOAuthRejected = (invoker: Operation.OperationService, descriptionKey
 const reportOAuthFailed = (invoker: Operation.OperationService, reason: string): Effect.Effect<void, never> =>
   Effect.ignore(
     invoker.invoke(LayoutOperation.AddToast, {
-      id: `${meta.profile.key}.oauth-failed`,
+      id: `${ConnectorNamespace.key}.oauth-failed`,
       icon: 'ph--warning--regular',
-      title: ['oauth-failed.title', { ns: meta.profile.key }],
+      title: ['oauth-failed.title', { ns: ConnectorNamespace.key }],
       description: reason,
     }),
   );

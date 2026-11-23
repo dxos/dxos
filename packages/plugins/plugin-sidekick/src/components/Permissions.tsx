@@ -7,8 +7,7 @@ import React from 'react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { meta } from '#meta';
-
+import { SidekickNamespace } from '../namespace.ts';
 import { Section } from './Section.tsx';
 
 export type PermissionEntry = {
@@ -25,7 +24,7 @@ export type PermissionsProps = {
 };
 
 export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SidekickNamespace.key);
 
   if (entries.length === 0) {
     return null;

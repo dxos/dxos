@@ -7,8 +7,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 
-import { meta } from '#meta';
-
+import { DebugNamespace } from '../namespace.ts';
 import * as Settings from './Settings.ts';
 
 export type DebugPluginOptions = {
@@ -20,6 +19,6 @@ export type DebugPluginOptions = {
 
 export namespace DebugCapabilities {
   export const Settings = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
-    `${meta.profile.key}.capability.settings`,
+    `${DebugNamespace.key}.capability.settings`,
   );
 }

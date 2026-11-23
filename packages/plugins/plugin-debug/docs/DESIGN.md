@@ -94,7 +94,7 @@ shrink to make room for — and it can be floated again.
   persisted with the rest of the deck's layout state (not the URL: the drawer is chrome, like the
   sidebars). `LayoutOperation.UpdateDrawer({ state })` mirrors `UpdateSidebar`; fullscreen closes
   it like the sidebars.
-- **Surface**: `DeckRole.Drawer` (`org.dxos.plugin.deck.role.drawer`), `limit={1}`; plugin-debug
+- **Surface**: `DeckSurface.Drawer` (`org.dxos.plugin.deck.role.drawer`), `limit={1}`; plugin-debug
   contributes `DebugPanel` (Root + Splitter + Sidebar/Main) there. Any plugin can contribute a
   drawer later (assistant trace, a terminal); which one shows is the first match for now.
 - **Float ↔ dock**: `debugPanelAspect` gains `mode: 'floating' | 'docked'` (default `docked`).

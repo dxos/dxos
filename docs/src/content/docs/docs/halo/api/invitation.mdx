@@ -1,0 +1,150 @@
+---
+title: Invitation
+description: Drive an invitation flow from either side.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Invitation } from '@dxos/halo';
+```
+
+An invitation lets a device into an identity, or a person into a space. The **host** is the device that starts it,
+and the **guest** is the device that redeems it. `Invitation` drives an invitation that is in progress, from either
+side.
+
+You never make an invitation with this namespace directly. `Identity.share`, `Identity.join`, `Space.share` and
+`Space.join` each return an `Invitation.Flow`, and you pass that flow to the functions here. They need no service,
+because they act on the flow handle itself.
+
+## Choose how the invitation works
+
+`share` takes options that decide who can redeem the invitation and how. With no options it starts an `'interactive'`
+invitation with the `'none'` auth method.
+
+<Aside type="caution" title="The default asks for no proof">
+  With `'none'`, anyone who gets the invitation code can join, and a guest who joins a space is an `admin` of it. Pass
+  `authMethod: 'shared-secret'` unless you control every screen the code appears on. Use `'none'` for demos.
+</Aside>
+
+`authMethod` is how the guest proves it is the intended guest:
+
+- `'shared-secret'` makes the guest enter the authorization code the host shows.
+- `'none'` admits anyone with the invitation code. It is the default.
+- `'known-public-key'` admits only a guest whose key the host names.
+
+`type` says whether the host has to be online:
+
+- `'interactive'` needs host and guest online together. It is the default.
+- `'delegated'` can be redeemed while the host is offline.
+
+`multiUse` keeps the invitation open after its first guest. By default it is `false`, and the invitation ends when
+the host admits one guest. Set `multiUse` to `true` when more than one guest has to redeem the same code.
+
+`target` goes with `'known-public-key'`. It is the key or DID of the one guest the invitation admits.
+
+**Example** (Sharing a space with an open, delegated invitation)
+
+<Snippet file="halo-guide-invitation" region="options" />
+
+`options` is the least guarded combination there is. It asks the guest for no proof, needs no host present, and puts
+no limit on guests. Keep it for a demo space.
+
+## Read the code
+
+`Invitation.code` returns the string to send to the guest, usually inside a link or a QR code.
+
+**Example** (Putting the code in a link)
+
+<Snippet file="halo-guide-invitation" region="code" />
+
+`Invitation.code` waits until the code is safe to send. For a `'known-public-key'` invitation that is a moment after
+`share` returns, and `showCode` fails with `InvitationError` if it takes more than 30 seconds.
+
+## Follow a flow
+
+`Invitation.events` streams the flow's progress: `connecting`, `connected`, `readyForAuthentication`, `authenticating`,
+then one of `success`, `cancelled` or `error`. Use it when your UI has to show where the invitation stands.
+
+`readyForAuthentication` means something different on each side:
+
+- On the host, it carries the authorization code to show.
+- On the guest, it is the moment to call `Invitation.authenticate`.
+
+**Example** (Following a flow to its end)
+
+<Snippet file="halo-guide-invitation" region="events" />
+
+`follow` runs unchanged on both sides, because `event.authCode` is set on the host's flow and absent on the guest's.
+
+The `result` of a `success` event names what the guest joined:
+
+- For a space invitation, `result.spaceId` is the space, on both the host and the guest.
+- For a device invitation, `result.identityDid` is the identity, on the guest. The host's result is empty, because
+  the guest joined the host's own identity.
+
+On the guest, the joined space then appears in `Space.spaces`, and the joined identity in `Identity.identity`.
+
+`Invitation.authenticate` sends the authorization code from the guest to the host. Use it when the guest's flow
+reaches `readyForAuthentication`. It fails on the host's flow, which takes no code.
+
+**Example** (Authenticating as the guest)
+
+<Snippet file="halo-guide-invitation" region="authenticate" />
+
+`join` sends `authCode` once. If the code is wrong, the flow emits `readyForAuthentication` again, so a UI calls
+`authenticate` each time that event arrives.
+
+## Cancel a flow
+
+`Invitation.cancel` ends a flow, and either side can call it. The host can list its open flows with
+`Space.invitations` or `Identity.invitations`.
+
+**Example** (Cancelling a flow and listing the open ones)
+
+<Snippet file="halo-guide-invitation" region="cancel" />
+
+`pending` is a stream, so it emits the list again each time the host opens or ends a flow for the space.
+
+## Members at a glance
+
+| Member            | Summary                                             |
+| ----------------- | --------------------------------------------------- |
+| `Flow`            | An invitation in progress, host or guest side       |
+| `code`            | The invitation code to send                         |
+| `events`          | The flow's progress as a stream                     |
+| `authenticate`    | Send the authorization code                         |
+| `cancel`          | End the flow                                        |
+| `ShareOptions`    | `authMethod`, `type`, `multiUse` and `target`       |
+
+The full list is in the [API reference](/docs/halo/resources/api-reference/).
+
+## Errors
+
+`code` and `authenticate` fail with `InvitationError`:
+
+- `code` fails when the flow ends before its code is ready to send.
+- `authenticate` fails when the flow takes no authorization code, as the host's flow does not.
+
+**Example** (Handling a flow that has no code to send)
+
+<Snippet file="halo-guide-invitation" region="errors" />
+
+`safeCode` logs `error.message`, which carries the reason, such as an invitation that ended before its code was
+ready.
+
+A wrong authorization code does not fail `authenticate`. The guest's flow goes back to `readyForAuthentication`, and
+the guest can send another code. After three wrong codes the flow ends with an `error` event, so a UI following
+`events` needs no separate handler.
+
+`share` and `join` fail with the error of the namespace that started the flow: `IdentityError` for a device invitation and
+`SpaceError` for a space invitation.
+
+## Related
+
+- [Invitations](/docs/halo/concepts/invitations/)
+- [Invite people](/docs/halo/learn/invite-people/) and [Add a device](/docs/halo/learn/add-device/) in the learning path.

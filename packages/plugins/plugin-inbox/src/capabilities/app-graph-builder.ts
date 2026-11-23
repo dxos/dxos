@@ -25,11 +25,12 @@ import { DraftMessage, Event, Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { kebabize } from '@dxos/util';
 
-import { meta } from '#meta';
-import { createSyncProgressKey } from '#sync';
+import { createSyncProgressKey, withPendingSyncMonitor } from '#sync';
 import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants.ts';
+import { ATTACHMENT_NODE_TYPE, type AttachmentRef } from '../attachment-ref.ts';
+import { MAILBOX_MENU_DISPOSITION, MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants.ts';
+import { InboxNamespace } from '../namespace.ts';
 import {
   getAllMailId,
   getCalendarsPath,
@@ -64,20 +65,6 @@ const liveBindingFor = (target: Obj.Unknown, get: Atom.AtomContext): Binding.Bin
       )
     : undefined;
 };
-
-export const ATTACHMENT_NODE_TYPE = `${Type.getTypename(Message.Message)}-attachment`;
-
-/**
- * A single attachment, addressed as its owning message plus an index — an attachment is an entry in
- * `message.attachments`, not an object, so it has no identity a surface could match on its own.
- */
-export type AttachmentRef = { message: Message.Message; index: number };
-
-export const isAttachmentRef = (value: unknown): value is AttachmentRef =>
-  typeof value === 'object' &&
-  value !== null &&
-  typeof (value as AttachmentRef).index === 'number' &&
-  Obj.instanceOf(Message.Message, (value as AttachmentRef).message);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 const CALENDAR_FILTER_TYPE = `${calendarTypename}-filter`;
@@ -114,7 +101,7 @@ const makeSavedFilterNodes = (
               caller: `${params?.caller}:${params?.parent?.id}`,
             }),
           properties: {
-            label: ['rename-filter.label', { ns: meta.profile.key }],
+            label: ['rename-filter.label', { ns: InboxNamespace.key }],
             icon: 'ph--pencil-simple--regular',
             disposition: 'list-item',
           },
@@ -136,7 +123,7 @@ const makeSavedFilterNodes = (
               });
             }),
           properties: {
-            label: ['delete-filter.label', { ns: meta.profile.key }],
+            label: ['delete-filter.label', { ns: InboxNamespace.key }],
             icon: 'ph--trash--regular',
             disposition: 'list-item',
           },
@@ -166,7 +153,7 @@ export default Capability.makeModule(
             AppNode.makeSection({
               id: getMailboxesSectionId(),
               type: MAILBOXES_SECTION_TYPE,
-              label: ['mailboxes-section.label', { ns: meta.profile.key }],
+              label: ['mailboxes-section.label', { ns: InboxNamespace.key }],
               icon: 'ph--tray--regular',
               iconHue: 'rose',
               space,
@@ -222,7 +209,7 @@ export default Capability.makeModule(
                         type: FILTER_TYPE,
                         data: mailbox,
                         properties: {
-                          label: ['inbox.label', { ns: meta.profile.key }],
+                          label: ['inbox.label', { ns: InboxNamespace.key }],
                           icon: 'ph--tray--regular',
                           iconHue: 'rose',
                           // Gmail/JMAP both model the inbox as positive membership (Gmail's INBOX label,
@@ -237,7 +224,7 @@ export default Capability.makeModule(
                         type: FILTER_TYPE,
                         data: mailbox,
                         properties: {
-                          label: ['starred.label', { ns: meta.profile.key }],
+                          label: ['starred.label', { ns: InboxNamespace.key }],
                           icon: 'ph--star--regular',
                           iconHue: 'rose',
                           filter: '#starred',
@@ -249,7 +236,7 @@ export default Capability.makeModule(
                         type: FILTER_TYPE,
                         data: mailbox,
                         properties: {
-                          label: ['important.label', { ns: meta.profile.key }],
+                          label: ['important.label', { ns: InboxNamespace.key }],
                           icon: 'ph--bookmark-simple--regular',
                           iconHue: 'rose',
                           filter: '#important',
@@ -261,7 +248,7 @@ export default Capability.makeModule(
                         type: FILTER_TYPE,
                         data: mailbox,
                         properties: {
-                          label: ['all-mail.label', { ns: meta.profile.key }],
+                          label: ['all-mail.label', { ns: InboxNamespace.key }],
                           icon: 'ph--stack--regular',
                           iconHue: 'rose',
                           filter: '',
@@ -272,7 +259,7 @@ export default Capability.makeModule(
                         type: FILTER_TYPE,
                         data: mailbox,
                         properties: {
-                          label: ['sent.label', { ns: meta.profile.key }],
+                          label: ['sent.label', { ns: InboxNamespace.key }],
                           icon: 'ph--paper-plane-tilt--regular',
                           iconHue: 'rose',
                           filter: '#sent',
@@ -284,7 +271,7 @@ export default Capability.makeModule(
                         type: FILTER_TYPE,
                         data: mailbox,
                         properties: {
-                          label: ['drafts.label', { ns: meta.profile.key }],
+                          label: ['drafts.label', { ns: InboxNamespace.key }],
                           icon: 'ph--pencil-simple--regular',
                           iconHue: 'rose',
                           filter: '',
@@ -296,7 +283,7 @@ export default Capability.makeModule(
                         type: MAILBOX_SUBSCRIPTIONS_TYPE,
                         data: mailbox,
                         properties: {
-                          label: ['subscriptions.label', { ns: meta.profile.key }],
+                          label: ['subscriptions.label', { ns: InboxNamespace.key }],
                           icon: 'ph--envelope-simple--regular',
                           iconHue: 'rose',
                           mailbox,
@@ -337,7 +324,7 @@ export default Capability.makeModule(
                   { spaceId: db.spaceId },
                 ),
               properties: {
-                label: ['create-draft.label', { ns: meta.profile.key }],
+                label: ['create-draft.label', { ns: InboxNamespace.key }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },
@@ -409,7 +396,7 @@ export default Capability.makeModule(
                 properties: {
                   label: attachment.name ?? 'Attachment',
                   icon: 'ph--paperclip--regular',
-                  [AppNode.TYPE_LABEL_PROPERTY]: ['attachment-type.label', { ns: meta.profile.key }],
+                  [AppNode.TYPE_LABEL_PROPERTY]: ['attachment-type.label', { ns: InboxNamespace.key }],
                   disposition: 'hidden',
                 },
               }),
@@ -496,7 +483,7 @@ export default Capability.makeModule(
                 type: Type.getTypename(Event.Event),
                 data: event,
                 properties: {
-                  label: event.title ?? ['event.label', { ns: meta.profile.key }],
+                  label: event.title ?? ['event.label', { ns: InboxNamespace.key }],
                   icon: 'ph--calendar-dot--regular',
                   disposition: 'hidden',
                 },
@@ -523,7 +510,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
           // A bound mailbox whose provider plugin is not registered cannot sync — `Binding.sync` resolves
-          // no connector and returns — so the button stays as the toolbar's affordance but disabled,
+          // no connector and returns — so the item stays as the affordance but disabled,
           // rather than looking functional and doing nothing.
           const hasConnector = get(connectorAtom)
             .flat()
@@ -540,15 +527,15 @@ export default Capability.makeModule(
             return [
               {
                 id: 'sync',
-                data: () => Binding.sync(mailbox),
+                data: () =>
+                  withPendingSyncMonitor(mailbox, Option.getOrUndefined(progressRegistry), Binding.sync(mailbox)),
                 properties: {
-                  label: ['sync-mailbox.label', { ns: meta.profile.key }],
+                  label: ['sync-mailbox.label', { ns: InboxNamespace.key }],
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
                   spin: isSyncing,
                   disabled: isSyncing || !hasConnector,
-                  // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
-                  disposition: ['toolbar', 'list-item'],
-                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  // Appears in the mailbox toolbar's ⋮ menu and as a nav-tree context-menu row.
+                  disposition: [MAILBOX_MENU_DISPOSITION, 'list-item'],
                   // The toolbar emits `data-testid` only for actions that set one; browser-e2e waits on it.
                   testId: 'inbox.mailbox.sync',
                 },
@@ -565,8 +552,7 @@ export default Capability.makeModule(
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           const binding = liveBindingFor(mailbox, get);
-          // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
-          // view's main call to action on a mailbox that has nothing to analyze yet.
+          // Gated on a connection, not rendered disabled: without one there is nothing to analyze.
           if (!db || !binding) {
             return Effect.succeed([]);
           }
@@ -601,13 +587,12 @@ export default Capability.makeModule(
                       ),
                 properties: {
                   label: isScanning
-                    ? ['stop-analyze-mailbox.label', { ns: meta.profile.key }]
-                    : ['analyze-mailbox.label', { ns: meta.profile.key }],
+                    ? ['stop-analyze-mailbox.label', { ns: InboxNamespace.key }]
+                    : ['analyze-mailbox.label', { ns: InboxNamespace.key }],
                   icon: isScanning ? 'ph--stop--regular' : AI_ACTION_ICON,
                   // Never disabled mid-run: the control is Stop then, and cancelling has to stay open.
                   disabled: !isScanning && !synced,
-                  disposition: ['toolbar', 'list-item'],
-                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  disposition: [MAILBOX_MENU_DISPOSITION, 'list-item'],
                   testId: 'inbox.mailbox.analyze',
                 },
               },
@@ -638,7 +623,7 @@ export default Capability.makeModule(
               id: 'sync',
               data: () => Binding.sync(calendar),
               properties: {
-                label: ['sync-calendar.label', { ns: meta.profile.key }],
+                label: ['sync-calendar.label', { ns: InboxNamespace.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disabled: !hasConnector,
                 // Appears both as a primary object-toolbar button and a nav-tree context-menu row.

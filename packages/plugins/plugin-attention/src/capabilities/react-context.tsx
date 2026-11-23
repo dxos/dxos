@@ -10,13 +10,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { RootAttentionProvider, ViewStateProvider } from '@dxos/react-ui-attention';
 
-import { meta } from '#meta';
 import { AttentionCapabilities } from '#types';
+
+import { AttentionNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactContext, {
-      id: meta.profile.key,
+      id: AttentionNamespace.key,
       context: (props: PropsWithChildren) => {
         const attention = Hooks.useCapability(AttentionCapabilities.Attention);
         const viewState = Hooks.useCapability(AttentionCapabilities.ViewState);

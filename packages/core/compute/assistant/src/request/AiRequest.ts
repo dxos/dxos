@@ -42,6 +42,12 @@ import { type AiAssistantError } from '../util/index.ts';
 import { formatSystemPrompt, formatUserPrompt } from './format.ts';
 import { GenerationObserver } from './observer.ts';
 
+/**
+ * Turns a model call carries whole, counting the one in progress: it and the four before keep their tool calls and
+ * results, so the agent can still build on what it just did; older turns keep only what was said.
+ */
+const FULL_TURNS = 5;
+
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
 /**
@@ -119,6 +125,8 @@ export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
   /** Who the prompt is from, when not the session's reader (e.g. one of several people in a shared agent chat). */
   sender?: Message.Message['sender'];
+  /** Id the prompt's message takes: the queued message it stands for, so readers see one message, not two. */
+  promptId?: Message.Message['id'];
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
@@ -132,6 +140,7 @@ export type RunProps<R = never> = {
 export type BeginProps = {
   prompt: string | ContentBlock.Any[];
   sender?: Message.Message['sender'];
+  promptId?: Message.Message['id'];
   system?: string;
   /** The system prompt already formatted from `system` and the bindings, so it is not formatted twice. */
   systemPrompt?: string;
@@ -261,6 +270,7 @@ export class Request {
   begin = ({
     prompt,
     sender,
+    promptId,
     system,
     systemPrompt: formatted,
     history = [],
@@ -293,7 +303,7 @@ export class Request {
         }
       }
 
-      const userMessage = yield* formatUserPrompt({ prompt, history, sender });
+      const userMessage = yield* formatUserPrompt({ prompt, history, sender, promptId });
       // Also sent on the ephemeral channel, as the reply's blocks are: the feed shows the prompt only
       // once its index catches up, which can be after the reply has started streaming in.
       this.#announcement = userMessage;
@@ -349,6 +359,7 @@ export class Request {
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',
+        fullTurns: FULL_TURNS,
         // History can hold calls to tools this turn does not offer (the toolkit changed); kept as
         // calls, they invite the model to call them again.
         tools: toolkit ? Object.keys(toolkit.tools) : undefined,

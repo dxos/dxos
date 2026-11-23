@@ -1,0 +1,79 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import { type Meta, composeStory } from '@storybook/react-vite';
+import React from 'react';
+
+import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName, type ThemeMode } from '@dxos/ui-types';
+
+import { ReadyContext } from './internal/ready.ts';
+import * as StoryPeers from './StoryPeers.ts';
+
+/** A story file's exports: its meta and its stories. */
+export type Module = { readonly default: Meta<any> } & Record<string, unknown>;
+
+export type Composed = ReturnType<typeof composeStory>;
+
+export type ComposeOptions = {
+  /** The `theme` global the story's decorators read; dark unless given. */
+  theme?: ThemeMode;
+};
+
+/** Applies a story's meta, args, decorators and loaders outside Storybook, ready to render. */
+export const compose = async (
+  module: Module,
+  name: string,
+  { theme = 'dark' }: ComposeOptions = {},
+): Promise<Composed> => {
+  const story = module[name];
+  if (!story) {
+    throw new Error(`No story "${name}"`);
+  }
+  // A module's story exports are typed by its meta, which the record of exports cannot carry.
+  const composed = composeStory(
+    story as Parameters<typeof composeStory>[0],
+    module.default,
+    {
+      initialGlobals: { theme },
+    },
+    name,
+  );
+  await composed.load();
+  return composed;
+};
+
+export type RootProps = ThemedClassName<{
+  story: Composed;
+  /** Args over the story's own, such as turning off a debug panel. */
+  args?: Record<string, unknown>;
+  /** A runtime the page shares between its stories, instead of each starting clients of its own. */
+  shared?: StoryPeers.Shared;
+  /** Called once the story shows on every peer. */
+  onReady?: () => void;
+}>;
+
+/**
+ * Renders a composed story in place; needs a height from its container. The transform makes the story's `fixed inset-0`
+ * layout fill this element; under layout containment Safari composites it against the viewport and blanks it on scroll.
+ */
+export const Root = ({ story: Story, args, shared, onReady, classNames }: RootProps) => {
+  const content = (
+    <ReadyContext.Provider value={onReady}>
+      <div className={mx('relative overflow-hidden [transform:translateZ(0)]', classNames)}>
+        <Story {...args} />
+      </div>
+    </ReadyContext.Provider>
+  );
+
+  return shared ? (
+    <StoryPeers.Provider runtime={shared.runtime} late={shared.late}>
+      {content}
+    </StoryPeers.Provider>
+  ) : (
+    content
+  );
+};

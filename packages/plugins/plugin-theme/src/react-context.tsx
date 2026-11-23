@@ -12,11 +12,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Toast from '@dxos/react-ui/Toast';
-import { ACCENT_HUES, type AccentHue, applyAccent } from '@dxos/ui-theme';
+import { ACCENT_HUES, type AccentHue, applyAccent, applyFocusHue } from '@dxos/ui-theme';
 import { type ThemeMode } from '@dxos/ui-types';
 
-import { meta } from '#meta';
 import { Settings, ThemeCapabilities } from '#types';
+
+import { ThemeNamespace } from './namespace.ts';
 
 export type ThemePluginOptions = Partial<Pick<Theme.ProviderProps, 'tx' | 'resourceExtensions'>> & {
   appName?: string;
@@ -24,6 +25,8 @@ export type ThemePluginOptions = Partial<Pick<Theme.ProviderProps, 'tx' | 'resou
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+const isHue = (value: unknown): value is AccentHue => ACCENT_HUES.some((hue) => hue === value);
 
 // Parse the settings from a cross-tab `storage` event value; `Atom.kvs` stores the settings object
 // as a single JSON string. Anything malformed falls back to the defaults.
@@ -33,10 +36,11 @@ const parseSettings = (value: string | null): Settings.Settings => {
   }
   try {
     const parsed: unknown = JSON.parse(value);
-    const { appearance, accent } = isRecord(parsed) ? parsed : {};
+    const { appearance, accent, focus } = isRecord(parsed) ? parsed : {};
     return {
       ...((appearance === 'light' || appearance === 'dark') && { appearance }),
-      ...(typeof accent === 'string' && ACCENT_HUES.some((hue) => hue === accent) && { accent: accent as AccentHue }),
+      ...(isHue(accent) && { accent }),
+      ...(isHue(focus) && { focus }),
     };
   } catch {
     return {};
@@ -51,12 +55,13 @@ export default Capability.makeModule(
 
     const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    // 'system' follows the OS; 'light'/'dark' override it. The accent rewrites the accent role tokens on
-    // the root, or clears them back to the stylesheet's default.
-    const applyTheme = ({ appearance = 'system', accent }: Settings.Settings) => {
+    // 'system' follows the OS; 'light'/'dark' override it. The accent and focus hues rewrite their tokens on
+    // the root, or clear them back to the stylesheet's default.
+    const applyTheme = ({ appearance = 'system', accent, focus }: Settings.Settings) => {
       const dark = appearance === 'system' ? modeQuery.matches : appearance === 'dark';
       document.documentElement.classList[dark ? 'add' : 'remove']('dark');
       applyAccent(document.documentElement, accent);
+      applyFocusHue(document.documentElement, focus);
       registry.set(themeAtom, { themeMode: dark ? 'dark' : 'light' });
     };
 
@@ -73,7 +78,7 @@ export default Capability.makeModule(
     // Cross-tab setting changes: `Atom.kvs` does not observe the `storage` event,
     // so re-apply from the written value to keep every tab in the same browser in sync.
     const handleStorage = (event: StorageEvent) => {
-      if (event.key !== meta.profile.key) {
+      if (event.key !== ThemeNamespace.key) {
         return;
       }
       applyTheme(parseSettings(event.newValue));
@@ -88,7 +93,7 @@ export default Capability.makeModule(
       }),
     );
     return Capability.contribute(Capabilities.ReactContext, {
-      id: meta.profile.key,
+      id: ThemeNamespace.key,
       context: ({ children }: { children?: ReactNode }) => {
         const { themeMode } = useAtomValue(themeAtom);
         // Translations are registered in the shared i18next instance by the Translator module; the

@@ -4,4 +4,5 @@ tags:
   - typetest
   - ts-vite-build
   - ts-test
+  - typedoc
   - pack

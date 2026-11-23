@@ -5,12 +5,12 @@
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { ProgressNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [ProgressNamespace.key]: {
         'plugin.name': 'Progress',
         'progress-indicator.label': 'Active progress',
       },

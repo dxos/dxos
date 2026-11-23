@@ -8,8 +8,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
 import { Initialize } from '#components';
-import { meta } from '#meta';
 import { Calendar } from '#types';
+
+import { InboxNamespace } from '../../namespace.ts';
 
 export type InitializeCalendarProps = {
   calendar: Calendar.Calendar;
@@ -17,7 +18,7 @@ export type InitializeCalendarProps = {
 
 export const InitializeCalendar = Util.composable<HTMLDivElement, InitializeCalendarProps>(
   ({ calendar, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(InboxNamespace.key);
     return (
       <Initialize
         {...props}

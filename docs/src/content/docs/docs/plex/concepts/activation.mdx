@@ -1,0 +1,84 @@
+---
+title: Activation
+description: When a module runs, the events that activate it, and the order the plugin manager follows.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+Activation is the plugin manager running a module's body. It happens once, when the module's event has fired and
+every singleton capability the module requires has been contributed.
+
+## Model
+
+Every feature that sets itself up in an app's entry file makes the first screen later, whether that screen needs the
+feature or not. In PLEX, each module names the moment it should run and the capabilities it needs, and the plugin
+manager works out the order.
+
+An **activation event** is a named moment in the app's life, such as startup or the first time an article is shown.
+You name the event a module waits for in `activatesOn`, and you can combine several events:
+
+- `ActivationEvent.oneOf` activates on the first of them.
+- `ActivationEvent.allOf` waits for all of them.
+
+**Example** (Activating on the first of two events)
+
+<Snippet file="app-framework-guide-activation-event" region="activates-on" />
+
+`IndexModule` waits until `IndexRequested` or `SearchStart` fires. In a session where neither fires, it never
+runs.
+
+A module's `requires` is the second gate. The **plugin manager** keeps a graph of which module provides each
+capability. It activates providers before the modules that require them, and registration order plays no part.
+
+**Example** (Waiting for a required capability)
+
+<Snippet file="app-framework-guide-activation-event" region="requires" />
+
+`QueryModule` passes both gates before it runs. It names no event, so its event is `Idle`, and it requires `Index`, so
+it also waits for `IndexModule`. It activates once the app is idle and the index is contributed, whichever comes
+later.
+
+## Behavior
+
+- The app fires `ActivationEvents.Startup` while it boots and `ActivationEvents.Idle` once it has painted and the
+  browser is idle. By default, a module with no `activatesOn` waits for `Idle`, so only what the first screen needs
+  runs at startup.
+- A provider can activate earlier than its event. When a module that is activating requires a singleton capability,
+  the plugin manager activates the provider first if the provider waits for `Startup` or `Idle`. A provider that
+  names any other event is left until that event fires.
+- The framework fires further events when something first needs a module. `ActivationEvents.SurfacesRequested(role)`
+  fires the first time a surface of that role renders. `CommandsRequested` fires when the command palette or CLI
+  asks for commands. The module makers in `AppCapability` choose the event, so the surface module of a plugin loads
+  with the first article, not at startup.
+- A module can fire an event itself with `Plugin.activate`. This is how one plugin loads another's modules on
+  demand.
+
+  **Example** (Firing an event from a module)
+
+  <Snippet file="app-framework-guide-activation-event" region="fire" />
+
+  `requestIndex` is an Effect that a module runs at the moment the index is first needed. `IndexModule` waits for
+  `IndexRequested`, so that is when it loads.
+
+- An event stays fired. A module added after its event, for example by a plugin a person turns on later, activates
+  at once.
+- A lazy module's code is imported only when the module is about to activate. A module whose event never fires is
+  never loaded, which is what keeps a large app's boot small.
+- Plugins come and go while the app runs. Enabling a plugin registers its modules and activates every module whose
+  event has fired. Disabling one deactivates its modules in reverse order, runs their finalizers and removes their
+  contributions. [PluginManager](/docs/plex/guides/plugin-manager/) shows the calls.
+- If a module fails, or does not finish within 30 seconds, it is recorded on the manager's `failed` list and its
+  plugin is disabled. One broken plugin does not stop the app from starting.
+
+## Limits
+
+- Two modules that require each other's capabilities form a cycle, and the plugin manager fails them with
+  `DependencyCycleError` at runtime.
+- If your module requires a singleton capability that no enabled plugin provides, it never activates. The plugin
+  manager records a `MissingProviderError` for its plugin on the `failed` list. The inspector in
+  [Debugging](/docs/plex/guides/debugging/) shows such a module as waiting.
+- If the provider waits on an event of its own, such as the first render of a role, your module waits until that
+  event fires, without an error.
+- A multi capability in `requires` never holds a module back, because no contributions is a valid answer.
+- Activation order is a graph, not a sequence. Do not rely on two modules with no requirement between them
+  activating in a particular order.

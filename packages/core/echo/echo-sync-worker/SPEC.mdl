@@ -1,0 +1,222 @@
+---
+id: org.dxos.echo-sync-worker
+name: EchoSyncWorker
+version: 0.2.0
+---
+
+`@dxos/echo-sync-worker` is the server half of echo-sqlite sync: a Cloudflare Worker that routes each
+space to one Durable Object, `SpaceObject`, the authority for that space's feeds. The design is
+`org.dxos.echo-sqlite.server-authority`; the client half is `SpaceSync` in `@dxos/echo-sqlite/sync`.
+
+Three properties define it:
+
+- **One authority per space.** The object holds the space's feeds in the real feed store, in its own
+  SQLite, and gives every block its position. A space's writes are ordered by one single-threaded
+  object, with no coordination and no clock [F-1].
+- **It never reifies Automerge.** The feed protocol carries blocks; the object reads their metadata and
+  never decodes their data [F-2].
+- **A write is announced, not pushed.** When a client's push lands, every other client of the space is
+  told the namespace advanced and pulls it through the ordinary cursor path [F-3].
+
+The object's logic is `SpaceAuthority` from `@dxos/echo-sqlite/sync`, which the in-process authority of
+echo-sqlite's end-to-end tests runs too; this package adds the socket and the routing.
+
+## Dependencies
+
+```mdl
+uses org.dxos.echo-sqlite.server-authority: The design this worker serves.
+```
+
+```mdl
+uses org.dxos.feed: The feed store the object keeps, as the position authority.
+```
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `uses`     | `dxos.spec.core/uses`       |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `binding`  | `org.dxos.mdl.binding@1.0`  |
+| `actor`    | `org.dxos.mdl.actor@1.0`    |
+| `route`    | `org.dxos.mdl.route@1.0`    |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Worker
+
+```mdl
+binding SPACE: The namespace of space authorities; the router addresses one per space.
+  type: DurableObjectNamespace<SpaceObject>
+  target: SpaceObject in this worker
+```
+
+```mdl
+actor SpaceObject: The authority for one space: it holds the space's feeds and positions their blocks.
+  binding: SPACE
+  key: the space id — `idFromName(spaceId)`
+  owns: every block of the space and its position
+  storage: sqlite
+  tables: [feeds, blocks, trimmed_blocks]
+  ops:
+    webSocketMessage(FeedProtocol.ProtocolMessage) → FeedProtocol.ProtocolMessage
+```
+
+The tables are the feed store's, as `org.dxos.feed` defines them, under its own migrations.
+
+```mdl
+route socket: The live connection to one space: the feed sync protocol, as CBOR frames.
+  method: GET
+  path: /api/space/:spaceId/socket
+  auth: none
+  output: WebSocket of FeedProtocol.ProtocolMessage in both directions
+```
+
+## Features
+
+```mdl
+feat F-1: Positions
+
+  req F-1.1:
+    when: a client pushes blocks
+    then: the object appends them to its feed store as the position authority, gives each the
+          namespace's next position, and answers the pusher with them
+
+  req F-1.2:
+    when: a push repeats a block the object holds (same feed, actor and sequence)
+    then: it answers with the block's existing position and appends nothing
+
+  req F-1.3:
+    when: the object starts
+    then: it applies the feed store's migrations before it handles any message
+```
+
+```mdl
+feat F-2: No reification
+
+  req F-2.1:
+    when: the object handles a block of any namespace
+    then: it reads the block's metadata only; the worker bundle imports no Automerge code
+```
+
+```mdl
+feat F-3: Announcements
+
+  req F-3.1:
+    when: a push appends at least one block
+    then: every other socket of the space receives `FeedAdvanced` for that namespace, with the highest
+          new position
+
+  req F-3.2:
+    when: a socket sends a frame that is not a binary feed protocol message
+    then: the object closes that socket
+```
+
+```mdl
+feat F-4: Deployment
+
+  req F-4.1:
+    when: the worker is deployed
+    then: it is built and deployed from the monorepo, with its `@dxos/*` dependencies from the workspace
+
+  req F-4.2:
+    when: the worker's entry module is loaded
+    then: it exports only the fetch handler and `SpaceObject`, since the runtime reads every export as one
+```
+
+## Changelog
+
+```mdl
+decision D-1: Sync orders writes with a sequence number the server keeps and a counter each client keeps, never with timestamps. A round is: the client pulls, merges, and pushes.
+  date: 2026-11-10
+  by: user:dmaretskyi
+  affects: [F-1, F-2, PushRequest]
+  source: https://claude.ai/code/session_01LepGAYKGht2b6Gyq1s1W6W
+```
+
+```mdl
+decision D-2: The sync server worker can be deployed with a "Deploy to Cloudflare" button.
+  date: 2026-11-10
+  by: user:dmaretskyi
+  affects: [F-6]
+  source: https://claude.ai/code/session_01LepGAYKGht2b6Gyq1s1W6W
+```
+
+```mdl
+decision D-3: A push is compare-and-set per record and all or nothing; a refused push is answered with what the client missed. Fills in [D-1].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2, PushResult]
+  why: |
+    Applying writes in arrival order let a client overwrite a version it never saw. Refusing the whole
+    push keeps a client's batch consistent with itself, and answering with the missed records saves the
+    client a separate pull before it merges.
+  rejected: |
+    Per-record accept and reject, which applies half a batch; a version vector per record, which needs
+    no central authority but this design has one in the Durable Object.
+```
+
+```mdl
+decision D-4: `clientSeq` numbers a client's pushes so the object applies a retried push once. Fills in [D-1].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.2, spaceState]
+  why: A push whose answer was lost on a dropped socket is sent again; without the counter its now-stale bases would read as a conflict.
+```
+
+```mdl
+decision D-5: The server is its own package whose directory imports nothing outside itself and pins its tools by version. Fills in [D-2].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6]
+  why: The button copies only the directory and installs it with npm, which resolves neither `workspace:` nor `catalog:` versions.
+```
+
+```mdl
+decision D-6: The worker is the Cloudflare part of the server-authority design: one Durable Object per space, and the server has authority.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  supersedes: D-1
+  affects: [F-1]
+```
+
+```mdl
+decision D-7: The worker depends on the workspace's feed store and deploys from the monorepo; it no longer deploys on its own.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  supersedes: D-5
+  affects: [F-4]
+```
+
+```mdl
+decision D-8: The object's logic is `SpaceAuthority` in `@dxos/echo-sqlite/sync`, and the worker adds only the socket and the routing. Fills in [D-6].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1, F-3]
+  why: The end-to-end tests run the same authority in process, so the logic the tests cover is the logic deployed.
+```
+
+```mdl
+decision D-9: Spaces are kept, not deleted after 24 hours. Fills in [D-6].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+  why: The authority holds the only copy every client trusts; deleting it would make clients' later pushes reposition everything.
+  rejected: Keeping the 24-hour expiry of the scratch record store.
+```
+
+```mdl
+decision D-10: Frames are CBOR-encoded feed protocol messages, as EDGE's feed sync encodes them. Fills in [D-6].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.2]
+  why: Blocks carry binary data, and the same encoding lets either side read EDGE's frames.
+  rejected: JSON with base64 block data.
+```

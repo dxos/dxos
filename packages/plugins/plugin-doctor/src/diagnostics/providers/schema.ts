@@ -7,8 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 
-import { meta } from '#meta';
-
+import { DoctorNamespace } from '../../namespace.ts';
 import { getReadyDatabases, labelObject, queryAllObjects } from '../helpers.ts';
 import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
@@ -18,8 +17,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
  */
 export const schemaDiagnostic: DiagnosticProvider = {
   id: 'schema',
-  label: ['diagnostic.schema.label', { ns: meta.profile.key }],
-  description: ['diagnostic.schema.description', { ns: meta.profile.key }],
+  label: ['diagnostic.schema.label', { ns: DoctorNamespace.key }],
+  description: ['diagnostic.schema.description', { ns: DoctorNamespace.key }],
   run: async ({ spaces, graph, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const databases = await getReadyDatabases({ spaces, graph });

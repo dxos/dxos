@@ -7,22 +7,20 @@
 import { writeFileSync } from 'node:fs';
 import { chalk, $ } from 'zx';
 
-const ITEM = 'plugin-script.r2.vendor';
+// Each `.env` name and the 1Password reference that holds it.
+const REFS = {
+  R2_ACCESS_KEY_ID: 'op://eng-ops/com.cloudflare/SCRIPT_VENDOR_R2_ACCESS_KEY_ID',
+  R2_SECRET_ACCESS_KEY: 'op://eng-ops/com.cloudflare/SCRIPT_VENDOR_R2_SECRET_ACCESS_KEY',
+};
 
-console.log(chalk.blue(`Fetching secrets from 1Password item: ${ITEM}`));
+console.log(chalk.blue('Fetching secrets from 1Password'));
 
-const { fields } = await $`op item get ${ITEM} --format json`.json();
-const secrets = fields.filter((field) => field.type === 'CONCEALED' && field.value !== undefined);
-
-if (secrets.length === 0) {
-  console.error(chalk.red(`No secrets found in 1Password item: ${ITEM}`));
-  process.exit(1);
+const env = [];
+for (const [name, ref] of Object.entries(REFS)) {
+  const value = (await $`op read ${ref}`).stdout.trim();
+  console.log(chalk.cyan(`  ${name}`));
+  env.push(`${name}=${value}`);
 }
 
-const env = secrets.map((field) => {
-  console.log(chalk.cyan(`  ${field.label}`));
-  return `${field.label}=${field.value}`;
-});
-
 writeFileSync('.env', env.join('\n') + '\n');
-console.log(chalk.green(`Wrote ${secrets.length} secrets to .env`));
+console.log(chalk.green(`Wrote ${env.length} secrets to .env`));

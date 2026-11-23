@@ -8,12 +8,13 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
+import * as Variant from '@dxos/plugin-studio/Variant';
+import { SlideFooter, SlideTheme, splitSlides } from '@dxos/react-ui-slides/dialect';
 import { Text } from '@dxos/schema';
 
-import { meta } from '#meta';
+import { PresenterNamespace } from '../namespace.ts';
 
-import { splitSlides } from '../markdown/split.ts';
-import * as SlideTheme from './SlideTheme.ts';
+export { contentTitle } from '../deck/heading.ts';
 
 /** Key of the presenter skill, attached to the Presentation type. */
 export const SKILL_KEY = 'org.dxos.skill.presenter';
@@ -26,17 +27,32 @@ export class Slide extends Type.makeObject<Slide>(DXN.make('org.dxos.type.slide'
   Schema.Struct({
     /** An owned `Text` (parented to this slide) or a linked object, which keeps its own parent. */
     content: Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false)),
-    /** Overrides the label read from the content's first heading. */
+    /** Overrides the label read from the content: its frontmatter's `title`, else its first heading. */
     title: Schema.optional(Schema.String),
     /** Left out when the deck is presented; the grid still shows it. */
     hidden: Schema.optional(Schema.Boolean),
+    /** Recorded voice-overs of the slide (takes), owned by it, oldest first. */
+    takes: Schema.Array(Ref.Ref(Variant.Variant)).pipe(
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
+    /** The take that voices the slide when the presentation's voice-over is played or exported. */
+    mainTake: Schema.optional(Ref.Ref(Variant.Variant)).pipe(Annotation.FormInputAnnotation.set(false)),
+    /** Desired length in seconds, shown against the time spent on the slide while presenting. */
+    duration: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0))).annotate({
+        title: 'Duration',
+        description: 'Desired length of the slide, in seconds.',
+      }),
+    ),
     /** Speaker notes, for any content. */
     notes: Schema.optional(Ref.Ref(Text.Text)).pipe(Annotation.FormInputAnnotation.set(false)),
     /** The image a layout places (cover and image layouts): a generated media artifact. */
     image: Schema.optional(Ref.Ref(MediaArtifact.MediaArtifact)).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
-    Annotation.IconAnnotation.set({ icon: 'ph--rectangle--regular', hue: 'orange' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--rectangle--regular', hue: 'indigo' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),
 ) {}
@@ -52,16 +68,18 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     slides: Schema.Array(Ref.Ref(Slide)).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included; edited by `PresentationProperties`. */
     theme: Schema.optional(SlideTheme.Settings).pipe(Annotation.FormInputAnnotation.set(false)),
+    /** Drawn on every slide, linked objects included, unless the slide's frontmatter says otherwise; edited by `PresentationProperties`. */
+    footer: Schema.optional(SlideFooter.Settings).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'orange' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'indigo' }),
     Annotation.UserType.set({ tags: [Collection.ItemTag] }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
     // Its navtree node lists `slides`; a slide is deleted only through the undoable space Delete.
     AppAnnotation.ContainerAnnotation.set({
       property: 'slides',
       deleteOwned: true,
-      removeLabel: ['remove-section.label', { ns: meta.profile.key }],
+      removeLabel: ['remove-section.label', { ns: PresenterNamespace.key }],
     }),
   ),
 ) {}
@@ -83,12 +101,18 @@ export const makeSlide = (content: Obj.Unknown, props: Omit<Partial<Slide>, 'con
 /**
  * Creates a presentation with one owned markdown slide per string.
  */
-type MakeProps = { name?: string; description?: string; theme?: SlideTheme.Settings };
+type MakeProps = {
+  name?: string;
+  description?: string;
+  theme?: SlideTheme.Settings;
+  footer?: SlideFooter.Settings;
+};
 
 export const make = ({
   name,
   description,
   theme,
+  footer,
   slides = [],
 }: MakeProps & { slides?: string[] } = {}): Presentation => {
   const owned = slides.map((content) => makeSlide(Text.make({ content })));
@@ -96,6 +120,7 @@ export const make = ({
     name,
     description,
     theme,
+    footer,
     slides: owned.map((slide) => Ref.make(slide)),
   });
   // Parent is set after the refs exist because setParent warns when the parent holds no ref.

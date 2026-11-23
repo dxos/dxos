@@ -154,12 +154,14 @@ const specText = (page) =>
   page
     .evaluate(async (key) => {
       const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
-      const [spec] = space
+      // The template's own spec, not the one breaking a feature down.
+      const specs = space
         ? await space.db
-            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.spec')))
+            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.projects.spec')))
             .run()
             .catch(() => [])
         : [];
+      const spec = specs.find((candidate) => candidate.name === 'Hello Worker');
       const text = await spec?.content?.load?.();
       return text?.content ?? '';
     }, TAKE_SPACE)
@@ -168,7 +170,7 @@ const specText = (page) =>
 /** Opens the feature's spec from its article, which opens the Spec object in the deck. */
 const openSpec = async (demo, page) => {
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.features"] >> nth=0', label: 'Features' });
-  await demo.click({ selector: '[data-testid="projectsPlugin.featureMap.kanban"] >> nth=0', label: 'Kanban' });
+  await demo.click({ selector: '[data-testid="spec-companion.view.kanban"] >> nth=0', label: 'Board' });
   const card = page.locator(`[data-testid="feature-card"]:has-text("${FEATURE}")`).first();
   await card.waitFor({ state: 'visible', timeout: 15_000 });
   await demo.click({
@@ -204,7 +206,7 @@ const delegate = async (demo, page, titles) => {
   for (const title of titles) {
     await demo.click({ selector: `${taskRow(title)} >> [data-testid="taskList.item.checkbox"]`, label: title });
   }
-  await demo.click({ selector: '[data-testid="projectsPlugin.delegateTasks"]', label: 'Assign to agent' });
+  await demo.click({ selector: '[data-testid="projectsPlugin.delegateTasks"]', label: 'Delegate to agent' });
   await page.getByTestId('projectsPlugin.pipeline.chart').first().waitFor({ state: 'visible', timeout: 30_000 });
 };
 

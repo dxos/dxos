@@ -1,0 +1,45 @@
+---
+spec: github:dxos/dxos/packages/reflect/deus/src/cli/__fixtures__/review/worker/SPEC.mdl
+commit: 0000000000000000000000000000000000000000
+date: 2026-11-10
+by: agent:claude-code
+---
+
+# Review: worker fixture
+
+Bare ids for qualified items, and the table left unjudged.
+
+```mdl
+verdict Feed: The type.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/review/review.ts#reviewItemId]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```
+
+```mdl
+verdict binding:SCHEDULER: Bound.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/review/review.ts#reviewItemId]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```
+
+```mdl
+verdict Scheduler: Dispatches.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/review/review.ts#reviewItemId]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+  note: Keyed by trigger, not by space.
+```
+
+```mdl
+verdict listFeeds: Lists.
+  status: missing
+  note: No such route.
+```
+
+```mdl
+verdict keyspace:schedulerState: Kept.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/review/review.ts#reviewItemId]
+  note: No test reads it back.
+```

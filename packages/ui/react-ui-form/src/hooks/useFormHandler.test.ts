@@ -177,3 +177,32 @@ describe('useFormHandler logging', () => {
     }
   });
 });
+
+describe('useFormHandler revert and commit-on-blur', () => {
+  test('revert drops the edit, so the field shows the source and a blur saves nothing', ({ expect }) => {
+    const saves: Partial<Values>[] = [];
+    const { result } = renderHook(() =>
+      useFormHandler<Values>({
+        schema,
+        values: { name: 'Alice', city: 'NYC' },
+        autoSave: true,
+        onSave: (values) => {
+          saves.push(values);
+        },
+      }),
+    );
+    act(() => result.current.onValueChange(['city'], stringAst, 'LA'));
+    expect(result.current.getValue(['city'])).toBe('LA');
+    act(() => result.current.onRevert(['city']));
+    expect(result.current.getValue(['city'])).toBe('NYC');
+    act(() => result.current.onBlur(['city']));
+    expect(saves).toEqual([]);
+  });
+
+  test('the form says when its fields commit, on change by default', ({ expect }) => {
+    const { result: byDefault } = renderHook(() => useFormHandler<Values>({ schema, values: {} }));
+    expect(byDefault.current.commitOn).toBe('change');
+    const { result: onBlur } = renderHook(() => useFormHandler<Values>({ schema, values: {}, commitOn: 'blur' }));
+    expect(onBlur.current.commitOn).toBe('blur');
+  });
+});

@@ -6,13 +6,14 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import { describe, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, SpaceId } from '@dxos/keys';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -22,8 +23,6 @@ import { startMcpHost } from './mcp-host.ts';
 import * as McpLatency from './McpLatency.ts';
 
 const SPACE = SpaceId.random();
-
-const SKILL_SECRET = 'test-secret';
 
 const KEY = 'com.example.operation.tasks.createTask';
 
@@ -90,7 +89,6 @@ describe('startMcpHost', () => {
           spaceIds: [SPACE],
           context: () => context,
           registry: () => registry,
-          skillSecret: SKILL_SECRET,
         });
         const toolkit = yield* McpToolkit.make({ url, protocol: 'http' });
 
@@ -107,7 +105,7 @@ describe('startMcpHost', () => {
         yield* Stream.runDrain(
           yield* handlers.handle('loadSkill', { skill: 'tasks' }).pipe(Effect.provide(toolkit.layer)),
         );
-        const skillToken = yield* McpServer.skillGate(SKILL_SECRET).issue(definition.key);
+        const skillToken = yield* McpServer.skillGate().issue(definition.key);
         const results = yield* handlers
           .handle('invokeOperation', { key: KEY, input: { title: 'Ship' }, spaceId: SPACE, skillToken })
           .pipe(Effect.provide(toolkit.layer));
@@ -120,14 +118,18 @@ describe('startMcpHost', () => {
 
   test('code mode serves runScript, whose loop reaches the invoker once per item', async ({ expect }) => {
     const { invocations, context } = stubInvoker();
+    const builder = await new EchoTestBuilder().open();
+    onTestFinished(async () => void (await builder.close()));
+    const { db } = await builder.createDatabase();
 
     await EffectEx.runPromise(
       Effect.gen(function* () {
         const registry = makeRegistry({ initial: [...Operation.serializable([CreateTask]), definition.make()] });
         const { url } = yield* startMcpHost({
           skills: [definition],
-          spaceIds: [SPACE],
-          context: () => context,
+          spaceIds: [db.spaceId],
+          // The script runs against the database in the harness's context.
+          context: () => Context.add(context, Database.Service, Database.makeService(db)),
           registry: () => registry,
           codeMode: true,
         });
@@ -135,18 +137,21 @@ describe('startMcpHost', () => {
         expect(Object.keys(toolkit.toolkit.tools)).to.include('runScript');
 
         const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
+        const skillToken = yield* McpServer.skillGate().issue(definition.key);
         const code = [
-          "yield* loadSkill('tasks');",
+          `const createTask = yield* Database.resolve('${KEY}');`,
           "for (const title of ['Ship', 'Test']) {",
-          `  yield* print((yield* invoke('${KEY}', { title })).id);`,
+          '  yield* print((yield* Operation.invoke(createTask, { title })).id);',
           '}',
         ].join('\n');
         yield* Stream.runDrain(
-          yield* handlers.handle('runScript', { code, spaceId: SPACE }).pipe(Effect.provide(toolkit.layer)),
+          yield* handlers
+            .handle('runScript', { code, spaceId: db.spaceId, skillTokens: [skillToken] })
+            .pipe(Effect.provide(toolkit.layer)),
         );
 
         expect(invocations.map(({ input }) => input)).to.deep.equal([{ title: 'Ship' }, { title: 'Test' }]);
-        expect(invocations.every(({ spaceId }) => spaceId === SPACE)).to.equal(true);
+        expect(invocations.every(({ spaceId }) => spaceId === db.spaceId)).to.equal(true);
       }).pipe(Effect.scoped),
     );
   });

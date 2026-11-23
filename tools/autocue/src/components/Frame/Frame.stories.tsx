@@ -34,7 +34,7 @@ const columnOf = (step: number, task: number) => (step < 2 ? -1 : step >= 3 && t
 /** A stand-in for the recorded app: enough of Composer's shape that the bands read against something real. */
 const MockApp = ({ step }: { step: number }) => (
   <div className='flex dx-grow bg-base-surface text-base-fg'>
-    <div className='w-56 shrink-0 border-e border-separator p-3 flex flex-col gap-1'>
+    <div className='w-56 shrink-0 border-e border-separator p-trim-md flex flex-col gap-1'>
       {['Inbox', 'Projects', 'Documents', 'Sketches'].map((item) => (
         <div
           key={item}

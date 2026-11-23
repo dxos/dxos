@@ -7,7 +7,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import compiled from './compiled.json?raw';
@@ -19,7 +19,7 @@ describe('compiled diagrams', () => {
   test('match their sources', { timeout: 120_000 }, async ({ expect }) => {
     const commands: Record<string, unknown> = {};
     for (const [id, source] of Object.entries(DIAGRAM_SOURCES)) {
-      commands[id] = (await EffectEx.runPromise(Dsl.compile(source))).commands;
+      commands[id] = (await EffectEx.runPromise(DSL.compile(source))).commands;
     }
     const encoded = Schema.encodeSync(CompiledDiagrams)(Schema.decodeUnknownSync(CompiledDiagrams)(commands));
     if (process.env.DX_UPDATE_DIAGRAMS) {

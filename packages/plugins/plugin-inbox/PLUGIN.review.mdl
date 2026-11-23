@@ -1,0 +1,442 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-inbox/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: InboxPlugin
+
+The core is built and well tested. `runMailSync` and the `MailSyncProvider` seam are exercised end to end
+by the Gmail and JMAP provider sync suites (dedup, resume after interruption, caps with `runAgain`,
+cancellation, progress and canonical system tags). Tags live in the mailbox `TagIndex` and are tested;
+extraction records `ExtractedFrom`; the feed cursor and its reset are tested; reply drafting in plugin-brain is
+grounded on the thread and facts. Three divergences matter. The enrich cascade is the `AnalyzeMailbox` op, not
+`EnrichMailbox`, and `ProcessMailbox` lives in plugin-crm as `org.dxos.operation.crm.processMailbox`; the
+provider ops are defined in plugin-google and plugin-jmap under their own key namespaces rather than
+`org.dxos.operation.inbox.*`. The draft-event save path is not wired: `EventArticle` passes no `onSave` and
+nothing invokes `CreateGoogleCalendarEvent`, so F-5.1 and T-6 fail. The routine templates are a single daily
+`analyzeMailbox` (plus a feed-triggered CRM routine), not hourly process plus daily enrich. The app graph,
+deck chain and compose/send hooks have no tests; QA-1 and QA-2 are manual only.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Mailbox: The type has every spec field; extractors.enabled is a list of extractor ids, not a boolean.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#Mailbox, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.test.ts]
+  note: `extractors` is `{ enabled: string[], threshold: number }` (threshold required). Skills come from SkillsAnnotation; the deck chain is not declared on the type.
+```
+
+```mdl
+verdict SavedFilter: Saved views are an inline { name, filter } struct array on Mailbox.filters.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#Mailbox]
+  note: No named `SavedFilter` schema; no test saves or applies a view.
+```
+
+```mdl
+verdict MessageFilter: Implemented as Mailbox.Filter with an optional from regex.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#Filter, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#matchesFilter, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#isFiltered]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.test.ts]
+  note: The schema is named `Filter` and `from` is optional.
+```
+
+```mdl
+verdict SystemTags: A canonical SystemTag registry with find-or-create and TagIndex membership helpers.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SystemTags.ts#SystemTag, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SystemTags.ts#findOrCreateSystemTag, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SystemTags.ts#toggleTag]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SystemTags.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/apply-tag.test.ts, github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync.test.ts]
+```
+
+```mdl
+verdict Calendar: The type has name, feed and tags, plus saved filters.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Calendar.ts#Calendar, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Calendar.ts#make]
+  note: No test in plugin-inbox builds a Calendar; it adds an optional `filters` field.
+```
+
+```mdl
+verdict DraftEvent: Helpers treat an Event with no foreign keys parented to a calendar as a draft.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/DraftEvent.ts#isDraft, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/DraftEvent.ts#belongsTo]
+  note: No test covers the helpers; saving a draft does not create the remote event (see F-5.1).
+```
+
+```mdl
+verdict ExtractedFrom: A relation with extractorId, extractedAt and optional confidence.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/ExtractedFrom.ts#ExtractedFrom]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/ExtractedFrom.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.test.ts]
+```
+
+```mdl
+verdict SentTag: MailSend.SentTag carries source, id and label.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/MailSend.ts#SentTag]
+  note: Only the live-gated Gmail send test touches send output.
+```
+
+```mdl
+verdict MailSend: Input { message, connection } and Output { id, threadId?, sentTag? } are declared and routed by connector id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/MailSend.ts#Input, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/MailSend.ts#Output, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxCapabilities.ts#MailSendOperation]
+  note: The Gmail send test runs only with `GOOGLE_ACCESS_TOKEN`; nothing exercises routing.
+```
+
+```mdl
+verdict Settings: conversations and loadRemoteImages, both optional booleans.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Settings.ts#Settings]
+  note: No test reads the settings defaults.
+```
+
+```mdl
+verdict SyncOptions: syncBackDays and filter on SyncOptions; syncForwardDays is on a separate CalendarSyncOptions.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SyncOptions.ts#SyncOptions, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SyncOptions.ts#CalendarSyncOptions]
+  note: Provider sync tests vary `syncBackDays` but are cited on the ops, not this schema.
+```
+
+```mdl
+verdict SyncStreamConfig: A per-provider tuning type exists.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SyncStreamConfig.ts]
+  note: Declared as a type alias; no test targets it directly.
+```
+
+```mdl
+verdict MailboxArticle: Paged, thread-grouped list with filter editor, tag chips, toolbar and progress meter.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx#MailboxArticle, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/mailbox-search.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/mailbox-search.test.ts]
+```
+
+```mdl
+verdict MessageArticle: Thread detail with summaries, reply, delete and attachment detail.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MessageArticle/MessageArticle.tsx#MessageArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MessageArticle/MessageArticle.stories.tsx]
+```
+
+```mdl
+verdict EditMessageArticle: The draft composer sends through the contributed MailSendOperation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/EditMessageArticle/EditMessageArticle.tsx#EditMessageArticle, github:dxos/dxos/packages/plugins/plugin-inbox/src/hooks/useSendEmail.ts#useSendEmail]
+  note: No story or test renders the container; only the `EditMessage` component has a story.
+```
+
+```mdl
+verdict CalendarArticle: Calendar grid and event list with range selection and draft creation.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/CalendarArticle/CalendarArticle.tsx#CalendarArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/CalendarArticle/CalendarArticle.stories.tsx]
+```
+
+```mdl
+verdict EventArticle: Draft events are editable, but the article wires no save action.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/EventArticle/EventArticle.tsx#EventArticle]
+  note: `Event.Toolbar` accepts `onSave`, but `EventArticle` never passes one, so a draft cannot be saved to the remote calendar.
+```
+
+```mdl
+verdict SubscriptionsArticle: Lists subscriptions by sender and count with unsubscribe.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/SubscriptionsArticle/SubscriptionsArticle.tsx#SubscriptionsArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/SubscriptionsArticle/SubscriptionsArticle.stories.tsx]
+```
+
+```mdl
+verdict MailSyncProvider: An Effect service implemented by Gmail and JMAP layers.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/sync/mail-sync.ts#MailSyncProvider, github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync-provider.ts#googleMailSyncProvider, github:dxos/dxos/packages/plugins/plugin-jmap/src/operations/mail/sync/sync-provider.ts#jmapMailSyncProvider]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-jmap/src/operations/mail/sync/sync.test.ts]
+```
+
+```mdl
+verdict FactStore: Facts are written to the pipeline-rdf FactStore by plugin-brain's analyze pass inside AnalyzeMailbox.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/mailbox-processor.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/capabilities/mailbox-processors.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.test.ts]
+  note: The analyze tier is contributed by plugin-brain, not by plugin-inbox, because only it provides a FactStore.
+```
+
+```mdl
+verdict GoogleMailSync: Defined and handled in plugin-google on the shared harness, keyed org.dxos.operation.google.syncMail.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-google/src/types/GoogleOperation.ts#GoogleMailSync, github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/handler.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync.test.ts]
+  note: The spec says provider ops are defined in plugin-inbox under `org.dxos.operation.inbox.*`; they are defined in plugin-google.
+```
+
+```mdl
+verdict JmapSync: Defined and handled in plugin-jmap with the same contract.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-jmap/src/types/JmapOperation.ts#JmapSync, github:dxos/dxos/packages/plugins/plugin-jmap/src/operations/mail/sync/handler.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-jmap/src/operations/mail/sync/sync.test.ts]
+```
+
+```mdl
+verdict GoogleCalendarSync: Windowed calendar sync in plugin-google.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-google/src/types/GoogleOperation.ts#GoogleCalendarSync, github:dxos/dxos/packages/plugins/plugin-google/src/operations/calendar/sync/handler.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/calendar/sync/sync.test.ts]
+```
+
+```mdl
+verdict GoogleContactsSync: Upserts a Google contact group into Person objects.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-google/src/types/GoogleOperation.ts#GoogleContactsSync, github:dxos/dxos/packages/plugins/plugin-google/src/operations/contacts/sync/handler.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/contacts/sync/sync.test.ts]
+```
+
+```mdl
+verdict DraftEmail: Creates a mailbox-scoped draft and returns its DXN.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxOperation.ts#DraftEmail, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/draft-email.ts]
+  note: No test invokes it.
+```
+
+```mdl
+verdict DraftEmailAndOpen: Creates a compose, reply, reply-all or forward draft and opens it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxOperation.ts#DraftEmailAndOpen, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/draft-email-and-open.ts]
+  note: No test invokes it.
+```
+
+```mdl
+verdict GmailSend: Sends through Gmail; JmapSend is the JMAP counterpart, routed by connector id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-google/src/types/GoogleOperation.ts#GmailSend, github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/send/handler.ts, github:dxos/dxos/packages/plugins/plugin-jmap/src/types/JmapOperation.ts#JmapSend]
+  note: `send/handler.test.ts` runs only when `GOOGLE_ACCESS_TOKEN` is set, so CI never runs it.
+```
+
+```mdl
+verdict CreateGoogleCalendarEvent: The op and handler exist, but nothing invokes them.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-google/src/types/GoogleOperation.ts#CreateGoogleCalendarEvent, github:dxos/dxos/packages/plugins/plugin-google/src/operations/calendar/create/handler.ts]
+  note: Searched dxos `packages/` for `CreateGoogleCalendarEvent`; it appears only in its definition, handler set and handler. No test.
+```
+
+```mdl
+verdict ExtractMessage: Picks the highest-confidence extractor and persists results with ExtractedFrom.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxOperation.ts#ExtractMessage, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.test.ts]
+```
+
+```mdl
+verdict EnrichMailbox: The cascade exists as AnalyzeMailbox, with the same tiers and default first three.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxOperation.ts#AnalyzeMailbox, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/analyze/analyze-mailbox.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/analyze/analyze-mailbox.test.ts]
+  note: |
+    No `EnrichMailbox` exists; `org.dxos.operation.inbox.analyzeMailbox` orchestrates contributed processors in tier order,
+    reports per-stage results, is idempotent, and reports to the `#analyze` monitor rather than `#enrich`.
+```
+
+```mdl
+verdict ProcessMailbox: A cursored mailbox pipeline exists in plugin-crm under org.dxos.operation.crm.processMailbox.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/types/CrmOperation.ts#ProcessMailbox, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+  note: It extracts CRM contacts past a durable cursor; it is not an inbox op. ResetFeedCursor in plugin-inbox rewinds such cursors.
+```
+
+```mdl
+verdict ReadEmail: Agent tool that reads mailbox content as text.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxOperation.ts#ReadEmail, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/read-email.ts]
+  note: No test invokes it.
+```
+
+```mdl
+verdict F-1.1: Messages sync into the feed and the article lists them paged, thread-grouped and newest first.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/sync/mail-sync.ts#runMailSync, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx#MailboxArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/components/RelatedMessages/RelatedMessages.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.stories.tsx]
+  note: No test asserts the "no empty-state flash" during initial sync.
+```
+
+```mdl
+verdict F-1.2: Tag membership lives in the mailbox TagIndex keyed by canonical system tags.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SystemTags.ts#SystemTag, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#applyTag]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/apply-tag.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/SystemTags.test.ts, github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync.test.ts]
+```
+
+```mdl
+verdict F-1.3: The app graph adds inbox, starred, important, all-mail, sent, drafts and saved-filter nodes over the mailbox.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/capabilities/app-graph-builder.ts]
+  note: No test covers the graph builder; it also adds starred and important folders the spec does not list.
+```
+
+```mdl
+verdict F-2.1: Row clicks open the message as the mailbox's detail; meta or ctrl click requests a new plank.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/components/InboxStack/InboxStack.tsx, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx#MailboxArticle]
+  note: No test drives the open gesture or the deck chain.
+```
+
+```mdl
+verdict F-2.2: Message, attachment and event nodes are added with disposition hidden.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/capabilities/app-graph-builder.ts]
+  note: No test covers the hidden child nodes.
+```
+
+```mdl
+verdict F-3.1: Sync is idempotent, resumable, capped and cancellable, and reports to the #sync monitor.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/sync/mail-sync.ts#runMailSync, github:dxos/dxos/packages/plugins/plugin-inbox/src/sync/mail-sync.ts#createSyncProgressKey]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-jmap/src/operations/mail/sync/sync.test.ts]
+```
+
+```mdl
+verdict F-3.2: Gmail and JMAP each provide a MailSyncProvider layer over the unchanged harness.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/sync/mail-sync.ts#MailSyncProvider, github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync-provider.ts#googleMailSyncProvider, github:dxos/dxos/packages/plugins/plugin-jmap/src/operations/mail/sync/sync-provider.ts#jmapMailSyncProvider]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-jmap/src/operations/mail/sync/sync.test.ts]
+```
+
+```mdl
+verdict F-3.3: The policy sets a 10-minute cron with remote sync on, and providers read it for their triggers.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/sync/policy.ts#MAIL_SYNC_CRON, github:dxos/dxos/packages/plugins/plugin-inbox/src/sync/policy.ts#MAIL_REMOTE_SYNC, github:dxos/dxos/packages/plugins/plugin-google/src/capabilities/connector.ts]
+  note: No test checks the trigger or EDGE execution; the workerd test checks only exports.
+```
+
+```mdl
+verdict F-4.1: Drafts send through the provider's MailSendOperation and the sent draft is removed when its copy syncs.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/hooks/useSendEmail.ts#useSendEmail, github:dxos/dxos/packages/core/compute/pipeline-email/src/stages/EmailStage.ts#reconcileDrafts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/sync.test.ts]
+  note: Reconciliation is tested; the send routing in `useSendEmail` is not.
+```
+
+```mdl
+verdict F-4.2: plugin-brain's GenerateReply grounds the draft on the thread and participant facts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/generate-reply.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/generate-reply.test.ts]
+```
+
+```mdl
+verdict F-5.1: Events sync and drafts are local Events, but saving a draft does not create the remote event.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/calendar/sync/handler.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/DraftEvent.ts#isDraft, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/EventArticle/EventArticle.tsx#EventArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/calendar/sync/sync.test.ts]
+  note: `EventArticle` passes no `onSave`, and nothing invokes `CreateGoogleCalendarEvent`.
+```
+
+```mdl
+verdict F-6.1: Extractors come from the ObjectExtractor capability and ExtractMessage records ExtractedFrom.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxCapabilities.ts#ObjectExtractor, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/ExtractedFrom.test.ts]
+```
+
+```mdl
+verdict F-6.2: AnalyzeMailbox runs the tiers in cascade order and is idempotent; each tier op is capped and invocable.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/analyze/analyze-mailbox.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/capabilities/mailbox-processors.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/analyze/analyze-mailbox.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/classify/classify-mailbox.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/summarize/summarize-mailbox.test.ts]
+  note: The orchestrator is `AnalyzeMailbox`, not `EnrichMailbox`; no test cancels a run.
+```
+
+```mdl
+verdict F-6.3: Feed cursors are durable per consumer and ResetFeedCursor clears them.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/FeedCursor.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/reset-feed-cursor.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/FeedCursor.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/classify/classify-mailbox.test.ts]
+```
+
+```mdl
+verdict F-7.1: ExtractSubscriptions derives senders from headers and body links; UnsubscribeSender filters and POSTs.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#deriveSubscriptions, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/subscriptions/extract-subscriptions.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/unsubscribe-sender.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/subscriptions/extract-subscriptions.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.test.ts]
+  note: The unsubscribe op itself has no test.
+```
+
+```mdl
+verdict F-8.1: RelatedToContact and RelatedToOrganization are bound to the Related role.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/RelatedToContact/RelatedToContact.tsx#RelatedToContact, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/RelatedToOrganization/RelatedToOrganization.tsx#RelatedToOrganization]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/components/RelatedMessages/RelatedMessages.test.ts, github:dxos/dxos/packages/plugins/plugin-inbox/src/components/RelatedMessages/RelatedMessages.stories.tsx]
+```
+
+```mdl
+verdict T-1: Provider sync tests sync generated messages with canonical tags and show a re-run adds nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/sync/mail-sync.ts#runMailSync]
+  tests: [github:dxos/dxos/packages/plugins/plugin-google/src/operations/mail/sync/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-jmap/src/operations/mail/sync/sync.test.ts]
+  note: Runs locally against fixtures, not on EDGE.
+```
+
+```mdl
+verdict T-2: No test saves a filter or checks the saved-filter node.
+  status: missing
+  note: `mailbox-search.test.ts` covers query parsing only.
+```
+
+```mdl
+verdict T-3: Draft reconciliation on sync is tested; reply and send are not.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/sync.test.ts]
+  note: `reconcileDrafts stage` tests remove a sent draft once its copy syncs; no automated test replies and sends.
+```
+
+```mdl
+verdict T-4: No test opens two messages or checks plank reuse.
+  status: missing
+  note: Searched the package tests and composer-app Playwright specs.
+```
+
+```mdl
+verdict T-5: analyze-mailbox tests cover cascade order and idempotent reruns, not real outputs or stop.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/analyze/analyze-mailbox.test.ts]
+  note: No test cancels a run or checks that classifications, summaries and facts appear together.
+```
+
+```mdl
+verdict T-6: Nothing creates a remote event from a draft, so no test can run it.
+  status: missing
+  note: `CreateGoogleCalendarEvent` has no caller and no test.
+```
+
+```mdl
+verdict T-7: No test checks interactivity during an initial sync.
+  status: missing
+  note: The MailboxArticle story exercises the progress meter but asserts nothing.
+```
+
+```mdl
+verdict T-8: Unsubscribe parsing and sender filtering are tested; the unsubscribe op is not.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.test.ts]
+  note: No test invokes `UnsubscribeSender` or checks the RFC 8058 POST.
+```
+
+```mdl
+verdict QA-1: Manual QA only; no automation runs it.
+  status: missing
+  note: Marked unverified in the spec; no automated test drives these steps.
+```
+
+```mdl
+verdict QA-2: Manual QA only, and its save step cannot pass today.
+  status: missing
+  note: Marked blocked in the spec; the draft-event save is not wired.
+```

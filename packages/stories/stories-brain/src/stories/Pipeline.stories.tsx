@@ -35,12 +35,14 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Filter, Obj } from '@dxos/echo';
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
 import { EmailPipeline, type FactIndexer, Thread } from '@dxos/pipeline-email';
 import { loadEnronMessages } from '@dxos/pipeline-email/testing';
-import { type DocumentFacts, type RDF, extractFactsStage, normalizeFactsStage } from '@dxos/pipeline-rdf';
+import { type DocumentFacts, extractFactsStage, normalizeFactsStage } from '@dxos/pipeline-rdf';
+import { type ExtractOptions, type KnownEntity } from '@dxos/pipeline-rdf';
 import {
   type CommitFn,
   TranscriptEvent,
@@ -56,7 +58,8 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
-import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -156,7 +159,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const progress = Hooks.useCapability(AppCapabilities.ProgressRegistry);
   // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
-  const extractOptions = useMemo<RDF.ExtractOptions | undefined>(
+  const extractOptions = useMemo<ExtractOptions | undefined>(
     () => (ai.preset === 'ollama' ? { model: ai.model, provider: Provider.ollama.id, strict: false } : undefined),
     [ai],
   );
@@ -186,7 +189,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         // The space's people and organizations, so a mention of one is stored under its ECHO URI.
         const people = yield* Effect.promise(() => space.db.query(Filter.type(Person.Person)).run());
         const organizations = yield* Effect.promise(() => space.db.query(Filter.type(Organization.Organization)).run());
-        const entities: RDF.KnownEntity[] = [
+        const entities: KnownEntity[] = [
           ...people.flatMap((person) =>
             person.fullName ? [{ iri: Obj.getURI(person), label: person.fullName, type: 'person' as const }] : [],
           ),
@@ -238,7 +241,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
       const startedMs = Date.now();
       const aiLayer = Layer.fresh(AiServiceTestingPreset(ai.preset));
 
-      const collected: RDF.Fact[] = [];
+      const collected: Fact.Fact[] = [];
       const indexFacts: FactIndexer = (message) =>
         EffectEx.runPromise(
           Effect.gen(function* () {
@@ -410,7 +413,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         details,
       }}
     >
-      <ModuleContainer layout={[[StoryRole.Input], [StoryRole.Pipeline], [StoryRole.Output]]} />
+      <ModuleContainer.Root layout={[[StoryRole.Input], [StoryRole.Pipeline], [StoryRole.Output]]} />
     </PipelineStoryContext.Provider>
   );
 };
@@ -424,7 +427,7 @@ const toDocs = (text: string): { readonly text: string; readonly source: string 
     .filter((part) => part.length > 0)
     .map((part, index) => ({ text: part, source: `doc-${index}` }));
 
-const factEntities = (fact: RDF.Fact): string[] =>
+const factEntities = (fact: Fact.Fact): string[] =>
   [fact.assertion.subject, fact.assertion.object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
 
 const round = (value: number): number => Math.round(value * 100) / 100;
@@ -500,7 +503,7 @@ const ThreadList = ({ result }: { result: { threads: readonly Thread[] } }) => (
 );
 
 const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?: string }) => (
-  <div className='flex flex-col gap-3 p-3 h-full overflow-auto'>
+  <div className='flex flex-col gap-3 p-trim-md h-full overflow-auto'>
     {summary && (
       <div className='flex flex-col gap-1'>
         <span className='text-sm text-fg-muted'>Summary</span>
@@ -521,7 +524,7 @@ const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?
 const meta = {
   title: 'stories/stories-brain/Pipeline',
   render: DefaultStory,
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
     onInit: async ({ space }) => {
       // Seed a couple of entities so the transcription pipeline has something to link against
@@ -533,7 +536,7 @@ const meta = {
       await space.db.flush({ indexes: true, secondaryIndexes: true });
     },
     plugins: [
-      SpacePlugin({}),
+      SpacePlugin.make({}),
       MarkdownPlugin.make(),
       TranscriptionPlugin.make(),
       BrainPlugin.make(),

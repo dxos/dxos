@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as RoutinePlugin from './RoutinePlugin.ts';
+export * as RoutinePlugin from '#meta';
 export * from '#types';
 export * as Hooks from './Hooks.ts';
 export * as InstructionsEditor from './InstructionsEditor.ts';

@@ -1,0 +1,69 @@
+---
+title: Add a device
+description: Join Alice's phone to her identity, so it shows the same contacts.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page Alice's phone joins her identity, and shows her name, her spaces and her contacts.
+
+## Background
+
+Alice opens the contact book on her phone, and it asks for her name as if she were new. The phone is a device of its
+own, with its own key, and a device that already has the identity has to let it in.
+
+Adding a device is the same handshake as inviting a person, with a device invitation in place of a space invitation.
+The **host** is the device already in the identity, which starts the invitation. The **guest** is the new device,
+which redeems it. At the end, the host writes a delegation, a signed statement that makes the new device's key a
+member of the identity's group.
+
+The new device then syncs every space the identity is in, from the other device or through EDGE, DXOS's always-online
+peer. We don't type in anything about the identity again.
+
+## Steps
+
+<Steps>
+
+1. **Share your identity.** On the Devices tab, **Add a device** calls `handleAdd`. `Identity.share` starts a device
+   invitation on the device we have, and `Invitation.code` returns its code.
+
+   <Snippet file="halo-tutorial/app/Devices" region="share" lang="tsx" />
+
+   `Identity.share` takes the same options as `Space.share`, and `shared-secret` matters more here. Without it, anyone
+   who saw the invitation code could add a device of their own to Alice's identity.
+
+2. **Join from the new device.** The phone has no identity yet, so we start from its welcome screen. **Join your
+   other device** opens the `Guest` panel from [Invite people](/docs/halo/learn/invite-people/), which calls
+   `handleJoin` with the pasted code.
+
+   <Snippet file="halo-tutorial/app/Welcome" region="join" lang="tsx" />
+
+   `Identity.join` returns a flow, as `Space.join` does. The handshake and its authorization code are the same as for
+   a space, so `Guest` needs no changes.
+
+3. **List your devices.** The Devices tab reads its list from `useDevices`, which follows the `Identity.devices`
+   stream. Each device carries its `key`, its `kind` and its `presence`. `current` is true for the device the code
+   runs on.
+
+   <Snippet file="halo-tutorial/app/Devices" region="list" lang="tsx" />
+
+</Steps>
+
+## Try it
+
+Alice's laptop has her identity, her spaces and her contacts. Her phone has nothing.
+
+1. On the laptop, open **Devices**, press **Add a device** and copy the code.
+2. On the phone, press **Join your other device**, paste it and press **Join**.
+3. Type the authorization code the laptop shows into the phone and press **Send**.
+
+The phone now shows Alice's name, both spaces and both contacts, and each device lists the other.
+
+<HaloEmbed stage="devices" scene="phone" />
+
+## What you can do now
+
+You can add a device to your identity and list your devices. Next,
+[Recover an identity](/docs/halo/learn/recover-identity/) covers losing all of them.

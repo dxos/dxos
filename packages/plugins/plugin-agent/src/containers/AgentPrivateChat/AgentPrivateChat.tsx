@@ -12,8 +12,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
-
+import { AgentNamespace } from '../../namespace.ts';
 import { useBrainClock } from '../useBrainClock.ts';
 import { useIdentityRepair } from '../useIdentityRepair.ts';
 import { usePrivateChat } from '../usePrivateChat.ts';
@@ -32,7 +31,7 @@ export type AgentPrivateChatProps = {
  * knows is shared through its one brain (`AgentPresence.brainId`), not through the conversation.
  */
 export const AgentPrivateChat = ({ role, agent, attendableId, nodeId }: AgentPrivateChatProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const { chat, failed, retry } = usePrivateChat(agent);
   useBrainClock(agent);
   useIdentityRepair(agent);

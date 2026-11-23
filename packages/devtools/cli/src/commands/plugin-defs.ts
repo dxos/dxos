@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
-import { type Config } from '@dxos/client';
+import { type Client, type Config } from '@dxos/client';
 import { Blob } from '@dxos/echo';
 import type * as Observability from '@dxos/observability/Observability';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -30,6 +32,8 @@ export type PluginConfig = {
   isDev?: boolean;
   isLabs?: boolean;
   isStrict?: boolean;
+  /** Attributes the session to the profile's identity once the client has initialized. */
+  identify?: (client: Client) => Promise<void>;
 };
 
 /**
@@ -69,16 +73,21 @@ export const getDefaults = (): string[] => [
   TasksPlugin.meta.profile.key,
 ];
 
-export const getPlugins = ({ config, namespace, observability }: PluginConfig): Plugin.Plugin[] => {
+export const getPlugins = ({ config, namespace, observability, identify }: PluginConfig): Plugin.Plugin[] => {
   return [
     // Declared in Projects' `dependsOn`; the manager refuses to resolve Projects without it.
     AssistantPlugin.make(),
     ChessPlugin.make(),
-    // Commands are imperative and run straight through, so the service must hand them a client
-    // that is already initialized rather than one whose `halo` getter still throws.
+    // Initialized on first use, so a command that never touches the client neither waits for it nor
+    // fails with it.
     // `File` and `Blob` are FilePlugin's types, and FilePlugin is not loaded here (it is mostly UI);
     // without them `file.createFromUpload` from `dx mcp serve` fails with `Schema not registered`.
-    ClientPlugin.make({ config, awaitInitialization: true, types: [File.File, Blob.Blob] }),
+    ClientPlugin.make({
+      config,
+      initializeOnUse: true,
+      types: [File.File, Blob.Blob],
+      onClientInitialized: identify ? ({ client }) => Effect.promise(() => identify(client)) : undefined,
+    }),
     ConnectorPlugin.make(),
     IllustratorPlugin.make(),
     InboxPlugin.make(),

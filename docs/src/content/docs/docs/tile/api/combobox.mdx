@@ -1,0 +1,37 @@
+---
+title: Combobox
+description: "A text field that filters a list of options as the user types."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/combobox" narrow />
+
+```ts
+import * as Combobox from '@dxos/react-ui/Combobox';
+```
+
+A combobox is a text field that filters a list of options as the user types. The field can sit in a control with a
+caret, or in the popup behind a button. Use `onCreate` to let the user add an option that does not exist yet.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Combobox.Root` | The root, which holds the options and the value |
+| `Combobox.Label` | The field's name |
+| `Combobox.Control` | The row with the text `Combobox.Input` and a caret `Combobox.Trigger` |
+| `Combobox.Input` | The text field |
+| `Combobox.Trigger` | The control that opens the list |
+| `Combobox.ClearTrigger` | The control that clears the value |
+| `Combobox.Content` | The popup |
+| `Combobox.List` | The options under a search field in the popup |
+| `Combobox.Item` | One option |
+| `Combobox.ItemIcon` | The option's icon |
+| `Combobox.ItemText` | The option's label |
+| `Combobox.ItemDescription` | A second line under the label |
+| `Combobox.ItemIndicator` | The check shown while the option is selected |
+| `Combobox.ItemGroup` | A group of options |
+| `Combobox.ItemGroupLabel` | The group's name |
+| `Combobox.CreateItem` | The row that creates an option from what was typed |
+| `Combobox.Empty` | The message shown when no option matches |

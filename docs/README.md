@@ -1,8 +1,19 @@
 # DXOS Docs
 
 - Current focus is around building a Composer plugin
-- later the docs for ECHO, HALO, App Framework, etc. should evolve independently
+- later the docs for ECHO, HALO, PLEX, etc. should evolve independently
 - as more content is added, use https://diataxis.fr/ to guide structure
+
+## Writing a page
+
+- `SPEC.mdl` says what each page covers and which template it follows. Change the spec before the page.
+- The docs have a voice of their own (`SPEC.mdl`, `F-22`). Its rules and before-and-after examples are in the
+  `docs-writing` skill, at `.agents/skills/docs-writing/`.
+- Check a page against the voice, and a rewrite against the version it replaces, from the repo root:
+
+  ```bash
+  node .agents/skills/docs-writing/scripts/check-voice.mjs docs/src/content/docs/docs/echo/overview.mdx
+  ```
 
 ## Starlight Starter Kit: Basics
 

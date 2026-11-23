@@ -380,7 +380,7 @@ export type FontOptions = {
   monospace?: boolean;
 };
 
-export const createFontTheme = ({ monospace }: FontOptions = {}) =>
+const fontTheme = (monospace: boolean) =>
   EditorView.theme({
     // Main content.
     '.cm-scroller': {
@@ -393,3 +393,9 @@ export const createFontTheme = ({ monospace }: FontOptions = {}) =>
       fontSize: 'inherit',
     },
   });
+
+// Built once per variant: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const bodyFontTheme = fontTheme(false);
+const monoFontTheme = fontTheme(true);
+
+export const createFontTheme = ({ monospace }: FontOptions = {}) => (monospace ? monoFontTheme : bodyFontTheme);

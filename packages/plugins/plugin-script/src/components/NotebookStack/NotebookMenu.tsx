@@ -7,8 +7,9 @@ import React from 'react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
 
-import { meta } from '#meta';
 import { Notebook } from '#types';
+
+import { ScriptNamespace } from '../../namespace.ts';
 
 export type NotebookMenuProps = {
   cell?: Notebook.Cell;
@@ -18,7 +19,7 @@ export type NotebookMenuProps = {
 
 // TODO(burdon): Better way to organize menu?
 export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ScriptNamespace.key);
   return (
     <Menu.Content>
       <Menu.Item

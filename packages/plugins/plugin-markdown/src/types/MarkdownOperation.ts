@@ -47,9 +47,7 @@ export const Create = Operation.make({
     description: 'Creates a new markdown document and adds it to the space.',
     icon: 'ph--file-text--regular',
   },
-  // The capability manager carries the `DefaultParent` rule that files the document into the root
-  // collection; an undeclared service is not provided, so without it the document is never filed.
-  services: [Capability.Service, Database.Service],
+  services: [Database.Service],
   input: Schema.Struct({
     name: Schema.String,
     content: Schema.String,
@@ -94,7 +92,7 @@ export const Open = Operation.make({
   output: Schema.Struct({
     content: Schema.String,
   }),
-});
+}).pipe(Operation.hiddenInCodeMode);
 
 export const GetSelection = Operation.make({
   meta: {
@@ -133,11 +131,19 @@ export const ScrollToAnchor = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    subject: Schema.String.annotate({ description: 'Attendable ID of the markdown editor.' }),
-    cursor: Schema.String.annotate({ description: 'Cursor position to scroll to.' }),
-    id: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
+    subject: Schema.String.annotate({ description: 'Attendable ID of the markdown editor, or the document URI.' }),
+    anchor: Schema.String.annotate({ description: 'Cursor range to reveal.' }),
+    focus: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          'Move the caret to the range and take focus (default); false scrolls the range to the top instead.',
+      }),
+    ),
+    thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
   }),
-  output: Schema.Void,
+  output: Schema.Boolean.annotate({
+    description: 'Whether the anchor was revealed; false while its view is not ready.',
+  }),
 });
 
 export const CreateCheckpoint = Operation.make({

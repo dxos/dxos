@@ -10,9 +10,9 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates.ts';
 
 export type UseDuplicatesGroupOptions = {
@@ -134,7 +134,7 @@ export const useDuplicatesGroup = ({
           .action(
             'confirm-merge',
             {
-              label: ['confirm-merge.label', { ns: meta.profile.key }],
+              label: ['confirm-merge.label', { ns: SpaceNamespace.key }],
               icon: 'ph--check--regular',
               variant: 'primary',
               iconOnly: false,
@@ -145,7 +145,7 @@ export const useDuplicatesGroup = ({
           .action(
             'cancel-merge',
             {
-              label: ['cancel-merge.label', { ns: meta.profile.key }],
+              label: ['cancel-merge.label', { ns: SpaceNamespace.key }],
               iconOnly: false,
               disabled: merging,
             },
@@ -156,7 +156,7 @@ export const useDuplicatesGroup = ({
           .action(
             'merge',
             {
-              label: ['merge-duplicates.label', { ns: meta.profile.key }],
+              label: ['merge-duplicates.label', { ns: SpaceNamespace.key }],
               icon: 'ph--arrows-merge--regular',
               variant: 'primary',
               iconOnly: false,
@@ -167,7 +167,7 @@ export const useDuplicatesGroup = ({
           .action(
             'skip',
             {
-              label: ['skip-duplicates.label', { ns: meta.profile.key }],
+              label: ['skip-duplicates.label', { ns: SpaceNamespace.key }],
               iconOnly: false,
               // Same bound as the next arrow: skipping past the last group left the counter out of range.
               disabled: position >= total || merging,
@@ -181,7 +181,7 @@ export const useDuplicatesGroup = ({
         .action(
           'rescan',
           {
-            label: ['rescan-duplicates.label', { ns: meta.profile.key }],
+            label: ['rescan-duplicates.label', { ns: SpaceNamespace.key }],
             icon: 'ph--arrows-clockwise--regular',
             disabled: scanning || merging,
             spin: scanning,
@@ -195,7 +195,7 @@ export const useDuplicatesGroup = ({
                 .action(
                   'previous',
                   {
-                    label: ['previous-duplicate.label', { ns: meta.profile.key }],
+                    label: ['previous-duplicate.label', { ns: SpaceNamespace.key }],
                     icon: 'ph--caret-left--regular',
                     disabled: position <= 1 || merging,
                   },
@@ -207,7 +207,7 @@ export const useDuplicatesGroup = ({
                     // The group counter is not an action; `custom` lets the graph carry it so the toolbar stays
                     // a single menu rather than a menu plus a hand-rolled toolbar for one label.
                     variant: 'custom',
-                    label: ['duplicates-position.label', { ns: meta.profile.key }],
+                    label: ['duplicates-position.label', { ns: SpaceNamespace.key }],
                     render: () => (
                       <span className='text-fg-muted text-sm tabular-nums'>
                         {position} / {total}
@@ -219,7 +219,7 @@ export const useDuplicatesGroup = ({
                 .action(
                   'next',
                   {
-                    label: ['next-duplicate.label', { ns: meta.profile.key }],
+                    label: ['next-duplicate.label', { ns: SpaceNamespace.key }],
                     icon: 'ph--caret-right--regular',
                     disabled: position >= total || merging,
                   },

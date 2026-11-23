@@ -11,24 +11,31 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { meta } from '#meta';
-import { ProjectOperation } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
+import { artifacts } from '../artifacts.ts';
+import { ProjectsNamespace } from '../namespace.ts';
+import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from '../paths.ts';
+import * as ProjectGraph from '../ProjectGraph.ts';
+import * as SpecSession from '../SpecSession.ts';
 import { inboxResearch } from '../templates/index.ts';
+import { readSpecTree } from '../util/spec-tree.ts';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
@@ -64,6 +71,7 @@ export default Capability.makeModule(
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
     const taskExtensions = yield* createProjectTasksExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
+    const specCompanionExtensions = yield* createSpecCompanionExtension();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
       ...actionExtensions,
@@ -73,9 +81,55 @@ export default Capability.makeModule(
       ...artifactsActionExtensions,
       ...taskExtensions,
       ...mailboxExtensions,
+      ...specCompanionExtensions,
     ]);
   }),
 );
+
+const makeSpecCompanion = (group: SpecSession.Group) =>
+  AppNode.makeCompanion({
+    variant: SpecSession.companionVariant(group),
+    label: SpecSession.companionLabel(group),
+    icon: SpecSession.companionIcon[group],
+    data: SpecSession.companionVariant(group),
+  });
+
+/**
+ * A spec's companion tabs, one per group that some plugin contributes a view to for the spec's dialects: beside the
+ * spec, and beside a project with specs (for whichever its Specs tab shows).
+ */
+const createSpecCompanionExtension = Effect.fnUntraced(function* () {
+  const viewsAtom = yield* Capability.atom(ProjectCapabilities.SpecView);
+  const viewStateAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
+  const groupsFor = (views: readonly ProjectCapabilities.SpecView[], dialects: readonly string[]) =>
+    SpecSession.GROUPS.filter((group) =>
+      views.some((view) => view.group === group && view.dialects.every((dialect) => dialects.includes(dialect))),
+    );
+  const specCompanions = yield* AppGraphBuilder.createTypeExtension({
+    id: 'specCompanions',
+    relation: AppNode.companion,
+    type: Spec.Spec,
+    connector: (spec, get) =>
+      Effect.succeed(groupsFor(get(viewsAtom), get(Obj.atom(spec)).dialects).map(makeSpecCompanion)),
+  });
+  // A project offers the groups of the spec its Specs tab shows, at any depth, the first while none is picked.
+  const projectCompanions = yield* AppGraphBuilder.createTypeExtension({
+    id: 'projectSpecCompanions',
+    relation: AppNode.companion,
+    type: Project.Project,
+    connector: (project, get) => {
+      const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
+      const tree = readSpecTree(specs, get);
+      const [viewState] = get(viewStateAtom);
+      const picked = viewState ? get(viewState.atom(ProjectView.aspect, Obj.getURI(project))).spec : undefined;
+      const shown = (tree.find(({ spec }) => spec.id === picked) ?? tree[0])?.spec;
+      return Effect.succeed(
+        shown ? groupsFor(get(viewsAtom), get(Obj.atom(shown)).dialects).map(makeSpecCompanion) : [],
+      );
+    },
+  });
+  return [...specCompanions, ...projectCompanions];
+});
 
 /**
  * "Set up project" on the primary mailbox node (`systemTag: 'inbox'`, so it appears once, not on
@@ -85,11 +139,14 @@ export default Capability.makeModule(
  * dependency direction); injecting actions into another plugin's nodes is the established pattern
  * (e.g. plugin-brain's mailbox Analyze action).
  */
-export const createMailboxProjectExtension = () =>
-  AppGraphBuilder.createExtension({
+export const createMailboxProjectExtension = Effect.fnUntraced(function* () {
+  const readOnly = yield* ReadOnly.atom;
+  return yield* AppGraphBuilder.createExtension({
     id: 'mailboxProjectActions',
-    match: (node) =>
-      node.properties.systemTag === 'inbox' && Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none(),
+    match: (node, get) =>
+      !get(readOnly) && node.properties.systemTag === 'inbox' && Mailbox.instanceOf(node.data)
+        ? Option.some(node.data)
+        : Option.none(),
     actions: (mailbox) => {
       const db = Obj.getDatabase(mailbox);
       if (!db) {
@@ -109,7 +166,7 @@ export const createMailboxProjectExtension = () =>
               yield* Operation.invoke(LayoutOperation.Open, { subject: [...subject] });
             }),
           properties: {
-            label: ['setup-project.label', { ns: meta.profile.key }],
+            label: ['setup-project.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--stack-plus--regular',
             disposition: 'list-item',
             testId: 'projectsPlugin.setupProject',
@@ -118,25 +175,10 @@ export const createMailboxProjectExtension = () =>
       ]);
     },
   });
+});
 
 /** Node `type` of a project's virtual Chats branch; the child extension below matches on it. */
 export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
-
-/** Path segment of the Chats branch. */
-export const SESSIONS_SEGMENT = 'sessions';
-
-/**
- * One URL binding for everything a project contains, shared with the type section that addresses the
- * project itself — so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
- * `project/<id>+sessions+<session>` a session. The path is fixed only as far as the Project section;
- * what varies below it rides in the pair's id, `+`-joined, and the chain reconstructs with no lookup.
- * Every extension under the key must share this one path, or a node's address forks by connector.
- */
-const PROJECT_URL: AppGraphBuilder.UrlBinding = {
-  key: 'project',
-  kind: 'item',
-  path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
-};
 
 /**
  * Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it, and
@@ -163,7 +205,7 @@ export const createProjectChatsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChats',
     // Selectable, so addressable: the row opens its chats as cards.
-    url: PROJECT_URL,
+    url: ProjectGraph.PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
@@ -175,7 +217,7 @@ export const createProjectChatsExtension = () =>
           type: CHATS_SECTION_TYPE,
           data: { branch: 'chats', project } satisfies ChatsBranch,
           properties: {
-            label: ['chats.label', { ns: meta.profile.key }],
+            label: ['chats.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--sparkle--regular',
             iconHue: 'amber',
             role: 'branch',
@@ -196,13 +238,14 @@ export const createProjectChatsExtension = () =>
  * same edge every companion chat uses — so what is project-specific is only the DISPLAY: project
  * chats surface in the navtree, other companions stay in their subject's companion panel.
  *
- * Addressed as the project's (see {@link PROJECT_URL}), not under plugin-assistant's `chat` key,
+ * Addressed as the project's (see {@link ProjectGraph.PROJECT_URL}), not under plugin-assistant's `chat` key,
  * which reaches a parentless chat by a different path.
  */
-export const createProjectChatsChildrenExtension = () =>
-  AppGraphBuilder.createExtension({
+export const createProjectChatsChildrenExtension = Effect.fnUntraced(function* () {
+  const readOnly = yield* ReadOnly.atom;
+  return yield* AppGraphBuilder.createExtension({
     id: 'projectChatsChildren',
-    url: PROJECT_URL,
+    url: ProjectGraph.PROJECT_URL,
     match: (node) =>
       node.type === CHATS_SECTION_TYPE && isChatsBranch(node.data) ? Option.some(node.data.project) : Option.none(),
     connector: (project, get) => {
@@ -218,15 +261,19 @@ export const createProjectChatsChildrenExtension = () =>
             .select(Filter.not(Filter.annotation(ArchivedAnnotation, true))),
         ).atom,
       );
+      const fixed = get(readOnly);
       return Effect.succeed(
         children
           .filter(Obj.instanceOf(Chat.Chat))
-          .map((chat) => AppNode.makeObject({ get, db, object: chat, navigable: true }))
+          .map((chat) =>
+            AppNode.makeObject({ get, db, object: chat, navigable: true, draggable: !fixed, droppable: !fixed }),
+          )
           // `makeObject` yields null for an object it cannot resolve a node for.
           .filter((node): node is NonNullable<typeof node> => node !== null),
       );
     },
   });
+});
 
 /**
  * Every task in the project's set as a hidden child of the project node, so `…/project/<id>/<taskId>`
@@ -239,7 +286,7 @@ export const createProjectChatsChildrenExtension = () =>
 export const createProjectTasksExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectTasks',
-    url: PROJECT_URL,
+    url: ProjectGraph.PROJECT_URL,
     match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
     connector: (project, get) => {
       const db = Obj.getDatabase(project);
@@ -264,10 +311,12 @@ export const createProjectTasksExtension = () =>
  * own create-chat button rather than sharing this one — the two surfaces are expected to diverge as
  * the toolbar grows, and a shared `toolbar` disposition here would double up with it.
  */
-export const createProjectActionExtension = () =>
-  AppGraphBuilder.createExtension({
+export const createProjectActionExtension = Effect.fnUntraced(function* () {
+  const readOnly = yield* ReadOnly.atom;
+  return yield* AppGraphBuilder.createExtension({
     id: 'projectActions',
-    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+    match: (node, get) =>
+      !get(readOnly) && Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none(),
     actions: (project) =>
       Effect.succeed([
         AppGraphNode.makeAction({
@@ -287,7 +336,7 @@ export const createProjectActionExtension = () =>
               yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
             }),
           properties: {
-            label: ['create-chat.label', { ns: meta.profile.key }],
+            label: ['create-chat.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--sparkle--regular',
             disposition: 'list-item-primary',
             testId: 'projectsPlugin.createChat',
@@ -295,15 +344,10 @@ export const createProjectActionExtension = () =>
         }),
       ]),
   });
-
-export const artifacts = (project: Project.Project): ContainerModel.Container =>
-  ContainerModel.make(project, 'artifacts', { removeLabel: ['remove-from-project.label', { ns: meta.profile.key }] });
+});
 
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
-
-/** Path segment (and node id) of that branch under its project. */
-export const ARTIFACTS_SEGMENT = 'artifacts';
 
 /** Data carried by the Artifacts branch node; tagged for the reason {@link ChatsBranch} is. */
 export type ArtifactsBranch = { branch: 'artifacts'; project: Project.Project };
@@ -323,16 +367,17 @@ export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
  * Separate from {@link createProjectChatsExtension}: both connect children to a project node and the
  * graph merges them, but chats are ECHO children while artifacts hang off the ref array.
  */
-export const createProjectArtifactsExtension = () =>
-  AppGraphBuilder.createExtension({
+export const createProjectArtifactsExtension = Effect.fnUntraced(function* () {
+  const readOnly = yield* ReadOnly.atom;
+  return yield* AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
     // Selectable, so addressable: the row opens its artifacts as cards.
-    url: PROJECT_URL,
+    url: ProjectGraph.PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
         : Option.none(),
-    connector: ({ project, space }) => {
+    connector: ({ project, space }, get) => {
       const db = Obj.getDatabase(project);
       return Effect.succeed([
         // Built inline rather than via `AppNode.makeSection`: that helper takes a typed `Space`, which
@@ -346,7 +391,7 @@ export const createProjectArtifactsExtension = () =>
           // matched only by {@link createProjectArtifactsActionExtension}.
           data: { branch: 'artifacts', project } satisfies ArtifactsBranch,
           properties: {
-            label: ['artifacts.label', { ns: meta.profile.key }],
+            label: ['artifacts.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--cube--regular',
             iconHue: 'amber',
             role: 'branch',
@@ -355,12 +400,13 @@ export const createProjectArtifactsExtension = () =>
             droppable: false,
             space,
             testId: 'projectsPlugin.artifactsSection',
-            ...(db ? AppNode.getListPartials(artifacts(project), db) : {}),
+            ...(db && !get(readOnly) ? AppNode.getListPartials(artifacts(project), db) : {}),
           },
         }),
       ]);
     },
   });
+});
 
 /**
  * The Artifacts branch's own children and its `+` action: create an object through the standard
@@ -369,13 +415,14 @@ export const createProjectArtifactsExtension = () =>
  * The dialog places the object in the space; the ref array is what makes it the project's, so the
  * link is written here rather than left to the dialog's own placement.
  *
- * Addressed as the project's (see {@link PROJECT_URL}), which is a different node from the same object
+ * Addressed as the project's (see {@link ProjectGraph.PROJECT_URL}), which is a different node from the same object
  * under its own type section, so an artifact opened from a project comes back to the project.
  */
-export const createProjectArtifactsActionExtension = () =>
-  AppGraphBuilder.createExtension({
+export const createProjectArtifactsActionExtension = Effect.fnUntraced(function* () {
+  const readOnly = yield* ReadOnly.atom;
+  return yield* AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
-    url: PROJECT_URL,
+    url: ProjectGraph.PROJECT_URL,
     match: (node) =>
       node.type === ARTIFACTS_SECTION_TYPE && isArtifactsBranch(node.data)
         ? Option.some({ project: node.data.project, nodeId: node.id })
@@ -387,14 +434,21 @@ export const createProjectArtifactsActionExtension = () =>
       }
 
       const objects = get(db.query(Query.select(Filter.entity(project)).reference('artifacts')).atom);
+      const fixed = get(readOnly);
       return Effect.succeed(
         objects
-          .map((object) => AppNode.makeObject({ get, db, object, navigable: true }))
+          .map((object) =>
+            AppNode.makeObject({ get, db, object, navigable: true, draggable: !fixed, droppable: !fixed }),
+          )
           .filter((node): node is NonNullable<typeof node> => node !== null),
       );
     },
-    actions: ({ project, nodeId }) =>
-      Effect.succeed([
+    actions: ({ project, nodeId }, get) => {
+      if (get(readOnly)) {
+        return Effect.succeed([]);
+      }
+
+      return Effect.succeed([
         AppGraphNode.makeAction({
           id: SpaceOperation.OpenObjectForm.meta.key,
           data: () =>
@@ -418,11 +472,13 @@ export const createProjectArtifactsActionExtension = () =>
               });
             }),
           properties: {
-            label: ['create-artifact.label', { ns: meta.profile.key }],
+            label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--plus--regular',
             disposition: 'list-item-primary',
             testId: 'projectsPlugin.addArtifact',
           },
         }),
-      ]),
+      ]);
+    },
   });
+});

@@ -1,0 +1,134 @@
+---
+spec: github:dxos/dxos/packages/apps/composer-app/spec/APP.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Composer
+
+Every item in this spec is an app-level `test`, so each is judged on whether a Playwright spec in
+`packages/e2e/composer-e2e` runs it, not on the app code. The multi-peer journeys are the solid part:
+QA-7, QA-8, QA-9, QA-10 and QA-12 each have e2e tests, tagged with the QA id, that drive every step.
+QA-5 and QA-6 are covered across several small tests. The single-user basics are thinner than their
+`automated:` lists suggest: QA-1, QA-2 and QA-3 each have tests for a few steps but not the journey
+(no multi-document deletion and survival, no document rename, no resolve and reopen). QA-4 is
+diverged: the only test sends a prompt to a standalone Chat, not a document's companion assistant.
+QA-11, QA-13 and QA-14 are run only by autocue recording scripts and the agent QA runner, which do not
+count as automated tests.
+
+Of 14 items: 7 done, 0 untested, 3 partial, 1 diverged, 3 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QA-1: Only the create-space and create-document steps are automated; deletion and survival are not.
+  status: partial
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/basic.spec.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/collections.spec.ts]
+  note: |
+    `basic.spec.ts` "create document" creates a space and one document; `collections.spec.ts` "create collection"
+    creates a collection. No test creates three documents, deletes one from the navtree with the toast and error
+    check, or verifies that the other two survive a reload.
+```
+
+```mdl
+verdict QA-2: Workspace reorder and delete-undo are automated; rename and space switching are not.
+  status: partial
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/basic.spec.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/collections.spec.ts]
+  note: |
+    "re-order workspaces" drags the rail and checks the order across a reload; "deletion undo restores collection"
+    deletes and undoes a collection, not a document. No test renames a document, checks the restored plank reopens,
+    or switches between two spaces and back.
+```
+
+```mdl
+verdict QA-3: Create, reply, delete message and delete thread are automated; resolve and reopen are not.
+  status: partial
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/comments.spec.ts]
+  note: |
+    `comments.spec.ts` creates a comment, adds a second message, deletes a message and deletes a thread (plus edit,
+    undo and selection, which the spec does not ask for). No test clicks Resolve or reopens a resolved thread.
+```
+
+```mdl
+verdict QA-4: The only test chats with a standalone Chat object; nothing has the document assistant edit a document.
+  status: diverged
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/chat.spec.ts]
+  note: |
+    `chat.spec.ts` "sends a message and receives a response" creates a Chat, sends a prompt and waits for a reply.
+    It does not open a document's companion assistant or check that a paragraph was translated in place.
+```
+
+```mdl
+verdict QA-5: First run, a second space, logout and recovery are each driven by a basic.spec.ts test.
+  status: done
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/basic.spec.ts]
+  note: Logout and recovery run on Chromium only (skipped in Firefox and WebKit as flaky).
+```
+
+```mdl
+verdict QA-6: Reorder, nest, delete with contents and undo each have a collections.spec.ts test.
+  status: done
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/collections.spec.ts]
+  note: The steps run as four separate tests rather than one journey; reorder runs on Chromium only.
+```
+
+```mdl
+verdict QA-7: Device join, recovery login, synced and device-local settings, and space deletion are driven by halo.spec.ts.
+  status: done
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/halo.spec.ts]
+```
+
+```mdl
+verdict QA-8: Invitation and two-way editing of one document are driven by collaboration.spec.ts.
+  status: done
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/collaboration.spec.ts]
+```
+
+```mdl
+verdict QA-9: The global tour (next, back, walk) and the document tour with contributed steps are driven by tour.spec.ts.
+  status: done
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/tour.spec.ts]
+  note: The document-tour test is `fixme` on WebKit.
+```
+
+```mdl
+verdict QA-10: contacts.spec.ts adds a known contact from the picker and the guest follows the join URL.
+  status: done
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/contacts.spec.ts]
+```
+
+```mdl
+verdict QA-11: Only an autocue recording script drives the basics tour; no test runs it.
+  status: missing
+  note: |
+    The spec names `autocue/composer-basics.mjs`, a recording script, as the driver. No Playwright spec in
+    `packages/e2e/composer-e2e/src/playwright` or `packages/apps/composer-app/src/playwright` covers the README
+    comment, canvas, table, assistant fill or map steps.
+```
+
+```mdl
+verdict QA-13: The plugin showcase is run only by the autocue overnight showcase script.
+  status: missing
+  note: |
+    `tools/autocue/showcase/overnight.mjs` drives it for recordings; no e2e spec asserts these steps (only
+    `presenter.spec.ts` and `tables.spec.ts` touch related plugins, separately).
+```
+
+```mdl
+verdict QA-12: messenger-demo.spec.ts drives the whole journey, from naming and invitation to the inbox Join and contacts.
+  status: done
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/messenger-demo.spec.ts]
+```
+
+```mdl
+verdict QA-14: Nothing automates the Bramble walkthrough.
+  status: missing
+  note: No e2e spec opens the Bramble template's inbox, contact card, project tasks or Roast Log; searched both playwright directories for "Spring" and "Bramble".
+```

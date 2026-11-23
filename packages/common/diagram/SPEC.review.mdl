@@ -1,0 +1,331 @@
+---
+spec: github:dxos/dxos/packages/common/diagram/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: DiagramStack
+
+The code meets this spec closely. The scene and semantic types match field for field, the three
+diagram kinds are dispatched in both `Dsl.parse` and `Dsl.compile`, and `checkKind` in
+`dsl/parse.ts` turns sequence-only and data-flow-only words into errors and ignored hints into
+warnings. The sequence engine implements activations, nesting, fragment-bounded bars, return checks,
+notes, fragments, label-driven spacing and stick-figure actors, and the data-flow rules emit the
+four warnings the spec names. Mermaid is marked deprecated in the core compilers, in the `Generate`
+operation and in the skills, and all four acceptance scenarios run as tests.
+
+The gaps are in test depth, not behaviour. Nested activation offsets (F-2.4), the end of an
+unreturned bar (F-2.5), the innermost-caller warning (F-2.6), stick-figure drawing (F-2.11),
+data-flow hints (F-3.2) and parse/compile equivalence (F-1.4) have code but no assertion. One small
+divergence: `checkKind` reports only the first ignored hint on an edge (waypoint, else side, else
+relationship word), not each one.
+
+Of 42 items: 36 done, 6 untested, 0 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Scene: Scene is a Schema struct holding objects: WorldObject[].
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/scene.ts#Scene]
+  tests: [github:dxos/dxos/packages/common/diagram/src/scene.test.ts]
+```
+
+```mdl
+verdict WorldObject: WorldObject carries id, origin, scale, index, ref and elements.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/scene.ts#WorldObject]
+  tests: [github:dxos/dxos/packages/common/diagram/src/scene.test.ts]
+```
+
+```mdl
+verdict Element: Element is the union of Box, Circle, Polyline, Curve, Arc, Text, Arrow and Portal, with an optional guide flag.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/scene.ts#Element]
+  tests: [github:dxos/dxos/packages/common/diagram/src/scene.test.ts]
+```
+
+```mdl
+verdict Command: Command is the union of the five edit commands.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/scene.ts#Command]
+  tests: [github:dxos/dxos/packages/common/diagram/src/scene.test.ts]
+```
+
+```mdl
+verdict Diagram: Semantic.Diagram has kind, flow, nodes, groups, edges and timeline, plus layout hints.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/semantic.ts#Diagram]
+  tests: [github:dxos/dxos/packages/common/diagram/src/dsl/semantic.test.ts, github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict DiagramKind: The kind is structure, sequence or dataflow.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/semantic.ts#DiagramKind]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts, github:dxos/dxos/packages/common/diagram/src/dataflow.test.ts]
+```
+
+```mdl
+verdict Step: Step is a message, note or fragment, in source order.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/semantic.ts#Step]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict Dsl: The DSL module exports the grammar's parser, read, parse, compile, print and convert.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dsl/parse.ts#read, github:dxos/dxos/packages/common/diagram/src/dsl/parse.ts#parse, github:dxos/dxos/packages/common/diagram/src/dsl/compile.ts#compile, github:dxos/dxos/packages/common/diagram/src/dsl/print.ts#print, github:dxos/dxos/packages/common/diagram/src/dsl/convert.ts#convert]
+  tests: [github:dxos/dxos/packages/common/diagram/src/dsl/dsl.test.ts, github:dxos/dxos/packages/common/diagram/src/dsl/semantic.test.ts, github:dxos/dxos/packages/common/diagram/src/dsl/convert.test.ts]
+```
+
+```mdl
+verdict SemanticEngine: compile runs the grid search and router, and adds mermaid-engine candidates when nothing is hinted.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/semantic-engine.ts#compile]
+  tests: [github:dxos/dxos/packages/common/diagram/src/semantic-engine.test.ts]
+```
+
+```mdl
+verdict SequenceEngine: solve lays out columns and rows deterministically into participant objects and one edges object.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict Dataflow: dataflow.ts supplies the role shapes and the flow checks; placement stays with the semantic engine.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dataflow.ts#nodeElements, github:dxos/dxos/packages/common/diagram/src/dataflow.ts#check]
+  tests: [github:dxos/dxos/packages/common/diagram/src/dataflow.test.ts]
+```
+
+```mdl
+verdict Diagnostics: analyze reports overlaps, crossings, bends and fit, and skips guide lines.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/diagnostics.ts#analyze]
+  tests: [github:dxos/dxos/packages/common/diagram/src/diagnostics.test.ts]
+```
+
+```mdl
+verdict ContentHandler: ContentHandler and applyCommands are the seam each variant implements.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/content.ts#ContentHandler, github:dxos/dxos/packages/common/diagram/src/content.ts#applyCommands]
+  tests: [github:dxos/dxos/packages/common/diagram/src/svg-handler.test.ts]
+```
+
+```mdl
+verdict MermaidDialects: Mermaid.compile, Uml.compile and MermaidEngine.compile are marked deprecated and still tested.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/mermaid.ts#compile, github:dxos/dxos/packages/common/diagram/src/uml.ts#compile, github:dxos/dxos/packages/common/diagram/src/mermaid-engine.ts#compile]
+  tests: [github:dxos/dxos/packages/common/diagram/src/mermaid.test.ts, github:dxos/dxos/packages/common/diagram/src/uml.test.ts, github:dxos/dxos/packages/common/diagram/src/mermaid-engine.test.ts]
+```
+
+```mdl
+verdict F-1.1: kind= picks SequenceEngine for sequence and SemanticEngine otherwise, over the same statements.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dsl/compile.ts#compile, github:dxos/dxos/packages/common/diagram/src/dsl/parse.ts#parse]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts, github:dxos/dxos/packages/common/diagram/src/dataflow.test.ts]
+```
+
+```mdl
+verdict F-1.2: checkKind reports sequence-only statements and roles of another kind as errors.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dsl/parse.ts#read, github:dxos/dxos/packages/common/diagram/src/semantic.ts#ROLES_BY_KIND]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts, github:dxos/dxos/packages/common/diagram/src/dataflow.test.ts]
+```
+
+```mdl
+verdict F-1.3: note, fragment and else parse as ids, and the printer leaves them unquoted.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dsl/parse.ts#read, github:dxos/dxos/packages/common/diagram/src/dsl/print.ts#print]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict F-1.4: Both parse and compile call SequenceEngine.solve for a sequence diagram, but no test compares them.
+  status: untested
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dsl/parse.ts#parse, github:dxos/dxos/packages/common/diagram/src/dsl/compile.ts#compile]
+  note: No test calls `Dsl.compile` on a sequence source; the equivalence holds by reading both dispatches.
+```
+
+```mdl
+verdict F-2.1: Participants are columns in declaration order, group members adjacent inside a guide frame.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#columnsOf]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict F-2.2: Each message is its own row going down; a self-message draws a loop.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict F-2.3: Plain, call, send and return messages are read and styled; a return is a dashed dependency arrow.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict F-2.4: A call opens a bar closed by its return; nested bars are offset by depth, but only the single bar is tested.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+  note: The nested-offset half (`bar.depth * BAR_W / 2`) has no assertion.
+```
+
+```mdl
+verdict F-2.5: Unreturned bars close at the end of their fragment section or after the participant's last message.
+  status: untested
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  note: Implemented in `drawFragment` (closes to the opened depth) and the `lastSeen` close after the timeline; no test checks either end.
+```
+
+```mdl
+verdict F-2.6: A return with no open call, or to someone other than the innermost caller, warns and is still drawn.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+  note: Only the no-open-call warning is tested; the innermost-caller warning has no test.
+```
+
+```mdl
+verdict F-2.7: Notes sit right, left or over a span of participants.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict F-2.8: Fragments draw a frame, operator tab, guards and dashed else dividers; else on other operators is an error.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve, github:dxos/dxos/packages/common/diagram/src/dsl/parse.ts#read]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict F-2.9: Column gaps grow with the labels between them.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict F-2.10: Ignored hints warn, but an edge reports only its first ignored hint.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dsl/parse.ts#read]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+  note: |
+    `checkKind` warns for pins, relations, waypoints, sides, relationship words and buses, but on an edge it uses an
+    else-if chain, so a waypoint hides a side or a relationship word on the same edge. Only relation and waypoint
+    warnings are tested.
+```
+
+```mdl
+verdict F-2.11: role=actor draws a stick figure with the name under it; no test checks the drawing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve]
+  note: The `actor` helper in `sequence-engine.ts` draws it; tests check only that the role is read.
+```
+
+```mdl
+verdict F-2.12: The LOGIN diagram lays out with no errors and no crossings; lifelines, dividers and frames are guides.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.ts#solve, github:dxos/dxos/packages/common/diagram/src/diagnostics.ts#analyze]
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict F-3.1: Processes are ellipses, externals shaded square boxes, stores boxes with a D-number compartment.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dataflow.ts#nodeElements]
+  tests: [github:dxos/dxos/packages/common/diagram/src/dataflow.test.ts]
+```
+
+```mdl
+verdict F-3.2: Data-flow diagrams go through SemanticEngine like structure, but no test uses hints or groups in one.
+  status: untested
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dsl/compile.ts#compile, github:dxos/dxos/packages/common/diagram/src/semantic-engine.ts#compile]
+  note: `dataflow.test.ts` lays out ORDERS without hints; the hint tests in `semantic-engine.test.ts` use structure diagrams.
+```
+
+```mdl
+verdict F-3.3: A flow between two non-processes warns.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dataflow.ts#check]
+  tests: [github:dxos/dxos/packages/common/diagram/src/dataflow.test.ts]
+```
+
+```mdl
+verdict F-3.4: Black holes, miracles and write-only stores warn.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dataflow.ts#check]
+  tests: [github:dxos/dxos/packages/common/diagram/src/dataflow.test.ts]
+```
+
+```mdl
+verdict F-4.1: Generate and the mermaid compilers carry @deprecated and keep working.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Generate, github:dxos/dxos/packages/common/diagram/src/mermaid.ts#compile, github:dxos/dxos/packages/common/diagram/src/uml.ts#compile, github:dxos/dxos/packages/common/diagram/src/mermaid-engine.ts#compile]
+  tests: [github:dxos/dxos/packages/common/diagram/src/mermaid.test.ts, github:dxos/dxos/packages/common/diagram/src/uml.test.ts]
+```
+
+```mdl
+verdict F-4.2: DrawingSkill teaches the DSL and calls mermaid deprecated; UmlSkill uses Generate only for class members.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts#semanticDiagrams, github:dxos/dxos/packages/plugins/plugin-uml/src/skills/UmlSkill.ts#make]
+  walkthrough:
+    - The drawing skill teaches the .dx kinds and says mermaid is deprecated. github:dxos/dxos/packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts#semanticDiagrams
+    - The UML skill points at Draw and reserves Generate for members in the boxes. github:dxos/dxos/packages/plugins/plugin-uml/src/skills/UmlSkill.ts#make
+  note: The skill text is prose an agent follows; no test checks that it avoids asking for mermaid.
+```
+
+```mdl
+verdict F-4.3: Dsl.convert turns mermaid sources into DSL text.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dsl/convert.ts#convert]
+  tests: [github:dxos/dxos/packages/common/diagram/src/dsl/convert.test.ts]
+```
+
+```mdl
+verdict F-4.4: draw calls Dsl.compile on DSL text; mermaid stays internal to SemanticEngine.compile.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/draw.ts, github:dxos/dxos/packages/common/diagram/src/semantic-engine.ts#compile]
+  note: No test drives the `Draw` operation handler; the plugin's tests do not call it.
+```
+
+```mdl
+verdict T-1: sequence-engine.test.ts parses LOGIN and checks problems, diagnostics, crossings and row order.
+  status: done
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict T-2: "a call opens an activation and its return closes it" checks the bar spans the two rows.
+  status: done
+  tests: [github:dxos/dxos/packages/common/diagram/src/sequence-engine.test.ts]
+```
+
+```mdl
+verdict T-3: dataflow.test.ts checks ORDERS's shapes and clean layout, and the four warnings.
+  status: done
+  tests: [github:dxos/dxos/packages/common/diagram/src/dataflow.test.ts]
+```
+
+```mdl
+verdict T-4: DrawingSkill.test.ts parses every fenced example and checks problems and layout errors.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/skills/DrawingSkill.test.ts]
+```

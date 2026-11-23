@@ -1,0 +1,45 @@
+---
+title: Map
+description: A tiled street map with markers and lines.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui-geo/map" height="24rem" />
+
+```ts
+import { Map } from '@dxos/react-ui-geo';
+```
+
+```sh
+npm install @dxos/react-ui-geo
+```
+
+`Map` is a street map on Leaflet, drawn from map tiles, with markers and lines over it. It loads tiles from
+OpenStreetMap unless you give it another server. For a map that needs no tile server, use
+[`Globe`](/docs/tile/api/react-ui-geo/globe/).
+
+Add the package's strings from `@dxos/react-ui-geo/translations` to the `resourceExtensions` of `Theme.Provider`.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Map.Root` | The root, which holds the map. Its `ref` gives a `MapController`, and `onChange` reports the center and zoom |
+| `Map.Viewport` | The Leaflet frame, which takes focus |
+| `Map.Tiles` | The tile layer. `url` is a tile URL template |
+| `Map.Markers` | A marker per `GeoMarker`. `onSelect` gets the clicked marker's id |
+| `Map.Lines` | Lines between places, such as a route |
+| `Map.Zoom` | The zoom in and zoom out buttons |
+| `Map.Action` | A start button |
+
+## `Map.Markers`
+
+`Map.Markers` draws a marker for each `GeoMarker` and reports the one the user clicks.
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `markers` | `GeoMarker[]` | Sets the markers, each an `id`, a `title` and a `location` |
+| `lines` | `MapLine[]` | Sets the lines the view fits around. `Map.Lines` draws them |
+| `selected` | `string[]` | Sets the ids of the markers to highlight |
+| `onSelect` | `(id) => void` | The user clicked a marker |

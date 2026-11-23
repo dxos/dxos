@@ -447,6 +447,65 @@ describe('QueryExecutor.matchesHint — id-rooted relation traversal', () => {
 });
 
 // ---------------------------------------------------------------------------
+// QueryExecutor.matchesHint — id-rooted typed relation query
+//
+// `Query.select(Filter.id(root)).targetOf(Relation)` returns the relations themselves, so its result changes only
+// when the root changes, a relation of that type changes, or an endpoint of a returned relation changes. Edits to
+// other objects in the space (typing in a document's text, say) must not re-run it.
+// ---------------------------------------------------------------------------
+
+describe('QueryExecutor.matchesHint — id-rooted typed relation query', () => {
+  const ROOT_ID = EntityId.random();
+  const HAS_MANAGER_TYPENAME = 'com.example.type.hasManager';
+
+  const relationsOfRoot = () =>
+    makeExecutor(withSpace(Query.select(Filter.id(ROOT_ID)).targetOf(TestSchema.HasManager)));
+
+  test('skips a write to an unrelated object in the same space', ({ expect }) => {
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SPACE_ID),
+      typenames: makeTypeSet(PERSON_TYPENAME),
+      objectIds: makeObjectSet(EntityId.random()),
+    });
+    expect(relationsOfRoot().matchesHint(hint)).toBe(false);
+  });
+
+  test('re-runs when a relation of the traversed type changes (hint omits the root id)', ({ expect }) => {
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SPACE_ID),
+      typenames: makeTypeSet(HAS_MANAGER_TYPENAME),
+      objectIds: makeObjectSet(EntityId.random()),
+    });
+    expect(relationsOfRoot().matchesHint(hint)).toBe(true);
+  });
+
+  test('re-runs when the root changes', ({ expect }) => {
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SPACE_ID),
+      typenames: makeTypeSet(PERSON_TYPENAME),
+      objectIds: makeObjectSet(ROOT_ID),
+    });
+    expect(relationsOfRoot().matchesHint(hint)).toBe(true);
+  });
+
+  test('re-runs for a hint that does not name its types', ({ expect }) => {
+    const hint = makeHint({ spaceIds: makeSpaceSet(SPACE_ID), objectIds: makeObjectSet(EntityId.random()) });
+    expect(relationsOfRoot().matchesHint(hint)).toBe(true);
+  });
+
+  test('skips a write in another space', ({ expect }) => {
+    const hint = makeHint({ spaceIds: makeSpaceSet(SpaceId.random()), typenames: makeTypeSet(HAS_MANAGER_TYPENAME) });
+    expect(relationsOfRoot().matchesHint(hint)).toBe(false);
+  });
+
+  test('stays conservative when the traversal continues past the relations', ({ expect }) => {
+    const executor = makeExecutor(withSpace(Query.select(Filter.id(ROOT_ID)).targetOf(TestSchema.HasManager).source()));
+    const hint = makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet('com.example.unrelated') });
+    expect(executor.matchesHint(hint)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // QueryExecutor.matchesHint — queue-scope derives spaceId
 // ---------------------------------------------------------------------------
 

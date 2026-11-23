@@ -18,6 +18,8 @@ const CONVENTIONAL_ENTRYPOINTS = new Set([
   './testing',
   './translations',
   './vite-plugin',
+  // The config loader alone, for the compiled CLI, which cannot bundle the rest of `./vite-plugin`.
+  './vite-plugin/config',
 ]);
 
 /**

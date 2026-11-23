@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -15,9 +15,9 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Ontology } from '@dxos/echo-memory';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person, ProfileOf, Task, TaskSet } from '@dxos/types';
@@ -73,6 +73,9 @@ const SKILLS = [
 ];
 
 const brain = makeTestBrain();
+
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
 
 const TestLayer = AssistantTestLayer({
   extraServices: Layer.merge(testSpaceLayer, brain.layer),
@@ -162,6 +165,55 @@ describe('Modes', () => {
   );
 
   it.effect(
+    'mode switches neither restore a skill removed from the instructions nor take one a chat started with',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const instructions = yield* Database.load(agent.instructions);
+        Obj.update(instructions, (instructions) => {
+          instructions.skills = instructions.skills.filter(({ uri }) => uri !== Skill.registryURI(RelaySkill.key));
+        });
+        const person = yield* Database.add(Person.make({ fullName: 'Ada' }));
+        yield* Database.flush();
+        const { chat: chatRef } = yield* Operation.invoke(AgentOperation.EnsureParticipantChat, {
+          agent: agentRef,
+          person: Ref.make(person),
+        });
+        const chat = yield* Database.load(chatRef);
+        yield* Database.flush();
+
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: chatRef, mode: 'Note-taker' });
+        yield* Database.flush();
+        expect(yield* boundKeys(agentRef, chat)).not.toContain(RelaySkill.key);
+
+        // Relay is now only the Relay mode's skill, so leaving that mode unbinds it.
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: chatRef, mode: 'Relay' });
+        yield* Database.flush();
+        expect(yield* boundKeys(agentRef, chat)).toContain(RelaySkill.key);
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: chatRef, mode: Mode.DEFAULT });
+        yield* Database.flush();
+        expect(yield* boundKeys(agentRef, chat)).not.toContain(RelaySkill.key);
+
+        // The agent's own chat started with Relay, and an edit to the instructions never takes it away.
+        const primary = yield* Agent.loadChat(agent);
+        expect(primary).toBeDefined();
+        if (!primary) {
+          return;
+        }
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: Ref.make(primary), mode: 'Note-taker' });
+        yield* Database.flush();
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: Ref.make(primary), mode: Mode.DEFAULT });
+        yield* Database.flush();
+        expect(yield* boundKeys(agentRef, primary)).toContain(RelaySkill.key);
+        expect(yield* boundKeys(agentRef, primary)).not.toContain(NoteTakerSkill.key);
+      },
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'records notes as facts stated by the agent about their subject',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -196,7 +248,7 @@ describe('Modes', () => {
         const store = brain.facts((yield* Database.load(agent)).id);
         const stored = store ? yield* store.query({}) : [];
         const fact = stored.find((fact) => fact.graph === owner);
-        expect(fact?.assertion.predicateIri).toBe(RDF.Ontology.DEFAULT.resolve('works on').iri);
+        expect(fact?.assertion.predicateIri).toBe(Ontology.DEFAULT.resolve('works on').iri);
         expect(fact?.attribution.agentLabel).toBe('Kai');
         expect(fact?.kind).toBeUndefined();
       },

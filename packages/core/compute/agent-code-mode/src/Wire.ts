@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { DatabaseImpl } from '@dxos/echo-client';
-import { EntityId, URI } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 
 /**
  * How an operation's input and output cross the worker boundary, where both sides open the same
@@ -22,6 +22,8 @@ import { EntityId, URI } from '@dxos/keys';
  * - A stored object crosses as its id and heads; the receiver loads its own copy once it has them.
  * - A detached object crosses as its properties and is rebuilt as a detached object of its type.
  * - A reference crosses as its `{ '/': uri }` envelope and comes back a `Ref`.
+ * - A stored object's JSON (an `@uri` record, as a runtime that answers in JSON returns one) crosses as that object,
+ *   or as the JSON again when the receiver cannot load it.
  */
 
 /** The receiver could not produce the value the sender named. */
@@ -33,6 +35,7 @@ export type Heads = Record<string, string[]>;
 // Namespaced so that no plain value the model passes is read as one of these.
 const STORED_KEY = '@dxos/agent-code-mode/stored';
 const DETACHED_KEY = '@dxos/agent-code-mode/detached';
+const SNAPSHOT_KEY = '@dxos/agent-code-mode/snapshot';
 const REFERENCE_KEY = '/';
 
 const Stored = Schema.Struct({
@@ -43,6 +46,8 @@ const Stored = Schema.Struct({
 });
 
 const Detached = Schema.Struct({ typename: Schema.String, properties: Schema.Record(Schema.String, Schema.Unknown) });
+
+const Snapshot = Schema.Struct({ stored: Stored, json: Schema.Record(Schema.String, Schema.Unknown) });
 
 /** How long a receiver waits for an object's own document to catch up with the sender's edit. */
 const CATCH_UP_TIMEOUT = Duration.seconds(5);
@@ -65,6 +70,16 @@ export const settle = (db: Database.Database): Effect.Effect<Heads, WireError> =
     },
     catch: (cause) => new WireError({ message: 'Could not write the changes to hand over.', cause }),
   });
+
+/**
+ * Writes this side's changes for a reader that refreshes its documents from the store instead of waiting on heads,
+ * which services that write through to a store can neither report nor wait for. Hands over no heads.
+ */
+export const flush = (db: Database.Database): Effect.Effect<Heads, WireError> =>
+  Effect.tryPromise({
+    try: () => db.flush(),
+    catch: (cause) => new WireError({ message: 'Could not write the changes to hand over.', cause }),
+  }).pipe(Effect.as({}));
 
 /** Waits until this replica carries `heads`. */
 export const catchUp = (db: Database.Database, heads: Heads): Effect.Effect<void, WireError> =>
@@ -105,7 +120,18 @@ export const encode = (value: unknown, db: Database.Database): unknown => {
     return value.map((entry) => encode(entry, db));
   }
   if (isRecord(value)) {
-    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, encode(entry, db)]));
+    // A field set to `undefined` is dropped, as JSON drops it: a schema's optional field does not take `undefined`.
+    const json = Object.fromEntries(
+      Object.entries(value).flatMap(([key, entry]) => (entry === undefined ? [] : [[key, encode(entry, db)]])),
+    );
+    const { id, '@uri': uri } = value;
+    if (typeof id === 'string' && typeof uri === 'string') {
+      const eid = EID.tryParse(uri);
+      return {
+        [SNAPSHOT_KEY]: { stored: { id, spaceId: (eid && EID.getSpaceId(eid)) ?? '', uri, heads: [] }, json },
+      };
+    }
+    return json;
   }
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 };
@@ -125,6 +151,12 @@ export const decode = (value: unknown, db: Database.Database): Effect.Effect<unk
   const detachedObject = sole(value, DETACHED_KEY);
   if (detachedObject !== undefined) {
     return Schema.is(Detached)(detachedObject) ? rebuild(detachedObject, db) : malformed(DETACHED_KEY);
+  }
+  const snapshot = sole(value, SNAPSHOT_KEY);
+  if (snapshot !== undefined) {
+    return Schema.is(Snapshot)(snapshot)
+      ? load(snapshot.stored, db).pipe(Effect.catch(() => decode(snapshot.json, db)))
+      : malformed(SNAPSHOT_KEY);
   }
   const reference = sole(value, REFERENCE_KEY);
   if (URI.isURI(reference)) {
@@ -150,16 +182,21 @@ const detached = (object: Obj.Unknown, db: Database.Database): unknown => {
   return { [DETACHED_KEY]: { typename, properties: encode(properties, db) } };
 };
 
-/** Found by id in its own space, since the query service there has already indexed the sender's flush. */
+/**
+ * Found by id in its own space, since the query service there has already indexed the sender's flush;
+ * else by its URI, which also reaches an object that lives in a feed (an email in a mailbox), not the
+ * space's index.
+ */
 const load = (
   { id, spaceId, uri, heads }: typeof Stored.Type,
   db: Database.Database,
 ): Effect.Effect<Obj.Unknown, WireError> =>
   Effect.tryPromise({
-    try: async () =>
-      spaceId === String(db.spaceId) && EntityId.isValid(id)
-        ? (await db.query(Filter.id(id)).run())[0]
-        : await db.makeRef(URI.make(uri)).load(),
+    try: async () => {
+      const [indexed] =
+        spaceId === String(db.spaceId) && EntityId.isValid(id) ? await db.query(Filter.id(id)).run() : [];
+      return indexed ?? (await db.makeRef(URI.make(uri)).load());
+    },
     catch: (cause) => new WireError({ message: `Object not found: ${uri}`, cause }),
   }).pipe(
     Effect.flatMap((object) =>

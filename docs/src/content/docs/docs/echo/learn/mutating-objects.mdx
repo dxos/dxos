@@ -1,0 +1,77 @@
+---
+title: Mutating objects
+description: Create, change and remove the tutorial app's records, and observe each change.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
+
+By the end of this page the app will add, edit and remove records, and you will watch a record change.
+
+## Background
+
+With a REST API, a write is a request, and your code waits for the answer. In ECHO, writes are local. `db.add` and
+`Obj.update` return once the change is in the local database, and replication runs after.
+
+An object you make with `Obj.make` exists only in memory until you add it to a database. `db.add` starts tracking it.
+From then on, the database stores every change and sends it to the space's other peers. Step 1 adds a record.
+
+You read a tracked object like any other, but you change it only inside `Obj.update`. The callback gets a mutable
+view of the object. Each update is one change, which peers apply whole, and which notifies subscribers once. Step 3
+relies on this to send several fields as one change.
+
+When two peers change the same object concurrently, both keep their edits. ECHO merges them field by field.
+
+We put each change in the component that makes it: adding and editing in `RecordForm.tsx`, removing in
+`Contacts.tsx`, and watching in `RecordGraph.tsx`.
+
+## Steps
+
+<Steps>
+
+1. **Add records.** `db.add` takes an object made with `Obj.make` and returns it, now tracked. The **New** form calls
+   `handleSave` with its values when you press save.
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="add" lang="tsx" />
+
+   `onCreate` gets the object that `db.add` returns, so the app can select the new record as soon as it exists.
+
+2. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops
+   the subscription. The graph subscribes to every record, so that it can redraw an edge when a reference moves.
+
+   <Snippet file="echo-tutorial/app/RecordGraph" region="subscribe" lang="tsx" />
+
+   `revision` goes up by one on each callback, and the graph redraws when it changes. A query's subscription would
+   not do this job, because a field changed in place leaves the query's results as they were.
+
+3. **Change a record.** The form calls `handleChange` as you type, and `handleChange` writes inside `Obj.update`.
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="update" lang="tsx" />
+
+   `Object.assign` sets every changed field inside one `Obj.update`, so the fields reach peers and subscribers as
+   one change.
+
+4. **Remove a record.** `db.remove` takes the object to remove. The **×** on a row calls `handleRemove` with the
+   row's id.
+
+   <Snippet file="echo-tutorial/app/Contacts" region="remove" lang="tsx" />
+
+   <Aside type="note" title="Removed, not yet gone">
+     `db.remove` marks the object as deleted, and queries leave it out from then on. ECHO keeps the object in the
+     change history until the next [epoch](/docs/echo/resources/glossary#epoch), so a peer that wrote while
+     offline can still merge its changes when it reconnects.
+   </Aside>
+
+</Steps>
+
+## Try it
+
+Select a record and change a field, and the list follows as you type. Press **New** to add a record of the chosen
+type, and press the **×** on a row to remove it. [React](/docs/echo/guides/react/) shows how the form is built.
+
+<TutorialEmbed stage="records" />
+
+## What you can do now
+
+You can add records to a database, change them inside `Obj.update`, watch them change, and remove them.

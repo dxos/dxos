@@ -13,7 +13,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from '../../namespace.ts';
 
 type TriggerStatusState = 'disabled' | 'idle' | 'running' | 'error';
 
@@ -44,7 +44,7 @@ const getIconClassNames = (state: TriggerStatusState): string | undefined => {
 export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 
 export const SpaceStatus = ({ space }: SpaceStatusProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   const { state } = RoutineHooks.useTriggerRuntimeControls(space.db);
   // The dispatcher is stopped for the space when `triggersDisabled` is set, so `enabled` already
   // reflects the space-wide kill-switch; per-trigger edge routing does not affect this indicator.
@@ -108,7 +108,7 @@ const TriggerStatusPopover = ({
   currentFunctionName,
   lastInvocation, // TODO(burdon): Show.
 }: TriggerStatusPopoverProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
 
   return (
     <Layout.Flex column gap='sm' classNames='p-2 w-popover-min-width'>

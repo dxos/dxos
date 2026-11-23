@@ -2,4 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as PipelinePlugin from './PipelinePlugin.ts';
+export * as PipelinePlugin from '#meta';

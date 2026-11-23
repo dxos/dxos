@@ -20,7 +20,7 @@ export const parseOptions = Effect.fn(function* (options: {
   functionId: Option.Option<string>;
   spaceId: Option.Option<Key.SpaceId>;
 }) {
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const identity = client.halo.identity.get();
   if (!identity) {
     return yield* Effect.fail(new CliError({ message: 'Identity not available' }));

@@ -10,17 +10,27 @@ import * as Record from 'effect/Record';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { type OpaqueToolkit, callTool } from '@dxos/ai';
-import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFromTool } from '@dxos/assistant';
+import {
+  AiRequest,
+  AiSession,
+  TrajectoryStore,
+  type TurnBindings,
+  createToolkit,
+  formatBindingChanges,
+  formatSystemPrompt,
+  getOperationFromTool,
+} from '@dxos/assistant';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import { Database, Obj } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import type { ContentBlock, Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
-import { type CallLabel, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
-import { describeTypes } from './fields.ts';
+import type { Dialect, SandboxOperation } from './Dialect.ts';
+import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
+import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -102,78 +112,159 @@ const runCodeModeTurn = ({
     // model's effects, and `Operation.invoke` resolves its handler through `Operation.Service`.
     const runtime = yield* Effect.context<Database.Service | Operation.Service>();
 
-    const history = yield* Effect.promise(() => session.getHistory());
-    // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
-    let labelCall = labelEvalCall([]);
-    const request = new AiRequest.Request({
-      onOutput: (message) => Effect.promise(() => session.appendTurnMessage(labelEvalCalls(message, labelCall))),
+    // A turn in a thread (a light thread or a fork) sees that thread's prompt, not main's.
+    const history =
+      params.thread === undefined
+        ? yield* Effect.promise(() => session.getHistory())
+        : yield* TrajectoryStore.history(feed, params.thread);
+    // The turn records the prompt itself (consuming a queued one), so the request's copy of it is not appended again.
+    const prompt = Message.make({
+      sender: { role: 'user', ...params.sender },
+      blocks: typeof params.prompt === 'string' ? [{ _tag: 'text', text: params.prompt }] : [...params.prompt],
     });
+    const promptId = params.source && 'message' in params.source ? params.source.message : prompt.id;
+    return yield* TrajectoryStore.turn(
+      feed,
+      { prompt, source: params.source, model: params.model, thread: params.thread },
+      (append) =>
+        Effect.gen(function* () {
+          // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
+          let labelCall = labelEvalCall([]);
+          const evaluations = makeEvaluationLog();
+          const request = new AiRequest.Request({
+            onOutput: (message) =>
+              message.id === promptId
+                ? Effect.void
+                : append([annotateEvalBlocks(message, labelCall, evaluations)]).pipe(Effect.provide(runtime)),
+          });
 
-    yield* request.begin({
-      history,
-      skills: session.context.getSkills(),
-      objects: session.context.getObjects(),
-      instructions,
-      prompt: params.prompt,
-      system: params.system,
-    });
+          yield* request.begin({
+            history,
+            skills: session.context.getSkills(),
+            objects: session.context.getObjects(),
+            instructions,
+            prompt: params.prompt,
+            promptId,
+            sender: params.sender,
+            system: params.system,
+          });
 
-    const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
-    // Each iteration is scoped so the MCP connections it opens close before the next opens its own.
-    const runIteration = (turn: number) =>
-      Effect.gen(function* () {
-        yield* Effect.promise(() => session.context.sync());
-        const skills = session.context.getSkills();
-        // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
-        const mcps = yield* AiSession.connectMcpServers(
-          params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
-        );
-        const operations = yield* projectOperations(skills, mcps);
-        labelCall = labelEvalCall(operations);
-        const toolkit = makeEvalToolkit({
-          dialect,
-          sandbox,
-          runtime,
-          operations,
-          skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
-          maxOutput: options.maxOutput,
-          timeout: options.timeout,
-        });
-        const system = yield* formatSystemPrompt({
-          system: [dialect.instructions({ operations, types: yield* registeredTypes }), options.system, params.system]
-            .filter(isPresent)
-            .join('\n\n'),
-          skills,
-          objects: session.context.getObjects(),
-          instructions,
-        }).pipe(Effect.orDie);
+          // The system prompt the turn started with, kept for every model call of the turn: a skill, operation or
+          // object bound mid-turn is announced in the conversation instead, since a changed system prompt discards the
+          // whole prompt cache. The next turn's system prompt includes it as usual.
+          let turnSystem: (TurnBindings & { operations: ReadonlySet<string>; text: string }) | undefined;
 
-        const { done, finishReason } = yield* request.runAgentTurn({
-          system,
-          toolkit,
-        });
-        if (done) {
-          return 'done' as const;
-        }
-        // Checked before the pause branch below: a provider that keeps pausing would otherwise
-        // re-issue the request forever, since a paused turn skips the rest of the loop.
-        if (turn + 1 >= maxTurns) {
-          yield* request.submitNotice(
-            `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
-          );
-          return 'done' as const;
-        }
-        // A paused server-tool turn resumes with another request and no local tool execution.
-        if (finishReason === 'pause') {
-          return 'continue' as const;
-        }
-        yield* request.runTools({ toolkit });
-        return 'continue' as const;
-      }).pipe(Effect.scoped);
+          const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
+          // Each iteration is scoped so the MCP connections it opens close before the next opens its own.
+          const runIteration = (turn: number) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => session.context.sync());
+              evaluations.clear();
+              const skills = session.context.getSkills();
+              // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
+              const mcps = yield* AiSession.connectMcpServers(
+                params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
+              );
+              // The prompt states the Skill Manager's lookups and the enabled skills, with their operations; the model
+              // looks up every other skill, operation and type through the lookups. A bound Skill Manager is stated as
+              // its code-mode form, since its own instructions list every skill, but its operations stay callable.
+              const lookups = SkillManagerSkill.makeForCodeMode();
+              const enabled = skills.filter(
+                (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
+              );
+              const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(
+                ({ definition }) => !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition),
+              );
+              labelCall = labelEvalCall(operations);
+              const evalOptions = {
+                dialect,
+                sandbox,
+                runtime,
+                operations,
+                skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
+                maxOutput: options.maxOutput,
+                timeout: options.timeout,
+                onEvaluated: evaluations.add,
+              };
+              // Through the script API rather than straight into the sandbox: the turn states what to
+              // run and the runner says where, which is what lets a deployment move code mode off
+              // this thread without touching the turn loop. The turn's own dialect is registered under
+              // its name, since a producer may hand the model a variant of it (extra bindings) and the
+              // runner must evaluate THAT one, not the canonical entry.
+              const toolkit = makeEvalToolkit({
+                ...evalOptions,
+                ...(Operation.isScriptDialect(dialect.name)
+                  ? {
+                      runner: ({ toolCallId }: { readonly toolCallId?: string }) =>
+                        Runner.make({ ...evalOptions, dialects: { [dialect.name]: dialect }, toolCallId }),
+                    }
+                  : {}),
+              });
+              const objects = session.context.getObjects();
+              const operationNames = new Set(operations.map((operation) => operation.name));
+              if (turnSystem === undefined) {
+                const text = yield* formatSystemPrompt({
+                  system: [dialect.instructions({ operations }), options.system, params.system]
+                    .filter(isPresent)
+                    .join('\n\n'),
+                  skills: [lookups, ...enabled],
+                  objects,
+                  instructions,
+                }).pipe(Effect.orDie);
+                turnSystem = { skills: enabled, objects, operations: operationNames, text };
+              } else {
+                // The lookups are made afresh each iteration, so only the enabled skills are compared.
+                const changes = yield* formatBindingChanges(turnSystem, { skills: enabled, objects }).pipe(
+                  Effect.orDie,
+                );
+                const known = turnSystem.operations;
+                const added = operations.filter((operation) => !known.has(operation.name));
+                if (added.length > 0) {
+                  changes.push(
+                    `Operations available in this turn, in addition to those above:\n\n${dialect.operations(added)}`,
+                  );
+                }
+                // E.g. an MCP server that failed to load on this iteration: its tools are no longer bound.
+                const removed = [...known].filter((name) => !operationNames.has(name));
+                if (removed.length > 0) {
+                  changes.push(
+                    `Operations no longer available in this turn; do not call them: ${removed.map((name) => `\`${name}\``).join(', ')}.`,
+                  );
+                }
+                if (changes.length > 0) {
+                  yield* request.submitNotice(changes.join('\n\n'));
+                }
+                turnSystem = { skills: enabled, objects, operations: operationNames, text: turnSystem.text };
+              }
 
-    for (let turn = 0; (yield* runIteration(turn)) !== 'done'; turn++) {}
+              const { done, finishReason } = yield* request.runAgentTurn({
+                system: turnSystem.text,
+                toolkit,
+              });
+              if (done) {
+                return 'done' as const;
+              }
+              // Checked before the pause branch below: a provider that keeps pausing would otherwise
+              // re-issue the request forever, since a paused turn skips the rest of the loop.
+              if (turn + 1 >= maxTurns) {
+                yield* request.submitNotice(
+                  `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
+                );
+                return 'done' as const;
+              }
+              // A paused server-tool turn resumes with another request and no local tool execution.
+              if (finishReason === 'pause') {
+                return 'continue' as const;
+              }
+              yield* request.runTools({ toolkit });
+              return 'continue' as const;
+            }).pipe(Effect.scoped);
 
-    return [...request.pending];
+          for (let turn = 0; (yield* runIteration(turn)) !== 'done'; turn++) {}
+
+          return [...request.pending];
+        }),
+    );
   }).pipe(
     // What `AiSession.createRequest` provides around its own turn: an operation invoked from the
     // sandbox is part of this conversation, the same as one invoked as a tool.
@@ -182,20 +273,56 @@ const runCodeModeTurn = ({
   );
 
 /**
- * Labels the message's `eval` calls before it reaches the feed, which is what the thread renders: a
- * code-mode turn's every call is an eval, and the label is the only thing that tells them apart.
+ * The request's evaluations by the `eval` call each answered, so a result written to the feed takes the operations
+ * its own call ran. An evaluation whose result is never written (the call was interrupted) is dropped when the next
+ * iteration starts.
  */
-const labelEvalCalls = (
+const makeEvaluationLog = () => {
+  const byCall = new Map<string, Evaluation>();
+  return {
+    add: (evaluation: Evaluation): void => {
+      if (evaluation.toolCallId !== undefined) {
+        byCall.set(evaluation.toolCallId, evaluation);
+      }
+    },
+    take: (block: ContentBlock.ToolResult): Evaluation | undefined => {
+      const evaluation = byCall.get(block.toolCallId);
+      byCall.delete(block.toolCallId);
+      return evaluation;
+    },
+    clear: (): void => byCall.clear(),
+  };
+};
+
+/** What an `eval` block is annotated with: a call's label, or the operations a result's evaluation ran. */
+type EvalAnnotation = CallLabel | Pick<ContentBlock.ToolResult, 'invocations'>;
+
+/**
+ * Annotates the message's `eval` blocks before it reaches the feed, which is what the thread renders and what a
+ * hook reads: a call is labelled after the operations its code names, and a result records the operations its code
+ * actually ran — every code-mode call is an eval, and these are the only things that tell them apart.
+ */
+const annotateEvalBlocks = (
   message: Message.Message,
   labelCall: (block: ContentBlock.ToolCall) => CallLabel | undefined,
+  evaluations: ReturnType<typeof makeEvaluationLog>,
 ): Message.Message => {
-  const labels = message.blocks.map((block) => (block._tag === 'toolCall' ? labelCall(block) : undefined));
-  if (labels.some((label) => label !== undefined)) {
+  const annotations = message.blocks.map((block): EvalAnnotation | undefined => {
+    if (block._tag === 'toolCall' && block.name === EVAL_TOOL_NAME) {
+      return labelCall(block);
+    }
+    if (block._tag === 'toolResult' && block.name === EVAL_TOOL_NAME) {
+      const invocations = evaluations.take(block)?.invocations ?? [];
+      return invocations.length > 0 ? { invocations: [...invocations] } : undefined;
+    }
+    return undefined;
+  });
+  if (annotations.some((annotation) => annotation !== undefined)) {
     Obj.update(message, (message) => {
       message.blocks.forEach((block, index) => {
-        const label = labels[index];
-        if (block._tag === 'toolCall' && label !== undefined) {
-          Object.assign(block, label);
+        const annotation = annotations[index];
+        if (annotation !== undefined) {
+          Object.assign(block, annotation);
         }
       });
     });
@@ -216,17 +343,6 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
     return undefined;
   }
 };
-
-/**
- * Every object and relation type the workspace has registered, with its fields.
- *
- * Stated in the prompt rather than left to be discovered: a dialect that binds the real modules
- * invites the model to introspect a schema for the shape it needs, and that costs turns it should
- * be spending on the task.
- */
-const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
-  describeTypes(db),
-);
 
 /**
  * Projects the skills' tools, and those of the turn's MCP servers, into callable operations. Resolution goes through the ordinary toolkit
@@ -252,11 +368,21 @@ export const projectOperations = Effect.fnUntraced(function* (
         _tag: 'toolCall',
         toolCallId: `code-mode-${name}`,
         name,
-        input: JSON.stringify(input ?? {}),
+        input: toToolInput(input),
         providerExecuted: false,
       }).pipe(Effect.map(toolResultValue), Effect.orDie),
   }));
 });
+
+/**
+ * An operation's input as its tool takes it. A `ref(obj)` the code passes becomes the object's URI: a tool's reference
+ * field decodes a URI string, and a ref would otherwise serialize to `{"/": uri}`, which it rejects.
+ */
+export const toToolInput = (input: unknown): string =>
+  JSON.stringify(input ?? {}, function (this: { readonly [key: string]: unknown }, key: string, value: unknown) {
+    const original = this[key];
+    return Ref.isRef(original) ? String(original.uri) : value;
+  });
 
 /** What an operation call resolves to: the operation's result, or a throw carrying its error. */
 const toolResultValue = (result: ContentBlock.ToolResult): unknown => {

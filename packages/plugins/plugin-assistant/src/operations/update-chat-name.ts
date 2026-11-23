@@ -7,10 +7,10 @@ import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { AssistantOperation } from '#types';
@@ -40,7 +40,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
           );
         } else {
           const feed = yield* Database.load(chat.feed);
-          const history = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+          const history = yield* TrajectoryStore.history(feed);
           log.info('history', { history: history.length });
           const historyPrompt = yield* AiPreprocessor.preprocessPrompt(history, {
             system,

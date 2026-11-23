@@ -36,4 +36,41 @@ describe('SpaceOperation.QueryTypes', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'names the typenames it did not find and where to look, rather than answering with nothing',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const result = yield* Operation.invoke(SpaceOperation.QueryTypes, {
+          typenames: ['com.example.type.testObject', 'org.dxos.type.document'],
+        });
+        expect(result.types.map((type) => decodeTypeRow(type).typename)).toEqual(['com.example.type.testObject']);
+        expect(result.notFound).toEqual(['org.dxos.type.document']);
+        expect(result.hint).toContain("Skill Manager's queryTypes");
+
+        const found = yield* Operation.invoke(SpaceOperation.QueryTypes, {
+          typenames: ['com.example.type.testObject'],
+        });
+        expect(found.notFound).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'limits the types named, not the summary they are picked from',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        // Other test types sort ahead of `testObject`, so limiting before picking would return none.
+        const { types } = yield* Operation.invoke(SpaceOperation.QueryTypes, {
+          typenames: ['com.example.type.testObject'],
+          limit: 1,
+        });
+        expect(types.map((type) => decodeTypeRow(type).typename)).toEqual(['com.example.type.testObject']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

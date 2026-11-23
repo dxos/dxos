@@ -5,6 +5,7 @@
 import React from 'react';
 import { Composition, Folder } from 'remotion';
 
+import { MORPH_TEST, Saas2D, SAAS2D_SECONDS, saas2dMetadata } from '../Saas2D/Saas2D.tsx';
 import { FormatId, FORMATS, FPS, SPOT_SECONDS, TIMING } from './brand.ts';
 import { ComposerIntro } from './ComposerIntro.tsx';
 import { PROVOCATIONS } from './provocations.ts';
@@ -82,6 +83,25 @@ export const RemotionRoot: React.FC = () => (
         />
       ))}
     </Folder>
+    <Composition
+      id='saas2d'
+      component={Saas2D}
+      calculateMetadata={saas2dMetadata}
+      durationInFrames={Math.round(SAAS2D_SECONDS * 60)}
+      fps={60}
+      width={1920}
+      height={1080}
+    />
+    <Composition
+      id='saas2d-morph'
+      component={Saas2D}
+      calculateMetadata={saas2dMetadata}
+      durationInFrames={Object.values(MORPH_TEST).reduce((sum, hold) => sum + hold, 0) * 60}
+      fps={60}
+      width={1920}
+      height={1080}
+      defaultProps={{ test: MORPH_TEST }}
+    />
     <Folder name='CLOSE'>
       {(Object.keys(FORMATS) as FormatId[]).map((f) => (
         <Composition

@@ -9,7 +9,8 @@
 // Plugs into the dialects via the `Router` contract (`uml-grid.ts`).
 //
 
-import type * as Scene from './scene.ts';
+import { Shape } from '@dxos/scene';
+
 import type { Rect, RoutedRelation, Router } from './uml-grid.ts';
 
 /** Clearance kept between a route and any node border, in steps. */
@@ -21,7 +22,7 @@ const USED_COST = 24;
 /** Margin around the diagram bounds the search may roam into, in steps. */
 const MARGIN = 8;
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 
 /** Directions: right, down, left, up. */
 const DX = [1, 0, -1, 0];

@@ -4,9 +4,10 @@
 
 // @import-as-namespace
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, type Entity, Format, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Organization from './Organization.ts';
 
@@ -92,3 +93,27 @@ export const fullName = (repo: Repo): string => `${repo.owner}/${repo.name}`;
 /** Web URL for an issue or pull request. */
 export const issueUrl = (repo: Repo, number: number): string | undefined =>
   repo.url ? `${repo.url.replace(/\/+$/, '')}/issues/${number}` : undefined;
+
+/**
+ * The repositories an object's work lands in. Order matters: on a project, bare issue numbers resolve against the
+ * first, and a cloud coding agent starts in it.
+ */
+export const RepositoriesAnnotation = Annotation.make({
+  id: 'org.dxos.annotation.repositories',
+  schema: Schema.Array(Ref.Ref(Repo)),
+});
+
+export const getRepositories = (object: Entity.Unknown | Entity.Snapshot): readonly Ref.Ref<Repo>[] =>
+  Annotation.get(object, RepositoriesAnnotation).pipe(Option.getOrElse(() => []));
+
+export const setRepositories = (object: Obj.Unknown, repositories: readonly Ref.Ref<Repo>[]): void => {
+  if (Option.isNone(Annotation.get(object, RepositoriesAnnotation))) {
+    Obj.update(object, (object) => {
+      Annotation.set(object, RepositoriesAnnotation, [...repositories]);
+    });
+  } else {
+    Annotation.update(object, RepositoriesAnnotation, (list) => {
+      list.splice(0, list.length, ...repositories);
+    });
+  }
+};

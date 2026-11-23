@@ -1,6 +1,6 @@
 {
   "name": "@dxos/sparql-sqlite",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "SPARQL 1.1 engine that compiles each query to a single SQLite statement over an interned quad store (Durable Object SQLite or node:sqlite).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,6 +18,16 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./async": {
+      "source": "./src/async.ts",
+      "types": "./dist/types/src/async.d.ts",
+      "import": "./dist/lib/async.mjs"
+    },
+    "./exchange": {
+      "source": "./src/Exchange.ts",
+      "types": "./dist/types/src/Exchange.d.ts",
+      "import": "./dist/lib/exchange.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -32,20 +42,24 @@
   "dependencies": {
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "n3": "catalog:",
     "sparqljs": "catalog:"
   },
   "devDependencies": {
     "@comunica/query-sparql-rdfjs": "catalog:",
     "@dxos/sql-sqlite": "workspace:*",
+    "@effect/sql-sqlite-node": "catalog:",
     "@types/n3": "catalog:",
     "@types/sparqljs": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",
     "fast-xml-parser": "catalog:",
-    "n3": "catalog:",
     "oxigraph": "catalog:",
     "tsx": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -39,3 +39,15 @@ export const detectMediaKind = (src: string): MediaKind | undefined => {
  * {@link isCloudflareStreamEmbed} and rendered via `<iframe>` instead.
  */
 export const isEmbedUrl = (src: string): boolean => detectMediaKind(src) !== undefined;
+
+/** Cloudflare Stream `/iframe` embeds: `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?…]`. */
+const CLOUDFLARE_STREAM_IFRAME_PATTERN =
+  /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\/[a-f0-9]{32}\/iframe(?:[/?#]|$)/i;
+
+export type MediaElement = MediaKind | 'embed' | 'image';
+
+/** The element a media URL plays in. An explicit `kind` forces native playback even for extensionless URLs. */
+export const resolveMediaElement = (src: string, kind?: MediaKind): MediaElement => {
+  const resolved = kind || isEmbedUrl(src) ? (kind ?? detectMediaKind(src) ?? 'video') : undefined;
+  return resolved ?? (CLOUDFLARE_STREAM_IFRAME_PATTERN.test(src) ? 'embed' : 'image');
+};

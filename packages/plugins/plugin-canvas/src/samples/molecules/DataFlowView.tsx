@@ -2,27 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  type BackgroundGrid,
-  type Bounds,
-  Canvas,
-  createMemoryStore,
-  defaultThemeRegistry,
-  resolveLook,
-} from '@dxos/react-ui-canvas/scene';
+import { type BackgroundGrid, defaultThemeRegistry, resolveLook } from '@dxos/react-ui-canvas';
+import { CanvasEditor } from '@dxos/react-ui-canvas-editor';
+import { fromRenderLists2D } from '@dxos/react-ui-canvas/headless';
 import { useThemeContext } from '@dxos/react-ui/Theme';
+import { type Bounds } from '@dxos/scene';
 
-import {
-  DATA_FLOW_VIEW_ID,
-  type DataFlowLayout,
-  type DataFlowSpec,
-  createDataFlowView,
-  layoutDataFlow,
-  partitionHub,
-} from './layout.ts';
+import { type DataFlowLayout, type DataFlowSpec, createDataFlowView, layoutDataFlow, partitionHub } from './layout.ts';
 import { LOOKS, MoleculeOverlay, REVEAL_MS } from './MoleculeOverlay.tsx';
 import { type Arrivals, type SplitMove, planArrivals, planMove, planSplit } from './morph.ts';
 import { DataFlowSimulation, type SimulationOptions } from './simulation.ts';
@@ -109,7 +97,6 @@ export const DataFlowView = ({
   const { themeMode } = useThemeContext();
   const initialTheme = chosenTheme ?? (themeMode === 'light' ? 'paper' : 'glass-night');
   const laidOut = useMemo(() => layoutDataFlow(spec), [spec]);
-  const registry = useContext(RegistryContext);
   // Continuous, one simulation runs on as the spec changes, moved to each new layout in place; else a new spec starts over.
   const [origin] = useState(laidOut);
   const seed = continuous ? origin : laidOut;
@@ -124,9 +111,8 @@ export const DataFlowView = ({
   const progress = useTween(partitioned ? 1 : 0, PARTITION_MS);
   // The layout as it now stands: split, once the split is asked for.
   const layout = morph && partitioned ? { ...laidOut, hub: morph.target } : laidOut;
-  // Created once per simulation: a new store would reset the view, so later layouts rewrite its one scene instead.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const store = useMemo(() => createMemoryStore([createDataFlowView(layout, revealed)]), [simulation]);
+  // One layout throughout, so a new layout redraws the canvas in place rather than resetting its view.
+  const document = useMemo(() => fromRenderLists2D([createDataFlowView(layout, revealed)]), [layout, revealed]);
   // Running, the split is made in the simulation, so what arrives afterwards lands in the new buckets; held, the morph
   // only redraws the frame. The ref keeps one toggle to one split, however often the effect runs.
   const [applied, setApplied] = useState<ReadonlyMap<string, SplitMove>>();
@@ -213,10 +199,6 @@ export const DataFlowView = ({
     return () => clearInterval(timer);
   }, [drifting, refocus]);
   useLayoutEffect(() => {
-    const scene = createDataFlowView(layout, revealed);
-    registry.set(store.views, { ...registry.get(store.views), [scene.id]: scene });
-  }, [registry, store, layout, revealed]);
-  useLayoutEffect(() => {
     simulation.agentReads = revealed;
   }, [simulation, revealed]);
   const [theme, setTheme] = useState<string | undefined>(initialTheme);
@@ -230,9 +212,8 @@ export const DataFlowView = ({
   // The containers are drawn by the overlay, in the theme's style set (glass for one the sample has no palette for).
   const overlayLook = LOOKS.find((candidate) => candidate === look.styleSet.id) ?? 'glass';
   return (
-    <Canvas.Root
-      store={store}
-      root={DATA_FLOW_VIEW_ID}
+    <CanvasEditor.Root
+      document={document}
       readonly
       theme={theme}
       backgroundGrid={grid}
@@ -245,7 +226,7 @@ export const DataFlowView = ({
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >
-      <Canvas.Viewport
+      <CanvasEditor.Viewport
         backgroundBounds={field}
         overlay={
           <MoleculeOverlay
@@ -269,11 +250,11 @@ export const DataFlowView = ({
       />
       {chrome && (
         <>
-          <Canvas.Navigation />
-          <Canvas.Debug />
-          <Canvas.Theme />
+          <CanvasEditor.Navigation />
+          <CanvasEditor.Camera />
+          <CanvasEditor.Display />
         </>
       )}
-    </Canvas.Root>
+    </CanvasEditor.Root>
   );
 };

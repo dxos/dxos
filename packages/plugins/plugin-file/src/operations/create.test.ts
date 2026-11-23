@@ -16,12 +16,12 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { FilePlugin } from '#plugin';
+import * as FilePlugin from '#meta';
 import { FileCapabilities, FileOperation } from '#types';
 
 import { FileTooLargeError } from './create.ts';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin.make()] });
 
 describe('FileOperation.Create', () => {
   test('uploads a small PNG to the selected inline backend', async ({ expect }) => {
@@ -167,7 +167,7 @@ const selectBackend = (harness: TestHarness, storage: string) =>
   harness.get(Capabilities.AtomRegistry).set(harness.get(FileCapabilities.SettingsAtom), { backend: storage });
 
 const setup = async () => {
-  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin.make()] });
   // The node plugin variant omits the browser-only `InlineBackend` module (settings UI, etc.) —
   // contribute the descriptor directly so `resolveActiveStorage` has something to resolve.
   harness.capabilities.contribute({

@@ -4,14 +4,15 @@
 
 import * as Tool from 'effect/ai/Tool';
 import * as Toolkit from 'effect/ai/Toolkit';
-import type * as Context from 'effect/Context';
+import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
@@ -65,12 +66,30 @@ export type EvalToolkitOptions = {
   readonly skills?: readonly string[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
+  /**
+   * Told, when an evaluation ends (failed or not), which operations its code ran: an `eval` result says only what the
+   * code printed, so this is how the turn records what the call actually did.
+   */
+  readonly onEvaluated?: (evaluation: Evaluation) => void;
+};
+
+/**
+ * What one evaluation did: the operations its code ran, in order. A failed evaluation still lists the ones that ran
+ * before the failure, since what they did (a message sent, an object written) happened all the same.
+ */
+export type Evaluation = {
+  /** The `eval` call this evaluation answered, when it ran as one. */
+  readonly toolCallId?: string;
+  readonly code: string;
+  readonly invocations: readonly ContentBlock.Invocation[];
 };
 
 /** One evaluation, as {@link evaluate} runs it: the program, plus everything that binds it to a workspace. */
 export type EvaluateOptions = EvalToolkitOptions & {
   /** The program, in the dialect's own syntax, before the dialect wraps it. */
   readonly code: string;
+  /** The `eval` call being answered, reported back in {@link Evaluation}. */
+  readonly toolCallId?: string;
 };
 
 /**
@@ -87,22 +106,40 @@ export const evaluate = Effect.fnUntraced(function* ({
   skills,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
+  onEvaluated,
+  toolCallId,
 }: EvaluateOptions) {
   const printer = makePrinter(maxOutput);
+  const invocations: ContentBlock.Invocation[] = [];
+  // Recorded on both paths an operation is reached by: the plain dialect calls `SandboxOperation.invoke` (the tool
+  // path, whose handlers hold their own services), while the Effect dialect and the worker sandbox call
+  // `Operation.invoke`, which resolves `Operation.Service` from the runtime handed to the sandbox.
+  const recorder = makeRecorder(invocations);
   const result = yield* sandbox
     .evaluate({
       code: dialect.wrap(code),
       dialect,
-      context: { runtime, operations, skills, print: printer.print },
+      context: {
+        runtime: Context.add(
+          runtime,
+          Operation.Service,
+          recordingService(Context.get(runtime, Operation.Service), recorder),
+        ),
+        operations: recordInvocations(operations, recorder),
+        skills,
+        print: printer.print,
+      },
       timeout,
     })
-    .pipe(Effect.result);
+    .pipe(Effect.result, Effect.ensuring(Effect.sync(() => onEvaluated?.({ toolCallId, code, invocations }))));
 
   if (Result.isFailure(result)) {
     // A tool failure reaches the model as a failed result, not a failed turn, so it can still
     // read the message and write different code.
     log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
-    printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
+    printer.fail(
+      `Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}${keptHint(invocations)}`,
+    );
     return yield* Effect.fail(printer.output());
   }
 
@@ -111,20 +148,125 @@ export const evaluate = Effect.fnUntraced(function* ({
     printer.print(result.success);
   }
 
+  if (printer.isEmpty()) {
+    const ran = ranOperations(invocations);
+    printer.print(
+      ran.length === 0
+        ? NO_OUTPUT
+        : `${NO_OUTPUT} It ran ${ran.join(', ')}; what they did is done, so do not run them again.`,
+    );
+  }
+
   return printer.output();
 });
 
 /**
  * The toolkit a code-mode turn hands the model: one `eval` tool over the turn's dialect and
  * sandbox. Rebuilt per turn, since a skill enabled mid-request changes what the operations are.
+ *
+ * `runner` is how the turn reaches another runtime: given one, every call becomes a
+ * `Operation.ScriptRequest` — the model's code as an inline script in the turn's dialect — and the
+ * runner decides where it runs. Without one the code is evaluated here, against `sandbox`.
  */
-export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.OpaqueToolkit =>
+export const makeEvalToolkit = (
+  options: EvalToolkitOptions & {
+    /**
+     * The runner for one `eval` call. Per call rather than per turn, so the evaluation it runs still
+     * reports which call it answered (`Evaluation.toolCallId`) — what the turn files its operations under.
+     */
+    readonly runner?: (call: { readonly toolCallId?: string }) => Operation.ScriptRunner;
+  },
+): OpaqueToolkit.OpaqueToolkit =>
   OpaqueToolkit.make(
     EvalToolkitDefinition,
     EvalToolkitDefinition.toLayer({
-      [EVAL_TOOL_NAME]: ({ code }: { code: string }) => evaluate({ ...options, code }),
+      [EVAL_TOOL_NAME]: ({ code }: { code: string }, { toolCallId }) =>
+        options.runner !== undefined
+          ? runThroughRunner(options.runner({ toolCallId }), options, code)
+          : evaluate({ ...options, code, toolCallId }),
     }),
   );
+
+/** Records each operation call into one evaluation's list: its key, and the first line of its failure if it failed. */
+type Recorder = {
+  /** Records the call `effect` makes once it settles. */
+  readonly effect: (operationKey: string) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  /** Records a call that reported its outcome as `invokePromise` does. */
+  readonly outcome: (operationKey: string, outcome: { readonly error?: Error }) => void;
+};
+
+/** Which operations ran, not what they returned: serializing every output (a query's) would cost each call. */
+const makeRecorder = (invocations: ContentBlock.Invocation[]): Recorder => {
+  // The first line names the failure; the rest is a trace no reader of the history needs.
+  const record = (operationKey: string, error?: string) =>
+    invocations.push(error === undefined ? { operationKey } : { operationKey, error: error.split('\n')[0] });
+  return {
+    effect: (operationKey) => (effect) =>
+      effect.pipe(
+        Effect.tap(() => Effect.sync(() => record(operationKey))),
+        Effect.tapCause((cause) => Effect.sync(() => record(operationKey, Cause.pretty(cause)))),
+      ),
+    outcome: (operationKey, { error }) => record(operationKey, error?.message),
+  };
+};
+
+/**
+ * The operations, each recording its calls as it runs. Only an operation-backed call is recorded: an MCP tool has no
+ * key a reader of the history could match.
+ */
+const recordInvocations = (operations: readonly SandboxOperation[], recorder: Recorder): SandboxOperation[] =>
+  operations.map((operation) => {
+    const operationKey = operation.definition && String(operation.definition.meta.key);
+    return operationKey === undefined
+      ? operation
+      : { ...operation, invoke: (input: unknown) => operation.invoke(input).pipe(recorder.effect(operationKey)) };
+  });
+
+/**
+ * `service`, recording each operation invoked through it. Both of its invoking methods are wrapped, and each call is
+ * recorded once: the original `invokePromise` runs through the original service, not through the `invoke` here.
+ */
+const recordingService = (service: Operation.OperationService, recorder: Recorder): Operation.OperationService => ({
+  // Delegated by name rather than spread, which would miss a method a class-based service holds on its prototype.
+  schedule: (op, ...args) => service.schedule(op, ...args),
+  invoke: (op, ...args) => service.invoke(op, ...args).pipe(recorder.effect(String(op.meta.key))),
+  invokePromise: (op, ...args) =>
+    service.invokePromise(op, ...args).then((outcome) => {
+      recorder.outcome(String(op.meta.key), outcome);
+      return outcome;
+    }),
+});
+
+/**
+ * One call answered by a {@link Operation.ScriptRunner}, in the `eval` tool's own terms: the text the
+ * model sees, failed when the code failed.
+ *
+ * A runner failure (no backend for the dialect, a runtime that refused) is reported the same way
+ * rather than failing the turn: the model can read it and the conversation survives a misconfigured
+ * deployment.
+ */
+const runThroughRunner = (
+  runner: Operation.ScriptRunner,
+  options: EvalToolkitOptions,
+  code: string,
+): Effect.Effect<string, string> =>
+  Effect.suspend(() => {
+    const dialect = options.dialect.name;
+    if (!Operation.isScriptDialect(dialect)) {
+      return Effect.fail(`Error: dialect "${dialect}" cannot be run by a script runner.`);
+    }
+    return runner
+      .run({
+        source: Operation.inlineScript(code, { dialect }),
+        ...(options.maxOutput !== undefined ? { maxOutput: options.maxOutput } : {}),
+      })
+      .pipe(
+        Effect.flatMap((result) =>
+          result.error === undefined ? Effect.succeed(result.output) : Effect.fail(result.output),
+        ),
+        Effect.catchTag('ScriptError', (error) => Effect.fail(`Error: ${error.message}`)),
+      );
+  });
 
 /** How a tool call is shown, where its tool name alone says nothing about what it does. */
 export type CallLabel = Pick<ContentBlock.ToolCall, 'displayName' | 'displayIcon'>;
@@ -162,11 +304,11 @@ export const labelEvalCall =
     };
   };
 
-const operationNames = ({ name, definition }: SandboxOperation): string[] => [
-  name,
-  camelCase(name),
-  ...(definition ? [String(definition.meta.key)] : []),
-];
+const operationNames = ({ name, definition }: SandboxOperation): string[] => {
+  const key = definition === undefined ? undefined : String(definition.meta.key);
+  // The key with and without `dxn:`, as the plain dialect binds `ops` under both.
+  return [name, camelCase(name), ...(key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])])];
+};
 
 /** The `code` argument of an eval call. */
 const evalCode = (input: string): string => {
@@ -230,10 +372,59 @@ const truncationWarning = (maxOutput: number): string =>
  * is not an effect reads as `(intermediate value) is not iterable`, and is most often a ref loaded as
  * `yield* ref.load` or through a helper that does not exist.
  */
-const hintFor = (message: string): string =>
-  /is not iterable/.test(message)
-    ? '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.'
-    : '';
+const hintFor = (message: string): string => {
+  if (/is not iterable/.test(message)) {
+    return '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.';
+  }
+  const undefinedName = /^(?:ReferenceError: )?(\w+) is not defined/m.exec(message)?.[1];
+  if (undefinedName) {
+    return `\nHint: each eval call is a fresh program, so \`${undefinedName}\` from an earlier call does not exist here. Resolve or load it again in this call.`;
+  }
+  if (/Not a valid effect/.test(message)) {
+    return '\nHint: a function passed to an Effect combinator (`Effect.catch`, `Effect.flatMap`) must return an Effect: `Effect.succeed(value)`, not the value.';
+  }
+  const refField = /(\w+): Expected Ref<dxn:([\w.]+)/.exec(message);
+  if (refField && /Invalid draft/.test(message)) {
+    return `\nHint: \`${refField[1]}\` holds a reference: make or load the ${refField[2]} object first and pass \`Ref.make(object)\`.`;
+  }
+  if (/reserved word/.test(message)) {
+    return '\nHint: `yield*` works only directly in your code, not inside a callback such as `.map((x) => …)`: loop with `for … of` instead. `await` does not work at all: `yield*` an Effect.';
+  }
+  const effect3Name = /Effect\.(catchAll|catchAllCause|either) is not a function/.exec(message)?.[1];
+  if (effect3Name) {
+    return `\nHint: this is Effect 4, where \`Effect.${EFFECT_4_NAMES[effect3Name]}\` replaces \`Effect.${effect3Name}\`.`;
+  }
+  const missing = /Entity not found: \{"uri":"(dxn:[^"]+)"\}/.exec(message)?.[1];
+  if (missing) {
+    return "\nHint: resolve a DXN exactly as `DOCS['catalog/types.md']` or `DOCS['catalog/operations.md']` lists it, a type's with its version (`dxn:org.dxos.type.document:0.1.0`); the Skill Manager's `queryTypes` and `queryOperations` find the ones not listed there.";
+  }
+  return '';
+};
+
+/** The Effect 3 names a model reaches for, and what Effect 4 calls them. */
+const EFFECT_4_NAMES: Record<string, string> = { catchAll: 'catch', catchAllCause: 'catchCause', either: 'result' };
+
+/**
+ * What already ran when a program failed. An operation's effects stay, so a model that runs the whole program again
+ * repeats them: a second document of the same name.
+ */
+const keptHint = (invocations: readonly ContentBlock.Invocation[]): string => {
+  const ran = ranOperations(invocations);
+  return ran.length === 0
+    ? ''
+    : `\nHint: these operations ran before the failure, and what they did was kept: ${ran.join(', ')}. Check for it before you run them again.`;
+};
+
+/** The operations a program ran to completion, each once. */
+const ranOperations = (invocations: readonly ContentBlock.Invocation[]): string[] => [
+  ...new Set(invocations.flatMap(({ operationKey, error }) => (error === undefined ? [operationKey] : []))),
+];
+
+/**
+ * What a program that printed nothing and returned nothing is told: an empty result reads as a call that did not run,
+ * and a model that runs it again repeats whatever it wrote.
+ */
+const NO_OUTPUT = 'No output: the code ran without error but printed nothing. Print the values you need to see.';
 
 /**
  * A failure's message cut to what the model can act on.

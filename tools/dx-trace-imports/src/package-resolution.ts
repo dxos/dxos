@@ -7,7 +7,17 @@ import path from 'node:path';
 
 import { normalizeFsPath, packageNameFromSpecifier } from './matcher.ts';
 
-type ConditionalEntry = string | { readonly [condition: string]: ConditionalEntry };
+/** A target: a path, `null` (excluded for the condition), a fallback list, or a nested condition map. */
+type ConditionalEntry =
+  | string
+  | null
+  | readonly ConditionalEntry[]
+  | { readonly [condition: string]: ConditionalEntry };
+
+type ConditionalMap = { readonly [key: string]: ConditionalEntry };
+
+const isConditionalMap = (entry: ConditionalEntry | undefined): entry is ConditionalMap =>
+  typeof entry === 'object' && entry !== null && !Array.isArray(entry);
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs', '.cjs'] as const;
 
@@ -21,22 +31,46 @@ const readJsonFile = <T>(filePath: string): T | null => {
 };
 
 /**
+ * The target an entry selects: a path, `null` when a matched condition excludes it (terminal, as in
+ * Node), or `undefined` when nothing matched, so the caller moves on to later keys.
+ */
+const matchConditionalEntry = (entry: ConditionalEntry, conditions: readonly string[]): string | null | undefined => {
+  if (entry === null || typeof entry === 'string') {
+    return entry;
+  }
+  if (!isConditionalMap(entry)) {
+    // A fallback list: the first valid package-relative target wins; invalid ones are skipped, and an
+    // empty list excludes the entry like `null` does.
+    if (entry.length === 0) {
+      return null;
+    }
+    for (const target of entry) {
+      const matched = matchConditionalEntry(target, conditions);
+      if (typeof matched === 'string' && matched.startsWith('./')) {
+        return matched;
+      }
+    }
+    return undefined;
+  }
+  for (const key of Object.keys(entry)) {
+    if (key === 'default' || key === 'import' || conditions.includes(key)) {
+      const matched = matchConditionalEntry(entry[key], conditions);
+      if (matched !== undefined) {
+        return matched;
+      }
+    }
+  }
+  return undefined;
+};
+
+/**
  * Resolve a conditional export/import entry against the given conditions, following
  * nested condition maps. Mirrors Node's resolution order: object keys are checked in
  * source order (not `conditions` order), since package authors rely on key order to
  * rank overlapping conditions (e.g. `node` before `default`).
  */
-const tryResolveConditionalEntry = (entry: ConditionalEntry, conditions: readonly string[]): string | null => {
-  if (typeof entry === 'string') {
-    return entry;
-  }
-  for (const key of Object.keys(entry)) {
-    if (key === 'default' || key === 'import' || conditions.includes(key)) {
-      return tryResolveConditionalEntry(entry[key], conditions);
-    }
-  }
-  return null;
-};
+const tryResolveConditionalEntry = (entry: ConditionalEntry, conditions: readonly string[]): string | null =>
+  matchConditionalEntry(entry, conditions) ?? null;
 
 /**
  * Collapse pnpm symlinks so the same physical module reached through different
@@ -128,10 +162,7 @@ const splitPackageSpecifier = (specifier: string): { packageName: string; subpat
   };
 };
 
-const lookupConditionalMap = (
-  map: Record<string, ConditionalEntry> | undefined,
-  subpath: string,
-): ConditionalEntry | undefined => {
+const lookupConditionalMap = (map: ConditionalMap | undefined, subpath: string): ConditionalEntry | undefined => {
   if (!map) {
     return undefined;
   }
@@ -154,8 +185,8 @@ const resolveFromPackageRoot = (
   conditions: readonly string[],
 ): string | null => {
   const packageJson = readJsonFile<{
-    exports?: Record<string, ConditionalEntry>;
-    imports?: Record<string, ConditionalEntry>;
+    exports?: ConditionalEntry;
+    imports?: ConditionalMap;
     main?: string;
     module?: string;
   }>(path.join(packageRoot, 'package.json'));
@@ -164,7 +195,16 @@ const resolveFromPackageRoot = (
   }
 
   const map = field === 'exports' ? packageJson.exports : packageJson.imports;
-  const entry = lookupConditionalMap(map, subpath);
+  // An `exports` value that is a path or is keyed by conditions rather than subpaths describes `.`.
+  const rootEntry =
+    field === 'exports' &&
+    subpath === '.' &&
+    map !== undefined &&
+    map !== null &&
+    (!isConditionalMap(map) || !Object.keys(map).some((key) => key.startsWith('.')))
+      ? map
+      : undefined;
+  const entry = rootEntry ?? lookupConditionalMap(isConditionalMap(map) ? map : undefined, subpath);
   if (entry !== undefined) {
     const relativePath = tryResolveConditionalEntry(entry, conditions);
     if (!relativePath) {

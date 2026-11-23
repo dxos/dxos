@@ -20,28 +20,28 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { isNonNullable } from '@dxos/util';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
 import { Blog } from '#types';
 
+import { BloggerNamespace } from '../namespace.ts';
 import { getPublicationsSectionId } from '../paths.ts';
 
 /** Node type of the "Publications" section under a space's content group. */
-const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;
+const PUBLICATIONS_SECTION_TYPE = `${BloggerNamespace.key}.publications-section`;
 
 /**
  * Node type of a Publication branch node under the Publications section. A custom type (rather than
  * the ECHO typename) scopes the post actions to these nodes, so they never bleed onto Publication
  * objects that also appear under a space's Database section.
  */
-const PUBLICATION_NODE_TYPE = `${meta.profile.key}.publication`;
+const PUBLICATION_NODE_TYPE = `${BloggerNamespace.key}.publication`;
 
 /**
  * Node type of the hidden post-body-doc node contributed by `postComments`. A custom type (not the
  * doc's ECHO typename) scopes graph contributions to the in-editor comment action only, keeping
  * object/delete actions off the body editor toolbar.
  */
-const CONTENT_DOC_NODE_TYPE = `${meta.profile.key}.post-content`;
+const CONTENT_DOC_NODE_TYPE = `${BloggerNamespace.key}.post-content`;
 
 /**
  * Contributes the Publications navtree hub, mirroring plugin-studio's Studio section: a "Publications"
@@ -67,7 +67,7 @@ export default Capability.makeModule(
             AppNode.makeSection({
               id: getPublicationsSectionId(),
               type: PUBLICATIONS_SECTION_TYPE,
-              label: ['publications.label', { ns: meta.profile.key }],
+              label: ['publications.label', { ns: BloggerNamespace.key }],
               icon: 'ph--books--regular',
               iconHue: 'amber',
               space,
@@ -192,7 +192,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               variant: 'comments',
-              label: ['comments.label', { ns: meta.profile.key }],
+              label: ['comments.label', { ns: BloggerNamespace.key }],
               icon: 'ph--chat-text--regular',
               data: contentDoc,
               position: Position.first,

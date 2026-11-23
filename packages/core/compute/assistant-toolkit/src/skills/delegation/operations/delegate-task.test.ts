@@ -63,7 +63,6 @@ describe('DelegateTask', () => {
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        // The durable task lands on the chat's checklist with an agent assignee.
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
         const tasks = yield* Chat.loadTasks(chat);
@@ -71,7 +70,7 @@ describe('DelegateTask', () => {
         expect(tasks[0]).toMatchObject({
           title: 'Research widgets',
           status: 'todo',
-          assignee: { role: 'assistant' },
+          delegate: { role: 'assistant' },
         });
         // The project's own ledger is untouched: a conversation's checklist is its own.
         invariant(project.taskSet, 'Project task set not materialized.');

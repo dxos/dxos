@@ -15,7 +15,7 @@ export const inspector = Command.make(
   'inspector',
   {},
   Effect.fnUntraced(function* () {
-    mountDevtoolsHooks({ client: yield* ClientService });
+    mountDevtoolsHooks({ client: yield* ClientService.client });
 
     Inspector.open();
     const url = Inspector.url();

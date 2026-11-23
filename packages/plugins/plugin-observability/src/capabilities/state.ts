@@ -9,13 +9,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import * as Observability from '@dxos/observability/Observability';
 
-import { meta } from '#meta';
-import { ObservabilityCapabilities } from '#types';
+import { ObservabilityCapabilities, type ObservabilityOptions } from '#types';
+
+import { ObservabilityNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {
+  Effect.fnUntraced(function* ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) {
     const stateAtom = KvsStore.make({
-      key: `${meta.profile.key}.state`,
+      key: `${ObservabilityNamespace.key}.state`,
       schema: ObservabilityCapabilities.StateSchema,
       defaultValue: () => ({}),
     });

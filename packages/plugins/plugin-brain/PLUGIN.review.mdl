@@ -1,0 +1,233 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-brain/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: BrainPlugin
+
+The store seam is solid: `makeFactStoreRegistry` builds one lazily created in-memory `FactStore`
+per space, a space-affinity `LayerSpec` serves the same instance to operations, and `QueryFacts` and
+`SummarizeSubject` are implemented as visible operations with unit tests for filtering, the limit,
+grounding and the empty-subject case. The `org.dxos.skill.brain` skill lists both tools.
+
+The plugin has moved past the spec in two places. The facts panel is a role-only surface
+(`BrainSurface.Facts`) that reads the active space, not a companion over an article subject, and
+`FactViewer` comes from `@dxos/react-ui-rdf`, not `src/components`. The F-4 consumers no longer live
+in plugin-inbox: fact extraction is brain's own `AnalyzeMailbox`, contributed as an inbox
+`MailboxProcessor`, and `GenerateReply` is a brain operation contributed through
+`InboxCapabilities.ReplyGenerator`. The dependency runs brain → inbox, so the "no inbox → brain"
+property holds, but `EnrichMailbox` as the spec names it is gone. The skill instructions also carry a
+"Procedure (do this first)" recipe, against F-2.2.
+
+Of 25 items: 12 done, 4 untested, 4 partial, 4 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Fact: Fact is declared in @dxos/pipeline-rdf with assertion, factuality, attribution and provenance.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-rdf/src/types/Fact.ts#Fact]
+  tests: [github:dxos/dxos/packages/core/compute/pipeline-rdf/src/types/Fact.test.ts]
+```
+
+```mdl
+verdict SemanticQueryInput: QueryFacts' input carries exactly the six structured fields, with no raw SPARQL.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#QueryFacts, github:dxos/dxos/packages/core/compute/pipeline-rdf/src/internal/sparql/query-builder.ts#SemanticQuery]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict CompactFact: CompactFact matches the spec and toCompactFact projects labels, factuality code and YYYY-MM-DD date.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#CompactFact, github:dxos/dxos/packages/plugins/plugin-brain/src/operations/facts.ts#toCompactFact]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict SummaryResult: The output has summary and factCount, plus an extra sources array.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#SummarizeSubject]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/operations.test.ts]
+  note: The code adds `sources` (distinct source DXNs of the summarized facts), which the spec does not list.
+```
+
+```mdl
+verdict FactStoreRegistry: The registry has forSpace and layerFor over one lazy store per space, plus a subscribe hook.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.ts#FactStoreRegistry, github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.ts#makeFactStoreRegistry, github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainCapabilities.ts#FactStoreRegistry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.test.ts]
+  note: `subscribe(spaceId, listener)` is an addition the spec does not list; surfaces use it to re-query after writes.
+```
+
+```mdl
+verdict queryFacts: QueryFacts runs the structured query on the space store and returns compact facts bounded by limit.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#QueryFacts, github:dxos/dxos/packages/plugins/plugin-brain/src/operations/query-facts.ts#queryCompactFacts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/operations.test.ts]
+  walkthrough:
+    - The operation declares the structured query input and is marked visible. github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#QueryFacts
+    - The handler queries FactStore, slices to the limit (default 50) and maps to CompactFact. github:dxos/dxos/packages/plugins/plugin-brain/src/operations/query-facts.ts#queryCompactFacts
+```
+
+```mdl
+verdict summarizeSubject: SummarizeSubject normalizes the subject, queries by entity and asks the LLM for a cited, hedged summary.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#SummarizeSubject, github:dxos/dxos/packages/plugins/plugin-brain/src/operations/summarize-subject.ts#summarizeSubject]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/operations.test.ts]
+  walkthrough:
+    - The operation declares subject and focus in and summary, factCount and sources out. github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#SummarizeSubject
+    - The handler queries by normalized entity, returns empty with no LLM call when nothing matches, else prompts with fact lines. github:dxos/dxos/packages/plugins/plugin-brain/src/operations/summarize-subject.ts#summarizeSubject
+```
+
+```mdl
+verdict FactsCompanion: The surface is a role-only facts panel for the active space, not a companion over a subject.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/containers/FactsCompanion/FactsCompanion.tsx#FactsCompanion, github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/react-surface.ts, github:dxos/dxos/packages/ui/react-ui-rdf/src/components/FactViewer/FactViewer.tsx#FactViewer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/containers/FactsCompanion/FactsCompanion.stories.tsx, github:dxos/dxos/packages/plugins/plugin-brain/src/containers/FactsCompanion/FactsCompanion.test.ts]
+  note: |
+    `FactsCompanion` takes no `subject` prop; it reads `useActiveSpace()` and is dispatched on the
+    `BrainSurface.Facts` role (used by `stories-inbox`'s FactsModule), not the companion role. `FactViewer`
+    lives in `@dxos/react-ui-rdf`, not `src/components/FactViewer`. Facts are refreshed on store writes via
+    `registry.subscribe`.
+```
+
+```mdl
+verdict F-1.1: The FactStore module contributes the registry and a space-affinity LayerSpec providing FactStore.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.ts, github:dxos/dxos/packages/plugins/plugin-brain/dx.config.ts]
+  note: No test activates the module and checks both contributions.
+```
+
+```mdl
+verdict F-1.2: forSpace lazily creates and then returns the same store per space.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.ts#makeFactStoreRegistry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.test.ts]
+```
+
+```mdl
+verdict F-1.3: The LayerSpec resolves registry.layerFor(context.space), which wraps the forSpace instance.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.ts]
+  note: `layerFor` is `Layer.succeed(FactStore, forSpace(spaceId))`; no test checks that an operation sees the same instance.
+```
+
+```mdl
+verdict F-1.4: Consumers depend only on the FactStore tag; store construction is confined to makeFactStoreRegistry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.ts#makeFactStoreRegistry]
+  note: Roadmap item. Only `makeFactStoreRegistry` calls `FactStoreLive.makeMemory`; operations read `FactStore` from `@dxos/pipeline-rdf`. No persistent backend exists to prove the swap.
+```
+
+```mdl
+verdict F-2.1: The brain skill is contributed with QueryFacts and SummarizeSubject as tools.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/skills/BrainSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/skill-definition.ts]
+  note: `mailbox-facts.test.ts` checks a project references the skill key, not the skill's tool list.
+```
+
+```mdl
+verdict F-2.2: The instructions cover slugs, confidence filtering and narrowing, but also prescribe a task procedure.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/skills/BrainSkill.ts#make]
+  note: |
+    The "Procedure (do this first)" section tells the assistant what to do when asked to summarize a person or topic
+    (call Summarize Subject first, then Query Facts, report "nothing found" only after both). That is a task recipe,
+    which F-2.2 excludes. No test.
+```
+
+```mdl
+verdict F-2.3: QueryFacts returns single-line compact facts bounded by limit, default 50.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/query-facts.ts#queryCompactFacts, github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#DEFAULT_QUERY_FACTS_LIMIT]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict F-3.1: FactViewer renders the space's facts, but on a role-only panel, not as a companion to an article subject.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainSurface.ts#Facts, github:dxos/dxos/packages/plugins/plugin-brain/src/containers/FactsCompanion/FactsCompanion.tsx#FactsCompanion]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/containers/FactsCompanion/FactsCompanion.stories.tsx]
+  note: The surface filter is `Surface.makeFilter(BrainSurface.Facts)`; nothing contributes it on the companion role for article subjects.
+```
+
+```mdl
+verdict F-3.2: An empty store yields an empty list and FactViewer shows its "No facts." empty state.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/containers/FactsCompanion/use-facts.ts#queryFacts, github:dxos/dxos/packages/ui/react-ui-rdf/src/components/FactViewer/FactViewer.tsx#FactViewer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/containers/FactsCompanion/FactsCompanion.test.ts, github:dxos/dxos/packages/ui/react-ui-rdf/src/components/FactViewer/FactViewer.stories.tsx]
+```
+
+```mdl
+verdict F-4.1: Facts land in the brain store, but extraction is brain's AnalyzeMailbox processor, not plugin-inbox's EnrichMailbox.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#AnalyzeMailbox, github:dxos/dxos/packages/plugins/plugin-brain/src/operations/analyze-mailbox.ts, github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/mailbox-processor.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/analyze-mailbox.test.ts]
+  walkthrough:
+    - brain contributes an analyze MailboxProcessor to plugin-inbox's cascade. github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/mailbox-processor.ts
+    - AnalyzeMailbox declares FactStore among its services, so the LayerSpec injects the space store. github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#AnalyzeMailbox
+    - The handler runs the cursored fact pipeline into that store. github:dxos/dxos/packages/plugins/plugin-brain/src/operations/analyze-mailbox.ts
+  note: |
+    plugin-inbox has no `EnrichMailbox` and no `@dxos/plugin-brain` dependency; instead plugin-brain depends on
+    plugin-inbox and owns the extraction operation. The seam property holds; the spec's placement of the consumer
+    does not.
+```
+
+```mdl
+verdict F-4.2: GenerateReply queries participant facts from the store, but it is a brain operation, not a plugin-inbox one.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/types/BrainOperation.ts#GenerateReply, github:dxos/dxos/packages/plugins/plugin-brain/src/operations/generate-reply.ts#generateReply, github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/reply-generator.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/generate-reply.test.ts]
+  note: brain contributes `GenerateReply` to inbox through `InboxCapabilities.ReplyGenerator`; inbox surfaces invoke it without naming brain.
+```
+
+```mdl
+verdict T-1: The registry tests check same and distinct instances, but not that layerFor provides the forSpace instance.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.test.ts]
+  note: No assertion on `layerFor('a')`.
+```
+
+```mdl
+verdict T-2: The QueryFacts tests cover entity filtering across positions, minConfidence and the limit.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/query-facts.ts#queryCompactFacts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict T-3: The SummarizeSubject tests check factCount, a cited id, and the empty unknown-subject case.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/summarize-subject.ts#summarizeSubject]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict T-4: A story renders FactsCompanion over a seeded store; the empty state is covered only at the FactViewer level.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/containers/FactsCompanion/FactsCompanion.stories.tsx, github:dxos/dxos/packages/ui/react-ui-rdf/src/components/FactViewer/FactViewer.stories.tsx]
+  note: The FactsCompanion story has only `Default`; the `Empty` story is FactViewer's own, and no assertion checks grouping by subject.
+```
+
+```mdl
+verdict T-5: The fact pipeline test writes facts into a store and reads them back, but uses a stub extractor and no QueryFacts call.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-email/src/fact-pipeline.ts#runFactPipeline]
+  tests: [github:dxos/dxos/packages/plugins/plugin-brain/src/operations/analyze-mailbox.test.ts]
+  note: The test lives in plugin-brain, runs `runFactPipeline` with `stubExtract` and reads with `store.query({})`, not `QueryFacts` for a participant entity.
+```
+
+```mdl
+verdict QA-1: No automation runs query and summarize against a store seeded by a mailbox run.
+  status: missing
+  note: No e2e test covers it; the unit tests seed stores directly.
+```

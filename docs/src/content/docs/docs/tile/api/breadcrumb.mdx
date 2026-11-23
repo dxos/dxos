@@ -1,0 +1,25 @@
+---
+title: Breadcrumb
+description: "The trail of pages from the top down to the current one."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/breadcrumb" height="6.25rem" narrow />
+
+```ts
+import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
+```
+
+A breadcrumb is the trail of pages from the top down to the current one. The trail scrolls sideways when it overflows.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Breadcrumb.Root` | The navigation landmark |
+| `Breadcrumb.List` | The ordered trail |
+| `Breadcrumb.Item` | One step, which holds a `Breadcrumb.Link` or, last, the `Breadcrumb.Current` page |
+| `Breadcrumb.Link` | An earlier step. It is a link, or a button with `asChild` |
+| `Breadcrumb.Current` | The page the user is on |
+| `Breadcrumb.Separator` | The mark between steps, hidden from screen readers |

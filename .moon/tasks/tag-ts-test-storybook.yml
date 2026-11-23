@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test-storybook:
-    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=storybook
+    command: dx-killorphans vitest run --passWithNoTests --project=storybook
     deps:
       - esbuild-plugins:build
       - node-std:build
@@ -11,9 +11,6 @@ tasks:
       - vite-plugin-module-url:build
       - vite-plugin-log:build
       - ^:build
-      # A plugin's vite config fails to load without its own generated capability barrels.
-      - target: ~:gen-modules
-        optional: true
       # Dependency packages' generated sources (e.g. the plugin capability barrels) must exist
       # before tests resolve them under the source condition. Addressed by the `prebuild` task tag
       # rather than a task name, since the generating task is named per what it generates.

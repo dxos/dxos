@@ -1,0 +1,84 @@
+---
+title: Why HALO?
+description: Why identity is keys your devices hold, not an account a server issues.
+---
+
+import Anatomy from '../../../../components/Anatomy.astro';
+import Snippet from '../../../../components/Snippet.astro';
+
+A local-first app keeps working offline and syncs between peers. No server is there to say who a user is, to check
+what they may see, or to take their account away.
+
+HALO gives each user an identity made of keys that their own devices hold, and it lets peers check each other's
+signatures directly.
+
+## The pattern
+
+The pattern has three steps: create an identity, create a space, invite someone. No step talks to a sign-up server.
+
+**Example** (Creating an identity and inviting someone to a space)
+
+<Snippet file="why-halo" region="pattern" />
+
+`invite` is the invitation code to send. With `shared-secret`, whoever redeems it also has to enter a second code that
+this device shows, so the invitation code alone lets no one in.
+
+Each call returns an Effect, which describes a piece of work and runs only when you run it. Reading the type of
+`Space.share` left to right:
+
+<Anatomy parts={[
+  { code: 'Space.share(id, options): ' },
+  { code: 'Effect<' },
+  { code: 'Invitation.Flow', label: 'what it returns' },
+  { code: ', SpaceError', label: 'how it fails' },
+  { code: ', Space.Service', label: 'the service it needs' },
+  { code: '>' },
+]} />
+
+You provide `Space.Service` once, from a client, and then run the Effect.
+
+## An account against a HALO identity
+
+|                                 | Account on a server                                  | HALO identity                                          |
+| ------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| Who creates it                  | The server, after sign-up                            | The device, with `Identity.create`                     |
+| What proves who you are         | A password or an OAuth token, checked by the server  | A signature from your device key, checked by any peer  |
+| Who decides access to data      | The server, on every request                         | The space's members, through signed membership         |
+| Works offline                   | No                                                   | Yes                                                    |
+| Can be taken away by the provider | Yes                                                | No. Your devices hold the keys, and a server holds one only if you grant it |
+| Lost password                   | Reset by email                                       | Recover with a recovery code or a passkey set up in advance |
+
+## Practical problems
+
+### One identity across devices
+
+A user expects their laptop and phone to be the same person. With an account, both devices sign in with the same
+password.
+
+In HALO, each device makes a key of its own. A device that already has the identity admits the new one, with a device
+invitation, and the new key becomes a member of the identity. A lost phone takes only its own key with it.
+[Add a device](/docs/halo/learn/add-device/) walks through it.
+
+### Access that peers check without a server
+
+When two peers sync a space, no server stands between them to check each request. Each peer has to decide for itself
+whether to accept the other's changes.
+
+Every peer holds the space's membership, as a [Keyhive](https://github.com/inkandswitch/keyhive) graph of signed
+delegations. A peer checks a change against that graph itself, so the check works with no server, even when two peers
+meet on a local network. [Spaces and membership](/docs/halo/concepts/spaces-membership/) explains the graph.
+
+### Recovery without a password reset
+
+No server can reset a key. Instead, the user registers a recovery key, such as a recovery code or a passkey, while
+they still have a device. Later, they use it to get the identity onto a new device.
+
+Recovery runs through EDGE, DXOS's always-online peer. [Recover an identity](/docs/halo/learn/recover-identity/) shows
+how.
+
+## What HALO does not do
+
+HALO is the identity of a user inside DXOS apps and spaces. It is not a login for third-party websites, and it does not
+replace OAuth for signing in to services outside DXOS.
+
+Start with [The HALO identity](/docs/halo/learn/the-halo-identity/).

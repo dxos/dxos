@@ -1,0 +1,32 @@
+---
+spec: github:dxos/dxos/packages/reflect/deus/src/cli/__fixtures__/features/SPEC.mdl
+commit: 0000000000000000000000000000000000000000
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Features fixture
+
+## Verdicts
+
+```mdl
+verdict F-1.1: Lists.
+  status: done
+```
+
+```mdl
+verdict F-1.2: Filters.
+  status: done
+```
+
+```mdl
+verdict F-2.1: Nothing exports.
+  status: missing
+  note: No exporter exists. Searched the CLI.
+```
+
+```mdl
+verdict Greet: Greets, untested.
+  status: untested
+  note: No test says hello.
+```

@@ -13,6 +13,7 @@
 export * from './binding.ts';
 export * from './headers.ts';
 export * from './mail-sync.ts';
+export * from './pending-monitor.ts';
 export * from './policy.ts';
 export * from './tag-diff.ts';
 export * from './tag-push.ts';

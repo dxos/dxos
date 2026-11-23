@@ -28,7 +28,7 @@ export const importCommand = Command.make(
   ({ key }) =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
 
       // TODO(dmaretskyi): Extract.
       yield* Effect.promise(() => client.addTypes([Operation.PersistentOperation]));

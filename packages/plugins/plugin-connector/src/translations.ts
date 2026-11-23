@@ -6,12 +6,12 @@ import { Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { ConnectorNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [ConnectorNamespace.key]: {
         'plugin.name': 'Connection',
         'space-panel.name': 'Connections',
         'connections-verbose.label': 'Manage connections',

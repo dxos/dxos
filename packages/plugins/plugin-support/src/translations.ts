@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Support } from '#types';
+
+import { SupportNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete ticket',
         'object-deleted.label': 'Ticket deleted',
       },
-      [meta.profile.key]: {
+      [SupportNamespace.key]: {
         'plugin.name': 'Support',
         'title.label': 'Title',
         'body.label': 'Description',

@@ -1,0 +1,49 @@
+---
+title: Density and sizes
+description: One size scale, set on an element and inherited by everything inside it.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+Every TILE control takes its height, text size, icon size and spacing from one scale with five steps: `xs`, `sm`, `md`,
+`lg` and `xl`. When you set a size on an element, the controls inside it follow.
+
+## Model
+
+To make one toolbar compact by hand, you override the height and the padding of every control in it. With TILE, you
+set the size once, on the toolbar, and the controls inside read it.
+
+**Density** is how compact a region's controls are, and a **size** is the step of the scale that sets it. A smaller
+size makes the controls shorter, with smaller text, smaller icons and narrower gaps.
+
+**A size is an attribute.** A component that takes a `size` prop sets `data-size` on its element. The theme defines,
+for each step, variables such as `--dx-block-size` (a control's height), `--dx-font-size`, `--dx-icon-size` and
+`--dx-gap-size`. Every control reads these variables instead of fixed values.
+
+**Sizes inherit.** A control without its own `size` uses the nearest one above it. `Panel.Root`, `Toolbar.Root`,
+`Layout.Container`, a field header, a dialog and a button all take `size`. Outside any of them, controls use `md`.
+
+**Example** (Setting a size on three toolbars)
+
+<Snippet file="tile-components" region="sizes" lang="tsx" />
+
+<TilePreview id="sizes" />
+
+`Toolbar.Root` is the only component here that takes a `size`. The buttons and the input inside it name none, so
+each row of controls follows its toolbar.
+
+## Behavior
+
+- An overlay takes the size of its trigger. For example, a popover opened from a `sm` toolbar is `sm` too, though the
+  popover renders in a portal outside the toolbar.
+- A menu is the exception. It is `md` wherever it opens, and a submenu takes the size of the menu it opens from.
+- An overlay's content can name its own `size` to break from its trigger. Use this for a dialog that should be `lg`
+  wherever it opens.
+- Labels read one text step below the body at the same size, and helper text one step below that.
+
+## Limits
+
+- A fixed height or padding set with `classNames` does not follow the scale. Set a size instead.
+- `data-size` takes effect only on TILE's own elements. If you set it on a plain `<div>`, it changes nothing. Use a
+  `Layout.Container` with `size` instead.

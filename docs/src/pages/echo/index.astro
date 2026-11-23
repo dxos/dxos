@@ -1,0 +1,724 @@
+---
+import { Code } from 'astro-expressive-code/components';
+
+import Diagram from '../../components/Diagram.astro';
+import SpecCite from '../../components/SpecCite.astro';
+import { SUITE_BACKGROUNDS, SUITE_COLORS } from '../../components/topic-nav/suite.ts';
+import { StoryDemo } from '../../demos/StoryDemo.tsx';
+import WebflowFooter from '../../components/WebflowFooter.astro';
+import WebflowNav from '../../components/WebflowNav.astro';
+import { INSTALL, guarantees, reasons, routes, steps } from '../../echo/home.ts';
+import { ECHO_DEMOS } from '../../demos/catalog.ts';
+import { NARRATIVES } from '../../demos/narratives.ts';
+import { snippetSource } from '../../echo/snippets.ts';
+import WebflowLayout from '../../layouts/WebflowLayout.astro';
+import '../../styles/tokens.generated.css';
+import '../../styles/fonts.css';
+
+// ECHO's art and color come from the section suite, as on the docs heroes, so the two cannot diverge [D-288].
+const art = SUITE_BACKGROUNDS.echo;
+const RAY_COLOR = SUITE_COLORS.echo;
+const pointsOf = (d: string) =>
+  [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map(([, x, y]) => ({ x: Number(x), y: Number(y) }));
+const pathsOf = (group: string) =>
+  [...(art.match(new RegExp(`<g id="${group}"[\\s\\S]*?</g>`))?.[0] ?? '').matchAll(/\sd="([^"]+)"/g)].map(([, d]) => d);
+const icon = pathsOf('icon');
+// The icon's box; the hero's view box and the rays' fade are sized from it.
+const iconPoints = pathsOf('icon').flatMap(pointsOf);
+const ICON = {
+  x: Math.min(...iconPoints.map((p) => p.x)),
+  y: Math.min(...iconPoints.map((p) => p.y)),
+  width: Math.max(...iconPoints.map((p) => p.x)) - Math.min(...iconPoints.map((p) => p.x)),
+  height: Math.max(...iconPoints.map((p) => p.y)) - Math.min(...iconPoints.map((p) => p.y)),
+};
+const CENTER = { x: ICON.x + ICON.width / 2, y: ICON.y + ICON.height / 2 };
+// The suite's rays already run past the art's edges.
+const rays = pathsOf('lines');
+const FADE = 1.05 * ICON.height;
+
+---
+<WebflowLayout
+  title="ECHO by DXOS"
+  description="ECHO is the typed, local-first object graph: the data model that apps and agents share."
+  ogImage="/webflow/images/dxos-home-og-image.png"
+  wfPageId="echo"
+  demos
+>
+  <WebflowNav currentPage="echo" />
+
+  <section class="echo-hero">
+    <div class="container-large echo-hero-grid">
+      <div class="echo-hero-copy">
+        <div class="all-caps echo-eyebrow">ECHO by DXOS</div>
+        <h1 class="heading-style-h1">The data model for <span class="echo-highlight">apps and agents</span></h1>
+        <p class="text-size-large text-style-muted">
+          A typed object graph on the device. Plugins code against it, agents keep their memory in it and read its
+          schema, and data from other systems meets in it. Writes land before the call returns, and peers merge when
+          they connect.
+        </p>
+        <div class="echo-install">
+          <code>{INSTALL}</code>
+          <button type="button" class="echo-copy" data-copy={INSTALL} aria-label="Copy the install command">
+            <svg class="echo-copy-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+              <path d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5" />
+            </svg>
+            <svg class="echo-copied-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3 8.5l3.25 3.25L13 5" />
+            </svg>
+          </button>
+        </div>
+        <div class="button-group">
+          <a href="/docs/echo/why-echo/" class="button is-secondary echo-primary w-inline-block"><div>Why ECHO?</div></a>
+          <a href="/docs/echo/learn/defining-types/" class="button is-tertiary w-inline-block"><div>Start the learning path</div></a>
+        </div>
+      </div>
+      <svg
+        class="echo-mark"
+        viewBox={`${ICON.x - 10} ${ICON.y - 10} ${ICON.width + 20} ${ICON.height + 20}`}
+        aria-hidden="true"
+      >
+        <defs>
+          {/* The rays fade with distance from the icon, and sooner to the left, before the copy. */}
+          <radialGradient id="echo-ray-fade" gradientUnits="userSpaceOnUse" cx={CENTER.x} cy={CENTER.y} r={FADE}>
+            <stop offset="0.5" stop-color="#fff" />
+            <stop offset="1" stop-color="#fff" stop-opacity="0" />
+          </radialGradient>
+          <linearGradient id="echo-ray-left" gradientUnits="userSpaceOnUse" x1={ICON.x - ICON.width * 0.3} x2={ICON.x}>
+            <stop offset="0" stop-color="#fff" stop-opacity="0" />
+            <stop offset="1" stop-color="#fff" />
+          </linearGradient>
+          <mask id="echo-ray-mask" maskUnits="userSpaceOnUse" x={CENTER.x - FADE} y={CENTER.y - FADE} width={2 * FADE} height={2 * FADE}>
+            <rect x={CENTER.x - FADE} y={CENTER.y - FADE} width={2 * FADE} height={2 * FADE} fill="url(#echo-ray-fade)" />
+          </mask>
+          <mask id="echo-ray-left-mask" maskUnits="userSpaceOnUse" x={CENTER.x - FADE} y={CENTER.y - FADE} width={2 * FADE} height={2 * FADE}>
+            <rect x={CENTER.x - FADE} y={CENTER.y - FADE} width={2 * FADE} height={2 * FADE} fill="url(#echo-ray-left)" />
+          </mask>
+        </defs>
+        <g class="echo-mark-left-fade" mask="url(#echo-ray-left-mask)">
+          <g class="echo-mark-rays" mask="url(#echo-ray-mask)">
+            {rays.map((d) => <path d={d} />)}
+          </g>
+        </g>
+        <g class="echo-mark-icon">
+          {icon.map((d) => <path d={d} />)}
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">In code</div>
+        <h2 class="heading-style-h2">Define a type, query it, change it</h2>
+      </div>
+      <div class="echo-tabs echo-card-tabs" data-tabs>
+        <div class="echo-tablist" role="tablist" aria-label="Steps of the sample">
+          {steps.map(({ id, label, body }, index) => (
+            <button
+              type="button"
+              role="tab"
+              id={`step-tab-${id}`}
+              aria-controls={`step-panel-${id}`}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? 0 : -1}
+              data-tab={id}
+            >
+              <span>{label}</span>
+              <span class="echo-tab-summary" set:html={body} />
+            </button>
+          ))}
+        </div>
+        <div class="echo-captions">
+          {steps.map(({ id, body }, index) => (
+            <p data-panel={id} data-active={index === 0 ? '' : undefined} set:html={body} />
+          ))}
+        </div>
+        <div class="echo-panels">
+          {steps.map(({ id }, index) => (
+            <div
+              role="tabpanel"
+              id={`step-panel-${id}`}
+              aria-labelledby={`step-tab-${id}`}
+              class="echo-step"
+              data-panel={id}
+              data-active={index === 0 ? '' : undefined}
+            >
+              <Code code={snippetSource('hero', id)} lang="ts" title="task.ts" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Why it exists</div>
+        <h2 class="heading-style-h2">One graph for apps, agents and external data</h2>
+      </div>
+      <div class="echo-grid echo-grid-four">
+        {reasons.map(({ title, body }) => (
+          <div class="echo-card">
+            <div class="heading-style-h5">{title}</div>
+            <p class="text-style-muted">{body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">What it guarantees</div>
+        <h2 class="heading-style-h2">Behavior you can rely on</h2>
+      </div>
+      <div class="echo-grid echo-grid-four">
+        {guarantees.map(({ title, body, cite }) => (
+          <div class="echo-card">
+            <div class="heading-style-h5">{title}</div>
+            <p class="text-style-muted">{body}</p>
+            <span class="echo-cite"><SpecCite item={cite} /></span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Live</div>
+        <h2 class="heading-style-h2">Running in this page</h2>
+        <p class="text-style-muted echo-lead">
+          Each demo is ECHO running in this tab. They share one space, held by two peers, Alice and Bob. Switch a
+          peer offline, keep editing, and its edits merge when it comes back.
+        </p>
+      </div>
+      <div class="echo-tabs echo-card-tabs" data-tabs>
+        <div class="echo-tablist" role="tablist" aria-label="Live demos">
+          {ECHO_DEMOS.map((id, index) => (
+            <button
+              type="button"
+              role="tab"
+              id={`demo-tab-${id}`}
+              aria-controls={`demo-panel-${id}`}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? 0 : -1}
+              data-tab={id}
+            >
+              <span>{NARRATIVES[id].title}</span>
+              <span class="echo-tab-summary" set:html={NARRATIVES[id].data} />
+            </button>
+          ))}
+        </div>
+        <div class="echo-captions">
+          {ECHO_DEMOS.map((id, index) => (
+            <p data-panel={id} data-active={index === 0 ? '' : undefined} set:html={NARRATIVES[id].data} />
+          ))}
+        </div>
+        <div class="echo-panels">
+          {ECHO_DEMOS.map((id, index) => (
+            <div
+              role="tabpanel"
+              id={`demo-panel-${id}`}
+              aria-labelledby={`demo-tab-${id}`}
+              class="echo-demo dx-island"
+              data-panel={id}
+              data-active={index === 0 ? '' : undefined}
+            >
+              <StoryDemo id={id} lazy client:only="react">
+                <div slot="fallback" class="echo-demo-loading" role="status">
+                  <span class="echo-demo-spinner" aria-hidden="true" />
+                  Loading live demo…
+                </div>
+              </StoryDemo>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Architecture</div>
+        <h2 class="heading-style-h2">How the packages fit</h2>
+      </div>
+      <Diagram
+        dark
+        name="packages"
+        alt="The @dxos packages in your process, echo-react, echo and echo-client, reach echo-host, index-core and EDGE through QueryService."
+      />
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Docs</div>
+        <h2 class="heading-style-h2">Where to go</h2>
+      </div>
+      <div class="echo-grid">
+        {routes.map(({ title, body, href }) => (
+          <a class="echo-card echo-card-link" href={href}>
+            <div class="heading-style-h5">{title}</div>
+            <p class="text-style-muted">{body}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <WebflowFooter accent="blue" />
+</WebflowLayout>
+
+<script>
+  // Tabs: a tab shows every element of its group whose `data-panel` matches it; the rest stay mounted, hidden in place.
+  for (const group of document.querySelectorAll<HTMLElement>('[data-tabs]')) {
+    const tabs = [...group.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const select = (tab: HTMLButtonElement) => {
+      for (const other of tabs) {
+        const selected = other === tab;
+        other.setAttribute('aria-selected', String(selected));
+        other.tabIndex = selected ? 0 : -1;
+      }
+      for (const panel of group.querySelectorAll<HTMLElement>('[data-panel]')) {
+        panel.toggleAttribute('data-active', panel.dataset.panel === tab.dataset.tab);
+      }
+    };
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(tab));
+      tab.addEventListener('keydown', (event) => {
+        const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+        if (step) {
+          const next = tabs[(index + step + tabs.length) % tabs.length];
+          next.focus();
+          select(next);
+        }
+      });
+    });
+  }
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy ?? '');
+      } catch {
+        // Without clipboard access, select the command so the reader can copy it by hand.
+        const code = button.parentElement?.querySelector('code');
+        if (code) {
+          window.getSelection()?.selectAllChildren(code);
+        }
+        return;
+      }
+      button.toggleAttribute('data-copied', true);
+      setTimeout(() => button.toggleAttribute('data-copied', false), 1500);
+    });
+  }
+</script>
+
+<style define:vars={{ echoGreen: RAY_COLOR }}>
+  /* --echoGreen is ECHO's ray color from the suite art [D-288]; text takes a lighter tint to stay legible on the dark ground. */
+
+  .echo-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 10rem 5% 6rem;
+    background-color: var(--black);
+  }
+
+  .echo-hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .echo-hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .echo-hero-copy h1,
+  .echo-hero-copy p {
+    margin: 0;
+  }
+
+  .echo-eyebrow {
+    color: color-mix(in oklab, var(--echoGreen), white 40%);
+  }
+
+  .echo-highlight {
+    border-bottom: 2px solid var(--echoGreen);
+  }
+
+  .echo-install {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.5rem 0.5rem 1.125rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
+        background-color: var(--black);
+    font-family: 'DM Mono', ui-monospace, monospace;
+    font-size: 0.9375rem;
+  }
+
+  .echo-install code {
+    font: inherit;
+    background: none;
+    padding: 0;
+  }
+
+  .echo-copy {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+        background: transparent;
+    color: rgb(255 255 255 / 0.6);
+    cursor: pointer;
+  }
+
+  .echo-copy:hover,
+  .echo-copy:focus-visible {
+    background-color: #ffffff14;
+    color: #fff;
+  }
+
+  .echo-copy svg {
+    grid-area: 1 / 1;
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .echo-copied-icon,
+  .echo-copy[data-copied] .echo-copy-icon {
+    visibility: hidden;
+  }
+
+  .echo-copy[data-copied] .echo-copied-icon {
+    visibility: visible;
+    color: color-mix(in oklab, var(--echoGreen), white 40%);
+  }
+
+  .button.echo-primary {
+    border-color: var(--echoGreen);
+    background-color: var(--echoGreen);
+  }
+
+  /* The icon keeps a bounded size in the column beside the copy; its rays run out past it and fade. */
+  .echo-mark {
+    justify-self: center;
+    width: min(100%, 26rem);
+    height: auto;
+    overflow: visible;
+    fill: none;
+    stroke-width: 14;
+  }
+
+  .echo-mark-rays {
+    stroke: var(--echoGreen);
+  }
+
+  .echo-mark-icon {
+    stroke: #fff;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .echo-section {
+    padding: 4rem 5%;
+    background-color: var(--black);
+  }
+
+  .echo-section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .echo-section-header h2 {
+    margin: 0;
+  }
+
+  .echo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    border-top: 1px solid var(--base-color-neutral--neutral-mid);
+    border-left: 1px solid var(--base-color-neutral--neutral-mid);
+  }
+
+  /* Four cards sit in one row, then two rows of two, then one column; never three and one. */
+  .echo-grid-four {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 40rem) {
+    .echo-grid-four {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .echo-grid-four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .echo-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 2rem;
+    border-right: 1px solid var(--base-color-neutral--neutral-mid);
+    border-bottom: 1px solid var(--base-color-neutral--neutral-mid);
+    text-decoration: none;
+  }
+
+  .echo-card p {
+    margin: 0;
+  }
+
+  .echo-card-link {
+    transition: background-color 0.2s ease;
+  }
+
+  .echo-card-link:hover {
+    background-color: #ffffff0d;
+  }
+
+  .echo-cite {
+    margin-top: auto;
+    font-family: 'DM Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+
+  .echo-lead {
+    max-width: 48rem;
+    margin: 0;
+  }
+
+  .echo-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .echo-tablist {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--base-color-neutral--neutral-mid);
+  }
+
+  .echo-tablist [role='tab'] {
+    margin-bottom: -1px;
+    padding: 0.625rem 1rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: rgb(255 255 255 / 0.6);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .echo-tablist [role='tab']:hover {
+    color: #fff;
+  }
+
+  .echo-tablist [role='tab'][aria-selected='true'] {
+    border-bottom-color: var(--echoGreen);
+    color: #fff;
+  }
+
+  /* Every panel shares one cell, so the group is as tall as its tallest panel and switching does not move the page. */
+  .echo-panels {
+    display: grid;
+  }
+
+  .echo-panels > [data-panel] {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .echo-panels > [data-panel]:not([data-active]) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* The step and demo tabs are cards as wide as the frame below them, each with a sentence or two on what it shows. */
+  .echo-card-tabs > .echo-tablist {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    border-bottom: 0;
+  }
+
+  .echo-card-tabs .echo-tablist [role='tab'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 1.25rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
+        text-align: left;
+  }
+
+  .echo-card-tabs .echo-tablist [role='tab'][aria-selected='true'] {
+    border-color: var(--echoGreen);
+    background-color: #ffffff0a;
+  }
+
+  .echo-tab-summary {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: rgb(255 255 255 / 0.6);
+  }
+
+  /* Shown only when the cards fold into plain tabs; every caption shares one cell, like the panels. */
+  .echo-captions {
+    display: none;
+  }
+
+  /* Below 64rem the cards become plain tabs, and only the selected one's sentence shows, under the tabs. */
+  @media (max-width: 64rem) {
+    .echo-card-tabs > .echo-tablist {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--base-color-neutral--neutral-mid);
+    }
+    .echo-card-tabs .echo-tablist [role='tab'] {
+      flex: none;
+      margin-bottom: 0;
+      padding: 0.625rem 1rem;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    .echo-card-tabs .echo-tablist [role='tab'][aria-selected='true'] {
+      border-color: transparent;
+      border-bottom-color: var(--echoGreen);
+      background-color: transparent;
+    }
+    .echo-card-tabs .echo-tab-summary {
+      display: none;
+    }
+    .echo-captions {
+      display: grid;
+      color: rgb(255 255 255 / 0.6);
+      line-height: 1.5;
+    }
+    .echo-captions > p {
+      grid-area: 1 / 1;
+      max-width: 40rem;
+      margin: 0;
+    }
+    .echo-captions > p:not([data-active]) {
+      visibility: hidden;
+    }
+    .echo-captions :global(code) {
+      font-family: 'DM Mono', ui-monospace, monospace;
+      font-size: 0.875em;
+    }
+  }
+
+  .echo-tab-summary :global(code) {
+    font-family: 'DM Mono', ui-monospace, monospace;
+    font-size: 0.875em;
+  }
+
+  .echo-demo {
+    height: 32rem;
+  }
+
+  /* Until its island hydrates, a demo holds its frame's size, so the page does not shift when it arrives. */
+  .echo-demo :global(astro-island),
+  .echo-demo-loading {
+    display: block;
+    height: 100%;
+  }
+
+  .echo-demo-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
+        color: rgb(255 255 255 / 0.6);
+  }
+
+  .echo-demo-spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: echo-demo-spin 0.8s linear infinite;
+  }
+
+  @keyframes echo-demo-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .echo-demo-spinner {
+      animation-duration: 2.4s;
+    }
+  }
+
+  .echo-section :global(.diagram) {
+    display: block;
+    width: 100%;
+    max-width: 60rem;
+    padding: 1rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
+        background: oklch(0.205 0.001 190);
+  }
+
+  @media (max-width: 991px) {
+    .echo-hero {
+      padding-top: 7rem;
+    }
+    .echo-hero-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2.5rem;
+    }
+    /* With no room beside the copy, the icon sits behind it, dimmed, as a background. */
+    .echo-hero-copy {
+      position: relative;
+      z-index: 1;
+    }
+    .echo-mark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(80%, 26rem);
+      opacity: 0.2;
+      transform: translate(-50%, -50%);
+    }
+    .echo-mark-left-fade {
+      mask: none;
+    }
+  }
+</style>

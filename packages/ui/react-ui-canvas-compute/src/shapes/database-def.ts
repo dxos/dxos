@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { DatabaseComponent } from './Database.tsx';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
@@ -23,7 +25,7 @@ export type DatabaseShape = Schema.Schema.Type<typeof DatabaseShape>;
 export type CreateDatabaseProps = CreateShapeProps<DatabaseShape>;
 
 export const createDatabase = (props: CreateDatabaseProps) =>
-  createShape<DatabaseShape>({ type: 'database', size: { width: 128, height: 64 }, ...props });
+  createShape<DatabaseShape>({ type: 'database', size: { width: 2 * MAJOR_GRID, height: MAJOR_GRID }, ...props });
 
 export const databaseNodeDef = defineComputeNode<DatabaseShape>({
   type: 'database',

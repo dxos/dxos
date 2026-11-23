@@ -26,15 +26,15 @@ export const ChessCard = ({ variant }: ChessCardProps) => {
           at min(width, height) — instead of the card clipping its bottom. Outside a popover the
           variable is absent and the fallback leaves the square unconstrained. */}
       <Card.Section classNames='aspect-square min-h-0 max-h-[calc(min(var(--available-height,800px),var(--spacing-card-max-height))-3rem)]'>
-        {/* `self-stretch`: the section centers its rows, so the row would sit at its content height —
-            zero here, since the board sizes itself from the container rather than from its content. */}
-        <Card.Row classNames='self-stretch'>
+        {/* A plain full-width cell rather than a `Card.Row`, whose text-line wrappers take their height from content —
+            zero, as the board sizes from its container; `dx-expand` fills the section in both card layouts. */}
+        <div className='col-[full-start/full-end] dx-expand'>
           <Chessboard.Root state={variant}>
             <Chessboard.Content>
               <Chessboard.Board />
             </Chessboard.Content>
           </Chessboard.Root>
-        </Card.Row>
+        </div>
       </Card.Section>
     </Card.Body>
   );

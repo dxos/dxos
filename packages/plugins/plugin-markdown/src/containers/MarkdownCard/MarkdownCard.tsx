@@ -13,9 +13,9 @@ import { Text } from '@dxos/schema';
 import { compactSlots } from '@dxos/ui-editor';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
-import { meta } from '#meta';
 import { Markdown } from '#types';
 
+import { MarkdownNamespace } from '../../namespace.ts';
 import { getContentSnippet } from '../../util.tsx';
 import { snippet as snippetExtension } from './snippet.ts';
 
@@ -28,7 +28,7 @@ const countWords = (text: string): number => text.split(/\s+/).filter(Boolean).l
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(MarkdownNamespace.key);
   const [document] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject : undefined);
   const [docContent] = useObject(document?.content, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');

@@ -9,8 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
-
+import { TripNamespace } from '../namespace.ts';
 import {
   DEFAULT_PLANNING_WINDOW_DAYS,
   DEFAULT_TRIP_GAP_DAYS,
@@ -27,7 +26,7 @@ import { Settings } from '../types/Settings.ts';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: TripNamespace.key,
       schema: Settings,
       defaultValue: (): Settings => ({}),
     });
@@ -43,7 +42,7 @@ export default Capability.makeModule(
     yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
 
     return Capability.contribute(AppCapabilities.Settings, {
-      prefix: meta.profile.key,
+      prefix: TripNamespace.key,
       schema: Settings,
       atom: settingsAtom,
     });

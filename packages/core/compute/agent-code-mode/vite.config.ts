@@ -12,6 +12,8 @@ export default defineConfig({
     WorkerSandboxEntry: 'src/WorkerSandboxEntry.ts',
     WorkerSandboxBrowserWorker: 'src/WorkerSandboxBrowserWorker.ts',
     WorkerSandboxBrowserEntry: 'src/WorkerSandboxBrowserEntry.ts',
+    // What a deployment bundles for workerd and hands `WorkerSandboxWorkerd.spawn` as its runtime.
+    WorkerSandboxWorkerdEntry: 'src/WorkerSandboxWorkerdEntry.ts',
   },
   test: {
     node: true,
@@ -27,8 +29,6 @@ export default defineConfig({
       // where it is declared.
       compatibilityFlags: ['nodejs_compat', 'experimental'],
       miniflare: { workerLoaders: { LOADER: {} } },
-      // `SELF` dispatches here, and a sandboxed isolate's outbound fetch is pointed at `SELF`.
-      main: 'src/WorkerdHostWorker.ts',
     },
   },
 });

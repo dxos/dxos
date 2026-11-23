@@ -1,0 +1,119 @@
+---
+title: Your profile
+description: Create an identity with a profile, show it and change it.
+---
+
+import { Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
+
+By the end of this page the contact book creates your identity with a profile the first time it runs. It shows your
+name from that profile in the corner, and lets you change it.
+
+To write the code as you read, open the starter on StackBlitz. It is the finished app with the code from these pages
+taken out.
+
+The starter runs before you write anything. When the app reaches code you have not written yet, a line at the top
+names the step and its file. Each sample on these pages has its file's name above it, and its line numbers are that
+file's.
+
+<StackBlitzButton project="halo" kind="starter" label="Follow along in StackBlitz" file="src/app/App.tsx" />
+
+## Background
+
+The first time the contact book runs on a device, it has no one to show. An **identity** is what stands for you in
+HALO. The client makes it on the device, with no network needed, and no server issues it.
+
+In Keyhive, which HALO is built on, the identity is a group named by a DID, such as `did:halo:BA25QRC2…`. Its members
+are your devices' keys, and the first member is the device that creates it. We create the identity in step 4.
+
+The identity also has a **profile**, which is a display name and any other data the app wants, such as an avatar.
+Everyone you share a space with sees it. We set the name in step 4 and change it in step 6.
+
+Every `@dxos/halo` function needs a service: `Identity.Service` for the identity, or `Space.Service` for spaces. We
+make both from a client in step 3, and the hooks of `@dxos/halo-react` read them from step 5 on.
+[The HALO identity](/docs/halo/learn/the-halo-identity/) says how these pages use Effect.
+
+## Steps
+
+<Steps>
+
+1. **Install the packages.** We need four. `@dxos/client` holds the client, `@dxos/halo` holds the API these pages
+   use, `@dxos/halo-adapter-client` makes the HALO services from a client, and `@dxos/halo-react` holds the provider
+   and the hooks for React.
+
+   The browser setup is the same as ECHO's. See [Installation](/docs/echo/learn/installation/) for the Vite config.
+   The StackBlitz project has it already.
+
+   Until the next npm release, install the build of main that these pages describe, from pkg.pr.new:
+
+   <Tabs>
+     <TabItem label="pnpm">
+       ```bash
+       pnpm add https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-adapter-client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-react@20a14b9 effect@4.0.4
+       ```
+     </TabItem>
+     <TabItem label="npm">
+       ```bash
+       npm install --save https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-adapter-client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-react@20a14b9 effect@4.0.4
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Configure the client.** The client keeps the device's keys and data on the device. It reaches other devices
+   through EDGE, DXOS's always-online peer.
+
+   <Snippet file="halo-tutorial/app/App" region="config" lang="tsx" />
+
+   `signaling` lets two devices find each other, which every invitation needs. The two replicators carry a space's
+   data through EDGE, so devices that are never online together still sync.
+
+3. **Start the client.** We write `openHalo` ourselves. It starts a client and returns it with the HALO services that
+   the client backs.
+
+   <Snippet file="halo-tutorial/app/App" region="client" lang="tsx" />
+
+   `makeIdentityService` and `makeSpaceService` build the two services from the client. `Context.add` files each one
+   under its tag, `Identity.Service` or `Space.Service`, and a function such as `Identity.create` finds its service by
+   that tag.
+
+   Further down the same file, `App` calls `openHalo` once, at startup, and puts `services` in a `HaloProvider`. A
+   component below the provider gets them back with `useHaloServices()`.
+
+   Code that runs outside React can use `layerClient(client)` from `@dxos/halo-adapter-client` instead. It provides
+   both services as one Effect layer. See [Identity](/docs/halo/api/identity/).
+
+4. **Create your identity.** On the welcome screen, **Start** calls `handleStart` with the name you typed.
+   `Identity.create` makes the identity, with this device as its first member, and gives its profile that name.
+
+   <Snippet file="halo-tutorial/app/Welcome" region="create" lang="tsx" />
+
+   `Effect.provide(services)` gives `Identity.create` the service it needs, and `Effect.runPromise` runs it. Every
+   handler on these pages ends with the same two calls.
+
+5. **Follow your identity.** `ContactBook` shows the welcome screen until there is an identity, and your name after
+   that. `useIdentity` gives it the identity to decide with, read from the `Identity.identity` stream.
+
+   <Snippet file="halo-tutorial/app/ContactBook" region="follow" lang="tsx" />
+
+6. **Change your profile.** Clicking your name opens a field, and **Save** calls `handleRename`.
+   `Identity.updateProfile` writes the new profile.
+
+   <Snippet file="halo-tutorial/app/Profile" region="rename" lang="tsx" />
+
+   `updateProfile` replaces the whole profile, and the contact book keeps only a name there, so the name is all that
+   `handleRename` passes. `useIdentity` re-renders with it, and so does every member list that includes you.
+
+</Steps>
+
+## Try it
+
+This device has no identity yet. Type a name and press **Start**, then click your name to change it.
+
+<HaloEmbed stage="name" scene="new" />
+
+## What you can do now
+
+You can start a client, create an identity with a profile, follow it from a component, and change its profile. Next,
+[Your spaces](/docs/halo/learn/your-spaces/) gives it somewhere to invite people.

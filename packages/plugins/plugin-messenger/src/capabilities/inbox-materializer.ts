@@ -18,8 +18,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { type Message, SpaceInvitationMessage } from '@dxos/types';
 
 import { startInboxMaterializer } from '#materializer';
-import { meta } from '#meta';
 import { MessengerCapabilities, Notifications } from '#types';
+
+import { MessengerNamespace } from '../namespace.ts';
 
 /**
  * Stores inbox messages in the default space's notifications feed and announces new space
@@ -43,13 +44,13 @@ export default Capability.makeModule(
         void invoker
           .invokePromise(LayoutOperation.AddToast, {
             // Keyed by space so a repeat invitation replaces rather than stacks.
-            id: `${meta.profile.key}/space-invitation/${spaceKey}`,
+            id: `${MessengerNamespace.key}/space-invitation/${spaceKey}`,
             icon: 'ph--envelope-simple--regular',
-            title: ['space-invitation-toast.title', { ns: meta.profile.key }],
-            description: ['space-invitation-toast.description', { ns: meta.profile.key }],
-            actionLabel: ['join-space-invitation.label', { ns: meta.profile.key }],
-            actionAlt: ['join-space-invitation.label', { ns: meta.profile.key }],
-            closeLabel: ['dismiss-space-invitation.label', { ns: meta.profile.key }],
+            title: ['space-invitation-toast.title', { ns: MessengerNamespace.key }],
+            description: ['space-invitation-toast.description', { ns: MessengerNamespace.key }],
+            actionLabel: ['join-space-invitation.label', { ns: MessengerNamespace.key }],
+            actionAlt: ['join-space-invitation.label', { ns: MessengerNamespace.key }],
+            closeLabel: ['dismiss-space-invitation.label', { ns: MessengerNamespace.key }],
             onAction: () =>
               void invoker
                 .invokePromise(SpaceInvitationOperation.JoinBySpaceKey, { spaceKey })

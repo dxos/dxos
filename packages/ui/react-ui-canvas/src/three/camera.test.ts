@@ -1,0 +1,212 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { type Scene } from '@dxos/scene';
+
+import {
+  axisPoint,
+  cameraPosition,
+  fitCamera,
+  orbitBy,
+  panBy,
+  planePoint,
+  project,
+  toOrbit,
+  zoomBy,
+  zoomPercent,
+} from './camera.ts';
+import { GROUND_PLANE, planeThrough } from './plane.ts';
+
+const camera = (props: Partial<Scene.Camera3D> = {}): Scene.Camera3D => ({
+  target: { x: 0, y: 0, z: 0 },
+  yaw: 0,
+  pitch: 0,
+  distance: 10,
+  fov: 0.8,
+  projection: 'perspective',
+  ...props,
+});
+
+describe('camera', () => {
+  test('toOrbit maps yaw 0 pitch 0 to a camera in front, looking along +z', () => {
+    const position = cameraPosition(toOrbit(camera()));
+    expect(position.x).toBeCloseTo(0);
+    expect(position.y).toBeCloseTo(0);
+    expect(position.z).toBeCloseTo(-10);
+  });
+
+  test('pitch 90 looks straight down', () => {
+    const position = cameraPosition(toOrbit(camera({ pitch: 90 })));
+    expect(position.y).toBeCloseTo(10, 1);
+  });
+
+  test('project puts the target at the middle of the viewport', () => {
+    const viewport = { width: 800, height: 600 };
+    expect(project(camera({ yaw: 30, pitch: 20 }), viewport, { x: 0, y: 0, z: 0 })).toMatchObject({ x: 400, y: 300 });
+    expect(project(camera({ projection: 'orthographic' }), viewport, { x: 0, y: 0, z: 0 })).toMatchObject({
+      x: 400,
+      y: 300,
+    });
+  });
+
+  test('a point to the right in front view projects right of centre', () => {
+    const point = project(camera(), { width: 800, height: 600 }, { x: 1, y: 0, z: 0 });
+    expect(point?.x).toBeGreaterThan(400);
+  });
+
+  describe('pointer moves', () => {
+    const viewport = { width: 800, height: 600 };
+
+    test('dragging right turns the scene right: a point in front of the target moves right', () => {
+      const before = camera({ yaw: 0, pitch: 20 });
+      const front = { x: 0, y: 0, z: -2 };
+      const after = orbitBy(before, { x: 50, y: 0 });
+      expect(project(after, viewport, front)!.x).toBeGreaterThan(project(before, viewport, front)!.x);
+    });
+
+    test('dragging down looks from higher, and pitch stops short of the poles', () => {
+      expect(orbitBy(camera({ pitch: 20 }), { x: 0, y: 50 }).pitch).toBeGreaterThan(20);
+      expect(orbitBy(camera({ pitch: 80 }), { x: 0, y: 10_000 }).pitch).toBeLessThan(90);
+      expect(orbitBy(camera({ pitch: -80 }), { x: 0, y: -10_000 }).pitch).toBeGreaterThan(-90);
+    });
+
+    test('panning keeps the old target under the pointer', () => {
+      for (const projection of ['perspective', 'orthographic'] as const) {
+        const before = camera({ yaw: 30, pitch: 25, projection });
+        const after = panBy(before, { x: 40, y: -30 }, viewport);
+        const moved = project(after, viewport, before.target)!;
+        expect(moved.x).toBeCloseTo(400 + 40);
+        expect(moved.y).toBeCloseTo(300 - 30);
+      }
+    });
+
+    test('zooming scales the distance and keeps it positive', () => {
+      expect(zoomBy(camera({ distance: 10 }), 0.5).distance).toBeCloseTo(5);
+      expect(zoomBy(camera({ distance: 10 }), 0).distance).toBeGreaterThan(0);
+    });
+  });
+
+  describe('axisPoint', () => {
+    const viewport = { width: 800, height: 600 };
+
+    test('is the inverse of project for points on the line, upright included', () => {
+      for (const projection of ['perspective', 'orthographic'] as const) {
+        const view = camera({ yaw: 25, pitch: 35, projection });
+        const origin = { x: 1, y: 0.5, z: -1 };
+        for (const [direction, point] of [
+          [
+            { x: 1, y: 0, z: 0 },
+            { x: 3, y: 0.5, z: -1 },
+          ],
+          [
+            { x: 0, y: 1, z: 0 },
+            { x: 1, y: 2.25, z: -1 },
+          ],
+          [
+            { x: 0, y: 0, z: 1 },
+            { x: 1, y: 0.5, z: -3.5 },
+          ],
+        ] as const) {
+          const screen = project(view, viewport, point);
+          const back = screen && axisPoint(view, viewport, screen, origin, direction);
+          expect(back?.x).toBeCloseTo(point.x);
+          expect(back?.y).toBeCloseTo(point.y);
+          expect(back?.z).toBeCloseTo(point.z);
+        }
+      }
+    });
+
+    test('a pixel off the line gives the nearest point of the line to its ray; a line seen end-on gives none', () => {
+      // Orthographic, so the ray through a point straight above the line meets it right below.
+      const view = camera({ yaw: 0, pitch: 0, projection: 'orthographic' });
+      const screen = project(view, viewport, { x: 2, y: 1, z: 0 });
+      const near = screen && axisPoint(view, viewport, screen, { x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 });
+      expect(near?.x).toBeCloseTo(2);
+      expect(near?.y).toBeCloseTo(0);
+      const towards = cameraPosition(toOrbit(view));
+      const along = { x: towards.x, y: towards.y, z: towards.z };
+      const length = Math.hypot(along.x, along.y, along.z);
+      const endOn = { x: along.x / length, y: along.y / length, z: along.z / length };
+      expect(axisPoint(view, viewport, { x: 400, y: 300 }, { x: 0, y: 0, z: 0 }, endOn)).toBeUndefined();
+    });
+  });
+
+  describe('planePoint', () => {
+    const viewport = { width: 800, height: 600 };
+
+    test('is the inverse of project for points on the work plane', () => {
+      for (const projection of ['perspective', 'orthographic'] as const) {
+        const view = camera({ yaw: 25, pitch: 35, projection });
+        for (const point of [
+          { x: 0, y: 0, z: 0 },
+          { x: 1.5, y: 0, z: -2 },
+        ]) {
+          const screen = project(view, viewport, point);
+          const back = screen && planePoint(view, viewport, screen, GROUND_PLANE);
+          expect(back?.x).toBeCloseTo(point.x);
+          expect(back?.y).toBeCloseTo(0);
+          expect(back?.z).toBeCloseTo(point.z);
+        }
+      }
+    });
+
+    test('lands on a raised plane, and on an upright one', () => {
+      const view = camera({ yaw: 10, pitch: 40 });
+      const point = { x: 1, y: 2, z: 1 };
+      const screen = project(view, viewport, point);
+      const raised = screen && planePoint(view, viewport, screen, planeThrough(GROUND_PLANE, { x: 0, y: 2, z: 0 }));
+      expect(raised?.x).toBeCloseTo(1);
+      expect(raised?.y).toBeCloseTo(2);
+      expect(raised?.z).toBeCloseTo(1);
+      const upright = screen && planePoint(view, viewport, screen, { origin: point, normal: { x: 1, y: 0, z: 0 } });
+      expect(upright?.x).toBeCloseTo(1);
+      expect(upright?.y).toBeCloseTo(2);
+      expect(upright?.z).toBeCloseTo(1);
+    });
+
+    test('is undefined when the ray is parallel to the plane or points away from it', () => {
+      expect(
+        planePoint(camera({ pitch: 0, projection: 'orthographic' }), viewport, { x: 400, y: 300 }, GROUND_PLANE),
+      ).toBeUndefined();
+      // Looking down from above, a pixel at the top of a steep perspective view still meets the ground; one far above
+      // the horizon of a level view does not.
+      expect(planePoint(camera({ pitch: 0 }), viewport, { x: 400, y: 0 }, GROUND_PLANE)).toBeUndefined();
+    });
+  });
+
+  describe('camera bar', () => {
+    const viewport = { width: 800, height: 600 };
+
+    test('fit centres the bounds and frames them whole, keeping the angle', () => {
+      const bounds = { center: { x: 4, y: 1, z: -2 }, radius: 3 };
+      const fitted = fitCamera(camera({ yaw: 30, pitch: 20 }), bounds, viewport);
+      expect(fitted.target).toEqual(bounds.center);
+      expect(fitted).toMatchObject({ yaw: 30, pitch: 20 });
+      for (const offset of [-1, 1]) {
+        for (const axis of ['x', 'y', 'z'] as const) {
+          const point = { ...bounds.center, [axis]: bounds.center[axis] + offset * bounds.radius };
+          const screen = project(fitted, viewport, point)!;
+          expect(screen.x).toBeGreaterThanOrEqual(0);
+          expect(screen.x).toBeLessThanOrEqual(viewport.width);
+          expect(screen.y).toBeGreaterThanOrEqual(0);
+          expect(screen.y).toBeLessThanOrEqual(viewport.height);
+        }
+      }
+    });
+
+    test('fitting nothing leaves the camera as it was', () => {
+      const given = camera();
+      expect(fitCamera(given, { center: { x: 0, y: 0, z: 0 }, radius: 0 }, viewport)).toBe(given);
+    });
+
+    test('the zoom reads 100% at the authored distance and steps with each zoom', () => {
+      const authored = camera({ distance: 10 });
+      expect(zoomPercent(authored, authored)).toBe(100);
+      expect(zoomPercent(zoomBy(authored, 1 / 1.25), authored)).toBe(125);
+      expect(zoomPercent(zoomBy(authored, 2), authored)).toBe(50);
+    });
+  });
+});

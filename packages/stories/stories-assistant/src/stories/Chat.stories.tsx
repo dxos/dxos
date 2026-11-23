@@ -20,13 +20,13 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {
   Calculate,
   CalculatorSkill,
-  ModuleContainer,
   config,
   createDecorators,
   findPromptEditor,
@@ -35,9 +35,9 @@ import {
   storyParameters,
 } from '../testing/index.ts';
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Chat',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -115,10 +115,9 @@ const seedProjectTask = async ({
     project.taskSet = Ref.make(taskSet);
   });
 
-  // A named reviewer is what sends the finished task to `review` rather than `done`.
   const task = Chat.addTask(db, chat, POEM_TASK_TITLE, {
     status: 'todo',
-    reviewers: [{ name: 'Rich', role: 'user' }],
+    assignee: { name: 'Rich', role: 'user' },
   });
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task)];
@@ -880,8 +879,6 @@ export const TestProjectTaskDelegationScripted: Story = {
     const documents = await storySpace.db.query(Filter.type(Markdown.Document)).run();
     await expect(documents.map((document) => document.name)).toContain(POEM_DOC_NAME);
 
-    // Finished, not closed: the task named a reviewer, so the session marking it done lands on
-    // `review`. The model asked for `done` and cannot know about reviewers — the rule is the task's.
     const tasks = await storySpace.db.query(Filter.type(Task.Task)).run();
     const worked = tasks.find(({ title }) => title === POEM_TASK_TITLE);
     await expect(worked?.status).toEqual('review');

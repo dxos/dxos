@@ -23,9 +23,9 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
 
-import * as AssistantPlugin from '../../AssistantPlugin.ts';
 import { QuestionCard } from './QuestionCard.tsx';
 
 const QUESTION_TEXT = 'How long is our refund window?';

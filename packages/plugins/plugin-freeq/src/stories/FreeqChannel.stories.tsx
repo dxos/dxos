@@ -22,7 +22,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { FreeqPlugin } from '#plugin';
+import * as FreeqPlugin from '#meta';
 import { translations } from '#translations';
 
 import { FREEQ_BACKEND_KIND } from '../constants.ts';
@@ -71,9 +71,9 @@ const meta = {
               );
             }),
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         ThreadPlugin.make(),
-        FreeqPlugin(),
+        FreeqPlugin.make(),
       ],
     }),
   ],

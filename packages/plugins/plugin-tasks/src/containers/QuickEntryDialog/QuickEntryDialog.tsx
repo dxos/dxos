@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
 import { Form, useFormContext } from '@dxos/react-ui-form';
@@ -15,8 +16,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { OutlineOperation } from '#types';
+
+import { TasksNamespace } from '../../namespace.ts';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
@@ -39,7 +41,7 @@ type QuickEntryActionsProps = {
  * Custom form actions with Cancel, Save & Add Another, and Save buttons.
  */
 const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TasksNamespace.key);
   const {
     form: { canSave, onSave, onCancel },
   } = useFormContext(QUICK_ENTRY_ACTIONS_NAME);
@@ -85,7 +87,8 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
 };
 
 export const QuickEntryDialog = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TasksNamespace.key);
+  const readOnly = ToolkitHooks.useReadOnly();
   const { invokePromise } = Hooks.useOperationInvoker();
   const [formKey, setFormKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -130,6 +133,10 @@ export const QuickEntryDialog = () => {
       formSaveRef.current?.();
     }
   }, []);
+
+  if (readOnly) {
+    return null;
+  }
 
   return (
     <Dialog.Content ref={contentRef} onKeyDownCapture={handleKeyDownCapture}>

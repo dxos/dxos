@@ -25,6 +25,7 @@ import {
   type Stats,
   type SyncRow,
 } from '../../../hooks/index.ts';
+import { type EdgeCardSpace } from '../EdgeCard/index.ts';
 import { type SurfaceProfilerStats } from '../SurfaceProfilerCard/index.ts';
 
 export const memory: MemoryInfo = {
@@ -93,24 +94,43 @@ export const edgeStatus: EdgeStatus = {
   },
 };
 
-export const edgeSpaceNames: Record<string, string> = {
-  BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N: 'Personal Space',
-  B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF: 'Acme Robotics',
+export const edgeSpaces: Record<string, EdgeCardSpace> = {
+  BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N: { name: 'Personal Space' },
+  B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF: { name: 'Acme Robotics' },
+  BUM5S2UIPZQQLMY3YNTT7UXBTN2MHM7DN: { tag: 'org.dxos.space.settings' },
 };
 
 export const edgeStatusDegraded: EdgeStatus = {
   problems: [
     'Agent is not reachable.',
     'Router fetch timed out.',
-    'Some credentials were not processed by space-state-machine, might be a gap in dependency timeframes. in space BUM5S2UIPZQQLMY3YNTT7UXBTN2MHM7DN',
+    'Some credentials were not processed by space-state-machine, might be a gap in dependency timeframes. in space B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF',
+    'Online peer was not found in the replicator\'s "active peers" list. in space B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF',
+    'Online peer was not found in the replicator\'s "active peers" list. in space B3WUF4FALJBIAHPTB5OVBUQQIKOENEG2O',
   ],
   agent: { agentStatus: 'inactive' },
   router: { fetchError: 'timeout' },
   spaces: {
     data: {
-      [SpaceId.make('BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N')]: { diagnostics: { redFlags: [] } },
-      [SpaceId.make('B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF')]: { diagnostics: { redFlags: ['feed lag', 'missing epoch'] } },
+      [SpaceId.make('BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N')]: {
+        diagnostics: { redFlags: [], echo: { documentCount: 1_204 } },
+      },
+      [SpaceId.make('B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF')]: {
+        diagnostics: {
+          echo: { documentCount: 38 },
+          redFlags: [
+            'Some credentials were not processed by space-state-machine, might be a gap in dependency timeframes.',
+            'Online peer was not found in the replicator\'s "active peers" list.',
+          ],
+          feedProcessingProgress: { '04688972a8': '0 / 6', '04c6a5b9b1': '10 / 10' },
+          members: [{ activeConnections: [{ replicating: false, deviceKey: '04b4d8f3ea' }] }],
+        },
+      },
       [SpaceId.make('BUM5S2UIPZQQLMY3YNTT7UXBTN2MHM7DN')]: { fetchError: 'timeout' },
+      // Deleted on this device, so missing from `edgeSpaces` and hidden.
+      [SpaceId.make('B3WUF4FALJBIAHPTB5OVBUQQIKOENEG2O')]: {
+        diagnostics: { redFlags: ['Online peer was not found in the replicator\'s "active peers" list.'] },
+      },
     },
   },
 };

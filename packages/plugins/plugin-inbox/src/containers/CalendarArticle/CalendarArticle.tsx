@@ -30,9 +30,9 @@ import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { useFilterTagIds, useQueryFilter, useTagMap } from '#hooks';
-import { meta } from '#meta';
 import { Calendar, DraftEvent, SystemTags } from '#types';
 
+import { InboxNamespace } from '../../namespace.ts';
 import { getCalendarPath, getFeedObjectPath } from '../../paths.ts';
 import { buildSearchSelection } from '../../util/index.ts';
 import { InitializeCalendar } from './InitializeCalendar.tsx';
@@ -51,7 +51,7 @@ export type CalendarArticleProps = AppSurface.ObjectArticleProps<
 >;
 
 export const CalendarArticle = ({ role, subject, attendableId, filter: filterProp }: CalendarArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(InboxNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [calendar] = useObject(subject);
   const db = Obj.getDatabase(calendar);
@@ -196,17 +196,17 @@ export const CalendarArticle = ({ role, subject, attendableId, filter: filterPro
     (get) => {
       // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.
       const builder = MenuBuilder.make()
-        .root({ label: ['calendar-toolbar.menu', { ns: meta.profile.key }] })
+        .root({ label: ['calendar-toolbar.menu', { ns: InboxNamespace.key }] })
         .action(
           'create-event',
-          { label: ['calendar-toolbar-create-event.menu', { ns: meta.profile.key }], icon: 'ph--pen--regular' },
+          { label: ['calendar-toolbar-create-event.menu', { ns: InboxNamespace.key }], icon: 'ph--pen--regular' },
           handleCreate,
         )
         .action(
           'filter',
           {
             variant: 'custom',
-            label: ['calendar-toolbar-filter.menu', { ns: meta.profile.key }],
+            label: ['calendar-toolbar-filter.menu', { ns: InboxNamespace.key }],
             render: () => filterElement,
           },
           () => {},

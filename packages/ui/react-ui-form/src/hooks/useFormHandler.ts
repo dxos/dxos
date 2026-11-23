@@ -15,6 +15,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
+import { type CommitOn } from '#types';
 import { type FormFieldOverride, type FormFieldStatus } from '#types';
 
 import { getDiscriminatorDefaults } from '../util/index.ts';
@@ -51,6 +52,12 @@ export interface FormHandlerProps<T extends AnyProperties> {
   autoSave?: boolean;
 
   /**
+   * When a typed value commits: `change` (the default) as each value parses; `blur`, only when the field blurs or
+   * Enter is pressed, so an auto-saving form writes one value per edit. Pickers, toggles and steppers commit at once.
+   */
+  commitOn?: CommitOn;
+
+  /**
    * Callback for value changes. Note: This is called even when values are invalid.
    * Sometimes the parent component may want to know about changes even if the form is
    * in an invalid state.
@@ -84,6 +91,9 @@ export type FormUpdateMeta<T extends AnyProperties> = {
  * Form handler properties and methods.
  */
 export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'schema' | 'autoSave'> & {
+  /** When typed values commit. */
+  commitOn: CommitOn;
+
   /** Initial values (which may not pass validation). */
   values: Partial<T>;
 
@@ -117,6 +127,8 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onBlur: (path: (string | number)[]) => void;
   onValueChange: <V>(path: (string | number)[], type: SchemaAST.AST, value: V) => void;
+  /** Drops the field's uncommitted edit, so it shows the source again and its blur saves nothing. */
+  onRevert: (path: (string | number)[]) => void;
 };
 
 /**
@@ -126,6 +138,7 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
 export const useFormHandler = <T extends AnyProperties>({
   schema,
   autoSave,
+  commitOn = 'change',
   fieldOverrides,
   values: valuesProp,
   defaultValues: defaultValuesProp,
@@ -339,6 +352,12 @@ export const useFormHandler = <T extends AnyProperties>({
     [source, overrides, validate, onValuesChanged],
   );
 
+  const onRevert = useCallback((path: (string | number)[]) => {
+    const jsonPath = SchemaEx.createJsonPath(path);
+    setOverrides((prev) => omitPaths(prev, [jsonPath]));
+    setChanged((prev) => omitPaths(prev, [jsonPath]));
+  }, []);
+
   // A blur commits the field. The validation and auto-save run in an effect, after the render that carries the
   // change, so a control that changes and blurs in one handler (a switch, a select, a picker) commits the value it
   // just set rather than the one rendered before it.
@@ -383,6 +402,8 @@ export const useFormHandler = <T extends AnyProperties>({
       getValue,
       onBlur,
       onValueChange,
+      onRevert,
+      commitOn,
 
       ...props,
     }),
@@ -400,6 +421,8 @@ export const useFormHandler = <T extends AnyProperties>({
       getValue,
       onBlur,
       onValueChange,
+      onRevert,
+      commitOn,
       handleSave,
       handleCancel,
     ],

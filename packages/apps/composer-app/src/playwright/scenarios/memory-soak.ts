@@ -18,7 +18,7 @@ const MAX_SPACES = 12;
 export type SoakContext = {
   page: Page;
   budget: number;
-  stage: (id: string, body: () => Promise<void>) => Promise<void>;
+  stage: (id: string, body: () => Promise<void>) => Promise<unknown>;
 };
 
 /** Imports a `.dxprofile` through `/recovery.html`'s own picker: its CSP admits no other origin. */

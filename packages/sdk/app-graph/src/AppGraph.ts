@@ -3,7 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
 import * as Function from 'effect/Function';
+import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Atom from 'effect/reactivity/Atom';
@@ -213,6 +215,16 @@ export const getGraph = (node: Node.Node): Graph => {
   return graph as Graph;
 };
 
+/** Carried by each forwarder {@link stableData} makes, so any graph recognizes one without a lookup table. */
+const ForwardedKey = Symbol('app-graph/forwarded');
+
+/** The closure a forwarder calls, never itself a forwarder, and the graph node it belongs to. */
+type Forwarded = { target: (...args: unknown[]) => unknown; readonly graph: object; readonly id: string };
+
+type Forwarder = ((...args: unknown[]) => unknown) & { readonly [ForwardedKey]: Forwarded };
+
+const isForwarder = (value: unknown): value is Forwarder => typeof value === 'function' && ForwardedKey in value;
+
 /**
  * The Graph represents the user interface information architecture of the application constructed via plugins.
  * @internal
@@ -224,6 +236,14 @@ export class GraphImpl implements WritableGraph {
   pipe() {
     // eslint-disable-next-line prefer-rest-params
     return Pipeable.pipeArguments(this, arguments);
+  }
+
+  [Hash.symbol](): number {
+    return Hash.random(this);
+  }
+
+  [Equal.symbol](that: unknown): boolean {
+    return this === that;
   }
 
   readonly onNodeChanged = new Event<{
@@ -371,7 +391,16 @@ export class GraphImpl implements WritableGraph {
 
     this._model.batch(() => {
       this._setNode(GraphNode.RootId, this._constructNode({ id: GraphNode.RootId, type: Node.RootType, data: null }));
-      nodes?.forEach((node) => this._setNode(node.id, this._constructNode(node)));
+      nodes?.forEach((node) =>
+        this._setNode(
+          node.id,
+          this._constructNode(
+            typeof node.data === 'function'
+              ? { ...node, data: stableData(this, node.id, node.type, undefined, node.data) }
+              : node,
+          ),
+        ),
+      );
       Object.entries(edges ?? {}).forEach(([source, relations]) => {
         Object.entries(relations).forEach(([relation, targets]) => {
           targets.forEach((target) => this._setEdge(source, target, relation));
@@ -833,6 +862,32 @@ export const addNodes = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<
 };
 
 /**
+ * Builders recreate an action's closure on every run, so an action's `data` is held behind a stable
+ * forwarder per node whose target is swapped: a re-offer that changes nothing else emits nothing,
+ * and invoking the node still runs the latest closure. Only actions: other function data (a type
+ * node's schema class) is read for its statics, which a forwarder does not carry.
+ */
+const stableData = (graph: GraphImpl, id: string, type: string, existing: unknown, data: any): any => {
+  if (type !== Node.ActionType || typeof data !== 'function') {
+    return data;
+  }
+  const owned = (forwarder: Forwarder) => forwarder[ForwardedKey].graph === graph && forwarder[ForwardedKey].id === id;
+  // This node's own forwarder read back and re-added is kept: retargeting it at itself would recurse.
+  if (isForwarder(data) && owned(data)) {
+    return data;
+  }
+  // Any other forwarder, from another node or graph, is unwrapped: a target is never a forwarder, so none can cycle.
+  const target = isForwarder(data) ? data[ForwardedKey].target : data;
+  if (isForwarder(existing) && owned(existing)) {
+    existing[ForwardedKey].target = target;
+    return existing;
+  }
+  const cell: Forwarded = { target, graph, id };
+  const forwarder: Forwarder = Object.assign((...args: unknown[]) => cell.target(...args), { [ForwardedKey]: cell });
+  return forwarder;
+};
+
+/**
  * Add a node to the graph.
  */
 export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T => {
@@ -854,17 +909,26 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
-      const dataChanged = !shallowEqual(existing.data, data);
-      const propertiesChanged = Object.keys(properties).some((key) => existing.properties[key] !== properties[key]);
+      const nextData = stableData(internal, id, type, existing.data, data);
+      const dataChanged = !shallowEqual(existing.data, nextData);
+      const propertiesChanged = Object.keys(properties).some(
+        (key) => !Equal.equals(existing.properties[key], properties[key]),
+      );
+      // The forwarder keeps `data` stable, so the context an action runs with is compared on its own; an
+      // offer without one keeps the stored context, since the update spreads the existing node.
+      const contextChanged =
+        rest._actionContext !== undefined &&
+        (Node.isAction(existing) ? existing._actionContext : undefined) !== rest._actionContext;
       // `changed` is on the visit log because counting `existing node` lines alone measures how often a
       // node was re-offered, not how often it actually changed — two very different costs.
-      const changed = typeChanged || dataChanged || propertiesChanged;
+      const changed = typeChanged || dataChanged || propertiesChanged || contextChanged;
       log('existing node', {
         id,
         changed,
         typeChanged,
         dataChanged,
         propertiesChanged,
+        contextChanged,
       });
       if (changed) {
         log('updating node', { id, type, data, properties });
@@ -872,7 +936,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
           ...existing,
           ...rest,
           type,
-          data,
+          data: nextData,
           // Merged, not replaced, so several extensions can each contribute properties to one node —
           // which makes a key one generation sets and the next omits impossible to clear. A builder
           // that varies a property must emit it on every generation, `false`/`undefined` included.
@@ -884,7 +948,13 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
     },
     onNone: () => {
       log('new node', { id, type, data, properties });
-      const newNode = internal._constructNode({ id, type, data, properties, ...rest });
+      const newNode = internal._constructNode({
+        id,
+        type,
+        data: stableData(internal, id, type, undefined, data),
+        properties,
+        ...rest,
+      });
       internal._setNode(id, newNode);
       graph.onNodeChanged.emit({ id, node: newNode });
 
@@ -946,7 +1016,13 @@ export const removeNode = <T extends WritableGraph>(graph: T, id: string, edges 
   const internal = getInternal(graph);
   internal._setNode(id, Option.none());
   graph.onNodeChanged.emit({ id, node: Option.none() });
-  // TODO(wittjosiah): Reset expanded and initialized flags?
+  // The builder drops the node's connectors with it, so its expansions wait to re-run when it comes back.
+  for (const key of internal._expanded) {
+    if (primaryParts(key)[0] === id) {
+      internal._expanded.delete(key);
+      internal._pendingExpands.add(key);
+    }
+  }
 
   if (edges) {
     const nodeEdges = internal._currentEdges(id);

@@ -2,12 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClaudeCapabilities from '@dxos/plugin-claude/ClaudeCapabilities';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { DevShellNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.devShell',
+    key: DevShellNamespace.key,
     name: 'Dev Shell',
     author: 'DXOS',
     description: trim`
@@ -32,4 +41,36 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['system'],
   },
+  modules: [
+    /** Runs coding agents through the dev server; the desktop app runs them through plugin-claude's sidecar instead. */
+    Capability.lazyModule(
+      'AgentHost',
+      { provides: [ClaudeCapabilities.AgentHelper], activatesOn: ActivationEvents.Startup, environments: ['browser'] },
+      () => import('./src/capabilities/agent-host.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.pluginAsset({
+      pluginId: DevShellNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    Capability.lazyModule(
+      'ProjectTemplates',
+      { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
+      () => import('./src/capabilities/project-templates.ts', { with: { type: 'module-url' } }),
+    ),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

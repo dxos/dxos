@@ -2,19 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FactGraph, type RDF } from '@dxos/pipeline-rdf';
+import { type Fact } from '@dxos/echo-memory';
+import { type FactGraph } from '@dxos/pipeline-rdf';
 import { type TreeNode } from '@dxos/react-ui-graph';
 import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
 export type Group = {
   subject: string;
-  facts: RDF.Fact[];
+  facts: Fact.Fact[];
   conflicted: boolean;
   conflictedIds: Set<string>;
 };
 
 /** Group facts by subject entity and flag predicate-level conflicts within each group. */
-export const groupFacts = (facts: RDF.Fact[], filter: string): Group[] => {
+export const groupFacts = (facts: Fact.Fact[], filter: string): Group[] => {
   const needle = filter.trim().toLowerCase();
   const filtered = needle
     ? facts.filter((fact) => {
@@ -26,7 +27,7 @@ export const groupFacts = (facts: RDF.Fact[], filter: string): Group[] => {
     : facts;
 
   // Group by the entity slug (so `DXOS`/`dxos` collapse) but remember a display label for the header.
-  const bySubject = new Map<string, RDF.Fact[]>();
+  const bySubject = new Map<string, Fact.Fact[]>();
   const labelByKey = new Map<string, string>();
   for (const fact of filtered) {
     const key = termKey(fact.assertion.subject);
@@ -40,7 +41,7 @@ export const groupFacts = (facts: RDF.Fact[], filter: string): Group[] => {
 
   return [...bySubject.entries()].map(([key, groupFactsList]) => {
     const subject = labelByKey.get(key) ?? key;
-    const byPredicate = new Map<string, RDF.Fact[]>();
+    const byPredicate = new Map<string, Fact.Fact[]>();
     for (const fact of groupFactsList) {
       const list = byPredicate.get(fact.assertion.predicate) ?? [];
       list.push(fact);
@@ -67,10 +68,10 @@ export const groupFacts = (facts: RDF.Fact[], filter: string): Group[] => {
 };
 
 /** The join/grouping key: the entity slug (or literal). Casing variants collapse to one key. */
-export const termKey = (term: RDF.Term): string => (term.kind === 'entity' ? term.entity : term.literal);
+export const termKey = (term: Fact.Term): string => (term.kind === 'entity' ? term.entity : term.literal);
 
 /** Display form: the preserved surface label, else a prettified slug; literals render verbatim. */
-export const formatTerm = (term: RDF.Term): string =>
+export const formatTerm = (term: Fact.Term): string =>
   term.kind === 'entity' ? (term.label ?? humanize(term.entity)) : term.literal;
 
 /**
@@ -117,7 +118,7 @@ export const formatDate = (iso: string): string => iso.slice(0, 10);
 
 /** Map FactBank factuality to a real react-ui palette member. */
 export const factualityColor = (
-  factuality: RDF.FactualityValue,
+  factuality: Fact.FactualityValue,
 ): NeutralPalette | ChromaticPalette | MessageValence => {
   switch (factuality) {
     case 'CT+':

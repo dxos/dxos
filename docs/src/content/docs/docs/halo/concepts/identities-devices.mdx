@@ -1,0 +1,75 @@
+---
+title: Identities and devices
+description: An identity is a Keyhive group named by a DID; its devices are its members.
+---
+
+An identity stands for one user. In [Keyhive](https://www.inkandswitch.com/keyhive/notebook/), which HALO is built on, it
+is a group named by a DID, and its members are the keys of the user's devices.
+
+## Model
+
+A user has a laptop and a phone, and may lose either. If the identity were one key, both devices would have to hold
+it, and losing one device would give the key away. In HALO each device has a key of its own, and the identity is the
+group that those keys belong to.
+
+An **identity** is a group of keys named by a DID, such as `did:halo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`.
+`Identity.create` makes the group and its first member, which is the key of the device the code runs on. No server
+issues an identity. Other members and services refer to the user by the DID.
+
+The identity also has a profile, which holds a display name and free-form data such as an avatar.
+
+A **device** is one client storage, such as one browser profile on one site, and it has its own device key. A device
+becomes a member of the identity through a **delegation**. A delegation is a statement, signed by a device that is
+already a member, that admits the new key. Removing a device is a **revocation**.
+
+The first device creates the identity. Later devices join through a
+[device invitation](/docs/halo/concepts/invitations/).
+
+A device signs the changes it makes with its device key, and peers check the signature against the identity's members.
+
+Each device reports:
+
+| Field      | Meaning                                                                 |
+| ---------- | ----------------------------------------------------------------------- |
+| `kind`     | `browser`, `native`, `mobile`, `agent` and `agent-managed` for hosted agents, or `unknown` |
+| `presence` | `online`, `offline`, or `removed` once the device has been evicted      |
+| `current`  | Whether this is the device the code runs on                             |
+
+An identity with two devices looks like this:
+
+```text
+identity (did:halo:…)
+├── device: laptop browser   ← created the identity
+└── device: phone            ← joined by invitation
+```
+
+**Recovery keys.** A [recovery key](/docs/halo/concepts/recovery-credentials/) is a member of the identity too, kept
+off every device. A new device that signs EDGE's challenge with it joins the identity when no device is left.
+
+**Key holding.** By default, no server holds a key that can act for the identity. An identity can grant a server
+access to hold a key for it, and EDGE, DXOS's always-online peer, provides this as a service.
+
+When an identity makes the grant, EDGE runs an **agent device** for it. The agent device is one of the identity's
+devices, of kind `agent-managed`, and EDGE holds its key. Like any device, it can sign for the identity. It keeps its
+key apart from the identity's data, runs no logic of its own, and signs only when another EDGE service asks. EDGE asks
+it in two cases:
+
+- When the user recovers the identity, it signs the credential that admits the new device.
+- When a member's device needs a credential written into a space and no other member is online to write it, it
+  writes the credential to the space for them. A new device's feed is admitted this way.
+
+`@dxos/halo` has no function that makes the grant. Composer makes it when the identity is linked to a DXOS account.
+[Recovery and credentials](/docs/halo/concepts/recovery-credentials/) describes EDGE's part in a recovery.
+
+## Behavior
+
+- You need no network to create an identity.
+- A new device receives the identity's spaces by syncing with the devices it was admitted by, or through [EDGE](/docs/edge/concepts/replication/).
+- A device that is revoked stops being trusted for new changes. Changes it signed before the revocation stay valid.
+
+## Limits
+
+- If every device is lost, the identity comes back only through
+  [recovery](/docs/halo/concepts/recovery-credentials/), and recovery needs a DXOS account. With no account, the
+  identity is gone. No one, including DXOS, can restore it, and its spaces are reachable only through other members.
+- Clearing a browser's site data deletes that device's keys. The device must join again as a new device.

@@ -95,6 +95,9 @@ const [MasonryProvider, useMasonryContext] = createContext<MasonryContextValue>(
 // A tile is laid out but hidden until the grid reveals it and its own height is measured; hidden content cannot take focus.
 const TileRevealedContext = createReactContext(true);
 
+/** Whether `Masonry.Content` pads the viewport inline, so the layout matches it top and bottom. */
+const GutterContext = createReactContext(false);
+
 /** Whether the enclosing Masonry tile is shown; true outside a Masonry. */
 export const useMasonryTileRevealed = () => useContext(TileRevealedContext);
 
@@ -142,7 +145,7 @@ MasonryRoot.displayName = 'Masonry.Root';
 type MasonryContentProps = Util.ThemedClassName<
   PropsWithChildren<
     Pick<ScrollAreaRootProps, 'scrollbars'> & {
-      /** Inline gutter equal to the grid gap, so the perimeter matches the inter-column gap. */
+      /** Gutter equal to the grid gap on every side, so the perimeter matches the inter-tile gap. */
       padding?: boolean;
     }
   >
@@ -159,7 +162,7 @@ const MasonryContentInner = Util.composable<HTMLDivElement, MasonryContentProps>
         scrollbars={scrollbars}
         ref={forwardedRef}
       >
-        {children}
+        <GutterContext.Provider value={padding}>{children}</GutterContext.Provider>
       </ScrollArea.Root>
     );
   },
@@ -214,6 +217,8 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
   ({ items, getId, cacheKey, itemProps, scroll = true, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
+    // Only a scrolling viewport inside a padded `Masonry.Content` has an inline gutter; otherwise the host owns the perimeter.
+    const perimeter = useContext(GutterContext) && scroll;
     const remInPx = Hooks.usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
     // than deriving it from the root width, so the grid tracks the actual available
@@ -235,6 +240,7 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
         gapPx,
         maxColumnWidthPx: maxColumnWidth * remInPx,
         centered,
+        perimeter,
         cacheKey,
       },
     );

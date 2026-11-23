@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import React, { type ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -18,17 +18,26 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
+import { withDialects } from '@dxos/deus/dialect';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as TaskSetView from '@dxos/plugin-tasks/TaskSetView';
 import { useSpace } from '@dxos/react-client/echo';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Form } from '@dxos/react-ui-form';
-import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Form, type FormFieldOverride, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
+import {
+  type ActionGraphProps,
+  type ActionGroupBuilderFn,
+  ActionToolbar,
+  MenuBuilder,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -36,27 +45,38 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { ProjectFeatures } from '#containers';
-import { meta } from '#meta';
 import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
-import { useRefTargets } from '../../hooks/index.ts';
+import {
+  SpecToolbarProvider,
+  useFieldExtensions,
+  useProjectSpecTree,
+  useRefTargets,
+  useSelectedSpec,
+  useSelectSpec,
+  useSpecToolbarSlot,
+} from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
+import { type SpecTreeEntry } from '../../util/spec-tree.ts';
+import { ConfigSection } from './ConfigSection.tsx';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
 // and the field types are re-attached here.
-type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'repositories'>;
+type HeaderValues = Pick<Project.Project, 'name' | 'status' | 'description' | 'specs'>;
 
 const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
-  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'repositories']),
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'status', 'description', 'specs']),
 );
 
-// The Context section edits only the instructions' standing context objects.
-const CONTEXT_FIELDS: readonly string[] = ['objects'];
+const ARTIFACT_LIMIT = 6;
+
+/** The Specs tab's own view of its spec: the text. */
 
 /** The pipeline pane's initial height in rem: a handful of lanes and the axis. */
 const PIPELINE_SIZE = 14;
@@ -64,16 +84,19 @@ const PIPELINE_SIZE = 14;
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
- * Article surface for a {@link Project}: one form-styled body (header fields, the owned instructions
- * sub-form, the task-set section, and a card gallery of the project's artifacts). `Form.Viewport`
- * owns the scroll and gutter so fields stay inset from the panel edges.
+ * Article surface for a {@link Project}. The overview is one form-styled body (header fields, the owned instructions
+ * sub-form, the outline, and a card gallery of the project's artifacts), and `Form.Viewport` owns the scroll and gutter
+ * so fields stay inset from the panel edges. Specs is one spec, as text or a view other plugins offer, its toolbar
+ * picking among the project's specs and those nested beneath them. Tasks is the project's task set.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  // The selected tab and the chart toggle are view state under the project's id, so they outlive
-  // the plank and the reload.
-  const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, subject.id);
-  const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
+  // The selected tab and the chart toggle are view state under the project's EID, so they outlive
+  // the plank and the reload, and a follower takes them.
+  const viewKey = Obj.getURI(subject);
+  const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, viewKey);
+  const { update: updateView } = useViewStateActions(ProjectView.aspect, viewKey);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
   const invoker = Hooks.useOperationInvoker();
   const { invokePromise } = invoker;
@@ -94,9 +117,22 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const artifacts = useRefTargets(project.artifacts);
   // Membership only: fires when a milestone is added or removed, not on milestone edits.
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
-  // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
-  const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
+  const { update: updateTaskView } = useViewStateActions(TaskSetView.aspect, taskSet?.id);
+  const handleOpenMilestone = useCallback(
+    (milestone: Milestone.Milestone) => {
+      updateTaskView((view) => ({ ...view, milestone: milestone.id }));
+      setTab('tasks');
+    },
+    [updateTaskView, setTab],
+  );
   const settings = useAtomValue(Hooks.useCapability(ProjectCapabilities.Settings));
+  // The spec the Specs tab shows: the reader's pick among the project's specs and those nested beneath them.
+  const specTree = useProjectSpecTree(subject);
+  const spec = useSelectedSpec(subject);
+  const selectSpec = useSelectSpec(subject);
+  const dialectActions = useSpecPackageActions(spec);
+  // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
+  const { tasks, delegatableTasks, uncheck } = useCheckedTasks(taskSet);
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -107,11 +143,11 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         <Tabs.Trigger value='overview' data-testid='projectsPlugin.tab.overview'>
           {t('overview.label')}
         </Tabs.Trigger>
+        <Tabs.Trigger value='spec' data-testid='projectsPlugin.tab.spec'>
+          {t('specs.label')}
+        </Tabs.Trigger>
         <Tabs.Trigger value='tasks' data-testid='projectsPlugin.tab.tasks'>
           {t('tasks.label')}
-        </Tabs.Trigger>
-        <Tabs.Trigger value='features' data-testid='projectsPlugin.tab.features'>
-          {t('features.label')}
         </Tabs.Trigger>
       </Tabs.List>
     ),
@@ -128,8 +164,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
     [updateView],
   );
-
-  const handleDelegated = useCallback(() => clearChecked(), [clearChecked]);
 
   // A session starting is what the chart is for, so a delegation run from this app — the toolbar or
   // a row's menu — brings the pipeline into view. Read off the invoker's own events rather than
@@ -156,13 +190,55 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     };
   }, [invoker, subject.id, updateView]);
 
+  const handleAddSpec = useCallback(async () => {
+    const { data: ref } = await invokePromise(SpaceOperation.OpenObjectForm, {
+      target: subject,
+      typename: Type.getTypename(Spec.Spec),
+      targetNodeId: attendableId,
+      navigable: false,
+    });
+    const added = await ref?.load();
+    if (!Spec.instanceOf(added)) {
+      return;
+    }
+
+    updateProject((project) => {
+      project.specs.push(Ref.make(added));
+    });
+    selectSpec(added);
+  }, [subject, attendableId, invokePromise, updateProject, selectSpec]);
+
+  const pickerActions = useSpecPickerActions({
+    specs: specTree,
+    selected: spec,
+    onSelect: selectSpec,
+    onAdd: readonly ? undefined : () => void handleAddSpec(),
+  });
+  // The spec section's editor tools, which it puts here rather than in a second toolbar of its own.
+  const { slot: specToolbarSlot, actions: editorActions } = useSpecToolbarSlot();
+  // The Specs tab's tools: which spec, its editor's, and its dialects.
+  const specActions = useCallback<ActionGroupBuilderFn>(
+    (group) => {
+      pickerActions(group);
+      if (spec) {
+        group.subgraph(editorActions);
+        if (!readonly) {
+          dialectActions(group);
+        }
+      }
+    },
+    [spec, readonly, pickerActions, editorActions, dialectActions],
+  );
+
   const menuActions = useToolbarActions({
     project: subject,
+    readonly,
+    tab,
     tabs,
+    specActions: spec ? specActions : undefined,
     checkedTasks: delegatableTasks,
     showPipeline,
-    onAddArtifact: () => void handleAddArtifact(),
-    onDelegated: handleDelegated,
+    onDelegated: uncheck,
     onTogglePipeline: togglePipeline,
   });
 
@@ -191,11 +267,20 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, db, subject.id, attendableId],
   );
 
-  // Read once per project identity; the uncontrolled form owns edits after mount.
-  const defaultValues = useMemo<Partial<HeaderValues>>(
-    () => ({ name: project.name, description: project.description, repositories: project.repositories }),
-    [subject],
+  const extensions = useFieldExtensions(subject);
+  const handleCreate = useCreateObject(db);
+  const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
+    () => ({
+      name: { presentation: 'title', placeholder: t('untitled-project.label'), collaborative: true },
+      // A status once picked is never cleared, so the pill offers no "None".
+      status: { required: true },
+      description: { presentation: 'plain', placeholder: t('project-description.placeholder'), collaborative: true },
+      specs: { presentation: 'section', label: t('specs.label'), placeholder: t('specs-empty.message') },
+    }),
+    [t],
   );
+  const [showAllArtifacts, setShowAllArtifacts] = useState(false);
+  const shownArtifacts = showAllArtifacts ? artifacts : artifacts.slice(0, ARTIFACT_LIMIT);
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
@@ -240,12 +325,20 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     });
   }, [db, subject, attendableId, invokePromise, updateProject]);
 
+  // Only the edited paths are written, so changing the status does not rewrite the specs. The name and description are
+  // collaborative, so their edits reach the project directly and never arrive here.
   const handleValuesChanged = useCallback(
-    (values: Partial<HeaderValues>) => {
+    (values: Partial<HeaderValues>, { changed }: FormUpdateMeta<HeaderValues>) => {
+      const paths = Object.keys(changed)
+        .filter(SchemaEx.isJsonPath)
+        .filter((path) => changed[path]);
       updateProject((project) => {
-        project.name = values.name;
-        project.description = values.description;
-        project.repositories = values.repositories && [...values.repositories];
+        for (const path of paths) {
+          const value = SchemaEx.getValue(values, path);
+          if (value !== Obj.getValue(project, SchemaEx.splitJsonPath(path))) {
+            Obj.setValue(project, SchemaEx.splitJsonPath(path), value);
+          }
+        }
       });
     },
     [updateProject],
@@ -274,32 +367,28 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             <Form.Root
               db={db}
               schema={HeaderValues}
-              defaultValues={defaultValues}
+              values={project}
+              extensions={extensions}
+              fieldOverrides={fieldOverrides}
+              readonly={readonly}
               onValuesChanged={handleValuesChanged}
+              onCreate={handleCreate}
             >
               <Form.Viewport scroll>
                 <Form.Content>
-                  <Form.Fields />
-
-                  {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
-
-                  {/* Standing context (inputs bound into every project session) — deliberately a
-                      separate labeled section from Artifacts (outputs the project owns). */}
-                  {instructions && (
-                    <Form.FieldSet label={t('context.label')}>
-                      <InstructionsEditor.InstructionsEditor
-                        db={db}
-                        instructions={instructions}
-                        fields={CONTEXT_FIELDS}
-                      />
-                    </Form.FieldSet>
-                  )}
+                  <Layout.Flex align='center' gap='sm'>
+                    <Layout.Flex column grow>
+                      <Form.Fields include={['name']} />
+                    </Layout.Flex>
+                    <Form.Fields include={['status']} layout='tag' />
+                  </Layout.Flex>
+                  <Form.Fields include={['description']} />
 
                   {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
                   {outline && (
-                    <Form.FieldSet label={t('outline.label')} description={t('outline.description')}>
+                    <Form.FieldSet label={t('outline.label')} data-testid='projectsPlugin.outline'>
                       <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}
@@ -308,22 +397,73 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     </Form.FieldSet>
                   )}
 
+                  <Form.FieldSet
+                    label={t('artifacts.label')}
+                    data-testid='projectsPlugin.artifacts'
+                    actions={
+                      <>
+                        {artifacts.length > ARTIFACT_LIMIT && (
+                          // TODO(wittjosiah): Open a companion listing every artifact rather than growing the overview.
+                          <Button.Root
+                            variant='ghost'
+                            data-testid='projectsPlugin.artifacts.showAll'
+                            onClick={() => setShowAllArtifacts((showAll) => !showAll)}
+                          >
+                            {showAllArtifacts
+                              ? t('show-fewer-artifacts.label')
+                              : t('show-all-artifacts.label', { count: artifacts.length })}
+                          </Button.Root>
+                        )}
+                        {!readonly && (
+                          <Button.Root
+                            iconOnly
+                            variant='ghost'
+                            icon='ph--plus--regular'
+                            label={t('create-artifact.label')}
+                            data-testid='projectsPlugin.addArtifact'
+                            onClick={() => void handleAddArtifact()}
+                          />
+                        )}
+                      </>
+                    }
+                  >
+                    {artifacts.length > 0 ? (
+                      <ObjectGallery
+                        objects={shownArtifacts}
+                        onOpen={handleOpen}
+                        onDelete={readonly ? undefined : handleDeleteArtifact}
+                      />
+                    ) : (
+                      <Typography.Text tone='muted' data-testid='projectsPlugin.artifacts.empty'>
+                        {t('artifacts-empty.message')}
+                      </Typography.Text>
+                    )}
+                  </Form.FieldSet>
+
                   {milestoneRefs.length > 0 && (
                     <Form.FieldSet label={t('milestones.label')}>
-                      <MilestoneList refs={milestoneRefs} />
+                      <MilestoneList refs={milestoneRefs} tasks={tasks} onOpen={handleOpenMilestone} />
                     </Form.FieldSet>
                   )}
 
-                  <Form.FieldSet label={t('artifacts.label')} data-testid='projectsPlugin.artifacts'>
-                    <ObjectGallery objects={artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
-                  </Form.FieldSet>
+                  <Form.Fields include={['specs']} />
 
-                  {/* Settings other plugins keep for this project, such as its folder on this device. */}
-                  <Surface.Surface type={ProjectView.Settings} data={{ project: subject }} />
+                  <ConfigSection db={db} project={subject} instructions={instructions} />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
           )}
+
+          {tab === 'spec' &&
+            spec && (
+              // A section rather than an article: the spec's own page is for opening it. Its other views are companions.
+              <div className='grid min-h-0 h-full' data-testid='projectsPlugin.spec.document'>
+                <SpecToolbarProvider value={specToolbarSlot}>
+                  <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
+                </SpecToolbarProvider>
+              </div>
+            )}
+          {tab === 'spec' && !spec && <AddSpec onAdd={readonly ? undefined : () => void handleAddSpec()} />}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
           {tab === 'tasks' && !taskSet && <Status.Empty>{t('no-task-set.message')}</Status.Empty>}
@@ -344,8 +484,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   data={{
                     subject: taskSet,
                     attendableId,
-                    // Unset means shown: settings saved before the preference existed hold no key.
-                    showDescription: settings.showTaskDescriptions ?? true,
+                    showDescription: settings.showTaskDescriptions ?? false,
                   }}
                   limit={1}
                 />
@@ -371,12 +510,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Splitter.Panel>
             </Splitter.Root>
           )}
-
-          {tab === 'features' && (
-            <Suspense fallback={null}>
-              <ProjectFeatures project={subject} attendableId={attendableId} />
-            </Suspense>
-          )}
         </Panel.Body>
       </Panel.Root>
     </Tabs.Root>
@@ -385,19 +518,165 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
 ProjectArticle.displayName = 'ProjectArticle';
 
-/** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
-const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
+type MilestoneListProps = {
+  refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>>;
+  tasks: readonly Task.Task[];
+  onOpen: (milestone: Milestone.Milestone) => void;
+};
+
+/** Read-only: milestones are authored through the agent/MCP verbs. */
+const MilestoneList = ({ refs, tasks, onOpen }: MilestoneListProps) => (
   <Layout.Container role='list' gap='sm' gutter='none'>
     {refs.map((milestoneRef) => (
-      <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
+      <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} tasks={tasks} onOpen={onOpen} />
     ))}
   </Layout.Container>
 );
 
+/** The Specs tab of a project without a spec: the offer to add one. */
+const AddSpec = ({ onAdd }: { onAdd?: () => void }) => {
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  return (
+    <Layout.Flex column center gap='sm' classNames='h-full' data-testid='projectsPlugin.spec.empty'>
+      <Status.Empty icon='ph--blueprint--regular'>{t('spec.empty.message')}</Status.Empty>
+      {onAdd && (
+        <Button.Root icon='ph--plus--regular' data-testid='projectsPlugin.addSpec' onClick={onAdd}>
+          {t('add-spec.label')}
+        </Button.Root>
+      )}
+    </Layout.Flex>
+  );
+};
+
+type SpecPickerActionsProps = {
+  specs: readonly SpecTreeEntry[];
+  /** The spec shown; no picker without one. */
+  selected?: Spec.Spec;
+  onSelect: (spec: Spec.Spec) => void;
+  onAdd?: () => void;
+};
+
+/**
+ * A dropdown of the project's specs, each with the specs nested beneath it indented under it, named after the one shown
+ * and checking it, ending in an action to add another.
+ */
+const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerActionsProps) => {
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
+  return useCallback<ActionGroupBuilderFn>(
+    (group) => {
+      if (!selected) {
+        return;
+      }
+      group.group(
+        'specs',
+        {
+          variant: 'dropdownMenu',
+          selectCardinality: 'single',
+          // The trigger names the spec shown.
+          applyActive: true,
+          iconOnly: false,
+          value: selected.id,
+          icon: 'ph--blueprint--regular',
+          label: ['specs.label', { ns: ProjectsNamespace.key }],
+          testId: 'projectsPlugin.specPicker',
+        },
+        (group) => {
+          specs.forEach(({ spec, depth }) =>
+            group.action(
+              spec.id,
+              {
+                label: spec.name || t('untitled-spec.label'),
+                icon: 'ph--blueprint--regular',
+                checked: spec.id === selected.id,
+                indent: depth,
+              },
+              () => onSelect(spec),
+            ),
+          );
+          if (onAdd) {
+            group.separator('line').action(
+              'add-spec',
+              {
+                label: ['add-spec.label', { ns: ProjectsNamespace.key }],
+                icon: 'ph--plus--regular',
+                testId: 'projectsPlugin.addSpec',
+              },
+              onAdd,
+            );
+          }
+        },
+      );
+      group.separator('line');
+    },
+    [specs, selected, onSelect, onAdd, t],
+  );
+};
+
+/**
+ * A multi-select of the extension packages plugins offer, checking those whose dialects the spec all uses; checking one
+ * adds its dialects, whose companion views then show, and unchecking removes them, leaving the base dialects for none.
+ */
+const useSpecPackageActions = (spec: Spec.Spec | undefined) => {
+  const packages = Hooks.useCapabilities(ProjectCapabilities.SpecPackage);
+  const [used] = useObject(spec, 'dialects');
+  const toggle = useCallback(
+    (dialects: readonly string[], checked: boolean) =>
+      spec &&
+      Obj.update(spec, (spec) => {
+        // One edit per id, so toggles of different packages on two peers merge.
+        const next = withDialects(spec.dialects, dialects, !checked);
+        for (let index = spec.dialects.length - 1; index >= 0; index--) {
+          if (!next.includes(spec.dialects[index])) {
+            spec.dialects.splice(index, 1);
+          }
+        }
+        next.filter((id) => !spec.dialects.includes(id)).forEach((id) => spec.dialects.push(id));
+      }),
+    [spec],
+  );
+  return useCallback<ActionGroupBuilderFn>(
+    (group) => {
+      if (!spec || packages.length === 0) {
+        return;
+      }
+      const checked = packages.map(({ dialects }) => dialects.every((id) => used?.includes(id)));
+      group.group(
+        'packages',
+        {
+          variant: 'dropdownMenu',
+          selectCardinality: 'multiple',
+          value: packages.filter((_, index) => checked[index]).map(({ id }) => id),
+          icon: 'ph--puzzle-piece--regular',
+          label: ['spec-extensions.label', { ns: ProjectsNamespace.key }],
+          testId: 'projectsPlugin.specExtensions',
+        },
+        (group) =>
+          packages.forEach(({ id, label, dialects }, index) =>
+            group.action(id, { label, checked: checked[index], testId: `projectsPlugin.specPackage.${id}` }, () =>
+              toggle(dialects, checked[index]),
+            ),
+          ),
+      );
+    },
+    [spec, packages, used, toggle],
+  );
+};
+
 /** One row, holding its own subscription so a rename re-renders just that row. */
-const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milestone> }) => {
+const MilestoneRow = ({
+  milestoneRef,
+  tasks,
+  onOpen,
+}: {
+  milestoneRef: Ref.Ref<Milestone.Milestone>;
+  tasks: readonly Task.Task[];
+  onOpen: (milestone: Milestone.Milestone) => void;
+}) => {
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const [milestone] = useObject(milestoneRef);
-  if (!milestone) {
+  const target = useResolveRef(milestoneRef);
+  const progress = useMemo(() => target && Task.milestoneProgress(tasks, target), [tasks, target]);
+  if (!milestone || !target || !progress) {
     return null;
   }
 
@@ -406,6 +685,23 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
       <Icon.Icon icon='ph--flag--regular' valence='info' />
       <span className='truncate'>{milestone.name}</span>
       {milestone.targetDate && <span className='text-fg-subtle shrink-0'>{milestone.targetDate}</span>}
+      {progress.total > 0 && (
+        <Layout.Flex gap='sm' align='center' classNames='ms-auto shrink-0'>
+          <Status.Progress value={progress.ratio} classNames='w-20' />
+          <Typography.Text tone='subtle' classNames='tabular-nums'>
+            {progress.done}/{progress.total}
+          </Typography.Text>
+        </Layout.Flex>
+      )}
+      <Button.Root
+        variant='ghost'
+        icon='ph--arrow-right--regular'
+        iconOnly
+        label={t('show-milestone-tasks.label')}
+        classNames={progress.total > 0 ? 'shrink-0' : 'ms-auto shrink-0'}
+        data-testid='projectsPlugin.milestone.open'
+        onClick={() => onOpen(target)}
+      />
     </Layout.Flex>
   );
 };
@@ -420,7 +716,7 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
  */
 const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
   const ids = useSelection(taskSet?.id, 'multi');
-  const { clear } = useSelectionActions(taskSet?.id);
+  const { multi } = useSelectionActions(taskSet?.id);
 
   // Same query the article's own list runs: membership is the ECHO parent edge, and the `tasks` and
   // `subtasks` lists carry sibling order, which the tree walk turns into the order rows appear in.
@@ -436,10 +732,11 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
       const tasks: readonly Task.Task[] = get(query.atom);
       tasks.forEach((task) => {
         get(Obj.atomProperty(task, 'subtasks'));
-        // The delegate action arms on whether the agent already holds a checked row, and delegation
-        // writes both fields — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
+        get(Obj.atomProperty(task, 'delegate'));
+        // Milestone progress counts the tasks filed under each milestone.
+        get(Obj.atomProperty(task, 'milestone'));
       });
       return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
@@ -454,34 +751,48 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
   // A row the agent is already working on is left out rather than handed to a second session.
   const delegatableTasks = useMemo(() => checkedTasks.filter((task) => !Task.isAgentWorking(task)), [checkedTasks]);
 
-  return { tasks, checkedTasks, delegatableTasks, clearChecked: clear };
+  // Only the given rows: the others stay checked.
+  const uncheck = useCallback(
+    (done: readonly Task.Task[]) => {
+      const doneIds = new Set(done.map(({ id }) => id));
+      multi(ids.filter((id) => !doneIds.has(id)));
+    },
+    [ids, multi],
+  );
+
+  return { tasks, checkedTasks, delegatableTasks, uncheck };
 };
 
 export type ToolbarActionsProps = {
   project: Project.Project;
+  readonly: boolean;
+  /** The tab shown, whose tools follow the tabs. */
+  tab: ProjectView.Tab;
   /** The view tabs, rendered as the bar's leading item. */
   tabs: ReactNode;
+  /** The level's spec picker, view toggle and dialects, shown on the Specs tab. */
+  specActions?: ActionGroupBuilderFn;
   /** The checked rows not already with the agent, which the delegate action hands to one chat, in this order. */
   checkedTasks: readonly Task.Task[];
   /** Whether the pipeline chart is shown under the ledger. */
   showPipeline: boolean;
-  onAddArtifact: () => void;
   /** Called once the checked tasks are delegated, so the boxes clear with the work. */
-  onDelegated: () => void;
+  onDelegated: (tasks: readonly Task.Task[]) => void;
   onTogglePipeline: () => void;
 };
 
 /**
- * The toolbar's own actions. Deliberately not spliced from the app graph: toolbar and navtree
- * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
- * the navtree row.
+ * The toolbar: the tabs, then the shown tab's own tools. Deliberately not spliced from the app graph: toolbar and
+ * navtree actions are expected to diverge, and a session with the project is the assistant companion's to start.
  */
 const useToolbarActions = ({
   project,
+  readonly,
+  tab,
   tabs,
+  specActions,
   checkedTasks,
   showPipeline,
-  onAddArtifact,
   onDelegated,
   onTogglePipeline,
 }: ToolbarActionsProps) => {
@@ -489,25 +800,6 @@ const useToolbarActions = ({
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
-
-  // Persisted on click rather than on the first message, so the chat is in the navtree straight away;
-  // the parent edge before the add is what files it under the project rather than the space root.
-  const createChat = useCallback(async () => {
-    if (!spaceId) {
-      return;
-    }
-
-    const { data } = await invokePromise(AssistantOperation.CreateChat, {}, { spaceId });
-    const chat = data?.object;
-    if (!chat) {
-      return;
-    }
-
-    Chat.linkCompanion({ chat, subject: project });
-    Chat.seedSession(chat, project.session);
-    await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
-    await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
-  }, [invokePromise, project, spaceId]);
 
   // Held in state so the bar redraws disabled for the whole invocation: a ref would guard the
   // handler but leave the button live, and the operation runs long enough (chat, bind, first turn)
@@ -531,7 +823,7 @@ const useToolbarActions = ({
       // Only a delegation that produced a chat moves the reader on; a refused one keeps the
       // selection so they can correct it and retry.
       if (data?.chat) {
-        onDelegated();
+        onDelegated(checkedTasks);
       }
     } finally {
       setDelegating(false);
@@ -545,84 +837,60 @@ const useToolbarActions = ({
           'tabs',
           {
             variant: 'custom',
-            label: ['views.label', { ns: meta.profile.key }],
+            label: ['views.label', { ns: ProjectsNamespace.key }],
             render: () => tabs,
           },
           () => {},
         )
-        .separator()
-        .action(
-          'create-chat',
-          {
-            label: ['create-chat.label', { ns: meta.profile.key }],
-            icon: 'ph--sparkle--regular',
-            disposition: 'toolbar',
-            testId: 'projectsPlugin.createChat',
-          },
-          () => void createChat(),
-        )
-        // Beside create-chat rather than in the overflow: it is the same gesture — start a session
-        // — and it is dead until rows are checked, so a reader who checks some needs to see it.
-        .action(
-          'delegate-tasks',
-          {
-            label: ['delegate-tasks.label', { ns: meta.profile.key }],
-            icon: 'ph--paper-plane-tilt--regular',
-            disposition: 'toolbar',
-            disabled: checkedTasks.length === 0 || delegating,
-            testId: 'projectsPlugin.delegateTasks',
-          },
-          () => void delegateTasks(),
-        )
-        // A toggle rather than a tab: the chart accompanies the ledger rather than replacing it.
-        .group(
-          'view',
-          {
-            label: ['view.label', { ns: meta.profile.key }],
-            variant: 'toggleGroup',
-            selectCardinality: 'multiple',
-            value: showPipeline ? ['pipeline'] : [],
-          },
-          (group) =>
-            group.action(
-              'pipeline',
-              {
-                label: ['pipeline.label', { ns: meta.profile.key }],
-                icon: 'ph--chart-bar-horizontal--regular',
-                testId: 'projectsPlugin.pipeline',
-              },
-              onTogglePipeline,
-            ),
-        )
-        // In the trailing overflow rather than on the toolbar: adding an artifact is occasional
-        // next to starting a chat, and a bare `+` beside the tabs read as adding a tab.
-        .menu(
-          'overflow',
-          (group) =>
-            group.action(
-              'add-artifact',
-              {
-                label: ['create-artifact.label', { ns: meta.profile.key }],
-                icon: 'ph--plus--regular',
-                testId: 'projectsPlugin.addArtifact',
-              },
-              onAddArtifact,
-            ),
-          'projectsPlugin.overflow',
+        // The spec's tools sit beside the tabs, its editor's own gap pushing view and search to the end.
+        .separator(tab === 'spec' ? 'line' : 'gap')
+        .subgraph(tab === 'spec' ? specActions : undefined)
+        .subgraph(
+          tab === 'tasks'
+            ? (group) =>
+                group
+                  .subgraph(
+                    !readonly &&
+                      ((group) =>
+                        // Dead until rows are checked, so a reader who checks some sees it come alive.
+                        group.action(
+                          'delegate-tasks',
+                          {
+                            label: ['delegate-tasks.label', { ns: ProjectsNamespace.key }],
+                            icon: 'ph--paper-plane-tilt--regular',
+                            disposition: 'toolbar',
+                            disabled: checkedTasks.length === 0 || delegating,
+                            testId: 'projectsPlugin.delegateTasks',
+                          },
+                          () => void delegateTasks(),
+                        )),
+                  )
+                  // A toggle rather than a tab: the chart accompanies the ledger rather than replacing it.
+                  .group(
+                    'view',
+                    {
+                      label: ['view.label', { ns: ProjectsNamespace.key }],
+                      variant: 'toggleGroup',
+                      selectCardinality: 'multiple',
+                      value: showPipeline ? ['pipeline'] : [],
+                    },
+                    (group) =>
+                      group.action(
+                        'pipeline',
+                        {
+                          label: [
+                            showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label',
+                            { ns: ProjectsNamespace.key },
+                          ],
+                          icon: 'ph--chart-bar-horizontal--regular',
+                          testId: 'projectsPlugin.pipeline',
+                        },
+                        onTogglePipeline,
+                      ),
+                  )
+            : undefined,
         )
         .build(),
-    [
-      project,
-      tabs,
-      spaceId,
-      invokePromise,
-      onAddArtifact,
-      createChat,
-      delegateTasks,
-      checkedTasks.length,
-      delegating,
-      showPipeline,
-      onTogglePipeline,
-    ],
+    [readonly, tab, tabs, delegateTasks, specActions, checkedTasks.length, delegating, showPipeline, onTogglePipeline],
   );
 };

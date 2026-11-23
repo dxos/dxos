@@ -2,20 +2,29 @@
 // Copyright 2026 DXOS.org
 //
 
-import { getHeads } from '@automerge/automerge';
+import { next as A, getHeads } from '@automerge/automerge';
+import { generateAutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/sql/SqlClient';
 import * as SqlError from 'effect/sql/SqlError';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Aggregate, Filter, Query } from '@dxos/echo';
-import { type DatabaseDirectory, EchoFeedCodec, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import {
+  type DatabaseDirectory,
+  EchoFeedCodec,
+  EntityStructure,
+  SpaceDocVersion,
+  createIdFromSpaceKey,
+} from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
@@ -349,6 +358,41 @@ describe('EchoHost trace indexing', () => {
   });
 });
 
+describe('EchoHost feed indexing', () => {
+  // Regression: every pass a feed append started re-read the heads of every document and every
+  // cursor, though an append changes no document (UI lag trace, 2026-10-26).
+  test('a pass started by feed appends alone does not rescan documents', async () => {
+    const { host, runtime, spaceId, saveDocs } = await setup();
+    await saveDocs(200);
+    await host.updateIndexes();
+    const update = vi.spyOn(host.indexEngine, 'update');
+    const documentScans = () => update.mock.calls.filter(([, source]) => source.sourceName === 'automerge').length;
+    const feedScans = () => update.mock.calls.filter(([, source]) => source.sourceName !== 'automerge').length;
+
+    const feedId = EntityId.random();
+    for (let index = 0; index < 20; index++) {
+      const scansBefore = feedScans();
+      await RuntimeProvider.runPromise(runtime)(
+        host.feedStore.appendLocal([
+          {
+            spaceId,
+            feedId,
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+            data: EchoFeedCodec.encode({ id: EntityId.random() }),
+          },
+        ]),
+      );
+      await expect.poll(feedScans).toBeGreaterThan(scansBefore);
+    }
+    expect(documentScans()).toBe(0);
+
+    // A document saved after the appends is still indexed by the next background pass.
+    const scansBefore = documentScans();
+    await saveDocs();
+    await expect.poll(documentScans).toBeGreaterThan(scansBefore);
+  });
+});
+
 describe('EchoHost query service', () => {
   test('a one-shot query stream ends after its first result', async () => {
     const { host, spaceId, saveObject } = await setup();
@@ -413,6 +457,78 @@ describe('EchoHost query service', () => {
 
     releaseBatch.wake();
     await batch;
+  });
+
+  test('queries run one at a time and report only their own evaluation time', async ({ expect }) => {
+    const STALL_MS = 200;
+    const { host, spaceId, saveObject } = await setup();
+    await saveObject(EntityId.random());
+    await host.updateIndexes();
+
+    let running = 0;
+    let overlapped = false;
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      overlapped ||= running > 0;
+      running++;
+      try {
+        if (this.queryId === 'slow') {
+          await sleep(STALL_MS);
+        }
+        return await execQuery.call(this);
+      } finally {
+        running--;
+      }
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const run = (queryId: string) =>
+      EffectEx.runPromise(
+        Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, queryId))),
+      );
+    const [slow, queued] = await Promise.all([run('slow'), run('queued')]);
+
+    expect(overlapped).toBe(false);
+    expect(Option.getOrThrow(slow).executionTime).toBeGreaterThanOrEqual(STALL_MS);
+    // Queued behind the stalled query, yet charged only for its own run.
+    expect(Option.getOrThrow(queued).executionTime).toBeLessThan(STALL_MS / 2);
+  });
+
+  test('a query closed while queued behind a batch is skipped', async ({ expect }) => {
+    const { host, spaceId, saveObject } = await setup();
+    await saveObject(EntityId.random());
+    await host.updateIndexes();
+
+    const slowStarted = new Trigger();
+    const releaseSlow = new Trigger();
+    onTestFinished(() => {
+      releaseSlow.wake();
+    });
+    const executed: string[] = [];
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      executed.push(this.queryId);
+      if (this.queryId === 'slow') {
+        slowStarted.wake();
+        await releaseSlow.wait();
+      }
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const slow = EffectEx.runPromise(
+      Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'slow'))),
+    );
+    const queued = Effect.runFork(
+      Stream.runDrain(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'queued'))),
+    );
+    await slowStarted.wait();
+    await EffectEx.runPromise(Fiber.interrupt(queued));
+    releaseSlow.wake();
+    await slow;
+    await host.queryService.awaitQueryUpdates();
+
+    expect(executed).toEqual(['slow']);
   });
 
   test('a one-shot id lookup cancelled before it runs is never executed', async () => {
@@ -1072,6 +1188,118 @@ const idLookupRequest = (
 ): QueryService.QueryRequest => ({
   ...oneShotRequest(spaceId, queryId),
   query: JSON.stringify(Query.select(Filter.id(objectId)).from([{ _tag: 'space', spaceId }]).ast),
+});
+
+describe('EchoHost directory snapshots', () => {
+  /** A space whose root links one object, opened by a host that is then closed, as a previous session would. */
+  const previousSession = async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const objectId = EntityId.random();
+    const linkedUrl = generateAutomergeUrl();
+    {
+      const host = new EchoHost({ runtime });
+      await host.open(Context.default());
+      const root = await host.createSpaceRoot(Context.default(), spaceKey);
+      root.change((doc) => {
+        doc.links ??= {};
+        doc.links[objectId] = new A.RawString(linkedUrl);
+      });
+      await host.flush(Context.default());
+      await host.updateIndexes();
+      await host.close();
+    }
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+    return { host, spaceId, objectId, linkedUrl };
+  };
+
+  test('a space opens from the directory the index stored, without loading its root', async ({ expect }) => {
+    const { host, spaceId, objectId, linkedUrl } = await previousSession();
+    const loadDoc = vi.spyOn(host.automergeHost, 'loadDoc');
+
+    const root = await host.openSpaceRoot(Context.default(), spaceId);
+    expect(root.isLoaded).toBe(false);
+    expect(root.getVersion()).toBe(SpaceDocVersion.CURRENT);
+    expect(root.directory()?.links?.[objectId]?.toString()).toBe(linkedUrl);
+    expect(loadDoc.mock.calls.some(([, documentId]) => String(documentId).includes(root.documentId))).toBe(false);
+
+    // A write loads the root, which then stays loaded.
+    await root.load();
+    root.change((doc) => {
+      doc.links ??= {};
+      doc.links[EntityId.random()] = new A.RawString(generateAutomergeUrl());
+    });
+    expect(root.isLoaded).toBe(true);
+  });
+
+  test('a change saved to a root opened from its snapshot loads the root', async ({ expect }) => {
+    const { host, spaceId } = await previousSession();
+    const root = await host.openSpaceRoot(Context.default(), spaceId);
+    expect(root.isLoaded).toBe(false);
+
+    const changed = Promise.withResolvers<void>();
+    root.changed.once(() => changed.resolve());
+    {
+      using lease = await host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), root.documentId);
+      invariant(lease, 'root document not found');
+      lease.change((doc) => {
+        doc.links ??= {};
+        doc.links[EntityId.random()] = new A.RawString(generateAutomergeUrl());
+      });
+      await host.flush(Context.default());
+    }
+    await changed.promise;
+    expect(root.isLoaded).toBe(true);
+    expect(Object.keys(root.directory()?.links ?? {})).toHaveLength(2);
+  });
+
+  test('a root change saved only by the flush on close reopens from storage, not a stale snapshot', async ({
+    expect,
+  }) => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const objectId = EntityId.random();
+    {
+      const host = new EchoHost({ runtime });
+      await host.open(Context.default());
+      const root = await host.createSpaceRoot(Context.default(), spaceKey);
+      await host.updateIndexes();
+      root.change((doc) => {
+        doc.links ??= {};
+        doc.links[objectId] = new A.RawString(generateAutomergeUrl());
+      });
+      await host.close();
+    }
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+    });
+
+    const root = await host.openSpaceRoot(Context.default(), spaceId);
+    expect(root.directory()?.links?.[objectId]).toBeDefined();
+  });
+
+  test('a directory with inline objects has no snapshot', async ({ expect }) => {
+    const { host, spaceId } = await setup();
+    const lease = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      objects: { [EntityId.random()]: EntityStructure.makeObject({ type: TEST_TYPE, data: {} }) },
+      links: {},
+    });
+    await host.flush(Context.default());
+    await host.updateIndexes();
+    expect(await host.readDirectorySnapshot(lease.documentId)).toBeUndefined();
+  });
 });
 
 const setup = async (

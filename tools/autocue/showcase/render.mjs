@@ -8,12 +8,14 @@
  * move judder however the result is re-encoded.
  *
  *   node render.mjs [--out composite.mp4] [--fps 60] [--url http://localhost:9009] [--theme light] [--hold 20000]
- *     [--holds 43300,19133,…] [--overlap 12000] [--duration 15000] [--supersample 2]
+ *     [--holds 43300,19133,…] [--overlap 12000] [--duration 15000] [--supersample 2] [--story shift-clips]
+ *     [--args 'shiftDistance:1;zoomMs:500']
  *
  * `--holds` sets each tour cell's hold in turn (one cell per entry), `--overlap` starts the zoom-out that long before
  * the last tour's hold ends, and `--duration` is the zoom-out's length; unset, the story's defaults apply.
  * `--supersample 2` screenshots each frame at twice the pixel density and area-averages it down, so the tiles do not
- * alias as the camera zooms out.
+ * alias as the camera zooms out. `--story` renders another Grid story (`shift-clips`, `mosaic-tours`, …; see
+ * GRID-TRANSITIONS.md), or any stepped story by its full id, and `--args` adds story args in Storybook's `key:value;…` URL form.
  */
 
 import { chromium } from '@playwright/test';
@@ -35,6 +37,8 @@ const { values } = parseArgs({
     overlap: { type: 'string' },
     duration: { type: 'string' },
     supersample: { type: 'string', default: '1' },
+    story: { type: 'string', default: 'default' },
+    args: { type: 'string' },
   },
 });
 
@@ -47,10 +51,17 @@ const args = [
   ...(values.holds?.split(',').map((ms, step) => `holds[${step}]:${Math.round(Number(ms))}`) ?? []),
   ...(values.overlap ? [`overlap:${Number(values.overlap)}`] : []),
   ...(values.duration ? [`duration:${Number(values.duration)}`] : []),
+  ...(values.args ? values.args.split(';') : []),
 ];
-const url =
-  `${values.url}/iframe.html?id=tools-autocue-grid--default&viewMode=story` +
-  `&args=${args.join(';')}&globals=theme:${values.theme}`;
+// A full story id (`tools-autocue-showcase--grid-only`) renders a story outside Grid.stories.tsx.
+const storyId = values.story.includes('--') ? values.story : `tools-autocue-grid--${values.story}`;
+// Encoded as one parameter each, so an `&` inside an arg value cannot start a new query parameter.
+const url = `${values.url}/iframe.html?${new URLSearchParams({
+  id: storyId,
+  viewMode: 'story',
+  args: args.join(';'),
+  globals: `theme:${values.theme}`,
+})}`;
 
 // Full Chromium's headless mode has the GPU; the default headless shell renders WebGL in software.
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });
@@ -67,7 +78,8 @@ const settle = async () => {
   await page.waitForFunction(
     () => {
       const videos = [...document.querySelectorAll('video')];
-      return videos.length > 0 && videos.every((video) => video.readyState >= 2);
+      // A story of numbered cells has no clips at all, so an empty page of videos is settled too.
+      return videos.every((video) => video.readyState >= 2);
     },
     undefined,
     { timeout: 120_000 },

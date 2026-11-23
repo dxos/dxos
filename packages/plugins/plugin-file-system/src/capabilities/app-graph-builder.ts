@@ -24,16 +24,16 @@ import { Expando, Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
+import { FileSystemNamespace } from '../namespace.ts';
 import { findDirectoryById, isFileId } from '../util.ts';
 import type { FileSystemManager } from './state/index.ts';
 
-const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
-const GENERAL_TYPE = `${meta.profile.key}.general`;
-const DIRECTORY_TYPE = `${meta.profile.key}.directory`;
-const MARKDOWN_PENDING_TYPE = `${meta.profile.key}.markdown-pending`;
+const FILESYSTEM_TYPE = `${FileSystemNamespace.key}.workspace`;
+const GENERAL_TYPE = `${FileSystemNamespace.key}.general`;
+const DIRECTORY_TYPE = `${FileSystemNamespace.key}.directory`;
+const MARKDOWN_PENDING_TYPE = `${FileSystemNamespace.key}.markdown-pending`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: string[]) => void>();
 
@@ -168,7 +168,7 @@ export default Capability.makeModule(
                 }
               }),
               properties: {
-                label: ['open-directory.label', { ns: meta.profile.key }],
+                label: ['open-directory.label', { ns: FileSystemNamespace.key }],
                 icon: 'ph--folder-open--regular',
                 testId: 'fileSystem.openDirectory',
                 disposition: 'menu',
@@ -253,7 +253,7 @@ export default Capability.makeModule(
               type: GENERAL_TYPE,
               data: GENERAL_TYPE,
               properties: {
-                label: ['settings.general.label', { ns: meta.profile.key }],
+                label: ['settings.general.label', { ns: FileSystemNamespace.key }],
                 icon: 'ph--sliders--regular',
                 position: Position.first,
               },

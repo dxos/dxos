@@ -15,7 +15,7 @@ import { handler } from './members.ts';
 describe('space members', () => {
   it('should list space members', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const space = yield* Effect.tryPromise(() => client.spaces.create());
       yield* Effect.tryPromise(() => space.waitUntilReady());

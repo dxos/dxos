@@ -15,8 +15,9 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Attention } from '@dxos/react-ui-attention/types';
 
-import { meta } from '#meta';
 import { SearchOperation } from '#types';
+
+import { SearchNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -51,7 +52,7 @@ export default Capability.makeModule(
             return [
               AppNode.makeDeckCompanion({
                 id: Attention.linkedSegment('search'),
-                label: ['search.label', { ns: meta.profile.key }],
+                label: ['search.label', { ns: SearchNamespace.key }],
                 icon: 'ph--magnifying-glass--regular',
                 data: space ?? null,
               }),
@@ -70,7 +71,7 @@ export default Capability.makeModule(
                 return false;
               }),
               properties: {
-                label: ['search-action.label', { ns: meta.profile.key }],
+                label: ['search-action.label', { ns: SearchNamespace.key }],
                 icon: 'ph--magnifying-glass--regular',
                 keyBinding: {
                   macos: 'meta+k',

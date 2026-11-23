@@ -8,10 +8,12 @@
 // `Diagnostics`, so they show what the renderer draws rather than what the source declared.
 //
 
+import { Shape } from '@dxos/scene';
+
 import { analyze, arrowPoints, bindTargets } from './diagnostics.ts';
 import type * as Scene from './scene.ts';
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 type Rect = { x: number; y: number; w: number; h: number };
 
 export type Box = { ref: string; label?: string; rect: Rect; frame: boolean };
@@ -22,7 +24,7 @@ export type Path = {
   from?: Box;
   to?: Box;
   /** The arrow's end markers and line style, when not a plain solid arrow. */
-  style?: Pick<Scene.Arrow, 'head' | 'tail' | 'stroke'>;
+  style?: Pick<Shape.Arrow, 'head' | 'tail' | 'stroke'>;
 };
 
 export type Drawing = { boxes: Box[]; paths: Path[]; bounds: Rect };

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { afterEach, describe, test } from 'vitest';
 
 import { DXN, Obj, Type } from '@dxos/echo';
 import * as Position from '@dxos/util/Position';
@@ -72,6 +72,94 @@ describe('matchers', () => {
   test('a type matcher accepts its own type and nothing else', ({ expect }) => {
     expect(Tour.whenType(Widget)(Obj.make(Widget, { name: 'x' }))).toBe(true);
     expect(Tour.whenType(Widget)({ typename: 'org.dxos.type.document' })).toBe(false);
+  });
+});
+
+describe('toolbarStep', () => {
+  const step = Tour.toolbarStep('editor.toolbar.viewMode', { title: 'Modes', description: 'Switch mode.' });
+
+  /**
+   * A toolbar whose control is at `at`, with the menu `open` already open; opening the overflow menu, or a folded group
+   * holding the control, shows it there.
+   */
+  const stubToolbarDocument = ({
+    at,
+    open,
+    folded = false,
+  }: {
+    at: 'row' | 'menu' | 'nowhere';
+    open?: 'overflow' | 'holder';
+    folded?: boolean;
+  }) => {
+    const clicks: string[] = [];
+    const trigger = (name: 'overflow' | 'holder') => ({
+      getAttribute: (attribute: string) => (attribute === 'aria-expanded' ? String(open === name) : null),
+      click: () => {
+        clicks.push(name);
+        if (open === name) {
+          open = undefined;
+        } else {
+          open = name;
+          at = 'menu';
+        }
+      },
+    });
+    const overflow = trigger('overflow');
+    const holder = trigger('holder');
+    (globalThis as any).document = {
+      querySelector: (selector: string) =>
+        selector.includes('toolbar.overflow')
+          ? overflow
+          : selector.includes('data-toolbar-holds')
+            ? folded
+              ? holder
+              : null
+            : at === 'nowhere'
+              ? null
+              : { closest: () => (at === 'menu' ? {} : null) },
+      querySelectorAll: () => (folded ? [holder] : []),
+    };
+    return clicks;
+  };
+
+  afterEach(() => {
+    delete (globalThis as any).document;
+  });
+
+  test('opens the menu when the toolbar has folded the control away', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'nowhere' });
+    await step.before?.(null as any);
+    expect(clicks).toEqual(['overflow']);
+  });
+
+  test('opens the folded group that holds the control, rather than the overflow menu', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'nowhere', folded: true });
+    await step.before?.(null as any);
+    expect(clicks).toEqual(['holder']);
+  });
+
+  test('leaves the menu open when the control is in it', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'menu', open: 'overflow' });
+    await step.before?.(null as any);
+    expect(clicks).toEqual([]);
+  });
+
+  test('closes a menu an earlier step opened over the control', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'row', open: 'overflow' });
+    await step.before?.(null as any);
+    expect(clicks).toEqual(['overflow']);
+  });
+
+  test('closes a folded group an earlier step opened over the control', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'row', open: 'holder', folded: true });
+    await step.before?.(null as any);
+    expect(clicks).toEqual(['holder']);
+  });
+
+  test('closes the menu an earlier step opened before opening the group that holds the control', async ({ expect }) => {
+    const clicks = stubToolbarDocument({ at: 'nowhere', open: 'overflow', folded: true });
+    await step.before?.(null as any);
+    expect(clicks).toEqual(['overflow', 'holder']);
   });
 });
 

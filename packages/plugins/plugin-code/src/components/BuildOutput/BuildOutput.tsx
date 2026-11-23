@@ -8,8 +8,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { CodeCapabilities } from '#types';
+
+import { CodeNamespace } from '../../namespace.ts';
 
 export type BuildOutputProps = {
   state: CodeCapabilities.ProjectBuildState | undefined;
@@ -24,7 +25,7 @@ export type BuildOutputProps = {
  * recent run's stdout / stderr lines.
  */
 export const BuildOutput = ({ state }: BuildOutputProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const build = state?.lastBuild;
   const run = state?.lastRun;
 
@@ -53,7 +54,7 @@ type BuildStatusProps = {
 };
 
 const BuildStatus = ({ build, run }: BuildStatusProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   if (!build) {
     return null;
   }
@@ -73,7 +74,7 @@ type DiagnosticsListProps = {
 };
 
 const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex column classNames='dx-expand overflow-auto'>
       <SectionHeader label={t('diagnostics.section.label')} count={diagnostics.length} />
@@ -112,7 +113,7 @@ type ConsoleViewProps = {
 };
 
 const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const total = stdout.length + stderr.length;
   return (
     <Layout.Flex column classNames='dx-expand overflow-auto'>

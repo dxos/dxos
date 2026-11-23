@@ -1,0 +1,495 @@
+---
+id: org.dxos.plugin.recorder
+name: RecorderPlugin
+version: 0.1.0
+---
+
+Records the voice-over of a plugin-presenter deck while it is presented, slide by slide. Each slide has its own
+takes, listed in the slide's Recordings companion, where a new take is recorded, played, selected as the slide's main
+take, or deleted. The presentation's Recordings companion records across every slide (the recording is split into a
+take per slide) and plays or downloads the voice-over assembled from each slide's main take. Every recording starts
+with a 3-2-1 count-in; the presenter shows each slide's speaker notes (subtitles or a notes window, a presenter
+setting) while it is read.
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `op`        | `org.dxos.mdl.op@1.1`        |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
+
+## Types
+
+```mdl
+type Slide.takes
+  desc: >
+    Fields plugin-presenter's `Slide` holds for the recorder. A take is a plugin-studio `Variant` owned by the slide;
+    its recorded `File` is owned by the take.
+  fields:
+    takes?: Ref<Variant>[]            # oldest first
+    mainTake?: Ref<Variant>           # the take used when the voice-over plays or is exported
+```
+
+```mdl
+type Take.Log
+  desc: How a take was recorded, held in its Variant's `config`. Times are seconds from the start of the take.
+  fields:
+    duration: number
+    steps: { step, at }[]             # click steps revealed while the slide was read
+    device?: string                   # microphone label
+    source: none | screen | camera
+    session?: string                  # shared by the takes of one recording across the presentation
+```
+
+```mdl
+type RecorderSettings
+  fields:
+    audioInput?: string               # microphone deviceId; unset prefers a /shure/i device, else the first
+    videoSource?: none | screen | camera
+    videoInput?: string               # camera deviceId
+```
+
+## Operations
+
+```mdl
+op DeleteTake
+  key: org.dxos.operation.recorder.deleteTake
+  desc: Deletes a take of a slide (and its file); the newest remaining take becomes main if it was. Undone by RestoreTake.
+  input: { slide: Slide, take: Variant }
+  output: { slide, take, index: number, main: boolean }
+  effects: [echo:write]
+```
+
+```mdl
+op RestoreTake
+  key: org.dxos.operation.recorder.restoreTake
+  desc: Re-adds a deleted take and its file at its place among the slide's takes, and its main mark.
+  input: { slide, take, index: number, main: boolean }
+  effects: [echo:write]
+```
+
+```mdl
+op SelectTake
+  key: org.dxos.operation.recorder.selectTake
+  desc: Marks a take as its slide's main take.
+  input: { slide: Slide, take: Variant }
+  effects: [echo:write]
+```
+
+## Components
+
+```mdl
+component RecordButton
+  desc: >
+    The presenter toolbar item (PresenterSurface.Toolbar): records the whole presentation. Inside its click it creates
+    the AudioContext and opens the microphone (processing off) and the screen or camera when set, then presents the
+    deck from its first slide. Disabled while a recording starts or runs; shows why the last start failed.
+  props: { subject: Presentation }
+```
+
+```mdl
+component RecordingOverlay
+  desc: >
+    Over a deck being recorded (PresenterSurface.Overlay): the 3-2-1 count-in, then, centered at the top, REC, the
+    recording's length, the time left on the slide when it has a desired length (red once over), and a compact level
+    meter that shows a readout only to warn (NO SIGNAL, CLIP).
+  props: { subject: Presentation }
+```
+
+```mdl
+component LevelMeter
+  desc: >
+    Peak meter over -60..0 dBFS: the target band -12..-3 marked, a peak-hold marker for 1.5s, CLIP above -1 dBFS,
+    and NO SIGNAL after 2s of digital silence.
+  props: { peakDb?, holdDb?, rmsDb?, silent?, clip?, compact? }
+```
+
+```mdl
+component RecordingsPanel
+  desc: >
+    The layout both Recordings companions share: the toolbar, a full-width RecordingList (a react-ui-list Listbox with
+    shared column tracks, its leading check and trailing buttons under the toolbar's icons; the current row is the
+    selection: a click or the arrow keys move it, Space plays or stops it, a double-click opens it), and the current
+    row's player docked in the status bar, with no download menu.
+  props: { toolbar, statusbar, children }
+```
+
+```mdl
+component SlideRecordingsArticle
+  desc: >
+    The Recordings companion of a Slide, on RecordingsPanel. The toolbar records a new take of the slide (the deck
+    presents from it; the recording ends when the reader leaves it), and saves an unsaved take again. The takes are a
+    list with columns, newest first, unsaved ones first: an icon, the date and time it was recorded, its length, the
+    slide's desired length, then a circle that a green check circle fills on the main take (it makes a take main), Play (in the status bar) and
+    Delete (undoable; it discards an unsaved take).
+  props: { slide: Slide }
+```
+
+```mdl
+component PresentationRecordingsArticle
+  desc: >
+    The Recordings companion of a Presentation, on RecordingsPanel. The toolbar records every slide (a take per
+    slide), plays every main take in order, and downloads them as one WAV. The presented slides are a list with
+    columns: a circle (a green check circle when the slide has a main take), the title, take count, main take's length, desired
+    length, then Play (its main take); a double-click opens the slide.
+  props: { presentation: Presentation }
+```
+
+```mdl
+component RecorderSettings
+  desc: The plugin settings: microphone and camera pickers, the video source, and Test microphone with the meter.
+```
+
+## Features
+
+```mdl
+feat F-1: Record
+  req F-1.1: A Presentation's toolbar, and its Recordings companion's toolbar, record every slide, presenting the deck from its first slide.
+  req F-1.2: A Slide's Recordings companion toolbar records that slide alone; the deck presents from it and the recording and presentation end when the reader leaves it.
+  req F-1.3: Every recording starts with a 3-2-1 count-in shown over the deck; nothing is recorded during it.
+  req F-1.4: The microphone is opened with echo cancellation, noise suppression and auto gain off.
+  req F-1.5: A recording is split by slide: each slide read becomes a take of that slide, named by its start time; no take is overwritten.
+  req F-1.6: A new take becomes its slide's main take.
+  req F-1.7: A take that cannot be saved stays listed with Save again and Discard.
+  req F-1.8: While recording, the deck shows REC, the recording's length and a level meter with NO SIGNAL and CLIP warnings, but no level readout, centered at the top.
+  req F-1.9: While recording a slide with a desired length, the overlay shows the time left on it, and how far over once past.
+```
+
+```mdl
+feat F-2: Slide takes
+  req F-2.1: A Slide has a Recordings companion listing its takes, newest first, with the main take marked.
+  req F-2.2: A take's row has a check that makes it the main take, Play, and Delete; a delete can be undone.
+  req F-2.4: Both Recordings companions share one layout: a toolbar, a keyboard-navigable list, and the current row's player in the status bar.
+  req F-2.3: Each take shows its length against the slide's desired length, flagged when over.
+```
+
+```mdl
+feat F-3: Presentation voice-over
+  req F-3.1: A Presentation has a Recordings companion listing each presented slide with its main take's length against its desired length.
+  req F-3.2: A slide's row has Play (its main take) and a double-click opens the slide; Play all plays every main take in slide order.
+  req F-3.3: Download saves the main takes, in slide order, as one WAV file.
+```
+
+```mdl
+feat F-4: Settings
+  req F-4.1: The settings choose the microphone, the video source (none, screen, camera) and the camera.
+  req F-4.2: Test microphone opens the chosen microphone on the level meter without recording.
+  req F-4.3: With no microphone chosen, a device whose label matches /shure/i is preferred.
+```
+
+## QA
+
+```mdl
+test QA-1: Record a presentation's voice-over, then re-record one slide
+  desc: The primary journey — record every slide, re-record one, pick its main take, and download the voice-over.
+  actors: human
+  covers: [F-1.1, F-1.2, F-1.3, F-1.5, F-1.6, F-2.2, F-3.1, F-3.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - a Presentation named "QA Recording" with two slides, each with speaker notes; the first slide's Duration is 5
+    - the Recorder plugin is enabled; video source None; a working microphone
+  steps:
+    - name: Record every slide
+      do: Open "QA Recording" and press Record in its toolbar; allow the microphone. After 3-2-1, read slide 1, press →, read slide 2, press Escape.
+      expect: the count-in shows, then REC; the presentation closes on Escape
+      note: NO `invoke` — the recording must start inside a click (the media prompt and the AudioContext need it).
+    - name: Check the voice-over
+      do: Open the presentation's Recordings companion.
+      expect: both slides list a main take; slide 1's is flagged over its 0:05
+    - name: Re-record slide 1
+      do: Open slide 1's Recordings companion and press Record; after 3-2-1 read it, then press →.
+      expect: the presentation closes; slide 1 lists two takes, the new one marked Main
+    - name: Choose the first read
+      do: Press the check on the older take.
+      expect: the older take is marked Main
+    - name: Delete and undo
+      do: Delete the newer take, then undo.
+      expect: the take leaves the list, then returns
+    - name: Download the voice-over
+      do: In the presentation's Recordings companion press Download.
+      expect: a WAV file named "QA Recording voice-over.wav" downloads
+  after:
+    - name: Delete the presentation
+      do: Delete "QA Recording" (its slides own their takes).
+      expect: the presentation and its takes are gone
+```
+
+## Changelog
+
+```mdl
+decision D-1: A new plugin records a presentation's voice-over from a script, working with plugin-studio; a take is stored as a studio MediaArtifact.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [Recording]
+```
+
+```mdl
+decision D-2: The plugin is named plugin-recorder; post-processing (trim, stretch, mux, loudness) runs on native ffmpeg, as an EDGE compute operation and as a desktop sidecar; video is a screen capture with a camera overlay, leaving room for other picture sources (autocue videos, canvas animations, presenter decks); plugin-presenter is the harness for the script.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [Recording, F-1]
+```
+
+```mdl
+decision D-3: plugin-recorder adds a toolbar item to the presenter that starts the presentation and records its voice-over, and has settings to choose the microphone and the video source and to test the microphone.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordButton, RecorderSettings, F-1.1, F-3]
+```
+
+```mdl
+decision D-4: A Recording is parented to its Presentation and owns one MediaArtifact per kind (audio, video); each take is a Variant with its timeline in `config`, so no take type of its own exists. Fills in [D-1].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Recording, Take.Log]
+  why: Studio's Variant is already "one produced alternative with the request that made it"; a take is exactly that.
+  rejected: A Take ECHO type beside Variant, which would duplicate studio's media model.
+```
+
+```mdl
+decision D-5: A take's timeline is on the take's own clock, one section per slide visit keyed by Slide id, with click steps logged apart; recording starts with the presentation, with no hold before the first slide. Fills in [D-3].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Take.Log, F-1.3]
+  why: A deck has no picture timeline of its own, and ids survive slide reorders where positions do not.
+```
+
+```mdl
+decision D-6: The recorder is a capability service rather than state in the toolbar item, and follows the presentation through presenter's PresentationEventHandler. Fills in [D-3].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordButton, F-1.3, F-1.4]
+  why: The toolbar unmounts while the deck is presented; presenter must not depend on the recorder.
+```
+
+```mdl
+decision D-7: A take that fails to save stays in memory with Save again and Save as a file; buffering it to IndexedDB is deferred. Takes are listed in a Recordings companion of the Presentation, not as navtree objects. Fills in [D-3].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsArticle, F-1.5, F-2.1]
+  why: A take is the one thing the workflow must never lose; a companion keeps takes beside the deck they voice.
+```
+
+```mdl
+decision D-8: Phase 1 records one video source (screen or camera); the camera overlay on a screen capture, post-processing, and other picture sources are later phases. Fills in [D-2].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, RecorderSettings]
+  why: Compositing the overlay needs a canvas pipeline; post-processing needs the EDGE and desktop runners.
+```
+
+```mdl
+decision D-9: The Recordings companion has a toolbar, and each recording can be played, downloaded and deleted.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsArticle, F-2.4, F-2.5]
+```
+
+```mdl
+decision D-10: The recording panel and its meter are centered horizontally over the deck and show the time remaining on the slide when it has a desired length; the peak and level readout is not shown while recording.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingOverlay, LevelMeter, F-1.6, F-1.7]
+```
+
+```mdl
+decision D-11: The overlay's compact meter still shows NO SIGNAL and CLIP, as warnings only; the companion plays a take with its own player rather than studio's VariantRenderer surface. Fills in [D-9] and [D-10].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [LevelMeter, RecordingsArticle]
+  why: A muted microphone silently ruined two takes in the prototype; studio's surface renders only while plugin-studio is enabled.
+```
+
+```mdl
+decision D-12: Each slide has its own takes, held as an array on the Slide and shown in the slide's companion, whose toolbar records a new take. Takes can be played, deleted with undo, or selected as the main take. The presentation's companion records across all slides, splitting the recording by slide, and plays and downloads using each slide's preferred take. Supersedes [D-4] and [D-7].
+  date: 2026-10-26
+  by: user:richburdon
+  supersedes: D-4
+  affects: [Slide.takes, SlideRecordingsArticle, PresentationRecordingsArticle, F-1, F-2, F-3]
+```
+
+```mdl
+decision D-13: Every recording starts with a 3-2-1 count-in.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingOverlay, F-1.3]
+```
+
+```mdl
+decision D-14: A recording runs one MediaRecorder per slide over the same input stream, so each slide read is a self-contained take; a new take becomes main; a one-slide recording ends, and closes the presentation, when the reader leaves its slide; the voice-over downloads as one WAV decoded from the main takes. Fills in [D-12].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Take.Log, F-1.2, F-1.5, F-1.6, F-3.3]
+  why: Compressed takes cannot be cut or joined in the browser without re-encoding; recording each slide separately needs no cut, and decoding to PCM is the one join the browser can do.
+  rejected: One file per recording with per-slide time ranges, which needs a cut to download or replace one slide.
+```
+
+```mdl
+decision D-15: Deleting a take is the DeleteTake operation, undone by RestoreTake through an undo mapping, which re-adds the take and its file at its place and restores its main mark. Fills in [D-12].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DeleteTake, RestoreTake, F-2.2]
+  why: The space's RemoveObjects unlinks only from collections, not from a slide's takes.
+```
+
+```mdl
+decision D-16: The slide and presentation Recordings companions use one layout, built on react-ui-list (the standard current row, up and down, scrolling), with the player in the status bar at the bottom.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.4]
+```
+
+```mdl
+decision D-17: The toolbar's actions act on the current row, rather than buttons on each row, and the status bar player reads a take's bytes into an object URL it owns. Fills in [D-16].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsPanel, F-2.2]
+  why: A Listbox row is one navigable item; a URL shared through studio's cache was revoked under the player, which then showed 0:00 / 0:00.
+```
+
+```mdl
+decision D-18: In both Recordings lists the current row is the selection.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, F-2.4]
+```
+
+```mdl
+decision D-19: The arrow keys select as they move; a pointer only highlights the rows it passes. Fills in [D-18].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsPanel]
+  why: Selecting on hover would switch the status bar's take as the mouse crosses the list.
+```
+
+```mdl
+decision D-20: Both lists show their rows as tiles, one per row with no image. A presentation companion tile has Play and navigation buttons; a slide companion tile has a Play button.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.2, F-3.2]
+```
+
+```mdl
+decision D-21: The tiles have small rounded corners, and the star that makes a take main sits on the take's row, not in the toolbar.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [SlideRecordingsArticle, F-2.2]
+```
+
+```mdl
+decision D-22: A take is labelled by the date and time it was recorded, and every tile is one compact row: icon, label, time, buttons.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle]
+```
+
+```mdl
+decision D-23: The date and time come from the take's name (its UTC start), shown in the reader's locale and time zone, so takes recorded before this change are labelled too. Fills in [D-22].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Take.Log]
+  why: Every take is already named by its start time; a new field would leave existing takes unlabelled.
+```
+
+```mdl
+decision D-24: Both companions are lists with columns, with the take count and length in separate columns. A slide companion row has a Delete button, and the slide companion has no download. Supersedes the tiles of [D-20].
+  date: 2026-10-26
+  by: user:richburdon
+  supersedes: D-20
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.2]
+```
+
+```mdl
+decision D-25: The list's star is the row's leading icon (on for the main take) and the row icons line up with the toolbar's; clicking a row selects it and Space plays or stops it; the presentation list has no navigate button (a double-click opens the slide); lists are full width; the status bar player has no download menu.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.2, F-3.2]
+```
+
+```mdl
+decision D-26: The rows use Listbox's shared `columns` tracks inside its own Viewport with no gutter, so a block-sized leading cell and block-sized trailing button cells fall under the toolbar's first and last buttons; a press on a row's button also selects the row. Fills in [D-25].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsPanel]
+  why: Under a plain ScrollArea the Listbox content found no `content` grid line and rendered half width.
+```
+
+```mdl
+decision D-27: Clicking a row selects it and makes it current, taking keyboard focus.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel]
+```
+
+```mdl
+decision D-28: The main-take mark is the system bookmark icon (react-ui's SystemButton.Bookmark) instead of a star, and the list's columns have space between them.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle]
+```
+
+```mdl
+decision D-29: The main-take mark is the system checkmark, green when checked, instead of the bookmark; take labels (their date and time) use tabular figures. Supersedes [D-28].
+  date: 2026-10-26
+  by: user:richburdon
+  supersedes: D-28
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle]
+```
+
+```mdl
+decision D-30: The system checkmark is a new react-ui `SystemButton.Check` toggle preset (check, bold and success valence while pressed), beside Star and Bookmark. Fills in [D-29].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsPanel]
+  why: react-ui had no checkmark preset; Clipboard already shows its success state as a green check.
+```
+
+```mdl
+decision D-31: The presentation companion's rows have no leading icon; the slide companion's main-take toggle is a circle, a check circle when checked.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [SlideRecordingsArticle, PresentationRecordingsArticle]
+```
+
+```mdl
+decision D-32: The presentation companion's rows show a circle (a check circle when the slide has a main take) and no slide number; a slide with no takes shows empty cells; actual and desired lengths share a color. Supersedes the no-leading-icon part of [D-31].
+  date: 2026-10-26
+  by: user:richburdon
+  supersedes: D-31
+  affects: [PresentationRecordingsArticle, RecordingsPanel]
+```
+
+```mdl
+decision D-33: The list rows are as tall as the toolbar, and the status bar player has square corners.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel]
+```
+
+```mdl
+decision D-34: An unsaved take offers Save again and Discard, with no Download. Fills in [D-24].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideRecordingsArticle, F-1.7]
+  why: The slide companion has no download, so F-1.7 named an action the UI does not offer.
+```

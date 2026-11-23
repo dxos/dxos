@@ -1,0 +1,627 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-deck/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: DeckPlugin
+
+The deck works and much of the spec holds: the sliding deck with spines, width caps and attention
+hysteresis, fullscreen, the drawer, dialogs and popovers, toasts, the flatten setting and the URL pair
+chain are all built. Unit tests cover the pure parts (deck insertion, URL parsing, companion bookkeeping,
+the drawer, complementary and dialog ops, toast upserts), and `Deck.stories.tsx` plays Open, ScrollIntoView
+and the dialog focus return. The spec has drifted from the code in several places.
+
+- **No tiling presentation.** `getDeckPresentation` returns only `fullbleed` or `sliding`, and its test
+  asserts that two planks slide. There is no `tilingSizing` and no `UpdateTilingSize` operation, so F-1.6
+  and T-8 have no code.
+- **Deck state moved to the URL.** `active` and `inactive` now live in the ephemeral `OpenDeck` that the URL
+  projection writes, not in the persisted deck. The persisted `StoredDeck` holds `plankSizing`,
+  `companionPlanks` and `plankNames`, and `companionOpen` is gone.
+- **Renamed and extended inputs.** `Open` takes `name` rather than `key` and adds a `detail` disposition.
+  `UpdateCompanion` takes `subject` and `anchor` rather than `open` and `variant`. `PartAdjustment` adds
+  `expand`, and `Close` also closes a plank's detail chain.
+- **Not-found is a placeholder, not a redirect.** An unresolved target opens under a placeholder id that
+  renders the not-found article (F-5.4).
+- **Breadcrumbs follow the graph.** Under `flatten` the heading shows the plank's graph ancestors from its
+  first object ancestor, and falls back to the stack history only when there is none (F-8.2).
+- **`Matrix` is not the deck.** The `Matrix` component is a generic object stack that nothing in the plugin
+  renders; the canvas the spec describes is `DeckPlanks` in `DeckViewport.tsx`.
+
+The mobile journey stack is half built: on mobile, `Open` pushes to the end of the stack without popping
+the planks after the current one, and `Close` does not unwind. Most scenarios have no automated test. The spec
+declares a `type` and a `component` both named `DeckSettings`; one verdict covers both. Of 80 items: 18 done,
+30 untested, 7 partial, 10 diverged, 15 missing (the shared verdict counted for both items).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict DeckPresentation: The derived presentation is fullbleed or sliding; there is no tiling.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/hooks/useDeckPresentation.ts#DeckPresentation, github:dxos/dxos/packages/plugins/plugin-deck/src/hooks/useDeckPresentation.ts#getDeckPresentation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/hooks/useDeckPresentation.test.ts]
+  note: |
+    `getDeckPresentation` returns `fullbleed` for one plank off mobile and `sliding` otherwise; the test asserts
+    that two planks slide.
+```
+
+```mdl
+verdict PartAdjustment: The adjustment union has the five spec values plus expand.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/types/DeckSchema.ts#DeckAction]
+  note: The code adds `expand` (fill the deck between the spine piles). No test applies an adjustment.
+```
+
+```mdl
+verdict DeckState: The deck is split into a persisted StoredDeck and a URL-driven OpenDeck, with no tilingSizing or companionOpen.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/types/DeckSchema.ts#StoredDeck, github:dxos/dxos/packages/plugins/plugin-deck/src/types/DeckSchema.ts#OpenDeck]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/url/set-active.test.ts]
+  note: |
+    `active` and `inactive` are in `OpenDeck`, held in `EphemeralDeckState.open` and written from the URL.
+    `StoredDeck` holds `plankSizing`, `companionPlanks` and `plankNames`. `tilingSizing` does not exist.
+```
+
+```mdl
+verdict StoredDeckState: The stored state has the sidebar, complementary, drawer and deck fields.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/types/DeckSchema.ts#StoredDeckState]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-drawer.test.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-complementary.test.ts]
+```
+
+```mdl
+verdict EphemeralDeckState: The ephemeral state holds fullscreen, dialog, popover, toasts and scrollIntoView, plus expanded, expose and open.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/types/DeckSchema.ts#EphemeralDeckState]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-dialog.test.ts]
+  note: The code adds `expanded`, `expose`, `open` (the URL-driven decks) and the `rename` popover kind.
+```
+
+```mdl
+verdict DeckSettings: The settings schema has showHints, enableNativeRedirect and flatten (default on), plus overscroll, and a settings container renders it as a form.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-deck/src/capabilities/settings.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/DeckSettings/DeckSettings.tsx#DeckSettings]
+  note: |
+    One verdict covers both the `type` and the `component` named DeckSettings, since verdicts are keyed by id. No
+    test reads the settings and the story has no play function; the code adds `overscroll`.
+```
+
+```mdl
+verdict Matrix: Matrix is a generic object stack nothing renders; the deck canvas is DeckPlanks.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/components/Matrix/Matrix.tsx#Matrix, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#DeckPlanks]
+  note: |
+    `Matrix` is exported but unused in the plugin. `DeckPlanks` in `DeckViewport.tsx` renders the active planks
+    through a Mosaic stack with spines, resize, fullscreen and the companion split.
+```
+
+```mdl
+verdict DeckContent: Main.Root hosts the sidebars, content and a Main.Drawer with one Drawer surface, closed while fullscreen.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckContent.tsx#DeckContent]
+  note: No test mounts it; the drawer's padding, live resize and persisted height are not asserted.
+```
+
+```mdl
+verdict Open: Open places subjects by solo, add, auto (and detail), but takes name instead of key and opens unknown targets as not-found placeholders.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#Open, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/open.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.test.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/Deck.stories.tsx]
+  note: |
+    Dispositions, shift-forces-add, `pivotId`, `workspace`, `scrollIntoView`, Expose and the observability event
+    match. Differences: `key` is `name`; a `detail` disposition exists; on mobile subjects are pushed to the end
+    of the stack; there is no graph validation with a 404 redirect.
+```
+
+```mdl
+verdict Close: Close removes the subjects and their detail chains, but does not compute the next attended plank or schedule ScrollIntoView.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#Close, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/close.ts]
+  note: |
+    The handler writes the new `active` with no intent and lets the URL write focus whatever attention falls to.
+    No test runs it.
+```
+
+```mdl
+verdict UpdateSidebar: The handler writes the sidebar state.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#UpdateSidebar, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-sidebar.ts]
+  note: No test runs it.
+```
+
+```mdl
+verdict UpdateDrawer: The handler toggles, sets and clamps the drawer and writes only on change.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#UpdateDrawer, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-drawer.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-drawer.test.ts]
+```
+
+```mdl
+verdict UpdateComplementary: The handler sets the state and panel; selecting a panel expands the sidebar.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#UpdateComplementary, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-complementary.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-complementary.test.ts]
+```
+
+```mdl
+verdict UpdateDialog: The handler opens and closes the dialog with its content, type, alignment and overlay classes.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#UpdateDialog, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-dialog.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-dialog.test.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict UpdatePopover: The handler writes the popover anchor, content, side, kind and title.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#UpdatePopover, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-popover.ts]
+  note: No test runs it.
+```
+
+```mdl
+verdict UpdateCompanion: UpdateCompanion takes a subject (or null) and an anchor rather than open and variant.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#UpdateCompanion, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-companion.ts]
+  note: |
+    The handler opens the named companion beside the anchored plank or closes it with `null`; there is no `open`
+    flag or `variant` field.
+```
+
+```mdl
+verdict AdjustPlank: The handler applies close, companion, fullscreen, expand and the increments; fullscreen toggles the ephemeral id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/types/DeckOperation.ts#Adjust, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/adjust.ts]
+  note: No test runs it; the increment helpers are not tested either.
+```
+
+```mdl
+verdict UpdatePlankSize: The handler persists a plank width in plankSizing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/types/DeckOperation.ts#UpdatePlankSize, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-plank-size.ts]
+  note: No test runs it.
+```
+
+```mdl
+verdict UpdateTilingSize: No UpdateTilingSize operation or tilingSizing field exists; two planks slide instead of tiling.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict AddToast: The handler upserts the toast into the ephemeral queue.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#AddToast, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/add-toast.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/util/upsert-toast.ts#upsertToast]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/upsert-toast.test.ts]
+```
+
+```mdl
+verdict ScrollIntoView: The handler schedules the subject, and focus false reveals without moving focus.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#ScrollIntoView, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/scroll-into-view.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict SwitchWorkspace: The handler switches the active deck and the URL apply records the previous one.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#SwitchWorkspace, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/switch-workspace.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/url/apply.ts#applyWorkspace]
+  note: No test switches workspaces.
+```
+
+```mdl
+verdict RevertWorkspace: The handler switches back to previousDeck.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#RevertWorkspace, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/revert-workspace.ts]
+  note: No test runs it.
+```
+
+```mdl
+verdict F-1.1: The presentation is derived, but two planks render sliding, not tiling.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/hooks/useDeckPresentation.ts#getDeckPresentation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/hooks/useDeckPresentation.test.ts]
+  note: Desktop gives fullbleed for one plank and sliding for two or more; mobile is always sliding.
+```
+
+```mdl
+verdict F-1.2: Sliding planks sit in a scrolling row with a fixed gap and edge shadow, resizable, widths persisted.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#DeckPlankTile, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#DeckPlanks]
+  note: Stories render many planks but no play function checks the gap, the shadow or a persisted resize.
+```
+
+```mdl
+verdict F-1.3: A sliding plank's width is capped to the viewport less the other planks' spines and one gap.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#useMaxPlankWidth]
+  note: No test checks the cap.
+```
+
+```mdl
+verdict F-1.4: Scrolled-past planks pin as slivers and fold to a spine with sigil and label below the threshold.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#useFoldedPlanks, github:dxos/dxos/packages/plugins/plugin-deck/src/components/FoldSpine/FoldSpine.tsx#FoldSpine]
+  note: No test scrolls a plank past the fold threshold.
+```
+
+```mdl
+verdict F-1.5: Clicking a spine scrolls its plank back into view.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/components/FoldSpine/FoldSpine.tsx#FoldSpine, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#scrollPlankToPile]
+  note: No test clicks a spine.
+```
+
+```mdl
+verdict F-1.6: There is no tiling presentation, hairline divider or UpdateTilingSize; two planks slide.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict F-1.7: Below md planks are full-width scroll-snap points and not resizable.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#DeckPlankTile, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#DeckPlanks]
+  note: |
+    The mobile branch uses `snap-start` tiles in a `snap-x snap-mandatory` viewport; no test runs at mobile width.
+```
+
+```mdl
+verdict F-1.8: Opening a subject that is already open keeps the deck and scrolls to it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.ts#addSubjectsToActiveDeck, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/open.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.test.ts]
+```
+
+```mdl
+verdict F-1.9: The increment controls are commented out in PlankControls, and the adjustments stay wired.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/PlankControls.tsx#PlankControls]
+  note: No test checks that the controls are absent.
+```
+
+```mdl
+verdict F-2.1: Fullscreen sets the ephemeral id and renders that plank alone, headless.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/adjust.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#useFullscreen]
+  note: No test enters fullscreen.
+```
+
+```mdl
+verdict F-2.2: Adjusting the fullscreen plank again clears the id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/adjust.ts]
+  note: No test exits fullscreen.
+```
+
+```mdl
+verdict F-2.3: Fullscreen is ephemeral and not in the URL, so a reload does not restore it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/types/DeckSchema.ts#EphemeralDeckState]
+  note: No test reloads with fullscreen set.
+```
+
+```mdl
+verdict F-3.1: UpdateSidebar writes the persisted sidebar state.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-sidebar.ts]
+  note: |
+    No test runs the operation; `resolve-sidebar-state.test.ts` covers only how a closed sidebar presents at lg.
+```
+
+```mdl
+verdict F-3.2: UpdateComplementary with a panel expands the complementary sidebar to it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-complementary.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-complementary.test.ts]
+```
+
+```mdl
+verdict F-3.3: UpdateDrawer toggles, sets and clamps the persisted drawer; DeckContent pads by its height.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-drawer.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckContent.tsx#DeckContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-drawer.test.ts]
+  note: The test covers the state; the block-end padding in `DeckContent` is not asserted.
+```
+
+```mdl
+verdict F-3.4: DeckContent passes both sidebar states to Main.Root so the drawer spans between them.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckContent.tsx#DeckContent]
+  note: No test checks the drawer insets.
+```
+
+```mdl
+verdict F-3.5: DeckContent renders the drawer closed while fullscreen without writing the stored state.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckContent.tsx#DeckContent]
+  note: No test enters fullscreen with the drawer open.
+```
+
+```mdl
+verdict F-4.1: UpdateDialog with a subject renders that surface in the global dialog.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-dialog.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Overlays/Dialog.tsx#Dialog]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-dialog.test.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-4.2: The popover positions on the anchor element named by anchorId.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-popover.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Overlays/Popover.tsx#PopoverRoot]
+  note: No test opens a popover against an anchor.
+```
+
+```mdl
+verdict F-4.3: Closing the dialog clears its content once the exit has run.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-dialog.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-dialog.test.ts]
+```
+
+```mdl
+verdict F-5.1: URL pairs are parsed against the url key table and opened as planks.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.ts#parse, github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.ts#initialPlanks, github:dxos/dxos/packages/plugins/plugin-deck/src/url/project.ts#projectUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.test.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/url/set-active.test.ts]
+```
+
+```mdl
+verdict F-5.2: The URL is formatted from the deck with the attended plank's companion, and attention is not serialized.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.ts#format, github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigate.ts#deckNavigation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.test.ts]
+  note: |
+    The direction is reversed: navigation writes the URL first and the deck's `active` is projected from it.
+```
+
+```mdl
+verdict F-5.3: A node with no URL segment cannot become a plank; nothing logs a warning.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.ts#segmentForNode]
+  note: |
+    `segmentForNode` returns `undefined` for a node without a url binding, and the navigation path treats it as
+    not openable rather than omitting it with a warning.
+```
+
+```mdl
+verdict F-5.4: An unresolved pair opens under a placeholder that renders the not-found article; Open does not redirect.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.ts#getUnresolvedPlankId, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckPlank.tsx#DeckPlank]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.test.ts]
+  note: |
+    `navigation.test.ts` checks that an unvouched pair opens under a placeholder; `DeckPlank` borrows the not-
+    found node's label and article.
+```
+
+```mdl
+verdict F-6.1: AddToast appends to the queue and the Toast closes after its duration.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/upsert-toast.ts#upsertToast, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Overlays/Toast.tsx#Toast]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/upsert-toast.test.ts]
+  note: The test covers the queue; the display duration is Radix's `duration` and is not asserted.
+```
+
+```mdl
+verdict F-6.2: The notification tracker shows an undo toast from the history tracker's undoable stream.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/capabilities/notification-tracker.ts]
+  note: There is no ShowUndo operation; undo toasts come from the history tracker. No test covers them.
+```
+
+```mdl
+verdict F-7.1: A plain solo open replaces the deck unless the subject is open, and each change is pushed to history.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/open.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/url/navigation.ts#push]
+  note: No test clicks the nav tree or runs a solo open.
+```
+
+```mdl
+verdict F-7.2: Shift forces any open into an add at the end of the deck.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/open.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.ts#addSubjectsToActiveDeck]
+  note: `layout.test.ts` covers appending; nothing tests the modifier path.
+```
+
+```mdl
+verdict F-7.3: Auto adds beside the origin when sliding and navigates solo otherwise.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/open.ts]
+  note: No test runs the auto disposition.
+```
+
+```mdl
+verdict F-7.3a: Card navigation passes add with the card's plank from useCardPivot.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/open.ts, github:dxos/dxos/packages/sdk/app-toolkit/src/ui/hooks/useObjectMenuItems.ts#useCardPivot]
+  note: No test opens from a card.
+```
+
+```mdl
+verdict F-7.4: Closing a plank also closes its detail chain; the last close shows the empty state.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/close.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.ts#detailChain, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#DeckContentEmpty]
+  note: |
+    `Close` expands each subject with `detailChain` before removing it, so detail planks opened from it close too.
+```
+
+```mdl
+verdict F-7.5: On mobile Open pushes subjects to the end of the stack, without popping the planks after the current one.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.ts#pushSubjectsToStack, github:dxos/dxos/packages/plugins/plugin-deck/src/operations/open.ts]
+  note: |
+    `pushSubjectsToStack` moves the subjects to the end; navigating from mid-stack does not drop the planks after
+    the current one.
+```
+
+```mdl
+verdict F-7.6: Close on mobile removes only the plank (and its details); it does not unwind the planks after it.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict F-7.7: When the attended plank folds or leaves the viewport, attention moves to the nearest unfolded plank, with hysteresis.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#useFoldedPlanks]
+  note: |
+    `OpenAttendsTheNewPlank` checks that an open keeps attention on the new plank; no test scrolls the attended
+    plank into a fold.
+```
+
+```mdl
+verdict F-8.1: Under flatten only the last active plank renders, with its companion.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/companion-anchor.ts#getRenderedPlanks, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckViewport.tsx#DeckPlanks]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/companion-anchor.test.ts]
+```
+
+```mdl
+verdict F-8.2: Breadcrumbs show the plank's graph ancestors from the first object ancestor, falling back to the stack history.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/hooks/useBreadcrumbs.ts#useAncestorBreadcrumbs, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckPlank.tsx#DeckPlank]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/hooks/useBreadcrumbs.test.ts, github:dxos/dxos/packages/plugins/plugin-deck/src/components/Plank/Plank.stories.tsx]
+  note: |
+    `useAncestorBreadcrumbs` uses `ancestorPaths(id)` and uses the earlier active entries only when no ancestor
+    holds an object.
+```
+
+```mdl
+verdict F-8.3: Clicking a breadcrumb in the stack closes every plank after it; otherwise it opens the crumb.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckPlank.tsx#DeckPlank]
+  note: No test clicks a breadcrumb; the Plank stories check only breadcrumb layout.
+```
+
+```mdl
+verdict F-8.4: With flatten off every active plank renders and no breadcrumbs are passed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/companion-anchor.ts#getRenderedPlanks, github:dxos/dxos/packages/plugins/plugin-deck/src/containers/Deck/DeckPlank.tsx#DeckPlank]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/companion-anchor.test.ts]
+```
+
+```mdl
+verdict T-1: The insertion is unit-tested; presentation, URL and scroll are not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.ts#addSubjectsToActiveDeck]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.test.ts]
+  note: |
+    `layout.test.ts` appends without a pivot. Nothing checks the sliding presentation, the URL or the scroll.
+```
+
+```mdl
+verdict T-2: A unit test inserts after the pivot without closing planks.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.ts#addSubjectsToActiveDeck]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.test.ts]
+  note: It runs `addSubjectsToActiveDeck`, which the add disposition calls.
+```
+
+```mdl
+verdict T-3: A unit test keeps an already-open subject in place; the scroll is not checked.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.ts#addSubjectsToActiveDeck]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/layout.test.ts]
+  note: No test runs a solo Open of an open subject or checks ScrollIntoView.
+```
+
+```mdl
+verdict T-4: No test runs AdjustPlank with fullscreen.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-5: No test exits fullscreen.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-5a: The op test toggles, clamps and keeps the height on close; the DOM padding is not checked.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-drawer.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/operations/update-drawer.test.ts]
+  note: Nothing asserts `data-drawer-state` or the block-end padding on `main`.
+```
+
+```mdl
+verdict T-6: No test closes a plank and checks attention or ScrollIntoView.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-7: The queue upsert is tested; showing and removing after the duration is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/upsert-toast.ts#upsertToast]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/upsert-toast.test.ts]
+  note: No test renders a toast and waits for it to close.
+```
+
+```mdl
+verdict T-8: Tiling does not exist; two planks slide.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-9: No test scrolls a plank into a spine and clicks it.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-10: No test clicks the nav tree or checks browser back.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-11: No test modifier-clicks the nav tree, or runs the T-11a and T-11b card and inline-reference cases.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-12: The mobile pop-forward is not built, and no test runs it.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-13: No test folds the attended plank by scrolling.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict T-14: A unit test collapses the stack to the current plank; the breadcrumbs are not checked.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/companion-anchor.ts#getRenderedPlanks]
+  tests: [github:dxos/dxos/packages/plugins/plugin-deck/src/util/companion-anchor.test.ts]
+  note: The Plank stories render breadcrumbs from fixed props, not from a flattened stack.
+```
+
+```mdl
+verdict T-15: No test clicks a breadcrumb.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict QA-1: No automated test opens, resizes and closes a second plank in the app.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```
+
+```mdl
+verdict QA-2: No automated test toggles the sidebar and companion in the app.
+  status: missing
+  note: Searched plugin-deck src, its stories and the composer-e2e specs; nothing implements or runs this.
+```

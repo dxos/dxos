@@ -11,7 +11,7 @@ import { createTestApp } from '@dxos/app-framework/testing';
 import { render } from '@dxos/app-framework/testing/react';
 import * as Toast from '@dxos/react-ui/Toast';
 
-import { ThemePlugin } from '#plugin';
+import * as ThemePlugin from '#meta';
 
 // Pins the system preference the theme reads.
 beforeEach(() => {
@@ -29,7 +29,7 @@ beforeEach(() => {
 describe('ThemePlugin ReactContext', () => {
   test('a toast with a close button renders under the app providers', async ({ expect }) => {
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({})],
     });
 
     // Toasts render in the viewport rather than where their roots sit, so the viewport's place in the

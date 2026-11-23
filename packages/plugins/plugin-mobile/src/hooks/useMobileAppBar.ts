@@ -16,8 +16,7 @@ import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
-
+import { MobileNamespace } from '../namespace.ts';
 import { useMobileStack } from './useMobileStack.ts';
 
 export type MobileAppBar = {
@@ -43,7 +42,7 @@ const ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-ite
  * at a time and the app bar is chrome for that one.
  */
 export const useMobileAppBar = (): MobileAppBar => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MobileNamespace.key);
   const { state } = DeckHooks.useDeckState();
   const stateAtom = Hooks.useCapability(DeckCapabilities.State);
   const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
@@ -86,7 +85,7 @@ export const useMobileAppBar = (): MobileAppBar => {
   );
 
   const popoverAnchorId =
-    node && state.popoverAnchorId === `${meta.profile.key}:${node.id}` ? state.popoverAnchorId : undefined;
+    node && state.popoverAnchorId === `${MobileNamespace.key}:${node.id}` ? state.popoverAnchorId : undefined;
 
   return {
     title,

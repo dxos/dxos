@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { BrainSkill } from '#skills';
+import { BrainSkill, ConversationSkill } from '#skills';
 import {
   AgentOperation,
   EmailOperation,
@@ -20,6 +20,7 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CreateEmailChannel.pipe(Operation.lazyHandler(() => import('./create-email-channel.ts'))),
   AgentOperation.EnsureIdentity.pipe(Operation.lazyHandler(() => import('./ensure-identity.ts'))),
   AgentOperation.EnsureChannelChat.pipe(Operation.lazyHandler(() => import('./ensure-channel-chat.ts'))),
+  AgentOperation.EnsureSessionChat.pipe(Operation.lazyHandler(() => import('./ensure-session-chat.ts'))),
   AgentOperation.ListAgents.pipe(Operation.lazyHandler(() => import('./list-agents.ts'))),
   AgentOperation.ListSkills.pipe(Operation.lazyHandler(() => import('./list-skills.ts'))),
   AgentOperation.CustomizeSkill.pipe(Operation.lazyHandler(() => import('./customize-skill.ts'))),
@@ -28,9 +29,6 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.OpenPrivateChat.pipe(Operation.lazyHandler(() => import('./open-private-chat.ts'))),
   AgentOperation.InviteAgent.pipe(Operation.lazyHandler(() => import('./invite-agent.ts'))),
   AgentOperation.ReadSource.pipe(Operation.lazyHandler(() => import('./read-source.ts'))),
-  AgentOperation.AddFactFeed.pipe(Operation.lazyHandler(() => import('./add-fact-feed.ts'))),
-  AgentOperation.RemoveFactFeed.pipe(Operation.lazyHandler(() => import('./remove-fact-feed.ts'))),
-  AgentOperation.ListFactFeeds.pipe(Operation.lazyHandler(() => import('./list-fact-feeds.ts'))),
   ModeOperation.ListModes.pipe(Operation.lazyHandler(() => import('./list-modes.ts'))),
   ModeOperation.SwitchMode.pipe(Operation.lazyHandler(() => import('./switch-mode.ts'))),
   MemoryOperation.ResolveEntity.pipe(Operation.lazyHandler(() => import('./resolve-entity.ts'))),
@@ -51,5 +49,6 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   TriggerOperation.InspectBrain.pipe(Operation.lazyHandler(() => import('./inspect-brain.ts'))),
   TriggerOperation.ResetBrain.pipe(Operation.lazyHandler(() => import('./reset-brain.ts'))),
   BrainSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
+  ConversationSkill.EnsureReplySent.pipe(Operation.lazyHandler(() => import('./ensure-reply-sent.ts'))),
   EmailOperation.Send.pipe(Operation.lazyHandler(() => import('./send-email.ts'))),
 ]);

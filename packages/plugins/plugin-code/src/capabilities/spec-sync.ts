@@ -8,13 +8,14 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
-import { Spec } from '@dxos/types';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
-import { SyncBases, getSpecKey, resolveRoots, syncSpec } from '#sync';
+import { SyncBases, getSpecKey, resolveRoots, syncReview, syncSpec } from '#sync';
 import { CodeCapabilities } from '#types';
 
 /** Polling keeps one code path for both hosts; a spec file is small and the dev route is on loopback. */
@@ -22,7 +23,8 @@ const SYNC_INTERVAL = '2 seconds';
 
 /**
  * Keeps every spec that carries a `github.com/<owner>/<repo>` meta key in step with its file in a local checkout,
- * both ways, while the app runs. Hosts with no file access (a deployed web app) leave the state unavailable.
+ * both ways, while the app runs, and records the review file beside it as one of its reviews. Hosts with no file
+ * access (a deployed web app) leave the state unavailable.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -31,6 +33,7 @@ export default Capability.makeModule(
     const settings = yield* CodeCapabilities.Settings;
     const fs = FileSystem.get();
     const bases = new SyncBases();
+    const reviews = new Map<string, string>();
 
     const state = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} });
     // Mounted for the module's scope so passes that run with no subscriber keep their result.
@@ -52,6 +55,7 @@ export default Capability.makeModule(
         return;
       }
       const roots = yield* resolveRoots(fs, registry.get(settings).repos);
+      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecCodec);
       const specs: Record<string, CodeCapabilities.SpecSyncEntry> = {};
       for (const space of client.spaces.get()) {
         if (!space.isOpen) {
@@ -63,7 +67,8 @@ export default Capability.makeModule(
         for (const spec of linked) {
           // Loads the text the first time a spec is synced; later passes find it resolved.
           yield* Effect.promise(() => spec.content.load());
-          const result = yield* syncSpec(spec, { fs, roots, bases });
+          const result = yield* syncSpec(spec, { fs, roots, bases, codecs });
+          yield* syncReview(spec, { fs, roots, seen: reviews });
           specs[spec.id] = { ...result, timestamp: Date.now() };
         }
       }

@@ -23,16 +23,28 @@ const IMAGES = HUES.map(
     )}`,
 );
 
-type StoryArgs = { count: number; continuous?: boolean; autoAdvance?: number };
+type StoryArgs = { count: number; continuous?: boolean; autoAdvance?: number; video?: boolean; slidesPerMove?: number };
 
-const DefaultStory = ({ count, continuous, autoAdvance }: StoryArgs) => {
+const DefaultStory = ({ count, continuous, autoAdvance, video, slidesPerMove }: StoryArgs) => {
   const images = IMAGES.slice(0, count);
   return (
-    <Carousel.Root count={images.length} continuous={continuous} autoAdvance={autoAdvance} data-testid='carousel'>
+    <Carousel.Root
+      count={images.length}
+      continuous={continuous}
+      autoAdvance={autoAdvance}
+      slidesPerMove={slidesPerMove}
+      data-testid='carousel'
+    >
       <Carousel.PrevTrigger />
       <Carousel.ItemGroup>
         {images.map((src, index) => (
-          <Carousel.Item key={src} index={index} src={src} alt={`Slide ${index + 1}`} />
+          <Carousel.Item
+            key={src}
+            index={index}
+            src={src}
+            kind={video ? 'video' : undefined}
+            alt={`Slide ${index + 1}`}
+          />
         ))}
       </Carousel.ItemGroup>
       <Carousel.NextTrigger />
@@ -96,6 +108,10 @@ export const Test: Story = {
     // The machine measures which slides are in view after mount, so every slide starts hidden.
     await waitFor(() => expect(within(slides[0]).getByRole('img', { name: 'Slide 1' })).toBeInTheDocument());
     await expect(slides[1]).toHaveAttribute('aria-hidden', 'true');
+    // Images mount on the slide in view and its neighbours only.
+    const media = (index: number) => slides[index].querySelector('[data-scope="media-player"]');
+    await expect(media(1)).not.toBeNull();
+    await expect(media(3)).toBeNull();
 
     await userEvent.click(next);
     await waitFor(() => expect(current()).toBe(1));
@@ -112,10 +128,41 @@ export const Test: Story = {
     await waitFor(() => expect(current()).toBe(4));
     await waitFor(() => expect(document.activeElement).toBe(indicators()[4]));
     await waitFor(() => expect(next).toBeDisabled());
+    await expect(media(3)).not.toBeNull();
+    await expect(media(0)).toBeNull();
 
     // Clicking a dot shows its page.
     await userEvent.click(indicators()[0]);
     await waitFor(() => expect(current()).toBe(0));
+  },
+};
+
+/** A video plays only on the slide in view: leaving the slide unmounts it, which stops it. */
+export const TestVideo: Story = {
+  args: { video: true },
+  play: async ({ canvasElement }) => {
+    const slides = part(canvasElement, 'item');
+    const media = (index: number) => slides[index].querySelector('video');
+    await waitFor(() => expect(media(0)).not.toBeNull());
+    await expect(media(1)).toBeNull();
+
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Next slide' }));
+    await waitFor(() => expect(media(1)).not.toBeNull());
+    await waitFor(() => expect(media(0)).toBeNull());
+  },
+};
+
+/** A page need not start at its own index: with two slides per move, the second page shows the third slide. */
+export const TestVideoPerMove: Story = {
+  args: { video: true, slidesPerMove: 2 },
+  play: async ({ canvasElement }) => {
+    const slides = part(canvasElement, 'item');
+    const media = (index: number) => slides[index].querySelector('video');
+    await waitFor(() => expect(media(0)).not.toBeNull());
+
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Next slide' }));
+    await waitFor(() => expect(media(2)).not.toBeNull());
+    await waitFor(() => expect(media(0)).toBeNull());
   },
 };
 

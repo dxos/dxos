@@ -27,7 +27,7 @@ export const handler = Effect.fn(function* ({
   authCode: Option.Option<string>;
 }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
 
   let encoded = invitationCode;
   if (encoded.startsWith('http') || encoded.startsWith('socket')) {

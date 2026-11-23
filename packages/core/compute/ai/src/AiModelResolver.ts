@@ -37,6 +37,7 @@ export const buildAiService: Layer.Layer<AiService.AiService, never, AiModelReso
       languageModel: (name, options) =>
         Layer.merge(AiTelemetry.markRequestsLayer(resolver.languageModel(name, options)), telemetryLayer),
       decisionModel: resolver.decisionModel,
+      extractionModel: resolver.extractionModel,
     } satisfies Context.Service.Shape<typeof AiService.AiService>;
   }),
 );
@@ -47,7 +48,11 @@ export const buildAiService: Layer.Layer<AiService.AiService, never, AiModelReso
  */
 const chain = <R>(
   metadata: AiService.ServiceMetadata,
-  impl: Effect.Effect<Partial<Pick<AiService.Service, 'languageModel' | 'decisionModel'>>, never, R>,
+  impl: Effect.Effect<
+    Partial<Pick<AiService.Service, 'languageModel' | 'decisionModel' | 'extractionModel'>>,
+    never,
+    R
+  >,
 ): Layer.Layer<AiModelResolver, never, R> =>
   Layer.effect(
     AiModelResolver,
@@ -76,6 +81,12 @@ const chain = <R>(
             ? own.decisionModel(modelName, options).pipe(Layer.catchCause(() => fallback(next, modelName)))
             : fallback(next, modelName);
         },
+        extractionModel: (modelName, options) => {
+          const next = (service: AiService.Service) => service.extractionModel(modelName, options);
+          return own.extractionModel
+            ? own.extractionModel(modelName, options).pipe(Layer.catchCause(() => fallback(next, modelName)))
+            : fallback(next, modelName);
+        },
       };
     }),
   );
@@ -98,6 +109,16 @@ export const decisionResolver = <R>(
   chain(
     metadata,
     Effect.map(impl, (decisionModel) => ({ decisionModel })),
+  );
+
+/** A resolver serving extraction models; the other kinds go upstream. */
+export const extractionResolver = <R>(
+  metadata: AiService.ServiceMetadata,
+  impl: Effect.Effect<AiService.ExtractionModelResolver, never, R>,
+): Layer.Layer<AiModelResolver, never, R> =>
+  chain(
+    metadata,
+    Effect.map(impl, (extractionModel) => ({ extractionModel })),
   );
 
 export const fromModelMap = <R>(

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-react",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "React integration for ECHO.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@effect/atom-react": "catalog:"
@@ -35,7 +38,8 @@
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:"

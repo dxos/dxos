@@ -10,6 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -19,8 +20,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../namespace.ts';
 import { ROUTINES_SETTINGS_ID, getRoutinesPath } from '../paths.ts';
 
 /** The routines panel in each space's settings section. */
@@ -33,8 +33,8 @@ export const createRoutinesSettingsExtension = () =>
       return Effect.succeed([
         AppNode.makeSettingsPanel({
           id: ROUTINES_SETTINGS_ID,
-          type: `${meta.profile.key}.space-settings-automation`,
-          label: ['automation-panel.label', { ns: meta.profile.key }],
+          type: `${RoutineNamespace.key}.space-settings-automation`,
+          label: ['automation-panel.label', { ns: RoutineNamespace.key }],
           icon: 'ph--lightning--regular',
           iconHue: 'emerald',
           position: Position.last,
@@ -45,6 +45,7 @@ export const createRoutinesSettingsExtension = () =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const readOnly = yield* ReadOnly.atom;
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Routine.Routine, {
         urlKey: 'routine',
@@ -62,15 +63,19 @@ export default Capability.makeModule(
         id: 'routineRuns',
         relation: AppNode.companion,
         type: Routine.Routine,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeCompanion({
-              variant: 'runs',
-              label: ['routine-runs.label', { ns: meta.profile.key }],
-              icon: 'ph--clock-countdown--regular',
-              data: 'runs',
-            }),
-          ]),
+        connector: (_, get) =>
+          Effect.succeed(
+            get(readOnly)
+              ? []
+              : [
+                  AppNode.makeCompanion({
+                    variant: 'runs',
+                    label: ['routine-runs.label', { ns: RoutineNamespace.key }],
+                    icon: 'ph--clock-countdown--regular',
+                    data: 'runs',
+                  }),
+                ],
+          ),
       }),
     ]);
 

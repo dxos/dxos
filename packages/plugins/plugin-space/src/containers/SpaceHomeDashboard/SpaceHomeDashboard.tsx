@@ -14,8 +14,8 @@ import { Dashboard } from '@dxos/react-ui-dashboard';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { SPACE_STATS_QUERY, countObjects, countTypenames } from '#dashboard';
-import { meta } from '#meta';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { HOURLY_ACTIVITY_QUERY, toActivity } from './activity.ts';
 
 const STAT_IDS = ['objects', 'types', 'collections', 'members', 'active-days', 'plugins'] as const;
@@ -26,13 +26,19 @@ type SpaceHomeDashboardProps = {
   space?: Space;
   /** Stat cards to render, in order; defaults to all. */
   stats?: readonly SpaceStatId[];
+  activity?: boolean;
   onClose?: () => void;
 };
 
 const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 
-export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+export const SpaceHomeDashboard = ({
+  space,
+  stats = STAT_IDS,
+  activity: showActivity = true,
+  onClose,
+}: SpaceHomeDashboardProps) => {
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const members = useMembers(space?.key);
 
   const manager = PluginManagerProvider.usePluginManager();
@@ -58,7 +64,7 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
   }
 
   return (
-    <HomeSection.Root>
+    <HomeSection.Root anchor='dashboard'>
       <HomeSection.Header title={t('space-home.dashboard.heading')} onClose={onClose} />
       <Dashboard.Stats>
         {stats.map((id) => (
@@ -69,7 +75,9 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
         ))}
       </Dashboard.Stats>
       {/* Smaller cells so a full year fits the 40rem home column without horizontal scroll. */}
-      <Dashboard.Activity classNames='[--dx-dashboard-cell:0.75rem]' data={activity} endDate={new Date()} />
+      {showActivity && (
+        <Dashboard.Activity classNames='[--dx-dashboard-cell:0.75rem]' data={activity} endDate={new Date()} />
+      )}
     </HomeSection.Root>
   );
 };

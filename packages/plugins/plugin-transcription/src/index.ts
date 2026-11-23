@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as TranscriptionPlugin from './TranscriptionPlugin.ts';
+export * as TranscriptionPlugin from '#meta';
 export * from './whistle/index.ts';
 export * from '#operations';
 export * from '#skills';

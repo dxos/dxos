@@ -3,16 +3,18 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Order from 'effect/Order';
 
 import type { AiService } from '@dxos/ai';
+import { TrajectoryStore } from '@dxos/assistant';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
+import { Fact, Graph, Ontology, Vocab } from '@dxos/echo-memory';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Space } from '@dxos/halo';
-import { RDF, type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
+import { EID } from '@dxos/keys';
+import { type SemanticIndexError, extractDocFacts, normalizeEntityId } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -57,6 +59,16 @@ type SourceText = {
 const SPEAKER_LINE = /^\*\*([^*:]{1,40}):\*\*\s*/;
 
 type Speaker = Pick<Segment, 'speaker' | 'speakerId' | 'speakerLabel'>;
+
+/** The name an utterance appears under when nothing identifies who said it. */
+const UNKNOWN_SPEAKER = 'User';
+
+/**
+ * Whether a term is the placeholder speaker left unresolved: the chat rules make "I" and "we" the line's speaker, which
+ * would otherwise store a decision by a person called User.
+ */
+const isUnknownSpeaker = (term: Fact.Term): boolean =>
+  term.kind === 'entity' && term.entity === normalizeEntityId(UNKNOWN_SPEAKER);
 
 /**
  * A member speaks under the name they signed with, else their display name; one with neither appears under a
@@ -111,12 +123,8 @@ const speakerOf = Effect.fnUntraced(function* (
     return namedSpeaker(members, sender.name);
   }
   const participantDid = participant ? personDid(participant) : undefined;
-  return participantDid ? memberSpeaker(members, participantDid) : ({ speaker: 'User' } satisfies Speaker);
+  return participantDid ? memberSpeaker(members, participantDid) : ({ speaker: UNKNOWN_SPEAKER } satisfies Speaker);
 });
-
-/** Feed items in append order. */
-const inAppendOrder = <T extends Obj.Unknown>(items: readonly T[]): T[] =>
-  [...items].sort(Order.mapInput(Order.Number, Feed.getPosition));
 
 /** What a message says aloud; synthetic text (a woken chat's relay, system notes) is not something anyone said. */
 const spokenText = (message: Message.Message): string =>
@@ -150,6 +158,12 @@ const NEW_HEADER = 'New messages:';
 
 const renderSegment = ({ text, speaker, at }: Segment): string => `[${at}] ${speaker}: ${text}`;
 
+/** Extraction rules for a chat read: the default rules drop an unresolved "we", which is how people state decisions. */
+const CHAT_RULES: readonly string[] = [
+  'Each line is "[time] Speaker: text". Attribute a first-person statement ("I am working on…", "we decided…", "we will ship…") to that line\'s speaker as subject, so a decision or commitment stated with "we" is kept, not omitted.',
+  'A decision is predicate "decided" with what was decided as the object: "we decided to ship offline mode" => subject the speaker, predicate "decided", object "ship offline mode".',
+];
+
 /**
  * The chat's messages after `after` (a message URI) in append order, each as a `[time] speaker: text`
  * line, preceded by up to {@link CONTEXT_MESSAGES} earlier ones as context; `through` is the last
@@ -162,8 +176,13 @@ const readChat = Effect.fnUntraced(function* (
   after?: string,
 ) {
   const feed = yield* Database.load(chat.feed);
-  const messages = inAppendOrder(yield* Feed.query(feed, Filter.type(Message.Message)).run);
-  const index = after === undefined ? -1 : messages.findIndex((message) => Obj.getURI(message) === after);
+  const messages = yield* TrajectoryStore.messages(feed);
+  // Messages read from the trajectory are not database objects, so their URIs are minted in the chat's space; a cursor
+  // stored before matches on the id it names.
+  const { db } = yield* Database.Service;
+  const uriOf = (message: Message.Message) => EID.make({ spaceId: db.spaceId, entityId: message.id });
+  const afterId = after === undefined ? undefined : EID.tryParse(after);
+  const index = afterId === undefined ? -1 : messages.findIndex((message) => message.id === EID.getEntityId(afterId));
   const start = index + 1;
   const participantId = ChatParticipant.get(chat);
   const participant = participantId ? (yield* Database.query(Filter.id(participantId)).run).at(0) : undefined;
@@ -175,7 +194,7 @@ const readChat = Effect.fnUntraced(function* (
     return {
       text,
       ...(yield* speakerOf(agent, members, message, participant)),
-      source: Obj.getURI(message),
+      source: uriOf(message),
       at: message.created,
     } satisfies Segment;
   });
@@ -210,7 +229,7 @@ const readChat = Effect.fnUntraced(function* (
     text: context.length === 0 ? lines : `${CONTEXT_HEADER}\n${contextLines}\n\n${NEW_HEADER}\n${lines}`,
     transcript: context.length === 0 ? lines : `${contextLines}\n${lines}`,
     segments,
-    through: last && Obj.getURI(last),
+    through: last && uriOf(last),
   };
 });
 
@@ -238,7 +257,7 @@ const readObject = Effect.fnUntraced(function* (
 const normalize = (text: string): string => text.replace(/\s+/g, ' ').trim().toLowerCase();
 
 /** Whether the fact quotes one of the segments; on an incremental read only facts from new messages are kept. */
-const quotesAny = (fact: RDF.Fact, segments: readonly Segment[]): boolean => {
+const quotesAny = (fact: Fact.Fact, segments: readonly Segment[]): boolean => {
   const quote = fact.assertion.quote ? normalize(fact.assertion.quote) : undefined;
   return quote !== undefined && segments.some(({ text }) => normalize(text).includes(quote));
 };
@@ -246,16 +265,20 @@ const quotesAny = (fact: RDF.Fact, segments: readonly Segment[]): boolean => {
 const FIRST_PERSON = new Set(['i', 'me', 'myself']);
 
 /** A first-person term the extractor left unresolved names the speaker of the utterance it quotes. */
-const selfTerm = (term: RDF.Term, segment: Segment): RDF.Term =>
+const selfTerm = (term: Fact.Term, segment: Segment): Fact.Term =>
   term.kind === 'entity' && segment.speakerId && FIRST_PERSON.has((term.label ?? term.entity).trim().toLowerCase())
-    ? { kind: 'entity', entity: segment.speakerId, ...(segment.speakerLabel ? { label: segment.speakerLabel } : {}) }
+    ? {
+        kind: 'entity',
+        entity: Fact.EntityKey.make(segment.speakerId),
+        ...(segment.speakerLabel ? { label: segment.speakerLabel } : {}),
+      }
     : term;
 
 /**
  * Attributes a fact to the utterance its quote comes from; the extractor sees the whole transcript
  * so pronouns resolve, and only knows the speaker of a fact through its quote.
  */
-const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
+const attribute = (fact: Fact.Fact, segments: readonly Segment[]): Fact.Fact => {
   const quote = fact.assertion.quote ? normalize(fact.assertion.quote) : undefined;
   const segment = quote ? segments.find(({ text }) => normalize(text).includes(quote)) : undefined;
   if (!segment) {
@@ -272,9 +295,11 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
     attribution: {
       ...fact.attribution,
       // Someone who is no member is attributed by the name they go by, which is what a watch on them names.
-      ...((segment.speakerId ?? segment.speakerLabel) ? { agent: segment.speakerId ?? segment.speakerLabel } : {}),
+      ...((segment.speakerId ?? segment.speakerLabel)
+        ? { agent: Fact.EntityKey.make(segment.speakerId ?? segment.speakerLabel ?? '') }
+        : {}),
       ...(segment.speakerLabel ? { agentLabel: segment.speakerLabel } : {}),
-      ...(segment.source ? { source: segment.source } : {}),
+      ...(segment.source ? { source: Fact.SourceUri.make(segment.source) } : {}),
       ...(segment.at ? { generatedAtTime: segment.at } : {}),
     },
   };
@@ -282,7 +307,7 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
 
 export type ReadSourceResult = {
   /** The facts pushed to the brain; none when a chat has no messages since the last read. */
-  facts: readonly RDF.Fact[];
+  facts: readonly Fact.Fact[];
   /** A chat's rendered window: the context lines before the new messages, then the new ones. */
   transcript?: string;
   /** The ids of the triggers the facts fired. */
@@ -327,7 +352,9 @@ export const readSource: (
     if (through === undefined || through === cursor) {
       return NOTHING_READ;
     }
-    const facts = yield* extract(agent, members, yield* loadEntities, read, uri);
+    const facts = (yield* extract(agent, members, yield* loadEntities, read, uri, CHAT_RULES)).filter(
+      ({ assertion }) => !isUnknownSpeaker(assertion.subject) && !isUnknownSpeaker(assertion.object),
+    );
     const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
     return {
       facts: fresh,
@@ -357,18 +384,20 @@ const extract = (
   entities: EntityIndex,
   body: Pick<SourceText, 'text' | 'segments'>,
   uri: string,
+  rules?: readonly string[],
 ) =>
   body.segments.length === 0 && body.text.trim().length === 0
     ? Effect.succeed([])
     : extractDocFacts(
         { text: body.text, source: uri },
         {
-          ontology: RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(AgentPresence.brainId(agent))),
+          ontology: Ontology.DEFAULT.withNamespace(Vocab.brainNamespace(AgentPresence.brainId(agent))),
           entities: knownEntities(members, entities),
+          ...(rules ? { rules } : {}),
         },
       ).pipe(
         Effect.map((facts) =>
-          RDF.Graph.assign(
+          Graph.assign(
             distinct(facts.map((fact) => attribute(resolveTerms(members, fact, entities), body.segments))).map(
               ({ graph: _, ...fact }) => fact,
             ),
@@ -377,7 +406,7 @@ const extract = (
       );
 
 /** The statement a fact makes, whoever said it: what two facts must share to be the same piece of knowledge. */
-const statementKey = ({ assertion, factuality }: RDF.Fact): string =>
+const statementKey = ({ assertion, factuality }: Fact.Fact): string =>
   JSON.stringify([
     termKey(assertion.subject),
     normalize(assertion.predicate).replace(/[\s_-]+/g, ' '),
@@ -385,11 +414,11 @@ const statementKey = ({ assertion, factuality }: RDF.Fact): string =>
     factuality.polarity,
   ]);
 
-const termKey = (term: RDF.Term): string =>
+const termKey = (term: Fact.Term): string =>
   `${term.kind}:${term.kind === 'entity' ? term.entity : normalize(term.literal)}`;
 
 /** One fact per statement in a pass: an extractor reading a repeated sentence states it once per repetition. */
-const distinct = (facts: readonly RDF.Fact[]): RDF.Fact[] => {
+const distinct = (facts: readonly Fact.Fact[]): Fact.Fact[] => {
   const seen = new Set<string>();
   return facts.filter((fact) => {
     const key = statementKey(fact);

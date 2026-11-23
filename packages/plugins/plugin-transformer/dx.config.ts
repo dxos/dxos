@@ -2,12 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { TransformerNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.transformer',
+    key: TransformerNamespace.key,
     name: 'Transformer',
     author: 'DXOS',
     description: trim`
@@ -31,4 +35,17 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
   },
+  modules: [
+    AppCapability.pluginAsset({
+      pluginId: TransformerNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

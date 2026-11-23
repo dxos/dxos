@@ -14,7 +14,7 @@ import { printIdentity } from '../util.ts';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const identity = client.halo.identity.get();
   if (!identity) {
     if (json) {

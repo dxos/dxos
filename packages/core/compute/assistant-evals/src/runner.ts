@@ -12,14 +12,14 @@ import type { Evalite } from 'evalite';
 import { afterAll } from 'vitest';
 
 import { AgentService as AgentSessions, type MakeTurnProducer } from '@dxos/agent-runtime';
-import { AiService, Model } from '@dxos/ai';
+import { AiService, AiUsage, Model } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
@@ -31,7 +31,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { EDGE_URLS } from '@dxos/config';
-import { Database, Feed, Filter, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -140,7 +140,7 @@ const createDefaultPlugins = async (options: {
   config?: Config;
   model: DXN.DXN;
   makeTurnProducer?: MakeTurnProducer;
-  record: (call: Usage.Call) => void;
+  record: (call: AiUsage.Call) => void;
 }): Promise<Plugin.Plugin[]> => [
   ClientPlugin.make({
     // The scenario's config first; the edge URL only fills in where it left one out.
@@ -157,8 +157,8 @@ const createDefaultPlugins = async (options: {
   AssistantPlugin.make({
     // The plugin's own resolvers serve an EDGE model through EDGE, authenticated as the run.
     aiServiceMiddleware: servedByEdge(options.model)
-      ? (upstream) => Usage.instrument(upstream, options.record)
-      : await directAiService(options.model).then((direct) => () => Usage.instrument(direct, options.record)),
+      ? (upstream) => AiUsage.instrument(upstream, options.record)
+      : await directAiService(options.model).then((direct) => () => AiUsage.instrument(direct, options.record)),
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
@@ -256,7 +256,7 @@ const runAgentSession = <I>(
           // process, and waiting on the old one would return at once.
           yield* (yield* AgentService.getSession(agent.chat)).submitPrompt(text);
           yield* (yield* AgentService.getSession(agent.chat)).waitForCompletion();
-          const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+          const messages = yield* TrajectoryStore.messages(agent.feed);
           const reply = messages
             .slice(seen)
             .filter((message) => message.sender.role === 'assistant')
@@ -482,7 +482,7 @@ export function createEvalRunner<I, O>(
     }
   });
 
-  const execute = async (input: I, variant: VariantConfig, record: (call: Usage.Call) => void) => {
+  const execute = async (input: I, variant: VariantConfig, record: (call: AiUsage.Call) => void) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const makeTurnProducer = variant?.makeTurnProducer ?? options.makeTurnProducer;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
@@ -633,10 +633,10 @@ export function createEvalRunner<I, O>(
   };
 
   return async (input: I, variant: VariantConfig) => {
-    const calls: Usage.Call[] = [];
+    const calls: AiUsage.Call[] = [];
     const experiment = Observe.experiment();
     const run = Observe.start(experiment);
-    const record = (call: Usage.Call) => {
+    const record = (call: AiUsage.Call) => {
       calls.push(call);
       run.generation(call);
     };

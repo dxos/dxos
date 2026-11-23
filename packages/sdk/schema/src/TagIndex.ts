@@ -88,7 +88,9 @@ const tagFamily = Atom.family((key: TagKey) =>
 const taggedIdsFamily = Atom.family((key: TaggedIdsKey) =>
   Atom.make<readonly EntityId[]>((get) => {
     const [tagIndex, tagId] = key;
-    const read = (): readonly EntityId[] => bind(tagIndex).objects(tagId);
+    // A copy: `objects` hands back the live list, which a later tag write extends in place, so the
+    // previous value would always equal the next one and the atom would stop updating.
+    const read = (): readonly EntityId[] => [...bind(tagIndex).objects(tagId)];
     let previous = read();
     const unsubscribe = Obj.subscribe(tagIndex, () => {
       const next = read();

@@ -66,7 +66,7 @@ describe('sketch → drawing migration', () => {
 
     const [drawing] = await db.query(Filter.type(Drawing.Drawing)).run();
     const canvas = drawing.canvas.target;
-    invariant(canvas, 'canvas ref did not resolve after migration');
+    invariant(Drawing.isCanvas(canvas), 'canvas ref did not resolve after migration');
     expect(Obj.getTypename(canvas)).toBe('org.dxos.type.canvas');
     // `schema` is what matches a drawing to its variant; losing it would render "unsupported".
     expect(canvas.schema).toBe('tldraw.com/2');
@@ -94,7 +94,8 @@ describe('sketch → drawing migration', () => {
 
     const drawings = await db.query(Filter.type(Drawing.Drawing)).run();
     expect(drawings.map((drawing) => drawing.name).sort()).toEqual(['One', 'Two']);
-    expect(drawings.map((drawing) => drawing.canvas.target?.schema).sort()).toEqual([
+    const schemaOf = (canvas: unknown) => (Drawing.isCanvas(canvas) ? canvas.schema : undefined);
+    expect(drawings.map((drawing) => schemaOf(drawing.canvas.target)).sort()).toEqual([
       'excalidraw.com/2',
       'tldraw.com/2',
     ]);

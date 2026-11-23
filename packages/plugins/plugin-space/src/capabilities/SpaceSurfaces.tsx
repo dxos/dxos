@@ -15,9 +15,9 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { useResolveRef, useType } from '@dxos/echo-react';
+import { useType } from '@dxos/echo-react';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { type Space, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import {
@@ -36,21 +36,32 @@ import {
 } from '#containers';
 import { Settings, SpaceCapabilities, SpaceOperation } from '#types';
 
+import { getPresenceKeyFromObject, getPresenceKeyFromSpace } from '../util/index.ts';
 import { tryGetViewForObject } from './try-get-view.ts';
 
 export type SpaceHomeSectionProps = {
   space: Space;
 };
 
+const READ_ONLY_STATS = ['objects', 'types', 'collections'] as const;
+
 /** Home sections are individually dismissible per space, which is durable UI state. */
 export const SpaceHomeRecentSurface = ({ space }: SpaceHomeSectionProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeRecent');
+  if (readOnly) {
+    return <SpaceHomeRecent space={space} />;
+  }
 
   return visible ? <SpaceHomeRecent space={space} onClose={hide} /> : null;
 };
 
 export const SpaceHomeDashboardSurface = ({ space }: SpaceHomeSectionProps) => {
+  const readOnly = ToolkitHooks.useReadOnly();
   const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeDashboard');
+  if (readOnly) {
+    return <SpaceHomeDashboard space={space} stats={READ_ONLY_STATS} activity={false} />;
+  }
 
   return visible ? <SpaceHomeDashboard space={space} onClose={hide} /> : null;
 };
@@ -218,29 +229,31 @@ export const ViewEditorSurface = ({ subject }: ViewEditorSurfaceProps) => {
 
 export type NavtreePresenceSurfaceProps = {
   id: string;
+  subject: Space | Obj.Unknown;
   open?: boolean;
 };
 
-export const NavtreePresenceSurface = ({ id, open }: NavtreePresenceSurfaceProps) => {
+export const NavtreePresenceSurface = ({ id, subject, open }: NavtreePresenceSurfaceProps) => {
   const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
+  const presenceKey = isSpace(subject) ? getPresenceKeyFromSpace(subject.id) : getPresenceKeyFromObject(subject);
 
-  return <SmallPresenceLive id={id} open={open} viewers={ephemeral.viewersByObject[id]} />;
+  return (
+    <SmallPresenceLive
+      id={id}
+      open={open}
+      viewers={presenceKey && ephemeral.viewersByObject[presenceKey]}
+      object={isSpace(subject) ? undefined : subject}
+    />
+  );
 };
 
 export type NavbarPresenceSurfaceProps = {
   subject: Space | Obj.Unknown;
 };
 
-/** For a space the presence target is its root collection; for an object it is the object itself. */
 export const NavbarPresenceSurface = ({ subject }: NavbarPresenceSurfaceProps) => {
-  const space = isSpace(subject) ? subject : getSpace(subject);
-  const isSpaceReady = isSpace(subject) && subject.state.get() === SpaceState.SPACE_READY;
-  const rootCollectionRef =
-    isSpaceReady && space
-      ? Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
-      : undefined;
-  const rootCollection = useResolveRef(rootCollectionRef);
-  const object = isSpace(subject) ? (isSpaceReady ? rootCollection : undefined) : subject;
+  const spaceId = isSpace(subject) ? subject.id : Obj.getDatabase(subject)?.spaceId;
+  const presenceKey = isSpace(subject) ? getPresenceKeyFromSpace(subject.id) : getPresenceKeyFromObject(subject);
 
-  return object ? <SpacePresence object={object} /> : null;
+  return <SpacePresence spaceId={spaceId} presenceKey={presenceKey} />;
 };

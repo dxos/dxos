@@ -44,7 +44,13 @@
       "path": "../assistant"
     },
     {
+      "path": "../assistant-toolkit"
+    },
+    {
       "path": "../compute"
+    },
+    {
+      "path": "../compute-runtime"
     },
     {
       "path": "../link"

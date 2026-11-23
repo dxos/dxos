@@ -16,9 +16,9 @@ import * as Status from '@dxos/react-ui/Status';
 import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
-import { meta } from '#meta';
 import { Booking, BookingOperation, BookingSearch, Segment, TripCapabilities } from '#types';
 
+import { TripNamespace } from '../../namespace.ts';
 import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment.ts';
 
 /** 2-column form layout for the flight query (parallels SegmentCard's FLIGHT_LAYOUT). */
@@ -52,7 +52,7 @@ export type BookingSearchProps = {
 };
 
 const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TripNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const kind = Segment.getKind(segment);
 

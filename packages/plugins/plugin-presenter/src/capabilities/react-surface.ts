@@ -20,8 +20,9 @@ import {
   SlideObjectArticle,
   SlidePreviewArticle,
 } from '#containers';
-import { meta } from '#meta';
 import { Presentation, SlideEditorViewState } from '#types';
+
+import { PresenterNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -31,12 +32,12 @@ export default Capability.makeModule(() =>
         position: Position.first,
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Markdown.Document }> =>
+          (data): data is AppSurface.ArticleData<{ type: typeof PresenterNamespace.key; object: Markdown.Document }> =>
             !!data.subject &&
             typeof data.subject === 'object' &&
             'type' in data.subject &&
             'object' in data.subject &&
-            data.subject.type === meta.profile.key &&
+            data.subject.type === PresenterNamespace.key &&
             Obj.instanceOf(Markdown.Document, data.subject.object),
         ),
         component: DocumentArticle,

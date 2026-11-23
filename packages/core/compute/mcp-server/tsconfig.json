@@ -25,6 +25,9 @@
       "path": "../../echo/echo-client"
     },
     {
+      "path": "../agent-code-mode"
+    },
+    {
       "path": "../compute"
     }
   ]

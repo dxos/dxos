@@ -4,16 +4,93 @@ name: CanvasPlugin
 version: 0.1.0
 ---
 
+```mdl
+plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at multiple depths.
+  id: org.dxos.plugin.canvas
+  dependsOn: [org.dxos.plugin.illustrator]
+  modules:
+    - AnimatorStage: the Canvas and 3D Canvas stages an animation shot plays on
+    - AppGraphBuilder: the lock and unlock actions on a canvas drawing
+    - CanvasSettings: whether the toolbar and palette overlays show
+    - DrawingVariant: the canvas drawing variant and its article, for the illustrator
+    - Exporter: print and save a 2D canvas drawing as SVG
+    - ExtensionNodeTypes: the plugin's own extension tools for the canvas, the space graph first
+    - LegacyMigration: moves a space's legacy scene drawings onto `Canvas`es when the space loads
+    - Library: the library objects the editor's library tool offers
+    - MarkdownExtension: a `diagram` fence in a markdown document, drawn as the canvas would draw it
+    - Migrations: the Scene type migrations
+    - OperationHandler: the canvas operations
+    - PluginAsset: this document, served as the plugin's own spec
+    - ReactSurface: the canvas properties panel of a drawing
+    - Schema: the canvas generator types
+    - SkillDefinition: the canvas generators skill
+    - TldrawConverter: the illustrator converter from a tldraw drawing to a canvas
+    - Translations: the plugin's strings
+    - UndoMappings: undo for canvas edits
+```
+
 An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
-plugin as a drawing variant (`dxos.org/scene/1`). A drawing is a scene graph stored in ECHO as one record
-per scene, node and link; a frame holds a child scene that opens in place and can show its contents live.
+plugin as two drawing variants, Canvas and 3D Canvas (`dxos.org/scene/2`). A drawing is a `Canvas` over the scene
+model's ECHO objects (a model, layouts and scenes); its article and card render the shared scene editor with the
+dimension config its scene asks for, as one set of surfaces (`CanvasArticle`, `CanvasCard`, `CanvasStage`). A drawing
+saved before `Canvas` is moved onto one when its space loads; no surface or operation reads the legacy format, and only
+the migration does.
+
+This plugin is the ECHO host between the illustrator plugin, a runtime dependency that provides the
+`Drawing` type, the variant contract and the converters this plugin registers with, and the scene editor
+below.
+
+## Dependencies
+
+```mdl
+uses org.dxos.ui.react-ui-canvas: The shared scene editor the article renders — its parts, commands, history, clipboard, lock, roles, panels, inspectors and timeline, which this spec does not restate.
+```
+
+```mdl
+uses org.dxos.ui.react-ui-canvas.2d: The 2D variant — the canvas engine's links, portals and modes — which a 2D drawing shows.
+```
+
+```mdl
+uses org.dxos.ui.react-ui-canvas.3d: The 3D variant, which a 3D Canvas drawing shows.
+```
+
+```mdl
+uses org.dxos.scene: The data a drawing stores — models, layouts and scenes as ECHO objects — and the migration target of its legacy content.
+```
 
 ## Extensions
 
-| Term   | URI                        |
-|--------|----------------------------|
-| `test` | `org.dxos.mdl.test@1.0`    |
+| Term       | URI                         |
+|------------|-----------------------------|
+| `plugin`   | `org.dxos.mdl.plugin@1.1`   |
+| `uses`     | `dxos.spec.core/uses`       |
+| `test`     | `org.dxos.mdl.test@1.0`     |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+
+## Features
+
+```mdl
+feat F-1: Collaborator cursors
+
+  req F-1.1: A 2D Canvas drawing's article and section show the other members' pointers on the drawing, each tagged with the member's name in their hue, on the illustrator's shared pointer channel. Pointers are shared in scene coordinates, so each sits over the same place for every peer whatever their pan and zoom.
+  req F-1.2: A pointer shows only to peers in the same drilled-in view, and leaves when its member's pointer leaves the canvas. A slide, a card and a 3D Canvas show none.
+```
+
+```mdl
+feat F-2: Frame
+
+  req F-2.1: The plugin exports `CanvasFrame`: the 2D article as a new drawing opens, over an empty scene, with the toolbars and panels the article draws, for an app to show before its plugins start. It needs no plugin context, so it offers the plugin's own node kinds, and its controls change nothing.
+```
+
+```mdl
+feat F-3: DSL companion
+
+  req F-3.1: A Canvas drawing has a `DSL` companion beside its article that shows the drawing's open scene as text. It shows the grid diagram the drawing says (`diagram kind=grid`) where there is one, and the drawing's boxes where there is not, with the reason in its footer. A drawing with both can switch between them.
+  req F-3.2: The text is printed again whenever the scene changes. An edit holds while the drawing is still the one it was typed over.
+  req F-3.3: The text can be edited. `Rebuild` makes the drawing what the text says: it clears the elements the DSL manages and draws the text, as one edit. Text that does not parse changes nothing and its errors show in the footer. `Discard edits` shows the drawing's text again.
+  req F-3.4: When the host contributes `ReadOnly`, the text can be read and switched between its two readings, and cannot be edited: `Rebuild` and `Discard edits` are withheld.
+```
 
 ## QA
 
@@ -50,7 +127,9 @@ test QA-1: Draw, connect, and nest a scene on a canvas
     - name: Zoom back out and show the frame's contents
       do: Click Up, select the Storage frame, and turn on "Show contents" in the Properties panel.
       expect: the frame draws its nested scene live inside it
+```
 
+```mdl
 test QA-2: Draw a nested architecture diagram of composer-app
   desc: |
     A complex diagram across three scenes — composer-app's top level, with the plugins and the client each
@@ -94,7 +173,9 @@ test QA-2: Draw a nested architecture diagram of composer-app
     - name: Go up and show both nested scenes live
       do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
       expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
+```
 
+```mdl
 test QA-4: Showcase clip
   desc: |
     The 20s showcase clip: Select a shape in the Composer architecture drawing, read its properties, and rename it. Recorded light at 60 fps with no ident, captions or
@@ -105,6 +186,7 @@ test QA-4: Showcase clip
     - an identity exists
     - space: a space is open
     - plugin-canvas enabled
+    - plugin-debug enabled (it contributes the DXOS Architecture template)
   steps:
     - name: Create the space from its template
       do: Open the app menu, choose Create space, pick DXOS Architecture, and open the Composer drawing.
@@ -115,7 +197,9 @@ test QA-4: Showcase clip
     - name: Rename it
       do: Turn off read-only, double-click the box, and type React components.
       expect: the box shows its new label
+```
 
+```mdl
 test QA-5: Copy a tldraw drawing as a canvas
   desc: |
     The illustrator's "Copy as Canvas" action converts a tldraw drawing through the converter plugin-canvas registers:
@@ -147,7 +231,7 @@ test QA-3: DXOS Architecture tour
   status: passing           # 2026-10-16, recorded by autocue/architecture-tour.mjs
   given:
     - an identity exists, on a fresh profile
-    - plugin: Canvas is enabled in the plugin registry (the template is contributed only while it is)
+    - plugin: Canvas and Debug are enabled in the plugin registry (Debug contributes the template)
     - space: a space created from the "DXOS Architecture" template, open, with its Architecture collection expanded
   steps:
     - name: Read the Composer guide
@@ -185,4 +269,376 @@ decision D-2: plugin-canvas registers the hybrid conversion as an illustrator `C
   why: The illustrator's Convert operation already resolves variants and files the result, so a per-pair converter reuses it rather than duplicating it.
   rejected:
     - A separate plugin-canvas import operation, which would offer a second, conflicting menu action.
+```
+
+```mdl
+decision D-3: plugin-canvas builds on `org.dxos.plugin.illustrator` and `org.dxos.ui.react-ui-canvas`, and its spec references both rather than restating them.
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-4: The spec declares its dependencies rather than listing them in prose: `org.dxos.plugin.illustrator` in the `plugin` block's `dependsOn`, exactly as dx.config.ts declares it, and `org.dxos.ui.react-ui-canvas` under `## Dependencies`. Fills in [D-3].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-5: The `plugin CanvasPlugin` block lists the twelve modules plugin.tsx adds, one line each, and the `uses` reason keeps the prose list's wording. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  why: The plugin dialect requires `modules:` on every `plugin` block; reusing the prose keeps what the spec says about the engine unchanged.
+```
+
+```mdl
+decision D-6: The plugin's detail page links to this spec: dx.config.ts names `PLUGIN.mdl` as the plugin's spec.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-7: The plugin serves this document with a `PluginAsset` module, listed in the `plugin` block, and the package exports `./assets/PLUGIN.mdl`, as other plugins with a spec do. Fills in [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The registry's open-spec action appears only when a plugin's asset module supplies the spec named by its profile.
+```
+
+```mdl
+decision D-8: Migrating a scene drawing turns the timelines its Views stored into one animator `Animation`, a shot per View with keyed tracks, staging that View's migrated scene: the same duration and keys, node tracks keying the element of the same id at its element path (`style.*` becomes `overrides.*`, `text` becomes `label`), camera tracks unchanged. The plugin registers `Animation` and `StyleCatalog` so the migration and its models can store them. Fills in COMMON-CORE decision 16.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: Canvas animation moved to the animator and Views stopped storing timelines, so a drawing saved before that keeps its animation only if the migration carries it over.
+```
+
+```mdl
+decision D-9: The plugin contributes a Canvas and a 3D Canvas variant over the scene model's ECHO objects; a drawing's article and card render the shared scene editor with the 2D or 3D config its scene asks for, and a drawing saved before `Canvas` keeps a hidden legacy variant that renders the 2D engine on its own until its article migrates it. Fills in [D-3].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The canvas engine is now the 2D viewport of a shared editor rather than the whole of a drawing's model, so the plugin builds on the editor, its two variants and the scene model.
+```
+
+```mdl
+decision D-10: A Canvas's mode (lattice, constrained, dynamic) is each 2D layout's own field, which the shared editor applies; the canvas settings' `lattice` and `projection` are read only to move the mode onto the layouts, when a legacy drawing migrates or its article opens. `CanvasOperation.Apply` on a Canvas takes `LayoutIntent`s in its layout's dimension, recorded over every layout the canvas lists; the tldraw importer writes `Element2D`s through create intents. Fills in [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: A mode the settings named for every View cannot travel with a layout or differ between layouts, and agents, the importer and the editor then share one write path and one undo.
+```
+
+```mdl
+decision D-11: Approve [D-10].
+  date: 2026-10-30
+  by: user:richburdon
+```
+
+```mdl
+decision D-12: CanvasOperation.Apply on a Canvas snaps an agent's edits to its layout's mode, and an undo patch recorded before layouts held the mode is dropped rather than migrated.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-13: `CanvasOperation.Apply` runs the shared editor's 2D mode rule (`constrain2D`) with snapping on over the whole batch of intents, and fails with `InvalidIntentError`, writing nothing, when the mode refuses it; the rule lives in react-ui-scene's `canvas` entry, which the plugin's operations already load. Fills in [D-12].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: One rule keeps an agent's edit and a person's drag on the same cells, and checking the batch whole matches how the editor refuses a drag; the `canvas` entry keeps the editor and the 3D renderer out of the operation handlers.
+  rejected:
+    - Importing `constrain2D` from react-ui-scene's root, which would load the editor's React components and the 3D renderer into every operation handler.
+    - Dropping only the refused intents, which would apply part of a batch the agent meant as one edit.
+```
+
+```mdl
+decision D-14: A legacy scene canvas (a `Drawing.Canvas` in the `dxos.org/scene/2` format) is read only through the scene migration: its article migrates it onto a `Canvas` on open (`migrateSceneDrawing`), while its section, slide, card and animator stage draw `legacyDocument` read-only through the 2D scene view, and a canvas a newer plugin saved stays read-only under its banner. `CanvasOperation.Apply` and `AddGenerator` migrate a legacy drawing before writing, `InspectGenerator` reads it as the migration does without writing, and `CanvasOperation.Patch` refuses a legacy canvas. Fills in [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The canvas engine's View model, intents and store are being retired (COMMON-CORE E.6), so one migration path must be the only reader of legacy records.
+  rejected:
+    - Keeping a writable legacy engine view, which would keep the View model and its store alive for one dialect.
+    - Migrating on any surface, which would write a document a slide or card only looks at.
+```
+
+```mdl
+decision D-15: `CanvasOperation.Apply` takes `constrain2D` from react-ui-canvas's root, which loads neither the editor nor the 3D renderer, and a 3D Canvas drawing shows the 3D variant `org.dxos.ui.react-ui-canvas.3d`. Fills in [D-13] and [org.dxos.ui.react-ui-canvas#D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: react-ui-scene, whose `canvas` entry held the rule, is removed; react-ui-canvas's root keeps the editor and Babylon out of the operation handlers, as that entry did, which its entries test checks.
+  rejected:
+    - Moving `constrain2D` into react-ui-canvas's `/headless` entry now, which needs the modes freed of the utilities barrel first.
+```
+
+```mdl
+decision D-16: Migrate old drawings when a space loads; delete every legacy surface and the hidden legacy variant; rename `SceneArticle` and `SceneStage` to `CanvasArticle` and `CanvasStage`, so the plugin has one set of surfaces that picks 2D or 3D by config.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-14
+```
+
+```mdl
+decision D-17: The migration is a `LegacyMigration` module that runs `migrateLegacyDrawings` once per space per session, after the space is ready: every current-revision legacy scene drawing moves onto a `Canvas` (`migrateSceneDrawing`), copies two peers made at once fold into one (`reconcileMigrations`), animation shots staged on a legacy canvas restage on its migrated scene, and a mode a canvas's settings still name moves onto its layouts. The pass is idempotent and logs what it changed; a drawing that fails keeps its legacy canvas until the next pass, and a canvas a newer plugin saved is left unmigrated, with no variant to open it. Operations refuse any canvas that is not a `Canvas`. Fills in [D-16].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: Only plugin-canvas can tell a scene drawing from a tldraw or excalidraw one sharing `Drawing.Canvas`, and a migration creates a graph of objects whose duplicates across peers must be reconciled, which ordinary writes and the `CreatedFrom` relation already do.
+  rejected:
+    - An ECHO object migration (`Migration.define`), which runs over every object of one type and cannot tell scene canvases from tldraw ones, nor create the model, layouts and scenes idempotently.
+    - An ECHO transaction migration (`Migration.defineTransaction`), which runs on every pass, starts a new space epoch and rewrites documents as forks, to move a handful of drawings.
+    - Migrating when the article opens, which leaves the section, slide, card and stage reading the legacy format.
+```
+
+```mdl
+decision D-18: The Canvas and 3D Canvas variants render `CanvasArticle` and `CanvasCard`, which choose the 2D or 3D editor config by the open scene's dimension, and contribute `canvasStage2D` and `canvasStage3D` over `CanvasStage`; the 2D stage keeps the row and ring layouts. The rename carries through folders, hooks (`useCanvasEditor`, `CanvasEditCommands`) and story titles. Fills in [D-16].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-9
+  why: With the legacy set gone, the scene surfaces are the only canvas surfaces, so they take the plugin's names and the stage gains the layouts the legacy stage offered.
+```
+
+```mdl
+decision D-19: `CanvasOperation.Apply` takes `constrain2D` from react-ui-canvas's `/headless` entry, and every canvas operation imports react-ui-canvas only through it; the entries test checks that `/headless` reaches no React module. A 3D Canvas drawing still shows the 3D variant `org.dxos.ui.react-ui-canvas.3d`. Fills in [D-13].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-15
+  why: The modes no longer reach React through the utilities barrel, so the headless entry can hold the rule, and the operation handlers then load nothing of the UI.
+```
+
+```mdl
+decision D-20: The plugin contributes library objects through `CanvasCapabilities.LibraryItem` (an editor `LibraryItem` and its dimension), and `CanvasArticle` passes each dimension's items to its config. The plugin contributes the three `MeshPresets` as "Race car", "Fire engine" and "Taxi" for 3D, activated with the canvas variant on the illustrator's start; each `make` imports the presets when first picked. Fills in [org.dxos.scene#D-57].
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: Another plugin can add library objects as it adds node types; the OBJ sources (~400KB) stay out of boot.
+
+decision D-21: A canvas drawing saves and prints as SVG with every shape in the open 2D view, not only those the diagram language manages, and its links along the routes the canvas engine draws them (lattice gutters and lanes included). The diagram renderer draws the shapes, so polygons, clouds, polylines and images draw as boxes, and hand-drawn nodes have no fill. Only a 2D canvas offers the actions; other drawing formats and 3D canvases do not.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: A printed or saved drawing must match what the user sees, so links keep the engine's routes; the diagram renderer is the only headless SVG renderer, so shapes it has no form for are approximated.
+```
+
+```mdl
+decision D-22: A `diagram` fence in a markdown document draws as a canvas diagram, in the editor's light or dark mode.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-23: The space graph is an extension tool that plugin-canvas itself provides, and extension tools are offered in a group of their own in the tools panel.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-24: The `ExtensionNodeTypes` module contributes the plugin's extension kinds through `CanvasCapabilities.NodeType`, as another plugin contributes its own; the space graph (`components/Graph`) is the first. The host offers a contributed kind in the `Extensions` group, beside the canvas's own card (react-ui-canvas's `EXTENSIONS_GROUP`), unless its spec names a group, and a kind that replaces a built-in stays where the built-in was. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: One contribution path means the canvas treats the plugin's own tools and another plugin's alike, and the host names the group so a contributor does not have to know how the rail is laid out.
+
+decision D-25: A contributed kind keeps its own fields under its element's `data` (`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), not at the element's top. `kindNodeDef` refuses a kind that declares a field of its own at the top unless the kind extends a core prototype, whose fields its frame reads there (a card's `icon`, `body` and `footer`). The space graph's fields are its `data`, so its object radius is `size`, the name the element's frame also has.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: Only core shapes keep properties at an element's top; an extension's own go in one common sub-object so they cannot collide with the base's or another extension's (COMMON-CORE.md decision 21).
+  rejected:
+    - Fields at the element's top (COMMON-CORE.md decision 13 as first built): the space graph had to call its radius `objectSize` because `size` was taken.
+```
+
+```mdl
+decision D-26: The 2D article takes the drawing's camera: one that changes while it is open moves this viewer's camera, which the engine applies as it changes, not only on open, and every camera the viewer settles on is reported back to the drawing. Fills in org.dxos.plugin.illustrator#D-8.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+  why: A follower's canvas has to move with the leader's.
+```
+
+```mdl
+decision D-27: The 2D `CanvasArticle` renders `CanvasCursors`: react-ui-attention's `RemoteCursorLayer` as the first viewport child, fed by `usePointerCursors` on the drawing's canvas object, with a projection that maps the layer's pixels to scene coordinates through the canvas camera atom (`sceneToScreen`, `screenToScene`). A pointer carries the drilled-in view path, and peers filter by it. Extends [org.dxos.plugin.illustrator#D-5] to the Canvas variant.
+  date: 2026-11-14
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.1, F-1.2, CanvasPlugin]
+  why: The user asked for collaborator cursors on canvas diagrams. The layer covers the canvas root, the same box the camera transform is drawn in, so the camera atom alone places a pointer, and a pan or zoom re-places every pointer through a new projection.
+  rejected:
+    - Reading the transform from the DOM, as the SVG article does: the camera is already an atom in the canvas services, and the DOM element carries no stable hook.
+```
+
+```mdl
+decision D-28: A drawing's presence location and `Locator` anchor are the 2D view's centre in scene coordinates and its zoom. The article reports it through the attention view state and shows a revealed one through `ScrollToAnchor`, which the article applies at its own size.
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.3, F-1.4]
+  why: The diagram app's user asked for follow from the presence list, here and across Composer; the space plugin's follow core reveals a leader's anchor through the attended type's `Locator`, and a centre and zoom mean the same in views of any size.
+  rejected:
+    - The camera's own offset: it places the scene against the view's top left, so views of different sizes would show different parts.
+```
+
+```mdl
+decision D-29: `CanvasFrame` renders the article's editor parts (`SceneEditorParts`, shared with `CanvasArticle`) over an empty in-memory scene, with the node registry built from the plugin's own `NodeType` contributions and no-op handlers wherever a handler decides whether a control shows. Fills in [F-2.1].
+  date: 2026-11-15
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.1, CanvasPlugin]
+  why: The diagram app's user asked for its boot shell to draw the editor's real toolbars rather than a copy of the last frame. Shared parts and node kinds keep the frame from drifting from the article, and the handlers make the lock, the dock header, the camera bar and the display toggles show as they do in the article.
+  rejected:
+    - A frame in the app over the editor's built-in config: it lacked the image and space-graph tools and the handler-gated controls.
+```
+
+```mdl
+decision D-30: A drawing reports no presence location and contributes no `Locator`; `ScrollToAnchor` is removed. A follower takes the leader's camera from the drawing's view state, which the 2D article already reads and writes ([D-26]).
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-28
+  affects: [F-1, CanvasPlugin]
+  why: The space plugin's follow now carries each followed view-state aspect, the drawing's camera among them. With the `Locator` as well, two paths set the follower's camera from different values each time the leader moved, and the view did not settle.
+  rejected:
+    - Keeping the `Locator` for Jump alone: Jump then places the camera by the centre while follow places it by the offset, so the two disagree on a view of another size.
+```
+
+```mdl
+decision D-31: A follower's camera matches the leader's from the moment the follow starts, through every zoom and pan, including when the leader has not moved the view since the drawing opened.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+```
+
+```mdl
+decision D-32: The camera the 2D article writes to the drawing's view state is whatever this viewer shows: the view the drawing opened with, a fitted one included, and every pan and zoom as it moves, at most every 100 ms. The camera saved for the next visit stays this viewer's own and is written only when the viewer moves the view. Fills in [D-31]; supersedes the settled-camera report of [D-26].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasArticle]
+  why: A leader whose view was fitted on open reported nothing, so a follower started from its own view; and a camera reported only once it settled reached the follower after the zoom had ended.
+  rejected:
+    - Sharing the saved camera: a fitted view would then be saved and reopen at a stale size.
+```
+
+```mdl
+decision D-33: The view-state camera is the scene point at the view's centre and the zoom, so it shows the same part of the drawing in views of any size. The follower glides to it over 120 ms and does not report the camera it was moved to. Fills in [D-31].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasArticle]
+  why: The engine's camera places the scene against the view's top left, so a follower with a smaller window lined up the leader's corner and showed another part; a follower that echoed its glide overwrote the leader's newer camera.
+  rejected:
+    - Compensating for the size difference in the follower: the leader's view would still be missing whenever it opened fitted.
+```
+
+```mdl
+decision D-34: Approve [D-32] and [D-33].
+  date: 2026-11-16
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-35: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [CanvasArticle]
+```
+
+```mdl
+decision D-36: A `readOnly` option locks every canvas and withholds the unlock action. Fills in [D-35].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasPlugin, CanvasArticle]
+  why: The canvas already has a locked mode, so the option only has to pin it.
+```
+
+```mdl
+decision D-37: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [CanvasPlugin, CanvasArticle]
+  supersedes: D-35
+```
+
+```mdl
+decision D-38: When the host contributes `ReadOnly`, every canvas is locked and the unlock action is withheld. The article reads it with `useReadOnly`, and the graph builder checks it when it builds a drawing's actions. Fills in [D-37].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [CanvasPlugin, CanvasArticle]
+  supersedes: D-36
+  why: The capability lands at startup with no order against module activation, so it is read when the article renders and when the graph expands, never while a module activates.
+```
+
+```mdl
+decision D-39: The DSL companion ([F-3]) reads the drawing's text from its records each time and stores none. After a Rebuild the author's text stays in the editor until the drawing next changes.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3]
+  why: A stored copy of the text would disagree with the records as soon as someone moved a box; keeping the typed text after a Rebuild keeps comments and spacing, which the records do not hold.
+  rejected:
+    - Rebuilding on every keystroke: half-typed text parses to part of a drawing, and a rebuild is a full sync, so it would delete what the broken parse dropped.
+```
+
+```mdl
+decision D-40: The DSL companion follows [D-38]: under the host's `ReadOnly` its text is read-only and it offers no Rebuild.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3]
+  why: Rebuild rewrites the drawing's records, so a companion that kept it would be a way round the lock on the article beside it.
+```
+
+```mdl
+decision D-41: The space graph's element kind is named `graph`; it was `space-graph`. A node stored under the old name reads as `graph` ([D-105] of `@dxos/scene`).
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: It is the one graph a canvas draws, and a drawing's text names it on every node (`node s0 kind=graph`).
+```
+
+```mdl
+decision D-42: The studio deck's diagrams, stories and element kinds leave this plugin; the Grids story moves from `experimental` to `src/dsl`. The deck is a presentation, and is added back as a sample of its own in a separate change.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: The deck was here only while the diagram language was built against it; the canvas keeps the language's own stories and its one contributed kind.
+```
+
+```mdl
+decision D-43: The DXOS Architecture space template leaves this plugin for plugin-debug, where the DXOS Deck is merged into it and replaces the ECHO presentation it had. This plugin keeps the architecture partial that the template applies.
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-44: The architecture partial seeds no presentation, and its Architecture collection lists Composer, DXOS, EDGE, ECHO design, Overview, CF Workers and Plugin metrics. The plugin contributes no space template. Fills in [D-43].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The deck that replaces the ECHO presentation is drawn with plugin-debug's element kinds, so only that plugin can seed it.
 ```

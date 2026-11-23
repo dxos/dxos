@@ -4,7 +4,6 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
@@ -16,7 +15,6 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-lib';
-import { PublicKey } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -25,7 +23,6 @@ import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CardAnnotation } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
-import { ComplexMap } from '@dxos/util';
 
 import { SpaceOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
@@ -147,17 +144,6 @@ const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) =>
   return <ObjectCardStack objectId={Type.getURI(type)} db={space.db} type={type} />;
 };
 
-/** Ephemeral state the toolbar and the merge preview read; normally contributed by `state.ts`. */
-const ephemeralState = () =>
-  Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-    sdkMigrationRunning: {},
-    navigableCollections: false,
-    viewersByObject: {},
-    viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
-    mergePreview: undefined,
-    lastMergeAt: undefined,
-  }).pipe(Atom.keepAlive);
-
 const meta = {
   title: 'plugins/plugin-space/containers/TypeArticle',
   render: DefaultStory,
@@ -169,7 +155,7 @@ const meta = {
         // The Duplicates tab is driven by real operations, so the story registers the handler set
         // and the state atom the space plugin would normally contribute.
         Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet.handlers),
-        Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
+        Capability.contribute(SpaceCapabilities.EphemeralState, SpaceCapabilities.makeEphemeralState('local-session')),
         // plugin-inbox contributes these in the app (it owns the types this materialises); the story
         // runs no plugins that would.
         Capability.contributeAll(SpaceCapabilities.IdentitySpec, [personIdentitySpec, organizationIdentitySpec]),

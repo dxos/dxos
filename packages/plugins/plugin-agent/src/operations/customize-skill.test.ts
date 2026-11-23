@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -15,6 +16,7 @@ import * as Template from '@dxos/compute/Template';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { Text } from '@dxos/schema';
 import { Channel } from '@dxos/types';
 
@@ -145,6 +147,8 @@ describe('CustomizeSkill', () => {
           Skill.registryURI(RelaySkill.key),
           Skill.registryURI(GoalsSkill.key),
           Skill.registryURI(BrainSkill.key),
+          Skill.registryURI(SkillManagerSkill.key),
+          Skill.registryURI(DatabaseSkill.key),
         ]);
         expect(yield* Database.load(Ref.make(copy)).pipe(Effect.option)).toMatchObject({ _tag: 'None' });
       },

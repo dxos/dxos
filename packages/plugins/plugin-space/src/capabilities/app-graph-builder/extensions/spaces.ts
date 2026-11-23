@@ -6,21 +6,26 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpacesService } from '@dxos/protocols/rpc';
@@ -28,9 +33,9 @@ import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
-import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
+import { PublicationLink, SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
+import { SpaceNamespace } from '../../../namespace.ts';
 import { getSpaceDisplayName } from '../../../util/index.ts';
 import {
   CAN_DROP_SPACE,
@@ -50,7 +55,7 @@ import {
 // The label tuple must be a module-level singleton: connectors re-evaluate whenever the matched
 // node emits, and a tuple rebuilt inline each time creates a new array reference, causing the graph
 // to re-emit the node and remount the Home article on every evaluation.
-const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }] as const;
+const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: SpaceNamespace.key }] as const;
 
 const SPACE_OPEN_TIMEOUT = 60_000;
 
@@ -70,7 +75,9 @@ const makeStallDeadlineAtom = (clientAtom: Atom.Atom<readonly Client[]>) =>
   });
 
 /** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
-export const createSpaceExtensions = Effect.fnUntraced(function* () {
+export const createSpaceExtensions = Effect.fnUntraced(function* ({
+  publication,
+}: Pick<SpaceSchema.SpacePluginOptions, 'publication'> = {}) {
   const capabilities = yield* Capability.Service;
   // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
   // `Capability.get`, establishing a dependency that heals once the capability lands.
@@ -79,6 +86,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+  const readOnly = yield* ReadOnly.atom;
   const openDeadlineFamily = Atom.family((_spaceId: string) => makeStallDeadlineAtom(clientAtom));
   const orderSettledAtom = Atom.make(false).pipe(Atom.keepAlive);
 
@@ -111,14 +119,14 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     AppGraphBuilder.createExtension({
       id: 'primaryActions',
       position: Position.first,
-      match: GraphNodeMatcher.whenRoot,
+      match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
       actions: () =>
         Effect.succeed([
           AppGraphNode.makeAction({
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
-              label: ['create-space.label', { ns: meta.profile.key }],
+              label: ['create-space.label', { ns: SpaceNamespace.key }],
               icon: 'ph--plus--regular',
               testId: 'spacePlugin.createSpace',
               disposition: 'menu',
@@ -128,7 +136,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
-              label: ['join-space.label', { ns: meta.profile.key }],
+              label: ['join-space.label', { ns: SpaceNamespace.key }],
               icon: 'ph--sign-in--regular',
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
@@ -138,7 +146,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenImportSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenImportSpace),
             properties: {
-              label: ['import-space.label', { ns: meta.profile.key }],
+              label: ['import-space.label', { ns: SpaceNamespace.key }],
               icon: 'ph--upload--regular',
               testId: 'spacePlugin.importSpace',
             },
@@ -156,7 +164,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['export-space-binary.label', { ns: meta.profile.key }],
+              label: ['export-space-binary.label', { ns: SpaceNamespace.key }],
               icon: 'ph--download--regular',
               testId: 'spacePlugin.exportSpaceBinary',
             },
@@ -174,11 +182,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['export-space-json.label', { ns: meta.profile.key }],
+              label: ['export-space-json.label', { ns: SpaceNamespace.key }],
               icon: 'ph--download--regular',
               testId: 'spacePlugin.exportSpaceJson',
             },
           }),
+          ...(publication ? createPublicationActions(capabilities, publication) : []),
           AppGraphNode.makeAction({
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
@@ -189,7 +198,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['share-space.label', { ns: meta.profile.key }],
+              label: ['share-space.label', { ns: SpaceNamespace.key }],
               icon: 'ph--users--regular',
               testId: 'spacePlugin.shareSpace',
               keyBinding: {
@@ -208,7 +217,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['open-current-space-settings.label', { ns: meta.profile.key }],
+              label: ['open-current-space-settings.label', { ns: SpaceNamespace.key }],
               icon: 'ph--faders--regular',
               keyBinding: {
                 macos: 'meta+shift+,',
@@ -336,7 +345,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           AppNode.makeGroup({
             id: GraphPath.GroupSegments.communications,
             type: GraphPath.GroupTypes.communications,
-            label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
+            label: ['nav-tree-group-comm.label', { ns: SpaceNamespace.key }],
             icon: 'ph--chats--regular',
             space,
             position: 100,
@@ -346,7 +355,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
     AppGraphBuilder.createExtension({
       id: 'actions',
-      match: AppNodeMatcher.whenSpace,
+      match: ReadOnly.unless<Space>(readOnly, AppNodeMatcher.whenSpace),
       actions: (space, get) => {
         const [client] = get(clientAtom);
         const [ephemeralAtom] = get(ephemeralCapAtom);
@@ -376,6 +385,79 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 //
 // Helpers
 //
+
+const createPublicationActions = (
+  capabilities: CapabilityManager.CapabilityManager,
+  publication: SpaceSchema.PublicationOptions,
+) => {
+  // Only the open space: publishing makes a space public, so it never falls back to the default one.
+  const activeSpace = Effect.gen(function* () {
+    const client = yield* Capability.get(ClientCapabilities.Client);
+    return AppSpace.getActiveSpace(client, capabilities);
+  });
+  const toast = (id: string, title: string, icon: string) =>
+    Operation.invoke(LayoutOperation.AddToast, {
+      id: `${SpaceNamespace.key}/${id}`,
+      title: [title, { ns: SpaceNamespace.key }],
+      icon,
+    }).pipe(Effect.ignore);
+
+  return [
+    AppGraphNode.makeAction({
+      id: SpaceOperation.PublishSpace.meta.key,
+      data: Effect.fnUntraced(function* () {
+        const space = yield* activeSpace;
+        if (!space) {
+          return;
+        }
+        yield* Operation.invoke(SpaceOperation.PublishSpace, { space }).pipe(
+          Effect.andThen(() => toast('published', 'publish-space-toast.title', 'ph--globe--regular')),
+          Effect.catch((error) =>
+            Effect.gen(function* () {
+              log.warn('publish failed', { error });
+              yield* toast('publish-failed', 'publish-failed-toast.title', 'ph--warning--regular');
+            }),
+          ),
+        );
+      }),
+      properties: {
+        label: ['publish-space.label', { ns: SpaceNamespace.key }],
+        icon: 'ph--globe--regular',
+        testId: 'spacePlugin.publishSpace',
+      },
+    }),
+    AppGraphNode.makeAction({
+      id: SpaceOperation.UnpublishSpace.meta.key,
+      data: Effect.fnUntraced(function* () {
+        const space = yield* activeSpace;
+        if (space && AppAnnotation.getPublication(space.properties, space.id)) {
+          yield* Operation.invoke(SpaceOperation.UnpublishSpace, { space });
+        }
+      }),
+      properties: {
+        label: ['unpublish-space.label', { ns: SpaceNamespace.key }],
+        icon: 'ph--globe-x--regular',
+        testId: 'spacePlugin.unpublishSpace',
+      },
+    }),
+    AppGraphNode.makeAction({
+      id: `${SpaceOperation.PublishSpace.meta.key}.copyLink`,
+      data: Effect.fnUntraced(function* () {
+        const space = yield* activeSpace;
+        const published = space && AppAnnotation.getPublication(space.properties, space.id);
+        if (published) {
+          const url = PublicationLink.viewerUrl(publication.viewerOrigin, published.publicId).toString();
+          yield* Effect.promise(() => navigator.clipboard.writeText(url));
+        }
+      }),
+      properties: {
+        label: ['copy-public-link.label', { ns: SpaceNamespace.key }],
+        icon: 'ph--link--regular',
+        testId: 'spacePlugin.copyPublicLink',
+      },
+    }),
+  ];
+};
 
 export const isPendingSpace = (state: SpaceState | undefined, lazySpaceOpen = false): boolean =>
   state === SpaceState.SPACE_INITIALIZING ||

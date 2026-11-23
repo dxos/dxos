@@ -8,6 +8,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -15,8 +16,9 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { RoutineForm } from '#components';
-import { meta } from '#meta';
 import { RoutineOperation } from '#types';
+
+import { RoutineNamespace } from '../../namespace.ts';
 
 export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>;
 
@@ -30,6 +32,7 @@ export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>
  */
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
+  const readonly = ToolkitHooks.useReadOnly();
   const registry = useContext(RegistryContext);
   // Subscribe so the run affordance tracks the routine's action (`spec`).
   const [routine] = useObject(subject);
@@ -56,13 +59,13 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
       { routine: Ref.make(subject) },
       {
         spaceId: db.spaceId,
-        notify: { error: ['run-error.message', { ns: meta.profile.key }] },
+        notify: { error: ['run-error.message', { ns: RoutineNamespace.key }] },
         ...(triggerRef ? { tracing: { trigger: triggerRef } } : {}),
       },
     ).finally(() => registry.set(runningAtom, false));
   }, [invokePromise, db, subject, routine, registry, runningAtom]);
 
-  const menuActions = useArticleMenuActions({ canRun, runningAtom, handleRun });
+  const menuActions = useArticleMenuActions({ readonly, canRun, runningAtom, handleRun });
 
   if (!db) {
     return null;
@@ -74,7 +77,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
         <ActionToolbar {...menuActions} attendableId={attendableId} classNames='dx-document' />
       </Panel.Header>
       <Panel.Body asChild>
-        <RoutineForm db={db} routine={subject} />
+        <RoutineForm db={db} routine={subject} readonly={readonly} />
       </Panel.Body>
     </Panel.Root>
   );
@@ -85,28 +88,31 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 //
 
 type ArticleMenuActionsOptions = {
+  readonly: boolean;
   canRun: boolean;
   runningAtom: Atom.Writable<boolean>;
   handleRun: () => void;
 };
 
-const useArticleMenuActions = ({ canRun, runningAtom, handleRun }: ArticleMenuActionsOptions) =>
+const useArticleMenuActions = ({ readonly, canRun, runningAtom, handleRun }: ArticleMenuActionsOptions) =>
   useMenuBuilder(
     (get) =>
-      MenuBuilder.make()
-        .action(
-          'run',
-          {
-            label: ['run.label', { ns: meta.profile.key }],
-            icon: 'ph--play--regular',
-            disabled: get(runningAtom) || !canRun,
-            disposition: 'toolbar',
-            testId: 'routine.toolbar.run',
-          },
-          () => handleRun(),
-        )
-        .build(),
-    [canRun, handleRun, runningAtom],
+      readonly
+        ? MenuBuilder.make().build()
+        : MenuBuilder.make()
+            .action(
+              'run',
+              {
+                label: ['run.label', { ns: RoutineNamespace.key }],
+                icon: 'ph--play--regular',
+                disabled: get(runningAtom) || !canRun,
+                disposition: 'toolbar',
+                testId: 'routine.toolbar.run',
+              },
+              () => handleRun(),
+            )
+            .build(),
+    [readonly, canRun, handleRun, runningAtom],
   );
 
 RoutineArticle.displayName = 'RoutineArticle';

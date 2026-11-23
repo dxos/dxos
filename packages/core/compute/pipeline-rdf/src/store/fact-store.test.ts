@@ -6,26 +6,27 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { Fact, Ontology, Vocab } from '@dxos/echo-memory';
 import { SqlSparqlEngine } from '@dxos/sparql-sqlite';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
-import { type Fact, Ontology, Vocab } from '../types/index.ts';
 import * as FactStoreLive from './fact-store-live.ts';
 import { FactStore } from './fact-store.ts';
 
-const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
-  assertion: {
-    subject: { kind: 'entity', entity: 'alice' },
-    predicate: 'travelsTo',
-    object: { kind: 'entity', entity: 'paris' },
-  },
-  factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
-  attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
-  recordedAt: '2026-06-06T12:00:00.000Z',
-  extractor: { id: 'default', model: 'm', version: '1' },
-  sourceHash: 'h1',
-  ...over,
-});
+const mk = (over: Partial<Fact.Encoded> & Pick<Fact.Encoded, 'id'>): Fact.Fact =>
+  Fact.make({
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice' },
+      predicate: 'travelsTo',
+      object: { kind: 'entity', entity: 'paris' },
+    },
+    factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
+    attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
+    recordedAt: '2026-06-06T12:00:00.000Z',
+    extractor: { id: 'default', model: 'm', version: '1' },
+    sourceHash: 'h1',
+    ...over,
+  });
 
 const TestLayer = FactStoreLive.layerMemory;
 
@@ -130,7 +131,7 @@ describe('FactStore', () => {
         mk({ id: 'f3' }),
       ]);
       const facts = yield* store.query({ subjectEntity: 'alice' });
-      const byId = new Map(facts.map((fact) => [fact.id, fact]));
+      const byId = new Map<string, Fact.Fact>(facts.map((fact) => [fact.id, fact]));
       expect(byId.get('f1')?.illocution).toEqual({ force: 'directive', mood: 'interrogative', addressee: 'bob' });
       expect(byId.get('f2')?.illocution).toEqual({ force: 'commissive' });
       expect(byId.get('f3')?.illocution).toBeUndefined();
@@ -238,13 +239,13 @@ describe('FactStore', () => {
       'keeps a minted predicate in the ontology graph, recording its first use once',
       Effect.fnUntraced(function* () {
         const store = yield* FactStore;
-        const minted = (id: string, quote: string): Fact =>
+        const minted = (id: string, quote: string): Fact.Fact =>
           mk({
             id,
             assertion: {
               subject: { kind: 'entity', entity: 'alice' },
               predicate: 'travels to',
-              predicateIri: `${Vocab.brainNamespace('agent-1')}travelTo`,
+              predicateIri: `${Vocab.brainNamespace('agent-1')}travelsTo`,
               predicateDescription: 'A place the subject is going to.',
               object: { kind: 'entity', entity: 'paris' },
               quote,
@@ -257,8 +258,8 @@ describe('FactStore', () => {
         );
         expect(predicates).toEqual([
           {
-            iri: `${Vocab.brainNamespace('agent-1')}travelTo`,
-            name: 'travel_to',
+            iri: `${Vocab.brainNamespace('agent-1')}travelsTo`,
+            name: 'travels_to',
             label: 'travels to',
             description: 'A place the subject is going to.',
             definedBy: Vocab.brainNamespace('agent-1'),

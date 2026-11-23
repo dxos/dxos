@@ -12,11 +12,16 @@
     "vite.config.ts"
   ],
   "include": [
+    "canary/**/*.ts",
     "dx.config.ts",
+    "scripts/mbox.ts",
     "src/**/*.ts",
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../../tools/fixtures"
+    },
     {
       "path": "../../common/async"
     },

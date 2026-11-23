@@ -46,10 +46,10 @@ import { objectLinks, pendingText } from '@dxos/ui-editor';
 import { type Merge } from '@dxos/util';
 
 import { insertMention, mentionText, useAttachFile, useChatKeymapExtensions, useObjectMentions } from '#hooks';
-import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
 import { type ChatModel, getChatModelState } from '../../chat-model/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 import { type ChatEvent } from '../Chat/index.ts';
 import { attachmentAnchors, dropAnchor, insertAtAnchor, placeAnchor } from './attachment-anchors.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
@@ -129,7 +129,7 @@ export const ChatPrompt = ({
   started,
   onPresetChange,
 }: ChatPromptProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   const chatModelState = getChatModelState(chatModel);
   const error = useAtomValue(chatModelState.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(chatModelState.streaming);
@@ -141,6 +141,8 @@ export const ChatPrompt = ({
     return event.on((ev) => {
       if (ev.type === 'update-prompt' && !editorRef.current?.getText()?.length) {
         editorRef.current?.setText(ev.text);
+        editorRef.current?.focus();
+      } else if (ev.type === 'focus-prompt') {
         editorRef.current?.focus();
       }
     });
@@ -385,7 +387,7 @@ export const ChatPrompt = ({
           onDismiss={() => setFailed([])}
         />
 
-        <Layout.Flex gap='sm' classNames='p-2'>
+        <Layout.Flex gap='sm' classNames='py-2 ps-1.5 pe-2'>
           <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
           <ChatEditor
             ref={editorRef}
@@ -403,7 +405,7 @@ export const ChatPrompt = ({
         {db && settings && (
           <>
             <ChatActions
-              classNames='p-1.5'
+              classNames='px-1 py-1.5'
               attendableId={attendableId}
               customActions={customActions}
               processing={active}

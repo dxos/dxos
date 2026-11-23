@@ -30,8 +30,48 @@ statement {
   NodeDecl |
   EdgeDecl |
   NoteDecl |
-  FragmentDecl
+  FragmentDecl |
+  SceneDecl |
+  LayoutDecl |
+  CompositeDecl |
+  ModelDecl
 }
+
+//
+// Scene-model statements (`@dxos/scene`): a scene views a layout through a camera; a layout positions elements; a
+// model holds the reusable objects elements place. The words are contextual, so documents that already use `scene`,
+// `camera`, `element`, `layout` or `model` as ids keep parsing.
+//
+
+// scene <id> dim=2d|3d layout=<id> [theme=…] [name="…"] { camera … }
+SceneDecl { ckw<"scene"> Id Attribute* SceneBody }
+SceneBody { "{" CameraStmt* "}" }
+
+// camera center=x,y zoom=… (2D) | camera target=x,y,z yaw=… pitch=… distance=… fov=… projection=… (3D)
+CameraStmt { ckw<"camera"> Attribute* }
+
+// layout <id> dim=2d|3d [model=<id>] [name="…"] { element … }
+LayoutDecl { ckw<"layout"> Id Attribute* LayoutBody }
+LayoutBody { "{" ElementStmt* "}" }
+
+// element <id> <kind | object id> ["label"] [@ x,y | @ x,y,z] [name=value]*
+ElementStmt { ckw<"element"> Id Word Label? Position? Attribute* }
+Position { "@" (Point3 | Point) }
+
+// composite <id> [size=WxH] [name="…"] { element … }
+//
+// One statement for what a composite object is: a layout of parts that stands on its own, and the model object that
+// places it. Spelling it as a `layout kind=composite` plus a matching `object … parts=` would say the same thing in
+// three statements and let the two drift apart, and a composite is the unit a tool ships.
+CompositeDecl { ckw<"composite"> Id Attribute* CompositeBody }
+CompositeBody { "{" ElementStmt* "}" }
+
+// model <id> dim=2d|3d [name="…"] { object … }
+ModelDecl { ckw<"model"> Id Attribute* ModelBody }
+ModelBody { "{" ModelObjectStmt* "}" }
+
+// object <id> <kind> [size=WxH | scale=…] [parts=<layout id>] [name=value]*
+ModelObjectStmt { kw<"object"> Id Word Attribute* }
 
 // object <id> [@ x,y] [scale=…] [index=…] [ref=…] { … }
 ObjectDecl { kw<"object"> Id ObjectAttr* Body }
@@ -63,7 +103,11 @@ Compact { kw<"compact"> }
 GroupBody { "{" (NodeDecl | EdgeDecl | GroupDecl)* "}" }
 
 // node <id> ["label"] [@ x,y | @cell(c,r)] [~]<relation> <node> … [ref=…] [color=…] [shape=…]
-NodeDecl { kw<"node"> Id Label? (Pin | Relation | Attribute)* }
+// A node may end in braces holding the rows its component lists: `node types kind=card { item "Effect Schema" }`.
+// A row is content, not a node: it has a label and its own attributes, and no id.
+NodeDecl { kw<"node"> Id Label? (Pin | Relation | Attribute)* ItemBody? }
+ItemBody { "{" ItemDecl* "}" }
+ItemDecl { ckw<"item"> Label Attribute* }
 
 // `@ x,y` is exact, in scene units; `@cell(c,r)` names a grid cell.
 Pin { "@" (Point | CellRef) }
@@ -110,6 +154,8 @@ Body { "{" Element* "}" }
 
 Element {
   BoxElement |
+  CustomElement |
+  GridElement |
   CircleElement |
   PathElement |
   ArcElement |
@@ -118,12 +164,25 @@ Element {
   PortalElement
 }
 
-BoxElement    { BoxKind Id Point Size Label? Attribute* }
+// The origin and the size are optional: inside a grid they are the grid's to decide, and stating them there
+// would be noise that the next solve overwrites. Absent, they are 0 — which a track reads as "share what is left".
+BoxElement    { BoxKind Id Point? Size? Label? Attribute* }
+// A box a contributed component draws (`custom s0 kind=graph`): the keyword says the box is not one of the shapes,
+// and `kind=` names what draws it. Contextual, as `grid` is, so an id may still be called `custom`.
+CustomElement { ckw<"custom"> Id Point? Size? Label? Attribute* ItemBody? }
+// A grid holds what it places, in braces. Containment is then structural: there is no naming a parent that does
+// not exist, no cycle to detect, and the cell a child lands in is the order it is written in — all three of which
+// a `parent=` attribute leaves representable and needing code to catch.
+GridElement   { ckw<"grid"> Id Point? Size? Label? Attribute* GridBody? }
+GridBody      { "{" Element* "}" }
 CircleElement { kw<"circle"> Id Point Number Label? Attribute* }
 PathElement   { PathKind Id Point Point+ Attribute* }
 ArcElement    { kw<"arc"> Id Point Number Range Attribute* }
 TextElement   { kw<"text"> Id Point Label Attribute* }
-ArrowElement  { kw<"arrow"> Id Connection Label? Attribute* }
+// `via` gives the arrow its own bends, in scene units, the way a semantic edge states waypoints. A connector a
+// person or a layout routed by hand had no spelling at all before: the route lived on the record and was lost
+// the moment the drawing was written down.
+ArrowElement  { kw<"arrow"> Id Connection Label? (Via | Attribute)* }
 PortalElement { kw<"portal"> Id Point Size Label? Attribute* }
 
 BoxKind  { kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> }
@@ -145,7 +204,10 @@ Ref { name | String }
 // the only case that wanted one.
 Attribute { AttrName "=" AttrValue }
 AttrName  { name }
-AttrValue { Number | Size | Ratio | String | Word }
+AttrValue { Number | Size | Size3 | Ratio | String | Pair | Word | Point3 | Point | Dimension }
+// `constrain=stretch,max`: two words, as `Point` is two numbers. The reader hands the raw text on, so a pair-valued
+// attribute no field claims still round-trips through `props`.
+Pair { Word "," Word }
 // `aspect=4:3`.
 Ratio { Number ":" Number }
 
@@ -164,10 +226,13 @@ Word {
 Id    { name | String }
 Label { String }
 Point { Number "," Number }
+Point3 { Number "," Number "," Number }
 Range { Number ".." Number }
 
 Number { number }
 Size   { size }
+Size3  { size3 }
+Dimension { dimension }
 
 // Keyword specialization: the statement and element-kind words drive the structure, so they
 // must not lex as ids. An id that collides is written quoted (the printer does it).
@@ -192,9 +257,17 @@ ckw<term> { @extend[@name={term}]<name, term> }
   // produce text this grammar rejects.
   exponent { $[eE] $[+\-]? digits }
   decimal { "-"? digits ("." digits)? exponent? }
-  number { decimal }
+  // A fraction says a quotient exactly where a decimal cannot: a run of three divides as 692/3, which prints as
+  // 230.66666666666666 and reads back as a different number. The denominator is digits only, so `A/box` (a ref,
+  // which must start with a letter) and a bare `/` are unaffected, and longest-match prefers `692/3` over `692`.
+  fraction { decimal "/" digits }
+  number { fraction | decimal }
   // `100x50`, longer than the `100` a bare number would match, so the tokenizer prefers it.
-  size { decimal "x" decimal }
+  size { number "x" number }
+  // `2x1x0.5`, a 3D scale.
+  size3 { number "x" number "x" number }
+  // `dim=2d`; a name cannot start with a digit, and longest match prefers this to the number `2`.
+  dimension { $[23] "d" }
 
   String { '"' (!["\\] | "\\" _)* '"' }
 
@@ -204,7 +277,7 @@ ckw<term> { @extend[@name={term}]<name, term> }
 
   "@" "->" "<->" "--" ".." "{" "}" "=" "," ":" "|" "~" "(" ")"
 
-  @precedence { size, number }
+  @precedence { size3, size, dimension, number }
   @precedence { name, Comment }
 }
 

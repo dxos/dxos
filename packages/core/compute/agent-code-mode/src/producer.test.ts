@@ -4,21 +4,30 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+import * as TestClock from 'effect/testing/TestClock';
 import { expect } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { Database, Feed, Filter } from '@dxos/echo';
+import { TrajectoryStore } from '@dxos/assistant';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
+import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { DXN } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';
 import { startTestServer } from '@dxos/mcp-client/testing';
-import { type ContentBlock, Message } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import { EVAL_TOOL_NAME } from './eval-tool.ts';
-import { makeCodeModeTurnProducer } from './producer.ts';
+import { makeCodeModeTurnProducer, toToolInput } from './producer.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 
@@ -52,7 +61,7 @@ describe('code mode', () => {
           yield* session.submitPrompt('What is the weather in Paris?');
           yield* session.waitForCompletion();
 
-          const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+          const messages = yield* TrajectoryStore.history(session.feed);
           const results = messages
             .flatMap((message) => message.blocks)
             .filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
@@ -75,4 +84,223 @@ describe('code mode', () => {
       { timeout: 30_000 },
     );
   });
+});
+
+const { EnableSkills, QueryOperations, QuerySkills } = SkillManagerSkill.Operations;
+
+class Ticket extends Type.makeObject<Ticket>(DXN.make('com.example.type.ticket', '0.1.0'))(
+  Schema.Struct({ title: Schema.String, priority: Schema.optional(Schema.Number) }),
+) {}
+
+const Score = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.score'),
+    name: 'Score',
+    description: 'Scores a title for urgency. Returns its length.',
+  },
+  input: Schema.Struct({ title: Schema.String }),
+  output: Schema.Number,
+});
+
+const AddNote = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.addNote'),
+    name: 'Add note',
+    description: 'Adds a note to the notebook.',
+  },
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.String,
+});
+
+/** Replaced by the database API, so code mode must not offer it although its skill is enabled. */
+const ReadTicket = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.readTicket'),
+    name: 'Read ticket',
+    description: 'Reads a ticket by reference.',
+  },
+  input: Schema.Struct({ id: Schema.String }),
+  output: Schema.String,
+}).pipe(Operation.hiddenInCodeMode);
+
+/** The scenario's operations, made per test with the record of what each was asked to do. */
+const makeHandlers = () => {
+  const scored: string[] = [];
+  const noted: string[] = [];
+  const handlers = OperationHandlerSet.make(
+    Score.pipe(
+      Operation.withHandler(({ title }) =>
+        Effect.sync(() => {
+          scored.push(title);
+          return title.length;
+        }),
+      ),
+    ),
+    AddNote.pipe(
+      Operation.withHandler(({ text }) =>
+        Effect.sync(() => {
+          noted.push(text);
+          return 'noted';
+        }),
+      ),
+    ),
+    ReadTicket.pipe(Operation.withHandler(({ id }) => Effect.succeed(id))),
+  );
+  return { scored, noted, handlers };
+};
+
+/** Enabled in the conversation. */
+const ScoreSkill = Skill.make({
+  key: 'com.example.skill.score',
+  name: 'Scoring',
+  description: 'Scores titles.',
+  instructions: Template.make({ source: 'Score titles before ranking them.' }),
+  tools: Skill.toolDefinitions({ operations: [Score, ReadTicket] }),
+});
+
+/** Not enabled, but the agent may enable it. */
+const NotesSkill = Skill.make({
+  key: 'com.example.skill.notes',
+  name: 'Notes',
+  description: 'Keeps a notebook.',
+  instructions: Template.make({ source: 'Write notes in lower case.' }),
+  tools: Skill.toolDefinitions({ operations: [AddNote] }),
+  agentCanEnable: true,
+});
+
+const toolOf = (operation: Operation.Definition.Any) => JSON.stringify(Operation.toolName(operation));
+const keyOf = (operation: Operation.Definition.Any) => String(operation.meta.key);
+
+/** One turn per dialect: find Score, run it and enable Notes, then run Notes' operation on the next model call. */
+const SCENARIOS = [
+  {
+    name: 'plain',
+    dialect: PlainDialect,
+    querySkillsCall: `await ops[${toolOf(QuerySkills)}](input)`,
+    steps: [
+      `print(await ops[${toolOf(QueryOperations)}]({ query: 'urgency' }));`,
+      // By the operation's key, which the Skill Manager says works as well as its tool name.
+      `print(await ops[${JSON.stringify(keyOf(Score))}]({ title: 'Write the docs' }));\n` +
+        `print(await ops[${toolOf(EnableSkills)}]({ keys: ['com.example.skill.notes'] }));`,
+      `print(await ops[${toolOf(AddNote)}]({ text: 'remember the docs' }));`,
+    ],
+  },
+  {
+    name: 'effect',
+    dialect: EffectDialect,
+    querySkillsCall: `yield* Database.resolve('${keyOf(QuerySkills)}')`,
+    steps: [
+      `const Query = yield* Database.resolve('${keyOf(QueryOperations)}');\n` +
+        "yield* print(yield* Operation.invoke(Query, { query: 'urgency' }));",
+      `const Score = yield* Database.resolve('${keyOf(Score)}');\n` +
+        "yield* print(yield* Operation.invoke(Score, { title: 'Write the docs' }));\n" +
+        `const Enable = yield* Database.resolve('${keyOf(EnableSkills)}');\n` +
+        "yield* print(yield* Operation.invoke(Enable, { keys: ['com.example.skill.notes'] }));",
+      `const AddNote = yield* Database.resolve('${keyOf(AddNote)}');\n` +
+        "yield* print(yield* Operation.invoke(AddNote, { text: 'remember the docs' }));",
+    ],
+  },
+];
+
+describe("code mode states the enabled skills and the Skill Manager's lookups", () => {
+  describe.each(SCENARIOS)('$name dialect', ({ dialect, steps, querySkillsCall }) => {
+    /** The system prompt, and the conversation's text, of every model call. */
+    const systems: string[] = [];
+    const conversations: string[] = [];
+    const { scored, noted, handlers } = makeHandlers();
+
+    it.effect(
+      'states the enabled skills, and the model finds, enables and calls the rest from code',
+      Effect.fnUntraced(
+        function* (_) {
+          yield* TestClock.setTime(Date.UTC(2026, 10, 19, 12));
+          const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
+          yield* session.submitPrompt('Score "Write the docs", then note it.');
+          yield* session.waitForCompletion();
+
+          expect(systems).toHaveLength(steps.length + 1);
+          // One system prompt for the whole turn, so the prompt cache holds across its calls.
+          expect(new Set(systems).size).toBe(1);
+          const [system] = systems;
+          expect(system).toContain('Today is Thursday, 2026-11-19 (UTC).');
+          expect(system).toContain('The skills enabled in this conversation are stated in this prompt');
+          expect(system).toContain(querySkillsCall);
+          // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
+          expect(system).toContain(
+            "find them, and their fields, with the Skill Manager's `assistant-toolkit-query-types`, which searches every registered type",
+          );
+          // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
+          expect(system).toContain('Score titles before ranking them');
+          expect(system).toContain('Scores a title for urgency');
+          // An operation the database API replaces is left out of the Effect dialect, though its skill is enabled; the
+          // plain dialect has no database API to replace it with.
+          expect(system.includes('Reads a ticket by reference')).toBe(dialect !== EffectDialect);
+          expect(system).not.toContain('Write notes in lower case');
+          // No types, and no skill that is not enabled.
+          expect(system).not.toContain('com.example.type.ticket');
+
+          // The Notes skill is enabled by the second eval, so a notice states it, and its operation, from the call
+          // after it.
+          const enabledAt = 2;
+          conversations.forEach((conversation, index) => {
+            if (index < enabledAt) {
+              expect(conversation).not.toContain('Write notes in lower case');
+            } else {
+              expect(conversation).toContain('Skills enabled in this turn');
+              expect(conversation).toContain('Write notes in lower case');
+              expect(conversation).toContain('Operations available in this turn');
+              expect(conversation).toContain('Adds a note to the notebook');
+            }
+          });
+
+          const messages = yield* TrajectoryStore.history(session.feed);
+          const results = messages
+            .flatMap((message) => message.blocks)
+            .filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
+          expect(results.map(({ name, error }) => ({ name, error }))).toEqual(
+            steps.map(() => ({ name: EVAL_TOOL_NAME, error: undefined })),
+          );
+          expect(JSON.stringify(results[0].result)).toContain('com.example.operation.score');
+          expect(scored).toEqual(['Write the docs']);
+          // Callable on the model call after the one that enabled its skill.
+          expect(noted).toEqual(['remember the docs']);
+        },
+        Effect.provide(
+          AssistantTestLayer({
+            types: [Ticket, Feed.Feed, Skill.Skill],
+            operationHandlers: [SkillManagerSkill.Handlers, handlers],
+            skills: [ScoreSkill, NotesSkill],
+            agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect }) },
+            aiService: scriptedAiService((request, index) => {
+              systems.push(request.system);
+              conversations.push(request.text);
+              const code = steps[index];
+              return code === undefined
+                ? { parts: [text('Scored and noted.')] }
+                : { parts: [toolCall(EVAL_TOOL_NAME, { code })] };
+            }),
+          }),
+        ),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: 30_000 },
+    );
+  });
+});
+
+describe('toToolInput', () => {
+  it.effect(
+    'passes a ref as the URI string a tool reference field decodes, at any depth',
+    Effect.fnUntraced(
+      function* (_) {
+        const ticket = yield* Database.add(Obj.make(Ticket, { title: 'Write the docs' }));
+        const uri = String(Ref.make(ticket).uri);
+        const input = JSON.parse(toToolInput({ target: Ref.make(ticket), files: [Ref.make(ticket)], note: 'x' }));
+        expect(input).toEqual({ target: uri, files: [uri], note: 'x' });
+        expect(toToolInput(undefined)).toEqual('{}');
+      },
+      Effect.provide(AssistantTestLayer({ types: [Ticket] })),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

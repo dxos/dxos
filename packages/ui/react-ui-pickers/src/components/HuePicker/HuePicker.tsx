@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import type * as Button from '@dxos/react-ui/Button';
+import { useControllableState } from '@dxos/react-hooks';
+import * as Button from '@dxos/react-ui/Button';
+import * as ColorPicker from '@dxos/react-ui/ColorPicker';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import type * as Util from '@dxos/react-ui/Util';
 import { getSize, osTranslations } from '@dxos/ui-theme';
-import { hues } from '@dxos/ui-types';
-
-import { PickerButton, type PickerButtonProps } from '../PickerButton/index.ts';
 
 export type HuePickerProps = {
   /** Replaces the generic "select hue" label (tooltip and screen-reader text). */
@@ -19,20 +20,64 @@ export type HuePickerProps = {
   defaultValue?: string;
   value?: string;
   onChange?: (nextHue: string) => void;
-  onReset?: Button.RootProps['onClick'];
-} & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
+  onReset?: () => void;
+  rootVariant?: 'button' | 'toolbar-button';
+  iconSize?: Icon.IconProps['size'];
+};
 
-export const HuePicker = ({ label, ...props }: Util.ThemedClassName<HuePickerProps>) => {
+/** A swatch of the current hue that opens the theme's hues as a grid (the hue-only variant of `ColorPicker`). */
+export const HuePicker = ({
+  classNames,
+  label,
+  disabled,
+  defaultValue,
+  value: valueProp,
+  onChange,
+  onReset,
+  rootVariant = 'button',
+  iconSize,
+}: Util.ThemedClassName<HuePickerProps>) => {
   const { t } = Hooks.useTranslation(osTranslations);
+  const [value, setValue] = useControllableState<string>({ prop: valueProp, defaultProp: defaultValue, onChange });
+  // TODO(burdon): useControllableState doesn't update the prop when the value is changed. Replace it.
+  useEffect(() => setValue(valueProp), [valueProp]);
+  const [open, setOpen] = useState(false);
+  const triggerLabel = label ?? t('select-hue.label', { defaultValue: 'Select hue' });
 
   return (
-    <PickerButton
-      Component={HuePreview}
-      label={label ?? t('select-hue.label')}
-      icon='ph--palette--regular'
-      values={hues}
-      {...props}
-    />
+    <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={{ placement: 'bottom' }}>
+      <Popover.Trigger asChild>
+        <Button.Root
+          variant={rootVariant === 'toolbar-button' ? 'ghost' : 'default'}
+          iconOnly
+          label={triggerLabel}
+          caretDown
+          classNames={classNames}
+          disabled={disabled}
+        >
+          {value ? (
+            <HuePreview value={value} size={iconSize} />
+          ) : (
+            <Icon.Icon icon='ph--palette--regular' size={iconSize} />
+          )}
+        </Button.Root>
+      </Popover.Trigger>
+      <Popover.Content classNames='flex flex-col gap-2 p-2'>
+        <ColorPicker.HueGrid value={value} onValueChange={setValue} onCommit={() => setOpen(false)} />
+        {onReset && (
+          <Button.Root
+            variant='ghost'
+            icon='ph--x--regular'
+            label={t('reset-hue.label', { defaultValue: 'Reset' })}
+            disabled={!value}
+            onClick={() => {
+              onReset();
+              setOpen(false);
+            }}
+          />
+        )}
+      </Popover.Content>
+    </Popover.Root>
   );
 };
 

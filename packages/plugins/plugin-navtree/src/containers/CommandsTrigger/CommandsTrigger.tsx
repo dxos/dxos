@@ -10,12 +10,13 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 
-import { COMMANDS_DIALOG, meta } from '#meta';
+import { COMMANDS_DIALOG } from '../../constants.ts';
+import { NavTreeNamespace } from '../../namespace.ts';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(NavTreeNamespace.key);
   return (
     <Button.Root
       classNames='m-1 px-1 lg:px-2'

@@ -13,9 +13,9 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Select from '@dxos/react-ui/Select';
 import * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Settings } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { getSpaceDisplayName } from '../../util/index.ts';
 
 export type SpaceSettingsProps = {
@@ -42,7 +42,7 @@ export const SpaceSettings = ({
   eligibleDefaultSpaces = spaces,
   onDefaultSpaceChange,
 }: SpaceSettingsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
 
   return (
     <Form.Root variant='settings'>

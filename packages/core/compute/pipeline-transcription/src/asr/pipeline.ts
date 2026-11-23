@@ -5,20 +5,15 @@
 import { type ContentBlock } from '@dxos/types';
 
 import { type LivePipeline, type RunOptions, runLivePipeline } from '../runtime/index.ts';
-import { type AudioRecorder } from './audio-recorder.ts';
 import { SentenceBuffer } from './sentence-buffer.ts';
-import { type TranscribeConfig, type TranscribeFn, Transcriber } from './transcriber.ts';
+import { type CreateTranscriber } from './transcriber.ts';
 
 export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
-  /** Audio source — browser `MediaStreamRecorder` or any `AudioRecorder` implementation. */
-  recorder: AudioRecorder;
-  /** Optional ASR transport override (default: `fetch` to the edge transcription service). */
-  transcribe?: TranscribeFn;
-  /** Transcriber chunking configuration. */
-  config: TranscribeConfig;
+  /** The speech-to-text session: RealtimeKit in the browser, a scripted one offline. */
+  createTranscriber: CreateTranscriber;
   /**
    * Re-segment the ASR output into complete sentences before it enters the pipeline, merging
-   * fragments that the transcriber cut mid-sentence at chunk boundaries. @default false
+   * fragments that the transcriber cut mid-sentence. @default false
    */
   segmentSentences?: boolean;
   /** Optional raw-segment hook invoked before each block enters the pipeline (e.g. live display). */
@@ -29,28 +24,26 @@ export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
 
 /** Imperative handle to a running ASR → pipeline session. */
 export type AsrPipeline = {
-  /** Open the recorder + transcriber. */
+  /** Open the transcriber. */
   open: () => Promise<void>;
-  /** Begin capturing audio for transcription. */
+  /** Begin sending audio for transcription. */
   start: () => void;
-  /** Stop capturing (buffered audio is still flushed by `end`). */
+  /** Stop sending audio (segments still pending are delivered by `end`). */
   stop: () => void;
-  /** Abort the in-flight transcription request. */
+  /** Stop waiting for pending segments. */
   abort: () => void;
-  /** Flush buffered audio, signal silence, and drain the pipeline. */
+  /** Deliver pending segments, signal silence, and drain the pipeline. */
   end: () => Promise<void>;
 };
 
 /**
  * The single end-to-end wiring: an ASR source ({@link Transcriber}) feeding the live orchestration
  * engine ({@link runLivePipeline}). Every consumer (editor driver, message-list recording, stories)
- * differs only by recorder, stages, and commit sink — this is the one place audio → text → stages →
+ * differs only by transcriber, stages, and commit sink — this is the one place audio → text → stages →
  * sink is assembled.
  */
 export const runAsrPipeline = ({
-  recorder,
-  transcribe,
-  config,
+  createTranscriber,
   segmentSentences = false,
   onSegment,
   drainSilenceMs = 5_000,
@@ -74,19 +67,14 @@ export const runAsrPipeline = ({
       }
     }
   };
-  const transcriber = new Transcriber({
-    config,
-    recorder,
-    transcribe,
-    onSegments: async (blocks: ContentBlock.Transcript[]) => handle(blocks),
-  });
+  const transcriber = createTranscriber({ onSegments: async (blocks: ContentBlock.Transcript[]) => handle(blocks) });
 
   return {
     open: async () => {
       await transcriber.open();
     },
-    start: () => transcriber.startChunksRecording(),
-    stop: () => transcriber.stopChunksRecording(),
+    start: () => transcriber.start(),
+    stop: () => transcriber.stop(),
     abort: () => transcriber.abort(),
     end: async () => {
       await transcriber.flush();

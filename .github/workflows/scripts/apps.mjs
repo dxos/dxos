@@ -20,6 +20,7 @@ import { basename, join } from 'node:path';
 
 export const APP_DIRS = [
   'packages/apps/composer-app',
+  'packages/apps/drawing-app',
   'docs',
   'tools/storybook-react',
   'packages/apps/todomvc',

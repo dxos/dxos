@@ -21,7 +21,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -39,7 +39,7 @@ import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
-import { ReviewPlugin, type ReviewPluginOptions } from '#plugin';
+import * as ReviewPlugin from '#meta';
 import { translations } from '#translations';
 import { AgentIdentity, CommentCapabilities, Settings } from '#types';
 
@@ -51,28 +51,20 @@ import {
   seedAgentSuggestions,
   seedComments,
 } from '../../testing/index.ts';
+import type { ReviewPluginOptions } from '../../types/ReviewPluginOptions.ts';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
 
 /**
- * Canned echo runner — never makes network calls. Appends an assistant message to the thread's feed
- * quoting the message that triggered the turn.
+ * Canned echo runner — never makes network calls. Replies by quoting the message that triggered the turn.
  * Used by the WithMentionAgent / WithAutoAgent variants.
  */
 const StubAgentRunner: AppCapabilities.CommentAgentRunner = {
-  run: ({ thread, message }) =>
+  run: ({ message }) =>
     Effect.gen(function* () {
       const identity = yield* Capability.get(AgentIdentity.AgentIdentity);
-      const db = Obj.getDatabase(thread);
-      invariant(db, 'thread not persisted');
-      const feed = yield* Effect.promise(() => thread.feed.load());
-      const reply = Obj.make(Message.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'assistant', name: identity.name, identityDid: identity.identityDid },
-        blocks: [{ _tag: 'text', text: `(${identity.name}) you said: "${textOf(message)}"` }],
-      });
-      yield* Effect.promise(() => db.appendToFeed(feed, [reply]));
+      return `(${identity.name}) you said: "${textOf(message)}"`;
     }),
 };
 
@@ -205,8 +197,8 @@ const meta = {
               }
             }),
         }),
-        SpacePlugin({}),
-        ReviewPlugin({
+        SpacePlugin.make({}),
+        ReviewPlugin.make({
           agentRunner: StubAgentRunner,
           agentIdentity: { name: STORY_AGENT_NAME },
         } satisfies ReviewPluginOptions),

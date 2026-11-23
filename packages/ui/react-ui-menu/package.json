@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-menu",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Components for facilitating reactive and consistent menus.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,6 +36,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -59,6 +62,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "typedoc": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

@@ -24,7 +24,9 @@
  * `--mode manual` is for a session a person records themselves: a headed window, no recorder, the
  * cursor without the action pills or caption banners (`--pills on` / `--captions on` bring them back),
  * and `stop` leaves the browser open. The driver exits when that window is closed. The browser runs on
- * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`).
+ * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`). `--persist on` records from that
+ * profile too, so a take starts signed in to whatever a manual session signed in to (Discord, a Composer identity), and
+ * `--headed on` shows a recording's window.
  *
  * `--target tauri` drives the native desktop app instead of Chromium: `--app` names its binary (the release
  * build under `packages/apps/composer-app/src-tauri/target/release/app` by default). On Linux it runs under
@@ -55,6 +57,7 @@ import { FRAME_MODULE, injectModule } from './inject.mjs';
 import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { recordingInfo } from './recording.mjs';
 import { launchTauri } from './tauri/launch.mjs';
 
 const parseArgs = () => {
@@ -86,8 +89,10 @@ const parseArgs = () => {
     // `white-on-black` or `black-on-white` for the title and captions; unset, floating panels invert the page's theme.
     'caption-colors': undefined,
     'mode': 'record',
-    // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
-    // so the user's recording starts in a prepared app instead of onboarding.
+    // Record mode: `on` records from `--profile` instead of a fresh context.
+    'persist': 'off',
+    // Manual mode, and record mode with `--persist on`: the app's identity, spaces and dismissed first-run UI survive
+    // between sessions, so a recording starts in a prepared app instead of onboarding.
     'profile': path.join(homedir(), '.local/state/dxos/autocue/profile'),
     // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
     'theme': 'dark',
@@ -105,6 +110,7 @@ const parseArgs = () => {
       new URL('../../../../packages/apps/composer-app/src-tauri/target/release/app', import.meta.url),
     ),
     'driver-port': 4444,
+    // `on`: Tauri on Linux uses your `$DISPLAY`; a Chromium recording shows its window.
     'headed': 'off',
     // `on` launches full Chromium's headless mode, which has the GPU, instead of the software-rendered headless shell.
     'gpu': 'off',
@@ -117,6 +123,12 @@ const parseArgs = () => {
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
     const value = args[index + 1];
+    // Every flag takes a value, so a trailing flag, or one followed by the next flag, would otherwise be misread;
+    // `--chromium-args` is exempt because its value is itself a list of `--` flags.
+    if (value === undefined || (value.startsWith('--') && key !== 'chromium-args')) {
+      console.error(`--${key} needs a value`);
+      process.exit(1);
+    }
     options[key] = /^[\d.]+$/.test(value) ? Number(value) : value;
   }
   // A person recording their own screen wants the product on camera, not the agent's narration of it.
@@ -177,7 +189,7 @@ if (!manual && !hires) {
 const scale = hires ? options.scale : 1;
 
 const launchOptions = {
-  headless: !manual,
+  headless: !manual && options.headed !== 'on',
   // The default headless shell renders WebGL in software (SwiftShader), so a 3D plugin records at a few frames a
   // second and starves the page; full Chromium's headless mode (`--gpu on`) uses the GPU.
   ...(options.gpu === 'on' && !sandbox ? { channel: 'chromium' } : {}),
@@ -185,7 +197,7 @@ const launchOptions = {
   args: [
     // The page follows the window, so a person can resize it for their capture without a fixed viewport
     // leaving dead space or scrollbars.
-    ...(manual ? [`--window-size=${options.width},${options.height}`] : []),
+    ...(manual || options.headed === 'on' ? [`--window-size=${options.width},${options.height}`] : []),
     ...(sandbox
       ? [
           '--no-sandbox',
@@ -234,12 +246,27 @@ if (native) {
 }
 
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
-const browser = manual || tauri ? undefined : await chromium.launch(launchOptions);
+const persist = !manual && options.persist === 'on';
+const browser = manual || persist || tauri ? undefined : await chromium.launch(launchOptions);
+// A recording's context, fresh or from `--profile`.
+const recordOptions = {
+  viewport,
+  deviceScaleFactor: scale,
+  colorScheme: options.theme,
+  recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+  // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
+  // trust; the proxy itself verifies the upstream certificate.
+  ignoreHTTPSErrors: Boolean(sandbox),
+};
 const context = tauri
   ? undefined
-  : manual
+  : manual || persist
     ? await chromium
-        .launchPersistentContext(options.profile, { ...launchOptions, viewport: null, colorScheme: options.theme })
+        .launchPersistentContext(options.profile, {
+          ...launchOptions,
+          // A manual window's page follows the window.
+          ...(manual ? { viewport: null, colorScheme: options.theme } : recordOptions),
+        })
         .catch((error) => {
           // Chromium locks a profile to one process; the usual cause is the previous session's window.
           if (/already in use/.test(error.message)) {
@@ -248,15 +275,7 @@ const context = tauri
           }
           throw error;
         })
-    : await browser.newContext({
-        viewport,
-        deviceScaleFactor: scale,
-        colorScheme: options.theme,
-        recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-        // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
-        // trust; the proxy itself verifies the upstream certificate.
-        ignoreHTTPSErrors: Boolean(sandbox),
-      });
+    : await browser.newContext(recordOptions);
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
 const page = native ? native.page : (context.pages()[0] ?? (await context.newPage()));
 page.setDefaultTimeout(options['action-timeout']);
@@ -1045,10 +1064,12 @@ const handlers = {
       return { browser: 'left open; closing the window ends the driver' };
     }
     const timelineFile = path.join(options.out, 'timeline.json');
+    // Read while the page is still open: the app's own config is the only record of the EDGE it talked to.
+    const recording = await recordingInfo({ page, flowFile: flow.file, appUrl: options.url, target: options.target });
     // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
     writeFileSync(
       timelineFile,
-      JSON.stringify({ started, flow: flow.file, steps: timeline, speed: speedChanges }, null, 2),
+      JSON.stringify({ started, flow: flow.file, recording, steps: timeline, speed: speedChanges }, null, 2),
     );
     let recorded;
     try {

@@ -10,10 +10,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import { PublicKey } from '@dxos/keys';
-import { ComplexMap } from '@dxos/util';
 
-import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
+
+import { SpaceNamespace } from '../namespace.ts';
 
 /** Default persisted state. */
 const defaultSpaceState: SpaceCapabilities.SpaceState = {
@@ -27,20 +27,13 @@ export default Capability.makeModule(
 
     // Persisted state using KVS store.
     const stateAtom = KvsStore.make({
-      key: `${meta.profile.key}.state`,
+      key: `${SpaceNamespace.key}.state`,
       schema: SpaceCapabilities.StateSchema,
       defaultValue: () => ({ ...defaultSpaceState }),
     });
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
-    const ephemeralAtom = Atom.make<SpaceCapabilities.SpaceEphemeralState>({
-      sdkMigrationRunning: {},
-      navigableCollections: false,
-      viewersByObject: {},
-      viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
-      mergePreview: undefined,
-      lastMergeAt: undefined,
-    }).pipe(Atom.keepAlive);
+    const ephemeralAtom = SpaceCapabilities.makeEphemeralState(PublicKey.random().toHex());
 
     const manager = yield* Capabilities.PluginManager;
     // Layout is optional and lands after this module: no plugin contributes it in standalone

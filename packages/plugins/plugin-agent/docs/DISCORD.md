@@ -139,8 +139,8 @@ What is built (dxos/dxos#13887, dxos/edge#1279), set up from the agent's **Disco
 - **Connect Discord** signs in with the `discord-user` connector (OAuth `identify` + `guilds`) and lists the servers the
   user administers; **Install** (or **Reinstall**, to grant permissions added since) opens the bot's install link.
 - One bot host per app on EDGE (`DiscordBot`, `bot:<applicationId>`) with a **binding table**: many Discord channels,
-  each routed to a `Channel` in one owning space. A binding from another space is refused (409) instead of taking
-  the bot over.
+  each routed to a `Channel` in one owning space. A binding from another space takes the bot over and drops the
+  previous space's bindings; refusing it (409) returns once EDGE can tell a stale owner from a live one.
 - The bot is the Kai app of the EDGE Composer talks to (plugin-discord's `KAI_APPLICATION_IDS`); EDGE holds each
   Kai's token (`DISCORD_KAI_BOT_TOKEN`), so a space's `DiscordChannel` config names the app and its Discord channels
   but no token. Only a team's own bot records an `AccessToken`.
@@ -202,8 +202,8 @@ channel leaves the agent's list, and its conversations stay in the space. Deleti
 
 ## Phases
 
-1. **Bindings.** Built: the bot host routes by binding, and a claim from another space is refused. Still to do:
-   Installation records. (edge, plugin-agent)
+1. **Bindings.** Built: the bot host routes by binding; a claim from another space takes the bot over. Still to do:
+   refusing that claim, and Installation records. (edge, plugin-agent)
 2. **Administration in plugin-agent.** Built: Connect Discord (OAuth), list servers and channels, connect and
    disconnect; agent messages and relays are posted by the bot host, so sending needs no token in the space. Still to
    do: the nickname, and tokens in KMS.

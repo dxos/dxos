@@ -10,8 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Translations from '@dxos/app-toolkit/Translations';
 import { Attention } from '@dxos/react-ui-attention/types';
 
-import { meta } from '#meta';
-
+import { DeckNamespace } from '../namespace.ts';
 import { isAnyCompanionOpen } from '../util/companion-anchor.ts';
 
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
@@ -85,6 +84,9 @@ export const defaultDeck: StoredDeck = {
   plankSizing: {},
   plankNames: {},
 };
+
+/** A deck whose companions start closed; an absent `companionPlanks` instead follows the layout's default. */
+export const closedCompanionsDeck: StoredDeck = { ...defaultDeck, companionPlanks: [] };
 
 //
 // Layout
@@ -223,6 +225,13 @@ export const EphemeralDeckState = Schema.Struct({
   currentUndoId: Schema.optional(Schema.String),
   /** A component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(ScrollIntoView),
+  /** Whether the first projection of the URL the app booted on has ended, whether or not it opened anything or ran its action. */
+  restored: Schema.optional(Schema.Boolean),
+  /**
+   * The deck's front as last measured: the first plank of a sliding deck not folded into its left pile (none when the
+   * deck is not sliding), and the planks it was measured among, joined by newlines.
+   */
+  front: Schema.optional(Schema.Struct({ id: Schema.optional(Schema.String), planks: Schema.String })),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 
@@ -247,13 +256,13 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.profile.key}.action.adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${DeckNamespace.key}.action.adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
   export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(
-    `${meta.profile.key}.action.update-plank-size`,
+    `${DeckNamespace.key}.action.update-plank-size`,
     {
       input: Schema.Struct({
         id: Schema.String,

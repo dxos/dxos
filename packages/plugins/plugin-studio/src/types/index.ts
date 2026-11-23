@@ -12,4 +12,5 @@ export * as StudioEvents from './StudioEvents.ts';
 export * as Storyboard from './Storyboard.ts';
 export * as StoryboardView from './StoryboardView.ts';
 export * as StudioOperation from './StudioOperation.ts';
+export * as StudioSurface from './StudioSurface.ts';
 export * as Variant from './Variant.ts';

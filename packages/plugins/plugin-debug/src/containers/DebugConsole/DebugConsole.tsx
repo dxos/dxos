@@ -12,8 +12,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-
+import { DebugNamespace } from '../../namespace.ts';
 import { createDebugCli } from './cli.ts';
 
 const BOLD = '\x1b[1m';
@@ -37,7 +36,7 @@ export type DebugConsoleProps = {
  * snapshot, plugin management, eval), as an interactive Effect-CLI terminal.
  */
 export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DebugNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const apiRef = useRef<TerminalApi | null>(null);
   const lastResultRef = useRef('');

@@ -12,17 +12,21 @@ import * as TimelineSpace from './TimelineSpace.ts';
 describe('Timeline project template', () => {
   test('builds the project, its feature map and its tasks', { timeout: 120_000 }, async ({ expect }) => {
     const { result, json } = await EffectEx.runPromise(buildArchive(TimelineSpace.make()));
-    const { project, features, tasks, fixture, spec } = result.timeline;
+    const { project, map, breakdowns, tasks, fixture } = result.timeline;
+    const archive: { objects: Array<{ 'id': string; '@type'?: string; 'content'?: unknown }> } = JSON.parse(json);
+    const content = String(archive.objects.find((object) => map.content.uri.endsWith(object.id))?.content);
 
     expect(project.name).toBe('Timeline');
-    expect(features.map((feature) => feature.name)).toEqual([
-      'Chart objects',
-      'Timeline chart',
-      'Slide embeds',
-      'Presenter space',
-      'Timeline research skill',
+    // Every feature is one of the spec's feat blocks, the research skill's written from the seed.
+    expect([...content.matchAll(/^feat (F-\d+): (.*)$/gm)].map(([, id, title]) => `${id} ${title}`)).toEqual([
+      'F-1 Chart objects',
+      'F-2 Timeline chart',
+      'F-3 Slide embeds',
+      'F-4 Presenter space',
+      'F-5 Timeline research skill',
     ]);
-    expect(features.every((feature) => feature.project?.uri.endsWith(project.id))).toBe(true);
+    const specs = [map, ...breakdowns];
+    expect(project.specs.map((ref, index) => ref.uri.endsWith(specs[index].id))).toEqual(specs.map(() => true));
     expect(tasks.map((task) => task.title)).toEqual([
       'Create a test fixture',
       'Complete the spec',
@@ -38,18 +42,12 @@ describe('Timeline project template', () => {
     expect(fixtureTask.artifacts?.map((ref) => ref.uri.endsWith(fixture.id))).toEqual([true]);
     expect(project.artifacts.some((ref) => ref.uri.endsWith(fixture.id))).toBe(true);
 
-    // The spec is filed on the project, and every feature cites one of its blocks.
-    expect(project.artifacts.some((ref) => ref.uri.endsWith(spec.id))).toBe(true);
-    expect(features.map((feature) => feature.specs)).toEqual(
-      [1, 2, 3, 4, 5].map((index) => [`timeline/SPEC.mdl#F-${index}`]),
-    );
     expect(planned.every((task) => task.status === 'todo')).toBe(true);
     expect(planned[2].dependsOn?.map((ref) => ref.uri.endsWith(planned[1].id))).toEqual([true]);
 
-    // Every task is linked to a feature, and the features' needs are drawn as edges.
-    const archive: { objects: Array<{ '@type'?: string }> } = JSON.parse(json);
+    // Every task is linked to a feature, and the features' needs are fields of their blocks.
     const count = (type: string) => archive.objects.filter((object) => object['@type']?.includes(type)).length;
-    expect(count('org.dxos.relation.implements')).toBe(6);
-    expect(count('org.dxos.relation.dependsOn')).toBe(5);
+    expect(count('org.dxos.relation.implementsItem')).toBe(6);
+    expect(content.match(/^  depends: /gm)).toHaveLength(4);
   });
 });

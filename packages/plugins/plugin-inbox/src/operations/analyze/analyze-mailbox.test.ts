@@ -218,8 +218,20 @@ describe('AnalyzeMailbox cascade', () => {
           tiers: ['classify', 'deterministic'],
         });
 
-        expect(result.stages.map((stage) => stage.tier)).toEqual(['deterministic', 'deterministic', 'classify']);
-        expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'failed']);
+        // Triage (`label`) skips: the scripted model serves no decision model.
+        expect(result.stages.map((stage) => stage.processor)).toEqual([
+          'contacts',
+          'subscriptions',
+          'label',
+          'classify',
+        ]);
+        expect(result.stages.map((stage) => stage.tier)).toEqual([
+          'deterministic',
+          'deterministic',
+          'classify',
+          'classify',
+        ]);
+        expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'skipped', 'failed']);
       },
       Effect.provide(makeFailingAiLayer()),
       TestHelpers.provideTestContext,
@@ -255,8 +267,9 @@ describe('AnalyzeMailbox cascade', () => {
           'skipped',
           'skipped',
           'skipped',
+          'skipped',
         ]);
-        for (const stage of result.stages.slice(2, 4)) {
+        for (const stage of result.stages.slice(2, 5)) {
           expect(stage.error).toBe('ai unavailable (assistant not ready)');
         }
         expect(result.stages.at(-1)).toMatchObject({
@@ -442,7 +455,13 @@ describe('AnalyzeMailbox cascade', () => {
         });
 
         expect(result.failed).toBe(1);
-        expect(result.stages.map((stage) => stage.status)).toEqual(['completed', 'completed', 'failed', 'skipped']);
+        expect(result.stages.map((stage) => stage.status)).toEqual([
+          'completed',
+          'completed',
+          'skipped',
+          'failed',
+          'skipped',
+        ]);
         expect(result.stages.at(-1)).toMatchObject({
           tier: 'analyze',
           status: 'skipped',

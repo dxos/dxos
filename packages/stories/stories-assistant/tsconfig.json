@@ -83,7 +83,13 @@
       "path": "../../plugins/plugin-board"
     },
     {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-chess"
+    },
+    {
+      "path": "../../plugins/plugin-claude"
     },
     {
       "path": "../../plugins/plugin-client"
@@ -96,6 +102,9 @@
     },
     {
       "path": "../../plugins/plugin-debug"
+    },
+    {
+      "path": "../../plugins/plugin-dev-shell"
     },
     {
       "path": "../../plugins/plugin-explorer"
@@ -122,6 +131,9 @@
       "path": "../../plugins/plugin-pipeline"
     },
     {
+      "path": "../../plugins/plugin-presenter"
+    },
+    {
       "path": "../../plugins/plugin-preview"
     },
     {
@@ -138,6 +150,9 @@
     },
     {
       "path": "../../plugins/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-sheet"
     },
     {
       "path": "../../plugins/plugin-space"
@@ -197,6 +212,9 @@
       "path": "../../ui/react-ui-debug"
     },
     {
+      "path": "../../ui/react-ui-dnd"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
@@ -216,6 +234,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/ui-editor"

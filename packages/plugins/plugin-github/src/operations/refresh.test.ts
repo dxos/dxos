@@ -9,11 +9,18 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { PullRequest } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/link';
+import { PullRequest, Repo } from '@dxos/types';
 
 import { GitHubOperation } from '#types';
 
-import { REFRESH_CRON, ensureRefreshTrigger, queryInFlightPullRequests, selectRefreshBatch } from './refresh.ts';
+import {
+  REFRESH_CRON,
+  ensureRefreshTrigger,
+  queryInFlightPullRequests,
+  queryUnboundInFlightPullRequests,
+  selectRefreshBatch,
+} from './refresh.ts';
 
 describe('pull request refresh', () => {
   let builder: EchoTestBuilder;
@@ -28,7 +35,7 @@ describe('pull request refresh', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Trigger.Trigger, PullRequest.PullRequest]);
+    graph.registry.add([Trigger.Trigger, PullRequest.PullRequest, Repo.Repo, Cursor.Cursor, AccessToken.AccessToken]);
     return db;
   };
 
@@ -72,6 +79,18 @@ describe('pull request refresh', () => {
 
     const inFlight = await run(db, queryInFlightPullRequests());
     expect(inFlight.map((pullRequest) => pullRequest.number).sort()).toEqual([1, 2]);
+  });
+
+  test('pull requests in a bound repository are left to its sync', async ({ expect }) => {
+    const db = await setup();
+    const repo = db.add(Repo.make({ owner: 'dxos', name: 'dxos' }));
+    const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'github.com', token: 'tok' }));
+    db.add(Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(repo) }));
+    db.add(PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: '#1', state: 'open' }));
+    db.add(PullRequest.make({ owner: 'dxos', repo: 'edge', number: 2, title: '#2', state: 'open' }));
+
+    const unbound = await run(db, queryUnboundInFlightPullRequests());
+    expect(unbound.map((pullRequest) => pullRequest.repo)).toEqual(['edge']);
   });
 
   test('duplicates a racing peer created collapse to the lowest-id trigger', async ({ expect }) => {

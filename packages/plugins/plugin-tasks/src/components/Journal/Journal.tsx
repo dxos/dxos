@@ -14,9 +14,9 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { TasksUtil } from '#types';
 
+import { TasksNamespace } from '../../namespace.ts';
 import {
   type JournalEntry as JournalEntryObject,
   type Journal as JournalObject,
@@ -26,14 +26,14 @@ import { Outline, type OutlineController, type OutlineRootProps } from '../Outli
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
-export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
+export type JournalProps = Pick<JournalEntryProps, 'onSelect' | 'readonly'> & {
   journal: JournalObject;
 };
 
 // TODO(burdon): Virtualize.
 export const Journal = Util.composable<HTMLDivElement, JournalProps>(
-  ({ journal, onSelect, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+  ({ journal, readonly, onSelect, ...props }, forwardedRef) => {
+    const { t } = Hooks.useTranslation(TasksNamespace.key);
     const date = new Date();
 
     // Subscribe to the journal object reactively so we pick up new entries.
@@ -71,11 +71,12 @@ export const Journal = Util.composable<HTMLDivElement, JournalProps>(
               key={dateKey}
               entryRef={ref}
               classNames='p-2'
+              readonly={readonly}
               onSelect={onSelect}
-              autoFocus={i === entryRefs.length - 1}
+              autoFocus={!readonly && i === entryRefs.length - 1}
             />
           ))}
-          {!hasTodayEntry && (
+          {!readonly && !hasTodayEntry && (
             <div className='p-2'>
               <Button.Root
                 label={t('start-today.label')}
@@ -96,11 +97,11 @@ type JournalEntryProps = Util.ThemedClassName<
   {
     entryRef: Ref.Ref<JournalEntryObject>;
     onSelect?: (event: { date: Date }) => void;
-  } & Pick<OutlineRootProps, 'autoFocus'>
+  } & Pick<OutlineRootProps, 'autoFocus' | 'readonly'>
 >;
 
 const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   const [entry] = useObject(entryRef);
   // Subscribe to the content ref to trigger a re-render when the Text object loads.
   useObject(entry?.content);

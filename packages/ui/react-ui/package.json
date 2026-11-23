@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,6 +41,11 @@
       "source": "./src/components/Avatar/Avatar.tsx",
       "types": "./dist/types/src/components/Avatar/Avatar.d.ts",
       "import": "./dist/lib/Avatar.mjs"
+    },
+    "./Badge": {
+      "source": "./src/components/Badge/Badge.tsx",
+      "types": "./dist/types/src/components/Badge/Badge.d.ts",
+      "import": "./dist/lib/Badge.mjs"
     },
     "./Banner": {
       "source": "./src/components/Banner/Banner.tsx",
@@ -292,6 +297,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@ark-ui/react": "catalog:",
     "@dxos/async": "workspace:*",
@@ -329,6 +337,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "typedoc": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

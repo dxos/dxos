@@ -13,11 +13,10 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
-import { Chat } from '@dxos/assistant';
+import { Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Message } from '@dxos/types';
 
 import * as AcpAgent from '../agents/AcpAgent.ts';
 import * as HelperClient from '../agents/HelperClient.ts';
@@ -41,7 +40,7 @@ const SIDECAR = join(DIST, 'sidecar', 'dx-agent');
 const AGENTS = join(DIST, 'agent');
 
 const TestLayer = Layer.mergeAll(
-  TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+  TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
   Layer.succeed(Trace.TraceService, { write: () => {} }),
 );
 
@@ -124,7 +123,7 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && existsSync(SIDECAR) && exi
           );
 
           expect(readFileSync(join(work, 'hello.txt'), 'utf8').trim()).toBe('hello from dx-agent');
-          const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+          const messages = yield* TrajectoryStore.history(feed);
           expect(messages.some((message) => message.sender.role === 'assistant')).toBe(true);
         }).pipe(Effect.scoped, Effect.provide(TestLayer)),
       TURN_TIMEOUT,

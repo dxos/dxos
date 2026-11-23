@@ -1,0 +1,87 @@
+---
+title: Effect
+description: Use ECHO from Effect code, with Database.Service, layers and typed errors.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Database, Hypergraph } from '@dxos/echo';
+```
+
+By the end of this guide you will have an Effect program that asks for a database, gets one from a layer, and handles
+each ECHO failure by name.
+
+The rest of the ECHO docs use the promise API. This page is for code written with [Effect](https://effect.website/).
+In Effect code, the database is a service that a program asks for, and failures are typed errors. Composer's
+operations and plugins are written this way.
+
+## Ask for the database
+
+`Database.Service` is the database of one space. The functions of the `Database` namespace that read or write a
+database, such as `add`, `query` and `flush`, are Effects that need it.
+
+**Example** (Writing a program that needs a database)
+
+<Snippet file="echo-guide-effect" region="service" />
+
+`Database.Service` shows up in the type of `hire` as a requirement, so the program says in its type that it acts on a
+space. The compiler rejects an attempt to run it until a layer provides a database.
+
+## Provide it
+
+`Database.layer` provides the service from a database you hold.
+
+**Example** (Running the program on a database)
+
+<Snippet file="echo-guide-effect" region="provide" />
+
+`EffectEx.runPromise`, from `@dxos/effect`, runs the program and throws its failures as errors. Use it in place of
+`Effect.runPromise`. `result` is the `{ acme, people }` that `hire` returns.
+
+Where a program has no database, `Database.notAvailable` stands in. It fails on use, so a missing database shows up at
+the call rather than as a silent no-op.
+
+## Handle errors
+
+With promises, a failed call throws, and the function's type does not say what it throws. In Effect code, a failure
+carries a tag, so a program handles each failure by name.
+
+- `Database.load` resolves a reference, and fails with `EntityNotFoundError` when the target is missing.
+- `Blob.read` fails with `BlobNotAvailableError` when the bytes cannot be reached.
+
+**Example** (Catching a missing target by its tag)
+
+<Snippet file="echo-guide-effect" region="errors" />
+
+`employerName` has no error left in its type once `Effect.catchTag` has handled `EntityNotFoundError`. A missing
+target gives `'unknown'` in place of a name.
+
+## Find a space
+
+Some work cannot be told its space in advance, such as a trigger that fires with a fixed payload. Work like this asks
+for `Hypergraph.Service`, which is every space this device holds. `Hypergraph.withDatabase` then narrows that to one
+space's `Database.Service`.
+
+If this device does not hold the space, the program fails with `SpaceNotFoundError` when the layer is built.
+
+**Example** (Running the program in a space found by id)
+
+<Snippet file="echo-guide-effect" region="hypergraph" />
+
+`hire` is the same program as before. Only the layers changed: `Hypergraph.layer(client.graph)` provides the
+Hypergraph, and `Hypergraph.withDatabase(spaceId)` takes one database from it. `inSpace` returns `undefined` when
+the space is not found.
+
+## Effect versions of other modules
+
+`Feed` has Effect versions of the database's feed methods: `append`, `walk`, `query` and `fork`. `Blob` has
+`fromBytes`, `read`, `exists` and `url`. Each needs `Database.Service`.
+
+`Feed.setIndexing` and `Feed.setRetention` write a field of the feed object, so they need no service. They fail with
+a schema error when the options are invalid.
+
+## Related
+
+- [Database](/docs/echo/api/database/) for the promise API these mirror.
+- [Effect in plugins](/docs/plex/guides/effect/) for Effect in a Composer plugin.

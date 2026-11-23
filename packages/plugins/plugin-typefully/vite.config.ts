@@ -8,10 +8,6 @@ export default defineConfig({
   entry: {
     'ns/TypefullyEvents': 'src/TypefullyEvents.ts',
     'index': 'src/index.ts',
-    'TypefullyPlugin': 'src/TypefullyPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
-    'meta': 'src/meta.ts',
     'translations': 'src/translations.ts',
     'services': 'src/services/index.ts',
   },

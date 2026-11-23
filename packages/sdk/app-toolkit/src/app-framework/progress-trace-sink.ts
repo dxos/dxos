@@ -8,13 +8,14 @@ import { EID } from '@dxos/keys';
 import type * as AppCapabilities from './AppCapabilities.ts';
 
 /** Terminal status message — reducer calls `done()` then `remove()` on the keyed monitor. */
-export const STATUS_COMPLETE = 'progress.complete';
+export const STATUS_COMPLETE = Trace.StatusComplete;
 
-/** Terminal status message — reducer calls `fail()` and leaves the monitor visible. */
-export const STATUS_FAILED = 'Sync failed';
+/** Terminal status messages — reducer calls `fail()` with the message and leaves the monitor visible. */
+export const STATUS_FAILED = Trace.StatusFailed;
+export const STATUS_ERROR = Trace.StatusError;
 
 /** Terminal status message — reducer calls `note()` then `remove()`. */
-export const STATUS_CANCELLED = 'Cancelled';
+export const STATUS_CANCELLED = Trace.StatusCancelled;
 
 /**
  * Reason shown when a run stops reporting. Deliberately not "failed": the run may well have finished
@@ -25,7 +26,7 @@ export const STATUS_STALLED = 'Stopped reporting';
 
 /** A terminal status message ends a run — the reducer removes or fails the keyed monitor. */
 const isTerminalMessage = (message: string | undefined): boolean =>
-  message === STATUS_COMPLETE || message === STATUS_FAILED || message === STATUS_CANCELLED;
+  message === STATUS_COMPLETE || message === STATUS_FAILED || message === STATUS_ERROR || message === STATUS_CANCELLED;
 
 type StatusPayload = Trace.PayloadType<typeof Trace.StatusUpdate>;
 type ProgressMonitor = ReturnType<AppCapabilities.ProgressRegistry['register']>;
@@ -90,6 +91,12 @@ type Tombstone = { scope: 'pid'; pid: string } | { scope: 'run'; at: number };
 const RUN_TOMBSTONE_TTL_MS = 60_000;
 
 /**
+ * How long after a pid's terminal its own non-terminal updates are taken as stragglers. Reordered
+ * broadcasts trail by milliseconds; past this, a long-lived process reporting the same key again is a new run.
+ */
+const FINISHED_REORDER_WINDOW_MS = 10_000;
+
+/**
  * How long a monitor may go without a status update before the sink stops believing in it.
  *
  * Every terminal the producer can emit travels the same lossy path its progress does — a killed
@@ -145,6 +152,9 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
   // process/edge abort lands) cannot resurrect the removed monitor. Release is scoped so a genuinely
   // later run still shows — see {@link TraceSinkOptions.cancelScope}.
   const cancelled = new Map<string, Tombstone>();
+  // The pid that last reported a terminal, per key: broadcasts can arrive out of order, so an update the
+  // run sent before its terminal can land after it and must not reopen a meter nothing will close.
+  const finished = new Map<string, { pid: string; at: number }>();
 
   const stallTimeout = options.stallTimeout ?? DEFAULT_STALL_TIMEOUT_MS;
   const stallBounded = Number.isFinite(stallTimeout) && stallTimeout > 0;
@@ -278,13 +288,19 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
     }
 
     const offset = entry.offset ?? 0;
+    const current = progress.current === undefined ? undefined : offset + progress.current;
+    // Broadcasts arrive unordered, so a count below the one shown is a stale update, not the run going back;
+    // its total is as stale as its count, so neither is applied.
+    if (current !== undefined && entry.shown.current !== undefined && current < entry.shown.current) {
+      return;
+    }
     if (progress.total !== undefined) {
       entry.shown.total = offset + progress.total;
       entry.handle.total(entry.shown.total);
     }
-    if (progress.current !== undefined) {
-      entry.shown.current = offset + progress.current;
-      entry.handle.set(entry.shown.current);
+    if (current !== undefined) {
+      entry.shown.current = current;
+      entry.handle.set(current);
     }
   };
 
@@ -321,13 +337,27 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       }
     }
 
+    const terminal = isTerminalMessage(data.message);
+    const ended = finished.get(key);
+    if (
+      !terminal &&
+      ended !== undefined &&
+      ended.pid === target.pid &&
+      Date.now() - ended.at <= FINISHED_REORDER_WINDOW_MS
+    ) {
+      return;
+    }
+    if (terminal && target.pid !== undefined) {
+      finished.set(key, { pid: target.pid, at: Date.now() });
+    }
+
     const handle = monitorFor(registry, key, data.message, target);
 
-    if (data.message === STATUS_FAILED) {
+    if (data.message === STATUS_FAILED || data.message === STATUS_ERROR) {
       // Stays registered so the meter can show it, but the clock stops: a stall firing over a
       // reported failure would replace the producer's reason with a guess about silence.
       disarmStall(key);
-      handle.fail(STATUS_FAILED);
+      handle.fail(data.message);
       const entry = monitors.get(key);
       if (entry) {
         entry.ended = true;

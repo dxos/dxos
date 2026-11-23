@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
+import * as Architecture from '@dxos/plugin-canvas/Architecture';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -31,7 +32,7 @@ export type Requires = {
 
 /** Alien Labs' handbook, planning, incident, customer and meeting documents, with the sheets and drawings they embed. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.partial('fieldstoneDocs', {
-  schemas: [Markdown.Document, Sheet.Sheet, Drawing.Drawing, Drawing.Canvas],
+  schemas: [Markdown.Document, Sheet.Sheet, ...Architecture.canvasDrawingSchemas],
   run: ({ team, inboxCrm, projects, architecture }) =>
     Effect.gen(function* () {
       const sheets = yield* makeSheets();

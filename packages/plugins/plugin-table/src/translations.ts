@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { TableNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete table',
         'object-deleted.label': 'Table deleted',
       },
-      [meta.profile.key]: {
+      [TableNamespace.key]: {
         'plugin.name': 'Tables',
         'table-name.placeholder': 'Table name',
         'table-schema.label': 'Type',

@@ -6,11 +6,15 @@ Makes a new `@dxos/*` package publishable on npm: one bootstrap publish, then an
 ## Quick start
 
 ```bash
-node scripts/publish-package.mjs @dxos/<name> --dry-run --trust
+node scripts/publish-package.mjs @dxos/<a> @dxos/<b> --dry-run --trust
 ```
 
 ```bash
-node scripts/publish-package.mjs @dxos/<name> --trust
+npm login
+```
+
+```bash
+node scripts/publish-package.mjs @dxos/<a> @dxos/<b> --trust
 ```
 
 - A package not yet on npm is built and published at `0.0.0`; its `package.json` version is restored.

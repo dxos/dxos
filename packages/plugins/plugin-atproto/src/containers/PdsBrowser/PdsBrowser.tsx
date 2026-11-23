@@ -28,11 +28,11 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 
-import { meta } from '#meta';
 import { AtprotoCapabilities } from '#types';
 
 import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection.ts';
 import { getAtprotoUris } from '../../foreign-key.ts';
+import { AtprotoNamespace } from '../../namespace.ts';
 import { importRecord } from '../../publish.ts';
 import { getMappedCollections } from '../../schema-map.ts';
 import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
@@ -119,7 +119,7 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
  * for are marked; their records preview as ECHO objects (readonly card surface) and can be imported.
  */
 export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AtprotoNamespace.key);
   const readRepoLayer = Hooks.useCapability(AtprotoCapabilities.ReadRepoLayer);
 
   const connections = useQuery(db, Filter.type(Connection.Connection));

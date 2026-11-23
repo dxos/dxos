@@ -6,21 +6,23 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Tour from '@dxos/app-toolkit/Tour';
 import * as Project from '@dxos/compute/Project';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../namespace.ts';
 import { steps } from '../tours/index.ts';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(AppCapabilities.Tour, {
-      id: `${meta.profile.key}.tour.project`,
-      label: ['project-tour.label', { ns: meta.profile.key }],
-      matches: Tour.whenType(Project.Project),
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
+    const isProject = Tour.whenType(Project.Project);
+    return Capability.contribute(AppCapabilities.Tour, {
+      id: `${ProjectsNamespace.key}.tour.project`,
+      label: ['project-tour.label', { ns: ProjectsNamespace.key }],
+      matches: (data) => !ReadOnly.isActive(manager) && isProject(data),
       auto: true,
       steps,
-    }),
-  ),
+    });
+  }),
 );

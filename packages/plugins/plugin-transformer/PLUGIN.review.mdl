@@ -1,0 +1,232 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-transformer/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TransformerPlugin
+
+The two hooks are built as specified: `usePipeline` loads a Transformers.js ASR pipeline, probes
+WebGPU for `gpuInfo` and reports load errors, and `useAudioStream` opens a 16 kHz mono microphone,
+chunks 32000 samples in an AudioWorklet and cleans up fully. The RAG test pipeline computes cosine
+similarity and keeps the top 3. Nothing is tested: the only tests are a plugin-activation smoke test
+and RAG/transformers suites that are `describe.skip`.
+
+Of 29 items: 0 done, 17 untested, 2 partial, 4 diverged, 6 missing. Findings:
+
+- **`Voice` never transcribes.** Its `onAudioData: handleAudioData` line is commented out, so audio
+  chunks never reach `transcribe`; F-3 and the `Transcribe` op are dead code in practice.
+- **The WebGPU fallback is cosmetic.** The ONNX provider is set to `webgpu` unconditionally at module
+  load; only the `gpuInfo` text changes when WebGPU is absent.
+- **No ops exist as operations.** LoadModel, Transcribe and CaptureAudio are effects inside hooks, not
+  `Operation.make` definitions, and the plugin is not mounted by any app.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict PipelineConfig: Declared with model, active and debug.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#PipelineConfig]
+  note: No test uses the hook.
+```
+
+```mdl
+verdict PipelineState: Declared with gpuInfo, isLoaded, isLoading and error.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#PipelineState]
+  note: No test uses the hook.
+```
+
+```mdl
+verdict AudioStreamConfig: Declared with active, debug and onAudioData.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/useAudioStream.ts#AudioStreamConfig]
+  note: No test uses the hook.
+```
+
+```mdl
+verdict AudioStreamState: Declared with stream, error and audioLevel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/useAudioStream.ts#AudioStreamState]
+  note: audioLevel is the mean byte frequency, not an RMS level, and only updates in debug mode.
+```
+
+```mdl
+verdict TranscriptionOptions: Declared with the five Whisper options.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#TranscriptionOptions]
+  note: No test uses it.
+```
+
+```mdl
+verdict EmbeddingOutput: Declared in the RAG test pipeline as a number array.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/testing/pipeline.ts#EmbeddingOutput]
+  note: The RAG tests that would use it are skipped.
+```
+
+```mdl
+verdict Voice: Wires both hooks and renders DebugInfo, but never connects audio to transcription.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/components/Voice/Voice.tsx#Voice, github:dxos/dxos/packages/plugins/plugin-transformer/src/components/Voice/DebugInfo.tsx]
+  note: |
+    `onAudioData: handleAudioData` is commented out, so `isTranscribing` never changes and the
+    transcript stays empty. Its story only mounts it.
+```
+
+```mdl
+verdict LoadModel: Model loading is an effect inside usePipeline, not an operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#usePipeline]
+  note: |
+    Loads the ASR pipeline with env.cacheDir './.cache' when active, but there is no Operation.make;
+    the provider is forced to webgpu with no WASM fallback configured.
+```
+
+```mdl
+verdict Transcribe: usePipeline returns a transcribe function; the isTranscribing guard sits in Voice.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#usePipeline, github:dxos/dxos/packages/plugins/plugin-transformer/src/components/Voice/Voice.tsx#Voice]
+  note: Not an operation, it returns the raw pipeline result rather than a string, and nothing calls it because the Voice wiring is commented out.
+```
+
+```mdl
+verdict CaptureAudio: useAudioStream opens the mic and a worklet emitting 2-second chunks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/useAudioStream.ts#useAudioStream]
+  note: A hook rather than an operation; behaviour matches. No test.
+```
+
+```mdl
+verdict F-1.1: The model loads when active, with isLoading true until it completes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#usePipeline]
+  note: No test.
+```
+
+```mdl
+verdict F-1.2: gpuInfo reports the adapter, and the provider is webgpu.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#usePipeline]
+  note: The provider is set to webgpu at module load whatever the adapter check finds. No test.
+```
+
+```mdl
+verdict F-1.3: Without WebGPU, gpuInfo says so, but the backend is not switched.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#usePipeline]
+  note: Only the message changes; `env.backends.onnx.provider` stays 'webgpu' and any fallback is left to the runtime. No test.
+```
+
+```mdl
+verdict F-1.4: A load failure sets a readable error and clears isLoading.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/usePipeline.ts#usePipeline]
+  note: No test.
+```
+
+```mdl
+verdict F-2.1: getUserMedia asks for mono 16 kHz with echo cancellation, noise suppression and gain control.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/useAudioStream.ts#useAudioStream]
+  note: No test.
+```
+
+```mdl
+verdict F-2.2: The worklet posts 32000-sample chunks to onAudioData.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/useAudioStream.ts#useAudioStream]
+  note: No test.
+```
+
+```mdl
+verdict F-2.3: Cleanup stops tracks, closes the AudioContext and cancels the animation frame.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/useAudioStream.ts#useAudioStream]
+  note: No test.
+```
+
+```mdl
+verdict F-2.4: A getUserMedia failure sets the error with its message.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/hooks/useAudioStream.ts#useAudioStream]
+  note: No test.
+```
+
+```mdl
+verdict F-3.1: Voice never receives audio chunks, so nothing is transcribed.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/components/Voice/Voice.tsx#Voice]
+  note: handleAudioData calls transcribe with 16 kHz options and appends text, but it is not passed to useAudioStream.
+```
+
+```mdl
+verdict F-3.2: handleAudioData returns early while isTranscribing, but is never called.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/components/Voice/Voice.tsx#Voice]
+  note: The guard exists but is unreachable; also `isModelLoaded` is missing from its dependency list.
+```
+
+```mdl
+verdict F-3.3: Empty or whitespace results do not update the transcript.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/components/Voice/Voice.tsx#Voice]
+  note: The check exists in unreachable code; no test.
+```
+
+```mdl
+verdict F-4.1: generateCompletions embeds the input and each knowledge-base entry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/testing/pipeline.ts#RagPipeline.generateCompletions]
+  note: The rag pipeline tests in pipeline.test.ts are describe.skip.
+```
+
+```mdl
+verdict F-4.2: Cosine similarity ranks the entries and the top 3 are kept.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transformer/src/testing/pipeline.ts#RagPipeline.generateCompletions]
+  note: The retrieved contexts are then ignored; the prompt is the literal 'hello'. Tests are skipped.
+```
+
+```mdl
+verdict T-1: No test loads the model.
+  status: missing
+  note: plugin.test.ts only checks module activation; pipeline.test.ts is skipped.
+```
+
+```mdl
+verdict T-2: No test covers a load failure.
+  status: missing
+  note: Searched src/**/*.test.ts; none mocks the model download.
+```
+
+```mdl
+verdict T-3: No test covers microphone capture.
+  status: missing
+  note: No test renders useAudioStream.
+```
+
+```mdl
+verdict T-4: No test covers chunk transcription, and the code path is not wired.
+  status: missing
+  note: Voice does not pass onAudioData, so this scenario cannot pass today.
+```
+
+```mdl
+verdict T-5: No test covers dropping concurrent chunks.
+  status: missing
+  note: No test exercises handleAudioData.
+```
+
+```mdl
+verdict QA-1: Not automated.
+  status: missing
+  note: Manual and blocked; no app mounts Voice.
+```

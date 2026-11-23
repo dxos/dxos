@@ -7,22 +7,25 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
+import { useIdentity } from '@dxos/halo-react';
 import { URI } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Show from '@dxos/react-ui/Show';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
+import { createDataExtensions } from '@dxos/ui-editor';
 
 import { Outline, type OutlineController } from '#components';
-import { meta } from '#meta';
 
 import { useMarkdownExtensions } from '../../hooks/index.ts';
+import { TasksNamespace } from '../../namespace.ts';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline> & {
   /**
@@ -41,11 +44,13 @@ export const OutlineArticle = ({
   role,
   attendableId,
   subject: outline,
-  taskSet,
+  taskSet: taskSetProp,
   toolbar = true,
 }: OutlineArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
+  const readonly = ToolkitHooks.useReadOnly();
   const db = Obj.getDatabase(outline);
+  const taskSet = readonly ? undefined : taskSetProp;
 
   // Link the user navigated into; the back button clears it to return to the outline.
   const [selected, setSelected] = useState<URI.URI>();
@@ -75,11 +80,19 @@ export const OutlineArticle = ({
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
   const handleBack = useCallback(() => setSelected(undefined), []);
 
-  const extensions = useMarkdownExtensions(outline);
-
   // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
   // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
   const text = useResolveRef(outline.content);
+  // Comments on the outline anchor into its text.
+  const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
+  const markdownExtensions = useMarkdownExtensions(outline, binding);
+  // Carets only: the outline's editor binds its text itself, under the same id.
+  const identity = useIdentity();
+  const space = getSpace(outline);
+  const extensions = useMemo(
+    () => [...markdownExtensions, createDataExtensions({ id: Obj.getURI(outline), messenger: space, identity })],
+    [markdownExtensions, outline, space, identity],
+  );
 
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
@@ -149,7 +162,7 @@ export const OutlineArticle = ({
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
         </Panel.Header>
         <Panel.Body>
-          <TaskForm task={task} />
+          <TaskForm task={task} readonly={readonly} />
         </Panel.Body>
       </Panel.Root>
     );
@@ -160,8 +173,10 @@ export const OutlineArticle = ({
       {(text) => (
         <Outline.Root
           ref={outlineRef}
-          id={text.id}
+          // The outline's URI, which keys the editor's comments as it does a Markdown document's.
+          id={Obj.getURI(outline)}
           text={text}
+          readonly={readonly}
           onConvertToTask={taskSet ? handleConvertToTask : undefined}
           onConvertibleChange={setConvertible}
           onSelectLink={handleSelectLink}
@@ -186,7 +201,7 @@ export const OutlineArticle = ({
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ task }: { task: Task.Task }) => {
+const TaskForm = ({ task, readonly }: { task: Task.Task; readonly?: boolean }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
   const [snapshot] = useObject(task);
 
@@ -204,7 +219,13 @@ const TaskForm = ({ task }: { task: Task.Task }) => {
   );
 
   return (
-    <Form.Root schema={schema} values={snapshot} autoSave onSave={handleSave}>
+    <Form.Root
+      schema={schema}
+      values={snapshot}
+      readonly={readonly}
+      autoSave={!readonly}
+      onSave={readonly ? undefined : handleSave}
+    >
       <Form.Viewport scroll width='document'>
         <Form.Content>
           <Form.Fields />

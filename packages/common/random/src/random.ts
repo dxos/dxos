@@ -19,6 +19,7 @@ import {
   randProductName,
   randRecentDate,
   randSentence,
+  randTodo,
   randUrl,
   randUuid,
   randWord,
@@ -123,11 +124,13 @@ export const random = {
     productName: () => randProductName(),
     department: () => randDepartment(),
   },
+  todo: {
+    title: () => randTodo().title,
+  },
   geo: {
     airport: () => rand(airports),
     location: () => rand(airports).location,
   },
-  email: {},
   properties: {
     emoji: () => rand(idEmoji),
     hue: () => rand(idHue),

@@ -6,7 +6,7 @@ import React, { act, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { beforeAll, describe, onTestFinished, test } from 'vitest';
 
-import { type EditorView } from '@dxos/ui-editor';
+import { type EditorLocation, type EditorView, editorLocation } from '@dxos/ui-editor';
 
 import { type UseTextEditorProps, useTextEditor } from './useTextEditor.ts';
 
@@ -38,6 +38,14 @@ const mount = async (element: React.ReactElement): Promise<HTMLElement> => {
 };
 
 const mountAutoFocusEditor = () => mount(<AutoFocusEditor />);
+
+/** An `editorLocation` extension whose `next` resolves with the next location it reports. */
+const locationReporter = () => {
+  const waiters: ((location: EditorLocation) => void)[] = [];
+  const extension = editorLocation((_id, location) => waiters.splice(0).forEach((resolve) => resolve(location)));
+  const next = () => new Promise<EditorLocation>((resolve) => waiters.push(resolve));
+  return { extension, next };
+};
 
 describe('useTextEditor', () => {
   beforeAll(() => {
@@ -86,5 +94,88 @@ describe('useTextEditor', () => {
       />,
     );
     expect(view?.state.selection.main.anchor).toBe(7);
+  });
+
+  // A document that shrank while closed: the scroll no longer fits, the selection still does.
+  test('restores the part of the state that still fits', async ({ expect }) => {
+    let view: EditorView | undefined;
+    await mount(
+      <RestoringEditor
+        id='doc'
+        initialValue='hello world'
+        scrollTo={500}
+        selection={{ anchor: 3 }}
+        onView={(next) => (view = next)}
+      />,
+    );
+    expect(view?.state.selection.main.anchor).toBe(3);
+  });
+
+  test('restores the part of the state that fits the content once it arrives', async ({ expect }) => {
+    let view: EditorView | undefined;
+    await mount(<RestoringEditor id='doc' scrollTo={500} selection={{ anchor: 5 }} onView={(next) => (view = next)} />);
+
+    await act(async () => {
+      view?.dispatch({ changes: { from: 0, insert: 'hello world' } });
+      await Promise.resolve();
+    });
+    expect(view?.state.selection.main.anchor).toBe(5);
+  });
+
+  test('restores a selection once content arriving over several updates reaches it', async ({ expect }) => {
+    let view: EditorView | undefined;
+    await mount(<RestoringEditor id='doc' selection={{ anchor: 8 }} onView={(next) => (view = next)} />);
+
+    for (const insert of ['hello', ' world']) {
+      await act(async () => {
+        view?.dispatch({ changes: { from: view.state.doc.length, insert } });
+        await Promise.resolve();
+      });
+    }
+    expect(view?.state.selection.main.anchor).toBe(8);
+  });
+
+  // Peers' Jump reads the reported selection; the caret the editor places at mount is not the reader's.
+  test("the selection placed at mount is not reported as the reader's", async ({ expect }) => {
+    const { extension, next } = locationReporter();
+    let mounted: EditorView | undefined;
+    await mount(
+      <RestoringEditor
+        id='doc'
+        initialValue={'line one\nline two\n'}
+        selectionEnd
+        extensions={[extension]}
+        onView={(view) => (mounted = view)}
+      />,
+    );
+    expect(mounted?.state.selection.main.head).toBe('line one'.length);
+    if (mounted) {
+      // happy-dom has no layout, so pin the top of the viewport to the second line.
+      mounted.posAtCoords = () => 10;
+      mounted.scrollDOM.dispatchEvent(new Event('scroll'));
+    }
+    expect(await next()).toEqual({ selection: undefined, viewport: expect.any(String) });
+  });
+
+  // A reopened document restores the reader's last caret; that is not where they are now.
+  test("a selection restored at mount is not reported as the reader's", async ({ expect }) => {
+    const { extension, next } = locationReporter();
+    let mounted: EditorView | undefined;
+    await mount(
+      <RestoringEditor
+        id='doc'
+        initialValue={'line one\nline two\n'}
+        selection={{ anchor: 3 }}
+        selectionEnd
+        extensions={[extension]}
+        onView={(view) => (mounted = view)}
+      />,
+    );
+    expect(mounted?.state.selection.main.head).toBe(3);
+    if (mounted) {
+      mounted.posAtCoords = () => 10;
+      mounted.scrollDOM.dispatchEvent(new Event('scroll'));
+    }
+    expect(await next()).toEqual({ selection: undefined, viewport: expect.any(String) });
   });
 });

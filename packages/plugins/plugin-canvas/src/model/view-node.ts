@@ -13,10 +13,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type NodeBase, type ViewId, ViewNode, viewLinkFields } from '@dxos/react-ui-canvas/headless';
-
-import { Canvas } from '#types';
+import { type NodeBase, type ViewId, ViewNode, viewLinkFields } from '@dxos/scene';
 
 /** How a frame shows an object that is not a canvas drawing: the object's surface of that role. */
 export const VIEW_ROLES = ['card', 'section', 'article'] as const;
@@ -94,19 +91,4 @@ export const viewRole = (node: NodeBase): ViewRole => {
   const link: unknown = Reflect.get(node, 'link');
   const role: unknown = typeof link === 'object' && link !== null ? Reflect.get(link, 'role') : undefined;
   return Schema.is(ViewRole)(role) ? role : 'card';
-};
-
-/** Whether a canvas belongs to this variant, so a drawing over it embeds as a scene rather than a surface. */
-export const isSceneCanvas = (canvas: Drawing.Canvas | undefined): boolean => Canvas.isSceneSchema(canvas?.schema);
-
-/**
- * Whether an object is a drawing of this variant, which a frame embeds as a scene; `undefined` while it is a
- * drawing whose canvas has not loaded.
- */
-export const isCanvasDrawing = (object: unknown): boolean | undefined => {
-  if (!Obj.instanceOf(Drawing.Drawing, object)) {
-    return false;
-  }
-  const canvas = object.canvas.target;
-  return canvas === undefined ? undefined : isSceneCanvas(canvas);
 };

@@ -24,13 +24,20 @@ import {
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import {
+  ViewLocation,
+  useAttention,
+  useSelection,
+  useSelectionActions,
+  useViewStateActions,
+} from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
   type DxGridElement,
   type DxGridPosition,
   type EditorBlurHandler,
   type EditorKeyHandler,
+  FitWidthBox,
   Grid,
   GridCellEditor,
   type GridContentProps,
@@ -43,13 +50,13 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
-import { meta } from '#meta';
 import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions/index.ts';
 import { useSelectThreadOnCellFocus } from '../../integrations/index.ts';
+import { SheetNamespace } from '../../namespace.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
-import { FitBox, naturalSize, useUsedExtent } from './fit.tsx';
+import { FitBox, naturalSize, useSheetFitWidth, useUsedExtent } from './fit.tsx';
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util.ts';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
@@ -80,20 +87,27 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
+const readonlyColDefault = {
+  frozenColsStart: sheetColDefault.frozenColsStart,
+  grid: { size: defaultColSize, readonly: true },
+};
+const readonlyRowDefault = {
+  frozenRowsStart: sheetRowDefault.frozenRowsStart,
+  grid: { size: defaultRowSize, readonly: true },
+};
+
 export type SheetContentProps = {
-  /** Shows the used range only, scaled down to fit the box (never past 1:1) and inert: a sheet on a slide. */
-  fit?: boolean;
+  fit?: 'contain' | 'width';
 };
 
 export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>(({ fit, ...props }, forwardedRef) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SheetNamespace.key);
   const {
     id,
     attendableId,
     model,
     editing,
-    setCursor,
-    setRange,
+    addressing,
     cursor,
     cursorFallbackRange,
     activeRefs,
@@ -103,6 +117,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   // The grid spans the sheet's own rows and columns, which grow past the defaults.
   const [sheetRows] = useObject(model.sheet, 'rows');
   const [sheetColumns] = useObject(model.sheet, 'columns');
+  const readonly = !!model.readonly;
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
@@ -116,16 +131,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     (event: FocusEvent) => {
       if (!editing) {
         const cell = closestCell(event.target);
-        if (cell) {
-          if (cell.plane === 'grid') {
-            setCursor({ col: cell.col, row: cell.row });
-            setExtraplanarFocus(null);
-          } else {
-            setExtraplanarFocus(cell);
-          }
-        } else {
-          setExtraplanarFocus(null);
-        }
+        setExtraplanarFocus(cell && cell.plane !== 'grid' ? cell : null);
       }
     },
     [editing],
@@ -192,6 +198,14 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     }
   }, [dxGrid, selection?.from, selection?.to]);
 
+  // Peers' presence reveals this sheet at the selection, so publish it as a comment-style anchor too. The anchor names
+  // rows and columns by id, so an axis edit under an unchanged A1 selection republishes it.
+  const { set: setViewLocation } = useViewStateActions(ViewLocation.aspect, selectionContextId);
+  useEffect(() => {
+    const anchor = selection && SheetUtil.anchorFromSelection(model.sheet, { mode: 'range', ...selection });
+    setViewLocation({ selection: anchor });
+  }, [model.sheet, sheetRows, sheetColumns, selection?.from, selection?.to, setViewLocation]);
+
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
     ({ minCol, maxCol, minRow, maxRow }) => {
       const range: CellRange = { from: { col: minCol, row: minRow } };
@@ -202,8 +216,6 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
         // Update range selection in formula.
         rangeController.current?.setRange(rangeToA1Notation(range));
       } else {
-        // Setting range while editing causes focus to move to null, avoid doing so.
-        setRange(range.to ? range : undefined);
         const from = addressToA1Notation(range.from);
         const to = addressToA1Notation(range.to ?? range.from);
         publishedSelection.current = `${from}:${to}`;
@@ -260,6 +272,14 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      if (readonly) {
+        if ((event.metaKey || event.ctrlKey) && (event.key === 'c' || event.key === 'C')) {
+          event.preventDefault();
+          return cursorFallbackRange && model.copy(cursorFallbackRange);
+        }
+        return;
+      }
+
       switch (event.key) {
         case 'Backspace':
         case 'Delete':
@@ -300,21 +320,24 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
         }
       }
     },
-    [cursorFallbackRange, model, cursor, extraplanarFocus, selectEntireAxis],
+    [readonly, cursorFallbackRange, model, cursor, extraplanarFocus, selectEntireAxis],
   );
 
   const contextMenuAnchorRef = useRef<HTMLButtonElement | null>(null);
   const [contextMenuOpen, setContextMenuOpen] = useState<DxGridPosition | null>(null);
   const contextMenuAxis = contextMenuOpen?.plane.startsWith('frozenRows') ? 'col' : 'row';
 
-  const handleContextMenu = useCallback((event: MouseEvent) => {
-    const cell = closestCell(event.target);
-    if (cell && cell.plane.startsWith('frozen')) {
-      event.preventDefault();
-      contextMenuAnchorRef.current = event.target as HTMLButtonElement;
-      setContextMenuOpen(cell);
-    }
-  }, []);
+  const handleContextMenu = useCallback(
+    (event: MouseEvent) => {
+      const cell = closestCell(event.target);
+      if (!readonly && cell && cell.plane.startsWith('frozen')) {
+        event.preventDefault();
+        contextMenuAnchorRef.current = event.target as HTMLButtonElement;
+        setContextMenuOpen(cell);
+      }
+    },
+    [readonly],
+  );
 
   const handleAxisMenuAction = useCallback(
     (operation: 'insert-before' | 'insert-after' | 'drop') => {
@@ -340,6 +363,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
   const extent = useUsedExtent(model.sheet);
   const natural = useMemo(() => naturalSize(extent, { columns, rows }), [extent, columns, rows]);
+  const { fitWidth, columns: fitWidthColumns } = useSheetFitWidth(fit === 'width' ? dxGrid : null, model, extent);
 
   const extensions = useMemo(
     () => [
@@ -371,10 +395,10 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   const [gridInstances] = Hooks.useCapabilities(SheetCapabilities.GridInstances);
   useEffect(() => {
     if (dxGrid && gridInstances) {
-      gridInstances.register(attendableId, dxGrid, setActiveRefs);
+      gridInstances.register(attendableId, { sheet: model.sheet, grid: dxGrid, setActiveRefs });
       return () => gridInstances.unregister(attendableId);
     }
-  }, [dxGrid, gridInstances, attendableId, setActiveRefs]);
+  }, [dxGrid, gridInstances, attendableId, model.sheet, setActiveRefs]);
 
   useSelectThreadOnCellFocus();
 
@@ -382,16 +406,23 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     <Grid.Content
       className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
       initialCells={initialCells}
-      limitColumns={fit ? extent.columns : (sheetColumns?.length ?? SheetUtil.DEFAULT_COLS)}
-      limitRows={fit ? extent.rows : (sheetRows?.length ?? SheetUtil.DEFAULT_ROWS)}
-      columns={columns}
+      limitColumns={
+        fit === 'width'
+          ? fitWidth.sizes.length
+          : fit
+            ? extent.columns
+            : (sheetColumns?.length ?? SheetUtil.DEFAULT_COLS)
+      }
+      limitRows={fit === 'contain' ? extent.rows : (sheetRows?.length ?? SheetUtil.DEFAULT_ROWS)}
+      columns={fit === 'width' ? fitWidthColumns : columns}
       rows={rows}
-      columnDefault={sheetColDefault}
-      rowDefault={sheetRowDefault}
+      columnDefault={readonly ? readonlyColDefault : sheetColDefault}
+      rowDefault={readonly ? readonlyRowDefault : sheetRowDefault}
       activeRefs={activeRefs}
       frozen={frozen}
       overscroll='trap'
-      onAxisResize={handleAxisResize}
+      addressing={addressing}
+      onAxisResize={readonly ? undefined : handleAxisResize}
       onSelect={handleSelect}
       onFocus={handleFocus}
       onWheelCapture={handleWheel}
@@ -405,7 +436,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   return (
     <div ref={forwardedRef} {...Util.composableProps(props, { classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
-      {fit ? (
+      {fit === 'contain' ? (
         <FitBox width={natural.width} height={natural.height}>
           {/* Inert, not only pointer-proof: no cell takes focus, so no key or clipboard edit reaches the sheet. The grid is
               uncapped by the viewport so it renders every cell of its natural size before the box scales it. */}
@@ -413,6 +444,8 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
             {grid}
           </div>
         </FitBox>
+      ) : fit === 'width' ? (
+        <FitWidthBox fit={fitWidth}>{grid}</FitWidthBox>
       ) : (
         grid
       )}

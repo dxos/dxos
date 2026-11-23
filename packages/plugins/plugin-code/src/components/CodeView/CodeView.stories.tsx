@@ -11,17 +11,17 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { translations } from '#translations';
 
 import { CodeView } from './CodeView.tsx';
-import SYMBOL_SOURCE from './symbol.ts?raw';
+import SOURCE from './CodeView.tsx?raw';
 
-const KEY = 'github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/symbol.ts';
-const PATH = 'packages/plugins/plugin-code/src/components/CodeView/symbol.ts';
+const KEY = 'github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/CodeView.tsx';
+const PATH = 'packages/plugins/plugin-code/src/components/CodeView/CodeView.tsx';
 
 const meta = {
   title: 'plugins/plugin-code/components/CodeView',
   component: CodeView,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { translations: [...translations, ...reactUiTranslations] },
-  args: { label: `${KEY}#findSymbolLine`, path: PATH, content: SYMBOL_SOURCE, symbol: 'findSymbolLine' },
+  args: { label: `${KEY}#CodeView`, path: PATH, content: SOURCE, symbol: 'CodeView' },
 } satisfies Meta<typeof CodeView>;
 
 export default meta;

@@ -8,9 +8,11 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -24,10 +26,11 @@ import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentOperation, ChatParticipant, Goal, Mode, Relay, type Trigger, TriggerOperation } from '#types';
 
+import { AgentNamespace } from '../namespace.ts';
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
 import { BRAIN_SCENARIO as SCENARIO } from './scenario.ts';
-import { createLocalAgent, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
+import { createLocalAgent, inlineBrainHooks, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -72,7 +75,7 @@ const makeScript =
     if (request.text.startsWith(COMPOSE_PROMPT)) {
       return { parts: [text(SCENARIO.composed)] };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       const facts = SCENARIO.facts
         .filter(({ quote }) => request.text.includes(quote))
         .map((fact) => ({ ...fact, factuality: 'CT+', polarity: '+' }));
@@ -126,6 +129,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, inlineBrainHooks) },
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
   ),
@@ -162,7 +166,7 @@ const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
 /** The agent's replies in the chat. */
 const messages = Effect.fnUntraced(function* (chat: Chat.Chat) {
   const feed = yield* Database.load(chat.feed);
-  return yield* Feed.query(feed, Filter.type(Message.Message)).run;
+  return yield* TrajectoryStore.messages(feed);
 });
 
 const replies = (chat: Chat.Chat) =>
@@ -174,8 +178,8 @@ const watchesOn = (triggers: readonly Trigger.Trigger[], speaker: string) =>
   triggers.filter(({ when, ongoing }) => when.speaker === speaker && ongoing);
 
 describe('agent brain (local)', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.reset();
   });
 
   it.effect(

@@ -21,10 +21,10 @@ import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Status from '@dxos/react-ui/Status';
 
 import { FrameStack, StoryboardPlayer } from '#components';
-import { meta } from '#meta';
 import { Frame, MediaArtifact, Storyboard, StoryboardView } from '#types';
 
 import { FRAME_COMPANION } from '../../constants.ts';
+import { StudioNamespace } from '../../namespace.ts';
 import { EmptyPanel } from './EmptyPanel.tsx';
 import { FrameThumbnail } from './FrameThumbnail.tsx';
 import { FrameVariants } from './FrameVariants.tsx';
@@ -45,7 +45,7 @@ export type StoryboardArticleProps = AppSurface.ObjectArticleProps<Storyboard.St
  * the storyboard. The same shape a slide deck takes; see the plugin design doc.
  */
 export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: StoryboardArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(StudioNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Live frame objects (not snapshots): the rows mutate them and the drag controller keys on them.
   const [refs] = useObject(storyboard, 'frames');
@@ -134,7 +134,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
         .action(
           'append-frame',
           {
-            label: ['append-frame.label', { ns: meta.profile.key }],
+            label: ['append-frame.label', { ns: StudioNamespace.key }],
             icon: 'ph--plus--regular',
             disposition: 'toolbar',
           },
@@ -143,7 +143,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
         .action(
           'delete-frame',
           {
-            label: ['delete-frame.label', { ns: meta.profile.key }],
+            label: ['delete-frame.label', { ns: StudioNamespace.key }],
             icon: 'ph--trash--regular',
             disposition: 'toolbar',
             disabled: !selectedFrame,

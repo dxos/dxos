@@ -5,8 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { type Bounds, NodeBase, type Port } from '@dxos/scene';
+
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type Bounds, NodeBase, type Port } from '../model/index.ts';
 import {
   MAX_PORTS_PER_SIDE,
   defaultPorts,

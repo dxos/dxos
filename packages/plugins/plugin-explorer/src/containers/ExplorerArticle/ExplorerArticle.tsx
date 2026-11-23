@@ -5,10 +5,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { type Filter, Obj, type View } from '@dxos/echo';
+import { type Filter, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { type TreeNode } from '@dxos/react-ui-graph';
-import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
+import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-query';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -17,20 +17,23 @@ import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type ExplorerArticleVariant, VARIANTS, Visualization, isVariant } from '#components';
 import { useGraphModel } from '#hooks';
+import { type Graph } from '#types';
 
 export type { ExplorerArticleVariant } from '#components';
 
-export type ExplorerArticleProps = AppSurface.ObjectArticleProps<View.View>;
+export type ExplorerArticleProps = AppSurface.ObjectArticleProps<Graph.Graph>;
 
 export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps) => {
-  const [view] = useObject(subject);
-  const [filter, setFilter] = useState<Filter.Any>();
+  const [graph] = useObject(subject);
+  // The graph opens on its saved query until the toolbar's query is edited.
+  const saved = useQueryBuilder(graph?.query.raw);
+  const [edited, setEdited] = useState<{ filter?: Filter.Any }>();
 
-  const db = view && Obj.getDatabase(view);
-  const model = useGraphModel(db, filter);
+  const db = graph && Obj.getDatabase(graph);
+  const model = useGraphModel(db, edited ? edited.filter : saved);
 
   const handleFilterChange = useCallback<NonNullable<QueryEditorProps['onFilterChange']>>(
-    ({ filter }) => setFilter(filter),
+    ({ filter }) => setEdited({ filter }),
     [],
   );
 
@@ -92,7 +95,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
       {showToolbar && (
         <Panel.Header>
           <Toolbar.Root>
-            <QueryEditor db={db} onFilterChange={handleFilterChange} />
+            <QueryEditor db={db} value={graph?.query.raw} onFilterChange={handleFilterChange} />
             <Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
               {VARIANTS.map(({ value, icon, label }) => (
                 <ToggleGroup.Item key={value} value={value} icon={icon} iconOnly label={label} />
@@ -109,6 +112,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
           onSurfaceClick={handleDismiss}
         >
           <Visualization.Graph onNodeHover={handleHover} />
+          <Visualization.TypeFilter />
         </Visualization.Root>
       </Panel.Body>
     </Panel.Root>

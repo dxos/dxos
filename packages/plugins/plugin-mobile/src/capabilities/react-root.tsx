@@ -10,12 +10,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Hooks from '@dxos/plugin-deck/Hooks';
 
 import { MobileDeckLayout } from '#containers';
-import { meta } from '#meta';
+
+import { MobileNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactRoot, {
-      id: meta.profile.key,
+      id: MobileNamespace.key,
       root: () => {
         const handleDismissToast = Hooks.useDismissToast();
 

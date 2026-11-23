@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions-runtime-cloudflare",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Functions runtime for Cloudflare.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,6 +41,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@cloudflare/workers-types": "catalog:"
   },
   "publishConfig": {

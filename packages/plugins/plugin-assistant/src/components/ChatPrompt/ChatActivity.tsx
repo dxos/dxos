@@ -9,7 +9,7 @@ import { ChatStatus as NaturalChatStatus } from '@dxos/react-ui-chat';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from '../../namespace.ts';
 
 const CHAT_ACTIVITY_NAME = 'Chat.Activity';
 
@@ -47,7 +47,7 @@ export type ChatActivityProps = Util.ThemedClassName<{
  * state can be mounted in a story without a live agent process; `Chat.Activity` is the bound form.
  */
 export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   // `sleeping` is the agent saying the turn is over and only the alarm is left, so the countdown
   // replaces it rather than competing with it.
   const waking = !activity || activity.phase === 'sleeping';

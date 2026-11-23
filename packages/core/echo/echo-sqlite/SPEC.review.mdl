@@ -1,0 +1,363 @@
+---
+spec: github:dxos/dxos/packages/core/echo/echo-sqlite/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: EchoSqlite
+
+The package matches its spec closely and is well tested. `SqliteDatabase` opens by migrating and
+loading type rows only. It holds hydrated entities in a `WeakRef` working set with a
+`FinalizationRegistry`, and writes dirty rows behind in one transaction per microtask, requeueing a
+failed batch. `compileQuery` emits one `WITH RECURSIVE` statement of `CROSS JOIN`ed CTEs with
+bound values, typed JSON comparisons, the FTS5 table, the reverse-reference table and the
+depth-10 deletion cascade. Every feature group has named tests in `database.test.ts`,
+`memory.test.ts`, `differential.test.ts`, `explain.test.ts` and `schema.test.ts`.
+
+Three gaps. The entity table has only the normalized `parent_id`/`source_id`/`target_id`
+columns, not the raw URI columns F-2.2 lists. An unknown type hydrates through `objectFromJSON` as an
+ordinary live object, or the row is skipped on a decode error, rather than as a read-only snapshot
+(F-7.3). T-1 seeds 2,000 objects, not 100,000, and its heap clause runs only in the manual
+`memory.report.test.ts`. Browser and bun SqlClients (F-1.2) and the registry scope (F-4.10) have no
+tests.
+
+Of 47 items: 42 done, 2 untested, 3 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict F-1.1: SqliteDatabase implements Database.Database, and its SqliteHypergraph returns it by space id.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase, github:dxos/dxos/packages/core/echo/echo-sqlite/src/graph.ts#SqliteHypergraph]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-1.2: The package depends only on the Effect SqlClient, but only the node client is tested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.open, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore]
+  note: No platform-specific imports in `src/`; no test runs on wa-sqlite/OPFS or bun.
+```
+
+```mdl
+verdict F-1.3: SqliteDatabase.layer provides Database.Service, and the scope's release flushes and closes.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.layer, github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.close]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-1.4: Feeds, branches, history, blob backends and retainObjects throw UnsupportedOperationError.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/errors.ts#UnsupportedOperationError, github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.retainObjects, github:dxos/dxos/packages/core/echo/echo-sqlite/src/graph.ts#SqliteHypergraph]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-2.1: Each entity is one echo_entities row keyed by (space_id, id) with the full ECHO JSON body.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/record.ts#toRecord, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore.write]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-2.2: The indexed columns exist, except the raw parent, source and target URIs.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/record.ts#toRecord, github:dxos/dxos/packages/core/echo/echo-sqlite/src/record.ts#localEntityId]
+  note: |
+    `0001_init.sql` has kind, type_dxn, deleted, created_at, updated_at and the normalized parent_id,
+    source_id and target_id (NULL when not local), all written with the body. There are no raw URI columns:
+    a cross-space endpoint or parent is kept only in the body.
+```
+
+```mdl
+verdict F-2.3: References go to echo_refs and strings to the echo_fts trigram table, in the write transaction.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/record.ts#toRecord, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore.write]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-2.4: Schema lives in one numbered, idempotent migration applied through Migrator.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore.migrate]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/schema.test.ts]
+```
+
+```mdl
+verdict F-2.5: Every statement is bound to its space_id.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-3.1: open migrates and reads only the type rows.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.open, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore.loadTypes]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts]
+```
+
+```mdl
+verdict F-3.2: A query hydrates only its result rows, and LIMIT runs in SQL.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore.query]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts]
+```
+
+```mdl
+verdict F-3.3: A ref load reads one row by (space_id, id); target and peek read the working set.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/graph.ts#DatabaseRefResolver, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore.load]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts, github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts]
+```
+
+```mdl
+verdict F-3.4: The working set keyed by id returns the resident instance for every lookup.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts]
+```
+
+```mdl
+verdict F-3.5: Unheld, clean objects are released through WeakRef and FinalizationRegistry.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts]
+```
+
+```mdl
+verdict F-3.6: Endpoints, parents and ref targets load one row at a time on demand.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/graph.ts#DatabaseRefResolver, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore.load]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts]
+```
+
+```mdl
+verdict F-3.7: diagnostics reports resident, hydrated, queries, loads and tracked.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.diagnostics]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts]
+```
+
+```mdl
+verdict F-4.1: A query compiles to one WITH RECURSIVE statement, sub-plans included.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/explain.test.ts]
+```
+
+```mdl
+verdict F-4.2: Compilation is pure and binds every value; lists go through json_each.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/explain.test.ts]
+```
+
+```mdl
+verdict F-4.3: Property filters use json_extract with typed comparison and COALESCE(json_type, 'missing').
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/differential.test.ts]
+```
+
+```mdl
+verdict F-4.4: Type, id and timestamp use indexed columns; meta reads the body; text reads FTS5.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/explain.test.ts, github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-4.5: Traversals join on the normalized id columns or echo_refs.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts, github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/explain.test.ts]
+```
+
+```mdl
+verdict F-4.6: Deletion covers the row, ancestors to depth 10 and relation endpoints, with exclude, include and only.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-4.7: Order, LIMIT and OFFSET run in SQL, NULLS LAST, with id as the tiebreaker.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-4.8: A metaVersion range throws UnsupportedQueryError; there is no JS fallback.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/compile.ts#compileQuery, github:dxos/dxos/packages/core/echo/echo-sqlite/src/errors.ts#UnsupportedQueryError]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+  note: No pre-pass exists yet, so the error path is the only one.
+```
+
+```mdl
+verdict F-4.9: A query flushes pending writes before it runs.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.flush]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-4.10: Registry-scope queries are matched in memory by matchRegistry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/registry.ts#matchRegistry, github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase]
+  note: No test runs a query with `Scope.registry()`; `database.test.ts` only reads the registry by URI.
+```
+
+```mdl
+verdict F-5.1: run, runEntries and first execute the statement and hydrate the rows.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/query-result.ts#LiveQueryResult.run, github:dxos/dxos/packages/core/echo/echo-sqlite/src/query-result.ts#LiveQueryResult.first]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-5.2: runSync returns the last execution and schedules a new one without running SQL.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/query-result.ts#LiveQueryResult.runSync]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-5.3: Subscriptions re-run after batches that can affect them, narrowed by type.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/query-result.ts#LiveQueryResult.subscribe, github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-5.4: Subscribers hear only a change of membership or order.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/query-result.ts#LiveQueryResult.subscribe]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-6.1: Changed rows are batched per microtask into one transaction, and flush awaits it.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.flush, github:dxos/dxos/packages/core/echo/echo-sqlite/src/object-store.ts#ObjectStore.write]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-6.2: Unstored ref targets and relation endpoints are stored in the same batch.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-6.3: remove soft-deletes, re-add restores, and runGarbageCollection purges rows and side tables.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.remove, github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.runGarbageCollection]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-6.4: A failed batch is requeued and the next flush retries it.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.flush, github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.close]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+  note: That close releases subscriptions when its final flush fails has no test.
+```
+
+```mdl
+verdict F-6.5: Flushed entities read back identically after reopen.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.open]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-7.1: open({ types }) registers static types for typed hydration.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.open, github:dxos/dxos/packages/core/echo/echo-sqlite/src/registry.ts#SimpleRegistry]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-7.2: addType stores a Type row and registers it, so objects hydrate after reopen.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase.addType]
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict F-7.3: An unknown type does not fail the query, but nothing makes the object read-only.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts#SqliteDatabase]
+  note: |
+    `#hydrate` decodes through `objectFromJSON` and makes the result live; a decode error logs and skips the row.
+    Nothing marks the object read-only, and no test hydrates a row whose type was never stored or registered.
+```
+
+```mdl
+verdict T-1: memory.test.ts checks zero reads on open and 10 hydrated, but over 2,000 objects; the heap check is manual.
+  status: partial
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts, github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.report.test.ts]
+  note: The heap-growth clause runs only in `memory.report.test.ts`, tagged `manual`, so CI does not run it.
+```
+
+```mdl
+verdict T-2: "query results nobody holds are released" checks release and re-read after GC.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/memory.test.ts]
+  note: It uses 1,000 objects, not 10,000.
+```
+
+```mdl
+verdict T-3: differential.test.ts runs 200 random filters and requires more than 50 non-empty rounds.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/differential.test.ts]
+```
+
+```mdl
+verdict T-4: explain.test.ts asserts every table access is an index seek.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/explain.test.ts]
+```
+
+```mdl
+verdict T-5: explain.test.ts runs a composite query as exactly one bound statement.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/sql/explain.test.ts]
+```
+
+```mdl
+verdict T-6: The read-your-writes test runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict T-7: "notifies subscribers only when results change" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```
+
+```mdl
+verdict T-8: Reopen is covered for every entity kind, spread over several database.test.ts tests.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+  note: Objects, references, relations, parents, dynamic types and blobs reopen in separate tests, not one fixture.
+```
+
+```mdl
+verdict T-9: "retries a failed write instead of dropping it" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.test.ts]
+```

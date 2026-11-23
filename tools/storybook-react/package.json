@@ -26,6 +26,7 @@
   "devDependencies": {
     "@dxos/agent-claude": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-dev-shell": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

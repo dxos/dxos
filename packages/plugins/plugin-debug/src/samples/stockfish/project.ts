@@ -52,7 +52,7 @@ is the wrong step.`;
  * above is what keeps it on. The Sandbox skill cannot be bound the same way — it is contributed by
  * a plugin under a key rather than stored here — so the text names it instead.
  *
- * No `repo` and no `McpServer`: the repository is created in stage five and the server record in
+ * No repository and no `McpServer`: the repository is created in stage five and the server record in
  * stage four, and seeding either would name a URL that does not exist.
  */
 export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {

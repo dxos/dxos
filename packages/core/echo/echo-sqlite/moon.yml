@@ -3,4 +3,18 @@ language: typescript
 tags:
   - ts-vite-build
   - ts-test
+  - ts-test-browser
   - pack
+
+tasks:
+  # The `manual`-tagged benches; `src/testing/echo.bench.ts` is echo-client-e2e's `echo.bench.ts` with
+  # only its imports changed, so the two compare. Node only: the browser project cannot load `node:fs`.
+  # Never cached: a cached measurement measured nothing.
+  bench:
+    command: pnpm exec vitest bench --run --project node
+    env:
+      DX_RUN_MANUAL_TESTS: '1'
+    deps:
+      - ^:build
+    options:
+      cache: false

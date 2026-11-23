@@ -39,12 +39,6 @@ export const steps: Tour.Step[] = [
     description: 'Ticked tasks go to one agent session, in the order they are listed.',
     placement: 'bottom',
   },
-  {
-    target: '[data-testid="projectsPlugin.createChat"]',
-    title: 'Sessions',
-    description: 'Start a session against the project. It reads the brief and files what it makes under Artifacts.',
-    placement: 'bottom',
-  },
 ];
 
 export default steps;

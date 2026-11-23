@@ -4,13 +4,14 @@
 
 import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { EntityId, PublicKey } from '@dxos/keys';
 import { subscribeStream } from '@dxos/protocols';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Space } from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -163,6 +164,34 @@ describe('SpacesService', () => {
       const message = create(GossipMessageSchema, { channelId: 'user-channel/test' });
       deliver(message);
       expect(await received.wait({ timeout: 1_000 })).toBe(message);
+    });
+  });
+
+  describe('importSpace', () => {
+    test('a failed feed write fails the import and deletes the half-imported space', async () => {
+      await serviceContext.createIdentity();
+      const dataSpaceManager = serviceContext.dataSpaceManager;
+      invariant(dataSpaceManager);
+      const liveSpaces = () =>
+        [...dataSpaceManager.spaces.values()].filter((space) => !dataSpaceManager.isSpaceDeleted(space.key)).length;
+      const before = liveSpaces();
+      vi.spyOn(serviceContext.echoHost.feedService, 'FeedService.insertIntoFeed').mockReturnValue(
+        Effect.die(new Error('feed write failed')),
+      );
+
+      const archive = {
+        version: 1,
+        objects: [],
+        feeds: [{ feedObjectId: EntityId.random(), namespace: 'data', messages: [{ id: EntityId.random() }] }],
+      };
+      await expect(
+        EffectEx.runPromise(
+          spacesService['SpacesService.importSpace']({
+            archive: { filename: 'space.dx.json', contents: new TextEncoder().encode(JSON.stringify(archive)) },
+          }),
+        ),
+      ).rejects.toThrow();
+      expect(liveSpaces()).toBe(before);
     });
   });
 

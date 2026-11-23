@@ -28,9 +28,9 @@ import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
 import { useNavTreeModel, useNavTreeState } from '#hooks';
-import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
+import { NavTreeNamespace } from '../../namespace.ts';
 import { filterItems, getParent, getRearrangeIndex, resolveDropKind } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
@@ -96,6 +96,7 @@ export type NavTreeContainerProps = {
 
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId }, forwardedRef) => {
+    const rail = !ToolkitHooks.useReadOnly();
     const [isLg] = UiHooks.useMediaQuery('lg');
     const { invokePromise } = Hooks.useOperationInvoker();
     const runAction = GraphHooks.useActionRunner();
@@ -111,7 +112,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { getItem, setItem } = useNavTreeState();
     const layout = ToolkitHooks.useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
-    const { navigationSidebarState } = Main.useMainSidebars(meta.profile.key);
+    const { navigationSidebarState } = Main.useMainSidebars(NavTreeNamespace.key);
     const latestRef = useRef({
       tab,
       activeItems: layout.active,
@@ -375,6 +376,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           tab={tab}
           unavailable={tabUnavailable}
           open={layout.sidebarOpen}
+          rail={rail}
           ref={forwardedRef}
         />
       </NavTreeContext.Provider>

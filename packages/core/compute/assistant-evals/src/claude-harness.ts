@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { AiService } from '@dxos/ai';
+import { AiService, type AiUsage } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -350,8 +350,11 @@ const bindTestAccount = async (edgeUrl: string, identity: Identity): Promise<voi
   }
 };
 
-/** Puts the harness's space on EDGE, where the deployed worker reads it. */
-const replicateToEdge = async (
+/**
+ * Puts the harness's space on EDGE, where the deployed worker reads it. Exported because every test that
+ * drives a deployed EDGE needs the same four steps, and EDGE refuses a space that skipped any of them.
+ */
+export const replicateToEdge = async (
   client: Client,
   edgeUrl: string,
   identity: Identity,
@@ -386,9 +389,9 @@ const count = (value: unknown): number => (typeof value === 'number' ? value : 0
  * The turn's model calls: one per `assistant` event, each fed the transcript before it. The CLI
  * reports no per-message timing, so every call spans the turn.
  */
-const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
+export const turnCalls = (prompt: string, turn: Turn): AiUsage.Call[] => {
   const transcript: unknown[] = [{ role: 'user', content: prompt }];
-  const calls: Usage.Call[] = [];
+  const calls: AiUsage.Call[] = [];
   for (const event of turn.events) {
     if (event.type === 'assistant') {
       const { message } = event;

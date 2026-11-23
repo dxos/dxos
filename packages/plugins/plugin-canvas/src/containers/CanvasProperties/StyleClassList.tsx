@@ -5,10 +5,11 @@
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
-import { type StyleClass, hueClasses } from '@dxos/react-ui-canvas/scene';
+import { hueClasses } from '@dxos/react-ui-canvas';
 import { Form } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
+import { type StyleClass } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 const NameSchema = Schema.Struct({
@@ -47,10 +48,9 @@ export const StyleClassList = ({ classes, uses, readonly, onRename, onDelete }: 
                     onOpenChange={(open) => setOpenId(open ? styleClass.id : undefined)}
                     data-testid={`style-class-${styleClass.id}`}
                   >
-                    <div
-                      aria-hidden
-                      className={mx('size-4 shrink-0 self-center rounded-sm border', hue.surface, hue.border)}
-                    />
+                    <OrderedList.ItemIcon>
+                      <div aria-hidden className={mx('size-4 rounded-sm border', hue.surface, hue.border)} />
+                    </OrderedList.ItemIcon>
                     <OrderedList.ItemText />
                     <OrderedList.ItemDescription>{count === 1 ? '1 use' : `${count} uses`}</OrderedList.ItemDescription>
                     {!readonly && onDelete && <SystemButton.Remove onClick={() => onDelete(styleClass.id)} />}

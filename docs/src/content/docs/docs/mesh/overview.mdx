@@ -1,0 +1,61 @@
+---
+title: Overview
+description: What MESH is, and what ECHO and HALO run over it.
+welcome:
+  section: MESH
+  tagline: Peer-to-peer networking and replication.
+  background: mesh
+---
+
+import Diagram from '../../../../components/Diagram.astro';
+
+MESH is peer-to-peer networking for devices that share a **topic**, the key that names one group of devices, such as
+the devices that have one space open. The devices on a topic find each other, prove they belong and open direct links,
+then run any number of protocols side by side over each link. MESH treats every route as a transport. A direct WebRTC
+link and a WebSocket through a server are both ways to reach a peer, and MESH uses both at once.
+
+## How devices reach each other
+
+In most web apps, two devices talk through a server. Each device holds a connection to the server, and the server
+passes every message between them. MESH starts the same way, then adds a direct link.
+
+Every device keeps one WebSocket to a **signaling server**, which introduces the devices on a topic to each other.
+After the introduction, two devices open a **direct link**, a connection that runs between the two of them, and
+exchange data over it.
+
+A server can join a topic too. A **peer** is anything a device exchanges a topic's data with: another device, or such
+a server. The server reaches devices that no direct link can, because they are offline or their network blocks the
+link.
+
+In DXOS, that server is [EDGE](/docs/edge/overview/), and it plays both parts:
+
+- It is the signaling server, so it introduces peers.
+- It is an always-online peer, so it holds a copy of each space that replicates through it.
+
+<Diagram name="mesh-links" alt="Device A and Device B share a direct WebRTC link through Teleport, and each also holds a WebSocket to EDGE." />
+
+In the diagram, each box is a peer and each arrow is a link. The arrow between the two devices is a direct link over
+WebRTC. It carries a **Teleport** session, the stream MESH runs its protocols on. The other two arrows are the
+WebSockets to EDGE.
+
+## Where ECHO and HALO use MESH
+
+ECHO and HALO reach MESH through **swarms**. A swarm is the set of direct links a device keeps for one topic.
+
+| What                    | Who uses it | How                                                                                                                              |
+| ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Space replication       | ECHO        | Each open space joins a [swarm](/docs/mesh/concepts/swarms/) and replicates its documents and feeds over every link in it        |
+| Presence                | ECHO, HALO  | Peers in a swarm [announce](/docs/mesh/concepts/presence/) that they are online                                                  |
+| Device sync             | HALO        | An identity's devices join a swarm of their own and replicate the identity's state                                               |
+| Invitations             | HALO        | Host and guest of an interactive [invitation](/docs/halo/concepts/invitations/) meet in a swarm keyed by the invitation          |
+| Going offline           | Apps        | `client.mesh.updateConfig(ConnectionState.OFFLINE)` leaves every swarm. The tutorials' offline switch calls it                   |
+
+## How these pages are organized
+
+Your app rarely calls MESH directly. The protocols that run over it do. These pages explain how MESH works, so there
+is no learning path, API group or guides.
+
+- [Why MESH?](/docs/mesh/why-mesh/) argues for direct links between devices, with a server as one more route.
+- [Architecture](/docs/mesh/concepts/architecture/) shows the layers, from the transport up to the extensions ECHO and
+  HALO run. The other concept pages take one layer each.
+- The [glossary](/docs/mesh/resources/glossary/) defines every MESH term.

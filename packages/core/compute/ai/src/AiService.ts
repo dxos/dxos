@@ -13,6 +13,7 @@ import * as Layer from 'effect/Layer';
 import { DXN } from '@dxos/keys';
 
 import { AiModelNotAvailableError } from './errors.ts';
+import type * as ExtractionModel from './ExtractionModel.ts';
 import * as Model from './Model.ts';
 
 export type ServiceMetadata = {
@@ -36,6 +37,12 @@ export type DecisionModelResolver = (
   options?: ResolveOptions,
 ) => Layer.Layer<DecisionModel.DecisionModel, AiModelNotAvailableError, never>;
 
+/** Maps a model DXN onto an `ExtractionModel` layer. */
+export type ExtractionModelResolver = (
+  model: DXN.DXN,
+  options?: ResolveOptions,
+) => Layer.Layer<ExtractionModel.ExtractionModel, AiModelNotAvailableError, never>;
+
 export interface Service {
   /**
    * Service metadata.
@@ -51,6 +58,11 @@ export interface Service {
    * Maps a model name onto a `DecisionModel` layer.
    */
   readonly decisionModel: DecisionModelResolver;
+
+  /**
+   * Maps a model name onto an `ExtractionModel` layer.
+   */
+  readonly extractionModel: ExtractionModelResolver;
 }
 
 /**
@@ -72,13 +84,14 @@ const unavailable = <A>(model: DXN.DXN): Layer.Layer<A, AiModelNotAvailableError
 
 /**
  * Builds a service from the resolvers it has; a kind of model it cannot resolve fails as not
- * available, so a service that only serves language models need not stub decision models.
+ * available, so a service that only serves language models need not stub decision or extraction models.
  */
 export const make = ({
   metadata,
   languageModel = unavailable,
   decisionModel = unavailable,
-}: Partial<Service>): Service => ({ metadata, languageModel, decisionModel });
+  extractionModel = unavailable,
+}: Partial<Service>): Service => ({ metadata, languageModel, decisionModel, extractionModel });
 
 /**
  * Resolves a language model layer from a bare NSID name — validated at compile time like
@@ -119,6 +132,16 @@ export const decisionModel: {
 ): Layer.Layer<DecisionModel.DecisionModel, AiModelNotAvailableError, AiService> =>
   AiService.pipe(
     Effect.map((service) => service.decisionModel(DXN.isDXN(model) ? model : DXN.make(model), options)),
+    Layer.unwrap,
+  );
+
+/** Resolves an extraction model layer from a model DXN (a catalog entry's `id`, e.g. `Model.cloudflareClairic.id`). */
+export const extractionModel = (
+  model: DXN.DXN,
+  options?: ResolveOptions,
+): Layer.Layer<ExtractionModel.ExtractionModel, AiModelNotAvailableError, AiService> =>
+  AiService.pipe(
+    Effect.map((service) => service.extractionModel(model, options)),
     Layer.unwrap,
   );
 

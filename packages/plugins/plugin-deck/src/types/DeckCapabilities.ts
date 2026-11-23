@@ -12,22 +12,38 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { invariant } from '@dxos/invariant';
 
-import { meta } from '#meta';
-
+import { DeckNamespace } from '../namespace.ts';
 import * as DeckSchema from './DeckSchema.ts';
 import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${DeckNamespace.key}.capability.settings`,
 );
 
 /** Persisted state (stored in KVS/localStorage). */
-export const State = Capability.makeSingleton<Atom.Writable<StoredDeckState>>()(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<StoredDeckState>>()(
+  `${DeckNamespace.key}.capability.state`,
+);
 
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDeckState>>()(
-  `${meta.profile.key}.capability.ephemeralState`,
+  `${DeckNamespace.key}.capability.ephemeralState`,
 );
+
+/** Where the deck is: whether it shows only its current plank, the plank it is scrolled to, and its open companions. */
+export type View = Readonly<{
+  /** Whether the deck shows only its current plank (flattened, or mobile) rather than planks side by side. */
+  flat: boolean;
+  /**
+   * The first plank not folded with at least half its width in view; the current plank when {@link flat}, and the first
+   * plank when the deck is not sliding. Unset while a sliding deck has not yet measured the planks it now shows.
+   */
+  front?: string;
+  /** The planks whose companion is open, and the companion tab the deck shows them in. */
+  companions: Readonly<{ items: readonly string[]; variant?: string }>;
+}>;
+
+export const View = Capability.makeSingleton<Atom.Atom<View>>()(`${DeckNamespace.key}.capability.view`);
 
 /**
  * Holds the URL projection in flight, so starting a newer one interrupts it. A projection can wait
@@ -35,7 +51,7 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDe
  * long since moved off (see `url/project.ts`).
  */
 export const Projection = Capability.makeSingleton<FiberHandle.FiberHandle<string | undefined, any>>()(
-  `${meta.profile.key}.capability.projection`,
+  `${DeckNamespace.key}.capability.projection`,
 );
 
 /**
@@ -60,4 +76,4 @@ export type DeckPluginOptions = {
   platform?: Platform;
 };
 
-export const Platform = Capability.makeSingleton<Platform>()(`${meta.profile.key}.capability.platform`);
+export const Platform = Capability.makeSingleton<Platform>()(`${DeckNamespace.key}.capability.platform`);

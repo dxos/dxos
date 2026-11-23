@@ -9,10 +9,11 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { ShortcutsList } from '#components';
-import { meta } from '#meta';
+
+import { SupportNamespace } from '../../namespace.ts';
 
 export const ShortcutsDialogContent = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
 
   return (
     <Dialog.Content>

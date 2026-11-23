@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { meta } from '#meta';
+import { SettingsNamespace } from './namespace.ts';
 
-export class Open extends Schema.TaggedClass<Open>()(`${meta.profile.key}.open`, {
+export class Open extends Schema.TaggedClass<Open>()(`${SettingsNamespace.key}.open`, {
   input: Schema.Struct({
     plugin: Schema.optional(Schema.String),
   }),
@@ -16,7 +16,7 @@ export class Open extends Schema.TaggedClass<Open>()(`${meta.profile.key}.open`,
 }) {}
 
 export class OpenPluginRegistry extends Schema.TaggedClass<OpenPluginRegistry>()(
-  `${meta.profile.key}.openPluginRegistry`,
+  `${SettingsNamespace.key}.openPluginRegistry`,
   {
     input: Schema.Void,
     output: Schema.Void,

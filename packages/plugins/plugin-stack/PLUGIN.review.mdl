@@ -1,0 +1,249 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-stack/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: StackPlugin
+
+The spec is out of date with the code. The core works: an article surface for `Collection`
+renders each object as a section in a Mosaic stack, sections show the object's icon and label,
+collapse is local component state, and the toolbar's Add Section opens `SpaceOperation.OpenObjectForm`.
+The code has also grown things the spec does not describe: drag-and-drop reorder, Move up / Move down,
+and Collapse all / Expand all.
+
+Much of the spec is not built. There is no `StackViewType` and no per-section view metadata: the
+plugin registers a placeholder `Stack` type (`org.dxos.type.stack`, empty struct, marked
+`TODO(burdon): Placeholder`). `StackSectionView`, `StackSectionMetadata`, `AddSectionPosition` and
+the settings panel do not exist; only translation strings for separation and navigate remain. The
+section menu has no Navigate and no Add Before. Remove splices the ref out of the collection
+directly instead of invoking `SpaceOperation.RemoveObjects`. No test exercises the plugin: the e2e
+suite only toggles it on and off, and the story has no play function.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict SectionSchema: No section schema exists.
+  status: missing
+  note: Searched `src/` for `height`/`custom` section fields; the only type is the empty placeholder `Stack`.
+```
+
+```mdl
+verdict StackViewType: A placeholder Stack type with no fields exists instead.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/types/Stack.ts#Stack]
+  note: Typename is `org.dxos.type.stack`, not `org.dxos.type.stackView`, and there is no `sections` field.
+```
+
+```mdl
+verdict StackSectionView: No section view type exists.
+  status: missing
+  note: '`StackSectionItem` carries only `id` and `object`; there is no title, size, height, collapsed or custom view data.'
+```
+
+```mdl
+verdict StackSectionMetadata: No section metadata type exists.
+  status: missing
+  note: The icon is read from the object at render time; there is no placeholder or `viewActions`.
+```
+
+```mdl
+verdict StackSectionItem: The item has id and object only.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/components/Stack/Stack.tsx#StackSectionItem]
+  note: No `view` or `metadata` fields.
+```
+
+```mdl
+verdict AddSectionPosition: No position type; a new section always goes after the origin section.
+  status: missing
+  note: '`StackContextValue.onAdd` takes only an id.'
+```
+
+```mdl
+verdict StackSettingsProps: No settings type exists.
+  status: missing
+  note: Only the `settings.separation.*` translation strings remain in `translations.ts`.
+```
+
+```mdl
+verdict StackArticle: Renders the stack with an Add Section toolbar, but without navigate and with extra reorder actions.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx#StackArticle]
+  note: |
+    Has `collapsedSections` state, `handleAdd(id)`, `handleDelete`, `handleCollapse` and `handleAddSection`. There is
+    no `handleNavigate`, and `handleAdd` takes no position. Adds move up/down, drag reorder and collapse/expand all.
+    Untested.
+```
+
+```mdl
+verdict StackSection: The sigil menu and section surface exist; there is no navigate action.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/components/Stack/Stack.tsx#StackSection]
+  note: |
+    Props come from a Mosaic tile (`data`) and a context, not `view`/`metadata`. The menu offers collapse/expand, add,
+    move up/down and remove. Untested.
+```
+
+```mdl
+verdict StackSettings: No settings component exists.
+  status: missing
+  note: No settings capability is registered in `plugin.ts`.
+```
+
+```mdl
+verdict F-1.1: The article surface is filtered to Collection objects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/capabilities/react-surface.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-1.2: Each collection object renders as a section in order.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx#createCollectionObjects, github:dxos/dxos/packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx#StackArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-1.3: The title comes from the object label with a typename fallback.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/components/Stack/Stack.tsx#StackSection]
+  note: Uses `useLabel(object, { fallback 'typename' })`, not the graph node label. No test.
+```
+
+```mdl
+verdict F-1.4: The sigil icon comes from Obj.getIcon.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/components/Stack/Stack.tsx#StackSection]
+  note: No test.
+```
+
+```mdl
+verdict F-2.1: The toolbar button invokes OpenObjectForm with the collection as target.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx#StackArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-2.2: The section menu has one Add Section item that opens OpenObjectForm and moves the result after.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx#StackArticle]
+  note: There is no Add Before, no `AddSectionDialog` and no `LayoutOperation.UpdateDialog` call.
+```
+
+```mdl
+verdict F-2.3: Remove splices the ref out of the collection; RemoveObjects is not invoked.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx#StackArticle]
+  note: '`handleDelete` edits `collection.objects` with `Obj.update`, so the object itself is not removed from the space.'
+```
+
+```mdl
+verdict F-2.4: No navigate action exists.
+  status: missing
+  note: No `LayoutOperation.Open` call in `src/`; only the `navigate-to-section.label` translation remains.
+```
+
+```mdl
+verdict F-3.1: Sections collapse from the sigil menu; there is no caret trigger.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/components/Stack/Stack.tsx#StackSection]
+  note: Untested.
+```
+
+```mdl
+verdict F-3.2: Expanded sections render the section surface; there is no navigate button.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/components/Stack/Stack.tsx#StackSection]
+  note: Untested.
+```
+
+```mdl
+verdict F-3.3: Collapsed sections show only the title; there is no expand toggle in the heading.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/components/Stack/Stack.tsx#StackSection]
+  note: Expand is a menu item, not a heading toggle. Untested.
+```
+
+```mdl
+verdict F-3.4: Collapsed state is local useState in StackArticle.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx#StackArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-4.1: No settings panel exists.
+  status: missing
+  note: '`plugin.ts` adds no settings module.'
+```
+
+```mdl
+verdict F-4.2: No separation setting exists.
+  status: missing
+  note: Only translation strings remain.
+```
+
+```mdl
+verdict F-5.1: The plugin registers a placeholder Stack type, not StackViewType.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stack/src/capabilities/schema.ts, github:dxos/dxos/packages/plugins/plugin-stack/src/types/Stack.ts#Stack]
+  note: The registered typename is `org.dxos.type.stack`.
+```
+
+```mdl
+verdict F-5.2: No per-section metadata is stored.
+  status: missing
+  note: The `Stack` type is an empty struct.
+```
+
+```mdl
+verdict T-1: No automated test renders a collection as a stack.
+  status: missing
+  note: '`basic.spec.ts` only toggles the plugin; the story has no play function.'
+```
+
+```mdl
+verdict T-2: No automated test clicks Add Section.
+  status: missing
+  note: No test references `stack.addSection`.
+```
+
+```mdl
+verdict T-3: No automated test removes a section.
+  status: missing
+  note: No test references `section.remove`.
+```
+
+```mdl
+verdict T-4: No automated test collapses a section.
+  status: missing
+  note: No test references `section.collapse`.
+```
+
+```mdl
+verdict T-5: Nothing to test; navigate is not built.
+  status: missing
+  note: See F-2.4.
+```
+
+```mdl
+verdict T-6: No test checks schema registration, and the type registered differs.
+  status: missing
+  note: There is no `plugin.test.ts` in the package.
+```
+
+```mdl
+verdict QA-1: Manual/agent QA; no automation runs it.
+  status: missing
+  note: Status `unverified` in the spec.
+```

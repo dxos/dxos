@@ -21,8 +21,8 @@ import { fenced, projectContext } from './task-brief.ts';
  * in-app invoker), and the key is what every one of them resolves.
  *
  * `remoteSession` makes claiming the task one call: an agent's actor is the object it IS, so the
- * operation resolves (or creates) the session record for that harness id and assigns the task to
- * it. A bare `{ role: 'assistant' }` would record that AN assistant owns the task, not which run,
+ * operation resolves (or creates) the session record for that harness id and delegates the task
+ * to it. A bare `{ role: 'assistant' }` would record that AN assistant has the task, not which run,
  * and a session's own check-in lists its open tasks by that ref.
  */
 const UPDATE_TASK_KEY = 'org.dxos.operation.tasks.update';
@@ -120,6 +120,13 @@ const renderPrompt = ({ task, project, context }: PromptInput): string => {
       That records the work against this run rather than against "an assistant", and creates the
       session in the space if it is not there yet. Add \`title\`, \`repo\`, \`branch\` and
       \`worktree\` to that object when you have them, so the session says where it is working.
+    `,
+    '',
+    concat`
+      Your session is the task's delegate, working for the person who answers for it. If the task
+      has no person as its assignee, add \`assignee: { "identityDid": "<did>", "name": "<name>" }\`
+      to the same call, with the \`identityDid\` and \`displayName\` that \`whoami\` returns. Never
+      make yourself the assignee.
     `,
     '',
     concat`

@@ -4,7 +4,7 @@
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from '../namespace.ts';
 
 /**
  * The assistant feature's start event. Fired on demand (chat surfaces, toolkit
@@ -13,4 +13,4 @@ import { meta } from '#meta';
  * `AppActivationEvents.AssistantStart` (app-toolkit names it by key convention to avoid a package
  * cycle).
  */
-export const Start = ActivationEvent.pluginStart(meta.profile.key);
+export const Start = ActivationEvent.pluginStart(AssistantNamespace.key);

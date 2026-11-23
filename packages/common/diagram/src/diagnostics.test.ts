@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import { analyze, arrowPoints, bindTargets, errors, layoutLabel, routes } from './diagnostics.ts';
 import type * as Scene from './scene.ts';
 import { CLASS_DIAGRAM } from './testing.ts';
@@ -21,7 +23,7 @@ const box = (id: string, x: number, y: number, w = 64, h = 64, text?: string): S
   elements: [{ kind: 'rect', id: 'frame', x: 0, y: 0, w, h, text }],
 });
 
-const arrow = (id: string, start: Scene.Point, end: Scene.Point): Scene.Element => ({ kind: 'arrow', id, start, end });
+const arrow = (id: string, start: Shape.Point, end: Shape.Point): Shape.Element => ({ kind: 'arrow', id, start, end });
 
 describe('diagnostics', () => {
   test('a clean scene reports nothing', ({ expect }) => {
@@ -33,6 +35,23 @@ describe('diagnostics', () => {
 
     expect(report.diagnostics).toEqual([]);
     expect(report.metrics).toMatchObject({ nodes: 2, connectors: 1, crossings: 0, bends: 0 });
+  });
+
+  test('a box a grid places is measured where the grid puts it, not as it is written', ({ expect }) => {
+    const grid = (w: number): Scene.WorldObject => ({
+      id: 'slide',
+      elements: [
+        { kind: 'grid', id: 'root', x: 0, y: 0, w, h: 120, cols: 2, gap: 16 },
+        { kind: 'rect', id: 'a', x: 0, y: 0, w: 0, h: 0, text: 'Calendar', parent: 'root' },
+        { kind: 'rect', id: 'b', x: 0, y: 0, w: 0, h: 0, text: 'Storage', parent: 'root' },
+      ],
+    });
+    expect(analyze([grid(400)]).diagnostics).toEqual([]);
+    // A frame too narrow for the words is still reported, so the solved frame is what is measured.
+    expect(analyze([grid(40)]).diagnostics.map(({ code, refs }) => `${code} ${refs.join()}`)).toEqual([
+      'label-overflow slide/a',
+      'label-overflow slide/b',
+    ]);
   });
 
   test('detects partially overlapping nodes, but not containment', ({ expect }) => {
@@ -96,7 +115,7 @@ describe('diagnostics', () => {
   });
 
   test('detects labels overlapping each other or a box, not a frame', ({ expect }) => {
-    const label = (id: string, x: number, y: number, text: string): Scene.Element => ({ kind: 'text', id, x, y, text });
+    const label = (id: string, x: number, y: number, text: string): Shape.Element => ({ kind: 'text', id, x, y, text });
     const report = analyze([
       box('a', 0, 0),
       box('frame', -32, -32, 400, 400),
@@ -178,7 +197,7 @@ describe('diagnostics', () => {
 });
 
 describe('connector geometry', () => {
-  const line = (id: string, points: Scene.Point[]): Scene.Element => ({ kind: 'line', id, points });
+  const line = (id: string, points: Shape.Point[]): Shape.Element => ({ kind: 'line', id, points });
 
   test('a bound arrow is measured along the clipped segment the renderer draws', ({ expect }) => {
     const bound: Scene.WorldObject = {

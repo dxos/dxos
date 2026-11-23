@@ -17,6 +17,7 @@ import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Actor, Event, Message, type Person } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
+import * as InboxPermission from './InboxPermission.ts';
 import * as Mailbox from './Mailbox.ts';
 
 export const AddMailbox = Operation.make({
@@ -68,6 +69,42 @@ export const DraftEmail = Operation.make({
   }),
   services: [Database.Service],
 }).pipe(Operation.visible);
+
+/**
+ * Replies to a message and sends the reply through the mailbox's mail provider. Declares the
+ * send-email permission, so an agent is asked before it sends anything.
+ */
+export const SendReply = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.inbox.sendReply'),
+    name: 'Send an email reply',
+    description:
+      'Replies to an email and sends the reply from the mailbox. The reply is threaded under the original message.',
+    icon: 'ph--paper-plane-tilt--regular',
+  },
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox the message is in; the reply is sent from it.',
+    }),
+    message: Ref.Ref(Message.Message).annotate({
+      description: 'The message to reply to.',
+    }),
+    body: Schema.String.annotate({
+      description: 'The body of the reply, as plain text.',
+    }),
+  }),
+  output: Schema.Struct({
+    /** The sent reply, as a draft object now tagged sent. */
+    replyDXN: Schema.String,
+    /** The provider's id for the sent message. */
+    sentMessageId: Schema.String,
+  }),
+  services: [Capability.Service, Database.Service],
+}).pipe(
+  Operation.visible,
+  Operation.annotate(Operation.RequiresAnnotation, [InboxPermission.SendEmailRequirement]),
+  Operation.annotate(Operation.ConsentPreviewAnnotation, { field: 'body', label: 'Reply' }),
+);
 
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
@@ -244,7 +281,7 @@ export const ExtractSummaryFromMessage = Operation.make({
 
 export const ExtractMessage = Operation.make({
   meta: { key: DXN.make('org.dxos.operation.inbox.extractMessage'), name: 'Extract Message' },
-  services: [Capability.Service, AiService.AiService, Database.Service],
+  services: [Capability.Service, AiService.AiService, Database.Service, Trace.TraceService],
   input: Schema.Struct({
     // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
     // re-resolves the live proxy by id when available and reads only `source.id` otherwise.
@@ -323,6 +360,9 @@ export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
 
 /** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link AnalyzeMailbox}). */
 export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
+
+/** Progress-registry key for a single-message extraction in a mailbox ({@link ExtractMessage}). */
+export const createExtractProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#extract');
 
 /** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
 export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
@@ -648,3 +688,60 @@ export const UnsubscribeSender = Operation.make({
     unsubscribed: Schema.Boolean,
   }),
 });
+
+/** Hard per-run cap: one decision call per message, so a run must stay bounded. */
+export const MAX_TRIAGE_MAILBOX_BATCH_LIMIT = 200;
+
+/** Default number of messages triaged per run. */
+export const DEFAULT_TRIAGE_MAILBOX_BATCH_LIMIT = 50;
+
+/** Decision calls in flight at once; the questions for one message do not depend on another's. */
+export const TRIAGE_MAILBOX_CONCURRENCY = 10;
+
+/** Progress-registry key for a mailbox's triage monitor. */
+export const createTriageProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#triage');
+
+export const TriageMailbox = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.inbox.triageMailbox'),
+    name: 'Triage Mailbox',
+    description:
+      "Triages mailbox messages: labels them with the space's own tags, needs-reply and a priority band using a decision model, and extracts action items as tasks using an extraction model.",
+    icon: 'ph--tag--regular',
+  },
+  services: [AiService.AiService, Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox whose feed messages are triaged.',
+    }),
+    batchLimit: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
+        description: 'Maximum messages triaged this run (hard-capped at 200).',
+      }),
+    ),
+    tasks: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Also extract action items from messages that ask something, as tasks (default true).',
+      }),
+    ),
+    minConfidence: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))).annotate({
+        description: 'Confidence a label or urgency answer must reach before it is applied.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    /** Messages asked about this run. */
+    processed: Schema.Number,
+    /** Messages that received a label from the space's own tags. */
+    labelled: Schema.Number,
+    /** Messages tagged as needing a reply. */
+    needsReply: Schema.Number,
+    /** Messages tagged urgent. */
+    urgent: Schema.Number,
+    /** Tasks extracted and filed in the mailbox's project. */
+    tasks: Schema.Number,
+    /** Messages skipped because they already carried one of these tags. */
+    skipped: Schema.Number,
+  }),
+}).pipe(Operation.idempotent);

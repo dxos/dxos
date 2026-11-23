@@ -11,8 +11,9 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
+
+import { CallsNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -36,7 +37,7 @@ export default Capability.makeModule(
               ? [
                   AppNode.makeDeckCompanion({
                     id: 'activeCall',
-                    label: ['call-panel.label', { ns: meta.profile.key }],
+                    label: ['call-panel.label', { ns: CallsNamespace.key }],
                     icon: 'ph--video-conference--regular',
                     data: null,
                     position: Position.first,

@@ -8,18 +8,19 @@ import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
+import * as StePlugin from '#meta';
 import { SteOperation } from '#operations';
-import { StePlugin } from '#plugin';
 import { SteSkill } from '#skills';
 
-await Harness.preload({ plugins: [StePlugin()] });
+import { SteNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [StePlugin.make()] });
+
+const moduleId = (name: string) => `${SteNamespace.key}.module.${name}`;
 
 describe('StePlugin', () => {
   test('the skill definition activates when the assistant starts', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [StePlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [StePlugin.make()] });
     expect(harness.manager.getActive()).not.toContain(moduleId('SkillDefinition'));
 
     await harness.fire(AppActivationEvents.AssistantStart);
@@ -29,7 +30,7 @@ describe('StePlugin', () => {
   });
 
   test('invokes the Verify operation', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [StePlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [StePlugin.make()] });
     const result = await harness.invoke(SteOperation.Verify, { text: "You should stop; it's hot.", vocabulary: false });
     expect(result.passed).toBe(false);
     expect(result.errors.map(({ rule }) => rule)).toEqual(['8.1', '4.2', '3.2']);

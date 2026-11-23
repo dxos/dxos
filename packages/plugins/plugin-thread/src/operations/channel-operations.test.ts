@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { BaseError } from '@dxos/errors';
 import { Channel, Message, Person } from '@dxos/types';
@@ -19,6 +19,7 @@ import { ChannelBackend, ThreadCapabilities, type ThreadOperation } from '#types
 
 import { feedChannelBackend } from '../capabilities/channel-backend-feed.ts';
 import connectChannel from './connect-channel.ts';
+import createChannel from './create-channel.ts';
 import deleteThread from './delete-thread.ts';
 import disconnectChannel from './disconnect-channel.ts';
 import getChannelStatus from './get-channel-status.ts';
@@ -88,6 +89,21 @@ const failureOf = <A, E>(exit: Exit.Exit<A, E>): string | undefined =>
 const testLayer = () => TestDatabaseLayer({ types: [Channel.Channel, Feed.Feed, Message.Message, Person.Person] });
 
 describe('channel operations', () => {
+  it.effect('createChannel files the channel in the space, so it can be addressed by reference', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const { object } = yield* createChannel
+        .handler({ spaceId: db.spaceId, name: 'general' })
+        .pipe(Effect.provideService(Capability.Service, capabilities(feedChannelBackend)));
+      expect(Obj.getDatabase(object)).toBe(db);
+
+      const result = yield* sendToChannel
+        .handler({ channel: Ref.make(object), text: 'hello' })
+        .pipe(Effect.provideService(Capability.Service, capabilities(feedChannelBackend)));
+      expect(result).toEqual({ delivered: true });
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('sendToChannel appends to a feed-backed channel', () =>
     Effect.gen(function* () {
       const channel = yield* Database.add(Channel.make({ name: 'general' }));

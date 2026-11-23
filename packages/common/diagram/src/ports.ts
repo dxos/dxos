@@ -9,10 +9,11 @@
 // take lattice slots in key order around the ones that stay put.
 //
 
-import type * as Scene from './scene.ts';
+import { Shape } from '@dxos/scene';
+
 import { type Rect } from './uml-grid.ts';
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 
 export type Side = 'top' | 'bottom' | 'left' | 'right';
 

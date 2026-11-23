@@ -202,6 +202,12 @@ describe('useMenuBuilder', () => {
       </RegistryContext.Provider>,
     );
     expect(screen.queryByTestId('item-0')).toBeNull();
+    // React DEV holds the last fiber that suspended on mount, which reaches its siblings; another suspension replaces it.
+    render(
+      <Suspense fallback={null}>
+        <Suspend />
+      </Suspense>,
+    );
     await expect.poll(() => collectedSize(registry)).toBe(0);
   });
 

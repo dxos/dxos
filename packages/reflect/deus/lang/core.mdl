@@ -29,14 +29,14 @@ extends?:  URI[]         # specs this document extends (transitive)
 All blocks use the `mdl` fence. The first line of the body declares the block
 type, optional identifier, and optional title:
 
-```
+````
 ```mdl
 <type> [<id>][: <title>]
   key: value
   key?: TypeExpr
   key: a | b | c
 ```
-```
+````
 
 - `<type>` must be declared in the Extensions section of this document or an ancestor.
 - `<id>` is an optional locally-scoped identifier (e.g. `F-1.1`, `Board`).
@@ -60,13 +60,13 @@ key:                      # multi-line value
 When an extension declares `inline-prose: true`, prose may appear between
 the header line and the first key-value pair:
 
-```
+````
 ```mdl
 feat F-1: Start Game
   A new Board is created with pieces in starting positions.  ← inline prose
   req F-1.1: White moves first.
 ```
-```
+````
 
 ### Cross-References
 
@@ -75,20 +75,20 @@ The linter verifies that all references resolve to a declared block.
 
 ### External References
 
-A block may name something outside its document by **source key**:
+A spec names a block of another spec as `<spec id>#<item>`, where the item is a block id or `req` id
+(`com.acme.canvas#F-3.1`), and declares that spec under `## Dependencies` (below). A
+block may name code, or anything else outside the specs, by **source key**:
 `github:<owner>/<repo>/<path>[#<fragment>]`, with the path relative to the repository root.
 
 | Key names           | Example                                                        | Fragment            |
 | ------------------- | -------------------------------------------------------------- | ------------------- |
-| A block of a spec   | `github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database`   | Block or req id     |
 | A code symbol       | `github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make`   | Symbol (`A.b` ok)   |
 | A whole file        | `github:dxos/dxos/packages/apps/composer-app/vite.config.ts`   | none                |
 
-A spec writes keys inline to name blocks of other specs. It does not name the code that implements
-it: those links are annotations kept outside the spec (a review's `evidence:`, see `review.mdl`),
-and the spec viewer renders them as decorations beside the items they annotate. Tools resolve keys
-against a local checkout of the repository. A key is a location, not a version: it names whatever
-the checkout holds.
+A spec does not name the code that implements it: those links are annotations kept outside the
+spec (a review's `evidence:`, see `review.mdl`), and the spec viewer renders them as decorations
+beside the items they annotate. Tools resolve keys against a local checkout of the repository. A
+key is a location, not a version: it names whatever the checkout holds.
 
 ---
 
@@ -114,6 +114,30 @@ inline `ext` blocks for custom or experimental ones.
 
 ---
 
+## Dependencies Section
+
+A spec lists the other specs it builds on under `## Dependencies`, after the opening prose and
+before `## Extensions`, one `uses` block per spec. A Composer plugin's runtime dependencies are the
+exception: they go in its `plugin` block's `dependsOn` (plugin dialect) and are never repeated under
+`uses`. The identifier is the depended-on spec's `id`;
+the inline prose is required and says what this spec takes from it.
+
+```mdl
+ext uses
+  uri: dxos.spec.core/uses
+  desc: Declares that this spec builds on another spec, identified by its frontmatter id.
+  inline-prose: true
+  role: context
+  fields:
+    id: URI                     # the depended-on spec's id (the block identifier)
+  syntax: |
+    uses org.dxos.ui.react-ui-canvas: The engine whose types and operations this canvas models.
+```
+
+A reference into another spec is `<spec id>#<item>`, where the item is any block id or `req` id.
+
+---
+
 ## The `ext` Primitive
 
 `ext` is the only block type the core language natively provides.
@@ -131,9 +155,70 @@ ext ext
     adds-fields?:   FieldMap      # additional fields merged into parent (use with extends)
     nesting?:       self | none   # whether instances may contain same-type blocks
     inline-prose?:  Boolean       # first non-key line treated as prose value
+    role?:          Role          # what instances are to the spec's structure (see Roles and Links)
+    label?:         Identifier    # a numbered kind's label prefix; ids are keys, labels positional
+    links?:         LinkMap       # fields whose values name other blocks, and how (see Roles and Links)
+    icon?:          Icon          # how tools draw instances (see Roles and Links)
+    hue?:           Hue           # the colour tools tag instances with (see Roles and Links)
     syntax?:        CodeBlock     # reference syntax (non-normative)
     example?:       CodeBlock     # usage example (non-normative)
 ```
+
+---
+
+## Roles and Links
+
+A dialect says how its blocks relate, so a tool can group a spec and draw it without knowing the
+dialect. Each `ext` block may give a `role` and `links`.
+
+A **role** says what instances are to the spec:
+
+| Role           | Instances                                                     |
+|----------------|---------------------------------------------------------------|
+| `anchor`       | state intent, and name the blocks that serve it               |
+| `structure`    | are what the subject is built from                            |
+| `verification` | check anchors and structure                                   |
+| `context`      | are what the spec relies on from outside it                   |
+
+A block type with no role is `structure`, except for a block outside the spec, which is `context`.
+
+**Links** map each field whose values name other blocks to its relationship, one per line:
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure.
+  fields:
+    fields?: FieldMap
+    extends?: TypeRef[]
+  links:
+    fields: composes
+    extends: extends
+```
+
+| Relationship  | The block…                               | UML            |
+|---------------|------------------------------------------|----------------|
+| `extends`     | is a kind of the named block             | generalization |
+| `generalizes` | is what the named blocks are kinds of    | generalization, from the named block |
+| `implements`  | meets the named block's contract         | realization    |
+| `composes`    | owns the named blocks as its parts       | composition    |
+| `part-of`     | is a part of the named block             | composition, from the named block |
+| `aggregates`  | holds the named blocks without owning them | aggregation  |
+| `references`  | points at the named block                | association    |
+| `depends-on`  | needs the named block to work            | dependency     |
+| `verifies`    | checks the named block                   | dependency     |
+
+1. `generalizes` and `part-of` are read from the other end: `scene: SC-1` on a shot with
+   `scene: part-of` is the same link as `SC-1` composing the shot.
+2. In a `composes` or `aggregates` field, a value written as a reference (`Ref<X>`, `Ref(X)`)
+   points at X without holding it, so it is `references`.
+3. An `ext` that `extends` another takes the parent's role and links; its own override them.
+4. A spec's own `ext` block for a type its dialect declares overrides the dialect's role, and its
+   links override the dialect's field by field.
+5. A name in a field with no link, or in prose, is not a link: tools relate blocks only through linked fields.
+
+An `ext` may also give an `icon` and a `hue`, which tools that draw the spec use for its instances. An `ext`
+that extends another takes the parent's icon and hue unless it gives its own.
 
 ---
 
@@ -156,6 +241,10 @@ They are the vocabulary of the meta-language.
 | `CodeBlock`  | Literal indented or fenced text                              |
 | `ExtRef`     | Reference to a declared extension name                       |
 | `TagList`    | Space or comma-separated tag identifiers                     |
+| `Role`       | `anchor \| structure \| verification \| context`              |
+| `LinkMap`    | Field names to relationships: `field: relationship`, one per line |
+| `Icon`       | A Phosphor icon name, e.g. `ph--star--regular`               |
+| `Hue`        | A theme hue, e.g. `emerald`, or `neutral`                    |
 
 ---
 

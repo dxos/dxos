@@ -33,6 +33,8 @@ export const View = Schema.Struct({
   expanded: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
   sort: Schema.optional(Sort),
   group: Schema.optional(GroupField),
+  /** The id of the milestone the list is narrowed to; absent shows every milestone and the backlog. */
+  milestone: Schema.optional(Schema.String),
 });
 export type View = Schema.Schema.Type<typeof View>;
 
@@ -44,7 +46,7 @@ export type View = Schema.Schema.Type<typeof View>;
  * The status menu and the text are two views over `query` — the status choice is written into it as
  * `status:` terms — so there is one value to persist and no second copy to drift. `expanded` maps a
  * task id to whether its branch is open; a task absent from it keeps the list's default (open).
- * `sort` and `group` are optional so a value persisted before they existed still decodes.
+ * `sort`, `group` and `milestone` are optional so a value persisted before they existed still decodes.
  */
 export const aspect: ViewState.Aspect<View> = ViewState.define<View>({
   key: 'tasks-task-set-view',

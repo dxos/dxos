@@ -11,6 +11,11 @@ import { type ClassNameValue } from './theme.ts';
 /** Horizontal region of a toolbar row. */
 export type ToolbarZone = 'start' | 'end';
 
+export const TOOLBAR_OVERFLOW_TESTID = 'toolbar.overflow';
+
+/** On a folded group's trigger: the test ids of the items it holds, space-separated, so a guided tour can open it. */
+export const TOOLBAR_HOLDS_ATTRIBUTE = 'data-toolbar-holds';
+
 /** Where a toolbar item or named group goes; menus ignore it. */
 export type ToolbarPlacement = {
   /** Left or right of its row (default `start`). */
@@ -21,10 +26,17 @@ export type ToolbarPlacement = {
   order?: number;
   /**
    * Rank for moving into the overflow menu when the row is too narrow: ranked items go first, higher ranks first; once
-   * they are all in the menu, unranked items follow, last first, so the row always fits. A `custom` or `text` item, or a
-   * group holding one, never moves.
+   * they are all in the menu, unranked items follow, last first, so the row always fits. Before anything moves, each
+   * ranked item with a compact form takes it, in the same order, staying in the row: a `custom` item renders with
+   * `collapsed`, and an action shown with its label and an icon (`iconOnly: false`) shows the icon alone. A `custom` or
+   * `text` item, or a group holding one, never moves.
    */
   collapse?: number;
+  /**
+   * A named group shown inline first folds in place, into a dropdown of its items under its own label and icon, and
+   * moves into the overflow menu only after that. Groups fold in collapse order, all before any item moves.
+   */
+  fold?: boolean;
 };
 
 /** Shared presentation fields for menu actions and group triggers. */
@@ -54,12 +66,19 @@ export type MenuActionChrome = MenuItemChrome & {
   variant?: 'action' | 'primary' | 'toggle' | 'switch' | 'custom' | 'text';
   value?: string;
   checked?: boolean;
+  /** Depth of the row in a menu listing a tree, which indents it beneath its parent row; a toolbar ignores it. */
+  indent?: number;
   /**
    * Renders an arbitrary control in place of the standard button. Required when `variant` is
    * `'custom'`; the contributor owns the element (and its interactions) so the toolbar can host
    * affordances the action model cannot express (e.g. press-and-hold, an embedded dropdown).
    */
-  render?: () => ReactNode;
+  render?: (props: CustomRenderProps) => ReactNode;
+};
+
+export type CustomRenderProps = {
+  /** The toolbar is too narrow for the item's full form (see `ToolbarPlacement.collapse`). */
+  collapsed: boolean;
 };
 
 export type MenuActionProperties = MenuActionChrome & {

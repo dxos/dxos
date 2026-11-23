@@ -9,11 +9,12 @@ import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
 import { type Type } from '@dxos/crawler';
+import { type Fact } from '@dxos/echo-memory';
 import { Pipeline } from '@dxos/pipeline';
+import { FactStore } from '@dxos/pipeline-rdf';
 
 import { DiscordPipeline } from '../pipeline.ts';
 import { replayStream } from '../replay.ts';
-import { ExtractedQuestionStore } from '../stores/index.ts';
 import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing/index.ts';
 import { detectQuestions, extractQuestionsStage } from './extract-questions.ts';
 
@@ -42,29 +43,35 @@ describe('detectQuestions', () => {
 
 describe('extractQuestionsStage', () => {
   it.effect(
-    'replay over a crawled store extracts user questions idempotently',
+    'records each question in the fact store around an anonymous question node',
     Effect.fnUntraced(function* () {
-      // First: the live crawl fills the message store (fixture channel + thread).
       yield* DiscordPipeline.run(CONFIG);
+      const facts = yield* FactStore;
+      const questionGraph = (all: readonly Fact.Fact[]) =>
+        all.filter((fact) => fact.extractor.id === 'extract-questions');
 
-      // Then: replay the stored messages through the question-extraction assembly.
-      const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
-      yield* replay;
-
-      const store = yield* ExtractedQuestionStore.ExtractedQuestionStore;
-      const extracted = yield* store.list();
-      // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
-      expect(extracted.length).toBe(1);
-      expect(extracted[0]).toMatchObject({
-        authorId: 'Alice',
-        targetId: 'chan-1',
-        messageId: '1000',
-        question: 'Should Composer use OPFS for local storage?',
+      const recorded = questionGraph(yield* facts.query({ source: 'discord:1000' }));
+      expect(recorded).toHaveLength(3);
+      expect(new Set(recorded.map((fact) => fact.graph)).size).toBe(1);
+      expect(recorded.every((fact) => fact.attribution.agent === 'https://discord.com/users/Alice')).toBe(true);
+      expect(recorded.find((fact) => fact.assertion.predicate === 'asked')?.assertion).toMatchObject({
+        subject: { kind: 'entity', entity: 'https://discord.com/users/Alice' },
+        object: { kind: 'entity', entity: 'question', label: 'Should Composer use OPFS for local storage?' },
+      });
+      expect(recorded.find((fact) => fact.assertion.predicate === 'has text')?.assertion.object).toEqual({
+        kind: 'literal',
+        literal: 'Should Composer use OPFS for local storage?',
+      });
+      expect(recorded.find((fact) => fact.assertion.predicate === 'is a')?.assertion.object).toMatchObject({
+        entity: 'https://schema.org/Question',
       });
 
-      // Replaying again changes nothing (idempotent upsert).
-      yield* replay;
-      expect((yield* store.list()).length).toBe(1);
+      // `asked` is a seed predicate, so a predicate query finds every question.
+      expect(questionGraph(yield* facts.query({ predicate: 'asked' }))).toHaveLength(1);
+
+      // A replay writes the same graph rather than a second copy.
+      yield* replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
+      expect(questionGraph(yield* facts.query({ source: 'discord:1000' }))).toHaveLength(3);
     }, Effect.provide(TestLayer)),
   );
 });

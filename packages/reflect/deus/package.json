@@ -1,7 +1,6 @@
 {
   "name": "@dxos/deus",
-  "version": "0.16.0",
-  "private": true,
+  "version": "0.17.0",
   "description": "Deus — pattern specification language for human-agent collaborative software development. Carries the .mdl grammar, CodeMirror extension, and core dialects.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,10 +18,35 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./dialect": {
+      "source": "./src/dialect/index.ts",
+      "types": "./dist/types/src/dialect/index.d.ts",
+      "import": "./dist/lib/dialect.mjs"
+    },
     "./extension": {
       "source": "./src/extension/index.ts",
       "types": "./dist/types/src/extension/index.d.ts",
       "import": "./dist/lib/extension.mjs"
+    },
+    "./parse": {
+      "source": "./src/extension/parse.ts",
+      "types": "./dist/types/src/extension/parse.d.ts",
+      "import": "./dist/lib/parse.mjs"
+    },
+    "./review": {
+      "source": "./src/review/index.ts",
+      "types": "./dist/types/src/review/index.d.ts",
+      "import": "./dist/lib/review.mjs"
+    },
+    "./schema": {
+      "source": "./src/schema/index.ts",
+      "types": "./dist/types/src/schema/index.d.ts",
+      "import": "./dist/lib/schema.mjs"
+    },
+    "./spec-index": {
+      "source": "./src/spec-index/index.ts",
+      "types": "./dist/types/src/spec-index/index.d.ts",
+      "import": "./dist/lib/spec-index.mjs"
     },
     "./cli": {
       "source": "./src/cli/index.ts",
@@ -48,12 +72,17 @@
     "@codemirror/view": "catalog:",
     "@dxos/errors": "workspace:*",
     "@effect/platform-node": "catalog:",
+    "@lezer/highlight": "catalog:",
     "@lezer/lr": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@lezer/generator": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

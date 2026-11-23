@@ -6,7 +6,7 @@ import { LanguageSupport, StreamLanguage, type StringStream } from '@codemirror/
 import { type Highlighter, type Tag, highlightCode, tags } from '@lezer/highlight';
 
 /** Token names emitted by the tokenizer, mapped to standard tags so the editor's highlight style colours them. */
-const tokenTable = {
+export const turtleTokenTable = {
   comment: tags.lineComment,
   // `@prefix`, `@base`, `PREFIX`, `BASE`, `GRAPH` and `a` (`rdf:type`).
   keyword: tags.keyword,
@@ -29,9 +29,9 @@ const tokenTable = {
   invalid: tags.invalid,
 } satisfies Record<string, Tag>;
 
-export type TurtleToken = keyof typeof tokenTable;
+export type TurtleToken = keyof typeof turtleTokenTable;
 
-type TurtleState = {
+export type TurtleState = {
   /** The delimiter of a long string (`"""` or `'''`) that spans lines. */
   long?: string;
   /** The last token was a prefix, so a local name follows directly, even one a number would otherwise claim. */
@@ -66,7 +66,8 @@ const skipLongString = (stream: StringStream, state: TurtleState): TurtleToken =
   return 'string';
 };
 
-const token = (stream: StringStream, state: TurtleState): TurtleToken | null => {
+/** One Turtle token; exported so languages that embed Turtle's triple syntax (SPARQL) can fall back to it. */
+export const turtleToken = (stream: StringStream, state: TurtleState): TurtleToken | null => {
   if (state.long) {
     return skipLongString(stream, state);
   }
@@ -149,8 +150,8 @@ export const turtleLanguage = StreamLanguage.define<TurtleState>({
   name: 'turtle',
   startState: () => ({ local: false }),
   copyState: (state) => ({ ...state }),
-  token,
-  tokenTable,
+  token: turtleToken,
+  tokenTable: turtleTokenTable,
   languageData: {
     commentTokens: { line: '#' },
     closeBrackets: { brackets: ['(', '[', '{', '"', "'", '<'] },

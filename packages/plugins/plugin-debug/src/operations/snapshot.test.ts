@@ -13,14 +13,14 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { DebugPlugin } from '#plugin';
+import * as DebugPlugin from '#meta';
 import { DebugOperation } from '#types';
 
-await Harness.preload({ plugins: [DebugPlugin(), ClientPlugin.make({}), SpacePlugin({})] });
+await Harness.preload({ plugins: [DebugPlugin.make(), ClientPlugin.make({}), SpacePlugin.make({})] });
 
 describe('DebugOperation.Snapshot', () => {
   test('returns a degraded snapshot on a headless host', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [DebugPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [DebugPlugin.make()] });
 
     const snapshot = await harness.runPromise(Operation.invoke(DebugOperation.Snapshot, {}));
 
@@ -38,7 +38,7 @@ describe('DebugOperation.Snapshot', () => {
 
   test('reports the spaces and the errors logged since a timestamp', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SpacePlugin({}), DebugPlugin()],
+      plugins: [ClientPlugin.make({}), SpacePlugin.make({}), DebugPlugin.make()],
     });
     const client = harness.get(ClientCapabilities.Client);
     await EffectEx.runAndForwardErrors(initializeIdentity(client));

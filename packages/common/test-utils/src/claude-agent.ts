@@ -4,6 +4,9 @@
 
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 /**
  * Drives one long-lived `claude --print` process in stream-json mode: prompts go in on stdin as
@@ -24,6 +27,14 @@ export type ClaudeAgentOptions = {
   model: string;
   /** Tools the agent may use without a prompt. Anything else is denied outright. */
   allowedTools: string[];
+  /** Plugin directories to load; with `--bare` no installed plugin loads, so these are the only ones. */
+  pluginDirs?: string[];
+  /**
+   * `--bare` (the default) also cuts the toolset to Bash, Edit and Read, so a plugin's skills cannot
+   * load. When false, the agent runs with the full toolset against an empty config directory, which
+   * isolates it from the developer's settings, plugins, CLAUDE.md and memory instead.
+   */
+  bare?: boolean;
   /** Ceiling for one turn, in ms. */
   timeout?: number;
 };
@@ -84,10 +95,12 @@ export class ClaudeAgent {
   #onEvent?: (event: StreamEvent) => void;
   #onFail?: (error: Error) => void;
   #exited?: Error;
+  #configDir?: string;
 
-  private constructor(child: ChildProcessWithoutNullStreams, timeout: number) {
+  private constructor(child: ChildProcessWithoutNullStreams, timeout: number, configDir?: string) {
     this.#child = child;
     this.#timeout = timeout;
+    this.#configDir = configDir;
     this.#child.stdout.on('data', (chunk) => this.#consume(String(chunk)));
     this.#child.stderr.on('data', (chunk) => {
       this.#stderr += String(chunk);
@@ -120,6 +133,8 @@ export class ClaudeAgent {
     apiKey,
     model,
     allowedTools,
+    pluginDirs = [],
+    bare = true,
     timeout = DEFAULT_TIMEOUT,
   }: ClaudeAgentOptions): ClaudeAgent {
     // Every CLAUDE_* variable is dropped: run from inside another Claude Code session they name
@@ -130,6 +145,7 @@ export class ClaudeAgent {
         string,
       ][],
     );
+    const configDir = bare ? undefined : mkdtempSync(join(tmpdir(), 'claude-agent-config-'));
 
     const child = spawn(
       'claude',
@@ -142,8 +158,9 @@ export class ClaudeAgent {
         // Required by the CLI alongside stream-json output.
         '--verbose',
         // A repo CLAUDE.md, the developer's settings and any installed plugin would each change
-        // what the agent does; without this the suite's failures are not reproducible.
-        '--bare',
+        // what the agent does; either mode keeps them out, or the suite's failures are not
+        // reproducible. The empty config directory carries the unbare mode's isolation.
+        ...(bare ? ['--bare'] : ['--setting-sources', 'project']),
         // Fresh conversation per run, and never one the caller is also writing to.
         '--session-id',
         randomUUID(),
@@ -157,6 +174,7 @@ export class ClaudeAgent {
         // Nobody is at the keyboard: anything not pre-allowed is denied rather than hanging.
         '--permission-prompts',
         'none',
+        ...pluginDirs.flatMap((dir) => ['--plugin-dir', dir]),
         // Variadic, so an empty list would swallow whatever followed it — and the CLI then reads
         // no prompt at all and produces not one event.
         ...(allowedTools.length > 0 ? ['--allowedTools', ...allowedTools] : []),
@@ -168,6 +186,7 @@ export class ClaudeAgent {
           // `claude` reads ANTHROPIC_API_KEY; the suite sources the value from
           // DX_ANTHROPIC_API_KEY so a developer's interactive login is never what it spends.
           ANTHROPIC_API_KEY: apiKey,
+          ...(configDir ? { CLAUDE_CONFIG_DIR: configDir } : {}),
         },
         stdio: ['pipe', 'pipe', 'pipe'],
         // Its own group: `claude` spawns the MCP server, and killing only `claude` orphans that
@@ -176,7 +195,7 @@ export class ClaudeAgent {
       },
     );
 
-    return new ClaudeAgent(child, timeout);
+    return new ClaudeAgent(child, timeout, configDir);
   }
 
   /**
@@ -243,18 +262,21 @@ export class ClaudeAgent {
    */
   async close(): Promise<void> {
     // A process that never spawned emits no `exit`, so awaiting one here would hang cleanup.
-    if (this.#child.pid === undefined || this.#child.exitCode !== null || this.#child.signalCode !== null) {
-      return;
+    if (this.#child.pid !== undefined && this.#child.exitCode === null && this.#child.signalCode === null) {
+      const exited = new Promise<void>((resolve) => this.#child.once('exit', () => resolve()));
+      this.#child.stdin.end();
+      try {
+        // The whole group, so the MCP server `claude` spawned goes with it.
+        process.kill(-this.#child.pid, 'SIGKILL');
+      } catch {
+        this.#child.kill('SIGKILL');
+      }
+      await exited;
     }
-    const exited = new Promise<void>((resolve) => this.#child.once('exit', () => resolve()));
-    this.#child.stdin.end();
-    try {
-      // The whole group, so the MCP server `claude` spawned goes with it.
-      process.kill(-this.#child.pid, 'SIGKILL');
-    } catch {
-      this.#child.kill('SIGKILL');
+    if (this.#configDir) {
+      rmSync(this.#configDir, { recursive: true, force: true });
+      this.#configDir = undefined;
     }
-    await exited;
   }
 
   #tail(start: number): string {

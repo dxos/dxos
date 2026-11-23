@@ -12,7 +12,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
+import { DebugNamespace } from '../../namespace.ts';
 
 /**
  * Scopes the panel to the controller's own entries.
@@ -38,7 +38,7 @@ export type DebugPortSettingsProps = {
  * flipped, the session id is regenerated on every activation, and nothing survives a reload.
  */
 export const DebugPortSettings = ({ controller = getDebugPortController(), disabled }: DebugPortSettingsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DebugNamespace.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);

@@ -7,9 +7,6 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    ThemePlugin: 'src/ThemePlugin.ts',
-    meta: 'src/meta.ts',
-    plugin: 'src/plugin.ts',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',
     Settings: 'src/types/Settings.ts',

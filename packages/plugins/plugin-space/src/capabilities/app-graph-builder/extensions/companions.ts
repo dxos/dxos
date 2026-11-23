@@ -5,24 +5,29 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { Obj, Type } from '@dxos/echo';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../../namespace.ts';
 
 //
 // Extension Factory
 //
 
+type Extensions = AppGraphBuilder.BuilderExtension[][];
+
 /** Creates companion panel extensions: object settings, related, and selected-objects. */
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/plugin-graph types (TS2883).
-export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.BuilderExtension[][]> = Effect.fnUntraced(
+export const createCompanionExtensions: () => Effect.Effect<Extensions, never, Capability.Service> = Effect.fnUntraced(
   function* () {
+    const readOnly = yield* ReadOnly.atom;
     return yield* Effect.all([
       // Object settings plank companion.
       AppGraphBuilder.createExtension({
@@ -33,7 +38,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'settings',
-              label: ['object-properties.label', { ns: meta.profile.key }],
+              label: ['object-properties.label', { ns: SpaceNamespace.key }],
               icon: 'ph--sliders--regular',
               data: 'settings', // TODO(burdon): Change to 'object-properties'.
               position: Position.last,
@@ -50,7 +55,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'related',
-              label: ['companion-related.label', { ns: meta.profile.key }],
+              label: ['companion-related.label', { ns: SpaceNamespace.key }],
               icon: 'ph--graph--regular',
               data: 'related',
               position: Position.last,
@@ -62,7 +67,11 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       AppGraphBuilder.createExtension({
         id: 'selectedObjects',
         relation: AppNode.companion,
-        match: (node) => {
+        match: (node, get) => {
+          if (get(readOnly)) {
+            return Option.none();
+          }
+
           // Type/schema node (e.g. a TypeArticle plank): the table's own row selection feeds this
           // companion directly, no view lookup needed.
           if (Type.isType(node.data)) {
@@ -89,7 +98,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'selected-objects',
-              label: ['companion-selected-objects.label', { ns: meta.profile.key }],
+              label: ['companion-selected-objects.label', { ns: SpaceNamespace.key }],
               icon: 'ph--tree-view--regular',
               data: 'selected-objects',
             }),

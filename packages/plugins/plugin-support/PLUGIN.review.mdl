@@ -1,0 +1,377 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-support/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SupportPlugin
+
+The ticket path is built: the `Ticket` schema, the four ticket operations, the support skill and
+`SupportArticle` all exist and do what the spec says, but no test drives any ticket operation or the
+article's buttons. The one-shot feedback path is built and its service layer (`submitSupportReport`,
+`submitSupportIssue`) is unit-tested against a stubbed `fetch`. The GitHub issue path (F-5.4 to F-5.7)
+is not built at all: there is no "Create GitHub issue" action, no `AccessToken` lookup and no
+`issues/new` fallback. The submit button is disabled when no support endpoint is configured, not when
+the Observability capability reports feedback unavailable, and the companion does not collapse after
+a successful submission.
+
+Of 44 items: 6 done, 23 untested, 2 partial, 2 diverged, 11 missing. Findings:
+
+- **F-5.4–F-5.7 are missing.** The FeedbackPanel offers only the support-service submit and Discord
+  presence; nothing files a GitHub issue.
+- **No ticket behaviour is tested.** The handlers in `operations/` and the article buttons have no
+  `*.test.ts`; T-1, T-2, T-4, T-5 and T-6 are not automated.
+- **F-4.5 diverged.** `SupportSubmitAction` disables submit on a missing support endpoint
+  (`SupportService.supportEndpoint`), not on an Observability "feedback unavailable" signal.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict TicketStatus: The three literals are declared as an Effect schema.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/Support.ts#TicketStatus]
+  note: No test asserts the literal set or a transition between them.
+```
+
+```mdl
+verdict Ticket: Ticket is an ECHO type with title, body, status, resolution and tags; tags is optional.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/Support.ts#Ticket, github:dxos/dxos/packages/plugins/plugin-support/src/types/Support.ts#make]
+  note: The spec has `tags: string[]` required; the schema makes it optional (`make` defaults it to `[]`). No test creates or reads a Ticket.
+```
+
+```mdl
+verdict IssueType: bug | feature literals exist and are exercised through the support request tests.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#IssueType]
+  tests: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportService.test.ts]
+```
+
+```mdl
+verdict Severity: The three priority literals exist verbatim.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#Severity]
+  note: Nothing emits them as GitHub labels (F-5.7 is missing), and no test asserts them.
+```
+
+```mdl
+verdict SupportRequest: The form schema has the spec's fields, but type and severity are optional and image and labels are added.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#SupportRequest]
+  tests: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportService.test.ts]
+  note: Spec requires `type` and `severity`; the schema marks both optional. It adds `image` (attach screenshot) and hidden `labels` that the spec does not list.
+```
+
+```mdl
+verdict SupportArticle: The article shows a status label, editable title and body, resolution when resolved, and status buttons.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/SupportArticle/SupportArticle.tsx#SupportArticle, github:dxos/dxos/packages/plugins/plugin-support/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/SupportArticle/SupportArticle.stories.tsx]
+  note: The resolution field renders only when status is resolved; the toolbar is a status text, not a slot. The story renders it with no interaction assertions.
+```
+
+```mdl
+verdict createTicket: The operation adds a new open Ticket to the database.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#CreateTicket, github:dxos/dxos/packages/plugins/plugin-support/src/operations/create-ticket.ts]
+  walkthrough:
+    - The operation declares title and optional body and returns a Ticket. github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#CreateTicket
+    - The handler builds the Ticket with `Support.make` and adds it with `Database.add`. github:dxos/dxos/packages/plugins/plugin-support/src/operations/create-ticket.ts
+  note: No test invokes the handler.
+```
+
+```mdl
+verdict markInProgress: The operation loads the ticket ref and sets status to in_progress.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#MarkInProgress, github:dxos/dxos/packages/plugins/plugin-support/src/operations/mark-in-progress.ts]
+  walkthrough:
+    - The operation takes a Ref to a Ticket and returns the Ticket. github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#MarkInProgress
+    - The handler loads the ref and updates its status. github:dxos/dxos/packages/plugins/plugin-support/src/operations/mark-in-progress.ts
+  note: Input is a `Ref(Ticket)` rather than a Ticket value. No test invokes it.
+```
+
+```mdl
+verdict resolveTicket: The operation sets status to resolved and records the resolution when given.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#ResolveTicket, github:dxos/dxos/packages/plugins/plugin-support/src/operations/resolve-ticket.ts]
+  walkthrough:
+    - The operation takes a ticket Ref and optional resolution. github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#ResolveTicket
+    - The handler sets status and, if present, resolution. github:dxos/dxos/packages/plugins/plugin-support/src/operations/resolve-ticket.ts
+  note: No test invokes it.
+```
+
+```mdl
+verdict searchDocs: The operation filters a three-entry in-memory index by substring and limits the results.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#SearchDocs, github:dxos/dxos/packages/plugins/plugin-support/src/operations/search-docs.ts]
+  walkthrough:
+    - The operation declares query, optional limit and the results array. github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#SearchDocs
+    - The handler matches title or excerpt against the static index, five results by default. github:dxos/dxos/packages/plugins/plugin-support/src/operations/search-docs.ts
+  note: No test invokes it.
+```
+
+```mdl
+verdict submitIssue: The operation files a Linear issue through the support service `/issue` route with logs, and the debug console invokes it with the Composer Feedback Form label.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#SubmitIssue,
+     github:dxos/dxos/packages/plugins/plugin-support/src/operations/submit-issue.ts,
+     github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportService.ts#submitSupportIssue,
+     github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugConsole/cli.ts#REPORT_LABEL]
+  tests: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportService.test.ts]
+  walkthrough:
+    - The operation declares the report and screenshot input and the issue result. github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#SubmitIssue
+    - The handler resolves endpoint, identity and version, then calls the service. github:dxos/dxos/packages/plugins/plugin-support/src/operations/submit-issue.ts
+    - The service uploads logs, posts to `/issue` and flushes logs with the report id. github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportService.ts#submitSupportIssue
+    - The debug console's report command tags issues with the shared label. github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugConsole/cli.ts#REPORT_LABEL
+```
+
+```mdl
+verdict F-1.1: Tickets can be created from the navtree (create-object entry) and by the assistant (createTicket tool).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-support/src/skills/support-skill.ts]
+  walkthrough:
+    - The create-object entry builds a Ticket and adds it through SpaceOperation.AddObject. github:dxos/dxos/packages/plugins/plugin-support/src/capabilities/create-object.ts
+    - The support skill exposes createTicket as an assistant tool. github:dxos/dxos/packages/plugins/plugin-support/src/skills/support-skill.ts
+  note: No test creates a ticket by either path.
+```
+
+```mdl
+verdict F-1.2: A new Ticket has status open and no resolution.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/Support.ts#make]
+  note: `make` sets status open and leaves resolution unset; no test asserts it.
+```
+
+```mdl
+verdict F-1.3: markInProgress sets status in_progress; the article's button does the same directly.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/operations/mark-in-progress.ts, github:dxos/dxos/packages/plugins/plugin-support/src/containers/SupportArticle/SupportArticle.tsx#SupportArticle]
+  note: The UI button updates the object directly rather than invoking the operation. No test.
+```
+
+```mdl
+verdict F-1.4: resolveTicket sets resolved and records the resolution when provided.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/operations/resolve-ticket.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-1.5: Title and body are editable inputs in SupportArticle.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/SupportArticle/SupportArticle.tsx#SupportArticle]
+  note: The story renders the inputs but asserts nothing about editing.
+```
+
+```mdl
+verdict F-1.6: The Reopen button on a resolved ticket sets status open.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/SupportArticle/SupportArticle.tsx#SupportArticle]
+  note: No test clicks Reopen.
+```
+
+```mdl
+verdict F-2.1: The support skill is registered under org.dxos.skill.support.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/skills/support-skill.ts, github:dxos/dxos/packages/plugins/plugin-support/src/capabilities/skill-definition.ts, github:dxos/dxos/packages/plugins/plugin-support/src/types/Support.ts#SKILL_KEY]
+  walkthrough:
+    - The skill definition uses SKILL_KEY. github:dxos/dxos/packages/plugins/plugin-support/src/skills/support-skill.ts
+    - The capability contributes it as a SkillDefinition. github:dxos/dxos/packages/plugins/plugin-support/src/capabilities/skill-definition.ts
+  note: No test resolves the skill.
+```
+
+```mdl
+verdict F-2.2: The skill's tools are exactly the four ticket and search operations.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/skills/support-skill.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-2.3: The Ticket type carries SkillsAnnotation with the support skill key, which binds the skill when a Ticket is active.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/Support.ts#Ticket]
+  note: Binding relies on the assistant's generic SkillsAnnotation handling; no test opens a Ticket and checks the chat's skills.
+```
+
+```mdl
+verdict F-2.4: The skill instructions ask one question at a time, search docs first and resolve only on user confirmation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/skills/support-skill.ts]
+  note: No eval exercises the instructions.
+```
+
+```mdl
+verdict F-3.1: searchDocs declares a query input.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#SearchDocs]
+  note: No test.
+```
+
+```mdl
+verdict F-3.2: searchDocs returns zero or more {title,url,excerpt} results.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/operations/search-docs.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-3.3: The handler uses a static three-entry DOCS_INDEX behind the stable schema.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/operations/search-docs.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-4.1: The `help` deck companion surface renders FeedbackPanel, which wraps FeedbackForm.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.tsx#FeedbackPanel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.stories.tsx]
+  walkthrough:
+    - The surface module matches deckCompanion('help') to FeedbackPanel. github:dxos/dxos/packages/plugins/plugin-support/src/capabilities/react-surface.ts
+    - FeedbackPanel renders FeedbackForm with the plugin list and hidden version. github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.tsx#FeedbackPanel
+```
+
+```mdl
+verdict F-4.2: Submitting calls submitReport, which posts to the support service that creates the ticket and Discord thread.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/SupportSubmitAction.tsx#useSupportSubmit,
+     github:dxos/dxos/packages/plugins/plugin-support/src/operations/submit-report.ts,
+     github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportService.ts#submitSupportReport]
+  tests: [github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportService.test.ts]
+  walkthrough:
+    - The submit hook invokes SubmitReport with the form values and identity. github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/SupportSubmitAction.tsx#useSupportSubmit
+    - The handler resolves the endpoint and Observability capability. github:dxos/dxos/packages/plugins/plugin-support/src/operations/submit-report.ts
+    - The service uploads logs, posts `/feedback` and flushes logs tagged with the ticket id. github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportService.ts#submitSupportReport
+  note: The PostHog ticket and Discord thread are created server-side by the EDGE support service in one call.
+```
+
+```mdl
+verdict F-4.3: Success shows a toast, but the companion does not collapse.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/SupportSubmitAction.tsx#useSupportSubmit]
+  note: The hook shows a success toast and the form resets; nothing closes the companion. No test.
+```
+
+```mdl
+verdict F-4.4: DownloadLogsAction renders the Download logs button only when a LogDownloader is contributed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/DownloadLogsAction.tsx#DownloadLogsAction]
+  tests: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.stories.tsx, github:dxos/dxos/packages/plugins/plugin-support/src/components/FeedbackForm/FeedbackForm.stories.tsx]
+```
+
+```mdl
+verdict F-4.5: Submit is disabled when no support endpoint is configured, not on an Observability signal.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/SupportSubmitAction.tsx#SupportSubmitAction]
+  note: `SupportSubmitAction` passes `disabled={!endpoint}` from `SupportService.supportEndpoint(config)`; the Observability capability is not consulted.
+```
+
+```mdl
+verdict F-5.1: The form exposes type, severity, title, body and area alongside submit and Discord presence.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/components/FeedbackForm/FeedbackForm.tsx#FeedbackFormRoot, github:dxos/dxos/packages/plugins/plugin-support/src/types/SupportOperation.ts#SupportRequest]
+  note: Stories render the form, but no test asserts the field set.
+```
+
+```mdl
+verdict F-5.2: The hidden version field is populated from the runtime build and re-attached on submit.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.tsx#FeedbackPanel, github:dxos/dxos/packages/plugins/plugin-support/src/components/FeedbackForm/FeedbackForm.tsx#FeedbackFormRoot]
+  walkthrough:
+    - The panel reads the build version from config. github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.tsx#FeedbackPanel
+    - The form seeds it as a default and re-adds it in handleSave; FormInputAnnotation hides it. github:dxos/dxos/packages/plugins/plugin-support/src/components/FeedbackForm/FeedbackForm.tsx#FeedbackFormRoot
+  note: No test.
+```
+
+```mdl
+verdict F-5.3: The area select lists loaded plugins by id and name; empty is allowed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.tsx#FeedbackPanel, github:dxos/dxos/packages/plugins/plugin-support/src/components/FeedbackForm/AreaSelectField.tsx#AreaSelectField]
+  walkthrough:
+    - The panel maps the plugin manager's plugins to id and name. github:dxos/dxos/packages/plugins/plugin-support/src/containers/FeedbackPanel/FeedbackPanel.tsx#FeedbackPanel
+    - AreaSelectField renders them as options for the area field. github:dxos/dxos/packages/plugins/plugin-support/src/components/FeedbackForm/AreaSelectField.tsx#AreaSelectField
+  note: No test.
+```
+
+```mdl
+verdict F-5.4: There is no "Create GitHub issue" action and no submitGitHubIssue.
+  status: missing
+  note: Searched plugin-support for GitHub, submitGitHubIssue and issues/new; only a HelpMenu link to the repo exists.
+```
+
+```mdl
+verdict F-5.5: No code looks up a github.com AccessToken or posts to the GitHub API.
+  status: missing
+  note: Searched plugin-support `src/`; the screenshot module mentions the GitHub path in a comment only.
+```
+
+```mdl
+verdict F-5.6: No prefilled issues/new URL fallback exists.
+  status: missing
+  note: Searched plugin-support `src/` for issues/new.
+```
+
+```mdl
+verdict F-5.7: No type, severity, area or Composer label mapping to GitHub exists.
+  status: missing
+  note: The Severity literals are label-shaped but nothing builds a GitHub URL or labels from them.
+```
+
+```mdl
+verdict T-1: No automated test invokes createTicket.
+  status: missing
+  note: No `*.test.ts` covers the ticket operations.
+```
+
+```mdl
+verdict T-2: No automated test invokes resolveTicket.
+  status: missing
+  note: No `*.test.ts` covers the ticket operations.
+```
+
+```mdl
+verdict T-3: The SupportArticle stories render a ticket under the storybook smoke run, without asserting fields or editing.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-support/src/containers/SupportArticle/SupportArticle.stories.tsx]
+  note: The stories have no play function, so visibility, editability and the status label are not asserted.
+```
+
+```mdl
+verdict T-4: No test clicks Resolve.
+  status: missing
+  note: SupportArticle stories have no play function.
+```
+
+```mdl
+verdict T-5: No test runs markInProgress or clicks Mark in progress.
+  status: missing
+  note: No test found.
+```
+
+```mdl
+verdict T-6: No test clicks Reopen.
+  status: missing
+  note: No test found.
+```
+
+```mdl
+verdict QA-1: No automation runs the create-and-resolve ticket QA flow.
+  status: missing
+  note: No playwright spec or autocue flow for plugin-support.
+```
+
+```mdl
+verdict QA-2: No automation runs the help-companion feedback QA flow.
+  status: missing
+  note: No playwright spec or autocue flow for plugin-support.
+```

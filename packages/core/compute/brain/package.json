@@ -1,7 +1,7 @@
 {
   "name": "@dxos/brain",
-  "version": "0.16.0",
-  "description": "Agent brain: pipeline-rdf facts encoded as Datalog relations, a canonical predicate vocabulary, goal built-ins and an incremental goal-rule evaluator.",
+  "version": "0.17.0",
+  "description": "Agent brain: memory facts encoded as Datalog relations, a canonical predicate vocabulary, goal built-ins and an incremental goal-rule evaluator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -72,8 +72,8 @@
   ],
   "dependencies": {
     "@dxos/datalog": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

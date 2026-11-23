@@ -30,6 +30,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-form"
+    },
+    {
       "path": "../react-ui-list"
     },
     {

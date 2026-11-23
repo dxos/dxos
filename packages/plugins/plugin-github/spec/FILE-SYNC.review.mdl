@@ -1,0 +1,263 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-github/spec/FILE-SYNC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: GitHub two-way file sync
+
+This spec describes a future design, and almost none of it is built. plugin-github has no `file-sync/`
+directory and no `GitHubCapabilities.FileMapping` (its capabilities file declares only `LinkSource`); no
+`SyncGitHubFiles` op, `FileMarker`, `VersionLink` or `TextMerge` helper exists; and `github-api.ts` has
+none of the git reads and writes (`fetchBranchHead`, `compareCommits`, `fetchTree`, `fetchBlob`,
+`commitFiles`, `ensurePullRequest`). Searched plugin-github and plugin-code `src/` for each name.
+
+The only existing pieces are on the plugin-code side, and they do not match the contract. `Spec.content` is a
+`Ref<Text>`, as F-6.2 needs. `CodeOperation.ImportSpec` exists under the spec's key, but it links a `.mdl`
+file in a local checkout by a `github:` source key and reads it from the file system; it takes neither
+`FileImportInput` nor returns heads. There is no `ExportSpec`. Automerge's `changeAt` is available on the
+ECHO object core (`object-core.ts`), which answers open question 1, but nothing wraps it for `Text`.
+
+Of 38 items: 0 done, 0 untested, 1 partial, 1 diverged, 36 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict FileMapping: No FileMapping capability exists.
+  status: missing
+  note: `types/GitHubCapabilities.ts` declares only `LinkSource`; no `FileImportInput`, `FileExportInput` or `MappingParseError` anywhere in plugin-github.
+```
+
+```mdl
+verdict TextMerge: No TextMerge helper exists.
+  status: missing
+  note: No `file-sync/text-merge.ts`, `applyAt`, `changedSince` or `TextMergeError` in plugin-github. ECHO's `ObjectCore.changeAt` exists but nothing wraps it for `Text`.
+```
+
+```mdl
+verdict FileSyncOptions: No file-binding options type exists.
+  status: missing
+  note: No `stream: files` option, `writeBranch` or file-binding cursor in plugin-github; `SyncOptions` holds only `maxDaysBack`.
+```
+
+```mdl
+verdict FileMarker: No FileMarker type exists.
+  status: missing
+  note: Searched plugin-github and plugin-connector for `FileMarker` and `file:` snapshot keys; none.
+```
+
+```mdl
+verdict VersionLink: No VersionLink type exists.
+  status: missing
+  note: Searched for `VersionLink` and `history:` snapshot keys; none.
+```
+
+```mdl
+verdict CompareFile: No compare payload schema exists.
+  status: missing
+  note: `github-api.ts` has no compare endpoint or `CompareFile` schema.
+```
+
+```mdl
+verdict GitHubApi: None of the git reads or writes exist in github-api.ts.
+  status: missing
+  note: `fetchBranchHead`, `compareCommits`, `fetchTree`, `fetchBlob`, `commitFiles`, `ensurePullRequest` and `RefMovedError` are absent; only the generic `Conditional` shape (used by `fetchRepoConditional`) exists to build on.
+```
+
+```mdl
+verdict SyncGitHubFiles: No SyncGitHubFiles operation exists.
+  status: missing
+  note: No `org.dxos.operation.github.syncFiles` in `GitHubOperation.ts`, and `syncRepoBinding` has no file-stream branch.
+```
+
+```mdl
+verdict FileSyncResult: No FileSyncResult type exists.
+  status: missing
+  note: Not found in `GitHubOperation.ts`.
+```
+
+```mdl
+verdict ImportSpec: An ImportSpec with this key exists, but it links a local-checkout file by source key, not the FileMapping import contract.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ImportSpec, github:dxos/dxos/packages/plugins/plugin-code/src/operations/import-spec.ts]
+  note: |
+    Input is `{ key }` (`github:<owner>/<repo>/<path>`) and output `{ spec, created }`. The handler returns a Spec
+    already carrying the key, else reads the file from a configured local checkout and creates the Spec. It takes no
+    `content`, `base` or `heads`, applies no merge, and returns no heads.
+```
+
+```mdl
+verdict ExportSpec: No ExportSpec operation exists.
+  status: missing
+  note: Searched plugin-code `src/` for `ExportSpec` and `exportSpec`; none.
+```
+
+```mdl
+verdict F-1.1: There is no FileMapping capability to contribute.
+  status: missing
+  note: See `FileMapping`.
+```
+
+```mdl
+verdict F-1.2: No mapping resolution or conflict logging exists.
+  status: missing
+  note: No code matches paths against mappings.
+```
+
+```mdl
+verdict F-1.3: No pull-only mapping handling exists.
+  status: missing
+  note: No push path for files exists at all.
+```
+
+```mdl
+verdict F-2.1: No file binding sync, so no fetchBranchHead request.
+  status: missing
+  note: `fetchBranchHead` does not exist.
+```
+
+```mdl
+verdict F-2.2: No early exit for an unchanged file binding.
+  status: missing
+  note: No file binding or token comparison exists.
+```
+
+```mdl
+verdict F-2.3: No compare or tree-diff path exists.
+  status: missing
+  note: `compareCommits` and `fetchTree` do not exist.
+```
+
+```mdl
+verdict F-2.4: No blob fetching or maxBytes filter exists.
+  status: missing
+  note: `fetchBlob` and `maxBytes` do not exist.
+```
+
+```mdl
+verdict F-3.1: No import on added paths.
+  status: missing
+  note: No file pull path exists.
+```
+
+```mdl
+verdict F-3.2: No merge of a modified file at marker heads.
+  status: missing
+  note: No file pull path or `TextMerge.applyAt` exists.
+```
+
+```mdl
+verdict F-3.3: No rename handling for file-keyed objects.
+  status: missing
+  note: No `<repoId>:<path>` foreign keys are written anywhere.
+```
+
+```mdl
+verdict F-3.4: No removed-path handling.
+  status: missing
+  note: No file pull path exists.
+```
+
+```mdl
+verdict F-4.1: No export of locally edited objects.
+  status: missing
+  note: No `changedSince` or export invocation exists.
+```
+
+```mdl
+verdict F-4.2: No commit to a write branch.
+  status: missing
+  note: `commitFiles` does not exist; nothing writes git trees or refs.
+```
+
+```mdl
+verdict F-4.3: No RefMovedError retry.
+  status: missing
+  note: `RefMovedError` does not exist.
+```
+
+```mdl
+verdict F-4.4: No write-branch pull request management.
+  status: missing
+  note: `ensurePullRequest` does not exist.
+```
+
+```mdl
+verdict F-4.5: No commit attribution or message.
+  status: missing
+  note: No commits are made.
+```
+
+```mdl
+verdict F-4.6: No pull of foreign commits on the write branch.
+  status: missing
+  note: No write branch handling exists.
+```
+
+```mdl
+verdict F-5.1: No atomic token and marker advance for files.
+  status: missing
+  note: No file markers exist.
+```
+
+```mdl
+verdict F-5.2: No VersionLink history.
+  status: missing
+  note: `VersionLink` does not exist.
+```
+
+```mdl
+verdict F-5.3: No commit-to-heads lookup.
+  status: missing
+  note: `VersionLink` does not exist.
+```
+
+```mdl
+verdict F-6.1: plugin-code contributes no FileMapping.
+  status: missing
+  note: plugin-code has no reference to a GitHub file mapping; `ExportSpec` is missing and `ImportSpec` has another contract.
+```
+
+```mdl
+verdict F-6.2: Spec.content is a Ref to Text; there is no sync for it to merge in.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#Spec]
+  note: The data model half holds (`content: Ref.Ref(Text.Text)`); no GitHub file sync runs, so character-level merging during sync is not implemented.
+```
+
+```mdl
+verdict T-1: No test runs a file sync pass.
+  status: missing
+  note: No `SyncGitHubFiles` and no test for it.
+```
+
+```mdl
+verdict T-2: No test runs a remote edit through file sync.
+  status: missing
+  note: Nothing to run.
+```
+
+```mdl
+verdict T-3: No test runs concurrent edits through file sync.
+  status: missing
+  note: Nothing to run.
+```
+
+```mdl
+verdict T-4: No test runs a moved write branch.
+  status: missing
+  note: Nothing to run.
+```
+
+```mdl
+verdict T-5: No test runs an upstream file removal.
+  status: missing
+  note: Nothing to run.
+```

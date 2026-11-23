@@ -1,0 +1,32 @@
+---
+title: Timeline
+description: Events from a table along a vertical time axis.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui-plot/timeline" height="32rem" />
+
+```ts
+import { Timeline } from '@dxos/react-ui-plot';
+```
+
+```sh
+npm install @dxos/react-ui-plot
+```
+
+A timeline plots events along a vertical time axis that scrolls and zooms. `Timeline` takes a table like `Plot`'s:
+
+- The first column is the time. It can be a year, a date or a date serial.
+- Each other column is a category of events.
+
+## Props
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `data` | `PlotData` | Sets the events. The first column is the time, and each other column is a category |
+| `options` | `TimelineOptions` | Sets the spine's side, the scale, and which marks to draw |
+| `zoom` | `number` | Sets the starting zoom. Ctrl or ⌘ and the wheel zoom about the pointer |
+| `filter` | `string` | Draws only the events that contain this text |
+| `onHiddenChange` | `(hidden: string[]) => void` | The user showed or hid a category. Passing it adds a row of category tags that show or hide each one |
+| `actions` | `ReactNode` | Shows controls at the end of the row of category tags, with `onHiddenChange` |

@@ -16,7 +16,7 @@ import { printDevice } from '../util.ts';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const device = client.halo.device;
   if (!device) {
     if (json) {

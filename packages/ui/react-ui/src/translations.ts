@@ -32,6 +32,8 @@ export const translations = [
         'system-button.unstar.label': 'Unstar',
         'system-button.bookmark.label': 'Bookmark',
         'system-button.unbookmark.label': 'Remove bookmark',
+        'system-button.check.label': 'Check',
+        'system-button.uncheck.label': 'Uncheck',
         'system-button.expand.label': 'Expand',
         'system-button.collapse.label': 'Collapse',
         'system-button.ai.label': 'Run AI',
@@ -71,6 +73,7 @@ export const translations = [
 
         'number-input.increment.label': 'Increment',
         'number-input.decrement.label': 'Decrement',
+        'number-input.slider.label': 'Adjust',
         'password-input.show.label': 'Show password',
         'password-input.hide.label': 'Hide password',
         'tag.delete.label': 'Remove {{label}}',

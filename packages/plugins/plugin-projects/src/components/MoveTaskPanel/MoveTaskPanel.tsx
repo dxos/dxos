@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
+import { ProjectsNamespace } from '../../namespace.ts';
 
 export type MoveTaskPanelProps = {
   /** Candidate destinations; the caller excludes the task's own project. */
@@ -19,7 +19,7 @@ export type MoveTaskPanelProps = {
 
 /** A searchable list of destination projects for a task's "Move to…" action. */
 export const MoveTaskPanel = ({ projects, onSelect }: MoveTaskPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const sorted = useMemo(
     () => [...projects].sort((left, right) => label(left).localeCompare(label(right))),
     [projects],

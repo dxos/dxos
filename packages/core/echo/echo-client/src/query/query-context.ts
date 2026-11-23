@@ -38,6 +38,14 @@ export type SourceEntry<O extends Entity.Unknown = Entity.Unknown> = QueryResult
   manifest?: readonly QueryService.ManifestEntry[];
 };
 
+export type QueryContextRunOptions = QueryResult.RunOptions & {
+  /**
+   * Receives each part of the run's evaluation time (ms) as it is known: the local evaluation and every remote's
+   * reported evaluation; time spent waiting for a remote or for documents to load is never reported.
+   */
+  onExecutionTime?: (executionTime: number) => void;
+};
+
 export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
   getResults(): SourceEntry<O>[];
 
@@ -60,13 +68,19 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
   /** Per-source progress on the current query. */
   getSourceStates(): QueryResult.SourceState[];
 
+  /**
+   * Time (ms) the remote sources reported spending to evaluate their latest answers, summed; undefined when none
+   * reported one, e.g. no remote serves the query.
+   */
+  getRemoteExecutionTime?(): number | undefined;
+
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
 
   /**
    * One-shot query.
    */
-  run(ctx: Context, query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<SourceEntry<O>[]>;
+  run(ctx: Context, query: QueryAST.Query, opts?: QueryContextRunOptions): Promise<SourceEntry<O>[]>;
 
   /**
    * Set the filter and trigger continuous updates.

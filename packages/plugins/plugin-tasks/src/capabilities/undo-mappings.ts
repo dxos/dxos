@@ -8,8 +8,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 
-import { meta } from '#meta';
 import { TaskOperation } from '#types';
+
+import { TasksNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -20,8 +21,8 @@ export default Capability.makeModule(() =>
         deriveContext: (_input, output) => output.restore,
         message: (_input, output) =>
           output.restore.entries.length > 1
-            ? ['tasks-deleted.label', { ns: meta.profile.key }]
-            : ['task-deleted.label', { ns: meta.profile.key }],
+            ? ['tasks-deleted.label', { ns: TasksNamespace.key }]
+            : ['task-deleted.label', { ns: TasksNamespace.key }],
       }),
     ]),
   ),

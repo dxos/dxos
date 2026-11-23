@@ -11,14 +11,17 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 
-import { meta } from '#meta';
 import { Drawing, DrawingOperation, IllustratorCapabilities } from '#types';
+
+import { IllustratorNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const readOnly = yield* ReadOnly.atom;
     // Read reactively so the actions appear once renderer plugins contribute their variants.
     const variantsAtom = yield* Capability.atom(IllustratorCapabilities.VariantProvider);
 
@@ -26,26 +29,34 @@ export default Capability.makeModule(
       id: 'scores',
       relation: AppNode.companion,
       type: Drawing.Drawing,
-      connector: () =>
-        Effect.succeed([
-          AppNode.makeCompanion({
-            variant: 'scores',
-            label: ['scores.label', { ns: meta.profile.key }],
-            icon: 'ph--gauge--regular',
-            data: 'scores',
-          }),
-        ]),
+      connector: (_, get) =>
+        Effect.succeed(
+          get(readOnly)
+            ? []
+            : [
+                AppNode.makeCompanion({
+                  variant: 'scores',
+                  label: ['scores.label', { ns: IllustratorNamespace.key }],
+                  icon: 'ph--gauge--regular',
+                  data: 'scores',
+                }),
+              ],
+        ),
     });
 
     const convertActions = yield* AppGraphBuilder.createTypeExtension({
       id: 'convertActions',
       type: Drawing.Drawing,
       actions: (drawing, get) => {
-        const canvas = get(Obj.atom(drawing.canvas));
-        if (!canvas) {
+        if (get(readOnly)) {
           return Effect.succeed([]);
         }
-        const targets = IllustratorCapabilities.editTargets(get(variantsAtom), canvas.schema);
+
+        // Read through the atom so the actions follow the canvas; the variant is matched on the live object.
+        const variants = get(variantsAtom);
+        const targets = get(Obj.atom(drawing.canvas))
+          ? IllustratorCapabilities.convertTargets(drawing.canvas.target, variants)
+          : [];
         return Effect.succeed(
           targets.map((variant) => {
             const slug = IllustratorCapabilities.variantSlug(variant);

@@ -220,7 +220,7 @@ export const Canvas = (props: { canvas: readonly Fold.Presentation[]; onClear: (
           clear
         </button>
       </header>
-      <div ref={scroller} class='flex flex-1 flex-col gap-3 overflow-y-auto p-3'>
+      <div ref={scroller} class='flex flex-1 flex-col gap-3 overflow-y-auto p-trim-md'>
         <For each={props.canvas}>{(presentation) => <Panel presentation={presentation} />}</For>
       </div>
     </div>

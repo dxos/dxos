@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-client",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "ECHO client-side database runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -53,6 +53,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "bs58check": "catalog:",
     "effect": "catalog:",
     "eventemitter3": "catalog:"
   },

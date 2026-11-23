@@ -5,7 +5,6 @@
 import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { Form } from '@dxos/react-ui-form';
-import * as Card from '@dxos/react-ui/Card';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
@@ -14,9 +13,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-
-import { EntityCardField } from './EntityCard.tsx';
+import { AgentNamespace } from '../../namespace.ts';
 
 //
 // Stack
@@ -37,7 +34,7 @@ export type KnowledgeStackProps<T> = {
  * out in the form's frame so the cards read as the forms beside them.
  */
 export const KnowledgeStack = <T,>({ items, getId, getText, renderItem, before }: KnowledgeStackProps<T>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const [filter, setFilter] = useState('');
   const visible = useMemo(() => {
     const text = filter.trim().toLowerCase();
@@ -75,39 +72,3 @@ export const KnowledgeStack = <T,>({ items, getId, getText, renderItem, before }
     </Panel.Body>
   );
 };
-
-//
-// Card
-//
-
-export type KnowledgeCardRow = {
-  label: string;
-  value: ReactNode;
-};
-
-export type KnowledgeCardProps = {
-  icon: string;
-  title: ReactNode;
-  rows: readonly KnowledgeCardRow[];
-  /** After the rows, the card's full width (e.g. the raw TriG). */
-  children?: ReactNode;
-  testId?: string;
-  /** Data attributes a test reads (e.g. a goal's status). */
-  data?: Readonly<Record<`data-${string}`, string>>;
-};
-
-/** One item as a read-only form: an icon and title head the card, its key/value rows follow. */
-export const KnowledgeCard = ({ icon, title, rows, children, testId, data }: KnowledgeCardProps) => (
-  <Card.Root grid data-testid={testId} {...data}>
-    <Card.Row icon={icon} align='start'>
-      <Card.Text lines={3}>{title}</Card.Text>
-    </Card.Row>
-    {rows.map(({ label, value }, index) => (
-      // A key can repeat (a goal's several watches), so the position keeps rows distinct.
-      <Card.Row key={`${label}:${index}`}>
-        <EntityCardField label={label}>{value}</EntityCardField>
-      </Card.Row>
-    ))}
-    {children}
-  </Card.Root>
-);

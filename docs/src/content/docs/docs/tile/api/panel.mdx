@@ -1,0 +1,40 @@
+---
+title: Panel
+description: The container shell, with a header, a body and a footer.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+<TilePreview id="panel" height="20rem" />
+
+```ts
+import * as Panel from '@dxos/react-ui/Panel';
+```
+
+A panel is the shell of a pane: a header row, a body that takes the rest of the height, and a footer row.
+[Layout](/docs/tile/concepts/layout/) explains how it scrolls.
+
+<Snippet file="tile-components" region="panel" lang="tsx" />
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Panel.Root` | The shell. It fills its parent and sets the size and surface for everything in it |
+| `Panel.Header` | A row sized to its content, usually a toolbar |
+| `Panel.Body` | The area that takes the remaining height. Use `asChild` to put it on a [`ScrollArea.Root`](/docs/tile/api/scroll-area/) |
+| `Panel.Footer` | A row sized to its content, such as a status line |
+
+## `Panel.Root`
+
+`Panel.Root` takes these props:
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `size` | `Size` | Sets the size of everything in the panel |
+| `level` | `'sunken' \| 'chrome' \| 'base' \| 'raised' \| 'overlay' \| 'popup'` | Sets the surface. `'base'` by default |
+| `width` | `'document'` | Keeps the body's content at reading width, centered, while it still scrolls at the panel's edge |
+| `gutter` | `'rail' \| 'inset' \| 'sm' \| 'md' \| 'lg' \| 'none'` | Sets the gutter of the first container in the body. `'sm'` by default |
+
+The panel is a container query, so its header, body and footer can change layout together at a narrow width.

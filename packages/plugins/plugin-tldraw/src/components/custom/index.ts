@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './CollaboratorCursor.tsx';
 export * from './CustomMenu.tsx';
 export * from './CustomStylePanel.tsx';
 export * from './CustomToolbar.tsx';

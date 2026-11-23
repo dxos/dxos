@@ -10,7 +10,6 @@ import process from 'node:process';
 import { buildImportGraph } from './build-graph.ts';
 import {
   EXTERNAL_PREFIX,
-  type Matcher,
   type WorkspacePackageResolver,
   createMatcher,
   createWorkspacePackageResolver,
@@ -29,6 +28,8 @@ export interface TraceImportsOptions {
   readonly exportSubpath?: string;
   /** Target spec — package, path, or glob. See `--to` in the CLI. */
   readonly to: string;
+  /** Bare specifiers (package, subpath, or glob) exempt from `to`; their files are traced instead. */
+  readonly allow?: string;
   /** Limit the number of distinct chains we render (default: 10). */
   readonly maxChains?: number;
   /** Custom export conditions; defaults to `['workerd', 'worker', 'node']`. */
@@ -164,19 +165,14 @@ const renderTree = (chainsOfLabels: readonly (readonly string[])[]): string => {
   return lines.join('\n');
 };
 
-/** Graph keys whose node is itself a terminal under the matcher. */
-const terminalKeys = (
-  graph: Map<string, string[]>,
-  matcher: Matcher,
-  resolveWorkspacePackage: WorkspacePackageResolver,
-): string[] => [...graph.keys()].filter((key) => matchesKey(key, matcher, resolveWorkspacePackage));
+/** Decides whether a graph key ends a chain. */
+type TerminalPredicate = (key: string) => boolean;
 
 /** Compute the set of graph keys that lie on some path from `entryKey` to a terminal node. */
 const buildKeysReachingTerminal = (
   graph: Map<string, string[]>,
   entryKey: string,
-  matcher: Matcher,
-  resolveWorkspacePackage: WorkspacePackageResolver,
+  isTerminal: TerminalPredicate,
 ): Set<string> => {
   const reverse = new Map<string, Set<string>>();
   for (const [currentKey, deps] of graph.entries()) {
@@ -190,7 +186,7 @@ const buildKeysReachingTerminal = (
     }
   }
 
-  const terminals = terminalKeys(graph, matcher, resolveWorkspacePackage);
+  const terminals = [...graph.keys()].filter(isTerminal);
   const reachableBackward = new Set<string>(terminals);
   const queue = [...terminals];
   for (let head = 0; head < queue.length; head++) {
@@ -220,11 +216,10 @@ const buildKeysReachingTerminal = (
 const collectChains = (
   graph: Map<string, string[]>,
   entryKey: string,
-  matcher: Matcher,
-  resolveWorkspacePackage: WorkspacePackageResolver,
+  isTerminal: TerminalPredicate,
   onChain: (chain: string[]) => boolean,
 ): void => {
-  const onPathToTarget = buildKeysReachingTerminal(graph, entryKey, matcher, resolveWorkspacePackage);
+  const onPathToTarget = buildKeysReachingTerminal(graph, entryKey, isTerminal);
 
   let stop = false;
   const emit = (chain: string[]): void => {
@@ -242,7 +237,7 @@ const collectChains = (
     }
 
     const extendedChain = [...chain, currentKey];
-    if (matchesKey(currentKey, matcher, resolveWorkspacePackage)) {
+    if (isTerminal(currentKey)) {
       emit(extendedChain);
       return;
     }
@@ -301,7 +296,14 @@ export const traceImports = (options: TraceImportsOptions): TraceImportsResult =
   const resolveWorkspacePackage = createWorkspacePackageResolver(absWorkingDir);
 
   const entryKey = normalizeFsPath(entryAbsolute);
-  const { graph, unresolvedSubpaths } = buildImportGraph(entryKey, conditions, matcher, resolveWorkspacePackage);
+  const allow = options.allow ? createMatcher(options.allow, absWorkingDir) : null;
+  const { graph, unresolvedSubpaths, allowed } = buildImportGraph(
+    entryKey,
+    conditions,
+    matcher,
+    allow,
+    resolveWorkspacePackage,
+  );
   if (unresolvedSubpaths.length > 0) {
     throw new Error(
       [
@@ -326,7 +328,8 @@ export const traceImports = (options: TraceImportsOptions): TraceImportsResult =
     return chain.map((step) => prettifyStep(step, absWorkingDir, color));
   };
 
-  collectChains(graph, entryKey, matcher, resolveWorkspacePackage, (chain) => {
+  const isTerminal: TerminalPredicate = (key) => !allowed.has(key) && matchesKey(key, matcher, resolveWorkspacePackage);
+  collectChains(graph, entryKey, isTerminal, (chain) => {
     totalEmitted += 1;
     const labels = chainToLabels(chain);
     const key = labels.join('\0');

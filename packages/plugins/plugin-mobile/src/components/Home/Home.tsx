@@ -21,8 +21,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { MobileNamespace } from '../../namespace.ts';
 import { useExpandPath } from '../hooks.ts';
 
 export type HomeProps = {};
@@ -31,7 +30,7 @@ export type HomeProps = {};
  * Home screen.
  */
 export const Home = (_: HomeProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MobileNamespace.key);
   // Profile and settings moved to the navbar's main menu; Home lists spaces only.
   const items = useItemsByDisposition('workspace');
   useExpandPath(GraphNode.RootId);
@@ -62,7 +61,7 @@ export const Home = (_: HomeProps) => {
 
 const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MobileNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const name = Theme.toLocalizedString(data.properties.label, t);

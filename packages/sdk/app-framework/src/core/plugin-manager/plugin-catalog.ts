@@ -35,6 +35,8 @@ export type PluginCatalogOptions = {
 export class PluginCatalog {
   /** Coalesces concurrent lazy-plugin resolutions per plugin id. */
   readonly #resolving = new Map<string, Deferred.Deferred<Plugin.Plugin, Plugin.LazyPluginError>>();
+  /** The lazy stub each resolved plugin came from, so {@link PluginCatalog.reload} can re-run its loader. */
+  readonly #stubs = new Map<string, Plugin.Plugin>();
   /** Serializes enable/disable per plugin id — see {@link PluginCatalog.#lifecycle}. */
   readonly #lifecycles = new Map<string, Semaphore.Semaphore>();
   /** Dev-sourced plugin ids, with the shadowed original (if any) for restoration on remove. */
@@ -369,6 +371,46 @@ export class PluginCatalog {
   }
 
   /**
+   * Re-creates a resolved lazy plugin by running its loader again, with the options it was made
+   * with, and swaps it in place. For an enabled plugin, modules the new definition dropped or changed
+   * are torn down — with active modules elsewhere that require a singleton capability they provide —
+   * unchanged ones keep running, and the plugin is enabled again so new and changed modules activate
+   * for every event that already fired. Hot module replacement calls this when the plugin's
+   * definition changes. Returns false for an unknown or still-unresolved plugin.
+   */
+  reload(id: string): Effect.Effect<boolean, Error, Plugin.Service> {
+    return Effect.gen({ self: this }, function* () {
+      const stub = this.#stubs.get(id);
+      const current = this.#state.getPlugin(id);
+      if (!stub || !current || Plugin.isLazy(current)) {
+        return 'skip' as const;
+      }
+      // Resolved before anything is torn down: a definition that fails to load leaves the old plugin running.
+      const next = yield* Plugin.resolveLazy(stub);
+      const enabled = this.#state.isEnabled(id);
+      if (enabled) {
+        // A module the new definition reuses unchanged (the same module object, as when only the module
+        // list changed) keeps running: re-running every module would repeat their side effects.
+        const nextById = new Map(next.modules.map((module) => [module.id, module]));
+        const stale = current.modules.filter((module) => {
+          const reused = nextById.get(module.id);
+          return reused === undefined || !Plugin.isSameDefinition(module, reused);
+        });
+        yield* this.#scheduler.deactivateModules(stale);
+        stale.forEach((module) => this.#state.removeModule(module.id));
+      }
+      this.#state.replacePlugin(id, next);
+      return enabled ? ('enable' as const) : ('replaced' as const);
+    }).pipe(
+      this.#lifecycle(id).withPermits(1),
+      // Outside the lock: enabling takes it too.
+      Effect.flatMap((outcome) =>
+        outcome === 'enable' ? this.#enableOne(id) : Effect.succeed(outcome === 'replaced'),
+      ),
+    );
+  }
+
+  /**
    * Resolves a lazy plugin stub (returned by {@link Plugin.lazy}) to its
    * loaded form and swaps it into `_pluginsAtom`. Returns the input unchanged
    * when the plugin is already resolved, so callers can `yield*` this
@@ -420,6 +462,7 @@ export class PluginCatalog {
         );
         performance.mark(`plugin-load:${id}:end`);
         performance.measure(`plugin-load:${id}`, `plugin-load:${id}:start`, `plugin-load:${id}:end`);
+        this.#stubs.set(id, plugin);
         this.#state.replacePlugin(id, resolvedPlugin);
         yield* PubSub.publish(this.#state.activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;

@@ -34,7 +34,7 @@ import {
 } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
-import { GitHubPlugin } from '#plugin';
+import * as GitHubPlugin from '#meta';
 
 import { githubLinks } from '../extensions/index.ts';
 import { FixtureLinkSourcePlugin } from '../testing/index.ts';
@@ -127,7 +127,7 @@ const meta = {
     // No PreviewPlugin: its popover module would answer the anchors too, through the deck's layout
     // operation, which has no handler here. The start event alone activates this plugin's resolver.
     withPluginManager({
-      plugins: [...CorePlugins.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...CorePlugins.make(), GitHubPlugin.make(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],

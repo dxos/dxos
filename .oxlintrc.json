@@ -245,7 +245,26 @@
       // imports single files on purpose, to keep React out of its bundle.
       "files": ["packages/ui/react-ui-canvas/src/**"],
       "rules": {
-        "@dxos/eslint-plugin-rules/folder-barrel-imports": ["error", { "allow": ["src/headless.ts"] }]
+        "@dxos/eslint-plugin-rules/folder-barrel-imports": ["error", { "allow": ["src/headless.ts"] }],
+        // The editor application builds on this surface package, so an import back would be a cycle.
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@dxos/react-ui-canvas-editor", "@dxos/react-ui-canvas-editor/*"],
+                "message": "react-ui-canvas is the surface; it must not import the editor (react-ui-canvas-editor)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Every folder is private here too; the editor reaches the surface through its package entries only.
+      "files": ["packages/ui/react-ui-canvas-editor/src/**"],
+      "rules": {
+        "@dxos/eslint-plugin-rules/folder-barrel-imports": "error"
       }
     },
     {

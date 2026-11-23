@@ -7,8 +7,9 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import { Text } from '@dxos/schema';
 
-import type { FileSystemManager } from '#capabilities';
 import { FileSystemCapabilities } from '#types';
+
+import type * as FileSystemManager from '../capabilities/state/FileSystemManager.ts';
 
 /** In-memory mock of FileSystemManager for tests that need graph builder integration. */
 export class MockFileSystemManager implements FileSystemManager.FileSystemManager {

@@ -45,7 +45,7 @@ export const verify = Command.make(
   (options) =>
     Function.pipe(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const session = yield* resolveSession({
           handle: Option.getOrUndefined(options.handle),
           appPassword: Option.getOrUndefined(options.appPassword),

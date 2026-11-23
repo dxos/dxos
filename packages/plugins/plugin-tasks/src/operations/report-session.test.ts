@@ -230,24 +230,54 @@ describe('report-session', () => {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Backlog' }));
       const open = yield* Database.add(Task.make({ title: 'Ship the thing', status: 'started', assignee }));
       const closed = yield* Database.add(Task.make({ title: 'Already done', status: 'done', assignee }));
+      const reviewed = yield* Database.add(
+        Task.make({
+          title: 'Awaiting sign-off',
+          status: 'review',
+          assignee: { name: 'Riley', identityDid: 'did:key:riley' },
+          delegate: assignee,
+        }),
+      );
+      const held = yield* Database.add(Task.make({ title: 'Awaiting the vendor', status: 'review', assignee }));
       const project = yield* Database.add(Project.make({ name: 'Voyage', taskSet: Ref.make(taskSet) }));
       Obj.update(taskSet, (taskSet) => {
-        taskSet.tasks = [Ref.make(open), Ref.make(closed)];
+        taskSet.tasks = [Ref.make(open), Ref.make(closed), Ref.make(reviewed), Ref.make(held)];
       });
       yield* Database.flush();
 
       const reported = yield* report({ sessionId: 'session_tasks' });
       const titles = (reported.tasks ?? []).map((task) => task.title);
       // Closed work is not a reminder.
-      expect(titles).toEqual(['Ship the thing']);
+      expect(titles).toEqual(['Ship the thing', 'Awaiting the vendor']);
 
-      expect(reported.tasks).toHaveLength(1);
+      expect(reported.tasks).toHaveLength(2);
       const [row] = reported.tasks ?? [];
       expect(row.dxn).toBe(Obj.getURI(open).toString());
       expect(row.status).toBe('started');
       expect(row.project).toBe('Voyage');
       expect(row.projectDxn).toBe(Obj.getURI(project).toString());
       expect(reported.instructions).toContain('tasks-list');
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+
+  it.effect('reports the project, not the task set, for a sub-task of a delegated tree', () =>
+    Effect.gen(function* () {
+      const { session } = yield* create({ sessionId: 'session_tree', title: 'Worker' });
+      const assignee = { role: 'assistant' as const, subject: Ref.make(session) };
+
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Backlog' }));
+      const project = yield* Database.add(Project.make({ name: 'Voyage', taskSet: Ref.make(taskSet) }));
+      const root = yield* Database.add(Task.make({ title: 'Root', status: 'started', assignee }));
+      const child = yield* Database.add(Task.make({ title: 'Child', status: 'started', assignee }));
+      TaskSet.addTaskToSet(taskSet, root);
+      TaskSet.addTaskToSet(taskSet, child, { parent: root });
+      yield* Database.flush();
+
+      const reported = yield* report({ sessionId: 'session_tree' });
+      expect((reported.tasks ?? []).map(({ title, projectDxn }) => ({ title, projectDxn }))).toEqual([
+        { title: 'Root', projectDxn: Obj.getURI(project).toString() },
+        { title: 'Child', projectDxn: Obj.getURI(project).toString() },
+      ]);
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 });

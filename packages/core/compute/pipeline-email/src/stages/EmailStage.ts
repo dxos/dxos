@@ -142,8 +142,20 @@ export const extractContacts = (): Stage.Stage<Change, Change, never, Database.S
         index = overlayIdentityIndex(identitySpecs, yield* getIdentityIndex(db, { refresh: true }));
       }
       const sender = change.message.sender;
+      // A contact is derived data: a sender that cannot become a Person (`Obj.make` throws on an address
+      // outside the email format) must not fail the sync run, so the message commits without one.
       const contact = sender
-        ? yield* buildContactFromActor(sender, db, { signals: senderSignals(change.message), index })
+        ? yield* buildContactFromActor(sender, db, { signals: senderSignals(change.message), index }).pipe(
+            Effect.catchDefect((defect) =>
+              Effect.sync(() => {
+                log.warn('contact extraction failed; message synced without a contact', {
+                  foreignId: change.foreignId,
+                  defect,
+                });
+                return undefined;
+              }),
+            ),
+          )
         : undefined;
       return contact ? { ...change, contact } : change;
     }),

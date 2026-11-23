@@ -45,8 +45,9 @@ import {
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { meta } from '#meta';
 import { SpaceOperation } from '#types';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';
@@ -61,10 +62,12 @@ const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservab
 
 export type MembersContainerProps = AppSurface.SpaceArticleProps<{
   createInvitationUrl: (invitationCode: string) => string;
+  /** The panel's own title and description; a host that names the panel itself (a dialog title) turns it off. */
+  heading?: boolean;
 }>;
 
-export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+export const MembersContainer = ({ space, createInvitationUrl, heading = true }: MembersContainerProps) => {
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const config = useConfig();
   const { invokePromise } = Hooks.useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
@@ -154,8 +157,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         if (result.failed.length > 0) {
           const names = namesOf(result.failed);
           await invokePromise(LayoutOperation.AddToast, {
-            id: `${meta.profile.key}/add-members-failed`,
-            title: ['add-members-failed-toast.title', { ns: meta.profile.key }],
+            id: `${SpaceNamespace.key}/add-members-failed`,
+            title: ['add-members-failed-toast.title', { ns: SpaceNamespace.key }],
             // Label tuples carry no interpolation values, so the names are resolved here.
             description: t('add-members-failed-toast.description', { names }),
             icon: 'ph--warning--regular',
@@ -166,8 +169,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
           const accountRequired = result.notNotified.some(({ reason }) => reason === 'account-required');
           const { joinUrl } = result;
           await invokePromise(LayoutOperation.AddToast, {
-            id: `${meta.profile.key}/add-members-not-notified`,
-            title: ['add-members-not-notified-toast.title', { ns: meta.profile.key }],
+            id: `${SpaceNamespace.key}/add-members-not-notified`,
+            title: ['add-members-not-notified-toast.title', { ns: SpaceNamespace.key }],
             // Label tuples carry no interpolation values, so the names are resolved here.
             description: t(
               accountRequired
@@ -178,7 +181,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             icon: 'ph--bell-slash--regular',
             ...(joinUrl
               ? {
-                  actionLabel: ['copy-link.label', { ns: meta.profile.key }],
+                  actionLabel: ['copy-link.label', { ns: SpaceNamespace.key }],
                   onAction: () =>
                     void navigator.clipboard
                       .writeText(joinUrl)
@@ -207,7 +210,10 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
+          <Form.FieldSet
+            label={heading ? t('members-verbose.label') : undefined}
+            description={heading ? t('members.description') : undefined}
+          >
             <Form.FieldSet label={t('members.label')}>
               <SpaceMemberList spaceKey={space.key} includeSelf />
             </Form.FieldSet>
@@ -296,7 +302,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
+      <p className='text-fg-muted'>{t('qr-code.description', { ns: SpaceNamespace.key })}</p>
       <Layout.Grid role='group' cols={['fill', 'min']} gap='sm' classNames='my-2'>
         <div className='w-full aspect-square relative text-fg-muted'>
           <QrCode.QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />

@@ -4,7 +4,6 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -27,13 +26,13 @@ EntityId.dangerouslyDisableRandomness();
 
 describe('PlanReminder', () => {
   it.effect(
-    'attempts a continuation reminder when the model says continue',
+    'returns a continuation reminder when the model says continue',
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-        const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
+        const { followUp } = yield* Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation));
 
-        expect(Exit.isFailure(exit)).toBe(true);
+        expect(followUp).toContain('Task 0');
       },
       Effect.provide(layerDeciding('continue')),
       TestHelpers.provideTestContext,
@@ -41,13 +40,13 @@ describe('PlanReminder', () => {
   );
 
   it.effect(
-    'enqueues nothing when the model says stop',
+    'returns no follow-up when the model says stop',
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-        const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
+        const output = yield* Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation));
 
-        expect(Exit.isSuccess(exit)).toBe(true);
+        expect(output).toEqual({});
       },
       Effect.provide(layerDeciding('stop')),
       TestHelpers.provideTestContext,
@@ -59,10 +58,10 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([true]);
-        const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
-
         // The script is empty, so reaching the model at all would fail as exhausted.
-        expect(Exit.isSuccess(exit)).toBe(true);
+        const output = yield* Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation));
+
+        expect(output).toEqual({});
       },
       Effect.provide(
         AssistantTestLayerWithTriggers({
@@ -107,11 +106,6 @@ const types = [
 
 // The hook asks the model whether to keep working; scripting that reply covers both branches, which
 // a single frozen conversation could not.
-//
-// No host process is spawned, so the Tier B enqueue on the continue branch fails with
-// NotSupportedError. That failure is the assertion: it fires exactly when the hook decided to
-// enqueue, and its absence proves it decided not to — observable without reaching into the host's
-// queue, which is where the reminder would otherwise land.
 const layerDeciding = (decision: string) =>
   AssistantTestLayerWithTriggers({
     operationHandlers: OperationHandlerSet.merge(PlanningHandlers),

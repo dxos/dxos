@@ -15,13 +15,13 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { AccountCache, ClientCapabilities } from '#types';
 
 import { useHubHttpClient } from '../../hooks/index.ts';
+import { ClientNamespace } from '../../namespace.ts';
 
 export const InvitationsContainer = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ClientNamespace.key);
   const accountCacheAtom = Hooks.useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);

@@ -16,10 +16,10 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { useCountdown } from '#hooks';
-import { meta } from '#meta';
 import { Dream, Sequence } from '#types';
 
-import { MixerEngine } from '../../generator/index.ts';
+import { MixerEngine, timedPlaybackStep } from '../../generator/index.ts';
+import { ZenNamespace } from '../../namespace.ts';
 import { Sound } from '../Sound/index.ts';
 
 //
@@ -49,25 +49,21 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   }
   const displayedLayer = selectedLayer ?? lastSelectedLayer.current;
 
-  const FADE_OUT_SECONDS = 10;
   const fadingRef = useRef(false);
 
-  // Begin fade-out when approaching end; auto-stop at zero.
+  // Sleep fade over the end of a timed Dream; auto-stop at zero.
   useEffect(() => {
-    if (!playing || !timed) {
-      return;
-    }
-    if (remaining <= FADE_OUT_SECONDS && remaining > 0 && !fadingRef.current) {
+    const action = timedPlaybackStep({ durationSeconds, remaining, playing, fading: fadingRef.current });
+    if (action.type === 'fade') {
       fadingRef.current = true;
-      engine.fadeOut(remaining);
-    }
-    if (remaining === 0) {
+      engine.fadeOut(action.seconds);
+    } else if (action.type === 'stop') {
       fadingRef.current = false;
       void engine.stop();
       setPlaying(false);
       stopCountdown();
     }
-  }, [playing, timed, remaining, engine, stopCountdown]);
+  }, [playing, durationSeconds, remaining, engine, stopCountdown]);
 
   // Cleanup on unmount.
   useEffect(() => {
@@ -217,7 +213,7 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ZenNamespace.key);
   return (
     <OrderedList.Item id={item.id} highlightOnHover current={selected} onClick={() => onLayerSelect(item.id)}>
       <OrderedList.DragHandle />

@@ -20,8 +20,9 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type FormattedRange, FormattingToolbar, formattingByRange, writeFormatting } from '#components';
-import { meta } from '#meta';
 import { type Sheet, SheetUtil } from '#types';
+
+import { SheetNamespace } from '../../namespace.ts';
 
 /** The list is a form row of its own, so its label and spacing match the object form it sits under; it edits no fields. */
 const NO_FIELDS = Schema.Struct({});
@@ -42,7 +43,7 @@ export type RangeListProps = {
  * its range in the sheet; a row can take the sheet's selection as its range, or be removed.
  */
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SheetNamespace.key);
   const [sheet, updateSheet] = useObject(sheetProp);
   const ranges = useMemo(() => formattingByRange(sheet.ranges), [sheet.ranges]);
 

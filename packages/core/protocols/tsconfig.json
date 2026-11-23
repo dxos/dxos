@@ -27,10 +27,16 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/timeframe"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../echo/echo-memory"
     }
   ]
 }

@@ -13,18 +13,25 @@ import {
   createCollectionExtensions,
   createCompanionExtensions,
   createDatabaseExtensions,
+  createExportExtensions,
+  createPeerExtensions,
   createSettingsExtensions,
   createSpaceExtensions,
 } from './extensions/index.ts';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ shareableLinkOrigin = window.location.origin }: SpaceSchema.SpacePluginOptions = {}) {
+  Effect.fnUntraced(function* ({
+    shareableLinkOrigin = window.location.origin,
+    publication,
+  }: SpaceSchema.SpacePluginOptions = {}) {
     const extensions = yield* Effect.all([
-      createSpaceExtensions(),
+      createSpaceExtensions({ publication }),
       createSettingsExtensions(),
       createDatabaseExtensions(),
-      createCollectionExtensions({ shareableLinkOrigin }),
+      createCollectionExtensions({ shareableLinkOrigin, publication }),
       createCompanionExtensions(),
+      createExportExtensions(),
+      createPeerExtensions(),
     ]);
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());

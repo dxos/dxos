@@ -66,7 +66,7 @@ export const signup = Command.make(
   },
   Effect.fn(function* ({ code, input, method }) {
     const { json } = yield* CommandConfig;
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     const manager = yield* Plugin.Service;
     const { invoke } = manager.capabilities.get(Capabilities.OperationInvoker);
 

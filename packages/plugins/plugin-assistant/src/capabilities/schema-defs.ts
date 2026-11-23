@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AiContext, Alarm, SessionLink } from '@dxos/assistant';
-import * as Memory from '@dxos/assistant-toolkit/Memory';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -11,7 +10,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Feed, type Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import { HasSubject, Message } from '@dxos/types';
+import { HasSubject } from '@dxos/types';
 
 // The single source for the plugin's schema list, loaded lazily by every `AssistantPlugin`
 // variant's schema module: these types ride heavy barrels (@dxos/assistant → @effect/ai →
@@ -19,16 +18,12 @@ import { HasSubject, Message } from '@dxos/types';
 const types: ReadonlyArray<Type.AnyEntity> = [
   Chat.Chat,
   Skill.Skill,
-  AiContext.Binding,
-  Alarm.Alarm,
-  SessionLink.SessionLink,
+  ...TrajectoryStore.types,
   Feed.Feed,
   HasSubject.HasSubject,
-  Message.Message,
   Instructions.Instructions,
   Agent.Agent,
   Sequence.Sequence,
-  Memory.Memory,
   Text.Text,
 ];
 

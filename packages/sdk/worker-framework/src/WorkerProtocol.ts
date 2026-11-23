@@ -11,6 +11,11 @@ import type { Event } from '@dxos/async';
  */
 export interface DedicatedWorkerListeningMessage {
   type: 'listening';
+  /**
+   * The worker's displacement id, so the tab can match it against the `displacedBy` of a later
+   * {@link DedicatedWorkerShuttingDownMessage}. Absent from a worker that predates the field.
+   */
+  workerId?: string;
 }
 
 /**
@@ -140,8 +145,50 @@ export interface DedicatedWorkerStatusMessage {
   status: unknown;
 }
 
+/**
+ * A worker that announced itself on a storage lock's displacement channel. Absent fields mean the
+ * sender predates them.
+ */
+export interface DisplaceIssuer {
+  workerId?: string;
+  /** The `name` the worker was constructed with, e.g. `dxos-client-worker`. */
+  name?: string;
+}
+
+/**
+ * Why a worker is closing:
+ * - `displaced`: a newer worker for the same storage lock posted `stop` while this one held it.
+ * - `displaced-while-queued`: the `stop` arrived before this worker got the storage lock.
+ * - `lock-lost`: its storage or liveness lock was taken from it.
+ * - `init-failed`: its runtime failed to start (also reported as `init-failed`).
+ * - `requested`: the runtime asked to shut down (see `detail`).
+ * - `aborted`: the host aborted the loop through `Options.signal`.
+ */
+export type WorkerShutdownReason =
+  | 'displaced'
+  | 'displaced-while-queued'
+  | 'lock-lost'
+  | 'init-failed'
+  | 'requested'
+  | 'aborted';
+
+/**
+ * Worker -> Leader Client as the worker starts shutting down. The worker's own log sink closes with it,
+ * so this message is the only record of why a worker went away that survives in the tab's logs.
+ */
+export interface DedicatedWorkerShuttingDownMessage {
+  type: 'shutting-down';
+  workerId: string;
+  reason: WorkerShutdownReason;
+  /** Free-form context, e.g. which lock was lost or why the runtime asked to shut down. */
+  detail?: string;
+  /** For `displaced` and `displaced-while-queued`: the worker that posted `stop`, as far as it named itself. */
+  displacedBy?: DisplaceIssuer;
+}
+
 export type DedicatedWorkerMessage =
   | DedicatedWorkerListeningMessage
+  | DedicatedWorkerShuttingDownMessage
   | DedicatedWorkerStatusMessage
   | DedicatedWorkerInitMessage
   | DedicatedWorkerReadyMessage

@@ -20,9 +20,11 @@ const MNEMONIC_PATTERN = new RegExp(`^[0-9A-HJKMNP-TV-Z]{${MNEMONIC_LENGTH}}$`, 
 // export const EntityIdSchema = Schema.ULID.pipe(S.brand(EntityIdBrand));
 // JSON Schema patterns take no flags, so the canonical uppercase form is exported in place of the
 // case-insensitive check, which effect would otherwise drop.
+const ENTITY_ID_PATTERN = /^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i;
+
 const EntityIdSchema = Schema.String.pipe(
   Schema.check(
-    Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i, {
+    Schema.isPattern(ENTITY_ID_PATTERN, {
       toJsonSchema: () => ({ pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$' }),
     }),
   ),
@@ -156,16 +158,12 @@ let factory: ULIDFactory = monotonicFactory();
 let seedTime: number | undefined;
 
 export const EntityId: EntityIdClass = withStatics(EntityIdSchema, {
-  isValid: (id: string): id is EntityId => {
-    try {
-      Schema.decodeSync(EntityIdSchema)(id);
-      return true;
-    } catch {
-      return false;
-    }
-  },
+  // Checked against the pattern directly: called per object on every feed read, where a schema decode
+  // (and a thrown error per miss) dominated the read.
+  isValid: (id: string): id is EntityId => typeof id === 'string' && ENTITY_ID_PATTERN.test(id),
 
-  make: (id: string): EntityId => Schema.decodeSync(EntityIdSchema)(id) as EntityId,
+  make: (id: string): EntityId =>
+    typeof id === 'string' && ENTITY_ID_PATTERN.test(id) ? id : Schema.decodeSync(EntityIdSchema)(id),
 
   random: (): EntityId => factory(seedTime) as EntityId,
 

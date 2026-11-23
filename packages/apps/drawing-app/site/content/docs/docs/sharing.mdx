@@ -1,0 +1,63 @@
+---
+title: Links and the share API
+description: Invitation links to a space, links that open a copy of a drawing, and the API behind them.
+---
+
+The app reads three kinds of link. They differ in what the person who opens one gets.
+
+| Link                          | Opens                                                  | Made by                                           |
+| ----------------------------- | ------------------------------------------------------ | ------------------------------------------------- |
+| `?spaceInvitationCode=<code>` | The space itself: every diagram, edited together.      | **Share** in the app or in Composer.              |
+| `?d=<id>`                     | A copy of one drawing, as a new diagram.               | **Open in app** on the home page, `drawing open`. |
+| `?src=<url>`                  | A copy of the `.dx.svg` at that URL, as a new diagram. | You, from any URL that allows the app by CORS.    |
+
+## Invitation links
+
+**Share** in the pill makes an invitation link to the open space. Whoever opens it joins the space. They see every
+diagram in it, and edits sync between all members.
+
+The Share dialog lists the members and the open invitations. It also cancels any invitation that should not be used
+again.
+
+The link format is Composer's, so an invitation from the app opens in Composer and one from Composer opens in the
+app.
+
+## Copy links
+
+A `?d=` or `?src=` link adds a copy of a drawing to whichever space the app opens. The app then removes the
+parameter from the address, so a reload does not add it again. The copy is yours. Changing it changes nothing for
+anyone else who opens the same link.
+
+A `?d=` link holds only the drawing's `.dx` source, kept by the share API below. Anyone with the link can open it.
+The link expires 30 days after it was last opened.
+
+## The share API
+
+The **share API** is the app Worker's store of shared sources, on every drawing.sh host. `drawing open` and the home
+page's **Open in app** use it.
+
+### POST /api/share
+
+`POST /api/share` stores the request body, a `.dx` source as UTF-8 text. It answers `201` with
+`{ "id": "…", "url": "…" }`.
+
+**Example** (Sharing a source with curl)
+
+```bash
+curl -X POST --data-binary @arch.dx 'https://drawing.sh/api/share?name=arch'
+```
+
+`?name=` names the diagram the link creates, here `arch`. `url` in the answer is the `?d=` link on the app host.
+
+- A body over 256 KB is refused with `413`.
+- Each IP may post 30 times a minute. Posts past that are refused with `429`.
+
+### GET /api/share/&lt;id&gt;
+
+`GET /api/share/<id>` answers the source as `text/plain`, with the name in the `X-Drawing-Name` header. Once the
+share has expired it answers `404`.
+
+### What is stored
+
+The share API stores only source text, never an SVG or HTML. Each id is 128 random bits, so a share cannot be found
+without its link. A share is kept for 30 days after it was last opened.

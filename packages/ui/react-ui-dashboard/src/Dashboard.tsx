@@ -278,13 +278,14 @@ const DashboardActivity = Util.composable<HTMLDivElement, DashboardActivityCusto
       if (!viewport) {
         return;
       }
+      // From the observer only, whose first report comes after layout, and every read before any
+      // write: a read after a write would force a layout per label.
       const update = () => {
         const left = viewport.getBoundingClientRect().left;
-        viewport.querySelectorAll<HTMLElement>('[data-month]').forEach((label) => {
-          label.toggleAttribute('data-clipped', label.getBoundingClientRect().left < left);
-        });
+        const labels = Array.from(viewport.querySelectorAll<HTMLElement>('[data-month]'));
+        const clipped = labels.map((label) => label.getBoundingClientRect().left < left);
+        labels.forEach((label, index) => label.toggleAttribute('data-clipped', clipped[index]));
       };
-      update();
       const observer = new ResizeObserver(update);
       observer.observe(viewport);
       return () => observer.disconnect();

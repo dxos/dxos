@@ -14,10 +14,10 @@ import { Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
 import { Frame, MediaArtifact, Storyboard, StoryboardView } from '#types';
 
 import { FRAME_COMPANION } from '../constants.ts';
+import { StudioNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -34,14 +34,14 @@ export default Capability.makeModule(
         actions: (storyboard, get) =>
           Effect.succeed([
             AppGraphNode.makeAction({
-              id: `${meta.profile.key}.play`,
+              id: `${StudioNamespace.key}.play`,
               data: () =>
                 Effect.gen(function* () {
                   const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
                   viewState.set(StoryboardView.aspect, storyboard.id, { playing: true });
                 }),
               properties: {
-                label: ['play.label', { ns: meta.profile.key }],
+                label: ['play.label', { ns: StudioNamespace.key }],
                 icon: 'ph--play--regular',
                 disposition: 'toolbar',
                 disabled: get(StoryboardView.clipsAtom(storyboard)).length === 0,
@@ -59,7 +59,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: FRAME_COMPANION,
-              label: ['frame-companion.label', { ns: meta.profile.key }],
+              label: ['frame-companion.label', { ns: StudioNamespace.key }],
               icon: 'ph--frame-corners--regular',
               data: FRAME_COMPANION,
             }),

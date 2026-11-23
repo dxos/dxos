@@ -14,12 +14,6 @@ import { trim } from '@dxos/util';
 import { ToolkitError } from '../../../errors.ts';
 import { DelegateTasks } from './definitions.ts';
 
-/**
- * Delegates existing checklist tasks: each selected task is assigned to an agent and queued, and
- * the supervisor's reconcile loop spawns one sub-agent per task once its dependencies are done
- * (marking it started at spawn; done/failed on exit). Selectors are 1-based checklist ordinals or
- * exact titles, so the model can act on "task 2" as easily as on a name.
- */
 const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ tasks: selectors }) {
@@ -63,7 +57,7 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
           continue;
         }
         Obj.update(task, (task) => {
-          task.assignee = { role: 'assistant' };
+          task.delegate = { role: 'assistant' };
           task.status = 'todo';
         });
         delegated += 1;
@@ -71,7 +65,7 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
       yield* Database.flush();
 
       return trim`
-        Delegated ${delegated} task(s) to sub-agents (each starts once its dependencies are done);
+        Delegated ${delegated} task(s) to sub-agents (each starts once its dependencies are done or in review);
         ${skipped.length > 0 ? `skipped: ${skipped.join(', ')}.` : ''}
 
         <checklist>

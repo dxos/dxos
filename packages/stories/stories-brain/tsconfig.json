@@ -44,6 +44,9 @@
       "path": "../../core/compute/ai"
     },
     {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/assistant-toolkit"
     },
     {
@@ -83,7 +86,16 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-memory"
+    },
+    {
+      "path": "../../plugins/plugin-assistant"
+    },
+    {
       "path": "../../plugins/plugin-brain"
+    },
+    {
+      "path": "../../plugins/plugin-client"
     },
     {
       "path": "../../plugins/plugin-discord"
@@ -96,6 +108,9 @@
     },
     {
       "path": "../../plugins/plugin-progress"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-space"
@@ -132,6 +147,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-rdf"

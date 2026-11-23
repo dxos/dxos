@@ -7,24 +7,31 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 
-import { SheetCapabilities, SheetOperation } from '#types';
-
-import { parseThreadAnchorAsCellRange } from '../integrations/thread-ranges.ts';
+import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
 const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = SheetOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, cursor, id }) {
+    Effect.fnUntraced(function* ({ subject, anchor, focus = true, thread }) {
       const gridInstances = yield* Capability.get(SheetCapabilities.GridInstances);
       const entry = gridInstances.get(subject);
       if (!entry) {
-        return;
+        return false;
       }
 
-      entry.setActiveRefs(id);
-      const range = parseThreadAnchorAsCellRange(cursor);
+      const range = SheetUtil.rangeFromAnchor(entry.sheet, anchor);
+      if (!focus) {
+        if (range) {
+          entry.grid.scrollToCoord({ coords: { ...range.from, plane: 'grid' } });
+        }
+        return !!range;
+      }
+
+      // Cells mark their threads by URI, so the grid highlights the cells whose `data-refs` hold this one.
+      entry.setActiveRefs(thread?.uri.toString() ?? '');
       if (range) {
         entry.grid.setFocus({ ...range.to, plane: 'grid' }, true);
       }
+      return !!range;
     }),
   ),
 );

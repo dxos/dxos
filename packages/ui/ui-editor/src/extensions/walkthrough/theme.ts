@@ -205,17 +205,19 @@ export const diffBlockTheme = EditorView.theme({
   },
 });
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const walkthroughStyles = EditorView.theme({
+  '&': {
+    '--color-cm-heading': 'var(--color-fg)',
+    '--color-cm-heading-number': 'var(--color-fg-subtle)',
+    '--color-cm-code-inline': 'var(--color-fg)',
+  },
+});
+
 /**
  * Reading-mode tuning for a walkthrough document: headings and inline code take the reading
  * foreground rather than the editor's syntax accent, since here they are structure the reader
  * navigates by, not markup being authored. Optional, and separate from {@link diffBlockTheme} — a
  * host that wants the chunks inside a normal editing surface adds only that one.
  */
-export const walkthroughTheme = (): Extension =>
-  EditorView.theme({
-    '&': {
-      '--color-cm-heading': 'var(--color-fg)',
-      '--color-cm-heading-number': 'var(--color-fg-subtle)',
-      '--color-cm-code-inline': 'var(--color-fg)',
-    },
-  });
+export const walkthroughTheme = (): Extension => walkthroughStyles;

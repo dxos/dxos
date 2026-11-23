@@ -1,0 +1,266 @@
+---
+spec: github:dxos/dxos/packages/reflect/deus/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Deus
+
+The machine-checkable core is built and tested: `lintMdl` enforces typed deciders and `for:`,
+`checkChangelogChange` enforces append-only ids, new-decision-per-change and the trivial-edit
+exemption, and `deus changelog check` runs them against the merge base in CI. The Effect CLI tree
+(`changelog`, `lint`, `qa`, `review`, plus `features`) is tested in `cli.test.ts`, and `dx` mounts it.
+What remains `untested` is either guidance in the mdl skill (F-1.2, F-1.4, F-4) that no test can
+check, or code with no test: the waiver trailer, the exempt paths and `check-decisions.ts`.
+
+Of 33 items: 15 done, 17 untested, 1 partial, 0 diverged, 0 missing. Findings:
+
+- **F-6.3 partial.** `table` is a known block type, but `deus review items` does not list tables
+  and nothing resolves `table:<name>` citations.
+- **F-2.7 and F-2.4 untested.** The `Spec-Changelog-Skip` waiver and the `EXEMPT` paths have no test.
+- **F-1.8 / F-3.3 untested.** `check-decisions.ts` has no test of its question or threshold.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict F-1.1: lintMdl requires a by: decider typed user: or agent:.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#lintMdl]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts]
+```
+
+```mdl
+verdict F-1.2: Naming agents by harness is a documented convention, not checked.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/lang/changelog.mdl, github:dxos/dxos/.agents/skills/mdl/SKILL.md]
+  note: The dialect and skill state it; no lint rejects a model name in `agent:`.
+```
+
+```mdl
+verdict F-1.3: lintMdl requires for: on agent decisions, forbids it on user decisions and requires it to name a user.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#lintMdl]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts]
+```
+
+```mdl
+verdict F-1.4: Faithful restatement is skill guidance; no tool can check it.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/mdl/SKILL.md]
+  note: Documented in the mdl skill ("First, what the person said"); not machine-checkable.
+```
+
+```mdl
+verdict F-1.5: checkChangelogChange rejects edited, removed or inserted decisions and unknown supersedes targets.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#checkChangelogChange]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts]
+```
+
+```mdl
+verdict F-1.6: checkChangelogChange rejects out-of-sequence decision ids.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#checkChangelogChange]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts]
+```
+
+```mdl
+verdict F-1.7: Approval as a new user: decision is a convention; a decision-only change passes the check.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#checkChangelogChange, github:dxos/dxos/.agents/skills/mdl/SKILL.md]
+  note: Nothing checks that an approval names what it approves; the test only confirms a decision-only change is accepted.
+```
+
+```mdl
+verdict F-1.8: check-decisions.ts asks System One whether a decision records process.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/mdl/scripts/check-decisions.ts#PROCESS_QUESTION]
+  note: No test exercises the script or its question.
+```
+
+```mdl
+verdict F-2.1: A body change without a new decision fails with MISSING_DECISION.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#checkChangelogChange, github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#MISSING_DECISION]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts, github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```
+
+```mdl
+verdict F-2.2: A new spec without a decision fails.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#checkChangelogChange]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts]
+```
+
+```mdl
+verdict F-2.3: deus changelog check diffs each changed .mdl against the merge base and runs in CI as "Check spec changelogs".
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/changelog.ts#checkChangelog, github:dxos/dxos/.github/workflows/check.yml]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+  walkthrough:
+    - checkChangelog finds the merge base, lists changed specs and applies the rules. github:dxos/dxos/packages/reflect/deus/src/cli/changelog.ts#checkChangelog
+    - checkChangelogChange compares the before and after logs. github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#checkChangelogChange
+    - The Check workflow runs `pnpm deus changelog check`. github:dxos/dxos/.github/workflows/check.yml
+```
+
+```mdl
+verdict F-2.4: lang/, rules/, __fixtures__ and .review.mdl files are exempt.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/changelog.ts#checkChangelog]
+  note: The `EXEMPT` patterns also exempt reviews, beyond the spec. No test covers an exempt path.
+```
+
+```mdl
+verdict F-2.5: Only decisions under ## Changelog count; examples elsewhere are ignored.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#parseChangelog]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts]
+```
+
+```mdl
+verdict F-2.6: isTrivialEdit accepts whitespace and up to three small fixes, rejecting digits and normative words.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#isTrivialEdit]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts]
+```
+
+```mdl
+verdict F-2.7: A Spec-Changelog-Skip trailer drops only the missing-decision error.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/changelog.ts#WAIVER, github:dxos/dxos/packages/reflect/deus/src/cli/changelog.ts#checkChangelog]
+  note: No test commits a waiver trailer.
+```
+
+```mdl
+verdict F-2.8: Using the trailer for non-decision changes is skill guidance.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/mdl/SKILL.md]
+  note: Documented in the mdl skill; nothing enforces it.
+```
+
+```mdl
+verdict F-3.1: The editor linter and deus lint both run lintMdl decision checks.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/check.ts#lintMdl, github:dxos/dxos/packages/reflect/deus/src/extension/lint.ts#mdlLint, github:dxos/dxos/packages/reflect/deus/src/cli/lint.ts#lintFiles]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/extension/check.test.ts, github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```
+
+```mdl
+verdict F-3.2: deus lint --only filters to one diagnostic source.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/lint.ts#lintFiles]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```
+
+```mdl
+verdict F-3.3: check-decisions.ts sends name and intro to System One, fails at 0.8, runs in CI and skips without TYPESAFE_API_KEY.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/mdl/scripts/check-decisions.ts#PROCESS_QUESTION, github:dxos/dxos/.github/workflows/check.yml]
+  note: Behaviour matches the spec; no test runs the script.
+```
+
+```mdl
+verdict F-4.1: The mdl skill exists.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/mdl/SKILL.md]
+  note: Documentation; nothing tests it.
+```
+
+```mdl
+verdict F-4.2: The skill orders recording the person first, faithfully, then agent additions separately.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/mdl/SKILL.md]
+  note: Documentation; nothing tests it.
+```
+
+```mdl
+verdict F-4.3: The skill lists where to read the person handle from the environment.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/mdl/SKILL.md]
+  note: Documentation; nothing tests it.
+```
+
+```mdl
+verdict F-4.4: The skill says to leave process out and to run check-decisions.ts.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/mdl/SKILL.md]
+  note: Documentation; nothing tests it.
+```
+
+```mdl
+verdict F-5.1: One Effect CLI deus tree carries changelog, lint, qa and review, plus features.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/index.ts#deus, github:dxos/dxos/packages/reflect/deus/bin/deus.ts]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+  note: The tree also has a `features` subcommand the spec does not list.
+```
+
+```mdl
+verdict F-5.2: @dxos/deus/cli exports the tree and dx mounts it as dx deus.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/index.ts#deus, github:dxos/dxos/packages/devtools/cli/src/bin.ts]
+  note: No test runs `dx deus`.
+```
+
+```mdl
+verdict F-5.3: The root pnpm deus script runs bin/deus.ts with node --conditions=source.
+  status: untested
+  evidence: [github:dxos/dxos/package.json, github:dxos/dxos/packages/reflect/deus/bin/deus.ts]
+  note: CI runs it, but no test does.
+```
+
+```mdl
+verdict F-5.4: qa list selects tests and suites; qa lint reports unbound references and unsafe teardowns.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/qa.ts#selectQa, github:dxos/dxos/packages/reflect/deus/src/cli/qa-lint.ts#findUnboundReferences, github:dxos/dxos/packages/reflect/deus/src/cli/qa-lint.ts#findUnsafeTeardowns]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```
+
+```mdl
+verdict F-5.5: review items lists judged items; review check validates verdicts against spec and checkout.
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/review.ts#reviewItems, github:dxos/dxos/packages/reflect/deus/src/cli/review.ts#checkReview]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```
+
+```mdl
+verdict F-6.1: lang/sql.mdl defines the table block with columns, keys, indexes and store.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/lang/sql.mdl]
+  note: A language definition; no test parses a `table` against it.
+```
+
+```mdl
+verdict F-6.2: The table dialect has a new: field for added tables or columns.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/lang/sql.mdl]
+  note: Defined in the dialect; nothing reads `new:` yet.
+```
+
+```mdl
+verdict F-6.3: deus lint knows table, but review items skips tables and nothing resolves table: citations.
+  status: partial
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/extension/constants.ts#BLOCK_TYPES, github:dxos/dxos/packages/reflect/deus/src/cli/review.ts#reviewItems]
+  note: `table` is in `BLOCK_TYPES`; `REVIEWED_KINDS` lacks it, so a review cannot judge a table, and no code resolves `table:<name>` references.
+```
+
+```mdl
+verdict F-6.4: Referring by symbol and spec id, never by path, is a documented authoring rule.
+  status: untested
+  evidence: [github:dxos/dxos/packages/reflect/deus/lang/sql.mdl]
+  note: The dialect states it for `store:`; no lint rejects file paths.
+```
+
+```mdl
+verdict F-6.5: buildDataModel makes tables stored roots with columns as fields and REFERENCES as links; the graph tags the store.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#buildDataModel, github:dxos/dxos/packages/plugins/plugin-code/src/components/DataModelGraph/DataModelGraph.tsx#DataModelGraph]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.test.ts]
+```

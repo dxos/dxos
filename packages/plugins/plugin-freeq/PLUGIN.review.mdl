@@ -1,0 +1,43 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-freeq/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: FreeqPlugin
+
+The spec has one item, the manual QA test `QA-1`. The code it drives is in place: `makeFreeqChannelBackend.subscribe`
+loads the `FreeqChannel` config, acquires a shared connection from `ConnectionManager`, joins the channel, streams
+inbound messages and backfills history from `FreeqRestApi.getMessages`. Unit tests cover the pieces (connection
+sharing and release, REST mapping, subscribe error paths), but no automated test joins a channel and checks that
+backfilled history reaches the thread, so the test is only partly exercised.
+
+The spec's `desc` is partly stale: the backend now declares `createFields` (server URL, channel, handle), and
+plugin-thread's `ChannelBackend.ts` builds a create form from them, so a freeq channel may no longer need to be
+seeded in code.
+
+Of 1 item: 0 done, 0 untested, 1 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QA-1: Unit tests cover connection sharing, release and REST backfill mapping; nothing runs join plus backfill end to end.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-freeq/src/capabilities/channel-backend.ts#makeFreeqChannelBackend, github:dxos/dxos/packages/plugins/plugin-freeq/src/services/ConnectionManager.ts#ConnectionManager]
+  tests: [github:dxos/dxos/packages/plugins/plugin-freeq/src/capabilities/channel-backend.test.ts, github:dxos/dxos/packages/plugins/plugin-freeq/src/services/ConnectionManager.test.ts, github:dxos/dxos/packages/plugins/plugin-freeq/src/services/FreeqRestApi.test.ts]
+  walkthrough:
+    - subscribe loads the FreeqChannel config, joins the channel, streams PRIVMSGs and merges REST-backfilled history by id. github:dxos/dxos/packages/plugins/plugin-freeq/src/capabilities/channel-backend.ts#makeFreeqChannelBackend
+    - ConnectionManager shares one socket per server and identity and closes it on the last release. github:dxos/dxos/packages/plugins/plugin-freeq/src/services/ConnectionManager.ts#ConnectionManager
+  note: |
+    `ConnectionManager.test.ts` covers the `after` step (the socket closes on the last release) and
+    `FreeqRestApi.test.ts` covers history mapping. The subscribe tests only check error paths (config load or join
+    failing); none asserts that backfilled or live messages are emitted, and no test drives a guest SASL login or the
+    thread pane.
+```

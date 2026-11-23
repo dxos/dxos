@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Voxel } from '#types';
+
+import { VoxelNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete voxel world',
         'object-deleted.label': 'Voxel world deleted',
       },
-      [meta.profile.key]: {
+      [VoxelNamespace.key]: {
         'plugin.name': 'Voxel',
       },
     },

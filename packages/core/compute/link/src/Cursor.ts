@@ -58,6 +58,12 @@ export const ExternalSpec = Schema.Struct({
    * concurrent local edits), whereas a token ahead of the heads diffs a fresh delta against a stale base.
    */
   tagHeads: Schema.Array(Schema.String).pipe(Schema.optional),
+  /**
+   * Foreign ids the delta past {@link token} has already handled (committed, or left to the backfill).
+   * A run that cannot advance the token reads the same delta again next run; these ids make that replay
+   * a no-op without a feed lookup. Cleared whenever the token advances (see {@link writeSyncState}).
+   */
+  deltaIds: Schema.Array(Schema.String).pipe(Schema.optional),
 });
 export type ExternalSpec = Schema.Schema.Type<typeof ExternalSpec>;
 
@@ -263,6 +269,9 @@ export const writeToken = (cursor: ExternalCursor, token: string): void => {
 /** Reads the tag-reconciliation base heads, or undefined before the first tag-aware sync completed. */
 export const readTagHeads = (cursor: ExternalCursor): readonly string[] | undefined => cursor.spec.tagHeads;
 
+/** Reads the foreign ids the delta past the current token has already handled (see {@link ExternalSpec}). */
+export const readDeltaIds = (cursor: ExternalCursor): readonly string[] => cursor.spec.deltaIds ?? [];
+
 /**
  * Advances the delta token and the tag-reconciliation base **together**, in one `Obj.update`.
  *
@@ -273,11 +282,12 @@ export const readTagHeads = (cursor: ExternalCursor): readonly string[] | undefi
  * remote moved in between it re-applies a tag the provider deliberately removed — and the diff sees no
  * conflict, so nothing catches it. One update makes the pair advance or neither.
  *
- * Omitted fields are left untouched, so a provider with no delta token can still record heads.
+ * Omitted fields are left untouched, so a provider with no delta token can still record heads. A new
+ * token clears `deltaIds` unless the same call sets them, since they name ids past the old token.
  */
 export const writeSyncState = (
   cursor: ExternalCursor,
-  { token, tagHeads }: { token?: string; tagHeads?: readonly string[] },
+  { token, tagHeads, deltaIds }: { token?: string; tagHeads?: readonly string[]; deltaIds?: readonly string[] },
 ): void => {
   Obj.update(cursor, (cursor) => {
     if (cursor.spec.kind !== 'external') {
@@ -285,9 +295,13 @@ export const writeSyncState = (
     }
     if (token !== undefined) {
       cursor.spec.token = token;
+      cursor.spec.deltaIds = undefined;
     }
     if (tagHeads !== undefined) {
       cursor.spec.tagHeads = [...tagHeads];
+    }
+    if (deltaIds !== undefined) {
+      cursor.spec.deltaIds = deltaIds.length > 0 ? [...deltaIds] : undefined;
     }
   });
 };
@@ -299,6 +313,7 @@ export const clearToken = (cursor: ExternalCursor): void => {
       return;
     }
     cursor.spec.token = undefined;
+    cursor.spec.deltaIds = undefined;
   });
 };
 
@@ -495,6 +510,12 @@ export type State = {
   readonly stats: Stats;
   /** Mutable run-observed key extent — see {@link Extent}. */
   readonly extent: Extent;
+  /**
+   * Foreign ids of delta items handled so far under the run's starting token, seeded from
+   * {@link ExternalSpec.deltaIds}. {@link dedupStage} drops a delta item already in it and adds the ones it
+   * drops; the caller adds the ones it keeps and persists the set when the token does not advance.
+   */
+  readonly deltaHandled?: Set<string>;
 };
 
 /** Terminal unit produced by the pipeline for one source item: everything the commit needs to write. */
@@ -743,21 +764,45 @@ export const skipCommitted = <In>(
  * drop decision, so a capped range-tracking run shrinks its window even when a whole page drops (see
  * {@link Extent}). Reads {@link Service}; provider-agnostic via `getForeignId`/`getKey`. Pair with
  * {@link skipCommitted} to avoid fetching already-committed items.
+ *
+ * An item `isDelta` marks came from a provider change feed (arrival order), not a key window, so its key is a
+ * provider date that says nothing about what was synced: it skips the range shortcut. A range run splits ownership
+ * at the backward window's low mark instead (`minKey`, or `maxKey` while `min` is unset; a never-synced cursor
+ * leaves everything to the backward window) — the delta keeps keys at or above it, and leaves keys below it to the
+ * backward window, which lists that range by key. A delta item never lowers `extent.minKey`, so it cannot mark
+ * unscanned history as synced, and every one it drops is recorded in {@link State.deltaHandled}.
  */
 export const dedupStage = <In>(
   id: string,
   getForeignId: (item: In) => string,
   getKey: (item: In) => number,
+  isDelta: (item: In) => boolean = () => false,
 ): Stage.Stage<In, In, never, Service> =>
   Stage.map(id, (item: In) =>
     Effect.gen(function* () {
-      const { maxKey, minKey, trackRange, dedupSet, extent } = yield* Service;
+      const { maxKey, minKey, trackRange, dedupSet, extent, deltaHandled } = yield* Service;
+      const foreignId = getForeignId(item);
       const key = getKey(item);
+      if (isDelta(item)) {
+        if (key > 0) {
+          extent.maxKey = Math.max(extent.maxKey, key);
+        }
+        const handled = deltaHandled?.has(foreignId) || dedupSet.has(foreignId);
+        // The backward window's own low mark (see `resolveWindows`): a never-synced cursor walks the whole
+        // range, so the delta owns nothing yet, and an unset `min` falls back to `max`.
+        const lowKey = maxKey === 0 ? Number.POSITIVE_INFINITY : minKey > 0 ? minKey : maxKey;
+        const belowMin = trackRange && key > 0 && key < lowKey;
+        if (handled || belowMin) {
+          deltaHandled?.add(foreignId);
+          return undefined;
+        }
+        return item;
+      }
       if (key > 0) {
         extent.maxKey = Math.max(extent.maxKey, key);
         extent.minKey = extent.minKey === 0 ? key : Math.min(extent.minKey, key);
       }
-      if (dedupSet.has(getForeignId(item))) {
+      if (dedupSet.has(foreignId)) {
         return undefined;
       }
       // A range run drops only the strict interior `(min, max)` so the region below `min` still

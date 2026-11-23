@@ -7,15 +7,15 @@ import React, { type PropsWithChildren, createContext, useContext, useEffect, us
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { MarkdownSlide, type SlideSurfaceRole } from '@dxos/react-ui-slides';
+import { SlideCanvas } from '@dxos/react-ui-slides';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Text } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { Presentation } from '#types';
 
-import { MarkdownSlide, type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
-import { SlideCanvas } from './canvas.tsx';
+import { PresenterNamespace } from '../../namespace.ts';
 import { ObjectSurface } from './ObjectSurface.tsx';
 
 export type EmbeddedSurfaceProps = {
@@ -127,7 +127,7 @@ const EmbeddedTextSlide = ({ text }: { text: Text.Text }) => {
 };
 
 const Placeholder = ({ testId, label }: { testId: string; label: string }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   return (
     <div
       data-testid={testId}

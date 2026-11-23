@@ -10,7 +10,7 @@ import { ClientService } from '@dxos/client';
 
 /** Client for the configured hub-service (accounts, invitations, email verification). */
 export const hubClient = Effect.gen(function* () {
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   return Account.createHubClient(client);
 });
 

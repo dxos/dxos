@@ -12,7 +12,7 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { GitHubPlugin } from '#plugin';
+import * as GitHubPlugin from '#meta';
 import { translations } from '#translations';
 
 import { PullRequestOverview, type PullRequestOverviewProps } from '../components/PullRequestOverview/index.ts';
@@ -32,7 +32,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...CorePlugins.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...CorePlugins.make(), GitHubPlugin.make(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],

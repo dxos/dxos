@@ -14,7 +14,8 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { useHomeSuggestions } from '#hooks';
-import { meta } from '#meta';
+
+import { AssistantNamespace } from '../../namespace.ts';
 
 type SpaceScopedProps = {
   space?: Space;
@@ -27,7 +28,7 @@ type SpaceScopedProps = {
  * quick entry points regardless of whether recent objects exist.
  */
 export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const suggestions = useHomeSuggestions(space);
 
@@ -46,7 +47,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
   }
 
   return (
-    <HomeSection.Root>
+    <HomeSection.Root anchor='suggestions'>
       <HomeSection.Header title={t('space-home.suggestions.heading')} onClose={onClose} />
       <Layout.Container gap='lg' gutter='none'>
         {suggestions.map((prompt, index) => (

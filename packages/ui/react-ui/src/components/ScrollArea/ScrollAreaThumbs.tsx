@@ -95,12 +95,13 @@ export const ScrollAreaThumbs = ({
   useEffect(() => {
     // Observe the scrolled content too, since content growth does not resize the viewport; the
     // set of children is re-synced on mutation so appended content is measured as it arrives.
+    // Measured only from the observer, whose first report of each element comes after layout:
+    // reading geometry here instead would force a layout in the middle of the commit.
     const resize = new ResizeObserver(update);
     const observeContent = () => {
       resize.disconnect();
       resize.observe(viewport);
       Array.from(viewport.children).forEach((child) => resize.observe(child));
-      update();
     };
 
     observeContent();

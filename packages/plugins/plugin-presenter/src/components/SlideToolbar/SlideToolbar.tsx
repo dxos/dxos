@@ -8,6 +8,7 @@ import React, { type KeyboardEvent, useLayoutEffect, useMemo, useRef, useState }
 import { EDITOR_TOOLBAR_INSERT_GROUP } from '@dxos/react-ui-editor';
 import { ObjectPicker } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type LayoutName, type SlideFrontmatter } from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
@@ -16,10 +17,10 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { type ThemedClassName } from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type LayoutName, type SlideFrontmatter } from '#markdown';
-import { meta } from '#meta';
 import { type SlideEditorViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
+import { AddSlideButton } from '../AddSlideButton/AddSlideButton.tsx';
 import { LayoutPicker } from './LayoutPicker.tsx';
 
 /** Snippets the toolbars insert at the cursor. */
@@ -28,7 +29,7 @@ export type SlideInsert = 'click' | 'clicks' | 'column' | 'notes';
 /** Frontmatter keys the background popover edits. */
 export type BackgroundSettings = Pick<SlideFrontmatter, 'image' | 'backgroundVideo'>;
 
-const label = (key: string): Theme.Label => [key, { ns: meta.profile.key }];
+const label = (key: string): Theme.Label => [key, { ns: PresenterNamespace.key }];
 
 export type SlideToolbarProps = ThemedClassName<{
   layout: LayoutName;
@@ -41,6 +42,13 @@ export type SlideToolbarProps = ThemedClassName<{
   onPrevious?: () => void;
   onNext?: () => void;
   onPresent?: () => void;
+  /** The layout a slide added from here takes; the split button's caret picks it. */
+  newSlideLayout?: LayoutName;
+  onNewSlideLayoutChange?: (layout: LayoutName) => void;
+  /** Absent for a slide with no presentation to add to. */
+  onAddSlide?: () => void;
+  /** Absent for a slide with no presentation to go back to. */
+  onOpenGallery?: () => void;
 }>;
 
 /**
@@ -59,10 +67,27 @@ export const SlideToolbar = ({
   onPrevious,
   onNext,
   onPresent,
+  newSlideLayout,
+  onNewSlideLayoutChange,
+  onAddSlide,
+  onOpenGallery,
 }: SlideToolbarProps) => {
   const menu = useMenuBuilder(
     () =>
       MenuBuilder.make()
+        .action(
+          'add-slide',
+          {
+            label: label('add-slide.label'),
+            variant: 'custom',
+            disabled: !onAddSlide || !onNewSlideLayoutChange,
+            render: () =>
+              onAddSlide && onNewSlideLayoutChange ? (
+                <AddSlideButton layout={newSlideLayout} onLayoutChange={onNewSlideLayoutChange} onAdd={onAddSlide} />
+              ) : null,
+          },
+          () => {},
+        )
         .group('slide', { label: label('slide-layout.label') }, (group) =>
           group
             .action(
@@ -89,38 +114,17 @@ export const SlideToolbar = ({
               () => onInsert('notes'),
             ),
         )
-        .group(
+        .action(
           'preview',
           {
-            label: label('preview-mode.label'),
-            icon: 'ph--eye--regular',
-            variant: 'toggleGroup',
-            selectCardinality: 'single',
-            value: previewMode,
+            label: label('preview-split.label'),
+            icon: 'ph--square-split-vertical--regular',
+            type: 'toggle',
+            checked: previewMode === 'split',
+            testId: 'presenter.slide-toolbar.split',
             placement: { zone: 'end', collapse: 2 },
           },
-          (group) =>
-            group
-              .action(
-                'split',
-                {
-                  label: label('preview-split.label'),
-                  icon: 'ph--square-split-vertical--regular',
-                  checked: previewMode === 'split',
-                  testId: 'presenter.slide-toolbar.split',
-                },
-                () => previewMode !== 'split' && onPreviewModeChange('split'),
-              )
-              .action(
-                'companion',
-                {
-                  label: label('preview-companion.label'),
-                  icon: 'ph--sidebar-simple--regular',
-                  checked: previewMode === 'companion',
-                  testId: 'presenter.slide-toolbar.companion',
-                },
-                () => previewMode !== 'companion' && onPreviewModeChange('companion'),
-              ),
+          () => onPreviewModeChange(previewMode === 'split' ? 'off' : 'split'),
         )
         .group(
           'navigate',
@@ -131,6 +135,16 @@ export const SlideToolbar = ({
           },
           (group) =>
             group
+              .action(
+                'gallery',
+                {
+                  label: label('slide-gallery.label'),
+                  icon: 'ph--squares-four--regular',
+                  disabled: !onOpenGallery,
+                  testId: 'presenter.slide-toolbar.gallery',
+                },
+                () => onOpenGallery?.(),
+              )
               .action(
                 'previous',
                 {
@@ -174,6 +188,10 @@ export const SlideToolbar = ({
       onPrevious,
       onNext,
       onPresent,
+      newSlideLayout,
+      onNewSlideLayoutChange,
+      onAddSlide,
+      onOpenGallery,
     ],
   );
 
@@ -205,7 +223,7 @@ export const useSlideInsertActions = ({
   onObjectsOpenChange,
   onInsertObject,
 }: SlideInsertActionsProps): Atom.Atom<ActionGraphProps> => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   // The handlers change every render; read through a ref so the graph is rebuilt only when what it shows changes.
   const handlers = useRef({ onInsert, onObjectsOpenChange, onInsertObject });
   useLayoutEffect(() => {
@@ -283,7 +301,7 @@ type BackgroundPopoverProps = { value: BackgroundSettings; onChange: (value: Bac
 
 /** Image and video URL fields for the slide background; each commits on Enter or blur, and empty removes it. */
 const BackgroundPopover = ({ value, onChange }: BackgroundPopoverProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const [image, setImage] = useState(value.image ?? '');
   const [video, setVideo] = useState(value.backgroundVideo ?? '');
   const commit = () => onChange({ image: image.trim() || undefined, backgroundVideo: video.trim() || undefined });

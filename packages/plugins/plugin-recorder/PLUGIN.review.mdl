@@ -1,0 +1,214 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-recorder/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: RecorderPlugin
+
+The plugin implements the whole spec. `TakeRecorder` opens the inputs in the click, counts in 3-2-1 and
+runs one `MediaRecorder` per slide. `saveTake` appends a new Variant and makes it main. The overlay,
+both Recordings companions, the settings and the three take operations (with a DeleteTake/RestoreTake
+undo mapping) are all wired to their surfaces. What is tested is the pure core: device choice and
+processing-off constraints, the level-meter state, per-slide segmenting, WAV concatenation and take
+naming. Nothing tests the recorder class, the take operations, the companions or the overlay, and no
+e2e exercises a recording, so most requirements are `untested`. There are no divergences.
+
+Of 25 items: 7 done, 17 untested, 0 partial, 0 diverged, 1 missing (QA-1, a human-only test).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Slide.takes: plugin-presenter's Slide holds takes (oldest first) and an optional mainTake.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Slide]
+  note: The fields exist as specified; no test reads or writes them.
+```
+
+```mdl
+verdict Take.Log: The Variant config schema has duration, steps, device, source and session.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/types/Take.ts#Log]
+  tests: [github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/session.test.ts, github:dxos/dxos/packages/plugins/plugin-recorder/src/types/Take.test.ts]
+```
+
+```mdl
+verdict RecorderSettings: Settings hold audioInput, videoSource and videoInput.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/types/RecorderSettings.ts#Settings]
+  note: Matches the spec; no test exercises the settings schema.
+```
+
+```mdl
+verdict DeleteTake: DeleteTake removes a take and returns its index and main mark; RestoreTake undoes it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/types/RecorderOperation.ts#DeleteTake, github:dxos/dxos/packages/plugins/plugin-recorder/src/operations/delete-take.ts, github:dxos/dxos/packages/plugins/plugin-recorder/src/operations/restore-take.ts, github:dxos/dxos/packages/plugins/plugin-recorder/src/capabilities/undo-mappings.ts]
+  walkthrough:
+    - The operation declares slide and take and returns where the take was. github:dxos/dxos/packages/plugins/plugin-recorder/src/types/RecorderOperation.ts#DeleteTake
+    - The handler removes the take and reassigns main to the newest remaining. github:dxos/dxos/packages/plugins/plugin-recorder/src/operations/delete-take.ts
+    - The undo mapping pairs it with RestoreTake, which re-adds it at its index. github:dxos/dxos/packages/plugins/plugin-recorder/src/capabilities/undo-mappings.ts
+  note: No test invokes DeleteTake, RestoreTake or SelectTake.
+```
+
+```mdl
+verdict RecordButton: The presenter toolbar item starts a whole-deck recording in the click and is disabled while busy.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/RecordButton/RecordButton.tsx#RecordButton, github:dxos/dxos/packages/plugins/plugin-recorder/src/hooks/useStartRecording.ts#useStartRecording]
+  note: Shows the last start error as its label and icon; no test or story renders it.
+```
+
+```mdl
+verdict F-1.1: The presenter toolbar and the presentation companion's toolbar both record every slide from the first.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/RecordButton/RecordButton.tsx#RecordButton, github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/PresentationRecordingsArticle/PresentationRecordingsArticle.tsx#PresentationRecordingsArticle, github:dxos/dxos/packages/plugins/plugin-recorder/src/hooks/useStartRecording.ts#useStartRecording]
+  walkthrough:
+    - The toolbar item and the companion's record action call the same start hook. github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/RecordButton/RecordButton.tsx#RecordButton
+    - The hook starts the recorder, moves the deck to the first slide and presents it. github:dxos/dxos/packages/plugins/plugin-recorder/src/hooks/useStartRecording.ts#useStartRecording
+  note: No test drives a recording start.
+```
+
+```mdl
+verdict F-1.2: A slide's companion records that slide alone and ends when the reader leaves it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/SlideRecordingsArticle/SlideRecordingsArticle.tsx#SlideRecordingsArticle, github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/session.ts#Session]
+  tests: [github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/session.test.ts]
+  note: The session logic for a one-slide scope is tested; the closing of the presentation is not.
+```
+
+```mdl
+verdict F-1.3: TakeRecorder counts in COUNT_IN = 3 before any MediaRecorder starts; the overlay shows the count.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/TakeRecorder.ts#TakeRecorder, github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/TakeRecorder.ts#COUNT_IN, github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/RecordingOverlay/RecordingOverlay.tsx#RecordingOverlay]
+  note: No test runs the count-in.
+```
+
+```mdl
+verdict F-1.4: The microphone constraints turn echo cancellation, noise suppression and auto gain off.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/devices.ts#audioConstraints]
+  tests: [github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/devices.test.ts]
+```
+
+```mdl
+verdict F-1.5: Each slide read is its own take, named by start time, appended without overwriting.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/TakeRecorder.ts#TakeRecorder, github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/save-take.ts#saveTake, github:dxos/dxos/packages/plugins/plugin-recorder/src/types/Take.ts#makeName]
+  tests: [github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/session.test.ts, github:dxos/dxos/packages/plugins/plugin-recorder/src/types/Take.test.ts]
+  walkthrough:
+    - The recorder starts a MediaRecorder per slide shown over the shared stream. github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/TakeRecorder.ts#TakeRecorder
+    - Each take is named by its UTC start time. github:dxos/dxos/packages/plugins/plugin-recorder/src/types/Take.ts#makeName
+    - saveTake appends a new Variant to the slide's takes. github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/save-take.ts#saveTake
+  note: Splitting and naming are tested; saveTake itself is not.
+```
+
+```mdl
+verdict F-1.6: saveTake sets the new take as the slide's mainTake.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/save-take.ts#saveTake]
+  note: No test calls saveTake.
+```
+
+```mdl
+verdict F-1.7: A take that fails to save stays pending, with Save again (retry) and Discard in the slide companion.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/TakeRecorder.ts#TakeRecorder.retry, github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/TakeRecorder.ts#TakeRecorder.discard, github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/SlideRecordingsArticle/SlideRecordingsArticle.tsx#SlideRecordingsArticle]
+  note: No test simulates a failed save.
+```
+
+```mdl
+verdict F-1.8: The overlay shows REC, the length and a compact meter that warns only with NO SIGNAL and CLIP.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/RecordingOverlay/RecordingOverlay.tsx#RecordingOverlay, github:dxos/dxos/packages/plugins/plugin-recorder/src/components/LevelMeter/LevelMeter.tsx#LevelMeter]
+  note: The meter's silence and clip state is tested in `level.test.ts`, and `LevelMeter.stories.tsx` renders it, but nothing renders the overlay.
+```
+
+```mdl
+verdict F-1.9: The overlay shows the time left on a slide with a duration, and the overrun in red.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/RecordingOverlay/RecordingOverlay.tsx#RecordingOverlay]
+  note: No test or story renders the remaining-time readout.
+```
+
+```mdl
+verdict F-2.1: The Slide companion lists saved takes newest first, unsaved first, with the main take checked.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/SlideRecordingsArticle/SlideRecordingsArticle.tsx#SlideRecordingsArticle, github:dxos/dxos/packages/plugins/plugin-recorder/src/capabilities/react-surface.ts]
+  note: Contributed as the RECORDINGS_COMPANION article for Slide; no test renders it.
+```
+
+```mdl
+verdict F-2.2: A take row has the main check (SelectTake), Play and an undoable Delete.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/SlideRecordingsArticle/SlideRecordingsArticle.tsx#SlideRecordingsArticle, github:dxos/dxos/packages/plugins/plugin-recorder/src/operations/select-take.ts, github:dxos/dxos/packages/plugins/plugin-recorder/src/operations/delete-take.ts]
+  note: No test invokes the row actions or the undo.
+```
+
+```mdl
+verdict F-2.4: Both companions use RecordingsPanel with a keyboard-navigable RecordingList and the player in the status bar.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/components/RecordingsPanel/RecordingsPanel.tsx#RecordingsPanel, github:dxos/dxos/packages/plugins/plugin-recorder/src/components/RecordingList/RecordingList.tsx#RecordingList, github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/TakePlayer/TakePlayer.tsx#TakePlayer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-recorder/src/components/RecordingList/RecordingList.stories.tsx]
+  note: Exercised only by a story; no interaction test checks the arrow keys or Space.
+```
+
+```mdl
+verdict F-2.3: Each row shows its length against the desired length, marked over when longer.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/components/RecordingList/RecordingList.tsx#RecordingList]
+  tests: [github:dxos/dxos/packages/plugins/plugin-recorder/src/components/RecordingList/RecordingList.stories.tsx]
+```
+
+```mdl
+verdict F-3.1: The Presentation companion lists each slide with its main take's length against the desired length.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/PresentationRecordingsArticle/PresentationRecordingsArticle.tsx#PresentationRecordingsArticle]
+  note: No test renders the presentation companion.
+```
+
+```mdl
+verdict F-3.2: Rows have Play and open on double-click; Play all plays main takes in slide order.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/PresentationRecordingsArticle/PresentationRecordingsArticle.tsx#PresentationRecordingsArticle, github:dxos/dxos/packages/plugins/plugin-recorder/src/components/RecordingList/RecordingList.tsx#RecordingList]
+  note: No test plays or opens a slide.
+```
+
+```mdl
+verdict F-3.3: Download decodes the main takes in order and saves one WAV.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/recorder/take-media.ts#exportVoiceOver, github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/wav.ts#encodeWav, github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/wav.ts#concatPcm]
+  note: `wav.test.ts` tests concatenation and encoding, but `exportVoiceOver` (decode and order) is untested.
+```
+
+```mdl
+verdict F-4.1: The settings pick the microphone, the video source and the camera.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/RecorderSettings/RecorderSettings.tsx#RecorderSettings]
+  note: No test or story renders the settings.
+```
+
+```mdl
+verdict F-4.2: Test microphone opens the chosen device on the level meter without recording.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/hooks/useMicrophoneTest.ts#useMicrophoneTest, github:dxos/dxos/packages/plugins/plugin-recorder/src/containers/RecorderSettings/RecorderSettings.tsx#RecorderSettings]
+  note: No test covers the hook.
+```
+
+```mdl
+verdict F-4.3: With no choice, a /shure/i device is preferred, in the recorder and the settings.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/devices.ts#pickDevice, github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/devices.ts#PREFERRED_MICROPHONE]
+  tests: [github:dxos/dxos/packages/plugins/plugin-recorder/src/audio/devices.test.ts]
+```
+
+```mdl
+verdict QA-1: No automated test records a voice-over.
+  status: missing
+  note: The test is human-only by design (the recording must start in a click); no Playwright spec under composer-app mentions the recorder.
+```

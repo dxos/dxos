@@ -3,13 +3,16 @@
 //
 
 import { markdownLanguage } from '@codemirror/lang-markdown';
-import { HighlightStyle } from '@codemirror/language';
+import { HighlightStyle, type TagStyle } from '@codemirror/language';
 import { Tag, styleTags, tags } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 
 import { fontBody, markdownTheme } from '../../../styles/index.ts';
 
-export type HighlightOptions = {};
+export type HighlightOptions = {
+  /** Renders headings at the body text size, so every text row has the same height. */
+  fixedHeight?: boolean;
+};
 
 /**
  * Styling based on `lezer` parser tags.
@@ -22,8 +25,33 @@ export type HighlightOptions = {};
  * - https://github.com/codemirror/language/blob/main/src/highlight.ts#L194
  * - https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts#L115
  */
-export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
-  return HighlightStyle.define(
+export const markdownHighlightStyle = ({ fixedHeight }: HighlightOptions = {}) =>
+  fixedHeight ? markdownHighlightFixedHeight : markdownHighlight;
+
+/**
+ * Custom tags defined and processed by the GFM lezer extension.
+ * https://github.com/lezer-parser/markdown
+ * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
+ */
+export const markdownTags = {
+  Blockquote: Tag.define(),
+  CodeMark: Tag.define(),
+  CodeText: Tag.define(),
+  EmphasisMark: Tag.define(),
+  HeaderMark: Tag.define(),
+  InlineCode: Tag.define(),
+  LinkLabel: Tag.define(),
+  LinkReference: Tag.define(),
+  ListMark: Tag.define(),
+  QuoteMark: Tag.define(),
+  URL: Tag.define(),
+
+  // Custom.
+  TableCell: Tag.define(),
+};
+
+const defineMarkdownHighlight = (headings: readonly TagStyle[]) =>
+  HighlightStyle.define(
     [
       {
         tag: [
@@ -105,21 +133,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
         class: 'font-mono',
       },
 
-      // Headings — use CSS properties only (no class:) so CodeMirror generates scoped CSS via
-      // StyleModule that overrides vscodeDarkStyle's t.heading rule. When class: is present,
-      // HighlightStyle silently ignores all other CSS properties (they're mutually exclusive).
-      // Font sizes use Tailwind v4 CSS variables so nothing is hardcoded.
-      {
-        tag: tags.heading,
-        color: 'var(--color-cm-heading) !important',
-        fontWeight: '300',
-      },
-      { tag: tags.heading1, ...markdownTheme.heading(1) },
-      { tag: tags.heading2, ...markdownTheme.heading(2) },
-      { tag: tags.heading3, ...markdownTheme.heading(3) },
-      { tag: tags.heading4, ...markdownTheme.heading(4) },
-      { tag: tags.heading5, ...markdownTheme.heading(5) },
-      { tag: tags.heading6, ...markdownTheme.heading(6) },
+      ...headings,
 
       // Emphasis.
       { tag: tags.emphasis, class: 'italic' },
@@ -148,29 +162,32 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
       },
     },
   );
-};
 
-/**
- * Custom tags defined and processed by the GFM lezer extension.
- * https://github.com/lezer-parser/markdown
- * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
- */
-export const markdownTags = {
-  Blockquote: Tag.define(),
-  CodeMark: Tag.define(),
-  CodeText: Tag.define(),
-  EmphasisMark: Tag.define(),
-  HeaderMark: Tag.define(),
-  InlineCode: Tag.define(),
-  LinkLabel: Tag.define(),
-  LinkReference: Tag.define(),
-  ListMark: Tag.define(),
-  QuoteMark: Tag.define(),
-  URL: Tag.define(),
+// Headings use CSS properties only (no `class`) so CodeMirror generates scoped CSS via StyleModule that overrides
+// vscodeDarkStyle's `t.heading` rule; `HighlightStyle` ignores the other properties when `class` is present.
+// Built once: every `HighlightStyle.define` call mints a new stylesheet, which restyles the whole document.
+const markdownHighlight = defineMarkdownHighlight([
+  {
+    tag: tags.heading,
+    color: 'var(--color-cm-heading) !important',
+    fontWeight: '300',
+  },
+  { tag: tags.heading1, ...markdownTheme.heading(1) },
+  { tag: tags.heading2, ...markdownTheme.heading(2) },
+  { tag: tags.heading3, ...markdownTheme.heading(3) },
+  { tag: tags.heading4, ...markdownTheme.heading(4) },
+  { tag: tags.heading5, ...markdownTheme.heading(5) },
+  { tag: tags.heading6, ...markdownTheme.heading(6) },
+]);
 
-  // Custom.
-  TableCell: Tag.define(),
-};
+// Without a size difference, weight is what tells a heading from body text.
+const markdownHighlightFixedHeight = defineMarkdownHighlight([
+  {
+    tag: tags.heading,
+    color: 'var(--color-cm-heading) !important',
+    fontWeight: '600 !important',
+  },
+]);
 
 // TODO(burdon): Customize table parser (make all content monospace).
 //  https://github.com/lezer-parser/markdown/blob/main/src/extension.ts

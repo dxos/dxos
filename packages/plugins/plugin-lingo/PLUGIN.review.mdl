@@ -1,0 +1,397 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-lingo/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: LingoPlugin
+
+The code implements nearly everything the spec describes. The types, the five operations, the Leitner
+schedule, the reading companion, structural selection and the Analysis cache are all present and
+behave as specified. What is solid and tested: the Leitner schedule (`Word.test.ts`), segment
+alignment and most-specific lookup (`@dxos/nlp` tests), and the ReaderPane stories, whose play
+functions check hover, commit, most-specific-wins and cross-pane mirroring. Everything that touches
+ECHO or the model has no test: `AddWord` dedup, `AnalyzeText` caching and harvesting, the create
+menu, delete, and stale dimming.
+
+Two divergences from the spec text. `VocabularyArticle` orders by deck, due or weakest, not by term.
+In the app the reader companion renders only the translation pane: the source is the host plugin's
+editor, which never receives the committed selection, so "drives the other pane" holds only in the
+two-pane story. Also, a word can reach box 5 (`BOX_COUNT`), where it graduates; the spec's `Progress`
+says 0..4.
+
+Of 51 items: 14 done, 27 untested, 4 partial, 0 diverged, 6 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Level: The six CEFR bands are a literal union.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Language.ts#Level]
+  note: Used only as `Language.level`; no test.
+```
+
+```mdl
+verdict Language: The Language object has name, code, baseCode, level and description.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Language.ts#Language]
+  note: Fields match; no test creates one.
+```
+
+```mdl
+verdict Vocabulary: The Vocabulary object has name, description and a Language ref.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Vocabulary.ts#Vocabulary]
+  note: Fields match; no test creates one.
+```
+
+```mdl
+verdict Progress: The Progress struct matches; box runs to 5, where a word graduates.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#Progress, github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#BOX_COUNT]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.test.ts]
+  note: `BOX_COUNT` is 5, so `box` ranges 0..5 rather than the spec's 0..4; box 5 takes the word out of the drill.
+```
+
+```mdl
+verdict Word: The Word object matches, with vocabulary and language refs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#Word, github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#PartOfSpeech]
+  note: Fields match; `Word.test.ts` exercises progress helpers on plain objects, never a Word.
+```
+
+```mdl
+verdict Range: Range is the half-open start/end struct in @dxos/nlp.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/nlp/src/Segmentation.ts#Range]
+  tests: [github:dxos/dxos/packages/core/compute/nlp/src/align-segments.test.ts]
+```
+
+```mdl
+verdict SegmentKind: The four kinds are a literal union in @dxos/nlp.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/nlp/src/Segmentation.ts#SegmentKind]
+  tests: [github:dxos/dxos/packages/core/compute/nlp/src/align-segments.test.ts]
+```
+
+```mdl
+verdict Segment: Segment carries source and target ranges, gloss, lemma and reading.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/nlp/src/Segmentation.ts#Segment]
+  tests: [github:dxos/dxos/packages/core/compute/nlp/src/align-segments.test.ts]
+```
+
+```mdl
+verdict Analysis: The Analysis object keys on subject and language with both hashes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Analysis.ts#Analysis]
+  note: Fields match; no test creates or queries one.
+```
+
+```mdl
+verdict Settings: Settings has language, highlightKnownWords and translateUnknownWords.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/LingoSettings.ts#Settings]
+  note: `language` is a literal union over the `POPULAR` codes, defaulting to `en`; no test.
+```
+
+```mdl
+verdict ReaderArticle: The companion translates, analyzes, adds and deletes without writing to the source.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/ReaderArticle/ReaderArticle.tsx#ReaderArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/ReaderArticle/ReaderArticle.stories.tsx]
+```
+
+```mdl
+verdict ReaderPane: A read-only pane decorates one side's ranges, with callbacks held in a ref.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.tsx#ReaderPane]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.stories.tsx]
+```
+
+```mdl
+verdict VocabularyArticle: The word list orders by deck, due or weakest; there is no order by term.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/VocabularyArticle/VocabularyArticle.tsx#VocabularyArticle]
+  note: `ORDERS` offers `deck`, `due` and `weakest`; ordering by term is missing. `WordList.stories.tsx` renders the list, not the article.
+```
+
+```mdl
+verdict FlashcardsArticle: The drill invokes RecordReview for every answer.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/FlashcardsArticle/FlashcardsArticle.tsx#FlashcardsArticle]
+  note: Due words sort first and each answer calls `invokePromise(RecordReview)`; `Flashcard.stories.tsx` covers only the card component.
+```
+
+```mdl
+verdict AddWord: Adds a word unless the deck already holds its normalized lemma or term.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/LingoOperation.ts#AddWord, github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/add-word.ts, github:dxos/dxos/packages/plugins/plugin-lingo/src/util/deck.ts#addWord]
+  walkthrough:
+    - The operation declares the deck ref and word fields, returning the word and an existing flag. github:dxos/dxos/packages/plugins/plugin-lingo/src/types/LingoOperation.ts#AddWord
+    - The handler loads the deck and delegates to addWord. github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/add-word.ts
+    - addWord queries the deck's words and dedups on the normalized lemma, falling back to the term. github:dxos/dxos/packages/plugins/plugin-lingo/src/util/deck.ts#addWord
+  note: Dedup keys on the lemma when present, not only the term. No test.
+```
+
+```mdl
+verdict RecordReview: Applies one answer to the word's Leitner progress and stores it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/LingoOperation.ts#RecordReview, github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/record-review.ts, github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#applyReview]
+  note: `applyReview` is tested in `Word.test.ts`, but the handler that loads and writes the word is not.
+```
+
+```mdl
+verdict TranslateTerm: Translates one term in context into a Candidate.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/LingoOperation.ts#TranslateTerm, github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/translate-term.ts]
+  note: The reader calls it from the hover card for words no deck holds; it has a runtime key the spec block omits. No test.
+```
+
+```mdl
+verdict TranslatePassage: Translates a passage and returns the detected source code.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/LingoOperation.ts#TranslatePassage, github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/translate-passage.ts]
+  note: `generateObject` with a `{ sourceCode, text }` schema; no test.
+```
+
+```mdl
+verdict AnalyzeText: Analyzes, caches per subject and language, and harvests vocab segments.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/LingoOperation.ts#AnalyzeText, github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/analyze-text.ts]
+  walkthrough:
+    - The operation declares the subject, text, language, translation, vocabulary and refresh inputs. github:dxos/dxos/packages/plugins/plugin-lingo/src/types/LingoOperation.ts#AnalyzeText
+    - The handler looks up the Analysis by ref filter, reuses it on matching hashes, otherwise calls segmentText and harvests. github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/analyze-text.ts
+  note: No test runs the handler; `segmentText` and `alignSegments` are tested in `@dxos/nlp`.
+```
+
+```mdl
+verdict F-1.1: Language and Vocabulary have create-menu entries.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/capabilities/create-object.ts]
+  note: Both are contributed as `CreateObjectEntry`; Vocabulary uses `CreateVocabularySchema`. No test.
+```
+
+```mdl
+verdict F-1.2: Deck membership is the Word's vocabulary ref.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Vocabulary.ts#Vocabulary, github:dxos/dxos/packages/plugins/plugin-lingo/src/util/deck.ts#queryWords]
+  note: Vocabulary holds no word array; `queryWords` filters Words by the vocabulary ref. No test.
+```
+
+```mdl
+verdict F-1.3: Word.language is copied from the deck on add.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/util/deck.ts#addWord]
+  note: `addWord` sets `language: deck.language`; no test.
+```
+
+```mdl
+verdict F-1.4: AddWord returns the existing Word on a duplicate.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/util/deck.ts#addWord]
+  note: Returns `{ word: existing, existing: true }`; no test.
+```
+
+```mdl
+verdict F-2.1: A word with no progress starts at box 0 and is due.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#applyReview, github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#isDue]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.test.ts]
+```
+
+```mdl
+verdict F-2.2: Correct advances one box; a miss resets box and streak.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#applyReview]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.test.ts]
+```
+
+```mdl
+verdict F-2.3: Intervals are 0, 1, 3, 7 and 21 days.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#applyReview]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.test.ts]
+```
+
+```mdl
+verdict F-2.4: Each answer is persisted as it is given.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/FlashcardsArticle/FlashcardsArticle.tsx#FlashcardsArticle]
+  note: The answer handler invokes `RecordReview` immediately; no test.
+```
+
+```mdl
+verdict F-3.1: The reader is offered for Markdown, Text and TextContent-registered types.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/ReaderArticle/useSourceText.ts#useSourceText]
+  note: The graph builder's readable check covers all three; `useSourceText` resolves the text. No test.
+```
+
+```mdl
+verdict F-3.2: The companion never writes to the object it reads.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/ReaderArticle/ReaderArticle.tsx#ReaderArticle, github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.tsx#ReaderPane]
+  note: ReaderPane is `readOnly: true` and ReaderArticle writes only Language, Analysis and the HasSubject relation; no test asserts it.
+```
+
+```mdl
+verdict F-3.3: The language defaults to Settings.language, then English.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/ReaderArticle/ReaderArticle.tsx#ReaderArticle]
+  note: `preferred` is `settings.language` when offered, else `Language.DEFAULT_BASE_CODE` (`en`); no test.
+```
+
+```mdl
+verdict F-3.4: Translate and analyze run only on the explicit action.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/ReaderArticle/ReaderArticle.tsx#ReaderArticle]
+  note: `handleRun` is bound only to the toolbar action; no effect runs it on open. No test.
+```
+
+```mdl
+verdict F-3.5: Delete removes the Analysis and its relation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/ReaderArticle/ReaderArticle.tsx#ReaderArticle]
+  note: `handleDelete` removes the stored Analysis and the matching HasSubject relation; no test.
+```
+
+```mdl
+verdict F-4.1: Hover outlines the most specific region; click commits it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/segments.ts#segmentAtPosition, github:dxos/dxos/packages/core/compute/nlp/src/align-segments.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.stories.tsx, github:dxos/dxos/packages/core/compute/nlp/src/align-segments.test.ts]
+```
+
+```mdl
+verdict F-4.2: The committed selection is a state field separate from the text selection.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/segments.ts#setSelected, github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/segments.ts#segmentsField]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.stories.tsx]
+```
+
+```mdl
+verdict F-4.3: The committed segment drives the popover and toolbar; the other pane only in the story.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/containers/ReaderArticle/ReaderArticle.tsx#ReaderArticle, github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/segments.ts#segments]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.stories.tsx]
+  note: |
+    The two-pane story mirrors selection through the shared `selected` prop. In the app, ReaderArticle renders only the
+    target pane, and the source document's editor (another plugin) never receives the selection, so there is no other
+    pane to drive.
+```
+
+```mdl
+verdict F-4.4: Ranges are not mapped; divergence by hash marks decorations stale.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/segments.ts#segmentsField, github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/segments.ts#segmentAtPosition]
+  note: `segmentsField` flips `stale` when the doc hash diverges, decorations gain `cm-segment-stale`, and lookup returns nothing; no test edits the text.
+```
+
+```mdl
+verdict F-4.5: Deck vocabulary yields vocab segments merged into the analysis.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/deck-segments.ts#deckSegments, github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/deck-segments.ts#mergeSegmentations]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.stories.tsx]
+```
+
+```mdl
+verdict F-5.1: Analysis lookup filters on subject and language refs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/analyze-text.ts]
+  note: `Filter.type(Analysis, { subject, language })`; no test.
+```
+
+```mdl
+verdict F-5.2: Matching compares refs through the filter, not URI strings.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/analyze-text.ts]
+  note: The ref filter replaces a URI comparison; no test guards against duplicates.
+```
+
+```mdl
+verdict F-5.3: Matching hashes return the cached analysis without a model call.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/analyze-text.ts]
+  note: Returns `cached: true` when `sourceHash` and `targetHash` match and `refresh` is unset; no test.
+```
+
+```mdl
+verdict F-5.4: refresh forces a fresh analysis.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/operations/analyze-text.ts]
+  note: The cache branch is skipped when `refresh` is set; ReaderArticle always passes `refresh: true` behind its own staleness guard. No test.
+```
+
+```mdl
+verdict T-1: No test creates a Vocabulary through the create menu.
+  status: missing
+  note: `plugin.test.ts` checks module activation only.
+```
+
+```mdl
+verdict T-2: The schedule test covers advances, not three corrects and a 7-day due date.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#applyReview]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.test.ts]
+  note: Asserts box 1 and 2 after two corrects and the box-1 interval; nothing asserts box 3, streak 3 or a 7-day `dueAt`.
+```
+
+```mdl
+verdict T-3: The miss test resets from box 2, not box 3.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.ts#applyReview]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/types/Word.test.ts]
+  note: Box and streak reset to 0 are asserted, from box 2 with a streak of 2.
+```
+
+```mdl
+verdict T-4: The MostSpecificWins story and segmentAt tests cover it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/extensions/segments.ts#segmentAtPosition]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.stories.tsx, github:dxos/dxos/packages/core/compute/nlp/src/align-segments.test.ts]
+```
+
+```mdl
+verdict T-5: The SelectionMirrorsAcrossPanes story covers it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.tsx#ReaderPane]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lingo/src/components/ReaderPane/ReaderPane.stories.tsx]
+```
+
+```mdl
+verdict T-6: No test runs AnalyzeText twice.
+  status: missing
+  note: No test file in the plugin invokes `AnalyzeText`.
+```
+
+```mdl
+verdict T-7: No test edits text under an analysis.
+  status: missing
+  note: The ReaderPane stories never edit the document; read-only panes cannot.
+```
+
+```mdl
+verdict T-8: No test harvests vocab from an analysis.
+  status: missing
+  note: No test invokes `AnalyzeText` with a vocabulary ref.
+```
+
+```mdl
+verdict QA-1: Manual test; no automation.
+  status: missing
+  note: No Playwright or harness run of the add-and-drill flow.
+```
+
+```mdl
+verdict QA-2: Manual test; no automation.
+  status: missing
+  note: Needs a live model; no automated run.
+```

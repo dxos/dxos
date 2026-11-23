@@ -260,7 +260,7 @@ progress **and** no traffic_.
 **A stress verdict against the deployed dev edge needs a same-session baseline control.** The dev
 environment itself degrades (observed: a full day where every build — including the previous day's
 green artifact redeployed byte-identical — froze mid-push with ~85 s server-silence watchdog
-restarts, while SigNoz ingestion was simultaneously dead). Before attributing a stress failure to
+restarts, while telemetry ingestion was down at the same time). Before attributing a stress failure to
 your change, redeploy the last known-green artifact and re-run; if it fails too, the verdict is
 contaminated. Also: the worker bundle must be built under **committed** deps (a bundle produced
 under `link-packages` node_modules is broken) — bundle first, then link for the client side.

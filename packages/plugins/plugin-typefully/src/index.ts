@@ -3,4 +3,4 @@
 //
 
 export * as TypefullyEvents from './TypefullyEvents.ts';
-export * as TypefullyPlugin from './TypefullyPlugin.ts';
+export * as TypefullyPlugin from '#meta';

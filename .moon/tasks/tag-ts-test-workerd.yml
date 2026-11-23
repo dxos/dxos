@@ -4,7 +4,7 @@ tasks:
     # Runs `*.workerd.test.{ts,tsx}` suites inside the Cloudflare Workers runtime
     # (`workerd`) via `@cloudflare/vitest-pool-workers`. See `createWorkerdProject`
     # in `vite.base.config.ts` for the shared project definition.
-    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=workerd
+    command: dx-killorphans vitest run --passWithNoTests --project=workerd
     deps:
       - esbuild-plugins:build
       - node-std:build
@@ -15,14 +15,10 @@ tasks:
         cacheStrategy: ignored
       - target: ^:source-hash
         cacheStrategy: hash
-      # Dependency packages' generated sources (e.g. the plugin capability barrels) must exist
+      # Dependency packages' generated sources (e.g. lezer parsers) must exist
       # before tests resolve them under the source condition. Addressed by the `prebuild` task tag
       # rather than a task name, since the generating task is named per what it generates.
       - '^:#prebuild'
-      # A composer plugin's own `#capabilities` workerd barrel is generated, not checked in; optional
-      # because only composer plugins define `gen-modules`.
-      - target: gen-modules
-        optional: true
     inputs:
       - '@group(sources)'
       - /tsconfig.base.json

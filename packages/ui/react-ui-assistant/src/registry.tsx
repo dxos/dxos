@@ -6,6 +6,7 @@ import { type WidgetProps, type XmlWidgetRegistry, getXmlInnerText, getXmlTextCh
 
 import {
   FallbackWidget,
+  LaneCardWidget,
   ReasoningWidget,
   ReferenceWidget,
   RequestWidget,
@@ -15,6 +16,7 @@ import {
   SuggestionWidget,
   SummaryWidget,
   SyntheticWidget,
+  TokensWidget,
   ToolWidget,
 } from './widgets/index.ts';
 
@@ -104,6 +106,14 @@ export const assistantRegistry: XmlWidgetRegistry = {
     },
   },
 
+  tokens: {
+    block: true,
+    factory: ({ children }) => {
+      const count = Number(getXmlTextChild(children ?? []));
+      return count > 0 ? new TokensWidget(count) : null;
+    },
+  },
+
   //
   // React widgets (portaled outside the editor)
   //
@@ -137,6 +147,12 @@ export const assistantRegistry: XmlWidgetRegistry = {
     estimatedHeight: () => COLLAPSED_HEIGHT,
     heightMode: 'min',
     Component: RequestWidget,
+  },
+
+  // Light threads: a lane working in the background, as a card in its original place, as tall as its content.
+  lane: {
+    block: true,
+    Component: LaneCardWidget,
   },
 
   // The host overrides this with a widget that can actually dispatch the surface.

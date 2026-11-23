@@ -15,9 +15,9 @@ import * as Media from '@dxos/react-ui/Media';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { Summary } from '#components';
-import { meta } from '#meta';
 import { Bookmark, BookmarkOperation } from '#types';
 
+import { BookmarksNamespace } from '../../namespace.ts';
 import { useImageLoads } from '../useImageLoads.ts';
 
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark.Bookmark>;
@@ -47,7 +47,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
       { bookmark: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['summarize-error.message', { ns: meta.profile.key }] },
+        notify: { error: ['summarize-error.message', { ns: BookmarksNamespace.key }] },
       },
     ).finally(() => setSummarizing(false));
   }, [invokePromise, subject]);
@@ -58,7 +58,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
         .action(
           'summarize',
           {
-            label: ['summarize.label', { ns: meta.profile.key }],
+            label: ['summarize.label', { ns: BookmarksNamespace.key }],
             icon: 'ph--sparkle--regular',
             disabled: summarizing || !isExternalHttpUrl(bookmark.url),
             disposition: 'toolbar',
@@ -70,7 +70,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
         .action(
           'openSource',
           {
-            label: ['open-source.label', { ns: meta.profile.key }],
+            label: ['open-source.label', { ns: BookmarksNamespace.key }],
             icon: 'ph--arrow-square-out--regular',
             disabled: !isExternalHttpUrl(bookmark.url),
             disposition: 'toolbar',

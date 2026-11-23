@@ -8,6 +8,9 @@ import composerEcho from '../../../docs/diagrams/composer-echo.dx?raw';
 import composerFramework from '../../../docs/diagrams/composer-framework.dx?raw';
 import composerPlugin from '../../../docs/diagrams/composer-plugin.dx?raw';
 import composer from '../../../docs/diagrams/composer.dx?raw';
+import echoModel from '../../../docs/diagrams/echo-model.dx?raw';
+import echoQuery from '../../../docs/diagrams/echo-query.dx?raw';
+import echoSync from '../../../docs/diagrams/echo-sync.dx?raw';
 import edgeCompute from '../../../docs/diagrams/edge-compute.dx?raw';
 import edgeDb from '../../../docs/diagrams/edge-db.dx?raw';
 import edgeHub from '../../../docs/diagrams/edge-hub.dx?raw';
@@ -29,4 +32,7 @@ export const DIAGRAM_SOURCES: Readonly<Record<string, string>> = {
   'edge-hub': edgeHub,
   'edge-router': edgeRouter,
   'edge-subduction': edgeSubduction,
+  'echo-model': echoModel,
+  'echo-query': echoQuery,
+  'echo-sync': echoSync,
 };

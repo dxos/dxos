@@ -11,7 +11,7 @@ import { ClientService } from '@dxos/client';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const identityService = client.services.services.IdentityService;
   if (!identityService) {
     if (json) {

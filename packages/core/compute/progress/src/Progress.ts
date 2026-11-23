@@ -97,7 +97,10 @@ export interface Api {
   ) => TaskHandle;
   /** Pre-registers tasks as `pending` (so an orchestrator can show the full list up front). */
   readonly seed: (tasks: readonly { name: string; total?: number; label?: string }[]) => void;
-  /** Invokes the task's registered `onCancel` handler (no-op if absent). */
+  /**
+   * Invokes the task's registered `onCancel` handler. Without one, a failed task is dismissed (removed),
+   * and anything else is a no-op.
+   */
   readonly cancel: (name: string) => void;
   readonly snapshot: () => Snapshot;
   /** Subscribe to snapshots; returns an unsubscribe. The listener fires on every change. */
@@ -196,7 +199,16 @@ export const make = (): Api => {
   };
 
   const cancel: Api['cancel'] = (name) => {
-    cancelHandlers.get(name)?.();
+    const handler = cancelHandlers.get(name);
+    if (handler) {
+      handler();
+      return;
+    }
+    // A failed task has nothing left to cancel, and without this its error could never be dismissed.
+    if (tasks.get(name)?.status === 'error') {
+      tasks.delete(name);
+      emit();
+    }
   };
 
   const seed: Api['seed'] = (defs) => {

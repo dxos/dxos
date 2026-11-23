@@ -12,14 +12,14 @@ import {
   type PutPatch,
   type SpliceTextPatch,
 } from '@automerge/automerge';
-import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState } from '@codemirror/state';
+import { ChangeSet, type ChangeSpec, type EditorSelection, type EditorState, Transaction } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 import { reconcileAnnotation } from './defs.ts';
 
 /**
  * Applies Automerge patches to the CodeMirror view as changes, keeping the given selection mapped
- * across them (marked with the reconcile annotation so the sync loop ignores the echoed transaction).
+ * across them. Each dispatch is marked remote, so awareness does not count it as the local user's.
  */
 export const updateCodeMirror = (view: EditorView, selection: EditorSelection, target: Prop[], patches: Patch[]) => {
   for (const patch of patches) {
@@ -29,14 +29,14 @@ export const updateCodeMirror = (view: EditorView, selection: EditorSelection, t
       selection = selection.map(changeSet, 1);
       view.dispatch({
         changes: changeSet,
-        annotations: reconcileAnnotation.of(false),
+        annotations: [reconcileAnnotation.of(false), Transaction.remote.of(true)],
       });
     }
   }
 
   view.dispatch({
     selection,
-    annotations: reconcileAnnotation.of(false),
+    annotations: [reconcileAnnotation.of(false), Transaction.remote.of(true)],
   });
 };
 

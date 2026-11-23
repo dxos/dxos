@@ -17,8 +17,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import { Task } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { AssistantNamespace } from '../../namespace.ts';
 import { QuestionCard } from '../QuestionCard/QuestionCard.tsx';
 
 const QUESTION_SURFACE_NAME = 'QuestionSurface';
@@ -40,7 +39,7 @@ export type QuestionSurfaceProps = {
  * history: an answer given here and one given from the task's row have to be the same answer.
  */
 export const QuestionSurface = ({ task: taskId, question: questionId }: QuestionSurfaceProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   const space = ToolkitHooks.useActiveSpace();
   // Validated before it reaches `Filter.id`, which asserts on its arguments: this id is written by
   // a model, so a truncated or hallucinated one is the expected case, and an unguarded filter
@@ -49,7 +48,8 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
   const filter = useMemo(() => (valid ? Filter.id(valid) : Filter.nothing()), [valid]);
   const [object] = useQuery(valid ? space?.db : undefined, filter);
   // Before the guard below, so the hook count is stable; it answers `[]` for a missing subject.
-  const menuItems = ToolkitHooks.useObjectMenuItems(object);
+  const readonly = ToolkitHooks.useReadOnly();
+  const menuItems = ToolkitHooks.useObjectMenuItems(object, undefined, { readonly });
   if (!object || !Obj.instanceOf(Task.Task, object) || !questionId) {
     return null;
   }

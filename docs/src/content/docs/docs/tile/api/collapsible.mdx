@@ -1,0 +1,23 @@
+---
+title: Collapsible
+description: "One region that opens and closes."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/collapsible" height="6.25rem" narrow />
+
+```ts
+import * as Collapsible from '@dxos/react-ui/Collapsible';
+```
+
+A collapsible is one region that opens and closes. `Collapsible.Trigger` is a caret and a label. Without a label,
+the trigger is only the caret. Use a caret-only trigger when the collapsible sits in a list row.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Collapsible.Root` | The root, which holds the open state |
+| `Collapsible.Trigger` | The caret and label that open and close the region |
+| `Collapsible.Content` | The region. Its height animates as it opens |

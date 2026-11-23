@@ -367,6 +367,15 @@ export const useSurfaces = () => {
 };
 
 /**
+ * The surfaces contributed for a role, subscribed: the caller re-renders when they change, so a check made with
+ * `useIsSurfaceAvailable` (which reads without subscribing) is repeated once a module loaded on demand contributes.
+ */
+export const useSurfaceContributions = (role: Role.Role<any>): ReadonlyArray<Definition> => {
+  const surfaceManager = useSurfaceManager();
+  return useAtomValue(surfaceManager.candidatesAtom(role.role));
+};
+
+/**
  * Reports whether a contributed surface matches the given role & data, without mounting it.
  *
  * Typed: pass a `type` role token and `data` is constrained to the token's

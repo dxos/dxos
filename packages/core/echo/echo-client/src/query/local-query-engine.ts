@@ -24,14 +24,16 @@ import {
   writeAffects,
 } from './merge-plan.ts';
 import { type CoreLookup } from './path-revalidation.ts';
-import { type QueryContext, type SourceEntry } from './query-context.ts';
+import { type QueryContext, type QueryContextRunOptions, type SourceEntry } from './query-context.ts';
 import { RegistryView } from './registry-view.ts';
 import { type RemoteQuerySource } from './remote-query-source.ts';
-import { isSimpleSelectionQuery } from './util.ts';
+import { getRegistryTypeKeys, isSimpleSelectionQuery } from './util.ts';
 import { WorkingSetView, compareIds } from './working-set-view.ts';
 
 export type LocalQueryEngineProps = {
   registry: Registry.Registry;
+  /** Resolves registry keys `registry` lacks from the graph's type sources, adding what they return to it. */
+  resolveRegistryKeys?: (keys: readonly string[]) => Promise<void>;
   onStart: () => void;
   onStop: () => void;
 };
@@ -161,6 +163,8 @@ export class LocalQueryEngine implements QueryContext {
       view.update(query);
     }
     this.#registry.update(query);
+    // What resolves lands in the registry, whose change re-emits this query.
+    void this.#resolveRegistryKeys(query);
     this.#remotesActive = false;
     this.#loadRequested.clear();
     this.#syncRemotes();
@@ -229,6 +233,17 @@ export class LocalQueryEngine implements QueryContext {
     return answered.length < remote.length || remote.some((source) => source.isTruncated()) ? 'merged' : 'complete';
   }
 
+  getRemoteExecutionTime(): number | undefined {
+    let total: number | undefined;
+    for (const source of this.#servingRemotes()) {
+      const executionTime = source.executionTime?.();
+      if (executionTime !== undefined) {
+        total = (total ?? 0) + executionTime;
+      }
+    }
+    return total;
+  }
+
   getSourceStates(): QueryResult.SourceState[] {
     const states: QueryResult.SourceState[] = [];
     if ([...this.#spaces.values()].some((view) => view.isServing())) {
@@ -250,14 +265,26 @@ export class LocalQueryEngine implements QueryContext {
   async run(
     ctx: Context,
     query: QueryAST.Query,
-    { timeout = 30_000 }: QueryResult.RunOptions = {},
+    { timeout = 30_000, onExecutionTime }: QueryContextRunOptions = {},
   ): Promise<SourceEntry[]> {
-    const plan = createMergePlan(query);
-    const local = this.#evaluateLocal(query);
+    // Only the synchronous parts are timed: the awaits below wait on remotes and document loads.
+    const timed = <R>(work: () => R): R => {
+      const begin = performance.now();
+      try {
+        return work();
+      } finally {
+        onExecutionTime?.(performance.now() - begin);
+      }
+    };
+    // A type source is remote, so a stalled one must not hold the query past its timeout; the local registry answers.
+    await asyncTimeout(this.#resolveRegistryKeys(query), Math.max(0, timeout)).catch((err) =>
+      log('type sources did not answer; using the local registry', { err }),
+    );
+    const { plan, local } = timed(() => ({ plan: createMergePlan(query), local: this.#evaluateLocal(query) }));
     const ids = getSelectedIds(query);
     if (ids === undefined) {
-      const remote = await this.#runRemotes(ctx, query, timeout);
-      return this.#merge(query, plan, local, remote ?? [], remote !== undefined);
+      const remote = await this.#runRemotes(ctx, query, timeout, onExecutionTime);
+      return timed(() => this.#merge(query, plan, local, remote ?? [], remote !== undefined));
     }
 
     // By id: the working set first, then the index for what it lacks, and only what neither holds is loaded
@@ -271,13 +298,16 @@ export class LocalQueryEngine implements QueryContext {
     if (unresolved.length === 0) {
       return local;
     }
-    const remote = await this.#runRemotes(ctx, selectIds(query, unresolved), deadline - performance.now()).catch(
-      (err) => {
-        // The documents are still there to load; an index that cannot answer is not a miss.
-        log('index could not answer a by-id run; loading the objects instead', { err });
-        return undefined;
-      },
-    );
+    const remote = await this.#runRemotes(
+      ctx,
+      selectIds(query, unresolved),
+      deadline - performance.now(),
+      onExecutionTime,
+    ).catch((err) => {
+      // The documents are still there to load; an index that cannot answer is not a miss.
+      log('index could not answer a by-id run; loading the objects instead', { err });
+      return undefined;
+    });
     unresolved = missing(remote ?? [], unresolved);
     const loaded: SourceEntry[] = [];
     if (unresolved.length > 0) {
@@ -287,11 +317,20 @@ export class LocalQueryEngine implements QueryContext {
         Math.max(0, deadline - performance.now()),
       );
       const reselected = selectIds(query, unresolved);
-      for (const view of views) {
-        loaded.push(...view.evaluate(reselected));
-      }
+      timed(() => {
+        for (const view of views) {
+          loaded.push(...view.evaluate(reselected));
+        }
+      });
     }
-    return this.#merge(query, plan, [...local, ...loaded], remote ?? [], remote !== undefined);
+    return timed(() => this.#merge(query, plan, [...local, ...loaded], remote ?? [], remote !== undefined));
+  }
+
+  async #resolveRegistryKeys(query: QueryAST.Query): Promise<void> {
+    const keys = getRegistryTypeKeys(query);
+    if (keys.length > 0) {
+      await this._params.resolveRegistryKeys?.(keys);
+    }
   }
 
   #evaluateLocal(query: QueryAST.Query): SourceEntry[] {
@@ -304,14 +343,19 @@ export class LocalQueryEngine implements QueryContext {
   }
 
   /** Every remote's one-shot answer, or undefined when no remote serves the query. */
-  async #runRemotes(ctx: Context, query: QueryAST.Query, timeout: number): Promise<SourceEntry[] | undefined> {
+  async #runRemotes(
+    ctx: Context,
+    query: QueryAST.Query,
+    timeout: number,
+    onExecutionTime?: (executionTime: number) => void,
+  ): Promise<SourceEntry[] | undefined> {
     if (this.#remotes.size === 0) {
       return undefined;
     }
     const answers = await Promise.all(
       [...this.#remotes].map(async (source) => {
         log('run query', { source: source.kind, query: Query.pretty(Query.fromAst(query)) });
-        const results = await asyncTimeout(source.run(ctx, query), Math.max(0, timeout));
+        const results = await asyncTimeout(source.run(ctx, query, { onExecutionTime }), Math.max(0, timeout));
         log('run query results', { source: source.kind, count: results.length });
         return results;
       }),
@@ -400,8 +444,10 @@ export class LocalQueryEngine implements QueryContext {
         this.#membersQueries.set(query, listed);
       }
       const members = views.flatMap((view) => view.evaluate(listed));
+      // A by-id selection also returns members whose dependencies settled unavailable, which `surfaces` does not admit.
+      const evaluated = new Set(members.map((entry) => entry.id));
       const adjusted = adjustGroups(plan.manifest, remote, members, {
-        held: (id) => views.some((view) => view.holdsBody(id)),
+        held: (id) => evaluated.has(id) || views.some((view) => view.surfaces(id)),
         survivor: (id) => views.find((view) => view.holdsBody(id))?.survivorId(id) ?? id,
       });
       if (adjusted) {
@@ -426,6 +472,10 @@ export class LocalQueryEngine implements QueryContext {
     }
     if (!plan.window) {
       const merged = plan.feed ? feedOrder(local, kept) : [...local, ...kept];
+      if (plan.unorderedLimit !== undefined && remoteAnswered && remote.length < plan.unorderedLimit) {
+        const seen = new Set(merged.map((entry) => entry.id));
+        merged.push(...unindexedMatches(views, plan, memo, seen, plan.unorderedLimit - seen.size));
+      }
       // Stable, so an in-process entry stays ahead of the remote duplicate that presentation drops.
       if (plan.order) {
         const orders = plan.order;
@@ -586,6 +636,20 @@ const whileLive =
  * A feed's order is its blocks' order, which only the remote knows: writes made here that it has not answered yet
  * are the newest, so they follow its entries rather than lead them, and the remote's entry stands for one it has.
  */
+/** Up to `count` loaded objects whose index rows may lag that match the query and that the merge does not hold yet. */
+const unindexedMatches = (
+  views: readonly WorkingSetView[],
+  plan: MergePlan,
+  memo: DeletionMemo,
+  seen: ReadonlySet<string>,
+  count: number,
+): SourceEntry[] =>
+  views
+    .flatMap((view) =>
+      view.matchLocal(plan, undefined, memo).flatMap(({ id }) => (seen.has(id) ? [] : (view.entryFor(id) ?? []))),
+    )
+    .slice(0, Math.max(count, 0));
+
 const feedOrder = (local: readonly SourceEntry[], kept: readonly SourceEntry[]): SourceEntry[] => {
   const answered = new Set(kept.map((entry) => entry.id));
   const tail = local.filter((entry) => !isEchoObject(entry.result));

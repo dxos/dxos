@@ -1,0 +1,46 @@
+[
+  {
+    "at": 4.5,
+    "title": "Documents",
+    "lines": [
+      "This is Composer: an extensible super-app for teams and their agents.",
+      "Your data is organized into collaborative workspaces and accessed via plugins.",
+      "You can add comments to any object; and assign tasks to agents, which read and update data in real time.",
+      "Documents can incorporate components from any plugin.",
+      "The plugin registry contains dozens of rich components, ready to drop into any workspace.",
+      "And every plugin brings new tools, skills and connectors for your agents.",
+      "Documents, diagrams, tables, and kanbans are all objects in the same graph."
+    ],
+    "text": "This is Composer: an extensible super-app for teams and their agents. Your data is organized into collaborative workspaces and accessed via plugins. You can add comments to any object; and assign tasks to agents, which read and update data in real time. Documents can incorporate components from any plugin. The plugin registry contains dozens of rich components, ready to drop into any workspace. And every plugin brings new tools, skills and connectors for your agents. Documents, diagrams, tables, and kanbans are all objects in the same graph."
+  },
+  {
+    "at": 46.5,
+    "title": "Agents",
+    "lines": [
+      "At DXOS we use Composer as a coding harness with both frontier and open models.",
+      "In fact, Composer's own development, including its plans, tasks and agents -- are all designed, developed and extended from inside the app."
+    ],
+    "text": "At DXOS we use Composer as a coding harness with both frontier and open models. In fact, Composer's own development, including its plans, tasks and agents -- are all designed, developed and extended from inside the app."
+  },
+  {
+    "at": 70.5,
+    "title": "Email, calendar, meetings and CRM",
+    "lines": [
+      "We run the rest of the business in Composer also.",
+      "Email arrives in the same graph, so every message is linked to the appropriate people and organization objects.",
+      "And the CRM is simply another view of the same data, for people and agents alike.",
+      "The calendar holds our meetings; with automated summaries including links to generated artifacts.",
+      "Meetings are captured, and agents turn them into notes, plans, and follow-ups."
+    ],
+    "text": "We run the rest of the business in Composer also. Email arrives in the same graph, so every message is linked to the appropriate people and organization objects. And the CRM is simply another view of the same data, for people and agents alike. The calendar holds our meetings; with automated summaries including links to generated artifacts. Meetings are captured, and agents turn them into notes, plans, and follow-ups."
+  },
+  {
+    "at": 110.5,
+    "title": "Open and extensible",
+    "lines": [
+      "The entire platform is open and extensible.",
+      "Your data, your apps, your agents, all in one place, and all under your control."
+    ],
+    "text": "The entire platform is open and extensible. Your data, your apps, your agents, all in one place, and all under your control."
+  }
+]

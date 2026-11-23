@@ -32,7 +32,7 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Database } from '@dxos/echo';
+import { Annotation, Database, DXN } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import type { SpaceId, URI } from '@dxos/keys';
@@ -45,7 +45,20 @@ import { type PersistedProcess, ProcessStore } from './process-store.ts';
 import { createProcessTraceService } from './process-trace.ts';
 import * as ProcessHandle from './ProcessHandle.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
+import * as ScriptRunner from './ScriptRunner.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
+
+/** The optional services that resolve; one the runtime cannot provide is left out rather than failing the process. */
+const resolveOptional = (
+  tags: readonly Context.Key<any, unknown>[],
+  context: ServiceResolver.ResolutionContext,
+): Effect.Effect<Context.Context<never>, never, Scope.Scope | ServiceResolver.ServiceResolver> =>
+  Effect.map(
+    Effect.forEach(tags, (tag) =>
+      ServiceResolver.resolveAll([tag], context).pipe(Effect.orElseSucceed(() => Context.empty())),
+    ),
+    (contexts): Context.Context<never> => Context.mergeAll(Context.empty(), ...contexts),
+  );
 
 /**
  * The origin a process's database writes are attributed to. A process serving a conversation is an agent's work,
@@ -78,6 +91,78 @@ const makeLoopbackRpcClient = (
   scope: Scope.Scope,
 ): Effect.Effect<RpcClient.RpcClient<any>> =>
   RpcTest.makeClient(rpcs).pipe(Effect.provide(rpcHandlers), Effect.provideService(Scope.Scope, scope));
+
+/**
+ * What `spawn` runs: a durable definition as given, or the handler this runtime builds for a script
+ * operation — which carries code rather than a handler, so the runtime runs it through its script
+ * backend. Keyed by the operation, so the run sits in the tree under the key a reader already knows
+ * and an EDGE runtime resolves the same operation by.
+ */
+const processDefinition = <I, O, Rpcs extends Rpc.Any>(
+  definition: Operation.Durable<I, O, any, Rpcs> | Operation.ScriptDefinition<I, O>,
+): Operation.Durable<I, O, any, Rpcs> => (Operation.isScript(definition) ? scriptHandler(definition) : definition);
+
+const scriptHandler = <I, O>(
+  op: Operation.ScriptDefinition<I, O>,
+): Operation.Durable<I, O, ScriptRunner.Service | Operation.ScriptRequirements> =>
+  Operation.makeDurable({
+    key: DXN.getName(op.meta.key),
+    name: op.meta.name ?? String(op.meta.key),
+    // The operation's own codecs, so the process is typed as the operation a caller invoked.
+    input: op.input,
+    output: op.output,
+    // The backend, plus what it runs the script against: a script's calls and children are its own
+    // process's, which is what `Operation.ScriptRequirements` names.
+    services: [ScriptRunner.Service, Operation.Service, Process.ManagerService],
+    // A script interrupted mid-run cannot be resumed: its evaluation state belonged to the runtime
+    // that was running it, which a restart has already lost.
+    resumable: false,
+  }).pipe(
+    Operation.withDurableHandler((ctx) =>
+      Effect.gen(function* () {
+        const runner = yield* ScriptRunner.Service;
+        return {
+          onInput: (input: I) =>
+            Effect.gen(function* () {
+              yield* Trace.write(Trace.OperationStart, {
+                key: String(op.meta.key),
+                name: op.meta.name,
+                icon: op.meta.icon,
+              });
+              // The script's own process, so what its code invokes and spawns belongs to this
+              // process rather than to whoever asked for the script.
+              const context = yield* Effect.context<Operation.ScriptRequirements>();
+              const result = yield* runner.run(Operation.scriptRequest(op, input), { context });
+              // Decoded against the operation's declared output, which defaults to
+              // `Operation.ScriptResult`: an operation that declares something else is declaring a
+              // value no backend produces, and this is where that is said rather than inferred.
+              const output = yield* Schema.decodeUnknownEffect(Schema.toType(op.output))(result).pipe(
+                Effect.mapError(
+                  (error) =>
+                    new Operation.ScriptError({
+                      message: `Script operation '${op.meta.key}' declares an output its run does not produce: ${String(error)}`,
+                    }),
+                ),
+              );
+              ctx.submitOutput(output);
+              ctx.succeed();
+              yield* Trace.write(Trace.OperationEnd, {
+                key: String(op.meta.key),
+                name: op.meta.name,
+                icon: op.meta.icon,
+                outcome: result.error === undefined ? 'success' : 'failure',
+                ...(result.error !== undefined ? { error: result.error } : {}),
+              });
+            }).pipe(
+              // A backend failure (no runner for the dialect, a source that will not resolve) is the
+              // deployment's fault, not the script's, so it fails the process rather than being
+              // reported as output a caller would read as the script's own error.
+              Effect.catchTag('ScriptError', (error) => Effect.die(error)),
+            ),
+        };
+      }),
+    ),
+  );
 
 const FINISHED_PROCESS_RETENTION = 200;
 
@@ -129,10 +214,11 @@ const matchesListOptions = (
  */
 export interface Manager {
   /**
-   * Spawn a new process from a process definition.
+   * Spawn a new process from a process definition: a durable operation, or a script operation, whose
+   * code this runtime runs through its script backend ({@link ScriptRunner.Service}).
    */
   spawn<I, O, Rpcs extends Rpc.Any = never>(
-    definition: Operation.Durable<I, O, any, Rpcs>,
+    definition: Operation.Durable<I, O, any, Rpcs> | Operation.ScriptDefinition<I, O>,
     options?: Process.SpawnOptions,
   ): Effect.Effect<Process.Process<I, O, Rpcs>>;
 
@@ -202,6 +288,16 @@ export class Impl implements Manager {
   readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
   /** Guards of live processes, kept beside the handles because a guard is a closure and is never persisted. */
   readonly #guards = new Map<Process.ID, Process.Guard>();
+  /**
+   * Live processes kept out of the durable store, each with the clear of its storage in {@link #memoryKvStore}; see
+   * {@link Operation.DurableProps.resumable}.
+   */
+  readonly #inMemory = new Map<Process.ID, Effect.Effect<void>>();
+  readonly #memoryKvStore = Effect.runSync(
+    Effect.gen(function* () {
+      return yield* KeyValueStore.KeyValueStore;
+    }).pipe(Effect.provide(KeyValueStore.layerMemory)),
+  );
   readonly #registry: Registry.AtomRegistry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
@@ -254,7 +350,7 @@ export class Impl implements Manager {
         location?.kind === 'edge'
           ? Effect.die(new Error('A process cannot spawn a remote process.'))
           : this.#spawn(
-              definition,
+              processDefinition(definition),
               {
                 origin,
                 ...options,
@@ -351,6 +447,11 @@ export class Impl implements Manager {
     }
     this.#handles.delete(pid);
     this.#guards.delete(pid);
+    const clearStorage = this.#inMemory.get(pid);
+    this.#inMemory.delete(pid);
+    if (clearStorage) {
+      Effect.runSync(clearStorage);
+    }
     this.#finished.push(handle.snapshotProcessInfo());
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
       this.#finished.shift();
@@ -386,6 +487,10 @@ export class Impl implements Manager {
         }
         this.#handles.clear();
         this.#guards.clear();
+        for (const clearStorage of this.#inMemory.values()) {
+          yield* clearStorage;
+        }
+        this.#inMemory.clear();
         this.#finished.length = 0;
         this.#shutDown = true;
         this.#refreshProcessTree();
@@ -409,10 +514,10 @@ export class Impl implements Manager {
   }
 
   spawn<I, O, _Rpcs extends Rpc.Any>(
-    definition: Operation.Durable<I, O, any, _Rpcs>,
+    definition: Operation.Durable<I, O, any, _Rpcs> | Operation.ScriptDefinition<I, O>,
     options?: Process.SpawnOptions,
   ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
-    return this.#spawn(definition, options, undefined);
+    return this.#spawn(processDefinition(definition), options, undefined);
   }
 
   #spawn<I, O, _Rpcs extends Rpc.Any>(
@@ -433,7 +538,15 @@ export class Impl implements Manager {
       const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
-      const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
+      // A child follows its parent, so a persisted parent still hears back from it after a restart.
+      const persisted =
+        options?.parentProcessId !== undefined
+          ? !this.#inMemory.has(options.parentProcessId)
+          : definition.resumable !== false;
+      const storage = storageServiceLayer(persisted ? this.#kvStore : this.#memoryKvStore, `process/${id}/`);
+      if (!persisted) {
+        this.#inMemory.set(id, storage.clear());
+      }
 
       const parentOption = Option.fromNullishOr(options?.parentProcessId);
 
@@ -544,6 +657,13 @@ export class Impl implements Manager {
           Effect.orDie,
         );
       }
+      serviceCtx = Context.merge(
+        serviceCtx,
+        yield* resolveOptional(definition.optionalServices ?? [], resolutionContext).pipe(
+          Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+          Effect.provideService(Scope.Scope, scope),
+        ),
+      );
       markWork('process.services-resolved');
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
@@ -573,13 +693,23 @@ export class Impl implements Manager {
         });
 
       // Persistence adapter bound to this process id.
-      const persistence = {
-        setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
-        setState: (state: Process.State) => this.#store.setState(id, state),
-        removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
-        appendEvent: (event: import('./process-store.ts').PersistedEventInput) => this.#store.appendEvent(id, event),
-        deleteRecord: () => this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
-      };
+      const persistence = persisted
+        ? {
+            setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
+            setState: (state: Process.State) => this.#store.setState(id, state),
+            removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
+            appendEvent: (event: import('./process-store.ts').PersistedEventInput) =>
+              this.#store.appendEvent(id, event),
+            deleteRecord: () =>
+              this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
+          }
+        : {
+            setAlarm: () => Effect.void,
+            setState: () => Effect.void,
+            removeEvent: () => Effect.void,
+            appendEvent: () => Effect.succeed(0),
+            deleteRecord: () => Effect.sync(() => this.#release(id)),
+          };
 
       // Operation.makeDurable spreads opts into the definition object at runtime; cast is safe at this boundary.
       const defRaw = definition as unknown as { input: Schema.Codec<I, any, never> };
@@ -619,7 +749,8 @@ export class Impl implements Manager {
         () => this.#terminateChildren(id),
         persistence,
         false,
-        encodeInput,
+        // Encoded only to be stored, so a process kept in memory hands its input straight through.
+        persisted ? encodeInput : undefined,
         undefined,
         cancellation,
       );
@@ -634,18 +765,20 @@ export class Impl implements Manager {
       // rather than a put and a read-modify-write, since each is an IndexedDB round trip on the
       // turn's critical path. The seq is passed to runOnSpawn so it's removed when the handler settles.
       const spawnSeq = 1;
-      yield* this.#store.putProcess({
-        id,
-        key: definition.key,
-        params: { name: params.name ?? null, annotations: params.annotations },
-        environment: { space: environment.space, conversation: environment.conversation },
-        parentId: Option.getOrNull(parentOption),
-        ...(origin !== undefined ? { origin } : {}),
-        state: Process.State.RUNNING,
-        alarmDueAt: null,
-        events: [{ _tag: 'spawn', seq: spawnSeq }],
-      });
-      markWork('process.persisted');
+      if (persisted) {
+        yield* this.#store.putProcess({
+          id,
+          key: definition.key,
+          params: { name: params.name ?? null, annotations: params.annotations },
+          environment: { space: environment.space, conversation: environment.conversation },
+          parentId: Option.getOrNull(parentOption),
+          ...(origin !== undefined ? { origin } : {}),
+          state: Process.State.RUNNING,
+          alarmDueAt: null,
+          events: [{ _tag: 'spawn', seq: spawnSeq }],
+        });
+        markWork('process.persisted');
+      }
       yield* handle.runOnSpawn(spawnSeq);
       markWork('process.started');
       log('lifecycle: started', { pid: id, key: definition.key });
@@ -757,6 +890,13 @@ export class Impl implements Manager {
           Effect.orDie,
         );
       }
+      serviceCtx = Context.merge(
+        serviceCtx,
+        yield* resolveOptional(definition.optionalServices ?? [], resolutionContext).pipe(
+          Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+          Effect.provideService(Scope.Scope, scope),
+        ),
+      );
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
       const handler = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));

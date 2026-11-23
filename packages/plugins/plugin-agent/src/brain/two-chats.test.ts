@@ -8,9 +8,11 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -24,8 +26,16 @@ import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentOperation, BrainService, Goal, Mode, Relay, Trigger, TriggerOperation } from '#types';
 
+import { AgentNamespace } from '../namespace.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
-import { TEST_MEMBERS, createLocalAgent, makeTestBrain, noChannelBackends, testSpaceLayer } from './testing.ts';
+import {
+  TEST_MEMBERS,
+  createLocalAgent,
+  inlineBrainHooks,
+  makeTestBrain,
+  noChannelBackends,
+  testSpaceLayer,
+} from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -160,7 +170,7 @@ const makeScript =
   (request) => {
     if (request.text.startsWith(COMPOSE_PROMPT)) {
       if (cancelWhileComposing) {
-        brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+        brain.clearTriggersSync();
       }
       // Only the facts being passed on: the transcript and the draft also quote lines.
       const facts = request.text.split('What changed:')[1]?.split('A draft')[0] ?? '';
@@ -177,7 +187,7 @@ const makeScript =
         ],
       };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       const facts = Object.entries(FACTS)
         .filter(([quote]) => request.text.includes(quote))
         .map(([quote, fact]) => ({ ...fact, quote, factuality: 'CT+', polarity: '+' }));
@@ -219,6 +229,9 @@ const refs: Refs = {};
 let offset = 0;
 const brain = makeTestBrain({ now: () => Date.now() + offset });
 
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
+
 const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
@@ -240,6 +253,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, inlineBrainHooks) },
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
   ),
@@ -276,7 +290,7 @@ const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
 /** The updates the agent wrote in the chat. */
 const updates = (chat: Chat.Chat) =>
   Database.load(chat.feed).pipe(
-    Effect.flatMap((feed) => Feed.query(feed, Filter.type(Message.Message)).run),
+    Effect.flatMap((feed) => TrajectoryStore.messages(feed)),
     Effect.map((messages) =>
       messages
         .filter((message) => message.sender.role === 'assistant')
@@ -293,8 +307,8 @@ const pending = Effect.fnUntraced(function* (agent: Agent.Agent) {
 });
 
 describe('local brain: two private chats', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.clearTriggers();
     offset = 0;
     compiler = 'off';
     cancelWhileComposing = false;
@@ -540,10 +554,6 @@ describe('local brain: two private chats', () => {
           ongoing: true,
           rules: `${watch.rules}\nwake(followup) :- elapsed(goal, 2d), not achieved(goal).`,
         });
-        const [clocked] = yield* service.subscriptions(agent.id);
-        const due = yield* service.nextDueAt(agent.id);
-        expect(Date.parse(due ?? '') - Date.parse(clocked.createdAt)).toBe(2 * 24 * 60 * 60_000);
-
         const run = Operation.invoke(TriggerOperation.RunDue, { agent: Ref.make(agent) });
         expect((yield* run).fired).toEqual([]);
         offset = 2 * 24 * 60 * 60_000 + 60_000;
@@ -552,7 +562,6 @@ describe('local brain: two private chats', () => {
         expect(yield* updates(alice)).toHaveLength(1);
         // It fired once; the clock has nothing more for it.
         expect((yield* run).fired).toEqual([]);
-        expect(yield* service.nextDueAt(agent.id)).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

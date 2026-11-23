@@ -1,0 +1,431 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-script/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ScriptPlugin
+
+The editor, the create flow and the skill are built. `Script` (from `@dxos/compute`) is registered.
+The navtree creates it through `CreateScript`, seeded from the first template, a chosen template
+or a Gist. `ScriptArticle` runs a TypeScript CodeMirror editor bound to the source `Text` with the
+configured input mode. The Execute and Logs companions are in the app graph. The `org.dxos.skill.script`
+skill carries all nine operations with handlers.
+
+The UI deploy and invoke paths diverge from the spec. The toolbar Deploy button deploys directly
+through `deployScript` and shows a generic error item and a copy-link action. It never opens
+`DeploymentDialog`, which only creates and deploys template scripts after a token is added, and
+nothing in the repo opens it. The Execute panel is a free-text JSON input with a TODO to become a
+schema form, and it calls `FunctionsServiceClient.invoke` rather than `op:invoke`. The skill ops
+take a `PersistentOperation` ref, not a `Script` ref, and `installFunction` creates a
+`PersistentOperation`, not a Script. `Notebook` holds inline typed cells (`markdown`, `script`,
+`query`, `prompt`, `view`) with `Text` sources, not linked Scripts. The schema module does not
+register it.
+
+Testing is thin. `plugin.test.ts` checks module activation. The compiler and notebook-parser tests
+cover internals. The two deploy e2e suites are `describe.skip`. No test invokes a skill op.
+
+Of 56 items: 0 done, 26 untested, 10 partial, 11 diverged, 9 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Script: Script has name and description, but source is a Ref<Text>, not a string, plus a changed flag.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/compute/compute/src/types/Script.ts#Script, github:dxos/dxos/packages/core/compute/compute/src/types/Script.ts#make]
+  note: '`source: Ref.Ref(Text.Text)`; `make` wraps a string in a new `Text`. `changed` tracks edits since the last deploy.'
+```
+
+```mdl
+verdict Notebook: Notebook has a name and an array of inline typed cells, not Script cells.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/types/Notebook.ts#Notebook, github:dxos/dxos/packages/plugins/plugin-script/src/types/Notebook.ts#Cell]
+  note: Cells are `{ id, type, name, source?: Ref<Text>, prompt?, graph? }` structs of type markdown, script, query, prompt or view.
+```
+
+```mdl
+verdict Settings: Settings holds editorInputMode (default, vim or vscode), persisted in a KVS atom.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/settings.ts]
+  note: The modes are `default | vim | vscode`, not emacs, and the field is required with a `vscode` default. No test covers it.
+```
+
+```mdl
+verdict InvocationSpan: The inspect op's span schema has id, timestamp, duration, outcome, input and error.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#InvocationSpanSchema]
+  note: It is a local schema in the op definitions. No test exercises it.
+```
+
+```mdl
+verdict DeployedFunction: The query op's schema has key, name, version, description and updated.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#DeployedFunctionSchema]
+  note: No test exercises it.
+```
+
+```mdl
+verdict ScriptArticle: ScriptArticle shows the toolbar over a TypeScript editor bound to the source Text.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/ScriptArticle/ScriptArticle.tsx#ScriptArticle, github:dxos/dxos/packages/plugins/plugin-script/src/components/TypescriptEditor/TypescriptEditor.tsx#TypescriptEditor]
+  note: The stories have no play test.
+```
+
+```mdl
+verdict NotebookArticle: NotebookArticle renders a stack of typed cells with insert and delete, not ScriptArticle sections.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/NotebookArticle/NotebookArticle.tsx#NotebookArticle, github:dxos/dxos/packages/plugins/plugin-script/src/components/NotebookStack/NotebookStack.tsx#NotebookStack]
+  tests: [github:dxos/dxos/packages/plugins/plugin-script/src/notebook/compute-graph.test.ts]
+  note: Cells render through `NotebookCell` per type and evaluate through a compute graph; there is no reorder. The test covers the dependency graph, not the article.
+```
+
+```mdl
+verdict TestContainer: The Execute panel is a free-text input that invokes the deployed function; it is not a schema form.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/TestContainer/TestContainer.tsx#TestContainer, github:dxos/dxos/packages/plugins/plugin-script/src/components/TestPanel/TestPanel.tsx#TestPanel]
+  note: TestPanel parses JSON-ish text and has a TODO to replace it with a form from the input schema. It calls `FunctionsServiceClient.invoke` directly.
+```
+
+```mdl
+verdict DeploymentDialog: The dialog creates and deploys template scripts for an access token; it takes no Script.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/DeploymentDialog/DeploymentDialog.tsx#DeploymentDialog, github:dxos/dxos/packages/plugins/plugin-script/src/hooks/useCreateAndDeployScriptTemplates.ts#useCreateAndDeployScriptTemplates]
+  note: Its props are `accessToken` and `scriptTemplates`, and it shows toasts. Nothing in the repo opens `DEPLOYMENT_DIALOG`.
+```
+
+```mdl
+verdict ScriptPluginSettings: The settings panel has the input-mode selector and an Authenticate button.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/ScriptSettings/ScriptSettings.tsx#ScriptSettings, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/ScriptSurfaces.tsx#ScriptSettingsSurface]
+  note: The story has no play test.
+```
+
+```mdl
+verdict create: createFunction makes a Script and a PersistentOperation that wraps it, and returns the operation's URI.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#Create, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/create.ts]
+  walkthrough:
+    - The op declares name, optional source and templateId. github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#Create
+    - The handler builds the Script and a PersistentOperation and files it with DefaultParent. github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/create.ts
+  note: There is no Gist input, and a missing source gives an empty string, not the default template. No test invokes it.
+```
+
+```mdl
+verdict read: read returns name, source and description through the function's Script.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#Read, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/read.ts]
+  note: The input is a `PersistentOperation` ref, not a `Script` ref. No test.
+```
+
+```mdl
+verdict update: update applies find/replace edits and optional name and description.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#Update, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/update.ts]
+  note: The input is a `PersistentOperation` ref. No test.
+```
+
+```mdl
+verdict delete: delete removes the function and its source Script.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#Delete, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/delete.ts]
+  note: No test.
+```
+
+```mdl
+verdict deploy: deploy bundles the source and uploads it to EDGE, returning the function id and URL.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#Deploy, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/deploy.ts]
+  walkthrough:
+    - The op declares the function ref and the id/URL output. github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#Deploy
+    - The handler loads the Script, bundles it and uploads through FunctionsServiceClient. github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/deploy.ts
+  note: Failures are a generic `FunctionError` or the bundle error, not typed `CompileError`/`DeploymentFailed`. The e2e suites that deploy are skipped.
+```
+
+```mdl
+verdict invoke: invoke calls the function through FunctionsServiceClient with the payload.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#Invoke, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/invoke.ts]
+  note: There are no `NotDeployed` or `InvocationError` errors; it fails only when the function is not in a space. No test.
+```
+
+```mdl
+verdict inspectInvocations: inspectInvocations reads the space's invocation trace feed and filters spans by function id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#InspectInvocations, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/inspect-invocations.ts]
+  note: The default limit is 20. No test.
+```
+
+```mdl
+verdict queryDeployedFunctions: queryDeployed lists deployed functions from EDGE.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#QueryDeployedFunctions, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/query-deployed-functions.ts]
+  note: No test.
+```
+
+```mdl
+verdict installFunction: install clones the deployed PersistentOperation into the space, not a Script.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts#InstallFunction, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/install-function.ts]
+  note: It finds the latest deployed entry by key, then updates matching local functions or adds a clone. No Script object is created. No test.
+```
+
+```mdl
+verdict createScript: CreateScript seeds the source from the default template, a chosen template or a Gist.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/types/ScriptOperation.ts#CreateScript, github:dxos/dxos/packages/plugins/plugin-script/src/operations/create-script.ts, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/create-object.ts]
+  walkthrough:
+    - The op declares name, gistUrl, initialTemplateId and db. github:dxos/dxos/packages/plugins/plugin-script/src/types/ScriptOperation.ts#CreateScript
+    - The handler picks the source and returns a new Script. github:dxos/dxos/packages/plugins/plugin-script/src/operations/create-script.ts
+    - The create-object entry invokes it and adds the result to the target. github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/create-object.ts
+  note: No test invokes it.
+```
+
+```mdl
+verdict F-1.1: The schema module registers Script.Script.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/schema.ts]
+  note: `plugin.test.ts` checks that the schema module activates, not that Script is in the registry or object lists.
+```
+
+```mdl
+verdict F-1.2: A CreateObjectEntry for Script makes it creatable from the navtree.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/create-object.ts]
+  note: No test creates a Script through the space create flow.
+```
+
+```mdl
+verdict F-1.3: Without a template, the source is the first template.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/operations/create-script.ts]
+  note: `templates[0].source` is the fallback. No test.
+```
+
+```mdl
+verdict F-1.4: A Gist URL is fetched with Octokit and its first file becomes the source.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/operations/create-script.ts]
+  note: No test. A template chosen alongside a Gist overrides it.
+```
+
+```mdl
+verdict F-2.1: ScriptArticle renders the TypeScript editor for the article role.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/ScriptArticle/ScriptArticle.tsx#ScriptArticle, github:dxos/dxos/packages/plugins/plugin-script/src/components/TypescriptEditor/TypescriptEditor.tsx#TypescriptEditor]
+  note: No play test.
+```
+
+```mdl
+verdict F-2.2: The input mode is configurable, but the choices are default, vim and vscode.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/ScriptSurfaces.tsx#ScriptSettingsSurface]
+  note: There is no emacs mode. No test.
+```
+
+```mdl
+verdict F-2.3: The editor writes to the source Text through the data extensions, and marks the Script changed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/ScriptArticle/ScriptArticle.tsx#ScriptArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-2.4: Remote edits arrive through createDataExtensions on the shared Text.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/ScriptArticle/ScriptArticle.tsx#ScriptArticle]
+  note: No two-peer test.
+```
+
+```mdl
+verdict F-3.1: The toolbar Deploy button deploys directly; it does not open DeploymentDialog.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/hooks/deploy.ts#createDeploy, github:dxos/dxos/packages/plugins/plugin-script/src/components/ScriptToolbar/ScriptToolbar.tsx#ScriptToolbar]
+  note: The deploy action calls `deployScript` in place. `DeploymentDialog` is unrelated (see DeploymentDialog).
+```
+
+```mdl
+verdict F-3.2: Deploying compiles and uploads to EDGE, through the deployScript util, not op:deploy.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/hooks/deploy.ts#createDeploy, github:dxos/dxos/packages/plugins/plugin-script/src/util/deploy.ts#deployScript]
+  note: There is no confirmation step. No test; the e2e deploy suites are skipped.
+```
+
+```mdl
+verdict F-3.3: A failed deploy shows a generic "upload failed" toolbar item, not the compile messages.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/hooks/deploy.ts#createDeploy]
+  note: The error is logged with `log.catch` and the toolbar shows `upload-failed.label`. No test.
+```
+
+```mdl
+verdict F-3.4: After deployment the toolbar offers a copy-link action for the function URL; there is no dialog.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/hooks/deploy.ts#createDeploy]
+  note: The URL is copied to the clipboard, not shown in a dialog. No test.
+```
+
+```mdl
+verdict F-4.1: An execute companion node is added to every Script.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/react-surface.ts]
+  note: `plugin.test.ts` checks that the graph builder module activates, not the node.
+```
+
+```mdl
+verdict F-4.2: The panel is a free-text input, not a form from the input schema.
+  status: missing
+  note: `TestPanel.tsx` has a TODO to "Replace with Form based on the function's input schema".
+```
+
+```mdl
+verdict F-4.3: Submitting invokes the function and shows the response, but through FunctionsServiceClient, not op:invoke.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/TestContainer/TestContainer.tsx#TestContainer, github:dxos/dxos/packages/plugins/plugin-script/src/components/TestPanel/TestPanel.tsx#TestPanel]
+  note: No test.
+```
+
+```mdl
+verdict F-4.4: A logs companion renders InvocationTraceContainer.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/ScriptSurfaces.tsx#ScriptLogsSurface]
+  note: No test.
+```
+
+```mdl
+verdict F-5.1: The skill org.dxos.skill.script is contributed as a SkillDefinition.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/ScriptSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/skill-definition.ts]
+  note: `plugin.test.ts` does not query the skill.
+```
+
+```mdl
+verdict F-5.2: The skill's tools are the nine listed operations.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/ScriptSkill.ts#make]
+  note: No test queries the tool set.
+```
+
+```mdl
+verdict F-5.3: The instructions describe the Operation pattern, the default export and the packages.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/ScriptSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-script/src/skills/functions/definitions.ts]
+  note: The definitions file holds the example and the package list the instructions use. No eval.
+```
+
+```mdl
+verdict F-5.4: The skill sets agentCanEnable.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/skills/ScriptSkill.ts#make]
+  note: No test.
+```
+
+```mdl
+verdict F-6.1: Notebook has a create entry but is not in the schema module.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/schema.ts]
+  note: '`schema.ts` exports `[Script.Script]` only; the create entry calls `Notebook.make({ name })`. No test.'
+```
+
+```mdl
+verdict F-6.2: Cells are inline typed cells with Text sources, not linked Scripts.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/types/Notebook.ts#Cell, github:dxos/dxos/packages/plugins/plugin-script/src/components/NotebookStack/NotebookStack.tsx#NotebookStack]
+  note: A script cell is evaluated by the notebook compute graph rather than rendered as a ScriptArticle.
+```
+
+```mdl
+verdict F-6.3: Cells can be inserted and deleted from the cell menu.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/containers/NotebookArticle/NotebookArticle.tsx#NotebookArticle, github:dxos/dxos/packages/plugins/plugin-script/src/components/NotebookStack/NotebookMenu.tsx#NotebookMenu]
+  note: No test.
+```
+
+```mdl
+verdict F-7.1: ScriptSettingsSurface renders the settings panel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/ScriptSurfaces.tsx#ScriptSettingsSurface, github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/react-surface.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-7.2: The input mode is persisted in a KVS settings atom.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/settings.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-7.3: Authenticate invokes GrantServiceAccess for the hub; it does not check the token.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-script/src/capabilities/ScriptSurfaces.tsx#ScriptSettingsSurface]
+  note: It grants `composer:beta` service access. A TODO says the token is not checked. No test.
+```
+
+```mdl
+verdict T-1: No test creates a Script from the default template.
+  status: missing
+  note: Searched plugin-script tests and stories.
+```
+
+```mdl
+verdict T-2: No test creates a Script from a Gist.
+  status: missing
+  note: Searched plugin-script tests and stories.
+```
+
+```mdl
+verdict T-3: No test edits and reopens a Script.
+  status: missing
+  note: Searched plugin-script tests and stories.
+```
+
+```mdl
+verdict T-4: The deploy e2e suite deploys templates through the util, and it is skipped; no test drives the dialog.
+  status: diverged
+  tests: [github:dxos/dxos/packages/plugins/plugin-script/src/e2e/deploy.test.ts]
+  note: '`describe.skip` with tag `functions-e2e`; it deploys FOREX through `deployScript`, not through a dialog.'
+```
+
+```mdl
+verdict T-5: The skipped ai e2e suite deploys and invokes a function; no test uses the Execute companion.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-script/src/e2e/ai.test.ts]
+  note: '`describe.skip`; it calls the client directly, not TestContainer.'
+```
+
+```mdl
+verdict T-6: No test opens the Logs companion or reads invocation spans.
+  status: missing
+  note: Searched plugin-script tests.
+```
+
+```mdl
+verdict T-7: No test queries the skill definition for its tools.
+  status: missing
+  note: `plugin.test.ts` checks module activation only.
+```
+
+```mdl
+verdict T-8: No test runs create, deploy and invoke through the skill ops.
+  status: missing
+  note: Searched plugin-script and assistant-evals.
+```
+
+```mdl
+verdict T-9: No test runs queryDeployed and install.
+  status: missing
+  note: Searched plugin-script tests.
+```
+
+```mdl
+verdict QA-1: Manual QA only; no automation runs the create, edit, deploy and invoke round trip.
+  status: missing
+  note: The QA test is unverified. The closest automation, the e2e suites, is skipped.
+```

@@ -9,11 +9,11 @@ import * as Struct from 'effect/Struct';
 import * as Capability from '@dxos/app-framework/Capability';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
+import { RegistryNamespace } from './namespace.ts';
 
 // A surface id is data, not UI: the app-graph builder reaches it from the headless barrel, so it
 // cannot live in the dialog component's module without dragging React in behind it.
-export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.profile.key}.loadPluginDialog`);
+export const LOAD_PLUGIN_DIALOG = DXN.make(`${RegistryNamespace.key}.loadPluginDialog`);
 
 export type RegistryPluginOptions = {
   /**
@@ -47,7 +47,7 @@ export type RegistrySettings = Schema.Schema.Type<typeof RegistrySettingsSchema>
  */
 export namespace RegistryCapabilities {
   export const Settings = Capability.makeSingleton<Atom.Writable<RegistrySettings>>()(
-    `${meta.profile.key}.capability.settings`,
+    `${RegistryNamespace.key}.capability.settings`,
   );
 }
 

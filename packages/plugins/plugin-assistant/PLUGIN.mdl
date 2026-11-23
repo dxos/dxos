@@ -225,6 +225,7 @@ op ToggleTracePanelDebug
 
 ```mdl
 feat F-1: AI Chat
+  uses: [Chat]
 
   req F-1.1: User can create a new Chat object in any space.
   req F-1.2: User can type a message and receive a streamed AI response.
@@ -236,6 +237,7 @@ feat F-1: AI Chat
 
 ```mdl
 feat F-2: Companion Chat
+  uses: [Chat, EnsureCompanionChat]
 
   req F-2.1:
     when: user opens an object that supports companions
@@ -252,6 +254,7 @@ feat F-2: Companion Chat
 
 ```mdl
 feat F-3: Skill System
+  uses: [RunPromptInNewChat]
 
   req F-3.1: Skills define named AI configurations (instructions, tools, model).
   req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager.
@@ -263,6 +266,7 @@ feat F-3: Skill System
 
 ```mdl
 feat F-4: Multi-Provider LLM
+  uses: [Settings]
 
   req F-4.1: Supported providers: DXOS Edge (remote), Ollama (local), LM Studio (local).
   req F-4.2: User can configure the active provider and per-provider default model in Settings.
@@ -273,6 +277,7 @@ feat F-4: Multi-Provider LLM
 
 ```mdl
 feat F-5: Tool Execution
+  uses: [Settings]
 
   req F-5.1: The assistant skill exposes LayoutOperation.Open and NavigationOperation.ResolveNavigationTargets
              as tools. Both are owned elsewhere — the assistant contributes no navigation operation of its
@@ -291,6 +296,7 @@ feat F-5: Tool Execution
 
 ```mdl
 feat F-6: ECHO Integration
+  uses: [Chat, Message, OnCreateSpace]
 
   req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
   req F-6.2:
@@ -301,6 +307,7 @@ feat F-6: ECHO Integration
 
 ```mdl
 feat F-7: Execution Trace
+  uses: [ToggleTracePanelDebug, TracePanel]
 
   req F-7.1: Every AI operation produces a structured span tree captured in the TracePanel.
   req F-7.2: User can toggle between commit-graph and raw JSON views via op:ToggleTracePanelDebug.
@@ -308,6 +315,7 @@ feat F-7: Execution Trace
 
 ```mdl
 feat F-8: Agent Struggle Reports
+  uses: [AnalyzeTurn, Settings]
 
   req F-8.1: Reporting is opt-in via `Settings.reportStruggles`, off by default, and also requires telemetry to be enabled.
   req F-8.2:
@@ -319,6 +327,35 @@ feat F-8: Agent Struggle Reports
     then: the trajectory is uploaded to the feedback-logs bucket under `trajectories/` and an `agent_struggle` event is captured
           carrying the cause, model DXN, code mode, and enabled skills
   req F-8.4: A review that fails is logged and dropped; it never surfaces to the user.
+```
+
+```mdl
+feat F-9: Token Labels
+  uses: [Settings]
+
+  req F-9.1: Labels are opt-in via `Settings.showTokens`, off by default.
+  req F-9.2:
+    when: labels are on
+    then: each block of the thread (a prompt, a paragraph of the answer, a tool run) shows its estimated token count in
+          a gutter beside it, level with its first line
+  req F-9.3: The count is an estimate (tokenx, the estimator the preprocessor budgets with), since per-request usage covers a whole turn and cannot be attributed to one block; status and stats blocks count zero.
+```
+
+```mdl
+feat F-10: Read-only Host
+  uses: [Chat, ChatPanel, EnsureCompanionChat]
+
+  req F-10.1:
+    when: the host contributes `ReadOnly`
+    then: a chat opens as its transcript, with no prompt, toolbar, rewind, fork or withdraw, and a question in it shows
+          without a way to answer
+  req F-10.2:
+    when: the host contributes `ReadOnly`
+    then: the navtree keeps the AI group and its chats, with no action to create or delete one, and nothing offers the
+          companion chat, the chat dialog, agents, slash commands or the trace panel
+  req F-10.3:
+    when: the host contributes `ReadOnly`
+    then: nothing sends an AI request to EDGE, runs or resumes an agent turn, or provisions a companion chat
 ```
 
 ## Acceptance
@@ -504,7 +541,9 @@ test QA-3: The prompt carries context, commands and the agent's settings
     - name: Remove an object from context
       do: Click the x beside Rich Burdon in the context drawer.
       expect: Rich Burdon leaves Context; the message that mentioned them is unchanged
+```
 
+```mdl
 test QA-4: A chat's MCP servers come from connections and built-in servers
   desc: |
     MCP tools reach a chat from two places: the built-in servers plugins ship (Browser), which start
@@ -542,6 +581,59 @@ test QA-4: A chat's MCP servers come from connections and built-in servers
       expect: it shows unchecked here, while it stays listed in the space's Connections
 ```
 
+```mdl
+test QA-5: A working agent marks its chat and its companion's subject in the navtree
+  desc: |
+    While an agent process runs for a chat, the chat's navtree row shows the agent star in its
+    attention glyph: a sparkle in the text colour that pulses in place of the presence dots (still,
+    under reduced motion). A companion chat marks the object it is a companion to instead, so a
+    document shows that the assistant is working on it. The star stays while you look at something
+    else and clears when the turn ends.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - chat: a chat "Trip ideas" in the space, open in a plank
+    - subject: a document "Launch plan" in the space
+  steps:
+    - name: The chat's row shows the agent star
+      do: In "Trip ideas", send a prompt that takes the agent several seconds to answer.
+      expect: the chat's navtree glyph shows the agent star while the agent works
+    - name: The star stays while you look elsewhere
+      do: Open "Launch plan" from the navtree and hover the chat's glyph.
+      expect: the chat's row keeps the star; its tooltip reads "Assistant is working"; the star
+        clears when the reply finishes
+    - name: The companion's subject shows the agent star
+      do: Open the companion's Assistant tab on "Launch plan" and send a prompt about the document.
+      expect: the document's navtree glyph shows the agent star
+    - name: The subject keeps the star while you look elsewhere
+      do: Open "Trip ideas" from the navtree and hover the document's glyph.
+      expect: the document's row keeps the star; its tooltip reads "Assistant is working on this";
+        the star clears when the reply finishes
+```
+
+
+```mdl
+test QA-6: Token labels beside each block
+  desc: The opt-in gutter that shows the estimated token count of each block in the thread.
+  actors: human
+  covers: [F-9.1, F-9.2, F-9.3]
+  status: unverified
+  given:
+    - a chat thread with prompts, answers and a tool run
+  steps:
+    - name: Labels are off by default
+      do: Open the chat with `showTokens` unset.
+      expect: no token labels; the blocks use the full width of the column
+    - name: Turn the labels on
+      do: Turn on "Show token counts" in the assistant settings.
+      expect: a muted count shows in a right-hand gutter beside every prompt, answer paragraph and tool run, level
+        with its first line
+    - name: Labels follow a streaming turn
+      do: Send a prompt and let the answer stream.
+      expect: each block of the answer gets its label as it arrives, and the labels never move a row
+```
 
 ## Changelog
 
@@ -695,6 +787,124 @@ decision D-18: Code mode is the default turn engine; the setting becomes `disabl
   date: 2026-10-23
   by: user:dmaretskyi
   affects: [F-5.4, F-5.5]
+```
+
+```mdl
+decision D-19: A running agent shows on the navtree as the agent star in the attention glyph's mark, in place of presence, on its chat's row and, for a companion chat, on the row of the object it is a companion to. It reaches the glyph through the progress registry.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-5]
+```
+
+```mdl
+decision D-20: An agent turn reports its progress as trace status updates from the runtime it runs on, not through a capability of its own, so a turn in a cloud session shows as well.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [QA-5]
+```
+
+```mdl
+decision D-21: Each turn sends a status update keyed `<uri>#agent` on the chat and on a companion chat's subject when it starts, every 30 seconds while it runs, and with its outcome when it ends; the progress trace sink makes it a monitor, and plugin-space's glyph draws running progress as the star. Both agents (the assistant and Claude Code) wrap their turns in the same helper. Fills in [D-19] and [D-20].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-5]
+  why: A turn's own trace reaches the progress registry wherever it runs (the local sink, or swarm broadcasts from EDGE), so nothing in the app has to watch for agents. The sink fails a meter that hears nothing for 90 seconds, which a long model call can outlast, hence the heartbeat. The star says an agent is on it, where an outline only says something is busy. One treatment on both rows keeps it consistent.
+  rejected:
+    - Project busy chats from the process tree in plugin-assistant: a second source beside the trace for the same signal, tied to the app watching processes.
+    - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
+    - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
+    - An `ActivitySource` capability the glyph merges: a second channel beside the progress registry for the same signal.
+```
+
+```mdl
+decision D-22: The thread can show the estimated token count of each block in a gutter beside it, opt-in via `Settings.showTokens`. The count is estimated per block, since provider usage covers a whole request.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [F-9.1, F-9.2, F-9.3, QA-6]
+```
+
+```mdl
+decision D-23: plugin-assistant's operations must not require an atom registry; EDGE hosts do not provide one.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+```
+
+```mdl
+decision D-24: CreateChat, BindChatContext and RunPromptInNewChat pass the atom registry to the context binder only when one is contributed; without one the binder uses a registry of its own. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+  why: The registry only carries the binder's atoms to UI subscribers, and a headless host has none.
+  rejected:
+    - Contribute an atom registry on the EDGE hosts: the registry is a UI concept, and [D-23] keeps it off them.
+```
+
+```mdl
+decision D-25: GenerateHomeSuggestions reads and writes its suggestions cache only when both the atom registry and the cache are contributed; without them it generates prompts on every call. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The cache is per-client UI state, so a host without it has nothing to reuse.
+```
+
+```mdl
+decision D-26: RunPromptInNewChat binds context through the database it is given rather than looking the space up through the client. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RunPromptInNewChat]
+  why: EDGE hosts contribute no client either, and the handler already provides that database.
+```
+
+```mdl
+decision D-27: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-10]
+```
+
+```mdl
+decision D-28: In read-only mode chats can be opened and read, with no companion, no editing and no interaction with chat history.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-10]
+```
+
+```mdl
+decision D-29: plugin-assistant reads `ReadOnly` when the work runs, never when a module activates: surfaces through `useReadOnly`, app-graph extensions through the capability's atom, and background work through the capability manager. Every module still activates, and only the work it would do is gated. Fills in [D-27].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: The host may contribute the capability after the plugin activates, so a module that read it once would keep the wrong answer.
+  rejected:
+    - Make the gated modules require `ReadOnly`, or drop them from the module list: that only adds modules, it cannot remove the ones a writable host needs.
+```
+
+```mdl
+decision D-30: A read-only chat renders from its feed with the same thread component as a writable one, with no prompt or toolbar. Its chat model never adopts the agent process, the thread's event handlers drop rewind, fork, withdraw, respond and submit, and a question card shows the question and any answer with no way to answer. Fills in [D-28].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: The transcript then looks as it does in the app, forks included, and nothing a reader clicks can write to the feed.
+  rejected:
+    - A separate read-only transcript built on the feed alone: it would duplicate how the thread groups messages, lanes and forks.
+    - Hide question cards: the question and its answer are part of the conversation a reader came to see.
+```
+
+```mdl
+decision D-31: The navtree keeps the AI group and the Chats section with no create or delete action. Every surface that prompts, edits, configures or runs an agent renders nothing, agent articles included. The EDGE AI client refuses to start, and the agent hydrator, question resumer, companion provisioner, comment-agent runner, MCP server registry and the markdown Run button each do nothing. Fills in [D-28].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-10]
+  why: A read-only host shows a space its reader cannot edit, and an agent turn or AI request would act in it.
+  rejected:
+    - Unregister the operations, skills and slash commands: nothing a read-only host shows can invoke them, and the EDGE client check stops any that would call a model.
 ```
 
 ---

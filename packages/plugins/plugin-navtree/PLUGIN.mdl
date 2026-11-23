@@ -20,6 +20,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -167,6 +168,7 @@ op expose
 
 ```mdl
 feat F-1: Sidebar Navigation
+  uses: [NavTree]
 
   req F-1.1: NavTree renders all root-level graph connections as workspace tabs.
   req F-1.2:
@@ -178,10 +180,13 @@ feat F-1: Sidebar Navigation
   req F-1.4:
     when: same active tab is clicked while sidebar is expanded
     then: sidebar collapses (state transitions to collapsed or closed on mobile)
+  req F-1.5: On a read-only host, the workspace rail (L0) is not shown and the tree takes the sidebar's full width.
+  req F-1.6: On a read-only host, the command search in the top bar is not shown.
 ```
 
 ```mdl
 feat F-2: Tree Expand / Collapse
+  uses: [expose]
 
   req F-2.1: Tree items with children show an expand/collapse toggle.
   req F-2.2:
@@ -218,6 +223,7 @@ feat F-3: Item Selection
 
 ```mdl
 feat F-4: Drag and Drop
+  uses: [NavTree]
 
   req F-4.1: NavTree items can be dragged to rearrange within the same parent.
   req F-4.2: NavTree items can be dragged to a different parent, moving within a shared move scope and linking elsewhere when the target accepts links.
@@ -240,6 +246,7 @@ feat F-4: Drag and Drop
 
 ```mdl
 feat F-5: Keyboard Shortcuts
+  uses: [NavTree]
 
   req F-5.1: NavTree plugin registers keyboard shortcuts for all graph actions that declare a keyBinding property.
   req F-5.2: Graph is traversed on change (debounced 500 ms) to bind newly added shortcuts.
@@ -383,6 +390,48 @@ test QA-1: Expose a nested document and select it
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: A host can show the navigation tree without the workspace rail.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-2: A `rail` plugin option, on by default, controls the rail. Fills in [D-1].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: Hosts that show one space have nothing to switch between.
+```
+
+```mdl
+decision D-3: On a read-only host, the top bar has no command search.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-1.6]
+```
+
+```mdl
+decision D-4: The rail follows `AppCapabilities.ReadOnly`, with no navtree option: a read-only host has no rail.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-2
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-5: The layout watches the ReadOnly atom to drop the rail's width, instead of requiring the capability. Fills in [D-4].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: A module that requires a capability no plugin provides is a startup error, and Composer never provides ReadOnly.
+```
 
 ## Appendix: Extension Definitions
 

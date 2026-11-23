@@ -22,13 +22,16 @@ feat F-1: Bring your own key
   req F-1.1: A connector for source `typesafe.ai` takes an API key pasted by the user.
   req F-1.2: The key is stored as an AccessToken plus a Connection, resolvable by CredentialsService.
   req F-1.3: A blank or whitespace-only key fails inline, leaving the dialog open with the reason.
+```
 
+```mdl
 feat F-2: Decision model in the space
 
   req F-2.1: An AiModelResolver serves `ai.typesafe.model.jev.latest` via AiService.decisionModel in every space.
   req F-2.2: The key is read per call, so connecting or disconnecting takes effect on the next question.
   req F-2.3: With the endpoint override set and no key connected, the decision fails with an AiError (AuthenticationError, MissingKey), never a defect.
   req F-2.4: Unless overridden, calls go through EDGE `/ai/generate/typesafe`: with no key connected EDGE answers on the platform key, and a connected key rides as `X-BYOK`.
+  req F-2.5: With the plugin enabled, `Model.defaultDecisionModel` resolves to the **Default decision model** setting, and to Cloudflare's Clef on Workers AI (through EDGE `/ai/generate/workers-ai/typesafe`) when the setting is unset; without it the assistant's keyless fallback serves Clef.
 ```
 
 ## Acceptance
@@ -38,12 +41,16 @@ scenario T-1: A pasted key reaches the model
   given: a space with no TypeSafe connection
   when: the user pastes a valid API key into the TypeSafe connector
   then: an operation asking AiService.decisionModel resolves and answers
+```
 
+```mdl
 scenario T-2: No key answers through EDGE on the platform key
   given: a space with no TypeSafe connection and no endpoint override
   when: an operation asking AiService.decisionModel runs
   then: the call reaches EDGE `/ai/generate/typesafe` without `X-BYOK` and answers
+```
 
+```mdl
 scenario T-3: A direct endpoint with no key is a failed decision, not a crash
   given: a space with no TypeSafe connection and the endpoint override set
   when: an operation asking AiService.decisionModel runs
@@ -64,7 +71,7 @@ test QA-1: Connect TypeSafe and label a mailbox
   given:
     - an identity exists
     - space: a space is open with a synced mailbox
-    - plugin-typesafe and plugin-labeler are enabled
+    - plugin-typesafe is enabled
     - key: a TypeSafe API key from https://docs.typesafe.ai/quickstart
     - no TypeSafe connection exists in this space — ABORT rather than removing one
   steps:
@@ -80,4 +87,22 @@ test QA-1: Connect TypeSafe and label a mailbox
     - name: Use it
       do: Open the mailbox and run "Label messages" from the toolbar menu.
       expect: messages gain tags — the labelling run does not report a missing credential
+```
+
+## Changelog
+
+```mdl
+decision D-1: The default decision model is Cloudflare's Clef on Workers AI, not jev on TypeSafe's API.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-2.5]
+  why: Clef runs on EDGE's own Cloudflare account, so every signed-in user gets an answer with no key, in about 0.3 s; jev on Workers AI returned 502 on preview.
+```
+
+```mdl
+decision D-2: The keyless Cloudflare models (Clef, Clef Flash, jev on Workers AI, the default decision model and Clairic) are served by the assistant without this plugin; enabled, this plugin's settings override them. Fills in [D-1].
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-2.5]
+  why: Inbox triage asks for the default decision model on a default install, where this opt-in plugin is off, and failed with AiModelNotAvailableError.
 ```

@@ -16,7 +16,8 @@ const config = defineConfig({
   // delegation turn, 180s for the checklist and 30s for the fold-backs. At 120s vitest killed the
   // test inside the checklist wait whenever the drain ran long, which reads as an unexplained
   // timeout rather than as the bound it actually is.
-  test: { node: { environment: 'jsdom' }, storybook: { timeout: 330_000 } },
+  // One module graph for every story file: re-instantiating the WASM crypto per file exhausts chromium's Wasm memory.
+  test: { node: { environment: 'jsdom' }, storybook: { timeout: 330_000, isolate: false } },
 });
 
 /**

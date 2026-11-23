@@ -230,13 +230,14 @@ const checklist = Scorer.shared(
     const delegated = DELEGATED_STAGES.map((title) => tasks.find((candidate) => candidate?.title === title));
     return {
       delegated,
-      readerSteps: tasks.filter((candidate) => candidate?.assignee?.role === 'user'),
+      readerSteps: tasks.filter((candidate) => candidate && Task.worker(candidate)?.role === 'user'),
       later: tasks.filter((candidate) => {
         const parentTask = candidate ? Task.getParentTask(candidate) : undefined;
+        const worker = candidate && Task.worker(candidate);
         return (
           parentTask !== undefined &&
-          candidate?.assignee?.role !== 'assistant' &&
-          candidate?.assignee?.role !== 'user' &&
+          worker?.role !== 'assistant' &&
+          worker?.role !== 'user' &&
           !DELEGATED_STAGES.includes(candidate?.title ?? '') &&
           !delegated.some((stage) => stage && parentTask.id === stage.id)
         );
@@ -323,7 +324,6 @@ const SCORERS = [
   Scorer.make({
     name: 'delegated-stages-in-review',
     description: 'Every stage the session was given is in review (or done) when it finishes.',
-    // `done` past a named reviewer lands as `review`; either means the session finished the stage.
     // The denominator is the stages it was given, so renaming one away cannot raise the score.
     score: checklist.pipe(
       Effect.map(
@@ -437,8 +437,8 @@ const task = createEvalRunner({
       for (const stage of stages) {
         Task.setStatus(stage, 'started', { actor: REVIEWER });
         Obj.update(stage, (stage) => {
-          stage.assignee = { role: 'assistant' };
-          stage.reviewers = [REVIEWER];
+          stage.assignee = { ...REVIEWER };
+          stage.delegate = { role: 'assistant' };
         });
       }
       yield* Database.flush();

@@ -11,6 +11,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Shape, solveGrids } from '@dxos/scene';
+
 import * as Layout from './layout.ts';
 import * as Scene from './scene.ts';
 
@@ -90,7 +92,7 @@ export type Options = {
   maxBends?: number;
 };
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 type Rect = { x: number; y: number; w: number; h: number };
 type Segment = [Point, Point];
 
@@ -103,10 +105,32 @@ const place = (object: Scene.WorldObject, point: Point): Point => {
   return { x: x + point.x * scale, y: y + point.y * scale };
 };
 
-const isBox = (element: Scene.Element): element is Scene.Box =>
+const isBox = (element: Shape.Element): element is Shape.Box =>
   element.kind === 'rect' || element.kind === 'ellipse' || element.kind === 'diamond' || element.kind === 'triangle';
 
-type Node = { ref: string; rect: Rect; text?: string; weight: Scene.Weight };
+type Node = { ref: string; rect: Rect; text?: string; weight: Shape.Weight };
+
+const PLACED_KINDS: readonly string[] = Shape.BoxKind.literals;
+const isPlaced = (element: Shape.Element): element is Shape.Box => PLACED_KINDS.includes(element.kind);
+
+/**
+ * Each object with the boxes a grid places in the frames the grid gives them. A grid's member states no geometry
+ * of its own, so measured as written it is an empty box at the origin and every label in it fails to fit.
+ */
+const solved = (objects: readonly Scene.WorldObject[]): readonly Scene.WorldObject[] =>
+  objects.map((object) => {
+    const boxes = object.elements.filter(isPlaced);
+    if (!boxes.some((box) => box.parent !== undefined)) {
+      return object;
+    }
+    const frames = solveGrids(boxes);
+    return {
+      ...object,
+      elements: object.elements.map((element) =>
+        isPlaced(element) ? { ...element, ...frames.get(element.id) } : element,
+      ),
+    };
+  });
 
 /** Absolute rects for every closed shape, keyed by scene ref. */
 const nodes = (objects: readonly Scene.WorldObject[]): Node[] =>
@@ -168,7 +192,7 @@ export const labels = (objects: readonly Scene.WorldObject[]): Label[] =>
     }),
   );
 
-/** Absolute rects of every shape an arrow can bind to, keyed `objectId/elementId` as `Scene.resolveRef` spells them. */
+/** Absolute rects of every shape an arrow can bind to, keyed `objectId/elementId` as `Shape.resolveRef` spells them. */
 export const bindTargets = (objects: readonly Scene.WorldObject[]): Map<string, Rect> => {
   const targets = new Map<string, Rect>();
   for (const object of objects) {
@@ -216,10 +240,10 @@ const LOOP = 24;
  */
 export const arrowPoints = (
   object: Scene.WorldObject,
-  arrow: Scene.Arrow,
+  arrow: Shape.Arrow,
   targets: ReadonlyMap<string, Rect>,
 ): Point[] | undefined => {
-  const resolve = (ref?: string) => (ref === undefined ? undefined : targets.get(Scene.resolveRef(ref, object.id)));
+  const resolve = (ref?: string) => (ref === undefined ? undefined : targets.get(Shape.resolveRef(ref, object.id)));
   const [from, to] = [resolve(arrow.from), resolve(arrow.to)];
   if (from && from === to) {
     const [right, top] = [from.x + from.w, from.y];
@@ -537,7 +561,7 @@ const bendCount = ({ points }: { points: readonly Point[] }): number => {
 };
 
 /** Box label type as the SVG renderer sets it, per weight: font size and line advance in scene units. */
-export const LABEL_TYPE: Record<Scene.Weight, { size: number; lineH: number }> = {
+export const LABEL_TYPE: Record<Shape.Weight, { size: number; lineH: number }> = {
   s: { size: 13, lineH: 20 },
   m: { size: 18, lineH: 26 },
   l: { size: 27, lineH: 38 },
@@ -598,7 +622,7 @@ export type LabelLayout = {
  * How the SVG renderer sets a box label: wrapped to the box width, shrunk a little if it still does not
  * fit the height, and ellipsized at the smallest size, so text never spills out of its box.
  */
-export const layoutLabel = (text: string, weight: Scene.Weight, { w, h }: { w: number; h: number }): LabelLayout => {
+export const layoutLabel = (text: string, weight: Shape.Weight, { w, h }: { w: number; h: number }): LabelLayout => {
   const room = { w: Math.max(0, w - LABEL_INSET.x * 2), h: Math.max(0, h - LABEL_INSET.y * 2) };
   const attempts = LABEL_SCALES.map((scale) => {
     const [size, lineH] = [LABEL_TYPE[weight].size * scale, LABEL_TYPE[weight].lineH * scale];
@@ -625,7 +649,8 @@ const labelFits = ({ rect, text, weight }: Node): boolean => !text || !layoutLab
  * Analyzes an emitted scene for layout defects and quality metrics. Pure: the same scene always
  * yields the same report, so the soft metrics can be golden-filed and the hard codes asserted.
  */
-export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }: Options = {}): Report => {
+export const analyze = (written: readonly Scene.WorldObject[], { maxBends = 3 }: Options = {}): Report => {
+  const objects = solved(written);
   const diagnostics: Diagnostic[] = [];
   const allNodes = nodes(objects);
   const allConnectors = connectors(objects, bindTargets(objects));

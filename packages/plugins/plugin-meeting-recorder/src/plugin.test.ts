@@ -7,17 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { MeetingRecorderPlugin } from '#plugin';
+import * as MeetingRecorderPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), MeetingRecorderPlugin()] });
+import { MeetingRecorderNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), MeetingRecorderPlugin.make()] });
+
+const moduleId = (name: string) => `${MeetingRecorderNamespace.key}.module.${name}`;
 
 describe('MeetingRecorderPlugin', () => {
   test('modules activate on the expected events', { timeout: 30_000 }, async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), MeetingRecorderPlugin()],
+      plugins: [ClientPlugin.make({}), MeetingRecorderPlugin.make()],
     });
 
     // The harness's idle trickle fires the plugin start event, which brings up the recorder modules;

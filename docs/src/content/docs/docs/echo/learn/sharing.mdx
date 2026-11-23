@@ -1,0 +1,80 @@
+---
+title: Sharing a space
+description: Invite a second peer to the tutorial app's space and watch both replicas follow each other's edits.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
+
+By the end of this page a second peer will have joined the app's space, and each peer will see the other's edits.
+
+## Background
+
+A second device wants the app's records, and no server decides who may read them. How does it get in? In ECHO, you
+share a space by invitation.
+
+- The **host** is the peer that creates the invitation.
+- The **guest** is the peer that uses the invitation code to find the host and open a secure connection.
+
+An invitation can also ask the guest for an authorization code, which the host passes on by another channel. The
+authorization code proves that the guest received the invitation from the host. Our app leaves it out in step 1, so
+pasting the invitation code is enough.
+
+A **replica** is one peer's full copy of the space's database. Once the guest is in, both peers hold one. Each peer
+reads and writes its own replica, and the replicas exchange changes whenever the peers can reach each other.
+
+A peer that goes offline keeps working, and catches up when it reconnects. [MESH](/docs/mesh/concepts/presence/) is
+what tells the peers who is online.
+
+[Invitations](/docs/halo/concepts/invitations/) explains the handshake in detail.
+
+We write both steps in `Share.tsx`, which draws the toolbar's Invite and Join buttons.
+
+## Steps
+
+<Steps>
+
+1. **Invite a peer.** `space.share` starts an invitation and reports each change to its state. Once the invitation is
+   connecting to the network, its encoded form is the invitation code to send. The **Invite** popover calls
+   `handleOpen` when it opens, and the app copies the code.
+
+   <Snippet file="echo-tutorial/app/Share" region="invite" lang="tsx" />
+
+   `Invitation_AuthMethod.NONE` leaves out the authorization code, so anyone with the invitation code can join while
+   the invitation is open.
+
+   If the code should not be enough on its own, leave out `authMethod`. The invitation then asks for an
+   authorization code, which you send over a different channel.
+
+2. **Join from the other peer.** The guest needs a client that knows the app's types and an identity of its own. The
+   **Join** button passes the pasted code to `joinSpace`, which decodes it and joins.
+
+   <Snippet file="echo-tutorial/app/Share" region="join" lang="tsx" />
+
+   `wait` resolves with the space's id once the invitation succeeds. The space joins the client's list a moment
+   later, so `joinSpace` waits for it there before it returns. From then on, both peers replicate the space.
+
+   <Aside type="caution" title="Reopen the joined space">
+     `openSpace` from [Installation](/docs/echo/learn/installation/) reopens the first space in
+     `client.spaces.get()`, which after a join may be the guest's own empty space. To reopen the space a peer joined,
+     remember its id, as the app does in `localStorage`, and on load open `client.spaces.get(id)` when it is there.
+   </Aside>
+
+</Steps>
+
+## Try it
+
+Two devices run the app side by side, each with a space of its own. Bob's space is empty.
+
+On Alice's device, press **Invite** in the toolbar, which copies a code. On Bob's device, press **Join**, paste the
+code and press **Join** again. Bob's app switches to Alice's space.
+
+Then edit a record on one device and watch the other follow. Switch a device offline, edit on both, then switch it
+back on. The replicas exchange what they missed.
+
+<TutorialEmbed stage="complete" peers={2} />
+
+## What you can do now
+
+You can invite a peer to a space, accept the invitation from a second client, and edit one database from both.

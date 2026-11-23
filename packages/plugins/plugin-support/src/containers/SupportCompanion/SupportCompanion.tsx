@@ -17,6 +17,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { MarkdownView } from '@dxos/react-ui-markdown';
@@ -29,8 +30,9 @@ import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useTours } from '#hooks';
-import { meta } from '#meta';
 import { HelpOperation } from '#types';
+
+import { SupportNamespace } from '../../namespace.ts';
 
 // The surface registration constrains incoming data to
 // `AppSurface.ArticleProps<'help', {}, Obj.Any>` (companion node with
@@ -45,7 +47,8 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const readonly = ToolkitHooks.useReadOnly();
+  const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const { invokePromise } = Hooks.useOperationInvoker();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));
@@ -96,7 +99,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          {tours.map((tour) => (
+          {(readonly ? [] : tours).map((tour) => (
             <Button.Root
               key={tour.id}
               icon='ph--path--regular'
@@ -109,7 +112,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
       </Panel.Header>
       <Panel.Body>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='flex flex-col items-center p-3 gap-3'>
+          <ScrollArea.Viewport classNames='flex flex-col items-center p-trim-md gap-3'>
             {screenshots.length > 0 && (
               <Carousel.Root count={screenshots.length}>
                 <Carousel.PrevTrigger />

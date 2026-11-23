@@ -24,7 +24,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 import * as Chat from '../types/Chat.ts';
 import * as AiContext from './AiContext.ts';
 import { type HarnessControlRpcs } from './harness-control.ts';
-import { SessionStore } from './SessionStore.ts';
+import * as TrajectoryStore from './TrajectoryStore.ts';
 
 export interface Service {
   /** The conversation {@link AiContext.Binder} (Tier A). */
@@ -228,10 +228,7 @@ interface MakeServiceOptions {
 const makeService = ({ feed, chat, runtime, binder, owningHost }: MakeServiceOptions): Service => ({
   binder: Effect.succeed(binder),
   chat,
-  history: Effect.gen(function* () {
-    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    return yield* new SessionStore().reifyHistory(feed, messages);
-  }).pipe(Effect.provide(runtime)),
+  history: TrajectoryStore.history(feed).pipe(Effect.provide(runtime)),
   queryContext: <T extends Obj.Unknown>(filter: Filter.Filter<T>) =>
     Effect.sync(() => {
       const match = Filter.toPredicate(filter);

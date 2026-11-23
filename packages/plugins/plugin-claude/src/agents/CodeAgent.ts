@@ -19,6 +19,7 @@ import { type Client } from '@dxos/client';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { McpServer } from '@dxos/mcp-server';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { toPublicKey } from '@dxos/protocols/buf';
@@ -53,6 +54,10 @@ export type Definition = {
   icon: string;
   /** Agent-specific options every session opens with (ACP `_meta`), given the Composer tools it is offered. */
   sessionMeta?: (composer: ComposerTools) => Record<string, unknown>;
+  /** What a chat can choose for the agent; the model and effort reach `sessionMeta`, the mode the session. */
+  choices?: AssistantCapabilities.AgentChoices;
+  /** The permission mode a chat that chose none runs in. */
+  mode?: (chat: Chat.Chat) => string | undefined;
 };
 
 /** The MCP server a session gets Composer's tools from. */
@@ -60,6 +65,8 @@ export type ComposerTools = {
   server: string;
   /** Tools that only read, which an agent may be let call without asking. */
   readOnlyTools: readonly string[];
+  /** The chat whose session is opening, for the choices it made (`chat.session`). */
+  chat: Chat.Chat;
 };
 
 /** A coding agent, as a plugin contributes it. */
@@ -152,6 +159,18 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
               database: (id) => client.spaces.get(id)?.db,
             }),
             path: `${Protocol.MCP_PATH}/${server}`,
+            // The project skill confirms its space with `whoami` before any write; the chat's space is the only one.
+            whoami: () =>
+              Effect.suspend(() => {
+                const identity = client.halo.identity.get();
+                return identity
+                  ? Effect.succeed({
+                      identityDid: identity.did,
+                      ...(identity.profile?.displayName !== undefined && { displayName: identity.profile.displayName }),
+                      spaces: [McpServer.describeSpace(spaceId, client.spaces.get(spaceId))],
+                    })
+                  : Effect.fail(McpServer.failure('invalid_request', 'Composer has no identity yet.'));
+              }),
           });
           entry = { server, ...mcp };
           served.set(chat.id, entry);
@@ -173,13 +192,18 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
         };
       });
 
+    const sessionMeta = definition.sessionMeta;
     const options: AcpAgent.AgentOptions = {
       id: definition.id,
       sessions,
-      sessionMeta: definition.sessionMeta?.({
-        server: ComposerMcp.SERVER_NAME,
-        readOnlyTools: ComposerMcp.READ_ONLY_TOOLS,
-      }),
+      sessionMeta:
+        sessionMeta &&
+        ((chat) =>
+          sessionMeta({
+            server: ComposerMcp.SERVER_NAME,
+            readOnlyTools: ComposerMcp.READ_ONLY_TOOLS,
+            chat,
+          })),
       connect: (cwd, toolsToken) => {
         const current = helper();
         return current
@@ -223,7 +247,8 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
           Workspace.recordBranch(chat, worktree.branch);
           return worktree.path;
         }),
-      mode: () => settings()?.agentPermissionMode ?? Settings.DEFAULT_AGENT_PERMISSION_MODE,
+      mode: (chat) =>
+        definition.mode?.(chat) ?? settings()?.agentPermissionMode ?? Settings.DEFAULT_AGENT_PERMISSION_MODE,
       tools: (chat) =>
         composerTools(chat).pipe(
           // Composer's tools add to a turn; a turn without them still runs.
@@ -242,6 +267,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
       id: definition.id,
       label: definition.label,
       icon: definition.icon,
+      ...(definition.choices && { choices: definition.choices }),
       availability,
       makeTurnProducer: AcpAgent.makeTurnProducer(options),
       respond: ({ chat, message, requestId, optionId }) =>

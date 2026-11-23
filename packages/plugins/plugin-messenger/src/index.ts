@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as MessengerPlugin from './MessengerPlugin.ts';
+export * as MessengerPlugin from '#meta';
 export * from '#types';

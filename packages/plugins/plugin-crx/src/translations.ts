@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { CrxNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [CrxNamespace.key]: {
         'plugin.name': 'Browser Extension',
         'settings.description':
           'Install the browser extension from the [Chrome Web Store](https://chromewebstore.google.com/detail/composer/ahkmmpagcinoehpnmdhoiohmmbikhnmj?pli=1).',

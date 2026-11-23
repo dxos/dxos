@@ -4,17 +4,21 @@
 
 import { describe, test } from 'vitest';
 
+import { type Layer } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
-import { reduceIntent } from '../engine/index.ts';
-import { type Layer, type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
+import { reorderElement, updateElement } from './edits.ts';
 import {
   DEFAULT_LAYER,
   createLayer,
   elementLayer,
   layerOrder,
-  mergeLayersIntent,
+  mergeLayers,
   moveLayer,
   pinLayers,
+  putLayer,
+  removeLayer,
   viewLayers,
   visibleView,
 } from './layers.ts';
@@ -31,10 +35,10 @@ describe('layers', () => {
   ]).build();
 
   /** The base scene with a second layer above, holding `b`. */
-  const layered = (): View => {
+  const layered = (): RenderList2D => {
     const top: Layer = { id: 'top', name: 'Top', z: between(DEFAULT_LAYER.z) };
-    const scene = reduceIntent(base, { kind: 'layer', layer: top });
-    return reduceIntent(scene, { kind: 'update', id: 'b', values: { layer: 'top' } });
+    const scene = putLayer(top)(base);
+    return updateElement('b', { layer: 'top' })(scene);
   };
 
   test('a scene with no layers has one, and every element is on it', ({ expect }) => {
@@ -45,13 +49,13 @@ describe('layers', () => {
   test('a new layer goes below the others', ({ expect }) => {
     const scene = layered();
     const layer = createLayer(scene, 'new');
-    const added = reduceIntent(scene, { kind: 'layer', layer });
+    const added = putLayer(layer)(scene);
     expect(layer.name).toBe('Layer 3');
     expect(viewLayers(added).map((layer) => layer.id)).toEqual(['new', DEFAULT_LAYER.id, 'top']);
   });
 
   /** The base scene as a drawing saved before layers: no layers, and no element naming one. */
-  const legacy = (): View => {
+  const legacy = (): RenderList2D => {
     const { layers: _, ...scene } = base;
     return {
       ...scene,
@@ -62,7 +66,7 @@ describe('layers', () => {
 
   test('adding a layer below keeps elements that name no layer where they were drawn', ({ expect }) => {
     const below = createLayer(legacy(), 'below');
-    const scene = reduceIntent(legacy(), { kind: 'layer', layer: below });
+    const scene = putLayer(below)(legacy());
     expect(viewLayers(scene).map((layer) => layer.id)).toEqual(['below', DEFAULT_LAYER.id]);
     expect([scene.nodes.a.layer, scene.nodes.b.layer, scene.links.ab.layer]).toEqual([
       DEFAULT_LAYER.id,
@@ -85,7 +89,7 @@ describe('layers', () => {
 
   test('a new layer takes a name no other layer has', ({ expect }) => {
     // Two layers, one already named after the count a new one would otherwise take.
-    const scene = reduceIntent(layered(), { kind: 'layer', layer: { ...DEFAULT_LAYER, name: 'Layer 3' } });
+    const scene = putLayer({ ...DEFAULT_LAYER, name: 'Layer 3' })(layered());
     expect(createLayer(scene, 'new').name).toBe('Layer 4');
   });
 
@@ -99,11 +103,11 @@ describe('layers', () => {
   test('nodes paint by layer, then by their own order', ({ expect }) => {
     const scene = layered();
     // `b` is above `a` by layer even with the lower z.
-    const lowered = reduceIntent(scene, { kind: 'reorder', id: 'b', z: between(undefined, scene.nodes.a.z) });
+    const lowered = reorderElement('b', between(undefined, scene.nodes.a.z))(scene);
     expect(layerOrder(Object.values(lowered.nodes), viewLayers(lowered)).map((node) => node.id)).toEqual(['a', 'b']);
     // Moving the top layer to the bottom swaps them.
     const moved = moveLayer(lowered, 'top', 0);
-    const reordered = moved ? reduceIntent(lowered, { kind: 'layer', layer: moved }) : lowered;
+    const reordered = moved ? putLayer(moved)(lowered) : lowered;
     expect(layerOrder(Object.values(reordered.nodes), viewLayers(reordered)).map((node) => node.id)).toEqual([
       'b',
       'a',
@@ -113,7 +117,7 @@ describe('layers', () => {
   test('a hidden layer hides its elements and the links to them', ({ expect }) => {
     const scene = layered();
     const top = viewLayers(scene)[1];
-    const hidden = reduceIntent(scene, { kind: 'layer', layer: { ...top, hidden: true } });
+    const hidden = putLayer({ ...top, hidden: true })(scene);
     const visible = visibleView(hidden);
     expect(Object.keys(visible.nodes)).toEqual(['a']);
     expect(Object.keys(visible.links)).toEqual([]);
@@ -121,17 +125,17 @@ describe('layers', () => {
   });
 
   test('removing a layer removes its elements; the last layer stays', ({ expect }) => {
-    const scene = reduceIntent(layered(), { kind: 'removeLayer', id: 'top' });
+    const scene = removeLayer('top')(layered());
     expect(Object.keys(scene.nodes)).toEqual(['a']);
     expect(Object.keys(scene.links)).toEqual([]);
-    expect(reduceIntent(scene, { kind: 'removeLayer', id: DEFAULT_LAYER.id })).toBe(scene);
+    expect(removeLayer(DEFAULT_LAYER.id)(scene)).toBe(scene);
   });
 
   test('merging a layer moves its elements onto the other and removes it', ({ expect }) => {
     const scene = layered();
-    const merge = mergeLayersIntent(scene, ['top', DEFAULT_LAYER.id], DEFAULT_LAYER.id);
+    const merge = mergeLayers(scene, ['top', DEFAULT_LAYER.id], DEFAULT_LAYER.id);
     expect(merge).toBeDefined();
-    const merged = merge ? reduceIntent(scene, merge) : scene;
+    const merged = merge ? merge(scene) : scene;
     expect(viewLayers(merged).map((layer) => layer.id)).toEqual([DEFAULT_LAYER.id]);
     expect(Object.keys(merged.nodes).sort()).toEqual(['a', 'b']);
     expect(Object.keys(merged.links)).toEqual(['ab']);

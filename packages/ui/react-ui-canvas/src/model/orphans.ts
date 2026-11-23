@@ -7,18 +7,20 @@
 // a named Object by the library. A record nothing kept reaches is an orphan, deleted with the edit that orphaned it.
 //
 
-import { type ViewMap } from './store.ts';
-import { type Node, type View, type ViewId, isInstanceNode, isViewNode } from './types.ts';
+import { type Node, type ViewId, isInstanceNode, isViewNode } from '@dxos/scene';
+
+import { type RenderLists2D } from './types.ts';
+import { type RenderList2D } from './types.ts';
 
 /** The record a node opens: a view node's child View, or an Instance's Object. */
 export const openedRecord = (node: Node): ViewId | undefined =>
   isViewNode(node) ? node.scene : isInstanceNode(node) ? node.composite : undefined;
 
 /** Whether a record is kept with no node pointing at it: a named Object is a library entry. */
-export const isLibraryEntry = (view: View): boolean => view.kind === 'composite' && view.anonymous !== true;
+export const isLibraryEntry = (view: RenderList2D): boolean => view.kind === 'composite' && view.anonymous !== true;
 
 /** The records reachable from `roots` and the library through the nodes that open them. */
-const reachable = (views: ViewMap, roots: Iterable<ViewId>): Set<ViewId> => {
+const reachable = (views: RenderLists2D, roots: Iterable<ViewId>): Set<ViewId> => {
   const seen = new Set<ViewId>();
   const pending = [
     ...roots,
@@ -43,13 +45,13 @@ const reachable = (views: ViewMap, roots: Iterable<ViewId>): Set<ViewId> => {
 };
 
 /** The records of `views` that nothing kept reaches: Views other than `roots`, and anonymous Objects. */
-export const orphanViews = (views: ViewMap, roots: Iterable<ViewId>): Set<ViewId> => {
+export const orphanViews = (views: RenderLists2D, roots: Iterable<ViewId>): Set<ViewId> => {
   const kept = reachable(views, roots);
   return new Set(Object.keys(views).filter((id) => !kept.has(id)));
 };
 
 /** `views` without the records `orphanViews` names; the same map when there are none. */
-export const withoutOrphans = (views: ViewMap, roots: Iterable<ViewId>): ViewMap => {
+export const withoutOrphans = (views: RenderLists2D, roots: Iterable<ViewId>): RenderLists2D => {
   const orphans = orphanViews(views, roots);
   return orphans.size === 0 ? views : Object.fromEntries(Object.entries(views).filter(([id]) => !orphans.has(id)));
 };
@@ -58,7 +60,7 @@ export const withoutOrphans = (views: ViewMap, roots: Iterable<ViewId>): ViewMap
  * `after` without the records an edit orphaned: those orphaned in `after` that were not already in `before`, so a
  * record some other cause left unreferenced stays until the load-time clean-up. The same map when there are none.
  */
-export const pruneOrphaned = (before: ViewMap, after: ViewMap, roots: readonly ViewId[]): ViewMap => {
+export const pruneOrphaned = (before: RenderLists2D, after: RenderLists2D, roots: readonly ViewId[]): RenderLists2D => {
   const already = orphanViews(before, roots);
   const orphaned = [...orphanViews(after, roots)].filter((id) => !already.has(id));
   return orphaned.length === 0

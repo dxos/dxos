@@ -33,7 +33,7 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { InboxPlugin } from '#plugin';
+import * as InboxPlugin from '#meta';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
 
@@ -231,7 +231,7 @@ const meta = {
 
         StorybookPlugin.make({}),
         ProgressPlugin.make(),
-        InboxPlugin(),
+        InboxPlugin.make(),
         PreviewPlugin.make(),
         MockDeckOperationsPlugin(),
       ],

@@ -40,13 +40,15 @@ export const TidyTree = ({
   classNames,
   data,
   label = (d) => d.label ?? d.id,
-  slots = defaultTreeLayoutSlots,
+  slots: slotsProp,
   r = 4,
   margin = 24,
   initialCollapsed,
   onNodeClick,
 }: TidyTreeProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // A partial `slots` (e.g. only `nodeFill`) must extend the defaults, not drop their classes.
+  const slots = useMemo(() => ({ ...defaultTreeLayoutSlots, ...slotsProp }), [slotsProp]);
   const { setRef, width, height } = useContainerSize();
 
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(initialCollapsed ?? []));

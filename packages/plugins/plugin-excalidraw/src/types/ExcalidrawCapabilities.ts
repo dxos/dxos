@@ -6,12 +6,7 @@
 
 import type * as Atom from 'effect/reactivity/Atom';
 
-import * as Capability from '@dxos/app-framework/Capability';
+import { ExcalidrawNamespace } from '../namespace.ts';
+import type * as SettingsModule from './Settings.ts';
 
-import { meta } from '#meta';
-
-// Inline import to avoid the `Settings` namespace alias colliding with the
-// `Settings` capability export below.
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
-);
+export const Settings = ExcalidrawNamespace.makeSingleton<Atom.Writable<SettingsModule.Settings>>()('settings');

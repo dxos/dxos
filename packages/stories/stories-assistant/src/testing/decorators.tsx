@@ -3,7 +3,7 @@
 //
 
 //
-// Assistant-domain story harness, layered on `createStoryDecorators` from `@dxos/storybook-testing`
+// Assistant-domain story harness, layered on `StoryHarness.decorators` from `@dxos/storybook-testing`
 // (which owns the generic substrate: theme/layout, the plugin manager, client init/seeding/snapshot
 // import, and the runtime-layout atom). This wrapper adds what is assistant-specific: the assistant
 // plugin stack, chat/agent creation, skill binding, and the scripted (offline) model.
@@ -11,9 +11,9 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
+import { ScriptedLanguageModel, ScriptedScene, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -44,6 +44,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
+import type * as Assistant from '@dxos/plugin-assistant/Assistant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
@@ -62,7 +64,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
-import { type StoryDecoratorsProps, createStoryDecorators, resolveStorySpace } from '@dxos/storybook-testing';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Outline, Task, TaskSet } from '@dxos/types';
 import { Merge, isNonNullable } from '@dxos/util';
 
@@ -150,8 +152,15 @@ type DecoratorsProps = Merge<
      * (supervisor + sub-agents).
      */
     scripted?: ScriptedLanguageModel.Script;
+    /**
+     * Serve each script as a model of its own (see `ScriptedLanguageModel.resolver`), offered in the chat's model picker
+     * beside the real models; the chat starts on `select`. Unlike `scripted`, every other model still resolves as usual.
+     */
+    scriptedModels?: { scenes: Readonly<Record<string, ScriptedScene.Scene>>; select?: string };
+    /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
+    assistantSettings?: Partial<Assistant.Settings>;
   },
-  Omit<StoryDecoratorsProps, 'Wrapper' | 'setupEvents'>,
+  Omit<StoryHarness.Options, 'Wrapper' | 'setupEvents'>,
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent' | 'onReady'>
 >;
 
@@ -209,18 +218,35 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   return <>{children}</>;
 };
 
+/**
+ * Applies story assistant settings before rendering its children, so an agent spawned by the first prompt already
+ * reads them.
+ */
+const SettingsApplier = ({ settings, children }: { settings: Partial<Assistant.Settings>; children: ReactNode }) => {
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const atom = Hooks.useCapability(AssistantCapabilities.Settings);
+  const [applied, setApplied] = useState(false);
+  useEffect(() => {
+    atomRegistry.set(atom, { ...atomRegistry.get(atom), ...settings });
+    setApplied(true);
+  }, [atomRegistry, atom, settings]);
+  return applied ? <>{children}</> : null;
+};
+
 /** Maps the assistant-domain props onto the shared harness props. */
 const toStoryDecoratorsProps = ({
   config: configProp = config.remote,
   skills,
   scripted,
+  scriptedModels,
   createAgent,
   types = [],
   plugins = [],
   onChatCreated,
   onReady,
+  assistantSettings,
   ...props
-}: DecoratorsProps): StoryDecoratorsProps => ({
+}: DecoratorsProps): StoryHarness.Options => ({
   ...props,
   config: configProp,
   types: [
@@ -249,10 +275,21 @@ const toStoryDecoratorsProps = ({
       scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
     ),
     TranscriptionPlugin.make(),
-    StoryPlugin({ onChatCreated, createAgent, onReady }),
+    StoryPlugin({
+      onChatCreated: scriptedModels?.select ? onScriptedChat(scriptedModels.select, onChatCreated) : onChatCreated,
+      createAgent,
+      onReady,
+    }),
+    ...(scriptedModels ? [ScriptedModelPlugin({ scenes: scriptedModels.scenes })] : []),
     ...plugins,
   ],
-  Wrapper: skills?.length ? ({ children }) => <SkillBinder skills={skills}>{children}</SkillBinder> : undefined,
+  Wrapper:
+    skills?.length || assistantSettings
+      ? ({ children }) => {
+          const bound = skills?.length ? <SkillBinder skills={skills}>{children}</SkillBinder> : children;
+          return assistantSettings ? <SettingsApplier settings={assistantSettings}>{bound}</SettingsApplier> : bound;
+        }
+      : undefined,
 });
 
 /**
@@ -263,7 +300,7 @@ const toStoryDecoratorsProps = ({
 export const createDecorators = <Args = any,>(
   input: DecoratorsProps | ((context: { args: Args }) => DecoratorsProps),
 ) =>
-  createStoryDecorators<Args>(
+  StoryHarness.decorators<Args>(
     typeof input === 'function' ? (context) => toStoryDecoratorsProps(input(context)) : toStoryDecoratorsProps(input),
   );
 
@@ -294,6 +331,45 @@ type StoryPluginOptions = {
    */
   onReady?: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
 };
+
+/** Starts the chat on the scripted model, then runs the story's own hook. */
+const onScriptedChat =
+  (name: string, next: StoryPluginOptions['onChatCreated']): NonNullable<StoryPluginOptions['onChatCreated']> =>
+  async (props) => {
+    Obj.update(props.chat, (chat) => {
+      chat.session = { ...chat.session, model: ScriptedLanguageModel.modelId(name) };
+    });
+    await next?.(props);
+  };
+
+/** Serves scripts as models of their own, beside the models the assistant resolves, and offers them in the picker. */
+const ScriptedModelPlugin = Plugin.define<{ scenes: Readonly<Record<string, ScriptedScene.Scene>> }>(
+  Plugin.makeMeta({ key: DXN.make('com.example.plugin.scriptedModel'), name: 'Scripted model' }),
+).pipe(
+  Plugin.addModule(({ scenes }) => ({
+    id: 'com.example.plugin.scriptedModel.module.resolver',
+    // Startup: the AI service reads every resolver once, when its layer is first built.
+    activatesOn: ActivationEvents.Startup,
+    provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.ModelPreset],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          AppCapabilities.AiModelResolver,
+          ScriptedLanguageModel.resolver(
+            Object.fromEntries(Object.entries(scenes).map(([name, scene]) => [name, ScriptedScene.play(scene)])),
+          ),
+        ),
+        ...Object.keys(scenes).map((name) =>
+          Capability.contribute(AssistantCapabilities.ModelPreset, {
+            model: ScriptedLanguageModel.modelId(name),
+            provider: ScriptedLanguageModel.provider.id,
+            label: `Scripted · ${name}`,
+          }),
+        ),
+      ]),
+  })),
+  Plugin.make,
+);
 
 /** Marks the chat this harness creates, so a reload finds it among any chats a story seeded. */
 const HARNESS_CHAT_KEY = { source: 'com.example.plugin.testing', id: 'chat' };
@@ -352,7 +428,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       const invoker = yield* Capabilities.OperationInvoker;
       const { invoke } = invoker;
       const client = yield* ClientCapabilities.Client;
-      const space = yield* resolveStorySpace(client);
+      const space = yield* StoryHarness.resolveSpace(client);
 
       // Ensure workspace is set. NOTE: the active workspace that surfaces read via
       // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module

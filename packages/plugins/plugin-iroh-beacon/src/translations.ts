@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { IrohBeaconNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [IrohBeaconNamespace.key]: {
         'plugin.name': 'Iroh Beacon',
         'beacon-status.label': 'Iroh beacon status',
         'beacon-title.label': 'Iroh Beacon',

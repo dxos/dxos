@@ -143,6 +143,44 @@ describe('TagIndex (feed integration)', () => {
     await builder.close();
   });
 
+  test('taggedIdsAtom yields a new value for every write to an existing tag', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TagIndex.TagIndex] });
+    const db = await peer.createDatabase();
+    const tagIndex = db.add(TagIndex.make());
+    await db.flush();
+    const tags = TagIndex.bind(tagIndex);
+    const urgent = 'dxn:tag:urgent';
+    const ids = [EntityId.random(), EntityId.random(), EntityId.random()];
+
+    const registry = Registry.make();
+    const atom = TagIndex.taggedIdsAtom(tagIndex, urgent);
+    // The first write creates the list; the later ones extend it in place, which must still yield a new
+    // value — a subscriber (React) compares by reference. Each write waits for the atom to emit, so a
+    // write that yields no new value hangs the test instead of passing.
+    const values: (readonly string[])[] = [];
+    let emitted: (() => void) | undefined;
+    const unsubscribe = registry.subscribe(atom, (value) => {
+      values.push(value);
+      emitted?.();
+    });
+    // Read once so the atom tracks the index before the first write.
+    expect(registry.get(atom)).toEqual([]);
+    const writes = [...ids.map((id) => () => tags.setTag(urgent, id)), () => tags.unsetTag(urgent, ids[0])];
+    for (const write of writes) {
+      const next = new Promise<void>((resolve) => {
+        emitted = resolve;
+      });
+      write();
+      await next;
+    }
+    unsubscribe();
+
+    // Creating the list can emit its empty state first; the last four are the writes.
+    const perWrite = values.slice(-writes.length);
+    expect(perWrite.map((value) => value.length)).toEqual([1, 2, 3, 2]);
+    expect(new Set(perWrite).size).toBe(perWrite.length);
+  });
+
   // Regression for DX-984: setTag/unsetTag must use push/splice (in-place), not spread-replace.
   // Spread-replace causes O(n) Automerge ops per call → O(n²) total → multi-MiB documents.
   test('setTag emits O(1) Automerge ops per append', async ({ expect }) => {

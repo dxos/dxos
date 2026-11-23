@@ -17,7 +17,7 @@ import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-me
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from '../../namespace.ts';
 
 /** Root node the connector-auth group hangs off in the component's local graph. */
 const NODE_ID = 'connector-auth-root';
@@ -45,7 +45,7 @@ export type ConnectorAuthMenuProps = {
  * with an auth flow. Renders nothing when there is nothing to offer.
  */
 export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }: ConnectorAuthMenuProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const registry = useContext(RegistryContext);
   const runAction = GraphHooks.useActionRunner();
   const allConnectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();

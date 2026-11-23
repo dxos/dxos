@@ -209,7 +209,7 @@ The title and description are a `Form` over the `Task` schema in `TaskArticle`, 
 fields: the pane's status, priority and estimate are `TaskProperties` (menu rows with a glyph and a
 value), so the form covers exactly the two text fields. The description is the form's markdown field
 (`Task.description` carries the Markdown format), with the host's contributed editor extensions passed
-as `Form.Root`'s `markdownExtensions`. Fields commit on blur (and the title on Enter), through
+as `Form.Root`'s `extensions`. Fields commit on blur (and the title on Enter), through
 `TaskOperation.UpdateTask`, so a rename is one history entry.
 
 **Still separate:** `TaskList.Editor` keeps its own fields — its create path, held-open description,

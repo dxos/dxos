@@ -278,7 +278,8 @@ export type Routes<R = never> = {
   readonly workersAi?: Options<R>;
   /**
    * The model {@link Model.defaultDecisionModel} stands for, read per resolution so a changed setting
-   * applies to the next decision. Defaults to {@link Model.typesafeJev}.
+   * applies to the next decision. Defaults to {@link Model.cloudflareClef} when there is a Workers AI
+   * route, else {@link Model.typesafeJev}.
    */
   readonly defaultModel?: () => DXN.DXN;
 };
@@ -298,7 +299,9 @@ export const make = <R = never>(
         [Provider.typesafe.id, routes.typesafe],
         [Provider.workersAi.id, routes.workersAi],
       ]);
-      const defaultModel = routes.defaultModel ?? (() => Model.typesafeJev.id);
+      // Clef answers on EDGE's own Cloudflare account, so it needs no vendor key.
+      const fallback = routes.workersAi ? Model.cloudflareClef.id : Model.typesafeJev.id;
+      const defaultModel = routes.defaultModel ?? (() => fallback);
       return (requested, resolveOptions) => {
         const id = requested === Model.defaultDecisionModel ? defaultModel() : requested;
         const model = models.find(

@@ -69,7 +69,7 @@ describe('dx drawing', () => {
     await Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.promise(() => client.addTypes([Drawing.Drawing, Drawing.Canvas]));
       yield* Effect.promise(() => client.halo.createIdentity());
       const space = yield* Effect.promise(() => client.spaces.create());
@@ -99,7 +99,7 @@ describe('dx drawing', () => {
     await Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.promise(() => client.addTypes([Drawing.Drawing, Drawing.Canvas]));
       yield* Effect.promise(() => client.halo.createIdentity());
       const space = yield* Effect.promise(() => client.spaces.create());

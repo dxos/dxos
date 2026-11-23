@@ -23,7 +23,8 @@ yield* print(DOCS['operations.md'].slice(0, 400));
 | `catalog/operations.md` | Every operation this turn can resolve: its DXN, description and input.       |
 
 The two `catalog/` files are generated for each call from what is actually registered, so they are
-the source of truth for which DXNs exist.
+the source of truth for which DXNs exist here. A host may serve more types on demand; the Skill
+Manager's `queryTypes` finds those.
 
 ## Searching the docs
 

@@ -23,7 +23,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import {
+  bootLoaderPlugin,
+  hotModulesPlugin,
+  importMapPlugin,
+  pluginConfigPlugin,
+} from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
@@ -43,6 +48,7 @@ import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
+import { viewerRoutePlugin } from './src/vite/viewer-route.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -83,6 +89,8 @@ const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core
  * worker caches each on first use instead. Matched by Fontsource's `<font>-<subset>-…` file names, so a family
  * that only shares a prefix (`nunito-sans`) is not caught.
  */
+const GEO_TOPOLOGY_FILES = '**/countries-*.json';
+
 const ON_DEMAND_FONTS = [
   'inter',
   'nunito',
@@ -336,6 +344,9 @@ export default defineConfig((env) => ({
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
     '__DX_DEV_SERVER_BOOT_ID__': JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    // When this build was made (a dev server: when it started). Tabs compare it to tell which of two
+    // builds open at once is newer, and the older one pauses.
+    '__DX_BUILD_TIME__': JSON.stringify(Date.now()),
     // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
     '__DX_DEBUG_PORT_SESSION__': JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
     // Pins the desktop app's Composer Plugin template (plugin-projects) to what this bundle was built from.
@@ -439,7 +450,9 @@ export default defineConfig((env) => ({
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
+        paused: path.resolve(dirname, './paused.html'),
         recovery: path.resolve(dirname, './recovery.html'),
+        viewer: path.resolve(dirname, './viewer.html'),
       },
       // NOTE: Vite 8 / rolldown eagerly walks into the `test` config imported via
       // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
@@ -531,6 +544,7 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
+      './paused.html',
       // Under a reduced DX_PLUGIN_SET, scan only the plugins that set can reach, read from its
       // sources themselves — the hand-maintained list this replaces had drifted from them
       // (missing `tasks`/`progress`, still naming a removed `outliner`).
@@ -588,6 +602,8 @@ export default defineConfig((env) => ({
     rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
+    // Serves each `Plugin.config`-defined `dx.config.ts` as its build-time manifest.
+    pluginConfigPlugin(),
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     rearmWatchPlugin(),
@@ -704,6 +720,9 @@ export default defineConfig((env) => ({
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 
+    // Dev only: an edited plugin module re-runs in place instead of reloading the page.
+    hotModulesPlugin(),
+
     // Emit a `<script type="importmap">` into the production HTML mapping shared
     // bare specifiers (`react`, `effect`, `@dxos/client`, etc.) to dedicated chunk
     // URLs the host serves. Two consumers:
@@ -729,7 +748,11 @@ export default defineConfig((env) => ({
     // inline markup. Wrapped in try/catch so an asset rename or move only
     // loses the brand mark — the loader still renders the bar + status
     // without it.
+    viewerRoutePlugin(),
+
     bootLoaderPlugin({
+      // `paused.html` shows the loader stopped, with one action, rather than a screen of its own.
+      include: ['index.html', 'viewer.html', 'paused.html'],
       // A prerelease bundle and the dev server recolour the released mark; production shows it as is.
       markFilter: bootMarkFilter(channelVariant(env.command)),
       markSvg: (() => {
@@ -762,14 +785,13 @@ export default defineConfig((env) => ({
       filename: 'sw.ts',
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}', GEO_TOPOLOGY_FILES],
         // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
         // manifest entries alone would add one install-time request per file, slowing every
         // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
         // so any icon the app has rendered once stays available offline.
         globIgnores: ['**/phosphor/**', ...ON_DEMAND_FONTS.map((font) => `**/${font}-${FONT_SUBSETS}-*.woff2`)],
       },
-      includeAssets: ['favicon.ico'],
       manifest: {
         name: 'DXOS Composer',
         short_name: 'Composer',

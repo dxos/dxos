@@ -1,0 +1,81 @@
+---
+title: Defining types
+description: Declare the tutorial app's types, with references between them, and see the form ECHO derives from each.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
+
+By the end of this page the app will have its three types: organizations, the people who work at them, and the events
+they attend.
+
+## Background
+
+In TypeScript, an interface tells the compiler what an object looks like, and then it is gone when the app runs. An
+ECHO type is a schema with a name, and it is still there at run time. ECHO uses the schema three ways:
+
+- The compiler uses it to check the fields of every object you create.
+- ECHO uses it to check what it stores, and to send the type to peers that have not seen it.
+- Your code can read it at run time. We build the app's forms, table and graph from the schemas, so we write none of
+  them per type.
+
+The schema is an [Effect Schema](https://effect.website/docs/schema/introduction/). The name is a DXN, which is a
+reverse-domain name and a version, such as `com.example.type.person` at `0.1.0`. Use a domain you control, because
+the name is global.
+
+A field can hold a reference to another object, with `Ref.Ref(Type)`. A reference stores the target's URI, which is
+its address, and not a copy. Every object that points at an organization sees the organization's latest name.
+
+## Steps
+
+<Steps>
+
+1. **Declare an organization.** `Type.makeObject` takes the name and the schema. It returns a class that is both the
+   schema and the TypeScript type of its instances.
+
+   <Snippet file="echo-tutorial/schema" region="organization" />
+
+   `Format.URL` marks the website as a URL, so a form offers a URL field for it. `IconAnnotation` gives the type an
+   icon and a hue, which the app's list and graph use.
+
+2. **Point a person at an organization.** `employer` is a reference to an `Organization`.
+
+   <Snippet file="echo-tutorial/schema" region="person" />
+
+3. **Point an event at many people.** A list of references gives an event its attendees. An event has a `title`
+   rather than a `name`, so `LabelAnnotation` says which field names it.
+
+   <Snippet file="echo-tutorial/schema" region="event" />
+
+4. **List the types.** We give this list to the client when the app starts, in
+   [Installation](/docs/echo/learn/installation/). Steps 1 to 4 all go in `schema.ts`.
+
+   <Snippet file="echo-tutorial/schema" region="types" />
+
+5. **Create instances.** `Obj.make` takes the props the schema allows, and `Ref.make` makes a reference to an object.
+   The app starts with these records, in `seed.ts`:
+
+   <Snippet file="echo-tutorial/seed" region="instance" />
+
+   If you leave out a person's `name`, the compiler rejects the call.
+
+6. **Follow a reference.** `peek` reads the target without waiting, if the target is loaded. In `Contacts.tsx`, the
+   list uses it to show each person's employer beside their name:
+
+   <Snippet file="echo-tutorial/app/Contacts" region="follow" lang="tsx" />
+
+</Steps>
+
+## Try it
+
+The form beside the list is built from the selected type's schema. A website gets a URL field, an employer gets a
+picker of organizations, and an event's attendees get a list of people. Choose a type to see its form, or a record to
+see its values. Editing comes in [Mutating objects](/docs/echo/learn/mutating-objects/).
+
+<TutorialEmbed stage="types" />
+
+## What you can do now
+
+You can declare object types with references between them, give a type an icon and a label, and create objects that
+the compiler checks against their schema.

@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -15,6 +16,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargets, useTestConnection } from '#hooks';
+import { ConnectorSurface } from '#types';
 
 import * as Binding from '../../Binding.ts';
 import { connectionsDeckSubject } from '../../constants.ts';
@@ -127,7 +129,9 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       onTestConnection={retest}
       onDelete={handleDelete}
       onRemoveBinding={handleRemoveBinding}
-    />
+    >
+      <Surface.Surface type={ConnectorSurface.ConnectionSection} data={{ connection: subject }} limit={1} />
+    </ConnectionView>
   );
 };
 

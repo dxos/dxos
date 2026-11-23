@@ -1,0 +1,64 @@
+---
+title: Overview
+description: What PLEX is, how an app is made of plugins, and Composer as the app built on it.
+welcome:
+  section: PLEX
+  tagline: Build apps out of plugins that extend each other through typed contributions.
+  background: plex
+---
+
+import DemoEmbed from '../../../../components/DemoEmbed.astro';
+
+PLEX is a framework for building apps out of plugins. An app is little more than the plugins it loads. Each plugin
+adds types, views, actions and settings, and plugins extend each other through typed contributions instead of imports.
+
+[Composer](/composer), a local-first workspace, is built entirely this way. Its navigation tree, deck, settings and
+assistant are plugins written against the same API as yours, so a plugin from outside DXOS has the same powers as a
+built-in one.
+
+## What you can build
+
+The four demos below are small PLEX apps built from Composer's own plugins. Each runs two peers, Alice and Bob, on one
+space in the page. The text above each demo says which plugins render it and how they work together. Use the switch on
+a peer to take it offline, or the toolbar to show one peer or both.
+
+<DemoEmbed id="editor" />
+
+<DemoEmbed id="views" />
+
+<DemoEmbed id="explorer" />
+
+<DemoEmbed id="diagram" />
+
+These are examples, not the limits. A plugin of your own can add anything a built-in one can: new types and views,
+actions, widgets inside another plugin's editor, or a whole new kind of app.
+
+## How it works
+
+A plugin is a set of modules. A **module** activates on an event, such as startup or the first time a view is needed,
+and then contributes to capabilities. A **capability** is a typed slot that modules contribute values to and other
+modules read. A React component for a surface, a handler for an operation and nodes for the navigation tree are all
+values a module contributes.
+
+No module imports another plugin. One plugin can therefore render inside another plugin's view, or add an action to
+another plugin's objects, without either knowing about the other.
+
+The pieces live in `@dxos/app-framework`. `@dxos/app-toolkit` adds what a workspace app needs: App Graph, layout,
+settings and the standard surface roles. [Plugins and modules](/docs/plex/concepts/plugins/) explains how the pieces
+fit.
+
+A plugin also gets three things for free:
+
+- Its data is [ECHO](/docs/echo/overview/) objects in spaces. The data syncs between a person's devices and the people
+  they share with, merges concurrent edits, and works offline, without the plugin doing anything for it.
+- Its operations and skills are tools that Composer's assistant can use as soon as the plugin is installed.
+- Its views use the same [TILE](/docs/tile/overview/) components as every other plugin, so plugins written by
+  different people look like one app.
+
+## Where to go next
+
+- [Why PLEX?](/docs/plex/why-plex/) for what an app made of plugins gives you.
+- [Build with a coding agent](/docs/plex/build-with-a-coding-agent/) to have Claude Code, Codex or Cursor build
+  a plugin for you to load into Composer.
+- [The PLEX plugin](/docs/plex/learn/the-plex-plugin/) to start the learning path, which builds the Stash plugin by
+  hand over the six pages that follow it.

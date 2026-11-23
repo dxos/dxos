@@ -2,365 +2,44 @@
 // Copyright 2025 DXOS.org
 //
 
-import { WaveFile } from 'wavefile';
-
-import { DeferredTask, Trigger, synchronized } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { BaseError } from '@dxos/errors';
-import { log } from '@dxos/log';
-import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
 
-import { mergeFloat64Arrays } from '../internal/asr-util.ts';
-import { type AudioChunk, type AudioRecorder } from './audio-recorder.ts';
-
-export type WhisperWord = {
-  word: string;
-
-  /**
-   * Time in seconds from the start of the audio.
-   */
-  start: number;
-
-  /**
-   * Time in seconds from the start of the audio.
-   */
-  end: number;
-};
-
-export type WhisperSegment = {
-  text: string;
-
-  /**
-   * Time in seconds from the start of the audio.
-   */
-  start: number;
-
-  /**
-   * Time in seconds from the start of the audio.
-   */
-  end: number;
-
-  /**
-   * Probability of no speech in the segment.
-   */
-  /** Absent from some Whisper-compatible endpoints; treated as confident speech. */
-  no_speech_prob?: number;
-
-  words: WhisperWord[];
-};
-
-export type TranscribeConfig = {
-  /**
-   * Number of chunks to transcribe automatically after.
-   */
-  transcribeAfterChunksAmount: number;
-
-  /**
-   * Number of chunks to save before the user starts speaking.
-   * This is needed to catch the beginning of the user's speech.
-   */
-  prefixBufferChunksAmount: number;
-
-  /**
-   * Transcription endpoint base URL, normally `<edge>/calls` (the worker that serves `/transcribe`).
-   * Required for the built-in HTTP transport; only optional when a `transcribe` fn is provided.
-   */
-  endpoint?: string;
-};
-
 /**
- * Raised when a transcriber is built without a transport — no `transcribe` fn and no endpoint.
- * Typed so a caller can tell an unconfigured service from a transcription that failed in flight.
+ * A live speech-to-text session over one audio source.
+ *
+ * Segments reach the `onSegments` callback it was built with, final and in the order they were spoken.
  */
-export class TranscriptionEndpointNotConfiguredError extends BaseError.extend(
-  'TranscriptionEndpointNotConfiguredError',
-  'Transcription endpoint is not configured (runtime.services.edge.url).',
-) {}
-
-/**
- * Function that converts a base64-encoded WAV payload into Whisper segments.
- * Allows callers to swap in alternative providers or mock the transport.
- */
-export type TranscribeFn = (audio: string) => Promise<WhisperSegment[]>;
-
-export type TranscriberProps = {
-  config: TranscribeConfig;
-  recorder: AudioRecorder;
-  /**
-   * Optional override of the transcription transport. When provided, supersedes `config.endpoint`.
-   */
-  transcribe?: TranscribeFn;
-  /**
-   * Callback to handle the transcribed segments, after all segment transformers are applied.
-   * @param segments - The transcribed segments.
-   */
-  onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
-};
-
-/**
- * Handles transcription of audio chunks.
- * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
- * If user is speaking, the chunks are added to the buffer until the user is done talking.
- */
-/**
- * Above this, the model's own estimate that a segment contains no speech is treated as decisive.
- * Whisper's default for the same judgement.
- */
-const NO_SPEECH_THRESHOLD = 0.6;
-
-export class Transcriber extends Resource {
-  private _audioChunks: AudioChunk[] = [];
-  private _lastTimestamp = 0;
-
-  private readonly _openTrigger = new Trigger({ autoReset: true });
-
-  private readonly _config: TranscribeConfig;
-  private readonly _recorder: AudioRecorder;
-  private readonly _onSegments: TranscriberProps['onSegments'];
-  private readonly _transcribeFn?: TranscribeFn;
-
-  private _recording = false;
-  private _transcribeTask?: DeferredTask = undefined;
-  /** Aborts the in-flight transcription request (e.g. when the user cancels the drain). */
-  private _transcribeAbort?: AbortController = undefined;
-
-  constructor({ config, recorder, onSegments, transcribe }: TranscriberProps) {
-    super();
-    this._config = config;
-    this._recorder = recorder;
-    this._onSegments = onSegments;
-    this._transcribeFn = transcribe;
-  }
-
-  protected override async _open(ctx: Context): Promise<void> {
-    // Fail before any audio is captured: a missing transport discovered mid-drain would discard
-    // the user's buffered speech.
-    if (!this._transcribeFn && !this._config.endpoint) {
-      throw new TranscriptionEndpointNotConfiguredError();
-    }
-    log.info('opening');
-    this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
-    await this._recorder.start();
-    this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
-    this._openTrigger.wake();
-  }
-
-  protected override async _close(): Promise<void> {
-    log.info('closing');
-    this._recording = false;
-    this._transcribeTask = undefined;
-    this._transcribeAbort?.abort();
-    await this._recorder.stop();
-  }
-
-  /** Abort the in-flight transcription request (e.g. user cancelled the drain). */
-  abort(): void {
-    this._transcribeAbort?.abort();
-  }
-
-  startChunksRecording(): void {
-    log.info('starting');
-    if (this._lifecycleState !== LifecycleState.OPEN) {
-      return;
-    }
-
-    this._recording = true;
-  }
-
-  stopChunksRecording(): void {
-    if (this._lifecycleState !== LifecycleState.OPEN || !this._recording) {
-      return;
-    }
-
-    this._recording = false;
-    this._transcribeTask?.schedule();
-    log.info('stopped');
-  }
-
-  /**
-   * Stop recording and transcribe any buffered audio, resolving once the final segments have been
-   * delivered via `onSegments`. Used to drain the pipeline when recording stops so the tail of speech
-   * (and its downstream enrichment) is not lost.
-   */
-  async flush(): Promise<void> {
-    if (this._lifecycleState !== LifecycleState.OPEN) {
-      return;
-    }
-
-    this._recording = false;
-    await this._transcribe();
-  }
-
-  private _saveAudioChunk(chunk: AudioChunk): void {
-    log('saving audio chunk', { chunk });
-    this._audioChunks.push(chunk);
-
-    // Clean the buffer if the user is not speaking and the transcription task is not scheduled.
-    if (
-      !this._recording &&
-      (!this._transcribeTask || !this._transcribeTask.scheduled) &&
-      this._audioChunks.length >= this._config.prefixBufferChunksAmount
-    ) {
-      this._audioChunks = this._dropOldChunks();
-    } else if (this._audioChunks.length >= this._config.transcribeAfterChunksAmount && this._recording) {
-      this._transcribeTask?.schedule();
-    }
-  }
-
-  // Serialized so a threshold-scheduled run and a flush()/deferred run cannot read the same buffer
-  // concurrently and duplicate or drop tail segments.
-  @synchronized
-  private async _transcribe(): Promise<void> {
-    log('transcribing', { chunks: this._audioChunks.length });
-    const chunks = this._audioChunks;
-    this._audioChunks = this._dropOldChunks();
-    if (chunks.length === 0) {
-      return;
-    }
-
-    const audio = await this._mergeAudioChunks(chunks);
-    const fetched = await this._fetchTranscription(audio);
-    // Whisper-family models confabulate over silence — a quiet room or a paused speaker yields
-    // phantom text ("Thank you.", subtitle credits) rather than nothing, because the model has no
-    // strong "no speech" output. `no_speech_prob` is the model's own confidence that a segment holds
-    // no speech, so dropping the confident ones removes the hallucinations at their source.
-    const segments = fetched.filter((segment) => (segment.no_speech_prob ?? 0) < NO_SPEECH_THRESHOLD);
-    if (segments.length === 0) {
-      return;
-    }
-
-    const alignedSegments = this._alignSegments(segments, chunks);
-    if (alignedSegments.length > 0) {
-      await this._onSegments(alignedSegments);
-    }
-  }
-
-  private _dropOldChunks(): AudioChunk[] {
-    return this._config.prefixBufferChunksAmount > 0
-      ? this._audioChunks.slice(-this._config.prefixBufferChunksAmount)
-      : [];
-  }
-
-  @trace.span({ showInBrowserTimeline: true })
-  private async _mergeAudioChunks(chunks: AudioChunk[]): Promise<string> {
-    const file = new WaveFile();
-    const wavConfig = this._recorder.wavConfig;
-
-    file.fromScratch(
-      wavConfig.channels,
-      wavConfig.sampleRate,
-      wavConfig.bitDepthCode,
-      mergeFloat64Arrays(chunks.map(({ data }) => data)),
-    );
-
-    return file.toBase64();
-  }
-
-  @trace.span({ showInBrowserTimeline: true })
-  private async _fetchTranscription(audio: string): Promise<WhisperSegment[]> {
-    if (audio.length === 0) {
-      throw new Error('No audio to send for transcribing');
-    }
-
-    let segments: unknown;
-    if (this._transcribeFn) {
-      segments = await this._transcribeFn(audio);
-    } else {
-      // TODO(burdon): Create separate endpoint?
-      const endpoint = this._config.endpoint;
-      if (!endpoint) {
-        throw new TranscriptionEndpointNotConfiguredError();
-      }
-      this._transcribeAbort = new AbortController();
-      let response: Response;
-      try {
-        response = await fetch(`${endpoint}/transcribe`, {
-          method: 'POST',
-          body: JSON.stringify({ audio }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: this._transcribeAbort.signal,
-        });
-      } catch (err) {
-        // Aborting (user cancelled the drain) is a clean stop, not a failed transcription cycle.
-        if (err instanceof DOMException && err.name === 'AbortError') {
-          return [];
-        }
-        throw err;
-      } finally {
-        this._transcribeAbort = undefined;
-      }
-
-      if (!response.ok) {
-        throw new Error(`Transcription failed: ${response.statusText}`);
-      }
-
-      ({ segments } = (await response.json()) as { segments?: unknown });
-    }
-
-    if (!Array.isArray(segments)) {
-      throw new Error('Transcription response payload is invalid');
-    }
-
-    log.info('transcription response', { segments: segments.length });
-    return segments as WhisperSegment[];
-  }
-
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): ContentBlock.Transcript[] {
-    const result = alignWhisperSegments(segments, originalChunks, this._lastTimestamp);
-    if (result.lastTimestamp !== undefined) {
-      this._lastTimestamp = result.lastTimestamp;
-    }
-
-    return result.transcripts;
-  }
+export interface Transcriber {
+  /** Connects the session; no audio is sent until {@link start}. */
+  open(): Promise<unknown>;
+  /** Ends the session, dropping segments still pending. */
+  close(): Promise<unknown>;
+  /** Starts sending audio. */
+  start(): void;
+  /** Stops sending audio; segments for audio already sent still arrive. */
+  stop(): void;
+  /** Stops sending audio and resolves once the segments for audio already sent are delivered. */
+  flush(): Promise<void>;
+  /** Releases a pending {@link flush}, dropping the segments it was waiting for. */
+  abort(): void;
 }
 
-/**
- * Pure helper that filters and absolute-timestamps Whisper segments against a chunk timeline.
- * Exported for testing.
- *
- * @param segments - Raw segments returned by the Whisper service for `originalChunks`.
- * @param originalChunks - Chunks fed into the transcription request (used for the zero timestamp).
- * @param lastTimestamp - Most recent absolute timestamp already emitted; segments whose end
- *   falls strictly before this point are deduped out, as are individual words whose start does.
- */
-export const alignWhisperSegments = (
-  segments: WhisperSegment[],
-  originalChunks: AudioChunk[],
-  lastTimestamp: number,
-): { transcripts: ContentBlock.Transcript[]; lastTimestamp?: number } => {
-  if (originalChunks.length === 0) {
-    return { transcripts: [] };
-  }
-
-  const zeroTimestamp = originalChunks[0].timestamp;
-
-  const filteredSegments = segments
-    .filter((segment) => zeroTimestamp + segment.end * 1_000 >= lastTimestamp)
-    .map((segment) => {
-      const words = segment.words.filter((word) => zeroTimestamp + word.start * 1_000 >= lastTimestamp);
-      return {
-        ...segment,
-        words,
-        text: words.map((word) => word.word).join(''),
-        start: words.at(0)?.start ?? segment.end,
-      };
-    })
-    .filter((segment) => segment.words.length > 0);
-
-  if (filteredSegments.length === 0) {
-    return { transcripts: [] };
-  }
-
-  return {
-    lastTimestamp: zeroTimestamp + filteredSegments.at(-1)!.end * 1_000,
-    transcripts: filteredSegments.map((segment) => ({
-      _tag: 'transcript',
-      started: new Date(zeroTimestamp + segment.start * 1_000).toISOString(),
-      text: segment.text.trim(),
-    })),
-  };
+export type TranscriberCallbacks = {
+  /** Receives final segments in spoken order; the next batch waits for this one to settle. */
+  onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
+  /**
+   * Called once when the service ends the session for good (the meeting ended, or this participant was removed or
+   * refused), after which the transcriber takes no more audio; a consumer stops its recording here.
+   */
+  onEnded?: (reason: string) => void;
 };
+
+/** Builds a {@link Transcriber} delivering to the given callbacks: the one seam a pipeline is wired through. */
+export type CreateTranscriber = (callbacks: TranscriberCallbacks) => Transcriber;
+
+/** Raised when no transcription service is configured, so a caller can tell it from a session that failed. */
+export class TranscriptionNotConfiguredError extends BaseError.extend(
+  'TranscriptionNotConfiguredError',
+  'Live transcription is not configured (runtime.services.edge.url).',
+) {}

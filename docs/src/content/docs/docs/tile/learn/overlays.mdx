@@ -1,0 +1,86 @@
+---
+title: Overlays
+description: An edit dialog, a delete confirmation, a tooltip and a toast.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+By the end of this page the detail column shows the contact's fields as text again. The toolbar has Edit, which opens
+the editor in a dialog, and Delete, which asks first. A toast says when a contact is saved.
+
+## Background
+
+Our screen needs four things to appear above the page: an editor, a question, a hint and a notice. Which component
+draws each one? An **overlay** is a component that TILE draws above the page, and we use four of them:
+
+- A `Dialog` is modal. The page behind it is inert until it closes. Use it for a task the user finishes or cancels
+  before going on, as step 1 does for the editor.
+- A `Popover` opens beside its trigger and closes when the user clicks elsewhere. Use it for short content that
+  belongs to one control, as step 2 does for the delete question.
+- A `Tooltip` shows a short hint on hover or focus. Use it to name a control or explain a value, as step 3 does for
+  the role. It never takes focus, so put nothing in it that the user has to click.
+- A `Toast` reports something that happened and goes away by itself. Use it when the user does not have to answer,
+  as step 4 does for a save.
+
+A dialog, a popover and a tooltip each have a `Trigger` that opens it and a `Content` that holds it. `asChild` on a
+trigger makes our button the trigger. Without it, the trigger wraps our button in a button of its own.
+
+A toast has neither. It is open while `open` on its `Toast.Root` is true.
+
+[Dialog](/docs/tile/api/dialog/), [Popover](/docs/tile/api/popover/), [Tooltip](/docs/tile/api/tooltip/) and
+[Toast](/docs/tile/api/toast/) list the parts of each. TILE has more overlays than these four, such as
+[Menu](/docs/tile/api/menu/) for a list of actions and [AlertDialog](/docs/tile/api/alert-dialog/) for a question the
+user must answer.
+
+## Steps
+
+<Steps>
+
+1. **Move the editor into a dialog.** The dialog is controlled, so it can close itself when the editor saves. The
+   trigger is an icon-only button, which shows its label as a tooltip on its own. Add `src/overlays/ContactsScreen.tsx`:
+
+   <Snippet file="tile-tutorial/overlays/ContactsScreen" region="edit" lang="tsx" />
+
+   `onSave` saves the contact, then calls `setOpen(false)`. A dialog that holds its own state would stay open after
+   Save, because the editor's Save button is not a `Dialog.CloseTrigger`.
+
+2. **Ask before deleting.** A popover is lighter than a dialog for a yes-or-no question. `Popover.CloseTrigger`
+   closes it without deleting:
+
+   <Snippet file="tile-tutorial/overlays/ContactsScreen" region="delete" lang="tsx" />
+
+   The destructive `Button.Root` calls `onDelete` and closes nothing itself. Step 4 clears the selection on a delete,
+   and the screen then stops rendering `DeletePopover`.
+
+3. **Explain the role.** A tooltip can wrap any element, not only a button:
+
+   <Snippet file="tile-tutorial/overlays/ContactsScreen" region="role" lang="tsx" />
+
+   `ROLE_HELP` keeps its strings in the component for now. The next page moves them into a translation resource.
+
+4. **Put them on the screen.** Edit and Delete go in the toolbar, after the gap that pushes them to the end.
+   `Toast.Provider` wraps the screen, and `Toast.Toaster` is where toasts appear. The toast is open while `saved`
+   holds a name.
+
+   Add the screen to the same file, and render it from `src/main.tsx`:
+
+   <Snippet file="tile-tutorial/overlays/ContactsScreen" region="screen" lang="tsx" />
+
+   `Toast.Root` passes `onOpenChange` the boolean itself, where `Dialog.Root` passes an object that holds it. When
+   the toast times out, the handler clears `saved`, so the next save opens the toast again.
+
+</Steps>
+
+## Try it
+
+Choose a contact and press Edit. Save a change, and the toast appears. Hover over the role, or tab to it, to see what
+the role allows. Press Delete, then Keep or Delete.
+
+<TilePreview id="learn-overlays" height="22rem" />
+
+## What you can do now
+
+You can open dialogs and popovers from buttons, add tooltips to any element, and show toasts. Next,
+[Icons and translations](/docs/tile/learn/icons-and-translations/) moves the screen's strings into a resource.

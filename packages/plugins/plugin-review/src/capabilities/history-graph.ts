@@ -11,8 +11,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
 
-import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
+
+import { ReviewNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -35,7 +36,7 @@ export default Capability.makeModule(
         Effect.succeed([
           AppNode.makeCompanion({
             variant: 'history',
-            label: ['history-panel.title', { ns: meta.profile.key }],
+            label: ['history-panel.title', { ns: ReviewNamespace.key }],
             icon: 'ph--git-branch--regular',
             data: 'history',
           }),

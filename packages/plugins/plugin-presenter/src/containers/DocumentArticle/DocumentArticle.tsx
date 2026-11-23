@@ -8,12 +8,12 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useAttention } from '@dxos/react-ui-attention';
+import { isHiddenSlide } from '@dxos/react-ui-slides';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Deck } from '#components';
 import { useDocumentDeck, useIsPresenting, usePresentedIndex, useSetPresenting, useSlideIndex } from '#hooks';
-import { isHiddenSlide } from '#markdown';
 
 export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Document>;
 
@@ -53,6 +53,8 @@ export const DocumentArticle = ({ role, subject: document, attendableId }: Docum
       onFullscreenChange={handleFullscreenChange}
       attendableId={attendableId}
       autoFocus={hasAttention}
+      // The preview shows hidden slides too, and numbers the rest as the presentation will.
+      presented={fullscreen ? undefined : positions}
     >
       <Panel.Root role={role} asChild>
         <Deck.Content>

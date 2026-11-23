@@ -77,6 +77,12 @@ type MosaicStackProps<TData = any> = Util.ThemedClassName<
     getKey?: GetId<TData>;
     items?: readonly TData[];
     scrollIntoView?: boolean;
+    /**
+     * Keeps the dragged item's tile mounted rather than removing it, for a tile that holds state a drag must not lose
+     * (a running session, a draft). The tile must take itself out of the flow with `data-[mosaic-tile-state=dragging]:*`,
+     * since the stack reserves its slot with a placeholder.
+     */
+    keepDragged?: boolean;
     Tile: MosaicStackTileComponent<TData>;
   } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
 >;
@@ -93,6 +99,7 @@ const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
       getKey = getId,
       items,
       scrollIntoView = true,
+      keepDragged = false,
       Tile,
       draggable = true,
       debug,
@@ -128,6 +135,8 @@ const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
     useLayoutEffect(() => {
       if (sourceIndex >= 0) {
         setActiveLocation(sourceIndex + 0.5);
+        // A drop on the container itself reaches no tile or placeholder, and those are what close the gap.
+        return () => setActiveLocation(undefined);
       }
     }, [sourceIndex, setActiveLocation]);
 
@@ -150,6 +159,9 @@ const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
     }, [registerScrollTo, scrollToId]);
 
     const composedRef = useComposedRefs(rootRef, forwardedRef);
+
+    // A kept source takes no location, since drop locations count the list without it.
+    let location = 0;
     return (
       <div
         {...Util.composableProps(props, {
@@ -163,20 +175,27 @@ const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
         ref={composedRef}
       >
         {draggable && <InternalPlaceholder orientation={orientation} location={0.5} />}
-        {visibleItems?.map((item, index) => (
-          <Fragment key={getKey(item)}>
-            <Tile
-              id={getId(item)}
-              data={item}
-              location={index + 1}
-              draggable={draggable}
-              current={getId(item) === currentId}
-              binding={itemProps?.(getId(item))}
-              debug={debug}
-            />
-            {draggable && <InternalPlaceholder orientation={orientation} location={index + 1.5} />}
-          </Fragment>
-        ))}
+        {(keepDragged ? (items ?? []) : visibleItems).map((item, index) => {
+          const kept = keepDragged && index === sourceIndex;
+          if (!kept) {
+            location++;
+          }
+
+          return (
+            <Fragment key={getKey(item)}>
+              <Tile
+                id={getId(item)}
+                data={item}
+                location={kept ? index + 1 : location}
+                draggable={draggable}
+                current={getId(item) === currentId}
+                binding={itemProps?.(getId(item))}
+                debug={debug}
+              />
+              {draggable && !kept && <InternalPlaceholder orientation={orientation} location={location + 0.5} />}
+            </Fragment>
+          );
+        })}
       </div>
     );
   },
@@ -205,7 +224,15 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
     paginationThreshold?: number;
     /** Pads the first and last item by `gap`; `false` when the scroll viewport already pads its content. @default true. */
     inset?: boolean;
+    /**
+     * Slides rows to their new place when the order changes rather than jumping (rows are keyed by item
+     * id, so a reorder is a change of offset). Off under `prefers-reduced-motion`.
+     */
+    animateReorder?: boolean;
   };
+
+/** How long a reordered row takes to reach its new place. */
+const REORDER_TRANSITION = 'transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1)';
 
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
   (
@@ -222,6 +249,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       pagination,
       paginationThreshold,
       inset = true,
+      animateReorder = false,
       onChange,
       draggable = true,
       debug,
@@ -231,6 +259,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
   ) => {
     invariant(Tile);
     invariant(!pagination || !draggable, 'pagination requires draggable={false}');
+    const reducedMotion = Util.useReducedMotion();
+    const transition = animateReorder && !reducedMotion ? REORDER_TRANSITION : undefined;
     const { id, dragging, currentId, itemProps, registerScrollTo } =
       useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const selectable = useSelectable(items, getId, itemProps);
@@ -292,16 +322,19 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
           }
 
           const virtualIndex = draggable ? itemIndex * 2 + 1 : itemIndex;
-          // Align to the item's start, but offset by the inter-item `gap` so the tile lands
-          // one gap below the viewport edge rather than flush against it (a plain
-          // `scrollToIndex({ align: 'start' })` scrolls the preceding gap out of view).
+          // Align to the item's start, but back off by the inter-item `gap` so the tile lands one gap below
+          // the viewport edge rather than flush against it (a plain `scrollToIndex({ align: 'start' })`
+          // scrolls the preceding gap out of view). When `inset` is false the viewport pads its own content:
+          // that padding lies outside the virtualizer's offsets, so it already holds the tile clear of the
+          // edge, and backing off as well would scroll the tail of the preceding row into view.
+          const leading = inset ? (gap ?? 0) : 0;
           const [offset] = virtualizer.getOffsetForIndex(virtualIndex, 'start') ?? [];
           if (offset != null) {
-            virtualizer.scrollToOffset(Math.max(0, offset - (gap ?? 0)), { behavior: 'smooth' });
+            virtualizer.scrollToOffset(Math.max(0, offset - leading), { behavior: 'smooth' });
           }
         }
       },
-      [visibleItems, getId, draggable, virtualizer, scrollIntoView, gap],
+      [visibleItems, getId, draggable, virtualizer, scrollIntoView, gap, inset],
     );
 
     useEffect(() => {
@@ -359,6 +392,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                 position: 'absolute',
                 top: 0,
                 left: 0,
+                transition,
                 ...(orientation === 'vertical'
                   ? {
                       width: '100%',

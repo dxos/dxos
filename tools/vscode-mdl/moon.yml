@@ -11,14 +11,31 @@ tasks:
       mergeOutputs: replace
     outputs: []
 
+  # `dist/extension.cjs` and the language server's `dist/server.cjs`, which the `.vsix` ships.
+  bundle:
+    command: node scripts/bundle.ts
+    deps:
+      - mdl-language-server:bundle
+    inputs:
+      - src/extension.ts
+      - scripts/bundle.ts
+    outputs:
+      - dist/extension.cjs
+      - dist/server.cjs
+
   # `dist/vscode-mdl.vsix`, installable with `code --install-extension`; see README.md.
   package:
-    command: pnpm exec vsce package --no-dependencies --out dist/vscode-mdl.vsix
+    command: node scripts/package.ts
+    deps:
+      - ~:bundle
     inputs:
       - package.json
       - README.md
       - .vscodeignore
+      - scripts/package.ts
       - language-configuration*.json
       - syntaxes/**/*
+      - dist/extension.cjs
+      - dist/server.cjs
     outputs:
       - dist/vscode-mdl.vsix

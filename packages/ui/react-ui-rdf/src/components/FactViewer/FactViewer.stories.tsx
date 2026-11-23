@@ -14,7 +14,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { FactViewer, type FactViewerRootProps } from './FactViewer.tsx';
@@ -29,7 +29,7 @@ const extractor = {
  * Static demo facts that exercise the viewer: an entity→entity conflict (f1 vs f2,
  * same subject + predicate, different objects/sources) plus a coherent pair (f3/f4).
  */
-const DEMO_FACTS: RDF.Fact[] = [
+const DEMO_FACTS = Fact.makeMany([
   {
     id: 'f1',
     assertion: {
@@ -86,7 +86,7 @@ const DEMO_FACTS: RDF.Fact[] = [
     extractor,
     sourceHash: 'demo',
   },
-] satisfies RDF.Fact[];
+]) satisfies Fact.Fact[];
 
 const DefaultStory = (props: FactViewerRootProps) => <FactViewer.Root {...props} />;
 
@@ -103,6 +103,33 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     facts: DEMO_FACTS,
+  },
+};
+
+/** 6,000 synthetic facts about 1,500 subjects: only the subject groups near the viewport render. */
+export const Large: Story = {
+  args: {
+    facts: Array.from({ length: 6_000 }, (_, index): Fact.Fact => {
+      const subject = index % 1_500;
+      return Fact.make({
+        id: `large-${index}`,
+        assertion: {
+          subject: { kind: 'entity', entity: `entity-${subject}` },
+          predicate: ['asked', 'works-on', 'uses', 'has-account'][index % 4],
+          object: { kind: 'entity', entity: `entity-${(subject * 7 + index) % 1_500}` },
+          ...(index % 3 === 0 && { quote: `Statement ${index} about entity ${subject}.` }),
+        },
+        factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
+        attribution: {
+          agent: 'crawler',
+          source: `dxn:discord:msg-${index}`,
+          generatedAtTime: '2026-11-01T09:00:00.000Z',
+        },
+        recordedAt: '2026-11-01T09:00:00.000Z',
+        extractor,
+        sourceHash: 'large',
+      });
+    }),
   },
 };
 

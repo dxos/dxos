@@ -8,6 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -20,8 +21,10 @@ import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
+import { type TaskMember } from '../../util/property-menus.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
+import { DEFAULT_COLUMNS, type TaskColumn } from './tracks.ts';
 
 random.seed(1);
 
@@ -55,7 +58,7 @@ const seedFlat = (): Task.Task[] => [
   Task.make({
     title: 'Write the launch poem',
     status: 'review',
-    reviewers: [{ name: 'Rich', role: 'user' }],
+    assignee: { name: 'Rich', role: 'user' },
     artifacts: [Ref.make(Task.make({ title: 'Ode to a Coffee Bean' }))],
   }),
   Task.make({
@@ -86,9 +89,10 @@ const seedFlat = (): Task.Task[] => [
     title: 'Draft launch email',
     status: 'started',
     priority: 'high',
-    assignee: { role: 'assistant', name: 'Scout' },
+    assignee: { role: 'user', name: 'Rich' },
+    delegate: { role: 'assistant', name: 'Scout' },
     // Spans the cut-off: the oldest entries are past three days and read as calendar dates.
-    history: seedHistory(1, 'Created this task', 'Assigned to an agent', 'Status changed from todo to started').map(
+    history: seedHistory(1, 'Created this task', 'Delegated to Scout', 'Status changed from todo to started').map(
       (entry, index) =>
         index === 0 ? { ...entry, date: new Date(Date.now() - 9 * 24 * 60 * 60_000).toISOString() } : entry,
     ),
@@ -536,6 +540,15 @@ const ArtifactsStory = (props: Parameters<typeof DefaultStory>[0]) => {
   );
 };
 
+/** Each host's framing of the create pane, copied from its call site so the story shows what ships. */
+const EDITOR_FRAME = {
+  default: 'bg-input-surface border border-separator rounded-md p-2',
+  // `TaskSetArticle`'s footer: inset from the panel's edges, in a bordered box of its own surface.
+  project: 'py-2 dx-group-surface ring-1 ring-inset ring-separator-subtle rounded-sm',
+  // `Chat`'s strip: the prompt frames it, so the pane itself carries no box.
+  chat: undefined,
+} as const;
+
 const DefaultStory = ({
   seed = seedFlat,
   readonly,
@@ -546,8 +559,13 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescription = true,
-  showEstimates,
+  columns,
   acceptFiles = false,
+  createOnly = false,
+  flush = false,
+  frame = 'default',
+  members,
+  agents = false,
 }: {
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
@@ -566,9 +584,17 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
-  showEstimates?: boolean;
+  columns?: readonly TaskColumn[];
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
+  /** Only ever create, as both hosts do: a task is edited through its own row, not by selecting it into the pane. */
+  createOnly?: boolean;
+  /** The list's rows sit flush, without the pane's outer columns — what the chat's narrow strip uses. */
+  flush?: boolean;
+  /** Which host's framing to reproduce: the project's footer box, the chat's inset strip, or the bare pane. */
+  frame?: 'default' | 'project' | 'chat';
+  members?: readonly TaskMember[];
+  agents?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
   // Stands in for the host's attach: the names of the files each create was handed.
@@ -617,11 +643,24 @@ const DefaultStory = ({
   }, []);
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Obj.update(task, (task) => {
-      Object.assign(task, patch);
-    });
+    Task.update(task, patch);
     setTasks((tasks) => [...tasks]);
   }, []);
+
+  const getDelegateActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(
+        `delegate-${task.id}`,
+        () =>
+          handleUpdate(task, {
+            delegate: { role: 'assistant', name: 'Scout' },
+            ...(task.assignee === undefined && { assignee: { role: 'user', name: 'Riley' } }),
+          }),
+        { label: 'Scout', icon: 'ph--robot--regular', testId: 'story.delegate' },
+      ),
+    ],
+    [handleUpdate],
+  );
 
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
@@ -658,10 +697,13 @@ const DefaultStory = ({
       hierarchical={hierarchical}
       groupByStatus={groupByStatus}
       showGroupLabels={showGroupLabels}
+      flush={flush}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
-      showEstimates={showEstimates}
+      columns={columns}
+      members={members}
       getTaskActions={readonly ? undefined : getTaskActions}
+      getDelegateActions={readonly || !agents ? undefined : getDelegateActions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
       checked={checked}
@@ -673,11 +715,16 @@ const DefaultStory = ({
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Layout.Flex classNames='p-3'>
+        {/* Block-axis padding only: horizontal padding here would inset the pane's grid from the rows' and the
+            columns would no longer line up. */}
+        <Layout.Flex classNames={frame === 'chat' ? 'px-1' : 'pb-trim-md'}>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
-            classNames='bg-input-surface border border-separator rounded-md p-2'
+            createOnly={createOnly}
+            // The project names its create row "Add task"; the chat leaves the title placeholder as it is.
+            placeholder={frame === 'project' ? 'Add task' : undefined}
+            classNames={EDITOR_FRAME[frame]}
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
         </Layout.Flex>
@@ -733,6 +780,25 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
   );
 };
 
+/**
+ * A property control in the create/edit pane. Each sits in the list column it edits when the list has one, and in the
+ * pane's trailing group when it does not, so a test finds it by field rather than by where it landed.
+ */
+const editorField = (root: ParentNode, field: string) =>
+  root.querySelector<HTMLElement>(`[data-testid="taskList.edit"] [data-testid="${field}"]`);
+
+/** What a property control reads as: its accessible name, since a control on a narrow column track is icon-only. */
+const editorFieldLabel = (element: HTMLElement | null | undefined) =>
+  element?.getAttribute('aria-label') ?? element?.textContent ?? undefined;
+
+/** Fails the play naming what is missing, where `!` would fail later on a null read. */
+const found = <T,>(value: T | null | undefined, what: string): T => {
+  if (value == null) {
+    throw new Error(`${what} not found.`);
+  }
+  return value;
+};
+
 /** The row's title cell: the grid track that the mnemonic chip and the title text share. */
 const titleCell = (row: Element): HTMLElement => row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!;
 
@@ -740,7 +806,7 @@ const meta = {
   title: 'ui/react-ui-task/TaskList',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: { translations },
+  parameters: { translations: [...translations, ...formTranslations] },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -748,6 +814,35 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * The chat's add row (`Chat.tsx`): one line on the list's own columns, each field under the column it edits, with
+ * the list above it. `createOnly`, because a task is changed through its row, never by selecting it into the strip.
+ */
+export const ChatPrompt: Story = {
+  args: {
+    showGroupLabels: false,
+    showOrdinals: true,
+    showDescription: false,
+    columns: ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'],
+    createOnly: true,
+    flush: true,
+    frame: 'chat',
+  },
+};
+
+/**
+ * The project's footer form (`TaskSetArticle`): the title and description stack above a row of labelled tags
+ * (Todo / Priority / Assignee / Estimate), framed as the chat prompt is, with the list above it.
+ */
+export const ProjectFooter: Story = {
+  args: {
+    showDescription: true,
+    acceptFiles: true,
+    createOnly: true,
+    frame: 'project',
+  },
+};
 
 /** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
 export const WithoutDescription: Story = {
@@ -760,7 +855,6 @@ export const WithoutDescription: Story = {
 export const ManyTasks: Story = {
   args: {
     seed: seedMany,
-    showEstimates: true,
     showDescription: true,
     showOrdinals: true,
   },
@@ -798,6 +892,7 @@ export const WithDescriptions: Story = {
     showGroupLabels: false,
     showOrdinals: true,
     showDescription: true,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
   },
 };
 
@@ -960,7 +1055,6 @@ export const DeepHierarchy: Story = {
     draggable: true,
     hierarchical: true,
     showOrdinals: true,
-    showEstimates: true,
     showDescription: true,
   },
 };
@@ -1072,7 +1166,7 @@ export const WithArtifacts: Story = {
 /**
  * Tags render as chips with the task's artifacts — a line of their own under the title, starting
  * where the title cell does and above the description — while the assignee stays on the title line,
- * right-aligned before the trailing controls.
+ * right-aligned, and priority leads the row.
  */
 export const WithTags: Story = {
   render: ArtifactsStory,
@@ -1113,13 +1207,13 @@ export const WithTags: Story = {
       const title = titleCell(row).getBoundingClientRect();
       const box = assignee.getBoundingClientRect();
       const centre = (rect: DOMRect) => rect.top + rect.height / 2;
-      // On the title's line, after it, and flush against the trailing controls.
       await expect(Math.abs(centre(box) - centre(title))).toBeLessThan(2);
       await expect(box.left).toBeGreaterThanOrEqual(title.right - 0.5);
+      // Who has it, how urgent it is and how big it is read together after the title.
       const priority = row
         .querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!
         .getBoundingClientRect();
-      await expect(priority.left - box.right).toBeLessThan(40);
+      await expect(priority.left).toBeGreaterThanOrEqual(box.right - 0.5);
     }
 
     // A row with nothing to show as a chip holds no empty line for them.
@@ -1202,6 +1296,146 @@ export const TestArtifactPreviews: Story = {
   },
 };
 
+export const TestAssigneeControl: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+  },
+  play: async ({ canvasElement }) => {
+    const placeholders = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.assignee.unset"]'));
+    await waitFor(async () => expect(placeholders().length).toBeGreaterThan(0));
+    const row = found(
+      placeholders()[0].closest<HTMLElement>('[data-testid="taskList.item"]'),
+      'Row of the unassigned control',
+    );
+
+    await userEvent.click(placeholders()[0]);
+    const body = within(document.body);
+    await userEvent.click(await body.findByText('Riley'));
+
+    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy());
+    await expect(row.querySelector('[data-testid="taskList.item.assignee.unset"]')).toBeNull();
+  },
+};
+
+export const TestDelegateFromAssignee: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+    agents: true,
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(document.body);
+    const [row] = (await within(canvasElement).findAllByTestId('taskList.item')).filter((item) =>
+      item.querySelector('[data-testid="taskList.item.assignee.unset"]'),
+    );
+    const cell = within(row);
+
+    await userEvent.click(cell.getByTestId('taskList.item.assignee.unset'));
+    await userEvent.click(await body.findByTestId('story.delegate'));
+    await waitFor(async () => expect(cell.queryByTestId('taskList.item.delegate')).toBeTruthy());
+
+    await userEvent.click(cell.getByTestId('taskList.item.assignee'));
+    await expect(await body.findByTestId('taskList.assignee.delegate')).toBeTruthy();
+    await userEvent.click(await body.findByTestId('taskList.assignee.member'));
+    await waitFor(async () => expect(cell.queryByTestId('taskList.item.delegate')).toBeNull());
+    await expect(cell.queryByTestId('taskList.item.assignee')).toBeTruthy();
+  },
+};
+
+export const TestEditorHandsBackFromAgent: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(document.body);
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.querySelector('[data-testid="taskList.item.delegate"]'),
+      );
+      if (!row) {
+        throw new Error('No delegated task is listed.');
+      }
+      return row;
+    });
+
+    await userEvent.click(row);
+    const pill = await waitFor(() => {
+      const pill = editorField(canvasElement, 'assignee');
+      if (!editorFieldLabel(pill)?.includes('Rich')) {
+        throw new Error('The editor is not editing the delegated task.');
+      }
+      return found(pill, 'Assignee control');
+    });
+    await userEvent.click(pill);
+    await expect(await body.findByTestId('taskList.assignee.delegate')).toBeTruthy();
+    await userEvent.click(await body.findByTestId('taskList.assignee.member'));
+    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.delegate"]')).toBeNull());
+  },
+};
+
+export const TestEditorWithoutAssignees: Story = {
+  args: {
+    showGroupLabels: false,
+    columns: DEFAULT_COLUMNS.filter((column) => column !== 'assignee'),
+  },
+  play: async ({ canvasElement }) => {
+    const pill = (field: string) => editorField(canvasElement, field);
+    await waitFor(async () => expect(pill('status')).toBeTruthy());
+    await expect(pill('assignee')).toBeNull();
+  },
+};
+
+export const TestEditDelegateOnly: Story = {
+  args: {
+    showGroupLabels: false,
+    seed: () => [
+      Task.make({ title: 'Draft notes', status: 'started', delegate: { role: 'assistant', name: 'Scout' } }),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(() => {
+      const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+      if (!row) {
+        throw new Error('The task is not listed yet.');
+      }
+      return row;
+    });
+    await userEvent.click(row);
+    const title = found(
+      canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'),
+      'Title input',
+    );
+    await waitFor(async () => expect(title.value).toEqual('Draft notes'));
+    await expect(editorFieldLabel(editorField(canvasElement, 'assignee'))).toContain('Scout');
+  },
+};
+
+export const TestEditUnsetStatus: Story = {
+  args: {
+    showGroupLabels: false,
+    seed: () => [Task.make({ title: 'Sort the pantry' })],
+  },
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(() => {
+      const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+      if (!row) {
+        throw new Error('The task is not listed yet.');
+      }
+      return row;
+    });
+    await userEvent.click(row);
+    const title = found(
+      canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'),
+      'Title input',
+    );
+    await waitFor(async () => expect(title.value).toEqual('Sort the pantry'));
+    await expect(editorFieldLabel(editorField(canvasElement, 'status'))).toContain('To Do');
+  },
+};
+
 /**
  * Checking is selection, not a status write, and it is not the current row either: the box toggles
  * independently of which row the reader is on, and leaves the task's status alone.
@@ -1276,19 +1510,15 @@ export const TestEdit: Story = {
     await expect(title().value).toEqual('');
     await waitFor(async () => expect(description()).not.toBeNull());
 
-    // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
-    // cancel, and two dead controls read as a form to fill in rather than a place to type.
+    // ...and offers no Save: with nothing typed there is nothing to save, and a dead control reads as
+    // a form to fill in rather than a place to type.
     const save = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]');
-    const cancel = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]');
     await expect(save()).toBeNull();
-    await expect(cancel()).toBeNull();
     await userEvent.click(title());
     await userEvent.keyboard('Something');
     await waitFor(async () => expect(save()).not.toBeNull());
-    await expect(cancel()).not.toBeNull();
     await userEvent.clear(title());
     await waitFor(async () => expect(save()).toBeNull());
-    await expect(cancel()).toBeNull();
 
     // A half-typed title that loses focus creates nothing: leaving the field is not a decision to
     // add a task. Enter and Save are the deliberate acts, and they still work.
@@ -1384,18 +1614,14 @@ export const TestEdit: Story = {
     // edited one's text.
     await expect(text()).not.toContain('KEEP');
 
-    // Cancel leaves the same way but throws the pending edit away. The buttons must not take focus:
-    // the fields commit on blur, so a Cancel that stole focus would have written the very text it is
-    // meant to discard — as would the blur that tearing the editor down fires.
+    // Escape leaves the same way but throws the pending edit away — the pane shows only Save, so this
+    // is the exit that discards. It must not blur first: the fields commit on blur, which would have
+    // written the very text it is meant to discard.
     rows()[0].click();
     await waitFor(async () => expect(description()).not.toBeNull());
     await userEvent.click(content());
     await userEvent.keyboard(' THROW');
-    const cancelButton = pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]');
-    if (!cancelButton) {
-      throw new Error('Task edit cancel button not found.');
-    }
-    await userEvent.click(cancelButton);
+    await userEvent.keyboard('{Escape}');
     await waitFor(async () => expect(title().value).toEqual(''));
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
 
@@ -1436,6 +1662,80 @@ export const TestCreateFailureKeepsDraft: Story = {
     await userEvent.keyboard(' and more');
     await waitFor(async () => expect(titles()).toContain('slow to land'), { timeout: 5_000 });
     await expect(title().value).toEqual('slow to land and more');
+  },
+};
+
+export const TestCreateWithProperties: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+  },
+  play: async ({ canvasElement }) => {
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
+    const pill = (field: string) => found(editorField(pane, field), `${field} pill`);
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
+    const body = within(document.body);
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Order green beans');
+    await userEvent.click(pill('priority'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('High'));
+    await userEvent.click(pill('assignee'));
+    await userEvent.click(await body.findByText('Riley'));
+    await userEvent.click(pill('estimate'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('M'));
+    await waitFor(async () => expect(editorFieldLabel(pill('priority'))).toContain('High'));
+    await expect(editorFieldLabel(pill('assignee'))).toContain('Riley');
+
+    await userEvent.click(title());
+    await userEvent.keyboard('{Enter}');
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.textContent?.includes('Order green beans'),
+      );
+      if (!row) {
+        throw new Error('The created task is not listed yet.');
+      }
+      return row;
+    });
+    await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
+    await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toEqual('M');
+    await waitFor(async () => expect(editorFieldLabel(pill('priority'))).toContain('Priority'));
+  },
+};
+
+export const TestInlineCreateWithProperties: Story = {
+  args: { ...ChatPrompt.args },
+  play: async ({ canvasElement }) => {
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
+    const glyph = (field: string) =>
+      found(pane.querySelector<HTMLElement>(`[data-testid="${field}"]`), `${field} glyph`);
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
+    const body = within(document.body);
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Order green beans');
+    await userEvent.click(glyph('priority'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('High'));
+    await userEvent.click(glyph('estimate'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('M'));
+    await waitFor(async () => expect(glyph('priority').textContent).toContain('High'));
+    await expect(glyph('estimate').textContent).toEqual('M');
+
+    await userEvent.click(title());
+    await userEvent.keyboard('{Enter}');
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.textContent?.includes('Order green beans'),
+      );
+      if (!row) {
+        throw new Error('The created task is not listed yet.');
+      }
+      return row;
+    });
+    await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toContain('M');
   },
 };
 
@@ -1536,6 +1836,13 @@ export const TestCreateWithDescription: Story = {
     // field is not empty-stringed: CodeMirror paints the placeholder inside `.cm-content`.
     await expect(title().value).toEqual('');
     await waitFor(async () => expect(content().textContent).not.toContain('Roast it twice'));
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Second task{Enter}');
+    await waitFor(async () => expect(rows()).toHaveLength(before + 2));
+    const second = rows().find((row) => row.textContent?.includes('Second task'));
+    await expect(second).not.toBeUndefined();
+    await expect(second!.textContent).not.toContain('Roast it twice');
   },
 };
 

@@ -13,9 +13,9 @@ import * as Stream from 'effect/Stream';
 import { type Client } from '@dxos/client';
 import { type RecoverIdentityArgs } from '@dxos/client-protocol';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { getDeviceLabel } from '@dxos/client/halo';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
@@ -72,10 +72,11 @@ const PRESENCE: Record<Device_PresenceState, HaloIdentity.Presence> = {
   [Device_PresenceState.REMOVED]: 'removed',
 };
 
-const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
+/** A client device as the HALO API reports it. */
+export const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
   key: requirePublicKey(device.deviceKey).toHex(),
   kind: device.profile?.type !== undefined ? DEVICE_KINDS[device.profile.type] : undefined,
-  label: device.profile?.label,
+  label: getDeviceLabel(device.profile),
   os: device.profile?.os,
   platform: device.profile?.platform,
   current: device.kind === DeviceKind.CURRENT,
@@ -221,16 +222,6 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
         ),
       catch: (error) => new IdentityError({ context: { error } }),
     }),
-
-  personalSpaceId: Effect.tryPromise({
-    try: async () => {
-      // Same pre-initialization contract as `getSnapshot`: none means "unknown", not "absent".
-      const spaceKey = client.initialized ? client.halo.identity.get()?.spaceKey : undefined;
-      const key = toPublicKey(spaceKey);
-      return key ? Option.some(await createIdFromSpaceKey(key)) : Option.none();
-    },
-    catch: (error) => new IdentityError({ context: { error } }),
-  }),
 
   recover: (args) =>
     Effect.tryPromise({

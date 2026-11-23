@@ -26,9 +26,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
 import { type MediaArtifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
+import { StudioNamespace } from '../../namespace.ts';
 import { providerFieldMap } from './ProviderOptionsField.tsx';
 
 export type MediaArtifactFormProps = Util.ThemedClassName<{
@@ -57,7 +57,7 @@ export const MediaArtifactForm = ({
   attendableId,
   nodeId = attendableId,
 }: MediaArtifactFormProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(StudioNamespace.key);
   const { hasAttention } = useAttention(attendableId);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(artifact);
@@ -167,12 +167,12 @@ export const MediaArtifactForm = ({
     } catch (error) {
       log.catch(error);
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}/generate-error`,
+        id: `${StudioNamespace.key}/generate-error`,
         icon: 'ph--warning--regular',
         duration: 5_000,
-        title: ['generate-error.title', { ns: meta.profile.key }],
+        title: ['generate-error.title', { ns: StudioNamespace.key }],
         description: error instanceof Error ? error.message : String(error),
-        closeLabel: ['close.label', { ns: meta.profile.key }],
+        closeLabel: ['close.label', { ns: StudioNamespace.key }],
       });
     } finally {
       setGenerating(false);
@@ -182,7 +182,7 @@ export const MediaArtifactForm = ({
   // The op publishes a progress monitor under the artifact's id for as long as it runs, so a
   // generation started before this form mounted (navigated away and back, or an agent's) reads as
   // busy too — `generating` alone dies with the component.
-  const running = ToolkitHooks.useProgressMonitor(`${meta.profile.key}/${artifactId}`) !== undefined;
+  const running = ToolkitHooks.useProgressMonitor(`${StudioNamespace.key}/${artifactId}`) !== undefined;
 
   // A produced variant with a persisted jobId is an in-flight async job whose op is no longer
   // running (a reload); resume awaiting it so a long provider poll survives (the op polls without
@@ -222,7 +222,7 @@ export const MediaArtifactForm = ({
 
   const menuActions = useMenuBuilder(
     (get) => {
-      const builder = MenuBuilder.make().root({ label: ['artifact-toolbar.menu', { ns: meta.profile.key }] });
+      const builder = MenuBuilder.make().root({ label: ['artifact-toolbar.menu', { ns: StudioNamespace.key }] });
 
       // Generator selector (custom control).
       if (providers.length > 0) {
@@ -230,7 +230,7 @@ export const MediaArtifactForm = ({
           'generator',
           {
             variant: 'custom',
-            label: ['generator.placeholder', { ns: meta.profile.key }],
+            label: ['generator.placeholder', { ns: StudioNamespace.key }],
             render: () => (
               <Select.Root
                 value={[provider?.id]}
@@ -261,7 +261,9 @@ export const MediaArtifactForm = ({
             iconOnly: false,
             icon: busy ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular',
             iconClassNames: busy ? 'animate-spin' : undefined,
-            label: busy ? ['generating.label', { ns: meta.profile.key }] : ['generate.label', { ns: meta.profile.key }],
+            label: busy
+              ? ['generating.label', { ns: StudioNamespace.key }]
+              : ['generate.label', { ns: StudioNamespace.key }],
             disabled: !db || !provider || !hasAttention || busy || !canGenerate,
           },
           () => {
@@ -276,7 +278,7 @@ export const MediaArtifactForm = ({
       builder.menu('more', (overflow) => {
         overflow.action(
           'delete',
-          { label: ['delete.label', { ns: meta.profile.key }], icon: 'ph--trash--regular' },
+          { label: ['delete.label', { ns: StudioNamespace.key }], icon: 'ph--trash--regular' },
           handleDelete,
         );
       });

@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { Database, Obj, Ref } from '@dxos/echo';
-import * as Feature from '@dxos/plugin-projects/Feature';
+import * as Spec from '@dxos/compute/Spec';
+import { Database, Obj } from '@dxos/echo';
+import * as Feature from '@dxos/plugin-code/Feature';
 import { Text } from '@dxos/schema';
-import { Spec } from '@dxos/types';
 
 import content from './SPEC.mdl?raw';
 
@@ -25,13 +25,11 @@ export const SpecPartial: SampleSpace.Partial<SpecResult> = SampleSpace.partial(
   schemas: [Spec.Spec, Text.Text],
   run: () =>
     Effect.gen(function* () {
-      const spec = yield* Database.add(
-        Obj.make(Spec.Spec, {
-          name: 'Hello Worker',
-          content: Ref.make(Text.make({ content })),
-          [Obj.Meta]: { keys: [{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }] },
-        }),
-      );
+      const spec = Spec.make({ name: 'Hello Worker', content });
+      Obj.update(spec, (spec) => {
+        Obj.getMeta(spec).keys.push({ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH });
+      });
+      yield* Database.add(spec);
       return { spec };
     }),
 });

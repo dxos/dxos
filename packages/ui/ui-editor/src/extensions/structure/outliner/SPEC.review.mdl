@@ -1,0 +1,257 @@
+---
+spec: github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Outliner
+
+The outliner is built as specified and well covered by unit tests: the tree parser (including list islands and
+prose), the caret-snapping filter, whole-subtree indent, move and delete, the action scope, the empty-item exit, the
+ghost placeholder and add button, the single block-selection model and the subtree extent all have tests in this
+directory. The one divergence is seeding: `editor()` seeds an empty document only when `autoInsert` is passed, and
+`outliner()` calls it without, so an empty outline is not seeded (the ghost add button covers the blank line
+instead). The gaps are in the view layer: the pointer-over-target outdent rule, the drag preview shift, the
+current-item border and the menu trigger have no tests, and task-marker atomicity is a `test.todo`.
+
+Of 31 items: 21 done, 6 untested, 3 partial, 1 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict tree: The parser, Tree, treeFacet, getRange and outlinerTree exist as specified.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#Item, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#Tree, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#treeFacet, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#getRange, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#outlinerTree]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.test.ts]
+```
+
+```mdl
+verdict editor: The transaction filter snaps the caret, admits whole-line deletes and guards marker edits; seeding is opt-in.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.ts#editor]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.test.ts]
+  note: Seeding an empty document runs only with `editor(true)`; `outliner()` passes nothing, so the composed extension never seeds (see F-1.3).
+```
+
+```mdl
+verdict commands: The structural commands, getActionScope and the keymap are exported and behave as described.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#indentItemMore, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#indentItemLess, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#moveItemUp, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#moveItemDown, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#deleteItem, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#toggleTask, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#getActionScope, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#commands]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+```
+
+```mdl
+verdict dnd: The blocks adapter, subtree extent, move with re-indent, drop rule and selection commands exist; getBlocks is not exported.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#getExtent, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#moveBlocks, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#replaceBlocks, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#getDropIndent, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#selectAllItems, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#selectNoneItems, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#selectUp, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#selectDown, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#outlinerDnd]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.test.ts]
+  note: `getBlocks` is module-private (`const`, not `export`), though the spec lists it in the api. The module also adds `canDragItem` and `mergeRanges`, which the spec does not list.
+```
+
+```mdl
+verdict menu: A fixed ⋮ trigger tracks the caret line in the right gutter, hides on prose and during a drag, and opens the host popover.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/menu.ts#menu]
+  note: No test covers the trigger. The host actions live in plugin-tasks' `Outline.tsx` (delete, link), which call `deleteItem` over the action scope.
+```
+
+```mdl
+verdict F-1.1: Nested task and bullet lists parse to a Tree with level, type, line range and subtree.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#outlinerTree, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#Tree]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.test.ts]
+```
+
+```mdl
+verdict F-1.2: The tree is a facet recomputed from the document, which stays plain markdown.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#treeFacet, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#outlinerTree]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.test.ts, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+```
+
+```mdl
+verdict F-1.3: The composed outliner does not seed an empty document; seeding exists only behind editor(true).
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.ts#editor, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.ts#outliner]
+  note: |
+    `initialize(autoInsert)` inserts `- [ ] ` and places the caret only when `autoInsert` is true, and `outliner()` calls
+    `editor()` with the default `false`. An empty document instead shows the ghost add button on its blank line
+    (F-2.6). The only related test checks that an empty document has a tree.
+```
+
+```mdl
+verdict F-2.1: The filter snaps a caret in the marker to content start, content end or the previous line end by direction.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.ts#editor]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.test.ts]
+```
+
+```mdl
+verdict F-2.2: Whole-line item deletes pass the filter; edits inside the marker are constrained.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.ts#editor]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.test.ts]
+```
+
+```mdl
+verdict F-2.3: The filter reacts to the markdown keymap's change shapes for marker removal and continuation, but no test dispatches them.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.ts#editor]
+  note: `editor.test.ts` leaves this as `test.todo('task-marker atomicity ...')`.
+```
+
+```mdl
+verdict F-2.4: Top-level lists are islands, prose belongs to no item, the caret rests in prose, prose is flush and the menu hides on it.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#outlinerTree, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.ts#editor, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.ts#outliner, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/menu.ts#menu]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.test.ts, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.test.ts]
+  walkthrough:
+    - The parser makes each top-level list its own island and leaves prose out of every item. github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/tree.ts#outlinerTree
+    - The filter lets the caret rest where no item is found. github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.ts#editor
+    - The decorations give prose lines the flush cm-outline-prose class. github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.ts#outliner
+    - The menu trigger hides when the caret has no item. github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/menu.ts#menu
+  note: The flush styling and the hidden menu are not tested; the tree and caret parts are.
+```
+
+```mdl
+verdict F-2.5: Enter on an empty childless item leaves a blank line (splitting a list mid-way); Backspace deletes it.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#exitEmptyItem, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.ts#editor]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/editor.test.ts]
+```
+
+```mdl
+verdict F-2.6: An empty focused item shows the placeholder and a blank line shows an add button that inserts a task.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/ghost.ts#ghost, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/ghost.ts#insertTaskAtLine]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/ghost.test.ts]
+```
+
+```mdl
+verdict F-3.1: Grip, shift-click and keyboard selection all use blockSelectionField.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#outlinerDnd, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#selectUp, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#selectDown, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#selectAllItems]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.test.ts]
+```
+
+```mdl
+verdict F-3.2: getExtent returns getRange, so a selected or dragged parent covers its descendants.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#getExtent]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.test.ts]
+```
+
+```mdl
+verdict F-3.3: The caret item gets a cm-list-item-current border distinct from the selection background.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.ts#outliner]
+  note: |
+    The private `decorations()` plugin adds the class when focused; the border is applied per line of the caret item,
+    not across its whole subtree as the spec says. No test checks the decoration.
+```
+
+```mdl
+verdict F-4.1: Tab and Shift-Tab re-indent the item with its descendants; Tab is a no-op with nothing to nest under.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#indentItemMore, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#indentItemLess]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+```
+
+```mdl
+verdict F-4.2: Move up and down swap whole subtrees with the adjacent sibling.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#moveItemUp, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#moveItemDown]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+```
+
+```mdl
+verdict F-4.3: toggleTask flips every scope item to the first item's opposite type, keeping indentation.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#toggleTask]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+```
+
+```mdl
+verdict F-5.1: The blocks drag lifts the subtree extent into a floating preview, and the menu hides during the drag.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#outlinerDnd, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/blocks/drag.ts#createBlockDrag, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/menu.ts#menu]
+  note: The preview, collapsed subtree and hidden grip come from `createBlockDrag` with `getExtent`; no outliner test drives a drag.
+```
+
+```mdl
+verdict F-5.2: getDropIndent defaults to the source level clamped to [sibling of T, child of A].
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#getDropIndent]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.test.ts]
+```
+
+```mdl
+verdict F-5.3: getDropIndent drops to T's level at a branch boundary while the pointer is at or below T's top.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#getDropIndent]
+  note: The test only calls `getDropIndent` with the pointer far above T; the outdent branch is exercised only by calling `moveBlocks` with an explicit indent 0.
+```
+
+```mdl
+verdict F-5.4: The preview offset is derived from the same indent the drop applies, and the drop re-roots the subtree to it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#getDropIndent, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#moveBlocks]
+  note: `moveBlocks` re-rooting to a given indent is tested; a non-zero preview offset and its agreement with the drop are not.
+```
+
+```mdl
+verdict F-6.1: With a block selection, commands act over each selected item's subtree.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#getActionScope, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#deleteItem]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+```
+
+```mdl
+verdict F-6.2: With no selection, commands act over the caret item's subtree.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#getActionScope]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+```
+
+```mdl
+verdict F-6.3: deleteItem removes each scope subtree with its trailing newline, merges ranges and clears the selection.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#deleteItem, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#mergeRanges]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.test.ts]
+```
+
+```mdl
+verdict T-indent-subtree: A test indents an item and checks its descendants move with it.
+  status: done
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#indentItemMore]
+```
+
+```mdl
+verdict T-drop-stays-in-branch: Tests drop B before D at its own level and check getDropIndent keeps it there with the pointer above D.
+  status: done
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.test.ts]
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#getDropIndent, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#moveBlocks]
+```
+
+```mdl
+verdict T-drop-outdents-over-target: A test applies the outdented drop, but nothing checks the pointer over D chooses it.
+  status: partial
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.test.ts]
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/dnd.ts#moveBlocks]
+  note: `(ii) outdent` calls `moveBlocks(view, [1], 3, 0)` with the level given; `getDropIndent` with the pointer over D's row is not exercised.
+```
+
+```mdl
+verdict T-delete-subtree: A test deletes a parent under the caret and checks its subtree goes with it.
+  status: done
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#deleteItem]
+```

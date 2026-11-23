@@ -7,13 +7,13 @@
 import React, { type SVGProps, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type ChromaticPalette, type MessageValence, type NeutralPalette, type ThemedClassName } from '@dxos/ui-types';
+import { type Hue, type MessageValence, type ThemedClassName } from '@dxos/ui-types';
 
 import { useIconHref } from '../../hooks/useIconHref.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 
-export type IconHue = NeutralPalette | ChromaticPalette | MessageValence;
+export type IconHue = Hue;
 
 export type IconValence = MessageValence;
 

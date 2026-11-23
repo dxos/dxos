@@ -18,7 +18,7 @@ import { EntityId, type URI } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';
 import { startTestServer } from '@dxos/mcp-client/testing';
 
-import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index.ts';
+import { AutomationSkill, ChatContextSkill, PlanningSkill } from '../index.ts';
 import {
   AddMcpConnection,
   EnableSkills,
@@ -34,7 +34,7 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: SkillManagerHandlers,
   types: [AccessToken.AccessToken, Connection.Connection, Skill.Skill],
-  skills: [ChatContextSkill.make(), MemorySkill.make(), AutomationSkill.make()],
+  skills: [ChatContextSkill.make(), PlanningSkill.make(), AutomationSkill.make()],
   tracing: 'pretty',
 });
 
@@ -215,9 +215,9 @@ describe('Skill Manager', () => {
         const conversation = yield* getConversationDXN;
         const result = yield* Operation.invoke(QuerySkills, {}, { conversation });
         expect(result).toHaveLength(3);
-        const keys = result.map((skill: Skill.Skill) => Obj.getMeta(skill).key);
+        const keys = result.map(({ key }) => key);
         expect(keys).toContain('org.dxos.skill.chatContext');
-        expect(keys).toContain('org.dxos.skill.memory');
+        expect(keys).toContain('org.dxos.skill.planning');
         expect(keys).toContain('org.dxos.skill.automation');
       },
       provideTestLayers,
@@ -231,10 +231,8 @@ describe('Skill Manager', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* getConversationDXN;
-        const result = yield* Operation.invoke(QuerySkills, { query: 'save a memory' }, { conversation });
-        expect(result.map((skill: Skill.Skill) => Obj.getMeta(skill).key)[0]).toBe('org.dxos.skill.memory');
-        // Each result names its tools, which is how the model tells it has found the right one.
-        expect(result[0].tools.length).toBeGreaterThan(0);
+        const result = yield* Operation.invoke(QuerySkills, { query: 'checklist task' }, { conversation });
+        expect(result.map(({ key }) => key)[0]).toBe('org.dxos.skill.planning');
 
         const none = yield* Operation.invoke(QuerySkills, { query: 'zzzz' }, { conversation });
         expect(none).toHaveLength(0);
@@ -299,14 +297,14 @@ describe('Skill Manager', () => {
         const { enabled, rejected } = yield* Operation.invoke(
           EnableSkills,
           {
-            keys: ['org.dxos.skill.chatContext', 'org.dxos.skill.memory', 'org.dxos.skill.automation'],
+            keys: ['org.dxos.skill.chatContext', 'org.dxos.skill.planning', 'org.dxos.skill.automation'],
           },
           { conversation },
         );
         expect(enabled).toHaveLength(2);
         const enabledKeys = enabled.map((bp: Skill.Skill) => Obj.getMeta(bp).key);
         expect(enabledKeys).toContain('org.dxos.skill.chatContext');
-        expect(enabledKeys).toContain('org.dxos.skill.memory');
+        expect(enabledKeys).toContain('org.dxos.skill.planning');
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.skill.automation');
       },

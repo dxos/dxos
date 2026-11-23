@@ -3,7 +3,7 @@
 //
 
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
-import { AiContext } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -21,10 +21,8 @@ import { AgentSkillHandlers } from '../skills/agent/operations/index.ts';
 import { AlarmHandlers } from '../skills/alarm/operations/index.ts';
 import { ChatContextHandlers } from '../skills/chat-context/operations/index.ts';
 import { DelegationSkillHandlers } from '../skills/delegation/operations/index.ts';
-import { MemoryHandlers } from '../skills/memory/operations/index.ts';
 import { PlanningHandlers } from '../skills/planning/operations/index.ts';
 import { SkillManagerHandlers } from '../skills/skill-manager/operations/index.ts';
-import * as Memory from '../types/Memory.ts';
 
 /**
  * Shared layer for operation tests: every handler in the package plus the types those handlers
@@ -38,19 +36,17 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
     AlarmHandlers,
     ChatContextHandlers,
     DelegationSkillHandlers,
-    MemoryHandlers,
     PlanningHandlers,
     SkillManagerHandlers,
   ),
   types: [
     Agent.Agent,
-    AiContext.Binding,
+    ...TrajectoryStore.types,
     Chat.Chat,
     Collection.Collection,
     Employer.Employer,
     Feed.Feed,
     Instructions.Instructions,
-    Memory.Memory,
     Organization.Organization,
     Person.Person,
     Outline.Outline,

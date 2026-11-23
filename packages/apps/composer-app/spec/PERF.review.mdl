@@ -1,0 +1,32 @@
+---
+spec: github:dxos/dxos/packages/apps/composer-app/spec/PERF.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Composer Performance
+
+The one flow is implemented as executable stages in `perf-projects.spec.ts`, and its stage ids match
+the spec's step ids one for one, from `boot` through `revisit-load-tasks`. The fixture
+(`perf/fixture.ts`) builds the single `SCALE` through the operation layer before the first stage,
+and replication is awaited as its own stage. The only gap is the teardown step: the spec never
+deletes the fixture space, and relies on the discarded first-run profile instead.
+
+Of 1 item: 1 done.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QA-1: perf-projects.spec.ts runs every stage of the flow under the same stage ids.
+  status: done
+  evidence: [github:dxos/dxos/packages/apps/composer-app/src/playwright/perf/fixture.ts#createProjectsFixture]
+  tests: [github:dxos/dxos/packages/apps/composer-app/src/playwright/perf-projects.spec.ts]
+  note: The "Delete the fixture space" after-step has no code; the run discards its fresh profile instead.
+```

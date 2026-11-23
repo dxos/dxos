@@ -16,8 +16,26 @@ import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { Button } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Editor, type EditorToolbarState, useEditorContext } from '@dxos/react-ui-editor';
+import {
+  type LayoutName,
+  LAYOUTS,
+  type SlideEdit,
+  SNIPPETS,
+  columnSnippet,
+  hasSlots,
+  insertSnippet,
+  nextSlot,
+  notesEdit,
+  parseSlide,
+  setFrontmatter,
+  slotBefore,
+  surfaceSnippet,
+} from '@dxos/react-ui-slides';
+import { slideCompletion } from '@dxos/react-ui-slides/editor';
+import { slideHighlight } from '@dxos/react-ui-slides/editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
@@ -34,29 +52,19 @@ import {
   scrollbarAutohide,
 } from '@dxos/ui-editor';
 
-import { type BackgroundSettings, type SlideInsert, SlideToolbar, useSlideInsertActions } from '#components';
+import {
+  type BackgroundSettings,
+  type SlideInsert,
+  SlideToolbar,
+  newSlideContent,
+  useSlideInsertActions,
+} from '#components';
 import { type SlideSource, slideSourcesAtom } from '#deck';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
-import {
-  LAYOUTS,
-  type SlideEdit,
-  SNIPPETS,
-  columnSnippet,
-  hasSlots,
-  insertSnippet,
-  nextSlot,
-  notesEdit,
-  parseSlide,
-  setFrontmatter,
-  slotBefore,
-  surfaceSnippet,
-} from '#markdown';
-import { meta } from '#meta';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { SlidePreview } from '../SlidePreviewArticle/SlidePreview.tsx';
-import { slideCompletion } from './slide-completion.ts';
-import { slideHighlight } from './slide-highlight.ts';
 
 export type SlideEditorArticleProps = AppSurface.ObjectArticleProps<Text.Text>;
 
@@ -65,6 +73,7 @@ export type SlideEditorArticleProps = AppSurface.ObjectArticleProps<Text.Text>;
  * the plank's companion), kept in step with the cursor.
  */
 export const SlideEditorArticle = ({ role, subject, attendableId }: SlideEditorArticleProps) => {
+  const { t } = UiHooks.useTranslation(PresenterNamespace.key);
   const { previewMode, splitSize } = useViewState(SlideEditorViewState.aspect, SlideEditorViewState.CONTEXT);
   const { update } = useViewStateActions(SlideEditorViewState.aspect, SlideEditorViewState.CONTEXT);
   const handleSizeChange = useCallback((size: number) => update((state) => ({ ...state, splitSize: size })), [update]);
@@ -90,8 +99,16 @@ export const SlideEditorArticle = ({ role, subject, attendableId }: SlideEditorA
                 <SlideEditorContent subject={subject} />
               </Splitter.Panel>
               <Splitter.ResizeTrigger />
-              <Splitter.Panel position='end'>
+              <Splitter.Panel position='end' classNames='relative'>
                 <SlidePreview subject={subject} />
+                <Button.Root
+                  classNames='absolute top-1 end-1 z-[1]'
+                  label={t('close-preview.label')}
+                  icon='ph--x--regular'
+                  iconOnly
+                  variant='ghost'
+                  onClick={() => update((state) => ({ ...state, previewMode: 'off' }))}
+                />
               </Splitter.Panel>
             </Splitter.Root>
           ) : (
@@ -109,7 +126,7 @@ type SlideEditorContentProps = Pick<SlideEditorArticleProps, 'subject'>;
 
 /** The markdown editor; publishes its cursor and applies the preview's selection requests. */
 const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(PresenterNamespace.key);
   const themeMode = UiHooks.useThemeMode();
   const registry = useContext(RegistryContext);
   const { controller, state: toolbarState } = useEditorContext('SlideEditorContent');
@@ -223,6 +240,7 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
   );
 
   const [objectsOpen, setObjectsOpen] = useState(false);
+  const [newSlideLayout, setNewSlideLayout] = useState<LayoutName>();
   const include = useCallback((object: Obj.Unknown) => object.id !== subject.id, [subject]);
   const objects = useObjectOptions(objectsOpen ? Obj.getDatabase(subject) : undefined, include);
 
@@ -244,22 +262,56 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     [view],
   );
 
-  const open = useCallback(
-    (index: number) => {
-      const id = slides[index]?.id;
+  /** Opens a path in this slide's space; the deck's own article, or one of its slides. */
+  const openPath = useCallback(
+    (path: string | undefined) => {
       const db = Obj.getDatabase(subject);
-      if (!presentation || !db || !id) {
+      if (!db || !path) {
         return;
       }
       void invokePromise(LayoutOperation.Open, {
-        subject: [GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), id)],
+        subject: [path],
         workspace: GraphPath.getSpacePath(db.spaceId),
       });
     },
-    [invokePromise, presentation, slides, subject],
+    [invokePromise, subject],
   );
 
+  const openSlide = useCallback(
+    (id: string | undefined) =>
+      openPath(
+        presentation && id
+          ? GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), id)
+          : undefined,
+      ),
+    [openPath, presentation],
+  );
+
+  const open = useCallback((index: number) => openSlide(slides[index]?.id), [openSlide, slides]);
+
   return {
+    newSlideLayout,
+    onNewSlideLayoutChange: setNewSlideLayout,
+    // Added after the slide being edited rather than last, which is where the gallery's own button puts one: here
+    // the deck has a current slide, and the new one belongs next to it. The index is read from `slides` on the
+    // presentation, not from the deck's sources: those drop an entry whose slide no longer resolves, so a dangling
+    // one before this slide would shift the insert in front of it. A slide not in the array at all appends.
+    onAddSlide: presentation
+      ? () => {
+          // By the ref's own entity id, which is there whether or not the slide has loaded.
+          const slideId = Presentation.getSlide(subject)?.id;
+          const index = slideId
+            ? presentation.slides.findIndex((ref) => {
+                const uri = EID.tryParse(ref.uri);
+                return uri !== undefined && EID.getEntityId(uri) === slideId;
+              })
+            : -1;
+          return openSlide(
+            Presentation.addSlide(presentation, newSlideContent(newSlideLayout), index >= 0 ? index + 1 : undefined).id,
+          );
+        }
+      : undefined,
+    onOpenGallery: presentation ? () => openPath(GraphPath.getObjectPathFromObject(presentation)) : undefined,
     onLayoutChange: (layout: (typeof LAYOUTS)[number]) =>
       apply((content) => setFrontmatter(content, { layout: layout === 'default' ? undefined : layout }), false),
     onInsert: (insert: SlideInsert) =>
@@ -285,13 +337,10 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     onObjectsOpenChange: setObjectsOpen,
     onInsertObject: (id: string) =>
       apply((content, cursor) => insertSnippet(content, cursor, surfaceSnippet(EID.make({ entityId: id })))),
-    onPreviewModeChange: (previewMode: SlideEditorViewState.PreviewMode) => {
-      update((state) => ({ ...state, previewMode }));
-      void invokePromise(LayoutOperation.UpdateCompanion, {
-        subject: previewMode === 'companion' ? `~${SlideEditorViewState.COMPANION_VARIANT}` : null,
-        anchor: attendableId,
-      });
-    },
+    // The preview is the editor's own pane, so showing or hiding it says nothing about the plank's
+    // companion — which another tool may have opened, and which closing here would take with it.
+    onPreviewModeChange: (previewMode: SlideEditorViewState.PreviewMode) =>
+      update((state) => ({ ...state, previewMode })),
     onPrevious: position > 0 ? () => open(position - 1) : undefined,
     onNext: position >= 0 && position < slides.length - 1 ? () => open(position + 1) : undefined,
     onPresent:

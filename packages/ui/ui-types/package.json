@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ui-types",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Types for DXOS UI and theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,6 +25,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./phosphor": {
+      "source": "./src/phosphor.ts",
+      "types": "./dist/types/src/phosphor.d.ts",
+      "import": "./dist/lib/phosphor.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -38,6 +43,9 @@
   ],
   "dependencies": {
     "i18next": "catalog:"
+  },
+  "devDependencies": {
+    "@phosphor-icons/core": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -7,11 +7,12 @@
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { type DiagnosticProvider as DiagnosticProviderType } from '#diagnostics';
-import { meta } from '#meta';
+
+import { DoctorNamespace } from '../namespace.ts';
 
 /**
  * Plugins contribute diagnostic providers via this capability.
  */
 export const DiagnosticProvider = Capability.make<DiagnosticProviderType>()(
-  `${meta.profile.key}.capability.diagnosticProvider`,
+  `${DoctorNamespace.key}.capability.diagnosticProvider`,
 );

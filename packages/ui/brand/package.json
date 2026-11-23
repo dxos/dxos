@@ -1,6 +1,6 @@
 {
   "name": "@dxos/brand",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "DXOS brand assets.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -54,6 +54,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
     "d3": "catalog:",
+    "opentype.js": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import type * as Scene from './scene.ts';
 import { CLASS_DIAGRAM } from './testing.ts';
 import { GRID, type Router, compile } from './uml-grid.ts';
@@ -13,7 +15,7 @@ const objectsOf = (commands: Scene.Command[]) =>
 
 const nodesOf = (objects: Scene.WorldObject[]) => objects.filter((object) => object.id !== 'edges');
 
-const frameOf = (node: Scene.WorldObject) => node.elements.find((element) => element.id === 'frame') as Scene.Box;
+const frameOf = (node: Scene.WorldObject) => node.elements.find((element) => element.id === 'frame') as Shape.Box;
 
 describe('uml-grid', () => {
   test('every class renders as an equal-size frame with a top-rounded header', ({ expect }) => {
@@ -22,7 +24,7 @@ describe('uml-grid', () => {
     expect(nodes).toHaveLength(6);
     const sizes = new Set(
       nodes.map((node) => {
-        const [frame, title] = node.elements as Scene.Box[];
+        const [frame, title] = node.elements as Shape.Box[];
         expect(frame.id).toBe('frame');
         expect(title.id).toBe('title');
         expect(title.corners).toBe('top');
@@ -53,7 +55,7 @@ describe('uml-grid', () => {
   test('connectors are orthogonal: every segment is axis-aligned', ({ expect }) => {
     const edges = objectsOf(compile(CLASS_DIAGRAM)).find((object) => object.id === 'edges')!;
 
-    const segments: [Scene.Point, Scene.Point][] = [];
+    const segments: [Shape.Point, Shape.Point][] = [];
     for (const element of edges.elements) {
       if (element.kind === 'line') {
         element.points.forEach((point, index) => {
@@ -80,12 +82,12 @@ describe('uml-grid', () => {
 
     // `Animal <|-- Dog` renders upward: the head lands on Animal's bottom edge.
     const inheritance = edges.elements.find(
-      (element): element is Scene.Arrow => element.kind === 'arrow' && element.id.startsWith('Dog-Animal'),
+      (element): element is Shape.Arrow => element.kind === 'arrow' && element.id.startsWith('Dog-Animal'),
     )!;
     expect(inheritance.end!.y).toBe(animal.origin!.y + frame.h);
 
     const labels = edges.elements.filter((element) => element.kind === 'text');
-    expect(labels.map((element) => (element as Scene.Text).text)).toEqual(
+    expect(labels.map((element) => (element as Shape.Text).text)).toEqual(
       expect.arrayContaining(['1 owns *', 'chews']),
     );
   });
@@ -93,7 +95,7 @@ describe('uml-grid', () => {
   test('dashed styling carries onto routed paths', ({ expect }) => {
     const edges = objectsOf(compile(CLASS_DIAGRAM)).find((object) => object.id === 'edges')!;
     const realization = edges.elements.find(
-      (element): element is Scene.Arrow => element.kind === 'arrow' && element.id.startsWith('Dog-Serializable'),
+      (element): element is Shape.Arrow => element.kind === 'arrow' && element.id.startsWith('Dog-Serializable'),
     )!;
     expect(realization.stroke).toBe('dashed');
   });
@@ -106,7 +108,7 @@ describe('uml-grid', () => {
       { x: to.x, y: to.y },
     ];
     const edges = objectsOf(compile(CLASS_DIAGRAM, { route })).find((object) => object.id === 'edges')!;
-    const paths = edges.elements.filter((element): element is Scene.Polyline => element.kind === 'line');
+    const paths = edges.elements.filter((element): element is Shape.Polyline => element.kind === 'line');
 
     expect(paths.length).toBeGreaterThan(0);
     for (const path of paths) {
@@ -130,7 +132,7 @@ describe('uml-grid', () => {
     const nodes = nodesOf(objectsOf(compile(CLASS_DIAGRAM, { cell: { w: 256, h: 480 }, titleHeight: 48 })));
 
     for (const node of nodes) {
-      const [frame, title] = node.elements as Scene.Box[];
+      const [frame, title] = node.elements as Shape.Box[];
       expect(frame.w).toBe(snap(256));
       expect(frame.h).toBe(snap(480));
       expect(title.h).toBe(48);
@@ -145,7 +147,7 @@ describe('uml-grid', () => {
     // The sole subtype sits directly below its supertype, so the arrow runs straight: a single
     // two-point segment, no polyline waypoints.
     expect(edges.elements.filter((element) => element.kind === 'line')).toHaveLength(0);
-    const [arrow] = edges.elements as Scene.Arrow[];
+    const [arrow] = edges.elements as Shape.Arrow[];
     expect(arrow.start!.x).toBe(arrow.end!.x);
     const [a, b] = ['A', 'B'].map((id) => objects.find((object) => object.id === id)!);
     expect(a.origin!.x).toBe(b.origin!.x);
@@ -164,7 +166,7 @@ describe('uml-grid', () => {
       'B --> D',
     ].join('\n');
     const edges = objectsOf(compile(source)).find((object) => object.id === 'edges')!;
-    const paths = edges.elements.filter((element): element is Scene.Polyline => element.kind === 'line');
+    const paths = edges.elements.filter((element): element is Shape.Polyline => element.kind === 'line');
 
     // Column alignment can straighten at most one of the crossing edges; the rest bend through
     // the same gutter and their channel runs must not share a coordinate.

@@ -1,0 +1,356 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-navtree/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: NavTreePlugin
+
+The plugin implements almost everything the spec describes. Tab switching, selection, drag-and-drop and
+expansion all live in `NavTreeContainer`; per-path state is in the `State` capability; shortcuts are in the
+`Keyboard` capability; `expose` is a handler for `LayoutOperation.Expose`. Tests cover the keyboard
+bindings and `expose` (`plugin.browser.test.ts`), drop-kind resolution and rearrange indices
+(`util.test.ts`), open-state persistence (`nav-tree-view-state.test.ts`) and focus/selection via the
+`NavTree` stories. Tab switching, the option/active-item selection branches, the drop callbacks and current
+tracking have no test.
+
+Divergences: persistence goes through the attention plugin's `ViewState` `local` backend rather than a
+hand-rolled localStorage blob (same effect). Teardown unregisters only the plugin's own hotkeys, not a
+`Keyboard.singleton` (F-5.4). `keyBinding` lives on action properties, not `NodeProperties`.
+
+Of 43 items: 12 done, 20 untested, 8 partial, 1 diverged, 2 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict NavTreeItemState: The state type has open and current booleans.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/types/NavTreeCapabilities.ts#NavTreeItemState]
+  note: Shape matches; no test asserts on the type itself beyond the expose test's `open` reads.
+```
+
+```mdl
+verdict KeyBinding: The per-platform key binding type matches.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/types/NavTreeNode.ts#KeyBinding]
+  note: All five optional platform keys are present.
+```
+
+```mdl
+verdict NodeProperties: Most fields exist, but split across NodeProperties, ActionProperties and the graph-node type.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/types/NavTreeNode.ts#NodeProperties, github:dxos/dxos/packages/plugins/plugin-navtree/src/types/NavTreeNode.ts#ActionProperties, github:dxos/dxos/packages/plugins/plugin-navtree/src/types/NavTreeNode.ts#NavTreeItemGraphNode]
+  note: |
+    `keyBinding` is on `ActionProperties`; `persistenceClass`/`persistenceKey` are on `NavTreeItemGraphNode`.
+    `NodeProperties` adds `count`, `modifiedCount` and `headingClassName` the spec lacks. No test.
+```
+
+```mdl
+verdict NavTree: Renders L0 workspace tabs and the L1 tree; handlers come from NavTreeContext.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/components/NavTree/NavTree.tsx#NavTree]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/components/NavTree/NavTree.stories.tsx]
+  note: The actions and the item-end slot are passed through `NavTreeContext` (`renderItemEnd`), not props; an extra `unavailable` prop exists.
+```
+
+```mdl
+verdict NavTreeContainer: Wires every listed handler, but emits no onNavigate.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/components/NavTree/NavTree.stories.tsx]
+  note: |
+    Select, open-change, tab-change, back and the drop monitor are all there; navigation goes through layout
+    operations rather than an `onNavigate` event, which does not exist. It also adds hover prefetch.
+```
+
+```mdl
+verdict CommandsDialogContent: A searchable action palette, but scoped to the current hotkey scope and with a selected prop, not onClose.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/CommandsDialogContent/CommandsDialogContent.tsx#CommandsDialogContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/CommandsDialogContent/CommandsDialogContent.stories.tsx]
+  note: |
+    Lists actions whose parent matches `getHotkeyScope()`, not all graph actions. Props are `{ selected? }`;
+    there is no `onClose`. Stories test autofocus and Escape-to-close.
+```
+
+```mdl
+verdict CommandsTrigger: The search-input button opens the commands dialog; the shortcut is a separate graph action.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/CommandsTrigger/CommandsTrigger.tsx#CommandsTrigger, github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/app-graph-builder.ts]
+  walkthrough:
+    - The button invokes LayoutOperation.UpdateDialog for COMMANDS_DIALOG on click. github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/CommandsTrigger/CommandsTrigger.tsx#CommandsTrigger
+    - A root graph action with the shift+meta+k / ctrl+shift+k binding opens the same dialog. github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/app-graph-builder.ts
+  note: No test clicks the trigger or presses the shortcut.
+```
+
+```mdl
+verdict expose: Expands and marks open every ancestor of the subject.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#Expose, github:dxos/dxos/packages/plugins/plugin-navtree/src/operations/expose.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/plugin.browser.test.ts]
+  walkthrough:
+    - app-toolkit declares Expose with key org.dxos.operation.appToolkit.expose. github:dxos/dxos/packages/sdk/app-toolkit/src/operations/LayoutOperation.ts#Expose
+    - The handler expands each ancestor from expandAttendableId and sets it open in NavTreeCapabilities.State. github:dxos/dxos/packages/plugins/plugin-navtree/src/operations/expose.ts
+```
+
+```mdl
+verdict F-1.1: Root children render as L0 workspace tabs.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/components/NavTree/NavTree.tsx#NavTree, github:dxos/dxos/packages/plugins/plugin-navtree/src/components/Sidebar/L0Menu.tsx#L0Menu]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/components/NavTree/NavTree.stories.tsx]
+```
+
+```mdl
+verdict F-1.2: Selecting a tab expands it and invokes SwitchWorkspace.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: `handleTabChange` calls `expandSync` then `SwitchWorkspace`; it also opens the first item when the deck is empty. No test.
+```
+
+```mdl
+verdict F-1.3: Selecting a tab with the sidebar closed expands the sidebar.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: Any tab other than the active one sends `UpdateSidebar { state: 'expanded' }`. No test.
+```
+
+```mdl
+verdict F-1.4: Clicking the active tab while expanded collapses (or closes on mobile) the sidebar.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: `collapsed` when `isLg`, else `closed`. No test.
+```
+
+```mdl
+verdict F-2.1: Branch rows show a disclosure indicator.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-list/src/components/Tree/Tree.tsx]
+  note: The toggle is react-ui-list's `TreeItemIndicator`; no navtree test asserts it.
+```
+
+```mdl
+verdict F-2.2: Expanding persists open per path and expands the node in the graph.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer, github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/state.ts, github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/nav-tree-view-state.ts#navTreeOpenAspect]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/nav-tree-view-state.test.ts]
+  walkthrough:
+    - handleOpenChange sets the path open and calls AppGraph.expandSync. github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer
+    - setItem writes open to the navtree-open ViewState aspect, which the local backend keeps in localStorage. github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/nav-tree-view-state.ts#navTreeOpenAspect
+  note: Storage is the ViewState `local` backend, not a direct localStorage key.
+```
+
+```mdl
+verdict F-2.3: Persisted open paths re-expand, but per workspace when it becomes active, not all at init.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/state.ts]
+  note: |
+    `reexpandWorkspace` waits for the app graph, then expands open paths in the current workspace, and again
+    on each workspace change. The view-state test checks re-seeding, not the graph expansion.
+```
+
+```mdl
+verdict F-2.4: Expose expands and opens every ancestor.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/operations/expose.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/plugin.browser.test.ts]
+```
+
+```mdl
+verdict F-3.1: Selecting a non-current item opens it solo with shift forwarded.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/components/NavTree/NavTree.stories.tsx]
+  note: The Default story selects a row with Enter and checks focus lands on the opened item.
+```
+
+```mdl
+verdict F-3.2: Option-click on an active item invokes Close.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: No test.
+```
+
+```mdl
+verdict F-3.3: A plain click on an active item invokes ScrollIntoView.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: No test.
+```
+
+```mdl
+verdict F-3.4: The item's default-disposition action runs after navigation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: Runs after the Open/Close/ScrollIntoView invoke is fired (not awaited). No test.
+```
+
+```mdl
+verdict F-3.5: The sidebar closes after selection on small screens, whether or not navigation succeeded.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: `UpdateSidebar { state: 'closed' }` runs whenever `!isLg`; the invoke is not awaited, so success is not checked. No test.
+```
+
+```mdl
+verdict F-4.1: Rows rearrange within one parent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer, github:dxos/dxos/packages/plugins/plugin-navtree/src/util.ts#getRearrangeIndex]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/util.test.ts]
+```
+
+```mdl
+verdict F-4.2: Cross-parent drops move within a move scope and link across it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/util.ts#resolveDropKind]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/util.test.ts]
+```
+
+```mdl
+verdict F-4.3: A rearrange drop calls the parent's onRearrange with the new order.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: The index maths is tested in `util.test.ts`; the callback call in the drop monitor is not.
+```
+
+```mdl
+verdict F-4.4: A move calls onMoveOut on the source parent, then onMoveIn on the target.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: Both are called in order but neither is awaited, so an async `onMoveOut` does not finish first. No test.
+```
+
+```mdl
+verdict F-4.5: A link drop calls onLink on the target and leaves the source parent alone.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer]
+  note: No test of the callback.
+```
+
+```mdl
+verdict F-4.6: blockInstruction rejects the drop.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer, github:dxos/dxos/packages/ui/react-ui-list/src/components/Tree/Tree.tsx]
+  walkthrough:
+    - getDropKind returns reject when the target's blockInstruction says so. github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer
+    - The Tree turns a reject into an instruction-blocked, which the drop monitor ignores. github:dxos/dxos/packages/ui/react-ui-list/src/components/Tree/Tree.tsx
+  note: No test.
+```
+
+```mdl
+verdict F-4.7: A link-only drop shows a dashed indicator.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/NavTreeContainer/NavTreeContainer.tsx#NavTreeContainer, github:dxos/dxos/packages/ui/react-ui/src/theme/tree.css]
+  note: `resolveDrop` reports `kind: 'link'` via `isLink`; the Tree sets `data-drop-kind` and `tree.css` styles it. No test.
+```
+
+```mdl
+verdict F-5.1: Every graph action with a keyBinding is registered as a hotkey.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/keyboard.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/plugin.browser.test.ts]
+```
+
+```mdl
+verdict F-5.2: Graph changes re-sync bindings through a 500 ms debounce.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/keyboard.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/plugin.browser.test.ts]
+```
+
+```mdl
+verdict F-5.3: The commands dialog is bound to shift+meta+k / ctrl+shift+k.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/app-graph-builder.ts]
+  note: Only `macos` and `windows` are set; Linux falls back through `resolveKeyBinding`. No test presses it.
+```
+
+```mdl
+verdict F-5.4: Teardown unregisters only the plugin's own bindings; nothing destroys a Keyboard singleton.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/keyboard.ts]
+  note: The finalizer unsubscribes and unregisters the ids it registered; the code comment says destroying the shared `hotkeyStore` would unbind every `useHotkeys` user.
+```
+
+```mdl
+verdict F-6.1: Per-path state is an Atom.family keyed by path string.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/state.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/plugin.browser.test.ts]
+```
+
+```mdl
+verdict F-6.2: Open state persists on every change.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/state.ts, github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/nav-tree-view-state.ts#navTreeOpenAspect]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/nav-tree-view-state.test.ts]
+  note: Top-level workspace paths are excluded from persistence.
+```
+
+```mdl
+verdict F-6.3: Current follows the layout and is never persisted.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/state.ts]
+  note: `setItem` writes ViewState only for `open`. No test asserts `current` is absent from storage.
+```
+
+```mdl
+verdict F-6.4: Layout changes mark removed items not current and new ones current.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/state.ts]
+  note: `updateCurrent` runs on a microtask after each layout notification. No test.
+```
+
+```mdl
+verdict T-1: No test switches workspace tabs.
+  status: missing
+  note: Neither the browser test nor the NavTree stories click a workspace tab and assert SwitchWorkspace or the sidebar state.
+```
+
+```mdl
+verdict T-2: Persistence of open per path is tested; the UI expand and Graph.expand are not.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/capabilities/nav-tree-view-state.test.ts]
+  note: The test drives the ViewState aspect directly; nothing expands a folder row.
+```
+
+```mdl
+verdict T-3: The browser test checks ancestors are marked open, not that Graph.expand runs.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-navtree/src/operations/expose.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/plugin.browser.test.ts]
+  note: Covers the first `then:` clause only.
+```
+
+```mdl
+verdict T-4: The Default story selects a row; the solo disposition and shift are not asserted.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/components/NavTree/NavTree.stories.tsx]
+  note: The story checks focus on the opened item, not the Open arguments.
+```
+
+```mdl
+verdict T-5: The dialog's autofocus is tested, but no test presses the shortcut.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/containers/CommandsDialogContent/CommandsDialogContent.stories.tsx]
+  note: `TestAutoFocus` renders the dialog directly.
+```
+
+```mdl
+verdict T-6: Rearrange index maths is tested; no test drags or checks onRearrange.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-navtree/src/util.test.ts]
+  note: `getRearrangeIndex` tests cover the new position only.
+```
+
+```mdl
+verdict QA-1: The QA test is a manual or agent-driven run; no automated test runs it.
+  status: missing
+  note: Status `unverified`; no Playwright spec in composer-app covers expose plus select.
+```

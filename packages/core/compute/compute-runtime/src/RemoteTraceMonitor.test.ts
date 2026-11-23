@@ -47,6 +47,22 @@ describe('createSwarmRemoteTraceMonitor', () => {
     expect(messages[0].events[0].type).toBe('status.update');
   });
 
+  test('a payload that does not decode is dropped and the messages after it still arrive', async ({ expect }) => {
+    const monitor = RemoteTraceMonitor.createSwarmRemoteTraceMonitor({
+      subscribe: () =>
+        Stream.fromIterable([
+          { payload: new Uint8Array([0x0a, 0x02, 0x08, 0x01]) },
+          broadcast({ pid: 'p1', space: 'SPACE1' }, 'status.update'),
+        ]),
+    });
+
+    const messages = await EffectEx.runPromise(
+      Stream.runCollect(monitor.subscribeToTraceMessages({ type: 'status.update' })),
+    );
+
+    expect(messages.map((message) => message.meta.pid)).toEqual(['p1']);
+  });
+
   test('empty filter subscribes with no tags (matches nothing at the swarm)', async ({ expect }) => {
     const requestedTags: string[][] = [];
     const monitor = RemoteTraceMonitor.createSwarmRemoteTraceMonitor({

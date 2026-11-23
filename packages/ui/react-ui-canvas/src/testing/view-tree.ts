@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { type Box, type BuilderElement, ViewBuilder, type ViewElement, type ViewTree } from '../builder/index.ts';
 import { DEFAULT_SIZES, portId } from '../utils/index.ts';
 
@@ -13,7 +15,7 @@ import { DEFAULT_SIZES, portId } from '../utils/index.ts';
 //
 
 /** The class fixture's unit: a major cell, so every box lands on the grid move and resize snap to. */
-const cell = (units: number) => units * 64;
+const cell = (units: number) => units * MAJOR_GRID;
 
 const CLASS_SIZE = { width: cell(4), height: cell(3) };
 const PORTAL_SIZE = DEFAULT_SIZES.view;
@@ -88,7 +90,7 @@ const classLevel = (level: LevelDef, path: string): ViewElement => {
     }),
   );
   const associations = level.classes.slice(1).map((current, index) =>
-    ViewBuilder.link('line', `${id}/${level.classes[index].key}#${portId('e')}`, `${id}/${current.key}#${portId('w')}`)
+    ViewBuilder.link('smart', `${id}/${level.classes[index].key}#${portId('e')}`, `${id}/${current.key}#${portId('w')}`)
       .id(`${id}/assoc${index + 1}`)
       .properties({ ends: { end: 'arrow' } }),
   );
@@ -109,8 +111,8 @@ const classLevel = (level: LevelDef, path: string): ViewElement => {
  */
 export const createViewTree = (depth: number, prefix = 'root'): ViewTree => treeScene(depth, prefix, 0).build();
 
-/** The fixture's unit: every point and size is written as a count of these, never as raw pixels. */
-const scale = (units: number) => units * 32;
+/** The fixture's unit: half a major cell, every point and size a count of these rather than raw pixels. */
+const scale = (units: number) => (units * MAJOR_GRID) / 2;
 
 const PORTAL = DEFAULT_SIZES.view;
 
@@ -177,7 +179,7 @@ const rootElements = (name: string, elementId: (suffix: string) => string): Buil
 
 const childElements = (name: string, elementId: (suffix: string) => string, variant: Variant): BuilderElement[] => {
   const directed = (id: string, from: string, to: string) =>
-    ViewBuilder.link('line', from, to)
+    ViewBuilder.link('smart', from, to)
       .id(elementId(id))
       .properties({ ends: { end: 'arrow' } });
   switch (variant) {
@@ -193,7 +195,7 @@ const childElements = (name: string, elementId: (suffix: string) => string, vari
       return [
         labelled(ViewBuilder.rect, elementId('person'), units(-20, -4, 8, 8), 'Person'),
         labelled(ViewBuilder.rect, elementId('org'), units(-4, -4, 8, 8), 'Organization'),
-        ViewBuilder.link('curve', `${elementId('person')}#e2`, `${elementId('org')}#w2`).id(elementId('works')),
+        ViewBuilder.link('smart', `${elementId('person')}#e2`, `${elementId('org')}#w2`).id(elementId('works')),
       ];
     case 'cycle':
       return [
@@ -212,7 +214,7 @@ const childElements = (name: string, elementId: (suffix: string) => string, vari
           text: `A note in "${name}". Portals below.`,
         }),
         labelled(ViewBuilder.rect, elementId('box'), units(6, -4, 8, 8), 'Box'),
-        ViewBuilder.link('curve', elementId('note'), elementId('box')).id(elementId('nb')),
+        ViewBuilder.link('smart', elementId('note'), elementId('box')).id(elementId('nb')),
       ];
   }
 };

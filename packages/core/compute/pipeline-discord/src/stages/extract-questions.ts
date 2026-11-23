@@ -6,17 +6,93 @@ import * as Effect from 'effect/Effect';
 
 import { AgentRegistry, type StateError, type StateStore, type Type, tapStage } from '@dxos/crawler';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Fact, Graph, Hash } from '@dxos/echo-memory';
 import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
+import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
 import { Person } from '@dxos/types';
 
 import { DISCORD_SOURCE } from '../constants.ts';
 import { StoreError } from '../errors.ts';
-import { ExtractedQuestionStore } from '../stores/index.ts';
 
 export type ExtractQuestionsOptions = {
   /** ECHO database: when provided, each asker is find-or-created as a `Person` (by foreign key). */
   readonly db?: Database.Database;
+  /** Source namespace of each question fact's `source` DXN (default 'discord', matching fact extraction). */
+  readonly sourceNamespace?: string;
+};
+
+const QUESTION_EXTRACTOR = { id: 'extract-questions', model: 'detect-questions', version: '1' } as const;
+
+const SCHEMA_QUESTION = 'https://schema.org/Question';
+
+/** Slug of the question node; slugs are local to their graph, so each question's graph holds its own anonymous one. */
+const QUESTION_NODE = 'question';
+
+/** One question a message asked, as {@link questionFacts} records it. */
+export type AskedQuestion = {
+  readonly question: string;
+  /** DXN of the message, e.g. `discord:<message id>`. */
+  readonly source: string;
+  /** IRI of the asker (`AgentRegistry.iriForUser`), the node their other facts name too. */
+  readonly agent: string;
+  readonly agentLabel?: string;
+  /** ISO time of the message. */
+  readonly askedAt?: string;
+  /** Where the question sits in the message text. */
+  readonly span?: { readonly start: number; readonly end: number };
+  /** Hash of the whole message text. */
+  readonly sourceHash: string;
+};
+
+/**
+ * The facts recording one asked question, in a named graph of its own around an anonymous question node:
+ * `asker —asked→ question`, `question —is a→ schema:Question` and `question —has text→ "…"`. Later passes can add
+ * structure to the same node (`question —about→ opfs`). Deterministic in its input, so a replay writes the same graph.
+ */
+export const questionFacts = (asked: AskedQuestion): Fact.Fact[] => {
+  // The message time stands in for the record time: a wall-clock value would mint a new graph on every replay.
+  const time = asked.askedAt ?? new Date(0).toISOString();
+  const node = { kind: 'entity', entity: QUESTION_NODE, label: asked.question } as const;
+  const base = {
+    id: '',
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: {
+      agent: asked.agent,
+      ...(asked.agentLabel ? { agentLabel: asked.agentLabel } : {}),
+      source: asked.source,
+      generatedAtTime: time,
+      ...(asked.span ? { span: asked.span } : {}),
+    },
+    recordedAt: time,
+    extractor: QUESTION_EXTRACTOR,
+    sourceHash: asked.sourceHash,
+  } satisfies Omit<Fact.Encoded, 'assertion'>;
+  return Graph.assign(
+    [
+      {
+        ...base,
+        assertion: {
+          subject: { kind: 'entity', entity: asked.agent, ...(asked.agentLabel ? { label: asked.agentLabel } : {}) },
+          predicate: 'asked',
+          object: node,
+        },
+      },
+      {
+        ...base,
+        assertion: {
+          subject: node,
+          predicate: 'is a',
+          object: { kind: 'entity', entity: SCHEMA_QUESTION, label: 'Question' },
+        },
+      },
+      {
+        ...base,
+        assertion: { subject: node, predicate: 'has text', object: { kind: 'literal', literal: asked.question } },
+      },
+    ],
+    { name: () => `${asked.source}#question#${Hash.text(asked.question)}` },
+  );
 };
 
 /**
@@ -75,13 +151,9 @@ const upsertAsker = (
  */
 export const extractQuestionsStage = (
   options: ExtractQuestionsOptions = {},
-): Stage.Stage<
-  Type.Event,
-  Type.Event,
-  StateError,
-  ExtractedQuestionStore.ExtractedQuestionStore | AgentRegistry.AgentRegistry | StateStore.StateStore
-> =>
-  tapStage('extract-questions', ['Message'], (event) =>
+): Stage.Stage<Type.Event, Type.Event, StateError, AgentRegistry.AgentRegistry | FactStore | StateStore.StateStore> => {
+  const namespace = options.sourceNamespace ?? 'discord';
+  return tapStage('extract-questions', ['Message'], (event) =>
     event._tag !== 'Message'
       ? Effect.void
       : Effect.gen(function* () {
@@ -89,32 +161,71 @@ export const extractQuestionsStage = (
           if (questions.length === 0) {
             return;
           }
-          yield* Effect.forEach(
-            questions,
-            (question) =>
-              ExtractedQuestionStore.put({
-                authorId: event.message.author.id,
-                ...(event.message.author.displayName ? { authorLabel: event.message.author.displayName } : {}),
-                targetId: event.target.id,
-                messageId: event.message.id,
+          for (const question of questions) {
+            log.info('question', {
+              author: event.message.author.displayName ?? event.message.author.id,
+              target: event.target.id,
+              message: event.message.id,
+              question,
+            });
+          }
+          const { text, author } = event.message;
+          const agent = yield* AgentRegistry.resolve(
+            AgentRegistry.identifiersForUser(author),
+            AgentRegistry.labelForUser(author),
+          );
+          const store = yield* FactStore;
+          yield* store.putFacts(
+            questions.flatMap((question) => {
+              const start = text.indexOf(question);
+              return questionFacts({
                 question,
+                source: `${namespace}:${event.message.id}`,
+                agent: AgentRegistry.iriForUser(author),
+                ...(agent.label ? { agentLabel: agent.label } : {}),
                 ...(event.message.createdAt ? { askedAt: event.message.createdAt } : {}),
-              }).pipe(
-                Effect.tap(() =>
-                  Effect.sync(() =>
-                    log.info('question', {
-                      author: event.message.author.displayName ?? event.message.author.id,
-                      target: event.target.id,
-                      message: event.message.id,
-                      question,
-                    }),
-                  ),
-                ),
-              ),
-            { discard: true },
+                ...(start >= 0 ? { span: { start, end: start + question.length } } : {}),
+                sourceHash: Hash.text(text),
+              });
+            }),
           );
           if (options.db) {
-            yield* upsertAsker(options.db, event.message.author);
+            yield* upsertAsker(options.db, author);
           }
         }),
   );
+};
+
+/** A question someone asked, as {@link extractQuestionsStage} recorded it in the fact store. */
+export type RecordedQuestion = {
+  readonly question: string;
+  /** The asker's IRI. */
+  readonly agent?: string;
+  readonly agentLabel?: string;
+  /** The message it was asked in, e.g. `discord:<message id>`. */
+  readonly source: string;
+  readonly askedAt: string;
+};
+
+/** Every question {@link extractQuestionsStage} recorded, read back from the fact store's `asked` facts. */
+export const listQuestions: () => Effect.Effect<RecordedQuestion[], SemanticIndexError, FactStore> = Effect.fnUntraced(
+  function* () {
+    const store = yield* FactStore;
+    const facts = yield* store.query({ predicate: 'asked' });
+    return facts.flatMap((fact): RecordedQuestion[] => {
+      const object = fact.assertion.object;
+      if (fact.extractor.id !== 'extract-questions' || object.kind !== 'entity' || !object.label) {
+        return [];
+      }
+      return [
+        {
+          question: object.label,
+          ...(fact.attribution.agent ? { agent: fact.attribution.agent } : {}),
+          ...(fact.attribution.agentLabel ? { agentLabel: fact.attribution.agentLabel } : {}),
+          source: fact.attribution.source,
+          askedAt: fact.attribution.generatedAtTime,
+        },
+      ];
+    });
+  },
+);

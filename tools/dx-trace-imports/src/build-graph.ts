@@ -23,6 +23,9 @@ const findPackageRoot = (filePath: string): string | null => {
   }
 };
 
+const isBareSpecifier = (specifier: string): boolean =>
+  !specifier.startsWith('.') && !specifier.startsWith('/') && !specifier.startsWith('#');
+
 const shouldRecurseInto = (
   resolved: string,
   matcher: Matcher,
@@ -44,6 +47,13 @@ export type ImportGraph = {
    * at that edge. Only the traced package's own files are policed.
    */
   readonly unresolvedSubpaths: string[];
+  /**
+   * Files reached through an allowed specifier, or by relative or `#` import from such a file. They
+   * are never terminals, so an allowed subpath of a banned package is checked for what it imports.
+   * Sharing the set across the graph cannot hide a banned path: a banned bare specifier ends at its
+   * own external node before it resolves to a file.
+   */
+  readonly allowed: Set<string>;
 };
 
 /**
@@ -55,11 +65,15 @@ export const buildImportGraph = (
   entryKey: string,
   conditions: readonly string[],
   matcher: Matcher,
+  allow: Matcher | null,
   resolveWorkspacePackage: WorkspacePackageResolver,
 ): ImportGraph => {
   const resolver = createImportResolver(conditions);
   const graph = new Map<string, string[]>();
   const unresolvedSubpaths: string[] = [];
+  const allowed = new Set<string>();
+  const isAllowedSpecifier = (specifier: string): boolean =>
+    allow !== null && matchesKey(externalKey(specifier), allow, resolveWorkspacePackage);
   const entryPackageRoot = findPackageRoot(entryKey);
   const queue = [entryKey];
   const queued = new Set(queue);
@@ -83,11 +97,26 @@ export const buildImportGraph = (
 
     const deps = new Set<string>();
     for (const specifier of parseImportSpecifiers(source, fileKey)) {
+      // A target naming a package subpath (`defuddle/full`) is matched on the specifier, since the
+      // file it resolves to no longer carries the subpath.
+      const bare = isBareSpecifier(specifier);
+      const allowedEdge = bare ? isAllowedSpecifier(specifier) : allowed.has(fileKey);
+      if (bare && !allowedEdge && matchesKey(externalKey(specifier), matcher, resolveWorkspacePackage)) {
+        const external = externalKey(specifier);
+        deps.add(external);
+        ensureNode(external);
+        continue;
+      }
+
       const resolved = resolver.resolve(fileKey, specifier);
       if (resolved) {
         deps.add(resolved);
         ensureNode(resolved);
-        if (shouldRecurseInto(resolved, matcher, resolveWorkspacePackage) && !queued.has(resolved)) {
+        if (allowedEdge) {
+          allowed.add(resolved);
+        }
+        const recurse = allowedEdge || shouldRecurseInto(resolved, matcher, resolveWorkspacePackage);
+        if (recurse && !queued.has(resolved)) {
           queued.add(resolved);
           queue.push(resolved);
         }
@@ -108,5 +137,5 @@ export const buildImportGraph = (
     graph.set(fileKey, [...deps]);
   }
 
-  return { graph, unresolvedSubpaths };
+  return { graph, unresolvedSubpaths, allowed };
 };

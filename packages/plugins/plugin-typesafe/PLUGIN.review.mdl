@@ -1,0 +1,101 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-typesafe/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TypeSafePlugin
+
+The plugin is small and matches its spec. The connector stores a trimmed key as an AccessToken
+(`typesafe.ai`) plus a Connection and rejects blank keys through `onValidate` as an `Effect.fail`.
+The model resolver contributes `TypeSafeResolver` (default model `ai.typesafe.model.jev.latest`),
+reads the key per call, routes through EDGE `/ai/generate/typesafe` unless overridden (moving a
+connected key to `X-BYOK`), and fails a direct call with no key as an `AuthenticationError`
+(`MissingKey`). Unit tests cover each piece.
+
+Of 9 items: 7 done, 0 untested, 1 partial, 0 diverged, 1 missing. (T-2 and T-3 share T-1's fenced block, so
+`deus review items` does not list them and they carry no verdict: T-2 is covered by `edge-http-client.test.ts`;
+T-3 is covered by `model-resolver.test.ts` except that the space slice staying up is not asserted.) Findings:
+
+- **No end-to-end test joins the pieces.** T-1 (paste a key, get an answer) is covered only as
+  separate connector and key-resolution tests; nothing runs an operation through the contributed resolver.
+- **T-2 and T-3 are not reviewable items.** They sit in T-1's fenced block, so the tool sees only T-1;
+  each scenario needs its own fence.
+- **QA-1 is manual** and was last run against a local proxy because the vendor blocks CORS.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict F-1.1: The connector entry for typesafe.ai takes a pasted API key.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.ts#createTypeSafeConnectorEntry, github:dxos/dxos/packages/plugins/plugin-typesafe/dx.config.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict F-1.2: Submit builds an AccessToken (source typesafe.ai) and a linked Connection.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.ts#typeSafeCredentialForm, github:dxos/dxos/packages/plugins/plugin-typesafe/src/constants.ts#TYPESAFE_SOURCE]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.test.ts, github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.test.ts]
+```
+
+```mdl
+verdict F-1.3: onValidate fails a blank key with MissingApiKeyError, keeping the dialog open.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.ts#typeSafeCredentialForm, github:dxos/dxos/packages/plugins/plugin-typesafe/src/errors.ts#MissingApiKeyError]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict F-2.1: The module contributes an AiModelResolver defaulting to ai.typesafe.model.jev.latest.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.ts, github:dxos/dxos/packages/core/compute/ai/src/Model.ts#typesafeJev]
+  tests: [github:dxos/dxos/packages/core/compute/ai/src/resolvers/typesafe/TypeSafeResolver.test.ts]
+  note: The resolver is tested in @dxos/ai; the plugin's contribution of it is not tested.
+```
+
+```mdl
+verdict F-2.2: The key is read from CredentialsService inside Effect.suspend on every call.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.ts#connectedApiKey, github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.ts#requiredApiKey]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.test.ts]
+```
+
+```mdl
+verdict F-2.3: A direct endpoint with no key fails with AuthenticationError (MissingKey).
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.ts#requiredApiKey]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.test.ts]
+```
+
+```mdl
+verdict F-2.4: Calls go through EDGE /ai/generate/typesafe; a connected key moves to X-BYOK, otherwise EDGE uses its platform key.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.ts#resolveEndpoint, github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/edge-http-client.ts#makeEdgeHttpClient, github:dxos/edge/packages/services/ai-service/src/api.ts#TYPESAFE_GENERATE_PREFIX]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/edge-http-client.test.ts, github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.test.ts]
+  walkthrough:
+    - Unless an override is set, the endpoint resolves to the EDGE host. github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.ts#resolveEndpoint
+    - The EDGE client sends the call to the typesafe service, moving a bearer key to X-BYOK. github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/edge-http-client.ts#makeEdgeHttpClient
+    - EDGE uses the X-BYOK key if present, otherwise its platform key. github:dxos/edge/packages/services/ai-service/src/api.ts#TYPESAFE_GENERATE_PREFIX
+```
+
+```mdl
+verdict T-1: Tests cover the connector and the key lookup separately, not a pasted key reaching the model.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.ts#typeSafeCredentialForm, github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.ts#connectedApiKey]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.test.ts, github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/model-resolver.test.ts]
+  note: No test runs an operation asking AiService.decisionModel with a connected key.
+```
+
+```mdl
+verdict QA-1: Not automated.
+  status: missing
+  note: A manual run (status partial, 2026-09-17) used a local proxy; no automated test drives the connector dialog and labeller.
+```

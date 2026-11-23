@@ -10,7 +10,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Entity, Obj, Type } from '@dxos/echo';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormExtensions } from '@dxos/react-ui-form';
 
 const INSTRUCTIONS_SCHEMA = Type.getSchema(Instructions.Instructions);
 
@@ -26,6 +26,8 @@ export type InstructionsEditorProps = {
   readonly?: boolean;
   /** Instructions schema fields rendered AND written back; others are left untouched. */
   fields?: readonly string[];
+  /** Added to the form's editors (see `Form.Root`). */
+  extensions?: FormExtensions;
 };
 
 /**
@@ -39,6 +41,7 @@ export const InstructionsEditor = ({
   instructions,
   readonly,
   fields = DEFAULT_FIELDS,
+  extensions,
 }: InstructionsEditorProps) => {
   // Signalled here rather than by each embedding surface: a `skills` row renders blank until the
   // modules gated on this event contribute their definitions.
@@ -82,6 +85,7 @@ export const InstructionsEditor = ({
       schema={INSTRUCTIONS_SCHEMA}
       db={db}
       readonly={readonly}
+      extensions={extensions}
       defaultValues={defaultValues}
       getOptions={getRefOptions}
       onValuesChanged={handleValuesChanged}

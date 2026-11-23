@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { TestCase, TestPlan, TestRun } from '#types';
+
+import { QaNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -29,7 +30,7 @@ export const translations = [
         'typename.label': 'Test run',
         'typename.label_other': 'Test runs',
       },
-      [meta.profile.key]: {
+      [QaNamespace.key]: {
         'plugin.name': 'QA',
         'cases.label': 'Cases',
         'runs.label': 'Runs',

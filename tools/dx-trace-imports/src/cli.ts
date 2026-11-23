@@ -6,6 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
@@ -15,11 +16,20 @@ const DEFAULT_CONDITIONS = ['workerd', 'worker', 'node'] as const;
 
 type FailMode = 'present' | 'missing';
 
+/** A `--to` target or, when `exception`, an `--allow` entry; `scope` limits it to sets naming that condition. */
+type TargetEntry = { pattern: string; exception: boolean; scope: string | null };
+
+/** The folded `--to` and `--allow` patterns one condition set is traced with. */
+type SetTargets = { to: string; allow: string | undefined };
+
 interface ParsedArgs {
   from: string | null;
   /** One trace per subpath; a guard usually covers every entry a headless host imports. */
   exportSubpaths: string[];
-  to: string;
+  /** Adds, per condition set, every subpath whose export entry names one of its conditions. */
+  conditionalExports: boolean;
+  /** `--to` and `--allow` entries; each condition set traces the ones in scope for it. */
+  targets: TargetEntry[];
   maxChains: number;
   /**
    * Independent condition sets, one per `--conditions` occurrence. A plugin resolves
@@ -47,6 +57,9 @@ const stringList = (value: unknown): string[] =>
  */
 const foldTargets = (targets: string[]): string => (targets.length === 1 ? targets[0] : `{${targets.join(',')}}`);
 
+/** An `exports` object keyed by conditions (`{ "workerd": …, "default": … }`) describes `.` itself. */
+const isSubpathMap = (exports: object): boolean => Object.keys(exports).some((key) => key.startsWith('.'));
+
 /**
  * Every export subpath of the package in `cwd` that resolves to a module: everything except
  * `./package.json`, wildcard patterns and stylesheet or data exports (`./theme.css`).
@@ -55,12 +68,82 @@ const allExportSubpaths = (cwd: string): string[] => {
   // Boundary: package.json contents are untyped JSON.
   const manifest = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')) as { exports?: unknown };
   const exports = manifest.exports;
-  if (typeof exports !== 'object' || exports === null || Array.isArray(exports)) {
+  if (typeof exports !== 'object' || exports === null || Array.isArray(exports) || !isSubpathMap(exports)) {
     return ['.'];
   }
   return Object.keys(exports).filter(
     (subpath) => subpath !== './package.json' && !subpath.includes('*') && !/\.(css|json|svg|wasm)$/.test(subpath),
   );
+};
+
+/**
+ * Every export subpath of the package in `cwd` whose entry names one of `conditions` as a key, at
+ * any depth. A subpath without such a key is not built for that runtime, so a guard on the runtime
+ * build has nothing to check there.
+ */
+const conditionalExportSubpaths = (cwd: string, conditions: readonly string[]): string[] => {
+  const manifest: unknown = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
+  const exports: unknown =
+    typeof manifest === 'object' && manifest !== null ? Reflect.get(manifest, 'exports') : undefined;
+  // An array is a fallback list for `.`, so it falls to the root case below.
+  if (typeof exports !== 'object' || exports === null) {
+    return [];
+  }
+  const declares = (entry: unknown): boolean =>
+    typeof entry === 'object' &&
+    entry !== null &&
+    // A `null` target excludes the subpath from that runtime, so there is nothing built to trace.
+    Object.entries(entry).some(([key, value]) => (conditions.includes(key) && value !== null) || declares(value));
+  if (!isSubpathMap(exports)) {
+    return declares(exports) ? ['.'] : [];
+  }
+  return allExportSubpaths(cwd).filter((subpath) => declares(Reflect.get(exports, subpath)));
+};
+
+/**
+ * Reads a `--bans` file: a map from condition to `ban` and `allow` lists of packages, subpaths or
+ * globs. A condition's lists apply to the `--conditions` sets that name it, so one file holds a list
+ * per runtime.
+ */
+const readBansFile = (file: string): TargetEntry[] => {
+  // Boundary: YAML contents are untyped.
+  const document: unknown = parseYaml(fs.readFileSync(path.resolve(file), 'utf8'));
+  if (typeof document !== 'object' || document === null || Array.isArray(document)) {
+    throw new Error(`${file}: expected a map from condition to { ban, allow }.`);
+  }
+  const patterns = (value: unknown, key: string): string[] => {
+    if (value === undefined || value === null) {
+      return [];
+    }
+    if (!Array.isArray(value) || !value.every((entry) => typeof entry === 'string')) {
+      throw new Error(`${file}: ${key} must be a list of strings.`);
+    }
+    return value;
+  };
+  return Object.entries(document).flatMap(([scope, lists]: [string, unknown]) => {
+    // An array here would read as a map with no `ban` and silently drop the runtime's checks.
+    if (typeof lists !== 'object' || lists === null || Array.isArray(lists)) {
+      throw new Error(`${file}: ${scope} must be a map with \`ban\` and \`allow\`.`);
+    }
+    return [
+      ...patterns(Reflect.get(lists, 'ban'), `${scope}.ban`).map((pattern) => ({ pattern, exception: false, scope })),
+      ...patterns(Reflect.get(lists, 'allow'), `${scope}.allow`).map((pattern) => ({
+        pattern,
+        exception: true,
+        scope,
+      })),
+    ];
+  });
+};
+
+/** Folds the entries in scope for `conditions`; `undefined` when no target applies to that set. */
+const targetsFor = (entries: TargetEntry[], conditions: readonly string[]): SetTargets | undefined => {
+  const inScope = entries.filter((entry) => entry.scope === null || conditions.includes(entry.scope));
+  const to = inScope.filter((entry) => !entry.exception).map((entry) => entry.pattern);
+  const allow = inScope.filter((entry) => entry.exception).map((entry) => entry.pattern);
+  return to.length === 0
+    ? undefined
+    : { to: foldTargets(to), allow: allow.length > 0 ? foldTargets(allow) : undefined };
 };
 
 const parseFailOn = (value: unknown): FailMode | null => {
@@ -94,12 +177,32 @@ const parseArgs = async (): Promise<ParsedArgs> => {
       default: false,
       describe: 'Trace every export subpath in ./package.json, so the guard covers subpaths added later.',
     })
+    .option('conditional-exports', {
+      type: 'boolean',
+      default: false,
+      describe:
+        'Trace each export subpath under the --conditions sets its package.json entry names, so a guard ' +
+        'on a runtime build covers every subpath built for it. Combines with --export.',
+    })
     .option('to', {
       type: 'string',
       array: true,
-      demandOption: true,
       describe:
         'Terminal: npm package name, file path, or glob pattern (e.g. "*.pcss", "@dxos/react-ui*"). Repeatable.',
+    })
+    .option('bans', {
+      type: 'string',
+      array: true,
+      describe:
+        "YAML map from condition to `ban` (--to targets) and `allow` (--allow entries) lists; a condition's " +
+        'lists apply to the --conditions sets that name it. Repeatable.',
+    })
+    .option('allow', {
+      type: 'string',
+      array: true,
+      describe:
+        'Bare specifier (package, subpath or glob) exempt from --to; the files it resolves to are traced ' +
+        'instead, so e.g. "@dxos/react-ui-attention/types" passes only while it imports nothing banned. Repeatable.',
     })
     .option('max-chains', { type: 'number', default: 10, describe: 'Stop after this many chains' })
     .option('conditions', {
@@ -121,13 +224,19 @@ const parseArgs = async (): Promise<ParsedArgs> => {
       describe: 'Exit non-zero if any chains are present or if no chains are found',
     })
     .check((args) => {
-      const sources = [Boolean(args.from), stringList(args.export).length > 0, Boolean(args.allExports)];
+      const sources = [
+        Boolean(args.from),
+        stringList(args.export).length > 0 || Boolean(args.conditionalExports),
+        Boolean(args.allExports),
+      ];
       const count = sources.filter(Boolean).length;
       if (count === 0) {
-        throw new Error('Provide one of --from <entry.ts>, --export <subpath> or --all-exports.');
+        throw new Error(
+          'Provide one of --from <entry.ts>, --export <subpath>, --all-exports or --conditional-exports.',
+        );
       }
       if (count > 1) {
-        throw new Error('Use only one of --from, --export or --all-exports.');
+        throw new Error('Use only one of --from, --export/--conditional-exports or --all-exports.');
       }
       return true;
     })
@@ -139,9 +248,13 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     throw new Error(`Invalid --max-chains value: ${String(argv.maxChains)}. Must be a positive integer.`);
   }
 
-  const targets = stringList(argv.to);
-  if (targets.length === 0) {
-    throw new Error('Provide at least one --to <package-or-pattern-or-path>.');
+  const targets: TargetEntry[] = [
+    ...stringList(argv.to).map((pattern) => ({ pattern, exception: false, scope: null })),
+    ...stringList(argv.allow).map((pattern) => ({ pattern, exception: true, scope: null })),
+    ...stringList(argv.bans).flatMap(readBansFile),
+  ];
+  if (!targets.some((entry) => !entry.exception)) {
+    throw new Error('Provide at least one --to <package-or-pattern-or-path> or a --bans file with a `ban` list.');
   }
 
   const conditionSets = stringList(argv.conditions)
@@ -154,7 +267,8 @@ const parseArgs = async (): Promise<ParsedArgs> => {
   return {
     from: argv.from ? String(argv.from) : null,
     exportSubpaths: argv.allExports ? allExportSubpaths(process.cwd()) : stringList(argv.export),
-    to: foldTargets(targets),
+    conditionalExports: Boolean(argv.conditionalExports),
+    targets,
     maxChains,
     conditionSets,
     packagesOnly: Boolean(argv.packagesOnly),
@@ -163,11 +277,17 @@ const parseArgs = async (): Promise<ParsedArgs> => {
 };
 
 /** Traces one entry under one condition set; returns whether it violated `--fail-on`. */
-const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined, conditions: string[]): boolean => {
+const traceEntry = (
+  args: ParsedArgs,
+  exportSubpath: string | undefined,
+  conditions: string[],
+  { to, allow }: SetTargets,
+): boolean => {
   const result = traceImports({
     from: args.from ?? undefined,
     exportSubpath,
-    to: args.to,
+    to,
+    allow,
     maxChains: args.maxChains,
     conditions,
     packagesOnly: args.packagesOnly,
@@ -180,10 +300,10 @@ const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined, conditi
   console.error(`graph: ${result.metafilePath}`);
 
   if (result.labelChains.length === 0) {
-    console.log(`No import paths from "${label}" to "${args.to}".`);
+    console.log(`No import paths from "${label}" to "${to}".`);
     if (args.failOn === 'missing') {
       console.error('');
-      console.error(`Failed because "${label}" does not transitively import "${args.to}".`);
+      console.error(`Failed because "${label}" does not transitively import "${to}".`);
       return true;
     }
     return false;
@@ -195,7 +315,7 @@ const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined, conditi
 
   if (args.failOn === 'present') {
     console.error('');
-    console.error(`Failed because "${label}" transitively imports "${args.to}".`);
+    console.error(`Failed because "${label}" transitively imports "${to}".`);
     return true;
   }
   return false;
@@ -207,11 +327,25 @@ const main = async () => {
   // Every entry is traced under every condition set even after one fails, so a single run reports
   // every offending combination rather than only the first — the guard is usually asserting a
   // property of all of them.
-  const entries: (string | undefined)[] = args.exportSubpaths.length > 0 ? args.exportSubpaths : [undefined];
   let failed = false;
   for (const conditions of args.conditionSets) {
+    const targets = targetsFor(args.targets, conditions);
+    if (!targets) {
+      console.log(`No targets apply to [${conditions.join(',')}].`);
+      continue;
+    }
+    const subpaths = [
+      ...new Set([
+        ...(args.conditionalExports ? conditionalExportSubpaths(process.cwd(), conditions) : []),
+        ...args.exportSubpaths,
+      ]),
+    ];
+    if (args.conditionalExports && subpaths.length === 0) {
+      console.log(`No export subpaths declare any of [${conditions.join(',')}].`);
+    }
+    const entries: (string | undefined)[] = subpaths.length > 0 || args.conditionalExports ? subpaths : [undefined];
     for (const entry of entries) {
-      failed = traceEntry(args, entry, conditions) || failed;
+      failed = traceEntry(args, entry, conditions, targets) || failed;
     }
   }
   process.exit(failed ? 1 : 0);

@@ -1,0 +1,75 @@
+---
+title: Overview
+description: What EDGE is, and where ECHO, HALO, MESH, SAGE and PLEX use it.
+welcome:
+  section: EDGE
+  tagline: Hosted services for sync, identity and compute.
+  background: edge
+---
+
+import Diagram from '../../../../components/Diagram.astro';
+
+EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers.
+
+In a client-server app, the data lives on the server. EDGE is not where the data lives. The devices are.
+
+A **peer** is anything a device syncs a space's data with, and EDGE is the one that never goes offline. It does four
+jobs for the devices:
+
+- It keeps a copy of each space that replicates through it.
+- It indexes that copy, if the space lets EDGE read it.
+- It recovers identities when every device is lost.
+- It runs operations and agents while every device is offline, on the spaces it can read.
+
+EDGE can read a space only when the space gives it more than `pull` access. `pull` is the lowest access level, and it
+lets a member store and relay the space's encrypted data. See HALO's
+[Spaces and membership](/docs/halo/concepts/spaces-membership/).
+
+Each space and each identity gets its own Durable Objects. A **Durable Object** is a small stateful server on
+Cloudflare, and these hold that space's or identity's state.
+
+## What goes over each link
+
+<Diagram name="edge-overview" alt="Two devices share a direct link and each keep a WebSocket to the Router in EDGE; the Router reaches the DB, compute and identity services, the DB service fires triggers in compute, and compute prompts the AI service." />
+
+In the diagram, each box is a device or one of EDGE's services, and each arrow is a link or a call. Each device's
+WebSocket ends at the Router, which reaches the DB, identity and compute services. The DB service fires triggers in
+compute, and compute sends prompts to the AI service.
+
+A device talks to EDGE two ways:
+
+- The WebSocket carries signaling, which introduces the device to its peers, and the changes of each of its spaces
+  that replicates through EDGE.
+- HTTP requests carry the rest, such as a query over objects the device has not loaded, or the recovery of an
+  identity.
+
+The arrow between the two devices is a direct link. Devices that are online together open one through
+[MESH](/docs/mesh/overview/).
+
+## Where the rest of DXOS uses EDGE
+
+| Section | Uses EDGE for                                                                  | Page                                                         |
+| ------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| ECHO    | An always-online copy of each space that replicates through it, and backups    | [Replication and backup](/docs/edge/concepts/replication/)   |
+| ECHO    | Queries over objects this device has not loaded                                | [Indexing and queries](/docs/edge/concepts/indexing/)        |
+| HALO    | Recovering an identity, accounts, invitations, service access                  | [Identity services](/docs/edge/concepts/identity-services/)  |
+| MESH    | The WebSocket each device keeps, and signaling between peers                   | [Connecting](/docs/edge/concepts/connecting/)                |
+| SAGE    | Agent processes, and models through the AI service                             | [Compute](/docs/edge/concepts/compute/)                      |
+| PLEX    | Operations, triggers, sandbox builds and the plugin registry                   | [Compute](/docs/edge/concepts/compute/)                      |
+
+## Running it
+
+DXOS runs EDGE. You point your app at it with `runtime.services.edge.url`. In production, the value is
+`https://dxos.network/`. The `runtime.client.edgeFeatures` flags then turn on each thing the client uses EDGE for, and
+they are off by default.
+
+There is no self-hosted EDGE. See [Configuration](/docs/edge/resources/configuration/).
+
+## How these pages are organized
+
+Your app reaches EDGE through the DXOS client, not through an API you call. These pages explain how EDGE works, so
+there is no learning path, API group or guides.
+
+- [Why EDGE?](/docs/edge/why-edge/) argues for servers in a local-first system.
+- [Architecture](/docs/edge/concepts/architecture/) lists the services and the objects behind them. The other concept
+  pages take one job each.

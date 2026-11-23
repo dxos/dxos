@@ -68,3 +68,19 @@ describe('nodeArgsUnchanged', () => {
     expect(nodeArgsUnchanged(stable(), stable())).to.be.true;
   });
 });
+
+describe('nodeArgsUnchanged properties', () => {
+  // Builders rebuild label tuples on every run, so property values compare by content.
+  test('rebuilt label tuples compare unchanged', ({ expect }) => {
+    const label = () => ['delete-object.label', { ns: 'org.dxos.type.example', defaultValue: 'Delete' }];
+    expect(nodeArgsUnchanged([node({ properties: { label: label() } })], [node({ properties: { label: label() } })])).to
+      .be.true;
+  });
+
+  test('a differing nested value, length or key reads as changed', ({ expect }) => {
+    const withLabel = (label: unknown) => [node({ properties: { label } })];
+    expect(nodeArgsUnchanged(withLabel(['key', { ns: 'a' }]), withLabel(['key', { ns: 'b' }]))).to.be.false;
+    expect(nodeArgsUnchanged(withLabel(['key']), withLabel(['key', {}]))).to.be.false;
+    expect(nodeArgsUnchanged([node({ properties: { a: 1 } })], [node({ properties: { b: 1 } })])).to.be.false;
+  });
+});

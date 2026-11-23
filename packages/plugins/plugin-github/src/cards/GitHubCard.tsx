@@ -12,7 +12,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 
-import { meta } from '#meta';
+import { GitHubNamespace } from '../namespace.ts';
 
 type Subject = Repo.Repo | Issue.Issue | PullRequest.PullRequest;
 
@@ -46,7 +46,7 @@ const stateHue: Record<PullRequest.State, Tag.TagHue> = {
  * the link out. Each row leads with an icon in the card's start rail, so the text lines up with the title.
  */
 export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   const [object] = useObject(subject);
   const { owner, name, repo, number, state, author, additions, deletions, defaultBranch, description, url }: Fields =
     object;

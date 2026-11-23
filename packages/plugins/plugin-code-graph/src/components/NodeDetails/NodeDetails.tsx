@@ -13,9 +13,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { Iri, Kind } from '#graph';
-import { meta } from '#meta';
 import { type CodeGraph } from '#types';
 
+import { CodeGraphNamespace } from '../../namespace.ts';
 import { KIND_ICONS } from '../icons.ts';
 
 export type Fact = { predicate: string; object: string };
@@ -78,7 +78,7 @@ export const NodeDetails = ({
   onRemove,
   onClose,
 }: NodeDetailsProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CodeGraphNamespace.key);
   const shown = unique(facts);
   const snippet = shown.find(({ predicate }) => Iri.localName(predicate) === SNIPPET)?.object;
   const groups = byPredicate(shown.filter(({ predicate }) => Iri.localName(predicate) !== SNIPPET).slice(0, FACTS));

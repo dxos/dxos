@@ -38,10 +38,10 @@ import { Merge } from '@dxos/util';
 
 import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from '#components';
 import { useLinkQuery } from '#hooks';
-import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
 
 import { mergeConflicts, pluginFences } from '../../extensions/index.ts';
+import { MarkdownNamespace } from '../../namespace.ts';
 
 // Stands in for the enabled set outside a plugin manager (stories, tests), where nothing can be offered.
 const noPlugins = Atom.make<readonly string[]>([]);
@@ -204,7 +204,7 @@ const MarkdownArticleImpl = forwardRef<
     }, [extensionProviders, otherExtensionProviders, object, viewMode, extensionProps]);
 
     // Fences rendered by a disabled plugin offer the registry, filtered by the fence's language.
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(MarkdownNamespace.key);
     const { invokePromise } = Hooks.useOperationInvoker();
     const manager = PluginManagerProvider.useOptionalPluginManager();
     const enabled = useAtomValue(manager?.enabled ?? noPlugins);

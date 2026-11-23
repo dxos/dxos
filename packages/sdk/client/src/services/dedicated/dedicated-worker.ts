@@ -82,10 +82,11 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         log('dedicated-worker: starting WorkerRuntime');
         const runtime = yield* WorkerRuntime.makeWorkerRuntime({
           configProvider: Effect.succeed(config),
-          requestShutdown: Effect.sync(() => {
-            log('dedicated-worker: WorkerRuntime requested shutdown');
-            requestShutdown();
-          }),
+          requestShutdown: (reason) =>
+            Effect.sync(() => {
+              log('dedicated-worker: WorkerRuntime requested shutdown', { reason });
+              requestShutdown(reason);
+            }),
           automaticallyConnectWebrtc: false,
           sqliteLayer: options.sqliteLayer,
           onIndexStatus: reportStatus,

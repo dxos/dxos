@@ -98,6 +98,8 @@ describe('feed migrations', () => {
         'sync_state.spaceId': 1,
         'sync_state.feedNamespace': 1,
         'trimmed_blocks.id': 0,
+        'branches.feedPrivateId': 1,
+        'branches.branchId': 1,
       });
     }).pipe(Effect.provide(TestLayer)),
   );

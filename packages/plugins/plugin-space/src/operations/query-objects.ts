@@ -55,11 +55,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
       const truncated = matched.length > limit;
       const results = truncated ? matched.slice(0, limit) : matched;
       return {
-        results: results.map((object) =>
-          includeContent
-            ? object
-            : { dxn: Obj.getURI(object), typename: Obj.getTypename(object), label: Obj.getLabel(object) },
-        ),
+        // Every row names its object the same way; `includeContent` adds the object's own fields beside the names,
+        // where callers have always read them. A stored field of the same name (e.g. `label`) keeps its value.
+        results: results.map((object) => ({
+          dxn: Obj.getURI(object),
+          typename: Obj.getTypename(object),
+          label: Obj.getLabel(object),
+          ...(includeContent ? Obj.toJSON(object) : {}),
+        })),
         truncated,
       };
     }),
@@ -82,9 +85,12 @@ export default handler;
  * The registry is still consulted to reject a typename nothing declares, and to add the `echo:` id
  * of every registration persisted in the space, since objects of such a type carry that id instead.
  */
+/** Every registration of a typename: persisted in the space, code-shipped here, or published by another plugin. */
+const typesNamed = (typename: string) =>
+  Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry());
+
 const typeFilter = Effect.fnUntraced(function* (typename: string) {
-  const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
-  const declared = types.filter((type) => Type.getTypename(type) === typename);
+  const declared = yield* Database.query(typesNamed(typename)).run;
   if (declared.length === 0) {
     return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
   }

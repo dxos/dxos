@@ -114,7 +114,12 @@ export interface BuildExecutionGraphParams {
    * is omitted.
    */
   now?: number;
+  /** Names and icons for operations whose trace events carry only a key (e.g. ones run on EDGE). */
+  resolveOperation?: OperationResolver;
 }
+
+/** An operation's display name and icon, looked up by its key. */
+export type OperationResolver = (key: string) => { name?: string; icon?: string } | undefined;
 
 /**
  * Builds a Timeline-compatible execution graph from trace messages and active processes.
@@ -144,9 +149,10 @@ export const buildExecutionGraph = ({
   eventLimit = 500,
   spanTimeoutMs,
   now,
+  resolveOperation,
 }: BuildExecutionGraphParams): ExecutionGraph => {
   const spanTree = buildSpanTree(traceMessages, { eventLimit, spanTimeoutMs, now });
-  const toolCallContext = buildToolCallContext(traceMessages);
+  const toolCallContext = buildToolCallContext(traceMessages, resolveOperation);
   const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext, collapseCompletedSpans);
   log('trace execution graph', {
     traceMessages: traceMessages.length,
@@ -165,9 +171,13 @@ export const buildExecutionGraph = ({
 interface ToolCallContext {
   callById: Map<string, ContentBlock.ToolCall>;
   resultByCallId: Map<string, ContentBlock.ToolResult>;
+  resolveOperation?: OperationResolver;
 }
 
-const buildToolCallContext = (messages: readonly Trace.Message[]): ToolCallContext => {
+const buildToolCallContext = (
+  messages: readonly Trace.Message[],
+  resolveOperation?: OperationResolver,
+): ToolCallContext => {
   const callById = new Map<string, ContentBlock.ToolCall>();
   const resultByCallId = new Map<string, ContentBlock.ToolResult>();
   for (const message of messages) {
@@ -187,7 +197,7 @@ const buildToolCallContext = (messages: readonly Trace.Message[]): ToolCallConte
       }
     }
   }
-  return { callById, resultByCallId };
+  return { callById, resultByCallId, resolveOperation };
 };
 
 /**
@@ -325,10 +335,12 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       log('invalid trace event', { type: event.type });
       return undefined;
     }
+    const resolved =
+      event.data.name && event.data.icon ? undefined : toolCallContext.resolveOperation?.(event.data.key);
     return {
-      icon: event.data.icon ?? ICONS.operationStart.icon,
+      icon: event.data.icon ?? resolved?.icon ?? ICONS.operationStart.icon,
       level: ICONS.operationStart.level,
-      message: event.data.name ?? event.data.key,
+      message: event.data.name ?? resolved?.name ?? event.data.key,
       idSuffix: `${event.data.key}:start`,
     };
   }
@@ -350,10 +362,12 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
               suffix: ' - Incomplete',
             }
           : { icon: ICONS.operationEndError.icon, level: ICONS.operationEndError.level, suffix: ' - Error' };
+    const resolved =
+      event.data.name && event.data.icon ? undefined : toolCallContext.resolveOperation?.(event.data.key);
     return {
-      icon: event.data.icon ?? presentation.icon,
+      icon: event.data.icon ?? resolved?.icon ?? presentation.icon,
       level: presentation.level,
-      message: `${event.data.name ?? event.data.key}${presentation.suffix}`,
+      message: `${event.data.name ?? resolved?.name ?? event.data.key}${presentation.suffix}`,
       idSuffix: `${event.data.key}:end`,
     };
   }
@@ -566,7 +580,8 @@ const isCollapsibleSpan = (span: Span, parent: Span | null, collapseCompletedSpa
       return true;
     }
   }
-  if (collapseCompletedSpans && isCompletedSpan(span)) {
+  // A finished thread stays expanded, so the lanes that ran side by side remain visible.
+  if (collapseCompletedSpans && isCompletedSpan(span) && span.meta.thread === undefined) {
     return true;
   }
   return false;
@@ -636,11 +651,13 @@ const spanTreeToCommits = (
 
   // The branch name for a span is its pid — multiple sequential spans of the same process
   // (e.g. successive agent requests in one session) share a branch so they reuse a single lane.
+  // Light threads of one process run at once, so each thread has a lane of its own.
   const branchOf = (span: Span | null): string => {
     if (!span || span.id === ROOT_SPAN_ID) {
       return MAIN_BRANCH;
     }
-    return span.meta.pid ?? span.id;
+    const pid = span.meta.pid ?? span.id;
+    return span.meta.thread === undefined ? pid : `${pid}/${span.meta.thread}`;
   };
 
   // Track the id of the begin commit for each non-collapsible span so the end commit can merge into it.
@@ -828,7 +845,9 @@ const spanTreeToCommits = (
 
   const finishSpan = (span: Span): void => {
     const pid = span.meta.pid;
-    if (pid) {
+    // The process-wide indicator draws on the pid's lane, which a threaded span does not use: a running
+    // thread shimmers its own last commit instead.
+    if (pid && span.meta.thread === undefined) {
       // Trace.Meta.pid is plain string (avoids circular dep); construct brand here.
       emitRunningIndicator(Process.ID.make(pid));
     }
@@ -837,7 +856,7 @@ const spanTreeToCommits = (
       return;
     }
 
-    if (pid && insertedRunningPids.has(pid)) {
+    if (pid && span.meta.thread === undefined && insertedRunningPids.has(pid)) {
       return;
     }
 
@@ -855,9 +874,24 @@ const spanTreeToCommits = (
       }
     }
 
+    // Light threads of one process run at once, so a run of them is emitted in time order across the
+    // run; emitted one after another, their lanes would never be open side by side.
+    let threads: Span[] = [];
+    const flushThreads = () => {
+      if (threads.length > 0) {
+        emitThreadCommits(threads);
+        threads = [];
+      }
+    };
     for (const child of span.children) {
-      emitSpanCommits(child);
+      if (child.meta.thread === undefined) {
+        flushThreads();
+        emitSpanCommits(child);
+      } else {
+        threads.push(child);
+      }
     }
+    flushThreads();
 
     for (let eventIndex = 0; eventIndex < span.events.length; eventIndex += 1) {
       const event = span.events[eventIndex]!;
@@ -867,6 +901,28 @@ const spanTreeToCommits = (
     }
 
     finishSpan(span);
+  };
+
+  /** Emits sibling thread spans with their events and child subtrees merged by time. */
+  const emitThreadCommits = (threads: readonly Span[]): void => {
+    const items = threads.flatMap((thread) => [
+      ...thread.events.map((event, eventIndex) => ({
+        timestamp: event.timestamp,
+        emit: () => emitEventCommit(thread, event, eventIndex),
+      })),
+      ...thread.children.map((child) => ({
+        timestamp: child.events[0]?.timestamp ?? Number.POSITIVE_INFINITY,
+        emit: () => emitSpanCommits(child),
+      })),
+    ]);
+    // `Array.prototype.sort` is stable, so same-time items keep their thread and event order.
+    items.sort((left, right) => left.timestamp - right.timestamp);
+    for (const item of items) {
+      item.emit();
+    }
+    for (const thread of threads) {
+      finishSpan(thread);
+    }
   };
 
   emitSpanCommits(root);

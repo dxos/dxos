@@ -24,7 +24,7 @@ const SPACE_READY_TIMEOUT = Duration.seconds(60);
 
 export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFoundError, ClientService> =>
   Effect.gen(function* () {
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     // v4 no longer yields an `Option` as an `Effect`, so the miss fails directly.
     const space = client.spaces.get(spaceId);
     return space ?? (yield* Effect.fail(new SpaceNotFoundError(spaceId)));
@@ -32,7 +32,7 @@ export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFou
 
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     return Option.getOrElse(spaceId, () => {
       // As `spaceLayer` resolves it, so a profile made outside Composer, which designates no default, still works.
       const defaultSpace = AppSpace.getDefaultSpace(client) ?? client.spaces.get().find(AppSpace.isVisibleSpace);
@@ -49,7 +49,7 @@ export const spaceLayer = (
   fallbackToPersonalSpace = false,
 ): Layer.Layer<Database.Service, never, ClientService> => {
   const getSpace = Effect.fn(function* () {
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
 
     // Resolution order when fallbackToPersonalSpace is true:
     //   1. the explicit spaceId arg (if provided);
@@ -158,7 +158,7 @@ export const flushAndSync = Effect.fn(function* (opts?: Database.FlushOptions) {
  */
 export const syncAllToEdge = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const spaces = client.spaces.get();
   // One line for the batch, never one per space: `waitForSync`'s per-space chatter would drown the
   // command's own output, and any of it on stdout makes `--json` unparseable.

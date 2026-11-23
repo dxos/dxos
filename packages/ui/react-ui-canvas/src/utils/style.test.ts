@@ -4,9 +4,24 @@
 
 import { describe, test } from 'vitest';
 
+import { type Node, type NodeTone, type StyleMap } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
-import { CLASSIC_LOOK, type Node, type StyleMap, defaultThemeRegistry, resolveLook } from '../model/index.ts';
-import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
+import { CLASSIC_LOOK, NEU_STYLE_SET, defaultThemeRegistry, resolveLook } from '../model/index.ts';
+import { createNode } from './shapes.ts';
+import {
+  bareNode,
+  canvasFillClass,
+  classedLink,
+  classedNode,
+  frameClasses,
+  hueClasses,
+  nodeRelief,
+  resolveStyle,
+  splitClassEdit,
+  surfaceClasses,
+  variantClasses,
+} from './style.ts';
 
 describe('style classes', () => {
   const styles: StyleMap = {
@@ -118,5 +133,89 @@ describe('style sets', () => {
     expect(frameClasses(nodes.blue, false, false, false, outline)[3]).toBe('');
     // Selection still draws in the focus colour.
     expect(frameClasses(nodes.blue, true, false, false, glass)[2]).toBe('border-focus');
+  });
+
+  test('Neu shapes are the ground colour, hue only accents them, and selection leaves the surface alone', ({
+    expect,
+  }) => {
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
+    const [surface, text, border] = frameClasses(nodes.blue, false, false, false, neu);
+    expect(surface).toBe('bg-(--dx-neu-ground) shadow-(--dx-neu-raised)');
+    expect(text).toBe('text-blue-300');
+    expect(border).toBe('border-blue-400/45');
+    // Neu Light takes the light accents over the same ground.
+    const light = frameClasses(
+      nodes.blue,
+      false,
+      false,
+      false,
+      resolveLook(defaultThemeRegistry, { theme: 'neu-light' }),
+    );
+    expect(light.slice(0, 3)).toEqual([surface, 'text-blue-700', 'border-blue-500/45']);
+    // A shape with no hue still takes an edge, as every 3D Neu body does: a flush one is otherwise invisible.
+    const plain = (tone: NodeTone): Node => ({ ...nodes.plain, style: { ...nodes.plain.style, tone } });
+    for (const tone of [0, 1, 2] as const) {
+      expect(frameClasses(plain(tone), false, false, false, neu)[2]).toBe('border-neutral-400/45');
+    }
+    // Selected: still raised; only the outline shows it.
+    const selected = frameClasses(nodes.blue, true, false, false, neu);
+    expect(selected[0]).toBe(surface);
+    expect(selected[2]).toBe('border-focus');
+    // The tone carries indentation: tone 0 is cut in, 1 is level, 2 stands out.
+    const toned = (tone: NodeTone): Node => ({ ...nodes.blue, style: { ...nodes.blue.style, tone } });
+    expect(frameClasses(toned(0), false, false, false, neu)[0]).toBe('bg-(--dx-neu-ground) shadow-(--dx-neu-inset)');
+    expect(frameClasses(toned(1), false, false, false, neu)[0]).toBe('bg-(--dx-neu-ground)');
+    expect(frameClasses(toned(2), true, false, false, neu)[0]).toBe(surface);
+    const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
+    expect(frameClasses(nodes.blue, true, false, false, glass)[0]).toBe('bg-white/55');
+  });
+
+  test('a silhouette takes its relief from the tone, never from selection', ({ expect }) => {
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
+    const toned = (tone: NodeTone): Node => ({ ...nodes.blue, style: { ...nodes.blue.style, tone } });
+    expect(nodeRelief(nodes.blue, neu)).toBe('raised');
+    expect(nodeRelief(toned(0), neu)).toBe('inset');
+    expect(nodeRelief(toned(1), neu)).toBeUndefined();
+    // Unfilled shapes and other sets draw no relief.
+    expect(nodeRelief(nodes.bare, neu)).toBeUndefined();
+    expect(nodeRelief(nodes.guide, neu)).toBeUndefined();
+    expect(nodeRelief(nodes.blue, resolveLook(defaultThemeRegistry, { theme: 'paper' }))).toBeUndefined();
+  });
+
+  test('the canvas fill under captions and hollow markers is the Neu ground on a Neu background', ({ expect }) => {
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
+    expect(canvasFillClass(neu, 'opaque')).toBe('fill-(--dx-neu-ground)');
+    const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
+    expect(canvasFillClass(glass, 'opaque')).toBe('fill-white');
+  });
+});
+
+describe('Neu without a hue', () => {
+  test('a Neu shape with no hue draws exactly as Neutral, in every variant and tone', ({ expect }) => {
+    for (const variant of NEU_STYLE_SET.variants) {
+      for (const tone of ['theme', 'light', 'dark'] as const) {
+        expect(variantClasses(undefined, variant, tone)).toEqual(variantClasses('neutral', variant, tone));
+      }
+    }
+  });
+
+  test('a bare type draws no fill or border unless its style sets them, and an outline type its border alone', ({
+    expect,
+  }) => {
+    const node = createNode({ type: 'rect', id: 't', z: 'a0', center: { x: 0, y: 0 } });
+    // Unset, the frame's defaults are on; a bare type's are off, so that is what a toggle shows.
+    expect(resolveStyle(node.style)).toMatchObject({ fill: true, border: true });
+    expect(resolveStyle(bareNode(node, { bare: true }).style)).toMatchObject({ fill: false, border: false });
+    expect(resolveStyle(bareNode({ ...node, style: { border: true } }, { bare: true }).style)).toMatchObject({
+      fill: false,
+      border: true,
+    });
+    // An outline type's ring is the frame's border, so it is on, and off or filled only when the style says so.
+    expect(resolveStyle(bareNode(node, { outline: true }).style)).toMatchObject({ fill: false, border: true });
+    expect(
+      resolveStyle(bareNode({ ...node, style: { fill: true, border: false } }, { outline: true }).style),
+    ).toMatchObject({ fill: true, border: false });
+    expect(bareNode(node, undefined)).toBe(node);
+    expect(bareNode(node, {})).toBe(node);
   });
 });

@@ -186,9 +186,11 @@ bash tools/storybook-react/diagnose.sh --watch    # capture whenever it next wed
 ```
 
 **Do not restart before capturing** — that is the whole difficulty. And check for
-a second server first: an orphaned keeper daemon from a previous session was found
-restarting storybook on another port for five days, doubling the watcher and
-memory load against the same repo.
+an orphaned server first: each session runs its own storybook on its own port
+(`AGENTS.md`, "Long-running servers"), so several live ones are expected, but a
+keeper daemon left by a finished session was once found restarting storybook on
+another port for five days, adding a watcher and its memory to the same repo for
+nobody.
 
 ### Fast dev mode (`serve-fast`)
 
@@ -368,7 +370,7 @@ gh run watch
 
 Handy as aliases — e.g. `gh alias set deploy-dev 'workflow run deploy-apps.yml -f environment=dev'`, then just `gh deploy-dev`.
 
-**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-preview`) applies only there. `remote <env>` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it. The `dev` MODE (`pnpm secrets dev <app>`, which writes `.dev.vars` for local `wrangler dev`) always requires an app; note this is a different `dev` from the `dev` ENVIRONMENT in `pnpm secrets remote dev`, which takes the usual `all` default. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. docs' `DX_POSTHOG_API_KEY`) from the app's own 1Password item, `network.dxos.<app>` — in `eng-ops` for a deployed environment, in `eng-dev` for `.dev.vars` — where a top-level field applies to every environment and a field in a section named after the environment (`production`, `staging`, `preview`; `local` for `.dev.vars`) overrides it. Each field is pushed under its own label, so the label is the Worker's binding name. `remote <env>` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it. The `dev` MODE (`pnpm secrets dev <app>`, which writes `.dev.vars` for local `wrangler dev`) always requires an app; note this is a different `dev` from the `dev` ENVIRONMENT in `pnpm secrets remote dev`, which takes the usual `all` default. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
 
 `secret put` both creates a version and deploys it, so Cloudflare refuses it when a Worker's latest version is not the deployed one. That is the normal state for `composer-dev`, which per-PR deploys upload versions to — promoting the latest there would push whichever PR version happens to be on top. `pnpm secrets` detects that specific refusal and writes the secret with `wrangler versions secret put` instead, which does not deploy; it then says so, because the secret only reaches the running Worker on the next deploy or `versions upload`. Any other failure is reported and exits non-zero as before.
 
@@ -403,7 +405,7 @@ For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](h
 
 ## Dependencies
 
-Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
+Packages can be locked to a particular version as required by updating `overrides` in `pnpm-workspace.yaml` (pnpm 11+ no longer reads the `pnpm` field in `package.json`).
 
 Examples:
 
@@ -492,8 +494,8 @@ Run `pnpm lint:changed` to lint only what you've been working on using `pnpm cha
 ### Unused dependencies and dead code
 
 `pnpm knip` reports unused dependencies, dependencies that are imported without being declared, and
-source files nothing references. CI runs the same command in the **Check** workflow's `knip` job, so
-a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
+source files nothing references. CI runs the same command in the **Check** workflow's nightly run
+(not on PRs), so a clean local run is a clean CI run. It analyses the source tree directly — resolving workspace
 packages through their `source` export condition — so it needs no build and takes about 80 seconds.
 
 Most of what the config in `.config/knip.ts` does is teach knip the ways this repo reaches code
@@ -605,7 +607,7 @@ pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
+This project requires Node.js 24.x, pnpm 12.21.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
 
 ```bash
 export PROTO_HOME="$HOME/.proto"
@@ -630,6 +632,6 @@ See the [Run commands](#run-commands) section above for the full list.
   them with `tools/moon-cache/install-certs.sh --op` — once per machine, covering every worktree. In GitHub Actions it is stricter: any job
   using `.github/actions/setup` **fails** when the credentials are missing or the cache does not
   answer, unless it is a fork PR or the call passes `remote-cache: 'false'`.
-- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
+- The `allowBuilds` map in `pnpm-workspace.yaml` controls which dependency build scripts run. pnpm fails the install on any build script it lists neither as `true` nor `false`, so a new native dependency needs an entry. `node-gyp` is a root devDependency because the standalone pnpm binary that proto installs does not bundle one.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

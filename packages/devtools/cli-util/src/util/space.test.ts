@@ -15,7 +15,7 @@ import { syncAllToEdge } from './space.ts';
 describe('syncAllToEdge', () => {
   test('drains every space, not just the default one', ({ expect }) =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.promise(() => client.halo.createIdentity());
       yield* Effect.promise(() => client.spaces.create({ name: 'first' }));
       yield* Effect.promise(() => client.spaces.create({ name: 'second' }));

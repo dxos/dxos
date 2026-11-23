@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import { EVALUATORS, measure, overall, visionRules } from './appeal.ts';
 import { RULES, keyOf, parse } from './rules.ts';
 import type * as Scene from './scene.ts';
@@ -14,7 +16,7 @@ const box = (id: string, x: number, y: number, w = 128, h = 64): Scene.WorldObje
   elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w, h, text: id }],
 });
 
-const arrow = (id: string, points: Scene.Point[]): Scene.WorldObject[] => [
+const arrow = (id: string, points: Shape.Point[]): Scene.WorldObject[] => [
   {
     id: `edge-${id}`,
     elements: [

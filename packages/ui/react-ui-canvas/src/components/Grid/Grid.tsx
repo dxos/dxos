@@ -6,9 +6,9 @@ import React, { forwardRef, useId, useMemo } from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
+import { type Bounds, type Point } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type Bounds, type Point } from '../../model/index.ts';
 import { easedStops } from '../Background/index.ts';
 
 const gridRatios = [1 / 4, 1, 4, 16];
@@ -121,8 +121,8 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
         </defs>
         {showAxes && (
           <>
-            <line x1={0} y1={offset.y} x2={width} y2={offset.y} className='stroke-neutral-500 opacity-40' />
-            <line x1={offset.x} y1={0} x2={offset.x} y2={height} className='stroke-neutral-500 opacity-40' />
+            <line x1={0} y1={offset.y} x2='100%' y2={offset.y} className='stroke-neutral-500 opacity-40' />
+            <line x1={offset.x} y1={0} x2={offset.x} y2='100%' className='stroke-neutral-500 opacity-40' />
           </>
         )}
         <g mask={fade ? `url(#${createId(instanceId, 0)}-fade)` : undefined}>

@@ -1767,7 +1767,11 @@ export const makeHistory = (input: HistoryInput) =>
       if (seed.agent !== 'triage') {
         for (const key of seed.tasks) {
           Obj.update(tasks[key], (task) => {
-            task.assignee = agentActor(agent, chat);
+            if (task.delegate) {
+              task.delegate = agentActor(agent, chat);
+            } else {
+              task.assignee = agentActor(agent, chat);
+            }
           });
         }
       }

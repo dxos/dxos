@@ -15,8 +15,9 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { Mic } from '#components';
-import { meta } from '#meta';
 import { Dictatable } from '#types';
+
+import { TranscriptionNamespace } from '../namespace.ts';
 
 // A chat is dictated into through its prompt node, not its toolbar.
 const whenDictatable = GraphNodeMatcher.whenAll(
@@ -34,7 +35,7 @@ const makeMicAction = (docId: string, disposition: string) =>
     id: 'transcription',
     data: () => Effect.void,
     properties: {
-      label: ['start-recording.label', { ns: meta.profile.key }],
+      label: ['start-recording.label', { ns: TranscriptionNamespace.key }],
       icon: 'ph--microphone--regular',
       disposition,
       variant: 'custom',

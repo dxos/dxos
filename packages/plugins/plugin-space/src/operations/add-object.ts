@@ -14,6 +14,7 @@ import { deepMapValues } from '@dxos/util';
 import { SpaceOperation } from '#types';
 
 import { SpaceOperationError } from './errors.ts';
+import { typeKeyFilter } from './helpers.ts';
 
 /** The caller's draft did not match the named schema, or the schema was not found. */
 export class InvalidDraftError extends BaseError.extend('InvalidDraftError', 'Invalid draft.') {}
@@ -67,10 +68,14 @@ export default handler;
  */
 const instantiate = Effect.fnUntraced(function* (db: Database.Database, draft: SpaceOperation.ObjectDraft) {
   const { '@type': typename, ...properties } = draft;
-  const types = yield* Effect.promise(() =>
-    db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
+  // The registry reaches the graph's type sources, so a type another plugin publishes resolves too.
+  const [schema] = yield* Effect.promise(() =>
+    db
+      .query(
+        Query.select(Filter.and(Filter.type(Type.Type), typeKeyFilter(typename))).from(Scope.space(), Scope.registry()),
+      )
+      .run(),
   );
-  const schema = types.find((type) => Type.getTypename(type) === typename);
   if (!schema) {
     return yield* Effect.fail(new InvalidDraftError({ message: `Schema not found: ${typename}` }));
   }

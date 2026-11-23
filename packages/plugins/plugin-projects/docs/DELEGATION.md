@@ -4,7 +4,7 @@ Agent delegation and task management over durable tasks: the conversation's
 working surface is a `TaskSet` — the owning project's ledger for a project
 chat, the chat's own lazily created set otherwise. Delegation assigns a
 durable `Task` to an agent; the supervisor's reconcile loop spawns a sub-agent
-per ready task (dependencies done), marks it started at spawn, and records
+per ready task (dependencies done or in review), marks it started at spawn, and records
 done/failed on exit — there is no separate markdown mirror to reconcile.
 
 ## Findings

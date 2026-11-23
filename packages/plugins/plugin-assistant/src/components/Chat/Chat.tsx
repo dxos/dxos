@@ -4,6 +4,7 @@
 
 import { Collapsible } from '@ark-ui/react/collapsible';
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -11,12 +12,13 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { SessionConfig } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
-import { Alarm } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
-import { type Database, Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { Database, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,9 +26,12 @@ import {
   type ChatThreadController,
   type ChatThreadEvent,
   type ChatView,
+  type ForkMarker,
   ChatThread as NaturalChatThread,
+  assistantRegistry,
 } from '@dxos/react-ui-assistant';
 import {
+  type FeedModel,
   type MessageRange,
   type OutlineMarker,
   Outline as OutlineRail,
@@ -34,26 +39,26 @@ import {
   useFeedModel,
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import { type TaskColumn, TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, Message, Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { hexToFallback, keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
-import { meta } from '#meta';
-import { AssistantOperation, ChatSurface } from '#types';
+import { AssistantOperation, AssistantSurface } from '#types';
 
 import {
   AiUsageQuotaError,
   type ChatRequestContext,
   getChatModelState,
-  projectAlarms,
-  projectSelfWakes,
   resolveRewind,
 } from '../../chat-model/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 import {
   ChatStatus,
   DEFAULT_MAX_QUEUE,
@@ -71,6 +76,7 @@ import {
   useChatThreadContext,
 } from './context.ts';
 import { type ChatDrawer, type ChatEvent } from './events.ts';
+import { LaneSurfaceWidget } from './LaneSurfaceWidget.tsx';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 
@@ -79,7 +85,7 @@ import { SurfaceWidget } from './SurfaceWidget.tsx';
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'chat' | 'chatModel' | 'debug'> & {
+  Pick<ChatContextValue, 'chat' | 'chatModel' | 'debug' | 'readonly'> & {
     /** Fallback database when the chat is transient (not yet persisted). */
     db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
@@ -105,6 +111,7 @@ const ChatRoot = ({
   onSubmit,
   getContext,
   defaultDrawer,
+  readonly = false,
   ...props
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
@@ -136,14 +143,9 @@ const ChatRoot = ({
   const [controller, setController] = useState<ChatThreadController | null>(null);
   const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
-  const feedAlarms = useQuery(
-    db,
-    feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
-  );
-  // The chat model queries the feed and reconciles it with the streamed turn and the outbox.
-  const { messages, delivery, queued, tail } = useAtomValue(chatModelState.thread);
-  const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
-  const selfWakes = useMemo(() => projectSelfWakes({ feedAlarms, messages }), [feedAlarms, messages]);
+  // The chat model folds the feed and reconciles it with the streamed turn and the outbox.
+  const { messages, delivery, queued, tail, lanes } = useAtomValue(chatModelState.thread);
+  const { alarms, selfWakes, forks } = useAtomValue(chatModelState.trajectory);
 
   const dump = useDebug({ chatModel });
 
@@ -176,28 +178,46 @@ const ChatRoot = ({
         }
 
         case 'rewind': {
+          if (readonly) {
+            break;
+          }
+
           // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
-          // composer so it can be revised. Recorded on the feed rather than the chat because the
-          // continuation is appended by the agent's process, which resolves the feed and never sees the
-          // chat. A stale click (message already gone) resolves to nothing and is a no-op. A prompt sent
-          // from here keeps its own row id, so the feed is pointed at its turn's message.
-          const rewind = feed && resolveRewind(messages, ev.id);
+          // composer so it can be revised. Recorded on the feed, where the agent's next turn reads it. A stale
+          // click (message already gone) resolves to nothing and is a no-op. A prompt sent from here keeps its
+          // own row id, so the rewind names the message the agent consumed.
+          const rewind = feed && db && resolveRewind(messages, ev.id);
           if (rewind) {
-            Obj.update(feed, (feed) => {
-              feed.rewindFrom = delivery.get(rewind.rewindFrom)?.turnId ?? rewind.rewindFrom;
-            });
+            const from = delivery.get(rewind.rewindFrom)?.turnId ?? rewind.rewindFrom;
+            void EffectEx.runPromise(TrajectoryStore.rewind(feed, from).pipe(Effect.provide(Database.layer(db)))).catch(
+              (err: unknown) => log.catch(err),
+            );
             event.emit({ type: 'update-prompt', text: rewind.text });
           }
           break;
         }
 
+        case 'fork': {
+          // A fork opens at once, so the reader goes straight to the thread they asked for.
+          if (feed && db && !readonly) {
+            void EffectEx.runPromise(
+              TrajectoryStore.forkThread(feed, { from: ev.id }).pipe(Effect.provide(Database.layer(db))),
+            )
+              .then((thread) => event.emit({ type: 'open-fork', thread }))
+              .catch((err: unknown) => log.catch(err));
+          }
+          break;
+        }
+
         case 'remove-prompt': {
-          // Withdrawing a prompt the agent has not taken up: the queue is feed state, so removing the
-          // entry is what takes it out of the agent's queue, and the outbox forgets this client's copy.
+          // Withdrawing a prompt the agent has not taken up: a `promptCancel` takes it out of the agent's queue,
+          // and the outbox forgets this client's copy.
           const row = delivery.get(ev.id);
-          if (row?.status === 'failed' || row?.status === 'delivered') {
+          if (!readonly && (row?.status === 'failed' || row?.status === 'delivered')) {
             if (row.entryId && db && feed) {
-              void db.removeFeedItemsByIds(feed, [row.entryId]).catch((err) => log.catch(err));
+              void EffectEx.runPromise(
+                TrajectoryStore.cancelPrompt(feed, row.entryId).pipe(Effect.provide(Database.layer(db))),
+              ).catch((err: unknown) => log.catch(err));
             }
             if (row.outboxId) {
               chatModel?.removePrompt(row.outboxId);
@@ -211,11 +231,11 @@ const ChatRoot = ({
     });
     // `feed`, `messages` and `delivery` are dependencies because the rewind and prompt branches read
     // them: without them the handler would keep resolving against whatever was mounted first.
-  }, [event, dump, onEvent, db, feed, messages, delivery, chatModel]);
+  }, [event, dump, onEvent, db, feed, messages, delivery, chatModel, readonly]);
 
   useEffect(() => {
     return event.on((ev) => {
-      if (ev.type !== 'respond' || !chat) {
+      if (ev.type !== 'respond' || !chat || readonly) {
         return;
       }
       const { messageId, requestId, optionId } = ev;
@@ -225,16 +245,22 @@ const ChatRoot = ({
         AssistantOperation.RespondToRequest,
         { chat, messageId, requestId, optionId },
         spaceId ? { spaceId } : undefined,
-      ).then(({ error }) => {
+      ).then(({ data, error }) => {
         if (error) {
           event.emit({ type: 'error', error });
+        } else if (data && !data.answered) {
+          // Otherwise the click looks like it did nothing.
+          event.emit({
+            type: 'error',
+            error: new Error('The assistant is no longer waiting for this answer. Ask it again to retry.'),
+          });
         }
       });
     });
-  }, [event, chat, invokePromise]);
+  }, [event, chat, invokePromise, readonly]);
 
   useEffect(() => {
-    if (!chatModel) {
+    if (!chatModel || readonly) {
       return;
     }
 
@@ -302,10 +328,11 @@ const ChatRoot = ({
                 const currentFeed = feed ?? chat.feed?.target;
                 if (currentFeed && result.summary) {
                   const ran = result.prompt ? resolved.command.command : text;
-                  await currentDb.appendToFeed(currentFeed, [
-                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: ran }] }),
-                    Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
-                  ]);
+                  await EffectEx.runPromise(
+                    TrajectoryStore.appendExchange(currentFeed, { prompt: ran, reply: result.summary }).pipe(
+                      Effect.provide(Database.layer(currentDb)),
+                    ),
+                  );
                 }
 
                 if (result.followUp) {
@@ -362,7 +389,7 @@ const ChatRoot = ({
         }
       }
     });
-  }, [event, chatModel, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed]);
+  }, [event, chatModel, streaming, active, queued, onSubmit, getContext, invokePromise, chat, db, feed, readonly]);
 
   // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
   // turn, so the agent resumes without the report reading as something the user typed.
@@ -375,6 +402,7 @@ const ChatRoot = ({
       db={db}
       chat={chat}
       chatModel={chatModel}
+      readonly={readonly}
       queueSize={queued}
       started={messages.length > 0 || queued > 0}
       setController={setController}
@@ -387,6 +415,8 @@ const ChatRoot = ({
       <ChatThreadContextProvider
         messages={messages}
         tail={tail}
+        lanes={lanes}
+        forks={forks}
         alarms={alarms}
         selfWakes={selfWakes}
         requestTiming={requestTiming}
@@ -549,11 +579,15 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
+/** The plugin's `surface` and `lane` widgets layered over the package registry: they can dispatch a Surface. */
 const chatRegistry = {
   surface: {
     block: true,
     Component: SurfaceWidget,
+  },
+  lane: {
+    ...assistantRegistry.lane,
+    Component: LaneSurfaceWidget,
   },
 } as const;
 
@@ -563,14 +597,51 @@ type ChatThreadProps = Util.ThemedClassName<{
   tailLines?: number;
   /** Hue of the user's messages; defaults to the identity's hue. */
   userHue?: string;
+  /** Shows each block's estimated token count beside it. */
+  showTokens?: boolean;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
 
-const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
-  const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
+/**
+ * Tells the feed model when a message changes in place: a feed query re-emits only when its set of
+ * ids changes, so an edit (a permission card recording its answer) reaches its row only this way.
+ */
+const useInPlaceUpdates = (model: FeedModel, messages: readonly Message.Message[]) => {
+  useEffect(() => {
+    const unsubscribes = messages
+      .filter((message) => Obj.isObject(message))
+      .map((message) => Obj.subscribe(message, () => model.update(message.id)));
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
+  }, [model, messages]);
+};
+
+const ChatThread = ({
+  classNames,
+  viewType,
+  tailLines,
+  userHue: userHueProp,
+  showTokens,
+  onViewUsage,
+}: ChatThreadProps) => {
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
+  const { chat, db, debug, event, chatModel, readonly, setController, setVisibleRange } =
+    useChatContext(CHAT_THREAD_NAME);
+  const { messages, tail, lanes, forks } = useChatThreadContext(CHAT_THREAD_NAME);
+  const getLane = useCallback((message: Message.Message) => lanes?.get(message.id), [lanes]);
+  const forkMarkers = useMemo(() => {
+    const markers = new Map<string, ForkMarker[]>();
+    for (const fork of forks ?? []) {
+      if (fork.from !== undefined) {
+        markers.set(fork.from, [
+          ...(markers.get(fork.from) ?? []),
+          { id: fork.id, label: fork.purpose ?? t('fork.label') },
+        ]);
+      }
+    }
+    return markers;
+  }, [forks, t]);
+  const getForks = useCallback((message: Message.Message) => forkMarkers.get(message.id), [forkMarkers]);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
@@ -597,6 +668,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
   // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
   // and range table have no equivalent left.
   const model = useFeedModel(messages, { stops: 'prompt' });
+  useInPlaceUpdates(model, messages);
   const streaming = useAtomValue(getChatModelState(chatModel).streaming);
   useEffect(() => {
     // The answer streams above any prompts still waiting for the agent, which end the thread.
@@ -682,10 +754,15 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         userHue={userHue}
         userDid={identity.did}
         getAuthor={getAuthor}
+        getLane={getLane}
         tailLines={tailLines}
         debug={debug}
         // An external agent keeps its own context, which a rewind of the transcript cannot reach.
-        rewind={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        rewind={!readonly && SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        // Forking needs the trajectory the Composer harness writes; an external agent keeps its own.
+        fork={!readonly && SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        getForks={getForks}
+        showTokens={showTokens}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
@@ -875,7 +952,7 @@ const ChatContextDrawer = () => {
   const { chat, db, chatModel } = useChatContext(CHAT_CONTEXT_DRAWER_NAME);
   return (
     <div className='flex flex-col gap-1 p-1' data-testid='assistant.details'>
-      {chat && <Surface.Surface type={ChatSurface.ChatDetails} data={{ chat, db, context: chatModel?.context }} />}
+      {chat && <Surface.Surface type={AssistantSurface.ChatDetails} data={{ chat, db, context: chatModel?.context }} />}
     </div>
   );
 };
@@ -889,9 +966,11 @@ const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 /** Rows the chat's checklist shows before it scrolls. */
 const CHAT_TASK_ROWS = 4;
 
+const CHAT_TASK_COLUMNS: readonly TaskColumn[] = ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'];
+
 const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
 
   // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
   const [chatSnapshot] = useObject(chat);
@@ -924,7 +1003,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   );
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Task.update(task, patch);
+    Task.update(task, patch, { approve: true });
   }, []);
 
   // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
@@ -966,17 +1045,16 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     <TaskList.Root
       tasks={tasks}
       showGroupLabels={false}
-      showOrdinals
-      showEstimates
-      // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
+      // The prompt frames the list, and its rows are too narrow for who holds a task or its reference.
       flush
-      showAssignees={false}
+      columns={CHAT_TASK_COLUMNS}
       showMnemonics={false}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       getTaskActions={getTaskActions}
     >
-      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+      {/* The inset puts the list's outer columns on the same lines as the context drawer's icons and carets. */}
+      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow px-1' })} ref={forwardedRef}>
         {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
         <TaskList.Viewport rows={CHAT_TASK_ROWS}>
           <TaskList.Content />
@@ -1072,6 +1150,51 @@ const ChatActivity = ({ classNames }: Util.ThemedClassName) => {
 ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
 //
+// Suggestions
+//
+
+const CHAT_SUGGESTIONS_NAME = 'Chat.Suggestions';
+
+type ChatSuggestionsProps = Util.ThemedClassName<{
+  /** Prompts offered as one-click chips; nothing renders when there are none. */
+  suggestions: readonly string[];
+  /** Called after a chip's prompt is submitted, e.g. to stop offering it. */
+  onSelect?: (text: string) => void;
+}>;
+
+/**
+ * A row of premade prompts above the composer. A chip submits its prompt exactly as the thread's own suggestion chips
+ * do, through the chat's event bus, so slash commands and queueing behave as if it had been typed.
+ */
+const ChatSuggestions = ({ classNames, suggestions, onSelect }: ChatSuggestionsProps) => {
+  const { event } = useChatContext(CHAT_SUGGESTIONS_NAME);
+  if (suggestions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div role='group' className={mx('flex flex-wrap gap-1', classNames)} data-testid='chat.suggestions'>
+      {suggestions.map((text) => (
+        <Button.Root
+          key={text}
+          classNames='max-w-full'
+          icon='ph--lightning--regular'
+          label={text}
+          size='sm'
+          data-testid='chat.suggestion'
+          onClick={() => {
+            event.emit({ type: 'submit', text });
+            onSelect?.(text);
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+ChatSuggestions.displayName = CHAT_SUGGESTIONS_NAME;
+
+//
 // Chat
 //
 
@@ -1081,6 +1204,7 @@ export const Chat = {
   Content: ChatContent,
   Prompt: ChatPrompt,
   Activity: ChatActivity,
+  Suggestions: ChatSuggestions,
   Status: ChatStatus,
   Thread: ChatThread,
   Outline: ChatOutline,
@@ -1092,6 +1216,7 @@ export type {
   ChatOutlineProps,
   ChatPromptProps,
   ChatRootProps,
+  ChatSuggestionsProps,
   ChatThreadProps,
   ChatToolbarProps,
 };

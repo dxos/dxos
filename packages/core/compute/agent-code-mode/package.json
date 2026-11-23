@@ -1,7 +1,6 @@
 {
   "name": "@dxos/agent-code-mode",
-  "version": "0.16.0",
-  "private": true,
+  "version": "0.17.0",
   "description": "Code mode for agent turns: the model writes code against the workspace instead of calling a tool per action.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,6 +32,11 @@
       "source": "./src/WorkerSandboxBrowserEntry.ts",
       "types": "./dist/types/src/WorkerSandboxBrowserEntry.d.ts",
       "import": "./dist/lib/WorkerSandboxBrowserEntry.mjs"
+    },
+    "./workerd-worker-entry": {
+      "source": "./src/WorkerSandboxWorkerdEntry.ts",
+      "types": "./dist/types/src/WorkerSandboxWorkerdEntry.d.ts",
+      "import": "./dist/lib/WorkerSandboxWorkerdEntry.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -47,6 +51,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -60,6 +65,7 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@effect/vitest": "catalog:",
@@ -67,6 +73,10 @@
   },
   "peerDependencies": {
     "@dxos/assistant": "workspace:^",
+    "@dxos/assistant-toolkit": "workspace:^",
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

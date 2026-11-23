@@ -1,0 +1,62 @@
+---
+title: ActionMenu
+description: A dropdown menu drawn from a list of actions.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-menu/action-menu" height="18rem" />
+
+```ts
+import { ActionMenu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+```
+
+```sh
+npm install @dxos/react-ui-menu @effect/atom-react
+```
+
+`ActionMenu` draws a list of actions as a dropdown menu, with groups as submenus. Its child is the button that opens
+it.
+
+An **action** is a label, an icon and the function it runs. You build the list with `MenuBuilder` and
+`useMenuBuilder`. Because the list is data, other code can add to it. This is how PLEX plugins add items to each
+other's menus.
+
+The actions live in an atom.
+
+Wrap your app in `RegistryProvider` from `@effect/atom-react`. This is best practice, because your app then controls
+the registry that the menu reads. Without a provider, the menu reads the library's default registry.
+
+Add the package's strings from `@dxos/react-ui-menu/translations` to the `resourceExtensions` of `Theme.Provider`.
+
+## Props
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `...menu` | `MenuActions` | Sets the actions, from `useMenuBuilder` |
+| `onAction` | `ActionExecutor` | The user chose an action. `onAction` runs it in place of the action's own function |
+| `actions` | `MenuItem[] \| (() => MenuItem[])` | Sets items in place of the group's own |
+| `group` | `MenuGroupContext` | Sets the group whose items the menu shows. The root's by default |
+| `open` | `boolean` | Controls whether the menu is open, with `onOpenChange` |
+| `defaultOpen` | `boolean` | Sets whether the menu starts open, when `open` is not set |
+| `onOpenChange` | `(open: boolean) => void` | The user opened or closed the menu |
+| `deferUntilOpen` | `boolean` | Builds the menu on the first click, for a menu on every row of a list |
+| `virtualRef` | `RefObject<Element \| null>` | Opens the menu at an element other than the trigger |
+| `disabled` | `boolean` | Disables the trigger |
+| `container` | `HTMLElement \| null` | Sets the element the menu's content portals into |
+| `children` | `ReactNode` | Sets the trigger |
+
+## Open a menu
+
+Spread the actions from `useMenuBuilder` into `ActionMenu`, and pass the trigger as its child.
+
+**Example** (Opening a menu from an icon button)
+
+<Snippet file="tile-guide-menus" region="menu" lang="tsx" />
+
+<TilePreview id="row-menu" height="14rem" />
+
+`MenuBuilder` makes three actions, with a separator before Delete. The icon-only `Button.Root` is the trigger, and
+each action's function records its name in state.

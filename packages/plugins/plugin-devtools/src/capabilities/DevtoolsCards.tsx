@@ -4,13 +4,17 @@
 
 // Card surfaces whose data comes from a hook rather than the stack's `DevtoolsCardData`.
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
+import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
   EdgeCard,
+  type EdgeCardSpace,
   IndexerCard,
   QueriesCard,
   type Stats,
@@ -24,8 +28,10 @@ import {
   useSwarmTrace,
   useSyncRows,
 } from '@dxos/devtools';
+import { Obj } from '@dxos/echo';
 import * as DebugOperation from '@dxos/plugin-debug/DebugOperation';
-import { SpaceState, useSpaces } from '@dxos/react-client/echo';
+import { useClient, useMulticastObservable } from '@dxos/react-client';
+import { SpaceState } from '@dxos/react-client/echo';
 
 import { Devtools } from '#types';
 
@@ -60,18 +66,27 @@ export type EdgeCardSurfaceProps = Pick<DevtoolsCardData, 'stats'>;
 
 export const EdgeCardSurface = ({ stats }: EdgeCardSurfaceProps) => {
   const { status, refresh, copy } = useEdgeStatus();
-  const spaces = useSpaces({ all: true });
-  const spaceNames = useMemo(() => {
-    const names: Record<string, string> = {};
-    for (const space of spaces) {
-      const name = space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
-      if (typeof name === 'string') {
-        names[space.id] = name;
-      }
-    }
-    return names;
-  }, [spaces]);
-  return <EdgeCard edge={stats.edge} status={status} spaceNames={spaceNames} onRefresh={refresh} onCopy={copy} />;
+  const client = useClient();
+  // The observable's own array, which changes only when the space list does (`useSpaces` copies it every render).
+  const spaces = useMulticastObservable(client.spaces);
+  const localSpacesAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        const local: Record<string, EdgeCardSpace> = {};
+        for (const space of spaces ?? []) {
+          const state = get(CreateAtom.fromObservable(space.state));
+          if (state === SpaceState.SPACE_DELETED) {
+            continue;
+          }
+          const name = state === SpaceState.SPACE_READY ? get(Obj.atom(space.properties)).name : undefined;
+          local[space.id] = { name: typeof name === 'string' ? name : undefined, tag: space.tags[0] };
+        }
+        return local;
+      }),
+    [spaces],
+  );
+  const localSpaces = useAtomValue(localSpacesAtom);
+  return <EdgeCard edge={stats.edge} status={status} spaces={localSpaces} onRefresh={refresh} onCopy={copy} />;
 };
 
 export type SurfaceProfilerCardSurfaceProps = Pick<DevtoolsCardData, 'surfaceProfilerStats' | 'onClearSurfaceProfiler'>;

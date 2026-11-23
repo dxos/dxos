@@ -72,7 +72,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='dx-expand grid grid-cols-2 gap-3 p-3'>
+    <div className='dx-expand grid grid-cols-2 gap-3 p-trim-md'>
       <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-separator-subtle'>
         <Editor source={source} autoFocus />
       </div>
@@ -142,8 +142,7 @@ export const Default: Story = {};
 /**
  * Two in-memory ECHO peers (no real networking, see `withMultiClientProvider`) sharing a
  * document, exercising the `Space.postMessage`/`listen` gossip channel and the CodeMirror
- * `awareness` extension end to end. This covers the same wiring as the (currently skipped,
- * flaky) composer-app e2e collaboration cursor test, deterministically and without a browser.
+ * `awareness` extension end to end, the same wiring the composer-e2e collaboration cursor test covers.
  */
 export const WithEcho: Story = {
   decorators: [

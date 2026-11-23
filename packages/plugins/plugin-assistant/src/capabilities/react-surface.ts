@@ -9,6 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -23,6 +24,7 @@ import {
   AgentArticle,
   AgentProperties,
   ChatArticle,
+  ChatCard,
   ChatCompanion,
   ChatDialog,
   IntegrationPrompt,
@@ -30,11 +32,14 @@ import {
   PluginPrompt,
   PluginUrlPrompt,
   QuestionSurface,
+  SpaceAssistantSettings,
   SpaceHomePrompt,
+  ThreadCard,
 } from '#containers';
-import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
-import { ChatSurface } from '#types';
+import { AssistantSurface } from '#types';
 
+import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, SPACE_SETTINGS_TYPE } from '../constants.ts';
+import { AssistantNamespace } from '../namespace.ts';
 import {
   AssistantSettingsSurface,
   InvocationsSurface,
@@ -51,28 +56,33 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, AssistantNamespace.key),
         component: AssistantSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
+        id: 'spaceSettings',
+        filter: AppSurface.literal(AppSurface.Article, SPACE_SETTINGS_TYPE),
+        component: ToolkitHooks.unlessReadOnly(SpaceAssistantSettings),
+      }),
+      Surface.create({
         id: 'chatContext',
-        filter: Surface.makeFilter(ChatSurface.ChatDetails),
-        component: ChatContextPanel,
+        filter: Surface.makeFilter(AssistantSurface.ChatDetails),
+        component: ToolkitHooks.unlessReadOnly(ChatContextPanel),
         props: ({ data: { chat, db, context } }) => ({ chat, db, context }),
         position: Position.first,
       }),
       Surface.create({
         id: 'spaceHomePrompt',
         filter: Surface.makeFilter(SpaceSurface.SpaceHomePinBottom),
-        component: SpaceHomePrompt,
+        component: ToolkitHooks.unlessReadOnly(SpaceHomePrompt),
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
         id: 'spaceHomeSuggestions',
         filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         position: Position.last,
-        component: SpaceHomeSuggestionsSurface,
+        component: ToolkitHooks.unlessReadOnly(SpaceHomeSuggestionsSurface),
         props: ({ data: { space } }) => ({ space }),
       }),
       Surface.create({
@@ -94,13 +104,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'agent',
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
-        component: AgentArticle,
+        component: ToolkitHooks.unlessReadOnly(AgentArticle),
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
-        component: AgentProperties,
+        component: ToolkitHooks.unlessReadOnly(AgentProperties),
         props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
@@ -111,7 +121,7 @@ export default Capability.makeModule(() =>
             Obj.isObject(data.companionTo) &&
             (Obj.instanceOf(Chat.Chat, data.subject) || isUnprovisionedAssistantCompanion(data)),
         ),
-        component: ChatCompanion,
+        component: ToolkitHooks.unlessReadOnly(ChatCompanion),
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
           role,
           // An unprovisioned companion's node carries `null`; the chat tree reads a missing chat as `undefined`.
@@ -131,24 +141,24 @@ export default Capability.makeModule(() =>
             AppSurface.companion(AppSurface.Article, Instructions.Instructions),
           ),
         ),
-        component: InvocationsSurface,
+        component: ToolkitHooks.unlessReadOnly(InvocationsSurface),
         props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
       }),
       Surface.create({
         id: ASSISTANT_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof ChatDialog>>(AppSurface.Dialog, ASSISTANT_DIALOG),
-        component: ChatDialog,
+        component: ToolkitHooks.unlessReadOnly(ChatDialog),
         props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: 'trace',
         filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
-        component: TracePanelSurface,
+        component: ToolkitHooks.unlessReadOnly(TracePanelSurface),
       }),
       Surface.create({
         id: 'integrationPrompt',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
-        component: IntegrationPrompt,
+        filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
+        component: ToolkitHooks.unlessReadOnly(IntegrationPrompt),
         // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
         props: ({ data }) => ({
           service: nonBlank(data.data?.service),
@@ -160,15 +170,15 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'pluginPrompt',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
-        component: PluginPrompt,
+        filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
+        component: ToolkitHooks.unlessReadOnly(PluginPrompt),
         // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
         props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
       }),
       Surface.create({
         id: 'pluginUrlPrompt',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
-        component: PluginUrlPrompt,
+        filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
+        component: ToolkitHooks.unlessReadOnly(PluginUrlPrompt),
         // `data.data` is model-supplied JSON (untyped); narrow before use.
         props: ({ data }) => ({ url: nonBlank(data.data?.url), name: nonBlank(data.data?.name) }),
       }),
@@ -176,15 +186,27 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'objectCard',
         filter: Surface.makeFilter(
-          ChatSurface.ChatSurface,
+          AssistantSurface.ChatSurface,
           (data) => data.role === 'card' && EID.tryParse(nonBlank(data.data?.id) ?? '') !== undefined,
         ),
         component: ObjectCardSurface,
         props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
       }),
       Surface.create({
+        id: 'card.chat',
+        filter: AppSurface.object(AppSurface.CardContent, Chat.Chat),
+        component: ChatCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
+        id: 'threadCard',
+        filter: Surface.makeFilter(AssistantSurface.ThreadCard),
+        component: ThreadCard,
+        props: ({ data }) => data,
+      }),
+      Surface.create({
         id: 'question',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'question'),
+        filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'question'),
         component: QuestionSurface,
         // `data.data` is model-supplied JSON (untyped); narrow the ids before use.
         props: ({ data }) => ({ task: nonBlank(data.data?.task), question: nonBlank(data.data?.question) }),
@@ -192,7 +214,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'triggerStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: TriggerStatusSurface,
+        component: ToolkitHooks.unlessReadOnly(TriggerStatusSurface),
       }),
     ]),
   ),

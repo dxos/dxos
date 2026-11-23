@@ -13,8 +13,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { AssistantNamespace } from '../../namespace.ts';
 import { type ChatDrawer, type ChatEvent } from '../Chat/events.ts';
 
 /**
@@ -57,7 +56,7 @@ export const ChatActions = ({
   onSend,
   onEvent,
 }: ChatActionsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   // While a turn runs the primary control interrupts it — unless there is text waiting, in which
   // case sending it (which queues it behind the running turn) is what the reader is asking for.
   const showStop = processing && !canSend;
@@ -106,9 +105,9 @@ export const ChatActions = ({
   const menuActions = useMenuBuilder(
     (get) =>
       MenuBuilder.make()
-        .custom('prompt-options', { label: ['prompt-options.label', { ns: meta.profile.key }] }, () => start)
+        .custom('prompt-options', { label: ['prompt-options.label', { ns: AssistantNamespace.key }] }, () => start)
         .subgraph(customActions && get(customActions))
-        .custom('prompt-controls', { label: ['prompt-controls.label', { ns: meta.profile.key }] }, () => controls)
+        .custom('prompt-controls', { label: ['prompt-controls.label', { ns: AssistantNamespace.key }] }, () => controls)
         .build(),
     [start, controls, customActions],
   );
@@ -126,7 +125,7 @@ const DrawerToggles = ({
   open,
   onEvent,
 }: NonNullable<ChatActionsProps['drawers']> & Pick<ChatActionsProps, 'onEvent'>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   return (
     <Toolbar.ToggleGroup
       type='multiple'

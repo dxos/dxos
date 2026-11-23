@@ -1,14 +1,68 @@
 # Hypercore removal — credentials over Automerge — Tasks
 
-_Resume (2026-08-25): PR A `dxos/dxos#12726`, PR B `dxos/edge#945`. Phase 1 is done; Phase 2 is done on the
-WRITE side (root + credentials document minted, populated and mirrored, on both data spaces and HALO) and
-on the EDGE read side. What is NOT done is the CLIENT read flip: there is no `CredentialSource` behind
-`ControlPipeline`, so the client still reads its credentials from the control feed and the document is
-written but never authoritative. That flip (Phase 2 write/read path + notarization) and all of Phase 3 are
-the remaining work, and Phase 3 is blocked on a design decision — see "Open decision" below. Phase 4 is out
-of scope for both PRs by design._
+_Resume (2026-10-27): the Phase 3 open decision is SETTLED — EDGE executes the migration (option 1).
+`POST /db/spaces/:id/root` with an empty body mints the root and credentials documents from EDGE's own
+chain (edge#945, on production `3de361c` and preview). Branch `dm/wizardly-cray-ym6cp4` (dxos + edge)
+wires the client to it: `space.internal.migrateSpaceRoot()` (`SpacesService.migrateSpaceRoot`), a
+"Credential storage → Migrate" button in Composer's space settings, a read-only `GET /db/spaces/:id/root`
+on EDGE, and members adopting EDGE's root on space open regardless of `DX_AUTOMERGE_CREDENTIALS`. The
+two-client e2e is `edge/packages/services/edge/test/space-root-migration.node.test.ts`. Still open: the
+client read FLIP, HALO replication, and the edge-initiated bulk pass (see "Edge-initiated migration")._
 
-## Open decision — blocks Phase 3
+## Decisions (2026-10-29, user)
+
+- **Older clients keep working: dual-write.** A migrated space keeps writing every credential to BOTH the
+  control feed and the credentials document until a cutoff, so a client that reads only the feed
+  (composer.space, older desktop builds) still sees new members. The flip (stop reading the feed) is
+  per space and independent of the cutoff; hypercore is dropped only after the cutoff.
+- **Identities migrate too.** HALO gets the same treatment as data spaces: a Composer button to migrate
+  one identity by hand first, then a plan for migrating every identity. Blocked on HALO document
+  replication (see Phase 2 blocker).
+- **Open clients: accept a reload.** No EDGE push; a device adopts a migration the next time it opens
+  the space or reloads.
+- **Credentials stay raw bytes in the document** (already the case: `AddOnlySet` values are the
+  credential's wire bytes). Signatures cover a canonical JSON shape rebuilt from the decoded credential,
+  so EDGE's rebuild must match the client's — fixed for Epoch and MemberProfile in dxos/edge#1422, which
+  now resolves every assertion through `@dxos/protocols/buf-registry` as the client does.
+
+### Plan
+
+1. [ ] dxos/edge#1422 — EDGE verifies every credential the client signs (Epoch, MemberProfile).
+2. [ ] Identity migration: HALO document replication (client + EDGE), EDGE mints a HALO root, client
+       `migrateIdentityRoot` + Composer button, recovery/device-join carry the root.
+3. [ ] Data-space client flip: a migrated space reads credentials only from the document, still
+       dual-writes to the feed.
+4. [ ] EDGE flip: `SpaceStateMachine` reads only the document for a migrated space.
+5. [ ] Bulk migration plan for spaces and identities (EDGE job, paced, resumable, observable).
+6. [ ] Cutoff: stop feed writes for migrated spaces, then Phase 4 (delete hypercore).
+
+## Edge-initiated migration (prep, 2026-10-27)
+
+- [x] Client-initiated, EDGE-executed migration: `DataSpaceManager.migrateSpaceRootOnEdge` asks EDGE,
+      retries while EDGE answers "pending", adopts the root (fetching it from the network) and mirrors.
+- [x] Members accept by adopting: on every space open an unanchored space asks EDGE (`GET`) and adopts
+      the recorded root before anything local could mint a second one; the latch re-arms on reopen.
+- [x] `Space.space_root_url` (services.proto field 12) reports the adopted root to the UI.
+- [x] Composer button: Space settings → Space controls → "Credential storage".
+- [x] e2e (edge repo): alice migrates, bob (active, untouched) adopts on reopen, a post-migration
+      admission lands in the EDGE-minted credentials document.
+- [x] EDGE side landed (dxos/edge#1403): read-only `GET /db/spaces/:id/root`, and `verifyCredential` no longer
+      mutates the credential it checks (it crashed the SpaceStateMachine on every document-sourced credential).
+      On preview EDGE; production EDGE needs a deploy before anyone migrates there. NOTE: Composer `preview`
+      talks to PRODUCTION EDGE (`.github/workflows/env/preview`); Composer `dev` talks to preview EDGE.
+- [ ] Two-client e2e (`edge/packages/services/edge/test/space-root-migration.node.test.ts`, in edge commit
+      `0c88e44`) returns with the dxos catalog bump that brings `migrateSpaceRoot`/`spaceRootUrl`.
+- [x] A member that is open does not notice until it reopens the space — accepted for the bulk pass too
+      (decision 2026-10-29: reload is fine, no push).
+- [ ] Bulk pass: iterate the registry and call `ensureSpaceRoot` per space (admin route or alarm),
+      rate-limited; `SpaceRootPendingError` spaces retried later.
+- [ ] `POST`/`GET /db/spaces/:id/root` authenticate the caller but do not check membership.
+- [ ] With the flag ON a device that finds no EDGE root still mints its own; with the flag OFF (all
+      deployments today) it never does. Resolve before turning the flag on anywhere.
+- [x] Root lookups no longer touch the registry singleton (dxos/edge#1407): the space's SpaceStateMachine
+      holds the primary root, the registry mirrors it via its queue, and the negative KV cache is gone.
+
+## Open decision — blocks Phase 3 (RESOLVED 2026-10-27: option 1, EDGE executes)
 
 Client-initiated migration executed by EDGE. Two shapes, not yet chosen:
 

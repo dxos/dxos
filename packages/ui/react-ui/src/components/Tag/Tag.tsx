@@ -19,9 +19,13 @@ import * as Icon from '../Icon/Icon.tsx';
 
 export type TagHue = NeutralPalette | ChromaticPalette | MessageValence;
 
+export type TagVariant = 'fill' | 'outline';
+
 export type TagProps = HTMLAttributes<HTMLElement> & {
   /** Maps to ui-theme's `--color-<hue>-surface`/`-fg` tokens; valences use the same hues as the current `Tag`. */
   hue?: TagHue;
+  /** `outline` draws the hue as a ring and text on no fill. */
+  variant?: TagVariant;
   /**
    * Adds a trailing × delete trigger (Ark TagsInput's "delete trigger") inside the pill; a clickable tag also calls it
    * on Backspace or Delete.
@@ -41,7 +45,10 @@ const DELETE_KEYS = ['Backspace', 'Delete'];
  * `delete-trigger`, so a button never nests inside another.
  */
 export const Tag = composable<HTMLElement, TagProps>(
-  ({ hue = 'neutral', onClick, onKeyDown, onDelete, deleteLabel, children, ...props }, forwardedRef) => {
+  (
+    { hue = 'neutral', variant = 'fill', onClick, onKeyDown, onDelete, deleteLabel, children, ...props },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(translationKey);
     const ref = useComposedRefs<HTMLElement>(forwardedRef);
     const { className, ...rest } = composableProps(props, { classNames: recipes.tag() });
@@ -61,6 +68,7 @@ export const Tag = composable<HTMLElement, TagProps>(
           onClick={onClick}
           onKeyDown={onKeyDown}
           data-hue={hue}
+          data-variant={variant}
           data-scope='tag'
           data-part='root'
           data-clickable=''
@@ -74,6 +82,7 @@ export const Tag = composable<HTMLElement, TagProps>(
           {...rest}
           onKeyDown={onKeyDown}
           data-hue={hue}
+          data-variant={variant}
           data-scope='tag'
           data-part='root'
           className={className}
@@ -90,6 +99,7 @@ export const Tag = composable<HTMLElement, TagProps>(
         {...rest}
         onKeyDown={onKeyDown}
         data-hue={hue}
+        data-variant={variant}
         data-scope='tag'
         data-part='root'
         className={className}

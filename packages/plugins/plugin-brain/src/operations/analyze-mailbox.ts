@@ -11,7 +11,8 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStoreMemory, extractDocFacts } from '@dxos/pipeline-rdf';
+import { type ExtractOptions } from '@dxos/pipeline-rdf';
 import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
@@ -55,7 +56,7 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
 
       // Extract options: the email rules plus optional model/provider/strict overrides so callers can
       // target a local model (e.g. ollama, strict:false) instead of the default edge Claude model.
-      const extractOptions: RDF.ExtractOptions = {
+      const extractOptions: ExtractOptions = {
         ...EMAIL_EXTRACT_OPTIONS,
         ...(model !== undefined ? { model } : {}),
         ...(provider !== undefined ? { provider } : {}),
@@ -71,13 +72,14 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
           ),
         );
 
+      // The pipeline still writes through a FactStore; this one writes into the space's memory.
       const result = yield* runFactPipeline({
         feed,
         cursor,
         pageSize,
         extract,
         onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
-      });
+      }).pipe(Effect.provide(FactStoreMemory.layer));
       reportStatus({ message: Progress.STATUS_COMPLETE });
       return result;
     }),

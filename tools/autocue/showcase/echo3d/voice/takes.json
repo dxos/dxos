@@ -1,0 +1,23 @@
+{
+  "url": "https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/showcase/echo3d/echo3d-voice-takes-20261031.tar.gz",
+  "sha256": "db1421cb85abe6a3f60661357d9a68d07dc14d09fcbdf60f1dd27d889b5e8f54",
+  "sets": {
+    "fry": {
+      "voice": "jRVXPhztJiPV60oQlVMX",
+      "name": "Watson",
+      "track": "SPEAKING-TRACK-FRY.md",
+      "holds": "holds-fry.json"
+    },
+    "pro": {
+      "voice": "19STyYD15bswVz51nqLf",
+      "name": "Samara X",
+      "track": "SPEAKING-TRACK-PROFESSIONAL.md",
+      "holds": "holds-pro.json"
+    },
+    "saas45": {
+      "voice": "jRVXPhztJiPV60oQlVMX",
+      "name": "Watson",
+      "takes": "1.wav … 8.wav, cleaned; lines in README.md"
+    }
+  }
+}

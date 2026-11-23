@@ -9,18 +9,16 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Main from '@dxos/react-ui/Main';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { useBreakpoints, useDeckState } from '#hooks';
-import { meta } from '#meta';
+import { useDeckState, useTopbar } from '#hooks';
 
-import { layoutAppliesTopbar } from '../../util/index.ts';
+import { DeckNamespace } from '../../namespace.ts';
 
-const label = ['sidebar.title', { ns: meta.profile.key }] satisfies Theme.Label;
+const label = ['sidebar.title', { ns: DeckNamespace.key }] satisfies Theme.Label;
 
 export const Sidebar = () => {
   const { state } = useDeckState();
   const { popoverAnchorId, activeDeck: current, fullscreen } = state;
-  const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
+  const topbar = useTopbar(!!fullscreen);
 
   const navigationData = useMemo<AppSurface.NavigationData<{ topbar: boolean }>>(
     () => ({ popoverAnchorId, topbar, current }),

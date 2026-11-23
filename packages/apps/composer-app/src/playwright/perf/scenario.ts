@@ -93,8 +93,8 @@ export type ScenarioContext = {
   runId: string;
   /** Locator budget for one step. */
   budget: number;
-  /** A measured stage; ids are the row's `stage` and the metric ids' suffix. */
-  stage: (id: string, body: () => Promise<void>) => Promise<void>;
+  /** A measured stage; ids are the row's `stage` and the metric ids' suffix. False when `--until` skipped it. */
+  stage: (id: string, body: () => Promise<void>) => Promise<boolean>;
 };
 
 export type Scenario = {
@@ -248,7 +248,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
         });
         // A stage past `--until` did not run, so it neither opens nor closes the window.
         if (!row) {
-          return;
+          return false;
         }
         if (RETAINED_SAMPLE?.from === id) {
           const targets = await attachAll(debugPort, include);
@@ -257,6 +257,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
         if (RETAINED_SAMPLE?.to === id) {
           await closeRetained();
         }
+        return true;
       },
     });
     // A window whose last stage never ran ends with the last stage that did.

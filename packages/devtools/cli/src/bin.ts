@@ -21,7 +21,7 @@ import * as Cli from '@dxos/app-framework/Cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { CommandConfig } from '@dxos/cli-util';
-import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
+import { ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 import { JsonOutput, deus } from '@dxos/deus/cli';
 import { LogLevel, LogProcessorType, levels, log } from '@dxos/log';
@@ -53,7 +53,7 @@ import {
   initializeObservability,
   observabilityNamespace,
 } from './observability.ts';
-import { installStderrFilter, registerSharedScope } from './util/index.ts';
+import { bundleDescriberLayer, installStderrFilter, registerSharedScope } from './util/index.ts';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
@@ -213,9 +213,16 @@ const program = Effect.gen(function* () {
     // match by key, so `add --dev` only overrides a builtin if its plugin precedes that builtin.
     plugins: [
       ...installed,
-      ...getPlugins({ config, namespace, observability: () => Promise.resolve(observabilityInstance) }).filter(
-        (plugin) => !overridden.has(plugin.meta.profile.key),
-      ),
+      ...getPlugins({
+        config,
+        namespace,
+        observability: () => Promise.resolve(observabilityInstance),
+        // Only a command that uses the client initializes it, so the session is attributed then.
+        identify: (client) =>
+          identifySession(observabilityInstance, client, namespace, installationId).catch((error) =>
+            log('session identification failed', { error }),
+          ),
+      }).filter((plugin) => !overridden.has(plugin.meta.profile.key)),
     ],
     enabled,
     core: getCore(),
@@ -232,15 +239,12 @@ const program = Effect.gen(function* () {
     }),
   ).pipe(Layer.provide(commandConfigLayer(argv)));
   const context = yield* Layer.build(
-    Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv), deusJsonLayer),
+    Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv), deusJsonLayer, bundleDescriberLayer),
   );
   const layer = Layer.succeedContext(context);
 
   const manager = yield* Capability.get(Capabilities.PluginManager).pipe(Effect.provide(layer));
   yield* manager.activate(ActivationEvents.Idle);
-
-  const client = yield* ClientService.pipe(Effect.provide(layer));
-  yield* Effect.promise(() => identifySession(observabilityInstance, client, namespace, installationId));
 
   // Register in-process dispatcher so `repl` can reuse the already-built
   // command tree and plugin layer instead of spawning a child `dx` process

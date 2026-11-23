@@ -17,15 +17,16 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { SampleItem, SampleOperation } from '#types';
+
+import { SampleNamespace } from '../namespace.ts';
 
 export type SamplePropertiesProps = {
   subject: SampleItem.SampleItem;
 };
 
 export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SampleNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleRandomize = useCallback(() => {

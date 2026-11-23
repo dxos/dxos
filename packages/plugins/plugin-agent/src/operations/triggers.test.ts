@@ -8,17 +8,20 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Evaluator from '@dxos/brain/Evaluator';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
-import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
@@ -38,7 +41,15 @@ import {
   TriggerOperation,
 } from '#types';
 
-import { TEST_MEMBERS, createLocalAgent, makeTestBrain, noChannelBackends, testSpaceLayer } from '../brain/testing.ts';
+import {
+  TEST_MEMBERS,
+  createLocalAgent,
+  inlineBrainHooks,
+  makeTestBrain,
+  noChannelBackends,
+  testSpaceLayer,
+} from '../brain/testing.ts';
+import { AgentNamespace } from '../namespace.ts';
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
@@ -56,7 +67,11 @@ const DIMA = TEST_MEMBERS.dima;
 const RICH = TEST_MEMBERS.rich;
 
 /** A fact as `readSource` records it from a chat message. */
-const entityTerm = (label: string): RDF.Term => ({ kind: 'entity', entity: normalizeEntityId(label), label });
+const entityTerm = (label: string): Fact.Term => ({
+  kind: 'entity',
+  entity: Fact.EntityKey.make(normalizeEntityId(label)),
+  label,
+});
 
 const fact = ({
   speaker = DIMA,
@@ -76,23 +91,24 @@ const fact = ({
   polarity?: '+' | '-';
   force?: Trigger.Force;
   saidAt?: string;
-} = {}): RDF.Fact => ({
-  id: `fact-${subject}-${predicate}-${object}`,
-  assertion: { subject: entityTerm(subject), predicate, object: entityTerm(object), quote },
-  factuality: { value: polarity === '+' ? 'CT+' : 'CT-', polarity },
-  ...(force ? { illocution: { force } } : {}),
-  attribution: { agent: speaker, source: 'dxn:chat', generatedAtTime: saidAt },
-  recordedAt: saidAt,
-  extractor: { id: 'test', model: 'test', version: '1' },
-  sourceHash: 'hash',
-});
+} = {}): Fact.Fact =>
+  Fact.make({
+    id: `fact-${subject}-${predicate}-${object}`,
+    assertion: { subject: entityTerm(subject), predicate, object: entityTerm(object), quote },
+    factuality: { value: polarity === '+' ? 'CT+' : 'CT-', polarity },
+    ...(force ? { illocution: { force } } : {}),
+    attribution: { agent: speaker, source: 'dxn:chat', generatedAtTime: saidAt },
+    recordedAt: saidAt,
+    extractor: { id: 'test', model: 'test', version: '1' },
+    sourceHash: 'hash',
+  });
 
 const PR_IS_UP: Trigger.FactPattern = { speaker: DIMA, about: 'indexer PR', force: 'assertive', polarity: '+' };
 
 /** Whether the pattern, translated to rules and evaluated by the brain, wakes on the fact. */
 const wakes = (
   pattern: Trigger.FactPattern,
-  subject: RDF.Fact,
+  subject: Fact.Fact,
   { after = '2026-10-03T00:00:00.000Z' }: { after?: string } = {},
 ): boolean => {
   const evaluator = Evaluator.make();
@@ -121,10 +137,10 @@ describe('toRules', () => {
     // Someone who is no member is attributed by bare name, and a watch on that name matches them.
     expect(wakes({ speaker: 'Dima' }, fact({ speaker: 'Dima' }))).toBe(true);
     expect(wakes({ speaker: DIMA.toLowerCase() }, fact())).toBe(false);
-    const aboutDima: RDF.Fact = {
+    const aboutDima = Fact.make({
       ...fact(),
       assertion: { ...fact().assertion, subject: { kind: 'entity', entity: DIMA, label: 'Dima' } },
-    };
+    });
     expect(wakes({ subject: DIMA }, aboutDima)).toBe(true);
     expect(wakes({ subject: RICH }, aboutDima)).toBe(false);
     // `about` still finds a person by the name their entity carries as its label.
@@ -254,7 +270,7 @@ const makeScript =
     if (request.text.startsWith(COMPOSE_PROMPT)) {
       return { parts: [text(composeReply(request.text, COMPOSED))] };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       const facts = FACTS.filter(({ quote }) => request.text.includes(quote)).map(({ factuality, ...fact }) => ({
         ...fact,
         factuality: factuality ?? 'CT+',
@@ -316,6 +332,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, inlineBrainHooks) },
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
@@ -326,18 +343,17 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
 const recordedQuotes = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat) {
   const brainService = yield* BrainService.BrainService;
   const feed = yield* Database.load(chat.feed);
-  const messages = [...(yield* Feed.query(feed, Filter.type(Message.Message)).run)].sort(
-    (left, right) => Feed.getPosition(left) - Feed.getPosition(right),
-  );
+  const messages = yield* TrajectoryStore.messages(feed);
+  const { db } = yield* Database.Service;
   const facts = yield* Effect.forEach(messages, (message) =>
-    brainService.query(agent.id, { source: Obj.getURI(message) }),
+    brainService.query(agent.id, { source: EID.make({ spaceId: db.spaceId, entityId: message.id }) }),
   );
   return facts.flat().map(({ assertion }) => assertion.quote);
 });
 
 const texts = Effect.fnUntraced(function* (chat: Chat.Chat) {
   const feed = yield* Database.load(chat.feed);
-  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+  const messages = yield* TrajectoryStore.messages(feed);
   return messages.map((message) => Message.extractText(message));
 });
 
@@ -375,8 +391,8 @@ describe('AgentPresence.delivers', () => {
 });
 
 describe('end-of-turn triggers', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.reset();
   });
 
   it.effect(
@@ -596,7 +612,7 @@ const makePostedScript =
       postedPrompts.compose.push(request.text);
       return { parts: [text(composeReply(request.text, POSTED_COMPOSED))] };
     }
-    if (request.text.includes(EXTRACTION_PROMPT)) {
+    if (request.system.includes(EXTRACTION_PROMPT)) {
       postedPrompts.extraction.push(request.text);
       const facts = POSTED_FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({
         ...fact,
@@ -662,6 +678,7 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, inlineBrainHooks) },
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       aiService: ScriptedLanguageModel.scriptedAiService(makePostedScript(postedRefs)),
     }),
@@ -669,8 +686,8 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
 );
 
 describe('keep me posted', () => {
-  afterEach(() => {
-    brain.triggers.snapshot.forEach(({ id }) => brain.triggers.remove(id));
+  afterEach(async () => {
+    await brain.clearTriggers();
     postedPrompts.extraction.length = 0;
     postedPrompts.compose.length = 0;
   });

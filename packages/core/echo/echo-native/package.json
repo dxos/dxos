@@ -1,0 +1,45 @@
+{
+  "name": "@dxos/echo-native",
+  "version": "0.17.0",
+  "private": true,
+  "description": "Experimental ECHO database whose storage engine (Turso + Automerge) is Rust compiled to WebAssembly",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@dxos/async": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/echo-sqlite": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/util": "workspace:*"
+  }
+}

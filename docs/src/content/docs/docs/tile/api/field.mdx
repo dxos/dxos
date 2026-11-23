@@ -1,0 +1,38 @@
+---
+title: Field
+description: "A control's label, help text and error."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/field" narrow />
+
+```ts
+import * as Field from '@dxos/react-ui/Field';
+```
+
+A field gives a control its label, help text and error.
+
+## Parts
+
+| Part                       | What it is                                         |
+| -------------------------- | -------------------------------------------------- |
+| `Field.Root`               | The root, which holds one control and its texts    |
+| `Field.Header`             | A row above the control, for the label and extras  |
+| `Field.Label`              | The label. `srOnly` hides it but keeps it for screen readers |
+| `Field.RequiredIndicator`  | The mark for a required field                      |
+| `Field.HelperText`         | A hint under the control                           |
+| `Field.ErrorText`          | The error, shown when the field is invalid         |
+
+`Field.Root` takes `invalid`, `required`, `disabled` and `readOnly` from the [Ark UI](https://ark-ui.com) field it is
+built on. Use `validationValence` to color the field by status.
+
+Use `layout` to place the label:
+
+- `'stack'` puts the label above the control. It is the default.
+- `'row'` makes the field a row of the parent container's columns. `Field.Header` and `Field.HelperText` take the
+  tracks before the control, and the row stacks in a narrow pane.
+- `'inline'` puts the label beside the control, in a label column of one width, so a run of inline fields lines up
+  its controls.
+
+Inside a `Field.Root`, a control takes the field's id, label and description, so it needs no `aria-label`.

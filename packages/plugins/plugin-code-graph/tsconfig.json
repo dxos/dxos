@@ -34,6 +34,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -49,6 +52,9 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -59,6 +65,9 @@
     },
     {
       "path": "../../ui/react-ui-canvas"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-editor"
     },
     {
       "path": "../../ui/react-ui-menu"
@@ -86,6 +95,9 @@
     },
     {
       "path": "../plugin-transcription"
+    },
+    {
+      "path": "../plugin-typesafe"
     }
   ]
 }

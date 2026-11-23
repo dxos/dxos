@@ -1,0 +1,81 @@
+---
+title: Passkey recovery
+description: Register a passkey as a recovery key and recover with it.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+This guide adds passkey recovery to an app. At the end, a user can register a passkey as a recovery key for their
+identity, recover the identity with it on a new device, and revoke it.
+
+With a passkey, the user gets their identity back on a new device with a fingerprint or a PIN, with no recovery code
+to keep.
+
+HALO and your app each do part of the work. `@dxos/halo` writes the recovery credential, the signed record that
+registers the passkey with the identity. The WebAuthn ceremony that creates and uses the passkey runs in the app,
+because only the app knows its site and its UI.
+
+This guide uses the browser's WebAuthn API. Recovery goes through EDGE, DXOS's always-online peer, so the client needs
+a network connection.
+
+<Aside type="caution" title="Account required">
+  Recovery needs a DXOS account. EDGE stores recovery credentials only for identities linked to an account, and for now
+  you can create an account only through [Composer](https://composer.space).
+</Aside>
+
+## Register a passkey
+
+`navigator.credentials.create` makes the passkey. A **lookup key** is a public value that names one recovery
+credential. Make a random one and put it in the passkey's user handle. The browser returns the handle when the passkey
+signs, and HALO finds the credential by it.
+
+Then pass the passkey's public key, the lookup key and the algorithm to `Identity.createRecoveryCredential` as
+`externalKey`. The identity's group gains the passkey as a member.
+
+**Example** (Registering a passkey as a recovery key)
+
+<Snippet file="halo-guide-passkey" region="register" />
+
+`response.getPublicKey()` returns the passkey's public half, which is all of the passkey that HALO sees.
+`pubKeyCredParams` offers Ed25519 and ES256, and `algorithm` tells HALO which of the two the authenticator chose.
+
+`residentKey: 'required'` makes the passkey a resident key, so a new device can find it without being told which one
+to use.
+
+## Recover on a new device
+
+Recovery runs on the new device, before any identity exists, in three calls:
+
+1. `Identity.requestRecoveryChallenge` gets a challenge from EDGE for this device.
+2. `navigator.credentials.get` asks the user to sign it with the passkey.
+3. `Identity.recover` sends the signature, the challenge and the lookup key from the user handle. EDGE checks them against
+   the identity's recovery credentials. The identity's agent device signs the credential that admits the device, and
+   EDGE returns it.
+
+**Example** (Recovering an identity with a passkey)
+
+<Snippet file="halo-guide-passkey" region="recover" />
+
+`challenge` holds more than the bytes to sign. It also names the device key that the challenge was made for, so
+`recoverWithPasskey` hands the whole object back to `recover`.
+
+`recover` returns the identity. The device then syncs the identity's spaces, as any new device does.
+
+## Revoke a passkey
+
+`Identity.credentials` streams every credential the identity holds. A recovery credential carries `recovery`, which
+has its kind, its lookup key and whether it is revoked.
+
+`revokeRecoveryCredential` revokes one by its lookup key. HALO refuses to revoke the last active recovery credential
+of any kind, so register the replacement first.
+
+**Example** (Replacing a passkey)
+
+<Snippet file="halo-guide-passkey" region="revoke" />
+
+## Related
+
+- [Recovery and credentials](/docs/halo/concepts/recovery-credentials/)
+- [Recover an identity](/docs/halo/learn/recover-identity/), which uses a recovery code.
+- [Identity](/docs/halo/api/identity/)

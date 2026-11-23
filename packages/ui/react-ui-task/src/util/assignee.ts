@@ -8,6 +8,8 @@ import { type Actor, type Person, RemoteSession, Task } from '@dxos/types';
 /** The glyph for a person assignee. */
 export const PERSON_ICON = 'ph--user--regular';
 
+export const UNASSIGNED_ICON = 'ph--user-circle-dashed--regular';
+
 /** The glyph for an assistant whose harness has no mark of its own. */
 export const AGENT_ICON = 'ph--robot--regular';
 
@@ -57,8 +59,8 @@ export const getAssigneeDisplay = ({
     (session || subject === undefined ? Task.refEntityId(assignee.subject) : undefined);
   const label =
     contact?.fullName ??
-    session?.title ??
     (session && RemoteSession.harnessName(session)) ??
+    session?.title ??
     assignee.name ??
     assignee.email ??
     (assignee.identityDid ? shortDid(assignee.identityDid) : undefined) ??

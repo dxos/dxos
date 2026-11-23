@@ -1,0 +1,669 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-agent/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: AgentPlugin
+
+The operations, the knowledge graph, identities and multi-space presence are solid and well tested:
+every op exists with the specified key, `interview.test.ts`, `relay.test.ts`, `ensure-channel-chat.test.ts`,
+`invite-agent.test.ts`, `admit-agent.test.ts`, `AgentSpace.test.ts` and `agent-admin-sync.test.ts` run all the
+derived scenarios, the scripted interview story covers the profile panel, and EDGE mints agent spaces, issues
+`IdentityAdmin` credentials and serves only registered spaces. The UI around channels has moved away from the
+spec: the Activity companion no longer has a channel picker or per-channel ObjectProperties surfaces, and lists
+conversations oldest first. The biggest divergence is `createAgent`, which binds the Modes, Relay, Goals and
+Brain skills and leaves the Interview skill to the `Interviewer` mode.
+
+Of 85 items: 67 done, 6 untested, 4 partial, 7 diverged, 1 missing. Findings:
+
+- **createAgent / F-1.2:** new agents do not get the Interview skill in their Instructions; only the
+  `Interviewer` mode binds it.
+- **Activity companion (F-3.1, F-3.3, F-3.7):** no picker or auto-saving AgentChannels form, a status row in place
+  of the backend's surface, and conversations sorted oldest first.
+- **F-6.2 on EDGE:** `BrainObject._runDue` runs `RunDue` only in the agent's home space, so a watch set in another
+  space is not delivered from the alarm.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict AgentChannels: The channel list type is parented to its agent, owns its channels, and has make, loadForAgent, addChannel and loadChannels.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#AgentChannels, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#loadForAgent, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#loadChannels]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict AgentChannels.Properties: The channels struct exists and is spread into AgentChannels, but no picker edits it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#Properties]
+  note: |
+    The Activity companion no longer renders a form over it (see AgentActivityContainer); channels are added by operations (`AgentChannels.addChannel` from plugin-discord `bind-channel` and `createEmailChannel`). No test uses the struct on its own.
+```
+
+```mdl
+verdict Relay: Relay 0.2.0 has the specified fields, statuses and parent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/Relay.ts#Relay, github:dxos/dxos/packages/plugins/plugin-agent/src/types/Relay.ts#Status]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/relay.test.ts]
+```
+
+```mdl
+verdict RecordedFact: The RecordedFact schema has subject, predicate, object or value, quote, origin, confidence and supersedes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/MemoryOperation.ts#RecordedFact]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict Goal: Goal 0.1.0 has title, description, horizon, status, owners and parent; new goals are proposed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/Goal.ts#Goal, github:dxos/dxos/packages/plugins/plugin-agent/src/types/Goal.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict Profile: Profile.render builds the goals and per-predicate facts sections from live goals and current facts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/Profile.ts#render, github:dxos/dxos/packages/plugins/plugin-agent/src/types/Profile.ts#isLiveGoal]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict createAgent: createAgent makes an initialized agent with the Conversation skill on its first chat, but binds Modes, Relay, Goals and Brain skills, not Interview.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentOperation.ts#CreateAgent, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/create-agent.ts#makeAgent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/create-agent.test.ts]
+  walkthrough:
+    - The operation declares name and instructions in and the agent ref out. github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentOperation.ts#CreateAgent
+    - makeAgent initializes the agent with base skills and the Conversation skill, and seeds the built-in modes. github:dxos/dxos/packages/plugins/plugin-agent/src/operations/create-agent.ts#makeAgent
+    - Settings' Add agent calls it, then ensureIdentity with mint while the setting is on. github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/create-agent.ts#createAgent
+  note: |
+    `makeAgent` passes `skills: [ModesSkill, RelaySkill, GoalsSkill, BrainSkill]` to `Agent.makeInitialized` and sets
+    the chat's mode to `Conversation`. The Interview skill is bound only by the built-in `Interviewer` mode
+    (`operations/modes.ts#BUILTIN_MODES`), not put in every new agent's Instructions as the note says.
+```
+
+```mdl
+verdict ensureIdentity: ensureIdentity provisions via EDGE with mint, records creator and space keys, joins in the background with retries, and repairs a missing join for the creator.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentOperation.ts#EnsureIdentity, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-identity.ts#missingJoin, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-identity.ts#CREATOR_SOURCE]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-identity.test.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/admit-agent.test.ts]
+  walkthrough:
+    - The operation is declared with skipRegistry. github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentOperation.ts#EnsureIdentity
+    - The handler mints only with mint, sets the DID at once, then forks the membership write and admission with JOIN_RETRIES. github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-identity.ts
+    - missingJoin decides which join steps a creator still needs when the agent is opened again. github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-identity.ts#missingJoin
+```
+
+```mdl
+verdict ensureChannelChat: ensureChannelChat is idempotent on agent, channel and thread via chatKey, and creates a parented chat sharing instructions and bindings.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentOperation.ts#EnsureChannelChat, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.ts#ensureChannelChat, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#chatKey]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict sendMessage: sendMessage tries the relay reply channel, then the participant chat, then a backend that opens a direct conversation, and returns refusals as delivered false.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/RelayOperation.ts#SendMessage, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/send-message.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/relay.test.ts]
+```
+
+```mdl
+verdict listAgents: listAgents returns every Agent with the count of chats parented to it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentOperation.ts#ListAgents, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/list-agents.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict inviteAgent: inviteAgent registers the space with EDGE outside home, returns the presence keyed to the home URI or the home agent, and takes the DID from EDGE.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentOperation.ts#InviteAgent, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts#inviteAgent, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts#inviteeOf]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+  walkthrough:
+    - The operation is declared with skipRegistry. github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentOperation.ts#InviteAgent
+    - inviteeOf reads name, DID and home from the agent, or from what its own space records when the home is out of reach. github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts#inviteeOf
+    - The handler registers the space with EDGE, then inviteAgent finds or makes the presence keyed to the home. github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts#inviteAgent
+```
+
+```mdl
+verdict resolveEntity: resolveEntity matches a Person by handle, then by name, appends missing handles, matches organizations by name, and fails with neither input.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/MemoryOperation.ts#ResolveEntity, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/resolve-entity.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+  note: |
+    Name matching goes beyond fullName / preferredName: the test also resolves a nickname, a handle written as a name and a unique first name.
+```
+
+```mdl
+verdict recordFacts: recordFacts validates the facts, pushes each into its own graph as the agent, quietly, and returns the graph IRIs.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/MemoryOperation.ts#Remember, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/remember.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict retrieveFacts: retrieveFacts returns current facts newest first, word-prefix filtered, with queryMatched, plus live goals.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/MemoryOperation.ts#Recall, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/recall.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict suggestGoal: suggestGoal creates a proposed goal and rejects owners that are not people or organizations.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/MemoryOperation.ts#ProposeGoal, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/propose-goal.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict setGoalStatus: setGoalStatus writes the given status, confirmed by default, with no transition rules.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/MemoryOperation.ts#ConfirmGoal, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/confirm-goal.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict updateProfile: updateProfile rewrites the ProfileOf document in place or creates the document and relation.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/MemoryOperation.ts#UpdateProfile, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/update-profile.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict AgentAdmission: The admission capability invites each admitted agent this identity administers, by the home its space records, with retries.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/agent-admission.ts#admittedHomes, github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/agent-admission.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict ProfileGraph: ProfileGraph renders labelled Goals and Facts regions, or an empty line.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/components/ProfileGraph/ProfileGraph.tsx#ProfileGraph]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+```
+
+```mdl
+verdict AgentActivity: The Activity component is a composite of agent, toolbar, channel rows, skills and conversations, with no channel form or onSave.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/components/AgentActivity/AgentActivity.tsx#AgentActivity]
+  note: |
+    The composite has Root, Toolbar (Start/Stop/Refresh for all channels), Agent, Channels and Channel (a row with status and
+    remove), Skills, Skill, Conversations and Conversation (with delete). There is no auto-saving form over
+    `AgentChannels.Properties` and no `onSave`. Its story has no play function.
+```
+
+```mdl
+verdict AgentActivityContainer: The container lists channels with polled status, skills and channel chats via child-of queries, but has no picker and renders no ObjectProperties surface per channel.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentActivity/AgentActivity.tsx#AgentActivity]
+  note: |
+    It uses `Filter.childOf(agent)` as specified and opens a chat on select. It does not create an AgentChannels on save,
+    and per channel it shows a status row instead of the backend's ObjectProperties surface. It also lists conversations
+    oldest first (`useAgentConversations` sorts ids ascending), not newest first, and adds delete. No test.
+```
+
+```mdl
+verdict AgentList: AgentList renders the administered agents in contact rows with avatar, name, space chips, DID copy and a filter.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/components/AgentList/AgentList.tsx#AgentList, github:dxos/dxos/packages/plugins/plugin-agent/src/components/AgentList/AgentList.tsx#filterAgents]
+  note: |
+    `AgentList.stories.tsx` renders it but has no play function, and no test calls `filterAgents`.
+```
+
+```mdl
+verdict AgentsPanel: AgentsPanel wires AgentList to the client through AgentSpace.administeredAgents and switches workspace on a chip.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsPanel/AgentsPanel.tsx#AgentsPanel]
+  note: |
+    No test or story renders the container.
+```
+
+```mdl
+verdict ProfileProperties: ProfileProperties shows the live goals and current facts about the subject, polling brains and subscribing to goals.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/ProfileProperties/ProfileProperties.tsx#ProfileProperties]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+```
+
+```mdl
+verdict F-1.1: Settings › Agents lists the space's agents and Add agent creates one.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/AgentsSettings.tsx#AgentsSettings, github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/create-agent.ts#createAgent]
+  note: |
+    `create-agent.test.ts` covers the creation function, not the listing; no test renders the settings section.
+```
+
+```mdl
+verdict F-1.2: A new agent has a first chat bound to the Conversation skill, but its Instructions do not hold the Interview skill.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/create-agent.ts#makeAgent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+  note: |
+    See createAgent: the Interview skill comes only with the `Interviewer` mode.
+```
+
+```mdl
+verdict F-1.3: listAgents reports chat counts per agent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/list-agents.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict F-1.4: Agents are managed in Settings › Agents; plugin-agent registers no Agent type of its own for Add to space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/AgentsSettings.tsx#AgentsSettings, github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/schema.ts]
+  note: |
+    Add, open and delete are in `AgentsSettings`; `Agent` is registered by plugin-assistant. No test checks that Add to space omits it.
+```
+
+```mdl
+verdict F-1.5: Concurrent opens share one in-flight private chat, and of two chats the one with the latest message opens.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/usePrivateChat.ts#shareInFlight, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-participant-chat.ts#ensureParticipantChat]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/usePrivateChat.test.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-participant-chat.test.ts]
+```
+
+```mdl
+verdict F-2.1: Two calls for one conversation return the same chat and feed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.ts#ensureChannelChat]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict F-2.2: A new conversation gets a parented chat, named after it, sharing Instructions and keyed by channel and thread.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.ts#ensureChannelChat]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict F-2.3: The same conversation under two agents yields two chats.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.ts#ensureChannelChat]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict F-2.4: A channel and a thread in it get separate chats.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#chatKey]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict F-3.1: The Activity companion has no channel picker, and saving creates no AgentChannels.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentActivity/AgentActivity.tsx#AgentActivity, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#addChannel]
+  note: |
+    The companion lists and removes channels; the list is created by `AgentChannels.addChannel` when an operation
+    (plugin-discord `bind-channel`, `createEmailChannel`) adds the first channel.
+```
+
+```mdl
+verdict F-3.2: The list is parented to the agent and found by loadForAgent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#make, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentChannels.ts#loadForAgent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict F-3.3: Channels show a status row and a shared Start/Stop, not the backend's ObjectProperties surface.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentActivity/AgentActivity.tsx#AgentActivity]
+  note: |
+    `ChannelTile` shows the channel name and the polled connection status; the toolbar connects or disconnects all channels.
+    No `ObjectProperties` surface is rendered per channel.
+```
+
+```mdl
+verdict F-3.4: A person with no chat is reached by a direct conversation on the first capable channel, which becomes their chat.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/send-message.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/relay.test.ts]
+```
+
+```mdl
+verdict F-3.5: A report to the requester goes to the relay's replyChannel and replyThread first.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/send-message.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/relay.test.ts]
+```
+
+```mdl
+verdict F-3.6: A refusal or an unreachable person returns delivered false with a reason and records nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/send-message.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/relay.test.ts]
+```
+
+```mdl
+verdict F-3.7: Channel chats list with title and last activity and open on select, but oldest first.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/useAgentConversations.ts#useAgentConversations, github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentActivity/AgentActivity.tsx#AgentActivity]
+  note: |
+    `useAgentConversations` sorts by id ascending ("in the order they started"), the reverse of the spec's newest first. No test.
+```
+
+```mdl
+verdict F-4.1: resolveEntity matches by handle, then by name case-insensitively, and creates only on no match.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/resolve-entity.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict F-4.2: recordFacts writes one graph per fact as the agent and rejects the listed malformed input.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/remember.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict F-4.3: Superseded facts are no longer recalled.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/recall.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict F-4.4: retrieveFacts returns current facts filtered by subject and query, plus live goals.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/recall.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict F-4.5: suggestGoal creates proposed goals and rejects non-entity owners.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/propose-goal.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict F-4.6: setGoalStatus defaults to confirmed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/confirm-goal.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict F-4.7: updateProfile keeps one ProfileOf document and rewrites it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/update-profile.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict F-5.1: The scripted interview story resolves the person, records facts, proposes and confirms goals.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/skills/InterviewSkill.ts]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+```
+
+```mdl
+verdict F-5.2: The properties panel lists live goals and current facts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/ProfileProperties/ProfileProperties.tsx#ProfileProperties]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+```
+
+```mdl
+verdict F-5.3: The panel updates as goals and facts change, as the story checks after confirmation.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/ProfileProperties/ProfileProperties.tsx#ProfileProperties]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+```
+
+```mdl
+verdict F-6.1: brainId names the brain by the DID, or the home agent's id without one, for every presence.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentPresence.ts#brainId, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentPresence.ts#brainOf]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict F-6.2: In-app delivery is per origin space; EDGE's alarm runs RunDue only at the agent's home.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentPresence.ts#delivers, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/run-due.ts, github:dxos/edge/packages/services/compute-service/src/brain/brain-object.ts#BrainObject]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/triggers.test.ts]
+  note: |
+    `AgentPresence.delivers` and the trigger tests cover origin-scoped delivery and the no-origin fallback. On EDGE,
+    `BrainObject._runDue` invokes `RunDue` once, in `identity.homeSpaceId` (or the legacy location), not in each space the brain
+    serves, so a watch set in another space is not delivered from the alarm.
+```
+
+```mdl
+verdict F-7.1: EDGE mints a tagged default space owned by the agent and makes its writers admins through IdentityAdmin credentials.
+  status: done
+  evidence: [github:dxos/edge/packages/services/identity-service/src/agent/agent.ts#Agent, github:dxos/edge/packages/services/compute-service/src/api.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.ts#admins]
+  tests: [github:dxos/edge/packages/services/edge/test/brain.node.test.ts, github:dxos/edge/packages/services/identity-service/test/agent.workerd.test.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.test.ts]
+  walkthrough:
+    - compute-service mints the identity and default space and admits the creator as ADMIN. github:dxos/edge/packages/services/compute-service/src/api.ts
+    - The identity-service Agent DO tags the space and appends one IdentityAdmin per admin. github:dxos/edge/packages/services/identity-service/src/agent/agent.ts#Agent
+    - AgentSpace.admins reads admins and editors on the client. github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.ts#admins
+```
+
+```mdl
+verdict F-7.2: ensureIdentity admits the agent as an editor where its creator may admit; locked spaces admit no one.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/admit-agent.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-identity.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/admit-agent.test.ts]
+```
+
+```mdl
+verdict F-7.3: Creating with the setting on waits up to 15 seconds for the DID; the join runs in the background and opening repairs it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/create-agent.ts#createAgent, github:dxos/dxos/packages/plugins/plugin-agent/src/containers/useIdentityRepair.ts#useIdentityRepair, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-identity.ts#missingJoin]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/create-agent.test.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/admit-agent.test.ts]
+```
+
+```mdl
+verdict F-7.4: AgentSettings.identities, off by default, gates provisioning on create.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSettings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/create-agent.ts#createAgent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/create-agent.test.ts]
+```
+
+```mdl
+verdict F-7.5: administeredBy lists the agent spaces among the client's spaces the identity may write to, without EDGE.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.ts#administeredBy]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.test.ts]
+```
+
+```mdl
+verdict F-7.6: admins lists admins and editors; agentOf is the space owner.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.ts#admins, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.ts#agentOf]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.test.ts]
+```
+
+```mdl
+verdict F-7.7: The Agents account panel is built and positioned last, but untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsPanel/AgentsPanel.tsx#AgentsPanel, github:dxos/dxos/packages/plugins/plugin-agent/src/components/AgentList/AgentList.tsx#AgentList]
+  note: |
+    The app graph adds the panel with `Position.last` only while the setting is on; AgentsPanel re-reads on space and member
+    changes. Only the manual QA-5 recording exercises it.
+```
+
+```mdl
+verdict F-7.8: EDGE keys the agent space properties to the agent URI, and administeredAgents reads name, DID and home from it.
+  status: done
+  evidence: [github:dxos/edge/packages/services/compute-service/src/api.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.ts#administeredAgents]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.test.ts]
+```
+
+```mdl
+verdict F-7.9: AgentAdminSync adds writers as admins via EDGE once per session, settles on 404, retries 5xx after 30 seconds, never removes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/agent-admin-sync.ts#makeAdminSync, github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/agent-admin-sync.ts#runOnWake]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/agent-admin-sync.test.ts]
+```
+
+```mdl
+verdict F-8.1: The contacts picker offers only administered agents, and AgentAdmission invites them after Add.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/echo/AppSpace.ts#agentsNotAdministeredBy, github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/agent-admission.ts#admittedHomes]
+  tests: [github:dxos/dxos/packages/sdk/app-toolkit/src/echo/AppSpace.test.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+  walkthrough:
+    - plugin-client's contact picker leaves out agents the member does not administer. github:dxos/dxos/packages/sdk/app-toolkit/src/echo/AppSpace.ts#agentsNotAdministeredBy
+    - AgentAdmission picks the admitted agents this identity administers and invokes inviteAgent. github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/agent-admission.ts#admittedHomes
+```
+
+```mdl
+verdict F-8.2: Inviting an agent already present returns it and creates nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts#inviteAgent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict F-8.3: A presence carries home name, DID and instructions keyed to the home URI, or base instructions from the agent space.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts#inviteeOf, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts#inviteAgent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict F-8.4: Each space gives the member a private chat of its own, with knowledge from the one brain.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-participant-chat.ts#ensureParticipantChat, github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentPresence.ts#brainId]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict F-8.5: Inviting writes no conversation; the presence's chat is empty.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts#inviteAgent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict F-8.6: inviteAgent registers the space with EDGE first, and EDGE serves only home and registered spaces.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.ts, github:dxos/edge/packages/services/compute-service/src/brain/brain-object.ts#BrainObject]
+  tests: [github:dxos/edge/packages/services/edge/test/brain.node.test.ts, github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict T-1: ensure-channel-chat.test runs idempotency, naming, parenting and keys for threads and the channel.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict T-2: ensure-channel-chat.test checks separate chats per agent and listAgents counts of 2.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict T-3: ensure-channel-chat.test checks the list's parent, loadForAgent and loadChannels.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/ensure-channel-chat.test.ts]
+```
+
+```mdl
+verdict T-4: interview.test runs the resolve, record, propose, supersede, recall and profile sequence.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict T-5: interview.test rejects malformed facts and a non-entity goal owner.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/interview.test.ts]
+```
+
+```mdl
+verdict T-6: relay.test covers direct threads, reply-channel reports, refusals and unreachable recipients.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/relay.test.ts]
+```
+
+```mdl
+verdict T-8: The TestInterviewScripted story play runs four scripted turns and checks goals, facts and the space.
+  status: done
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+```
+
+```mdl
+verdict T-9: triggers.test delivers only the watch set here and leaves the other queued.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/triggers.test.ts]
+```
+
+```mdl
+verdict T-10: admit-agent.test covers admission roles, locked spaces, removal, refusal and missingJoin.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/admit-agent.test.ts]
+```
+
+```mdl
+verdict T-11: create-agent.test checks the setting gates provisioning.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/AgentsSettings/create-agent.test.ts]
+```
+
+```mdl
+verdict T-12: AgentSpace.test covers agentOf, admins, administeredBy and administeredAgents.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/types/AgentSpace.test.ts]
+```
+
+```mdl
+verdict T-13: invite-agent.test covers one presence, one brain, home recall, admission filtering and the out-of-reach home.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/operations/invite-agent.test.ts]
+```
+
+```mdl
+verdict T-14: agent-admin-sync.test covers adds, no-ops, untrusted spaces, 404/503 handling and the 30-second rerun.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/capabilities/agent-admin-sync.test.ts]
+```
+
+```mdl
+verdict QA-1: No automation runs the Discord channel journey.
+  status: missing
+  note: |
+    Status is unverified and no Playwright spec or autocue flow exists. Step 4 relies on a channel picker the Activity
+    companion no longer has (see F-3.1).
+```
+
+```mdl
+verdict QA-2: Only the scripted-model story runs the interview; nothing runs it against a live model.
+  status: partial
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+  note: |
+    TestInterviewScripted covers the same steps and assertions with a scripted model; the live-model run is manual.
+```
+
+```mdl
+verdict QA-3: brain.edge.test runs the two-member watch flow at the brain level, not in the app.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/src/brain/brain.edge.test.ts]
+  note: |
+    'E2E 1: Alice asks to be kept posted on Bob' covers the watch firing across chats; the two-device UI steps are manual.
+```
+
+```mdl
+verdict QA-5: The autocue flow drives the two-admin journey, but by hand with a live model, and steps 4 and 7 changed since the recording.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-agent/autocue/agent-identities.mjs]
+  note: |
+    `autocue/agent-identities.mjs` (tagged `@mdl ... test QA-5`) needs a local EDGE and a model key, so it is not in CI.
+```

@@ -28,7 +28,7 @@ import {
   persistMessageStage,
   topicsStage,
 } from './stages/index.ts';
-import { ExtractedQuestionStore, MessageStore, QuestionStore } from './stores/index.ts';
+import { MessageStore, QuestionStore } from './stores/index.ts';
 import { type DetectOptions } from './topics/detect-topics.ts';
 
 export type RunOptions = {
@@ -43,6 +43,8 @@ export type RunOptions = {
   readonly db?: Database.Database;
   /** Topic-detection tuning (session gap, affinity threshold). */
   readonly detect?: DetectOptions;
+  /** Channels or threads whose topics are summarized at once (default 1); fact extraction's is `extract.concurrency`. */
+  readonly topicsConcurrency?: number;
 };
 
 export type RunSummary = {
@@ -72,7 +74,6 @@ export const DiscordPipeline = {
     | AgentRegistry.AgentRegistry
     | FactStore
     | QuestionStore.QuestionStore
-    | ExtractedQuestionStore.ExtractedQuestionStore
     | AiService.AiService
   > =>
     Effect.gen(function* () {
@@ -84,7 +85,7 @@ export const DiscordPipeline = {
           agentProfileStage(),
           extractQuestionsStage({ db: options.db }),
           extractFactsStage(options.extract),
-          topicsStage({ db: options.db, detect: options.detect }),
+          topicsStage({ db: options.db, detect: options.detect, concurrency: options.topicsConcurrency }),
           answerQuestionsStage(),
           Pipeline.run({ sink: Crawler.commit }),
         );

@@ -8,15 +8,16 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
 import type * as PageAction from '@dxos/plugin-crx/PageAction';
 
-import { meta } from '#meta';
 import { GitHubOperation } from '#types';
+
+import { GitHubNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     // Typed array so the contribution is checked against CrxCapabilities.PageAction's value type.
     const actions: PageAction.PageAction[] = [
       {
-        id: `${meta.profile.key}/page-action/open-pull-request`,
+        id: `${GitHubNamespace.key}/page-action/open-pull-request`,
         label: 'Open PR in Composer',
         icon: 'ph--git-pull-request--regular',
         // `/pull/123` and anything below it (`/files`, `/commits`), which GitHub serves as the same

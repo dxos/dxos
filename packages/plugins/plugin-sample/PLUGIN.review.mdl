@@ -1,0 +1,288 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-sample/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SamplePlugin
+
+The type, settings, three operations, app-graph extensions, surfaces and companions are in place.
+`plugin.test.ts` invokes all three operations through the composer harness. Four presentational
+components have stories. The biggest divergence is creation: the root "Create Sample Item" action is
+commented out in `app-graph-builder.ts`, and items are created through a `CreateObjectEntry` that
+calls `SpaceOperation.AddObject`, not `createSampleItem`. Settings render through the generic
+`AppCapabilities.Settings` schema form, so there is no `SampleSettings` component. The deck companion
+and `ActiveSpacePanel` show only the active space's name, not its SampleItems. No test covers the app
+graph, the companions or settings persistence, and none of the scenarios runs end to end.
+
+Of 37 items: 8 done, 15 untested, 3 partial, 4 diverged, 7 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict SampleItem: The ECHO type has optional name, description and status (active, archived, draft), defaulting to active in make.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/types/SampleItem.ts#SampleItem, github:dxos/dxos/packages/plugins/plugin-sample/src/types/SampleItem.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/plugin.test.ts]
+```
+
+```mdl
+verdict Settings: Settings hold showStatusIndicator, defaulting to true in the KVS store.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/settings.ts]
+  note: No test reads the settings or their default.
+```
+
+```mdl
+verdict SampleItemView: A form for name, description and status that emits onValuesChanged.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/components/SampleItemView.tsx#SampleItemView]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/components/SampleItemView.stories.tsx]
+```
+
+```mdl
+verdict SampleArticle: Subscribes with useObject, writes with Obj.update and builds toolbar actions from the graph.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleArticle.tsx#SampleArticle]
+  note: No test or story renders the article.
+```
+
+```mdl
+verdict SampleCompanionPanel: Queries SampleItems in the same space with useQuery and lists all but the subject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleCompanionPanel.tsx#SampleCompanionPanel]
+  note: No test or story renders the companion.
+```
+
+```mdl
+verdict SampleDeckCompanion: The deck companion renders, but shows only the active space's name, not a summary of its SampleItems.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleDeckCompanion.tsx#SampleDeckCompanion, github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/SampleSurfaces.tsx#SampleDeckCompanionSurface]
+  note: It passes `space.properties.name` to `ActiveSpacePanel`, which prints static text and the name; no SampleItem query is made.
+```
+
+```mdl
+verdict SampleSettings: No SampleSettings component; settings render through the generic schema-driven settings form.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/settings.ts]
+  note: The plugin contributes `AppCapabilities.Settings` with the `Settings` schema and a KVS atom; the framework renders the form, so there is no component with `onSettingsChange`.
+```
+
+```mdl
+verdict SampleStatusIndicator: The status-bar widget shows or hides by the setting atom read with useAtomCapability.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/components/SampleStatusIndicator.tsx#SampleStatusIndicator, github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/SampleSurfaces.tsx#SampleStatusSurface]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/components/SampleStatusIndicator.stories.tsx]
+  note: The story renders the widget; the setting-driven hide is untested.
+```
+
+```mdl
+verdict SampleProperties: The properties panel exists but offers only a Randomize button.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleProperties.tsx#SampleProperties]
+  note: Contributed on `AppSurface.ObjectProperties`; no test or story renders it.
+```
+
+```mdl
+verdict ActiveSpacePanel: Takes a spaceName string and shows it with static text; it lists no SampleItems.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/components/ActiveSpacePanel.tsx#ActiveSpacePanel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/components/ActiveSpacePanel.stories.tsx]
+  note: The prop is `spaceName?: string`, not `space?: Space`, and the panel never displays SampleItems.
+```
+
+```mdl
+verdict RelatedItemsList: Lists items and emits onNavigate with the clicked id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/components/RelatedItemsList.tsx#RelatedItemsList]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/components/RelatedItemsList.stories.tsx]
+```
+
+```mdl
+verdict createSampleItem: Creates a SampleItem with the given name and returns it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/types/SampleOperation.ts#CreateSampleItem, github:dxos/dxos/packages/plugins/plugin-sample/src/operations/create-sample-item.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/plugin.test.ts]
+  note: The output field is typed `Schema.Any` rather than SampleItem.
+```
+
+```mdl
+verdict randomize: Sets name, description and status to faker values.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/types/SampleOperation.ts#Randomize, github:dxos/dxos/packages/plugins/plugin-sample/src/operations/randomize.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/plugin.test.ts]
+```
+
+```mdl
+verdict updateStatus: Sets the status field with Obj.update.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/types/SampleOperation.ts#UpdateStatus, github:dxos/dxos/packages/plugins/plugin-sample/src/operations/update-status.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/plugin.test.ts]
+```
+
+```mdl
+verdict F-1.1: Creation goes through a CreateObjectEntry and SpaceOperation.AddObject; the global action that invokes createSampleItem is commented out.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/plugin.test.ts]
+  note: The `rootActions` extension that invoked `CreateSampleItem` is in a block comment; the create dialog's entry builds the item with `SampleItem.make` and adds it with `SpaceOperation.AddObject`. `plugin.test.ts` checks the entry activates.
+```
+
+```mdl
+verdict F-1.2: Edits in SampleArticle are written with Obj.update.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleArticle.tsx#SampleArticle]
+  note: No test edits a field through the article.
+```
+
+```mdl
+verdict F-1.3: An Archive list-item action invokes updateStatus with archived.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts]
+  note: The operation is tested; the navtree action that invokes it is not.
+```
+
+```mdl
+verdict F-2.1: A toolbar action Randomize is contributed for SampleItem nodes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleArticle.tsx#SampleArticle]
+  note: No test checks the action appears in the toolbar.
+```
+
+```mdl
+verdict F-2.2: The Randomize operation sets name, description and status to random values.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/operations/randomize.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/plugin.test.ts]
+```
+
+```mdl
+verdict F-3.1: A Samples section appears under a space that holds a SampleItem.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts]
+  note: The `section` extension queries SampleItems and returns a section node; no test builds the graph.
+```
+
+```mdl
+verdict F-3.2: The section's children are the space's SampleItems.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts]
+  note: The `sectionItems` extension maps each item to an object node; no test covers it.
+```
+
+```mdl
+verdict F-3.3: No section is created for a space without SampleItems.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts]
+  note: The extension returns an empty list when the query is empty; untested.
+```
+
+```mdl
+verdict F-4.1: A related companion lists the other SampleItems of the space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleCompanionPanel.tsx#SampleCompanionPanel]
+  walkthrough:
+    - The graph adds a related companion to every SampleItem. github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts
+    - The companion queries the space and drops the subject. github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleCompanionPanel.tsx#SampleCompanionPanel
+  note: No test renders the companion.
+```
+
+```mdl
+verdict F-4.2: Clicking a related item invokes LayoutOperation.Open with its path.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/containers/SampleCompanionPanel.tsx#SampleCompanionPanel]
+  note: No test clicks an item.
+```
+
+```mdl
+verdict F-4.3: A workspace-wide deck companion is contributed, but it shows no SampleItem summary.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/SampleSurfaces.tsx#SampleDeckCompanionSurface]
+  note: The deck companion node and surface exist; its content is the active space's name only (see SampleDeckCompanion). Untested.
+```
+
+```mdl
+verdict F-5.1: The settings render through the generic settings form with current values.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/settings.ts]
+  note: Rendered by the framework from `AppCapabilities.Settings`, not by a SampleSettings component; no test opens it.
+```
+
+```mdl
+verdict F-5.2: Toggling the setting shows or hides the indicator at once through the atom subscription.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/SampleSurfaces.tsx#SampleStatusSurface]
+  note: No test toggles the setting.
+```
+
+```mdl
+verdict F-5.3: Settings persist in a KvsStore atom keyed by the plugin.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/capabilities/settings.ts]
+  note: `KvsStore.make` persists the atom; no test reloads it.
+```
+
+```mdl
+verdict T-1: The operation is tested, but no test checks the item appears in the Samples section.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/operations/create-sample-item.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/plugin.test.ts]
+  note: `plugin.test.ts` covers "returns an object" only; the global action is commented out and the nav-tree check is not automated.
+```
+
+```mdl
+verdict T-2: No automated test edits an item inline.
+  status: missing
+  note: No test renders SampleArticle; searched the package and composer-app's playwright specs.
+```
+
+```mdl
+verdict T-3: No test clicks Randomize in the toolbar.
+  status: missing
+  note: `plugin.test.ts` invokes the operation directly, not through the toolbar action, so the scenario's trigger is not exercised.
+```
+
+```mdl
+verdict T-4: No test triggers Archive from the context menu.
+  status: missing
+  note: The `UpdateStatus` operation is tested directly; the navtree action is not.
+```
+
+```mdl
+verdict T-5: No test renders the companion with related items.
+  status: missing
+  note: No test or story for SampleCompanionPanel; `RelatedItemsList.stories.tsx` renders the list with fixed items only.
+```
+
+```mdl
+verdict T-6: No test clicks an item in the companion.
+  status: missing
+  note: Nothing asserts that LayoutOperation.Open is invoked.
+```
+
+```mdl
+verdict T-7: No test toggles the status indicator setting.
+  status: missing
+  note: `SampleStatusIndicator.stories.tsx` renders the widget alone, without the setting.
+```
+
+```mdl
+verdict T-8: No test reloads settings from KVS.
+  status: missing
+  note: Searched the package tests; none touch settings.
+```
+
+```mdl
+verdict QA-1: The three operations are invoked in sequence-equivalent tests, but not as one flow with the nav-tree checks.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sample/src/operations/create-sample-item.ts, github:dxos/dxos/packages/plugins/plugin-sample/src/operations/randomize.ts, github:dxos/dxos/packages/plugins/plugin-sample/src/operations/update-status.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sample/src/plugin.test.ts]
+  note: `plugin.test.ts` invokes CreateSampleItem, Randomize and UpdateStatus in separate tests on fresh items; the nav-tree expectations and the delete teardown are not automated.
+```

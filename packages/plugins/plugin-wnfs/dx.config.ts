@@ -2,12 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
+import * as FileEvents from '@dxos/plugin-file/FileEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { WnfsNamespace } from './src/namespace.ts';
+import * as WnfsCapabilities from './src/types/WnfsCapabilities.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.wnfs',
+    key: WnfsNamespace.key,
     name: 'WNFS',
     author: 'DXOS',
     description: trim`
@@ -30,4 +39,39 @@ export default Config2.make({
     tags: ['labs'],
     dependsOn: ['org.dxos.plugin.file'],
   },
+  modules: [
+    Capability.lazyModule(
+      'BlobBackend',
+      {
+        // Blockstore/Instances are awaited in the module body, not declared here: they are absent by
+        // design when EDGE is unconfigured.
+        requires: [ClientCapabilities.Client],
+        provides: [FileCapabilities.Backend],
+        activatesOn: FileEvents.Start,
+      },
+      () => import('./src/capabilities/blob-backend.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'Dependencies',
+      {
+        requires: [ClientCapabilities.Client],
+        // The file plugin's start, not wnfs's own: wnfs contributes no surface, so nothing would
+        // ever fire its own start — and these are exactly what the blob backend above waits for.
+        provides: [WnfsCapabilities.Blockstore, WnfsCapabilities.Instances],
+        activatesOn: FileEvents.Start,
+      },
+      () => import('./src/capabilities/dependencies.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.pluginAsset({
+      pluginId: WnfsNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

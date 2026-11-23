@@ -89,7 +89,7 @@ const RowsCard = ({ size, grid, prefix = '', rows, onInvite }: RowsCardProps) =>
 };
 
 /**
- * A poster card, a card with a header action and footer, and one with a broken poster; then a card of sections, rows,
+ * A poster card, a card with a header action and footer, one with a broken poster, and one with a content poster at its end; then a card of sections, rows,
  * a link, a menu and a drag handle, as a `grid` card and beside it as a default (inline) one; a clickable, selected card with
  * a nested action; and a borderless card.
  */
@@ -138,6 +138,13 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Card.Body>
           <Typography.Text>A card with a broken poster and no footer.</Typography.Text>
         </Card.Body>
+      </Card.Root>
+
+      <Card.Root grid data-testid={`end-poster-card-${size}`}>
+        <Card.Header>
+          <Card.Title>Budget</Card.Title>
+        </Card.Header>
+        <Card.Poster position='end' classNames='h-24 bg-group-surface' data-testid={`end-poster-${size}`} />
       </Card.Root>
 
       <RowsCard size={size} grid rows={rows} onInvite={() => setRows((count) => count + 1)} />
@@ -323,6 +330,34 @@ export const LeadingRow: Story = {
       icon ? centreX(icon.getBoundingClientRect()) : 0,
       0,
     );
+  },
+};
+
+/** A wrapping Title keeps the header's icon and icon-only Button beside its first line. */
+export const WrappingTitle: Story = {
+  render: () => (
+    <Card.Root classNames='w-48' data-testid='wrapping-card'>
+      <Card.Header>
+        <Block data-testid='wrapping-icon'>
+          <Icon.Icon icon='ph--file--regular' />
+        </Block>
+        <Card.Title data-testid='wrapping-title'>A title long enough to wrap over several lines</Card.Title>
+        <Button data-testid='wrapping-action' icon='ph--dots-three--regular' label='More actions' iconOnly />
+      </Card.Header>
+    </Card.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const middle = (testId: string) => {
+      const box = byTestId(canvasElement, testId).getBoundingClientRect();
+      return box.top + box.height / 2;
+    };
+    const title = byTestId(canvasElement, 'wrapping-title');
+    const { lineHeight, paddingTop } = getComputedStyle(title);
+    const titleBox = title.getBoundingClientRect();
+    await expect(titleBox.height).toBeGreaterThan(parseFloat(lineHeight) * 1.5);
+    const firstLine = titleBox.top + parseFloat(paddingTop) + parseFloat(lineHeight) / 2;
+    await expect(middle('wrapping-icon')).toBeCloseTo(firstLine, 0);
+    await expect(middle('wrapping-action')).toBeCloseTo(firstLine, 0);
   },
 };
 

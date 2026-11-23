@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -66,7 +67,7 @@ describe('A person’s chat with an agent', () => {
       run(
         Effect.gen(function* () {
           const feed = yield* Database.load(chat.feed);
-          yield* Feed.append(feed, [
+          yield* TrajectoryStore.appendMessages(feed, [
             Message.make({ created, sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
           ]);
         }),

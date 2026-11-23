@@ -8,10 +8,6 @@ export default defineConfig({
   entry: {
     'ns/PreviewEvents': 'src/PreviewEvents.ts',
     'index': 'src/index.ts',
-    'PreviewPlugin': 'src/PreviewPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
-    'meta': 'src/meta.ts',
     'PreviewCapabilities': 'src/types/PreviewCapabilities.ts',
     'types': 'src/types/index.ts',
     'testing': 'src/testing.ts',

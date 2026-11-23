@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-toolkit",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Composer-specific capabilities, plugin helpers, and playground for building Composer plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,6 +45,36 @@
       "source": "./src/app-framework/AppCapability.ts",
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
+    },
+    "./SchemaAdapter": {
+      "source": "./src/app-framework/SchemaAdapter.ts",
+      "types": "./dist/types/src/app-framework/SchemaAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SchemaAdapter.mjs"
+    },
+    "./CommandsAdapter": {
+      "source": "./src/app-framework/CommandsAdapter.ts",
+      "types": "./dist/types/src/app-framework/CommandsAdapter.d.ts",
+      "import": "./dist/lib/app-framework/CommandsAdapter.mjs"
+    },
+    "./PluginAssetAdapter": {
+      "source": "./src/app-framework/PluginAssetAdapter.ts",
+      "types": "./dist/types/src/app-framework/PluginAssetAdapter.d.ts",
+      "import": "./dist/lib/app-framework/PluginAssetAdapter.mjs"
+    },
+    "./SurfaceAdapter": {
+      "source": "./src/app-framework/SurfaceAdapter.ts",
+      "types": "./dist/types/src/app-framework/SurfaceAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SurfaceAdapter.mjs"
+    },
+    "./TranslationsAdapter": {
+      "source": "./src/app-framework/TranslationsAdapter.ts",
+      "types": "./dist/types/src/app-framework/TranslationsAdapter.d.ts",
+      "import": "./dist/lib/app-framework/TranslationsAdapter.mjs"
+    },
+    "./SpaceTemplatesAdapter": {
+      "source": "./src/app-framework/SpaceTemplatesAdapter.ts",
+      "types": "./dist/types/src/app-framework/SpaceTemplatesAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SpaceTemplatesAdapter.mjs"
     },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",
@@ -101,6 +131,11 @@
       "types": "./dist/types/src/operations/CollectionOperation.d.ts",
       "import": "./dist/lib/operations/CollectionOperation.mjs"
     },
+    "./ExportOperation": {
+      "source": "./src/operations/ExportOperation.ts",
+      "types": "./dist/types/src/operations/ExportOperation.d.ts",
+      "import": "./dist/lib/operations/ExportOperation.mjs"
+    },
     "./ConnectorSync": {
       "source": "./src/types/ConnectorSync.ts",
       "types": "./dist/types/src/types/ConnectorSync.d.ts",
@@ -135,6 +170,11 @@
       "source": "./src/operations/LayoutOperation.ts",
       "types": "./dist/types/src/operations/LayoutOperation.d.ts",
       "import": "./dist/lib/operations/LayoutOperation.mjs"
+    },
+    "./LinkAction": {
+      "source": "./src/app/LinkAction.ts",
+      "types": "./dist/types/src/app/LinkAction.d.ts",
+      "import": "./dist/lib/app/LinkAction.mjs"
     },
     "./NamePopover": {
       "source": "./src/ui/components/NamePopover/NamePopover.tsx",
@@ -207,6 +247,16 @@
       "types": "./dist/types/src/echo/Query.d.ts",
       "import": "./dist/lib/echo/Query.mjs"
     },
+    "./ReadOnly": {
+      "source": "./src/app-framework/ReadOnly.ts",
+      "types": "./dist/types/src/app-framework/ReadOnly.d.ts",
+      "import": "./dist/lib/app-framework/ReadOnly.mjs"
+    },
+    "./ResetDialog": {
+      "source": "./src/ui/components/ResetDialog/ResetDialog.tsx",
+      "types": "./dist/types/src/ui/components/ResetDialog/ResetDialog.d.ts",
+      "import": "./dist/lib/ResetDialog.mjs"
+    },
     "./SampleSpace": {
       "source": "./src/sample/SampleSpace.ts",
       "types": "./dist/types/src/sample/SampleSpace.d.ts",
@@ -268,6 +318,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@bufbuild/protobuf": "catalog:",
@@ -280,11 +333,13 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -317,7 +372,8 @@
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
     "@effect/atom-react": "catalog:",

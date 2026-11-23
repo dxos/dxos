@@ -19,20 +19,27 @@ import React, {
 import { createPortal, flushSync } from 'react-dom';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
+import {
+  type SlideFooter,
+  SlideFooterProvider,
+  type SlidePosition,
+  type SlideTheme,
+  SlideThemeProvider,
+} from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
 import { type SlideSource } from '#deck';
 import { useDeckTheme, useSlideClicks } from '#hooks';
-import { meta } from '#meta';
-import { type SlideTheme, SlideViewState } from '#types';
+import { SlideViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { ExitButton, PageNumber as PageNumberComponent, Pager as PagerComponent } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
 import { Slide } from '../Slide/index.ts';
-import { SlideGrid, type SlideGridProps } from '../SlideGrid/index.ts';
-import { SlideThemeProvider } from '../SlideTheme/index.ts';
+import { SlideGallery, type SlideGalleryProps } from '../SlideGallery/index.ts';
+import { countColumns, moveByRow } from './grid-rows.ts';
 
 // TODO(burdon): Factor the Deck and Slide families out to a react-ui-presenter package.
 
@@ -57,8 +64,34 @@ const KEY_OWNERS = [
 const ACTIVATABLE =
   'button, a[href], summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [role="tab"], [role="option"]';
 
+/** Where a key moves the grid's current slide; undefined for a key the grid leaves alone. */
+/** Option makes `[` and `]` on some layouts (German on a Mac), and elsewhere Alt never reports them as those keys. */
+const isAltChord = ({ altKey, key }: { altKey: boolean; key: string }): boolean => altKey && key !== '[' && key !== ']';
+
+const gridTarget = (key: string, index: number, count: number, grid: Element): number | undefined => {
+  switch (key) {
+    case 'ArrowDown':
+      return moveByRow(index, count, countColumns(grid), 1);
+    case 'ArrowUp':
+      return moveByRow(index, count, countColumns(grid), -1);
+    case ']':
+      return index + 1;
+    case '[':
+      return index - 1;
+  }
+};
+
+/** The grid's own controls keep Space; a thumbnail tile (`role="option"`) does not, so Space presents from it. */
+const GRID_CONTROLS = 'button, a[href]';
+
 /** Keys typed into slide content (inputs, editors, arrow-driven widgets) must not turn the page. */
 const isEditable = (target: EventTarget) => target instanceof Element && target.closest(KEY_OWNERS) !== null;
+
+/** As `isEditable`, for a thumbnail grid: the grid's own listbox gives way, while a control inside a thumbnail does not. */
+const ownsKeysInGrid = (target: EventTarget) => {
+  const owner = target instanceof Element ? target.closest(KEY_OWNERS) : null;
+  return owner !== null && owner.getAttribute('role') !== 'listbox';
+};
 
 //
 // Root
@@ -76,6 +109,9 @@ type DeckContextValue = {
   fullscreen: boolean;
   setFullscreen: (fullscreen: boolean) => void;
   themeSettings: SlideTheme.Settings | undefined;
+  footer: SlideFooter.Settings | undefined;
+  /** A slide's place among the slides the deck presents, for the counters it draws. */
+  positionOf: (index: number) => SlidePosition;
   attendableId?: string;
   /** The element that takes focus when the deck mounts (opted in) or toggles fullscreen: the viewport or the grid. */
   focusRef: MutableRefObject<HTMLDivElement | null>;
@@ -95,6 +131,13 @@ type DeckRootProps = PropsWithChildren<{
   onFullscreenChange?: (fullscreen: boolean) => void;
   /** Deck theme; without a base theme, the first slide's `theme:` headmatter applies. */
   theme?: SlideTheme.Settings;
+  /** Drawn on every slide, unless the slide's frontmatter says otherwise. */
+  footer?: SlideFooter.Settings;
+  /**
+   * The positions in `slides` of those shown when the deck is presented (default: all of them). The slide number and
+   * total count only these, so a grid that also shows hidden slides numbers the rest as the presentation does.
+   */
+  presented?: readonly number[];
   attendableId?: string;
   /** Focus the deck on mount, so keys work without a click; it is refocused after every fullscreen toggle regardless. */
   autoFocus?: boolean;
@@ -112,6 +155,8 @@ const DeckRoot = ({
   fullscreen = false,
   onFullscreenChange,
   theme,
+  footer,
+  presented,
   attendableId,
   autoFocus = false,
 }: DeckRootProps) => {
@@ -135,11 +180,27 @@ const DeckRoot = ({
   const themeSettings = useDeckTheme(slides, theme);
   const step = stepState.index === index ? Math.min(stepState.step, clicks) : 0;
 
+  const positionOf = useMemo(() => {
+    const total = presented?.length ?? count;
+    // A slide the deck leaves out when presented has no number of its own, only the total.
+    const numbers = presented && new Map(presented.map((position, rank) => [position, rank + 1]));
+    return (slideIndex: number): SlidePosition => ({
+      current: numbers ? numbers.get(slideIndex) : slideIndex + 1,
+      total,
+    });
+  }, [presented, count]);
+
   const setFullscreen = useCallback((next: boolean) => onFullscreenChange?.(next), [onFullscreenChange]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
-      if (isEditable(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
+      // Cmd (Ctrl elsewhere) belongs to the browser and app except on the two arrows that jump to the deck's ends.
+      const command = event.metaKey || event.ctrlKey;
+      if (
+        isEditable(event.target) ||
+        isAltChord(event) ||
+        (command && event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+      ) {
         return;
       }
       // Arrow keys inside a toolbar move between its buttons (roving focus), so only `f` applies there.
@@ -154,15 +215,37 @@ const DeckRoot = ({
         setStepState({ index: clamped, step: 0 });
         onIndexChange(clamped);
       };
+      const nextSlide = (nextStep = 0) => {
+        if (index < count - 1) {
+          event.preventDefault();
+          setStepState({ index: index + 1, step: nextStep });
+          onIndexChange(index + 1);
+        } else {
+          // Past the last slide there is nowhere to go, and its revealed steps must stay revealed.
+          event.preventDefault();
+        }
+      };
+      const previousSlide = () => {
+        event.preventDefault();
+        if (index > 0) {
+          setStepState({ index: index - 1, step: Number.POSITIVE_INFINITY });
+          onIndexChange(index - 1);
+        }
+      };
       const forward = () => {
         if (step < clicks) {
           event.preventDefault();
           setStepState({ index, step: step + 1 });
-        } else if (index < count - 1) {
-          go(index + 1);
         } else {
-          // Past the last slide there is nowhere to go, and its revealed steps must stay revealed.
+          nextSlide();
+        }
+      };
+      const backward = () => {
+        if (step > 0) {
           event.preventDefault();
+          setStepState({ index, step: step - 1 });
+        } else {
+          previousSlide();
         }
       };
       switch (event.key) {
@@ -178,27 +261,20 @@ const DeckRoot = ({
           setFullscreen(!fullscreen);
           return;
         case 'ArrowLeft':
-          if (event.shiftKey) {
-            return go(0);
-          }
-          if (step > 0) {
-            event.preventDefault();
-            setStepState({ index, step: step - 1 });
-            return;
-          }
-          event.preventDefault();
-          if (index > 0) {
-            setStepState({ index: index - 1, step: Number.POSITIVE_INFINITY });
-            onIndexChange(index - 1);
-          }
-          return;
+          return command || event.shiftKey ? go(0) : previousSlide();
         case 'ArrowRight':
-          return event.shiftKey ? go(count - 1) : forward();
-        case 'Home':
+          return command || event.shiftKey ? go(count - 1) : nextSlide(Number.POSITIVE_INFINITY);
         case 'ArrowUp':
+          return backward();
+        case 'ArrowDown':
+          return forward();
+        case '[':
+          return previousSlide();
+        case ']':
+          return nextSlide(Number.POSITIVE_INFINITY);
+        case 'Home':
           return go(0);
         case 'End':
-        case 'ArrowDown':
           return go(count - 1);
       }
     },
@@ -232,6 +308,8 @@ const DeckRoot = ({
       fullscreen,
       setFullscreen,
       themeSettings,
+      footer,
+      positionOf,
       attendableId,
       focusRef,
       handleKeyDown,
@@ -246,6 +324,8 @@ const DeckRoot = ({
       fullscreen,
       setFullscreen,
       themeSettings,
+      footer,
+      positionOf,
       attendableId,
       handleKeyDown,
     ],
@@ -256,6 +336,17 @@ const DeckRoot = ({
 
 DeckRoot.displayName = 'Deck.Root';
 
+/** What every slide the deck draws shares, wherever it draws it: the viewport, the grid, or the print container. */
+const DeckSlides = ({
+  theme,
+  footer,
+  children,
+}: PropsWithChildren<{ theme: SlideTheme.Settings | undefined; footer: SlideFooter.Settings | undefined }>) => (
+  <SlideThemeProvider settings={theme}>
+    <SlideFooterProvider settings={footer}>{children}</SlideFooterProvider>
+  </SlideThemeProvider>
+);
+
 //
 // Content
 //
@@ -265,7 +356,8 @@ DeckRoot.displayName = 'Deck.Root';
  * printing while it holds focus (or is fullscreen) prints every slide.
  */
 const DeckContent = Util.composable<HTMLDivElement>(({ children, onKeyDown, ...props }, forwardedRef) => {
-  const { slides, fullscreen, themeSettings, attendableId, handleKeyDown } = useDeckContext('Deck.Content');
+  const { slides, fullscreen, themeSettings, footer, positionOf, attendableId, handleKeyDown } =
+    useDeckContext('Deck.Content');
   const contentRef = useRef<HTMLDivElement>(null);
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, contentRef);
 
@@ -312,12 +404,17 @@ const DeckContent = Util.composable<HTMLDivElement>(({ children, onKeyDown, ...p
       {children}
       {printing &&
         createPortal(
-          <SlideThemeProvider settings={themeSettings}>
+          <DeckSlides theme={themeSettings} footer={footer}>
             <div data-print-deck=''>
               {slides.map((source, slideIndex) => (
                 // An object linked twice yields two slides with one id.
                 <div key={`${source.id}:${slideIndex}`} data-print-slide=''>
-                  <Slide.Root source={source} attendableId={attendableId} step={Number.POSITIVE_INFINITY}>
+                  <Slide.Root
+                    source={source}
+                    attendableId={attendableId}
+                    step={Number.POSITIVE_INFINITY}
+                    position={positionOf(slideIndex)}
+                  >
                     <Slide.Frame scaled={false}>
                       <Slide.Content />
                     </Slide.Frame>
@@ -325,7 +422,7 @@ const DeckContent = Util.composable<HTMLDivElement>(({ children, onKeyDown, ...p
                 </div>
               ))}
             </div>
-          </SlideThemeProvider>,
+          </DeckSlides>,
           document.body,
         )}
     </div>
@@ -340,9 +437,10 @@ DeckContent.displayName = 'Deck.Content';
 
 /**
  * The current slide: inset in a void inline, full-bleed with an auto-hiding pager in fullscreen, where Escape exits.
+ * Children draw over the slide (speaker notes, another plugin's overlay).
  */
-const DeckViewport = Util.composable<HTMLDivElement>((props, forwardedRef) => {
-  const { slide, step, fullscreen, setFullscreen, themeSettings, attendableId, focusRef } =
+const DeckViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { slide, index, step, fullscreen, setFullscreen, themeSettings, footer, positionOf, attendableId, focusRef } =
     useDeckContext('Deck.Viewport');
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
   const handleExit = useCallback(() => setFullscreen(false), [setFullscreen]);
@@ -358,17 +456,25 @@ const DeckViewport = Util.composable<HTMLDivElement>((props, forwardedRef) => {
       onExit={handleExit}
     >
       <div className='dx-cover flex flex-col'>
-        <SlideThemeProvider settings={themeSettings}>
+        <DeckSlides theme={themeSettings} footer={footer}>
+          {/* The frame outlives the slide: a new frame paints nothing until it has measured itself, which flashes. */}
           {slide && (
-            <Slide.Root key={slide.id} source={slide} attendableId={attendableId} step={step}>
-              <Slide.Frame inset={!fullscreen}>
+            <Slide.Frame inset={!fullscreen}>
+              <Slide.Root
+                key={slide.id}
+                source={slide}
+                attendableId={attendableId}
+                step={step}
+                position={positionOf(index)}
+              >
                 <Slide.Content />
-              </Slide.Frame>
-            </Slide.Root>
+              </Slide.Root>
+            </Slide.Frame>
           )}
-        </SlideThemeProvider>
+        </DeckSlides>
       </div>
       {fullscreen && <Overlay />}
+      {children}
     </PresentationShell>
   );
 });
@@ -437,7 +543,7 @@ const DeckExit = () => {
 
 type DeckGridProps = {
   /** Thumbnail size (default `small`). */
-  size?: SlideGridProps['size'];
+  size?: SlideGalleryProps['size'];
   /** Moves a slide; without it the thumbnails cannot be dragged. */
   onMove?: (from: number, to: number) => void;
   /** Opens a slide on double-click; without it a double-click presents from that slide. */
@@ -452,8 +558,9 @@ type DeckGridProps = {
  * Every slide as a thumbnail; the current one is selected, and a double-click opens it (or presents from it).
  */
 const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
-  ({ size, onMove, onOpen, onAddSlide, contextMenuId, ...props }, forwardedRef) => {
-    const { slides, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
+  ({ size, onMove, onOpen, onAddSlide, contextMenuId, onKeyDownCapture, ...props }, forwardedRef) => {
+    const { slides, count, index, setIndex, setFullscreen, themeSettings, footer, positionOf, focusRef } =
+      useDeckContext('Deck.Grid');
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
     return (
       <div
@@ -461,9 +568,28 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
         ref={ref}
         tabIndex={-1}
         data-testid='presenter.deck'
+        // Capture, so one path handles these keys whether the grid or a listbox tile has focus.
+        onKeyDownCapture={(event) => {
+          onKeyDownCapture?.(event);
+          if (ownsKeysInGrid(event.target) || event.metaKey || event.ctrlKey || isAltChord(event)) {
+            return;
+          }
+          const present =
+            event.key === ' ' && !(event.target instanceof Element && event.target.closest(GRID_CONTROLS));
+          const next = gridTarget(event.key, index, count, event.currentTarget);
+          if (present || next !== undefined) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (present) {
+              setFullscreen(true);
+            } else if (next !== undefined) {
+              setIndex(SlideViewState.clamp(next, count));
+            }
+          }
+        }}
       >
-        <SlideThemeProvider settings={themeSettings}>
-          <SlideGrid
+        <DeckSlides theme={themeSettings} footer={footer}>
+          <SlideGallery
             slides={slides}
             index={index}
             size={size}
@@ -471,6 +597,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
             onMove={onMove}
             onAdd={onAddSlide}
             contextMenuId={contextMenuId}
+            positionOf={positionOf}
             onPresent={(slideIndex) => {
               setIndex(slideIndex);
               if (onOpen) {
@@ -480,7 +607,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
               }
             }}
           />
-        </SlideThemeProvider>
+        </DeckSlides>
       </div>
     );
   },
@@ -518,7 +645,7 @@ DeckPageNumber.displayName = 'Deck.PageNumber';
 
 /** Presents the deck from the current slide. */
 const DeckPlayButton = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const { setFullscreen } = useDeckContext('Deck.PlayButton');
   return (
     <Button.Root

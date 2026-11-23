@@ -14,10 +14,10 @@ import { Connection, Cursor } from '@dxos/link';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 
-import { meta } from '#meta';
 import { TrelloOperation } from '#types';
 
 import { TRELLO_SOURCE } from '../constants.ts';
+import { TrelloNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -76,7 +76,7 @@ export default Capability.makeModule(
                   { spaceId: db.spaceId },
                 ),
               properties: {
-                label: ['sync-this-board.label', { ns: meta.profile.key }],
+                label: ['sync-this-board.label', { ns: TrelloNamespace.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },

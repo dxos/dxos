@@ -11,8 +11,9 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
-import { Channel, Task } from '@dxos/types';
+import { Channel, Task, TaskSet } from '@dxos/types';
 
+import * as AgentChannels from './AgentChannels.ts';
 import * as BrainService from './BrainService.ts';
 import * as Relay from './Relay.ts';
 
@@ -26,6 +27,7 @@ export const CreateRelay = Operation.make({
     icon: 'ph--arrows-left-right--regular',
   },
   services: [Database.Service],
+  types: [TaskSet.TaskSet, Task.Task],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that carries the message.' }),
     recipient: Ref.Ref(Obj.Unknown).annotate({ description: 'The person or organization to tell (resolve first).' }),
@@ -132,7 +134,7 @@ export const SendMessage = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat).annotate({ description: 'The chat the message was recorded in.' })),
     reason: Schema.optional(Schema.String.annotate({ description: 'Why the message was not delivered.' })),
   }),
-});
+}).pipe(AgentChannels.channelSend('chat'));
 
 /** Marks an agent's chat as its conversation with a person, so deliveries to them land there. */
 export const AssignChatParticipant = Operation.make({

@@ -18,6 +18,30 @@ const require = nodeCreateRequire(import.meta.url);
 // detecting module formats (ESM vs CJS), and extracting named exports from CJS bundles.
 //
 
+/** Whether an ES module's source declares a default export, outside its comments. */
+export const hasDefaultExport = (file: string): boolean => {
+  try {
+    const code = readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    if (/^\s*export\s+default\b/m.test(code)) {
+      return true;
+    }
+    // In `export { a, b as default }` the exported name is the one after `as`, so `default as x` does not count.
+    return [...code.matchAll(/^\s*export\s*\{([^}]*)\}/gm)].some(([, specifiers]) =>
+      specifiers.split(',').some(
+        (specifier) =>
+          specifier
+            .trim()
+            .split(/\s+as\s+/)
+            .at(-1) === 'default',
+      ),
+    );
+  } catch {
+    return false;
+  }
+};
+
 /** Strips vite query strings (e.g. `?v=123`) from resolved module IDs. */
 const trimQueryString = (id: string) => id.replace(/\?.*$/, '');
 
@@ -117,7 +141,7 @@ const resolvePackageJsonPathViaContext = async (
  * at build time — so every new server-only entrypoint doesn't require a code change here.
  */
 const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> = {
-  '@dxos/app-framework': new Set(['vite-plugin']),
+  '@dxos/app-framework': new Set(['vite-plugin', 'vite-plugin/config']),
   // `@dxos/lit-grid/testing` re-exports a playwright page-object manager and pulls
   // `@playwright/test` (and transitive playwright-core) into the browser bundle.
   '@dxos/lit-grid': new Set(['testing']),
@@ -385,7 +409,16 @@ const getCjsNamedExports = (filePath: string, seen = new Set<string>()): string[
  *     `this.resolve()` ourselves
  *   - resolve via `require.resolve` directly, bypassing the Vite plugin pipeline entirely
  */
-export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => {
+export type ImportMapPluginOptions = {
+  packages?: string[];
+  /**
+   * Receives the import map once the bundle is written, for a host whose pages Vite's HTML hooks never see (e.g. an
+   * Astro site), which then writes the map into its pages itself.
+   */
+  onImportMap?: (importMap: { imports: Record<string, string> }) => void;
+};
+
+export const importMapPlugin = (options?: ImportMapPluginOptions): Plugin[] => {
   const packages = options?.packages ?? DEFAULT_PACKAGES;
   const WRAPPER_PREFIX = '\0import-map:';
   const chunkRefIds: Record<string, string> = {};
@@ -529,7 +562,11 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
             return `export { default, ${named.join(', ')} } from ${JSON.stringify(filePath)};\n${keepalive}\n`;
           }
         }
-        return `export * from ${JSON.stringify(filePath)};\n${keepalive}\n`;
+        // `export *` leaves out `default`, which a module adapter is loaded by, so it is re-exported by name.
+        const reexportDefault = hasDefaultExport(filePath)
+          ? `export { default } from ${JSON.stringify(filePath)};\n`
+          : '';
+        return `export * from ${JSON.stringify(filePath)};\n${reexportDefault}${keepalive}\n`;
       },
 
       // After bundling, map each specifier to the URL of its emitted chunk. Preserves
@@ -548,6 +585,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
               .map((specifier) => [specifier, `${base}${this.getFileName(chunkRefIds[specifier])}`]),
           ),
         };
+        options?.onImportMap?.({ imports });
       },
     },
 

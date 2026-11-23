@@ -27,7 +27,8 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
-import { meta } from '#meta';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 /**
  * Article view for collections.
@@ -37,7 +38,7 @@ export const CollectionArticle = ({
   subject,
   attendableId,
 }: AppSurface.ObjectArticleProps<Collection.Collection>) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { items, handleSearch } = useCollectionItems(subject, attendableId);
 
   return (
@@ -83,7 +84,7 @@ type ObjectItem = {
 };
 
 const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';

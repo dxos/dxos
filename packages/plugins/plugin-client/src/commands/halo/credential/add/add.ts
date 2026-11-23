@@ -19,7 +19,7 @@ import { CommandError } from '../../../errors.ts';
 
 export const handler = Effect.fn(function* ({ credential }: { credential: Option.Option<string> }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
 
   let credentialHex = Option.getOrUndefined(credential);
   if (!credentialHex) {

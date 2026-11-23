@@ -20,9 +20,12 @@ export default Capability.makeModule(() =>
           return 0;
         }
 
-        return !anchorA.anchor || !anchorB.anchor
-          ? 0
-          : SheetUtil.compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
+        // Whole-sheet comments have no anchor and sort after cell comments.
+        if (!anchorA.anchor || !anchorB.anchor) {
+          return (anchorA.anchor ? 0 : 1) - (anchorB.anchor ? 0 : 1);
+        }
+
+        return SheetUtil.compareAnchors(sheet, anchorA.anchor, anchorB.anchor);
       },
     }),
   ),

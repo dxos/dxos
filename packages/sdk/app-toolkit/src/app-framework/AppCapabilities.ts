@@ -17,19 +17,25 @@ import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
 import type { Client } from '@dxos/client';
 import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import type { Database, Obj, Type } from '@dxos/echo';
+import type { Database, Obj, Ref, Type } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
+import { type Selection, ViewState } from '@dxos/react-ui-attention/types';
 import type { AnchoredTo, Message, Thread } from '@dxos/types';
+import { type ChromaticPalette } from '@dxos/ui-types';
 import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate$ from '../app/AppUpdate.ts';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as LinkAction$ from '../app/LinkAction.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations.ts';
 import type * as AppSettings from '../types/AppSettings.ts';
@@ -84,6 +90,40 @@ export type Layout = Readonly<{
  * @category Capability
  */
 export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
+
+/**
+ * A hue the layout tints its chrome with while it is set, such as while the session takes part in a follow; the layout
+ * uses the first contribution that holds one.
+ * @category Capability
+ */
+export const LayoutAccent = Capability$.make<Atom.Atom<ChromaticPalette | undefined>>()(
+  'org.dxos.app-framework.capability.layoutAccent',
+);
+
+/** How long what a follow opens has to mount; the follow applies it again on every update meanwhile. */
+export const FOLLOW_MOUNT_TIMEOUT = 5_000;
+
+const CompanionsState = Schema$.Struct({
+  /** The planks in the space whose companion is open. */
+  planks: Schema$.Array(Schema$.String),
+  /** The companion tab they show. */
+  variant: Schema$.optional(Schema$.String),
+});
+
+export type Companions = Schema$.Schema.Type<typeof CompanionsState>;
+
+/**
+ * The companions the layout shows in a space, keyed by the space's EID. The layout reports them and a follower opens the
+ * same through `LayoutOperation.UpdateCompanion`.
+ */
+// TODO(follow): Consider making this the layout's source of truth for open companions, so it need not be kept in step.
+export const Companions: ViewState.Aspect<Companions> = ViewState.define({
+  key: 'org.dxos.app-framework.companions',
+  backend: 'memory',
+  schema: CompanionsState,
+  defaultValue: () => ({ planks: [] }),
+  follow: 'reveal',
+});
 
 /**
  * @category Capability
@@ -145,6 +185,14 @@ export type StatsPanelStore = Readonly<{
  * @category Capability
  */
 export const StatsPanel = Capability$.makeSingleton<StatsPanelStore>()('org.dxos.app-toolkit.capability.statsPanel');
+
+/**
+ * Present when the whole app is read-only, as in the published-space viewer: plugins show content
+ * and drop every control that writes. The host contributes it at startup, so read it when rendering
+ * or expanding the graph, never while a module activates.
+ * @category Capability
+ */
+export const ReadOnly = Capability$.makeSingleton<true>()('org.dxos.app-toolkit.capability.readOnly');
 
 /**
  * The graph builder instance. Its `graph` is the reactive node tree; the builder also carries the
@@ -252,6 +300,14 @@ export const Toolkit = Capability$.make<Toolkit>()('org.dxos.app-framework.capab
 export const SkillDefinition = Capability$.make<Skill.Definition>()(
   'org.dxos.app-framework.capability.skillDefinition',
 );
+
+/**
+ * A hook the agent host runs at a point in a request's lifecycle, usually scoped to one of the plugin's
+ * skills. Read per request, so a hook contributed after the agent service was built still fires.
+ *
+ * @category Capability
+ */
+export const HookDefinition = Capability$.make<Hook.Definition>()('org.dxos.app-framework.capability.hookDefinition');
 
 /**
  * An MCP server a plugin ships, needing no credential. It is synced into the registry, where every
@@ -365,12 +421,43 @@ export type TextContent = Readonly<{
  */
 export const TextContent = Capability$.make<TextContent>()('org.dxos.app-framework.capability.textContent');
 
+/** A file an object is saved as. */
+export type ExportFile = Readonly<{
+  /** File extension without the dot (e.g. `md`); the file is named after the object's label. */
+  extension: string;
+  mimeType: string;
+  content: string | Blob;
+}>;
+
+/** An object could not be rendered for printing or saving. */
+export class ExportError extends BaseError.extend('ExportError', 'The object could not be exported.') {}
+
+/**
+ * Print and save contributed per typename by plugins whose objects can leave the app.
+ * Contributing one adds Print and/or Save to the object's article menu (`ExportOperation`).
+ */
+export type Exporter = Readonly<{
+  id: string;
+  /** Whether the menu offers this object, for a type only some of whose objects can leave; every object when absent. */
+  available?: (object: any, get: Atom.AtomContext) => boolean;
+  /** The object as a file in its native format (e.g. `.md`, `.csv`). */
+  save?: (object: any) => Effect$.Effect<ExportFile, ExportError>;
+  /** The object as an HTML fragment, which the browser prints (or saves as PDF). */
+  print?: (object: any) => Effect$.Effect<string, ExportError>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const Exporter = Capability$.make<Exporter>()('org.dxos.app-framework.capability.exporter');
+
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = Readonly<{
   id: string;
   comments: 'anchored' | 'unanchored';
   selectionMode?: string;
-  scrollToAnchor?: Operation.Definition.Any;
+  /** The anchor a new comment on `selection` stores, when the object's anchors are not the selection's own form. */
+  anchorFromSelection?: (obj: any, selection: Selection.Selection | undefined) => string | undefined;
 }>;
 
 /**
@@ -378,8 +465,56 @@ export type CommentConfig = Readonly<{
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
 
+/** Input of a {@link Locator}'s `reveal` operation. */
+export type RevealInput = {
+  /** Attendable id of the view, or the object's URI. */
+  subject: string;
+  /** Position in the type's own anchor format (the format comments and presence locations use). */
+  anchor: string;
+  /** Move the caret to the anchor and take focus (the default); false only scrolls the anchor to the top of the view, as a follow does. */
+  focus?: boolean;
+  /** Comment thread to mark current, when revealing a comment. */
+  thread?: Ref.Ref<Thread.Thread>;
+};
+
 /**
- * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.
+ * Reveals a position in an object, contributed per typename by plugins whose objects have anchors.
+ * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view,
+ * or with `focus: false` only scrolls.
+ */
+export type Locator = Readonly<{
+  id: string;
+  /** Answers whether it revealed the anchor: false while the view has not mounted or cannot resolve it yet. */
+  reveal: Operation.Definition<RevealInput, boolean>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const Locator = Capability$.make<Locator>()('org.dxos.app-framework.capability.locator');
+
+/**
+ * The comments of graph nodes that cover more than one commentable object (a project and its specs, a level of a spec):
+ * the objects whose threads they list, grouped, and the object a comment on the whole node goes on. Every scope that
+ * covers a node adds its objects, so each plugin lists the objects it owns.
+ */
+export type CommentScope = Readonly<{
+  id: string;
+  /** Undefined for node data this scope does not cover; read through `get` so the targets follow edits. */
+  resolve: (
+    data: unknown,
+    get: Atom.AtomContext,
+  ) => { subject: Obj.Unknown; targets: readonly Obj.Unknown[] } | undefined;
+}>;
+
+/**
+ * @category Capability
+ */
+export const CommentScope = Capability$.make<CommentScope>()('org.dxos.app-framework.capability.commentScope');
+
+/**
+ * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed, and returns
+ * the text of the turn's final reply (absent when the turn produced none), which the review plugin posts to the thread.
  * Contributed by the assistant, so the review plugin owns threads without depending on any AI stack.
  */
 export type CommentAgentRunner = Readonly<{
@@ -387,7 +522,7 @@ export type CommentAgentRunner = Readonly<{
     thread: Thread.Thread;
     subject: Obj.Unknown;
     message: Message.Message;
-  }) => Effect$.Effect<void, Error, Capability$.Service>;
+  }) => Effect$.Effect<string | undefined, Error, Capability$.Service>;
 }>;
 
 /**
@@ -396,6 +531,19 @@ export type CommentAgentRunner = Readonly<{
 export const CommentAgentRunner = Capability$.make<CommentAgentRunner>()(
   'org.dxos.app-framework.capability.commentAgentRunner',
 );
+
+/**
+ * Signs a message and relays it to another identity's inbox, addressed by their identity DID; resolves once
+ * the relay accepts it. Contributed by the messenger, so plugins can notify people without depending on it.
+ */
+export type InboxSender<E extends Error = Error> = Readonly<{
+  send: (recipientDid: string, message: Message.Message) => Effect$.Effect<void, E>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const InboxSender = Capability$.makeSingleton<InboxSender>()('org.dxos.app-framework.capability.inboxSender');
 
 /**
  * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the
@@ -428,6 +576,8 @@ export type NavigationTarget = {
    * position rather than path sniffing by the caller.
    */
   position?: Position.Position;
+  /** View state to set before `path` opens, so it opens on the part the target is about (a project on one of its specs). */
+  viewState?: readonly ViewState.Patch[];
 };
 
 export type NavigationQuery = {
@@ -507,6 +657,12 @@ export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 export const NavigationHandler = Capability$.make<NavigationHandler>()(
   'org.dxos.app-toolkit.capability.navigationHandler',
 );
+
+/**
+ * An action a link can run on the object it opens (see {@link LinkAction$}).
+ * @category Capability
+ */
+export const LinkAction = Capability$.make<LinkAction$.LinkAction>()('org.dxos.app-toolkit.capability.linkAction');
 
 /** A transient progress monitor handle — the update side of one registry entry. */
 export type ProgressMonitor = Progress.TaskHandle;

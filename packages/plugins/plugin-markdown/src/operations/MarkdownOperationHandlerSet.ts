@@ -22,7 +22,6 @@ export const handlers = OperationHandlerSet.lazy([
   MarkdownOperation.GetSelection.pipe(Operation.lazyHandler(() => import('./get-selection.ts'))),
   MarkdownOperation.MergeBranch.pipe(Operation.lazyHandler(() => import('./merge-branch.ts'))),
   MarkdownOperation.Open.pipe(Operation.lazyHandler(() => import('./open.ts'))),
-  MarkdownOperation.ScrollToAnchor.pipe(Operation.lazyHandler(() => import('./scroll-to-anchor.ts'))),
   MarkdownOperation.SuggestEdit.pipe(Operation.lazyHandler(() => import('./suggest-edit.ts'))),
   MarkdownOperation.Update.pipe(Operation.lazyHandler(() => import('./update-markdown.ts'))),
 ]);

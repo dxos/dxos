@@ -10,6 +10,8 @@
 // a column. See `docs/DESIGN.md`.
 //
 
+import { Shape } from '@dxos/scene';
+
 import * as Layout from './layout.ts';
 import type * as Scene from './scene.ts';
 import {
@@ -217,7 +219,7 @@ export const buildGroups = (model: UmlModel, cell: Cell, rules: GroupRule[]): Gr
  * Pack groups as super-nodes: rank by up-oriented cross-group edges (target group above), then
  * lay ranks out as rows, bottom rank last — mirroring the node-level convention.
  */
-export const packGroups = (model: UmlModel, groups: Group[]): Map<string, Scene.Point> => {
+export const packGroups = (model: UmlModel, groups: Group[]): Map<string, Shape.Point> => {
   const groupOf = new Map<string, Group>();
   for (const group of groups) {
     for (const id of group.rects.keys()) {
@@ -238,7 +240,7 @@ export const packGroups = (model: UmlModel, groups: Group[]): Map<string, Scene.
     const rank = groupRanks.get(group.id) ?? 0;
     lanes.set(rank, [...(lanes.get(rank) ?? []), group]);
   }
-  const origins = new Map<string, Scene.Point>();
+  const origins = new Map<string, Shape.Point>();
   let y = 0;
   for (const rank of [...lanes.keys()].sort((left, right) => left - right)) {
     const members = lanes.get(rank)!;
@@ -253,7 +255,7 @@ export const packGroups = (model: UmlModel, groups: Group[]): Map<string, Scene.
 };
 
 /** Absolute node rects for a (possibly partial) group placement. */
-export const resolveRects = (groups: Group[], origins: Map<string, Scene.Point>): Map<string, Rect> => {
+export const resolveRects = (groups: Group[], origins: Map<string, Shape.Point>): Map<string, Rect> => {
   const rects = new Map<string, Rect>();
   for (const group of groups) {
     const at = origins.get(group.id);
@@ -270,8 +272,8 @@ export const resolveRects = (groups: Group[], origins: Map<string, Scene.Point>)
 /** Dashed frames behind multi-node groups. */
 export const frameCommands = (
   groups: Group[],
-  origins: Map<string, Scene.Point>,
-  { origin = { x: 0, y: 0 }, scale = 1 }: { origin?: Scene.Point; scale?: number } = {},
+  origins: Map<string, Shape.Point>,
+  { origin = { x: 0, y: 0 }, scale = 1 }: { origin?: Shape.Point; scale?: number } = {},
 ): Scene.Command[] =>
   groups
     .filter((group) => group.rects.size > 1 && origins.has(group.id))

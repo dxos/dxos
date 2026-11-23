@@ -9,3 +9,4 @@ export const PluginArticle: ComponentType<any> = lazy(() => import('./PluginArti
 export const PublicRegistryArticle: ComponentType<any> = lazy(() => import('./PublicRegistryArticle/index.ts'));
 export const RegistryArticle: ComponentType<any> = lazy(() => import('./RegistryArticle/index.ts'));
 export const RegistrySettingsContainer: ComponentType<any> = lazy(() => import('./RegistrySettingsContainer/index.ts'));
+export const SpacePluginsSettings: ComponentType<any> = lazy(() => import('./SpacePluginsSettings/index.ts'));

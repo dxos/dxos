@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type PluginView } from '@dxos/protocols';
+import { EdgeCallFailedError, type PluginView } from '@dxos/protocols';
 
 import { EdgeRegistryPluginProvider, type RegistryHttpClient } from './edge-registry-plugin-provider.ts';
 
@@ -23,6 +23,33 @@ const view = (version: string): PluginView => ({
 });
 
 describe('EdgeRegistryPluginProvider', () => {
+  test('a private catalog for an identity with no account is empty, not an error', async ({ expect }) => {
+    const client: RegistryHttpClient = {
+      getRegistryPlugins: async () => body([]),
+      getPrivateRegistryPlugins: async () => {
+        throw new EdgeCallFailedError({
+          message: 'Identity is not associated with an account.',
+          data: { type: 'identity_not_associated_with_account' },
+        });
+      },
+    };
+    const provider = new EdgeRegistryPluginProvider(client, { catalog: 'private' });
+
+    expect(await EffectEx.runPromise(provider.listPlugins())).toEqual([]);
+  });
+
+  test('a private catalog still fails on any other error', async ({ expect }) => {
+    const client: RegistryHttpClient = {
+      getRegistryPlugins: async () => body([]),
+      getPrivateRegistryPlugins: async () => {
+        throw new EdgeCallFailedError({ message: 'Internal error.' });
+      },
+    };
+    const provider = new EdgeRegistryPluginProvider(client, { catalog: 'private' });
+
+    await expect(EffectEx.runPromise(provider.listPlugins())).rejects.toThrow();
+  });
+
   test('a superseded response does not overwrite the cache a later one wrote', async ({ expect }) => {
     const slow = new Trigger<ReturnType<typeof body>>();
     const responses = [slow.wait(), Promise.resolve(body([view('2.0.0')]))];

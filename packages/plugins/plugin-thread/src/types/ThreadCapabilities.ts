@@ -11,8 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
 import { type Channel, type Message, type Person } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { ThreadNamespace } from '../namespace.ts';
 import type * as ThreadOperation from './ThreadOperation.ts';
 
 /** What a backend reports about a post; `void` when it has nothing to report. */
@@ -90,5 +89,5 @@ export interface ChannelBackendProvider {
 
 /** Registry of channel-message backends. Collect with `Capability.getAll`. */
 export const ChannelBackend = Capability.make<ChannelBackendProvider>()(
-  `${meta.profile.key}.capability.channelBackend`,
+  `${ThreadNamespace.key}.capability.channelBackend`,
 );

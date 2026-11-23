@@ -1,0 +1,173 @@
+---
+title: Why ECHO?
+description: The data model that apps and agents share, and that ties external data together.
+---
+
+import Anatomy from '../../../../components/Anatomy.astro';
+import Snippet from '../../../../components/Snippet.astro';
+import SpecCite from '../../../../components/SpecCite.astro';
+
+ECHO is a typed object graph that lives on the user's devices and merges between them. Your app and an agent read and
+write the same objects, and the agent can inspect the schema of everything in the graph at run time. Data from external
+systems lands there as linked objects, so one query can reach all of it, offline or on.
+
+## Agents need memory they can query
+
+A conversation ends and its context goes with it. An agent that works across sessions needs somewhere durable to put
+what it learned. That memory is only useful if it connects to the work it is about.
+
+In ECHO, a memory is an ordinary object. It has a type, it can reference the issue it is about, and it comes back
+through the same query your app uses. The `org.dxos.skill.memory` skill stores an agent's memories this way.
+
+**Example** (Storing a memory about an issue)
+
+<Snippet file="why-model" region="memory" />
+
+`about` is a reference, so the memory is joined to its issue in the graph and not only by an id in a string.
+`recalled` comes back through `db.query`, the same call the app uses for its own types.
+
+Memory is not a separate store. It replicates with the rest of the space, and any code that can query the space can
+read it.
+
+## An agent can only use what it can inspect
+
+When you write against a typed API, the compiler tells you which fields exist. An agent has no compiled types. It
+works from what it can read at run time, so the schema has to be data, not only a TypeScript declaration.
+
+Every ECHO type reports its name, version and metadata at run time, and converts to JSON Schema, the format tool
+parameters already use. <SpecCite item="org.dxos.echo#F-2.3" />
+
+The schema goes the other way too. A type built from JSON Schema and added to a database replicates like any object,
+so an agent can define a new type while it runs.
+
+**Example** (Reading a type's schema and adding a type at run time)
+
+<Snippet file="why-model" region="introspect" />
+
+`parameters` is plain JSON Schema, so an agent can hand it to a model as the parameters of a tool. `Contact` did not
+exist when the app was built. `Type.makeObjectFromJsonSchema` makes it, and `db.addType` stores it in the space.
+
+The database skill in `plugin-space` gives agents this through its `QueryTypes` and `AddType` operations. An agent can
+look up what a space holds before it writes, instead of guessing at field names.
+
+## External data needs somewhere to meet
+
+Mail, issues and calendars live in systems that do not know about each other. When you sync them into ECHO, each
+record becomes an object. A **foreign key** is the id the record has in its own system, and the object keeps it in
+its metadata. A `Ref` can then link a GitHub issue to a Linear task, or to the note that discusses both.
+
+The foreign key is what makes a repeat sync safe. You look the record up by its key, then update the object you found
+or add a new one, and the record does not end up in the graph twice.
+
+**Example** (Syncing a record by its foreign key)
+
+<Snippet file="why-model" region="external" />
+
+`Filter.foreignKeys` looks for the issue that carries `key`.
+
+- If the issue is in the graph, `Obj.update` changes its title.
+- If it is not, `db.add` adds it, with the key in its metadata.
+
+`plugin-github` and `plugin-linear` sync this way. Once the data is in the graph, the code that reads it does not need
+to know which system it came from.
+
+## One model for every reader
+
+In an app built from plugins, each plugin declares its types with `Type.makeObject` and contributes them to the
+registry, the set of types the app registers in code. Its UI, its operations and the agents that use it all read and
+write the same objects. A second plugin can select the first plugin's objects by type, with no plugin-specific API in
+between.
+
+## The ECHO pattern
+
+When you keep state on a server, your client code spends its time on copies: caches, optimistic updates, retry queues
+and conflict handling.
+
+ECHO moves the state onto the device. Objects are CRDT documents in a local database, so a write is finished when the
+call returns. Peers merge their changes when they connect.
+
+An ECHO type is a class that declares one schema. The class is the runtime schema and the TypeScript type of its
+instances.
+
+**Example** (Declaring two types)
+
+<Snippet file="why-pattern" region="declare" />
+
+The signature of `Task` reads left to right:
+
+<Anatomy parts={[
+  { code: 'class Task extends ' },
+  { code: 'Type.makeObject', label: 'an object type' },
+  { code: '<Task>', label: 'instance type' },
+  { code: '(dxn)', label: 'global type name and version' },
+  { code: '(schema)', label: 'Effect Schema of the fields' },
+  { code: ' {}' },
+]} />
+
+Instances are live objects. You add them to a database, change them with `Obj.update`, and select them with a typed
+query.
+
+**Example** (Adding, changing and selecting a task)
+
+<Snippet file="why-pattern" region="use" />
+
+`db.add` and `Obj.update` apply locally and return. A query reflects a local write before the writing call
+returns, so `finished` already contains the task. <SpecCite item="org.dxos.echo.query#F-2" />
+
+## Don't rebuild the data layer
+
+**Example** (Marking a task as done, with REST and with ECHO)
+
+<div class="compare">
+  <Snippet file="why-without" title="REST, cache and queue" numbered={false} />
+  <Snippet file="why-with" title="ECHO" numbered={false} />
+</div>
+
+- Both versions start by looking the task up among what the screen already holds. The REST version reads its cache.
+  The ECHO version calls `runSync`, which reads the loaded objects and waits for nothing.
+- The REST version is not careless. It is the minimum that handles a slow network, an offline user and a concurrent
+  edit, and it still has two open questions in its comments.
+- The ECHO version has no error branches for these cases because the failures do not reach it. There is no request to
+  fail, the local write cannot conflict with itself, and a concurrent edit from a peer merges as a CRDT change.
+
+## DXOS apps compared with SaaS apps
+
+| | SaaS web apps | DXOS apps |
+| :-- | :-- | :-- |
+| How code is served | Rendered on the client and the server | Served as static files and rendered on the client |
+| Where data is stored | On the **server** | On the **client**, optionally backed up to a server |
+| How data is exchanged | Client to server over HTTP or WebSockets | Peer to peer over WebRTC, optionally through a sync server |
+| How identity is established | The server issues a session token after checking credentials, for example with OAuth | Each user's first device makes the identity itself, and no server issues it. Each device then signs its changes with its own key |
+
+## Solving practical problems
+
+### Your UI never shows stale local state
+
+An app that waits on a server keeps an optimistic copy of a list, so that a write shows before the server answers. An
+ECHO query answers from the objects the client has loaded, in the same process as your code. A subscriber sees your
+own write in the same call that made it, so a list does not need an optimistic copy of itself.
+<SpecCite item="org.dxos.echo.query#F-2" />
+
+### A query can see more than this device holds
+
+Queries also read two indexes, which hold objects the client has not loaded: the index the device keeps of its
+spaces, and [EDGE's index](/docs/edge/concepts/indexing/). ECHO treats those answers as evidence. It re-evaluates each
+remote entry against the local document and drops the entry when local state contradicts it. A slow server cannot
+bring back an object you removed. <SpecCite item="org.dxos.echo.query#F-5" />
+
+### Your types can change after you ship
+
+Every type carries a version in its DXN. An object migration declares how objects of an old version become the new
+one, so data written by last year's build still opens. <SpecCite item="org.dxos.echo#Migration" />
+
+### Your graph is not limited to one document
+
+A `Ref` field stores the URI of its target and resolves lazily, across objects and across spaces. A relation joins a
+source and a target with typed endpoints, and it is stored on its own, so you can query from either end.
+<SpecCite item="org.dxos.echo#F-4" />
+
+## Enjoy building
+
+To build an app step by step, follow the learning path from
+[The ECHO object](/docs/echo/learn/the-echo-object/). To look up one namespace, use the API pages, such as
+[Filter](/docs/echo/api/filter/).

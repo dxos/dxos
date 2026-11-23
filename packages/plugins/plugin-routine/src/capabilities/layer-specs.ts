@@ -84,7 +84,7 @@ const RegistrySpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return Layer.succeed(Registry.Service, client.graph.registry);
       }),
     ),
@@ -222,7 +222,7 @@ const RemoteOperationInvokerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         return edgeUrl ? EdgeOperationInvoker.fromClient(client) : RemoteOperationInvoker.layerNoop;
       }),
@@ -245,7 +245,7 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
     Layer.unwrap(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for RemoteTriggerManager');
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         return edgeUrl ? EdgeTriggerManager.fromClient(client, context.space) : RemoteTriggerManager.layerNoop;
       }),
@@ -268,7 +268,7 @@ const RemoteProcessManagerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const edgeUrl = client.config.values.runtime?.services?.edge?.url;
         if (!edgeUrl) {
           return RemoteProcessManager.layerNoop;

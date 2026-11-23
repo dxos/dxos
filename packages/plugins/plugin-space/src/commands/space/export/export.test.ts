@@ -55,7 +55,7 @@ describe('space export', () => {
 });
 
 const createSpace = Effect.fn(function* () {
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   yield* Effect.tryPromise(() => client.halo.createIdentity());
   const space = yield* Effect.tryPromise(() => client.spaces.create());
   yield* Effect.tryPromise(() => space.waitUntilReady());

@@ -10,6 +10,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
@@ -61,6 +62,31 @@ const TestLayer = AssistantTestLayer({
   types: [TestNote],
   // Provide Capability.Service so the handler can read/write the suggestions cache.
   extraServices: Layer.succeed(Capability.Service, testManager),
+});
+
+// Mirrors an EDGE host: schemas are contributed, but no atom registry and no suggestions cache.
+const headlessManager = CapabilityManager.make({ registry: Registry.make() });
+headlessManager.contribute({ module: 'test', interface: AppCapabilities.Schema, implementation: [TestNote] });
+
+const HeadlessTestLayer = AssistantTestLayer({
+  operationHandlers: AssistantOperationHandlerSet,
+  types: [TestNote],
+  extraServices: Layer.succeed(Capability.Service, headlessManager),
+});
+
+const SCRIPTED_PROMPTS = ['Summarize my notes', 'Plan the week', 'Draft a status update'];
+
+/** Every model call answers with the same prompts, recorded so a test can count the calls generation made. */
+const scriptedRequests: ScriptedLanguageModel.ScriptedRequest[] = [];
+
+const ScriptedTestLayer = AssistantTestLayer({
+  operationHandlers: AssistantOperationHandlerSet,
+  types: [TestNote],
+  extraServices: Layer.succeed(Capability.Service, headlessManager),
+  aiService: ScriptedLanguageModel.scriptedAiService((request) => {
+    scriptedRequests.push(request);
+    return { parts: [ScriptedLanguageModel.text(JSON.stringify({ prompts: SCRIPTED_PROMPTS }))] };
+  }),
 });
 
 describe('GenerateHomeSuggestions', () => {
@@ -136,6 +162,54 @@ describe('GenerateHomeSuggestions', () => {
         expect(result.prompts).toEqual(stored);
       },
       Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+describe('GenerateHomeSuggestions without an atom registry', () => {
+  it.effect(
+    'empty space returns empty prompts',
+    Effect.fnUntraced(
+      function* (_) {
+        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
+
+        expect(result.prompts).toHaveLength(0);
+      },
+      Effect.provide(HeadlessTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'fewer recent objects than the minimum use the fallback',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* addNotes(4);
+
+        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
+
+        expect(result.prompts).toHaveLength(0);
+      },
+      Effect.provide(HeadlessTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'generates on every call, since no cache holds the prompts',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* addNotes(5);
+
+        const first = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
+        const second = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
+
+        expect(first.prompts).toEqual(SCRIPTED_PROMPTS);
+        expect(second.prompts).toEqual(SCRIPTED_PROMPTS);
+        expect(scriptedRequests).toHaveLength(2);
+      },
+      Effect.provide(ScriptedTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

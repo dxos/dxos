@@ -12,13 +12,13 @@ import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { meta } from '#meta';
 import { FileSystemCapabilities } from '#types';
 
+import { FileSystemNamespace } from '../namespace.ts';
 import { MockFileSystemManager } from '../testing/mock-file-system-manager.ts';
 import { createFileSystemEntryExtensions } from './app-graph-builder.ts';
 
-const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
+const FILESYSTEM_TYPE = `${FileSystemNamespace.key}.workspace`;
 
 describe('filesystem app graph builder', () => {
   test('shows nested directories and files when expanded', async ({ expect }) => {

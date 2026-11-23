@@ -9,7 +9,7 @@ import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLEventInfo, type TLGridProps, type TLInstance } from '@tldraw/editor';
 import { DefaultToolbar, type Editor, Tldraw as TldrawEditor, type TLUiAssetUrlOverrides } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Obj } from '@dxos/echo';
@@ -22,7 +22,15 @@ import { useStoreAdapter } from '#hooks';
 import { Settings } from '#types';
 
 import { handleSnap } from '../actions.ts';
-import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom/index.ts';
+import {
+  CollaboratorCursor,
+  CustomMenu,
+  CustomStylePanel,
+  DefaultToolbarContent,
+  DottedGrid,
+  MeshGrid,
+} from '../custom/index.ts';
+import { CanvasCursors } from './CanvasCursors.tsx';
 
 const threadToolId = 'thread';
 
@@ -34,8 +42,12 @@ const gridComponents: Record<Settings.GridType, FC<TLGridProps>> = {
 export type CanvasProps = {
   canvas: Drawing.Canvas;
   readonly?: boolean;
+  locked?: boolean;
   autoCenter?: boolean;
   hideUi?: boolean;
+  focusContainer?: boolean;
+  /** Share pointers with collaborators; only the interactive surface sets it, so cards and previews stay off the channel. */
+  cursors?: boolean;
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
   onSettingsChange?: (fn: (current: Settings.Settings) => Settings.Settings) => void;
@@ -46,6 +58,22 @@ export type CanvasProps = {
   onSelectionChange?: (objectIds: readonly string[]) => void;
   /** Double-click on a managed shape. */
   onActivate?: (objectId: string) => void;
+  /** The page point at the view's centre and the zoom, so a view of another size looks at the same place. */
+  camera?: CanvasCamera;
+  /** The camera moved, reported at most once per {@link CAMERA_REPORT_MS}. */
+  onCameraChange?: (camera: CanvasCamera) => void;
+};
+
+export type CanvasCamera = { x: number; y: number; zoom: number };
+
+const CAMERA_REPORT_MS = 100;
+
+const sameCamera = (left: CanvasCamera, right: CanvasCamera) =>
+  left.x === right.x && left.y === right.y && left.zoom === right.zoom;
+
+const viewCamera = (editor: Editor): CanvasCamera => {
+  const { center } = editor.getViewportPageBounds();
+  return { x: center.x, y: center.y, zoom: editor.getZoomLevel() };
 };
 
 /** Scene object ids of the selected shapes (unmanaged shapes carry no `meta.object` and are skipped). */
@@ -63,8 +91,11 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
     {
       canvas,
       readonly = false,
+      locked = false,
       autoCenter = true,
       hideUi = false,
+      focusContainer = true,
+      cursors = false,
       assetsBaseUrl = '/assets/plugin-tldraw',
       settings,
       onSettingsChange,
@@ -72,6 +103,8 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
       selection,
       onSelectionChange,
       onActivate,
+      camera,
+      onCameraChange,
       ...props
     },
     forwardedRef,
@@ -86,8 +119,8 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
 
     // Focus.
     useEffect(() => {
-      hideUi ? editor?.blur() : editor?.focus();
-    }, [hideUi, editor]);
+      hideUi ? editor?.blur() : editor?.focus({ focusContainer });
+    }, [hideUi, focusContainer, editor]);
 
     // Editor State.
     useEffect(() => {
@@ -192,7 +225,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
         return;
       }
 
-      const isLocked = readonly || hideUi;
+      const isLocked = locked || hideUi;
 
       // Unlock to allow programmatic camera positioning.
       editor.setCameraOptions({ isLocked: false });
@@ -228,7 +261,50 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
         clearTimeout(timer);
         subscription?.();
       };
-    }, [editor, adapter, width, height, autoCenter, readonly, hideUi]);
+    }, [editor, adapter, width, height, autoCenter, locked, hideUi]);
+
+    // Camera, editor → host, including the fit's moves; a pan reports at most once per interval.
+    const onCameraChangeRef = useRef(onCameraChange);
+    onCameraChangeRef.current = onCameraChange;
+    // The last camera reported, so its echo back through `camera` does not pull a view still moving back to it.
+    const reportedRef = useRef<CanvasCamera>(undefined);
+    useEffect(() => {
+      if (!editor) {
+        return;
+      }
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const unsubscribe = editor.store.listen(
+        ({ changes: { updated } }) => {
+          if (timer === undefined && Object.keys(updated).some((id) => id.startsWith('camera:'))) {
+            timer = setTimeout(() => {
+              timer = undefined;
+              reportedRef.current = viewCamera(editor);
+              onCameraChangeRef.current?.(reportedRef.current);
+            }, CAMERA_REPORT_MS);
+          }
+        },
+        { scope: 'session' },
+      );
+      return () => {
+        clearTimeout(timer);
+        unsubscribe();
+      };
+    }, [editor]);
+
+    // Camera, host → editor, after the fit so a followed camera wins; forced, since an unattended view is locked.
+    useEffect(() => {
+      if (!editor || !camera) {
+        return;
+      }
+      if ([reportedRef.current, viewCamera(editor)].some((seen) => seen && sameCamera(seen, camera))) {
+        return;
+      }
+      const { w, h } = editor.getViewportScreenBounds();
+      editor.setCamera(
+        { x: w / (2 * camera.zoom) - camera.x, y: h / (2 * camera.zoom) - camera.y, z: camera.zoom },
+        { force: true, immediate: true },
+      );
+    }, [editor, camera]);
 
     // NOTE: Currently copying assets to composer-app public/assets/tldraw.
     // https://tldraw.dev/installation#Self-hosting-static-assets
@@ -280,10 +356,13 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
 
     const components = useMemo(
       () => ({
+        CollaboratorCursor,
+        // tldraw's default hint paints the presence `color` as a CSS colour, but it carries a member hue name.
+        CollaboratorHint: null,
         DebugPanel: null,
         Grid: gridComponents[settings?.gridType ?? 'mesh'],
         HelpMenu: null,
-        MenuPanel: CustomMenu,
+        MenuPanel: readonly ? null : CustomMenu,
         NavigationPanel: null,
         StylePanel: CustomStylePanel,
         TopPanel: null,
@@ -294,7 +373,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
           </DefaultToolbar>
         ),
       }),
-      [settings],
+      [readonly, settings],
     );
 
     if (!adapter.store) {
@@ -320,6 +399,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
           components={components}
           onMount={setEditor}
         />
+        {cursors && editor && <CanvasCursors canvas={canvas} editor={editor} />}
       </div>
     );
   },

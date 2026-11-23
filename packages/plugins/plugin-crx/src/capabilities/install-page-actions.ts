@@ -11,9 +11,9 @@ import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { meta } from '#meta';
 import { CrxCapabilities, Settings } from '#types';
 
+import { CrxNamespace } from '../namespace.ts';
 import { installPageActionListeners } from '../page-actions.ts';
 
 const openObject = async (invoker: Capabilities.OperationInvoker, uri: EID.EID) => {
@@ -36,8 +36,8 @@ export default Capability.makeModule(
     installPageActionListeners(capabilityManager, invoker, (ack, _label, spaceId) => {
       if (ack.ok) {
         void invoker.invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.page-action-${ack.objectId ?? ack.id}`,
-          title: ['toast.page-action.success.title', { ns: meta.profile.key }],
+          id: `${CrxNamespace.key}.page-action-${ack.objectId ?? ack.id}`,
+          title: ['toast.page-action.success.title', { ns: CrxNamespace.key }],
         });
         const entityId = ack.objectId;
         if (
@@ -50,9 +50,9 @@ export default Capability.makeModule(
         }
       } else {
         void invoker.invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.page-action-error-${Date.now()}`,
-          title: ['toast.page-action.error.title', { ns: meta.profile.key }],
-          description: [`toast.error.${ack.error}.message`, { ns: meta.profile.key }],
+          id: `${CrxNamespace.key}.page-action-error-${Date.now()}`,
+          title: ['toast.page-action.error.title', { ns: CrxNamespace.key }],
+          description: [`toast.error.${ack.error}.message`, { ns: CrxNamespace.key }],
         });
       }
     });

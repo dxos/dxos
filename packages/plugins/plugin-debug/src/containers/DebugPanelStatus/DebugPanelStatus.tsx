@@ -13,8 +13,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as FloatingPanel from '@dxos/react-ui/FloatingPanel';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
+import { DebugNamespace } from '../../namespace.ts';
 import {
   DEBUG_PANEL_CONTEXT,
   DebugPanel,
@@ -43,7 +42,7 @@ export type DebugPanelStatusProps = {
  * port — an agent can evaluate code in this page — so it must be visible without opening settings.
  */
 export const DebugPanelStatus = ({ controller = getDebugPortController() }: DebugPanelStatusProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DebugNamespace.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);

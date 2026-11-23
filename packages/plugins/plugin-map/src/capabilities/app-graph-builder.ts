@@ -16,8 +16,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, View } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { meta } from '#meta';
 import { Map, MapCapabilities, MapOperation } from '#types';
+
+import { MapNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -45,7 +46,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(MapOperation.SetControlType, { type });
               }),
             properties: {
-              label: ['toggle-type.label', { ns: meta.profile.key }],
+              label: ['toggle-type.label', { ns: MapNamespace.key }],
               icon: 'ph--compass--regular',
             },
           }),
@@ -75,7 +76,7 @@ export default Capability.makeModule(
           return [
             AppNode.makeCompanion({
               variant: 'map',
-              label: ['map.companion.label', { ns: meta.profile.key }],
+              label: ['map.companion.label', { ns: MapNamespace.key }],
               icon: 'ph--map-trifold--regular',
               data: 'map',
             }),

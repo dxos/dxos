@@ -9,10 +9,11 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database } from '@dxos/echo';
+import type * as MemoryService from '@dxos/echo-memory/MemoryService';
 import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
-import { resolveStorySpace } from '@dxos/storybook-testing';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 export type StorySetupOptions = {
   /**
@@ -22,6 +23,8 @@ export type StorySetupOptions = {
   onReady: (props: {
     db: Database.Database;
     invoker: Capabilities.OperationInvoker;
+    /** The space's memory, which the client services host runs. */
+    memory: MemoryService.Service;
   }) => Promise<void | (() => Promise<void>)>;
 };
 
@@ -37,9 +40,9 @@ export const StorySetupPlugin = Plugin.define<StorySetupOptions>(
     activate: Effect.fnUntraced(function* () {
       const invoker = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
-      const space = yield* resolveStorySpace(client);
+      const space = yield* StoryHarness.resolveSpace(client);
       yield* invoker.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
-      const stop = yield* Effect.tryPromise(() => onReady({ db: space.db, invoker }));
+      const stop = yield* Effect.tryPromise(() => onReady({ db: space.db, invoker, memory: client.memory(space.id) }));
       if (stop) {
         yield* Effect.addFinalizer(() => Effect.promise(stop));
       }

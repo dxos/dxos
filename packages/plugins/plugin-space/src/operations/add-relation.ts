@@ -10,6 +10,8 @@ import { invariant } from '@dxos/invariant';
 
 import { SpaceOperation } from '#types';
 
+import { typeKeyFilter } from './helpers.ts';
+
 const handler: Operation.WithHandler<typeof SpaceOperation.AddRelation> = SpaceOperation.AddRelation.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -48,10 +50,14 @@ const resolveEnd = Effect.fnUntraced(function* (end: Obj.Unknown | Ref.Ref<Obj.U
 /** Resolves a relation typename against the types registered for the space. */
 const resolveRelationType = Effect.fnUntraced(function* (db: Database.Database, typename: string | undefined) {
   invariant(typename, 'Pass a `typename` when no `schema` is given.');
-  const types = yield* Effect.promise(() =>
-    db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
+  // The registry reaches the graph's type sources, so a type another plugin publishes resolves too.
+  const [schema] = yield* Effect.promise(() =>
+    db
+      .query(
+        Query.select(Filter.and(Filter.type(Type.Type), typeKeyFilter(typename))).from(Scope.space(), Scope.registry()),
+      )
+      .run(),
   );
-  const schema = types.find((type) => Type.getTypename(type) === typename);
   invariant(schema, `Schema not found: ${typename}`);
   invariant(Type.isRelation(schema), `Not a relation schema: ${typename}`);
   return schema;

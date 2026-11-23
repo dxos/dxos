@@ -1,0 +1,24 @@
+---
+title: Fieldset
+description: "A named group of fields."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/fieldset" narrow />
+
+```ts
+import * as Fieldset from '@dxos/react-ui/Fieldset';
+```
+
+A fieldset is a named group of fields. `disabled` and `invalid` on `Fieldset.Root` reach every control inside it.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Fieldset.Root` | The group of fields |
+| `Fieldset.Legend` | The group's name |
+| `Fieldset.HelperText` | A hint under the fields |
+| `Fieldset.ErrorText` | The error, shown only while the group is `invalid` |
+| `Fieldset.useFieldsetDisabled` | A hook that returns a control's `disabled`, or its fieldset's |

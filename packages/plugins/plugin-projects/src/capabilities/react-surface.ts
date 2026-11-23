@@ -9,24 +9,28 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
 import { type Task } from '@dxos/types';
+import * as Position from '@dxos/util/Position';
 
 import {
-  FeatureArticle,
-  FeatureCardContent,
   MoveTaskDialog,
   ProjectArticle,
   ProjectArtifactsArticle,
   ProjectChatsArticle,
-  ShowcaseArticle,
-  ShowcaseCardContent,
+  SpecCompanion,
+  SpecCompanionPanel,
+  SpecDocumentArticle,
+  SpecView,
 } from '#containers';
-import { MOVE_TASK_DIALOG } from '#meta';
-import { Feature, Showcase } from '#types';
+import { ProjectSurface } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
+import { isSpecView } from '../companion-views.ts';
+import { MOVE_TASK_DIALOG } from '../constants.ts';
+import * as SpecSession from '../SpecSession.ts';
 
-/** React surfaces contributed by plugin-projects — articles and cards for projects, features and showcases. */
+/** React surfaces contributed by plugin-projects — articles for projects, their specs and their branches. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
@@ -36,29 +40,36 @@ export default Capability.makeModule(() =>
         component: ProjectArticle,
         props: ({ role, data }) => ({ role, ...data }),
       }),
+      // A spec's companion tabs, beside the spec and beside a project showing one.
+      ...SpecSession.GROUPS.map((group) =>
+        Surface.create({
+          id: `spec.companion.${group}`,
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, SpecSession.companionVariant(group)),
+            AppSurface.oneOf(
+              AppSurface.companion(AppSurface.Article, Spec.Spec),
+              AppSurface.companion(AppSurface.Article, Project.Project),
+            ),
+          ),
+          component: SpecCompanion,
+          props: ({ data: { companionTo, attendableId } }) => ({ companionTo, group, attendableId }),
+        }),
+      ),
       Surface.create({
-        id: 'feature.article',
-        filter: AppSurface.object(AppSurface.Article, Feature.Feature),
-        component: FeatureArticle,
-        props: ({ role, data }) => ({ role, ...data }),
+        id: 'spec.view',
+        filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => isSpecView(view)),
+        component: SpecView,
+        props: ({ data: { subject, view, attendableId } }) => ({
+          spec: subject,
+          view: isSpecView(view) ? view : 'definitions',
+          attendableId,
+        }),
       }),
       Surface.create({
-        id: 'feature.card',
-        filter: AppSurface.object(AppSurface.CardContent, Feature.Feature),
-        component: FeatureCardContent,
-        props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: 'showcase.article',
-        filter: AppSurface.object(AppSurface.Article, Showcase.Showcase),
-        component: ShowcaseArticle,
-        props: ({ role, data }) => ({ role, ...data }),
-      }),
-      Surface.create({
-        id: 'showcase.card',
-        filter: AppSurface.object(AppSurface.CardContent, Showcase.Showcase),
-        component: ShowcaseCardContent,
-        props: ({ data: { subject } }) => ({ subject }),
+        id: 'spec.companion.panel',
+        filter: Surface.makeFilter(ProjectSurface.SpecCompanion),
+        component: SpecCompanionPanel,
+        props: ({ data }) => data,
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
       // one is a request to see the set, not only to expand the tree.
@@ -73,6 +84,14 @@ export default Capability.makeModule(() =>
         filter: AppSurface.subject(AppSurface.Article, isArtifactsBranch),
         component: ProjectArtifactsArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, project: subject.project, attendableId }),
+      }),
+      // The spec's text, which its Document view embeds; last, so a richer section can take its place.
+      Surface.create({
+        id: 'spec.section',
+        filter: AppSurface.object(AppSurface.Section, Spec.Spec),
+        component: SpecDocumentArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        position: Position.last,
       }),
       Surface.create({
         id: MOVE_TASK_DIALOG,

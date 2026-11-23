@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
         id: 'drawingCard',
         filter: AppSurface.object(AppSurface.CardContent, Drawing.Drawing),
         component: DrawingCard,
-        props: ({ role, data: { subject, editable } }) => ({ role, subject, editable }),
+        props: ({ role, data: { subject, editable, extrinsic } }) => ({ role, subject, editable, extrinsic }),
       }),
     ]),
   ),

@@ -9,11 +9,11 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
+import { CallsNamespace } from '../../namespace.ts';
 import { Toolbar, type ToolbarProps } from '../Call/index.ts';
 import { VideoObject } from '../Media/index.ts';
 import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
@@ -31,7 +31,10 @@ type LobbyRootProps = PropsWithChildren<Util.ThemedClassName>;
 // TODO(burdon): Make headless?
 const LobbyRoot = ({ children }: LobbyRootProps) => {
   return (
-    <Layout.Flex column classNames='relative grow overflow-hidden group'>
+    <Layout.Flex
+      column
+      classNames={mx('relative grow overflow-hidden', hoverableControls, hoverableFocusedWithinControls)}
+    >
       {children}
     </Layout.Flex>
   );
@@ -46,7 +49,7 @@ LobbyRoot.displayName = 'LobbyRoot';
 type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CallsNamespace.key);
   const call = Hooks.useCapability(CallsCapabilities.Manager);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const videoStream = useAtomValue(call.localVideoStreamAtom);
@@ -80,6 +83,8 @@ const LobbyPreview = (_props: LobbyPreviewProps) => {
           />
         )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera-off.label')}</div>}
       </ResponsivePanel>
+      {/* RealtimeKit transcribes every participant for the whole call; the meeting's toggle only decides what is kept. */}
+      <p className='text-center text-description text-sm'>{t('transcribed-call.message')}</p>
     </Layout.Grid>
   );
 };

@@ -5,7 +5,7 @@
 
 import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { type InlineConfig, type Plugin } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
@@ -66,6 +66,8 @@ export const modules = [
   'ui/react-primitives/*/src/**',
   // autocue's on-screen UI lives under `tools/` beside the skill scripts that inject it.
   '../tools/autocue/src/**',
+  // The status-board skill's page, filled from Markdown by its CLI.
+  '../tools/session-board/src/**',
 ];
 
 /**
@@ -323,6 +325,14 @@ const repairTopLevelAwait = async (code: string): Promise<string | null> => {
   return repaired;
 };
 
+export type CreateConfigOptions = {
+  /**
+   * Mount Dev Shell's shell route; only the full storybook opts in, since a package's or an e2e storybook does not
+   * build `@dxos/plugin-dev-shell` before `storybook dev` imports it.
+   */
+  devShell?: boolean;
+};
+
 /**
  * Storybook and Vite configuration.
  *
@@ -330,10 +340,10 @@ const repairTopLevelAwait = async (code: string): Promise<string | null> => {
  * https://storybook.js.org/docs/api/main-config/main-config
  * https://nx.dev/recipes/storybook/one-storybook-for-all
  */
-export const createConfig = ({
-  stories: baseStories,
-  ...baseConfig
-}: Partial<StorybookConfig> = {}): StorybookConfig => ({
+export const createConfig = (
+  { stories: baseStories, ...baseConfig }: Partial<StorybookConfig> = {},
+  { devShell = false }: CreateConfigOptions = {},
+): StorybookConfig => ({
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -403,6 +413,24 @@ export const createConfig = ({
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
+    // Read from the workspace path on the first config served: this package does not depend on
+    // app-framework, so a test run that never loads a config must not need it built.
+    let appFrameworkVitePlugin:
+      | Promise<{ stripModuleBodyAttributes: (code: string, ast: unknown) => string | null }>
+      | undefined;
+    const moduleBodyAttributePlugin = (): Plugin => ({
+      name: 'module-url-attribute',
+      async transform(code, id) {
+        if (!/\/dx\.config\.ts$/.test(id.split('?')[0])) {
+          return null;
+        }
+        appFrameworkVitePlugin ??= import(
+          pathToFileURL(resolve(rootDir, 'packages/sdk/app-framework/dist/lib/vite-plugin.mjs')).href
+        );
+        const { stripModuleBodyAttributes } = await appFrameworkVitePlugin;
+        return stripModuleBodyAttributes(code, this.parse(code));
+      },
+    });
 
     const finalConfig = mergeConfig(
       {
@@ -573,6 +601,9 @@ export const createConfig = ({
 
           DxosLogPlugin(),
 
+          // Stories load plugin configs as authored; the browser rejects their module-body import attribute.
+          moduleBodyAttributePlugin(),
+
           // Hosts the Claude Agent SDK so stories reach it same-origin. Storybook builds its vite
           // config here and never loads a package's `vite.config.ts`, so a story cannot mount its
           // own host — hence mounting it centrally. Opt-in: the host spawns the SDK and spends real
@@ -587,6 +618,20 @@ export const createConfig = ({
               server.middlewares.use(Middleware.make({ cwd: agentCwd }));
             },
           },
+
+          // Dev Shell's shell route, so a story's agent runs bash and edits on this machine as composer-app's dev server
+          // lets it. Rooted at the Composer app, the directory the Composer Plugin template's commands start in. Dev only:
+          // it runs arbitrary scripts, so no build mounts it, nor a test run unless it opts into manual tests. Imported
+          // dynamically, as the package is ESM-only.
+          devShell &&
+            options.configType !== 'PRODUCTION' &&
+            (!isVitestRun || isTrue(process.env.DX_RUN_MANUAL_TESTS)) &&
+            import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => {
+              const root = resolve(rootDir, 'packages/apps/composer-app');
+              // A story's bash tool answers "not mounted" when this line is missing from the startup output.
+              console.log(`[storybook] Dev Shell mounted at /api/dev-shell/exec (scripts run in ${root})`);
+              return DevShellVitePlugin({ root, agentHost: false });
+            }),
 
           IconsPlugin({
             // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
@@ -623,7 +668,7 @@ export const createConfig = ({
   },
 });
 
-const config = createConfig();
+const config = createConfig({}, { devShell: true });
 
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ config }, null, 2));
