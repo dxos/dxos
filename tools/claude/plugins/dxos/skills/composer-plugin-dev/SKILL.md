@@ -18,8 +18,8 @@ Two add-ons extend the flow; take each only when its condition holds:
 - [PUBLISHING.md](PUBLISHING.md): the user asks to publish the plugin or install it from the
   registry.
 
-Before step 1, put Node `>=22.12` on `PATH` for every command. In a new repository, `git init` and
-write a `.gitignore` naming `.dxos/`, `node_modules/` and `dist/`.
+In a new repository, `git init` and write a `.gitignore` naming `.dxos/`, `node_modules/` and
+`dist/`.
 
 When a command fails, look it up in [REFERENCE.md](REFERENCE.md).
 
