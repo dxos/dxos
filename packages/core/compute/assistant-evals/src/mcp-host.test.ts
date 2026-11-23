@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import { describe, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -119,44 +119,41 @@ describe('startMcpHost', () => {
   test('code mode serves runScript, whose loop reaches the invoker once per item', async ({ expect }) => {
     const { invocations, context } = stubInvoker();
     const builder = await new EchoTestBuilder().open();
+    onTestFinished(async () => void (await builder.close()));
     const { db } = await builder.createDatabase();
 
-    try {
-      await EffectEx.runPromise(
-        Effect.gen(function* () {
-          const registry = makeRegistry({ initial: [...Operation.serializable([CreateTask]), definition.make()] });
-          const { url } = yield* startMcpHost({
-            skills: [definition],
-            spaceIds: [db.spaceId],
-            // The harness's database rides in its context, which is what the script runs against.
-            context: () => Context.add(context, Database.Service, Database.makeService(db)),
-            registry: () => registry,
-            codeMode: true,
-          });
-          const toolkit = yield* McpToolkit.make({ url, protocol: 'http' });
-          expect(Object.keys(toolkit.toolkit.tools)).to.include('runScript');
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const registry = makeRegistry({ initial: [...Operation.serializable([CreateTask]), definition.make()] });
+        const { url } = yield* startMcpHost({
+          skills: [definition],
+          spaceIds: [db.spaceId],
+          // The script runs against the database in the harness's context.
+          context: () => Context.add(context, Database.Service, Database.makeService(db)),
+          registry: () => registry,
+          codeMode: true,
+        });
+        const toolkit = yield* McpToolkit.make({ url, protocol: 'http' });
+        expect(Object.keys(toolkit.toolkit.tools)).to.include('runScript');
 
-          const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
-          const skillToken = yield* McpServer.skillGate().issue(definition.key);
-          const code = [
-            `const createTask = yield* Database.resolve('${KEY}');`,
-            "for (const title of ['Ship', 'Test']) {",
-            '  yield* print((yield* Operation.invoke(createTask, { title })).id);',
-            '}',
-          ].join('\n');
-          yield* Stream.runDrain(
-            yield* handlers
-              .handle('runScript', { code, spaceId: db.spaceId, skillTokens: [skillToken] })
-              .pipe(Effect.provide(toolkit.layer)),
-          );
+        const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
+        const skillToken = yield* McpServer.skillGate().issue(definition.key);
+        const code = [
+          `const createTask = yield* Database.resolve('${KEY}');`,
+          "for (const title of ['Ship', 'Test']) {",
+          '  yield* print((yield* Operation.invoke(createTask, { title })).id);',
+          '}',
+        ].join('\n');
+        yield* Stream.runDrain(
+          yield* handlers
+            .handle('runScript', { code, spaceId: db.spaceId, skillTokens: [skillToken] })
+            .pipe(Effect.provide(toolkit.layer)),
+        );
 
-          expect(invocations.map(({ input }) => input)).to.deep.equal([{ title: 'Ship' }, { title: 'Test' }]);
-          expect(invocations.every(({ spaceId }) => spaceId === db.spaceId)).to.equal(true);
-        }).pipe(Effect.scoped),
-      );
-    } finally {
-      await builder.close();
-    }
+        expect(invocations.map(({ input }) => input)).to.deep.equal([{ title: 'Ship' }, { title: 'Test' }]);
+        expect(invocations.every(({ spaceId }) => spaceId === db.spaceId)).to.equal(true);
+      }).pipe(Effect.scoped),
+    );
   });
 
   test('the latency probe times the same surface from the outside', async ({ expect }) => {

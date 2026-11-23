@@ -586,11 +586,7 @@ export const invokeHosted = (
 export type ScriptResult = Operation.ScriptResult;
 export type ScriptStats = Operation.ScriptStats;
 
-/**
- * The text a `runScript` call answers with: what the program printed (the failure its last line, when it failed),
- * then a trailer with the operation calls it made and how long they took, so the caller can tell a slow script from
- * a chatty one without asking for timings in the code.
- */
+/** The text a `runScript` call answers with: what it printed, any failure last, then its calls and their time. */
 export const formatScriptAnswer = ({ output, error, stats }: ScriptResult, totalMs: number): string => {
   const trailer = [
     stats ? `${stats.calls} ${stats.calls === 1 ? 'call' : 'calls'}` : undefined,
@@ -612,17 +608,11 @@ export type ScriptOptions = {
   readonly maxOutput?: number;
 } & (
   | {
-      /**
-       * Runs the script here, against the host's `database`: code mode's `Sandbox.inProcess` is not a boundary, a
-       * `WorkerSandbox` spawning `WorkerSandboxWorkerd` isolates is.
-       */
+      /** Runs the script here, against the host's `database`; `Sandbox.inProcess` is not a security boundary. */
       readonly sandbox: Sandbox.Sandbox;
     }
   | {
-      /**
-       * Hands the script, as an Effect-dialect request, to a runner in another runtime, which governs its calls
-       * itself: EDGE's MCP router runs no code and hands it to compute-service.
-       */
+      /** Hands the script to a runner that governs its calls itself, as EDGE's compute-service does. */
       readonly runner: Operation.ScriptRunner;
     }
 );
@@ -682,9 +672,8 @@ export const RunScript = Tool.make('runScript', {
 export const ScriptServerToolkit = Toolkit.make(QueryOperations, InvokeOperation, LoadSkill, RunScript);
 
 /**
- * Answers one `runScript` call: the program runs in code mode's Effect dialect through code mode's runner, the
- * `Operation.ScriptRunner` scripts run through, against the database of the space it names. A host whose options name
- * a `runner` instead hands it the request, and that runner answers it, wherever it runs, with this function.
+ * Answers one `runScript` call in code mode's Effect dialect, against the database of the space it names, or hands it
+ * to the `runner` the options name.
  */
 export const runScript = (
   registry: Registry.Registry,
@@ -741,10 +730,8 @@ export const runScript = (
 const failed = (message: string): ScriptResult => ({ output: `Error: ${message}`, error: message });
 
 /**
- * The operations a script resolves by key: every one an opted-in skill names, except those the API replaces. Each is a
- * stand-in definition naming the record's key, which `Database.resolve` answers and `Operation.invoke` runs through
- * {@link scriptOperationService} as `invokeOperation` runs it, presenting the script's tokens to the skill gate. Each
- * call is counted into `stats`.
+ * The operations a script resolves by key: those opted-in skills name, less those the API replaces. Each runs as
+ * `invokeOperation` runs it, through the skill gate with the script's tokens, and is counted into `stats`.
  */
 const scriptOperations = (
   registry: Registry.Registry,
@@ -805,11 +792,7 @@ const scriptOperations = (
     }),
   );
 
-/**
- * A definition carrying only an operation record's key: the record is all an MCP server holds, and the real definition
- * lives with its handler wherever the operation runs. Its input and output are left undecoded here, since the
- * operation's own handler decodes them.
- */
+/** A definition carrying only a record's key, since the real one lives with its handler, which decodes the input. */
 const standInDefinition = (key: DXN.DXN, name: string, description: string | undefined): Operation.Definition.Any =>
   Operation.make({
     // The record's own key; the literal lives where the operation is declared, which is what the rule protects.
@@ -819,10 +802,7 @@ const standInDefinition = (key: DXN.DXN, name: string, description: string | und
     output: Schema.Unknown,
   });
 
-/**
- * An operation's input in `invokeOperation`'s wire form: a reference becomes its `{"/": uri}` envelope and an object
- * its snapshot, which is what JSON makes of them, and an `undefined` field is dropped, as a tool call's JSON drops it.
- */
+/** An operation's input as a tool call's JSON carries it: refs as `{"/": uri}` envelopes, no `undefined` fields. */
 const toWireInput = (input: unknown): Record<string, unknown> | undefined => {
   const json: unknown = JSON.parse(JSON.stringify(input ?? {}));
   return json !== null && typeof json === 'object' && !Array.isArray(json)

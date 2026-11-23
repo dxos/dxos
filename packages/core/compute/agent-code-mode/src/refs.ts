@@ -28,9 +28,8 @@ const targetTypename = (ast: SchemaAST.AST): string | undefined => {
 const LEGACY_ECHO_DXN = /^dxn:echo:(?:([A-Z0-9]+|@):)?([0-9A-Z]{26})$/;
 
 /**
- * The URI of the object a string names, in the forms models write: its URI (`echo://…`, as the agent's context names
- * the agent), its bare id (`obj.id`, as a printed object shows it), a URI missing the slash of this space
- * (`echo://<id>`), a URI behind a `dxn:` it does not take, or a legacy ECHO DXN. Undefined for anything else.
+ * The URI of the object a string names in a form models write: its URI, its bare id, `echo://<id>`, `dxn:echo://…`, or
+ * a legacy ECHO DXN. Undefined for anything else.
  */
 export const toObjectURI = (text: string): string | undefined => {
   const bare = text.startsWith('dxn:echo://') ? text.slice('dxn:'.length) : text;
@@ -53,9 +52,8 @@ export const toObjectURI = (text: string): string | undefined => {
 /**
  * The input with every object that sits where its schema expects a reference replaced by a reference to
  * it. Code holds objects, and passing one for a `Ref<…>` field is the call agents get wrong first; the
- * object names its target exactly, so the reference is the one the caller meant. A string that names an
- * object ({@link toObjectURI}) names it as exactly, so it is taken too. An object of another type than the reference
- * targets throws.
+ * object names its target exactly, so the reference is the one the caller meant. So does a string
+ * {@link toObjectURI} reads. An object of another type than the reference targets throws.
  */
 export const toRefs = (ast: SchemaAST.AST, value: unknown, depth = 0): unknown => {
   const uri = typeof value === 'string' && takesRef(ast) ? toObjectURI(value) : undefined;
@@ -69,8 +67,7 @@ export const toRefs = (ast: SchemaAST.AST, value: unknown, depth = 0): unknown =
     if (!takesRef(ast)) {
       return value;
     }
-    // Checked here, before the operation runs: a reference to an object of another type fails inside it, far from
-    // the argument that was wrong.
+    // Inside the operation, a reference of another type would fail far from the argument that was wrong.
     const expected = targetTypename(ast);
     const actual = Obj.getTypename(value);
     if (expected !== undefined && actual !== undefined && actual !== expected) {

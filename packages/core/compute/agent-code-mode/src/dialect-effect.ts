@@ -54,8 +54,7 @@ export const EffectDialect: Dialect = {
 
   bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
     const describe = makeDescriber({ syntax: EFFECT_HINTS, skills });
-    // A `print(...)` the code builds without `yield*` would show nothing, and a model told its program printed nothing
-    // runs it again, repeating whatever it wrote; such a print runs when the program ends instead.
+    // A print built without `yield*` runs when the program ends: told nothing printed, a model runs it all again.
     const unyielded = new Set<Effect.Effect<void>>();
     const printEffect = (...values: unknown[]): Effect.Effect<void> => {
       const effect: Effect.Effect<void> = Effect.suspend(() => {
@@ -250,9 +249,6 @@ const operationKey = (definition: Operation.Definition.Any): string => String(de
  * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
  * Every other DXN — a type, an object — goes to the real resolver.
  */
-/** The object URI a string names in a form models write (see {@link toObjectURI}); any other string as is. */
-export const fromLegacyEchoDXN = (ref: string): URI.URI => URI.make(toObjectURI(ref) ?? ref);
-
 const resolveWith = (operations: readonly SandboxOperation[]) => {
   // Keyed without the `dxn:` prefix: the Skill Manager reports an operation by its registry key, which may omit it.
   const definitions = new Map(
@@ -272,11 +268,9 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
     if (definition !== undefined) {
       return Effect.succeed(definition);
     }
-    const target = typeof ref === 'string' ? fromLegacyEchoDXN(ref) : ref;
+    const target = typeof ref === 'string' ? URI.make(toObjectURI(ref) ?? ref) : ref;
     const resolved = schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
-    // A type a source serves on demand (on EDGE, the published types) reaches the registry only once it is asked for,
-    // which `Database.resolve` does not do, and a type named without its version is not found by it at all; asked here
-    // first, either resolves. A lookup that fails leaves `Database.resolve` to report what it finds.
+    // `Database.resolve` neither asks the type sources (EDGE's published types) nor finds a versionless type DXN.
     return typeof target === 'string' && DXN.isDXN(target)
       ? Effect.gen(function* () {
           const { db } = yield* Database.Service;
@@ -290,9 +284,8 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
 };
 
 /**
- * A type by its DXN, as the database's resolver finds one: in the registry, else from the type sources that serve
- * types on demand, which register what they return. A DXN without a version — operation inputs and printed objects
- * name types so — is the newest version registered. Undefined when none has it.
+ * A type by its DXN, from the registry or the type sources; a DXN without a version (as operation inputs and printed
+ * objects name types) is the newest version registered.
  */
 export const resolveTypeOf = async (db: Database.Database, uri: URI.URI): Promise<unknown> => {
   const resolved = await db.graph.createRefResolver({ context: { space: db.spaceId } }).resolveType?.(uri);
@@ -303,26 +296,14 @@ export const resolveTypeOf = async (db: Database.Database, uri: URI.URI): Promis
   return db.registry
     .list()
     .filter((entity): entity is Type.AnyEntity => Type.isType(entity) && Type.getTypename(entity) === typename)
-    .sort((left, right) => compareVersions(Type.getVersion(right), Type.getVersion(left)))[0];
-};
-
-const compareVersions = (left: string, right: string): number => {
-  const [a, b] = [left, right].map((version) => version.split('.').map(Number));
-  for (let index = 0; index < Math.max(a.length, b.length); index++) {
-    const difference = (a[index] ?? 0) - (b[index] ?? 0);
-    if (difference !== 0) {
-      return difference;
-    }
-  }
-  return 0;
+    .sort((left, right) =>
+      Type.getVersion(right).localeCompare(Type.getVersion(left), undefined, { numeric: true }),
+    )[0];
 };
 
 const bareKey = (key: string): string => key.replace(/^dxn:/, '');
 
-/**
- * `Database.load`, which also takes the object a reference would load: an operation's output holds objects, and code
- * loads what it is handed. Anything but a reference or an object fails saying what it was, not as a missing method.
- */
+/** `Database.load`, which also takes an object, since operation outputs hold objects and code loads what it gets. */
 const load = <T>(ref: Ref.Ref<T> | T, options?: Parameters<typeof Database.load>[1]) =>
   Ref.isRef(ref)
     ? Database.load(ref, options)

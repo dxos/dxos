@@ -10,16 +10,9 @@ import { log } from '@dxos/log';
 export type Send = (batch: unknown[]) => Promise<void>;
 
 /**
- * One end of a message channel carried over function calls rather than a real `MessagePort`, shaped as `MessagePort` for
- * the worker protocol's client and runner, which only post and listen for `message`.
- *
- * A Worker Loader isolate cannot be handed a port, but it can be handed a function, which crosses as an RPC stub. Each
- * end sends in batches with one call in flight, so messages arrive in the order they were posted whatever the transport
- * does with concurrent calls, and a burst costs one round trip rather than one per message. {@link Port.receive}
- * dispatches what the other end sent as real `MessageEvent`s.
- *
- * A failed send closes this end: the channel's only failure mode is the other side going away, which the sandbox
- * learns about separately.
+ * One end of a message channel carried over function calls, since a Worker Loader isolate can be handed a function (an
+ * RPC stub) but not a `MessagePort`. Batches go one call at a time, so messages keep their order. A failed send means
+ * the other end went away, and closes this one.
  */
 export class Port extends EventTarget implements MessagePort {
   onmessage: MessagePort['onmessage'] = null;
@@ -38,7 +31,7 @@ export class Port extends EventTarget implements MessagePort {
       return;
     }
     this.#queue.push(message);
-    // Deferred to the end of the current task, so the messages one step posts go as one batch.
+    // Deferred, so the messages one step posts go as one batch.
     if (!this.#scheduled) {
       this.#scheduled = true;
       queueMicrotask(() => {

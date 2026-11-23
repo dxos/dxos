@@ -71,8 +71,7 @@ export const SandboxHostRpcs = RpcGroup.make(
     }),
     success: Schema.Void,
   }),
-  // The host's working set for the space (`WorkingSetService`), which the worker's database opens from and reports
-  // to, so it reads the writes the index does not hold yet. Rows carry document bytes, which a port clones as they are.
+  // The host's working set for the space, so the worker reads writes the index does not hold yet.
   Rpc.make('Sandbox.workingSetGet', {
     success: Schema.Any,
   }),
@@ -80,8 +79,7 @@ export const SandboxHostRpcs = RpcGroup.make(
     payload: Schema.Struct({ report: WorkingSetReport }),
     success: Schema.Void,
   }),
-  // A type the worker's registry does not hold, resolved by the host as its own database resolves it (on EDGE, from
-  // the published types), as the {@link SandboxType} the worker rebuilds it from; null when the host has none.
+  // A type the worker's registry does not hold (on EDGE, a published type); null when the host has none.
   Rpc.make('Sandbox.resolveType', {
     payload: Schema.Struct({ uri: Schema.String }),
     success: Schema.NullOr(Schema.Any),
@@ -104,15 +102,11 @@ export type SandboxInit = {
   readonly code: string;
   /** Selects the dialect the worker rebuilds its bindings from. */
   readonly dialect: string;
-  /**
-   * The names the dialect binds in the code's scope, for a runtime that compiles the code before it builds the
-   * bindings: workerd has no `eval`, so its program is a module written ahead of loading.
-   */
+  /** The names the dialect binds, for workerd, which has no `eval` and compiles the code before the bindings exist. */
   readonly names: readonly string[];
   /**
-   * How each side's writes reach the other. `heads`: the writer reports the root's heads and the reader waits for them.
-   * `flush`: the writer flushes and the host refreshes its documents from the store, for services that can neither
-   * report heads nor wait for them (EDGE's), which write through to a store and push no client's writes to another.
+   * How each side's writes reach the other: the writer reports heads and the reader waits for them, or (for services
+   * that can do neither, as EDGE's) the writer flushes and the host refreshes.
    */
   readonly handover: 'heads' | 'flush';
   /** Whether the host keeps a working set for the space, which the worker's database then opens over. */

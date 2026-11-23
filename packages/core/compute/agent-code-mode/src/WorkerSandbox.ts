@@ -55,20 +55,12 @@ export type WorkingSet = NonNullable<Parameters<EchoClient['constructDatabase']>
 
 export type Options = {
   /**
-   * Host-side ECHO services for the space the code runs against, resolved per evaluation so the served set follows
-   * the host lifecycle.
+   * Host-side ECHO services, resolved per evaluation so the served set follows the host lifecycle.
    */
   readonly echo: (spaceId: SpaceId) => EchoAccess;
-  /**
-   * For services that write through to a store and push no client's writes to another (EDGE's): brings every document
-   * the host's database and the worker hold up to date with the store. Given, each side's writes are handed over by a
-   * flush and this refresh rather than by heads, which such services can neither report nor wait for.
-   */
+  /** For services that cannot report or wait for heads (EDGE's): re-reads both sides' documents after a flush. */
   readonly refresh?: () => Promise<void>;
-  /**
-   * The working set the host keeps for the space, if any: the worker's database opens over it, so it reads the writes
-   * of the calls before it that the index does not hold yet, and reports its own writes to it.
-   */
+  /** The host's working set for the space, which the worker's database opens over and reports to. */
   readonly workingSet?: (spaceId: SpaceId) => WorkingSet | undefined;
   /**
    * Module the worker runs. Defaults to the entry beside this one, under the extension this module
@@ -92,9 +84,9 @@ export type Options = {
  * bindings, including a synchronous loop no in-process timeout can interrupt. A long evaluation
  * also cannot stall the turn's thread, because it was never on it.
  *
- * A thread or Web Worker is NOT a security boundary: it shares the host's permissions and can reach
- * the network and the filesystem, so it bounds time and isolates crashes, not authority. A Worker
- * Loader isolate (`WorkerSandboxWorkerd`) is one, and its handle limits what it is served.
+ * It is NOT a security boundary: a worker shares the host's permissions and can reach the network
+ * and the filesystem. It bounds time and isolates crashes, not authority. A `WorkerSandboxWorkerd`
+ * isolate is the exception, and its handle limits what it is served.
  */
 export const make = (options: Options): Sandbox.Sandbox => ({
   evaluate: ({ code, dialect, context, timeout }) =>
@@ -152,7 +144,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
             'Sandbox.invokeOperation': ({ key, input }) => invokeOperation(context, key, input),
             'Sandbox.invokeDefinition': ({ key, input, heads }) =>
               invokeDefinition(context, key, input, heads, refresh),
-            // A host without one reports an empty set and drops reports; the worker asks only when told it has one.
+            // The worker asks only when told the host has one.
             'Sandbox.workingSetGet': () =>
               workingSet === undefined ? Effect.succeed({ rows: [] }) : Effect.promise(() => workingSet.get()),
             'Sandbox.workingSetPut': ({ report }) =>
@@ -267,7 +259,7 @@ const invokeOperation = (
   );
 };
 
-/** How long a refresh may take, as long as a heads catch-up may wait: each runs after the code's budget. */
+/** As long as a heads catch-up may wait. */
 const REFRESH_TIMEOUT = Duration.seconds(5);
 
 /** {@link Options.refresh} as an effect, failing as a hand-over does, and bounded as one is. */
@@ -282,7 +274,7 @@ const refreshing = (refresh: () => Promise<void>): Effect.Effect<void, Wire.Wire
     }),
   );
 
-/** A type the host's database resolves, by its DXN, as the worker rebuilds it; null for none the worker can rebuild. */
+/** A type the host resolves by its DXN, as the worker rebuilds it; null for none. */
 const resolveType = (context: BindingsContext, uri: string) => {
   if (!DXN.isDXN(uri)) {
     return Effect.succeed(null);
@@ -309,13 +301,12 @@ const invokeDefinition = (
     return Effect.succeed({ _tag: 'Error' as const, message: `Unknown operation: ${key}` });
   }
   const { db } = Context.get(context.runtime, Database.Service);
-  // Read the worker's writes before resolving what it named; afterwards write the operation's, and with `refresh` push
-  // them to the worker, whose reply arrives after the documents it sent on the same channel.
+  // The worker's writes are read first, and the operation's are written before the reply.
   const catchUp = refresh === undefined ? Wire.catchUp(db, heads) : refresh;
   const settle = refresh === undefined ? Wire.settle(db) : Wire.flush(db).pipe(Effect.tap(() => refresh));
   return catchUp.pipe(
     Effect.andThen(Wire.decode(input, db)),
-    // A reference to an object of another type fails here, before the operation runs, naming both types.
+    // A reference to an object of another type fails here, naming both types.
     Effect.flatMap((decoded) =>
       Effect.try({
         try: () => toRefs(definition.input.ast, decoded),
@@ -342,10 +333,7 @@ const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
     return type === undefined ? [] : [type];
   });
 
-/**
- * A type as the worker rebuilds it. A relation's kind and endpoints do not survive the JSON-schema round trip — the
- * worker would rebuild it as an object type — so it stays out of the worker rather than resolving as the wrong kind.
- */
+/** A type as the worker rebuilds it; not a relation, which the JSON-schema round trip turns into an object type. */
 const describeType = (entity: unknown): SandboxType | undefined => {
   if (!Type.isType(entity) || Type.isRelation(entity)) {
     return undefined;

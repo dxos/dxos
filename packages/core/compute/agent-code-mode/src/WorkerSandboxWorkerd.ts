@@ -24,10 +24,7 @@ const PROGRAM_MODULE = 'program.js';
 /** A module as the Worker Loader takes it. */
 export type Module = { readonly js: string } | { readonly wasm: ArrayBuffer };
 
-/**
- * `WorkerSandboxWorkerdEntry`, bundled for workerd by the deployment: {@link RUNTIME_MODULE} and every module it imports
- * (its chunks, the Automerge wasm) under the names it imports them by.
- */
+/** `WorkerSandboxWorkerdEntry` bundled for workerd: {@link RUNTIME_MODULE} and each module it imports, by import name. */
 export type Runtime = {
   readonly modules: Readonly<Record<string, Module>>;
 };
@@ -51,10 +48,7 @@ export type WorkerCode = {
   globalOutbound: null;
 };
 
-/**
- * The `worker_loaders` binding, narrowed to what this uses. A deployment adapts its own binding, whose entrypoint is
- * typed by the RPC interface it is asked for (`getEntrypoint<T>()`).
- */
+/** The `worker_loaders` binding, narrowed to what this uses. */
 export type WorkerLoader = {
   readonly get: (id: string, load: () => Promise<WorkerCode>) => { readonly getEntrypoint: () => Entrypoint };
 };
@@ -65,36 +59,20 @@ export type SpawnOptions = {
   readonly runtime: Runtime;
 };
 
-/** The date the program is written against; the runtime bundle's own needs come in as flags. */
 const COMPATIBILITY_DATE = '2026-03-17';
 
-/**
- * What a runtime bundled the way EDGE bundles workers needs: Node built-ins its dependencies import, async local
- * storage, and the flag every EDGE worker pins (past its default date a promise settled from another request's context
- * has its continuation dropped, which the code would see as a hung `await`).
- */
+/** Node built-ins and async local storage for the bundle, and the cross-request promise flag EDGE workers pin. */
 const COMPATIBILITY_FLAGS = ['nodejs_compat', 'nodejs_als', 'no_handle_cross_request_promise_resolution'];
 
 /**
- * A `WorkerSandbox` spawner for a Cloudflare Worker Loader isolate running {@link Runtime}, as `WorkerSandboxBrowser`'s
- * is for a Web Worker: `WorkerSandbox.make({ echo, refresh, spawn: WorkerSandboxWorkerd.spawn({ loader, runtime }) })`,
- * with `refresh`, since the isolate hands over by flush.
- *
- * Three things differ from a thread. The isolate cannot be handed a `MessagePort`, so the worker protocol travels over
- * two Workers RPC functions ({@link WorkerdBridge}). Workerd has no `eval`, so the model's code is compiled into the
- * program module written for each evaluation, a fresh isolate each time. And the isolate is a SECURITY boundary — no
- * network (`globalOutbound: null`), no bindings — so the handle limits the host's services to the calls a client of one
- * database makes, on subscriptions it opened on the evaluation's space; no caller can leave that out. A subscription's
- * documents stay in that space with a data service that reads and writes them there, as EDGE's does.
- *
- * The price is the runtime: every evaluation loads its own copy of ECHO and Automerge, and loads each document the code
- * touches from the host.
+ * A `WorkerSandbox` spawner for a Worker Loader isolate running {@link Runtime}, used with `refresh`, since the isolate
+ * hands over by flush. The isolate is a security boundary: no network, no bindings, and its handle limits the host's
+ * services to its own space. See `docs/DESIGN.md`.
  */
 export const spawn =
   ({ loader, runtime }: SpawnOptions) =>
   async (_entry: URL | undefined, init: SandboxInit): Promise<WorkerSandbox.WorkerHandle> => {
-    // The host's end waits for the isolate to attach before its first batch, since the server greets the worker as soon
-    // as it opens, which may be before the isolate has started.
+    // The server greets the worker on open, which may be before the isolate attaches.
     let attached: (deliver: WorkerdBridge.Send) => void = () => {};
     const delivery = new Promise<WorkerdBridge.Send>((resolve) => {
       attached = resolve;
@@ -105,7 +83,7 @@ export const spawn =
     });
     const port = new WorkerdBridge.Port(async (batch) => (await delivery)(batch));
 
-    // A fresh id per evaluation: the loader caches isolates by id, and one program must never observe another's state.
+    // A fresh id per evaluation: the loader caches isolates by id, and no program may see another's state.
     const isolate = loader.get(`code-mode-${crypto.randomUUID()}`, async () => ({
       compatibilityDate: COMPATIBILITY_DATE,
       compatibilityFlags: COMPATIBILITY_FLAGS,
@@ -123,8 +101,7 @@ export const spawn =
         return detached;
       },
     );
-    // Ends once the runtime has reported, so only a failure says anything: a program that does not load (the model's
-    // code does not parse), or a runtime that failed before its channel opened.
+    // Settles only on a failure: code that does not parse, or a runtime that failed before its channel opened.
     const stopped = run.then(
       () => new Promise<string | undefined>(() => {}),
       (error: unknown) => (error instanceof Error ? error.message : String(error)),
@@ -133,16 +110,13 @@ export const spawn =
     return {
       port,
       stopped,
-      // An isolate cannot be killed: this releases its channel home, and the sandbox has already stopped answering it.
+      // An isolate cannot be killed: this releases its channel home.
       terminate: () => detach(),
       limit: (echo) => limitToSpace(echo, spaceId),
     };
   };
 
-/**
- * The isolate's entrypoint: the model's code is the body of the function `serve` runs with the dialect's bindings, which
- * it destructures by name. Strict, as every module is.
- */
+/** The isolate's entrypoint, with the model's code as the body of a function over the dialect's names. */
 const program = ({ code, names }: SandboxInit): string =>
   [
     `import { WorkerEntrypoint } from 'cloudflare:workers';`,
@@ -158,10 +132,8 @@ const program = ({ code, names }: SandboxInit): string =>
   ].join('\n');
 
 /**
- * The services as the isolate may use them: the calls a client of one database makes, on that database's space.
- * Everything here runs with the host's authority — on EDGE, a data service that serves any space — and the code holds
- * live objects, through which it can reach its own client and ask for any of it. Reindexing, index configuration,
- * statistics and garbage collection are refused outright.
+ * The services limited to the calls one database makes on its space: the host's serve any space (EDGE's do), and code
+ * can reach its own client through the objects it holds.
  */
 const limitToSpace = (access: WorkerSandbox.EchoAccess, spaceId: SpaceId): WorkerSandbox.EchoAccess => {
   const data = access.DataService;
@@ -169,8 +141,7 @@ const limitToSpace = (access: WorkerSandbox.EchoAccess, spaceId: SpaceId): Worke
   const outside = (other: string | undefined) =>
     new Error(`Space ${other ?? '(none)'} is outside this sandbox, which reaches only space ${spaceId}.`);
   const refused = (call: string) => new Error(`${call} is not available inside the sandbox.`);
-  // A subscription id is the client's to choose, and a service looks it up among every subscriber's, so the isolate may
-  // name only the ones it opened here on this space.
+  // A client chooses its subscription ids and a service shares them across clients: the isolate names only its own.
   const subscriptions = new Set<string>();
   const notOwn = (subscriptionId: string) =>
     new Error(`Subscription ${subscriptionId} was not opened inside this sandbox.`);
@@ -228,10 +199,7 @@ const limitToSpace = (access: WorkerSandbox.EchoAccess, spaceId: SpaceId): Worke
   };
 };
 
-/**
- * The spaces a query names, as the data service resolves them. Empty for a query that cannot be read, which is then
- * refused rather than passed on for a service to interpret.
- */
+/** The spaces a query names; none for a query that does not decode, which is then refused. */
 const targetSpaces = (encoded: string): string[] => {
   const decoded = Schema.decodeUnknownOption(Schema.fromJsonString(QueryAST.Query))(encoded);
   if (decoded._tag === 'None') {
@@ -241,8 +209,7 @@ const targetSpaces = (encoded: string): string[] => {
   QueryAST.visit(decoded.value, (node) => {
     if (node.type === 'from' && node.from._tag === 'scope') {
       for (const scope of node.from.scopes) {
-        // As db-service routes a query: a space scope by its id, a feed scope by the space its feed belongs to. A scope
-        // that names no space targets the owning one, which a service with no database of its own cannot pick.
+        // As db-service routes a query; a scope with no space is refused, since this service has no owning space.
         if (scope._tag === 'space') {
           spaces.add(scope.spaceId ?? '');
         } else if (scope._tag === 'feed') {

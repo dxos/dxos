@@ -68,10 +68,7 @@ const connect = (port: MessagePort) =>
 /** The client both halves of the protocol are reached through. */
 type SandboxClient = Effect.Success<ReturnType<typeof connect>>;
 
-/**
- * Runs the model's code with the dialect's bindings in scope. The default compiles it here; a runtime with no `eval`
- * (workerd) passes the program it compiled ahead of loading, which binds the same {@link SandboxInit.names}.
- */
+/** Runs the code with the bindings in scope; workerd, which has no `eval`, passes the program it compiled. */
 export type Execute = (bindings: Record<string, unknown>) => Promise<unknown>;
 
 /** Compiles the code as the body of an async function over the bindings' names. */
@@ -98,7 +95,7 @@ const evaluate = (client: SandboxClient, init: SandboxInit, execute: Execute) =>
     yield* Effect.promise(async () => {
       await echo.graph.registry.add(types);
     });
-    // A type the host resolves on demand (on EDGE, every published type) is asked for when the code names it.
+    // Types the host serves on demand (EDGE's published ones) are asked for when the code names one.
     echo.graph.registerTypeSource(async (uri) => {
       const type = await EffectEx.runPromise(client['Sandbox.resolveType']({ uri }));
       return type === null ? undefined : rebuildType(type);
@@ -117,9 +114,7 @@ const evaluate = (client: SandboxClient, init: SandboxInit, execute: Execute) =>
     yield* Effect.promise(() => db.setSpaceRoot(init.space.rootUrl));
     yield* Effect.promise(() => db.open());
 
-    // Each side's writes reach the other as the host's services allow; see `SandboxInit.handover`. Flushed writes
-    // also go to the working set, and come back from it after the host has run an operation, as a host's own database
-    // hands its writes over around a call.
+    // See `SandboxInit.handover`. Flushed writes also pass through the working set, as a host database's do.
     const settle =
       init.handover === 'heads'
         ? () => Wire.settle(db)
@@ -195,8 +190,7 @@ const evaluate = (client: SandboxClient, init: SandboxInit, execute: Execute) =>
       }),
       // The turn carries on against the host's database, so it waits for what the code wrote.
       Effect.flatMap((result) => settle().pipe(Effect.map((heads) => ({ ...result, heads })))),
-      // With the flush handover the host refreshes every subscription its services handed out once the result arrives,
-      // so this client leaves first rather than be waited on by a refresh it will never answer.
+      // The host's final refresh would wait on this client, so it leaves first.
       Effect.tap(() =>
         init.handover === 'flush'
           ? Effect.tryPromise(() => echo.close()).pipe(
