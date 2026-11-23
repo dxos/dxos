@@ -409,6 +409,22 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
+    'a combinator handler that returns a plain value points at Effect.succeed',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult(
+          "yield* Effect.fail('x').pipe(Effect.catch(() => null));",
+          EffectDialect,
+        );
+        expect(ok).toBe(false);
+        expect(output).toContain('`Effect.succeed(value)`, not the value');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'an Effect 3 name points at its Effect 4 one',
     Effect.fnUntraced(
       function* (_) {

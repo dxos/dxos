@@ -117,6 +117,7 @@ export const EffectDialect: Dialect = {
 
     You have exactly one tool, \`eval\`. Its \`code\` is the body of an \`Effect.gen\` generator run
     against this workspace, so \`yield*\` is available and you must NOT write the wrapper yourself.
+    \`await\` is a syntax error there: \`yield*\` each Effect, including the ones \`Database\` returns.
     It returns whatever the code printed: a value you do not \`print\` never reaches you. Do not use
     \`import\` or \`require\` — the modules below are already in scope.
 

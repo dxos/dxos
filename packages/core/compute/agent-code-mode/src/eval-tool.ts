@@ -380,6 +380,9 @@ const hintFor = (message: string): string => {
   if (undefinedName) {
     return `\nHint: each eval call is a fresh program, so \`${undefinedName}\` from an earlier call does not exist here. Resolve or load it again in this call.`;
   }
+  if (/Not a valid effect/.test(message)) {
+    return '\nHint: a function passed to an Effect combinator (`Effect.catch`, `Effect.flatMap`) must return an Effect: `Effect.succeed(value)`, not the value.';
+  }
   const refField = /(\w+): Expected Ref<dxn:([\w.]+)/.exec(message);
   if (refField && /Invalid draft/.test(message)) {
     return `\nHint: \`${refField[1]}\` holds a reference: make or load the ${refField[2]} object first and pass \`Ref.make(object)\`.`;
