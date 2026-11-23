@@ -31,4 +31,10 @@ describe('toRefs', () => {
     const tasks = field('tasks');
     expect(Array.isArray(tasks) && tasks.every((entry) => Ref.isRef(entry) && entry.uri === URI_OF_TASK)).toBe(true);
   });
+
+  test("an object's bare id where a reference goes names it in this space", ({ expect }) => {
+    const value = toRefs(Input.ast, { task: '01M82XEH98BVZ36GZVT2NPZS6K', tasks: [], note: 'x' });
+    const task = typeof value === 'object' && value !== null ? Reflect.get(value, 'task') : undefined;
+    expect(Ref.isRef(task) && task.uri).toEqual('echo:///01M82XEH98BVZ36GZVT2NPZS6K');
+  });
 });

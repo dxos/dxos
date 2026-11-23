@@ -9,7 +9,7 @@ import { describeInput, describeTypes } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, URI } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { DXN } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { type HintSyntax, makeDescriber } from './describe.ts';
@@ -71,7 +71,12 @@ export const EffectDialect: Dialect = {
       // The namespaces the code is written against, exactly as a module would import them.
       Effect,
       Database: { ...Database, resolve: resolveWith(operations) },
-      Filter,
+      // A type named by its typename alone (`'org.dxos.type.document'`), as printed objects name it, filters as its DXN.
+      Filter: {
+        ...Filter,
+        type: (input: Parameters<typeof Filter.type>[0], props?: Parameters<typeof Filter.type>[1]) =>
+          Filter.type(typeof input === 'string' && !input.includes(':') ? URI.make(`dxn:${input}`) : input, props),
+      },
       Query,
       Order,
       Obj,
@@ -188,7 +193,7 @@ export const EFFECT_API = trim`
     or operation fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
 
     \`yield*\` works only directly in this body, not inside a callback such as \`.map((x) => …)\`: loop
-    with \`for … of\`. This is Effect 4: \`Effect.catch\`, \`Effect.catchCause\` and \`Effect.result\`
+    with \`for … of\`. \`await\` does not compile here: \`yield*\` the Effect instead. This is Effect 4: \`Effect.catch\`, \`Effect.catchCause\` and \`Effect.result\`
     replace \`catchAll\`, \`catchAllCause\` and \`either\`.
 
     A skill may name tools for reading, querying or updating objects; in code those are hidden, so do
@@ -249,7 +254,8 @@ export const fromLegacyEchoDXN = (ref: string): URI.URI => {
   }
   const match = LEGACY_ECHO_DXN.exec(ref);
   if (!match) {
-    return URI.make(ref);
+    // An object's bare id (`obj.id`, as a printed object shows it) names it in this space.
+    return URI.make(EntityId.isValid(ref) ? `echo:///${ref}` : ref);
   }
   const [, space, id] = match;
   return URI.make(space === undefined || space === '@' ? `echo:///${id}` : `echo://${space}/${id}`);

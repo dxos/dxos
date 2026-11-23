@@ -355,6 +355,29 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
     ),
   );
 
+  // As models write them, after the typenames printed objects and operation inputs show.
+  it.effect(
+    'a typename, a versionless DXN and a bare object id each name what they mean',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval(
+          [
+            `const Task = yield* Database.resolve('${TASK_DXN}');`,
+            "const task = yield* Database.add(Obj.make(Task, { title: 'Named', status: 'open' }));",
+            `const byTypename = yield* Database.query(Filter.type('${TASK_TYPENAME}', { title: 'Named' })).run;`,
+            `const byDxn = yield* Database.query(Filter.type('dxn:${TASK_TYPENAME}', { title: 'Named' })).run;`,
+            'const byId = yield* Database.resolve(task.id);',
+            'yield* print(byTypename.length, byDxn.length, byId.title);',
+          ].join('\n'),
+          EffectDialect,
+        );
+        expect(output).toEqual('1 1 Named');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Found on EDGE: a program that created a document and then failed was run again whole, creating a second one.
   it.effect(
     'a failure after an operation ran says what it did was kept',

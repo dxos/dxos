@@ -380,6 +380,10 @@ const hintFor = (message: string): string => {
   if (undefinedName) {
     return `\nHint: each eval call is a fresh program, so \`${undefinedName}\` from an earlier call does not exist here. Resolve or load it again in this call.`;
   }
+  const refField = /(\w+): Expected Ref<dxn:([\w.]+)/.exec(message);
+  if (refField && /Invalid draft/.test(message)) {
+    return `\nHint: \`${refField[1]}\` holds a reference: make or load the ${refField[2]} object first and pass \`Ref.make(object)\`.`;
+  }
   if (/reserved word/.test(message)) {
     return '\nHint: `yield*` works only directly in your code, not inside a callback such as `.map((x) => …)`: loop with `for … of` instead. `await` does not work at all: `yield*` an Effect.';
   }
