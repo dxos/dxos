@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -21,6 +22,7 @@ import * as ActivationEvent from './activation-event.ts';
 import * as Capability from './capability.ts';
 import * as HotModules from './hot-modules.ts';
 import type * as PluginManager from './plugin-manager/index.ts';
+import * as Stylesheet from './stylesheet.ts';
 
 //
 // Plugin Service Layer
@@ -722,11 +724,16 @@ export type ManifestTag = { identifier: string; arity: Capability.Arity };
 export type ManifestModule = {
   id: string;
   url: string;
+  /**
+   * Stylesheets the chunk at `url` and its static imports need, each a root-relative URL or a path
+   * relative to `url`. Present only in an app build, whose loader imports the chunk by URL.
+   */
+  css?: readonly string[];
   activatesOn?: ActivationEvent.Events;
   requires: readonly ManifestTag[];
   provides: readonly ManifestTag[];
-  /** Transform applied to what `url` exports, when the module's maker adapts a data module. */
-  adapter?: { url: string; args?: unknown };
+  /** Transform applied to what `url` exports, when the module's maker adapts a data module; `css` as above. */
+  adapter?: { url: string; css?: readonly string[]; args?: unknown };
   /** Runtimes the module loads in; present only in a library build, which serves every runtime. */
   environments?: readonly Capability.Environment[];
 };
@@ -763,23 +770,34 @@ export const fromManifest = <T = void>(
   const meta = getMetaFromConfig(data);
   const toTags = (tags: readonly ManifestTag[]) =>
     tags.map(({ identifier, arity }) => Capability.fromIdentifier(identifier, arity));
-  const load = (url: string) => loaders[url]?.() ?? import(/* @vite-ignore */ url);
+  // Stylesheets first, as a bundler's own dynamic import orders them, so a body never renders unstyled.
+  const load = async (url: string, css: readonly string[] = []): Promise<unknown> => {
+    if (css.length > 0) {
+      await EffectEx.runPromise(
+        Effect.all(
+          css.map((href) => Stylesheet.load(href, url)),
+          { concurrency: 'unbounded', discard: true },
+        ),
+      );
+    }
+    return loaders[url]?.() ?? import(/* @vite-ignore */ url);
+  };
   return {
     plugin: data.plugin,
     meta,
     make: fromModules<T>(
       meta,
-      modules.map(({ id, url, activatesOn, requires, provides, adapter, environments }) =>
+      modules.map(({ id, url, css, activatesOn, requires, provides, adapter, environments }) =>
         Capability.lazyModule(
           id,
           { activatesOn, requires: toTags(requires), provides: toTags(provides), environments },
           async () => {
-            const loaded = await load(url);
+            const loaded = await load(url, css);
             if (!adapter) {
               invariant(isModuleBody(loaded), `Module ${id} at ${url} has no default export.`);
               return loaded;
             }
-            const adapterModule = await load(adapter.url);
+            const adapterModule = await load(adapter.url, adapter.css);
             invariant(isModuleAdapter(adapterModule), `Adapter at ${adapter.url} has no default export.`);
             const adapted = adapterModule.default(loaded, adapter.args);
             invariant(isModuleBody(adapted), `Adapter at ${adapter.url} returned no module body.`);
