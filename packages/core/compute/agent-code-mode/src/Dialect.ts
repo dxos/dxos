@@ -127,16 +127,19 @@ const hasAbridgedUnion = ({ fields }: SandboxType): boolean => fields.some(({ ty
 
 /**
  * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
- * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path.
+ * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path, and `output`,
+ * given, is what the call returns.
  */
 export const renderOperation = (
   operation: SandboxOperation,
   call: (name: string) => string,
   input: string = JSON.stringify(operation.parameters),
-): string => trim`
-  - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
-    input: ${input}
-`;
+  output?: string,
+): string =>
+  trim`
+    - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
+      input: ${input}
+  ` + (output === undefined ? '' : `\n  output: ${output}`);
 
 /**
  * The `console` bound in the code's scope: its output methods print into the call's output, since the model writes

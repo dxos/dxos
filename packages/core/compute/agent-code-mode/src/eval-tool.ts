@@ -375,14 +375,14 @@ const hintFor = (message: string): string => {
   if (undefinedName) {
     return `\nHint: each eval call is a fresh program, so \`${undefinedName}\` from an earlier call does not exist here. Resolve or load it again in this call.`;
   }
+  if (/reserved word/.test(message)) {
+    return '\nHint: `yield*` works only directly in your code, not inside a callback such as `.map((x) => …)`: loop with `for … of` instead. `await` does not work at all: `yield*` an Effect.';
+  }
   const effect3Name = /Effect\.(catchAll|catchAllCause|either) is not a function/.exec(message)?.[1];
   if (effect3Name) {
     return `\nHint: this is Effect 4, where \`Effect.${EFFECT_4_NAMES[effect3Name]}\` replaces \`Effect.${effect3Name}\`.`;
   }
   const missing = /Entity not found: \{"uri":"(dxn:[^"]+)"\}/.exec(message)?.[1];
-  if (missing?.startsWith('dxn:echo:')) {
-    return "\nHint: an object resolves by its URI as it is, without `dxn:`: `yield* Database.resolve('echo://<space>/<id>')`.";
-  }
   if (missing) {
     return "\nHint: resolve a DXN exactly as `DOCS['catalog/types.md']` or `DOCS['catalog/operations.md']` lists it, a type's with its version (`dxn:org.dxos.type.document:0.1.0`); the Skill Manager's `queryTypes` and `queryOperations` find the ones not listed there.";
   }

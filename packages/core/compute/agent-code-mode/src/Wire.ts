@@ -120,7 +120,10 @@ export const encode = (value: unknown, db: Database.Database): unknown => {
     return value.map((entry) => encode(entry, db));
   }
   if (isRecord(value)) {
-    const json = Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, encode(entry, db)]));
+    // A field set to `undefined` is dropped, as JSON drops it: a schema's optional field does not take `undefined`.
+    const json = Object.fromEntries(
+      Object.entries(value).flatMap(([key, entry]) => (entry === undefined ? [] : [[key, encode(entry, db)]])),
+    );
     const { id, '@uri': uri } = value;
     if (typeof id === 'string' && typeof uri === 'string') {
       const eid = EID.tryParse(uri);

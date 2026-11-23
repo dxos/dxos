@@ -4,7 +4,8 @@
 
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, URI } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 
 const MAX_DEPTH = 8;
 
@@ -15,9 +16,13 @@ const takesRef = (ast: SchemaAST.AST): boolean =>
 /**
  * The input with every object that sits where its schema expects a reference replaced by a reference to
  * it. Code holds objects, and passing one for a `Ref<…>` field is the call agents get wrong first; the
- * object names its target exactly, so the reference is the one the caller meant.
+ * object names its target exactly, so the reference is the one the caller meant. An object's URI
+ * (`echo://…`, as the agent's context names the agent) names it as exactly, so it is taken too.
  */
 export const toRefs = (ast: SchemaAST.AST, value: unknown, depth = 0): unknown => {
+  if (typeof value === 'string' && EID.tryParse(value) !== undefined && takesRef(ast)) {
+    return Ref.fromURI(URI.make(value));
+  }
   if (depth > MAX_DEPTH || value === null || typeof value !== 'object') {
     return value;
   }

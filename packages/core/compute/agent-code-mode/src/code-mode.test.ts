@@ -339,6 +339,22 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
     ),
   );
 
+  // Operation inputs and printed objects name a type without its version, so the model resolves it that way.
+  it.effect(
+    'a type DXN without its version resolves to the version registered',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval(
+          `const Task = yield* Database.resolve('dxn:${TASK_TYPENAME}'); yield* print(Type.getVersion(Task));`,
+          EffectDialect,
+        );
+        expect(output).toEqual('0.1.0');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Found on EDGE: a program that created a document and then failed was run again whole, creating a second one.
   it.effect(
     'a failure after an operation ran says what it did was kept',
@@ -350,6 +366,19 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
         );
         expect(ok).toBe(false);
         expect(output).toContain(`these operations ran before the failure, and what they did was kept: ${SCORE_KEY}`);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'yield* inside a callback points at a for loop',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('[1, 2].map((n) => yield* print(n));', EffectDialect);
+        expect(ok).toBe(false);
+        expect(output).toContain('loop with `for … of` instead');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -373,16 +402,21 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
-    'a DXN that does not resolve points at the catalogs, and an object URI at resolving it as it is',
+    'a DXN that does not resolve points at the catalogs; an object URI behind dxn: resolves',
     Effect.fnUntraced(
       function* (_) {
-        const type = yield* runEvalResult("yield* Database.resolve('dxn:com.example.type.task');", EffectDialect);
+        const type = yield* runEvalResult("yield* Database.resolve('dxn:com.example.type.nothing');", EffectDialect);
         expect(type.output).toContain("a type's with its version");
-        const object = yield* runEvalResult(
-          "yield* Database.resolve('dxn:echo://BAHIPVPJFD7F34K4TWS4SPMTK2KQ2TEDX/01M82XEH98BVZ36GZVT2NPZS6K');",
+        const object = yield* runEval(
+          [
+            `const Task = yield* Database.resolve('${TASK_DXN}');`,
+            "const task = yield* Database.add(Obj.make(Task, { title: 'Found again', status: 'open' }));",
+            "const again = yield* Database.resolve('dxn:' + Obj.getURI(task));",
+            'yield* print(again.title);',
+          ].join('\n'),
           EffectDialect,
         );
-        expect(object.output).toContain('an object resolves by its URI as it is, without `dxn:`');
+        expect(object).toEqual('Found again');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

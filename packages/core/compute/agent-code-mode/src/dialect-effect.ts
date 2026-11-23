@@ -171,8 +171,13 @@ export const EFFECT_API = trim`
     \`Obj.update\` is the only way to change a stored object. A \`Ref<typename>\` field takes
     \`Ref.make(obj)\` of an object you hold — never an id or a URI string. An object you know only by
     its URI (\`echo://…\`, as an operation's output or your context names it) is
-    \`yield* Database.resolve(uri)\`. A failed load or operation fails the whole program;
-    \`DOCS['errors.md']\` shows how to contain one.
+    \`yield* Database.resolve(uri)\`. A \`Ref\` field loads with \`yield* Database.load(task.owner)\`; its
+    URI is \`ref.uri\`. An operation returns its listed \`output\`, with live objects in it. A failed load
+    or operation fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
+
+    \`yield*\` works only directly in this body, not inside a callback such as \`.map((x) => …)\`: loop
+    with \`for … of\`. This is Effect 4: \`Effect.catch\`, \`Effect.catchCause\` and \`Effect.result\`
+    replace \`catchAll\`, \`catchAllCause\` and \`either\`.
 
     A skill may name tools for reading, querying or updating objects; in code those are hidden, so do
     that with \`Database\` and \`Obj\` instead.
@@ -219,17 +224,23 @@ const operationKey = (definition: Operation.Definition.Any): string => String(de
  * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
  * Every other DXN — a type, an object — goes to the real resolver.
  */
-/** An object's legacy ECHO DXN (`dxn:echo:<space>:<id>`, `@` for this space), which models still write. */
-const LEGACY_ECHO_DXN = /^dxn:echo:([A-Z0-9]+|@):([0-9A-Z]{26})$/;
+/**
+ * An object's legacy ECHO DXN (`dxn:echo:<space>:<id>`, `@` or nothing for this space), or an object URI behind a
+ * `dxn:` it does not take (`dxn:echo://…`), which models still write.
+ */
+const LEGACY_ECHO_DXN = /^dxn:echo:(?:([A-Z0-9]+|@):)?([0-9A-Z]{26})$/;
 
 /** The object URI a legacy ECHO DXN names, since no resolver reads that form any more; any other string as is. */
 export const fromLegacyEchoDXN = (ref: string): URI.URI => {
+  if (ref.startsWith('dxn:echo://')) {
+    return URI.make(ref.slice('dxn:'.length));
+  }
   const match = LEGACY_ECHO_DXN.exec(ref);
   if (!match) {
     return URI.make(ref);
   }
   const [, space, id] = match;
-  return URI.make(space === '@' ? `echo:///${id}` : `echo://${space}/${id}`);
+  return URI.make(space === undefined || space === '@' ? `echo:///${id}` : `echo://${space}/${id}`);
 };
 
 const resolveWith = (operations: readonly SandboxOperation[]) => {
@@ -247,13 +258,15 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
     const target = typeof ref === 'string' ? fromLegacyEchoDXN(ref) : ref;
     const resolved = schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
     // A type a source serves on demand (on EDGE, the published types) reaches the registry only once it is asked for,
-    // which `Database.resolve` does not do; asked here first, it then resolves as a registered type. A lookup that fails
-    // leaves `Database.resolve` to report what it finds.
+    // which `Database.resolve` does not do, and a type named without its version is not found by it at all; asked here
+    // first, either resolves. A lookup that fails leaves `Database.resolve` to report what it finds.
     return typeof target === 'string' && DXN.isDXN(target)
       ? Effect.gen(function* () {
           const { db } = yield* Database.Service;
-          yield* Effect.tryPromise(() => resolveTypeOf(db, target)).pipe(Effect.ignore);
-          return yield* resolved;
+          const type = yield* Effect.tryPromise(() => resolveTypeOf(db, target)).pipe(
+            Effect.orElseSucceed(() => undefined),
+          );
+          return type !== undefined && schema === undefined ? type : yield* resolved;
         })
       : resolved;
   };
@@ -261,10 +274,31 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
 
 /**
  * A type by its DXN, as the database's resolver finds one: in the registry, else from the type sources that serve
- * types on demand, which register what they return. Undefined when neither has it.
+ * types on demand, which register what they return. A DXN without a version — operation inputs and printed objects
+ * name types so — is the newest version registered. Undefined when none has it.
  */
-export const resolveTypeOf = async (db: Database.Database, uri: URI.URI): Promise<unknown> =>
-  db.graph.createRefResolver({ context: { space: db.spaceId } }).resolveType?.(uri);
+export const resolveTypeOf = async (db: Database.Database, uri: URI.URI): Promise<unknown> => {
+  const resolved = await db.graph.createRefResolver({ context: { space: db.spaceId } }).resolveType?.(uri);
+  if (resolved !== undefined || !DXN.isDXN(uri) || DXN.getVersion(uri) !== undefined) {
+    return resolved;
+  }
+  const typename = DXN.getName(uri);
+  return db.registry
+    .list()
+    .filter((entity): entity is Type.AnyEntity => Type.isType(entity) && Type.getTypename(entity) === typename)
+    .sort((left, right) => compareVersions(Type.getVersion(right), Type.getVersion(left)))[0];
+};
+
+const compareVersions = (left: string, right: string): number => {
+  const [a, b] = [left, right].map((version) => version.split('.').map(Number));
+  for (let index = 0; index < Math.max(a.length, b.length); index++) {
+    const difference = (a[index] ?? 0) - (b[index] ?? 0);
+    if (difference !== 0) {
+      return difference;
+    }
+  }
+  return 0;
+};
 
 const bareKey = (key: string): string => key.replace(/^dxn:/, '');
 
@@ -316,6 +350,8 @@ const renderOperationList = (operations: readonly SandboxOperation[]): string =>
               () => `yield* Database.resolve('${operationKey(definition)}')`,
               // A worker's stand-in definition carries no input schema; the operation's JSON schema does.
               definition.input.ast._tag === 'Unknown' ? undefined : describeInput(definition.input),
+              // What `Operation.invoke` returns, so the code reads the field that holds the result.
+              definition.output.ast._tag === 'Unknown' ? undefined : describeInput(definition.output),
             ),
           ]
         : [];
