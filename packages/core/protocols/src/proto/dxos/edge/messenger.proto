@@ -141,8 +141,8 @@ message SwarmResponse {
 }
 
 //
-// EDGE's answer to a message it will not serve. Sent on the refused message's `service_id`, so the client
-// fails fast instead of waiting for a reply that never comes.
+// EDGE's notice that it will not serve a message, sent on the refused message's `service_id` instead of no reply.
+// Clients log it; it does not end the connection, which still carries swarm and signal messages.
 //
 message ServiceRefusal {
   enum Reason {
