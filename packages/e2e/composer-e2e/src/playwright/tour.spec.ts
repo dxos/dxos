@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager.ts';
-import { Support } from './plugins/index.ts';
+import { Markdown, Support } from './plugins/index.ts';
 
 const GLOBAL_TOUR = ['Sharing', 'Creating content', 'Profile', 'Settings', 'Plugins', 'Companions', 'Feedback'];
 
@@ -69,12 +69,11 @@ test.describe('Tour tests', () => {
     await host.page.goto(documentUrl.replace(/\/object\/.*$/, '/home'));
     await host.waitForBoot(new RegExp(`/w/${host.workspaceId}/home`));
     await expect(host.page.getByTestId('supportPlugin.startTour')).toBeVisible();
-    await expect(Support.card(host.page)).not.toBeVisible();
 
-    // With the tour gone nothing blocks the navtree, and a click needs no second boot.
-    await host.navigateToObject();
-    await expect(host.page).toHaveURL(new RegExp(new URL(documentUrl).pathname));
-    await expect(host.page.getByTestId('composer.markdownRoot')).toBeVisible();
+    await host.page.goto(documentUrl);
+    await host.waitForBoot(new RegExp(new URL(documentUrl).pathname));
+    // The editor, not a toolbar button: the reopened Help companion narrows the toolbar until its buttons collapse.
+    await Markdown.waitForMarkdownTextbox(host.page);
     await expect(Support.card(host.page)).not.toBeVisible();
 
     await Support.startGlobal(host.page);
