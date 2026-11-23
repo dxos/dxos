@@ -21,6 +21,8 @@ export class Port extends EventTarget implements MessagePort {
   #sending = false;
   #scheduled = false;
   #closed = false;
+  #started = false;
+  #inbox: unknown[] = [];
 
   constructor(private readonly _send: Send) {
     super();
@@ -41,7 +43,20 @@ export class Port extends EventTarget implements MessagePort {
     }
   }
 
-  start(): void {}
+  /**
+   * Delivers what arrived before, as a `MessagePort` does. The other end can answer before this end's listener is
+   * attached: the isolate hands over `deliver` before its RPC client starts, and on Cloudflare the host's greeting
+   * sometimes wins that race. Dispatched then, it is lost, and both ends wait forever.
+   */
+  start(): void {
+    if (this.#started) {
+      return;
+    }
+    this.#started = true;
+    const inbox = this.#inbox;
+    this.#inbox = [];
+    this.#dispatch(inbox);
+  }
 
   close(): void {
     this.#closed = true;
@@ -49,6 +64,14 @@ export class Port extends EventTarget implements MessagePort {
   }
 
   receive(batch: readonly unknown[]): void {
+    if (this.#started) {
+      this.#dispatch(batch);
+    } else {
+      this.#inbox.push(...batch);
+    }
+  }
+
+  #dispatch(batch: readonly unknown[]): void {
     for (const data of batch) {
       this.dispatchEvent(new MessageEvent('message', { data }));
     }
