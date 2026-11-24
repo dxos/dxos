@@ -17,4 +17,4 @@ export type FormDispatch = {
   FormFields: FC<FormFieldsProps<any>>;
 };
 
-export const [FormDispatchProvider, useFormDispatch] = createContext<FormDispatch>('Form.Fields');
+export const [FormDispatchProvider, useFormDispatch] = createContext<FormDispatch>('Form.Root');

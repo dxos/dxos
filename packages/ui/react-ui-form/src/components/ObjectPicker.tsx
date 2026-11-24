@@ -104,7 +104,7 @@ type CreateFormProps = Pick<PickerCreateProps, 'createInitialValuePath' | 'creat
 
 /**
  * The create form a picker's popup swaps its list for, seeded with the query at `createInitialValuePath`. Throws in a
- * picker rendered outside a form, which has no dispatcher to render the fields with.
+ * picker rendered outside `Form.Root`, which has no dispatcher to render the fields with.
  */
 const CreateForm = ({ schema, query, createInitialValuePath, createFieldMap, onSave, onCancel }: CreateFormProps) => {
   const { FormFields } = useFormDispatch('ObjectPicker');
