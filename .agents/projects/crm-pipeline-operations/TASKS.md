@@ -27,7 +27,7 @@ test coverage sits. Deliverable: AUDIT + spec in
 
 Decisions (user, 2026-08-02): remove `plugin-crm/src/skills/crm/instructions.ts`
 outright; scaffold + deterministic tests only (LLM research stubbed behind
-schemas); docs in `agents/superpowers/specs/`; finish with commits + PR.
+schemas); docs in `.agents/superpowers/specs/`; finish with commits + PR.
 
 ### Tasks
 

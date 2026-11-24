@@ -20,6 +20,7 @@ export type { VendorSpecifier } from './vendor.ts';
 export type { BuildMeta };
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
+const REFRESH_SHIM = 'virtual:composer-plugin/refresh-shim';
 
 /** Reads `version` from the project's `package.json`; falls back to `0.0.0`. */
 const readPackageVersion = (dir: string): string => {
@@ -381,32 +382,34 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     // dynamic-imported into the Composer host at a different origin, the host's window
     // never receives that preamble, so every JSX module throws on first import.
     //
-    // Inject a no-op refresh shim on the host's window from the plugin's entrypoint: fast-
+    // Install a no-op refresh shim on the host's window from the plugin's entrypoint: fast-
     // refresh itself doesn't work cross-origin anyway, so silencing the check lets the
     // plugin load and ordinary page reloads take care of picking up edits. Production
     // builds are untouched (`apply: 'serve'`).
+    // The entry imports the shim first because a module's imports run before its body.
     {
       name: 'composer-plugin:react-refresh-shim',
       enforce: 'pre',
       apply: 'serve',
+      resolveId: (id) => (id === REFRESH_SHIM ? `\0${REFRESH_SHIM}` : undefined),
+      load: (id) =>
+        id === `\0${REFRESH_SHIM}`
+          ? [
+              'if (typeof window !== "undefined") {',
+              '  window.$RefreshReg$ = window.$RefreshReg$ || (() => {});',
+              '  window.$RefreshSig$ = window.$RefreshSig$ || (() => (type) => type);',
+              '  window.__vite_plugin_react_preamble_installed__ = true;',
+              '}',
+            ].join('\n')
+          : undefined,
       transform(code, id) {
         // Only patch the plugin entrypoint (an absolute path ending in the configured entry).
-        // Matching by suffix keeps us from prepending the shim to every transformed module,
+        // Matching by suffix keeps us from prepending the import to every transformed module,
         // which would both bloat the output and defeat vite's caching.
         if (!id.endsWith(entry.replace(/^\.?\//, '/'))) {
           return;
         }
-        const shim = [
-          '// composer-plugin: no-op React Refresh shim so cross-origin plugin modules',
-          "// don't throw the @vitejs/plugin-react preamble check at dynamic-import time.",
-          'if (typeof window !== "undefined") {',
-          '  window.$RefreshReg$ = window.$RefreshReg$ || (() => {});',
-          '  window.$RefreshSig$ = window.$RefreshSig$ || (() => (type) => type);',
-          '  window.__vite_plugin_react_preamble_installed__ = true;',
-          '}',
-          '',
-        ].join('\n');
-        return { code: shim + code, map: null };
+        return { code: `import ${JSON.stringify(REFRESH_SHIM)};\n${code}`, map: null };
       },
     },
   ];

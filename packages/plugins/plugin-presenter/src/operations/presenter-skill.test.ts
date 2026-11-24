@@ -127,7 +127,7 @@ describe('PresenterSkill operations', () => {
         const { layouts, frontmatter } = yield* Operation.invoke(PresenterOperation.ListLayouts, {});
         expect(layouts).toContainEqual({ name: 'three-cols', slots: ['::middle::', '::right::'] });
         expect(layouts).toContainEqual({ name: 'cover', slots: [] });
-        expect(frontmatter).toEqual(expect.arrayContaining(['layout', 'bleed', 'backgroundVideo']));
+        expect(frontmatter).toEqual(expect.arrayContaining(['layout', 'bleed', 'backgroundVideo', 'footer']));
       },
       WithProperties,
       Effect.provide(OperationTestLayer),

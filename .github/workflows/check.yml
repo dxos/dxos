@@ -523,8 +523,8 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.5.2'
-          proto-version: '0.60.2'
+          moon-version: '2.6.5'
+          proto-version: '0.64.1'
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected

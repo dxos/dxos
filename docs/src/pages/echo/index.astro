@@ -8,6 +8,7 @@ import { StoryDemo } from '../../demos/StoryDemo.tsx';
 import WebflowFooter from '../../components/WebflowFooter.astro';
 import WebflowNav from '../../components/WebflowNav.astro';
 import { INSTALL, guarantees, reasons, routes, steps } from '../../echo/home.ts';
+import { ECHO_DEMOS } from '../../demos/catalog.ts';
 import { NARRATIVES } from '../../demos/narratives.ts';
 import { snippetSource } from '../../echo/snippets.ts';
 import WebflowLayout from '../../layouts/WebflowLayout.astro';
@@ -35,8 +36,6 @@ const CENTER = { x: ICON.x + ICON.width / 2, y: ICON.y + ICON.height / 2 };
 const rays = pathsOf('lines');
 const FADE = 1.05 * ICON.height;
 
-/** The live demos shown, in order, by id in `STORIES`. */
-const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 ---
 <WebflowLayout
   title="ECHO by DXOS"
@@ -201,7 +200,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
       </div>
       <div class="echo-tabs echo-card-tabs" data-tabs>
         <div class="echo-tablist" role="tablist" aria-label="Live demos">
-          {DEMO_ORDER.map((id, index) => (
+          {ECHO_DEMOS.map((id, index) => (
             <button
               type="button"
               role="tab"
@@ -217,12 +216,12 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
           ))}
         </div>
         <div class="echo-captions">
-          {DEMO_ORDER.map((id, index) => (
+          {ECHO_DEMOS.map((id, index) => (
             <p data-panel={id} data-active={index === 0 ? '' : undefined} set:html={NARRATIVES[id].data} />
           ))}
         </div>
         <div class="echo-panels">
-          {DEMO_ORDER.map((id, index) => (
+          {ECHO_DEMOS.map((id, index) => (
             <div
               role="tabpanel"
               id={`demo-panel-${id}`}
@@ -231,7 +230,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
               data-panel={id}
               data-active={index === 0 ? '' : undefined}
             >
-              <StoryDemo id={id} client:only="react">
+              <StoryDemo id={id} lazy client:only="react">
                 <div slot="fallback" class="echo-demo-loading" role="status">
                   <span class="echo-demo-spinner" aria-hidden="true" />
                   Loading live demo…

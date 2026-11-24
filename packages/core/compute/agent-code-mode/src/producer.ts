@@ -172,7 +172,9 @@ const runCodeModeTurn = ({
               const enabled = skills.filter(
                 (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
               );
-              const operations = yield* projectOperations([lookups, ...skills], mcps);
+              const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(
+                ({ definition }) => !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition),
+              );
               labelCall = labelEvalCall(operations);
               const evalOptions = {
                 dialect,

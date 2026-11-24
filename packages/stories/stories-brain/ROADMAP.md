@@ -1,7 +1,7 @@
 # Mailbox Research — Roadmap
 
 _Date: 2026-07-13 · draft for morning refinement. Companion to `fixtures/REPORT.md` (findings) and
-`agents/superpowers/specs/2026-07-13-crm-workflow-design.md` (product vision)._
+`.agents/superpowers/specs/2026-07-13-crm-workflow-design.md` (product vision)._
 
 This roadmap sets research direction for the Topic-anchored AI CRM. It has three parts: **(A)** a
 technique survey with background research, **(B)** the open **FactStore / RDF** question and concrete

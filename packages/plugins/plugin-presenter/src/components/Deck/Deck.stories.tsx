@@ -169,6 +169,60 @@ const ThemedStory = ({ theme }: Pick<DeckPanelProps, 'theme'>) => {
   return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} theme={theme} />;
 };
 
+/** A deck's footer: a line of text at the start edge, and the slide's number over the deck's count at the end. */
+const FOOTER = { left: 'DXOS', right: '<SlideCurrentNo /> / <SlidesTotal />' };
+
+/** A cover, a plain slide, a slide that switches the footer off, a slide the deck hides, and a last one. */
+const FOOTER_SLIDES = [
+  ['---', 'layout: cover', '---', '', '# Composer'].join('\n'),
+  ['# Agenda', '', '- Memory', '- Access', '- Coordination'].join('\n'),
+  ['---', 'footer: false', '---', '', '# A slide with no footer'].join('\n'),
+  '# Left out when presented',
+  '# Thank you',
+];
+
+/** The positions the deck presents: every slide but the fourth. */
+const FOOTER_PRESENTED = [0, 1, 2, 4];
+
+/** A deck with a footer, as the viewport draws it (one slide) or as the grid does (every slide, the hidden one too). */
+const FooterStory = ({ grid = false }: { grid?: boolean }) => {
+  const slides = useMemo(
+    (): SlideSource[] => FOOTER_SLIDES.map((content, index) => ({ kind: 'markdown', id: `footer-${index}`, content })),
+    [],
+  );
+  const [index, setIndex] = useState(1);
+  const props = { slides, index, onIndexChange: setIndex, footer: FOOTER, presented: FOOTER_PRESENTED };
+  if (!grid) {
+    return <DeckPanel {...props} />;
+  }
+  return (
+    <Deck.Root {...props}>
+      <Panel.Root asChild>
+        <Deck.Content>
+          <Panel.Body asChild>
+            <Deck.Grid size='large' />
+          </Panel.Body>
+        </Deck.Content>
+      </Panel.Root>
+    </Deck.Root>
+  );
+};
+
+/** Linked objects as slides, which no markdown draws: the deck's footer is on them all the same. */
+const FooterObjectStory = () => {
+  const slides = useMemo(
+    (): SlideSource[] =>
+      [0, 1].map((index) => ({
+        kind: 'object' as const,
+        id: `object-${index}`,
+        object: Markdown.make({ name: `Doc ${index}`, content: '# Linked' }),
+      })),
+    [],
+  );
+  const [index, setIndex] = useState(0);
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} footer={FOOTER} />;
+};
+
 /** Index is far past the end, as when slides were deleted since the view state was saved. */
 const StaleIndexStory = () => {
   const slides = useMemo(() => createTextSlides(3), []);
@@ -717,5 +771,141 @@ export const ThemeOverride: Story = {
     await waitFor(() =>
       expect(canvasElement.querySelector<HTMLElement>('[data-slide]')?.style.colorScheme).toBe('dark'),
     );
+  },
+};
+
+/** The element a selector finds under `container`; the story fails by name where there is none. */
+const find = (container: Element, selector: string): HTMLElement => {
+  const element = container.querySelector<HTMLElement>(selector);
+  if (!element) {
+    throw new Error(`No element for ${selector}`);
+  }
+  return element;
+};
+
+/** The text of a footer's part, or undefined where no footer is drawn. */
+const footerPart = (container: Element, part: 'left' | 'center' | 'right') =>
+  container.querySelector(`[data-slide-footer] [data-part="${part}"]`)?.textContent;
+
+/**
+ * A deck's footer is drawn on the slide's own canvas, over its bottom padding: the text the deck sets and the slide's
+ * number, on every slide but a cover and one that says `footer: false`.
+ */
+export const Footer: Story = {
+  render: () => <FooterStory />,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck', undefined, { timeout: 10_000 });
+    const footer = await waitFor(() => find(deck, '[data-slide-footer]'));
+
+    // 1. The second of the four slides the deck presents: its text at the start edge, its number at the end.
+    await expect(footerPart(deck, 'left')).toBe('DXOS');
+    await expect(footerPart(deck, 'right')).toBe('2 / 4');
+
+    // 2. An overlay inside the slide's bottom padding: the slide's layout still covers the whole slide, and the
+    // footer stands on its bottom edge, no taller than the padding (64 of the canvas's 1440).
+    const slide = find(deck, '[data-slide]');
+    const layout = find(slide, '[data-layout]');
+    const box = slide.getBoundingClientRect();
+    const scale = box.height / 1440;
+    await expect(layout.getBoundingClientRect().height).toBeCloseTo(box.height, 0);
+    await expect(footer.getBoundingClientRect().bottom).toBeCloseTo(box.bottom, 0);
+    await expect(footer.getBoundingClientRect().height).toBeCloseTo(64 * scale, 0);
+    await expect(getComputedStyle(layout).paddingBottom).toBe('64px');
+    // The slide's content ends above it.
+    const lastLine = find(slide, 'li:last-of-type');
+    await expect(lastLine.getBoundingClientRect().bottom).toBeLessThan(footer.getBoundingClientRect().top);
+
+    // 3. Quiet type in the slide's own color and font, with digits of one width.
+    await expect(getComputedStyle(footer).fontSize).toBe('28px');
+    await expect(getComputedStyle(footer).color).toBe(getComputedStyle(slide).color);
+    await expect(getComputedStyle(footer).fontFamily).toBe(getComputedStyle(slide).fontFamily);
+    await expect(Number(getComputedStyle(footer).opacity)).toBeLessThan(1);
+    const number = find(footer, '[data-slide-counter="current"]');
+    await expect(getComputedStyle(number).fontVariantNumeric).toBe('tabular-nums');
+
+    // 4. The next slide says `footer: false`, and the cover shows none of its own accord.
+    deck.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await canvas.findByText('A slide with no footer');
+    await expect(deck.querySelector('[data-slide-footer]')).toBeNull();
+    await userEvent.keyboard('{Home}');
+    await canvas.findByText('Composer');
+    await expect(deck.querySelector('[data-slide-footer]')).toBeNull();
+
+    // 5. The last slide is the fourth the deck presents, though it is the fifth in the grid.
+    await userEvent.keyboard('{End}');
+    await canvas.findByText('Thank you');
+    await waitFor(() => expect(footerPart(deck, 'right')).toBe('4 / 4'));
+  },
+};
+
+/**
+ * Every thumbnail carries its slide's footer, numbered as the presentation will be: the slide the deck leaves out
+ * has no number, and the slides after it close the gap.
+ */
+export const FooterGrid: Story = {
+  render: () => <FooterStory grid />,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const tiles = await Promise.all(
+      FOOTER_SLIDES.map((_, index) =>
+        canvas.findByTestId(`presenter.slide-gallery.${index}`, undefined, { timeout: 10_000 }),
+      ),
+    );
+    await waitFor(() => expect(footerPart(tiles[4], 'right')).toBe('4 / 4'));
+    await expect(tiles.map((tile) => footerPart(tile, 'right'))).toEqual([
+      undefined,
+      '2 / 4',
+      undefined,
+      '\u2013 / 4',
+      '4 / 4',
+    ]);
+    await expect(footerPart(tiles[1], 'left')).toBe('DXOS');
+    // The footer is part of the picture: it scales with its thumbnail, on the slide's bottom edge.
+    const slide = find(tiles[1], '[data-slide]').getBoundingClientRect();
+    const footer = find(tiles[1], '[data-slide-footer]').getBoundingClientRect();
+    await expect(footer.bottom).toBeCloseTo(slide.bottom, 0);
+    await expect(footer.height).toBeCloseTo((64 * slide.height) / 1440, 0);
+  },
+};
+
+/** A linked object's slide is drawn by its own surface, and the deck still puts its footer on it. */
+export const FooterObject: Story = {
+  render: FooterObjectStory,
+  decorators: [withPluginManager({ plugins: [createInputPlugin()()] })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck', undefined, { timeout: 10_000 });
+    await canvas.findByTestId('slide-input');
+    await waitFor(() => expect(footerPart(deck, 'right')).toBe('1 / 2'));
+    await expect(footerPart(deck, 'left')).toBe('DXOS');
+    await expect(deck.querySelector('[data-slide]')).toBeNull();
+  },
+};
+
+/** A printed deck is one page per slide, each with its footer and its own number. */
+export const FooterPrint: Story = {
+  render: () => <FooterStory />,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck', undefined, { timeout: 10_000 });
+    deck.focus();
+    window.dispatchEvent(new Event('beforeprint'));
+    await waitFor(() => expect(document.querySelectorAll('[data-print-deck] [data-print-slide]')).toHaveLength(5));
+    const pages = [...document.querySelectorAll('[data-print-deck] [data-print-slide]')];
+    await waitFor(() => expect(footerPart(pages[4], 'right')).toBe('4 / 4'));
+    await expect(pages.map((page) => footerPart(page, 'right'))).toEqual([
+      undefined,
+      '2 / 4',
+      undefined,
+      '\u2013 / 4',
+      '4 / 4',
+    ]);
+    window.dispatchEvent(new Event('afterprint'));
+    await waitFor(() => expect(document.querySelector('[data-print-deck]')).toBeNull());
   },
 };

@@ -1450,6 +1450,23 @@ export const getConsentPreview = (
 };
 
 /**
+ * Marks an operation the database API does entirely, so code that holds the database (the Effect dialect, MCP scripts)
+ * is not offered it; the plain dialect and tool callers still are.
+ */
+export const HiddenInCodeModeAnnotation = Annotation.make({
+  id: 'org.dxos.operation.hidden-in-code-mode',
+  schema: Schema$.Literal(true),
+});
+
+/** Hides an operation from code mode: `Operation.make({ ... }).pipe(Operation.hiddenInCodeMode)`. */
+export const hiddenInCodeMode = annotate(HiddenInCodeModeAnnotation, true);
+
+/** Whether the operation carries {@link HiddenInCodeModeAnnotation}. */
+export const isHiddenInCodeMode = (op: Definition.Any): boolean =>
+  op.meta.annotations !== undefined &&
+  Option.isSome(Annotation.getDictionary(op.meta.annotations, HiddenInCodeModeAnnotation));
+
+/**
  * Operation service interface - provides unified access to operation invocation and scheduling.
  * This service is automatically provided to operation handlers.
  */

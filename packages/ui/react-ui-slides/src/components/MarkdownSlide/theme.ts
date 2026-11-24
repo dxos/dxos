@@ -106,6 +106,8 @@ export const theme = {
 
     p: 'text-[48px]',
     a: 'text-(color:--slide-accent) underline',
+    // Color alone marks bold text, so the weight a browser gives <strong> is reset.
+    strong: `font-normal ${subheadingColor}`,
     blockquote: 'my-[16px] ps-12 border-l-[8px] border-(--slide-accent) text-[56px] italic',
     img: 'max-w-full max-h-full object-contain',
 
@@ -166,6 +168,8 @@ export const theme = {
           '[&_em]:before:content-["·"] [&_em]:before:mx-2 ' +
           '[&_strong]:block [&_strong]:mt-5 [&_strong]:mb-3 [&_strong]:text-[44px] [&_strong]:leading-tight ' +
           '[&_strong]:font-(family-name:--slide-font-heading) ' +
+          // The title keeps the card's color and a bold weight; a descendant rule outranks the class on <strong>.
+          '[&_strong]:text-[color:inherit] [&_strong]:font-bold ' +
           '[&[data-active]]:border-4 [&[data-active]]:border-(--slide-accent) ' +
           '[&[data-active]]:before:text-(color:--slide-accent) [&[data-active]]:before:opacity-100 ' +
           '[&[data-active]_em]:text-(color:--slide-accent) [&[data-active]_em]:opacity-100 ' +
@@ -323,6 +327,20 @@ export const theme = {
       },
     },
   } as Record<string, Record<string, Record<string, string> | undefined> | undefined>,
+
+  /**
+   * The deck's footer: one quiet line that overlays the slide's bottom padding (`py-16`) on the content's own side
+   * margins, so no layout that keeps the padding gives up room to it. It takes no clicks but a link's own.
+   */
+  footer: {
+    root:
+      'absolute inset-x-40 bottom-0 h-16 grid grid-cols-3 items-center gap-8 pointer-events-none ' +
+      'text-[28px] leading-normal opacity-60 [&_a]:pointer-events-auto ' +
+      '[&_img]:inline-block [&_img]:h-8 [&_img]:w-auto [&_img]:max-w-none [&_img]:align-middle',
+    left: 'min-w-0 truncate text-start',
+    center: 'min-w-0 truncate text-center',
+    right: 'min-w-0 truncate text-end',
+  },
 
   /** Static `{2,4-5}` line highlights; other lines are dimmed as in Slidev. */
   line: {

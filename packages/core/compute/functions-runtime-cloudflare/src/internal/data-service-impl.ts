@@ -31,7 +31,7 @@ type Subscription = {
 export class DataServiceImpl implements DataService.Handlers {
   private 'dataSubscriptions' = new Map<string, Subscription>();
 
-  'constructor'(
+  constructor(
     private _executionContext: EdgeFunctionEnv.TraceContext,
     private _dataService: EdgeFunctionEnv.DataService,
   ) {}
@@ -86,7 +86,7 @@ export class DataServiceImpl implements DataService.Handlers {
    * absent (`Entity not found`) when it loads the output's refs. The host calls this when a nested call returns, so
    * the caller continues on the space as the callee left it.
    */
-  async 'refreshWorkingSet'(): Promise<void> {
+  async refreshWorkingSet(): Promise<void> {
     await Promise.all(
       [...this.dataSubscriptions.values()].map(async (subscription) => {
         const documentIds = [...subscription.workingSet];
@@ -190,7 +190,7 @@ export class DataServiceImpl implements DataService.Handlers {
    * runtime reclaims when it is released.
    * See <https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/>.
    */
-  private async '_loadDocuments'(spaceId: SpaceId, documentIds: string[]): Promise<Map<string, Uint8Array>> {
+  private async _loadDocuments(spaceId: SpaceId, documentIds: string[]): Promise<Map<string, Uint8Array>> {
     using documents = await this._dataService.getDocuments(this._executionContext, spaceId, documentIds);
     return new Map(documents.map((document) => [document.documentId, copyUint8Array(document.data)]));
   }

@@ -11,7 +11,7 @@ invitations are messages too: they render plugin-client's Join/Open surface and 
 device that stored them. A message is an alert that points elsewhere — a short text and a link to
 the object where the work lives — not a chat channel.
 
-Design: `agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`.
+Design: `.agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`.
 
 ## Extensions
 
@@ -249,4 +249,12 @@ decision D-5: A notification opens its object at the first path `NavigationOpera
   for: user:wittjosiah
   affects: [F-2.2]
   why: An object without a node of its own, a spec, opened at a database path no node has, so the deck showed a plank that never finished loading and no companion.
+```
+
+```mdl
+decision D-6: The design link points at `.agents/superpowers/`, where the design now lives.
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The repo keeps one agent directory, `.agents/`, because `npx skills` and `.claude/skills` need the dot; the design moved with it.
 ```

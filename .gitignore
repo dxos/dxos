@@ -23,6 +23,8 @@
 # transcript of what the user typed, the decision log is what the agent chose.
 .claude/.autonomous-user.md
 .claude/.autonomous-log.md
+# The status board's built page and publish marker (status-board skill).
+.claude/.status-board/
 
 # Logs
 logs/

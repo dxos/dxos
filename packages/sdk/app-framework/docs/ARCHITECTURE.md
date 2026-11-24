@@ -120,7 +120,9 @@ own `meta`.
 At build time `pluginConfigPlugin` evaluates the config in Node, never loading a body, and replaces it with a
 `Plugin.Manifest`: the plugin data, and per module its activation spec, tags and body URL. Each body becomes its
 own chunk and `Plugin.fromManifest` turns the manifest back into a plugin factory whose bodies load on
-activation. A library build emits one entry per runtime (`?dx-env=node|workerd`) restricted to the modules whose
+activation. A body imported by URL bypasses the bundler's own CSS loading, so an app build also lists per body
+the stylesheets its chunk adds to the page (`css`), and `fromManifest` links them before it imports the body.
+A library build emits one entry per runtime (`?dx-env=node|workerd`) restricted to the modules whose
 `environments` name it. In tests and storybook the config is served as authored (`moduleBodyAttributePlugin`
 drops the attribute), and `Plugin.fromModules` builds the plugin directly. Authoring rules are in
 [API.md](./API.md#composing-a-plugin).

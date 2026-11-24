@@ -12,6 +12,25 @@ import type { JsonSchema } from '@dxos/echo';
 /** Document id to Automerge heads. */
 const DocumentHeads = Schema.Record(Schema.String, Schema.mutable(Schema.Array(Schema.String)));
 
+/** A database's `WorkingSetReport`, checked because a worker in an isolate is untrusted code. */
+const WorkingSetReport = Schema.Struct({
+  rows: Schema.mutable(
+    Schema.Array(
+      Schema.Struct({
+        documentId: Schema.String,
+        heads: Schema.mutable(Schema.Array(Schema.String)),
+        bytes: Schema.Uint8Array,
+        objectId: Schema.optionalKey(Schema.String),
+        objectJson: Schema.optionalKey(Schema.String),
+        createdAt: Schema.optionalKey(Schema.Number),
+        updatedAt: Schema.optionalKey(Schema.Number),
+        directoryJson: Schema.optionalKey(Schema.String),
+      }),
+    ),
+  ),
+  base: DocumentHeads,
+});
+
 /**
  * What the worker needs from the host beyond ECHO itself.
  *
@@ -52,7 +71,23 @@ export const SandboxHostRpcs = RpcGroup.make(
     }),
     success: Schema.Void,
   }),
+  // The host's working set for the space, so the worker reads writes the index does not hold yet.
+  Rpc.make('Sandbox.workingSetGet', {
+    success: Schema.Any,
+  }),
+  Rpc.make('Sandbox.workingSetPut', {
+    payload: Schema.Struct({ report: WorkingSetReport }),
+    success: Schema.Void,
+  }),
+  // A type the worker's registry does not hold (on EDGE, a published type); null when the host has none.
+  Rpc.make('Sandbox.resolveType', {
+    payload: Schema.Struct({ uri: Schema.String }),
+    success: Schema.NullOr(Schema.Any),
+  }),
 );
+
+/** A registered type as schema rather than as the class a worker cannot receive. */
+export type SandboxType = SandboxInit['types'][number];
 
 /**
  * The whole contract the worker speaks: the client services it would speak anywhere, plus the few
@@ -67,6 +102,15 @@ export type SandboxInit = {
   readonly code: string;
   /** Selects the dialect the worker rebuilds its bindings from. */
   readonly dialect: string;
+  /** The names the dialect binds, for workerd, which has no `eval` and compiles the code before the bindings exist. */
+  readonly names: readonly string[];
+  /**
+   * How each side's writes reach the other: the writer reports heads and the reader waits for them, or (for services
+   * that can do neither, as EDGE's) the writer flushes and the host refreshes.
+   */
+  readonly handover: 'heads' | 'flush';
+  /** Whether the host keeps a working set for the space, which the worker's database then opens over. */
+  readonly workingSet: boolean;
   /** Which database to open, named the way the host's own client names it. */
   readonly space: { readonly spaceId: string; readonly spaceKey: string; readonly rootUrl: string };
   /** Every registered type, as schema rather than as the class the worker cannot receive. */

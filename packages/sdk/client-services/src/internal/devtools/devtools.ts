@@ -62,12 +62,12 @@ export type DevtoolsServiceProps = {
  * @deprecated
  */
 export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
-  'constructor'(private readonly params: DevtoolsServiceProps) {}
+  constructor(private readonly params: DevtoolsServiceProps) {}
 
   /**
    * Debugging util.
    */
-  async 'exportSqliteDatabase'(): Promise<Uint8Array> {
+  async exportSqliteDatabase(): Promise<Uint8Array> {
     return RuntimeProvider.runPromise(this.params.sql)(
       Effect.gen(function* () {
         const sql = yield* SqlExport.SqlExport;
@@ -79,7 +79,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
   /**
    * Debugging util.
    */
-  async 'runSqliteQuery'(query: string, params?: unknown[]): Promise<readonly Record<string, unknown>[]> {
+  async runSqliteQuery(query: string, params?: unknown[]): Promise<readonly Record<string, unknown>[]> {
     return RuntimeProvider.runPromise(this.params.sql)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;

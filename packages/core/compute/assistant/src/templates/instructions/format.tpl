@@ -62,7 +62,3 @@ Do not use bullets when listing suggestions.
 
 You may ask multiple choice questions by wrapping consise options inside <option> tags inside a well formed <select> tag.
 Example: <select><option>Yes</option><option>No</option></select>
-
-## Context
-
-The current date and time is {{DATETIME}}.

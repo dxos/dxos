@@ -6,6 +6,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 
+import { SlideFooterProvider, SlidePositionProvider } from '../SlideDeck/index.ts';
 import { SlideThemeProvider } from '../SlideTheme/index.ts';
 import { MarkdownSlide, parseLineHighlights, parseLineNumbers } from './MarkdownSlide.tsx';
 import { backgroundStyle } from './SlideBackground.tsx';
@@ -44,6 +45,20 @@ describe('MarkdownSlide', () => {
       /data-tone="warning"[^>]*style="[^"]*--slide-accent: ?var\(--color-warning-text\)[^"]*"[^>]*>\s*<h2 [^>]*class="[^"]*var\(--slide-subheading,var\(--slide-accent\)\)/,
     );
     expect(markup).not.toContain('--slide-subheading:');
+  });
+
+  test('bold text takes the subheading color at the body’s weight', ({ expect }) => {
+    const markup = render('- **ECHO** holds the data');
+    const classes = markup.match(/<li [^>]*>\s*<strong [^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('text-[color:var(--slide-subheading,var(--slide-accent))]');
+    expect(classes.split(' ')).toContain('font-normal');
+  });
+
+  test('bold text in a flow card is its title, in the card’s color and a bold weight', ({ expect }) => {
+    const markup = render('<List variant="flow">\n\n1. **Chat** A model\n\n</List>');
+    const classes = markup.match(/<ol [^>]*data-variant="flow"[^>]*>\s*<li [^>]*class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('[&amp;_strong]:text-[color:inherit]');
+    expect(classes).toContain('[&amp;_strong]:font-bold');
   });
 
   test('root carries the default theme variables', ({ expect }) => {
@@ -296,6 +311,96 @@ describe('MarkdownSlide', () => {
     expect(classes).not.toContain('--slide-font-heading');
     // A heading outside the box still takes the deck's.
     expect(render('# composer')).toMatch(/<h1 [^>]*class="[^"]*font-\(family-name:--slide-font-heading\)/);
+  });
+
+  test('the counters draw the slide\u2019s place in its deck, and a dash where it has none', ({ expect }) => {
+    const content = 'Slide <SlideCurrentNo /> of <SlidesTotal />';
+    const counters = (markup: string) =>
+      [...markup.matchAll(/<span data-slide-counter="(current|total)"[^>]*>([^<]*)<\/span>/g)].map(
+        ([, counter, value]) => [counter, value],
+      );
+    const placed = renderToStaticMarkup(
+      <SlidePositionProvider current={3} total={12}>
+        <MarkdownSlide content={content} />
+      </SlidePositionProvider>,
+    );
+    expect(counters(placed)).toEqual([
+      ['current', '3'],
+      ['total', '12'],
+    ]);
+    expect(placed).toMatch(/<span data-slide-counter="current" class="tabular-nums">/);
+    // A slide outside a deck (the editor's preview, a lone slide) still shows where each number goes.
+    expect(counters(render(content))).toEqual([
+      ['current', '\u2013'],
+      ['total', '\u2013'],
+    ]);
+    // A slide the deck leaves out when presented has no number, only the total.
+    const hidden = renderToStaticMarkup(
+      <SlidePositionProvider total={12}>
+        <MarkdownSlide content={content} />
+      </SlidePositionProvider>,
+    );
+    expect(counters(hidden)).toEqual([
+      ['current', '\u2013'],
+      ['total', '12'],
+    ]);
+  });
+
+  test('a deck\u2019s footer is drawn on a slide as three parts of inline markdown', ({ expect }) => {
+    const footer = {
+      left: 'DXOS',
+      center: '[dxos.org](https://dxos.org)',
+      right: '<SlideCurrentNo /> / <SlidesTotal />',
+    };
+    const inDeck = (content: string) =>
+      renderToStaticMarkup(
+        <SlideFooterProvider settings={footer}>
+          <SlidePositionProvider current={2} total={9}>
+            <MarkdownSlide content={content} />
+          </SlidePositionProvider>
+        </SlideFooterProvider>,
+      );
+    const markup = inDeck('# Title');
+    const part = (name: string) => markup.match(new RegExp(`<div data-part="${name}"[^>]*>(.*?)</div>`))?.[1];
+    // A part is a phrase: no paragraph of its own, so it takes the footer's type rather than the slide's body size.
+    expect(part('left')).toBe('DXOS');
+    expect(part('center')).toMatch(/^<a [^>]*href="https:\/\/dxos.org"[^>]*>dxos.org<\/a>$/);
+    expect(part('right')).toMatch(
+      /data-slide-counter="current"[^>]*>2<\/span> \/ <span data-slide-counter="total"[^>]*>9</,
+    );
+    // One quiet line over the slide's bottom padding, which takes no clicks but a link's own.
+    const classes = markup.match(/<footer data-slide-footer="true" class="([^"]*)"/)?.[1] ?? '';
+    expect(classes).toContain('absolute');
+    expect(classes).toContain('bottom-0');
+    expect(classes).toContain('h-16');
+    expect(classes).toContain('pointer-events-none');
+    // No deck footer, no layer; and a footer with nothing in it draws nothing either.
+    expect(render('# Title')).not.toContain('data-slide-footer');
+    expect(
+      renderToStaticMarkup(
+        <SlideFooterProvider settings={{ left: ' ' }}>
+          <MarkdownSlide content='# Title' />
+        </SlideFooterProvider>,
+      ),
+    ).not.toContain('data-slide-footer');
+  });
+
+  test('a slide switches the footer off, a cover and an end slide show none, and either can ask for it', ({
+    expect,
+  }) => {
+    const shown = (content: string) =>
+      renderToStaticMarkup(
+        <SlideFooterProvider settings={{ left: 'DXOS' }}>
+          <MarkdownSlide content={content} />
+        </SlideFooterProvider>,
+      ).includes('data-slide-footer');
+    expect(shown('# Title')).toBe(true);
+    expect(shown('---\nlayout: two-cols\n---\n\n# Title')).toBe(true);
+    expect(shown('---\nfooter: false\n---\n\n# Title')).toBe(false);
+    expect(shown('---\nlayout: cover\n---\n\n# Title')).toBe(false);
+    expect(shown('---\nlayout: end\n---\n\n# Title')).toBe(false);
+    expect(shown('---\nlayout: cover\nfooter: true\n---\n\n# Title')).toBe(true);
+    expect(shown('---\nlayout: end\nfooter: true\n---\n\n# Title')).toBe(true);
   });
 
   test('a card with no title still shows its icon', ({ expect }) => {

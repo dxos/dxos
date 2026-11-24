@@ -19,10 +19,10 @@
   "sortPackageJson": false,
   "ignorePatterns": [
     "*.tpl",
+    "**/*.md",
     "**/*.mdx",
     ".agents/reviews/**",
     ".store/**",
-    "**/README.md",
     "packages/core/compute/agent-code-mode/src/docs/**",
     "**/__swc_snapshots__/**",
     "**/gen/**",

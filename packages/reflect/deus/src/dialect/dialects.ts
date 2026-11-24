@@ -10,6 +10,7 @@ import FEATURES from '../../lang/features.mdl?raw';
 import PLUGIN from '../../lang/plugin.mdl?raw';
 import QA from '../../lang/qa.mdl?raw';
 import REVIEW from '../../lang/review.mdl?raw';
+import SESSION from '../../lang/session.mdl?raw';
 import SOFTWARE from '../../lang/software.mdl?raw';
 import SQL from '../../lang/sql.mdl?raw';
 import VIDEO from '../../lang/video.mdl?raw';
@@ -19,7 +20,7 @@ import * as Resolve from './resolve.ts';
 
 /** The dialects in `lang/`, by frontmatter id. */
 export const DIALECTS: ReadonlyMap<string, string> = new Map(
-  [APP, CHANGELOG, CODE, CORE, FEATURES, PLUGIN, QA, REVIEW, SOFTWARE, SQL, VIDEO, WORKER].map((text) => [
+  [APP, CHANGELOG, CODE, CORE, FEATURES, PLUGIN, QA, REVIEW, SESSION, SOFTWARE, SQL, VIDEO, WORKER].map((text) => [
     frontmatter(text).id,
     text,
   ]),

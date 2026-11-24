@@ -138,7 +138,13 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article, AppSurface.ObjectProperties, AppSurface.Section, AppSurface.Slide],
+      roles: [
+        AppSurface.Article,
+        AppSurface.CardContent,
+        AppSurface.ObjectProperties,
+        AppSurface.Section,
+        AppSurface.Slide,
+      ],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(

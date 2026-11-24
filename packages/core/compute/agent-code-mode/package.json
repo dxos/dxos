@@ -32,6 +32,11 @@
       "source": "./src/WorkerSandboxBrowserEntry.ts",
       "types": "./dist/types/src/WorkerSandboxBrowserEntry.d.ts",
       "import": "./dist/lib/WorkerSandboxBrowserEntry.mjs"
+    },
+    "./workerd-worker-entry": {
+      "source": "./src/WorkerSandboxWorkerdEntry.ts",
+      "types": "./dist/types/src/WorkerSandboxWorkerdEntry.d.ts",
+      "import": "./dist/lib/WorkerSandboxWorkerdEntry.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
