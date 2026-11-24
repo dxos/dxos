@@ -175,6 +175,20 @@ const ChatPlaneRoot = ({
   const [footer, setFooter] = useState<HTMLDivElement | null>(null);
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
+  // The columns end where the footer begins, however tall its prompt, suggestions and activity line make it.
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!footer || !root) {
+      return;
+    }
+    const observer = new ResizeObserver(() =>
+      root.style.setProperty('--chat-plane-footer-height', `${footer.offsetHeight}px`),
+    );
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [footer]);
+
   // Where a move we started is headed: adding a column re-snaps the strip, and that scroll must not select anything.
   const moveTargetRef = useRef<string | undefined>(undefined);
   const reportedRef = useRef(value);
@@ -368,12 +382,17 @@ const ChatPlaneRoot = ({
       onAdd={onAdd}
       onMove={onMove}
     >
-      {/* A one-line prompt (5.625rem) over the footer's padding, under a gap the size of the strip's top one. Anything
-          taller, the activity line included, floats over the columns rather than resizing them. */}
+      {/* The space kept under the columns: the footer's height, and never less than a one-line prompt over the footer's
+          padding (6.375rem), so that selecting a column with no prompt does not resize every column. */}
       {/* Sunken, as the deck is behind its planks, so each column's own panel surface reads against the strip. */}
       <Panel.Root
         level='sunken'
-        classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:6.875rem]', classNames]}
+        classNames={[
+          '[--chat-plane-width:32vw]',
+          '[--chat-plane-prompt-height:max(6.375rem,var(--chat-plane-footer-height,0px))]',
+          classNames,
+        ]}
+        ref={rootRef}
       >
         {children}
       </Panel.Root>
@@ -478,7 +497,8 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
               {children}
             </div>
           </ScrollArea.Viewport>
-          <div className='absolute inset-x-0 bottom-0 z-10 py-3 pointer-events-none' ref={setFooter} />
+          {/* No padding above: the columns end exactly where the footer's content starts. */}
+          <div className='absolute inset-x-0 bottom-0 z-10 pb-3 pointer-events-none' ref={setFooter} />
         </ScrollArea.Root>
       </Mosaic.Container>
     </Panel.Body>
