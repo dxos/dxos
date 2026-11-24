@@ -888,6 +888,27 @@ const stableData = (graph: GraphImpl, id: string, type: string, existing: unknow
 };
 
 /**
+ * Points the stored action `id` at `data`, as re-adding it would, without re-adding it: the node, its
+ * edges and the graph's version are untouched. Returns false when the graph holds no forwarder of its own
+ * for `id` (the node is absent or is not an action), in which case the caller must add the node instead.
+ */
+export const retargetAction = (graph: BaseGraph, id: string, data: (...args: any[]) => unknown): boolean => {
+  const internal = getInternal(graph);
+  const existing = internal._currentNode(id);
+  if (Option.isNone(existing) || existing.value.type !== Node.ActionType) {
+    return false;
+  }
+  const forwarder = existing.value.data;
+  if (!isForwarder(forwarder) || forwarder[ForwardedKey].graph !== internal || forwarder[ForwardedKey].id !== id) {
+    return false;
+  }
+  if (forwarder !== data) {
+    forwarder[ForwardedKey].target = isForwarder(data) ? data[ForwardedKey].target : data;
+  }
+  return true;
+};
+
+/**
  * Add a node to the graph.
  */
 export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T => {

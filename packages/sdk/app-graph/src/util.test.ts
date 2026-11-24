@@ -67,6 +67,28 @@ describe('nodeArgsUnchanged', () => {
     ];
     expect(nodeArgsUnchanged(stable(), stable())).to.be.true;
   });
+
+  test('sameAction lets a re-created closure read as unchanged', ({ expect }) => {
+    const context = {} as Node.ActionContext;
+    const makeArgs = (actionContext = context) => [
+      node({
+        actions: [
+          {
+            ...Node.makeAction({ id: 'delete', data: () => Effect.void, properties: { label: 'Delete' } }),
+            _actionContext: actionContext,
+          } as Node.NodeArg<any>,
+        ],
+      }),
+    ];
+    const seen: string[] = [];
+    const sameAction = (id: string) => (seen.push(id), true);
+    expect(nodeArgsUnchanged(makeArgs(), makeArgs(), { sameAction })).to.be.true;
+    expect(seen).to.deep.equal(['delete']);
+
+    // A differing action context, or a callee that cannot retarget, still reads as changed.
+    expect(nodeArgsUnchanged(makeArgs(), makeArgs({} as Node.ActionContext), { sameAction })).to.be.false;
+    expect(nodeArgsUnchanged(makeArgs(), makeArgs(), { sameAction: () => false })).to.be.false;
+  });
 });
 
 describe('nodeArgsUnchanged properties', () => {
