@@ -175,6 +175,23 @@ feat F-8: Agent picker in the prompt input
     then: each appears in the same selection, and selecting one runs the prompt with that agent
 ```
 
+```mdl
+feat F-9: Current process
+  status: planned
+  desc: |
+    `Process.current: Effect<Process.Process, NoCurrentProcessError, Process.ManagerService>`
+    returns the process the calling code runs in.
+
+  req F-9.1:
+    when: code running inside a process yields `Process.current`
+    then: it gets that process's `Process.Process`, read from the ambient `Process.ManagerService`
+
+  req F-9.2:
+    when: code with a `Process.ManagerService` that is not scoped to a process yields
+          `Process.current`
+    then: it fails with `NoCurrentProcessError`
+```
+
 ## Changelog
 
 ```mdl
@@ -364,4 +381,21 @@ decision D-21: Selecting a custom agent runs the prompt with that agent, and the
   for: user:dmaretskyi
   affects: [F-8.3]
   why: D-20 lists custom agents in the selection, and choosing one mirrors how choosing Composer selects the agent-less session.
+```
+
+```mdl
+decision D-22: Add `Process.current: Effect<Process.Process, ..., Process.Manager>`, which returns the current process.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-9]
+```
+
+```mdl
+decision D-23: `Process.current` fails with a typed `NoCurrentProcessError` when the ambient manager is not scoped to a process, and `Process.Manager` in [D-22] is the `Process.ManagerService` tag. Fills in [D-22].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1, F-9.2]
+  why: The process's own `ManagerService` already knows its process (it defaults `parentProcessId` to it), but a manager built outside any process has none, and callers need to tell that case apart.
+  rejected: Dying instead of failing, since being outside a process is a normal state for app-level code.
 ```
