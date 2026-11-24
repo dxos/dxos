@@ -6,7 +6,3 @@ layout: 'default'
 # Composer: modular components
 
 <Surface ref="{{app}}" />
-
-<!--
-Notes.
--->
