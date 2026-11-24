@@ -287,8 +287,8 @@ export class Toolbox {
       // git-based, not GitHub API-based — see .github/RELEASE-SPEC.md for why.
       changelog: '@changesets/changelog-git',
       commit: false,
-      // Pinned rather than left on `auto` so a generated CHANGELOG matches what CI's `oxfmt --check` expects.
-      format: 'oxfmt',
+      // Off because `.oxfmtrc.json` ignores markdown, so `oxfmt --write` on the changelogs matches no file and fails.
+      format: false,
       access: 'public',
       baseBranch: 'main',
       updateInternalDependencies: 'patch',
