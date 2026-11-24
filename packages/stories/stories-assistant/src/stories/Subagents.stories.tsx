@@ -3,17 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
-import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
-import { ThreadColumns } from '../components/index.ts';
 import { StoryRole } from '../modules/index.ts';
-import { LAUNCH_REQUEST, LAUNCH_TASKS, PLANS, SAVINGS_PROMPTS, Scripts, SIDE_QUESTION } from '../scripts/index.ts';
+import { PLANS, SAVINGS_PROMPTS, Scripts } from '../scripts/index.ts';
 import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
 /**
@@ -66,56 +62,5 @@ export const Demo: Story = {
   args: {
     layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
   },
-  tags: ['!test'],
-};
-
-//
-// Columns: a complex request split into subagent threads, each in a column of its own.
-//
-
-const columnsDecorators = createDecorators({
-  lazyPlugins: async () => {
-    const SpacePlugin = await import('@dxos/plugin-space/SpacePlugin');
-    // Files the documents the subagents create.
-    return { plugins: [SpacePlugin.make({})] };
-  },
-  skills: [MarkdownSkill.key, PlanningSkill.key],
-  scriptedModels: { scenes: { launchKit: Scripts.launchKit }, select: 'launchKit' },
-  assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
-});
-
-/** Waits until exactly `count` subagent and agent columns are open. */
-const waitForColumns = (canvasElement: HTMLElement, count: number, timeout: number) =>
-  waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="chat-plane.column"]').length).toBe(count), {
-    timeout,
-  });
-
-export const Columns: StoryObj = {
-  render: () => <ThreadColumns suggestions={[LAUNCH_REQUEST, SIDE_QUESTION]} />,
-  decorators: columnsDecorators,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: LAUNCH_REQUEST }, { timeout: 60_000 }));
-
-    // A column per subagent opens beside the agent's.
-    await waitForColumns(canvasElement, 1 + LAUNCH_TASKS.length, 60_000);
-
-    // The reader keeps talking while they work; the reply comes once the agent's current wait returns.
-    await userEvent.click(await canvas.findByRole('button', { name: SIDE_QUESTION }, { timeout: 30_000 }));
-    await canvas.findAllByText(/Tuesday the 18th/, {}, { timeout: 90_000 });
-
-    // Every subagent's column closes once it reports, and the summary lands in the agent's column with each document.
-    await waitForColumns(canvasElement, 1, 120_000);
-    await canvas.findAllByText(/The launch kit is ready/, {}, { timeout: 60_000 });
-    for (const { document } of LAUNCH_TASKS) {
-      await canvas.findAllByText(document, { exact: false });
-    }
-  },
-};
-
-/** {@link Columns} without its play function, for a recorded walkthrough that clicks the prompts itself. */
-export const ColumnsDemo: StoryObj = {
-  render: () => <ThreadColumns suggestions={[LAUNCH_REQUEST, SIDE_QUESTION]} />,
-  decorators: columnsDecorators,
   tags: ['!test'],
 };

@@ -9,7 +9,10 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const findPromptEditor = (canvasElement: HTMLElement, timeout: number): Promise<HTMLElement> =>
   waitFor(
     () => {
-      const editor = canvasElement.querySelector<HTMLElement>('[data-testid="assistant.prompt"] .cm-content');
+      // A plane of columns keeps every chat's prompt mounted and shows only the selected one's.
+      const editor = Array.from(
+        canvasElement.querySelectorAll<HTMLElement>('[data-testid="assistant.prompt"] .cm-content'),
+      ).find((candidate) => candidate.getClientRects().length > 0);
       if (!editor) {
         throw new Error('Chat editor not found.');
       }

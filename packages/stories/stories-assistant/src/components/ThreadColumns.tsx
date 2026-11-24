@@ -14,36 +14,14 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as ChatPlane from '@dxos/plugin-assistant/ChatPlane';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
-import { useObject, useQuery, useRegistry, useResolveRef, useSpaces } from '@dxos/react-client/echo';
+import { useObject, useQuery, useResolveRef, useSpaces } from '@dxos/react-client/echo';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Timeline } from '@dxos/react-ui-trace';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { toCommits } from '../modules/trajectory-commits.ts';
-
-type ChatModel = NonNullable<ReturnType<typeof AssistantHooks.useChatModel>>;
-
-/** The chat model of the agent's conversation, or of one subagent thread when `lane` is given. */
-const useThreadModel = (
-  db: Database.Database | undefined,
-  chat: AssistantChat.Chat | undefined,
-  lane?: Trajectory.ThreadId,
-) => {
-  const registry = useRegistry();
-  const runtime = Hooks.useProcessManagerRuntime();
-  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
-  const { preset } = AssistantHooks.usePresets(settings, chat);
-  return AssistantHooks.useChatModel({
-    db,
-    chat,
-    preset,
-    runtime,
-    registry,
-    settings,
-    ...(lane ? { thread: lane } : {}),
-  });
-};
+import { type ChatModel, useThreadModel } from './hooks.ts';
 
 /** The events written in `lane` and in every turn or thread nested in it, in feed order. */
 const laneEvents = (events: readonly Trajectory.Event[], lane: Trajectory.ThreadId): Trajectory.Event[] => {
@@ -236,10 +214,3 @@ export const ThreadColumns = ({ suggestions }: { suggestions?: readonly string[]
 
   return <ThreadPlane db={db} chat={chat} chatModel={chatModel} suggestions={suggestions} />;
 };
-
-/**
- * Scripted (offline): the reader asks for a launch kit; the agent puts four tasks on its checklist and delegates each
- * to a subagent, whose thread opens as a column showing its reasoning, the document it writes and its slice of memory.
- * The reader keeps talking meanwhile; each column closes once its subagent reports, and the result lands in the agent's
- * column.
- */

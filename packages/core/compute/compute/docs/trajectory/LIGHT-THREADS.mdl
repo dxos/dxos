@@ -504,14 +504,14 @@ test QA-5: Fork a chat at an earlier answer
 
 ```mdl
 test QA-6: Subagent threads open as columns
-  desc: The scripted story `stories-assistant/Subagents` (Columns) walked by a person. Each subagent thread renders as a
+  desc: The scripted story `stories-assistant/ThreadColumns` walked by a person. Each subagent thread renders as a
     column of its own beside the agent's conversation, holding its reasoning, the document it wrote and its slice of
     the trajectory, and closes once the subagent reports.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4]
   status: draft
   given:
-    - the story `stories/stories-assistant/Subagents` ColumnsDemo, with Parallel threads on and the `launchKit` scripted model
+    - the story `stories/stories-assistant/ThreadColumns` Default, with Parallel threads on and the `launchKit` scripted model
   steps:
     - name: Describe a complex task
       do: Click the chip "Plan the Composer 1.0 launch: we need a blog post, release notes, an FAQ and an announcement email."
@@ -523,7 +523,7 @@ test QA-6: Subagent threads open as columns
       do: Wait while the agent delegates.
       expect: a column opens for each task, one at a time, showing its subagent's reasoning as it works
     - name: Keep talking
-      do: Select the agent's column and click the chip "While they work: which day should we launch?"
+      do: Click the chip "While they work: which day should we launch?"
       expect: the agent answers once its current wait returns, while the other subagents keep working
     - name: Look inside a subagent's column
       do: Click the FAQ column.
@@ -975,4 +975,22 @@ decision D-41: `test QA-6` walks subagent threads as columns: the Subagents Colu
   why: A card shows a subagent's tail; a column shows its whole conversation and the artifacts it made, side by side with the others, which is what a reader following several delegated tasks needs.
   rejected:
     - Expand the lane cards in place — the agent's conversation would grow sideways and lose its reading order.
+```
+
+```mdl
+decision D-42: In the story `test QA-6` walks, the agent's column rests at the start of the strip instead of its center, the columns keep their width so the strip scrolls sideways, and the story is a file of its own, apart from the story that shows a column per chat.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-43: The agent's column stays selected while subagent columns open, so `test QA-6` no longer selects it before the side question. The story is `stories/stories-assistant/ThreadColumns`. Fills in [D-42].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  why: A strip that rests the selection at its start would scroll the agent's column, and its prompt, out of view each time the selection followed a new thread.
+  rejected:
+    - Keep following the newest thread — the reader would lose the agent's conversation as soon as the columns outgrow the strip.
 ```
