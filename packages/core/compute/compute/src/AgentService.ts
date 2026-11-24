@@ -5,15 +5,20 @@
 // @import-as-namespace
 
 import * as Context from 'effect/Context';
+import type * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
+import type * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
+import type * as Rpc from 'effect/rpc/Rpc';
 import type * as Stream from 'effect/Stream';
 
 import type { SessionConfig } from '@dxos/ai';
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { BaseError } from '@dxos/errors';
+import { DXN, type URI } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
 
+import type * as Operation from './Operation.ts';
 import type * as Process from './Process.ts';
 import type * as Trace from './Trace.ts';
 import type * as Trajectory from './trajectory/Trajectory.ts';
@@ -47,6 +52,108 @@ export interface Service {
    * Each record is rehydrated with a fresh process built from the layer options.
    */
   hydrate: () => Effect.Effect<void>;
+
+  /**
+   * The session the calling process works for, named by its {@link Process.SessionAnnotation}.
+   */
+  readonly currentSession: Effect.Effect<Conversation, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+
+  /**
+   * The agent the calling process works for, named by its {@link Process.AgentAnnotation}; none for a standalone
+   * session.
+   */
+  readonly currentAgent: Effect.Effect<Option.Option<Obj.Unknown>, never, Process.ManagerService | Database.Service>;
+
+  /**
+   * The thread the calling process works for, named by its {@link Process.ThreadAnnotation}; none for work on the
+   * session's main thread.
+   */
+  readonly currentThread: Effect.Effect<Option.Option<Trajectory.ThreadId>, never, Process.ManagerService>;
+
+  /**
+   * Enqueues a message into the current session's input queue.
+   */
+  enqueueMessage: (options: EnqueueMessageOptions) => Effect.Effect<void, NoCurrentSessionError, Process.ManagerService>;
+
+  /**
+   * Schedules a self-wake of the current session.
+   */
+  setAlarm: (options: SetAlarmOptions) => Effect.Effect<void, NoCurrentSessionError, Process.ManagerService>;
+
+  /**
+   * Sessions with a live process, found from the annotations of the processes this service manages.
+   */
+  listSessions: (options?: ListSessionsOptions) => Effect.Effect<readonly URI.URI[], never, Process.ManagerService>;
+
+  /**
+   * Agents with a live process, found from the annotations of the processes this service manages.
+   */
+  listAgents: () => Effect.Effect<readonly URI.URI[], never, Process.ManagerService>;
+
+  /**
+   * Spawns a process for agent work, stamped with the session, agent and thread annotations of the caller (or of
+   * `options`). Operations spawn through this rather than through {@link Process.ManagerService}.
+   */
+  spawn: <I, O, Rpcs extends Rpc.Any = never>(
+    definition: Operation.Durable<I, O, any, Rpcs>,
+    options?: SpawnOptions,
+  ) => Effect.Effect<Process.Process<I, O, Rpcs>, never, Process.ManagerService>;
+
+  /**
+   * Delegates work to a thread of the current session, to another session of the current agent, or to another
+   * agent.
+   */
+  delegate: (
+    request: DelegateRequest,
+  ) => Effect.Effect<DelegateResult, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+}
+
+/** Raised when the calling process works for no session. */
+export class NoCurrentSessionError extends BaseError.extend('NoCurrentSessionError', 'Not running in a session') {}
+
+export interface EnqueueMessageOptions {
+  readonly content: readonly ContentBlock.Any[];
+}
+
+export interface SetAlarmOptions {
+  readonly at: DateTime.DateTime;
+  /** Message delivered when the alarm fires. */
+  readonly message: string | null;
+}
+
+export interface ListSessionsOptions {
+  /** Only the sessions of this agent. */
+  readonly agent?: URI.URI;
+}
+
+export interface SpawnOptions extends Process.SpawnOptions {
+  /** The session the process works for; the caller's when absent. */
+  readonly session?: URI.URI;
+  /** The thread the process works for; the caller's when absent. */
+  readonly thread?: Trajectory.ThreadId;
+}
+
+/** Where delegated work goes. */
+export type DelegationTarget =
+  | { readonly kind: 'thread' }
+  | { readonly kind: 'session'; readonly session?: URI.URI }
+  | { readonly kind: 'agent'; readonly agent: URI.URI };
+
+export interface DelegateRequest {
+  readonly target: DelegationTarget;
+  /** The base case: a message for the receiver. */
+  readonly message?: readonly ContentBlock.Any[];
+  /** The richer case: a task assigned to the receiver. */
+  readonly task?: Ref.Ref<Obj.Unknown>;
+  /** A short title shown to the reader. */
+  readonly purpose?: string;
+}
+
+export interface DelegateResult {
+  /** The thread the work runs in, for thread delegation. */
+  readonly thread?: Trajectory.ThreadId;
+  /** The session the work runs in, for session delegation. */
+  readonly session?: URI.URI;
 }
 
 export class AgentService extends Context.Service<AgentService, Service>()('@dxos/functions-runtime/AgentService') {}
@@ -132,6 +239,48 @@ export const getSession = (...args: Parameters<Context.Service.Shape<typeof Agen
 
 export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentService>['hydrate']>) =>
   AgentService.use((service) => service.hydrate(...args));
+
+/** The session the calling process works for. */
+export const currentSession: Effect.Effect<
+  Conversation,
+  NoCurrentSessionError,
+  AgentService | Process.ManagerService | Database.Service
+> = Effect.flatMap(AgentService, (service) => service.currentSession);
+
+/** The agent the calling process works for; none for a standalone session. */
+export const currentAgent: Effect.Effect<
+  Option.Option<Obj.Unknown>,
+  never,
+  AgentService | Process.ManagerService | Database.Service
+> = Effect.flatMap(AgentService, (service) => service.currentAgent);
+
+/** The thread the calling process works for; none for the session's main thread. */
+export const currentThread: Effect.Effect<
+  Option.Option<Trajectory.ThreadId>,
+  never,
+  AgentService | Process.ManagerService
+> = Effect.flatMap(AgentService, (service) => service.currentThread);
+
+export const enqueueMessage = (
+  options: EnqueueMessageOptions,
+): Effect.Effect<void, NoCurrentSessionError, AgentService | Process.ManagerService> =>
+  Effect.flatMap(AgentService, (service) => service.enqueueMessage(options));
+
+export const setAlarm = (
+  options: SetAlarmOptions,
+): Effect.Effect<void, NoCurrentSessionError, AgentService | Process.ManagerService> =>
+  Effect.flatMap(AgentService, (service) => service.setAlarm(options));
+
+export const spawn = <I, O, Rpcs extends Rpc.Any = never>(
+  definition: Operation.Durable<I, O, any, Rpcs>,
+  options?: SpawnOptions,
+): Effect.Effect<Process.Process<I, O, Rpcs>, never, AgentService | Process.ManagerService> =>
+  Effect.flatMap(AgentService, (service) => service.spawn(definition, options));
+
+export const delegate = (
+  request: DelegateRequest,
+): Effect.Effect<DelegateResult, NoCurrentSessionError, AgentService | Process.ManagerService | Database.Service> =>
+  Effect.flatMap(AgentService, (service) => service.delegate(request));
 
 export interface GetSessionOptions {
   // The model is read off the chat (see `Conversation.session`), but the catalog's shared model ids are
