@@ -66,6 +66,7 @@ goal G-5: The Check workflow passes on the PR.
 ```mdl
 pr PR-1: Include plugins in the cycle check and remove the cycles.
   ref: dxos/dxos#14664
+  status: landing
   goals: [G-1, G-2, G-3, G-5]
 ```
 
@@ -181,4 +182,11 @@ event T-13: The Check workflow passed on [PR-1] at 11:43Z. T-9 to T-12 have inco
   date: 2026-11-24T12:12Z
   by: agent:claude-code
   refs: [G-5, PR-1]
+```
+
+```mdl
+event T-14: You asked to land [PR-1]. It is ready for review, and the full CI suite runs.
+  date: 2026-11-24T12:50Z
+  by: agent:claude-code
+  refs: [PR-1]
 ```
