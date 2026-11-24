@@ -78,7 +78,7 @@ DX_PERF_SERVER=dev moon run assistant-e2e:e2e-perf   # `storybook dev` on :9009 
 ```
 
 Rows from the dev server carry `servingMode: 'dev'` and are not comparable with the budgets, which
-are calibrated on the build. What the build needs to boot is in `tools/storybook-react/.storybook/production-bundle.ts`.
+are calibrated on the build. What the build needs to boot is in `tools/storybook-react/.storybook/perf-bundle.ts`.
 
 `DX_PERF_SCALES` picks the spaces (`blank`, `busy`; both by default) and `DX_PERF_ITERATIONS` repeats
 the flow. With `DX_POSTHOG_API_KEY` set, each iteration publishes its rows as `ci.perf-stage`.

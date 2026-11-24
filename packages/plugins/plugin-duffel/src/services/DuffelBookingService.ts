@@ -5,9 +5,7 @@
 import * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
 
 import { offerRequestBody, parseOffers } from './duffel-mapping.ts';
-import { createOfferRequest } from './DuffelClient.ts';
-
-export const DUFFEL_SERVICE_ID = 'duffel';
+import { DUFFEL_SERVICE_ID, createOfferRequest } from './DuffelClient.ts';
 
 /**
  * Builds the BookingService implementation. Takes a `getApiKey` accessor (the

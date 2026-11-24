@@ -9,27 +9,22 @@ import { type Plugin } from 'vite';
 
 const storybookDir = dirname(fileURLToPath(import.meta.url));
 
-/** Set by `storybook-react:bundle-perf`, which builds one chunk; see `productionBundlePlugin`. */
-const isPerfBundle = process.env.DX_PERF_BUNDLE === '1';
+/** Set by `storybook-react:bundle-perf`; the published `bundle` is unchanged. */
+export const isPerfBundle = process.env.DX_PERF_BUNDLE === '1';
 
 const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
 
 /**
- * Makes a production build of the stories boot. The automerge packages' `browser` entrypoints
- * instantiate wasm with top-level await, which makes every importer's lazy module init async, and
- * rolldown's async-init emulation deadlocks on any import cycle above them (a cyclic init awaits its
- * own pending promise), leaving the story on its loading spinner. They resolve to `slim` instead (as
- * in composer-app), and each realm initializes the wasm: the page in `preview.ts`, the SDK's dedicated
- * worker via `dedicated-worker.ts`.
- *
- * The perf build is also one chunk: rolldown 1.2.4 dropped a lazily wrapped module's init call across
- * chunks, and its budgets were calibrated on that single-chunk build.
+ * Makes a production build of the stories boot: the automerge packages' `browser` entrypoints instantiate
+ * wasm with top-level await, which makes lazy module inits async, and rolldown's async-init emulation
+ * deadlocks on the stories' import cycles. They resolve to `slim` instead (as in composer-app), and each
+ * realm initializes the wasm: the page in `preview.ts`, the SDK's dedicated worker via `dedicated-worker.ts`.
  */
-export const productionBundlePlugin = (): Plugin => {
+export const slimWasmPlugin = (): Plugin => {
   // `browser` is absent: a `browser`-conditioned subpath resolves to its own wasm-initializing glue.
   const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
   return {
-    name: 'dxos:production-bundle',
+    name: 'dxos:slim-wasm',
     apply: 'build',
     enforce: 'pre',
     config: () => ({
@@ -41,7 +36,6 @@ export const productionBundlePlugin = (): Plugin => {
           { find: /^@dxos\/client\/dedicated-worker$/, replacement: resolve(storybookDir, 'dedicated-worker.ts') },
         ],
       },
-      ...(isPerfBundle && { build: { rolldownOptions: { output: { codeSplitting: false } } } }),
     }),
     resolveId: {
       order: 'pre',
@@ -57,3 +51,10 @@ export const productionBundlePlugin = (): Plugin => {
     },
   };
 };
+
+/** Rolldown 1.2.4 drops a lazily wrapped module's init call across chunks, so the perf build is one chunk. */
+export const perfBundlePlugin = (): Plugin => ({
+  name: 'dxos:perf-bundle',
+  apply: 'build',
+  config: () => ({ build: { rolldownOptions: { output: { codeSplitting: false } } } }),
+});
