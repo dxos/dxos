@@ -17,6 +17,9 @@ import * as Binding from './Binding.ts';
 import { SYNC_TEMPLATE_ID } from './constants.ts';
 import { SyncTemplateScaffoldError } from './errors.ts';
 
+/** Id of the connector sync template, for callers that seed the create-routine dialog with it. */
+export const ID = SYNC_TEMPLATE_ID;
+
 /**
  * "Sync" automation template: the account-level recurring sync routine for a Connection, built from
  * the connector-declared trigger spec and bound to the connector's own sync operation (whose handler
@@ -28,7 +31,7 @@ import { SyncTemplateScaffoldError } from './errors.ts';
  * connection.
  */
 export const make = (capabilities: CapabilityManager.CapabilityManager): RoutineCapabilities.Template => ({
-  id: SYNC_TEMPLATE_ID,
+  id: ID,
   label: 'Sync',
   icon: 'ph--arrows-clockwise--regular',
   hidden: true,
