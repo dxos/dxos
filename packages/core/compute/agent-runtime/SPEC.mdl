@@ -1,0 +1,169 @@
+---
+id: org.dxos.agent-delegation
+name: Agents, Sessions and Delegation
+version: 0.1.0
+---
+
+How agent work is identified, split and handed off. Three tiers name the units:
+
+- **Agent** — the unit of identity, permissions and access control. An agent is invited to spaces.
+  It has one main durable object: the entry point for external events, with no inference of its
+  own, that delegates to worker sessions. It has a home space that holds its memory (RDF store),
+  its ECHO database, its access tokens and its skills.
+- **Session** — the unit of work. Each session is its own durable object with its own feed and
+  task list. A session attached to an agent inherits that agent's permissions. A standalone
+  session (no agent) is still supported.
+- **Thread** — a microtask inside a session; what Claude calls a subagent.
+
+Delegation has two scopes. **Intra-agent** delegation hands work to sessions and threads of one
+agent. **Cross-agent** delegation hands work to another agent: a separate identity, separate
+spaces and a separate entry point.
+
+The task list in the project or session is the control plane. Ephemeral messages (wake, start,
+stop) sit on top of it and carry no state of their own.
+
+## Extensions
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `question` | `org.dxos.mdl.question@1.0` |
+
+## Features
+
+```mdl
+feat F-1: Agent ontology
+  status: planned
+
+  req F-1.1:
+    when: an agent is created
+    then: it has one main durable object, which receives external events, runs no inference, and
+          delegates work to sessions
+
+  req F-1.2:
+    when: an agent is created
+    then: it has a home space that holds its memory, ECHO database, access tokens and skills
+
+  req F-1.3:
+    when: a session is attached to an agent
+    then: the session has its own durable object, feed and task list, and inherits the agent's
+          permissions
+
+  req F-1.4:
+    when: a session is created with no agent
+    then: it runs as a standalone session with today's behavior
+```
+
+```mdl
+feat F-2: Intra-agent delegation
+  status: planned
+
+  req F-2.1:
+    when: a session delegates a task to a thread
+    then: the thread runs in the same session and works from the session's shared task list
+
+  req F-2.2:
+    when: an agent delegates a task to another of its sessions
+    then: the receiving session records the task in its own task list
+```
+
+```mdl
+feat F-3: Cross-agent delegation
+  status: planned
+
+  req F-3.1:
+    when: an agent looks for another agent
+    then: it finds it through HALO contacts, which return ECHO objects of type actor (people or
+          agents) for the members of the spaces they share
+
+  req F-3.2:
+    when: an agent is referenced
+    then: it is addressed by its DID, as a URI inside ECHO
+
+  req F-3.3:
+    when: an agent delegates to another agent
+    then: it pushes a durable message to the other agent's main durable object
+
+  req F-3.4:
+    when: the delegated work is tracked in a shared space
+    then: a task object in that space is assigned to the other agent, and the durable message is
+          the notification for it
+```
+
+## Changelog
+
+```mdl
+decision D-1: Agent, Session and Thread are the three tiers of agent work: Agent is identity and access, Session is the durable worker with its own feed and task list, Thread is a microtask inside a session.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-2: An agent has one main durable object that receives external events, runs no inference and delegates to sessions; it has a home space for memory, ECHO database, access tokens and skills. Attached sessions inherit the agent's permissions, and standalone sessions stay supported.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.1, F-1.2, F-1.3, F-1.4]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-3: Delegation has an intra-agent scope (sessions and threads of one agent) and a cross-agent scope (separate identities, spaces and entry points).
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-2, F-3]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-4: Cross-agent delegation is push-based: a durable message to the other agent's main durable object, optionally with a task object in a shared space assigned to that agent. Agents find each other through HALO contacts in shared spaces and are addressed by DID.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-3]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-5: The task list in the project or session is the control plane; ephemeral messages (wake, start, stop) sit on top of it.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-2, F-3]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-6: Requirements are written as when/then pairs derived from [D-1] to [D-5], grouped as ontology (F-1), intra-agent (F-2) and cross-agent (F-3) delegation, all planned.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1, F-2, F-3]
+  why: The baseline notes state the model, not testable behavior; grouping by delegation scope matches [D-3].
+```
+
+```mdl
+question Q-1: What is the agent's main durable object called, given that "router" collides with the idea of an agent that routes?
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.1]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+question Q-2: Which space is a session's home when it is attached to an agent?
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.3]
+  context: The notes start with the agent's own space and revisit later.
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+question Q-3: Is memory per agent (in the agent's home space) or per space (shared by every agent in it)?
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.2]
+  context: Today there is one memory object per space; per-agent memory is the stated ideal, deferred.
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
