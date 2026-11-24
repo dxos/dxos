@@ -100,7 +100,7 @@ System One judges this a likely violation of `bounded-live-state` (Every collect
 - 620396cc-11: the e2e suite drives the real registry and query path; the source is the boundary under test, so it is stubbed. The EDGE path is driven end to end by edge's agent suites against bundles built from this branch.
 - 620396cc-12: the try/finally at `hypergraph.ts:749` is the existing ref-resolution trace, not Effect code.
 - 620396cc-13: `OBJECT_DIAGNOSTICS` predates the PR.
-- 620396cc-14: the registry is an in-memory cache by design. What sources add is bounded by what the live sources publish: an enumerated entity already registered under one of its URIs is not added again, even when a replaced source rebuilt it under a new id. The per-query enumeration cache is cleared when a source is added or removed, on `clear()`, and when an enumeration fails.
+- 620396cc-14: the registry is an in-memory cache by design, and what sources add is bounded by what the live sources publish. Removing a source removes every entity it added. An enumerated entity whose most specific URI (its versioned key, or its type's typename and version) is already registered or already in the same answer is not added again, even when a source rebuilt it under a new id. The per-query enumeration cache is cleared when a source is added or removed, on `remove()` and `clear()`, and when an enumeration fails.
 
 
 ### System One pass

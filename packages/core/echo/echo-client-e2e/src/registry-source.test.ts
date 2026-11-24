@@ -238,13 +238,34 @@ describe('registry sources', () => {
         .sort();
 
     expect(await listVersions()).toEqual(['1.0.0']);
-    versions.push('1.0.0', '2.0.0');
+    versions.push('1.0.0', '2.0.0', '2.0.0');
     const unregister = db.graph.registerRegistrySource({
       resolve: async () => undefined,
       query: async () => versions.map(thing),
     });
     expect(await listVersions()).toEqual(['1.0.0', '2.0.0']);
     unregister();
+  });
+
+  test('removing a source removes what it added, so a replacement publishing other keys does not accumulate', async ({
+    expect,
+  }) => {
+    const { db } = await setup();
+    const thing = (key: string) => Obj.make(Remote, { [Obj.Meta]: { key }, title: key });
+    const publishing = (key: string): RegistrySource => ({
+      resolve: async () => undefined,
+      query: async () => [thing(key)],
+    });
+    const listKeys = async () =>
+      (await db.query(Query.select(Filter.type(Remote)).from(Scope.registry())).run())
+        .map((entity) => Obj.getMeta(entity).key)
+        .sort();
+
+    const unregister = db.graph.registerRegistrySource(publishing('com.example.thing.a'));
+    expect(await listKeys()).toEqual(['com.example.thing.a']);
+    unregister();
+    db.graph.registerRegistrySource(publishing('com.example.thing.b'));
+    expect(await listKeys()).toEqual(['com.example.thing.b']);
   });
 
   test('a source that cannot enumerate leaves an unkeyed query to the local registry', async ({ expect }) => {

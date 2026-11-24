@@ -72,6 +72,9 @@ export class RegistryImpl implements Registry.Registry {
   readonly #resolving = new Map<string, Promise<Entity.Unknown | undefined>>();
   // What an enumerating source answered stays registered, so each unkeyed query asks it once.
   readonly #fetched = new Map<string, Promise<void>>();
+  // The ids each source added, so removing a source takes its entities with it and the registry holds only what live
+  // sources publish.
+  readonly #provided = new Map<RegistrySource, Set<string>>();
 
   constructor(options: Registry.Options) {
     this.#upstream = options.upstream;
@@ -96,6 +99,17 @@ export class RegistryImpl implements Registry.Registry {
   }
 
   remove(id: string): boolean {
+    if (!this.#delete(id)) {
+      return false;
+    }
+    // The removed entity may be one an enumeration added, so each query enumerates again.
+    this.#fetched.clear();
+    this.#changed.emit();
+    return true;
+  }
+
+  /** Drops an entity and its URI index entries without notifying; false when the registry does not hold it. */
+  #delete(id: string): boolean {
     const entity = this.#entitiesById.get(id);
     if (entity == null) {
       return false;
@@ -107,9 +121,6 @@ export class RegistryImpl implements Registry.Registry {
         this.#entitiesByUri.delete(uri);
       }
     }
-    // The removed entity may be one an enumeration added, so each query enumerates again.
-    this.#fetched.clear();
-    this.#changed.emit();
     return true;
   }
 
@@ -118,6 +129,7 @@ export class RegistryImpl implements Registry.Registry {
     this.#entitiesByUri.clear();
     // What an enumeration added is gone, so each query enumerates again.
     this.#fetched.clear();
+    this.#provided.clear();
     this.#changed.emit();
   }
 
@@ -166,6 +178,11 @@ export class RegistryImpl implements Registry.Registry {
     return () => {
       this.#sources = this.#sources.filter((entry) => entry !== source);
       this.#fetched.clear();
+      const provided = this.#provided.get(source);
+      this.#provided.delete(source);
+      if (provided !== undefined && [...provided].map((id) => this.#delete(id)).some(Boolean)) {
+        this.#changed.emit();
+      }
     };
   }
 
@@ -240,7 +257,7 @@ export class RegistryImpl implements Registry.Registry {
           return undefined;
         });
       if (entity !== undefined) {
-        this.add([entity]);
+        this.#addFrom(source, [entity]);
         return entity;
       }
     }
@@ -263,18 +280,38 @@ export class RegistryImpl implements Registry.Registry {
       return false;
     }
     // Matched by its most specific URI as well as id: a source rebuilds each entity under a new id, and only the
-    // versioned address tells another version of a key apart from a copy of one already registered.
+    // versioned address tells another version of a key apart from a copy of one already registered or accepted.
+    const accepted = new Set<string>();
     const missing = answer.entities.filter((entity) => {
       const identity = getEntityUris(entity).at(-1);
-      return (
-        this.get(getEntityId(entity)) === undefined &&
-        (identity === undefined || this.#entitiesByUri.get(identity) === undefined)
-      );
+      const id = getEntityId(entity);
+      if (this.get(id) !== undefined || accepted.has(id)) {
+        return false;
+      }
+      if (identity !== undefined && (this.#entitiesByUri.get(identity) !== undefined || accepted.has(identity))) {
+        return false;
+      }
+      accepted.add(id);
+      if (identity !== undefined) {
+        accepted.add(identity);
+      }
+      return true;
     });
     if (missing.length > 0) {
-      this.add(missing);
+      this.#addFrom(source, missing);
     }
     return true;
+  }
+
+  #addFrom(source: RegistrySource, entities: readonly Entity.Unknown[]): void {
+    // A source removed while its answer was in flight no longer publishes it.
+    if (!this.#sources.includes(source)) {
+      return;
+    }
+    const provided = this.#provided.get(source) ?? new Set<string>();
+    entities.forEach((entity) => provided.add(getEntityId(entity)));
+    this.#provided.set(source, provided);
+    this.add(entities);
   }
 
   #put(entity: Entity.Unknown): void {
