@@ -210,6 +210,28 @@ describe('registry sources', () => {
     expect(await count()).toBe(1);
   });
 
+  test('enumerations that return two versions of one key register both', async ({ expect }) => {
+    const { db } = await setup();
+    const thing = (version: string) =>
+      Obj.make(Remote, { [Obj.Meta]: { key: THING_KEY, version }, title: `Thing ${version}` });
+    const versions = ['1.0.0'];
+    db.graph.registerRegistrySource({ resolve: async () => undefined, query: async () => versions.map(thing) });
+    const listVersions = async () =>
+      (await db.query(Query.select(Filter.type(Remote)).from(Scope.registry())).run())
+        .filter((entity) => Obj.getMeta(entity).key === THING_KEY)
+        .map((entity) => Obj.getMeta(entity).version)
+        .sort();
+
+    expect(await listVersions()).toEqual(['1.0.0']);
+    versions.push('1.0.0', '2.0.0');
+    const unregister = db.graph.registerRegistrySource({
+      resolve: async () => undefined,
+      query: async () => versions.map(thing),
+    });
+    expect(await listVersions()).toEqual(['1.0.0', '2.0.0']);
+    unregister();
+  });
+
   test('a source that cannot enumerate leaves an unkeyed query to the local registry', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();

@@ -260,13 +260,15 @@ export class RegistryImpl implements Registry.Registry {
     if (answer === undefined) {
       return false;
     }
-    // Matched by URI as well as id: a source rebuilds each entity under a new id, and an entity already registered
-    // under one of its addresses is the same one.
-    const missing = answer.entities.filter(
-      (entity) =>
+    // Matched by its most specific URI as well as id: a source rebuilds each entity under a new id, and only the
+    // versioned address tells another version of a key apart from a copy of one already registered.
+    const missing = answer.entities.filter((entity) => {
+      const identity = getEntityUris(entity).at(-1);
+      return (
         this.get(getEntityId(entity)) === undefined &&
-        getEntityUris(entity).every((uri) => this.#entitiesByUri.get(normalizeURI(uri)) === undefined),
-    );
+        (identity === undefined || this.#entitiesByUri.get(identity) === undefined)
+      );
+    });
     if (missing.length > 0) {
       this.add(missing);
     }
