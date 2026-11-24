@@ -30,10 +30,9 @@ import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import * as Binding from '../../Binding.ts';
 import { ConnectorCommandError } from '../../commands/errors.ts';
-import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants.ts';
+import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, SYNC_TEMPLATE_ID, connectionDeckSubject } from '../../constants.ts';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors.ts';
 import { ConnectorNamespace } from '../../namespace.ts';
-import * as SyncTemplate from '../../SyncTemplate.ts';
 import { autoSyncConnection } from './auto-sync.ts';
 import { createSingleCursor } from './create-single-cursor.ts';
 import { beginOAuthFlow, decodeOAuthMessageData, isOAuthShapedMessage } from './oauth.ts';
@@ -189,7 +188,7 @@ const openCreateSyncRoutineDialog = (
       target: db,
       typename: Type.getTypename(Routine.Routine),
       // `subject` may be the connection or a bound target — the template resolves either to the account.
-      defaults: { templateId: SyncTemplate.ID, subject },
+      defaults: { templateId: SYNC_TEMPLATE_ID, subject },
       navigable: false,
     });
     // The trigger is read off the saved routine — a `findTrigger` lookup here would race the

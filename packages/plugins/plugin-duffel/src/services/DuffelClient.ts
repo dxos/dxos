@@ -7,7 +7,8 @@ import { log } from '@dxos/log';
 import * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
 
 import { type DuffelOfferRequestBody, type DuffelOffersResponse } from './duffel-mapping.ts';
-import { DUFFEL_SERVICE_ID } from './DuffelBookingService.ts';
+
+export const DUFFEL_SERVICE_ID = 'duffel';
 
 const DUFFEL_API = 'https://api.duffel.com';
 const DUFFEL_VERSION = 'v2';
