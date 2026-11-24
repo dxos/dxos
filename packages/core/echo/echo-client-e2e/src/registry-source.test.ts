@@ -168,6 +168,48 @@ describe('registry sources', () => {
     expect(await queryType(db, TYPENAME)).toBeDefined();
   });
 
+  test('a failed enumeration is asked again on the next run of the query', async ({ expect }) => {
+    const { db } = await setup();
+    let queries = 0;
+    db.graph.registerRegistrySource({
+      resolve: async () => undefined,
+      query: async () => {
+        queries++;
+        if (queries === 1) {
+          throw new Error('registry unavailable');
+        }
+        return [remoteType()];
+      },
+    });
+    const listTypes = () => db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run();
+
+    expect((await listTypes()).map((type) => Type.getTypename(type))).not.toContain(TYPENAME);
+    expect((await listTypes()).map((type) => Type.getTypename(type))).toContain(TYPENAME);
+    expect(queries).toBe(2);
+  });
+
+  test('first() asks the sources, as run() does', async ({ expect }) => {
+    const { db } = await setup();
+    db.graph.registerRegistrySource(makeMockRegistry().source);
+
+    const type = await db
+      .query(Query.select(Filter.and(Filter.type(Type.Type), Filter.key(TYPENAME))).from(Scope.registry()))
+      .firstOrUndefined();
+    expect(type && Type.getTypename(type)).toBe(TYPENAME);
+  });
+
+  test('a replaced source does not register a second copy of what the first one did', async ({ expect }) => {
+    const { db } = await setup();
+    const listTypes = () => db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run();
+    const count = async () => (await listTypes()).filter((type) => Type.getTypename(type) === TYPENAME).length;
+
+    const unregister = db.graph.registerRegistrySource(makeMockRegistry().source);
+    expect(await count()).toBe(1);
+    unregister();
+    db.graph.registerRegistrySource(makeMockRegistry().source);
+    expect(await count()).toBe(1);
+  });
+
   test('a source that cannot enumerate leaves an unkeyed query to the local registry', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();

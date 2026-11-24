@@ -33,13 +33,16 @@ export type Own = {
 export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Source => {
   const types = TypeSource.fromRegistry(registry);
   let catalog: Promise<PluginProtocol.SkillCatalog> | undefined;
-  const skillCatalog = () => (catalog ??= registry.listSkills());
+  const skillCatalog = () => (catalog ??= retryable(registry.listSkills(), () => (catalog = undefined)));
 
   // Converted once per source: each conversion mints new ids, and the registry tells entities apart by id.
   let skillEntities: Promise<Skill.Skill[]> | undefined;
   const skills = (): Promise<Skill.Skill[]> =>
-    (skillEntities ??= skillCatalog().then(({ skills }) =>
-      skills.filter((record) => !own.skills.has(bareKey(record.key))).map(fromSkillRecord),
+    (skillEntities ??= retryable(
+      skillCatalog().then(({ skills }) =>
+        skills.filter((record) => !own.skills.has(bareKey(record.key))).map(fromSkillRecord),
+      ),
+      () => (skillEntities = undefined),
     ));
 
   const readOperations = async (): Promise<Operation.PersistentOperation[]> => {
@@ -59,7 +62,8 @@ export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Sourc
   };
 
   let operationEntities: Promise<Operation.PersistentOperation[]> | undefined;
-  const operations = (): Promise<Operation.PersistentOperation[]> => (operationEntities ??= readOperations());
+  const operations = (): Promise<Operation.PersistentOperation[]> =>
+    (operationEntities ??= retryable(readOperations(), () => (operationEntities = undefined)));
 
   return {
     resolve: async (uri: URI.URI) => {
@@ -71,9 +75,13 @@ export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Sourc
         return type;
       }
       const key = DXN.getName(uri);
+      const version = DXN.getVersion(uri);
+      // A versioned URI addresses that version only, as the registry's own lookup reads it.
+      const matches = (entityKey: string | undefined, entityVersion: string | undefined) =>
+        entityKey !== undefined && bareKey(entityKey) === key && (version === undefined || entityVersion === version);
       return (
-        (await skills()).find((skill) => bareKey(Skill.getKey(skill)) === key) ??
-        (await operations()).find((record) => bareKey(Operation.getKey(record) ?? '') === key)
+        (await skills()).find((skill) => matches(Skill.getKey(skill), Obj.getMeta(skill).version)) ??
+        (await operations()).find((record) => matches(Operation.getKey(record), Operation.getVersion(record)))
       );
     },
     query: async (query: Query.Any): Promise<readonly Entity.Unknown[]> => {
@@ -121,6 +129,16 @@ const rebuildType = (record: PluginProtocol.TypeRecord): Type.AnyEntity[] => {
     return [];
   }
 };
+
+/**
+ * `request`, calling `reset` when it rejects: a memoized lookup that failed once must not fail every later call in the
+ * invocation, while a successful answer stays cached.
+ */
+const retryable = <T>(request: Promise<T>, reset: () => void): Promise<T> =>
+  request.catch((error) => {
+    reset();
+    throw error;
+  });
 
 /** Keys compare without the `dxn:` prefix, which records and definitions spell differently. */
 export const bareKey = (key: string): string => key.replace(/^dxn:/, '');

@@ -203,7 +203,12 @@ export class RegistryImpl implements Registry.Registry {
     if (pending !== undefined) {
       return pending;
     }
-    const request = Promise.all(this.#sources.map((source) => this.#enumerate(source, query))).then(() => undefined);
+    const request = Promise.all(this.#sources.map((source) => this.#enumerate(source, query))).then((answered) => {
+      // A failed enumeration is not a completed one: the next run of the query asks again.
+      if (!answered.every(Boolean) && this.#fetched.get(id) === request) {
+        this.#fetched.delete(id);
+      }
+    });
     this.#fetched.set(id, request);
     return request;
   }
@@ -240,20 +245,32 @@ export class RegistryImpl implements Registry.Registry {
     return undefined;
   }
 
-  async #enumerate(source: RegistrySource, query: Query.Any): Promise<void> {
+  /** Adds what `source` enumerates for `query`; false when it failed, so the query is not marked fetched. */
+  async #enumerate(source: RegistrySource, query: Query.Any): Promise<boolean> {
     if (source.query === undefined) {
-      return;
+      return true;
     }
-    const entities = await Promise.resolve()
+    const answer = await Promise.resolve()
       .then(() => source.query?.(query) ?? [])
+      .then((entities) => ({ entities }))
       .catch((error) => {
         log.warn('registry source query failed', { error });
-        return [];
+        return undefined;
       });
-    const missing = entities.filter((entity) => this.get(getEntityId(entity)) === undefined);
+    if (answer === undefined) {
+      return false;
+    }
+    // Matched by URI as well as id: a source rebuilds each entity under a new id, and an entity already registered
+    // under one of its addresses is the same one.
+    const missing = answer.entities.filter(
+      (entity) =>
+        this.get(getEntityId(entity)) === undefined &&
+        getEntityUris(entity).every((uri) => this.#entitiesByUri.get(normalizeURI(uri)) === undefined),
+    );
     if (missing.length > 0) {
       this.add(missing);
     }
+    return true;
   }
 
   #put(entity: Entity.Unknown): void {
@@ -495,14 +512,14 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
     }));
   }
 
-  async first(): Promise<T> {
-    const results = this.runSync();
+  async first(options?: QueryResult.RunOptions): Promise<T> {
+    const results = await this.run(options);
     invariant(results.length > 0, 'No results');
     return results[0];
   }
 
-  async firstOrUndefined(): Promise<T | undefined> {
-    return this.runSync()[0];
+  async firstOrUndefined(options?: QueryResult.RunOptions): Promise<T | undefined> {
+    return (await this.run(options))[0];
   }
 
   subscribe(callback?: (query: QueryResult.QueryResult<T>) => void): () => void {
