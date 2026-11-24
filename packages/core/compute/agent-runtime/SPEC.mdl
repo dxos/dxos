@@ -90,6 +90,11 @@ feat F-1: Agents and sessions
   req F-1.4:
     when: a session is created with no agent
     then: it runs as a standalone session
+
+  req F-1.5:
+    when: a session that is part of an agent is created
+    then: its home space is either the current space or, when the agent has an identity, the
+          agent's home space; nothing assumes one of the two [Q-2]
 ```
 
 ```mdl
@@ -671,4 +676,11 @@ decision D-39: The thread annotation holds the thread's id and sits beside the s
   for: user:dmaretskyi
   affects: [F-12.5, F-13.6]
   why: Main has no thread id in the trajectory, so a tool call made on main has no thread to name, and a tool's own child processes still work for the thread that called it.
+```
+
+```mdl
+decision D-40: Q-2 stays open. A session that is part of an agent may live in the current space or, when the agent has an identity, in the agent's home space, and the design expects both.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.5]
 ```
