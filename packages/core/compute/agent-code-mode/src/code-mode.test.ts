@@ -622,7 +622,7 @@ describe('code mode types', () => {
           throw new Error('The test database is not backed by echo-client.');
         }
         const asked: string[] = [];
-        const unregister = graph.registry.addSource({
+        const unregister = graph.registerRegistrySource({
           resolve: async (uri) => {
             asked.push(String(uri));
             return DXN.isDXN(uri) && DXN.getName(uri) === NOTE_TYPENAME ? Note : undefined;

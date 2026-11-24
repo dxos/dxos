@@ -20,7 +20,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, type Entity, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import { DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
+import { DatabaseImpl, EchoClient, type RegistrySource, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
@@ -78,7 +78,7 @@ export interface FunctionWrappingOptions {
    * Resolves what the database's registry and space do not hold — types, skills, operations — and answers registry
    * queries for it, e.g. from EDGE's registry of the plugins it enables.
    */
-  registrySource?: Registry.Source;
+  registrySource?: RegistrySource;
 
   /**
    * Blob storage backends to register for the invocation, after the S3 backend this runtime registers itself.
@@ -326,7 +326,7 @@ export class FunctionContext extends Resource {
       this.db.graph.registry.add(this.opts.registry);
     }
     if (this.opts.registrySource && this.client) {
-      this.#unregisterRegistrySource = this.client.graph.registry.addSource(this.opts.registrySource);
+      this.#unregisterRegistrySource = this.client.graph.registerRegistrySource(this.opts.registrySource);
     }
 
     // Register the S3 backend so a handler running here can write to a bucket the space is

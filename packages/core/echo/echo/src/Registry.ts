@@ -6,7 +6,6 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
 import { type ReadOnlyEvent } from '@dxos/async';
-import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database.ts';
 import * as Entity from './Entity.ts';
@@ -127,49 +126,9 @@ export interface Registry {
    * and boolean combinators, plus full-text filters as case-insensitive all-terms containment.
    * Server-side concerns (order, traversal, vector search, timestamp filters) throw or match nothing.
    *
-   * `run()` first asks the registry's {@link Source}s for what the query selects and the registry lacks (see
-   * {@link fetch}); `runSync()` and `results` read only what the registry holds.
-   *
    * @performance O(n · filter size) linear scan of `list()` on every read; results are not cached between reads.
    */
   query: Database.QueryFn;
-
-  /**
-   * Adds a source the registry consults for what it does not hold.
-   * @returns A function that removes the source.
-   */
-  addSource(source: Source): () => void;
-
-  /**
-   * The entity a URI addresses: from the registry, or else from its sources, which adds it to the registry.
-   * Undefined when neither holds it; a failing source reads as one that does not.
-   */
-  resolve(uri: URI.URI): Promise<Entity.Unknown | undefined>;
-
-  /**
-   * Asks the sources for what `query` selects and the registry lacks, and adds their answers: the entities its keys
-   * (`Filter.key`) name, or for a query that names none, what each enumerating source returns for it, asked once per
-   * query.
-   */
-  fetch(query: Query.Any): Promise<void>;
-}
-
-/**
- * A registry the in-process one consults for what it does not hold, e.g. EDGE's registry of the types, skills and
- * operations of the plugins it enables. What a source returns is added to the registry, so it is fetched once.
- */
-export interface Source {
-  /**
-   * The entity a URI addresses: a type by its typename DXN, a keyed entity (a skill, an operation) by its key DXN.
-   * Undefined when the source does not know it.
-   */
-  resolve(uri: URI.URI): Promise<Entity.Unknown | undefined>;
-
-  /**
-   * The entities a query that names no key selects, e.g. every type for `Filter.type(Type.Type)`. A source that cannot
-   * enumerate omits it, and only keyed lookups reach it.
-   */
-  query?(query: Query.Any): Promise<readonly Entity.Unknown[]>;
 }
 
 /**

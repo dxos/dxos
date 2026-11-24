@@ -5,15 +5,19 @@
 // @import-as-namespace
 
 import { ToolId } from '@dxos/ai';
+import { type FunctionWrappingOptions } from '@dxos/compute-runtime/protocol';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { type Entity, Obj, type Query, type Registry, Type } from '@dxos/echo';
+import { type Entity, Obj, type Query, Type } from '@dxos/echo';
 import { DXN, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { PluginProtocol } from '@dxos/protocols';
 
 import * as TypeSource from './TypeSource.ts';
+
+/** A source of an invocation's registry, as the compute runtime registers it (`registrySource`). */
+export type Source = NonNullable<FunctionWrappingOptions['registrySource']>;
 
 /** The keys of what the bundle registers itself, which win over EDGE's records of the same key. */
 export type Own = {
@@ -26,7 +30,7 @@ export type Own = {
  * key enumerates, whichever enabled plugin publishes the type, skill or operation. Built per invocation: the skill
  * catalog it reads once is a promise of this request's I/O context, which a later request may not await.
  */
-export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Registry.Source => {
+export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Source => {
   const types = TypeSource.fromRegistry(registry);
   let catalog: Promise<PluginProtocol.SkillCatalog> | undefined;
   const skillCatalog = () => (catalog ??= registry.listSkills());

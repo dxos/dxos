@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Entity, JsonSchema, Obj, type Registry, Type } from '@dxos/echo';
+import { type FunctionWrappingOptions } from '@dxos/compute-runtime/protocol';
+import { Entity, JsonSchema, Obj, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { PluginProtocol } from '@dxos/protocols';
 
@@ -61,7 +62,10 @@ const isolateCache = makeCache();
  * for the isolate; an unknown type or a failure is not, since a later publish or retry may answer it.
  */
 export const fromRegistry =
-  (registry: PluginProtocol.TypeRegistry, cache: Cache = isolateCache): Registry.Source['resolve'] =>
+  (
+    registry: PluginProtocol.TypeRegistry,
+    cache: Cache = isolateCache,
+  ): NonNullable<FunctionWrappingOptions['registrySource']>['resolve'] =>
   async (uri) => {
     if (!DXN.isDXN(uri)) {
       return undefined;

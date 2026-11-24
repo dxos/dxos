@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Query, type Registry, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import type { PluginProtocol } from '@dxos/protocols';
 
@@ -22,7 +22,7 @@ const makeRegistry = (types: PluginProtocol.TypeRecord[]): PluginProtocol.Regist
 const own: RegistrySource.Own = { skills: new Set(), operations: new Set() };
 
 /** What `source` enumerates for `query`; a source that cannot enumerate answers nothing. */
-const enumerate = (source: Registry.Source, query: Query.Any) => source.query?.(query) ?? Promise.resolve([]);
+const enumerate = (source: RegistrySource.Source, query: Query.Any) => source.query?.(query) ?? Promise.resolve([]);
 
 describe('RegistrySource', () => {
   test('a query for every type lists the types EDGE publishes', async ({ expect }) => {

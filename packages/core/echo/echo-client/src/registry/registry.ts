@@ -17,6 +17,24 @@ import { log } from '@dxos/log';
 import { QueryResultCache } from '../query/index.ts';
 
 /**
+ * A registry {@link RegistryImpl} consults for what it does not hold, e.g. EDGE's registry of the types, skills and
+ * operations of the plugins it enables. What a source returns is added to the registry, so it is fetched once.
+ */
+export interface RegistrySource {
+  /**
+   * The entity a URI addresses: a type by its typename DXN, a keyed entity (a skill, an operation) by its key DXN.
+   * Undefined when the source does not know it.
+   */
+  resolve(uri: URI.URI): Promise<Entity.Unknown | undefined>;
+
+  /**
+   * The entities a query that names no key selects, e.g. every type for `Filter.type(Type.Type)`. A source that cannot
+   * enumerate omits it, and only keyed lookups reach it.
+   */
+  query?(query: Query.Any): Promise<readonly Entity.Unknown[]>;
+}
+
+/**
  * Concrete implementation of the {@link Registry.Registry} interface.
  *
  * All entities (objects, relations, and type-definition entities) are stored in the primary
@@ -49,7 +67,7 @@ export class RegistryImpl implements Registry.Registry {
   // serialized query against this registry.
   readonly #queryResultCache = new QueryResultCache();
 
-  #sources: Registry.Source[] = [];
+  #sources: RegistrySource[] = [];
   // A reactive query and its one-shot run ask for the same entity at once; one request answers both.
   readonly #resolving = new Map<string, Promise<Entity.Unknown | undefined>>();
   // What an enumerating source answered stays registered, so each unkeyed query asks it once.
@@ -132,13 +150,22 @@ export class RegistryImpl implements Registry.Registry {
     return this.#entitiesByUri.get(normalizeURI(uri)) ?? this.#upstream?.getByURI(uri);
   }
 
-  addSource(source: Registry.Source): () => void {
+  /**
+   * Adds a source the registry consults for what it does not hold: a query's `run()` asks it first, and so does
+   * {@link resolve}. `runSync()` and `results` read only what the registry holds.
+   * @returns A function that removes the source.
+   */
+  addSource(source: RegistrySource): () => void {
     this.#sources.push(source);
     return () => {
       this.#sources = this.#sources.filter((entry) => entry !== source);
     };
   }
 
+  /**
+   * The entity a URI addresses: from the registry, or else from its sources, which adds it to the registry. Undefined
+   * when neither holds it; a failing source reads as one that does not.
+   */
   resolve(uri: URI.URI): Promise<Entity.Unknown | undefined> {
     const held = this.#held(uri);
     if (held !== undefined || this.#sources.length === 0) {
@@ -153,6 +180,10 @@ export class RegistryImpl implements Registry.Registry {
     return request;
   }
 
+  /**
+   * Asks the sources for what `query` selects and the registry lacks, and adds their answers: the entities its keys
+   * (`Filter.key`) name, or for a query that names none, what each enumerating source returns, asked once per query.
+   */
   fetch(query: Query.Any): Promise<void> {
     if (this.#sources.length === 0) {
       return Promise.resolve();
@@ -205,7 +236,7 @@ export class RegistryImpl implements Registry.Registry {
     return undefined;
   }
 
-  async #enumerate(source: Registry.Source, query: Query.Any): Promise<void> {
+  async #enumerate(source: RegistrySource, query: Query.Any): Promise<void> {
     if (source.query === undefined) {
       return;
     }
@@ -384,10 +415,10 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * Vector search, traversal, ordering, and timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
-  readonly #registry: Registry.Registry;
+  readonly #registry: RegistryImpl;
   readonly #query: Query.Query<T>;
 
-  constructor(registry: Registry.Registry, query: Query.Query<T>) {
+  constructor(registry: RegistryImpl, query: Query.Query<T>) {
     this.#registry = registry;
     this.#query = query;
   }

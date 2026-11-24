@@ -42,7 +42,7 @@ export type Env = Partial<Pick<EdgeFunctionEnv.Env, 'DATA_SERVICE' | 'QUEUE_SERV
   readonly TYPE_REGISTRY?: TypeRegistry;
   /**
    * EDGE's registry of what its enabled plugins publish — types, skills and operation records. The host makes it a
-   * source of each invocation's registry (`Registry.Source`), so a registry query or a registry URI reaches whichever
+   * source of each invocation's registry (the compute runtime's `registrySource`), so a registry query or a registry URI reaches whichever
    * plugin contributes the entity. Supersedes {@link TYPE_REGISTRY}, which EDGE keeps for hosts published before it.
    */
   readonly REGISTRY?: Registry;

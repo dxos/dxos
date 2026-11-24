@@ -37,7 +37,7 @@ import {
   QueryResultImpl,
   type RemoteQuerySource,
 } from './query/index.ts';
-import { makeRegistry } from './registry/index.ts';
+import { RegistryImpl, type RegistrySource } from './registry/index.ts';
 
 const TRACE_REF_RESOLUTION = false;
 
@@ -55,7 +55,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   // TODO(burdon): Space dependency?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: RegistryImpl;
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<LocalQueryEngine>();
@@ -82,7 +82,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   readonly #reportedMalformedUris = new Set<string>();
 
   constructor() {
-    this._registry = makeRegistry();
+    this._registry = new RegistryImpl({});
     this._registry.add([Type.Type]);
   }
 
@@ -579,7 +579,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return this._resolveObjectInSpaceFeeds(spaceId, entityId);
   }
 
-  /** A type from the registry, or else from its sources (`Registry.addSource`), which register what they return. */
+  /**
+   * Registers a source that the registry's queries and registry-URI resolution consult for what the registry does not
+   * hold, e.g. EDGE's registry of published plugins; what it returns is added to the registry, so it is fetched once.
+   * @returns A cleanup function that unregisters the source.
+   */
+  registerRegistrySource(source: RegistrySource): CleanupFn {
+    return this._registry.addSource(source);
+  }
+
+  /** A type from the registry, or else from its sources ({@link registerRegistrySource}), which register what they return. */
   async #resolveTypeFromSources(uri: URI.URI): Promise<Type.AnyEntity | undefined> {
     const entity = await this._registry.resolve(uri);
     return entity !== undefined && Type.isType(entity) ? entity : undefined;

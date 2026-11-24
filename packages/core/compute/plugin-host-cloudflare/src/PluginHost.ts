@@ -18,7 +18,7 @@ import { wrapFunctionHandler } from '@dxos/compute-runtime/protocol';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
-import { type Entity, Obj, type Registry } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, messageOf } from '@dxos/errors';
 import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
@@ -306,7 +306,7 @@ const registryEntities = (activation: PluginActivation.Activation): Entity.Unkno
  * publishes the entity; an EDGE that serves only `TYPE_REGISTRY` resolves types alone. The primary's entities, already
  * registered, win for a key both hold.
  */
-const edgeRegistry = (env: PluginProtocol.Env, own: readonly Entity.Unknown[]): Registry.Source | undefined => {
+const edgeRegistry = (env: PluginProtocol.Env, own: readonly Entity.Unknown[]): RegistrySource.Source | undefined => {
   if (env.REGISTRY !== undefined) {
     return RegistrySource.fromRegistry(env.REGISTRY, {
       skills: new Set(

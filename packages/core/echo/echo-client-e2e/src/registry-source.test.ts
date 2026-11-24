@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { type Database, DXN, Filter, JsonSchema, Obj, Query, type Registry, Scope, Type } from '@dxos/echo';
+import { type Database, DXN, Filter, JsonSchema, Obj, Query, Scope, Type } from '@dxos/echo';
+import { type RegistrySource } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { PublicKey, type URI } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
@@ -17,7 +18,7 @@ describe('registry sources', () => {
   test('a type the registry does not hold resolves from the source and is then registered', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
-    db.graph.registry.addSource(registry.source);
+    db.graph.registerRegistrySource(registry.source);
 
     expect(db.graph.registry.getByURI(DXN.make(TYPENAME, VERSION))).toBeUndefined();
     const type = await queryType(db, TYPENAME);
@@ -32,7 +33,7 @@ describe('registry sources', () => {
 
   test('the resolved type creates objects', async ({ expect }) => {
     const { db } = await setup();
-    db.graph.registry.addSource(makeMockRegistry().source);
+    db.graph.registerRegistrySource(makeMockRegistry().source);
 
     const type = await queryType(db, TYPENAME);
     expect(type && Type.isObject(type)).toBe(true);
@@ -46,7 +47,7 @@ describe('registry sources', () => {
   test('the source is not asked for a type the registry holds', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
-    db.graph.registry.addSource(registry.source);
+    db.graph.registerRegistrySource(registry.source);
 
     expect(await queryType(db, Type.getTypename(Type.Type))).toBe(Type.Type);
     expect(registry.requests).toHaveLength(0);
@@ -55,7 +56,7 @@ describe('registry sources', () => {
   test('a type no source knows resolves to undefined', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
-    db.graph.registry.addSource(registry.source);
+    db.graph.registerRegistrySource(registry.source);
 
     expect(await queryType(db, 'com.example.type.unknown')).toBeUndefined();
     expect(registry.requests).toHaveLength(1);
@@ -63,7 +64,7 @@ describe('registry sources', () => {
 
   test('a failing source reads as a missing type', async ({ expect }) => {
     const { db } = await setup();
-    db.graph.registry.addSource(makeMockRegistry({ fail: true }).source);
+    db.graph.registerRegistrySource(makeMockRegistry({ fail: true }).source);
 
     expect(await queryType(db, TYPENAME)).toBeUndefined();
   });
@@ -71,7 +72,7 @@ describe('registry sources', () => {
   test('without a source the type is missing; unregistering removes the source', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
-    const unregister = db.graph.registry.addSource(registry.source);
+    const unregister = db.graph.registerRegistrySource(registry.source);
     unregister();
 
     expect(await queryType(db, TYPENAME)).toBeUndefined();
@@ -80,7 +81,7 @@ describe('registry sources', () => {
 
   test('a stalled source does not hold a query past its timeout', async ({ expect }) => {
     const { db } = await setup();
-    db.graph.registry.addSource({ resolve: () => new Promise(() => {}) });
+    db.graph.registerRegistrySource({ resolve: () => new Promise(() => {}) });
 
     const started = Date.now();
     const types = await db
@@ -93,7 +94,7 @@ describe('registry sources', () => {
   test('a query outside the registry does not ask the source', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
-    db.graph.registry.addSource(registry.source);
+    db.graph.registerRegistrySource(registry.source);
 
     expect(await queryType(db, TYPENAME, [Scope.space()])).toBeUndefined();
     expect(registry.requests).toHaveLength(0);
@@ -102,7 +103,7 @@ describe('registry sources', () => {
   test('a registry query by an entity key other than a type resolves it from the source', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
-    db.graph.registry.addSource(registry.source);
+    db.graph.registerRegistrySource(registry.source);
 
     const [entity] = await db.query(Query.select(Filter.key(THING_KEY)).from(Scope.registry())).run();
     expect(entity && Obj.getMeta(entity).key).toBe(THING_KEY);
@@ -112,7 +113,7 @@ describe('registry sources', () => {
   test('a registry query that names no key lists what the source enumerates, asking it once', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
-    db.graph.registry.addSource(registry.source);
+    db.graph.registerRegistrySource(registry.source);
 
     const listTypes = () => db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run();
     expect((await listTypes()).map((type) => Type.getTypename(type))).toContain(TYPENAME);
@@ -124,7 +125,7 @@ describe('registry sources', () => {
   test('a source that cannot enumerate leaves an unkeyed query to the local registry', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
-    db.graph.registry.addSource({ resolve: registry.source.resolve });
+    db.graph.registerRegistrySource({ resolve: registry.source.resolve });
 
     const types = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run();
     expect(types.map((type) => Type.getTypename(type))).not.toContain(TYPENAME);
@@ -132,7 +133,7 @@ describe('registry sources', () => {
 
   test('a reactive query picks up the type once the remote registry answers', async ({ expect }) => {
     const { db } = await setup();
-    db.graph.registry.addSource(makeMockRegistry().source);
+    db.graph.registerRegistrySource(makeMockRegistry().source);
 
     const result = db.query(
       Query.select(Filter.and(Filter.type(Type.Type), Filter.key(TYPENAME))).from(Scope.registry()),
@@ -156,14 +157,14 @@ describe('registry sources', () => {
     expect(() => db.add(Obj.make(Remote, { title: 'Unregistered' }))).toThrow(/Schema not registered/);
 
     const registry = makeMockRegistry();
-    db.graph.registry.addSource(registry.source);
+    db.graph.registerRegistrySource(registry.source);
     expect(() => db.add(Obj.make(Remote, { title: 'Unregistered' }))).toThrow(/Schema not registered/);
     expect(registry.requests).toHaveLength(0);
   });
 
   test('loading an object of an unregistered type resolves its schema from the source', async ({ expect }) => {
     const { db } = await setup();
-    db.graph.registry.addSource(makeMockRegistry().source);
+    db.graph.registerRegistrySource(makeMockRegistry().source);
 
     const schema = await db.graph
       .createRefResolver({ context: { space: db.spaceId } })
@@ -182,7 +183,7 @@ describe('registry sources', () => {
     // A second client, as another bundle's isolate is: it never registered `Remote`, only the source knows it.
     const reader = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
     const registry = makeMockRegistry();
-    reader.graph.registry.addSource(registry.source);
+    reader.graph.registerRegistrySource(registry.source);
     expect(reader.graph.registry.getByURI(DXN.make(TYPENAME, VERSION))).toBeUndefined();
 
     const loaded = await reader.makeRef(Obj.getURI(written)).load();
@@ -198,7 +199,7 @@ describe('registry sources', () => {
     const { db } = await setup();
     db.graph.registry.add([Remote]);
     const registry = makeMockRegistry();
-    db.graph.registry.addSource(registry.source);
+    db.graph.registerRegistrySource(registry.source);
     const written = db.add(Obj.make(Remote, { title: 'Registered' }));
     await db.flush();
 
@@ -223,7 +224,7 @@ const remoteType = () => Type.makeObject(DXN.make(TYPENAME, VERSION))(JsonSchema
 const makeMockRegistry = (options: { fail?: boolean } = {}) => {
   const requests: string[] = [];
   let queries = 0;
-  const source: Registry.Source = {
+  const source: RegistrySource = {
     resolve: async (uri: URI.URI) => {
       requests.push(uri);
       await new Promise((resolve) => setTimeout(resolve, 5));
