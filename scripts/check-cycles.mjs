@@ -4,7 +4,7 @@ import { globby } from 'globby';
 import madge from 'madge';
 
 const CONFIG = {
-  include: ['packages/{common,core,plugins}/**/*.{ts,tsx}'],
+  include: ['packages/{common,core,plugins,ui}/**/*.{ts,tsx}'],
   ignoreGlobs: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
   ignorePathSegments: ['gen/', 'dist/'],
   gitignore: true,

@@ -9,7 +9,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { useMosaicContainer } from '../components/index.ts';
+import { useMosaicContainerContext as useMosaicContainer } from '../components/Mosaic/MosaicContainerContext.ts';
 
 export type UseContainerDebug = [FC<Util.ThemedClassName>, (() => ReactNode) | undefined];
 

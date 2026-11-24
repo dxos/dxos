@@ -12,7 +12,7 @@ import { type FormFieldRendererProps } from '#types';
 
 import { StepAnnotation } from '../../annotations.ts';
 import { useFormContext } from '../../hooks/index.ts';
-import { FormStaticValue } from '../FormField.tsx';
+import { FormStaticValue } from '../FormFieldRow.tsx';
 import { presentationFor } from '../presentation.tsx';
 import { type NumberEditEvent, type NumberEditState, numberEdit } from './number-edit.ts';
 import { numberLayoutOf } from './number-layout.ts';

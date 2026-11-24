@@ -8,7 +8,7 @@ import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormStaticValue } from '../FormField.tsx';
+import { FormStaticValue } from '../FormFieldRow.tsx';
 import { presentationFor } from '../presentation.tsx';
 
 export const PasswordField = ({
