@@ -8,9 +8,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 
-import { ThreadColumns } from '../components/index.ts';
-import { LAUNCH_REQUEST, LAUNCH_TASKS, Scripts, SIDE_QUESTION } from '../scripts/index.ts';
-import { createDecorators, storyParameters } from '../testing/index.ts';
+import { ThreadColumns } from '../../components/index.ts';
+import { LAUNCH_REQUEST, LAUNCH_TASKS, Scripts, SIDE_QUESTION } from '../../scripts/index.ts';
+import { createDecorators, storyParameters } from '../../testing/index.ts';
 
 type StoryArgs = {
   /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
@@ -21,11 +21,11 @@ type StoryArgs = {
  * One chat and the threads it delegates: the chat stays in the first column, at the start of the strip, with its
  * prompt beneath it, and each subagent thread opens in a column of its own beside it, showing its reasoning, the
  * document it writes and its slice of memory. A column closes once its subagent reports, and the strip scrolls
- * sideways when the columns outgrow it. For a column per chat, see the ChatColumns stories. See
+ * sideways when the columns outgrow it. For a column per chat, see the chat Columns stories. See
  * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8, QA-6).
  */
 const meta: Meta<StoryArgs> = {
-  title: 'stories/stories-assistant/ThreadColumns',
+  title: 'stories/stories-assistant/threads/ThreadColumns',
   component: ThreadColumns,
   decorators: createDecorators({
     lazyPlugins: async () => {

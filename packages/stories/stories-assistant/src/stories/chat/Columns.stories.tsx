@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { ChatColumns } from '../components/index.ts';
-import { Scripts } from '../scripts/index.ts';
-import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { ChatColumns } from '../../components/index.ts';
+import { Scripts } from '../../scripts/index.ts';
+import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 
 /**
  * A column per chat: every chat in the space is a conversation of its own, and the selected one rests at the center of
@@ -15,7 +15,7 @@ import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from
  * the threads it delegates, see the ThreadColumns stories.
  */
 const meta: Meta<typeof ChatColumns> = {
-  title: 'stories/stories-assistant/ChatColumns',
+  title: 'stories/stories-assistant/chat/Columns',
   component: ChatColumns,
   parameters: storyParameters,
 };

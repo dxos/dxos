@@ -30,7 +30,7 @@ import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/index.ts';
+import { StoryRole } from '../../modules/index.ts';
 import {
   ResearchInputQueue,
   addTestData,
@@ -40,9 +40,9 @@ import {
   organizations,
   storyParameters,
   testTypes,
-} from '../testing/index.ts';
+} from '../../testing/index.ts';
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Data',
+  title: 'stories/stories-assistant/chat/Data',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };

@@ -10,8 +10,8 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
-import { StoryRole } from '../modules/index.ts';
-import { Calculate, CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { Calculate, CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
@@ -22,7 +22,7 @@ const { text, reasoning, toolCall } = ScriptedLanguageModel;
  * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl`.
  */
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/LightThreads',
+  title: 'stories/stories-assistant/threads/LightThreads',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };
@@ -133,6 +133,20 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself; the trace
+ * panel beside the chat draws each thread as a lane of its own. */
+export const Default: Story = {
+  decorators: createDecorators({
+    skills: [CalculatorSkill.key],
+    scripted: script,
+    assistantSettings: { parallelThreads: true },
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
+  },
+  tags: ['!test'],
+};
+
 /**
  * Scripted (offline): the research runs on main; the three prompts sent during it start light threads. The quick ones
  * finish first, and the translation waits for the research and answers once it completes.
@@ -176,20 +190,6 @@ export const Live: Story = {
   }),
   args: {
     layout: [[StoryRole.Chat], [StoryRole.Logging]],
-  },
-  tags: ['!test'],
-};
-
-/** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself; the trace
- * panel beside the chat draws each thread as a lane of its own. */
-export const Default: Story = {
-  decorators: createDecorators({
-    skills: [CalculatorSkill.key],
-    scripted: script,
-    assistantSettings: { parallelThreads: true },
-  }),
-  args: {
-    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
   },
   tags: ['!test'],
 };

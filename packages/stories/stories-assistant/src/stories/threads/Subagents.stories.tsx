@@ -8,9 +8,9 @@ import { expect, waitFor, within } from 'storybook/test';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
-import { StoryRole } from '../modules/index.ts';
-import { PLANS, SAVINGS_PROMPTS, Scripts } from '../scripts/index.ts';
-import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { PLANS, SAVINGS_PROMPTS, Scripts } from '../../scripts/index.ts';
+import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 
 /**
  * Subagents on light threads: the agent delegates self-contained tasks with `thread_delegate`; each runs in a
@@ -20,7 +20,7 @@ import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from
  * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8, QA-4).
  */
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Subagents',
+  title: 'stories/stories-assistant/threads/Subagents',
   render: ModuleContainer.Root,
   decorators: createDecorators({
     skills: [CalculatorSkill.key],

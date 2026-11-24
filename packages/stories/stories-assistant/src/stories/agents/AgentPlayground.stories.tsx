@@ -20,7 +20,7 @@ import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
-import { StoryRole } from '../modules/index.ts';
+import { StoryRole } from '../../modules/index.ts';
 import {
   GOAL_FACTS,
   PARTICIPANTS,
@@ -38,10 +38,10 @@ import {
   setupPlayground,
   storyParameters,
   submitPrompt,
-} from '../testing/index.ts';
+} from '../../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/AgentPlayground',
+  title: 'stories/stories-assistant/agents/AgentPlayground',
   render: ModuleContainer.Root,
   // A new story's setup starts after the previous one's refs and database are still in place, so each story
   // waits on its own setup rather than racing it.

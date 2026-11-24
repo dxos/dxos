@@ -20,16 +20,16 @@ import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Event, Message, Transcript } from '@dxos/types';
 
-import { StoryRole } from '../modules/index.ts';
+import { StoryRole } from '../../modules/index.ts';
 import {
   config,
   createDecorators,
   createTestMailbox,
   createTestTranscription,
   storyParameters,
-} from '../testing/index.ts';
+} from '../../testing/index.ts';
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Connectors',
+  title: 'stories/stories-assistant/chat/Connectors',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };

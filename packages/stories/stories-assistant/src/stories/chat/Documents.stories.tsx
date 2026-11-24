@@ -22,11 +22,11 @@ import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/index.ts';
-import { createDecorators, findPromptEditor, storyParameters } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, findPromptEditor, storyParameters } from '../../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Documents',
+  title: 'stories/stories-assistant/chat/Documents',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };

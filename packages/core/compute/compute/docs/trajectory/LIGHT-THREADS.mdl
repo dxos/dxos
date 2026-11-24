@@ -376,12 +376,12 @@ scenario T-7: A fork stays apart
 
 ```mdl
 test QA-1: Three prompts sent while the agent researches
-  desc: The scripted story `stories-assistant/LightThreads` (Default) walked by a person.
+  desc: The scripted story `stories-assistant/threads/LightThreads` (Default) walked by a person.
   actors: human
   covers: [F-1.1, F-1.2, F-3.1, F-3.2, F-4.1, F-4.2, F-4.3, T-4]
   status: draft
   given:
-    - the story `stories/stories-assistant/LightThreads` Default, with Parallel threads on
+    - the story `stories/stories-assistant/threads/LightThreads` Default, with Parallel threads on
   steps:
     - name: Start the research
       do: Send "Research the factorials of 5 to 9 and summarise them."
@@ -402,12 +402,12 @@ test QA-1: Three prompts sent while the agent researches
 
 ```mdl
 test QA-2: Two agents share one chat
-  desc: The scripted story `stories-assistant/MultiTenantThreads` (Default) walked by a person; both agents are scripted stand-ins.
+  desc: The scripted story `stories-assistant/threads/MultiTenantThreads` (Default) walked by a person; both agents are scripted stand-ins.
   actors: human
   covers: [F-1.1, F-2.1, F-4.1, F-4.2, F-4.3, F-7.1, F-7.2]
   status: draft
   given:
-    - the story `stories/stories-assistant/MultiTenantThreads` Default, with Parallel threads on and the agent `claude` sharing the chat
+    - the story `stories/stories-assistant/threads/MultiTenantThreads` Default, with Parallel threads on and the agent `claude` sharing the chat
   steps:
     - name: Ask the default agent for a plan
       do: Send "Draft a three-step plan for migrating the chat store to events."
@@ -425,7 +425,7 @@ test QA-2: Two agents share one chat
 
 ```mdl
 test QA-3: A live assistant draws while live Claude Code edits files
-  desc: The story `stories-assistant/MultiTenantThreads` (Live) walked by a person, against real models: the chat's
+  desc: The story `stories-assistant/threads/MultiTenantThreads` (Live) walked by a person, against real models: the chat's
     agent runs DeepSeek V4 Flash through the remote EDGE AI service, and Claude Code runs through the ACP agent helper.
   actors: human
   covers: [F-1.1, F-4.1, F-7.1, F-7.2, F-7.3]
@@ -433,7 +433,7 @@ test QA-3: A live assistant draws while live Claude Code edits files
   given:
     - the agent helper serving `claude-code` with an Anthropic key, and its port, token and a scratch folder holding
       `notes.txt` passed to the story as `helperPort`, `helperToken` and `cwd`
-    - the story `stories/stories-assistant/MultiTenantThreads` Live, with the Drawing skill and an empty drawing
+    - the story `stories/stories-assistant/threads/MultiTenantThreads` Live, with the Drawing skill and an empty drawing
       "Launch plan" beside the chat
   steps:
     - name: Ask the assistant for a diagram
@@ -455,12 +455,12 @@ test QA-3: A live assistant draws while live Claude Code edits files
 
 ```mdl
 test QA-4: Three subagents compare savings plans
-  desc: The scripted story `stories-assistant/Subagents` (Default) walked by a person.
+  desc: The scripted story `stories-assistant/threads/Subagents` (Default) walked by a person.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4, T-6]
   status: draft
   given:
-    - the story `stories/stories-assistant/Subagents` Default, with Parallel threads on
+    - the story `stories/stories-assistant/threads/Subagents` Default, with Parallel threads on
   steps:
     - name: Ask for a comparison
       do: Send "Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years."
@@ -504,14 +504,14 @@ test QA-5: Fork a chat at an earlier answer
 
 ```mdl
 test QA-6: Subagent threads open as columns
-  desc: The scripted story `stories-assistant/ThreadColumns` walked by a person. Each subagent thread renders as a
+  desc: The scripted story `stories-assistant/threads/ThreadColumns` walked by a person. Each subagent thread renders as a
     column of its own beside the agent's conversation, holding its reasoning, the document it wrote and its slice of
     the trajectory, and closes once the subagent reports.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4]
   status: draft
   given:
-    - the story `stories/stories-assistant/ThreadColumns` Default, with Parallel threads on and the `launchKit` scripted model
+    - the story `stories/stories-assistant/threads/ThreadColumns` Default, with Parallel threads on and the `launchKit` scripted model
   steps:
     - name: Describe a complex task
       do: Click the chip "Plan the Composer 1.0 launch: we need a blog post, release notes, an FAQ and an announcement email."
@@ -1025,4 +1025,11 @@ decision D-47: `test QA-1` and `test QA-2` walk `Default`, the story that was `D
   for: user:richburdon
   affects: [F-1, F-7]
   why: `test QA-1` named `Scripted`, which runs a play function and so cannot be walked by a person; `Demo` was the play-free story in both files.
+```
+
+```mdl
+decision D-48: The `stories-assistant` stories sit in three groups, `chat`, `threads` and `agents`, and the stories the tests of this spec walk are in `threads`.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-1, F-7, F-8]
 ```

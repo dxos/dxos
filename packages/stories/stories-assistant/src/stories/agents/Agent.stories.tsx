@@ -16,8 +16,8 @@ import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { ContentBlock, Message } from '@dxos/types';
 import { concat } from '@dxos/util';
 
-import { AgentModule, StoryRole } from '../modules/index.ts';
-import { AgentClaudePlugin, createDecorators, findPromptEditor, storyParameters } from '../testing/index.ts';
+import { AgentModule, StoryRole } from '../../modules/index.ts';
+import { AgentClaudePlugin, createDecorators, findPromptEditor, storyParameters } from '../../testing/index.ts';
 
 /**
  * The turn asks for one allowed tool call (Read), one that the M1 permission posture must refuse
@@ -87,7 +87,7 @@ const require_ = <T,>(value: T | undefined, message: string): T => {
 };
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Agent',
+  title: 'stories/stories-assistant/agents/Agent',
   render: ModuleContainer.Root,
   parameters: storyParameters,
   // Spawns the real SDK and spends real tokens. `manual` is the repo's opt-in tag (vitest.tags.ts),
@@ -99,6 +99,17 @@ const meta: Meta<typeof ModuleContainer.Root> = {
 export default meta;
 
 type Story = StoryObj<typeof ModuleContainer.Root>;
+
+/**
+ * The interactive console rendered directly, skipping the plugin stack.
+ *
+ * Kept alongside {@link ConsoleModule} because that variant boots the DXOS client, which cannot
+ * finish inside `useApp`'s 30s budget under `storybook dev` (~5s per Automerge doc open). This is
+ * the variant that actually opens in a browser until that is fixed.
+ */
+export const Default: Story = {
+  render: () => <AgentModule />,
+};
 
 /**
  * Drives a real Claude Agent SDK turn through the sidecar and appends the projected messages onto
@@ -210,17 +221,6 @@ export const ConsoleModule: Story = {
     // Resolving the surface is the assertion: the prompt box only exists if the role bound.
     await canvas.findByPlaceholderText('Ask the agent…', undefined, { timeout: 60_000 });
   },
-};
-
-/**
- * The same console rendered directly, skipping the plugin stack.
- *
- * Kept alongside {@link ConsoleModule} because that variant boots the DXOS client, which cannot
- * finish inside `useApp`'s 30s budget under `storybook dev` (~5s per Automerge doc open). This is
- * the variant that actually opens in a browser until that is fixed.
- */
-export const Default: Story = {
-  render: () => <AgentModule />,
 };
 
 /**

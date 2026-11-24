@@ -17,7 +17,7 @@ import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { HasSubject, Message, Organization, Person, ProfileOf } from '@dxos/types';
 
-import { StoryRole } from '../modules/index.ts';
+import { StoryRole } from '../../modules/index.ts';
 import {
   type Participant,
   PARTICIPANTS,
@@ -28,10 +28,10 @@ import {
   setupPlayground,
   storyParameters,
   submitPrompt,
-} from '../testing/index.ts';
+} from '../../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/AgentConversation',
+  title: 'stories/stories-assistant/agents/AgentConversation',
   render: ModuleContainer.Root,
   parameters: {
     ...storyParameters,

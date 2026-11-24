@@ -11,7 +11,7 @@
  * @title Subagent columns
  * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-6
  * @app storybook via `DX_STORIES=stories/stories-assistant moon run storybook-react:serve` on :9009,
- *   story `stories-stories-assistant-threadcolumns--default` in isolation mode
+ *   story `stories-stories-assistant-threads-threadcolumns--default` in isolation mode
  */
 
 const PROMPT = '[data-testid="assistant.prompt"] .cm-content';

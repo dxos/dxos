@@ -27,13 +27,13 @@ identity, so no key reaches the browser.
 
 ## 1. Live story
 
-`stories-assistant` → **Interview › Live** (`stories-stories-assistant-interview--live`): a chat with
+`stories-assistant` → **Interview › Live** (`stories-stories-assistant-chat-interview--live`): a chat with
 an agent that has the interview skill, beside a panel showing the person's goals and facts as the
 agent records them. Edit the skill's instructions
 (`packages/plugins/plugin-agent/src/skills/InterviewSkill.ts`), let the story hot-reload, and talk to
 it. Tagged `!test`, so CI never runs it.
 
-**Agent playground** (`stories-stories-assistant-agentplayground--default`): one agent, Kai, and
+**Agent playground** (`stories-stories-assistant-agents-agentplayground--default`): one agent, Kai, and
 three chat panels — Rich, Dima, Josiah — plus the agent state panel. Each panel is that person's chat
 with Kai (`ensureParticipantChat`, `ChatParticipant`) and attributes every prompt to them: the panel
 passes a `sender` to `useChatModel`, the agent process records it on the user message, and the
@@ -43,7 +43,7 @@ direct pipeline-rdf extraction, no chat) into facts in the agent's brain — the
 panel counts them and the knowledge panel's Facts tab lists them. Try "tell Dima the fix landed", Dima's reply, "take notes", "interview me".
 Tagged `!test`.
 
-**Agent goals** (`stories-stories-assistant-agentplayground--goals`): the same panels without the
+**Agent goals** (`stories-stories-assistant-agents-agentplayground--goals`): the same panels without the
 transcript. As Rich, "let me know when Dima's indexer PR is up" — Kai records a goal Rich owns and a
 watch, both listed in the knowledge panel's Goals tab. As Dima, "still working on it" (nothing reaches
 Rich), then "the indexer PR is up" — the end-of-turn read records the fact, the watch fires, Rich is
@@ -66,14 +66,14 @@ Start → connecting → ready → Stop in CI.
   `discord-bot.test.ts` covers the bot operations against a stubbed EDGE.
 - **Scripted interview** — `stories-assistant` → **Interview › TestInterviewScripted**: a scripted
   model plays the agent through four exchanges and the play function checks the profile panel and the
-  space. `pnpm exec vitest run --project=storybook src/stories/Interview.stories.tsx` in
+  space. `pnpm exec vitest run --project=storybook src/stories/chat/Interview.stories.tsx` in
   `packages/stories/stories-assistant`.
 - **Scripted playground** — **AgentPlayground › PlaygroundScripted**: a turn generator plays the
   agent across the three conversations and the transcript's extraction; the play function checks the
   facts read (count, Dima's attributed directive, no extra conversation), a relay from Rich's panel
   into Dima's and back, and a switch to Note-taker that records a note. `modes.test.ts` covers modes,
   notes and participant chats; `read-source.test.ts` covers `readSource` and fact recall (scripted model).
-- **Scripted goals** — **AgentPlayground › GoalsScripted** (`stories-stories-assistant-agentplayground--goals-scripted`):
+- **Scripted goals** — **AgentPlayground › GoalsScripted** (`stories-stories-assistant-agents-agentplayground--goals-scripted`):
   Rich's request registers a watch under a goal he owns (one watch listed); Dima's "still working on it"
   is read into a negative fact that must not fire it; "the indexer PR is up" fires it — Rich's panel
   shows the notification, the goal is achieved and the watch list is empty. `triggers.test.ts` covers
