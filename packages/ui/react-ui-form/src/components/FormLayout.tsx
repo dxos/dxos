@@ -18,8 +18,8 @@ import { type FormPresentation } from '#types';
 
 import { useFormContext, useFormFieldState } from '../hooks/index.ts';
 import { FormFieldErrorBoundary } from './field-binding.tsx';
-import { FormFieldRow } from './FormField.tsx';
 import { FormFieldDispatch } from './FormFieldDispatch.tsx';
+import { FormFieldRow } from './FormFieldRow.tsx';
 import { type LayoutGrid, type LayoutNode, LayoutParseError, gridTracks, parseLayout } from './layout/parser.ts';
 import { resolveLayoutField } from './layout/resolve-layout-field.ts';
 import { type FormFieldDispatchProps } from './resolve-field.ts';

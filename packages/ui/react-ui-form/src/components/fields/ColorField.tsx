@@ -8,7 +8,7 @@ import * as ColorPicker from '@dxos/react-ui/ColorPicker';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormStaticValue } from '../FormField.tsx';
+import { FormStaticValue } from '../FormFieldRow.tsx';
 import { presentationFor } from '../presentation.tsx';
 
 /** A CSS color typed as text, with a swatch at the end of the box that opens a picker. */

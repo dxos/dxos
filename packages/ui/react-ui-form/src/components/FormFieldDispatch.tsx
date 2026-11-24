@@ -42,8 +42,8 @@ import {
   VectorField,
   getArrayPresentation,
 } from './fields/index.ts';
-import { FormFieldRow } from './FormField.tsx';
 import { type FormFieldBinding } from './FormFieldContext.ts';
+import { FormFieldRow } from './FormFieldRow.tsx';
 import { FormFieldSet } from './FormFieldSet.tsx';
 import { FormLayout } from './FormLayout.tsx';
 import { type FormFieldsProps, toPathSegments, useFormFieldsProperties } from './property-walk.ts';

@@ -5,7 +5,7 @@ import madge from 'madge';
 
 const CONFIG = {
   // TODO(dmaretskyi): Add more packages.
-  include: ['packages/{common,core}/**/*.{ts,tsx}'],
+  include: ['packages/{common,core}/**/*.{ts,tsx}', 'packages/ui/react-ui-form/**/*.{ts,tsx}'],
   ignoreGlobs: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
   ignorePathSegments: ['gen/', 'dist/'],
   gitignore: true,
