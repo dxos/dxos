@@ -287,7 +287,8 @@ export class Toolbox {
       // git-based, not GitHub API-based — see .github/RELEASE-SPEC.md for why.
       changelog: '@changesets/changelog-git',
       commit: false,
-      // Off because `.oxfmtrc.json` ignores markdown, so `oxfmt --write` on the changelogs matches no file and fails.
+      // Off: `.oxfmtrc.json` ignores every markdown file, so `oxfmt --write` on the CHANGELOGs exits 2 and
+      // fails `changeset version`.
       format: false,
       access: 'public',
       baseBranch: 'main',
