@@ -19,3 +19,4 @@ export * from './model-intent.ts';
 export * from './validate.ts';
 export * from './watch.ts';
 export * from './clipboard.ts';
+export * as Ontology from './ontology.ts';

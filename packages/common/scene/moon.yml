@@ -4,3 +4,11 @@ tags:
   - ts-vite-build
   - ts-test
   - pack
+
+tasks:
+  # Writes the ontology's JSON Schema and its docs page from `src/ontology.ts`.
+  gen-ontology:
+    command: pnpm exec tsx ./src/ontology-cli.ts
+    options:
+      cache: false
+      runInCI: false
