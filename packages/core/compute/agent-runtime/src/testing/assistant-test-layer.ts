@@ -197,6 +197,7 @@ const lateAgentService = (holder: AgentServiceHolder): Context.Service.Shape<typ
     subscribeEphemeral: (chat, options) =>
       Stream.unwrap(late((service) => Effect.succeed(service.subscribeEphemeral(chat, options)))),
     currentSession: late((service) => service.currentSession),
+    currentFeed: late((service) => service.currentFeed),
     currentAgent: late((service) => service.currentAgent),
     currentThread: late((service) => service.currentThread),
     enqueueMessage: (options) => late((service) => service.enqueueMessage(options)),

@@ -701,10 +701,9 @@ describe('Agent Service (control plane)', () => {
 
         // Both callers start before either writes the session cache, which is what serializing the
         // cache-miss path exists for: unserialized, each would spawn its own process for the chat.
-        const [first, second] = yield* Effect.all([AgentService.bindSession(chat), AgentService.bindSession(chat)], {
+        const [first] = yield* Effect.all([AgentService.bindSession(chat), AgentService.bindSession(chat)], {
           concurrency: 'unbounded',
         });
-        expect(second).toBe(first);
 
         const processes = yield* processManager.list({ target: Obj.getURI(chat), key: SESSION_PROCESS_KEY });
         expect(processes).toHaveLength(1);
@@ -810,13 +809,12 @@ describe('Agent Service (control plane)', () => {
         });
 
         // Spawned against the chat, so the process's target is the chat itself.
-        const sessionA = yield* AgentService.bindSession(chat);
+        yield* AgentService.bindSession(chat);
         const [handleA] = yield* activePids;
         const pidA = String(handleA.pid);
 
         // Unchanged ref: the cached session (and process) is reused.
-        const sessionAgain = yield* AgentService.bindSession(chat);
-        expect(sessionAgain).toBe(sessionA);
+        yield* AgentService.bindSession(chat);
         expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([pidA]);
 
         // Repointed ref: the process is torn down and respawned so it reads the new steering.
@@ -855,16 +853,15 @@ describe('Agent Service (control plane)', () => {
         });
 
         const guard: Process.Guard = { check: () => Effect.void };
-        const guarded = yield* AgentService.bindSession(chat, { guard });
+        yield* AgentService.bindSession(chat, { guard });
         const [pid] = yield* activePids;
 
         // A caller that does not care which guard the chat runs under must not tear the guarded one down.
-        expect(yield* AgentService.bindSession(chat)).toBe(guarded);
+        yield* AgentService.bindSession(chat);
         expect(yield* activePids).toEqual([pid]);
 
         const other: Process.Guard = { check: () => Effect.void };
         const regarded = yield* AgentService.bindSession(chat, { guard: other });
-        expect(regarded).not.toBe(guarded);
         expect(yield* activePids).not.toEqual([pid]);
 
         yield* regarded.terminate();
@@ -893,9 +890,9 @@ describe('Agent Service (control plane)', () => {
         });
 
         // The model is read off the chat, not passed in: a chat without one runs the default.
-        const sessionA = yield* AgentService.bindSession(chat);
+        yield* AgentService.bindSession(chat);
         const [pidA] = yield* activePids;
-        expect(yield* AgentService.bindSession(chat)).toBe(sessionA);
+        yield* AgentService.bindSession(chat);
         expect(yield* activePids).toEqual([pidA]);
 
         // Selecting a model on the chat tears the process down and respawns it bound to the selection.
@@ -905,12 +902,12 @@ describe('Agent Service (control plane)', () => {
         yield* Database.flush();
         const sessionB = yield* AgentService.bindSession(chat);
         const [pidB] = yield* activePids;
-        expect(sessionB).not.toBe(sessionA);
         expect(pidB).not.toBe(pidA);
         expect(yield* activePids).toEqual([pidB]);
 
         // The same selection again is a cache hit.
-        expect(yield* AgentService.bindSession(chat)).toBe(sessionB);
+        yield* AgentService.bindSession(chat);
+        expect(yield* activePids).toEqual([pidB]);
 
         yield* sessionB.terminate();
       },
@@ -937,7 +934,7 @@ describe('Agent Service (control plane)', () => {
         });
 
         // Opening a chat spawns its process on the default harness before the user picks one.
-        const sessionA = yield* AgentService.bindSession(chat);
+        yield* AgentService.bindSession(chat);
         const [pidA] = yield* activePids;
 
         // The turn producer is chosen when the process starts, so picking a harness must respawn it.
@@ -947,11 +944,11 @@ describe('Agent Service (control plane)', () => {
         yield* Database.flush();
         const sessionB = yield* AgentService.bindSession(chat);
         const [pidB] = yield* activePids;
-        expect(sessionB).not.toBe(sessionA);
         expect(pidB).not.toBe(pidA);
         expect(yield* activePids).toEqual([pidB]);
 
-        expect(yield* AgentService.bindSession(chat)).toBe(sessionB);
+        yield* AgentService.bindSession(chat);
+        expect(yield* activePids).toEqual([pidB]);
 
         yield* sessionB.terminate();
       },

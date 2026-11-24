@@ -102,7 +102,7 @@ export const HarnessHostAnnotation = Annotation.make({
 });
 
 /**
- * The `Session` object (formerly `Chat`) the process works for. A spawned child inherits it.
+ * The `Session` object (formerly `Chat`) the process works for, or the feed it runs on. A spawned child inherits it.
  */
 export const SessionAnnotation = Annotation.make({
   id: 'org.dxos.process.session',

@@ -12,6 +12,7 @@ import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';
@@ -57,9 +58,15 @@ const getConversationDXN = Effect.gen(function* () {
   return conversation;
 });
 
-const getBoundSkills = AiContext.useCurrentBinder((binder) =>
-  Effect.promise(() => binder.sync()).pipe(Effect.map(() => binder.getSkills())),
-);
+/** The test runs outside the conversation's process, so it opens the conversation's binder itself. */
+const getBoundSkills = Effect.gen(function* () {
+  const { conversation } = yield* TestConversation;
+  const feed = yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie);
+  const runtime = yield* Effect.context<Database.Service>();
+  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+  yield* Effect.promise(() => binder.sync());
+  return binder.getSkills();
+}).pipe(Effect.scoped);
 
 describe('Skill Manager', () => {
   it.effect(

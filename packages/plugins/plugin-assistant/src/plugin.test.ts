@@ -63,7 +63,6 @@ describe('AssistantPlugin', () => {
         moduleId('schema'),
         moduleId('OperationHandler'),
         moduleId('AiService'),
-        moduleId('AiContext'),
         moduleId('AgentRuntime'),
       ]),
     );

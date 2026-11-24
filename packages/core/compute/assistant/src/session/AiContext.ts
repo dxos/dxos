@@ -797,8 +797,7 @@ export const useCurrentBinder = <A, E, R>(
   use: (binder: Binder) => Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E | Agent.NoCurrentSessionError, R | CurrentSessionServices> =>
   Effect.gen(function* () {
-    const session = yield* Agent.currentSession;
-    const feed = yield* Database.load(session.feed).pipe(Effect.orDie);
+    const feed = yield* Agent.currentFeed;
     const runtime = yield* Effect.context<Database.Service>();
     const binder = yield* EffectEx.acquireReleaseResource(() => new Binder({ feed, runtime }));
     return yield* use(binder);

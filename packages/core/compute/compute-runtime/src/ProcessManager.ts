@@ -575,6 +575,16 @@ export class Impl implements Manager {
       let handleRef: ProcessHandle.Impl<I, O, any> | null = null;
 
       const annotations = Annotation.buildDictionary((dictionary) => {
+        // A child works for the same session, agent and thread as its parent unless the spawn names its own.
+        if (parentHandle !== undefined) {
+          const inherit = <T>(annotation: Annotation.Annotation<T>) =>
+            Option.map(Annotation.getDictionary(parentHandle.params.annotations, annotation), (value) =>
+              Annotation.setDictionary(dictionary, annotation, value),
+            );
+          inherit(Process.SessionAnnotation);
+          inherit(Process.AgentAnnotation);
+          inherit(Process.ThreadAnnotation);
+        }
         if (options?.target != null) {
           Annotation.setDictionary(dictionary, Process.TargetAnnotation, options.target);
         }

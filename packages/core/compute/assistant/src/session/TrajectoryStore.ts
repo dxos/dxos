@@ -15,7 +15,7 @@ import type * as Process from '@dxos/compute/Process';
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import * as Transcript from '@dxos/compute/Transcript';
-import { Database, Feed, Filter, type Obj } from '@dxos/echo';
+import { type Database, Feed, Filter, type Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import * as Legacy from './Legacy.ts';
@@ -116,8 +116,7 @@ export const currentHistory: Effect.Effect<
   Agent.NoCurrentSessionError,
   Agent.Service | Process.ManagerService | Database.Service
 > = Effect.gen(function* () {
-  const session = yield* Agent.currentSession;
-  const feed = yield* Database.load(session.feed).pipe(Effect.orDie);
+  const feed = yield* Agent.currentFeed;
   return yield* history(feed);
 });
 

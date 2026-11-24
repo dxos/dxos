@@ -630,6 +630,12 @@ export interface ServiceApi {
   readonly currentSession: Effect.Effect<Session, NoCurrentSessionError, Process.ManagerService | Database.Service>;
 
   /**
+   * The feed the calling process's conversation runs on: its session's, or the bare feed an invocation names (a
+   * conversation with no session object).
+   */
+  readonly currentFeed: Effect.Effect<Feed.Feed, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+
+  /**
    * The agent the calling process works for, named by its {@link Process.AgentAnnotation}; none for a
    * standalone session.
    */
@@ -717,6 +723,13 @@ export const currentSession: Effect.Effect<
   NoCurrentSessionError,
   Service | Process.ManagerService | Database.Service
 > = Effect.flatMap(Service, (service) => service.currentSession);
+
+/** The feed the calling process's conversation runs on. */
+export const currentFeed: Effect.Effect<
+  Feed.Feed,
+  NoCurrentSessionError,
+  Service | Process.ManagerService | Database.Service
+> = Effect.flatMap(Service, (service) => service.currentFeed);
 
 /** The agent the calling process works for; none for a standalone session. */
 export const currentAgent: Effect.Effect<

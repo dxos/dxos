@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
+import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -393,6 +394,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                 activeProcess = undefined;
               }
 
+              const agent = yield* Agent.loadForSession(chat);
               let handle: AgentHandle;
               if (activeProcess) {
                 // `hydrate` returns the live handle; the listed one may be a dormant view whose
@@ -408,6 +410,10 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                   // lookup (set once at spawn, immutable — the identity plane).
                   annotations: Annotation.buildDictionary((dictionary) => {
                     Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+                    Annotation.setDictionary(dictionary, Process.SessionAnnotation, target);
+                    if (agent !== undefined) {
+                      Annotation.setDictionary(dictionary, Process.AgentAnnotation, Obj.getURI(agent));
+                    }
                   }),
                   environment: {
                     ...(spaceId !== undefined ? { space: spaceId } : {}),
@@ -473,18 +479,53 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           ),
         );
 
+      const currentSession = Effect.gen(function* () {
+        const uri = yield* currentAnnotation(Process.SessionAnnotation);
+        if (Option.isNone(uri)) {
+          return yield* Effect.fail(new Agent.NoCurrentSessionError());
+        }
+        // An invocation that names its conversation by feed (`Operation.withInvocationOptions`) carries the feed's URI.
+        const target = yield* Database.resolve(uri.value);
+        if (Obj.instanceOf(Agent.Session, target)) {
+          return target;
+        }
+        const session = Obj.instanceOf(Feed.Feed, target) ? yield* Agent.loadSessionForFeed(target) : undefined;
+        if (session === undefined) {
+          return yield* Effect.fail(new Agent.NoCurrentSessionError());
+        }
+        return session;
+      });
+
+      const currentFeed = Effect.gen(function* () {
+        const uri = yield* currentAnnotation(Process.SessionAnnotation);
+        if (Option.isNone(uri)) {
+          return yield* Effect.fail(new Agent.NoCurrentSessionError());
+        }
+        const target = yield* Database.resolve(uri.value);
+        if (Obj.instanceOf(Feed.Feed, target)) {
+          return target;
+        }
+        if (Obj.instanceOf(Agent.Session, target)) {
+          return yield* Database.load(target.feed).pipe(Effect.mapError(() => new Agent.NoCurrentSessionError()));
+        }
+        return yield* Effect.fail(new Agent.NoCurrentSessionError());
+      });
+
+      /** The live process of the current session, which owns its queue and alarms. */
+      const currentHost = Effect.gen(function* () {
+        const session = yield* currentSession;
+        const cached = sessionCache.get(session.id);
+        if (cached === undefined || Process.isTerminal(cached.handle.status.state)) {
+          return yield* Effect.fail(new Agent.NoCurrentSessionError());
+        }
+        return cached.handle;
+      });
+
       const service: Agent.ServiceApi = {
         ...serviceFromHandles(getHandle),
         hydrate: hydrateAgents,
-        currentSession: Effect.gen(function* () {
-          const uri = yield* currentAnnotation(Process.SessionAnnotation);
-          if (Option.isNone(uri)) {
-            return yield* Effect.fail(new Agent.NoCurrentSessionError());
-          }
-          return yield* Database.resolve(uri.value, Agent.Session).pipe(
-            Effect.mapError(() => new Agent.NoCurrentSessionError()),
-          );
-        }),
+        currentSession,
+        currentFeed,
         currentAgent: Effect.gen(function* () {
           const uri = yield* currentAnnotation(Process.AgentAnnotation);
           if (Option.isNone(uri)) {
@@ -496,9 +537,12 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           currentAnnotation(Process.ThreadAnnotation),
           Option.flatMap(Schema.decodeUnknownOption(Trajectory.ThreadId)),
         ),
-        // TODO(dmaretskyi): Dispatch over the owning `SessionProcess`'s `HarnessControl` RPC (F-13.5).
-        enqueueMessage: () => Effect.die(new Error('Agent.enqueueMessage is not implemented.')),
-        setAlarm: () => Effect.die(new Error('Agent.setAlarm is not implemented.')),
+        enqueueMessage: ({ content }) =>
+          Effect.flatMap(currentHost, (host) => host.rpc.enqueueMessage({ content: [...content] }).pipe(Effect.orDie)),
+        setAlarm: ({ at, message }) =>
+          Effect.flatMap(currentHost, (host) =>
+            host.rpc.setAlarm({ at: DateTime.toUtc(at), message }).pipe(Effect.orDie),
+          ),
         listSessions: (listOptions) =>
           Effect.map(
             Process.ManagerService.use((manager) => manager.list()),
@@ -551,6 +595,7 @@ export const serviceFromHandles = (
   subscribeEphemeral: (chat, options) =>
     Stream.unwrap(Effect.map(handleFor(chat), (handle) => handle.subscribeEphemeral(options))),
   currentSession: Effect.die(new Error('Agent.currentSession is not implemented.')),
+  currentFeed: Effect.die(new Error('Agent.currentFeed is not implemented.')),
   currentAgent: Effect.die(new Error('Agent.currentAgent is not implemented.')),
   currentThread: Effect.die(new Error('Agent.currentThread is not implemented.')),
   enqueueMessage: () => Effect.die(new Error('Agent.enqueueMessage is not implemented.')),
