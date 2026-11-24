@@ -179,11 +179,14 @@ export class RegistryImpl implements Registry.Registry {
   addSource(source: RegistrySource): () => void {
     const registration: Registration = { source };
     this.#sources.push(registration);
-    // A query enumerated before this source was added has not asked it.
+    // A query enumerated, or a lookup started, before this source was added has not asked it.
     this.#fetched.clear();
+    this.#resolving.clear();
     return () => {
       this.#sources = this.#sources.filter((entry) => entry !== registration);
       this.#fetched.clear();
+      // A lookup waiting on the removed source must not hold up the next one.
+      this.#resolving.clear();
       const provided = this.#provided.get(registration);
       this.#provided.delete(registration);
       if (provided !== undefined && [...provided].map((id) => this.#delete(id)).some(Boolean)) {
@@ -205,7 +208,12 @@ export class RegistryImpl implements Registry.Registry {
     if (pending !== undefined) {
       return pending;
     }
-    const request = this.#askSources(uri).finally(() => this.#resolving.delete(uri));
+    const request: Promise<Entity.Unknown | undefined> = this.#askSources(uri).finally(() => {
+      // A source change may have replaced this lookup with a newer one, which stays.
+      if (this.#resolving.get(uri) === request) {
+        this.#resolving.delete(uri);
+      }
+    });
     this.#resolving.set(uri, request);
     return request;
   }
@@ -255,11 +263,19 @@ export class RegistryImpl implements Registry.Registry {
     if (!DXN.isDXN(uri)) {
       return undefined;
     }
-    for (const registration of this.#sources) {
+    // The live list, not a snapshot: a source added while an earlier one was answering is asked too.
+    const asked = new Set<Registration>();
+    for (
+      let registration = this.#sources.find((entry) => !asked.has(entry));
+      registration !== undefined;
+      registration = this.#sources.find((entry) => !asked.has(entry))
+    ) {
+      asked.add(registration);
+      const { source } = registration;
       // A failing source reads as one that does not know the entity, so resolution reports it missing rather than throws;
       // started inside `then`, so a source that throws synchronously fails the same way.
       const entity = await Promise.resolve()
-        .then(() => registration.source.resolve(uri))
+        .then(() => source.resolve(uri))
         .catch((error) => {
           log.warn('registry source failed', { uri, error });
           return undefined;

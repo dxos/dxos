@@ -318,6 +318,32 @@ describe('registry sources', () => {
     expect(registry.getByURI(`dxn:${THING_KEY}`)).toBeUndefined();
   });
 
+  test('a source that replaces one still answering is asked, by the pending lookup and by a new one', async ({
+    expect,
+  }) => {
+    const registry = new RegistryImpl({});
+    let answerA: ((entity: Entity.Unknown | undefined) => void) | undefined;
+    const removeA = registry.addSource({
+      resolve: () =>
+        new Promise((resolve) => {
+          answerA = resolve;
+        }),
+    });
+    const pending = registry.resolve(DXN.make(THING_KEY));
+    await expect.poll(() => answerA !== undefined).toBe(true);
+
+    removeA();
+    registry.addSource({
+      resolve: async () => Obj.make(Remote, { [Obj.Meta]: { key: THING_KEY }, title: 'From B' }),
+    });
+    const fresh = await registry.resolve(DXN.make(THING_KEY));
+    expect(fresh && Entity.getMeta(fresh)?.key).toBe(THING_KEY);
+
+    answerA?.(undefined);
+    const replaced = await pending;
+    expect(replaced && Entity.getMeta(replaced)?.key).toBe(THING_KEY);
+  });
+
   test('a source that cannot enumerate leaves an unkeyed query to the local registry', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
