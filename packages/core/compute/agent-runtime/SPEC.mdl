@@ -32,8 +32,9 @@ Delegation is started by operations, and there can be many of them. Every one of
 `AgentService`; an operation never spawns a process itself.
 
 `AgentService` is a global singleton that manages agents and sessions. Code finds where it runs
-through `AgentService.currentAgent` and `AgentService.currentSession`, which read the current
-process (`Process.current`) and discover the `Agent` and `Session` from its annotations.
+through `AgentService.currentAgent`, `AgentService.currentSession` and
+`AgentService.currentThread`, which read the current process (`Process.current`) and discover the
+`Agent`, `Session` and thread from its annotations.
 `HarnessService` is deprecated; what it serves moves to `AgentService`.
 
 The task list in the project or session is the control plane. Ephemeral messages (wake, start,
@@ -52,7 +53,9 @@ Each ECHO object maps to the process that runs it:
 | `Agent`     | `AgentProcess`   |
 
 A process run on behalf of a session carries a session annotation naming that `Session`, and one
-run on behalf of an agent carries an agent annotation naming that `Agent`.
+run on behalf of an agent carries an agent annotation naming that `Agent`. When a `SessionProcess`
+spawns a process for a thread (a tool call, or code execution), it adds a thread annotation naming
+that thread.
 
 The eventual goal is that every agent has its own identity and its own personal space.
 
@@ -277,6 +280,11 @@ feat F-12: Session annotation on processes
     when: a process is spawned on behalf of an agent
     then: it carries an agent annotation whose value is the URI of that `Agent` object, and a
           spawned child inherits it
+
+  req F-12.5:
+    when: a `SessionProcess` spawns a process for a thread's tool call or code execution
+    then: the new process carries a thread annotation whose value is that thread's id, beside the
+          session annotation, and a spawned child inherits it
 ```
 
 ```mdl
@@ -308,6 +316,11 @@ feat F-13: AgentService
     when: code uses `HarnessService`
     then: the service is deprecated; each of its reads and control verbs has an `AgentService`
           replacement scoped by `currentSession`
+
+  req F-13.6:
+    when: code yields `AgentService.currentThread`
+    then: it gets the thread named by the thread annotation of `Process.current`, or none for
+          work on the session's main thread
 ```
 
 ## Changelog
@@ -642,4 +655,20 @@ decision D-37: Thread delegation (today's `thread_delegate` and `thread_wait` to
   affects: [F-10.4]
   why: Light threads are delegation started by plain toolkit tools that bypass operations, which D-24 does not allow.
   rejected: Exempting the thread tier from F-10, which leaves thread delegation unguarded and invisible to the operation catalog.
+```
+
+```mdl
+decision D-38: `AgentService.currentThread` returns the current thread. Whenever a `SessionProcess` makes a tool call or runs code for a thread, it annotates the new process with that thread.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-12.5, F-13.6]
+```
+
+```mdl
+decision D-39: The thread annotation holds the thread's id and sits beside the session annotation; a spawned child inherits it; `currentThread` returns none for work on the session's main thread. Fills in [D-38].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.5, F-13.6]
+  why: Main has no thread id in the trajectory, so a tool call made on main has no thread to name, and a tool's own child processes still work for the thread that called it.
 ```
