@@ -43,6 +43,8 @@ import { useChatContext } from '../Chat/index.ts';
 
 const COLUMN_SELECTOR = '[data-column-id]';
 const INTERACTIVE_SELECTOR = 'a, button, input, textarea, summary, [role="button"], [contenteditable="true"]';
+// Where the horizontal arrow keys move a caret, and so cannot step between columns.
+const CARET_SELECTOR = 'input, textarea, select, [contenteditable="true"]';
 // How far a press may travel and still be a click; further than this it was selecting text.
 const CLICK_SLOP = 4;
 // How quickly the strip closes on the column it is heading for: the distance left shrinks by 63% in this time.
@@ -81,6 +83,18 @@ const restPosition = (viewport: HTMLElement, align: ChatPlaneAlign, group: ChatP
   const frame = viewport.getBoundingClientRect();
   return viewport.scrollLeft + (span.left + span.right) / 2 - (frame.left + frame.width / 2);
 };
+
+/** The column beside `value` in the strip, on the side an arrow key points to. */
+const adjacentColumn = (viewport: HTMLElement | null, value: string, key: string): HTMLElement | undefined => {
+  const columns = Array.from(viewport?.querySelectorAll<HTMLElement>(COLUMN_SELECTOR) ?? []);
+  const index = columns.findIndex((column) => column.dataset.columnId === value);
+  return index === -1 ? undefined : columns[index + (key === 'ArrowLeft' ? -1 : 1)];
+};
+
+/** A bare left or right arrow, which steps between columns wherever it does not move a caret. */
+const isColumnStep = ({ key, altKey, ctrlKey, metaKey, shiftKey, nativeEvent }: KeyboardEvent<HTMLElement>) =>
+  (key === 'ArrowLeft' || key === 'ArrowRight') &&
+  !(altKey || ctrlKey || metaKey || shiftKey || nativeEvent.isComposing);
 
 type ChatPlaneContextValue = {
   value?: string;
@@ -632,7 +646,7 @@ type ChatPlaneCellProps = PropsWithChildren<{
 const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { event } = useChatContext('ChatPlane.Cell');
-  const { navigation, align } = useChatPlaneContext('ChatPlane.Cell');
+  const { navigation, align, viewport, select } = useChatPlaneContext('ChatPlane.Cell');
   const { value, current, columnRef } = useChatPlaneColumnContext('ChatPlane.Cell');
   const { data, location, draggable, binding } = useChatPlaneTileContext('ChatPlane.Cell');
 
@@ -648,12 +662,24 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
       }
       // Inside the thread the arrow keys scroll it, so they must not reach the strip.
       keyEvent.stopPropagation();
-      // Containment rather than bubbling: a popup opened from here takes its own Escape.
-      if (key === 'Escape' && !keyEvent.defaultPrevented && target instanceof Node && currentTarget.contains(target)) {
+      // Containment rather than bubbling: a popup opened from here takes its own keys.
+      if (keyEvent.defaultPrevented || !(target instanceof Element) || !currentTarget.contains(target)) {
+        return;
+      }
+      if (key === 'Escape') {
         currentTarget.focus({ preventScroll: true });
+        return;
+      }
+      // A thread scrolls on the vertical arrows alone, so from inside it the horizontal ones step between columns, and
+      // land on the column itself, where they keep stepping.
+      const next = isColumnStep(keyEvent) && !target.closest(CARET_SELECTOR) && adjacentColumn(viewport, value, key);
+      if (next && next.dataset.columnId) {
+        keyEvent.preventDefault();
+        next.focus({ preventScroll: true });
+        select(next.dataset.columnId);
       }
     },
-    [event],
+    [event, viewport, value, select],
   );
 
   const pressRef = useRef({ x: 0, y: 0 });
@@ -767,17 +793,12 @@ const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
         return;
       }
       // An empty prompt has no caret to move, so its arrow keys step between columns.
-      const { altKey, ctrlKey, metaKey, shiftKey, nativeEvent } = keyEvent;
       if (
-        (key === 'ArrowLeft' || key === 'ArrowRight') &&
-        !(altKey || ctrlKey || metaKey || shiftKey || nativeEvent.isComposing) &&
+        isColumnStep(keyEvent) &&
         target instanceof HTMLElement &&
         EditorView.findFromDOM(target)?.state.doc.length === 0
       ) {
-        const ids = Array.from(viewport?.querySelectorAll<HTMLElement>(COLUMN_SELECTOR) ?? []).map(
-          (column) => column.dataset.columnId,
-        );
-        const next = ids[ids.indexOf(value) + (key === 'ArrowLeft' ? -1 : 1)];
+        const next = adjacentColumn(viewport, value, key)?.dataset.columnId;
         if (next) {
           keyEvent.preventDefault();
           select(next);
