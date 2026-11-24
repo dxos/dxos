@@ -1,12 +1,8 @@
 ---
-title: 'PLEX (Plugins)'
+title: 'Composer'
 layout: 'default'
 ---
 
-# Extensibility
+# Composer: the application framework
 
 <Surface ref="{{plugins}}" />
-
-<!--
-Notes.
--->
