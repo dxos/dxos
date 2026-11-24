@@ -34,15 +34,21 @@ const dataFieldsOf = (schema: Schema.Codec<unknown, unknown>): readonly string[]
   return data?.propertySignatures.map(({ name }) => String(name)) ?? [];
 };
 
+/** The names of the fields a kind's element has at its top: the base's, and any its schema adds there. */
+const ownFieldsOf = (schema: Schema.Codec<unknown, unknown>): readonly string[] =>
+  structOf(schema.ast)?.propertySignatures.map(({ name }) => String(name)) ?? [];
+
 /** Element kinds by name, each the full schema of its elements (the base plus the kind's `data`). */
 export class KindRegistry {
   readonly #kinds = new Map<string, Schema.Codec<unknown, unknown>>();
   readonly #dataFields = new Map<string, readonly string[]>();
+  readonly #ownFields = new Map<string, readonly string[]>();
 
   /** Registers the schema elements of `kind` decode with; a later registration of the same kind replaces it. */
   register(kind: string, schema: Schema.Codec<unknown, unknown>): this {
     this.#kinds.set(kind, schema);
     this.#dataFields.set(kind, dataFieldsOf(schema));
+    this.#ownFields.set(kind, ownFieldsOf(schema));
     return this;
   }
 
@@ -58,11 +64,13 @@ export class KindRegistry {
   /**
    * The element with its kind's fields under `data`. An element stored before kinds kept their fields there has them
    * at its top, so each is moved down unless `data` already holds one of that name; any other element is returned as
-   * it is.
+   * it is. A field the element has at its top by its own schema stays there: a kind may name one of its own as the
+   * base names one (a graph's `size` is its object radius, and the element's `size` is its frame).
    */
   normalize(element: KindElement): KindElement {
     const fields = element.kind === undefined ? [] : this.dataFields(element.kind);
-    const moved = fields.filter((field) => field in element);
+    const own = element.kind === undefined ? [] : (this.#ownFields.get(element.kind) ?? []);
+    const moved = fields.filter((field) => field in element && !own.includes(field));
     if (moved.length === 0) {
       return element;
     }

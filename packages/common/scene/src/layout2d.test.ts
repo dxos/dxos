@@ -40,6 +40,22 @@ describe('Layout2D', () => {
     expect(registry.validate({ id: 'r', kind: 'rect', data: { author: 7 } })).toEqual({ ok: true });
   });
 
+  test("a kind's field named as the element names one leaves the element's own at its top", () => {
+    // A graph keeps its object radius in `data.size`, which is not the frame's `size`.
+    const discs = new KindRegistry().register(
+      'disc',
+      Schema.Struct({
+        ...Scene.Element2D.fields,
+        kind: Schema.Literal('disc'),
+        data: Schema.Struct({ size: Schema.optional(Schema.Number) }),
+      }),
+    );
+    const disc = { id: 'd', kind: 'disc', center: { x: 0, y: 0 }, size: { width: 64, height: 64 }, data: {} };
+    expect(discs.normalize(disc)).toBe(disc);
+    expect(discs.validate(disc)).toEqual({ ok: true });
+    expect(discs.validate({ ...disc, data: { size: 'wide' } }).ok).toBe(false);
+  });
+
   test("an element stored with its kind's fields at its top reads with them under data, where data wins", () => {
     const registry = new KindRegistry().register('sticky', Sticky);
     expect(registry.dataFields('sticky')).toEqual(['author', 'votes']);

@@ -71,6 +71,33 @@ describe('element kinds', () => {
     expect(toViewportDocument({ scenes: [], layouts: [layout], models: [] }, kinds).layouts[0]).toEqual(drawn);
   });
 
+  test("a kind's field that shares a name with a field of the element leaves the element's own alone", () => {
+    // A graph keeps its object radius in `data.size`, which is not the frame's `size`.
+    const Disc = Schema.Struct({
+      ...Scene.Element2D.fields,
+      kind: Schema.Literal('disc'),
+      data: Schema.Struct({ size: Schema.optional(Schema.Number), label: Schema.optional(Schema.String) }),
+    });
+    const disc: ElementKindSpec = {
+      name: 'Disc',
+      icon: 'ph--circle--regular',
+      schema: Disc,
+      create: ({ id, z, center, size }) => ({ kind: 'disc', id, z, center, size, data: {} }),
+      defaultSize: { width: 1, height: 1 },
+    };
+    const discs = kindRegistry({ disc });
+    const stored: Scene.LayoutRecord2D = {
+      id: 'main',
+      dim: '2d',
+      elements: { d: { kind: 'disc', ...frame, id: 'd', label: 'Frame label', data: { size: 8 } } },
+    };
+    const drawn = toViewportLayout(stored, discs).elements.d;
+    expect(drawn).toEqual(stored.elements.d);
+    expect(drawn.size).toEqual(frame.size);
+    const intent = fromViewportIntent({ kind: 'update', id: 'd', path: [], value: drawn }, stored, discs);
+    expect(intent.kind === 'update' && intent.value).toEqual(stored.elements.d);
+  });
+
   test('a created element is stored as it was drawn', () => {
     const drawn = toViewportLayout(layout, kinds).elements.s;
     const intent = fromViewportIntent({ kind: 'create', element: { ...drawn, id: 'copy' } }, layout, kinds);

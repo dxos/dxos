@@ -115,9 +115,12 @@ const split = (fields: Readonly<Record<string, unknown>>, names: readonly string
  */
 const lower = (element: KindElement, kinds: Kinds, ports: readonly Port[] | undefined): KindElement => {
   const fields = element.kind === undefined ? [] : kinds.dataFields(element.kind);
-  const data = { ...split(unslotted(element), fields, true), ...element.data };
+  // Only a field the base has no slot for can be the kind's: a kind may name one of its own as the base names one
+  // (a graph's `size` is its object radius), and the element's own `size` is its frame.
+  const stray = split(unslotted(element), fields, true);
+  const data = { ...stray, ...element.data };
   return {
-    ...split(element, fields, false),
+    ...split(element, Object.keys(stray), false),
     id: element.id,
     ...(element.data !== undefined || Object.keys(data).length > 0 ? { [DATA]: data } : {}),
     ...(ports ? { ports } : {}),
