@@ -132,6 +132,9 @@ export type DisplayPanelProps = PanelProps & {
   /** Whether the axes are drawn (3D's in red, green and blue, 2D's in a stronger grid colour); with `onAxesToggle`, a toggle. */
   axes?: boolean;
   onAxesToggle?: () => void;
+  /** Whether collaborators' pointers are drawn; with `onCursorsToggle`, a toggle in its own group after the grid's. */
+  cursors?: boolean;
+  onCursorsToggle?: () => void;
   /** The scene's dimension, which picks the axes icon; 2D by default. */
   dim?: Scene.Dimension;
   /** Whether moves, resizes and new nodes snap to the grid; with `onSnapToggle`, a toggle leads the grid controls. */
@@ -205,7 +208,7 @@ export type DisplayItemsProps = Omit<DisplayPanelProps, 'classNames'>;
 
 /**
  * The canvas's look: the snap, guides and axes toggles, a switch over what is drawn behind the shapes (dots or lines;
- * on a lattice scene its cells or the grid), and the theme selector last. Pressing the option that is drawn turns it
+ * on a lattice scene its cells or the grid), the cursors toggle in a group of its own, and the theme selector last. Pressing the option that is drawn turns it
  * off, so the switch has three states with two buttons. Narrowed, the grid kinds collapse first, then guides and axes,
  * the Timeline toggle and snap; the theme selector stays.
  */
@@ -224,6 +227,8 @@ export const displayItems = ({
   onGuidesToggle,
   axes,
   onAxesToggle,
+  cursors,
+  onCursorsToggle,
   dim = '2d',
   snap,
   onSnapToggle,
@@ -339,6 +344,20 @@ export const displayItems = ({
       );
     }
   }
+  // Other people, not the drawing's geometry, so a group of its own after the grid's; viewing, so offered read-only too.
+  onCursorsToggle &&
+    builder.separator('line').action(
+      'cursors',
+      {
+        label: "Cursors: show collaborators' pointers",
+        icon: 'ph--users-three--regular',
+        variant: 'toggle',
+        checked: cursors === true,
+        testId: 'toolbar-cursors',
+        placement: { collapse: 3 },
+      },
+      onCursorsToggle,
+    );
   // Playing a shot is viewing, as the axes are, so a read-only scene offers it too.
   onTimelineToggle &&
     builder.separator('line').action(
