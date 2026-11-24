@@ -116,7 +116,7 @@ const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps
         <ChatPlane.Prompt>
           <Chat.Activity />
           <Chat.Suggestions suggestions={suggestions.slice(sent, sent + 1)} onSelect={handleSelect} />
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+          <Chat.Prompt {...chatProps} preset={preset?.id} />
         </ChatPlane.Prompt>
       </ChatPlane.Column>
     </Chat.Root>

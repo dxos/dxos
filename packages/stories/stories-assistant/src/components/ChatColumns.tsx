@@ -86,7 +86,7 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
         </ChatPlane.Cell>
         <ChatPlane.Prompt>
           <Chat.Activity />
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+          <Chat.Prompt {...chatProps} preset={preset?.id} />
         </ChatPlane.Prompt>
       </ChatPlane.Column>
     </Chat.Root>

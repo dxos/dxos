@@ -98,8 +98,6 @@ const isColumnStep = ({ key, altKey, ctrlKey, metaKey, shiftKey, nativeEvent }: 
 
 type ChatPlaneContextValue = {
   value?: string;
-  footer: HTMLElement | null;
-  setFooter: (footer: HTMLDivElement | null) => void;
   viewport: HTMLDivElement | null;
   setViewport: (viewport: HTMLDivElement | null) => void;
   navigation: UseListNavigationReturn;
@@ -123,6 +121,9 @@ type ChatPlaneColumnContextValue = {
   value: string;
   current: boolean;
   columnRef: RefObject<HTMLDivElement | null>;
+  /** The foot of the column's tile, which its prompt renders into. */
+  promptSlot: HTMLElement | null;
+  setPromptSlot: (slot: HTMLDivElement | null) => void;
 };
 
 const [ChatPlaneColumnProvider, useChatPlaneColumnContext] =
@@ -160,7 +161,7 @@ type ChatPlaneRootProps = Util.ThemedClassName<
 >;
 
 /**
- * Columns of threads in a horizontal strip, with the selected column's prompt floating over the strip.
+ * Columns of threads in a horizontal strip, each full height, with the selected column's prompt at its foot.
  * Goes inside a `Dnd.Root`, which the deck provides in the app.
  */
 const ChatPlaneRoot = ({
@@ -172,22 +173,7 @@ const ChatPlaneRoot = ({
   onMove,
   children,
 }: ChatPlaneRootProps) => {
-  const [footer, setFooter] = useState<HTMLDivElement | null>(null);
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
-
-  // The columns end where the footer begins, however tall its prompt, suggestions and activity line make it.
-  const rootRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!footer || !root) {
-      return;
-    }
-    const observer = new ResizeObserver(() =>
-      root.style.setProperty('--chat-plane-footer-height', `${footer.offsetHeight}px`),
-    );
-    observer.observe(footer);
-    return () => observer.disconnect();
-  }, [footer]);
 
   // Where a move we started is headed: adding a column re-snaps the strip, and that scroll must not select anything.
   const moveTargetRef = useRef<string | undefined>(undefined);
@@ -261,7 +247,7 @@ const ChatPlaneRoot = ({
         const destination = restPosition(viewport, align, group, group.fits ? group : target.getBoundingClientRect());
         setFits(group.fits);
         if (align === 'start') {
-          // The stack's leading gap sets where a column rests, and the prompt and each snap must land there too.
+          // The stack's leading gap sets where a column rests, and each snap must land there too.
           const inset = group.left + viewport.scrollLeft - viewport.getBoundingClientRect().left;
           viewport.parentElement?.style.setProperty('--chat-plane-inset', `${inset}px`);
         }
@@ -366,8 +352,6 @@ const ChatPlaneRoot = ({
   return (
     <ChatPlaneProvider
       value={value}
-      footer={footer}
-      setFooter={setFooter}
       viewport={viewport}
       setViewport={setViewport}
       navigation={navigation}
@@ -382,18 +366,8 @@ const ChatPlaneRoot = ({
       onAdd={onAdd}
       onMove={onMove}
     >
-      {/* The space kept under the columns: the footer's height, and never less than a one-line prompt over the footer's
-          padding (6.375rem), so that selecting a column with no prompt does not resize every column. */}
       {/* Sunken, as the deck is behind its planks, so each column's own panel surface reads against the strip. */}
-      <Panel.Root
-        level='sunken'
-        classNames={[
-          '[--chat-plane-width:32vw]',
-          '[--chat-plane-prompt-height:max(6.375rem,var(--chat-plane-footer-height,0px))]',
-          classNames,
-        ]}
-        ref={rootRef}
-      >
+      <Panel.Root level='sunken' classNames={['[--chat-plane-width:32vw]', classNames]}>
         {children}
       </Panel.Root>
     </ChatPlaneProvider>
@@ -408,9 +382,9 @@ ChatPlaneRoot.displayName = 'ChatPlane.Root';
 
 type ChatPlaneViewportProps = PropsWithChildren;
 
-/** The scrolling strip, and the footer the selected column's prompt floats in. */
+/** The scrolling strip. */
 const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
-  const { setFooter, viewport, setViewport, selection, select, scrolling, fits, align, dragging, onMove } =
+  const { viewport, setViewport, selection, select, scrolling, fits, align, dragging, onMove } =
     useChatPlaneContext('ChatPlane.Viewport');
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -486,7 +460,7 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
             {/* The frame less a column, split across both sides or all after the last, so every column can reach its resting place. */}
             <div
               className={[
-                'relative flex w-max h-full pt-2 pb-(--chat-plane-prompt-height)',
+                'relative flex w-max h-full py-2',
                 align === 'start'
                   ? 'pe-[calc(100cqw-var(--chat-plane-width))]'
                   : 'px-[calc(50cqw-var(--chat-plane-width)/2)]',
@@ -497,8 +471,6 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
               {children}
             </div>
           </ScrollArea.Viewport>
-          {/* No padding above: the columns end exactly where the footer's content starts. */}
-          <div className='absolute inset-x-0 bottom-0 z-10 pb-3 pointer-events-none' ref={setFooter} />
         </ScrollArea.Root>
       </Mosaic.Container>
     </Panel.Body>
@@ -615,6 +587,7 @@ const ChatPlaneColumn = ({ value, children }: ChatPlaneColumnProps) => {
   const { value: selected, dragging, scrollToColumn, recenter } = useChatPlaneContext('ChatPlane.Column');
   const current = value === selected;
   const columnRef = useRef<HTMLDivElement>(null);
+  const [promptSlot, setPromptSlot] = useState<HTMLDivElement | null>(null);
 
   // A column arriving or leaving moves the others, and the strip must come to rest again.
   useEffect(() => {
@@ -640,7 +613,13 @@ const ChatPlaneColumn = ({ value, children }: ChatPlaneColumnProps) => {
   }, [event, current, dragging]);
 
   return (
-    <ChatPlaneColumnProvider value={value} current={current} columnRef={columnRef}>
+    <ChatPlaneColumnProvider
+      value={value}
+      current={current}
+      columnRef={columnRef}
+      promptSlot={promptSlot}
+      setPromptSlot={setPromptSlot}
+    >
       {children}
     </ChatPlaneColumnProvider>
   );
@@ -667,7 +646,7 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { event } = useChatContext('ChatPlane.Cell');
   const { navigation, align, viewport, select } = useChatPlaneContext('ChatPlane.Cell');
-  const { value, current, columnRef } = useChatPlaneColumnContext('ChatPlane.Cell');
+  const { value, current, columnRef, setPromptSlot } = useChatPlaneColumnContext('ChatPlane.Cell');
   const { data, location, draggable, binding } = useChatPlaneTileContext('ChatPlane.Cell');
 
   const handleKeyDown = useCallback(
@@ -735,14 +714,13 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
       asChild
       classNames={[
         'w-(--chat-plane-width) dx-focus-group transition-opacity',
-        // Framed as the prompt beneath it is, so the two read as one column.
         'rounded-sm border border-separator-subtle',
         align === 'start' ? 'snap-start scroll-ms-(--chat-plane-inset)' : 'snap-center',
         !current && 'opacity-50',
         // Floats over the gap the stack reserves.
         'data-[mosaic-tile-state=dragging]:absolute data-[mosaic-tile-state=dragging]:z-10',
         'data-[mosaic-tile-state=dragging]:h-auto',
-        'data-[mosaic-tile-state=dragging]:top-2 data-[mosaic-tile-state=dragging]:bottom-(--chat-plane-prompt-height)',
+        'data-[mosaic-tile-state=dragging]:top-2 data-[mosaic-tile-state=dragging]:bottom-2',
         'data-[mosaic-tile-state=dragging]:left-(--chat-plane-drag-x) data-[mosaic-tile-state=dragging]:-translate-x-1/2',
         'data-[mosaic-tile-state=dragging]:pointer-events-none data-[mosaic-tile-state=dragging]:opacity-100',
         'data-[mosaic-tile-state=dragging]:bg-base-surface data-[mosaic-tile-state=dragging]:shadow-lg',
@@ -782,6 +760,8 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
             )}
           </Panel.Header>
           {children}
+          {/* Empty, and so no height, until the column's prompt renders into it. */}
+          <Panel.Footer ref={setPromptSlot} />
         </div>
       </Panel.Root>
     </Mosaic.Tile>
@@ -797,13 +777,14 @@ ChatPlaneCell.displayName = 'ChatPlane.Cell';
 type ChatPlanePromptProps = PropsWithChildren;
 
 /**
- * Renders into the footer, and stays mounted but hidden unless its column is selected, so a draft survives moving away.
+ * Renders at the foot of its column's tile, so only that column gives up height to it, and stays mounted but hidden
+ * unless the column is selected, so a draft survives moving away.
  */
 const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
-  const { footer, viewport, select, align } = useChatPlaneContext('ChatPlane.Prompt');
-  const { value, current, columnRef } = useChatPlaneColumnContext('ChatPlane.Prompt');
+  const { viewport, select } = useChatPlaneContext('ChatPlane.Prompt');
+  const { value, current, columnRef, promptSlot } = useChatPlaneColumnContext('ChatPlane.Prompt');
 
-  // React bubbles through the portal, and the strip would take Tab and focus from the prompt as its own.
+  // React bubbles to the strip, not to the tile the prompt sits in, and the strip would take Tab and focus as its own.
   const handleKeyDown = useCallback(
     (keyEvent: KeyboardEvent<HTMLDivElement>) => {
       keyEvent.stopPropagation();
@@ -829,23 +810,17 @@ const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
   );
   const handleFocus = useCallback((focusEvent: FocusEvent<HTMLDivElement>) => focusEvent.stopPropagation(), []);
 
-  return footer
+  return promptSlot
     ? createPortal(
         <div
-          className={
-            current
-              ? [
-                  'flex flex-col gap-1 w-(--chat-plane-width) pointer-events-auto',
-                  align === 'start' ? 'ms-(--chat-plane-inset)' : 'mx-auto',
-                ].join(' ')
-              : 'hidden'
-          }
+          // The tile frames the prompt, so it needs only the edge that parts it from the thread.
+          className={current ? 'flex flex-col gap-1 border-t border-separator-subtle' : 'hidden'}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
         >
           {children}
         </div>,
-        footer,
+        promptSlot,
       )
     : null;
 };
