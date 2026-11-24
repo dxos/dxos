@@ -76,8 +76,14 @@ goal G-6: Move sandbox-service to the new Artifacts API.
 ```mdl
 pr PR-1: Update the edge build tools.
   ref: dxos/edge#1576
-  status: landing
   goals: [G-1, G-3]
+```
+
+```mdl
+pr PR-3: Hold node at 24.11.1 in edge.
+  ref: dxos/edge#1577
+  status: landing
+  goals: [G-1]
 ```
 
 ```mdl
@@ -98,6 +104,13 @@ question Q-1: Do you want the major upgrades now, or in a later session?
   options:
     - Later: merge the two pull requests first.
     - Now: start Node 26, bun 1.4 and vitest 5 after the merge.
+```
+
+```mdl
+decision D-1: Node stays at 24.11.1 in both repositories until ECHO queries work with SQLite 3.54.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
 ```
 
 ## Timeline
@@ -145,4 +158,14 @@ event T-8: The edge pull request has auto-merge. It merges after CI and a review
 ```mdl
 event T-9: Node 24.22 failed the dxos node tests, so node stays at 24.11.1 in both repositories.
   date: 2026-11-24T12:05Z
+```
+
+```mdl
+event T-10: The edge pull request merged with node 24.22.3 before the node hold.
+  date: 2026-11-24T12:06Z
+```
+
+```mdl
+event T-11: A new edge pull request holds node at 24.11.1. It has auto-merge.
+  date: 2026-11-24T12:07Z
 ```
