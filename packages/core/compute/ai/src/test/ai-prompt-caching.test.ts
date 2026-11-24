@@ -10,7 +10,7 @@ import type { ExpectStatic } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import * as AiPreprocessor from './AiPreprocessor.ts';
+import * as AiPreprocessor from '../AiPreprocessor.ts';
 
 // A provider's prompt cache reuses a request only up to its first changed byte, so consecutive model calls must
 // extend each other except where history is rewritten on purpose (compaction, summary, retired tools).
