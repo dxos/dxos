@@ -13,5 +13,6 @@
   "env": {
     "production": { "name": "storybook-react" },
     "preview": { "name": "storybook-react-preview" },
+    "dev": { "name": "storybook-react-dev" },
   },
 }

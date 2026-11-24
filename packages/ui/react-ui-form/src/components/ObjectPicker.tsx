@@ -23,10 +23,10 @@ import { arrayMove } from '@dxos/util';
 
 import { type CreateOptions, type RefOption } from '#types';
 
-import { FormActions, FormContent } from './Form.tsx';
-import { FormFields } from './FormFieldDispatch.tsx';
-// The parts, not the `Form` namespace: RefField renders this picker inside the Form's module cycle, and the namespace
+// The parts, never `Form.tsx`: RefField renders this picker inside the field modules' cycle, and the `Form` namespace
 // object reads every part when its module is evaluated.
+import { FormFields } from './FormFieldDispatch.tsx';
+import { FormActions, FormContent } from './FormParts.tsx';
 import { FormRoot } from './FormRoot.tsx';
 
 type PickerCreateProps = Pick<CreateOptions, 'createInitialValuePath' | 'createFieldMap'> & {
