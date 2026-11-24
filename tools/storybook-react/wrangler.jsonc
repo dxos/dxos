@@ -11,8 +11,17 @@
     "not_found_handling": "single-page-application",
   },
   "env": {
-    "production": { "name": "storybook-react" },
-    "preview": { "name": "storybook-react-preview" },
-    "dev": { "name": "storybook-react-dev" },
+    "production": {
+      "name": "storybook-react",
+      "routes": [{ "pattern": "storybook-react.dxos.network", "custom_domain": true }],
+    },
+    "preview": {
+      "name": "storybook-react-preview",
+      "routes": [{ "pattern": "preview.storybook-react.dxos.network", "custom_domain": true }],
+    },
+    "dev": {
+      "name": "storybook-react-dev",
+      "routes": [{ "pattern": "dev.storybook-react.dxos.network", "custom_domain": true }],
+    },
   },
 }

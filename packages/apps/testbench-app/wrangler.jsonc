@@ -9,7 +9,13 @@
     "not_found_handling": "single-page-application",
   },
   "env": {
-    "production": { "name": "testbench" },
-    "preview": { "name": "testbench-preview" },
+    "production": {
+      "name": "testbench",
+      "routes": [{ "pattern": "testbench.dxos.network", "custom_domain": true }],
+    },
+    "preview": {
+      "name": "testbench-preview",
+      "routes": [{ "pattern": "preview.testbench.dxos.network", "custom_domain": true }],
+    },
   },
 }

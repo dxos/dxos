@@ -9,7 +9,13 @@
     "not_found_handling": "single-page-application",
   },
   "env": {
-    "production": { "name": "todomvc" },
-    "preview": { "name": "todomvc-preview" },
+    "production": {
+      "name": "todomvc",
+      "routes": [{ "pattern": "todomvc.dxos.network", "custom_domain": true }],
+    },
+    "preview": {
+      "name": "todomvc-preview",
+      "routes": [{ "pattern": "preview.todomvc.dxos.network", "custom_domain": true }],
+    },
   },
 }

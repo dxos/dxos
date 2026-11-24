@@ -9,7 +9,13 @@
     "not_found_handling": "single-page-application",
   },
   "env": {
-    "production": { "name": "tasks" },
-    "preview": { "name": "tasks-preview" },
+    "production": {
+      "name": "tasks",
+      "routes": [{ "pattern": "tasks.dxos.network", "custom_domain": true }],
+    },
+    "preview": {
+      "name": "tasks-preview",
+      "routes": [{ "pattern": "preview.tasks.dxos.network", "custom_domain": true }],
+    },
   },
 }
