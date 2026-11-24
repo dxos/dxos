@@ -330,12 +330,12 @@ You can still pull a specific one on demand: `git fetch origin tag composer/prev
 `--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
 check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
 
-| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                                                                       |
-| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
-| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
-| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only                                                                 |
-| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                                                                   |
-| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
+| Env            | URL                      | EDGE         | Trigger                           | Apps                                            | Notes                                                                                       |
+| -------------- | ------------------------ | ------------ | --------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer + docs + drawing-app + storybook-react | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
+| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled                           | dogfood build; desktop only                                                                 |
+| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs + drawing-app                   | kept, deliberately unused                                                                   |
+| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                                             | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
 
 Local dev talks to EDGE preview by default; point it at EDGE dev or a local EDGE with `DX_EDGE_BASE_URL`.
 
@@ -345,10 +345,10 @@ Every environment ships a **desktop** Composer on its own CrabNebula channel, so
 
 **Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop via `deploy-tauri.yaml`, CrabNebula; iOS builds on `dev` alone). This is the only path that advances Composer's version — it is not a Changesets package.
 
-**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`dev` \| `preview` \| `staging` \| `production`, default `dev`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
+**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`dev` \| `preview` \| `staging` \| `production`, default `dev`), `app` (`all` default, or one of `composer` / `docs` / `drawing-app` / `storybook-react` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
 
 ```bash
-# Composer → dev (the default env). `app` defaults to `all`, which for dev is just composer.
+# Composer → dev (the default env). `app` defaults to `all`, which for dev also deploys docs, drawing-app and storybook-react.
 gh workflow run deploy-apps.yml -f environment=dev
 
 # Composer + docs → staging.
