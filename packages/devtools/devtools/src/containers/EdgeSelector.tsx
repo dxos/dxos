@@ -9,7 +9,8 @@ import { type Config, EDGE_URLS, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import { ConfirmReset } from '@dxos/shell/react';
 
 import { Select } from '../components/index.ts';
 import { getTarget } from './VaultSelector.tsx';
@@ -66,17 +67,13 @@ export const EdgeSelector = () => {
   const current = config.values.runtime?.services?.edge?.url;
 
   const switchEnvironment = async (value: string) => {
-    try {
-      // Sign out before saving: if deletion fails nothing has switched, and the identity is never left
-      // pointed at an environment that has no account for it.
-      if (identity) {
-        await client.halo.deleteIdentity();
-      }
-      await saveEdgeEnvironment(config, value);
-      window.location.reload();
-    } catch (err) {
-      log.catch(err);
+    // Sign out before saving: if deletion fails nothing has switched, and the identity is never left
+    // pointed at an environment that has no account for it.
+    if (identity) {
+      await client.halo.deleteIdentity();
     }
+    await saveEdgeEnvironment(config, value);
+    window.location.reload();
   };
 
   const handleValueChange = (value: string) => {
@@ -86,12 +83,13 @@ export const EdgeSelector = () => {
     if (identity) {
       setPending(value);
     } else {
-      void switchEnvironment(value);
+      void switchEnvironment(value).catch((err) => log.catch(err));
     }
   };
 
   const pendingLabel = edgeServers.find((server) => server.value === pending)?.label ?? pending;
 
+  // The same confirmation as Composer's log out (plugin-client `ResetDialog`), since switching is one.
   return (
     <>
       <Select
@@ -100,7 +98,7 @@ export const EdgeSelector = () => {
         items={edgeServers}
         onValueChange={handleValueChange}
       />
-      <AlertDialog.Root
+      <Dialog.Root
         open={pending !== undefined}
         onOpenChange={({ open }) => {
           if (!open) {
@@ -108,30 +106,24 @@ export const EdgeSelector = () => {
           }
         }}
       >
-        <AlertDialog.Content>
-          <AlertDialog.Body>
-            <AlertDialog.Title>Switch to {pendingLabel}?</AlertDialog.Title>
-            <AlertDialog.Description>
-              Your identity belongs to the current environment. Switching signs you out and deletes this device&apos;s
-              identity and spaces, then reloads at the login screen for {pendingLabel}.
-            </AlertDialog.Description>
-          </AlertDialog.Body>
-          <AlertDialog.Footer>
-            <div className='grow' />
-            <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-            <AlertDialog.Action
-              variant='destructive'
-              onClick={() => {
-                if (pending) {
-                  void switchEnvironment(pending);
-                }
-              }}
-            >
-              Sign out and switch
-            </AlertDialog.Action>
-          </AlertDialog.Footer>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Switch to {pendingLabel}</Dialog.Title>
+          </Dialog.Header>
+          <Dialog.Description srOnly>Sign out and switch the EDGE environment.</Dialog.Description>
+          <ConfirmReset
+            active
+            message={`Your identity belongs to the current environment. Switching signs you out and deletes this device's identity and spaces, then reloads at the login screen for ${pendingLabel}.`}
+            confirmLabel='Sign out and switch'
+            onConfirm={async () => {
+              if (pending) {
+                await switchEnvironment(pending);
+              }
+            }}
+            onCancel={() => setPending(undefined)}
+          />
+        </Dialog.Content>
+      </Dialog.Root>
     </>
   );
 };
