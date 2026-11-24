@@ -231,7 +231,7 @@ const meta = {
         RoutinePlugin.make(),
         SettingsPlugin.make(),
         SpacePlugin.make({}),
-        ThemePlugin.make({ appName: 'Composer', platform: 'desktop' }),
+        ThemePlugin.make({ appName: 'Composer', platform: 'desktop', followDocument: true }),
 
         // Content: the plugins whose objects the templates seed, and which contribute them.
         // Required by projects and chess respectively.
