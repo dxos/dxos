@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { FetchError } from './fetch.ts';
+import { FetchError } from './errors.ts';
 
 /**
  * Page side of the Composer extension's search render-proxy contract.
