@@ -51,7 +51,8 @@
         // Style suggestions stay in the editor and out of build logs: 1529 of them
         // across the repo would bury everything else.
         "includeSuggestionsInTsc": false,
-        "diagnosticSeverity": {}
+        // Effect 4 marks most of its surface (cli, http, platform, vitest) unstable; flagging every use is noise.
+        "diagnosticSeverity": { "unstableApiUsage": "off" }
       }
     ]
   },

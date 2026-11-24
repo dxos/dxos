@@ -454,15 +454,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             </Form.Root>
           )}
 
-          {tab === 'spec' &&
-            spec && (
-              // A section rather than an article: the spec's own page is for opening it. Its other views are companions.
-              <div className='grid min-h-0 h-full' data-testid='projectsPlugin.spec.document'>
-                <SpecToolbarProvider value={specToolbarSlot}>
-                  <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
-                </SpecToolbarProvider>
-              </div>
-            )}
+          {tab === 'spec' && spec && (
+            // A section rather than an article: the spec's own page is for opening it. Its other views are companions.
+            <div className='grid min-h-0 h-full' data-testid='projectsPlugin.spec.document'>
+              <SpecToolbarProvider value={specToolbarSlot}>
+                <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
+              </SpecToolbarProvider>
+            </div>
+          )}
           {tab === 'spec' && !spec && <AddSpec onAdd={readonly ? undefined : () => void handleAddSpec()} />}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}

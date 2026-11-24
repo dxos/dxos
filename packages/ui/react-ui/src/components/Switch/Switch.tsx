@@ -25,7 +25,7 @@ export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'child
  * input joins the roving focus.
  */
 export const Switch = forwardRef<HTMLLabelElement, SwitchProps>(
-  ({ classNames, label, 'aria-label': ariaLabel, indeterminate, disabled: disabledProp, ...props }, forwardedRef) => {
+  ({ classNames, label, 'aria-label': ariaLabel, indeterminate, 'disabled': disabledProp, ...props }, forwardedRef) => {
     const disabled = Fieldset.useFieldsetDisabled(disabledProp);
     const toolbarItem = useToolbarItem(disabled);
     return (

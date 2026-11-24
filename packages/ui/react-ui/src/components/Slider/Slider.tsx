@@ -61,7 +61,7 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(
       'aria-label': ariaLabel,
       thumbLabels,
       orientation = 'horizontal',
-      id: idProp,
+      'id': idProp,
       ...props
     },
     forwardedRef,

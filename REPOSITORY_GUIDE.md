@@ -607,7 +607,7 @@ pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 12.21.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
+This project requires Node.js 24.x, pnpm 12.22.0, and moon 2.6.5, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
 
 ```bash
 export PROTO_HOME="$HOME/.proto"

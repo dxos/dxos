@@ -66,7 +66,7 @@ export class DataServiceImpl implements DataService.Handlers {
     options: DataService.RunGarbageCollectionRequest,
   ) => Promise<DataService.GarbageCollectionReport>;
 
-  'constructor'(params: DataServiceProps) {
+  constructor(params: DataServiceProps) {
     this._automergeHost = params.automergeHost;
     this._spaceStateManager = params.spaceStateManager;
     this._updateIndexes = params.updateIndexes;
@@ -258,7 +258,7 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   /** Whether any of the given subscriptions holds the document, passive or loaded. */
-  'holds'(subscriptionIds: readonly string[], documentId: DocumentId): boolean {
+  holds(subscriptionIds: readonly string[], documentId: DocumentId): boolean {
     return subscriptionIds.some((subscriptionId) => this._subscriptions.get(subscriptionId)?.holds(documentId));
   }
 
@@ -266,7 +266,7 @@ export class DataServiceImpl implements DataService.Handlers {
    * Test affordance: pause/resume flushing of document updates on every
    * active subscription. See `DocumentsSynchronizer.setSendUpdatesPaused`.
    */
-  'setAllSubscriptionsSendUpdatesPaused'(paused: boolean): void {
+  setAllSubscriptionsSendUpdatesPaused(paused: boolean): void {
     for (const synchronizer of this._subscriptions.values()) {
       synchronizer.setSendUpdatesPaused(paused);
     }

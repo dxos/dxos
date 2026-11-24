@@ -185,10 +185,7 @@ export const sqlEngine: W3cEngine = {
   isUnsupported: (error) => error instanceof UnsupportedSparqlError,
 };
 
-const projectedVars = (
-  variables: { termType?: string; value?: string; variable?: { value: string } }[],
-  rows: Row[],
-) =>
+const projectedVars = (variables: { termType?: string; value?: string; variable?: { value: string } }[], rows: Row[]) =>
   variables.some((item) => item.termType === 'Wildcard')
     ? [...new Set(rows.flatMap(Object.keys))]
     : variables.flatMap((item) => (item.variable ? [item.variable.value] : item.value ? [item.value] : []));
