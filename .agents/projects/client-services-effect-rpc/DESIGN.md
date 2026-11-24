@@ -121,7 +121,7 @@ between file content and PR subject, not confirmed with anyone; verify ownership
 relocating or deleting these files. They are dated notes about work on
 `dm/worker-package` as of 2026-07-10 and were never updated after. Per this repo's convention
 (`CLAUDE.md` → "Where things live"), planning docs like this belong under
-`agents/superpowers/{specs,plans}/` or a project folder, not a root `plans/` directory — worth
+`.agents/superpowers/{specs,plans}/` or a project folder, not a root `plans/` directory — worth
 relocating (or deleting, if the branch is abandoned rather than resumed) in a follow-up.
 
 ## 4. RPC payload encoding — spec for the protobuf-removal pass (this session, in progress)

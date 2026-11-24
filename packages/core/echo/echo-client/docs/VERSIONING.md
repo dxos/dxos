@@ -284,7 +284,7 @@ interleaving. The field is additive and optional — existing branches read as p
 migration is needed.
 
 Full design, plugin/timeline plumbing, and estimate:
-[`agents/superpowers/specs/2026-07-17-nested-branches-design.md`](../../../../../agents/superpowers/specs/2026-07-17-nested-branches-design.md).
+[`.agents/superpowers/specs/2026-07-17-nested-branches-design.md`](../../../../../.agents/superpowers/specs/2026-07-17-nested-branches-design.md).
 
 ## Design notes & constraints
 

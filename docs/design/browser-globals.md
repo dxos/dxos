@@ -115,4 +115,4 @@ instrumentation and end-to-end tests. Two consequences worth respecting:
 
 - `.agents/skills/composer-debug/SKILL.md` — driving these from an agent via the debug port.
 - `.agents/skills/composer-forensics/SKILL.md` — the safe-mode (`/recovery.html`) surface.
-- `agents/superpowers/specs/2026-08-08-agent-debug-channel-design.md` — why the debug port exists.
+- `.agents/superpowers/specs/2026-08-08-agent-debug-channel-design.md` — why the debug port exists.

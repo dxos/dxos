@@ -57,7 +57,7 @@ before the wire exists.
 - [x] **Author `PLUGIN.mdl`** — types, 4 features, 6 acceptance scenarios; wired as a plugin asset
       (`dx.config.ts` `spec:` + `AppCapability.pluginAsset`).
 - [ ] **Changeset** — new private package, so likely none required; confirm against
-      `agents/instructions/changesets.md`.
+      `.agents/instructions/changesets.md`.
 
 ## Phase 2 (M2): The wire
 
@@ -135,8 +135,8 @@ The `.sdPlugin` bundle and the WebSocket transport. Needs the physical device an
 
 - [x] **LaMetric TIME support** — a second hardware surface for the same space dashboard
       ([product page](https://store.lametric.com/products/lametric)). Designed and built 2026-08-19:
-      [design](../../../agents/superpowers/specs/2026-08-19-lametric-design.md) ·
-      [plan](../../../agents/superpowers/plans/2026-08-19-lametric.md).
+      [design](../../../.agents/superpowers/specs/2026-08-19-lametric-design.md) ·
+      [plan](../../../.agents/superpowers/plans/2026-08-19-lametric.md).
   - **No second package.** The device is an HTTP server on the LAN, so there is no exclusivity
     problem and no `.sdPlugin` equivalent to build.
   - **Local and cloud are different requests.** The design initially assumed one request at two

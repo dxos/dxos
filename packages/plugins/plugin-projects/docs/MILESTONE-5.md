@@ -3,8 +3,8 @@
 Date: 2026-08-01 · Status: v3 — Phase 0 DECIDED; ready for Phase 1 · Owner: burdon
 Project: `plugin-projects` (registry). Companion to
 [`USE-CASES.md`](./USE-CASES.md) (§2.7 operation channels) and the `mcp` project's
-[task-plugin reconciliation](../../../agents/superpowers/specs/2026-08-01-task-plugin-reconciliation-design.md)
-and [task-planning ⇄ Composer sync](../../../agents/superpowers/specs/2026-08-01-task-planning-composer-sync-design.md)
+[task-plugin reconciliation](../../../.agents/superpowers/specs/2026-08-01-task-plugin-reconciliation-design.md)
+and [task-planning ⇄ Composer sync](../../../.agents/superpowers/specs/2026-08-01-task-planning-composer-sync-design.md)
 specs, which this milestone subsumes on the dxos side.
 The full type inventory (current → target, by package) is tabulated in
 [`DESIGN.md` § Types](./DESIGN.md#types).
