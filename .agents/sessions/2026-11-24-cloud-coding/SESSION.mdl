@@ -135,6 +135,13 @@ question Q-2: The branch of edge#1535 is behind main. Who merges main into it?
     - I merge main into edge#1535: it is your branch, so I need your permission.
 ```
 
+```mdl
+decision D-1: The runtime changes go in their own pull requests, and the person reviews them first: the compute
+  package, the sandbox-service API, and the compute-runtime and edge-compute changes that support them.
+  date: 2026-11-20
+  by: user:dmaretskyi
+```
+
 ## Timeline
 
 ```mdl
