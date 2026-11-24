@@ -75,6 +75,12 @@ export const EdgeSelector = () => {
       await client.halo.deleteIdentity();
     }
     await saveEdgeEnvironment(config, value);
+    // `SaveConfig` logs a failed write and resolves, so read it back: a reload after a lost write would land on the
+    // old environment as if the switch had worked.
+    const saved = await Storage();
+    if (saved?.runtime?.services?.edge?.url !== value) {
+      throw new Error(`Could not save the ${value} environment; you are signed out on the current one.`);
+    }
     window.location.reload();
   };
 
