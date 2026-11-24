@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './L0ItemActiveTabIndicator.tsx';
 export * from './L0Menu.tsx';
 export * from './L0PendingAvatar.tsx';
 export * from './L1Panel.tsx';

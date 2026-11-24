@@ -12,8 +12,7 @@ import { PullRequest, Repo } from '@dxos/types';
 import { GitHubOperation } from '#types';
 
 import { pullRequestChanges } from '../pull-request.ts';
-import { fetchPullRequestWithFallback } from './import-pull-request.ts';
-import { type GitHubAccess } from './pull-request.ts';
+import { type GitHubAccess, fetchPullRequestWithFallback } from './pull-request.ts';
 
 /**
  * How often the space's refresh trigger polls its open pull requests: hourly, at an off-the-hour minute

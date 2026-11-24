@@ -29,7 +29,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { ConnectorSpec } from '#types';
 
-import { connectionDeckSubject } from './constants.ts';
+import { SYNC_TEMPLATE_ID, connectionDeckSubject } from './constants.ts';
 import {
   ConnectionAuthExpiredError,
   ConnectionSyncError,
@@ -38,7 +38,6 @@ import {
   isUnauthorizedError,
 } from './errors.ts';
 import { ConnectorNamespace } from './namespace.ts';
-import * as SyncTemplate from './SyncTemplate.ts';
 
 /**
  * The binding between a local object (a Mailbox, a Calendar) and the remote feed a `Connection` syncs
@@ -696,7 +695,7 @@ export const syncOrOfferRoutine = ({
         const result = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
           target: db,
           typename: Type.getTypename(Routine.Routine),
-          defaults: { templateId: SyncTemplate.ID, subject: subject ?? connection },
+          defaults: { templateId: SYNC_TEMPLATE_ID, subject: subject ?? connection },
           navigable: false,
         });
         const created = result?.target;

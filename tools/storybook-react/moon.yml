@@ -52,7 +52,7 @@ tasks:
       - --output-dir=out/storybook-perf
     env:
       DX_STORIES: stories/stories-assistant
-      # One chunk, which the perf budgets were calibrated on; see `.storybook/production-bundle.ts`.
+      # See `.storybook/perf-bundle.ts`: builds the stories as one chunk.
       DX_PERF_BUNDLE: '1'
     deps:
       # See `bundle`.

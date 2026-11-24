@@ -11,8 +11,8 @@ import * as Theme from '@dxos/react-ui/Theme';
 
 import { getListActions, useActions } from '#hooks';
 
+import { NAV_TREE_ITEM } from '../../constants.ts';
 import { NavTreeNamespace } from '../../namespace.ts';
-import { NAV_TREE_ITEM } from '../NavTree/index.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { type NavTreeItemColumnsProps } from '../types.ts';
 import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction.tsx';

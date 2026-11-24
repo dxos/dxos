@@ -14,13 +14,11 @@ import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilit
 import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding.ts';
+import { SYNC_TEMPLATE_ID } from './constants.ts';
 import { SyncTemplateScaffoldError } from './errors.ts';
 
-/**
- * Id of the connector sync template. Declared here so the coordinator can seed the create-routine
- * dialog with it without importing the template module.
- */
-export const ID = 'org.dxos.routine.connectorSync';
+/** Id of the connector sync template, for callers that seed the create-routine dialog with it. */
+export const ID = SYNC_TEMPLATE_ID;
 
 /**
  * "Sync" automation template: the account-level recurring sync routine for a Connection, built from
