@@ -27,39 +27,39 @@ group hyperspace "ECHO Hyperspace" cols="1fr 0" gap=0 {
   group field-ports gap=12 {
     group port-calendar { }
     group port-email { }
-    group port-projects { }
-    group port-translation { }
+    group port-linear { }
+    group port-github { }
     group port-search { }
-    group port-sql { }
+    group port-discord { }
     group port-files { }
-    group port-commerce { }
-    group port-travel { }
+    group port-bluesky { }
+    group port-trello { }
     group port-slack { }
   }
 }
 
-group services "EDGE Services" gap=12 {
+group services "Services" gap=12 {
   node calendar "Calendar" kind=card icon=calendar-blank tone=event variant=simple
   node email "Email" kind=card icon=envelope tone=message variant=simple
-  node projects "Projects" kind=card icon=database tone=file variant=simple
-  node translation "Translation" kind=card icon=translate variant=simple
+  node linear "Linear" kind=card icon=list-checks tone=file variant=simple
+  node github "GitHub" kind=card icon=github-logo variant=simple
   node search "Search" kind=card icon=magnifying-glass variant=simple
-  node sql "SQL" kind=card icon=table variant=simple
+  node discord "Discord" kind=card icon=discord-logo variant=simple
   node files "Files" kind=card icon=folder variant=simple
-  node commerce "Commerce" kind=card icon=shopping-cart variant=simple
-  node travel "Travel" kind=card icon=airplane-tilt variant=simple
+  node bluesky "Bluesky" kind=card icon=butterfly variant=simple
+  node trello "Trello" kind=card icon=kanban variant=simple
   node slack "Slack" kind=card icon=hash variant=simple tone=trip 
 }
 
 edge calendar     -- port-calendar    path=line stroke=dotted
 edge email        -- port-email       path=line stroke=dotted
-edge projects     -- port-projects    path=line stroke=dotted
-edge translation  -- port-translation path=line stroke=dotted
+edge linear     -- port-linear    path=line stroke=dotted
+edge github  -- port-github path=line stroke=dotted
 edge search       -- port-search      path=line stroke=dotted
-edge sql          -- port-sql         path=line stroke=dotted
+edge discord          -- port-discord         path=line stroke=dotted
 edge files        -- port-files       path=line stroke=dotted
-edge commerce     -- port-commerce    path=line stroke=dotted
-edge travel       -- port-travel      path=line stroke=dotted
+edge bluesky     -- port-bluesky    path=line stroke=dotted
+edge trello       -- port-trello      path=line stroke=dotted
 edge slack        -- port-slack       path=line stroke=dotted
 
 edge plank-board  -- s0 path=line stroke=dashed

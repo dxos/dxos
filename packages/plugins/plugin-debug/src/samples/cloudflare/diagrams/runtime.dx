@@ -1,0 +1,94 @@
+diagram kind=grid size=1676x880 cols="616 284 616" gap=64 padding=16 autoRows=744 alignContent=center
+
+group client-wrap rows="64 1fr" {
+  group client-head cols=2 gap=32 {
+    group client-head-rest { }
+    group device-label "Device" {
+      group device-label-fill { }
+    }
+  }
+  group client-cell rows="496 1fr" {
+    group client-section cols=2 gap=32 padding=8 stroke=solid {
+      group client-col rows="154 1fr" gap=16 {
+        node client "Client" kind=card icon=browser iconTone=teal {
+          item "Composer app tab"
+          item "Plugins and surfaces"
+        }
+        group client-parts rows=3 gap=16 {
+          node cache "Local queries" kind=card icon=lightning iconTone=teal
+        }
+      }
+      group worker-col rows="154 1fr" gap=16 {
+        node worker "SharedWorker" kind=card icon=cpu iconTone=teal {
+          item "Shared by every tab"
+          item "Local replica in SQLite"
+        }
+        group worker-parts gap=16 {
+          node opfs "SQLite on OPFS" kind=card icon=database iconTone=teal
+          node plugin-registry "Plugin Registry" kind=card icon=puzzle-piece iconTone=teal
+          node vault "Vault" kind=card icon=vault iconTone=teal
+        }
+      }
+    }
+    group client-below { }
+  }
+}
+
+group router-wrap rows="64 1fr" {
+  group router-head { }
+  group router-section rows="8 1fr 8" {
+    group router-above { }
+    group router-col rows="154 1fr" gap=16 {
+      node router "Router DO" kind=card icon=arrows-left-right iconTone=rose {
+        item "One WebSocket per identity"
+        item "Hibernates when idle"
+      }
+      group router-rest { }
+    }
+    group router-below { }
+  }
+}
+
+group edge-section rows="64 1fr" {
+  group edge-head cols=2 gap=32 {
+    group space-label "Per Space" {
+      group space-label-fill { }
+    }
+    group edge-head-rest { }
+  }
+  group edge-body cols=2 gap=32 padding=8 stroke=solid {
+    group space-col gap=16 autoRows=154 {
+      node replicator "Replicator DO" kind=card icon=arrows-clockwise iconTone=accent {
+        item "Automerge sync"
+        item "Stores history, never opens it"
+      }
+      node indexer "Indexer DO" kind=card icon=list-magnifying-glass iconTone=accent {
+        item "Types, relations, full text"
+        item "Serves queries"
+      }
+      node triggers "Scheduler DO" kind=card icon=alarm iconTone=accent {
+        item "Query, feed, cron, webhook, email"
+        item "Wakes agents on change"
+      }
+      node agent "Agent DO" kind=card icon=robot iconTone=accent {
+        item "Own identity and keys"
+        item "Writes back to the space"
+      }
+    }
+    group platform-col gap=16 {
+      node sqlite "DO SQLite" kind=card icon=database iconTone=sheet
+      node blobstore "R2" kind=card icon=files iconTone=sheet
+      node registry "D1" kind=card icon=table iconTone=sheet
+      node loader "Dynamic Workers" kind=card icon=lightning iconTone=sheet
+      node models "Workers AI" kind=card icon=cpu iconTone=sheet
+      node calls "RealtimeKit" kind=card icon=video-camera iconTone=sheet
+    }
+  }
+}
+
+edge client#e3 -- worker#w3
+edge worker#e3 -- router#w3
+edge router#e3 -- replicator#w3
+edge replicator#s3 -> indexer#n3 head=triangle path=ortho
+edge indexer#s3 -> triggers#n3 head=triangle path=ortho
+edge triggers#s3 -> agent#n3 head=triangle path=ortho

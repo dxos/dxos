@@ -91,7 +91,7 @@ export const AgentTurnProducer = Capability.make<MakeTurnProducer>()(
 
 /**
  * Present when the host supplied `codeModeTurnProducer`, since without it code mode never runs whatever
- * `Settings.disableCodeMode` says.
+ * `Settings.codeMode` says.
  */
 export const CodeModeAvailable = Capability.make<true>()(`${AssistantNamespace.key}.capability.codeModeAvailable`);
 

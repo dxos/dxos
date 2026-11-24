@@ -65,7 +65,7 @@ export const fromRegistry =
   (
     registry: PluginProtocol.TypeRegistry,
     cache: Cache = isolateCache,
-  ): NonNullable<FunctionWrappingOptions['typeSource']> =>
+  ): NonNullable<FunctionWrappingOptions['registrySource']>['resolve'] =>
   async (uri) => {
     if (!DXN.isDXN(uri)) {
       return undefined;

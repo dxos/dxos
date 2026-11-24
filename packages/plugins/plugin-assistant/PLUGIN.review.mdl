@@ -295,7 +295,7 @@ verdict F-5.3: Tool calls dispatch operations through the compute runtime and re
 ```
 
 ```mdl
-verdict F-5.4: composerTurnProducer uses the host's codeModeTurnProducer unless disableCodeMode is set.
+verdict F-5.4: composerTurnProducer uses the host's codeModeTurnProducer when codeMode is set.
   status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/turn-producers.ts#composerTurnProducer]
   note: Without the plugin option it falls back to the AiSession producer. No test.

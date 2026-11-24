@@ -4,7 +4,8 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
 
 - `CLAUDE.md` and `GEMINI.md` are symlinks to it.
 - Keep it thin and durable — deep how-to lives in `.agents/skills/*`;
-- environment setup lives in `REPOSITORY_GUIDE.md`.
+- environment setup and running an app (Storybook, Composer) live in `REPOSITORY_GUIDE.md`
+  §Quickstart.
 
 ## Start of session
 
