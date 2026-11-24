@@ -4,23 +4,37 @@ name: Agents, Sessions and Delegation
 version: 0.1.0
 ---
 
-How agent work is identified, split and handed off. Three tiers name the units:
 
-- **Agent** — the unit of identity, permissions and access control. An agent is invited to spaces.
-  It has one main durable object: the entry point for external events, with no inference of its
-  own, that delegates to worker sessions. It has a home space that holds its memory (RDF store),
-  its ECHO database, its access tokens and its skills.
-- **Session** — the unit of work. Each session is its own durable object with its own feed and
-  task list. A session attached to an agent inherits that agent's permissions. A standalone
-  session (no agent) is still supported.
-- **Thread** — a microtask inside a session; what Claude calls a subagent.
+How agent work is identified, split and handed off.
 
-Delegation has two scopes. **Intra-agent** delegation hands work to sessions and threads of one
-agent. **Cross-agent** delegation hands work to another agent: a separate identity, separate
-spaces and a separate entry point.
+- **Agent** — one durable object named `Agent` plus one or more `SessionProcess`es. The `Agent`
+  object is the entry point for external events; it runs no inference of its own and delegates
+  work to its sessions. Every agent is addressed by a DID.
+- **Session** — a `SessionProcess`: the unit of work, with its own feed and task list. A session
+  exists on its own (standalone) or as part of an agent, whose permissions it then inherits.
+- **Thread** — a microtask inside a session, in the same process; what Claude calls a subagent. A
+  thread has no task list of its own: it works from its session's.
+
+Delegation has three tiers:
+
+| Tier    | Delegates to                         | Boundary               | Handled by                    |
+| ------- | ------------------------------------ | ---------------------- | ----------------------------- |
+| Thread  | a thread in the same session         | same process           | the intra-agent delegation service |
+| Session | another session of the same agent    | different process      | the intra-agent delegation service |
+| Agent   | another agent                        | different agent (DID)  | the cross-agent delegation service |
+
+The base case of delegation is a message. The richer case sends a reference to a task, and the
+task is assigned to the receiver.
 
 The task list in the project or session is the control plane. Ephemeral messages (wake, start,
 stop) sit on top of it and carry no state of their own.
+
+Memory is per space. `MemoryService` serves one space's memory to every session in it, whether or
+not the session belongs to an agent, so agents in the same space share memory. Not every agent has
+an identity yet, and several agents can share a space; each still gets a generated DID.
+`DiscordService` is how agents interact with Discord.
+
+The eventual goal is that every agent has its own identity and its own personal space.
 
 ## Extensions
 
@@ -33,26 +47,26 @@ stop) sit on top of it and carry no state of their own.
 ## Features
 
 ```mdl
-feat F-1: Agent ontology
+feat F-1: Agents and sessions
   status: planned
 
   req F-1.1:
     when: an agent is created
-    then: it has one main durable object, which receives external events, runs no inference, and
-          delegates work to sessions
+    then: it is one `Agent` durable object, which receives external events, runs no inference, and
+          delegates work to its `SessionProcess`es
 
   req F-1.2:
-    when: an agent is created
-    then: it has a home space that holds its memory, ECHO database, access tokens and skills
+    when: a session holds work
+    then: the tasks are in the session's task list; a thread has no task list of its own
 
   req F-1.3:
-    when: a session is attached to an agent
-    then: the session has its own durable object, feed and task list, and inherits the agent's
+    when: a session is part of an agent
+    then: the session has its own `SessionProcess`, feed and task list, and inherits the agent's
           permissions
 
   req F-1.4:
     when: a session is created with no agent
-    then: it runs as a standalone session with today's behavior
+    then: it runs as a standalone session
 ```
 
 ```mdl
@@ -61,11 +75,15 @@ feat F-2: Intra-agent delegation
 
   req F-2.1:
     when: a session delegates a task to a thread
-    then: the thread runs in the same session and works from the session's shared task list
+    then: the thread runs in the same session and process, and works from the session's task list
 
   req F-2.2:
     when: an agent delegates a task to another of its sessions
-    then: the receiving session records the task in its own task list
+    then: the task runs in that session's own `SessionProcess` and is recorded in its task list
+
+  req F-2.3:
+    when: work is delegated to a thread or to a session of the same agent
+    then: the intra-agent delegation service handles it
 ```
 
 ```mdl
@@ -78,17 +96,65 @@ feat F-3: Cross-agent delegation
           agents) for the members of the spaces they share
 
   req F-3.2:
+    when: work is delegated to another agent
+    then: the cross-agent delegation service handles it
+
+  req F-3.3:
+    when: an agent delegates to another agent in the base case
+    then: it sends a durable message to the other agent's `Agent` object
+
+  req F-3.4:
+    when: an agent delegates a tracked task to another agent
+    then: it sends a reference to the task, and the task is assigned to the other agent
+```
+
+```mdl
+feat F-4: Agent addressing
+  status: planned
+
+  req F-4.1:
     when: an agent is referenced
     then: it is addressed by its DID, as a URI inside ECHO
 
-  req F-3.3:
-    when: an agent delegates to another agent
-    then: it pushes a durable message to the other agent's main durable object
+  req F-4.2:
+    when: an agent is created without an identity
+    then: it still gets a generated DID
 
-  req F-3.4:
-    when: the delegated work is tracked in a shared space
-    then: a task object in that space is assigned to the other agent, and the durable message is
-          the notification for it
+  req F-4.3:
+    when: several agents are in one space
+    then: each has its own DID and they co-exist in that space
+```
+
+```mdl
+feat F-5: Per-space memory
+  status: planned
+
+  req F-5.1:
+    when: a session in a space reads or writes memory
+    then: it uses that space's `MemoryService`, whether or not the session belongs to an agent
+
+  req F-5.2:
+    when: several agents are in one space
+    then: they share that space's memory
+```
+
+```mdl
+feat F-6: Discord
+  status: planned
+
+  req F-6.1:
+    when: an agent interacts with Discord
+    then: it goes through `DiscordService`
+```
+
+```mdl
+feat F-7: Agent identity and personal space
+  status: planned
+  desc: The eventual goal; [F-4.2] and [F-5.2] are the interim state.
+
+  req F-7.1:
+    when: an agent is created
+    then: it has its own identity and its own personal space
 ```
 
 ## Changelog
@@ -166,4 +232,102 @@ question Q-3: Is memory per agent (in the agent's home space) or per space (shar
   affects: [F-1.2]
   context: Today there is one memory object per space; per-agent memory is the stated ideal, deferred.
   source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-7: Delegation has three tiers: to a thread within one session (same process), to another session of the same agent (different process), and to another agent.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-2, F-3]
+```
+
+```mdl
+decision D-8: A session holds tasks; threads do not have their own tasks.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.2, F-2.1]
+```
+
+```mdl
+decision D-9: A session exists on its own or as part of an agent.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.3, F-1.4]
+```
+
+```mdl
+decision D-10: An agent is one durable object named `Agent` (formerly `AgentRouter`) plus one or more `SessionProcess`es (renamed from `AgentProcess`).
+  date: 2026-11-24
+  by: user:dmaretskyi
+  answers: Q-1
+  affects: [F-1.1, F-1.3, F-2.2]
+```
+
+```mdl
+decision D-11: `MemoryService` is per space; sessions with and without an agent can both access it.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  answers: Q-3
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-12: `DiscordService` handles Discord interaction.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-6]
+```
+
+```mdl
+decision D-13: Two services handle delegation: an intra-agent one (to threads or sessions) and a cross-agent one (to another agent).
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-2.3, F-3.2]
+```
+
+```mdl
+decision D-14: The base case of delegation is sending a message; the more complex case is sending a reference to a task that is then assigned.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-3.3, F-3.4]
+```
+
+```mdl
+decision D-15: Each agent is addressed by a DID.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-4.1]
+```
+
+```mdl
+decision D-16: For now not every agent has an identity, and several agents can co-exist in one space. Each agent still gets a generated DID without an identity, and agents in one space share its memory.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-4.2, F-4.3, F-5.2]
+```
+
+```mdl
+decision D-17: The eventual goal is that each agent always has its own identity and its own personal space.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-7]
+```
+
+```mdl
+decision D-18: The agent's home space holding memory, ECHO database, access tokens and skills is not the current design: memory is per space ([D-11]) and an agent's own space is the eventual goal ([D-17]). The rest of [D-2] stands: the `Agent` object runs no inference and delegates to sessions, attached sessions inherit the agent's permissions, and standalone sessions are supported.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-2
+  affects: [F-1, F-7]
+  why: The home-space part of [D-2] contradicts [D-11], [D-16] and [D-17], and the log is append-only, so D-2 is replaced by what still holds.
+```
+
+```mdl
+decision D-19: Addressing, memory, Discord and the identity goal are their own features (F-4 to F-7), and the delegation service for each tier is a requirement of its feature ([F-2.3], [F-3.2]). Fills in [D-10] to [D-17].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3, F-3.2, F-4, F-5, F-6, F-7]
+  why: Each decision constrains a different component, so separate features keep each review verdict about one thing.
 ```
