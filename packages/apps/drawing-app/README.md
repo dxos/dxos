@@ -42,10 +42,13 @@ landing host, `/`, `/docs/` and the site's files come from `out/drawing-app/site
 redirects to the app host; `LANDING_HOSTS` and
 `APP_ORIGIN` in `wrangler.jsonc` name them.
 
+For now the production hosts point at preview and production has no custom domain. Preview binds production's
+bucket while it serves them, so existing `?d=` links keep opening.
+
 | Environment | Site                        | App                    | Shares bucket               |
 | ----------- | --------------------------- | ---------------------- | --------------------------- |
-| production  | drawing.sh, www.drawing.sh  | app.drawing.sh         | `drawing-sh-shares`         |
-| preview     | preview.drawing.sh          | app.preview.drawing.sh | `drawing-sh-shares-preview` |
+| production  | none                        | its `workers.dev` host | `drawing-sh-shares`         |
+| preview     | drawing.sh, www.drawing.sh  | app.drawing.sh         | `drawing-sh-shares`         |
 | dev         | dev.drawing.sh              | app.dev.drawing.sh     | `drawing-sh-shares-dev`     |
 | staging     | none                        | its `workers.dev` host | `drawing-sh-shares-staging` |
 
