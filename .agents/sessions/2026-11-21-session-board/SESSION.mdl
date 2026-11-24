@@ -83,12 +83,28 @@ goal G-9: A Land switch on each PR starts or stops the `land` skill.
     - The skill keeps the database in step when the session starts or stops the `land` skill.
 ```
 
+```mdl
+goal G-10: The repo has one agent directory, `.agents/`.
+  status: review
+  notes:
+    - `agents/` moves into `.agents/`, and each path to it is rewritten.
+    - Routines that are stored outside the repo can still name `agents/` paths.
+```
+
 ## Pull requests
 
 ```mdl
 pr PR-1: Build the status board from a session file.
   ref: dxos/dxos#14647
   status: merged
+```
+
+```mdl
+pr PR-2: Keep one agent directory, `.agents/`.
+  ref: dxos/dxos#14650
+  branch: dm/charming-knuth-lw1x6k
+  status: draft
+  goals: [G-10]
 ```
 
 ## Changelog
@@ -293,5 +309,17 @@ event T-12: [PR-1] is in the merge queue.
 ```mdl
 event T-13: [PR-1] is merged.
   date: 2026-11-21T15:07Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-14: Opened [PR-2] as a draft.
+  date: 2026-11-21T15:09Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-15: The draft checks on [PR-2] pass.
+  date: 2026-11-21T15:28Z
   by: agent:claude-code
 ```
