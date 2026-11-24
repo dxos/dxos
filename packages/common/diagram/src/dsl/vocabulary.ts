@@ -60,10 +60,12 @@ export const RESERVED: ReadonlySet<string> = new Set<string>([
 /**
  * Attribute value shapes; `enum` carries the literals the schema allows, `size` is `WxH`, `ratio` is `W:H`.
  * `name` is a bare word from an open set a plugin extends, and `scalar` is a value of whichever of those three
- * shapes it reads as — the shape a contributed kind's own field takes, which no table here can know.
+ * shapes it reads as — the shape a contributed kind's own field takes, which no table here can know. `color` is
+ * the open set the scene's `Color` schema checks: a theme name, a name at a tone, or a quoted CSS colour.
  */
 export type AttrType =
   | { type: 'number' }
+  | { type: 'color' }
   | { type: 'string' }
   | { type: 'boolean' }
   | { type: 'size' }
@@ -74,12 +76,13 @@ export type AttrType =
 
 export type AttrSpec = AttrType & { name: string };
 
+const COLOR: AttrSpec = { name: 'color', type: 'color' };
+
 const STYLE: readonly AttrSpec[] = [
-  { name: 'color', type: 'enum', values: Shape.Color.literals },
+  COLOR,
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
   { name: 'weight', type: 'enum', values: Shape.Weight.literals },
-  { name: 'border', type: 'boolean' },
   { name: 'align', type: 'enum', values: Shape.Align.literals },
   { name: 'valign', type: 'enum', values: Shape.VerticalAlign.literals },
   { name: 'fontSize', type: 'number' },
@@ -144,6 +147,16 @@ export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
 };
 
 /**
+ * The flag that said whether a shape draws its outline before `stroke=none` did, which the reader still takes
+ * wherever `stroke` is taken; nothing prints or completes it.
+ */
+export const LEGACY_BORDER: AttrSpec = { name: 'border', type: 'boolean' };
+
+/** `specs` and, where they state a stroke, the flag older text states it with. */
+export const withLegacy = (specs: readonly AttrSpec[]): readonly AttrSpec[] =>
+  specs.some(({ name }) => name === 'stroke') ? [...specs, LEGACY_BORDER] : specs;
+
+/**
  * The attribute that names a contributed kind. A box carrying it takes that kind's own attributes too: no table
  * can list them, since the plugin that defines the kind is what decides them.
  */
@@ -201,7 +214,7 @@ const RULE: readonly AttrSpec[] = [
 export const GRID_RULE_ATTRS: readonly string[] = RULE.map(({ name }) => name).filter((name) => name !== 'gap');
 
 /** The frame a grid diagram draws round a group's members. */
-export const GROUP_FRAME_ATTRS: readonly string[] = ['fill', 'stroke', 'border'];
+export const GROUP_FRAME_ATTRS: readonly string[] = ['fill', 'stroke'];
 
 /** `diagram` attributes. */
 export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
@@ -218,10 +231,9 @@ export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
 export const GROUP_ATTRS: readonly AttrSpec[] = [
   ...RULE,
   { name: 'max-width', type: 'number' },
-  { name: 'color', type: 'enum', values: Shape.Color.literals },
+  COLOR,
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
-  { name: 'border', type: 'boolean' },
 ];
 
 /** `node` attributes. A node naming a component (`kind=card`) also takes that component's own, as a box does. */
@@ -230,10 +242,9 @@ export const NODE_ATTRS: readonly AttrSpec[] = [
   { name: 'ref', type: 'string' },
   { name: 'role', type: 'enum', values: Semantic.ROLES },
   { name: 'shape', type: 'enum', values: Shape.BoxKind.literals },
-  { name: 'color', type: 'enum', values: Shape.Color.literals },
+  COLOR,
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
-  { name: 'border', type: 'boolean' },
   // The size the node keeps in its cell. Not `size`, which a component may name a field of its own.
   { name: 'width', type: 'number' },
   { name: 'height', type: 'number' },
@@ -245,11 +256,11 @@ export const EDGE_ATTRS: readonly AttrSpec[] = [
   { name: 'tail', type: 'enum', values: Shape.ArrowTail.literals },
   { name: 'path', type: 'enum', values: Shape.Path.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
-  { name: 'color', type: 'enum', values: Shape.Color.literals },
+  COLOR,
 ];
 
 /** `note` attributes. */
-export const NOTE_ATTRS: readonly AttrSpec[] = [{ name: 'color', type: 'enum', values: Shape.Color.literals }];
+export const NOTE_ATTRS: readonly AttrSpec[] = [COLOR];
 
 /** Placement relations a `node` or `group` may state; `~` before one makes it a preference. */
 export const RELATION_WORDS: readonly string[] = Semantic.RELATION_KINDS;

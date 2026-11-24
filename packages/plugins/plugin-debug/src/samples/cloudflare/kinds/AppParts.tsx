@@ -70,14 +70,14 @@ export const ChromeData = Schema.Struct({
 
 export const ChromeNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('app-chrome'),
+  kind: Schema.Literal('app-chrome'),
   label: Schema.optional(Schema.String),
   data: Schema.optional(ChromeData),
 });
 
 const ChromeNodeView = ({ node }: NodeViewProps) => {
   const data = kindData(ChromeData, node);
-  if (node.type !== 'app-chrome' || !data) {
+  if (node.kind !== 'app-chrome' || !data) {
     return null;
   }
   const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
@@ -125,7 +125,7 @@ export const appChromeSpec: ElementKindSpec = {
   icon: 'ph--browser--regular',
   schema: ChromeNode,
   component: ChromeNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'app-chrome', id, z, center, size, data: { part: 'bar' } }),
+  create: ({ id, z, center, size }) => ({ kind: 'app-chrome', id, z, center, size, data: { part: 'bar' } }),
   defaultSize: { width: 14, height: 1 },
   resizable: true,
   bare: true,
@@ -143,13 +143,13 @@ export const PaneData = Schema.Struct({
 
 export const PaneNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('app-pane'),
+  kind: Schema.Literal('app-pane'),
   data: Schema.optional(PaneData),
 });
 
 const PaneNodeView = ({ node }: NodeViewProps) => {
   const data = kindData(PaneData, node);
-  if (node.type !== 'app-pane' || !data) {
+  if (node.kind !== 'app-pane' || !data) {
     return null;
   }
   const { style, mark } = highlightOf(data.tone);
@@ -189,7 +189,7 @@ export const appPaneSpec: ElementKindSpec = {
   icon: 'ph--sidebar--regular',
   schema: PaneNode,
   component: PaneNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'app-pane', id, z, center, size, data: { pane: 'nav' } }),
+  create: ({ id, z, center, size }) => ({ kind: 'app-pane', id, z, center, size, data: { pane: 'nav' } }),
   defaultSize: { width: 4, height: 10 },
   resizable: true,
   bare: true,
@@ -207,14 +207,14 @@ export const EmbedData = Schema.Struct({
 
 export const EmbedNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('app-embed'),
+  kind: Schema.Literal('app-embed'),
   label: Schema.optional(Schema.String),
   data: Schema.optional(EmbedData),
 });
 
 const EmbedNodeView = ({ node }: NodeViewProps) => {
   const data = kindData(EmbedData, node);
-  if (node.type !== 'app-embed' || !data) {
+  if (node.kind !== 'app-embed' || !data) {
     return null;
   }
   const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
@@ -238,7 +238,7 @@ export const appEmbedSpec: ElementKindSpec = {
   icon: 'ph--frame-corners--regular',
   schema: EmbedNode,
   component: EmbedNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'app-embed', id, z, center, size, data: { embed: 'canvas' } }),
+  create: ({ id, z, center, size }) => ({ kind: 'app-embed', id, z, center, size, data: { embed: 'canvas' } }),
   defaultSize: { width: 6, height: 2.5 },
   resizable: true,
   bare: true,
@@ -265,7 +265,7 @@ export const LinesData = Schema.Struct({
 
 export const LinesNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('app-lines'),
+  kind: Schema.Literal('app-lines'),
   data: Schema.optional(LinesData),
 });
 
@@ -273,7 +273,7 @@ const WIDTHS = ['96%', '88%', '92%', '64%'];
 
 const LinesNodeView = ({ node }: NodeViewProps) => {
   const data = kindData(LinesData, node);
-  if (node.type !== 'app-lines' || !data) {
+  if (node.kind !== 'app-lines' || !data) {
     return null;
   }
   const count = Math.max(1, Math.min(Math.trunc(data.lines ?? 3), LINES_MAX));
@@ -296,7 +296,7 @@ export const appLinesSpec: ElementKindSpec = {
   icon: 'ph--text-align-left--regular',
   schema: LinesNode,
   component: LinesNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'app-lines', id, z, center, size, data: { lines: 3 } }),
+  create: ({ id, z, center, size }) => ({ kind: 'app-lines', id, z, center, size, data: { lines: 3 } }),
   defaultSize: { width: 6, height: 1.5 },
   resizable: true,
   bare: true,

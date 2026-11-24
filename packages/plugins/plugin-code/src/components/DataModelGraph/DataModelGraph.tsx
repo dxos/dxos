@@ -21,11 +21,11 @@ import { type DataModelEdgeKind, type DataTypeModel, buildDataModel } from '../S
 const LATTICE: LatticeSpec = { width: 256, height: 256, gutterX: 64, gutterY: 64 };
 
 /** Line and marker per relation, UML-style: inheritance is a hollow triangle, a reference a dashed arrow. */
-const EDGE_STYLE: Record<DataModelEdgeKind, Pick<GraphEdge, 'ends' | 'style'>> = {
-  embeds: { ends: { start: 'circle', end: 'arrow' } },
-  references: { ends: { end: 'arrow' }, style: { hue: 'sky', lineStyle: 'dashed' } },
-  variant: { ends: { end: 'arrow' }, style: { hue: 'violet', lineStyle: 'dotted' } },
-  extends: { ends: { end: 'triangle' }, style: { hue: 'neutral' } },
+const EDGE_STYLE: Record<DataModelEdgeKind, Pick<GraphEdge, 'ends' | 'overrides'>> = {
+  embeds: { ends: { tail: 'circle', head: 'arrow' } },
+  references: { ends: { head: 'arrow' }, overrides: { color: 'sky', stroke: 'dashed' } },
+  variant: { ends: { head: 'arrow' }, overrides: { color: 'violet', stroke: 'dotted' } },
+  extends: { ends: { head: 'triangle' }, overrides: { color: 'neutral' } },
 };
 
 /** Field names size to the longest; types take the rest and truncate. */
@@ -159,7 +159,7 @@ export const DataModelGraph = ({ content }: DataModelGraphProps) => {
         from,
         to,
         ...EDGE_STYLE[kind],
-        ...(field && { text: field }),
+        ...(field && { label: field }),
       })),
     }),
     [model],

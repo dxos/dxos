@@ -115,12 +115,12 @@ export const useCanvasSelection = (
 export const useCanvasTools = (
   consumer: string,
 ): CanvasAspect<
-  Pick<CanvasAtoms, 'tool' | 'linkType' | 'layer' | 'snap' | 'guides' | 'axes' | 'debug'>,
+  Pick<CanvasAtoms, 'tool' | 'linkPath' | 'layer' | 'snap' | 'guides' | 'axes' | 'debug'>,
   ToolsCommands
 > => {
   const { atoms, controller } = useCanvasServices(consumer);
-  const { tool, linkType, layer, snap, guides, axes, debug } = atoms;
-  return { atoms: { tool, linkType, layer, snap, guides, axes, debug }, commands: controller.tools };
+  const { tool, linkPath, layer, snap, guides, axes, debug } = atoms;
+  return { atoms: { tool, linkPath, layer, snap, guides, axes, debug }, commands: controller.tools };
 };
 
 /**

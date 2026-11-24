@@ -14,28 +14,26 @@ import {
   nodeDragData,
   toolGroups,
 } from '@dxos/react-ui-canvas';
-import { type LinkType } from '@dxos/scene';
+import { LINK_PATHS } from '@dxos/scene';
 
 import { type ToolDef } from '../editor/index.ts';
 
-const LINK_TYPES = ['line', 'ortho', 'curve', 'spline', 'smart'] as const satisfies readonly LinkType[];
-
-/** A 2D engine tool as the editor's tool id: `select`, `hand`, `node:<type>` or `link:<type>`. */
+/** A 2D engine tool as the editor's tool id: `select`, `hand`, `node:<kind>` or `link:<path>`. */
 const toolId = (tool: Tool): string =>
-  tool.kind === 'node' || tool.kind === 'link' ? `${tool.kind}:${tool.type}` : tool.kind;
+  tool.kind === 'node' ? `node:${tool.node}` : tool.kind === 'link' ? `link:${tool.path}` : tool.kind;
 
 /** The editor's tool as the 2D engine's; an id the engine has no tool for selects. */
 export const toTool2D = ({ id }: ActiveTool): Tool => {
-  const [kind, type] = id.split(':');
+  const [kind, name] = id.split(':');
   if (kind === 'hand') {
     return { kind: 'hand' };
   }
-  if (kind === 'node' && type) {
-    return { kind, type };
+  if (kind === 'node' && name) {
+    return { kind, node: name };
   }
-  const link = kind === 'link' ? LINK_TYPES.find((candidate) => candidate === type) : undefined;
-  if (link) {
-    return { kind: 'link', type: link };
+  const path = kind === 'link' ? LINK_PATHS.find((candidate) => candidate === name) : undefined;
+  if (path) {
+    return { kind: 'link', path };
   }
   return { kind: 'select' };
 };
@@ -58,8 +56,8 @@ export const tools2D = (
       label: entry.label,
       category: group.name === TOOLS_GROUP ? ('select' as const) : ('create' as const),
       group: group.name,
-      ...(entry.tool.kind === 'node' ? { kind: entry.tool.type } : {}),
-      ...(entry.tool.kind === 'node' && nodes[entry.tool.type]?.createFromPoints ? { drawn: true } : {}),
+      ...(entry.tool.kind === 'node' ? { kind: entry.tool.node } : {}),
+      ...(entry.tool.kind === 'node' && nodes[entry.tool.node]?.createFromPoints ? { drawn: true } : {}),
       ...(entry.key ? { key: entry.key } : {}),
       ...(entry.fold ? { fold: entry.fold } : {}),
     })),

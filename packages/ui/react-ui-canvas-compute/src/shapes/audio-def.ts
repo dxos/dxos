@@ -16,7 +16,7 @@ import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ
 
 export const AudioShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('audio'),
+    kind: Schema.Literal('audio'),
   }),
 );
 
@@ -25,7 +25,7 @@ export type AudioShape = Schema.Schema.Type<typeof AudioShape>;
 export type CreateAudioProps = CreateShapeProps<AudioShape>;
 
 export const createAudio = (props: CreateAudioProps) =>
-  createShape<AudioShape>({ type: 'audio', size: { width: MAJOR_GRID, height: MAJOR_GRID }, ...props });
+  createShape<AudioShape>({ kind: 'audio', size: { width: MAJOR_GRID, height: MAJOR_GRID }, ...props });
 
 export const audioNodeDef = defineComputeNode<AudioShape>({
   type: 'audio',

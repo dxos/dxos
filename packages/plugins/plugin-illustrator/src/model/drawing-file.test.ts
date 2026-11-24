@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { MermaidEngine, type Scene, SVG_SCHEMA, SvgFile } from '@dxos/diagram';
-import { Database, Filter } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
@@ -30,6 +30,50 @@ afterEach(async () => {
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+
+const placement = { origin: { x: 0, y: 0 }, scale: 1 };
+
+/** SVG canvas content as scene revision 2 stored it: an outline switched by `border`, a component named by `type`. */
+const LEGACY_CONTENT = {
+  'heading/box': {
+    object: 'heading',
+    element: 'box',
+    order: 0,
+    placement,
+    data: { kind: 'rect', id: 'box', x: 0, y: 0, w: 120, h: 40, text: 'Heading', border: false },
+  },
+  'frame/box': {
+    object: 'frame',
+    element: 'box',
+    order: 1,
+    placement,
+    data: { kind: 'rect', id: 'box', x: 0, y: 60, w: 240, h: 120, color: 'light-blue', border: true },
+  },
+  'card/box': {
+    object: 'card',
+    element: 'box',
+    order: 2,
+    placement,
+    data: { kind: 'rect', id: 'box', x: 20, y: 80, w: 96, h: 64, type: 'card', stroke: 'dashed', border: true },
+  },
+  'wire/arrow': {
+    object: 'wire',
+    element: 'arrow',
+    order: 3,
+    placement,
+    data: { kind: 'arrow', id: 'arrow', from: 'heading/box', to: 'card/box', border: true },
+  },
+};
+
+const CURRENT_ELEMENTS = [
+  { kind: 'rect', id: 'box', x: 0, y: 0, w: 120, h: 40, text: 'Heading', stroke: 'none' },
+  { kind: 'rect', id: 'box', x: 0, y: 60, w: 240, h: 120, color: 'light-blue', stroke: 'solid' },
+  { kind: 'rect', id: 'box', x: 20, y: 80, w: 96, h: 64, stroke: 'dashed', component: 'card' },
+  { kind: 'arrow', id: 'arrow', from: 'heading/box', to: 'card/box' },
+];
+
+const elementsOf = (canvas: Drawing.Canvas) =>
+  SvgBuilder.read(canvas).scene.objects.flatMap(({ elements }) => elements);
 
 describe('.dx.svg', () => {
   test('a drawing exports to an SVG and imports back as an editable drawing under fresh ids', async ({ expect }) => {
@@ -107,6 +151,35 @@ describe('.dx.svg', () => {
     const exit = await Effect.runPromiseExit(importDxSvg(svg).pipe(Effect.provide(Database.layer(db))));
     expect(exit._tag).toBe('Failure');
     expect(await db.query(Filter.type(Drawing.Canvas)).run()).toHaveLength(0);
+  });
+
+  test('a file written in the earlier words imports with its elements in the current words', async ({ expect }) => {
+    const canvas = Obj.make(Drawing.Canvas, { schema: SVG_SCHEMA, content: LEGACY_CONTENT });
+    const drawing = Drawing.make({ name: 'Slide', canvas });
+    const svg = toDxSvg(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180"></svg>',
+      toPayload({ drawing, canvas }),
+    );
+    expect(svg).toContain('"border":false');
+    expect(svg).toContain('"type":"card"');
+
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const imported = await EffectEx.runPromise(importDxSvg(svg).pipe(Effect.provide(Database.layer(db))));
+    const stored = await imported.canvas.load();
+    invariant(Drawing.isCanvas(stored), 'The imported drawing resolves its canvas.');
+    // What the space now stores is current, so no later reader has to know the old words.
+    const records = Object.values(stored.content).sort((left, right) => left.order - right.order);
+    expect(records.map(({ data }) => ({ ...data }))).toEqual(CURRENT_ELEMENTS);
+    expect(elementsOf(stored)).toEqual(CURRENT_ELEMENTS);
+  });
+
+  test('a canvas a space stored in the earlier words reads in the current words', ({ expect }) => {
+    const canvas = Obj.make(Drawing.Canvas, { schema: SVG_SCHEMA, content: LEGACY_CONTENT });
+    expect(elementsOf(canvas)).toEqual(CURRENT_ELEMENTS);
+    // Editing one object leaves the others stored as they were, and they still read current.
+    SvgBuilder.apply(canvas, [{ op: 'move-object', objectId: 'card', origin: { x: 8, y: 8 } }]);
+    expect(elementsOf(canvas)).toEqual(CURRENT_ELEMENTS);
   });
 
   test('a plain SVG has no payload, and importing one fails', async ({ expect }) => {

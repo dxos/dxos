@@ -14,6 +14,7 @@ import * as Canvas from '@dxos/plugin-canvas/Canvas';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
+import { Legacy } from '@dxos/scene';
 
 import { NAME_HEADER, NOT_FOUND_MESSAGE, SHARE_PATH } from '../../functions/share.ts';
 
@@ -132,12 +133,22 @@ export const downloadDxSvg = async (
   return true;
 };
 
-/** Adds a `.dx.svg`'s drawing to the space under fresh ids. */
+/**
+ * Adds a `.dx.svg`'s drawing to the space under fresh ids. A file embeds its objects at the version they were stored
+ * at, and a space migrates only what it holds when it loads, so the scene migrations run on what was added.
+ */
 export const addDxSvg = Effect.fn('addDxSvg')(function* (space: Space, svg: string) {
-  return yield* IllustratorModel.DrawingFile.importDxSvg(svg).pipe(
+  // An object whose type the client does not know is added with no type, and no migration finds it afterwards.
+  space.db.graph.registry.add(Legacy.Types);
+  const drawing = yield* IllustratorModel.DrawingFile.importDxSvg(svg).pipe(
     Effect.provide(Database.layer(space.db)),
     Effect.mapError((error) => new ImportError({ message: error.message, cause: error })),
   );
+  yield* Effect.tryPromise({
+    try: () => space.db.runMigrations([...Legacy.Migrations]),
+    catch: (error) => new ImportError({ message: `Could not upgrade the drawing: ${String(error)}`, cause: error }),
+  });
+  return drawing;
 });
 
 /** Compiles a shared drawing's DSL into a new laid-out drawing in the space, under fresh ids. */

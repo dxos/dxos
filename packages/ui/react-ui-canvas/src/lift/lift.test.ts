@@ -21,7 +21,7 @@ describe('liftScene', () => {
     expect(doc.scenes[0].dim).toBe('3d');
     const layout = doc.layouts[0];
     const b = layout.dim === '3d' ? resolveLayout3D(doc, layout).b : undefined;
-    expect(b).toMatchObject({ type: 'cube', center: { x: 192 / PIXELS_PER_UNIT, y: 0 } });
+    expect(b).toMatchObject({ kind: 'cube', center: { x: 192 / PIXELS_PER_UNIT, y: 0 } });
     expect(b?.scale?.x).toBeCloseTo(96 / PIXELS_PER_UNIT);
   });
 
@@ -52,19 +52,19 @@ describe('a parametric shape', () => {
     elements: {
       arrow: {
         id: 'arrow',
-        type: 'shape',
+        kind: 'shape',
         center: { x: 100, y: 200 },
         size: { width: 200, height: 100 },
         props: { recipe: 'arrow', params: { head: 0.5 } },
       },
-      box: { id: 'box', type: 'rect', center: { x: 0, y: 0 }, size: { width: 100, height: 100 } },
+      box: { id: 'box', kind: 'rect', center: { x: 0, y: 0 }, size: { width: 100, height: 100 } },
     },
   };
 
   test('lifts to a solid over its outline, sized by its frame, and keeps the recipe it was drawn from', () => {
     const { arrow, box } = liftLayout(layout).elements;
     expect(arrow).toMatchObject({
-      type: 'mesh',
+      kind: 'mesh',
       center: { x: 1, z: -2 },
       scale: { x: 2, z: 1 },
       props: { recipe: 'arrow', params: { head: 0.5 } },
@@ -75,7 +75,7 @@ describe('a parametric shape', () => {
     // The tip is half way down the right edge: +x, and z at the middle.
     expect(mesh?.positions.slice(3 * 3, 4 * 3)).toEqual([0.5, 0.5, 0]);
     // Any other kind lifts to its primitive, as before.
-    expect(box.type).toBe('cube');
+    expect(box.kind).toBe('cube');
   });
 
   test('an element placing a shape object stands as its own outline, in its own frame and with its own parameters', () => {
@@ -86,7 +86,7 @@ describe('a parametric shape', () => {
           id: 'm',
           dim: '2d',
           objects: {
-            arrow: { id: 'arrow', type: 'shape', size: { width: 200, height: 100 }, props: { recipe: 'arrow' } },
+            arrow: { id: 'arrow', kind: 'shape', size: { width: 200, height: 100 }, props: { recipe: 'arrow' } },
           },
         },
       ],
@@ -107,7 +107,7 @@ describe('a parametric shape', () => {
     const layout = lifted.layouts[0];
     const model = lifted.models[0];
     const object = model.dim === '3d' ? model.objects.arrow : undefined;
-    expect(object?.type).toBe('mesh');
+    expect(object?.kind).toBe('mesh');
     // Where the head begins, as a share of the frame's width: the second vertex's x, from −0.5.
     const neck = (props: Scene.Element3D['props']) => (meshProps(props)?.positions[3] ?? 0) + 0.5;
     // The object's own outline: a 50 px head in a 200 px frame.
@@ -125,30 +125,30 @@ describe('a parametric shape', () => {
 
   test("an element with a kind of its own, drawn by its object's recipe, flattens back to the shape", () => {
     const objects: Record<string, Scene.Object2D> = {
-      arrow: { id: 'arrow', type: 'shape', props: { recipe: 'arrow', params: { head: 0.5 } } },
+      arrow: { id: 'arrow', kind: 'shape', props: { recipe: 'arrow', params: { head: 0.5 } } },
     };
     const typed: Scene.LayoutRecord2D = {
       id: 'l',
       dim: '2d',
       elements: {
-        own: { id: 'own', type: 'shape', object: 'arrow', size: { width: 200, height: 100 } },
+        own: { id: 'own', kind: 'shape', object: 'arrow', size: { width: 200, height: 100 } },
         placed: { id: 'placed', object: 'arrow', size: { width: 200, height: 100 } },
       },
     };
     const lifted = liftLayout(typed, objects);
-    expect(lifted.elements.own).toMatchObject({ type: 'mesh', props: { recipe: 'arrow', params: { head: 0.5 } } });
+    expect(lifted.elements.own).toMatchObject({ kind: 'mesh', props: { recipe: 'arrow', params: { head: 0.5 } } });
     const flat = flattenLayout(lifted);
-    expect(flat.elements.own.type).toBe('shape');
+    expect(flat.elements.own.kind).toBe('shape');
     expect(flat.elements.own.props).toEqual({ recipe: 'arrow', params: { head: 0.5 } });
     // One that takes its kind from the object keeps only what it had: the recipe stays the object's.
-    expect(flat.elements.placed.type).toBeUndefined();
+    expect(flat.elements.placed.kind).toBeUndefined();
     expect(flat.elements.placed.props ?? {}).toEqual({});
   });
 
   test('flattens back to the shape, without the solid it was stood up as', () => {
     const flat = flattenLayout(liftLayout(layout)).elements.arrow;
     expect(flat).toMatchObject({
-      type: 'shape',
+      kind: 'shape',
       center: { x: 100, y: 200 },
       size: { width: 200, height: 100 },
       props: { recipe: 'arrow', params: { head: 0.5 } },
@@ -158,9 +158,9 @@ describe('a parametric shape', () => {
     const imported: Scene.LayoutRecord3D = {
       id: 'm',
       dim: '3d',
-      elements: { taxi: { id: 'taxi', type: 'mesh', props: { mesh: { key: 'k', positions: [], indices: [] } } } },
+      elements: { taxi: { id: 'taxi', kind: 'mesh', props: { mesh: { key: 'k', positions: [], indices: [] } } } },
     };
-    expect(flattenLayout(imported).elements.taxi.type).toBe('mesh');
+    expect(flattenLayout(imported).elements.taxi.kind).toBe('mesh');
   });
 });
 
@@ -170,24 +170,24 @@ describe('flattenLayout', () => {
       id: 'l',
       dim: '3d',
       elements: {
-        a: { id: 'a', type: 'cube', center: { x: 1, y: 0.5, z: -2 }, scale: { x: 2, y: 1, z: 1 } },
-        s: { id: 's', type: 'sphere', center: { x: 0, y: 0, z: 0 } },
-        ab: { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 's' } },
+        a: { id: 'a', kind: 'cube', center: { x: 1, y: 0.5, z: -2 }, scale: { x: 2, y: 1, z: 1 } },
+        s: { id: 's', kind: 'sphere', center: { x: 0, y: 0, z: 0 } },
+        ab: { id: 'ab', kind: 'link', source: { node: 'a' }, target: { node: 's' } },
       },
     };
     const flat = flattenLayout(layout);
     expect(flat.dim).toBe('2d');
     expect(flat.elements.a).toMatchObject({
-      type: 'rect',
+      kind: 'rect',
       center: { x: 100, y: 200 },
       size: { width: 200, height: 100 },
     });
     expect(flat.elements.s).toMatchObject({
-      type: 'ellipse',
+      kind: 'ellipse',
       center: { x: 0, y: 0 },
       size: { width: 100, height: 100 },
     });
-    expect(flat.elements.ab).toMatchObject({ type: 'link', source: { node: 'a' }, target: { node: 's' } });
+    expect(flat.elements.ab).toMatchObject({ kind: 'link', source: { node: 'a' }, target: { node: 's' } });
     const again = flattenLayout(liftLayout(flat));
     expect(again.elements.a).toMatchObject({ center: { x: 100, y: 200 }, size: { width: 200, height: 100 } });
   });

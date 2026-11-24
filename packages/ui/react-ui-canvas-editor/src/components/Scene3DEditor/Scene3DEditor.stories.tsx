@@ -43,10 +43,10 @@ const OVERLAP: Scene.SceneDocument = {
       id: 'overlap',
       dim: '3d',
       elements: {
-        a: { id: 'a', type: 'cube', center: { x: -1, y: 0.5, z: 0 } },
-        b: { id: 'b', type: 'cube', center: { x: -0.5, y: 0.75, z: 0.5 } },
-        c: { id: 'c', type: 'cube', center: { x: 2, y: 0.5, z: 0 } },
-        d: { id: 'd', type: 'cube', center: { x: 3, y: 0.5, z: 0 } },
+        a: { id: 'a', kind: 'cube', center: { x: -1, y: 0.5, z: 0 } },
+        b: { id: 'b', kind: 'cube', center: { x: -0.5, y: 0.75, z: 0.5 } },
+        c: { id: 'c', kind: 'cube', center: { x: 2, y: 0.5, z: 0 } },
+        d: { id: 'd', kind: 'cube', center: { x: 3, y: 0.5, z: 0 } },
       },
     },
   ],
@@ -66,13 +66,13 @@ const CRATE_MESH = {
 const KIT: Scene.SceneDocument = {
   scenes: [{ ...OVERLAP.scenes[0], id: 'kit', layout: 'kit' }],
   layouts: [
-    { id: 'kit', dim: '3d', model: 'kit', elements: { c: { id: 'c', type: 'cube', center: { x: 3, y: 0.5, z: 0 } } } },
+    { id: 'kit', dim: '3d', model: 'kit', elements: { c: { id: 'c', kind: 'cube', center: { x: 3, y: 0.5, z: 0 } } } },
   ],
   models: [
     {
       id: 'kit',
       dim: '3d',
-      objects: { crate: { id: 'crate', type: 'mesh', lockAspect: true, props: { mesh: CRATE_MESH } } },
+      objects: { crate: { id: 'crate', kind: 'mesh', lockAspect: true, props: { mesh: CRATE_MESH } } },
     },
   ],
 };
@@ -85,9 +85,9 @@ const FLUSH: Scene.SceneDocument = {
       id: 'flush',
       dim: '3d',
       elements: {
-        p: { id: 'p', type: 'cube', center: { x: 0, y: 0.5, z: 0 } },
-        q: { id: 'q', type: 'cube', center: { x: 2.6, y: 0.5, z: 0 } },
-        r: { id: 'r', type: 'cube', center: { x: 0, y: 2.6, z: 0 } },
+        p: { id: 'p', kind: 'cube', center: { x: 0, y: 0.5, z: 0 } },
+        q: { id: 'q', kind: 'cube', center: { x: 2.6, y: 0.5, z: 0 } },
+        r: { id: 'r', kind: 'cube', center: { x: 0, y: 2.6, z: 0 } },
       },
     },
   ],

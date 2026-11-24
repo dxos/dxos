@@ -34,7 +34,7 @@ describe('end card shot', () => {
     const rest = rootScene();
     const drawn = drawnAt(DURATION);
     expect(drawn.nodes.tagline.center).toEqual(LAYOUT.tagline);
-    expect(drawn.nodes.cta.style?.opacity).toBe(0.72);
+    expect(drawn.nodes.cta.overrides?.opacity).toBe(0.72);
     expect(drawn.nodes.rule.size).toEqual(rest.nodes.rule.size);
   });
 
@@ -45,7 +45,7 @@ describe('end card shot', () => {
     }
     const atStart = drawnAt(0).nodes[LOGO];
     const atEnd = drawnAt(DURATION).nodes[LOGO];
-    expect(atStart.style?.opacity).toBe(0);
+    expect(atStart.overrides?.opacity).toBe(0);
     expect(atStart.size.width).toBeCloseTo(content.width * 0.9);
     expect(atEnd.size.height).toBeCloseTo(content.height * 1.012);
     // The box's centre scales about the scale origin with its size.
@@ -56,6 +56,6 @@ describe('end card shot', () => {
 
   test('a line rises into place as it fades in', ({ expect }) => {
     expect(drawnAt(0.55).nodes.tagline.center).toEqual({ x: LAYOUT.tagline.x, y: LAYOUT.tagline.y + 24 });
-    expect(drawnAt(0.55).nodes.tagline.style?.opacity).toBe(0);
+    expect(drawnAt(0.55).nodes.tagline.overrides?.opacity).toBe(0);
   });
 });

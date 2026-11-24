@@ -37,12 +37,12 @@ const DrawingCard = ({ object }: ModuleContainer.ResolvedCellProps) => (
   </Card.Root>
 );
 
-const node = (scene: string, id: string, type: string, x: number, y: number, label: string) => ({
+const node = (scene: string, id: string, kind: string, x: number, y: number, label: string) => ({
   kind: 'node',
   scene,
   node: {
     id,
-    type,
+    kind,
     z: `a${id}`,
     center: { x, y },
     size: { width: 2 * DEFAULT_CELL, height: DEFAULT_CELL },
@@ -134,7 +134,7 @@ export const Scene3D: Story = {
     }
 
     layout cube dim=3d {
-      element box cube @ 0,1,0 scale=2 hue=blue surface=solid
+      element box cube @ 0,1,0 scale=2 color=blue fill=solid
     }
   `),
 };

@@ -33,7 +33,7 @@ describe('layoutSource', () => {
       Obj.make(Scene.Layout3D, {
         key,
         elements: Object.fromEntries(
-          ids.map((id, index) => [id, { id, type: 'cube', center: { x: index, y: 0, z: 0 } }]),
+          ids.map((id, index) => [id, { id, kind: 'cube', center: { x: index, y: 0, z: 0 } }]),
         ),
       }),
     );
@@ -60,7 +60,7 @@ describe('layoutSource', () => {
   test('a 2D layout: undoing a create removes the element and redo makes it again', () => {
     const root = db.add(Obj.make(Scene.Layout2D, { key: 'root', elements: {} }));
     const source = layoutSource(root);
-    const element = { id: 'r', type: 'rect', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+    const element = { id: 'r', kind: 'rect', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
     const [change] = recordChanges([source], () => applyLayoutIntent(root, { kind: 'create', element }));
     expect(root.elements.r?.center).toEqual({ x: 0, y: 0 });
     if (!change) {
@@ -73,11 +73,11 @@ describe('layoutSource', () => {
   });
 
   test('a layout intent writes the constraints with the elements, and undo and redo restore both', () => {
-    const before: Scene.Constraint[] = [{ subject: 'b', relation: 'east', object: 'a' }];
-    const after: Scene.Constraint[] = [{ subject: 'b', relation: 'south', object: 'a' }];
+    const before: Scene.Constraint[] = [{ subject: 'b', relation: 'right-of', object: 'a' }];
+    const after: Scene.Constraint[] = [{ subject: 'b', relation: 'below', object: 'a' }];
     const shape = (id: string, x: number) => ({
       id,
-      type: 'rect',
+      kind: 'rect',
       center: { x, y: 0 },
       size: { width: 64, height: 64 },
     });
@@ -145,7 +145,7 @@ describe('layoutSource', () => {
     const root = db.add(
       Obj.make(Scene.Layout2D, {
         key: 'root',
-        elements: { a: { id: 'a', type: 'rect', center: { x: 0, y: 0 } } },
+        elements: { a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 } } },
         grid: 32,
       }),
     );
@@ -168,7 +168,7 @@ describe('layoutSource', () => {
       applyLayoutIntent(group, {
         kind: 'batch',
         intents: [
-          { kind: 'create', element: { id: 'a', type: 'rect', center: { x: 0, y: 0 } } },
+          { kind: 'create', element: { id: 'a', kind: 'rect', center: { x: 0, y: 0 } } },
           { kind: 'layout', patch: { kind: 'composite', anonymous: true } },
         ],
       }),

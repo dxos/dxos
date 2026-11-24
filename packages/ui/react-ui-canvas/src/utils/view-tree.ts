@@ -10,6 +10,7 @@ import {
   type ViewId,
   isInstanceNode,
   isViewNode,
+  linkPath,
 } from '@dxos/scene';
 
 import { type RenderList2D, type RenderLists2D } from '../model/index.ts';
@@ -36,7 +37,7 @@ export type ViewTreeItem = {
   /** The scene that holds the row's element, whose drawing order a restack changes; undefined for the root view. */
   container?: ViewId;
   label: string;
-  /** The node or link type, for its icon. */
+  /** The node's kind or the link's path, for its icon. */
   type?: string;
   /** Read-only: an object's contents are edited by opening the object, not where it is placed. */
   readonly?: boolean;
@@ -54,7 +55,7 @@ export type ViewTreeItem = {
   children: ViewTreeItem[];
 };
 
-/** A node's own text, whichever field its type keeps it in. */
+/** A node's own text, whichever field its kind keeps it in. */
 const textOf = (element: Node | Link): string | undefined => {
   for (const field of ['label', 'name', 'text']) {
     const value: unknown = Reflect.get(element, field);
@@ -65,11 +66,11 @@ const textOf = (element: Node | Link): string | undefined => {
   return undefined;
 };
 
-/** A node as its row names it: its own text, else the View or Object it shows, else its type. */
+/** A node as its row names it: its own text, else the View or Object it shows, else its kind. */
 const nodeLabel = (scenes: RenderLists2D, node: Node): string =>
   textOf(node) ??
   (isViewNode(node) ? scenes[node.scene]?.name : isInstanceNode(node) ? scenes[node.composite]?.name : undefined) ??
-  node.type;
+  node.kind;
 
 /** A link end as its row names it, by its node's label; a free end is a point. */
 const endLabel = (scenes: RenderLists2D, scene: RenderList2D, end: Endpoint): string => {
@@ -112,7 +113,7 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
           container: scene.id,
           path: childPath,
           label: textOf(node) ?? child?.name ?? 'View',
-          type: node.type,
+          type: node.kind,
           ...inObject,
           children:
             child && !seen.has(child.id)
@@ -135,7 +136,7 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
           container: scene.id,
           path,
           label: definition?.name ?? node.composite,
-          type: node.type,
+          type: node.kind,
           ...inObject,
           children:
             definition && !seen.has(definition.id)
@@ -155,8 +156,8 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
         element: node.id,
         container: scene.id,
         path,
-        label: textOf(node) ?? node.type,
-        type: node.type,
+        label: textOf(node) ?? node.kind,
+        type: node.kind,
         ...inObject,
         children: [],
       };
@@ -168,7 +169,7 @@ export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem
       container: scene.id,
       path,
       label: textOf(link) ?? `${endLabel(scenes, scene, link.source)} → ${endLabel(scenes, scene, link.target)}`,
-      type: link.type,
+      type: linkPath(link),
       ...inObject,
       children: [],
     }));

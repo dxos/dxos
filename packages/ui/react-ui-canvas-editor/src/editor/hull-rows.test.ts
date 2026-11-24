@@ -26,7 +26,7 @@ import { DEFAULT_LATTICE, type DrawingValues, drawingSaves, latticeValues } from
 import { layoutTree, selectedElement } from './scene-rows.ts';
 
 const box = (id: string, x: number, parent?: string): RectNode => ({
-  type: 'rect',
+  kind: 'rect',
   id,
   z: `b${id}`,
   center: { x, y: 0 },
@@ -36,17 +36,17 @@ const box = (id: string, x: number, parent?: string): RectNode => ({
 });
 
 const hull = (id: string): HullNode => ({
-  type: 'hull',
+  kind: 'hull',
   id,
   z: `a${id}`,
   center: { x: 0, y: 0 },
   size: { width: 10, height: 10 },
   label: id.toUpperCase(),
-  style: HULL_STYLE,
+  overrides: HULL_STYLE,
 });
 
 const smart = (id: string, source: string, target: string): Link =>
-  createLink({ type: 'smart', id, z: `c${id}`, source: { node: source }, target: { node: target } });
+  createLink({ path: 'smart', id, z: `c${id}`, source: { node: source }, target: { node: target } });
 
 // Two hulls and a shape outside both: G holds A and B, H holds C; X stands alone, linked to A.
 const BOARD: RenderList2D = {
@@ -284,7 +284,7 @@ describe('hull rows', () => {
   test('a shape in any hull is found before a part of an Object that has its name', ({ expect }) => {
     // G holds an Object whose definition has a part named C; H, read after G, holds the scene's own shape C.
     const placed: Node = {
-      type: 'instance',
+      kind: 'instance',
       id: 'obj',
       z: 'bobj',
       center: { x: 300, y: 0 },

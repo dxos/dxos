@@ -38,8 +38,8 @@ describe('arrange', () => {
     const pinned: Vec3 = { x: 9, y: 9, z: 9 };
     const layout = applyArrangement(
       cluster([
-        { id: 'a', type: 'sphere' },
-        { id: 'b', type: 'sphere', center: pinned, pinned: true },
+        { id: 'a', kind: 'sphere' },
+        { id: 'b', kind: 'sphere', center: pinned, pinned: true },
       ]),
     );
     expect(layout.elements.b.center).toEqual(pinned);

@@ -18,7 +18,7 @@ import { type Bounds, type Node, type Point } from '@dxos/scene';
 
 import { type HullWalls, type Wall } from './hull.ts';
 import { type LatticeSpec, onLattice } from './lattice.ts';
-import { sideNormal } from './ports.ts';
+import { frameExit, sideNormal } from './ports.ts';
 import { type RouteEnd } from './route.ts';
 import { nodeBounds } from './shapes.ts';
 
@@ -88,19 +88,21 @@ const wallLines = (wall: Wall, at: number, inward: number, gutter: number): numb
 ];
 
 /**
- * Where an end meets the gutter beside its port: straight out along the side's normal, half a gutter. Where that is
- * on a border closed to the route, the track on the end's own side of the border.
+ * Where an end meets the gutter beside its port: straight out along the side's normal, half a gutter from its frame's
+ * edge, which is where a port on the edge sits. Where that is on a border closed to the route, the track on the end's
+ * own side of the border.
  */
 const gutterExit = (end: RouteEnd, spec: LatticeSpec, walls?: HullWalls): Point => {
   const normal = sideNormal(end.side);
   const gutter = Math.abs(normal.x) * spec.gutterX + Math.abs(normal.y) * spec.gutterY;
+  const edge = frameExit(end.point, end.side, end.bounds);
   const out = (distance: number) => ({
-    x: end.point.x + normal.x * distance,
-    y: end.point.y + normal.y * distance,
+    x: edge.x + normal.x * distance,
+    y: edge.y + normal.y * distance,
   });
   const centre = out(gutter / 2);
   // A wall on the centre line is met there, and one drawn inset is met on the way to it, from inside its hull.
-  const wall = walls?.closed.find((closed) => touches(end.point, centre, closed));
+  const wall = walls?.closed.find((closed) => touches(edge, centre, closed));
   if (!wall) {
     return centre;
   }
@@ -312,7 +314,7 @@ const searchGrid = (
   const [startI, startJ] = [indexOf(xs, start.x), indexOf(ys, start.y)];
   const [endI, endJ] = [indexOf(xs, end.x), indexOf(ys, end.y)];
   // The stub leaves along the side's normal, so the first run continuing that axis is not a bend.
-  const axisOf = (end: RouteEnd): Axis => (end.side === 'e' || end.side === 'w' ? 'h' : 'v');
+  const axisOf = (end: RouteEnd): Axis => (end.side === 'right' || end.side === 'left' ? 'h' : 'v');
 
   // Dijkstra over (column, row, arriving axis), the open set a binary heap: a route is searched for each candidate
   // pair of ports, so each search must be cheap. A state is a number, `(row * columns + column) * 2 + axis`.

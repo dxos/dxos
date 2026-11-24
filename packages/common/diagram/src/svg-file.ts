@@ -8,7 +8,7 @@
 // same tree as elements (the canvas's diagram nodes and links), and the two cannot drift apart.
 //
 
-import { Shape } from '@dxos/scene';
+import { DEFAULT_THEME_SLOTS, Shape, parseColor, resolveColor } from '@dxos/scene';
 
 import * as Diagnostics from './diagnostics.ts';
 import * as Scene from './scene.ts';
@@ -107,8 +107,25 @@ export const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number,
         `L ${x + radius} ${y + h} Q ${x} ${y + h} ${x} ${y + h - radius} Z`;
 };
 
-/** Text (and so `currentColor`) per scene color; the group tints wash their fill from it. */
-export const COLOR_CLASS: Partial<Record<Shape.Color, string>> = {
+/** The names a diagram has always coloured with; the ones `COLOR_CLASS` leaves out draw in the root ink. */
+export const PALETTE: readonly string[] = [
+  'black',
+  'grey',
+  'light-violet',
+  'violet',
+  'blue',
+  'light-blue',
+  'yellow',
+  'orange',
+  'green',
+  'light-green',
+  'light-red',
+  'red',
+  'white',
+];
+
+/** Text (and so `currentColor`) per palette name; the group tints wash their fill from it. */
+export const COLOR_CLASS: Partial<Record<string, string>> = {
   'grey': 'text-neutral-400 dark:text-neutral-500',
   'light-blue': 'text-sky-500',
   'light-green': 'text-emerald-500',
@@ -118,7 +135,43 @@ export const COLOR_CLASS: Partial<Record<Shape.Color, string>> = {
   'light-red': 'text-rose-500',
 };
 
-const colorClass = (color?: Shape.Color) => (color ? COLOR_CLASS[color] : undefined);
+/**
+ * What a colour draws as here: a palette name, or a CSS literal written out. A palette name draws as itself, and at
+ * tone 3 as its `light-` twin where the palette has one. A hue the palette lacks is neither, so it draws in the
+ * root ink, as `blue` and `black` do.
+ */
+export const drawnColor = (color: Shape.Color | undefined): { name?: string; css?: string } => {
+  const stated = parseColor(color);
+  if (stated?.kind === 'name' && PALETTE.includes(stated.name)) {
+    const light = `light-${stated.name}`;
+    return { name: stated.tone === 3 && PALETTE.includes(light) ? light : stated.name };
+  }
+  const resolved = resolveColor(color, DEFAULT_THEME_SLOTS);
+  return resolved?.kind === 'css' ? { css: resolved.css } : {};
+};
+
+/** The class that sets an element's `currentColor`; none for the root ink and for a literal. */
+export const colorClass = (color?: Shape.Color): string | undefined => {
+  const { name } = drawnColor(color);
+  return name === undefined ? undefined : COLOR_CLASS[name];
+};
+
+/** A literal colour as the `color` attribute, which is what `currentColor` reads where no class sets it. */
+const literalOf = (color?: Shape.Color): string | undefined => drawnColor(color).css;
+
+/** A hex literal as `#rrggbb`, its alpha dropped; no other literal has channels to read without a CSS engine. */
+const hexOf = (css: string | undefined): string | undefined => {
+  if (!css?.startsWith('#')) {
+    return undefined;
+  }
+  const digits = css.slice(1);
+  return digits.length < 6
+    ? `#${[...digits.slice(0, 3)].map((digit) => `${digit}${digit}`).join('')}`
+    : `#${digits.slice(0, 6)}`;
+};
+
+/** The class of a closed shape's outline: `none` draws none. */
+const outlineClass = (stroke?: Shape.Stroke): string => (stroke === 'none' ? 'stroke-none' : 'stroke-current');
 
 const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
 
@@ -146,7 +199,7 @@ const TINT_STYLE = `fill:color-mix(in srgb, currentColor ${TINT_PERCENT}%, var(-
 
 /** `TINT_STYLE` precomputed for the file's light theme, as `color-mix(in srgb, …)` mixes it. */
 const tintFallback = (color?: Shape.Color): string => {
-  const hex = TEXT_HEX[colorClass(color)?.split(' ')[0] ?? ''] ?? INK_HEX;
+  const hex = hexOf(literalOf(color)) ?? TEXT_HEX[colorClass(color)?.split(' ')[0] ?? ''] ?? INK_HEX;
   const channel = (offset: number, source: string) => parseInt(source.slice(offset, offset + 2), 16);
   return `#${[1, 3, 5]
     .map((offset) =>
@@ -263,9 +316,10 @@ export const elementMarkup = (
       const rect = rectOf(object, element);
       const mid = center(rect);
       const tinted = element.fill === 'tint';
+      // There is no material here, so glass draws as a solid surface.
       const fill = tinted
         ? undefined
-        : element.fill === 'solid'
+        : element.fill === 'solid' || element.fill === 'glass'
           ? 'fill-neutral-100 dark:fill-neutral-800'
           : 'fill-transparent';
       // Renderers without `color-mix` (librsvg, so sharp and ImageMagick) drop the style and would paint the
@@ -301,7 +355,8 @@ export const elementMarkup = (
       return el(
         'g',
         {
-          'class': cx('stroke-current', colorClass(element.color)),
+          'class': cx(outlineClass(element.stroke), colorClass(element.color)),
+          'color': literalOf(element.color),
           'stroke-width': 1.5,
           'stroke-dasharray': element.stroke ? strokeDash[element.stroke] : undefined,
         },
@@ -312,7 +367,11 @@ export const elementMarkup = (
       const mid = map({ x: element.cx, y: element.cy });
       return el(
         'g',
-        { 'class': cx('stroke-current fill-transparent', colorClass(element.color)), 'stroke-width': 1.5 },
+        {
+          'class': cx(outlineClass(element.stroke), 'fill-transparent', colorClass(element.color)),
+          'color': literalOf(element.color),
+          'stroke-width': 1.5,
+        },
         [
           el('circle', { cx: mid.x, cy: mid.y, r: element.r * scale }),
           element.text ? multilineText(mid.x, mid.y, element.text, weight) : undefined,
@@ -328,21 +387,23 @@ export const elementMarkup = (
         ? object.elements.find((other) => other.kind === 'arrow' && other.id === element.id.slice(0, -'-path'.length))
         : undefined;
       const derived = arrow?.kind === 'arrow' ? Shape.markersOf(arrow) : undefined;
-      const start = derived?.start;
+      const tail = derived?.tail;
       // The route takes its arrow's relation dash unless the polyline sets its own stroke.
       const stroke = element.stroke ?? (derived?.dashed ? 'dashed' : undefined);
       return el('polyline', {
         'points': points.map((point) => `${point.x},${point.y}`).join(' '),
         'class': cx('stroke-current fill-none', colorClass(element.color)),
+        'color': literalOf(element.color),
         'stroke-width': 1.5,
         'stroke-dasharray': stroke ? strokeDash[stroke] : undefined,
-        'marker-start': start ? `url(#${markers[start]})` : undefined,
+        'marker-start': tail ? `url(#${markers[tail]})` : undefined,
       });
     }
     case 'text': {
       const anchor = map(element);
       const textWeight = element.weight ?? 's';
       const fontSize = FONT_SIZE(textWeight);
+      const muted = drawnColor(element.color).name === 'grey';
       const maxChars = element.w ? Math.max(4, Math.floor((element.w * scale) / (fontSize * CHAR_EM))) : Infinity;
       return el(
         'text',
@@ -351,8 +412,9 @@ export const elementMarkup = (
           'y': anchor.y + LINE_H(textWeight) / 2,
           'font-size': fontSize,
           // Muted text (group titles) is still text to read: grey strokes stay light, grey type meets 4.5:1.
-          'font-weight': element.color === 'grey' ? 500 : undefined,
-          'class': cx('fill-current', element.color === 'grey' ? MUTED_TEXT : colorClass(element.color)),
+          'font-weight': muted ? 500 : undefined,
+          'class': cx('fill-current', muted ? MUTED_TEXT : colorClass(element.color)),
+          'color': literalOf(element.color),
         },
         tspans(wrapLines(element.text, maxChars), anchor.x, LINE_H(textWeight)),
       );
@@ -363,7 +425,8 @@ export const elementMarkup = (
       return el(
         'g',
         {
-          'class': cx('stroke-current fill-transparent', colorClass(element.color)),
+          'class': cx(outlineClass(element.stroke), 'fill-transparent', colorClass(element.color)),
+          'color': literalOf(element.color),
           'stroke-width': 1.5,
           'stroke-dasharray': strokeDash[element.stroke ?? 'dashed'],
         },
@@ -383,7 +446,7 @@ export const elementMarkup = (
       }
       const [start, end] = [points[points.length - 2], points[points.length - 1]];
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
-      const { start: tail, end: head, dashed } = Shape.markersOf(element);
+      const { tail, head, dashed } = Shape.markersOf(element);
       // On a routed connector the source marker is drawn by its `-path` polyline instead.
       const routed = object.elements.some(
         (other) => (other.kind === 'line' || other.kind === 'curve') && other.id === `${element.id}-path`,
@@ -402,7 +465,7 @@ export const elementMarkup = (
               class: 'fill-none',
               ...stroke,
             });
-      return el('g', { class: cx('stroke-current', colorClass(element.color)) }, [
+      return el('g', { class: cx('stroke-current', colorClass(element.color)), color: literalOf(element.color) }, [
         line,
         element.text ? multilineText(mid.x, mid.y - LINE_H('s') / 2, element.text, 's', 'stroke-none') : undefined,
       ]);

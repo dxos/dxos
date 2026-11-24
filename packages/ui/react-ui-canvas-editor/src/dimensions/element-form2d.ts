@@ -19,11 +19,11 @@ export const ElementForm2D = Schema.Struct({
   rotation: NodeBase.fields.rotation,
   label: Scene.Element2D.fields.label,
   layer: Scene.Element2D.fields.layer,
-  style: Schema.optional(Style2D),
+  overrides: Schema.optional(Style2D),
 });
 export type ElementForm2D = Schema.Schema.Type<typeof ElementForm2D>;
 
-/** The style grid at `style.hue`, the layer picker, and centre and size in two columns. */
+/** The style grid at `overrides.color`, the layer picker, and centre and size in two columns. */
 export const ELEMENT_FORM_2D_FIELDS: FormFieldMap = {
   ...STYLE_FIELDS,
   layer: LayerField,
@@ -45,12 +45,12 @@ export const elementForm2DValues = (element: Scene.Element2D): ElementForm2D => 
   rotation: element.rotation ?? 0,
   label: element.label,
   layer: element.layer,
-  style: element.overrides,
+  overrides: element.overrides,
 });
 
 /**
  * The updates a save makes: only the fields that changed from what the form showed (so a default it shows is not
- * written); the form's style is the element's own overrides.
+ * written).
  */
 export const elementForm2DIntents = (element: Scene.Element2D, values: ElementForm2D): LayoutIntent[] => {
   const shown = elementForm2DValues(element);
@@ -60,8 +60,8 @@ export const elementForm2DIntents = (element: Scene.Element2D, values: ElementFo
         ? []
         : [{ kind: 'update', id: element.id, path: [field], value: values[field] }],
     ),
-    ...(JSON.stringify(values.style) === JSON.stringify(element.overrides)
+    ...(JSON.stringify(values.overrides) === JSON.stringify(element.overrides)
       ? []
-      : [{ kind: 'update' as const, id: element.id, path: ['overrides'], value: values.style }]),
+      : [{ kind: 'update' as const, id: element.id, path: ['overrides'], value: values.overrides }]),
   ];
 };

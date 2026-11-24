@@ -5,7 +5,7 @@
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type RefObject, useEffect, useRef } from 'react';
 
-import { type NodeType } from '@dxos/scene';
+import { type NodeKind } from '@dxos/scene';
 
 import { type Drag } from '../../engine/index.ts';
 import { type Capabilities, type NodeRegistry } from '../../model/index.ts';
@@ -33,7 +33,7 @@ export const useNodeDrop = ({
   cancelDrag,
   onPointerUp,
 }: UseNodeDropOptions) => {
-  // A node type dragged in (from the palette or a host's draggable) previews as a create drag would and
+  // A node kind dragged in (from the palette or a host's draggable) previews as a create drag would and
   // lands through the same drop, so what the ghost shows is what is created.
   const onPointerUpRef = useRef(onPointerUp);
   onPointerUpRef.current = onPointerUp;
@@ -44,34 +44,34 @@ export const useNodeDrop = ({
     }
     // The pointer is the shape's centre; its top-left snaps to the minor grid, so the shape lands where it
     // was dropped rather than up to half a major cell away.
-    const dragAt = (type: NodeType, input: { clientX: number; clientY: number }): Drag => {
+    const dragAt = (kind: NodeKind, input: { clientX: number; clientY: number }): Drag => {
       const point = toScene(input);
-      const def = nodeRegistry[type];
+      const def = nodeRegistry[kind];
       const size = def ? nominalSize(def.defaultSize, cell) : { width: 0, height: 0 };
       const from = { x: snap(point.x - size.width / 2), y: snap(point.y - size.height / 2) };
-      return { kind: 'create', type, from, to: from, dropped: true };
+      return { kind: 'create', node: kind, from, to: from, dropped: true };
     };
     return dropTargetForElements({
       element,
       canDrop: ({ source }) => capabilities.create === true && nodeDragType(source.data) !== undefined,
       onDragEnter: ({ source, location }) => {
-        const type = nodeDragType(source.data);
-        if (type !== undefined) {
-          setDrag(dragAt(type, location.current.input));
+        const kind = nodeDragType(source.data);
+        if (kind !== undefined) {
+          setDrag(dragAt(kind, location.current.input));
         }
       },
       onDrag: ({ source, location }) => {
-        const type = nodeDragType(source.data);
-        if (type !== undefined) {
-          setDrag(dragAt(type, location.current.input));
+        const kind = nodeDragType(source.data);
+        if (kind !== undefined) {
+          setDrag(dragAt(kind, location.current.input));
         }
       },
       onDragLeave: cancelDrag,
       // Placed where it is released: the last drag-over can lag the pointer by a step.
       onDrop: ({ source, location }) => {
-        const type = nodeDragType(source.data);
-        if (type !== undefined) {
-          setDrag(dragAt(type, location.current.input));
+        const kind = nodeDragType(source.data);
+        if (kind !== undefined) {
+          setDrag(dragAt(kind, location.current.input));
         }
         onPointerUpRef.current();
       },

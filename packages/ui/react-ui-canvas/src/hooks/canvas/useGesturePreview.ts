@@ -173,7 +173,7 @@ export const useGesturePreview = ({
     if (drag?.kind === 'link' && isLinkDrawn(drag, minor) && (drag.target || isPointEndpoint(drag.source))) {
       // A port drag previews once it reaches a target; a free-ended link previews as it will land.
       const link = createLink({
-        type: drag.type,
+        path: drag.path,
         id: PREVIEW_LINK_ID,
         z: topZ(Object.values(scene.links)),
         source: drag.source,

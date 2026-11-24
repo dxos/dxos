@@ -4,3 +4,4 @@
 
 export * from './StyleGrid.tsx';
 export * from './TextColorGrid.tsx';
+export * from './StyleSwitch.tsx';

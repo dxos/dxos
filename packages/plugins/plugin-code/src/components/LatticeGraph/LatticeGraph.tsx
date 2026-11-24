@@ -21,11 +21,11 @@ import { Graph2DView } from '@dxos/react-ui-canvas-editor';
 import * as Layout from '@dxos/react-ui/Layout';
 import { type Node, nodeBase } from '@dxos/scene';
 
-const LATTICE_NODE_TYPE = 'lattice-node';
+const LATTICE_NODE_KIND = 'lattice-node';
 
-const LatticeNode = Schema.Struct({ type: Schema.Literal(LATTICE_NODE_TYPE), ...nodeBase });
+const LatticeNode = Schema.Struct({ kind: Schema.Literal(LATTICE_NODE_KIND), ...nodeBase });
 
-const createLatticeNode = (props: CreateProps): Node => ({ type: LATTICE_NODE_TYPE, ...props });
+const createLatticeNode = (props: CreateProps): Node => ({ kind: LATTICE_NODE_KIND, ...props });
 
 /** Node views get no host props, so the host's renderer reaches them through context. */
 const RenderNodeContext = createContext<(id: string) => ReactNode>(() => null);
@@ -46,7 +46,7 @@ const LatticeNodeView = ({ node }: NodeViewProps) => {
 const nodes = createNodeRegistry(
   {
     ...defaultNodeTypes,
-    [LATTICE_NODE_TYPE]: {
+    [LATTICE_NODE_KIND]: {
       name: 'Node',
       icon: 'ph--square--regular',
       schema: LatticeNode,
@@ -80,7 +80,7 @@ export type LatticeGraphProps = PropsWithChildren<{
  */
 export const LatticeGraph = ({ graph, renderNode, lattice, arrange = 'crossings', children }: LatticeGraphProps) => {
   const layout = useMemo<GraphLayoutOptions>(
-    () => ({ lattice, arrange, shape: () => ({ type: LATTICE_NODE_TYPE }), link: { ends: { end: 'arrow' } } }),
+    () => ({ lattice, arrange, shape: () => ({ kind: LATTICE_NODE_KIND }), link: { ends: { head: 'arrow' } } }),
     [lattice, arrange],
   );
   return (

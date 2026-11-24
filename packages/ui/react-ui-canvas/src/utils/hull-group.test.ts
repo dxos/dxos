@@ -14,24 +14,24 @@ import { HULL_STYLE, moveToHull } from './hull.ts';
 import { createLink, createNode } from './shapes.ts';
 
 const box = (id: string, x: number, y: number, parent?: string): Node => ({
-  ...createNode({ type: 'rect', id, z: `b${id}`, center: { x, y }, size: { width: 100, height: 50 } }),
+  ...createNode({ kind: 'rect', id, z: `b${id}`, center: { x, y }, size: { width: 100, height: 50 } }),
   ...(parent ? { parent } : {}),
 });
 
 const hull = (id: string, fields: Partial<HullNode> = {}): HullNode => ({
-  type: 'hull',
+  kind: 'hull',
   id,
   z: 'a1',
   center: { x: 0, y: 0 },
   size: { width: 10, height: 10 },
   shape: 'box',
   label: 'Storage',
-  style: HULL_STYLE,
+  overrides: HULL_STYLE,
   ...fields,
 });
 
 const smart = (id: string, source: string, target: string): Link =>
-  createLink({ type: 'smart', id, z: `c${id}`, source: { node: source }, target: { node: target } });
+  createLink({ path: 'smart', id, z: `c${id}`, source: { node: source }, target: { node: target } });
 
 const listOf = (id: string, nodes: readonly Node[], links: readonly Link[] = []): RenderList2D => ({
   id,
@@ -76,7 +76,7 @@ describe('collapseHulls', () => {
     expect(Object.keys(board.links)).toEqual(['xa']);
     expect(board.links.xa.target).toEqual({ node: 'h', port: 'a' });
     // The hull's own look and name are the Instance's.
-    expect([Reflect.get(instance, 'label'), instance.style]).toEqual(['Storage', HULL_STYLE]);
+    expect([Reflect.get(instance, 'label'), instance.overrides]).toEqual(['Storage', HULL_STYLE]);
   });
 
   test('a hull with nothing inside it has no group, and a node naming a hull that has gone names nothing', ({
@@ -85,7 +85,7 @@ describe('collapseHulls', () => {
     const lists = { board: listOf('board', [hull('empty'), box('a', 0, 0, 'gone')]) };
     const { board, ...rest } = collapseHulls(lists);
     expect(Object.keys(rest)).toEqual([]);
-    expect([board.nodes.empty.type, board.nodes.a.parent]).toEqual(['hull', undefined]);
+    expect([board.nodes.empty.kind, board.nodes.a.parent]).toEqual(['hull', undefined]);
   });
 
   test('lists with no hull come back as they are', ({ expect }) => {
@@ -101,7 +101,7 @@ describe('expandHulls', () => {
     // The group's own list is not one the editor draws.
     expect(Object.keys(rest)).toEqual([]);
     const made = board.nodes.h;
-    expect(isHullNode(made) && [made.shape, made.group, made.label, made.style]).toEqual([
+    expect(isHullNode(made) && [made.shape, made.group, made.label, made.overrides]).toEqual([
       'box',
       'h-parts',
       'Storage',

@@ -12,7 +12,7 @@ import React, { useEffect, useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { useSceneDocument, useSceneServices } from '@dxos/react-ui-canvas-editor';
-import { type Scene, findLayout } from '@dxos/scene';
+import { LINK_KIND, type Scene, findLayout } from '@dxos/scene';
 
 import { type ComputeGraphController } from '../graph/index.ts';
 import { parseAnchorId } from '../shapes/index.ts';
@@ -31,10 +31,10 @@ export type BulletsProps = {
 const outgoing = (layout: Scene.LayoutRecord | undefined, nodeId: string, property: string): string[] =>
   layout?.dim !== '2d'
     ? []
-    : Object.values(layout.elements).flatMap(({ id, type, source }) => {
+    : Object.values(layout.elements).flatMap(({ id, kind, source }) => {
         const node = layout.elements[source?.node ?? ''];
         const port = source?.port;
-        return type === 'link' &&
+        return kind === LINK_KIND &&
           node !== undefined &&
           computeNodeId(node) === nodeId &&
           (port ? parseAnchorId(port)[1] : DEFAULT_OUTPUT) === property

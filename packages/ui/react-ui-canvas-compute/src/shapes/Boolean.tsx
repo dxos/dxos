@@ -21,13 +21,13 @@ type GateType = 'and' | 'or' | 'not';
 
 const GateShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.String,
+    kind: Schema.String,
   }),
 );
 
 type GateShape = Schema.Schema.Type<typeof GateShape>;
 
-type CreateGateProps = CreateShapeProps<GateShape> & { type: GateType };
+type CreateGateProps = CreateShapeProps<GateShape> & { kind: GateType };
 
 const createGate = (props: CreateGateProps): GateShape =>
   createShape<GateShape>({
@@ -147,8 +147,8 @@ const AndSymbol = createSymbol(({ startX, endX, top, bottom }) => {
 export const AndShape = GateShape;
 export type AndShape = GateShape;
 
-export const createAnd = (props: Omit<CreateGateProps, 'type'>) => {
-  return createGate({ ...props, type: 'and' });
+export const createAnd = (props: Omit<CreateGateProps, 'kind'>) => {
+  return createGate({ ...props, kind: 'and' });
 };
 export const andNodeDef = defineGate({
   type: 'and',
@@ -181,8 +181,8 @@ const OrSymbol = createSymbol(({ startX, endX, top, mid, bottom }) => {
 export const OrShape = GateShape;
 export type OrShape = GateShape;
 
-export const createOr = (props: Omit<CreateGateProps, 'type'>) => {
-  return createGate({ ...props, type: 'or' });
+export const createOr = (props: Omit<CreateGateProps, 'kind'>) => {
+  return createGate({ ...props, kind: 'or' });
 };
 export const orNodeDef = defineGate({
   type: 'or',
@@ -218,8 +218,8 @@ const NotSymbol = createSymbol(({ startX, endX, top, mid, bottom }) => {
 export const NotShape = GateShape;
 export type NotShape = GateShape;
 
-export const createNot = (props: Omit<CreateGateProps, 'type'>) => {
-  return createGate({ ...props, type: 'not' });
+export const createNot = (props: Omit<CreateGateProps, 'kind'>) => {
+  return createGate({ ...props, kind: 'not' });
 };
 export const notNodeDef = defineGate({
   type: 'not',

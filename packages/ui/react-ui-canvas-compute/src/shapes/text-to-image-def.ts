@@ -16,7 +16,7 @@ import { TextToImageComponent } from './TextToImage.tsx';
 
 export const TextToImageShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('text-to-image'),
+    kind: Schema.Literal('text-to-image'),
   }),
 );
 
@@ -26,7 +26,7 @@ export type CreateTextToImageProps = CreateShapeProps<TextToImageShape>;
 
 export const createTextToImage = (props: CreateTextToImageProps) =>
   createShape<TextToImageShape>({
-    type: 'text-to-image',
+    kind: 'text-to-image',
     size: { width: 2 * MAJOR_GRID, height: MAJOR_GRID },
     ...props,
   });

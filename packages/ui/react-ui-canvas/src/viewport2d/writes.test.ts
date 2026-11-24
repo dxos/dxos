@@ -15,7 +15,7 @@ const rects = (count: number): Record<string, Scene.Element2D> =>
   Object.fromEntries(
     Array.from({ length: count }, (_, index) => [
       `r${index}`,
-      { id: `r${index}`, type: 'rect', center: { x: index * 32, y: 0 }, size: { width: 16, height: 16 } },
+      { id: `r${index}`, kind: 'rect', center: { x: index * 32, y: 0 }, size: { width: 16, height: 16 } },
     ]),
   );
 
@@ -48,8 +48,8 @@ const flat = (intent: LayoutIntent): LayoutIntent[] =>
 
 describe('a 2D solid', () => {
   const overlapping = (): Record<string, Scene.Element2D> => ({
-    a: { id: 'a', type: 'rect', z: 'a0', center: { x: 50, y: 50 }, size: { width: 100, height: 100 } },
-    b: { id: 'b', type: 'ellipse', z: 'a1', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
+    a: { id: 'a', kind: 'rect', z: 'a0', center: { x: 50, y: 50 }, size: { width: 100, height: 100 } },
+    b: { id: 'b', kind: 'ellipse', z: 'a1', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
   });
 
   const joined = (kind: 'join' | 'subtract') => {
@@ -66,7 +66,7 @@ describe('a 2D solid', () => {
     const view = toRenderList2D(doc, layoutOf(doc));
     expect(Object.keys(view.nodes)).toEqual(['s']);
     expect(view.nodes.s).toMatchObject({
-      type: 'solid',
+      kind: 'solid',
       op: 'union',
       operands: 'a b',
       center: { x: 75, y: 75 },
@@ -121,14 +121,14 @@ describe('a 2D solid', () => {
         },
       ],
       models: [
-        { id: 'm', dim: '2d', objects: { box: { id: 'box', type: 'rect', size: { width: 100, height: 100 } } } },
+        { id: 'm', dim: '2d', objects: { box: { id: 'box', kind: 'rect', size: { width: 100, height: 100 } } } },
       ],
     };
     const layout = applyIntent(layoutOf(doc), { kind: 'join', id: 's', operands: ['a', 'b'] });
     expect(layout.elements.s.center).toBeUndefined();
     const view = toRenderList2D({ ...doc, layouts: [layout] }, layout);
     expect(Object.keys(view.nodes)).toEqual(['s']);
-    expect(view.nodes.s).toMatchObject({ type: 'solid', center: { x: 75, y: 75 }, size: { width: 150, height: 150 } });
+    expect(view.nodes.s).toMatchObject({ kind: 'solid', center: { x: 75, y: 75 }, size: { width: 150, height: 150 } });
     // Two boxes that overlap corner to corner: eight corners in one ring.
     expect(Reflect.get(view.nodes.s, 'rings')).toHaveLength(1);
     expect(Reflect.get(view.nodes.s, 'rings')[0]).toHaveLength(8);
@@ -183,12 +183,12 @@ describe('layoutWrites', () => {
     const layout = layoutOf(doc);
     const view = toRenderList2D(doc, layout);
     const node = {
-      ...createNode({ type: 'rect', id: 'n', z: 'b0', center: { x: 64, y: 64 }, size: { width: 64, height: 64 } }),
+      ...createNode({ kind: 'rect', id: 'n', z: 'b0', center: { x: 64, y: 64 }, size: { width: 64, height: 64 } }),
       layer: 'default',
     };
     const [write] = layoutWrites(doc, { main: view }, { main: { ...view, nodes: { ...view.nodes, n: node } } });
     expect(write.kind === 'layout' && applyIntent(layout, write.intent).elements.n).toMatchObject({
-      type: 'rect',
+      kind: 'rect',
       center: { x: 64, y: 64 },
     });
   });
@@ -197,7 +197,7 @@ describe('layoutWrites', () => {
     const doc = document({});
     const view = toRenderList2D(doc, layoutOf(doc));
     const portal = {
-      type: 'view' as const,
+      kind: 'view' as const,
       id: 'p',
       z: 'a0',
       center: { x: 0, y: 0 },
@@ -219,7 +219,7 @@ describe('layoutWrites', () => {
     const doc = document({});
     const view = toRenderList2D(doc, layoutOf(doc));
     const node = {
-      ...createNode({ type: 'rect', id: 'n', z: 'a0', center: { x: 0, y: 0 }, size: { width: 16, height: 16 } }),
+      ...createNode({ kind: 'rect', id: 'n', z: 'a0', center: { x: 0, y: 0 }, size: { width: 16, height: 16 } }),
       layer: 'default',
     };
     const group = { id: 'g', kind: 'composite' as const, anonymous: true, nodes: { n: node }, links: {} };
@@ -229,7 +229,7 @@ describe('layoutWrites', () => {
     expect(write.kind === 'layout' && applyIntent(bare, write.intent)).toMatchObject({
       kind: 'composite',
       anonymous: true,
-      elements: { n: { type: 'rect' } },
+      elements: { n: { kind: 'rect' } },
     });
   });
 });
@@ -237,8 +237,8 @@ describe('layoutWrites', () => {
 describe('applyLayoutWrites', () => {
   const portal: LayoutWrite[] = [
     { kind: 'layout', layout: 'root', intent: { kind: 'create', element: { id: 'p', object: 'o' } }, created: false },
-    { kind: 'layout', layout: 'inside', intent: { kind: 'create', element: { id: 'q', type: 'rect' } }, created: true },
-    { kind: 'define', object: { id: 'o', type: 'view', parts: 'inside' } },
+    { kind: 'layout', layout: 'inside', intent: { kind: 'create', element: { id: 'q', kind: 'rect' } }, created: true },
+    { kind: 'define', object: { id: 'o', kind: 'view', parts: 'inside' } },
   ];
 
   test('a change that writes more than once (a new portal) is one transaction, so it undoes in one step', () => {

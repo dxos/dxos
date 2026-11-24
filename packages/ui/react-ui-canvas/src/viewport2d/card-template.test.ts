@@ -22,10 +22,10 @@ const composite = (): RenderList2D => {
 };
 
 /** A card as the tool makes one: its own typed fields, and the Instance fields that place the Object. */
-type Card = CardNode & Pick<PlacedComposite, 'composite' | 'overrides'>;
+type Card = CardNode & Pick<PlacedComposite, 'composite' | 'partOverrides'>;
 
-const card = (size = CARD_SIZE, overrides?: PlacedComposite['overrides']): Card => ({
-  type: 'card',
+const card = (size = CARD_SIZE, partOverrides?: PlacedComposite['partOverrides']): Card => ({
+  kind: 'card',
   id: 'card-1',
   z: 'a0',
   center: { x: 0, y: 0 },
@@ -35,7 +35,7 @@ const card = (size = CARD_SIZE, overrides?: PlacedComposite['overrides']): Card 
   body: 'Body',
   footer: 'Footer',
   icon: { type: 'rocket' },
-  ...(overrides ? { overrides } : {}),
+  ...(partOverrides ? { partOverrides } : {}),
 });
 
 /** A part's box in scene coordinates, as the instance draws it. */
@@ -76,18 +76,20 @@ describe('the card template', () => {
 
   test('each text part has a size of its own, and the glyph fills its two cells', () => {
     const { nodes } = composite();
-    const sizes = Object.fromEntries(['icon', 'title', 'body', 'footer'].map((id) => [id, nodes[id]?.style?.fontSize]));
+    const sizes = Object.fromEntries(
+      ['icon', 'title', 'body', 'footer'].map((id) => [id, nodes[id]?.overrides?.fontSize]),
+    );
     expect(sizes).toEqual({ icon: 24, title: 18, body: 16, footer: 14 });
     // The title is a line beside the glyph, so it sits at the glyph's middle rather than at its top.
-    expect(nodes.title?.style?.alignVertical).toBe('middle');
-    expect(nodes.body?.style?.alignVertical).toBeUndefined();
+    expect(nodes.title?.overrides?.valign).toBe('middle');
+    expect(nodes.body?.overrides?.valign).toBeUndefined();
     // The frame and the hairline have no text.
-    expect([nodes.frame?.style?.fontSize, nodes.rule?.style?.fontSize]).toEqual([undefined, undefined]);
+    expect([nodes.frame?.overrides?.fontSize, nodes.rule?.overrides?.fontSize]).toEqual([undefined, undefined]);
   });
 
   test('draws its hairline as a line, not a box', () => {
     const rule = composite().nodes.rule;
-    expect(rule?.type).toEqual('polyline');
+    expect(rule?.kind).toEqual('polyline');
     // Fractions of its own frame, so the rule stretches with the card rather than being redrawn at each size.
     expect(Reflect.get(rule ?? {}, 'points')).toEqual([
       { x: 0, y: 0.5 },
@@ -95,17 +97,17 @@ describe('the card template', () => {
     ]);
   });
 
-  test('a bound part with nothing to show draws nothing, not its type’s placeholder', () => {
+  test('a bound part with nothing to show draws nothing, not its kind’s placeholder', () => {
     const bare = { ...card(), body: undefined };
-    const view = drawnParts(bare, composite(), () => [{ field: 'text', multiline: true }]);
-    expect(Reflect.get(view.nodes.body ?? {}, 'text')).toEqual('');
+    const view = drawnParts(bare, composite(), () => [{ field: 'label', multiline: true }]);
+    expect(Reflect.get(view.nodes.body ?? {}, 'label')).toEqual('');
   });
 
   test('binds each region to the card’s own field', () => {
-    const view = drawnParts(card(), composite(), () => [{ field: 'text', multiline: true }]);
-    expect(Reflect.get(view.nodes.title ?? {}, 'text')).toEqual('Title');
-    expect(Reflect.get(view.nodes.body ?? {}, 'text')).toEqual('Body');
-    expect(Reflect.get(view.nodes.footer ?? {}, 'text')).toEqual('Footer');
+    const view = drawnParts(card(), composite(), () => [{ field: 'label', multiline: true }]);
+    expect(Reflect.get(view.nodes.title ?? {}, 'label')).toEqual('Title');
+    expect(Reflect.get(view.nodes.body ?? {}, 'label')).toEqual('Body');
+    expect(Reflect.get(view.nodes.footer ?? {}, 'label')).toEqual('Footer');
   });
 
   test('binds the glyph, which is not text, under its own name', () => {

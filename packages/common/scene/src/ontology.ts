@@ -11,10 +11,12 @@ import * as Struct from 'effect/Struct';
 
 import { Ref, Type } from '@dxos/echo';
 
+import * as Color from './color.ts';
 import * as Element from './element.ts';
 import * as Scene from './Scene.ts';
 import * as Shape from './shape.ts';
 import * as Style from './style.ts';
+import * as Theme from './theme.ts';
 
 //
 // Registry.
@@ -30,6 +32,11 @@ export const GROUPS = [
   { name: 'Nodes', summary: 'A node is the typed form of a 2D element that is not a link, one schema per kind.' },
   { name: 'Links', summary: 'A link is the typed form of a 2D element that joins two ends.' },
   { name: 'Styles', summary: 'A style is the look an element takes, by name or as its own overrides.' },
+  { name: 'Theme', summary: 'A theme fills the slots a style names: its colours and its typefaces.' },
+  {
+    name: 'Vocabulary',
+    summary: 'The geometry and the style values that every part of a drawing states in the same words.',
+  },
   {
     name: 'Diagram shapes',
     summary: 'A diagram shape is a primitive of the diagram DSL, stored inside a `diagram` node.',
@@ -39,7 +46,7 @@ export const GROUPS = [
 export type Group = (typeof GROUPS)[number]['name'];
 
 /** The module an entry's schema, or the fields it is built from, comes from. */
-export type Module = 'Scene' | 'element' | 'style' | 'shape';
+export type Module = 'Scene' | 'element' | 'style' | 'shape' | 'color' | 'theme';
 
 /** One registered type. */
 export type Entry = {
@@ -75,6 +82,8 @@ const scene = define('Scene', 'Scene.');
 const element = define('element', '');
 const style = define('style', '');
 const shape = define('shape', 'Shape.');
+const color = define('color', '');
+const theme = define('theme', '');
 
 /** A schema this registry builds from `module`'s fields, where the module exports none for them. */
 const derived = (module: Module, ...args: Parameters<ReturnType<typeof define>>): Entry => ({
@@ -102,14 +111,8 @@ export const Document = Schema.Struct({
   models: Schema.Array(Schema.Union([Scene.ModelRecord2D, Scene.ModelRecord3D])),
 });
 
-/** The fields every link kind shares; `linkBase` is exported as fields, not as a schema. */
-export const LinkBase = Schema.Struct({ type: Schema.String, ...Element.linkBase });
-
 /** The id and style fields every diagram shape shares, which `shape.ts` keeps private. */
 export const ShapeBase = Schema.Struct(Struct.omit(Shape.Curve.fields, ['kind', 'points']));
-
-/** One entry of a `StyleCatalog`, which the catalog declares inline. */
-export const CatalogStyle = Schema.Struct({ ...Style.Style3D.fields, ...Style.Style2D.fields });
 
 /** Every type of a stored drawing, in the order the page prints them. */
 export const ENTRIES: readonly Entry[] = [
@@ -153,6 +156,7 @@ export const ENTRIES: readonly Entry[] = [
     "Lattice mode's grid: shapes span whole cells and links run in the gutters.",
   ),
   scene('Layouts', 'Constraint', Scene.Constraint, "Constrained mode's relation of one element to another."),
+  scene('Layouts', 'Placement', Scene.Placement, 'Where one element sits from another.'),
   scene('Layouts', 'Arrangement', Scene.Arrangement, 'How a layout places the elements that have no position yet.'),
   element('Layouts', 'Layer', Element.Layer, 'A layer that elements paint on, bottom first.'),
 
@@ -178,15 +182,20 @@ export const ENTRIES: readonly Entry[] = [
   scene('Elements', 'BaseElement', Scene.BaseElement, 'The fields every element has, in either dimension.'),
   scene('Elements', 'Element2D', Scene.Element2D, 'A 2D element.', { base: 'Scene.BaseElement' }),
   scene('Elements', 'Element3D', Scene.Element3D, 'A 3D element.', { base: 'Scene.BaseElement' }),
+  scene(
+    'Elements',
+    'ElementRecord2D',
+    Scene.ElementRecord2D,
+    "A 2D element as a layout stores it: the element, and its kind's own fields beside it.",
+  ),
+  scene('Elements', 'ElementRecord3D', Scene.ElementRecord3D, 'A 3D element as a layout stores it.'),
   element('Elements', 'ElementEndpoint', Element.ElementEndpoint, "A link's end as an element stores it."),
   scene('Elements', 'DslIdentity', Scene.DslIdentity, 'The DSL statement that made an element.'),
   element('Elements', 'PartLayout', Element.PartLayout, 'How a part of a composite follows its frame on each axis.'),
   element('Elements', 'PartConstraint', Element.PartConstraint, 'How a part follows its frame on one axis.'),
-  scene('Elements', 'InstanceFit', Scene.InstanceFit, 'How a placed composite maps its parts into its frame.'),
+  element('Elements', 'InstanceFit', Element.InstanceFit, 'How a placed composite draws its parts in its frame.'),
   scene('Elements', 'Dimension', Scene.Dimension, 'The dimension of a scene, layout or model.'),
-  scene('Elements', 'Vec2', Scene.Vec2, 'A 2D vector.'),
   scene('Elements', 'Vec3', Scene.Vec3, 'A 3D vector.'),
-  scene('Elements', 'Size2', Scene.Size2, 'A 2D size.'),
 
   element('Nodes', 'NodeBase', Element.NodeBase, 'The fields every node kind shares.'),
   element('Nodes', 'BaseNode', Element.BaseNode, 'A node whose kind is not known here: a box with a label.', {
@@ -223,53 +232,50 @@ export const ENTRIES: readonly Entry[] = [
   element('Nodes', 'DiagramHeading', Element.DiagramHeading, "Where a diagram shape's heading sits."),
   element('Nodes', 'DiagramShape', Element.DiagramShape, 'The diagram shapes a diagram node can hold.'),
   element('Nodes', 'BuiltinNode', Element.BuiltinNode, 'Any node kind this package defines.'),
-  element('Nodes', 'Port', Element.Port, "An attachment point on a node's frame."),
-  element('Nodes', 'Side', Element.Side, "A side of a node's frame."),
+  element('Nodes', 'Port', Element.Port, 'An attachment point on a node, as a fraction of its frame.'),
   element('Nodes', 'PortDirection', Element.PortDirection, 'What a port takes.'),
   element('Nodes', 'Padding', Element.Padding, "Space between a shape's frame and its text."),
-  element('Nodes', 'Point', Element.Point, 'A point.'),
-  element('Nodes', 'Size', Element.Size, 'A size.'),
-  element('Nodes', 'Bounds', Element.Bounds, 'A rectangle by its top-left corner and size.'),
 
-  derived('element', 'Links', 'LinkBase', LinkBase, 'The fields every link kind shares.'),
-  element('Links', 'LineLink', Element.LineLink, 'A straight link.', { base: 'LinkBase' }),
-  element('Links', 'OrthoLink', Element.OrthoLink, 'A link of horizontal and vertical segments.', {
-    base: 'LinkBase',
-  }),
-  element('Links', 'CurveLink', Element.CurveLink, 'A cubic curve that leaves each port along its normal.', {
-    base: 'LinkBase',
-  }),
-  element('Links', 'SplineLink', Element.SplineLink, 'A smooth curve through control points.', { base: 'LinkBase' }),
-  element('Links', 'SmartLink', Element.SmartLink, 'A link that is routed between its ends.', { base: 'LinkBase' }),
-  element('Links', 'Link', Element.Link, 'Any link kind.'),
+  element('Links', 'Link', Element.Link, 'A link between two ends.'),
+  element('Links', 'LinkPath', Element.LinkPath, 'How a link runs between its ends.'),
   element('Links', 'Endpoint', Element.Endpoint, "A link's end: on a node, or free at a point."),
   element('Links', 'PortEndpoint', Element.PortEndpoint, 'A link end on a node.'),
   element('Links', 'PointEndpoint', Element.PointEndpoint, 'A free link end at a point.'),
-  element('Links', 'LinkEnds', Element.LinkEnds, 'The markers at the two ends of a link.'),
   element('Links', 'Marker', Element.Marker, 'What is drawn at a link end.'),
   element('Links', 'DiagramConnector', Element.DiagramConnector, 'A link drawn as a diagram connector.'),
   element('Links', 'DiagramCaption', Element.DiagramCaption, "Where a diagram connector's caption sits."),
 
   element('Styles', 'LineStyle', Element.LineStyle, "A link's style."),
-  element('Styles', 'NodeStyle', Element.NodeStyle, "A node's style.", { base: 'LineStyle' }),
-  style('Styles', 'Style2D', Style.Style2D, 'A 2D look: the node style and the diagram vocabulary.', {
-    base: 'NodeStyle',
-  }),
-  style('Styles', 'Style3D', Style.Style3D, 'A 3D look: a material over a hue and a tone.'),
+  element('Styles', 'Style2D', Element.Style2D, 'A 2D look: what a node draws with.', { base: 'LineStyle' }),
+  style('Styles', 'Style3D', Style.Style3D, 'A 3D look: a material over a colour.'),
   style('Styles', 'NamedStyle2D', Style.NamedStyle2D, "A model's named 2D style.", { base: 'Style2D' }),
   style('Styles', 'NamedStyle3D', Style.NamedStyle3D, "A model's named 3D style.", { base: 'Style3D' }),
   element('Styles', 'StyleClass', Element.StyleClass, 'A named look that nodes and links take their style from.'),
   echo('style', 'Styles', 'StyleCatalog', Style.StyleCatalog, 'A reusable set of styles, as an ECHO object.'),
-  derived(
-    'style',
-    'Styles',
-    'CatalogStyle',
-    CatalogStyle,
-    'One style of a catalog: the 2D and 3D fields in one struct.',
-  ),
+  style('Styles', 'CatalogStyle', Style.CatalogStyle, 'One style of a catalog: the 2D and 3D fields in one struct.'),
   element('Styles', 'StyleHue', Element.StyleHue, 'The hues the style pickers offer.'),
-  element('Styles', 'NodeTone', Element.NodeTone, 'How strongly a hue fills a frame.'),
-  element('Styles', 'TextTone', Element.TextTone, "How light or dark a text's hue is drawn."),
+  element('Styles', 'NodeTone', Element.NodeTone, 'How strongly a colour fills a frame.'),
+  element('Styles', 'TextTone', Element.TextTone, "How light or dark a text's colour is drawn."),
+
+  theme('Theme', 'ThemeSlots', Theme.ThemeSlots, 'The colours and typefaces a theme defines, by name.'),
+  theme('Theme', 'Font', Theme.Font, 'A typeface slot of the theme: `body`, `mono`, or one the theme defines.'),
+
+  color(
+    'Vocabulary',
+    'Color',
+    Color.Color,
+    'A colour: a theme name (`blue`, `accent`), a name at a tone (`blue/2`), or a CSS literal (`#1e90ff`).',
+  ),
+  element('Vocabulary', 'Point', Element.Point, 'A point.'),
+  element('Vocabulary', 'Size', Element.Size, 'A size.'),
+  element('Vocabulary', 'Bounds', Element.Bounds, 'A rectangle by its top-left corner and size.'),
+  element('Vocabulary', 'Side', Element.Side, 'A side of a frame.'),
+  element('Vocabulary', 'Stroke', Element.Stroke, "How a line is drawn: a link's line, or a shape's outline."),
+  element('Vocabulary', 'Fill', Element.Fill, 'What a closed shape is filled with.'),
+  element('Vocabulary', 'Corners', Element.Corners, 'Which corners a shape rounds.'),
+  element('Vocabulary', 'Weight', Element.Weight, 'Stroke weight and text size together.'),
+  element('Vocabulary', 'Align', Element.Align, 'Where text sits across a shape.'),
+  element('Vocabulary', 'VerticalAlign', Element.VerticalAlign, 'Where text sits down a shape.'),
 
   derived('shape', 'Diagram shapes', 'ShapeBase', ShapeBase, 'The id and style fields every diagram shape shares.'),
   shape('Diagram shapes', 'Box', Shape.Box, 'A closed shape in a bounding box.', { base: 'ShapeBase' }),
@@ -281,15 +287,7 @@ export const ENTRIES: readonly Entry[] = [
   shape('Diagram shapes', 'Arrow', Shape.Arrow, 'A connector between two elements or points.', { base: 'ShapeBase' }),
   shape('Diagram shapes', 'Portal', Shape.Portal, 'A window onto another drawing.', { base: 'ShapeBase' }),
   shape('Diagram shapes', 'Element', Shape.Element, 'Any diagram shape.'),
-  shape('Diagram shapes', 'Point', Shape.Point, 'A point.'),
   shape('Diagram shapes', 'BoxKind', Shape.BoxKind, 'The closed shapes a box can be.'),
-  shape('Diagram shapes', 'Corners', Shape.Corners, 'Which corners of a rectangle are rounded.'),
-  shape('Diagram shapes', 'Color', Shape.Color, 'The colors of a diagram shape.'),
-  shape('Diagram shapes', 'Fill', Shape.Fill, 'The interior of a closed shape.'),
-  shape('Diagram shapes', 'Stroke', Shape.Stroke, 'How a stroke is drawn.'),
-  shape('Diagram shapes', 'Weight', Shape.Weight, 'Stroke weight and text size together.'),
-  shape('Diagram shapes', 'Align', Shape.Align, "Where a shape's text sits across it."),
-  shape('Diagram shapes', 'VerticalAlign', Shape.VerticalAlign, "Where a shape's text sits down it."),
   shape('Diagram shapes', 'Layout', Shape.Layout, 'How a grid box places its children.'),
   shape('Diagram shapes', 'Place', Shape.Place, 'Where grid tracks sit when they leave space over.'),
   shape('Diagram shapes', 'Path', Shape.Path, 'How a connector runs between its ends.'),
@@ -329,7 +327,8 @@ export type Literal = string | number | boolean;
 export type TypeDesc =
   | { readonly kind: 'ref'; readonly name: string; readonly open?: boolean }
   | { readonly kind: 'echo-ref'; readonly target: string }
-  | { readonly kind: 'string' | 'boolean' | 'any' | 'unknown' }
+  | { readonly kind: 'string'; readonly pattern?: string }
+  | { readonly kind: 'boolean' | 'any' | 'unknown' }
   | { readonly kind: 'number'; readonly integer?: boolean; readonly minimum?: number; readonly maximum?: number }
   | { readonly kind: 'literals'; readonly values: readonly Literal[] }
   | { readonly kind: 'array'; readonly items: TypeDesc }
@@ -360,6 +359,17 @@ const literalOf = ({ literal }: SchemaAST.Literal): Literal =>
   typeof literal === 'bigint' ? unsupported('a bigint literal') : literal;
 
 type NumberDesc = Extract<TypeDesc, { kind: 'number' }>;
+type StringDesc = Extract<TypeDesc, { kind: 'string' }>;
+
+/** A string check as the pattern it sets; one this does not know is an error, so no constraint is dropped. */
+const patternOf = (check: SchemaAST.Check<never>): Partial<StringDesc> => {
+  const representation: unknown = check.annotations?.representation;
+  const id = isRecord(representation) ? representation.id : undefined;
+  const payload = isRecord(representation) && isRecord(representation.payload) ? representation.payload : {};
+  return id === 'effect/schema/isPattern' && typeof payload.source === 'string'
+    ? { pattern: payload.source }
+    : unsupported(`the string check \`${String(id)}\``);
+};
 
 /** A number check as the bounds it sets; one this does not know is an error, so no constraint is dropped. */
 const constraintOf = (check: SchemaAST.Check<never>): Partial<NumberDesc> => {
@@ -432,18 +442,21 @@ const describeAst = (ast: SchemaAST.AST, resolve: Resolve): TypeDesc => {
     const target = Ref.getReferenceTarget(ast);
     return target ? { kind: 'echo-ref', target } : unsupported('a declaration that is not an ECHO reference');
   }
+  if (SchemaAST.isString(ast)) {
+    return (ast.checks ?? []).reduce<StringDesc>((desc, check) => ({ ...desc, ...patternOf(check) }), {
+      kind: 'string',
+    });
+  }
   if (ast.checks) {
     return unsupported(`a check on \`${ast._tag}\``);
   }
-  return SchemaAST.isString(ast)
-    ? { kind: 'string' }
-    : SchemaAST.isBoolean(ast)
-      ? { kind: 'boolean' }
-      : SchemaAST.isAny(ast)
-        ? { kind: 'any' }
-        : SchemaAST.isUnknown(ast)
-          ? { kind: 'unknown' }
-          : unsupported(`the schema node \`${ast._tag}\``);
+  return SchemaAST.isBoolean(ast)
+    ? { kind: 'boolean' }
+    : SchemaAST.isAny(ast)
+      ? { kind: 'any' }
+      : SchemaAST.isUnknown(ast)
+        ? { kind: 'unknown' }
+        : unsupported(`the schema node \`${ast._tag}\``);
 };
 
 /** A shape as a comparison key; descriptions are left out so an annotated copy of a type still matches it. */
@@ -454,6 +467,7 @@ const keyOf = (desc: TypeDesc): string =>
 const isNameable = (desc: TypeDesc): boolean =>
   (desc.kind === 'object' && desc.fields.length > 0) ||
   (desc.kind === 'literals' && desc.values.length > 1) ||
+  (desc.kind === 'string' && desc.pattern !== undefined) ||
   desc.kind === 'union';
 
 /** The type an optional field holds: `Schema.optional` wraps it in a union with `undefined`. */
@@ -548,6 +562,7 @@ const jsonOf = (desc: TypeDesc): JsonObject => {
         required: ['/'],
       };
     case 'string':
+      return { type: 'string', ...(desc.pattern !== undefined ? { pattern: desc.pattern } : {}) };
     case 'boolean':
       return { type: desc.kind };
     case 'any':

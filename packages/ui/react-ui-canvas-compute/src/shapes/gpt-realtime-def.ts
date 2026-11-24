@@ -16,7 +16,7 @@ import { GptRealtimeComponent } from './GptRealtime.tsx';
 
 export const GptRealtimeShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('gpt-realtime'),
+    kind: Schema.Literal('gpt-realtime'),
   }),
 );
 
@@ -26,7 +26,7 @@ export type CreateGptRealtimeProps = CreateShapeProps<GptRealtimeShape>;
 
 export const createGptRealtime = (props: CreateGptRealtimeProps) =>
   createShape<GptRealtimeShape>({
-    type: 'gpt-realtime',
+    kind: 'gpt-realtime',
     size: { width: 4 * MAJOR_GRID, height: 4 * MAJOR_GRID },
     ...props,
   });

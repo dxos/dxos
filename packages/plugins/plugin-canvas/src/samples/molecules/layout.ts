@@ -570,12 +570,12 @@ export const createDataFlowView = (layout: DataFlowLayout, revealed = true): Ren
   blocks.forEach((block, index) => {
     const rect = baseOf(block);
     const node: RectNode = {
-      type: 'rect',
+      kind: 'rect',
       id: block.id,
       z: keys[index],
       center: { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
       size: { width: rect.width, height: rect.height },
-      style: { border: false, fill: false },
+      overrides: { stroke: 'none', fill: 'none' },
     };
     nodes[block.id] = node;
   });

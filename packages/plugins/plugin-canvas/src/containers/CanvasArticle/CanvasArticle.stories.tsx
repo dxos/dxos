@@ -108,7 +108,7 @@ const seedBasic: Seed = (_db, content, scene) => {
     scene,
     node: {
       id,
-      type: 'rect',
+      kind: 'rect',
       z,
       label: id.toUpperCase(),
       center: { x, y: 0 },
@@ -120,11 +120,12 @@ const seedBasic: Seed = (_db, content, scene) => {
     scene,
     link: {
       id: `${source}-${target}`,
-      type: 'smart',
+      kind: 'link',
+      path: 'smart',
       z,
       source: { node: source },
       target: { node: target },
-      ends: { end: 'arrow' },
+      head: 'arrow',
     },
   });
   // Six cells apart, so the gap between two boxes is half a box: close enough to read as a chain.
@@ -206,7 +207,7 @@ export const ObjectView: Story = {
       scene: root,
       node: {
         id,
-        type: 'view',
+        kind: 'view',
         z: id === 'card' ? 'a1' : 'a2',
         center: { x, y: 0 },
         size: { width: cells.width * DEFAULT_CELL, height: cells.height * DEFAULT_CELL },
@@ -255,7 +256,7 @@ export const DrawingView: Story = {
       scene: root,
       node: {
         id: 'detail',
-        type: 'view',
+        kind: 'view',
         z: 'a1',
         center: { x: 0, y: 0 },
         size: { width: 8 * DEFAULT_CELL, height: 3 * DEFAULT_CELL },
@@ -301,7 +302,7 @@ export const Image: Story = {
       scene: root,
       node: {
         id,
-        type: 'image',
+        kind: 'image',
         z: `a${x}`,
         center: { x, y: 0 },
         size: { width: 4 * DEFAULT_CELL, height: 3 * DEFAULT_CELL },
@@ -454,7 +455,7 @@ export const Canvas3D: Story = {
     }
 
     layout cube dim=3d model=library {
-      element box cube @ 0,1,0 scale=2 hue=blue surface=solid
+      element box cube @ 0,1,0 scale=2 color=blue fill=solid
     }
 
     model library dim=3d {

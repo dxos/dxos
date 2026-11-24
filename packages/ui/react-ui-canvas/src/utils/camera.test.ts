@@ -28,7 +28,7 @@ import { nodeBounds } from './shapes.ts';
 const viewport = { width: 800, height: 600 };
 
 const portal: ViewNode = {
-  type: 'view',
+  kind: 'view',
   id: 'p',
   z: 'V',
   center: { x: 640, y: 620 },

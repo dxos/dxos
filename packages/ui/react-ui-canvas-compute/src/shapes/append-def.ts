@@ -17,7 +17,7 @@ import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.
 
 export const AppendShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('append'),
+    kind: Schema.Literal('append'),
   }),
 );
 
@@ -27,7 +27,7 @@ export type CreateAppendProps = CreateShapeProps<AppendShape>;
 
 export const createAppend = (props: CreateAppendProps) =>
   createShape<AppendShape>({
-    type: 'append',
+    kind: 'append',
     size: { width: 2 * MAJOR_GRID, height: getHeight(AppendInput) },
     ...props,
   });

@@ -20,7 +20,7 @@ const selected = (document: Scene.SceneDocument, open: string | undefined, selec
   return {
     model: document.models[0]?.id,
     element,
-    type: element && record ? resolveLayout(document, record)[element.id]?.type : undefined,
+    type: element && record ? resolveLayout(document, record)[element.id]?.kind : undefined,
   };
 };
 
@@ -187,7 +187,7 @@ export const createCommandsAspect = <C>(
           model,
           layout: open,
           ids: registry.get(editorSelection.atoms.selection),
-          object: { id: `object-${index}`, type: config.dim === '3d' ? 'sphere' : 'rect' },
+          object: { id: `object-${index}`, kind: config.dim === '3d' ? 'sphere' : 'rect' },
         }).length === 0 && editorSelection.commands.select([]);
       }
     },

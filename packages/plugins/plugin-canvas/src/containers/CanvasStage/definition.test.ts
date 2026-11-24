@@ -16,7 +16,7 @@ const read = (name: keyof typeof EXEMPLARS) => DSL.readScenes(EXEMPLARS[name]).d
 
 const box = (id: string, x: number, opacity?: number): Scene.Element2D => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   z: 'a0',
   center: { x, y: 0 },
   size: { width: 100, height: 50 },

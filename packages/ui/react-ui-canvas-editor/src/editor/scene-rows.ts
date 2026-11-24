@@ -7,9 +7,11 @@ import {
   type ElementEndpoint,
   type Layer,
   type LayoutIntent,
+  LINK_KIND,
   type ModelIntent,
   type Scene,
   findLayout,
+  linkPath,
   resolveLayout,
   rootScene,
   sceneLayout,
@@ -63,12 +65,13 @@ export const objectEntries = (doc: Scene.SceneDocument): ObjectEntry[] => {
 };
 
 /** Whether an element is a hull: the border as drawn with nothing inside it, or a group's Instance that draws one. */
-const isHull = (element: Scene.Element): boolean => {
-  const canvas: unknown = element.props?.canvas;
-  return (
-    element.type === 'hull' ||
-    (typeof canvas === 'object' && canvas !== null && Reflect.get(canvas, 'hull') !== undefined)
-  );
+const isHull = (element: Scene.Element): boolean =>
+  element.kind === 'hull' || Reflect.get(element, 'hull') !== undefined;
+
+/** What a row's icon is drawn for: a 2D link's path, as its tool on the rail is named, else the element's kind. */
+const iconType = (layout: Scene.LayoutRecord, id: string, kind: string | undefined): string | undefined => {
+  const link = layout.dim === '2d' && kind === LINK_KIND ? layout.elements[id] : undefined;
+  return link ? linkPath(link) : kind;
 };
 
 /** A selected element as its layout resolves it, and the layout that stores it. */
@@ -175,7 +178,7 @@ export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): Vi
           element: element.id,
           container: layout.id,
           label: element.label ?? element.id,
-          type: item?.type,
+          type: iconType(layout, element.id, item?.kind),
           ...inObject,
           ...held,
           ...(isHull(element) ? { hull: true } : {}),
@@ -192,7 +195,7 @@ export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): Vi
         }
         return {
           ...row,
-          kind: element.type === 'link' ? 'link' : parts ? 'instance' : 'node',
+          kind: element.kind === 'link' ? 'link' : parts ? 'instance' : 'node',
           path,
           children:
             !parts || !inside

@@ -15,7 +15,7 @@ const LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 6
 /** A one-cell shape at lattice cell (`col`, `row`). */
 const cellElement = (id: string, col: number, row: number): Scene.Element2D => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   center: { x: col * 384, y: row * 192 },
   size: { width: 256, height: 128 },
 });
@@ -37,7 +37,7 @@ describe('latticeConstrain', () => {
   test('a created element snaps onto the lattice', ({ expect }) => {
     const loose: Scene.Element2D = {
       id: 'n',
-      type: 'rect',
+      kind: 'rect',
       center: { x: 30, y: -20 },
       size: { width: 300, height: 90 },
     };
@@ -112,10 +112,10 @@ describe('latticeConstrain', () => {
     // A hull's frame covers the shapes inside it, so as a shape of the lattice it would refuse every move among them.
     const hull: Scene.Element2D = {
       id: 'h',
-      type: 'hull',
+      kind: 'hull',
       center: { x: 192, y: 0 },
       size: { width: 768, height: 192 },
-      overrides: { tone: 2, lineStyle: 'solid' },
+      overrides: { color: 'default/2', stroke: 'solid' },
     };
     const layout = layoutOf(hull, cellElement('a', 0, 0));
     const moved = after(layout, { kind: 'move', ids: ['a'], delta: { x: 384, y: 0 } });

@@ -38,7 +38,7 @@ export const parseAnchorId = (id: string): [PropertyKind | undefined, string] =>
  * What a shape's factory takes: the board shape's fields, and the shape's own under `data`. The compute `node` is not
  * among them, being the id of the node the compute graph makes for the shape.
  */
-export type CreateShapeProps<S extends ComputeShape> = Omit<MakeOptional<S, 'id' | 'size'>, 'type' | 'data'> & {
+export type CreateShapeProps<S extends ComputeShape> = Omit<MakeOptional<S, 'id' | 'size'>, 'kind' | 'data'> & {
   data?: Omit<NonNullable<S['data']>, 'node'>;
 };
 
@@ -77,7 +77,7 @@ export type ComputeShape = Schema.Schema.Type<typeof ComputeShape>;
 export const withZ = <Fields extends Schema.Struct.Fields>(shape: Schema.Struct<Fields>) =>
   shape.mapFields(Struct.assign({ z: Schema.String }));
 
-export const createShape = <S extends ComputeShape>({ id, ...rest }: CreateShapeProps<S> & { type: string }): S => {
+export const createShape = <S extends ComputeShape>({ id, ...rest }: CreateShapeProps<S> & { kind: string }): S => {
   return {
     id: id ?? Obj.ID.random(),
     ...rest,

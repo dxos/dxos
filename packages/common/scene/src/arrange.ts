@@ -83,7 +83,7 @@ export const applyArrangement = (layout: LayoutRecord3D): LayoutRecord3D => {
   }
   const elements: Record<string, Element3D> = { ...layout.elements };
   const targets = Object.values(elements)
-    .filter((element) => element.type !== 'link' && !element.pinned && element.center === undefined)
+    .filter((element) => element.kind !== 'link' && !element.pinned && element.center === undefined)
     .map((element) => element.id);
   const placed = arranger({
     targets,

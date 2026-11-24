@@ -67,7 +67,7 @@ const standalone = (
   bounds: { x: number; y: number; width: number; height: number } = { x: -256, y: -256, width: 512, height: 512 },
 ): RenderList2D => {
   const node: GeneratorNode = {
-    type: 'generator',
+    kind: 'generator',
     id: STANDALONE_NODE,
     z: 'a0',
     center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },

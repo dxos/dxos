@@ -30,6 +30,7 @@ import {
   mapPoint,
   nodeFrame,
   pointBounds,
+  sidePort,
   solvePartBounds,
 } from '@dxos/scene';
 
@@ -165,19 +166,19 @@ export const instanceTransform = (
   };
 };
 
-/** The composite's node with this instance's overrides of it, shallow per field (`style` merges per key). */
+/** The composite's node with this instance's values for it, shallow per field (`overrides` merges per key). */
 export const overriddenNode = (instance: PlacedComposite, node: Node): Node => {
-  const override = instance.overrides?.[node.id];
+  const override = instance.partOverrides?.[node.id];
   if (!override) {
     return node;
   }
-  const style = Reflect.get(override, 'style');
+  const look = Reflect.get(override, 'overrides');
   return {
     ...node,
     ...override,
     id: node.id,
-    type: node.type,
-    ...(typeof style === 'object' && style !== null ? { style: { ...node.style, ...style } } : {}),
+    kind: node.kind,
+    ...(typeof look === 'object' && look !== null ? { overrides: { ...node.overrides, ...look } } : {}),
   };
 };
 
@@ -205,7 +206,7 @@ export const boundNode = (instance: PlacedComposite, node: Node, fields: readonl
   const text = boundText(value);
   const [part] = fields;
   // Text reaches the part's own text field, whatever the Instance calls it, so a class's `attributes` fill a note's
-  // `text`. Anything else — a glyph, a number — is written under the name it binds, which the part's type reads.
+  // `label`. Anything else — a glyph, a number — is written under the name it binds, which the part's kind reads.
   return text !== undefined && part
     ? { ...node, ...fieldValues(node, part.field, text) }
     : { ...node, [fieldName(node.bind)]: value };
@@ -252,8 +253,8 @@ export const visibleParts = (view: RenderList2D): RenderList2D => {
 };
 
 /**
- * The composite with an instance's overrides applied to its nodes and its bound parts filled in, as the instance
- * draws it. `parts` says where a node type keeps its text, so a bound part writes into the right field.
+ * The composite with an instance's part overrides applied to its nodes and its bound parts filled in, as the instance
+ * draws it. `parts` says where a node kind keeps its text, so a bound part writes into the right field.
  */
 export const instanceView = (
   instance: PlacedComposite,
@@ -261,7 +262,7 @@ export const instanceView = (
   parts: (node: Node) => readonly PartField[] = () => [],
 ): RenderList2D => {
   const bound = Object.values(composite.nodes).some((node) => node.bind !== undefined);
-  if (!instance.overrides && !bound) {
+  if (!instance.partOverrides && !bound) {
     return visibleParts(composite);
   }
   return visibleParts({
@@ -316,7 +317,7 @@ export const placeParts = (
       ...link,
       source: move(link.source),
       target: move(link.target),
-      ...(link.type === 'spline' ? { points: link.points.map((point) => mapPoint(point, box, solved)) } : {}),
+      ...(link.points ? { points: link.points.map((point) => mapPoint(point, box, solved)) } : {}),
     };
   });
   return {
@@ -328,13 +329,13 @@ export const placeParts = (
 
 /** How an instance draws its composite: the parts it draws, and how their coordinates reach the scene. */
 export type InstancePlacement = {
-  /** The composite with this instance's overrides, and its parts solved into the scene when any of them is constrained. */
+  /** The composite with this instance's part overrides, and its parts solved into the scene when any of them is constrained. */
   readonly view: RenderList2D;
   /** The transform from the view's coordinates to the scene's; the identity once the parts are already placed. */
   readonly transform: InstanceTransform;
 };
 
-/** What `instance` draws for `composite`: its overrides, then its constraints ({@link placeParts}). */
+/** What `instance` draws for `composite`: its part overrides, then its constraints ({@link placeParts}). */
 export const instancePlacement = (
   instance: PlacedComposite,
   composite: RenderList2D,
@@ -388,7 +389,7 @@ export const drawnParts = (
           ...link,
           source: mapEnd(link.source),
           target: mapEnd(link.target),
-          ...(link.type === 'spline' ? { points: link.points.map(map) } : {}),
+          ...(link.points ? { points: link.points.map(map) } : {}),
         },
       ]),
     ),
@@ -403,8 +404,8 @@ const sideToward = (frame: Bounds, point: Point): { side: Side; offset: number }
   const dy = (point.y - (frame.y + halfHeight)) / halfHeight;
   const clamp = (value: number) => Math.min(1, Math.max(0, value));
   return Math.abs(dx) >= Math.abs(dy)
-    ? { side: dx >= 0 ? 'e' : 'w', offset: clamp((point.y - frame.y) / (frame.height || 1)) }
-    : { side: dy >= 0 ? 's' : 'n', offset: clamp((point.x - frame.x) / (frame.width || 1)) };
+    ? { side: dx >= 0 ? 'right' : 'left', offset: clamp((point.y - frame.y) / (frame.height || 1)) }
+    : { side: dy >= 0 ? 'bottom' : 'top', offset: clamp((point.x - frame.x) / (frame.width || 1)) };
 };
 
 /**
@@ -418,10 +419,10 @@ export const instancePorts = (frame: Bounds, composite: RenderList2D, fit?: Inst
   const transform = placed ? undefined : instanceTransform(frame, content, fit);
   return Object.values((placed ?? composite).nodes)
     .filter((node) => node.exposed)
-    .map((node) => ({
-      id: node.id,
-      ...sideToward(frame, transform ? toInstance(transform, node.center) : node.center),
-    }));
+    .map((node) => {
+      const { side, offset } = sideToward(frame, transform ? toInstance(transform, node.center) : node.center);
+      return sidePort(node.id, side, offset);
+    });
 };
 
 export type ComposeOptions = {
@@ -493,7 +494,7 @@ export const composeSelection = (
       ...link,
       source: shiftEnd(link.source),
       target: shiftEnd(link.target),
-      ...(link.type === 'spline' ? { points: link.points.map(shiftPoint) } : {}),
+      ...(link.points ? { points: link.points.map(shiftPoint) } : {}),
     }),
   );
   const used = new Set([...childNodes, ...childLinks].map((element) => element.layer));
@@ -507,7 +508,7 @@ export const composeSelection = (
     layers: Object.fromEntries(layers.filter((entry) => used.has(entry.id)).map((entry) => [entry.id, entry])),
   };
   const instance: PlacedComposite = {
-    type: 'instance',
+    kind: 'instance',
     id: instanceId,
     z: topZ(Object.values(scene.nodes)),
     center: centre,
@@ -540,7 +541,7 @@ export const composeSelection = (
 export type Ungrouping = { edit: SceneEdit; created: NodeId[] };
 
 /**
- * Ungroups an instance: the composite's nodes and links, with the instance's overrides, are placed where the instance
+ * Ungroups an instance: the composite's nodes and links, with the instance's part overrides, are placed where the instance
  * draws them under fresh ids (`createId`), and links on the instance's ports re-attach to the nodes behind them. The
  * definition is left as it is, for any other instance.
  */
@@ -577,7 +578,7 @@ export const ungroupInstance = (
       id: createId('link'),
       source: mapEnd(source.source),
       target: mapEnd(source.target),
-      ...(source.type === 'spline' ? { points: source.points.map(map) } : {}),
+      ...(source.points ? { points: source.points.map(map) } : {}),
       ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
     };
   });
@@ -642,7 +643,7 @@ export const copyComposite = (
   };
 };
 
-/** The instance pointed at the composite copy `compositeId`, its overrides and ports renamed as the copy's nodes were. */
+/** The instance pointed at the composite copy `compositeId`, its part overrides and ports renamed as the copy's nodes were. */
 export const retargetInstance = (
   instance: PlacedComposite,
   compositeId: ViewId,
@@ -650,8 +651,12 @@ export const retargetInstance = (
 ): PlacedComposite => ({
   ...instance,
   composite: compositeId,
-  ...(instance.overrides
-    ? { overrides: Object.fromEntries(Object.entries(instance.overrides).map(([id, value]) => [rename(id), value])) }
+  ...(instance.partOverrides
+    ? {
+        partOverrides: Object.fromEntries(
+          Object.entries(instance.partOverrides).map(([id, value]) => [rename(id), value]),
+        ),
+      }
     : {}),
   ...(instance.ports ? { ports: instance.ports.map((port) => ({ ...port, id: rename(port.id) })) } : {}),
 });

@@ -58,7 +58,7 @@ const glyphNode = (glyph: DXOSLockupGlyph, index: number): PathNode => {
   const d = DXOS_HORIZONTAL_LOCKUP.paths[glyph];
   const box = pathBounds(d) ?? { x: 0, y: 0, width: 1, height: 1 };
   return {
-    type: 'path',
+    kind: 'path',
     id: `logo-${glyph}`,
     z: `a${index}`,
     center: {
@@ -69,7 +69,7 @@ const glyphNode = (glyph: DXOSLockupGlyph, index: number): PathNode => {
     d,
     viewBox: box,
     // `COLORS.main`: the mark is pure white, brighter than the theme's text.
-    fill: '#FFFFFF',
+    overrides: { color: '#FFFFFF' },
   };
 };
 
@@ -92,21 +92,21 @@ const text = (
   center: Point,
   size: Size,
   fontSize: number,
-  fontFamily?: 'monospace',
+  font?: 'mono',
 ): NoteNode => ({
-  type: 'note',
+  kind: 'note',
   id,
   z,
   center,
   size,
-  text: value,
-  style: {
-    fill: false,
-    border: false,
+  label: value,
+  overrides: {
+    fill: 'none',
+    stroke: 'none',
     fontSize,
-    alignHorizontal: 'center',
-    alignVertical: 'middle',
-    ...(fontFamily ? { fontFamily } : {}),
+    align: 'center',
+    valign: 'middle',
+    ...(font ? { font } : {}),
   },
 });
 
@@ -121,7 +121,7 @@ export const LAYOUT = {
   url: { x: 0, y: 370.5 },
 };
 
-/** The accent rule, 240x4 with round ends, as path data: a path node fills with its hue's colour at full strength. */
+/** The accent rule, 240x4 with round ends, as path data: a path node fills with its own colour, a literal as written. */
 const RULE_PATH = 'M 2 0 L 238 0 Q 240 0 240 2 Q 240 4 238 4 L 2 4 Q 0 4 0 2 Q 0 0 2 0 Z';
 
 /** The end card's root scene at rest: the logo instance, the tagline, the rule and the call to action. */
@@ -129,7 +129,7 @@ export const rootScene = (): RenderList2D => {
   const composite = logoComposite();
   const content = compositeBounds(composite) ?? { x: 0, y: 0, width: 0, height: 0 };
   const logo: InstanceNode = {
-    type: 'instance',
+    kind: 'instance',
     id: LOGO,
     z: 'a0',
     center: { x: content.x + content.width / 2, y: content.y + content.height / 2 },
@@ -140,7 +140,7 @@ export const rootScene = (): RenderList2D => {
     frame: content,
   };
   const rule: PathNode = {
-    type: 'path',
+    kind: 'path',
     id: 'rule',
     z: 'a2',
     center: LAYOUT.rule,
@@ -148,14 +148,14 @@ export const rootScene = (): RenderList2D => {
     d: RULE_PATH,
     viewBox: { x: 0, y: 0, width: 240, height: 4 },
     // `COLORS.accent`, used once per spot.
-    fill: '#5B8CFF',
+    overrides: { color: '#5B8CFF' },
   };
   const nodes: Node[] = [
     logo,
     text('tagline', 'a1', 'Sovereign Intelligence.', LAYOUT.tagline, { width: 1024, height: 96 }, 64),
     rule,
     text('cta', 'a3', 'Join the community', LAYOUT.cta, { width: 640, height: 64 }, 40),
-    text('url', 'a4', 'dxos.org/discord', LAYOUT.url, { width: 640, height: 64 }, 40, 'monospace'),
+    text('url', 'a4', 'dxos.org/discord', LAYOUT.url, { width: 640, height: 64 }, 40, 'mono'),
   ];
   return {
     id: ROOT,

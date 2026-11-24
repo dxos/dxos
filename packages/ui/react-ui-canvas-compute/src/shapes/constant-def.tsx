@@ -21,7 +21,7 @@ import { ComputeShape, type CreateShapeProps, computeData, createAnchorId, creat
 
 export const ConstantShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('constant'),
+    kind: Schema.Literal('constant'),
     data: computeData({ value: Schema.optional(Schema.Any) }),
   }),
 );
@@ -35,7 +35,7 @@ export type ConstantShape = Schema.Schema.Type<typeof ConstantShape>;
 export type CreateConstantProps = CreateShapeProps<ConstantShape>;
 
 export const createConstant = (props: CreateConstantProps) =>
-  createShape<ConstantShape>({ type: 'constant', size: { width: 3 * MAJOR_GRID, height: 2 * MAJOR_GRID }, ...props });
+  createShape<ConstantShape>({ kind: 'constant', size: { width: 3 * MAJOR_GRID, height: 2 * MAJOR_GRID }, ...props });
 
 export const constantNodeDef = defineComputeNode<ConstantShape>({
   type: 'constant',

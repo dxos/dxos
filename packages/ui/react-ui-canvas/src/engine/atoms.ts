@@ -17,9 +17,9 @@ import {
   type LayerId,
   type LinkEnds,
   type LinkId,
-  type LinkType,
+  type LinkPath,
   type NodeId,
-  type NodeType,
+  type NodeKind,
   type Point,
   type PolylineBend,
   type Side,
@@ -62,7 +62,7 @@ export type Drag =
    */
   | {
       kind: 'link';
-      type: LinkType;
+      path: LinkPath;
       source: Endpoint;
       from: Point;
       fromSide: Side;
@@ -75,17 +75,17 @@ export type Drag =
    * Drawing a new node with a tool. `dropped` marks one dragged in from the palette or a host's
    * draggable, which previews as its frame alone: the pointer already carries the drag's own preview.
    */
-  | { kind: 'create'; type: NodeType; from: Point; to: Point; dropped?: boolean }
+  | { kind: 'create'; node: NodeKind; from: Point; to: Point; dropped?: boolean }
   /**
    * Drawing a node vertex by vertex (`NodeDef.createFromPoints`): `points` are those placed, in scene coordinates, and
    * `to` the pointer, where the next segment runs. It outlasts each press, ending when the line is finished or dropped.
    */
-  | { kind: 'vertices'; type: NodeType; points: Point[]; to: Point }
+  | { kind: 'vertices'; node: NodeKind; points: Point[]; to: Point }
   /**
    * Drawing a node in one stroke (`NodeDef.freehand`): `points` are the pointer's path since the press, in scene
    * coordinates. It ends with the press, when the stroke lands as a node.
    */
-  | { kind: 'freehand'; type: NodeType; points: Point[]; times: number[] }
+  | { kind: 'freehand'; node: NodeKind; points: Point[]; times: number[] }
   /**
    * Moving one vertex of a node in vertex edit mode; `points` are all its vertices and `bends` its bent segments, in
    * scene coordinates. With `bend`, it is a control of that segment that moves (`handle` says which), and the
@@ -158,8 +158,8 @@ export type CanvasAtoms = {
   /** The selected control point of a selected spline, if any. */
   point: Atom.Writable<ControlPointRef | undefined>;
   tool: Atom.Writable<Tool>;
-  /** The link type a port drag creates under the select tool: orthogonal until a link tool is picked, then the last one. */
-  linkType: Atom.Writable<LinkType>;
+  /** The path of a link a port drag creates under the select tool: orthogonal until a link tool is picked, then the last one. */
+  linkPath: Atom.Writable<LinkPath>;
   /** The end markers the next link drawn takes: those last set on a link (none, if they were cleared); unset until then. */
   linkEnds: Atom.Writable<LinkEnds | undefined>;
   /** The background grid drawn. */
@@ -180,7 +180,7 @@ export type CanvasAtoms = {
    * node's embedded content is inert, so a press anywhere on it selects and moves it.
    */
   active: Atom.Writable<NodeId | undefined>;
-  /** Frames show their id, type and geometry. */
+  /** Frames show their id, kind and geometry. */
   debug: Atom.Writable<boolean>;
   /** The time the view shows and whether it plays (ANIMATION.md §5.1): the host samples the document at it. */
   clock: Clock;
@@ -206,7 +206,7 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   layer: Atom.keepAlive(Atom.make<LayerId | undefined>(undefined)),
   point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
-  linkType: Atom.keepAlive(Atom.make<LinkType>('ortho')),
+  linkPath: Atom.keepAlive(Atom.make<LinkPath>('ortho')),
   linkEnds: Atom.keepAlive(Atom.make<LinkEnds | undefined>(undefined)),
   grid: Atom.keepAlive(Atom.make<boolean>(true)),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),

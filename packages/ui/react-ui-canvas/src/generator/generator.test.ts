@@ -17,7 +17,7 @@ import { GeneratorRunner } from './runner.ts';
 import { type GeneratorModule } from './types.ts';
 
 const generatorNode: GeneratorNode = {
-  type: 'generator',
+  kind: 'generator',
   id: 'g',
   z: 'a',
   center: { x: 0, y: 0 },
@@ -30,7 +30,7 @@ const scene: RenderList2D = {
   id: 's',
   nodes: {
     g: generatorNode,
-    box: { type: 'rect', id: 'box', z: 'b', center: { x: 100, y: 0 }, size: { width: 50, height: 50 } },
+    box: { kind: 'rect', id: 'box', z: 'b', center: { x: 100, y: 0 }, size: { width: 50, height: 50 } },
   },
   links: {},
 };

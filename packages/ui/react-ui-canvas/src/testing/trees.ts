@@ -5,7 +5,7 @@
 // Hierarchical drawings shared by the canvas's stories and tests: one square, a lattice, nested views shallow and deep,
 // a labelled frame, and objects placed across views.
 
-import { type InstanceNode, MAJOR_GRID, type Node, type ViewId } from '@dxos/scene';
+import { type InstanceNode, MAJOR_GRID, type Node, type ViewId, formatColor } from '@dxos/scene';
 
 import { type Box, ViewBuilder, type ViewTree } from '../builder/index.ts';
 import { type RenderList2D } from '../model/index.ts';
@@ -46,15 +46,17 @@ export const createLatticeTree = () => {
   const smart = (from: string, to: string) => ViewBuilder.link('smart', from, to);
   return ViewBuilder.view(root, [
     ...[box('a', at(-1, -1), 'A'), box('b', at(-1, 0), 'B'), box('c', at(-1, 1), 'C')].map((element) =>
-      element.properties({ style: { hue: 'neutral' } }),
+      element.properties({ overrides: { color: 'neutral' } }),
     ),
-    box('d', at(0, 0), 'D').properties({ style: { hue: 'green', tone: 3 } }),
-    box('e', at(0, 1), 'E').properties({ style: { hue: 'green', tone: 1 } }),
+    box('d', at(0, 0), 'D').properties({ overrides: { color: 'green/3' } }),
+    box('e', at(0, 1), 'E').properties({ overrides: { color: 'green/1' } }),
     // Unlabelled, so the scene shows its contents.
     ViewBuilder.view('f', [
-      // One hue at each of its tones: outline, then strongest to lightest.
+      // One colour at each of its tones: outline, then strongest to lightest.
       ...TONES.map((tone, index) =>
-        box(`f${index + 1}`, at(0, index - 1), `F${index + 1}`).properties({ style: { hue: 'blue', tone } }),
+        box(`f${index + 1}`, at(0, index - 1), `F${index + 1}`).properties({
+          overrides: { color: formatColor('blue', tone) },
+        }),
       ),
       smart('f1', 'f2'),
       smart('f2', 'f3'),
@@ -62,7 +64,7 @@ export const createLatticeTree = () => {
     ])
       .name('F')
       .at(at(1, -1, 1, 2))
-      .properties({ style: { hue: 'blue' }, portsPerSide: 4 }),
+      .properties({ overrides: { color: 'blue' }, portsPerSide: 4 }),
     smart('a', 'b'),
     smart('b', 'c'),
     smart('b', 'd'),
@@ -231,7 +233,7 @@ export const createObjectsTree = (): ViewTree => {
     ]),
     definition('card', 'Card', [
       ViewBuilder.rect('card-logo', at(-128)),
-      ViewBuilder.note('body', at(128)).properties({ text: 'Body' }),
+      ViewBuilder.note('body', at(128)).properties({ label: 'Body' }),
     ]),
     definition('badge', 'Badge', [ViewBuilder.ellipse('dot', at(0)).properties({ label: 'Badge' })]),
   ];
@@ -241,7 +243,7 @@ export const createObjectsTree = (): ViewTree => {
       Object.entries(scene.nodes).map(([id, node]): [string, Node] => {
         const composite = placed[id];
         const instance: InstanceNode | undefined = composite
-          ? { type: 'instance', id, z: node.z, center: node.center, size: node.size, composite }
+          ? { kind: 'instance', id, z: node.z, center: node.center, size: node.size, composite }
           : undefined;
         return [id, instance ?? node];
       }),

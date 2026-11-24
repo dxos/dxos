@@ -60,8 +60,8 @@ const insetOf = (node: Node): number | undefined => {
 /** The fields a hull and its group's Instance share: what the hull looks like and where it is in the stack. */
 const shared = (node: Node) => ({
   ...(labelOf(node) !== undefined ? { label: labelOf(node) } : {}),
-  ...(node.style ? { style: node.style } : {}),
-  ...(node.class !== undefined ? { class: node.class } : {}),
+  ...(node.overrides ? { overrides: node.overrides } : {}),
+  ...(node.style !== undefined ? { style: node.style } : {}),
   ...(node.layer !== undefined ? { layer: node.layer } : {}),
   ...(node.locked !== undefined ? { locked: node.locked } : {}),
 });
@@ -80,7 +80,7 @@ const movedLink = (link: Link, by: Point): Link => ({
   ...link,
   source: movedEnd(link.source, by),
   target: movedEnd(link.target, by),
-  ...(link.type === 'spline' ? { points: link.points.map((point) => moved(point, by)) } : {}),
+  ...(link.points ? { points: link.points.map((point) => moved(point, by)) } : {}),
 });
 
 /** A scene with one hull's group opened out in it. */
@@ -104,7 +104,7 @@ const expandGroup = (scene: RenderList2D, instance: PlacedComposite, shape: Hull
   // Under its own shapes however the Instance is stacked, so a press on a shape inside it reaches the shape.
   const [lowest] = sortByZ(members);
   const hull: HullNode = {
-    type: 'hull',
+    kind: 'hull',
     id: instance.id,
     z: lowest === undefined || instance.z < lowest.z ? instance.z : between(undefined, lowest.z),
     center: instance.center,
@@ -240,7 +240,7 @@ const collapseGroup = (
     ...(scene.layers ? { layers: scene.layers } : {}),
   };
   const instance: HullGroup = {
-    type: 'instance',
+    kind: 'instance',
     id: hull.id,
     z: hull.z,
     center: centre,

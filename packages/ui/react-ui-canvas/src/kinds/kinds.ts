@@ -4,22 +4,22 @@
 
 //
 // Plugin element kinds in 2D (COMMON-CORE.md decisions 13 and 21). A kind's element keeps its own fields under `data`,
-// over the shared `Element2D` base, so no kind's field meets the base's or another kind's. The 2D viewport still draws
-// through react-ui-canvas's engine, which reads a node's fields from an element's `props.canvas` (R-18), so `data` and
-// the engine's own fields are moved down for drawing and back up from every intent the viewport writes, and the
-// engine's node type is derived from the kind.
+// over the shared `Element2D` base, so no kind's field meets the base's or another kind's. The 2D viewport draws
+// through react-ui-canvas's engine, whose node is the element itself, so the engine's node definition is derived from
+// the kind, and the fields the host derives for drawing (runtime ports) are left out of every intent the viewport
+// writes.
 //
 
 import * as Schema from 'effect/Schema';
 
-import { KindRegistry, type LayoutIntent, type Node, type Port, Scene, nodeBase } from '@dxos/scene';
+import { KindRegistry, type LayoutIntent, LINK_KIND, type Node, type Port, Scene, nodeBase } from '@dxos/scene';
 
 import { type CreateProps, type NodeDefSpec, templateCompositeId } from '../model/index.ts';
 
 /** An element as a layout stores it: the 2D base and any field of its kind. */
 export type KindElement = Scene.LayoutRecord2D['elements'][string];
 
-/** The kinds a host draws, by type, and the fields each keeps under `data`. */
+/** The kinds a host draws, by name, and the fields each keeps under `data`. */
 export type Kinds = Pick<KindRegistry, 'has' | 'dataFields'>;
 
 /** The fields every 2D element has, which the engine reads from the element itself. */
@@ -32,14 +32,14 @@ const SHARED_SLOTS: ReadonlySet<string> = new Set(['label']);
 const DATA = 'data';
 
 /**
- * A plugin's element kind for the 2D editor: its element schema (`Schema.Struct({ ...Scene.Element2D.fields, type:
+ * A plugin's element kind for the 2D editor: its element schema (`Schema.Struct({ ...Scene.Element2D.fields, kind:
  * Schema.Literal(…), data: Schema.Struct({ …own }) })`), a new element of it, and how the canvas draws and edits it
  * (every other field is the canvas's node definition, which {@link kindNodeDef} completes from the kind). Only the
  * core's fields sit at the element's top: the base's, and those of the prototype a kind extends, whose frame reads
  * them from the node itself (a card's `icon`, `body` and `footer`). A kind that extends none and declares a field of
  * its own there is refused.
  *
- * A kind may name a prototype (`extends: 'card'`), as a built-in type does: the host resolves it against
+ * A kind may name a prototype (`extends: 'card'`), as a built-in kind does: the host resolves it against
  * `defaultNodePrototypes` when it builds the registry, so a contributed kind inherits a shared look, parts and
  * sizing instead of restating them.
  */
@@ -62,17 +62,17 @@ const carried = <V>(fields: Readonly<Record<string, V>>): Record<string, V> =>
   );
 
 /**
- * The canvas engine's node type for a kind: the node base, the kind's `data` (and its `label`), so the engine's
+ * The canvas engine's node definition for a kind: the node base, the kind's `data` (and its `label`), so the engine's
  * palette, in-place editing and Properties form read the kind's fields from the node's `data`.
  */
-export const kindNodeDef = (type: string, { schema, create, ...spec }: ElementKindSpec): NodeDefSpec => {
+export const kindNodeDef = (kind: string, { schema, create, ...spec }: ElementKindSpec): NodeDefSpec => {
   const stray = spec.extends === undefined ? Object.keys(unslotted(schema.fields)) : [];
   if (stray.length > 0) {
-    throw new Error(`Kind '${type}' declares ${stray.join(', ')} at its top: a kind's own fields go under data.`);
+    throw new Error(`Kind '${kind}' declares ${stray.join(', ')} at its top: a kind's own fields go under data.`);
   }
-  // A kind that declares a composite template keeps its own type and fields and names the composite it draws, so its
+  // A kind that declares a composite template keeps its own name and fields and names the composite it draws, so its
   // data stays typed while its parts are a composite's (`PlacedComposite`).
-  const composite = spec.template === undefined ? {} : { composite: templateCompositeId(type) };
+  const composite = spec.template === undefined ? {} : { composite: templateCompositeId(kind) };
   // The base's own `data` is any record, which is no field of the kind's to show.
   const own = Object.fromEntries(
     Object.entries(carried(schema.fields)).filter(([, field]) => field !== Scene.Element2D.fields.data),
@@ -81,8 +81,8 @@ export const kindNodeDef = (type: string, { schema, create, ...spec }: ElementKi
     // A templated kind draws through the Instance view and needs no component of its own.
     ...(spec.template === undefined ? {} : { extends: 'object' }),
     ...spec,
-    schema: Schema.Struct({ ...own, ...nodeBase, type: Schema.Literal(type) }),
-    create: (props: CreateProps): Node => ({ ...carried(create(props)), ...props, ...composite, type }),
+    schema: Schema.Struct({ ...own, ...nodeBase, kind: Schema.Literal(kind) }),
+    create: (props: CreateProps): Node => ({ ...carried(create(props)), ...props, ...composite, kind }),
   };
 };
 
@@ -97,42 +97,36 @@ export const kindData = <A>(schema: Schema.Codec<A, unknown>, node: object): A |
 
 /** The registry that validates elements of `kinds` (each against its own schema). */
 export const kindRegistry = (kinds: Readonly<Record<string, ElementKindSpec>>): KindRegistry =>
-  Object.entries(kinds).reduce((registry, [type, { schema }]) => registry.register(type, schema), new KindRegistry());
+  Object.entries(kinds).reduce((registry, [kind, { schema }]) => registry.register(kind, schema), new KindRegistry());
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-const isKind = (element: { readonly type?: string }, kinds: Kinds): boolean =>
-  element.type !== undefined && element.type !== 'link' && kinds.has(element.type);
+const isKind = (element: { readonly kind?: string }, kinds: Kinds): boolean =>
+  element.kind !== undefined && element.kind !== LINK_KIND && kinds.has(element.kind);
 
 /** The entries of `fields` whose key is, or is not, one of `names`. */
 const split = (fields: Readonly<Record<string, unknown>>, names: readonly string[], named: boolean) =>
   Object.fromEntries(Object.entries(fields).filter(([key]) => names.includes(key) === named));
 
+/**
+ * A kind's element as the viewport draws it. An element stored before kinds kept their fields under `data` has them
+ * at its top: each is read from there unless `data` holds one of that name, and the element's next write stores it in
+ * `data`.
+ */
 const lower = (element: KindElement, kinds: Kinds, ports: readonly Port[] | undefined): KindElement => {
-  const fields = element.type === undefined ? [] : kinds.dataFields(element.type);
-  const slots = Object.fromEntries(Object.entries(element).filter(([key]) => SLOTS.has(key) && key !== DATA));
-  const own = { ...(isRecord(element.props?.canvas) ? element.props.canvas : {}), ...unslotted(element) };
-  // An element stored before kinds kept their fields under `data` has them at its top, or under the canvas fields:
-  // each is read from there unless `data` holds one of that name, and the element's next write stores it in `data`.
-  const data = { ...split(own, fields, true), ...element.data };
+  const fields = element.kind === undefined ? [] : kinds.dataFields(element.kind);
+  const data = { ...split(unslotted(element), fields, true), ...element.data };
   return {
-    ...slots,
+    ...split(element, fields, false),
     id: element.id,
-    props: {
-      ...element.props,
-      canvas: {
-        ...split(own, fields, false),
-        ...(element.data !== undefined || Object.keys(data).length > 0 ? { [DATA]: data } : {}),
-        ...(ports ? { ports } : {}),
-      },
-    },
+    ...(element.data !== undefined || Object.keys(data).length > 0 ? { [DATA]: data } : {}),
+    ...(ports ? { ports } : {}),
   };
 };
 
 /**
- * The layout as the 2D viewport draws it: each element of a registered kind with its `data`, the engine's own fields
- * (and `ports`, where the host derives them) under `props.canvas`. A kind's element written there before keeps drawing
- * as it was.
+ * The layout as the 2D viewport draws it: each element of a registered kind with its fields in its `data`, and the
+ * `ports` the host derives for it.
  */
 export const toViewportLayout = (
   layout: Scene.LayoutRecord2D,
@@ -173,25 +167,22 @@ const keepData = (stored: KindElement | undefined, value: unknown): unknown => {
 };
 
 /**
- * An element the viewport wrote, with its `data` and the engine's fields back at its top. The `derived` fields (the
- * host's, such as runtime ports) are dropped; a field that still equals the stored element's keeps the stored value.
+ * An element the viewport wrote, as it is stored. The `derived` fields (the host's, such as runtime ports) are
+ * dropped; a field that still equals the stored element's keeps the stored value.
  */
 const lift = (
   element: Record<string, unknown>,
   stored: KindElement | undefined,
   derived: readonly string[],
-): Record<string, unknown> => {
-  const { props, ...slots } = element;
-  const { canvas, ...rest } = isRecord(props) ? props : {};
-  const own = Object.entries(isRecord(canvas) ? canvas : {}).filter(([key]) => !derived.includes(key));
-  const kept = Object.fromEntries(
-    own.map(([key, value]) => {
-      const whole = keep(stored?.[key], value);
-      return [key, key === DATA && whole === value ? keepData(stored, value) : whole];
-    }),
+): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(element)
+      .filter(([key]) => !derived.includes(key))
+      .map(([key, value]) => {
+        const whole = keep(stored?.[key], value);
+        return [key, key === DATA && whole === value ? keepData(stored, value) : whole];
+      }),
   );
-  return { ...slots, ...kept, ...(Object.keys(rest).length > 0 ? { props: rest } : {}) };
-};
 
 /** An intent the viewport wrote over `layout`, with every element of a registered kind lifted back. */
 export const fromViewportIntent = (
@@ -205,9 +196,8 @@ export const fromViewportIntent = (
       if (!isKind(intent.element, kinds)) {
         return intent;
       }
-      // The lifted fields replace `props`, so the drawn `props.canvas` is not stored beside them.
-      const { props: _props, ...element } = intent.element;
-      return { kind: 'create', element: { ...element, ...lift(intent.element, layout.elements[element.id], derived) } };
+      const { id } = intent.element;
+      return { kind: 'create', element: { ...lift(intent.element, layout.elements[id], derived), id } };
     }
     case 'update': {
       const { value } = intent;

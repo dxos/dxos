@@ -15,13 +15,13 @@ const LINKS = `scene root dim=2d layout=main theme=flat {
 }
 
 layout main dim=2d model=shapes {
-  element a box "A" @ 0,0 surface=solid
+  element a box "A" @ 0,0 fill=solid
   element b rect "B" @ 200,0 size=100x60
   element ab link from=a to=b end=arrow
 }
 
 model shapes dim=2d {
-  object box rect size=100x60 border=true rounded=true
+  object box rect size=100x60 stroke=solid corners=all
 }
 `;
 
@@ -35,7 +35,7 @@ layout board dim=2d model=composites {
 }
 
 composite tile size=288x192 name="Tile" {
-  element frame rect @ 0,0 size=288x192 constrain=stretch rounded=true
+  element frame rect @ 0,0 size=288x192 constrain=stretch corners=all
   element icon icon @ -126,-78 size=36x36 constrain=min
   element title note "Card" @ -24,-78 size=204x24 constrain=stretch,min
   element body note "Body" @ 0,6 size=264x84 constrain=stretch
@@ -54,7 +54,7 @@ describe('composite statements', () => {
     const model = document.models.find((candidate) => candidate.id === 'composites');
     expect(model?.dim === '2d' && model.objects.tile).toEqual({
       id: 'tile',
-      type: 'instance',
+      kind: 'instance',
       parts: 'tile',
       size: { width: 288, height: 192 },
     });
@@ -88,22 +88,20 @@ describe('composite statements', () => {
 
   test("a 2D element's text size and alignment are read into its style and printed back, beside its other look", () => {
     const source = `composite c {
-  element title note "Card" @ 0,0 size=100x24 fontSize=18 alignVertical=middle constrain=stretch,min
-  element tag note "New" @ 0,30 size=100x24 fontSize=14 rounded=true
+  element title note "Card" @ 0,0 size=100x24 fontSize=18 valign=middle constrain=stretch,min
+  element tag note "New" @ 0,30 size=100x24 fontSize=14 corners=all
   element plain note "Body" @ 0,60 size=100x24
 }
 `;
     const { document, problems } = readScenes(source);
     expect(problems).toEqual([]);
     const parts = document.layouts.find((layout) => layout.id === 'c');
-    expect(parts?.elements.title?.overrides).toEqual({ fontSize: 18, alignVertical: 'middle' });
+    expect(parts?.elements.title?.overrides).toEqual({ fontSize: 18, valign: 'middle' });
     // A word that is no alignment is reported, and not stored.
-    const bad = readScenes('composite d {\n  element a note "A" @ 0,0 size=10x10 alignVertical=centre\n}\n');
-    expect(bad.problems.map((problem) => problem.message)).toEqual([
-      'alignVertical must be one of top, middle, bottom.',
-    ]);
+    const bad = readScenes('composite d {\n  element a note "A" @ 0,0 size=10x10 valign=centre\n}\n');
+    expect(bad.problems.map((problem) => problem.message)).toEqual(['valign must be one of top, middle, bottom.']);
     expect(bad.document.layouts.find((layout) => layout.id === 'd')?.elements.a?.overrides).toBeUndefined();
-    expect(parts?.elements.tag?.overrides).toMatchObject({ fontSize: 14, rounded: true });
+    expect(parts?.elements.tag?.overrides).toMatchObject({ fontSize: 14, corners: 'all' });
     // Not a field of the element's own: it is the style's, as it is set from the Properties panel.
     expect(parts?.elements.title?.props).toBeUndefined();
     expect(parts?.elements.plain?.overrides).toBeUndefined();
@@ -151,7 +149,7 @@ describe('composite statements', () => {
           elements: {
             rule: {
               id: 'rule',
-              type: 'polyline',
+              kind: 'polyline',
               center: { x: 0, y: 0 },
               size: { width: 10, height: 1 },
               props: {
@@ -200,7 +198,7 @@ describe('readScenes', () => {
     expect(parts).toMatchObject({ kind: 'composite', anonymous: true, model: 'nodes', arrange: { kind: 'ring' } });
     expect(Object.keys(parts?.elements ?? {})).toEqual(['s1', 's2', 's3', 's4']);
     const model = document.models.find((candidate) => candidate.id === 'nodes');
-    expect(model?.objects['cluster/team']).toEqual({ id: 'cluster/team', type: 'group', parts: 'cluster/team' });
+    expect(model?.objects['cluster/team']).toEqual({ id: 'cluster/team', kind: 'group', parts: 'cluster/team' });
   });
 
   test('a layout with groups and no model gets one made for its groups, which printing leaves out', () => {
@@ -222,12 +220,11 @@ describe('readScenes', () => {
       object: 'box',
       label: 'A',
       center: { x: 0, y: 0 },
-      // A 2D surface is the canvas's fill.
-      overrides: { fill: true },
+      overrides: { fill: 'solid' },
     });
-    expect(layout.elements.b).toMatchObject({ type: 'rect', size: { width: 100, height: 60 } });
+    expect(layout.elements.b).toMatchObject({ kind: 'rect', size: { width: 100, height: 60 } });
     expect(layout.elements.ab).toMatchObject({
-      type: 'link',
+      kind: 'link',
       source: { node: 'a' },
       target: { node: 'b' },
       props: { end: 'arrow' },
@@ -239,9 +236,9 @@ describe('readScenes', () => {
         objects: {
           box: {
             id: 'box',
-            type: 'rect',
+            kind: 'rect',
             size: { width: 100, height: 60 },
-            overrides: { border: true, rounded: true },
+            overrides: { stroke: 'solid', corners: 'all' },
           },
         },
       },
@@ -274,7 +271,7 @@ model m dim=3d {
     expect(document.layouts[0].elements.t).toMatchObject({ object: 'team' });
     expect(document.models[0].objects.team).toEqual({
       id: 'team',
-      type: 'sphere',
+      kind: 'sphere',
       scale: { x: 3, y: 3, z: 3 },
       parts: 'inner',
     });
@@ -289,11 +286,95 @@ model m dim=3d {
     expect(problems).toEqual([]);
     expect(document.models[0].objects.taxi).toEqual({
       id: 'taxi',
-      type: 'cube',
+      kind: 'cube',
       scale: { x: 5, y: 5, z: 5 },
       lockAspect: true,
     });
     expect(readScenes(printScenes(document)).document.models[0].objects.taxi).toEqual(document.models[0].objects.taxi);
+  });
+
+  test('a look is a colour, a fill, a stroke and its corners, in either dimension', () => {
+    const text = `layout flat dim=2d {
+  element a rect @ 0,0 size=10x10 color=blue/1 fill=tint stroke=dashed corners=top opacity=0.5
+  element b rect @ 0,0 size=10x10 color="#1e90ff" fill=none stroke=none
+}
+
+layout solid dim=3d {
+  element c cube @ 0,0,0 color=teal fill=glass stroke=solid corners=all
+}
+`;
+    const { document, problems } = readScenes(text);
+    expect(problems).toEqual([]);
+    const [flat, solid] = document.layouts;
+    expect(flat.elements.a?.overrides).toEqual({
+      color: 'blue/1',
+      fill: 'tint',
+      stroke: 'dashed',
+      corners: 'top',
+      opacity: 0.5,
+    });
+    expect(flat.elements.b?.overrides).toEqual({ color: '#1e90ff', fill: 'none', stroke: 'none' });
+    expect(solid.elements.c?.overrides).toEqual({ color: 'teal', fill: 'glass', stroke: 'solid', corners: 'all' });
+    expect(printScenes(document)).toBe(text);
+  });
+
+  test('a word no fill, stroke, corner or colour is spelled as is reported, and not stored', () => {
+    const { document, problems } = readScenes(`layout flat dim=2d {
+  element a rect @ 0,0 size=10x10 fill=puce stroke=wavy corners=some color=Blue
+}
+`);
+    expect(problems.map((problem) => problem.message)).toEqual([
+      'color must be a name (blue), a name at a tone (blue/2), or a quoted CSS colour.',
+      'fill must be one of none, solid, tint, pattern, glass.',
+      'stroke must be one of none, solid, dashed, dotted, sketchy.',
+      'corners must be one of all, top, bottom, none.',
+    ]);
+    expect(document.layouts[0].elements.a?.overrides).toBeUndefined();
+  });
+
+  test('text written in the older words reads as the look it meant, and prints in the current ones', () => {
+    // A hue and a tone were stated apart, a 3D surface was the fill, and a flag said the border and the corners.
+    const { document, problems } = readScenes(`layout flat dim=2d {
+  element a rect @ 0,0 size=10x10 hue=blue tone=1 surface=tint border=true rounded=true
+  element b note "B" @ 0,0 size=10x10 tone=0 border=false rounded=false alignHorizontal=right alignVertical=bottom
+}
+
+layout solid dim=3d model=m {
+  element c cube @ 0,0,0 hue=amber surface=glass border=true
+}
+
+model m dim=3d {
+  object ball sphere hue=violet surface=solid
+}
+`);
+    expect(problems).toEqual([]);
+    const [flat, solid] = document.layouts;
+    expect(flat.elements.a?.overrides).toEqual({ color: 'blue/1', fill: 'tint', stroke: 'solid', corners: 'all' });
+    expect(flat.elements.b?.overrides).toEqual({
+      color: 'default/0',
+      stroke: 'none',
+      corners: 'none',
+      align: 'right',
+      valign: 'bottom',
+    });
+    // None of the older words is left over as a prop of the element.
+    expect(flat.elements.a?.props).toBeUndefined();
+    expect(flat.elements.b?.props).toBeUndefined();
+    expect(solid.elements.c?.overrides).toEqual({ color: 'amber', fill: 'glass', stroke: 'solid' });
+    expect(document.models[0].objects.ball?.overrides).toEqual({ color: 'violet', fill: 'solid' });
+    expect(printScenes(document)).toBe(`layout flat dim=2d {
+  element a rect @ 0,0 size=10x10 color=blue/1 fill=tint stroke=solid corners=all
+  element b note "B" @ 0,0 size=10x10 align=right valign=bottom color=default/0 stroke=none corners=none
+}
+
+layout solid dim=3d model=m {
+  element c cube @ 0,0,0 color=amber fill=glass stroke=solid
+}
+
+model m dim=3d {
+  object ball sphere color=violet fill=solid
+}
+`);
   });
 
   test('an id called scene, layout or model still parses in an object statement', () => {

@@ -14,15 +14,19 @@ import {
   useSceneLook,
   variantClasses,
 } from '@dxos/react-ui-canvas';
-import {
-  Form,
-  type FormFieldMap,
-  type FormFieldOverride,
-  type FormFieldRenderer,
-  useFormFieldState,
-} from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, type FormFieldOverride, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-import { NodeStyle, type NodeTone, STYLE_HUES, type StyleHue } from '@dxos/scene';
+import {
+  Color,
+  DEFAULT_COLOR,
+  type NodeTone,
+  STYLE_HUES,
+  type StyleHue,
+  colorLiteral,
+  colorName,
+  colorTone,
+  formatColor,
+} from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 export type StyleChoice = { hue: StyleHue; tone: NodeTone };
@@ -161,38 +165,60 @@ export type StyleFieldOptions = {
   unsetHue?: StyleHue;
 };
 
-/** A style with a pick applied: with fills, the hue and its tone together; without, the hue alone. */
+/** The colour a pick makes of `color`: with fills, the hue at the picked tone; without, the hue at the tone it had. */
+export const pickedColor = (color: string | undefined, { hue, tone }: StyleChoice, fills: boolean): Color =>
+  formatColor(hue, fills ? tone : colorTone(color));
+
+/** A style with a pick applied to its colour, keeping the rest of it. */
 export const applyStyleChoice = <S extends object>(
-  style: S,
-  { hue, tone }: StyleChoice,
+  style: S & { readonly color?: string },
+  choice: StyleChoice,
   fills: boolean,
-): S & { hue: StyleHue; tone?: NodeTone } => (fills ? { ...style, hue, tone } : { ...style, hue });
+): S & { color: Color } => ({ ...style, color: pickedColor(style.color, choice, fills) });
+
+/** The hue and tone of a colour as the grid selects them; the look's own colour (`default`) is no hue. */
+const shownChoice = (color: string | undefined): { hue?: string; tone?: NodeTone } => {
+  const name = colorName(color);
+  const tone = colorTone(color);
+  return {
+    ...(name !== undefined && name !== DEFAULT_COLOR ? { hue: name } : {}),
+    tone: TONES.find((candidate) => candidate === tone),
+  };
+};
 
 /**
- * The properties panel's style picker, rendered at `style.hue`, for every kind of element: with `fills`, one pick
- * sets the hue and its tone together (a node); without, the outline row sets the hue alone (a link, or a
+ * The properties panel's style picker, rendered at `overrides.color`, for every kind of element: with `fills`, one
+ * pick sets the hue and its tone together (a node); without, the outline row sets the hue alone (a link, or a
  * selection mixing kinds, which edits only the style they share).
  */
 export const createStyleField = ({ fills, unsetHue }: StyleFieldOptions): FormFieldRenderer => {
-  const StyleField: FormFieldRenderer = ({ label, jsonPath, readonly, indeterminate, getValue, onBlur }) => {
-    // Hue and tone change together, so the pick writes their parent once; two field writes would race.
-    const stylePath = (jsonPath ?? 'style.hue').split('.').slice(0, -1);
-    const styleField = useFormFieldState('StyleField', stylePath);
-    const style: NodeStyle = styleField.getValue() ?? {};
+  const StyleField: FormFieldRenderer = ({
+    label,
+    jsonPath,
+    readonly,
+    indeterminate,
+    getValue,
+    onValueChange,
+    onBlur,
+  }) => {
+    const value: unknown = getValue();
+    const color = typeof value === 'string' ? value : undefined;
+    const { hue, tone } = shownChoice(color);
     return (
       <Form.Field path={jsonPath} label={label} readonly={readonly}>
         <StyleGrid
           // A link's colour is its hue's border whatever the set, so its row is the canvas's own outline.
           look={fills ? undefined : CLASSIC_LOOK}
-          hue={getValue()}
+          hue={hue}
           unsetHue={unsetHue}
-          tone={fills ? style.tone : 0}
+          tone={fills ? tone : 0}
           tones={fills ? undefined : OUTLINE_TONES}
-          indeterminate={indeterminate}
+          // A literal is none of the grid's hues, so it selects nothing until a swatch is picked.
+          indeterminate={indeterminate || colorLiteral(color) !== undefined}
           readonly={!!readonly}
           onValueChange={(choice) => {
             // A pick is a commit: the grid never blurs, so it commits itself.
-            styleField.onValueChange(NodeStyle.ast, applyStyleChoice(style, choice, fills));
+            onValueChange(Color.ast, pickedColor(color, choice, fills));
             onBlur();
           }}
         />
@@ -211,11 +237,11 @@ export const StyleGridField3D = createStyleField({ fills: true, unsetHue: 'neutr
 /** The style picker's outline row alone: a link's, or a selection with a link in it. */
 export const OutlineStyleField = createStyleField({ fills: false });
 
-/** The style fields every scene view's properties form takes: the grid at `style.hue`, which also sets the tone. */
-export const STYLE_FIELDS: FormFieldMap = { 'style.hue': StyleGridField };
+/** The style fields every scene view's properties form takes: the grid at `overrides.color`, which sets hue and tone. */
+export const STYLE_FIELDS: FormFieldMap = { 'overrides.color': StyleGridField };
 
-/** How those fields present: the swatches sit under the Style heading, and the tone has no field of its own. */
+/** How those fields present: an element's own look is its Style group, and the swatches sit under that heading. */
 export const STYLE_FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
-  'style.hue': { label: 'Style', hideLabel: true },
-  'style.tone': { hidden: true },
+  'overrides': { label: 'Style' },
+  'overrides.color': { label: 'Style', hideLabel: true },
 };

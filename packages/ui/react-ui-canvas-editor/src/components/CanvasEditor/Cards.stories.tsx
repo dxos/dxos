@@ -52,7 +52,7 @@ if (!isCompiled(compiled)) {
 const CARD: RenderList2D = compiled.composite;
 
 /** A card as the tool makes one: its own typed fields, and the Instance fields that place the Object. */
-type Card = CardNode & Pick<PlacedComposite, 'composite' | 'overrides'>;
+type Card = CardNode & Pick<PlacedComposite, 'composite' | 'partOverrides'>;
 
 type CardFields = {
   icon?: string;
@@ -70,9 +70,9 @@ const cardOf = (
   { icon, label, body, footer, without = [] }: CardFields,
   size = CARD_SIZE,
 ): Card => {
-  const overrides = Object.fromEntries(without.map((part) => [part, { hidden: true }]));
+  const partOverrides = Object.fromEntries(without.map((part) => [part, { hidden: true }]));
   return {
-    type: 'card',
+    kind: 'card',
     id,
     z,
     center: { x, y },
@@ -83,13 +83,13 @@ const cardOf = (
     ...(label ? { label } : {}),
     ...(body ? { body } : {}),
     ...(footer ? { footer } : {}),
-    ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
+    ...(Object.keys(partOverrides).length > 0 ? { partOverrides } : {}),
   };
 };
 
 const iconOf = (id: string, z: string, [x, y]: [number, number], weight: IconWeight): IconNode => ({
   id,
-  type: 'icon',
+  kind: 'icon',
   z,
   center: { x, y },
   size: ICON_SIZE,

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Style2D } from './element.ts';
 import {
   type Element2D,
   type Element3D,
@@ -14,15 +15,15 @@ import {
   type SceneDocument,
   type SceneRecord,
 } from './Scene.ts';
-import { type Style2D, type Style3D, resolveStyle } from './style.ts';
+import { type Style3D, resolveStyle } from './style.ts';
 
 /**
  * An element with its model object applied, which is what renderers draw and the animator keys: its `type` is known,
  * and `overrides` hold its whole resolved look (the named style through the layout and model, then the object's and
  * its own overrides).
  */
-export type Resolved2D = Element2D & { type: string; parts?: string };
-export type Resolved3D = Element3D & { type: string; parts?: string };
+export type Resolved2D = Element2D & { kind: string; parts?: string };
+export type Resolved3D = Element3D & { kind: string; parts?: string };
 export type Resolved = Resolved2D | Resolved3D;
 
 /** A document with no scenes, layouts or models. */
@@ -97,7 +98,7 @@ export const resolve2D = (
   const size = element.size ?? object?.size;
   return {
     ...element,
-    type: element.type ?? object?.type ?? '',
+    kind: element.kind ?? object?.kind ?? '',
     ...(size ? { size } : {}),
     ...look(element, object, styles),
     ...mergeProps(object?.props, element.props),
@@ -114,7 +115,7 @@ export const resolve3D = (
   const scale = element.scale ?? object?.scale;
   return {
     ...element,
-    type: element.type ?? object?.type ?? '',
+    kind: element.kind ?? object?.kind ?? '',
     ...(scale ? { scale } : {}),
     ...look(element, object, styles),
     ...mergeProps(object?.props, element.props),

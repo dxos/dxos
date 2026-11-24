@@ -15,7 +15,7 @@ group frame rows="44 1fr 36" color=grey fill=solid {
   node frame-bar "composer.space" kind=app-chrome part=bar
   group frame-body cols="160 1fr 160" gap=10 padding=10 {
     node r-nav kind=app-pane pane=nav tone=accent
-    group r-doc rows="40 74 124 106 132" gap=15 padding=20 color=green border=true {
+    group r-doc rows="40 74 124 106 132" gap=15 padding=20 color=green stroke=solid {
       node doc-title kind=app-lines lines=1 strong=true
       node doc-first kind=app-lines lines=3
       node r-canvas "CANVAS" kind=app-embed embed=canvas tone=violet

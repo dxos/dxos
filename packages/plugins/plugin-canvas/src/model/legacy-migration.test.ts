@@ -25,7 +25,6 @@ import {
   rootOf,
   toRenderList2D,
   updateCanvasRecord,
-  writeStyles,
   writeViews,
 } from '@dxos/react-ui-canvas/headless';
 import {
@@ -39,7 +38,7 @@ import {
   createSquareTree,
   createViewTree,
 } from '@dxos/react-ui-canvas/testing';
-import { type Node, Scene, type StyleClass, fromEcho } from '@dxos/scene';
+import { type Node, Scene, fromEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
 
 import { Canvas } from '#types';
@@ -216,7 +215,7 @@ describe('migrateSceneDrawing', () => {
     // scene names a View of the other drawing, not one of this one.
     const portal: Node & Record<string, unknown> = {
       ...createNode({
-        type: 'view',
+        kind: 'view',
         id: 'portal',
         z: 'z9',
         center: { x: 512, y: 0 },
@@ -235,7 +234,7 @@ describe('migrateSceneDrawing', () => {
     }
     const opened = sceneViews(scene);
     const node: unknown = opened.views[opened.root].nodes.portal;
-    expect(node).toMatchObject({ type: 'view', scene: 'other-drawing-view' });
+    expect(node).toMatchObject({ kind: 'view', scene: 'other-drawing-view' });
     const link: unknown = isRecord(node) && isRecord(node.link) ? node.link.object : undefined;
     expect(Ref.isRef(link) ? link.uri.toString() : JSON.stringify(link)).toContain(other.id);
   });
@@ -257,17 +256,84 @@ describe('migrateSceneDrawing', () => {
     expect(elements.b.dsl).toBeUndefined();
   });
 
+  test('records in the words of an earlier revision migrate to elements in the current ones', async () => {
+    const frame = { center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+    const canvas = db.add(makeLegacyCanvas());
+    Obj.update(canvas, (canvas) => {
+      Object.assign(canvas.content, {
+        'node:a': {
+          kind: 'node',
+          scene: 'root',
+          node: {
+            type: 'rect',
+            id: 'a',
+            z: 'a0',
+            ...frame,
+            class: 'warning',
+            style: { hue: 'blue', tone: 1, border: false, fontFamily: 'monospace', alignHorizontal: 'left' },
+            ports: [{ id: 'out', side: 'e', offset: 0.25 }],
+          },
+        },
+        'node:t': { kind: 'node', scene: 'root', node: { type: 'note', id: 't', z: 'a1', ...frame, text: 'Hello' } },
+        'link:at': {
+          kind: 'link',
+          scene: 'root',
+          link: {
+            type: 'ortho',
+            id: 'at',
+            z: 'a2',
+            source: { node: 'a', port: 'out' },
+            target: { node: 't' },
+            ends: { start: 'many', end: 'arrow' },
+            text: 'calls',
+            style: { hue: 'red', lineStyle: 'dashed' },
+          },
+        },
+      });
+    });
+    const drawing = db.add(Drawing.make({ name: 'Legacy', canvas }));
+    expect(await migrate(drawing)).toBe(true);
+    const layout = openScene(migratedCanvas(drawing))?.layout.target;
+    if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+      throw new Error('The migrated canvas opens a 2D layout.');
+    }
+    const elements = clone(layout.elements);
+    expect(elements.a).toMatchObject({
+      kind: 'rect',
+      style: 'warning',
+      overrides: { color: 'blue/1', stroke: 'none', font: 'mono', align: 'left' },
+      ports: [{ id: 'out', x: 1, y: 0.25, side: 'right' }],
+    });
+    expect(elements.t).toMatchObject({ kind: 'note', label: 'Hello' });
+    expect(elements.at).toMatchObject({
+      kind: 'link',
+      path: 'ortho',
+      source: { node: 'a', port: 'out' },
+      target: { node: 't' },
+      tail: 'crowsfoot',
+      head: 'arrow',
+      label: 'calls',
+      overrides: { color: 'red', stroke: 'dashed' },
+    });
+    // Nothing is left in the earlier words, or in the bag an element once kept its node in.
+    for (const element of Object.values(elements)) {
+      for (const field of ['type', 'class', 'ends', 'text', 'props']) {
+        expect(element, `${element.id}.${field}`).not.toHaveProperty(field);
+      }
+    }
+  });
+
   test('named style classes become the model styles, settings move onto the Canvas and the lattice onto its layouts', async () => {
     const tree = createSquareTree();
-    const warning: StyleClass = { id: 'warning', name: 'Warning', style: { hue: 'red' } };
+    // A class as it was stored before a style named one colour.
+    const warning = { id: 'warning', name: 'Warning', style: { hue: 'red' } };
     const drawing = legacyDrawing(tree.views, tree.root, { theme: 'paper', lattice: true });
     const legacyCanvas = drawing.canvas.target;
     if (!Drawing.isCanvas(legacyCanvas)) {
       throw new Error('A legacy drawing has a base canvas.');
     }
     Obj.update(legacyCanvas, (legacyCanvas) => {
-      legacyCanvas.styles = {};
-      writeStyles(legacyCanvas.styles, { warning });
+      legacyCanvas.styles = { warning };
       updateCanvasRecord(legacyCanvas.content, { grid: 24 });
     });
     expect(await migrate(drawing)).toBe(true);
@@ -278,7 +344,7 @@ describe('migrateSceneDrawing', () => {
     }
     const model = canvas.model?.target;
     expect(Obj.instanceOf(Scene.Model2D, model) && model.styles).toEqual({
-      warning: { name: warning.name, ...warning.style },
+      warning: { name: 'Warning', color: 'red' },
     });
   });
 
@@ -362,14 +428,14 @@ describe('migrateSceneDrawing', () => {
           ...views,
           'peer-view': {
             id: 'peer-view',
-            nodes: { x: createNode({ type: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
+            nodes: { x: createNode({ kind: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
             links: {},
           },
           [root]: {
             ...rootView,
             nodes: {
               ...rootView.nodes,
-              p: createNode({ type: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: 'peer-view' }),
+              p: createNode({ kind: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: 'peer-view' }),
             },
           },
         },
@@ -404,7 +470,7 @@ describe('migrateSceneDrawing', () => {
             ...rootView,
             nodes: {
               ...rootView.nodes,
-              p: createNode({ type: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: root }),
+              p: createNode({ kind: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: root }),
             },
           },
         },
@@ -429,10 +495,10 @@ describe('migrateSceneDrawing', () => {
         winner.model = undefined;
       });
       Obj.update(rootLayout(loser), (layout) => {
-        layout.elements['added'] = { id: 'added', type: 'rect', center: { x: 0, y: 0 } };
+        layout.elements['added'] = { id: 'added', kind: 'rect', center: { x: 0, y: 0 } };
       });
       const loserModel = db.add(
-        Obj.make(Scene.Model2D, { key: 'peer', objects: { thing: { id: 'thing', type: 'rect' } } }),
+        Obj.make(Scene.Model2D, { key: 'peer', objects: { thing: { id: 'thing', kind: 'rect' } } }),
       );
       Obj.update(loser, (loser) => {
         loser.model = Ref.make(loserModel);

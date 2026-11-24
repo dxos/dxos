@@ -135,7 +135,7 @@
         },
         "layout": {
           "type": "object",
-          "description": "An ECHO reference to dxn:org.dxos.type.scene.layout2d:0.1.0.",
+          "description": "An ECHO reference to dxn:org.dxos.type.scene.layout2d:0.2.0.",
           "properties": {
             "/": {
               "type": "string"
@@ -174,7 +174,7 @@
         },
         "layout": {
           "type": "object",
-          "description": "An ECHO reference to dxn:org.dxos.type.scene.layout3d:0.1.0.",
+          "description": "An ECHO reference to dxn:org.dxos.type.scene.layout3d:0.2.0.",
           "properties": {
             "/": {
               "type": "string"
@@ -203,7 +203,19 @@
       "type": "object",
       "properties": {
         "center": {
-          "$ref": "#/$defs/Scene.Vec2"
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
         },
         "zoom": {
           "type": "number"
@@ -272,7 +284,7 @@
         "elements": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/Scene.Element2D"
+            "$ref": "#/$defs/Scene.ElementRecord2D"
           }
         },
         "styles": {
@@ -341,7 +353,7 @@
         "elements": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/Scene.Element3D"
+            "$ref": "#/$defs/Scene.ElementRecord3D"
           }
         },
         "styles": {
@@ -377,7 +389,7 @@
       ]
     },
     "Scene.Layout2D": {
-      "description": "A 2D layout as an ECHO object. ECHO type dxn:org.dxos.type.scene.layout2d:0.1.0.",
+      "description": "A 2D layout as an ECHO object. ECHO type dxn:org.dxos.type.scene.layout2d:0.2.0.",
       "type": "object",
       "properties": {
         "key": {
@@ -401,7 +413,7 @@
         "elements": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/Scene.Element2D"
+            "$ref": "#/$defs/Scene.ElementRecord2D"
           }
         },
         "styles": {
@@ -452,7 +464,7 @@
       ]
     },
     "Scene.Layout3D": {
-      "description": "A 3D layout as an ECHO object. ECHO type dxn:org.dxos.type.scene.layout3d:0.1.0.",
+      "description": "A 3D layout as an ECHO object. ECHO type dxn:org.dxos.type.scene.layout3d:0.2.0.",
       "type": "object",
       "properties": {
         "key": {
@@ -476,7 +488,7 @@
         "elements": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/Scene.Element3D"
+            "$ref": "#/$defs/Scene.ElementRecord3D"
           }
         },
         "styles": {
@@ -559,14 +571,7 @@
           "type": "string"
         },
         "relation": {
-          "type": "string",
-          "enum": [
-            "east",
-            "west",
-            "north",
-            "south",
-            "aligned"
-          ]
+          "$ref": "#/$defs/Scene.Placement"
         },
         "object": {
           "type": "string"
@@ -576,6 +581,17 @@
         "subject",
         "relation",
         "object"
+      ]
+    },
+    "Scene.Placement": {
+      "description": "Where one element sits from another.",
+      "type": "string",
+      "enum": [
+        "right-of",
+        "left-of",
+        "above",
+        "below",
+        "aligned"
       ]
     },
     "Scene.Arrangement": {
@@ -700,7 +716,7 @@
       ]
     },
     "Scene.Model2D": {
-      "description": "A 2D model as an ECHO object. ECHO type dxn:org.dxos.type.scene.model2d:0.1.0.",
+      "description": "A 2D model as an ECHO object. ECHO type dxn:org.dxos.type.scene.model2d:0.2.0.",
       "type": "object",
       "properties": {
         "key": {
@@ -725,7 +741,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "description": "An ECHO reference to dxn:org.dxos.type.scene.styleCatalog:0.1.0.",
+            "description": "An ECHO reference to dxn:org.dxos.type.scene.styleCatalog:0.2.0.",
             "properties": {
               "/": {
                 "type": "string"
@@ -747,7 +763,7 @@
       ]
     },
     "Scene.Model3D": {
-      "description": "A 3D model as an ECHO object. ECHO type dxn:org.dxos.type.scene.model3d:0.1.0.",
+      "description": "A 3D model as an ECHO object. ECHO type dxn:org.dxos.type.scene.model3d:0.2.0.",
       "type": "object",
       "properties": {
         "key": {
@@ -772,7 +788,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "description": "An ECHO reference to dxn:org.dxos.type.scene.styleCatalog:0.1.0.",
+            "description": "An ECHO reference to dxn:org.dxos.type.scene.styleCatalog:0.2.0.",
             "properties": {
               "/": {
                 "type": "string"
@@ -800,7 +816,7 @@
         "id": {
           "type": "string"
         },
-        "type": {
+        "kind": {
           "type": "string"
         },
         "style": {
@@ -814,7 +830,19 @@
           "type": "boolean"
         },
         "size": {
-          "$ref": "#/$defs/Scene.Size2"
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ]
         },
         "overrides": {
           "$ref": "#/$defs/Style2D"
@@ -825,7 +853,7 @@
       },
       "required": [
         "id",
-        "type"
+        "kind"
       ]
     },
     "Scene.Object3D": {
@@ -835,7 +863,7 @@
         "id": {
           "type": "string"
         },
-        "type": {
+        "kind": {
           "type": "string"
         },
         "style": {
@@ -860,7 +888,7 @@
       },
       "required": [
         "id",
-        "type"
+        "kind"
       ]
     },
     "Scene.StoredObject2D": {
@@ -870,7 +898,7 @@
         "id": {
           "type": "string"
         },
-        "type": {
+        "kind": {
           "type": "string"
         },
         "style": {
@@ -884,7 +912,19 @@
           "type": "boolean"
         },
         "size": {
-          "$ref": "#/$defs/Scene.Size2"
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ]
         },
         "overrides": {
           "$ref": "#/$defs/Style2D"
@@ -904,7 +944,7 @@
       },
       "required": [
         "id",
-        "type"
+        "kind"
       ]
     },
     "Scene.StoredObject3D": {
@@ -914,7 +954,7 @@
         "id": {
           "type": "string"
         },
-        "type": {
+        "kind": {
           "type": "string"
         },
         "style": {
@@ -948,7 +988,7 @@
       },
       "required": [
         "id",
-        "type"
+        "kind"
       ]
     },
     "Scene.BaseElement": {
@@ -961,7 +1001,7 @@
         "object": {
           "type": "string"
         },
-        "type": {
+        "kind": {
           "type": "string"
         },
         "z": {
@@ -1023,7 +1063,7 @@
         "object": {
           "type": "string"
         },
-        "type": {
+        "kind": {
           "type": "string"
         },
         "z": {
@@ -1071,22 +1111,144 @@
           "additionalProperties": {}
         },
         "center": {
-          "$ref": "#/$defs/Scene.Vec2"
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
         },
         "size": {
-          "$ref": "#/$defs/Scene.Size2"
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ]
         },
         "rotation": {
           "type": "number"
         },
         "scale": {
-          "$ref": "#/$defs/Scene.Vec2"
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
         },
         "fit": {
-          "$ref": "#/$defs/Scene.InstanceFit"
+          "$ref": "#/$defs/InstanceFit"
         },
         "overrides": {
           "$ref": "#/$defs/Style2D"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Port"
+          }
+        },
+        "portsPerSide": {
+          "type": "number"
+        },
+        "exposed": {
+          "type": "boolean"
+        },
+        "bind": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "grow": {
+          "type": "string"
+        },
+        "follows": {
+          "type": "string"
+        },
+        "partOverrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "parent": {
+          "type": "string"
+        },
+        "extent": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          }
+        },
+        "path": {
+          "type": "string",
+          "enum": [
+            "line",
+            "ortho",
+            "curve",
+            "spline",
+            "smart"
+          ]
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point"
+          }
+        },
+        "tail": {
+          "type": "string",
+          "enum": [
+            "arrow",
+            "circle",
+            "diamond",
+            "diamond-filled",
+            "crowsfoot",
+            "triangle"
+          ]
+        },
+        "head": {
+          "type": "string",
+          "enum": [
+            "arrow",
+            "circle",
+            "diamond",
+            "diamond-filled",
+            "crowsfoot",
+            "triangle"
+          ]
+        },
+        "connector": {
+          "$ref": "#/$defs/DiagramConnector"
         }
       },
       "required": [
@@ -1103,7 +1265,7 @@
         "object": {
           "type": "string"
         },
-        "type": {
+        "kind": {
           "type": "string"
         },
         "z": {
@@ -1160,7 +1322,7 @@
           "$ref": "#/$defs/Scene.Vec3"
         },
         "fit": {
-          "$ref": "#/$defs/Scene.InstanceFit"
+          "$ref": "#/$defs/InstanceFit"
         },
         "overrides": {
           "$ref": "#/$defs/Style3D"
@@ -1169,6 +1331,287 @@
       "required": [
         "id"
       ]
+    },
+    "Scene.ElementRecord2D": {
+      "description": "A 2D element as a layout stores it: the element, and its kind's own fields beside it.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "object": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "z": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        },
+        "style": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ElementEndpoint"
+        },
+        "target": {
+          "$ref": "#/$defs/ElementEndpoint"
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "constrain": {
+          "$ref": "#/$defs/PartLayout"
+        },
+        "composite": {
+          "type": "string"
+        },
+        "dsl": {
+          "$ref": "#/$defs/Scene.DslIdentity"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "props": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "center": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "size": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ]
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "fit": {
+          "$ref": "#/$defs/InstanceFit"
+        },
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Port"
+          }
+        },
+        "portsPerSide": {
+          "type": "number"
+        },
+        "exposed": {
+          "type": "boolean"
+        },
+        "bind": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "grow": {
+          "type": "string"
+        },
+        "follows": {
+          "type": "string"
+        },
+        "partOverrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "parent": {
+          "type": "string"
+        },
+        "extent": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          }
+        },
+        "path": {
+          "type": "string",
+          "enum": [
+            "line",
+            "ortho",
+            "curve",
+            "spline",
+            "smart"
+          ]
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point"
+          }
+        },
+        "tail": {
+          "type": "string",
+          "enum": [
+            "arrow",
+            "circle",
+            "diamond",
+            "diamond-filled",
+            "crowsfoot",
+            "triangle"
+          ]
+        },
+        "head": {
+          "type": "string",
+          "enum": [
+            "arrow",
+            "circle",
+            "diamond",
+            "diamond-filled",
+            "crowsfoot",
+            "triangle"
+          ]
+        },
+        "connector": {
+          "$ref": "#/$defs/DiagramConnector"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": {}
+    },
+    "Scene.ElementRecord3D": {
+      "description": "A 3D element as a layout stores it.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "object": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "z": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        },
+        "style": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ElementEndpoint"
+        },
+        "target": {
+          "$ref": "#/$defs/ElementEndpoint"
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "constrain": {
+          "$ref": "#/$defs/PartLayout"
+        },
+        "composite": {
+          "type": "string"
+        },
+        "dsl": {
+          "$ref": "#/$defs/Scene.DslIdentity"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "props": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "center": {
+          "$ref": "#/$defs/Scene.Vec3"
+        },
+        "scale": {
+          "$ref": "#/$defs/Scene.Vec3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/Scene.Vec3"
+        },
+        "fit": {
+          "$ref": "#/$defs/InstanceFit"
+        },
+        "overrides": {
+          "$ref": "#/$defs/Style3D"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": {}
     },
     "ElementEndpoint": {
       "description": "A link's end as an element stores it.",
@@ -1236,12 +1679,13 @@
         "scale"
       ]
     },
-    "Scene.InstanceFit": {
-      "description": "How a placed composite maps its parts into its frame.",
+    "InstanceFit": {
+      "description": "How a placed composite draws its parts in its frame.",
       "type": "string",
       "enum": [
-        "none",
-        "frame"
+        "fit",
+        "fill",
+        "none"
       ]
     },
     "Scene.Dimension": {
@@ -1250,22 +1694,6 @@
       "enum": [
         "2d",
         "3d"
-      ]
-    },
-    "Scene.Vec2": {
-      "description": "A 2D vector.",
-      "type": "object",
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "x",
-        "y"
       ]
     },
     "Scene.Vec3": {
@@ -1288,27 +1716,11 @@
         "z"
       ]
     },
-    "Scene.Size2": {
-      "description": "A 2D size.",
-      "type": "object",
-      "properties": {
-        "width": {
-          "type": "number"
-        },
-        "height": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "width",
-        "height"
-      ]
-    },
     "NodeBase": {
       "description": "The fields every node kind shares.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string"
         },
         "id": {
@@ -1343,11 +1755,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -1370,7 +1782,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -1396,7 +1808,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -1407,7 +1819,7 @@
       "description": "A node whose kind is not known here: a box with a label.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string"
         },
         "id": {
@@ -1442,11 +1854,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -1469,7 +1881,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -1498,7 +1910,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -1509,7 +1921,7 @@
       "description": "A rectangle.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "rect"
@@ -1547,11 +1959,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -1574,7 +1986,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -1606,7 +2018,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -1617,7 +2029,7 @@
       "description": "An ellipse inscribed in the frame.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "ellipse"
@@ -1655,11 +2067,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -1682,7 +2094,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -1714,7 +2126,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -1725,7 +2137,7 @@
       "description": "A cloud filling the frame.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "cloud"
@@ -1763,11 +2175,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -1790,7 +2202,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -1825,7 +2237,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -1847,7 +2259,7 @@
       "description": "A regular polygon.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "polygon"
@@ -1885,11 +2297,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -1912,7 +2324,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -1947,7 +2359,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -1976,7 +2388,7 @@
       "description": "A shape that a named recipe draws from the frame and parameters.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "shape"
@@ -2014,11 +2426,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -2041,7 +2453,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -2082,7 +2494,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -2094,7 +2506,7 @@
       "description": "A line through points, in the 0 to 1 space of its frame.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "polyline"
@@ -2132,11 +2544,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -2159,7 +2571,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -2206,7 +2618,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -2249,7 +2661,7 @@
       "description": "A border drawn round the nodes that name it as their parent.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "hull"
@@ -2287,11 +2699,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -2314,7 +2726,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -2366,7 +2778,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -2377,7 +2789,7 @@
       "description": "Free text.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "note"
@@ -2415,11 +2827,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -2442,7 +2854,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -2469,24 +2881,24 @@
         "padding": {
           "$ref": "#/$defs/Padding"
         },
-        "text": {
+        "label": {
           "type": "string"
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
         "size",
-        "text"
+        "label"
       ]
     },
     "ViewNode": {
       "description": "A window onto a child view.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "view"
@@ -2524,11 +2936,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -2551,7 +2963,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -2589,7 +3001,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -2610,7 +3022,7 @@
       "description": "A composite object placed in a scene.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "instance"
@@ -2648,11 +3060,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -2675,7 +3087,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -2700,12 +3112,7 @@
           "$ref": "#/$defs/PartLayout"
         },
         "fit": {
-          "type": "string",
-          "enum": [
-            "fit",
-            "fill",
-            "none"
-          ]
+          "$ref": "#/$defs/InstanceFit"
         },
         "frame": {
           "$ref": "#/$defs/Bounds"
@@ -2722,7 +3129,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -2734,7 +3141,7 @@
       "description": "A vector shape from SVG path data.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "path"
@@ -2772,11 +3179,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -2799,7 +3206,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -2828,13 +3235,10 @@
         },
         "viewBox": {
           "$ref": "#/$defs/Bounds"
-        },
-        "fill": {
-          "type": "string"
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -2847,7 +3251,7 @@
       "description": "A node whose content a generator computes.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "generator"
@@ -2885,11 +3289,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -2912,7 +3316,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -2948,7 +3352,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -2960,7 +3364,7 @@
       "description": "A shape of a laid-out diagram.",
       "type": "object",
       "properties": {
-        "type": {
+        "kind": {
           "type": "string",
           "enum": [
             "diagram"
@@ -2998,11 +3402,11 @@
         "layer": {
           "type": "string"
         },
-        "class": {
+        "style": {
           "type": "string"
         },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
+        "overrides": {
+          "$ref": "#/$defs/Style2D"
         },
         "exposed": {
           "type": "boolean"
@@ -3025,7 +3429,7 @@
         "composite": {
           "type": "string"
         },
-        "overrides": {
+        "partOverrides": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
@@ -3060,7 +3464,7 @@
         }
       },
       "required": [
-        "type",
+        "kind",
         "id",
         "z",
         "center",
@@ -3085,10 +3489,10 @@
           "type": "number"
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color"
+          "$ref": "#/$defs/Color"
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight"
+          "$ref": "#/$defs/Weight"
         }
       },
       "required": [
@@ -3159,17 +3563,20 @@
       ]
     },
     "Port": {
-      "description": "An attachment point on a node's frame.",
+      "description": "An attachment point on a node, as a fraction of its frame.",
       "type": "object",
       "properties": {
         "id": {
           "type": "string"
         },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
         "side": {
           "$ref": "#/$defs/Side"
-        },
-        "offset": {
-          "type": "number"
         },
         "accepts": {
           "$ref": "#/$defs/PortDirection"
@@ -3177,18 +3584,8 @@
       },
       "required": [
         "id",
-        "side",
-        "offset"
-      ]
-    },
-    "Side": {
-      "description": "A side of a node's frame.",
-      "type": "string",
-      "enum": [
-        "n",
-        "e",
-        "s",
-        "w"
+        "x",
+        "y"
       ]
     },
     "PortDirection": {
@@ -3211,6 +3608,558 @@
           "type": "number"
         }
       }
+    },
+    "Link": {
+      "description": "A link between two ends.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "link"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "z": {
+          "type": "string"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "target": {
+          "$ref": "#/$defs/Endpoint"
+        },
+        "path": {
+          "type": "string",
+          "enum": [
+            "line",
+            "ortho",
+            "curve",
+            "spline",
+            "smart"
+          ]
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point"
+          }
+        },
+        "tail": {
+          "type": "string",
+          "enum": [
+            "arrow",
+            "circle",
+            "diamond",
+            "diamond-filled",
+            "crowsfoot",
+            "triangle"
+          ]
+        },
+        "head": {
+          "type": "string",
+          "enum": [
+            "arrow",
+            "circle",
+            "diamond",
+            "diamond-filled",
+            "crowsfoot",
+            "triangle"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "style": {
+          "type": "string"
+        },
+        "overrides": {
+          "$ref": "#/$defs/LineStyle"
+        },
+        "connector": {
+          "$ref": "#/$defs/DiagramConnector"
+        },
+        "constrain": {
+          "$ref": "#/$defs/PartLayout"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "z",
+        "source",
+        "target"
+      ]
+    },
+    "LinkPath": {
+      "description": "How a link runs between its ends.",
+      "type": "string",
+      "enum": [
+        "line",
+        "ortho",
+        "curve",
+        "spline",
+        "smart"
+      ]
+    },
+    "Endpoint": {
+      "description": "A link's end: on a node, or free at a point.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PortEndpoint"
+        },
+        {
+          "$ref": "#/$defs/PointEndpoint"
+        }
+      ]
+    },
+    "PortEndpoint": {
+      "description": "A link end on a node.",
+      "type": "object",
+      "properties": {
+        "node": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "node"
+      ]
+    },
+    "PointEndpoint": {
+      "description": "A free link end at a point.",
+      "type": "object",
+      "properties": {
+        "point": {
+          "$ref": "#/$defs/Point"
+        }
+      },
+      "required": [
+        "point"
+      ]
+    },
+    "Marker": {
+      "description": "What is drawn at a link end.",
+      "type": "string",
+      "enum": [
+        "arrow",
+        "circle",
+        "diamond",
+        "diamond-filled",
+        "crowsfoot",
+        "triangle"
+      ]
+    },
+    "DiagramConnector": {
+      "description": "A link drawn as a diagram connector.",
+      "type": "object",
+      "properties": {
+        "relation": {
+          "$ref": "#/$defs/Shape.Relation"
+        },
+        "head": {
+          "$ref": "#/$defs/Shape.ArrowHead"
+        },
+        "tail": {
+          "$ref": "#/$defs/Shape.ArrowTail"
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "route": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Point"
+          }
+        },
+        "caption": {
+          "$ref": "#/$defs/DiagramCaption"
+        }
+      }
+    },
+    "DiagramCaption": {
+      "description": "Where a diagram connector's caption sits.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        },
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "weight": {
+          "$ref": "#/$defs/Weight"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "LineStyle": {
+      "description": "A link's style.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "fontSize": {
+          "type": "number"
+        }
+      }
+    },
+    "Style2D": {
+      "description": "A 2D look: what a node draws with.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "fill": {
+          "$ref": "#/$defs/Fill"
+        },
+        "corners": {
+          "$ref": "#/$defs/Corners"
+        },
+        "weight": {
+          "$ref": "#/$defs/Weight"
+        },
+        "guide": {
+          "type": "boolean"
+        },
+        "font": {
+          "$ref": "#/$defs/Font"
+        },
+        "fontSize": {
+          "type": "number"
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "align": {
+          "$ref": "#/$defs/Align"
+        },
+        "valign": {
+          "$ref": "#/$defs/VerticalAlign"
+        }
+      }
+    },
+    "Style3D": {
+      "description": "A 3D look: a material over a colour.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "fill": {
+          "$ref": "#/$defs/Fill"
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "corners": {
+          "$ref": "#/$defs/Corners"
+        },
+        "opacity": {
+          "type": "number"
+        },
+        "metalness": {
+          "type": "number"
+        },
+        "roughness": {
+          "type": "number"
+        },
+        "emissive": {
+          "type": "number"
+        }
+      }
+    },
+    "NamedStyle2D": {
+      "description": "A model's named 2D style.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "fill": {
+          "$ref": "#/$defs/Fill"
+        },
+        "corners": {
+          "$ref": "#/$defs/Corners"
+        },
+        "weight": {
+          "$ref": "#/$defs/Weight"
+        },
+        "guide": {
+          "type": "boolean"
+        },
+        "font": {
+          "$ref": "#/$defs/Font"
+        },
+        "fontSize": {
+          "type": "number"
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "align": {
+          "$ref": "#/$defs/Align"
+        },
+        "valign": {
+          "$ref": "#/$defs/VerticalAlign"
+        }
+      }
+    },
+    "NamedStyle3D": {
+      "description": "A model's named 3D style.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "fill": {
+          "$ref": "#/$defs/Fill"
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "corners": {
+          "$ref": "#/$defs/Corners"
+        },
+        "opacity": {
+          "type": "number"
+        },
+        "metalness": {
+          "type": "number"
+        },
+        "roughness": {
+          "type": "number"
+        },
+        "emissive": {
+          "type": "number"
+        }
+      }
+    },
+    "StyleClass": {
+      "description": "A named look that nodes and links take their style from.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/$defs/Style2D"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "StyleCatalog": {
+      "description": "A reusable set of styles, as an ECHO object. ECHO type dxn:org.dxos.type.scene.styleCatalog:0.2.0.",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "dim": {
+          "type": "string",
+          "enum": [
+            "2d",
+            "3d"
+          ]
+        },
+        "styles": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CatalogStyle"
+          }
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "name",
+        "dim",
+        "styles",
+        "id"
+      ]
+    },
+    "CatalogStyle": {
+      "description": "One style of a catalog: the 2D and 3D fields in one struct.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "fill": {
+          "$ref": "#/$defs/Fill"
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "corners": {
+          "$ref": "#/$defs/Corners"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "metalness": {
+          "type": "number"
+        },
+        "roughness": {
+          "type": "number"
+        },
+        "emissive": {
+          "type": "number"
+        },
+        "weight": {
+          "$ref": "#/$defs/Weight"
+        },
+        "guide": {
+          "type": "boolean"
+        },
+        "font": {
+          "$ref": "#/$defs/Font"
+        },
+        "fontSize": {
+          "type": "number"
+        },
+        "textColor": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
+        },
+        "align": {
+          "$ref": "#/$defs/Align"
+        },
+        "valign": {
+          "$ref": "#/$defs/VerticalAlign"
+        }
+      }
+    },
+    "StyleHue": {
+      "description": "The hues the style pickers offer.",
+      "type": "string",
+      "enum": [
+        "neutral",
+        "red",
+        "orange",
+        "amber",
+        "green",
+        "teal",
+        "sky",
+        "blue",
+        "violet"
+      ]
+    },
+    "NodeTone": {
+      "description": "How strongly a colour fills a frame.",
+      "type": "number",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "TextTone": {
+      "description": "How light or dark a text's colour is drawn.",
+      "type": "number",
+      "enum": [
+        1,
+        2,
+        3
+      ]
+    },
+    "ThemeSlots": {
+      "description": "The colours and typefaces a theme defines, by name.",
+      "type": "object",
+      "properties": {
+        "colors": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Color"
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Font": {
+      "description": "A typeface slot of the theme: `body`, `mono`, or one the theme defines.",
+      "type": "string"
+    },
+    "Color": {
+      "description": "A colour: a theme name (`blue`, `accent`), a name at a tone (`blue/2`), or a CSS literal (`#1e90ff`).",
+      "type": "string",
+      "pattern": "^(?:[a-z][a-z0-9-]*(?:\\/[0-3])?|#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-z][a-z0-9-]*\\([0-9a-zA-Z.,%/ +-]+\\))$"
     },
     "Point": {
       "description": "A point.",
@@ -3268,1012 +4217,74 @@
         "height"
       ]
     },
-    "LinkBase": {
-      "description": "The fields every link kind shares.",
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "z": {
-          "type": "string"
-        },
-        "locked": {
-          "type": "boolean"
-        },
-        "source": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "target": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "ends": {
-          "$ref": "#/$defs/LinkEnds"
-        },
-        "text": {
-          "type": "string"
-        },
-        "layer": {
-          "type": "string"
-        },
-        "class": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/LineStyle"
-        },
-        "connector": {
-          "$ref": "#/$defs/DiagramConnector"
-        },
-        "constrain": {
-          "$ref": "#/$defs/PartLayout"
-        }
-      },
-      "required": [
-        "type",
-        "id",
-        "z",
-        "source",
-        "target"
-      ]
-    },
-    "LineLink": {
-      "description": "A straight link.",
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "line"
-          ]
-        },
-        "id": {
-          "type": "string"
-        },
-        "z": {
-          "type": "string"
-        },
-        "locked": {
-          "type": "boolean"
-        },
-        "source": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "target": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "ends": {
-          "$ref": "#/$defs/LinkEnds"
-        },
-        "text": {
-          "type": "string"
-        },
-        "layer": {
-          "type": "string"
-        },
-        "class": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/LineStyle"
-        },
-        "connector": {
-          "$ref": "#/$defs/DiagramConnector"
-        },
-        "constrain": {
-          "$ref": "#/$defs/PartLayout"
-        }
-      },
-      "required": [
-        "type",
-        "id",
-        "z",
-        "source",
-        "target"
-      ]
-    },
-    "OrthoLink": {
-      "description": "A link of horizontal and vertical segments.",
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "ortho"
-          ]
-        },
-        "id": {
-          "type": "string"
-        },
-        "z": {
-          "type": "string"
-        },
-        "locked": {
-          "type": "boolean"
-        },
-        "source": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "target": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "ends": {
-          "$ref": "#/$defs/LinkEnds"
-        },
-        "text": {
-          "type": "string"
-        },
-        "layer": {
-          "type": "string"
-        },
-        "class": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/LineStyle"
-        },
-        "connector": {
-          "$ref": "#/$defs/DiagramConnector"
-        },
-        "constrain": {
-          "$ref": "#/$defs/PartLayout"
-        }
-      },
-      "required": [
-        "type",
-        "id",
-        "z",
-        "source",
-        "target"
-      ]
-    },
-    "CurveLink": {
-      "description": "A cubic curve that leaves each port along its normal.",
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "curve"
-          ]
-        },
-        "id": {
-          "type": "string"
-        },
-        "z": {
-          "type": "string"
-        },
-        "locked": {
-          "type": "boolean"
-        },
-        "source": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "target": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "ends": {
-          "$ref": "#/$defs/LinkEnds"
-        },
-        "text": {
-          "type": "string"
-        },
-        "layer": {
-          "type": "string"
-        },
-        "class": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/LineStyle"
-        },
-        "connector": {
-          "$ref": "#/$defs/DiagramConnector"
-        },
-        "constrain": {
-          "$ref": "#/$defs/PartLayout"
-        }
-      },
-      "required": [
-        "type",
-        "id",
-        "z",
-        "source",
-        "target"
-      ]
-    },
-    "SplineLink": {
-      "description": "A smooth curve through control points.",
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "spline"
-          ]
-        },
-        "id": {
-          "type": "string"
-        },
-        "z": {
-          "type": "string"
-        },
-        "locked": {
-          "type": "boolean"
-        },
-        "source": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "target": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "ends": {
-          "$ref": "#/$defs/LinkEnds"
-        },
-        "text": {
-          "type": "string"
-        },
-        "layer": {
-          "type": "string"
-        },
-        "class": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/LineStyle"
-        },
-        "connector": {
-          "$ref": "#/$defs/DiagramConnector"
-        },
-        "constrain": {
-          "$ref": "#/$defs/PartLayout"
-        },
-        "points": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Point"
-          }
-        }
-      },
-      "required": [
-        "type",
-        "id",
-        "z",
-        "source",
-        "target",
-        "points"
-      ]
-    },
-    "SmartLink": {
-      "description": "A link that is routed between its ends.",
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "smart"
-          ]
-        },
-        "id": {
-          "type": "string"
-        },
-        "z": {
-          "type": "string"
-        },
-        "locked": {
-          "type": "boolean"
-        },
-        "source": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "target": {
-          "$ref": "#/$defs/Endpoint"
-        },
-        "ends": {
-          "$ref": "#/$defs/LinkEnds"
-        },
-        "text": {
-          "type": "string"
-        },
-        "layer": {
-          "type": "string"
-        },
-        "class": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/LineStyle"
-        },
-        "connector": {
-          "$ref": "#/$defs/DiagramConnector"
-        },
-        "constrain": {
-          "$ref": "#/$defs/PartLayout"
-        }
-      },
-      "required": [
-        "type",
-        "id",
-        "z",
-        "source",
-        "target"
-      ]
-    },
-    "Link": {
-      "description": "Any link kind.",
-      "anyOf": [
-        {
-          "$ref": "#/$defs/LineLink"
-        },
-        {
-          "$ref": "#/$defs/OrthoLink"
-        },
-        {
-          "$ref": "#/$defs/CurveLink"
-        },
-        {
-          "$ref": "#/$defs/SplineLink"
-        },
-        {
-          "$ref": "#/$defs/SmartLink"
-        }
-      ]
-    },
-    "Endpoint": {
-      "description": "A link's end: on a node, or free at a point.",
-      "anyOf": [
-        {
-          "$ref": "#/$defs/PortEndpoint"
-        },
-        {
-          "$ref": "#/$defs/PointEndpoint"
-        }
-      ]
-    },
-    "PortEndpoint": {
-      "description": "A link end on a node.",
-      "type": "object",
-      "properties": {
-        "node": {
-          "type": "string"
-        },
-        "port": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "node"
-      ]
-    },
-    "PointEndpoint": {
-      "description": "A free link end at a point.",
-      "type": "object",
-      "properties": {
-        "point": {
-          "$ref": "#/$defs/Point"
-        }
-      },
-      "required": [
-        "point"
-      ]
-    },
-    "LinkEnds": {
-      "description": "The markers at the two ends of a link.",
-      "type": "object",
-      "properties": {
-        "start": {
-          "$ref": "#/$defs/Marker"
-        },
-        "end": {
-          "$ref": "#/$defs/Marker"
-        }
-      }
-    },
-    "Marker": {
-      "description": "What is drawn at a link end.",
+    "Side": {
+      "description": "A side of a frame.",
       "type": "string",
       "enum": [
-        "arrow",
-        "circle",
-        "diamond",
-        "diamond-filled",
-        "many",
-        "triangle"
+        "top",
+        "right",
+        "bottom",
+        "left"
       ]
     },
-    "DiagramConnector": {
-      "description": "A link drawn as a diagram connector.",
-      "type": "object",
-      "properties": {
-        "relation": {
-          "$ref": "#/$defs/Shape.Relation"
-        },
-        "head": {
-          "$ref": "#/$defs/Shape.ArrowHead"
-        },
-        "tail": {
-          "$ref": "#/$defs/Shape.ArrowTail"
-        },
-        "stroke": {
-          "$ref": "#/$defs/Shape.Stroke"
-        },
-        "color": {
-          "$ref": "#/$defs/Shape.Color"
-        },
-        "route": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Point"
-          }
-        },
-        "caption": {
-          "$ref": "#/$defs/DiagramCaption"
-        }
-      }
-    },
-    "DiagramCaption": {
-      "description": "Where a diagram connector's caption sits.",
-      "type": "object",
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "w": {
-          "type": "number"
-        },
-        "color": {
-          "$ref": "#/$defs/Shape.Color"
-        },
-        "weight": {
-          "$ref": "#/$defs/Shape.Weight"
-        }
-      },
-      "required": [
-        "x",
-        "y"
-      ]
-    },
-    "LineStyle": {
-      "description": "A link's style.",
-      "type": "object",
-      "properties": {
-        "hue": {
-          "type": "string"
-        },
-        "lineStyle": {
-          "type": "string",
-          "enum": [
-            "solid",
-            "dashed",
-            "dotted"
-          ]
-        },
-        "fontSize": {
-          "type": "number"
-        }
-      }
-    },
-    "NodeStyle": {
-      "description": "A node's style.",
-      "type": "object",
-      "properties": {
-        "hue": {
-          "type": "string"
-        },
-        "tone": {
-          "$ref": "#/$defs/NodeTone"
-        },
-        "opacity": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "lineStyle": {
-          "type": "string",
-          "enum": [
-            "solid",
-            "dashed",
-            "dotted"
-          ]
-        },
-        "rounded": {
-          "type": "boolean"
-        },
-        "fill": {
-          "type": "boolean"
-        },
-        "border": {
-          "type": "boolean"
-        },
-        "guide": {
-          "type": "boolean"
-        },
-        "fontFamily": {
-          "type": "string",
-          "enum": [
-            "default",
-            "monospace"
-          ]
-        },
-        "fontSize": {
-          "type": "number"
-        },
-        "textHue": {
-          "$ref": "#/$defs/StyleHue"
-        },
-        "textTone": {
-          "$ref": "#/$defs/TextTone"
-        },
-        "alignHorizontal": {
-          "type": "string",
-          "enum": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "alignVertical": {
-          "type": "string",
-          "enum": [
-            "top",
-            "middle",
-            "bottom"
-          ]
-        }
-      }
-    },
-    "Style2D": {
-      "description": "A 2D look: the node style and the diagram vocabulary.",
-      "type": "object",
-      "properties": {
-        "hue": {
-          "type": "string"
-        },
-        "tone": {
-          "$ref": "#/$defs/NodeTone"
-        },
-        "opacity": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "lineStyle": {
-          "type": "string",
-          "enum": [
-            "solid",
-            "dashed",
-            "dotted",
-            "sketchy"
-          ]
-        },
-        "rounded": {
-          "type": "boolean"
-        },
-        "fill": {
-          "type": "boolean"
-        },
-        "border": {
-          "type": "boolean"
-        },
-        "guide": {
-          "type": "boolean"
-        },
-        "fontFamily": {
-          "type": "string",
-          "enum": [
-            "default",
-            "monospace"
-          ]
-        },
-        "fontSize": {
-          "type": "number"
-        },
-        "textHue": {
-          "$ref": "#/$defs/StyleHue"
-        },
-        "textTone": {
-          "$ref": "#/$defs/TextTone"
-        },
-        "alignHorizontal": {
-          "type": "string",
-          "enum": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "alignVertical": {
-          "type": "string",
-          "enum": [
-            "top",
-            "middle",
-            "bottom"
-          ]
-        },
-        "pattern": {
-          "type": "boolean"
-        },
-        "weight": {
-          "type": "string",
-          "enum": [
-            "s",
-            "m",
-            "l",
-            "xl"
-          ]
-        }
-      }
-    },
-    "Style3D": {
-      "description": "A 3D look: a material over a hue and a tone.",
-      "type": "object",
-      "properties": {
-        "hue": {
-          "type": "string"
-        },
-        "tone": {
-          "type": "number",
-          "enum": [
-            0,
-            1,
-            2,
-            3
-          ]
-        },
-        "surface": {
-          "type": "string",
-          "enum": [
-            "solid",
-            "tint",
-            "glass",
-            "none"
-          ]
-        },
-        "border": {
-          "type": "boolean"
-        },
-        "rounded": {
-          "type": "boolean"
-        },
-        "opacity": {
-          "type": "number"
-        },
-        "metalness": {
-          "type": "number"
-        },
-        "roughness": {
-          "type": "number"
-        },
-        "emissive": {
-          "type": "number"
-        }
-      }
-    },
-    "NamedStyle2D": {
-      "description": "A model's named 2D style.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "hue": {
-          "type": "string"
-        },
-        "tone": {
-          "$ref": "#/$defs/NodeTone"
-        },
-        "opacity": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "lineStyle": {
-          "type": "string",
-          "enum": [
-            "solid",
-            "dashed",
-            "dotted",
-            "sketchy"
-          ]
-        },
-        "rounded": {
-          "type": "boolean"
-        },
-        "fill": {
-          "type": "boolean"
-        },
-        "border": {
-          "type": "boolean"
-        },
-        "guide": {
-          "type": "boolean"
-        },
-        "fontFamily": {
-          "type": "string",
-          "enum": [
-            "default",
-            "monospace"
-          ]
-        },
-        "fontSize": {
-          "type": "number"
-        },
-        "textHue": {
-          "$ref": "#/$defs/StyleHue"
-        },
-        "textTone": {
-          "$ref": "#/$defs/TextTone"
-        },
-        "alignHorizontal": {
-          "type": "string",
-          "enum": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "alignVertical": {
-          "type": "string",
-          "enum": [
-            "top",
-            "middle",
-            "bottom"
-          ]
-        },
-        "pattern": {
-          "type": "boolean"
-        },
-        "weight": {
-          "type": "string",
-          "enum": [
-            "s",
-            "m",
-            "l",
-            "xl"
-          ]
-        }
-      }
-    },
-    "NamedStyle3D": {
-      "description": "A model's named 3D style.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "hue": {
-          "type": "string"
-        },
-        "tone": {
-          "type": "number",
-          "enum": [
-            0,
-            1,
-            2,
-            3
-          ]
-        },
-        "surface": {
-          "type": "string",
-          "enum": [
-            "solid",
-            "tint",
-            "glass",
-            "none"
-          ]
-        },
-        "border": {
-          "type": "boolean"
-        },
-        "rounded": {
-          "type": "boolean"
-        },
-        "opacity": {
-          "type": "number"
-        },
-        "metalness": {
-          "type": "number"
-        },
-        "roughness": {
-          "type": "number"
-        },
-        "emissive": {
-          "type": "number"
-        }
-      }
-    },
-    "StyleClass": {
-      "description": "A named look that nodes and links take their style from.",
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/NodeStyle"
-        }
-      },
-      "required": [
-        "id",
-        "name"
-      ]
-    },
-    "StyleCatalog": {
-      "description": "A reusable set of styles, as an ECHO object. ECHO type dxn:org.dxos.type.scene.styleCatalog:0.1.0.",
-      "type": "object",
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "dim": {
-          "type": "string",
-          "enum": [
-            "2d",
-            "3d"
-          ]
-        },
-        "styles": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/CatalogStyle"
-          }
-        },
-        "id": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "key",
-        "name",
-        "dim",
-        "styles",
-        "id"
-      ]
-    },
-    "CatalogStyle": {
-      "description": "One style of a catalog: the 2D and 3D fields in one struct.",
-      "type": "object",
-      "properties": {
-        "hue": {
-          "type": "string"
-        },
-        "tone": {
-          "$ref": "#/$defs/NodeTone"
-        },
-        "surface": {
-          "type": "string",
-          "enum": [
-            "solid",
-            "tint",
-            "glass",
-            "none"
-          ]
-        },
-        "border": {
-          "type": "boolean"
-        },
-        "rounded": {
-          "type": "boolean"
-        },
-        "opacity": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "metalness": {
-          "type": "number"
-        },
-        "roughness": {
-          "type": "number"
-        },
-        "emissive": {
-          "type": "number"
-        },
-        "lineStyle": {
-          "type": "string",
-          "enum": [
-            "solid",
-            "dashed",
-            "dotted",
-            "sketchy"
-          ]
-        },
-        "fill": {
-          "type": "boolean"
-        },
-        "guide": {
-          "type": "boolean"
-        },
-        "fontFamily": {
-          "type": "string",
-          "enum": [
-            "default",
-            "monospace"
-          ]
-        },
-        "fontSize": {
-          "type": "number"
-        },
-        "textHue": {
-          "$ref": "#/$defs/StyleHue"
-        },
-        "textTone": {
-          "$ref": "#/$defs/TextTone"
-        },
-        "alignHorizontal": {
-          "type": "string",
-          "enum": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "alignVertical": {
-          "type": "string",
-          "enum": [
-            "top",
-            "middle",
-            "bottom"
-          ]
-        },
-        "pattern": {
-          "type": "boolean"
-        },
-        "weight": {
-          "type": "string",
-          "enum": [
-            "s",
-            "m",
-            "l",
-            "xl"
-          ]
-        }
-      }
-    },
-    "StyleHue": {
-      "description": "The hues the style pickers offer.",
+    "Stroke": {
+      "description": "How a line is drawn: a link's line, or a shape's outline.",
       "type": "string",
       "enum": [
-        "neutral",
-        "red",
-        "orange",
-        "amber",
-        "green",
-        "teal",
-        "sky",
-        "blue",
-        "violet"
+        "none",
+        "solid",
+        "dashed",
+        "dotted",
+        "sketchy"
       ]
     },
-    "NodeTone": {
-      "description": "How strongly a hue fills a frame.",
-      "type": "number",
+    "Fill": {
+      "description": "What a closed shape is filled with.",
+      "type": "string",
       "enum": [
-        0,
-        1,
-        2,
-        3
+        "none",
+        "solid",
+        "tint",
+        "pattern",
+        "glass"
       ]
     },
-    "TextTone": {
-      "description": "How light or dark a text's hue is drawn.",
-      "type": "number",
+    "Corners": {
+      "description": "Which corners a shape rounds.",
+      "type": "string",
       "enum": [
-        1,
-        2,
-        3
+        "all",
+        "top",
+        "bottom",
+        "none"
+      ]
+    },
+    "Weight": {
+      "description": "Stroke weight and text size together.",
+      "type": "string",
+      "enum": [
+        "s",
+        "m",
+        "l",
+        "xl"
+      ]
+    },
+    "Align": {
+      "description": "Where text sits across a shape.",
+      "type": "string",
+      "enum": [
+        "left",
+        "center",
+        "right"
+      ]
+    },
+    "VerticalAlign": {
+      "description": "Where text sits down a shape.",
+      "type": "string",
+      "enum": [
+        "top",
+        "middle",
+        "bottom"
       ]
     },
     "ShapeBase": {
@@ -4285,31 +4296,27 @@
           "description": "Stable element id, unique within the object (e.g. \"left-eye\"). Used to edit or delete the element."
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -4355,10 +4362,10 @@
           "description": "Centered label."
         },
         "corners": {
-          "$ref": "#/$defs/Shape.Corners",
-          "description": "Rects only: round just these corners (default all); backends without corner control ignore it."
+          "$ref": "#/$defs/Corners",
+          "description": "Rects only: round these corners (default all); backends without corner control ignore it."
         },
-        "type": {
+        "component": {
           "type": "string",
           "description": "A contributed element kind's name."
         },
@@ -4456,31 +4463,27 @@
           "description": "Height the box keeps inside its grid cell."
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -4526,31 +4529,27 @@
           "type": "string"
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -4583,7 +4582,7 @@
         "points": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Shape.Point"
+            "$ref": "#/$defs/Point"
           },
           "description": "Two or more points (object-local units)."
         },
@@ -4596,31 +4595,27 @@
           "description": "A guide (lifeline, divider, outline) rather than a connector; layout checks do not count it as a route."
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -4651,36 +4646,32 @@
         "points": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Shape.Point"
+            "$ref": "#/$defs/Point"
           },
           "description": "Control points the curve passes through."
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -4724,31 +4715,27 @@
           "type": "number"
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -4794,31 +4781,27 @@
           "type": "string"
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -4857,11 +4840,11 @@
           "description": "Target element ref, optionally `#port`."
         },
         "start": {
-          "$ref": "#/$defs/Shape.Point",
+          "$ref": "#/$defs/Point",
           "description": "Explicit start (used when `from` is omitted)."
         },
         "end": {
-          "$ref": "#/$defs/Shape.Point",
+          "$ref": "#/$defs/Point",
           "description": "Explicit end (used when `to` is omitted)."
         },
         "text": {
@@ -4879,7 +4862,7 @@
         "route": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Shape.Point"
+            "$ref": "#/$defs/Point"
           },
           "description": "The connector's route, ends included."
         },
@@ -4892,31 +4875,27 @@
           "description": "What the connector means; sets its markers: inheritance and implementation (hollow triangle at the target), composition and aggregation (filled or hollow diamond at the source, the whole), one-to-many (bar at the source, crow’s foot at the target), many-to-many, dependency (dashed, open arrow), association."
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -4966,31 +4945,27 @@
           "description": "Title shown on the frame."
         },
         "color": {
-          "$ref": "#/$defs/Shape.Color",
+          "$ref": "#/$defs/Color",
           "description": "Stroke/text color."
         },
         "fill": {
-          "$ref": "#/$defs/Shape.Fill",
+          "$ref": "#/$defs/Fill",
           "description": "Interior fill of closed shapes."
         },
         "stroke": {
-          "$ref": "#/$defs/Shape.Stroke",
-          "description": "Stroke rendering; sketchy is hand-drawn."
+          "$ref": "#/$defs/Stroke",
+          "description": "Line or outline: none draws no outline; sketchy is hand-drawn."
         },
         "weight": {
-          "$ref": "#/$defs/Shape.Weight",
+          "$ref": "#/$defs/Weight",
           "description": "Stroke weight / text size."
         },
-        "border": {
-          "type": "boolean",
-          "description": "Whether a closed shape draws its outline."
-        },
         "align": {
-          "$ref": "#/$defs/Shape.Align",
+          "$ref": "#/$defs/Align",
           "description": "Where the shape's text sits across it."
         },
         "valign": {
-          "$ref": "#/$defs/Shape.VerticalAlign",
+          "$ref": "#/$defs/VerticalAlign",
           "description": "Where the shape's text sits down it."
         },
         "fontSize": {
@@ -5037,22 +5012,6 @@
         }
       ]
     },
-    "Shape.Point": {
-      "description": "A point.",
-      "type": "object",
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "x",
-        "y"
-      ]
-    },
     "Shape.BoxKind": {
       "description": "The closed shapes a box can be.",
       "type": "string",
@@ -5062,82 +5021,6 @@
         "diamond",
         "triangle",
         "grid"
-      ]
-    },
-    "Shape.Corners": {
-      "description": "Which corners of a rectangle are rounded.",
-      "type": "string",
-      "enum": [
-        "top",
-        "bottom",
-        "none"
-      ]
-    },
-    "Shape.Color": {
-      "description": "The colors of a diagram shape.",
-      "type": "string",
-      "enum": [
-        "black",
-        "grey",
-        "light-violet",
-        "violet",
-        "blue",
-        "light-blue",
-        "yellow",
-        "orange",
-        "green",
-        "light-green",
-        "light-red",
-        "red",
-        "white"
-      ]
-    },
-    "Shape.Fill": {
-      "description": "The interior of a closed shape.",
-      "type": "string",
-      "enum": [
-        "none",
-        "solid",
-        "pattern",
-        "tint"
-      ]
-    },
-    "Shape.Stroke": {
-      "description": "How a stroke is drawn.",
-      "type": "string",
-      "enum": [
-        "sketchy",
-        "solid",
-        "dashed",
-        "dotted"
-      ]
-    },
-    "Shape.Weight": {
-      "description": "Stroke weight and text size together.",
-      "type": "string",
-      "enum": [
-        "s",
-        "m",
-        "l",
-        "xl"
-      ]
-    },
-    "Shape.Align": {
-      "description": "Where a shape's text sits across it.",
-      "type": "string",
-      "enum": [
-        "left",
-        "center",
-        "right"
-      ]
-    },
-    "Shape.VerticalAlign": {
-      "description": "Where a shape's text sits down it.",
-      "type": "string",
-      "enum": [
-        "top",
-        "middle",
-        "bottom"
       ]
     },
     "Shape.Layout": {

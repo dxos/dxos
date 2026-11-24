@@ -24,22 +24,22 @@ const cell = (x: number, y: number, width = 4, height = 2) => ({
 const createSample = () =>
   ViewBuilder.view('root', [
     ViewBuilder.rect('plain', cell(0, 0)).properties({ label: 'Plain' }),
-    ViewBuilder.rect('blue', cell(6, 0)).properties({ label: 'Blue', style: { hue: 'blue' } }),
-    ViewBuilder.rect('strong', cell(12, 0)).properties({ label: 'Strong', style: { hue: 'violet', tone: 1 } }),
+    ViewBuilder.rect('blue', cell(6, 0)).properties({ label: 'Blue', overrides: { color: 'blue' } }),
+    ViewBuilder.rect('strong', cell(12, 0)).properties({ label: 'Strong', overrides: { color: 'violet/1' } }),
     // A circle, centred on its row.
-    ViewBuilder.ellipse('ellipse', cell(0.5, 3.5, 3, 3)).properties({ label: 'Ellipse', style: { hue: 'teal' } }),
+    ViewBuilder.ellipse('ellipse', cell(0.5, 3.5, 3, 3)).properties({ label: 'Ellipse', overrides: { color: 'teal' } }),
     ViewBuilder.rect('rounded', cell(6, 4)).properties({
       label: 'Rounded',
-      style: { hue: 'amber', rounded: true },
+      overrides: { color: 'amber', corners: 'all' },
     }),
     ViewBuilder.rect('outline', cell(12, 4)).properties({
       label: 'Outline tone',
-      style: { hue: 'red', tone: 0, lineStyle: 'dashed' },
+      overrides: { color: 'red/0', stroke: 'dashed' },
     }),
-    ViewBuilder.note('note', cell(0, 8, 5, 2)).properties({ text: 'A note says what the diagram does not.' }),
+    ViewBuilder.note('note', cell(0, 8, 5, 2)).properties({ label: 'A note says what the diagram does not.' }),
     ViewBuilder.view('child', [
-      ViewBuilder.rect('inner-a', cell(0, 0)).properties({ label: 'Inside', style: { hue: 'green' } }),
-      ViewBuilder.rect('inner-b', cell(6, 0)).properties({ label: 'Frame', style: { hue: 'sky' } }),
+      ViewBuilder.rect('inner-a', cell(0, 0)).properties({ label: 'Inside', overrides: { color: 'green' } }),
+      ViewBuilder.rect('inner-b', cell(6, 0)).properties({ label: 'Frame', overrides: { color: 'sky' } }),
       ViewBuilder.link('smart', 'inner-a', 'inner-b').id('inner-link'),
     ])
       .name('Child')
@@ -48,54 +48,50 @@ const createSample = () =>
     ViewBuilder.link('smart', 'plain', 'blue').id('l1'),
     ViewBuilder.link('smart', 'blue', 'strong')
       .id('l2')
-      .properties({ style: { hue: 'violet' }, ends: { end: 'arrow' } }),
+      .properties({ overrides: { color: 'violet' }, head: 'arrow' }),
     ViewBuilder.link('smart', 'ellipse', 'rounded')
       .id('l3')
-      .properties({ style: { hue: 'teal' }, text: 'flows' }),
+      .properties({ overrides: { color: 'teal' }, label: 'flows' }),
     ViewBuilder.link('smart', 'rounded', 'outline')
       .id('l4')
-      .properties({ style: { hue: 'red', lineStyle: 'dashed' } }),
+      .properties({ overrides: { color: 'red', stroke: 'dashed' } }),
   ]).build();
 
 /** Each tone side by side, as boxes and as outline shapes, joined by links with each kind of end. */
 const createTones = () =>
   ViewBuilder.view('root', [
-    ViewBuilder.rect('inset', cell(0, 0)).properties({ label: 'Inset (tone 0)', style: { hue: 'blue', tone: 0 } }),
-    ViewBuilder.rect('flat', cell(6, 0)).properties({ label: 'Flat (tone 1)', style: { hue: 'blue', tone: 1 } }),
-    ViewBuilder.rect('blue', cell(12, 0)).properties({ label: 'Raised (tone 2)', style: { hue: 'blue', tone: 2 } }),
+    ViewBuilder.rect('inset', cell(0, 0)).properties({ label: 'Inset (tone 0)', overrides: { color: 'blue/0' } }),
+    ViewBuilder.rect('flat', cell(6, 0)).properties({ label: 'Flat (tone 1)', overrides: { color: 'blue/1' } }),
+    ViewBuilder.rect('blue', cell(12, 0)).properties({ label: 'Raised (tone 2)', overrides: { color: 'blue/2' } }),
     ViewBuilder.polygon('polygon-inset', cell(0, 4, 4, 3)).properties({
       label: 'Inset',
-      style: { hue: 'teal', tone: 0 },
+      overrides: { color: 'teal/0' },
     }),
-    ViewBuilder.cloud('cloud-flat', cell(6, 4, 4, 3)).properties({ label: 'Flat', style: { hue: 'teal', tone: 1 } }),
-    ViewBuilder.polygon('polygon-raised', cell(12, 4, 4, 3)).properties({ label: 'Raised', style: { hue: 'teal' } }),
+    ViewBuilder.cloud('cloud-flat', cell(6, 4, 4, 3)).properties({ label: 'Flat', overrides: { color: 'teal/1' } }),
+    ViewBuilder.polygon('polygon-raised', cell(12, 4, 4, 3)).properties({
+      label: 'Raised',
+      overrides: { color: 'teal' },
+    }),
     ViewBuilder.cloud('cloud-inset', cell(0, 9, 4, 3)).properties({
       label: 'Inset',
-      style: { hue: 'violet', tone: 0 },
+      overrides: { color: 'violet/0' },
     }),
-    ViewBuilder.cloud('cloud-raised', cell(12, 9, 4, 3)).properties({ label: 'Raised', style: { hue: 'violet' } }),
-    ViewBuilder.link('smart', 'inset', 'flat')
-      .id('arrow')
-      .properties({ ends: { end: 'arrow' } }),
-    ViewBuilder.link('smart', 'flat', 'blue')
-      .id('triangle')
-      .properties({ ends: { end: 'triangle' } }),
-    ViewBuilder.link('smart', 'blue', 'polygon-raised')
-      .id('circle')
-      .properties({ ends: { start: 'circle', end: 'arrow' } }),
+    ViewBuilder.cloud('cloud-raised', cell(12, 9, 4, 3)).properties({
+      label: 'Raised',
+      overrides: { color: 'violet' },
+    }),
+    ViewBuilder.link('smart', 'inset', 'flat').id('arrow').properties({ head: 'arrow' }),
+    ViewBuilder.link('smart', 'flat', 'blue').id('triangle').properties({ head: 'triangle' }),
+    ViewBuilder.link('smart', 'blue', 'polygon-raised').id('circle').properties({ tail: 'circle', head: 'arrow' }),
     ViewBuilder.link('smart', 'polygon-inset', 'cloud-inset')
       .id('down')
-      .properties({ style: { hue: 'teal' }, ends: { end: 'arrow' } }),
+      .properties({ overrides: { color: 'teal' }, head: 'arrow' }),
     ViewBuilder.link('smart', 'cloud-inset', 'cloud-raised')
       .id('across')
-      .properties({ style: { lineStyle: 'dashed' }, ends: { start: 'triangle', end: 'arrow' } }),
+      .properties({ overrides: { stroke: 'dashed' }, tail: 'triangle', head: 'arrow' }),
     // Straight and vertical, as a UML class diagram draws inheritance and composition.
-    ViewBuilder.link('line', 'cloud-flat', 'flat')
-      .id('inherits')
-      .properties({ ends: { end: 'triangle' } }),
-    ViewBuilder.link('line', 'cloud-raised', 'polygon-raised')
-      .id('owns')
-      .properties({ ends: { end: 'circle' } }),
+    ViewBuilder.link('line', 'cloud-flat', 'flat').id('inherits').properties({ head: 'triangle' }),
+    ViewBuilder.link('line', 'cloud-raised', 'polygon-raised').id('owns').properties({ head: 'circle' }),
   ]).build();
 
 type StoryArgs = { theme?: string; defaultTheme?: string; sample?: 'elements' | 'tones' };

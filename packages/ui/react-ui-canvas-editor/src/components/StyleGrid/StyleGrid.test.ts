@@ -6,25 +6,42 @@ import { describe, expect, test } from 'vitest';
 
 import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '@dxos/react-ui-canvas';
 
-import { STYLE_FIELD_OVERRIDES, STYLE_FIELDS, StyleGridField, applyStyleChoice, shownHue } from './StyleGrid.tsx';
+import {
+  STYLE_FIELD_OVERRIDES,
+  STYLE_FIELDS,
+  StyleGridField,
+  applyStyleChoice,
+  pickedColor,
+  shownHue,
+} from './StyleGrid.tsx';
 
 describe('style fields', () => {
   test('a pick with fills sets the hue and its tone together, keeping the rest of the style', () => {
-    expect(applyStyleChoice({ surface: 'glass', border: true }, { hue: 'red', tone: 1 }, true)).toEqual({
-      surface: 'glass',
-      border: true,
-      hue: 'red',
-      tone: 1,
+    expect(applyStyleChoice({ fill: 'glass', stroke: 'solid' }, { hue: 'red', tone: 1 }, true)).toEqual({
+      fill: 'glass',
+      stroke: 'solid',
+      color: 'red/1',
     });
+    expect(pickedColor('blue/3', { hue: 'red', tone: 1 }, true)).toBe('red/1');
   });
 
   test('an outline pick sets the hue alone', () => {
-    expect(applyStyleChoice({ tone: 3 }, { hue: 'blue', tone: 0 }, false)).toEqual({ tone: 3, hue: 'blue' });
+    expect(applyStyleChoice({ color: 'default/3' }, { hue: 'blue', tone: 0 }, false)).toEqual({ color: 'blue/3' });
+    expect(pickedColor('red/3', { hue: 'blue', tone: 0 }, false)).toBe('blue/3');
+    // A colour with no tone, a link's, takes the hue and still states none.
+    expect(pickedColor(undefined, { hue: 'blue', tone: 0 }, false)).toBe('blue');
+    expect(pickedColor('red', { hue: 'blue', tone: 0 }, false)).toBe('blue');
   });
 
-  test('every scene view takes the same style fields: the grid at style.hue, its tone hidden', () => {
-    expect(STYLE_FIELDS['style.hue']).toBe(StyleGridField);
-    expect(STYLE_FIELD_OVERRIDES['style.tone']).toMatchObject({ hidden: true });
+  test('every scene view takes the same style fields: the grid at overrides.color, under the Style heading', () => {
+    expect(STYLE_FIELDS['overrides.color']).toBe(StyleGridField);
+    expect(STYLE_FIELD_OVERRIDES['overrides.color']).toMatchObject({ hideLabel: true });
+    expect(STYLE_FIELD_OVERRIDES.overrides).toMatchObject({ label: 'Style' });
+  });
+
+  test('a pick replaces a literal colour, which has no tone to keep', () => {
+    expect(pickedColor('#1e90ff', { hue: 'green', tone: 2 }, true)).toBe('green/2');
+    expect(pickedColor('#1e90ff', { hue: 'green', tone: 0 }, false)).toBe('green');
   });
 });
 

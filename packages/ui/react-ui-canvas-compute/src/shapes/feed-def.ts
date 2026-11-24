@@ -17,7 +17,7 @@ import { FeedComponent } from './Feed.tsx';
 
 export const FeedShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('queue'),
+    kind: Schema.Literal('queue'),
   }),
 );
 
@@ -27,13 +27,13 @@ export type CreateFeedProps = CreateShapeProps<FeedShape>;
 
 export const createFeed = (props: CreateFeedProps) =>
   createShape<FeedShape>({
-    type: 'queue',
+    kind: 'queue',
     size: { width: 4 * MAJOR_GRID, height: 8 * MAJOR_GRID },
     ...props,
   });
 
 export const feedNodeDef = defineComputeNode<FeedShape>({
-  // Must match the shape's `type` literal ('queue') so the registry resolves it; the registry is keyed by this.
+  // Must match the shape's `kind` literal ('queue') so the registry resolves it; the registry is keyed by this.
   type: 'queue',
   name: 'Feed',
   icon: 'ph--queue--regular',

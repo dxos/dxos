@@ -80,14 +80,14 @@ export const createdElement = (
     const diameter = Math.max(base.width, base.depth);
     return {
       id,
-      type: kind,
+      kind,
       center: { ...base.center, y: base.center.y + diameter / 2 },
       scale: { x: diameter, y: diameter, z: diameter },
     };
   }
   return {
     id,
-    type: kind,
+    kind,
     center: { ...base.center, y: base.center.y + height / 2 },
     scale: { x: base.width, y: height, z: base.depth },
   };
@@ -95,7 +95,7 @@ export const createdElement = (
 
 /** An object's extents before its scale: a mesh's own, else the unit every primitive is. */
 const unitExtents = (object: Scene.Object3D): Scene.Vec3 => {
-  const mesh = object.type === 'mesh' ? meshProps(object.props) : undefined;
+  const mesh = object.kind === 'mesh' ? meshProps(object.props) : undefined;
   const extent = (axis: number) => {
     const values = mesh?.positions.filter((_, index) => index % 3 === axis) ?? [];
     const size = values.length > 0 ? Math.max(...values) - Math.min(...values) : 1;

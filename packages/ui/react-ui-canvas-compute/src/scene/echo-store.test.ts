@@ -6,18 +6,19 @@ import { describe, test } from 'vitest';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { sortByZ } from '@dxos/react-ui-canvas';
-import { type NodeStyle, type Scene, applyIntent } from '@dxos/scene';
+import { type Scene, applyIntent } from '@dxos/scene';
 
 import { computeKinds } from '../registry.ts';
-import { type ComputeShape } from '../shapes/index.ts';
-import { type CanvasBoard } from '../types/index.ts';
-import { type BoardLayout, boardLayout, writeBoardLayout } from './echo-store.ts';
+import {
+  type BoardConnection,
+  type BoardLayout,
+  type BoardShape,
+  boardLayout,
+  writeBoardLayout,
+} from './echo-store.ts';
 
-const shape = (
-  id: string,
-  x: number,
-  rest: Partial<ComputeShape> & { style?: NodeStyle; class?: string } = {},
-): ComputeShape & { style?: NodeStyle } => ({
+/** A shape as the old editor stored one: its kind under `type`, its look under `guide` / `style` / `class`. */
+const shape = (id: string, x: number, rest: Record<string, unknown> = {}): BoardShape => ({
   id,
   type: 'constant',
   center: { x, y: 0 },
@@ -25,7 +26,7 @@ const shape = (
   ...rest,
 });
 
-const edge = (id: string, source: string, target: string, rest: Partial<CanvasBoard.Connection> = {}) => ({
+const edge = (id: string, source: string, target: string, rest: Record<string, unknown> = {}): BoardConnection => ({
   id,
   source,
   target,
@@ -49,21 +50,47 @@ describe('echo store', () => {
     expect(layout).toMatchObject({ id: 'board', dim: '2d', name: 'Board' });
     expect(ordered(layout)).toEqual(['a', 'b', 'c']);
     expect(layout.elements.b).toMatchObject({
-      type: 'constant',
+      kind: 'constant',
       center: { x: 100, y: 0 },
       size: { width: 64, height: 32 },
     });
+    expect('type' in layout.elements.b).toBe(false);
   });
 
   test('a connection reads as a link element whose ports are the anchor ids of its properties', ({ expect }) => {
     const link = boardLayout('board', fixture()).elements['a-b'];
     expect(link).toMatchObject({
-      type: 'link',
+      kind: 'link',
       source: { node: 'a', port: 'output.result' },
       target: { node: 'b', port: 'input.input' },
     });
     // The editor stored no link type, so it draws the default: a smart link with an arrow.
-    expect(link.props?.canvas).toEqual({ type: 'smart', ends: { end: 'arrow' } });
+    expect(link).toMatchObject({ path: 'smart', head: 'arrow' });
+    expect('tail' in link || 'props' in link).toBe(false);
+  });
+
+  test('a connection stored with a link type reads it as its path, and the next write stores the path', ({
+    expect,
+  }) => {
+    const board: BoardLayout = {
+      nodes: [shape('a', 0), shape('b', 1)],
+      edges: [
+        edge('line', 'a', 'b', { type: 'line' }),
+        edge('smart', 'a', 'b', { type: 'smart' }),
+        edge('e', 'a', 'b'),
+      ],
+    };
+    const layout = boardLayout('board', board);
+    expect(layout.elements.line).toMatchObject({ kind: 'link', path: 'line' });
+    writeBoardLayout(board, layout);
+    const ends = { source: 'a', target: 'b', output: DEFAULT_OUTPUT, input: DEFAULT_INPUT };
+    expect(board.edges).toEqual([
+      { id: 'line', path: 'line', ...ends },
+      // The default path is stored where the connection named it.
+      { id: 'smart', path: 'smart', ...ends },
+      { id: 'e', ...ends },
+    ]);
+    expect(boardLayout('board', board)).toEqual(layout);
   });
 
   test('a connection with no properties falls back to the default input and output', ({ expect }) => {
@@ -75,18 +102,45 @@ describe('echo store', () => {
   test('the editor style fields read as overrides and a class as the named style; kind fields stay under data', ({
     expect,
   }) => {
-    const layout = boardLayout('board', {
+    const board: BoardLayout = {
       nodes: [
         shape('a', 0, { guide: true, classNames: 'text-red-500', data: { node: 'compute-a' } }),
         shape('b', 1, { style: { hue: 'sky' }, class: 'accent' }),
+        shape('c', 2, { guide: true, style: { hue: 'red', tone: 1, border: false, rounded: true } }),
       ],
       edges: [],
-    });
+    };
+    const layout = boardLayout('board', board);
     expect(layout.elements.a.overrides).toEqual({ guide: true });
-    expect(layout.elements.b.overrides).toEqual({ hue: 'sky' });
+    expect(layout.elements.b.overrides).toEqual({ color: 'sky' });
     expect(layout.elements.b.style).toBe('accent');
-    expect('guide' in layout.elements.a).toBe(false);
+    expect(layout.elements.c.overrides).toEqual({ guide: true, color: 'red/1', stroke: 'none', corners: 'all' });
+    expect('guide' in layout.elements.a || 'class' in layout.elements.b).toBe(false);
     expect(layout.elements.a).toMatchObject({ data: { node: 'compute-a' }, classNames: 'text-red-500' });
+
+    // The next write stores the look as the element holds it.
+    writeBoardLayout(board, layout);
+    const frame = { size: { width: 64, height: 32 } };
+    expect(board.nodes).toEqual([
+      {
+        id: 'a',
+        kind: 'constant',
+        center: { x: 0, y: 0 },
+        ...frame,
+        overrides: { guide: true },
+        classNames: 'text-red-500',
+        data: { node: 'compute-a' },
+      },
+      { id: 'b', kind: 'constant', center: { x: 1, y: 0 }, ...frame, overrides: { color: 'sky' }, style: 'accent' },
+      {
+        id: 'c',
+        kind: 'constant',
+        center: { x: 2, y: 0 },
+        ...frame,
+        overrides: { guide: true, color: 'red/1', stroke: 'none', corners: 'all' },
+      },
+    ]);
+    expect(boardLayout('board', board)).toEqual(layout);
   });
 
   test("a shape stored with its kind's fields beside its own reads them under data, and the next write stores them there", ({
@@ -111,11 +165,11 @@ describe('echo store', () => {
 
     const layout = boardLayout('board', board);
     const { a, b, c, d, n } = layout.elements;
-    expect(a).toEqual({ id: 'a', type: 'constant', z: a.z, ...frame, data: { node: nodeA, value: 5 } });
+    expect(a).toEqual({ id: 'a', kind: 'constant', z: a.z, ...frame, data: { node: nodeA, value: 5 } });
     // A template's `text` is the board shape's, so it stays beside the shape's own.
     expect(b).toEqual({
       id: 'b',
-      type: 'template',
+      kind: 'template',
       z: b.z,
       text: 'Hi',
       ...frame,
@@ -123,7 +177,7 @@ describe('echo store', () => {
     });
     expect(c).toEqual({
       id: 'c',
-      type: 'rng',
+      kind: 'rng',
       z: c.z,
       ...frame,
       overrides: { guide: true },
@@ -131,7 +185,8 @@ describe('echo store', () => {
     });
     expect(d.data).toEqual({ node: nodeD, value: 1 });
     expect('node' in d || 'value' in d).toBe(false);
-    expect(n).toEqual({ id: 'n', type: 'note', z: n.z, text: 'Note', ...frame });
+    // A note's text is its label.
+    expect(n).toEqual({ id: 'n', kind: 'note', z: n.z, label: 'Note', ...frame });
     for (const element of [a, b, c, d]) {
       expect(computeKinds.validate(element), element.id).toEqual({ ok: true });
     }
@@ -140,26 +195,30 @@ describe('echo store', () => {
     const moved = applyIntent(layout, { kind: 'move', ids: ['n'], delta: { x: 32, y: 0 } });
     writeBoardLayout(board, moved);
     expect(board.nodes).toEqual([
-      { id: 'a', type: 'constant', ...frame, data: { node: nodeA, value: 5 } },
-      { id: 'b', type: 'template', text: 'Hi', ...frame, data: { node: nodeB, valueType: 'object' } },
-      { id: 'c', type: 'rng', guide: true, ...frame, data: { node: nodeC, min: 1, max: 6 } },
-      { id: 'd', type: 'constant', ...frame, data: { node: nodeD, value: 1 } },
-      { id: 'n', type: 'note', text: 'Note', center: { x: 32, y: 0 }, size: frame.size },
+      { id: 'a', kind: 'constant', ...frame, data: { node: nodeA, value: 5 } },
+      { id: 'b', kind: 'template', text: 'Hi', ...frame, data: { node: nodeB, valueType: 'object' } },
+      { id: 'c', kind: 'rng', overrides: { guide: true }, ...frame, data: { node: nodeC, min: 1, max: 6 } },
+      { id: 'd', kind: 'constant', ...frame, data: { node: nodeD, value: 1 } },
+      { id: 'n', kind: 'note', label: 'Note', center: { x: 32, y: 0 }, size: frame.size },
     ]);
     expect(boardLayout('board', board)).toEqual(moved);
   });
 
   test('a move intent writes back the moved shape and nothing else', ({ expect }) => {
     const board = fixture();
+    // The first write stores the old editor's board in the current form; from then on a write touches what changed.
+    writeBoardLayout(board, boardLayout('board', board));
     const before = board.nodes[0];
+    const stored = structuredClone(before);
     writeBoardLayout(
       board,
       applyIntent(boardLayout('board', board), { kind: 'move', ids: ['b'], delta: { x: 32, y: 16 } }),
     );
     expect(board.nodes.map(({ id }) => id)).toEqual(['a', 'b', 'c']);
     expect(board.nodes[1].center).toEqual({ x: 132, y: 16 });
-    // The untouched shapes are the same objects, so nothing else reaches the CRDT.
+    // The untouched shapes are the same objects, unchanged, so nothing else reaches the CRDT.
     expect(board.nodes[0]).toBe(before);
+    expect(board.nodes[0]).toEqual(stored);
   });
 
   test('create, bind and delete intents reach the arrays', ({ expect }) => {
@@ -169,13 +228,13 @@ describe('echo store', () => {
       intents: [
         {
           kind: 'create',
-          element: { id: 'd', type: 'constant', z: 'z', center: { x: 300, y: 0 }, size: { width: 64, height: 32 } },
+          element: { id: 'd', kind: 'constant', z: 'z', center: { x: 300, y: 0 }, size: { width: 64, height: 32 } },
         },
         {
           kind: 'bind',
           link: {
             id: 'c-d',
-            type: 'link',
+            kind: 'link',
             z: 'z0',
             source: { node: 'c', port: 'output.result' },
             target: { node: 'd', port: 'input.input' },

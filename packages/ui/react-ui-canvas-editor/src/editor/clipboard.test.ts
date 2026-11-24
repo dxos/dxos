@@ -26,7 +26,7 @@ const codec: ClipboardCodec = {
 const fragment: Scene.LayoutRecord3D = {
   id: 'clipboard',
   dim: '3d',
-  elements: { box: { id: 'box', type: 'cube', center: { x: 0, y: 1, z: 0 } } },
+  elements: { box: { id: 'box', kind: 'cube', center: { x: 0, y: 1, z: 0 } } },
 };
 const copied: SceneClipboard = { fragment, text: 'layout clipboard dim=3d {}', pasted: 0 };
 
@@ -40,7 +40,7 @@ const document: Scene.SceneDocument = {
     },
   ],
   layouts: [
-    { id: 'root', dim: '3d', elements: { 'box-1': { id: 'box-1', type: 'cube', center: { x: 0, y: 0, z: 0 } } } },
+    { id: 'root', dim: '3d', elements: { 'box-1': { id: 'box-1', kind: 'cube', center: { x: 0, y: 0, z: 0 } } } },
   ],
   models: [],
 };

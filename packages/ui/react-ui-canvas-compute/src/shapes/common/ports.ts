@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { DEFAULT_GRID, type Point, type Port, type Size } from '@dxos/scene';
+import { DEFAULT_GRID, type Point, type Port, type Size, sidePort } from '@dxos/scene';
 
 import { createAnchorId, parseAnchorId } from '../defs.ts';
 import { footerHeight, headerHeight } from './box-defs.ts';
@@ -45,17 +45,17 @@ export const pointsToPorts = (points: readonly PortPoint[], size: Size): Port[] 
     const half = { x: size.width / 2, y: size.height / 2 };
     // Ties go to the vertical edges (the input / output sides).
     const vertical = Math.abs(Math.abs(pos.x) - half.x) <= Math.abs(Math.abs(pos.y) - half.y);
-    const side = vertical ? (pos.x < 0 ? 'w' : 'e') : pos.y < 0 ? 'n' : 's';
+    const side = vertical ? (pos.x < 0 ? 'left' : 'right') : pos.y < 0 ? 'top' : 'bottom';
     const along = vertical ? (pos.y + half.y) / size.height : (pos.x + half.x) / size.width;
-    return {
+    return sidePort(
       id,
       side,
-      offset: Math.min(Math.max(along, 0), 1),
-      ...(kind === 'input' ? { accepts: 'in' as const } : kind === 'output' ? { accepts: 'out' as const } : {}),
-    };
+      Math.min(Math.max(along, 0), 1),
+      kind === 'input' ? 'in' : kind === 'output' ? 'out' : undefined,
+    );
   });
 
-/** Ports at points given in half-sizes from the centre (`{ x: 1, y: 0 }` is the middle of the east side). */
+/** Ports at points given in half-sizes from the centre (`{ x: 1, y: 0 }` is the middle of the right side). */
 export const createPorts = (size: Size, points: Record<string, Point>): Port[] =>
   pointsToPorts(
     Object.entries(points).map(([id, { x, y }]) => ({
@@ -65,7 +65,7 @@ export const createPorts = (size: Size, points: Record<string, Point>): Port[] =
     size,
   );
 
-/** Inputs stacked one row apart down the west side and outputs down the east, centred on `center`. */
+/** Inputs stacked one row apart down the left side and outputs down the right, centred on `center`. */
 export const createRowPorts = ({
   size,
   inputs,

@@ -49,7 +49,7 @@ export const PlankData = Schema.Struct(plankFields);
 
 export const PlankNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('plank'),
+  kind: Schema.Literal('plank'),
   label: Schema.String,
   data: Schema.optional(PlankData),
 });
@@ -182,7 +182,7 @@ const BODIES: Record<string, () => React.ReactElement> = { board: Board, sheet: 
 
 export const PlankNodeView = ({ node, editing }: NodeViewProps) => {
   const data = kindData(PlankData, node);
-  if (node.type !== 'plank' || !data) {
+  if (node.kind !== 'plank' || !data) {
     return null;
   }
   const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
@@ -222,7 +222,7 @@ export const plankSpec: ElementKindSpec = {
   schema: PlankNode,
   component: PlankNodeView,
   create: ({ id, z, center, size }) => ({
-    type: 'plank',
+    kind: 'plank',
     id,
     z,
     center,

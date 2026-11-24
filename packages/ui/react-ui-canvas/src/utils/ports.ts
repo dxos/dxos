@@ -3,17 +3,24 @@
 //
 
 //
-// Ports come from the node type's definition unless the node carries its own (decision 12). A link end
+// Ports come from the node kind's definition unless the node carries its own (decision 12). A link end
 // without a `port` is automatic: the closest pair is chosen from the two nodes' ports on every projection, so rearranging
 // the diagram re-attaches its links.
 //
 
-import { type Bounds, type Node, type Point, type Port, type PortDirection, type Side } from '@dxos/scene';
+import {
+  type Bounds,
+  type Node,
+  type Point,
+  type Port,
+  type PortDirection,
+  type Side,
+  SIDES,
+  sidePort,
+} from '@dxos/scene';
 
 import { type NodeRegistry, nodeDef } from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
-
-export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
 
 export const DEFAULT_PORTS_PER_SIDE = 3;
 
@@ -23,11 +30,14 @@ export const MAX_PORTS_PER_SIDE = 9;
 const clampPorts = (count: number) =>
   Number.isFinite(count) ? Math.min(MAX_PORTS_PER_SIDE, Math.max(1, Math.round(count))) : DEFAULT_PORTS_PER_SIDE;
 
+/** The letter a generated port's id names its side by, which a stored link end pinned to one still reads. */
+const SIDE_LETTERS: Record<Side, string> = { top: 'n', right: 'e', bottom: 's', left: 'w' };
+
 /**
  * The id of the `index`th port along `side`, counting from 1 at the side's start: `e1` is the top of the
- * east side, `s2` the middle of the south side. Pin a link end to one by naming `<node>#<portId>`.
+ * right side, `s2` the middle of the bottom side. Pin a link end to one by naming `<node>#<portId>`.
  */
-export const portId = (side: Side, index = 1): string => `${side}${index}`;
+export const portId = (side: Side, index = 1): string => `${SIDE_LETTERS[side]}${index}`;
 
 /**
  * `count` ports spread evenly along each side, named by `portId`. Each side lists its centre port first
@@ -38,20 +48,18 @@ export const sidePorts = (count = DEFAULT_PORTS_PER_SIDE): readonly Port[] => {
   const indices = Array.from({ length: count }, (_, index) => index + 1).sort(
     (left, right) => Math.abs(left - middle) - Math.abs(right - middle) || left - right,
   );
-  return SIDES.flatMap((side) =>
-    indices.map((index) => ({ id: portId(side, index), side, offset: index / (count + 1) })),
-  );
+  return SIDES.flatMap((side) => indices.map((index) => sidePort(portId(side, index), side, index / (count + 1))));
 };
 
 export const defaultPorts: readonly Port[] = sidePorts();
 
-/** How many ports a node spreads along each side: its own count, else its type's, else the default. */
+/** How many ports a node spreads along each side: its own count, else its kind's, else the default. */
 export const portsPerSideOf = (registry: NodeRegistry, node: Node): number =>
   clampPorts(node.portsPerSide ?? nodeDef(registry, node)?.portsPerSide ?? DEFAULT_PORTS_PER_SIDE);
 
 /**
  * A node's ports: its own when it carries them, else its own `portsPerSide` spread along each side, else
- * its type's layout or count. Ports landing on the same point collapse to the first, so a definition
+ * its kind's layout or count. Ports landing on the same point collapse to the first, so a definition
  * cannot stack two at one place.
  */
 export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] => {
@@ -74,36 +82,47 @@ export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] =
   });
 };
 
-/** A port's point on the frame: exactly its offset along the side, whatever the grid. */
-export const portPoint = (bounds: Bounds, port: Port): Point => {
-  const along = (origin: number, length: number) => origin + length * port.offset;
-  switch (port.side) {
-    case 'n':
-      return { x: along(bounds.x, bounds.width), y: bounds.y };
-    case 's':
-      return { x: along(bounds.x, bounds.width), y: bounds.y + bounds.height };
-    case 'w':
-      return { x: bounds.x, y: along(bounds.y, bounds.height) };
-    case 'e':
-      return { x: bounds.x + bounds.width, y: along(bounds.y, bounds.height) };
-  }
-};
+/** A port's point in the frame: exactly its fraction of each axis, whatever the grid. */
+export const portPoint = (bounds: Bounds, port: Pick<Port, 'x' | 'y'>): Point => ({
+  x: bounds.x + bounds.width * port.x,
+  y: bounds.y + bounds.height * port.y,
+});
 
-const OPPOSITE: Record<Side, Side> = { n: 's', s: 'n', e: 'w', w: 'e' };
+const OPPOSITE: Record<Side, Side> = { top: 'bottom', bottom: 'top', right: 'left', left: 'right' };
 
 export const oppositeSide = (side: Side): Side => OPPOSITE[side];
 
 /** Outward unit normal of a side. */
 export const sideNormal = (side: Side): Point => {
   switch (side) {
-    case 'n':
+    case 'top':
       return { x: 0, y: -1 };
-    case 's':
+    case 'bottom':
       return { x: 0, y: 1 };
-    case 'w':
+    case 'left':
       return { x: -1, y: 0 };
-    case 'e':
+    case 'right':
       return { x: 1, y: 0 };
+  }
+};
+
+/**
+ * Where a link leaving `point` toward `side` crosses the frame it is on: the point itself for a port on that edge,
+ * and the edge straight out from a port inside the frame, so its stub is measured from the shape rather than within it.
+ */
+export const frameExit = (point: Point, side: Side, bounds: Bounds | undefined): Point => {
+  if (!bounds) {
+    return point;
+  }
+  switch (side) {
+    case 'top':
+      return { x: point.x, y: Math.min(point.y, bounds.y) };
+    case 'bottom':
+      return { x: point.x, y: Math.max(point.y, bounds.y + bounds.height) };
+    case 'left':
+      return { x: Math.min(point.x, bounds.x), y: point.y };
+    case 'right':
+      return { x: Math.max(point.x, bounds.x + bounds.width), y: point.y };
   }
 };
 

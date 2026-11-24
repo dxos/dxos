@@ -23,14 +23,14 @@ import { TriggerComponent } from './Trigger.tsx';
 /** The struct behind `TriggerShape`, for hosts that compose their own union (the scene engine). */
 export const TriggerShapeSchema = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('trigger'),
+    kind: Schema.Literal('trigger'),
     data: computeData({ functionTrigger: Schema.optional(Ref.Ref(Trigger.Trigger)) }),
   }),
 );
 
 // TODO(wittjosiah): Try to clean up this type inference.
 export interface TriggerShape extends ComputeShape {
-  type: 'trigger';
+  kind: 'trigger';
   data?: ComputeShape['data'] & { functionTrigger?: Ref.Ref<Trigger.Trigger> };
 }
 
@@ -48,7 +48,7 @@ export const createTrigger = ({ spaceId, triggerKind, ...props }: CreateTriggerP
     spec: createTriggerSpec({ spaceId, triggerKind }),
   });
   return createShape<TriggerShape>({
-    type: 'trigger',
+    kind: 'trigger',
     size: { width: 3 * MAJOR_GRID, height: getHeight(TriggerEvent.EmailEvent) },
     ...props,
     data: { functionTrigger: Ref.make(functionTrigger) },

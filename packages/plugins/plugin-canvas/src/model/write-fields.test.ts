@@ -40,11 +40,11 @@ describe('writeFields', () => {
   });
 
   test('a field left out of the next value is deleted, and a new nested record is set whole', () => {
-    const before = { id: 'a', style: { hue: 'red' } };
+    const before = { id: 'a', overrides: { color: 'red' } };
     const after = { id: 'a', scale: { x: 2, y: 2, z: 2 } };
     const { target, writes } = recording(JSON.parse(JSON.stringify(before)));
     writeFields(target, before, after);
-    expect(writes.sort()).toEqual(['delete style', 'set scale']);
+    expect(writes.sort()).toEqual(['delete overrides', 'set scale']);
     expect(target).toEqual(after);
   });
 });

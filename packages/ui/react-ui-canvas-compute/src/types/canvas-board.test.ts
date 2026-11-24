@@ -97,10 +97,10 @@ describe('CanvasBoard', () => {
     const layout = createBoardStore(board).read();
     expect(layout).toMatchObject({ id: board.id, dim: '2d', name: 'Circuit' });
     expect(Object.keys(layout.elements)).toEqual(['switch-1', 'note-1', 'edge-1']);
-    expect(layout.elements['note-1']).toMatchObject({ type: 'note', text: 'Hello', center: { x: 0, y: -128 } });
+    expect(layout.elements['note-1']).toMatchObject({ kind: 'note', label: 'Hello', center: { x: 0, y: -128 } });
     // The editor stored the compute node beside the shape's own fields; it reads under the element's data.
-    expect(layout.elements['switch-1']).toMatchObject({ type: 'switch', data: { node: 'compute-1' } });
-    expect('node' in layout.elements['switch-1']).toBe(false);
+    expect(layout.elements['switch-1']).toMatchObject({ kind: 'switch', data: { node: 'compute-1' } });
+    expect('node' in layout.elements['switch-1'] || 'type' in layout.elements['switch-1']).toBe(false);
     expect(layout.elements['edge-1']).toMatchObject({
       source: { node: 'switch-1', port: 'output.value' },
       target: { node: 'note-1', port: 'input.input' },
@@ -114,7 +114,7 @@ describe('CanvasBoard', () => {
       kind: 'create',
       element: {
         id: 'rect-1',
-        type: 'rect',
+        kind: 'rect',
         z: 'z',
         center: { x: 256, y: 0 },
         size: { width: 128, height: 64 },
@@ -122,7 +122,7 @@ describe('CanvasBoard', () => {
       },
     });
     expect(board.layout.nodes.map((node) => node.id)).toEqual(['switch-1', 'note-1', 'rect-1']);
-    expect(board.layout.nodes[2]).toMatchObject({ type: 'rect', size: { width: 128, height: 64 }, label: 'Added' });
+    expect(board.layout.nodes[2]).toMatchObject({ kind: 'rect', size: { width: 128, height: 64 }, label: 'Added' });
     // The stored connection is untouched by a write that does not change it.
     expect(board.layout.edges[0]).toEqual(persistedBoard.layout.edges[0]);
   });
@@ -133,12 +133,14 @@ describe('CanvasBoard', () => {
     const [board] = await EffectEx.runPromise(loadBoard);
     const store = createBoardStore(board);
     store.write({ kind: 'move', ids: ['note-1'], delta: { x: 32, y: 0 } });
-    const [{ node: _node, ...shape }, note] = persistedBoard.layout.nodes;
+    const [{ node: _node, type: switchKind, ...shape }, { type: noteKind, text, ...note }] =
+      persistedBoard.layout.nodes;
+    // The write also stores each shape in the current words: its kind, and a note's text as its label.
     expect(Obj.getSnapshot(board).layout.nodes).toEqual([
-      { ...shape, data: { node: 'compute-1' } },
-      { ...note, center: { x: 32, y: -128 } },
+      { ...shape, kind: switchKind, data: { node: 'compute-1' } },
+      { ...note, kind: noteKind, label: text, center: { x: 32, y: -128 } },
     ]);
-    expect(store.read().elements['switch-1']).toMatchObject({ type: 'switch', data: { node: 'compute-1' } });
+    expect(store.read().elements['switch-1']).toMatchObject({ kind: 'switch', data: { node: 'compute-1' } });
   });
 
   test("a write moves a persisted trigger's function trigger under its data, still a reference", async ({ expect }) => {
@@ -147,7 +149,7 @@ describe('CanvasBoard', () => {
     expect(Ref.isRef(stored()?.functionTrigger)).toBe(true);
     createBoardStore(board).write({ kind: 'move', ids: ['note-1'], delta: { x: 32, y: 0 } });
     const shape = stored();
-    expect(Object.keys(shape ?? {}).sort()).toEqual(['center', 'data', 'id', 'size', 'type']);
+    expect(Object.keys(shape ?? {}).sort()).toEqual(['center', 'data', 'id', 'kind', 'size']);
     expect(shape?.data.node).toBe(TRIGGER_NODE);
     expect(Ref.isRef(shape?.data.functionTrigger)).toBe(true);
     expect(uri).toBeDefined();

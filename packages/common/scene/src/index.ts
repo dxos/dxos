@@ -19,4 +19,8 @@ export * from './model-intent.ts';
 export * from './validate.ts';
 export * from './watch.ts';
 export * from './clipboard.ts';
+export * from './color.ts';
+export * from './theme.ts';
+export * from './upgrade.ts';
 export * as Ontology from './ontology.ts';
+export * as Legacy from './legacy.ts';

@@ -2,28 +2,42 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { useSceneLook } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
-import { DEFAULT_FONT_SIZE, FONT_FAMILIES, type FontFamily, LINK_FONT_SIZE, NodeStyle } from '@dxos/scene';
+import { DEFAULT_FONT, DEFAULT_FONT_SIZE, FONT_SLOTS, LINK_FONT_SIZE, Style2D } from '@dxos/scene';
 
-const FAMILY_LABELS: Record<FontFamily, string> = { default: 'Default', monospace: 'Monospace' };
+/** What the slots every theme has are called; any other slot reads by its own name. */
+const SLOT_LABELS: Readonly<Record<string, string>> = { body: 'Default', mono: 'Monospace' };
 
-const FAMILIES = FONT_FAMILIES.map((value) => ({ value, label: FAMILY_LABELS[value] }));
+const slotLabel = (slot: string): string => SLOT_LABELS[slot] ?? slot.charAt(0).toUpperCase() + slot.slice(1);
 
 /** The editor's readable range; stored sizes outside it are kept, not checked. */
 const FONT_SIZE = { min: 8, max: 80, step: 1 };
 
 /**
- * The text face and size, rendered at `style.fontFamily`: the two side by side in one row (`style.fontSize` is
- * hidden). Each writes only its own path, so an edit across a selection leaves each element's other style values.
+ * The text face and size, rendered at `overrides.font`: the two side by side in one row (`overrides.fontSize` is
+ * hidden). The faces are the theme's font slots: those every theme has, then any more the canvas's theme defines.
+ * Each writes only its own path, so an edit across a selection leaves each element's other style values.
  */
 export const FontField: FormFieldRenderer = ({ jsonPath, readonly }) => {
-  const stylePath = (jsonPath ?? 'style.fontFamily').split('.').slice(0, -1);
-  const familyField = useFormFieldState('FontField', [...stylePath, 'fontFamily']);
-  const family: unknown = familyField.getValue();
+  const stylePath = (jsonPath ?? 'overrides.font').split('.').slice(0, -1);
+  const fontField = useFormFieldState('FontField', [...stylePath, 'font']);
+  const stored: unknown = fontField.getValue();
+  const font = typeof stored === 'string' ? stored : DEFAULT_FONT;
+  const { theme } = useSceneLook();
+  const items = useMemo(
+    // A stored slot the theme does not define is still listed, so the select shows what the element says.
+    () =>
+      [...new Set([...FONT_SLOTS, ...Object.keys(theme.fonts ?? {}), font])].map((value) => ({
+        value,
+        label: slotLabel(value),
+      })),
+    [theme.fonts, font],
+  );
   return (
     <Layout.Container
       layout='row'
@@ -36,17 +50,13 @@ export const FontField: FormFieldRenderer = ({ jsonPath, readonly }) => {
     >
       <Form.Field path={jsonPath} label='Font' readonly={readonly}>
         <SelectControl
-          items={FAMILIES}
-          value={typeof family === 'string' ? family : 'default'}
+          items={items}
+          value={font}
           readonly={readonly}
           onValueChange={(next) => {
-            const fontFamily = FONT_FAMILIES.find((family) => family === next);
             // The body face is the default, so it is stored as unset; a pick never blurs, so it commits itself.
-            familyField.onValueChange(
-              NodeStyle.fields.fontFamily.ast,
-              fontFamily === 'default' ? undefined : fontFamily,
-            );
-            familyField.onBlur();
+            fontField.onValueChange(Style2D.fields.font.ast, next === DEFAULT_FONT ? undefined : next);
+            fontField.onBlur();
           }}
         />
       </Form.Field>
@@ -71,7 +81,7 @@ const FontSizeControl = ({ path, fallback, readonly }: FontSizeControlProps) => 
         onValueChange={(_, fontSize) => {
           if (!Number.isNaN(fontSize)) {
             // A stepper press never blurs, so each value commits itself.
-            sizeField.onValueChange(NodeStyle.fields.fontSize.ast, fontSize);
+            sizeField.onValueChange(Style2D.fields.fontSize.ast, fontSize);
             sizeField.onBlur();
           }
         }}
@@ -80,7 +90,7 @@ const FontSizeControl = ({ path, fallback, readonly }: FontSizeControlProps) => 
   );
 };
 
-/** The caption size alone, rendered at `style.fontSize` when a link is selected, since a link has no font face. */
+/** The caption size alone, rendered at `overrides.fontSize` when a link is selected, since a link has no font face. */
 export const FontSizeField: FormFieldRenderer = ({ jsonPath, readonly }) => (
-  <FontSizeControl path={(jsonPath ?? 'style.fontSize').split('.')} fallback={LINK_FONT_SIZE} readonly={readonly} />
+  <FontSizeControl path={(jsonPath ?? 'overrides.fontSize').split('.')} fallback={LINK_FONT_SIZE} readonly={readonly} />
 );

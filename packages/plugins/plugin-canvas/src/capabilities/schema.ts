@@ -3,7 +3,7 @@
 //
 
 import * as Animation from '@dxos/plugin-animator/Animation';
-import { Scene, StyleCatalog } from '@dxos/scene';
+import { Legacy, Scene, StyleCatalog } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
 
 import { Canvas, Generator } from '#types';
@@ -23,6 +23,8 @@ export default [
   Scene.Scene2D,
   Scene.Scene3D,
   StyleCatalog,
+  // The scene objects at the version before, so one a file or an older peer brings is read as what it is and migrated.
+  ...Legacy.Types,
   CreatedFrom.CreatedFrom,
   Animation.Animation,
 ];

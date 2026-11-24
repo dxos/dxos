@@ -10,6 +10,7 @@ import { log } from '@dxos/log';
 
 import { type GeometrySource, type MeshData } from './renderer.ts';
 import { evaluateSolid, fallbackMesh, primitiveSolid, solidKey, toMeshData } from './solid.ts';
+import { isRounded } from './style.ts';
 
 let loading: Promise<ManifoldToplevel> | undefined;
 
@@ -32,7 +33,7 @@ export const manifoldGeometry = (wasm: ManifoldToplevel): GeometrySource => {
   const reported = new Set<string>();
   let roundedCube: MeshData | undefined;
   return (item) => {
-    if (item.type === 'cube' && item.style?.rounded === true) {
+    if (item.type === 'cube' && isRounded(item.style)) {
       if (!roundedCube) {
         const solid = primitiveSolid(wasm, 'cube', { x: 1, y: 1, z: 1 }, true);
         roundedCube = toMeshData(solid);

@@ -8,7 +8,7 @@
 // `parse(print(x))` round-tripping is only worth anything if the text side is normalized too.
 //
 
-import { Shape } from '@dxos/scene';
+import { Shape, colorLiteral } from '@dxos/scene';
 
 import { itemsOf } from '../items.ts';
 import type * as Scene from '../scene.ts';
@@ -25,6 +25,7 @@ import {
   OBJECT_ATTRS,
   RESERVED,
   dataAttrName,
+  withLegacy,
 } from './vocabulary.ts';
 
 const ESCAPES: Record<string, string> = { '\\': '\\\\', '"': '\\"', '\n': '\\n', '\t': '\\t', '\r': '\\r' };
@@ -76,6 +77,9 @@ const formatScalar = (value: AttrValue): string =>
       : formatString(value)
     : String(value);
 
+/** A colour as the reader takes it: a name, toned or not, is bare; a CSS literal is quoted, since `#` opens a comment. */
+export const formatColor = (color: string): string => (colorLiteral(color) === undefined ? color : formatString(color));
+
 /** Prints `name=value` for the attributes of `kind` that are set, in the table's order. */
 const formatAttrs = (kind: keyof typeof ELEMENT_ATTRS, values: Partial<Record<string, AttrValue>>): string[] =>
   formatSpecs(ELEMENT_ATTRS[kind], values);
@@ -89,6 +93,9 @@ const formatSpecs = (specs: readonly AttrSpec[], values: Partial<Record<string, 
     }
     if (type === 'string' && typeof value === 'string') {
       return [`${name}=${formatString(value)}`];
+    }
+    if (type === 'color' && typeof value === 'string') {
+      return [`${name}=${formatColor(value)}`];
     }
     return [`${name}=${type === 'name' || type === 'scalar' ? formatScalar(value) : String(value)}`];
   });
@@ -121,7 +128,8 @@ const formatItems = (items: readonly Semantic.Item[] | undefined, pad: string): 
 
 /** A kind's own fields beside the attributes `specs` already claims, whose names are written escaped. */
 const formatFields = (specs: readonly AttrSpec[], data: Readonly<Record<string, unknown>> | undefined): string[] => {
-  const claimed = new Set(specs.map(({ name }) => name));
+  // The flag older text states a stroke with is still read as one, so a field of that name is escaped too.
+  const claimed = new Set(withLegacy(specs).map(({ name }) => name));
   return Object.entries(data ?? {})
     .sort(([left], [right]) => (left < right ? -1 : 1))
     .flatMap(([name, value]) => {
@@ -138,7 +146,6 @@ const style = ({
   fill,
   stroke,
   weight,
-  border,
   align,
   valign,
   fontSize,
@@ -147,7 +154,6 @@ const style = ({
   fill,
   stroke,
   weight,
-  border,
   align,
   valign,
   fontSize,
@@ -163,14 +169,14 @@ export const formatElement = (element: Shape.Element, { nested = false }: { nest
     case 'grid':
       return [
         // A box a component draws says so, in place of a shape it does not draw.
-        element.type === undefined ? element.kind : 'custom',
+        element.component === undefined ? element.kind : 'custom',
         formatId(element.id),
         // A child the braces place states neither: its frame is the rule's result, re-solved on every render, and
         // writing it down would be a coordinate that the next solve contradicts.
         ...(nested ? [] : [formatPoint(element), formatSize(element.w, element.h)]),
         ...(element.text === undefined ? [] : [formatString(element.text)]),
         ...formatAttrs(element.kind, {
-          kind: element.type,
+          kind: element.component,
           rotation: element.rotation,
           corners: element.corners,
           cols: element.cols,
@@ -367,14 +373,13 @@ export const formatGridDiagram = (diagram: Semantic.Diagram): string => {
         formatId(node.id),
         ...(node.labelled || node.label !== node.id ? [formatString(node.label)] : []),
         ...formatSpecs(NODE_ATTRS, {
-          kind: node.type,
+          kind: node.component,
           ref: node.ref,
           role: node.role,
           shape: node.shape,
           color: node.color,
           fill: node.fill,
           stroke: node.stroke,
-          border: node.border,
           width: node.width,
           height: node.height,
         }),
@@ -406,7 +411,6 @@ export const formatGridDiagram = (diagram: Semantic.Diagram): string => {
         color: group.color,
         fill: group.fill,
         stroke: group.stroke,
-        border: group.border,
       }),
     ].join(' ');
     const inner = membersOf(id).flatMap((child) => member(child, depth + 1));

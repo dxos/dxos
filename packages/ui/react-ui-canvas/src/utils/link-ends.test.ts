@@ -22,26 +22,26 @@ import { flattenPath } from './path.ts';
 const miter = (width: number) => width / 2 / Math.sin(Math.atan2(5, 10));
 
 describe("a link end's marker", () => {
-  test('the source end is the start marker and the target end the end marker', ({ expect }) => {
-    const ends = { start: 'circle', end: 'arrow' } as const;
+  test('the source end is the tail marker and the target end the head marker', ({ expect }) => {
+    const ends = { tail: 'circle', head: 'arrow' } as const;
     expect(endMarker(ends, 'source')).toBe('circle');
     expect(endMarker(ends, 'target')).toBe('arrow');
     expect(endMarker(undefined, 'target')).toBeUndefined();
   });
 
   test('setting one end keeps the other, and clearing one drops only it', ({ expect }) => {
-    expect(withEndMarker(undefined, 'target', 'arrow')).toEqual({ end: 'arrow' });
-    expect(withEndMarker({ end: 'arrow' }, 'source', 'triangle')).toEqual({ start: 'triangle', end: 'arrow' });
-    expect(withEndMarker({ start: 'circle', end: 'arrow' }, 'target', undefined)).toEqual({ start: 'circle' });
-    expect(withEndMarker({ end: 'arrow' }, 'target', undefined)).toEqual({});
+    expect(withEndMarker(undefined, 'target', 'arrow')).toEqual({ head: 'arrow' });
+    expect(withEndMarker({ head: 'arrow' }, 'source', 'triangle')).toEqual({ tail: 'triangle', head: 'arrow' });
+    expect(withEndMarker({ tail: 'circle', head: 'arrow' }, 'target', undefined)).toEqual({ tail: 'circle' });
+    expect(withEndMarker({ head: 'arrow' }, 'target', undefined)).toEqual({});
   });
 
   test('a link drawn takes the markers last set, and before any were an arrow where it has a direction', ({
     expect,
   }) => {
     expect(drawnLinkEnds(undefined, false)).toBeUndefined();
-    expect(drawnLinkEnds(undefined, true)).toEqual({ end: 'arrow' });
-    expect(drawnLinkEnds({ start: 'circle' }, true)).toEqual({ start: 'circle' });
+    expect(drawnLinkEnds(undefined, true)).toEqual({ head: 'arrow' });
+    expect(drawnLinkEnds({ tail: 'circle' }, true)).toEqual({ tail: 'circle' });
     // Markers cleared are a choice too: the next link has none, directed or not.
     expect(drawnLinkEnds({}, true)).toBeUndefined();
   });
@@ -100,13 +100,13 @@ describe('marker ends', () => {
 
   test("a crow's foot's toes reach the anchor, and the line runs on between them", ({ expect }) => {
     for (const stroke of [1, 2, 6]) {
-      const many = markerFrame('many', 16, stroke);
+      const foot = markerFrame('crowsfoot', 16, stroke);
       // The toes end at 10 view units; their round caps reach half a stroke past, to the anchor.
-      expect((many.refX - 10) * (many.size / many.view)).toBeCloseTo(stroke / 2);
-      expect(many.size).toBe(markerFrame('arrow', 16, stroke).size);
+      expect((foot.refX - 10) * (foot.size / foot.view)).toBeCloseTo(stroke / 2);
+      expect(foot.size).toBe(markerFrame('arrow', 16, stroke).size);
     }
-    expect(markerTrim('many', 16, 2, { width: 8, round: false })).toBe(0);
-    expect(markerTrim('many', 16, 2, { width: 8, round: true })).toBe(0);
+    expect(markerTrim('crowsfoot', 16, 2, { width: 8, round: false })).toBe(0);
+    expect(markerTrim('crowsfoot', 16, 2, { width: 8, round: true })).toBe(0);
   });
 });
 
@@ -118,7 +118,7 @@ describe('groove heads', () => {
   }) => {
     // Arriving left to right at (100, 0), as a smart link's last straight run does.
     const path = 'M 0 40 L 50 40 Q 60 40, 60 30 L 60 0 L 100 0';
-    const [upper, vertex, lower] = corners(grooveHeads(path, { end: 'arrow' }, 8, 16).outline);
+    const [upper, vertex, lower] = corners(grooveHeads(path, { head: 'arrow' }, 8, 16).outline);
     expect(vertex.x + miter(8)).toBeCloseTo(100);
     expect(vertex.y).toBeCloseTo(0);
     expect(upper.x).toBeLessThan(vertex.x);
@@ -126,14 +126,14 @@ describe('groove heads', () => {
     expect(grooveTrim('arrow', 8, 16)).toBeCloseTo(miter(8));
   });
 
-  test('a start head points back along the route', ({ expect }) => {
-    const [, vertex] = corners(grooveHeads('M 0 0 L 0 100', { start: 'arrow' }, 8, 16).outline);
+  test('a tail head points back along the route', ({ expect }) => {
+    const [, vertex] = corners(grooveHeads('M 0 0 L 0 100', { tail: 'arrow' }, 8, 16).outline);
     expect(vertex.x).toBeCloseTo(0);
     expect(vertex.y).toBeCloseTo(miter(8));
   });
 
   test("a ring's far side is at the end, and the track stops at its near side", ({ expect }) => {
-    const head = grooveHeads('M 0 0 L 100 0', { end: 'circle' }, 8, 16).outline;
+    const head = grooveHeads('M 0 0 L 100 0', { head: 'circle' }, 8, 16).outline;
     // Radius 12 about 84: its outer edge, half the channel out, is at the end; its near side at 72.
     expect(head).toContain('A 12 12');
     expect(head.startsWith('M 72 0')).toBe(true);
@@ -143,7 +143,7 @@ describe('groove heads', () => {
   test("a crow's foot opens onto the end: its toes are there, its vertex back along the route, and the track runs on", ({
     expect,
   }) => {
-    const head = grooveHeads('M 0 0 L 100 0', { end: 'many' }, 8, 16);
+    const head = grooveHeads('M 0 0 L 100 0', { head: 'crowsfoot' }, 8, 16);
     const [upper, vertex, lower] = corners(head.outline);
     // The toes' caps, half the channel out, reach the end; the vertex is a head's length back, on the route.
     expect(upper.x + 4).toBeCloseTo(100);
@@ -154,43 +154,43 @@ describe('groove heads', () => {
     expect(vertex.y).toBeCloseTo(0);
     expect(vertex.x).toBeLessThan(upper.x);
     expect(head.hollow).toBe('');
-    expect(grooveTrim('many', 8, 16)).toBeCloseTo(4);
-    // At a start, the toes are at the route's first point.
-    const [first] = corners(grooveHeads('M 0 0 L 0 100', { start: 'many' }, 8, 16).outline);
+    expect(grooveTrim('crowsfoot', 8, 16)).toBeCloseTo(4);
+    // At the tail, the toes are at the route's first point.
+    const [first] = corners(grooveHeads('M 0 0 L 0 100', { tail: 'crowsfoot' }, 8, 16).outline);
     expect(first.y).toBeCloseTo(4);
   });
 
   test('a degenerate route draws no heads', ({ expect }) => {
-    expect(grooveHeads('M 5 5', { end: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '', solid: '' });
-    expect(grooveHeads('M 5 5 L 5 5', { end: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '', solid: '' });
+    expect(grooveHeads('M 5 5', { head: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '', solid: '' });
+    expect(grooveHeads('M 5 5 L 5 5', { head: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '', solid: '' });
   });
 
   test("a hollow head's inside is its own outline, so the track stops at its base and the hollow shows the ground", ({
     expect,
   }) => {
-    const triangle = grooveHeads('M 0 0 L 100 0', { end: 'triangle' }, 8, 16);
+    const triangle = grooveHeads('M 0 0 L 100 0', { head: 'triangle' }, 8, 16);
     expect(triangle.hollow).toBe(triangle.outline);
     // The track's cap ends on the base, inside the hollow it is cut from.
     const [tip, upper, lower] = corners(triangle.hollow);
     expect(tip.x + miter(8)).toBeCloseTo(100);
     expect(upper.x).toBeCloseTo(100 - grooveTrim('triangle', 8, 16));
     expect(lower.x).toBeCloseTo(upper.x);
-    const ring = grooveHeads('M 0 0 L 100 0', { end: 'circle' }, 8, 16);
+    const ring = grooveHeads('M 0 0 L 100 0', { head: 'circle' }, 8, 16);
     expect(ring.hollow).toBe(ring.outline);
   });
 
   test("a filled diamond's inside is solid, and a hollow one's shows the ground", ({ expect }) => {
-    const filled = grooveHeads('M 0 0 L 100 0', { end: 'diamond-filled' }, 8, 16);
+    const filled = grooveHeads('M 0 0 L 100 0', { head: 'diamond-filled' }, 8, 16);
     expect(filled.solid).toBe(filled.outline);
     expect(filled.hollow).toBe('');
-    const hollow = grooveHeads('M 0 0 L 100 0', { end: 'diamond' }, 8, 16);
+    const hollow = grooveHeads('M 0 0 L 100 0', { head: 'diamond' }, 8, 16);
     expect(hollow.hollow).toBe(hollow.outline);
     expect(hollow.solid).toBe('');
   });
 
   test('an open arrow has no hollow, and only hollow ends are cut from the track', ({ expect }) => {
-    expect(grooveHeads('M 0 0 L 100 0', { end: 'arrow' }, 8, 16).hollow).toBe('');
-    const both = grooveHeads('M 0 0 L 100 0', { start: 'arrow', end: 'triangle' }, 8, 16);
+    expect(grooveHeads('M 0 0 L 100 0', { head: 'arrow' }, 8, 16).hollow).toBe('');
+    const both = grooveHeads('M 0 0 L 100 0', { tail: 'arrow', head: 'triangle' }, 8, 16);
     expect(flattenPath(both.hollow)).toHaveLength(1);
   });
 

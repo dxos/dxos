@@ -22,7 +22,7 @@ const setup = () => {
     { runPromiseExit: () => Promise.reject(new Error('The view test runs no graph.')) },
     model,
   );
-  const gpt = circuit.nodes.find((node) => node.type === 'gpt');
+  const gpt = circuit.nodes.find((node) => node.kind === 'gpt');
   const computeId = gpt?.data?.node;
   if (!gpt || computeId === undefined) {
     throw new Error('The circuit has no GPT shape with a compute node.');

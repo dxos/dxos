@@ -19,6 +19,7 @@ import {
   isInstanceNode,
   isLink,
   isViewNode,
+  linkMarkers,
 } from '@dxos/scene';
 
 import {
@@ -401,10 +402,12 @@ export const createCanvasController = ({
       const styleMap = registry.get(store.styles);
       const id = newId('class');
       const name = `Class ${Object.keys(styleMap).length + 1}`;
-      const style = isLink(element) ? classedLink(element, styleMap).style : classedNode(element, styleMap).style;
-      const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };
+      const look = isLink(element)
+        ? classedLink(element, styleMap).overrides
+        : classedNode(element, styleMap).overrides;
+      const styleClass: StyleClass = { id, name, ...(look ? { style: look } : {}) };
       registry.set(store.styles, { ...styleMap, [id]: styleClass });
-      draw().apply(updateElement(element.id, { class: id, style: undefined }));
+      draw().apply(updateElement(element.id, { style: id, overrides: undefined }));
       return id;
     },
   };
@@ -459,7 +462,7 @@ export const createCanvasController = ({
     setTool: (tool) => {
       registry.set(atoms.tool, tool);
       if (tool.kind === 'link') {
-        registry.set(atoms.linkType, tool.type);
+        registry.set(atoms.linkPath, tool.path);
       }
       if (tool.kind === 'node' || tool.kind === 'link') {
         select([]);
@@ -823,8 +826,8 @@ export const createCanvasController = ({
       if (!link || link.locked || !capabilities().update) {
         return false;
       }
-      const ends = withEndMarker(link.ends, end, marker);
-      draw().apply(updateElement(id, { ends: ends.start || ends.end ? ends : undefined }));
+      const ends = withEndMarker(linkMarkers(link), end, marker);
+      draw().apply(updateElement(id, { tail: ends.tail, head: ends.head }));
       registry.set(atoms.linkEnds, ends);
       return true;
     },

@@ -92,7 +92,11 @@ export const useObjectActions = ({
         const copy = copyComposite(composite, createId('object'), createId);
         const unique = retargetInstance(instance, copy.composite.id, copy.rename);
         commit({ [copy.composite.id]: copy.composite }, [
-          updateElement(id, { composite: unique.composite, overrides: unique.overrides, ports: unique.ports }),
+          updateElement(id, {
+            composite: unique.composite,
+            partOverrides: unique.partOverrides,
+            ports: unique.ports,
+          }),
           ...renamePortLinks(current, instance, unique),
         ]);
       },
@@ -123,7 +127,7 @@ export const useObjectActions = ({
         };
         const current = registry.get(draw.scene);
         const instance: PlacedComposite = {
-          type: 'instance',
+          kind: 'instance',
           id: createId('instance'),
           z: topZ(Object.values(current.nodes)),
           center,

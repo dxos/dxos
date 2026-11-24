@@ -3398,7 +3398,7 @@ page tile-scene-schema: Scene schema
   template: resource
   status: spike
   covers:
-    - Every schema of a stored drawing in `@dxos/scene`: the document, scenes, layouts, models, elements, nodes, links, styles and diagram shapes [D-378]
+    - Every schema of a stored drawing in `@dxos/scene`: the document, scenes, layouts, models, elements, nodes, links, styles, the theme's slots, the shared vocabulary and diagram shapes [D-378] [D-380]
     - One table per type, where a type that repeats another's fields lists only the fields that differ, and one table of the enums [D-379]
     - The element kinds that have no schema in `@dxos/scene`, by name and package [D-379]
 ```
@@ -7297,6 +7297,13 @@ decision D-379: The page of [D-378] is `tile-scene-schema`, a `resource` page in
   rejected:
     - A section of its own for the scene model: one page does not make a section, and the sidebar lists sections above every page.
     - PLEX: its pages cover the app framework and plugins, and the scene types belong to no plugin.
+```
+
+```mdl
+decision D-380: The page of [D-378] shows the stored drawing's types in one set of names. A type is told apart by its `kind`. A colour is one string, a theme name or a CSS colour, and a font is a slot of the theme. A port is a point of its node's frame. The words for a stroke, a fill, corners and alignment are the same on a stored element, a node, a link and a diagram shape, and the page lists them once, with the theme's slots, in sections of their own.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [tile-scene-schema]
 ```
 
 ## Appendix: Extension Definitions

@@ -44,7 +44,7 @@ const TaskData = Schema.Struct({
 
 const TaskNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('task'),
+  kind: Schema.Literal('task'),
   /** The task's title, in the core base's `label`, so it still reads where the type is unknown. */
   label: Schema.String,
   data: Schema.optional(TaskData),
@@ -52,7 +52,7 @@ const TaskNode = Schema.Struct({
 
 const TaskNodeView = ({ node, editing }: NodeViewProps) => {
   const data = kindData(TaskData, node);
-  if (node.type !== 'task' || !data) {
+  if (node.kind !== 'task' || !data) {
     return null;
   }
   const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
@@ -72,7 +72,7 @@ const taskSpec: ElementKindSpec = {
   key: 'K',
   schema: TaskNode,
   component: TaskNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'task', id, z, center, size, label: 'Task' }),
+  create: ({ id, z, center, size }) => ({ kind: 'task', id, z, center, size, label: 'Task' }),
   defaultSize: { width: 2, height: 1 },
   resizable: true,
   parts: [{ field: 'label' }],
@@ -97,17 +97,17 @@ const seed = (content: ContentMap, root: string) => {
   content[nodeKey('r')] = {
     kind: 'node',
     scene: root,
-    node: { id: 'r', type: 'rect', z: 'a1', ...frame(-320), label: 'Rect' },
+    node: { id: 'r', kind: 'rect', z: 'a1', ...frame(-320), label: 'Rect' },
   };
   content[nodeKey('t1')] = {
     kind: 'node',
     scene: root,
-    node: { id: 't1', type: 'task', z: 'a2', ...frame(0), label: 'Write the spec', data: { done: true } },
+    node: { id: 't1', kind: 'task', z: 'a2', ...frame(0), label: 'Write the spec', data: { done: true } },
   };
   content[nodeKey('t2')] = {
     kind: 'node',
     scene: root,
-    node: { id: 't2', type: 'task', z: 'a3', ...frame(320), label: 'Ship it' },
+    node: { id: 't2', kind: 'task', z: 'a3', ...frame(320), label: 'Ship it' },
   };
 };
 

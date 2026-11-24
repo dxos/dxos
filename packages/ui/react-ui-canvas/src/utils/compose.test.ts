@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type InstanceNode, type Node, type PlacedComposite, isInstanceNode } from '@dxos/scene';
+import { type InstanceNode, type Node, type PlacedComposite, isInstanceNode, sidePort } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { type RenderList2D } from '../model/index.ts';
@@ -71,7 +71,7 @@ describe('composeSelection', () => {
     // The link that crossed the edge leaves through a port of the instance, named by the inner node it left.
     expect(composite.nodes.b.exposed).toBe(true);
     expect(parent.links.bc.source).toEqual({ node: 'i', port: 'b' });
-    expect(instance.ports).toEqual([{ id: 'b', side: 'e', offset: 0.5 }]);
+    expect(instance.ports).toEqual([sidePort('b', 'right', 0.5)]);
   });
 
   test('a locked node is not grouped', ({ expect }) => {
@@ -89,24 +89,24 @@ describe('instances', () => {
     expect(transform).toEqual({ scale: 2, offset: { x: 300, y: 100 } });
   });
 
-  test('overrides apply per field, style per key', ({ expect }) => {
+  test('part overrides apply per field, a look per key', ({ expect }) => {
     const composite: RenderList2D = {
       id: 'obj',
       kind: 'composite',
-      nodes: { a: { ...scene.nodes.a, style: { hue: 'red', rounded: true } } },
+      nodes: { a: { ...scene.nodes.a, overrides: { color: 'red', corners: 'all' } } },
       links: {},
     };
     const instance: InstanceNode = {
-      type: 'instance',
+      kind: 'instance',
       id: 'i',
       z: 'a',
       center: { x: 0, y: 0 },
       size: { width: 100, height: 50 },
       composite: 'obj',
-      overrides: { a: { style: { hue: 'blue', opacity: 0.5 } } },
+      partOverrides: { a: { overrides: { color: 'blue', opacity: 0.5 } } },
     };
     expect(instanceView(instance, composite).nodes.a).toMatchObject({
-      style: { hue: 'blue', rounded: true, opacity: 0.5 },
+      overrides: { color: 'blue', corners: 'all', opacity: 0.5 },
     });
   });
 });
@@ -136,18 +136,18 @@ describe('compose and ungroup', () => {
     ).toBe(true);
   });
 
-  test('make unique copies the definition under fresh ids and renames the overrides and ports', ({ expect }) => {
+  test('make unique copies the definition under fresh ids and renames the part overrides and ports', ({ expect }) => {
     const composition = composeSelection(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
     if (!composition) {
       throw new Error('no composition');
     }
     const parent = composition.edit(scene);
-    const instance = { ...instanceOf(parent, 'i'), overrides: { a: { style: { opacity: 0.5 } } } };
+    const instance = { ...instanceOf(parent, 'i'), partOverrides: { a: { overrides: { opacity: 0.5 } } } };
     const { composite, rename } = copyComposite(composition.composite, 'obj2', counter());
     const unique = retargetInstance(instance, 'obj2', rename);
     expect(composite.id).toBe('obj2');
     expect(Object.keys(composite.nodes)).toEqual(['node-0', 'node-1']);
-    expect(unique.overrides).toEqual({ 'node-0': { style: { opacity: 0.5 } } });
+    expect(unique.partOverrides).toEqual({ 'node-0': { overrides: { opacity: 0.5 } } });
     expect(unique.ports?.map((port) => port.id)).toEqual(['node-1']);
     expect(instanceCounts({ s: { ...parent, nodes: { ...parent.nodes, j: unique } } })).toEqual({ obj: 1, obj2: 1 });
   });
@@ -193,7 +193,7 @@ describe('anonymous Objects', () => {
 
 describe('removeComposite', () => {
   const instance = (id: string, composite: string): InstanceNode => ({
-    type: 'instance',
+    kind: 'instance',
     id,
     z: 'a',
     center: { x: 0, y: 0 },
@@ -217,9 +217,9 @@ describe('removeComposite', () => {
       'root',
       {
         card: instance('card', 'card-def'),
-        box: { type: 'rect', id: 'box', z: 'b', center: { x: 0, y: 0 }, size: { width: 10, height: 10 } },
+        box: { kind: 'rect', id: 'box', z: 'b', center: { x: 0, y: 0 }, size: { width: 10, height: 10 } },
       },
-      { l: { type: 'line', id: 'l', z: 'a', source: { node: 'box' }, target: { node: 'card' } } },
+      { l: { kind: 'link', path: 'line', id: 'l', z: 'a', source: { node: 'box' }, target: { node: 'card' } } },
     ),
     'card-def': view('card-def', { inner: instance('inner', 'anon') }, {}, { kind: 'composite', name: 'Card' }),
     'anon': view('anon', {}, {}, { kind: 'composite', anonymous: true }),
@@ -253,7 +253,7 @@ describe('constrained parts', () => {
     nodes: {
       frame: {
         id: 'frame',
-        type: 'rect',
+        kind: 'rect',
         z: 'a0',
         center: { x: 0, y: 0 },
         size: { width: 288, height: 192 },
@@ -261,7 +261,7 @@ describe('constrained parts', () => {
       },
       icon: {
         id: 'icon',
-        type: 'rect',
+        kind: 'rect',
         z: 'a1',
         center: { x: -114, y: -66 },
         size: { width: 36, height: 36 },
@@ -269,7 +269,7 @@ describe('constrained parts', () => {
       },
       footer: {
         id: 'footer',
-        type: 'rect',
+        kind: 'rect',
         z: 'a2',
         center: { x: 0, y: 75 },
         size: { width: 264, height: 18 },
@@ -279,7 +279,8 @@ describe('constrained parts', () => {
     links: {
       rule: {
         id: 'rule',
-        type: 'line',
+        kind: 'link',
+        path: 'line',
         z: 'b0',
         source: { point: { x: -132, y: 72 } },
         target: { point: { x: 132, y: 72 } },
@@ -291,12 +292,12 @@ describe('constrained parts', () => {
   const PLAIN: RenderList2D = {
     id: 'plain',
     kind: 'composite',
-    nodes: { only: { id: 'only', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 100, height: 50 } } },
+    nodes: { only: { id: 'only', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 100, height: 50 } } },
     links: {},
   };
 
   const instance = (size: { width: number; height: number }): InstanceNode => ({
-    type: 'instance',
+    kind: 'instance',
     id: 'i',
     z: 'c0',
     center: { x: 0, y: 0 },
@@ -335,7 +336,10 @@ describe('constrained parts', () => {
   });
 
   test('an overridden part is solved after the override, not before', ({ expect }) => {
-    const node = { ...instance({ width: 576, height: 384 }), overrides: { icon: { size: { width: 24, height: 24 } } } };
+    const node = {
+      ...instance({ width: 576, height: 384 }),
+      partOverrides: { icon: { size: { width: 24, height: 24 } } },
+    };
     const { view } = instancePlacement(node, CARD);
     // The smaller glyph keeps its own gap to the corner, measured in the definition's box, not the overridden one.
     expect(nodeBounds(view.nodes.icon!)).toEqual({ x: -270, y: -174, width: 24, height: 24 });

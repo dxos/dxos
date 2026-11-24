@@ -9,16 +9,17 @@
 
 import { Layout } from '@dxos/diagram';
 import {
-  type BuiltinNodeType,
+  type BuiltinNodeKind,
   type Layer,
   type LayerId,
   type LineStyle,
   type Link,
   type LinkEnds,
-  type LinkType,
+  type LinkPath,
   type Node,
   type Point,
   type Size,
+  linkMarkers,
 } from '@dxos/scene';
 
 import { type CreateProps, type NodeRegistry, type RenderList2D } from '../model/index.ts';
@@ -42,7 +43,7 @@ import {
 export type GraphNode = {
   id: string;
   label?: string;
-  type?: BuiltinNodeType;
+  kind?: BuiltinNodeKind;
   /** The row the node takes, in place of its rank along the edges (a host's own bands, say). */
   rank?: number;
 };
@@ -51,10 +52,10 @@ export type GraphEdge = {
   from: string;
   to: string;
   /** A caption at the middle of the link. */
-  text?: string;
+  label?: string;
   /** Overrides `DynamicOptions.link.ends` for this edge, so a graph can draw several kinds of edge. */
   ends?: LinkEnds;
-  style?: LineStyle;
+  overrides?: LineStyle;
 };
 
 export type GraphModel = {
@@ -88,9 +89,9 @@ export type DynamicOptions = {
    * object) where the default is a titled `rect`.
    */
   createNode?: (node: GraphNode, props: CreateProps) => Node;
-  /** How edges draw; by default a `curve` with no markers. Not `spline`, whose control points the layout does not make. */
+  /** How edges draw; by default a `smart` path with no markers. Not `spline`, whose control points the layout does not make. */
   link?: {
-    type?: Exclude<LinkType, 'spline'>;
+    path?: Exclude<LinkPath, 'spline'>;
     ends?: LinkEnds;
     /** The layer the links go on; the bottom one when unset. */
     layer?: LayerId;
@@ -177,20 +178,21 @@ export const layoutGraph = (
     const props = { id: node.id, z: keys[graph.edges.length + index], center, size };
     nodes[node.id] = options.createNode
       ? options.createNode(node, props)
-      : withTitle(options.nodes, createNode({ type: node.type ?? 'rect', ...props }), node.label ?? node.id);
+      : withTitle(options.nodes, createNode({ kind: node.kind ?? 'rect', ...props }), node.label ?? node.id);
   });
   const links: Record<string, Link> = {};
   graph.edges.forEach((edge, index) => {
     if (known.has(edge.from) && known.has(edge.to)) {
       links[edge.id] = {
-        type: options.link?.type ?? 'smart',
+        kind: 'link',
+        path: options.link?.path ?? 'smart',
         id: edge.id,
         z: keys[index],
         source: { node: edge.from },
         target: { node: edge.to },
-        ...((edge.ends ?? options.link?.ends) && { ends: edge.ends ?? options.link?.ends }),
-        ...(edge.text !== undefined && { text: edge.text }),
-        ...(edge.style && { style: edge.style }),
+        ...linkMarkers(edge.ends ?? options.link?.ends ?? {}),
+        ...(edge.label !== undefined && { label: edge.label }),
+        ...(edge.overrides && { overrides: edge.overrides }),
         ...(options.link?.layer && { layer: options.link.layer }),
       };
     }
@@ -264,7 +266,8 @@ const routedSlots = (
   }
   const { pitch, size } = latticeSlots(lattice);
   const links: Link[] = edges.map(({ id, from, to }) => ({
-    type: 'smart',
+    kind: 'link',
+    path: 'smart',
     id,
     z: 'a0',
     source: { node: from },
@@ -282,7 +285,7 @@ const routedSlots = (
       };
       nodes[node.id] = options.createNode
         ? options.createNode(node, props)
-        : createNode({ type: node.type ?? 'rect', ...props });
+        : createNode({ kind: node.kind ?? 'rect', ...props });
     }
     const view: RenderList2D = { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links: {} };
     const route = { spec: lattice, nodes: Object.values(nodes) };

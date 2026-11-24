@@ -8,18 +8,22 @@ import { describe, test } from 'vitest';
 
 import { Type } from '@dxos/echo';
 
+import * as Color from './color.ts';
 import * as Element from './element.ts';
 import { TASK, outputs } from './ontology-files.ts';
 import * as Ontology from './ontology.ts';
 import * as Scene from './Scene.ts';
 import * as Shape from './shape.ts';
 import * as Style from './style.ts';
+import * as Theme from './theme.ts';
 
 const MODULES: Readonly<Record<Ontology.Module, Readonly<Record<string, unknown>>>> = {
   Scene,
   element: Element,
   style: Style,
   shape: Shape,
+  color: Color,
+  theme: Theme,
 };
 
 /** Exported schemas that are not part of a stored drawing, by `module.name`, each with the reason. */
@@ -58,7 +62,7 @@ describe('Ontology', () => {
     const described = Ontology.describe().flatMap(({ type }) =>
       type.kind === 'object'
         ? type.fields.flatMap((field) =>
-            field.name === 'type' && field.type.kind === 'literals' ? field.type.values : [],
+            field.name === 'kind' && field.type.kind === 'literals' ? field.type.values : [],
           )
         : [],
     );

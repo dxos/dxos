@@ -9,9 +9,9 @@
 //
 
 import { DSL } from '@dxos/diagram';
-import { type NodeType, type Scene, type ViewId } from '@dxos/scene';
+import { type NodeKind, type Scene, type ViewId } from '@dxos/scene';
 
-import { type NodeRegistry, type RenderList2D, nodeDef, templateCompositeId, templateType } from '../model/index.ts';
+import { type NodeRegistry, type RenderList2D, templateCompositeId, templateType } from '../model/index.ts';
 import { toRenderLists2D } from './render-list.ts';
 
 /** What a template compiled to, or why it did not. */
@@ -45,12 +45,12 @@ export const compileTemplate = (source: string, id: ViewId): CompiledTemplate =>
 };
 
 /**
- * The composite a tool's instances draw, compiled from the type's template; none when the type has no template or its
+ * The composite a tool's instances draw, compiled from the kind's template; none when the kind has no template or its
  * source does not compile. The caller stores it under `composite`, so the next instance of the tool reuses it.
  */
 export const templateComposite = (registry: NodeRegistry, composite: ViewId): RenderList2D | undefined => {
-  const type = templateType(composite);
-  const source = type === undefined ? undefined : templateSource(registry, type);
+  const kind = templateType(composite);
+  const source = kind === undefined ? undefined : templateSource(registry, kind);
   if (source === undefined) {
     return undefined;
   }
@@ -58,10 +58,9 @@ export const templateComposite = (registry: NodeRegistry, composite: ViewId): Re
   return isCompiled(result) ? result.composite : undefined;
 };
 
-/** A type's template source, when it has one. */
-export const templateSource = (registry: NodeRegistry, type: NodeType): string | undefined =>
-  nodeDef(registry, { type } as never)?.template;
+/** A kind's template source, when it has one. */
+export const templateSource = (registry: NodeRegistry, kind: NodeKind): string | undefined => registry[kind]?.template;
 
-/** The composite a node of `type` would be an instance of, when the type is a template tool. */
-export const templateIdOf = (registry: NodeRegistry, type: NodeType): ViewId | undefined =>
-  templateSource(registry, type) === undefined ? undefined : templateCompositeId(type);
+/** The composite a node of `kind` would be an instance of, when the kind is a template tool. */
+export const templateIdOf = (registry: NodeRegistry, kind: NodeKind): ViewId | undefined =>
+  templateSource(registry, kind) === undefined ? undefined : templateCompositeId(kind);

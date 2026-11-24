@@ -31,7 +31,7 @@ export const namedStyleUses = (canvas: Canvas.Canvas): Record<string, number> =>
 /**
  * Removes the named style `id` from the canvas's model. The elements that took it keep its look as their own overrides
  * (under anything they set themselves), so deleting a style changes how nothing looks, only what restyles together; a
- * link keeps the style's hue and line style, all it ever drew.
+ * link keeps the style's colour and stroke, all it ever drew.
  */
 export const deleteNamedStyle = (canvas: Canvas.Canvas, id: string): void => {
   const model = canvasModel2D(canvas);
@@ -43,8 +43,8 @@ export const deleteNamedStyle = (canvas: Canvas.Canvas, id: string): void => {
       }
       const base = isLink(element)
         ? {
-            ...(look.hue !== undefined ? { hue: look.hue } : {}),
-            ...(look.lineStyle !== undefined ? { lineStyle: look.lineStyle } : {}),
+            ...(look.color !== undefined ? { color: look.color } : {}),
+            ...(look.stroke !== undefined ? { stroke: look.stroke } : {}),
           }
         : look;
       const overrides = { ...base, ...plain(element.overrides ?? {}) };

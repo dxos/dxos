@@ -34,7 +34,7 @@ const cell = (id: string, col: number, row: number, parent?: string): Node => {
   const { x, y, width, height } = cellBounds({ col, row, spanX: 1, spanY: 1 }, spec);
   return {
     ...createNode({
-      type: 'rect',
+      kind: 'rect',
       id,
       z: id,
       center: { x: x + width / 2, y: y + height / 2 },
@@ -46,8 +46,8 @@ const cell = (id: string, col: number, row: number, parent?: string): Node => {
 
 /** A hull that names its border: a perimeter unless told, which is what most of these tests are about. */
 const hull = (id: string, shape: HullShape = 'perimeter', parent?: string): HullNode => ({
-  ...createNode({ type: 'hull', id, z: `0${id}`, center: { x: 0, y: 0 }, size: { width: 10, height: 10 } }),
-  type: 'hull',
+  ...createNode({ kind: 'hull', id, z: `0${id}`, center: { x: 0, y: 0 }, size: { width: 10, height: 10 } }),
+  kind: 'hull',
   shape,
   ...(parent ? { parent } : {}),
 });
@@ -68,7 +68,8 @@ const sceneOf = (nodes: readonly Node[], links: readonly Link[] = []): RenderLis
 });
 
 const smart = (id: string, source: string, target: string): Link => ({
-  type: 'smart',
+  kind: 'link',
+  path: 'smart',
   id,
   z: `z${id}`,
   source: { node: source },
@@ -166,7 +167,7 @@ describe('hull', () => {
 
   test('off a lattice a box stands a margin off its nodes and a perimeter is their convex hull', ({ expect }) => {
     const at = (id: string, x: number, y: number): Node => ({
-      ...createNode({ type: 'rect', id, z: id, center: { x, y }, size: { width: 100, height: 50 } }),
+      ...createNode({ kind: 'rect', id, z: id, center: { x, y }, size: { width: 100, height: 50 } }),
       parent: 'h',
     });
     const members = [at('a', 0, 0), at('b', 300, 0), at('c', 0, 200)];
@@ -207,7 +208,7 @@ describe('enclose', () => {
     const scene = sceneOf([cell('a', 0, 0), cell('b', 1, 0), cell('x', 3, 0)]);
     const made = enclose(scene, ['a', 'b'], 'h', { lattice: spec });
     const hull = made?.nodes.h;
-    expect(hull && isHullNode(hull) && [hull.parent, hull.style]).toEqual([undefined, HULL_STYLE]);
+    expect(hull && isHullNode(hull) && [hull.parent, hull.overrides]).toEqual([undefined, HULL_STYLE]);
     expect([made?.nodes.a.parent, made?.nodes.b.parent, made?.nodes.x.parent]).toEqual(['h', 'h', undefined]);
     expect(Object.values(made?.nodes ?? {}).every((node) => node.id === 'h' || node.z > (hull?.z ?? ''))).toBe(true);
     // The two tiles of row 0.
@@ -329,13 +330,13 @@ describe('a hull drawn with its tool', () => {
     const [right, bottom] = [last.x + last.width, last.y + last.height];
     return {
       ...createNode({
-        type: 'hull',
+        kind: 'hull',
         id,
         z: 'zz',
         center: { x: (first.x + right) / 2, y: (first.y + bottom) / 2 },
         size: { width: right - first.x, height: bottom - first.y },
       }),
-      type: 'hull',
+      kind: 'hull',
     };
   };
 
@@ -471,7 +472,7 @@ describe('hull routing', () => {
 
   test('off a lattice an inset takes its grid cells off the margin, down to the shapes themselves', ({ expect }) => {
     const member: Node = {
-      ...createNode({ type: 'rect', id: 'a', z: 'a', center: { x: 0, y: 0 }, size: { width: 100, height: 50 } }),
+      ...createNode({ kind: 'rect', id: 'a', z: 'a', center: { x: 0, y: 0 }, size: { width: 100, height: 50 } }),
       parent: 'h',
     };
     const sized = (count: number) => {

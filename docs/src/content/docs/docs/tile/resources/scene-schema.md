@@ -75,7 +75,7 @@ Where a 2D scene looks and how far in.
 
 | Field    | Type                     |
 | -------- | ------------------------ |
-| `center` | [Scene.Vec2](#scenevec2) |
+| `center` | { x: number, y: number } |
 | `zoom`   | number                   |
 
 ### Scene.Camera3D
@@ -99,36 +99,36 @@ A layout positions elements in one coordinate space.
 
 A 2D layout as plain data.
 
-| Field          | Type                                                                |
-| -------------- | ------------------------------------------------------------------- |
-| `id`           | string                                                              |
-| `dim`          | `2d`                                                                |
-| `name?`        | string                                                              |
-| `model?`       | string                                                              |
-| `elements`     | map of [Scene.Element2D](#sceneelement2d) and the kind's own fields |
-| `styles?`      | map of [Style2D](#style2d)                                          |
-| `layers?`      | map of [Layer](#layer)                                              |
-| `kind?`        | [Scene.LayoutKind](#enums)                                          |
-| `anonymous?`   | boolean                                                             |
-| `arrange?`     | [Scene.Arrangement](#scenearrangement)                              |
-| `props?`       | map of any                                                          |
-| `grid?`        | [Scene.GridPitch](#scenegridpitch)                                  |
-| `lattice?`     | [Scene.Lattice](#scenelattice)                                      |
-| `constraints?` | [Scene.Constraint](#sceneconstraint)[]                              |
+| Field          | Type                                                  |
+| -------------- | ----------------------------------------------------- |
+| `id`           | string                                                |
+| `dim`          | `2d`                                                  |
+| `name?`        | string                                                |
+| `model?`       | string                                                |
+| `elements`     | map of [Scene.ElementRecord2D](#sceneelementrecord2d) |
+| `styles?`      | map of [Style2D](#style2d)                            |
+| `layers?`      | map of [Layer](#layer)                                |
+| `kind?`        | [Scene.LayoutKind](#enums)                            |
+| `anonymous?`   | boolean                                               |
+| `arrange?`     | [Scene.Arrangement](#scenearrangement)                |
+| `props?`       | map of any                                            |
+| `grid?`        | [Scene.GridPitch](#scenegridpitch)                    |
+| `lattice?`     | [Scene.Lattice](#scenelattice)                        |
+| `constraints?` | [Scene.Constraint](#sceneconstraint)[]                |
 
 ### Scene.LayoutRecord3D
 
 A 3D layout as plain data. As [Scene.LayoutRecord2D](#scenelayoutrecord2d), without `grid`, `lattice`, `constraints`.
 
-| Field      | Type                                                                |
-| ---------- | ------------------------------------------------------------------- |
-| `dim`      | `3d`                                                                |
-| `elements` | map of [Scene.Element3D](#sceneelement3d) and the kind's own fields |
-| `styles?`  | map of [Style3D](#style3d)                                          |
+| Field      | Type                                                  |
+| ---------- | ----------------------------------------------------- |
+| `dim`      | `3d`                                                  |
+| `elements` | map of [Scene.ElementRecord3D](#sceneelementrecord3d) |
+| `styles?`  | map of [Style3D](#style3d)                            |
 
 ### Scene.Layout2D
 
-A 2D layout as an ECHO object. ECHO type `org.dxos.type.scene.layout2d`, version 0.1.0. As [Scene.LayoutRecord2D](#scenelayoutrecord2d), without `dim`.
+A 2D layout as an ECHO object. ECHO type `org.dxos.type.scene.layout2d`, version 0.2.0. As [Scene.LayoutRecord2D](#scenelayoutrecord2d), without `dim`.
 
 | Field    | Type              |
 | -------- | ----------------- |
@@ -137,7 +137,7 @@ A 2D layout as an ECHO object. ECHO type `org.dxos.type.scene.layout2d`, version
 
 ### Scene.Layout3D
 
-A 3D layout as an ECHO object. ECHO type `org.dxos.type.scene.layout3d`, version 0.1.0. As [Scene.LayoutRecord3D](#scenelayoutrecord3d), without `dim`.
+A 3D layout as an ECHO object. ECHO type `org.dxos.type.scene.layout3d`, version 0.2.0. As [Scene.LayoutRecord3D](#scenelayoutrecord3d), without `dim`.
 
 | Field    | Type              |
 | -------- | ----------------- |
@@ -165,11 +165,11 @@ Lattice mode's grid: shapes span whole cells and links run in the gutters.
 
 Constrained mode's relation of one element to another.
 
-| Field      | Type                                    |
-| ---------- | --------------------------------------- |
-| `subject`  | string                                  |
-| `relation` | `east` `west` `north` `south` `aligned` |
-| `object`   | string                                  |
+| Field      | Type                      |
+| ---------- | ------------------------- |
+| `subject`  | string                    |
+| `relation` | [Scene.Placement](#enums) |
+| `object`   | string                    |
 
 ### Scene.Arrangement
 
@@ -220,7 +220,7 @@ A 3D model as plain data. Extends [Scene.ModelRecord2D](#scenemodelrecord2d).
 
 ### Scene.Model2D
 
-A 2D model as an ECHO object. ECHO type `org.dxos.type.scene.model2d`, version 0.1.0. As [Scene.ModelRecord2D](#scenemodelrecord2d), without `dim`.
+A 2D model as an ECHO object. ECHO type `org.dxos.type.scene.model2d`, version 0.2.0. As [Scene.ModelRecord2D](#scenemodelrecord2d), without `dim`.
 
 | Field       | Type                                                |
 | ----------- | --------------------------------------------------- |
@@ -230,7 +230,7 @@ A 2D model as an ECHO object. ECHO type `org.dxos.type.scene.model2d`, version 0
 
 ### Scene.Model3D
 
-A 3D model as an ECHO object. ECHO type `org.dxos.type.scene.model3d`, version 0.1.0. As [Scene.ModelRecord3D](#scenemodelrecord3d), without `dim`.
+A 3D model as an ECHO object. ECHO type `org.dxos.type.scene.model3d`, version 0.2.0. As [Scene.ModelRecord3D](#scenemodelrecord3d), without `dim`.
 
 | Field       | Type                                                |
 | ----------- | --------------------------------------------------- |
@@ -242,16 +242,16 @@ A 3D model as an ECHO object. ECHO type `org.dxos.type.scene.model3d`, version 0
 
 A reusable 2D object, with no position.
 
-| Field         | Type                       |
-| ------------- | -------------------------- |
-| `id`          | string                     |
-| `type`        | string                     |
-| `style?`      | string                     |
-| `props?`      | map of any                 |
-| `lockAspect?` | boolean                    |
-| `size?`       | [Scene.Size2](#scenesize2) |
-| `overrides?`  | [Style2D](#style2d)        |
-| `parts?`      | string                     |
+| Field         | Type                              |
+| ------------- | --------------------------------- |
+| `id`          | string                            |
+| `kind`        | string                            |
+| `style?`      | string                            |
+| `props?`      | map of any                        |
+| `lockAspect?` | boolean                           |
+| `size?`       | { width: number, height: number } |
+| `overrides?`  | [Style2D](#style2d)               |
+| `parts?`      | string                            |
 
 ### Scene.Object3D
 
@@ -260,7 +260,7 @@ A reusable 3D object, with no position.
 | Field         | Type                     |
 | ------------- | ------------------------ |
 | `id`          | string                   |
-| `type`        | string                   |
+| `kind`        | string                   |
 | `style?`      | string                   |
 | `props?`      | map of any               |
 | `lockAspect?` | boolean                  |
@@ -296,7 +296,7 @@ The fields every element has, in either dimension.
 | ------------ | -------------------------------------- |
 | `id`         | string                                 |
 | `object?`    | string                                 |
-| `type?`      | string                                 |
+| `kind?`      | string                                 |
 | `z?`         | string                                 |
 | `layer?`     | string                                 |
 | `hidden?`    | boolean                                |
@@ -316,26 +316,115 @@ The fields every element has, in either dimension.
 
 A 2D element. Extends [Scene.BaseElement](#scenebaseelement).
 
-| Field        | Type                        |
-| ------------ | --------------------------- |
-| `center?`    | [Scene.Vec2](#scenevec2)    |
-| `size?`      | [Scene.Size2](#scenesize2)  |
-| `rotation?`  | number                      |
-| `scale?`     | [Scene.Vec2](#scenevec2)    |
-| `fit?`       | [Scene.InstanceFit](#enums) |
-| `overrides?` | [Style2D](#style2d)         |
+| Field            | Type                                                               |
+| ---------------- | ------------------------------------------------------------------ |
+| `center?`        | { x: number, y: number }                                           |
+| `size?`          | { width: number, height: number }                                  |
+| `rotation?`      | number                                                             |
+| `scale?`         | { x: number, y: number }                                           |
+| `fit?`           | [InstanceFit](#enums)                                              |
+| `overrides?`     | [Style2D](#style2d)                                                |
+| `ports?`         | [Port](#port)[]                                                    |
+| `portsPerSide?`  | number                                                             |
+| `exposed?`       | boolean                                                            |
+| `bind?`          | string                                                             |
+| `optional?`      | boolean                                                            |
+| `grow?`          | string                                                             |
+| `follows?`       | string                                                             |
+| `partOverrides?` | map of map of unknown                                              |
+| `parent?`        | string                                                             |
+| `extent?`        | { width?: number, height?: number }                                |
+| `path?`          | `line` `ortho` `curve` `spline` `smart`                            |
+| `points?`        | [Point](#point)[]                                                  |
+| `tail?`          | `arrow` `circle` `diamond` `diamond-filled` `crowsfoot` `triangle` |
+| `head?`          | `arrow` `circle` `diamond` `diamond-filled` `crowsfoot` `triangle` |
+| `connector?`     | [DiagramConnector](#diagramconnector)                              |
 
 ### Scene.Element3D
 
 A 3D element. Extends [Scene.BaseElement](#scenebaseelement).
 
-| Field        | Type                        |
-| ------------ | --------------------------- |
-| `center?`    | [Scene.Vec3](#scenevec3)    |
-| `scale?`     | [Scene.Vec3](#scenevec3)    |
-| `rotation?`  | [Scene.Vec3](#scenevec3)    |
-| `fit?`       | [Scene.InstanceFit](#enums) |
-| `overrides?` | [Style3D](#style3d)         |
+| Field        | Type                     |
+| ------------ | ------------------------ |
+| `center?`    | [Scene.Vec3](#scenevec3) |
+| `scale?`     | [Scene.Vec3](#scenevec3) |
+| `rotation?`  | [Scene.Vec3](#scenevec3) |
+| `fit?`       | [InstanceFit](#enums)    |
+| `overrides?` | [Style3D](#style3d)      |
+
+### Scene.ElementRecord2D
+
+A 2D element as a layout stores it: the element, and its kind's own fields beside it.
+
+| Field            | Type                                                               |
+| ---------------- | ------------------------------------------------------------------ |
+| `id`             | string                                                             |
+| `object?`        | string                                                             |
+| `kind?`          | string                                                             |
+| `z?`             | string                                                             |
+| `layer?`         | string                                                             |
+| `hidden?`        | boolean                                                            |
+| `locked?`        | boolean                                                            |
+| `label?`         | string                                                             |
+| `style?`         | string                                                             |
+| `source?`        | [ElementEndpoint](#elementendpoint)                                |
+| `target?`        | [ElementEndpoint](#elementendpoint)                                |
+| `pinned?`        | boolean                                                            |
+| `constrain?`     | [PartLayout](#partlayout)                                          |
+| `composite?`     | string                                                             |
+| `dsl?`           | [Scene.DslIdentity](#scenedslidentity)                             |
+| `data?`          | map of any                                                         |
+| `props?`         | map of any                                                         |
+| `center?`        | { x: number, y: number }                                           |
+| `size?`          | { width: number, height: number }                                  |
+| `rotation?`      | number                                                             |
+| `scale?`         | { x: number, y: number }                                           |
+| `fit?`           | [InstanceFit](#enums)                                              |
+| `overrides?`     | [Style2D](#style2d)                                                |
+| `ports?`         | [Port](#port)[]                                                    |
+| `portsPerSide?`  | number                                                             |
+| `exposed?`       | boolean                                                            |
+| `bind?`          | string                                                             |
+| `optional?`      | boolean                                                            |
+| `grow?`          | string                                                             |
+| `follows?`       | string                                                             |
+| `partOverrides?` | map of map of unknown                                              |
+| `parent?`        | string                                                             |
+| `extent?`        | { width?: number, height?: number }                                |
+| `path?`          | `line` `ortho` `curve` `spline` `smart`                            |
+| `points?`        | [Point](#point)[]                                                  |
+| `tail?`          | `arrow` `circle` `diamond` `diamond-filled` `crowsfoot` `triangle` |
+| `head?`          | `arrow` `circle` `diamond` `diamond-filled` `crowsfoot` `triangle` |
+| `connector?`     | [DiagramConnector](#diagramconnector)                              |
+
+### Scene.ElementRecord3D
+
+A 3D element as a layout stores it.
+
+| Field        | Type                                   |
+| ------------ | -------------------------------------- |
+| `id`         | string                                 |
+| `object?`    | string                                 |
+| `kind?`      | string                                 |
+| `z?`         | string                                 |
+| `layer?`     | string                                 |
+| `hidden?`    | boolean                                |
+| `locked?`    | boolean                                |
+| `label?`     | string                                 |
+| `style?`     | string                                 |
+| `source?`    | [ElementEndpoint](#elementendpoint)    |
+| `target?`    | [ElementEndpoint](#elementendpoint)    |
+| `pinned?`    | boolean                                |
+| `constrain?` | [PartLayout](#partlayout)              |
+| `composite?` | string                                 |
+| `dsl?`       | [Scene.DslIdentity](#scenedslidentity) |
+| `data?`      | map of any                             |
+| `props?`     | map of any                             |
+| `center?`    | [Scene.Vec3](#scenevec3)               |
+| `scale?`     | [Scene.Vec3](#scenevec3)               |
+| `rotation?`  | [Scene.Vec3](#scenevec3)               |
+| `fit?`       | [InstanceFit](#enums)                  |
+| `overrides?` | [Style3D](#style3d)                    |
 
 ### ElementEndpoint
 
@@ -369,15 +458,6 @@ How a part of a composite follows its frame on each axis.
 | `x?`  | [PartConstraint](#enums) |
 | `y?`  | [PartConstraint](#enums) |
 
-### Scene.Vec2
-
-A 2D vector.
-
-| Field | Type   |
-| ----- | ------ |
-| `x`   | number |
-| `y`   | number |
-
 ### Scene.Vec3
 
 A 3D vector.
@@ -388,15 +468,6 @@ A 3D vector.
 | `y`   | number |
 | `z`   | number |
 
-### Scene.Size2
-
-A 2D size.
-
-| Field    | Type   |
-| -------- | ------ |
-| `width`  | number |
-| `height` | number |
-
 ## Nodes
 
 A node is the typed form of a 2D element that is not a link, one schema per kind.
@@ -405,31 +476,31 @@ A node is the typed form of a 2D element that is not a link, one schema per kind
 
 The fields every node kind shares.
 
-| Field           | Type                                | Notes       |
-| --------------- | ----------------------------------- | ----------- |
-| `type`          | string                              |             |
-| `id`            | string                              |             |
-| `z`             | string                              |             |
-| `locked?`       | boolean                             |             |
-| `center`        | [Point](#point)                     |             |
-| `size`          | [Size](#size)                       |             |
-| `rotation?`     | number                              | -360 to 360 |
-| `ports?`        | [Port](#port)[]                     |             |
-| `portsPerSide?` | number                              |             |
-| `layer?`        | string                              |             |
-| `class?`        | string                              |             |
-| `style?`        | [NodeStyle](#nodestyle)             |             |
-| `exposed?`      | boolean                             |             |
-| `bind?`         | string                              |             |
-| `optional?`     | boolean                             |             |
-| `hidden?`       | boolean                             |             |
-| `grow?`         | string                              |             |
-| `follows?`      | string                              |             |
-| `composite?`    | string                              |             |
-| `overrides?`    | map of map of unknown               |             |
-| `parent?`       | string                              |             |
-| `extent?`       | { width?: number, height?: number } |             |
-| `constrain?`    | [PartLayout](#partlayout)           |             |
+| Field            | Type                                | Notes       |
+| ---------------- | ----------------------------------- | ----------- |
+| `kind`           | string                              |             |
+| `id`             | string                              |             |
+| `z`              | string                              |             |
+| `locked?`        | boolean                             |             |
+| `center`         | [Point](#point)                     |             |
+| `size`           | [Size](#size)                       |             |
+| `rotation?`      | number                              | -360 to 360 |
+| `ports?`         | [Port](#port)[]                     |             |
+| `portsPerSide?`  | number                              |             |
+| `layer?`         | string                              |             |
+| `style?`         | string                              |             |
+| `overrides?`     | [Style2D](#style2d)                 |             |
+| `exposed?`       | boolean                             |             |
+| `bind?`          | string                              |             |
+| `optional?`      | boolean                             |             |
+| `hidden?`        | boolean                             |             |
+| `grow?`          | string                              |             |
+| `follows?`       | string                              |             |
+| `composite?`     | string                              |             |
+| `partOverrides?` | map of map of unknown               |             |
+| `parent?`        | string                              |             |
+| `extent?`        | { width?: number, height?: number } |             |
+| `constrain?`     | [PartLayout](#partlayout)           |             |
 
 ### BaseNode
 
@@ -445,7 +516,7 @@ A rectangle. Extends [NodeBase](#nodebase).
 
 | Field      | Type                |
 | ---------- | ------------------- |
-| `type`     | `rect`              |
+| `kind`     | `rect`              |
 | `label?`   | string              |
 | `padding?` | [Padding](#padding) |
 
@@ -455,7 +526,7 @@ An ellipse inscribed in the frame. Extends [NodeBase](#nodebase).
 
 | Field      | Type                |
 | ---------- | ------------------- |
-| `type`     | `ellipse`           |
+| `kind`     | `ellipse`           |
 | `label?`   | string              |
 | `padding?` | [Padding](#padding) |
 
@@ -465,7 +536,7 @@ A cloud filling the frame. Extends [NodeBase](#nodebase).
 
 | Field      | Type                        |
 | ---------- | --------------------------- |
-| `type`     | `cloud`                     |
+| `kind`     | `cloud`                     |
 | `label?`   | string                      |
 | `padding?` | [Padding](#padding)         |
 | `params?`  | [CloudParams](#cloudparams) |
@@ -484,7 +555,7 @@ A regular polygon. Extends [NodeBase](#nodebase).
 
 | Field      | Type                            |
 | ---------- | ------------------------------- |
-| `type`     | `polygon`                       |
+| `kind`     | `polygon`                       |
 | `label?`   | string                          |
 | `padding?` | [Padding](#padding)             |
 | `params?`  | [PolygonParams](#polygonparams) |
@@ -504,7 +575,7 @@ A shape that a named recipe draws from the frame and parameters. Extends [NodeBa
 
 | Field      | Type                |
 | ---------- | ------------------- |
-| `type`     | `shape`             |
+| `kind`     | `shape`             |
 | `label?`   | string              |
 | `padding?` | [Padding](#padding) |
 | `recipe`   | string              |
@@ -516,7 +587,7 @@ A line through points, in the 0 to 1 space of its frame. Extends [NodeBase](#nod
 
 | Field      | Type                              |
 | ---------- | --------------------------------- |
-| `type`     | `polyline`                        |
+| `kind`     | `polyline`                        |
 | `label?`   | string                            |
 | `padding?` | [Padding](#padding)               |
 | `points`   | [Point](#point)[]                 |
@@ -548,7 +619,7 @@ A border drawn round the nodes that name it as their parent. Extends [NodeBase](
 
 | Field      | Type                | Notes      |
 | ---------- | ------------------- | ---------- |
-| `type`     | `hull`              |            |
+| `kind`     | `hull`              |            |
 | `label?`   | string              |            |
 | `padding?` | [Padding](#padding) |            |
 | `shape?`   | `perimeter` `box`   |            |
@@ -562,9 +633,9 @@ Free text. Extends [NodeBase](#nodebase).
 
 | Field      | Type                |
 | ---------- | ------------------- |
-| `type`     | `note`              |
+| `kind`     | `note`              |
 | `padding?` | [Padding](#padding) |
-| `text`     | string              |
+| `label`    | string              |
 
 ### ViewNode
 
@@ -572,7 +643,7 @@ A window onto a child view. Extends [NodeBase](#nodebase).
 
 | Field    | Type                  |
 | -------- | --------------------- |
-| `type`   | `view`                |
+| `kind`   | `view`                |
 | `label?` | string                |
 | `scene`  | string                |
 | `link?`  | [ViewLink](#viewlink) |
@@ -590,14 +661,14 @@ How a view node shows what it links to.
 
 A composite object placed in a scene. Extends [NodeBase](#nodebase).
 
-| Field        | Type                |
-| ------------ | ------------------- |
-| `type`       | `instance`          |
-| `composite`  | string              |
-| `fit?`       | `fit` `fill` `none` |
-| `frame?`     | [Bounds](#bounds)   |
-| `hull?`      | `perimeter` `box`   |
-| `hullInset?` | number              |
+| Field        | Type                  |
+| ------------ | --------------------- |
+| `kind`       | `instance`            |
+| `composite`  | string                |
+| `fit?`       | [InstanceFit](#enums) |
+| `frame?`     | [Bounds](#bounds)     |
+| `hull?`      | `perimeter` `box`     |
+| `hullInset?` | number                |
 
 ### PathNode
 
@@ -605,10 +676,9 @@ A vector shape from SVG path data. Extends [NodeBase](#nodebase).
 
 | Field     | Type              |
 | --------- | ----------------- |
-| `type`    | `path`            |
+| `kind`    | `path`            |
 | `d`       | string            |
 | `viewBox` | [Bounds](#bounds) |
-| `fill?`   | string            |
 
 ### GeneratorNode
 
@@ -616,7 +686,7 @@ A node whose content a generator computes. Extends [NodeBase](#nodebase).
 
 | Field       | Type           |
 | ----------- | -------------- |
-| `type`      | `generator`    |
+| `kind`      | `generator`    |
 | `generator` | string         |
 | `params?`   | map of unknown |
 | `seed?`     | number         |
@@ -627,7 +697,7 @@ A shape of a laid-out diagram. Extends [NodeBase](#nodebase).
 
 | Field      | Type                              |
 | ---------- | --------------------------------- |
-| `type`     | `diagram`                         |
+| `kind`     | `diagram`                         |
 | `label?`   | string                            |
 | `element`  | [DiagramShape](#diagramshape)     |
 | `heading?` | [DiagramHeading](#diagramheading) |
@@ -636,14 +706,14 @@ A shape of a laid-out diagram. Extends [NodeBase](#nodebase).
 
 Where a diagram shape's heading sits.
 
-| Field     | Type                   |
-| --------- | ---------------------- |
-| `id`      | string                 |
-| `x`       | number                 |
-| `y`       | number                 |
-| `w?`      | number                 |
-| `color?`  | [Shape.Color](#enums)  |
-| `weight?` | [Shape.Weight](#enums) |
+| Field     | Type             |
+| --------- | ---------------- |
+| `id`      | string           |
+| `x`       | number           |
+| `y`       | number           |
+| `w?`      | number           |
+| `color?`  | [Color](#color)  |
+| `weight?` | [Weight](#enums) |
 
 ### DiagramShape
 
@@ -659,13 +729,14 @@ One of [RectNode](#rectnode), [EllipseNode](#ellipsenode), [CloudNode](#cloudnod
 
 ### Port
 
-An attachment point on a node's frame.
+An attachment point on a node, as a fraction of its frame.
 
 | Field      | Type                    |
 | ---------- | ----------------------- |
 | `id`       | string                  |
-| `side`     | [Side](#enums)          |
-| `offset`   | number                  |
+| `x`        | number                  |
+| `y`        | number                  |
+| `side?`    | [Side](#enums)          |
 | `accepts?` | [PortDirection](#enums) |
 
 ### Padding
@@ -676,6 +747,216 @@ Space between a shape's frame and its text.
 | ----- | ------ |
 | `x?`  | number |
 | `y?`  | number |
+
+## Links
+
+A link is the typed form of a 2D element that joins two ends.
+
+### Link
+
+A link between two ends.
+
+| Field        | Type                                                               |
+| ------------ | ------------------------------------------------------------------ |
+| `kind`       | `link`                                                             |
+| `id`         | string                                                             |
+| `z`          | string                                                             |
+| `locked?`    | boolean                                                            |
+| `source`     | [Endpoint](#endpoint)                                              |
+| `target`     | [Endpoint](#endpoint)                                              |
+| `path?`      | `line` `ortho` `curve` `spline` `smart`                            |
+| `points?`    | [Point](#point)[]                                                  |
+| `tail?`      | `arrow` `circle` `diamond` `diamond-filled` `crowsfoot` `triangle` |
+| `head?`      | `arrow` `circle` `diamond` `diamond-filled` `crowsfoot` `triangle` |
+| `label?`     | string                                                             |
+| `layer?`     | string                                                             |
+| `style?`     | string                                                             |
+| `overrides?` | [LineStyle](#linestyle)                                            |
+| `connector?` | [DiagramConnector](#diagramconnector)                              |
+| `constrain?` | [PartLayout](#partlayout)                                          |
+
+### Endpoint
+
+A link's end: on a node, or free at a point.
+
+One of [PortEndpoint](#portendpoint), [PointEndpoint](#pointendpoint).
+
+### PortEndpoint
+
+A link end on a node.
+
+| Field   | Type   |
+| ------- | ------ |
+| `node`  | string |
+| `port?` | string |
+
+### PointEndpoint
+
+A free link end at a point.
+
+| Field   | Type            |
+| ------- | --------------- |
+| `point` | [Point](#point) |
+
+### DiagramConnector
+
+A link drawn as a diagram connector.
+
+| Field       | Type                              |
+| ----------- | --------------------------------- |
+| `relation?` | [Shape.Relation](#enums)          |
+| `head?`     | [Shape.ArrowHead](#enums)         |
+| `tail?`     | [Shape.ArrowTail](#enums)         |
+| `stroke?`   | [Stroke](#enums)                  |
+| `color?`    | [Color](#color)                   |
+| `route?`    | [Point](#point)[]                 |
+| `caption?`  | [DiagramCaption](#diagramcaption) |
+
+### DiagramCaption
+
+Where a diagram connector's caption sits.
+
+| Field     | Type             |
+| --------- | ---------------- |
+| `x`       | number           |
+| `y`       | number           |
+| `w?`      | number           |
+| `color?`  | [Color](#color)  |
+| `weight?` | [Weight](#enums) |
+
+## Styles
+
+A style is the look an element takes, by name or as its own overrides.
+
+### LineStyle
+
+A link's style.
+
+| Field       | Type             |
+| ----------- | ---------------- |
+| `color?`    | string           |
+| `stroke?`   | [Stroke](#enums) |
+| `fontSize?` | number           |
+
+### Style2D
+
+A 2D look: what a node draws with. Extends [LineStyle](#linestyle).
+
+| Field        | Type                    | Notes  |
+| ------------ | ----------------------- | ------ |
+| `opacity?`   | number                  | 0 to 1 |
+| `fill?`      | [Fill](#enums)          |        |
+| `corners?`   | [Corners](#enums)       |        |
+| `weight?`    | [Weight](#enums)        |        |
+| `guide?`     | boolean                 |        |
+| `font?`      | [Font](#font)           |        |
+| `textColor?` | string                  |        |
+| `align?`     | [Align](#enums)         |        |
+| `valign?`    | [VerticalAlign](#enums) |        |
+
+### Style3D
+
+A 3D look: a material over a colour.
+
+| Field        | Type              |
+| ------------ | ----------------- |
+| `color?`     | string            |
+| `fill?`      | [Fill](#enums)    |
+| `stroke?`    | [Stroke](#enums)  |
+| `corners?`   | [Corners](#enums) |
+| `opacity?`   | number            |
+| `metalness?` | number            |
+| `roughness?` | number            |
+| `emissive?`  | number            |
+
+### NamedStyle2D
+
+A model's named 2D style. Extends [Style2D](#style2d).
+
+| Field   | Type   |
+| ------- | ------ |
+| `name?` | string |
+
+### NamedStyle3D
+
+A model's named 3D style. Extends [Style3D](#style3d).
+
+| Field   | Type   |
+| ------- | ------ |
+| `name?` | string |
+
+### StyleClass
+
+A named look that nodes and links take their style from.
+
+| Field    | Type                |
+| -------- | ------------------- |
+| `id`     | string              |
+| `name`   | string              |
+| `style?` | [Style2D](#style2d) |
+
+### StyleCatalog
+
+A reusable set of styles, as an ECHO object. ECHO type `org.dxos.type.scene.styleCatalog`, version 0.2.0.
+
+| Field    | Type                                 |
+| -------- | ------------------------------------ |
+| `key`    | string                               |
+| `name`   | string                               |
+| `dim`    | `2d` `3d`                            |
+| `styles` | map of [CatalogStyle](#catalogstyle) |
+| `id`     | string                               |
+
+### CatalogStyle
+
+One style of a catalog: the 2D and 3D fields in one struct.
+
+| Field        | Type                    | Notes  |
+| ------------ | ----------------------- | ------ |
+| `color?`     | string                  |        |
+| `fill?`      | [Fill](#enums)          |        |
+| `stroke?`    | [Stroke](#enums)        |        |
+| `corners?`   | [Corners](#enums)       |        |
+| `opacity?`   | number                  | 0 to 1 |
+| `metalness?` | number                  |        |
+| `roughness?` | number                  |        |
+| `emissive?`  | number                  |        |
+| `weight?`    | [Weight](#enums)        |        |
+| `guide?`     | boolean                 |        |
+| `font?`      | [Font](#font)           |        |
+| `fontSize?`  | number                  |        |
+| `textColor?` | string                  |        |
+| `align?`     | [Align](#enums)         |        |
+| `valign?`    | [VerticalAlign](#enums) |        |
+
+## Theme
+
+A theme fills the slots a style names: its colours and its typefaces.
+
+### ThemeSlots
+
+The colours and typefaces a theme defines, by name.
+
+| Field     | Type                   |
+| --------- | ---------------------- |
+| `colors?` | map of [Color](#color) |
+| `fonts?`  | map of string          |
+
+### Font
+
+A typeface slot of the theme: `body`, `mono`, or one the theme defines.
+
+Type: string.
+
+## Vocabulary
+
+The geometry and the style values that every part of a drawing states in the same words.
+
+### Color
+
+A colour: a theme name (`blue`, `accent`), a name at a tone (`blue/2`), or a CSS literal (`#1e90ff`).
+
+Type: string.
 
 ### Point
 
@@ -706,258 +987,6 @@ A rectangle by its top-left corner and size.
 | `width`  | number |
 | `height` | number |
 
-## Links
-
-A link is the typed form of a 2D element that joins two ends.
-
-### LinkBase
-
-The fields every link kind shares.
-
-| Field        | Type                                  |
-| ------------ | ------------------------------------- |
-| `type`       | string                                |
-| `id`         | string                                |
-| `z`          | string                                |
-| `locked?`    | boolean                               |
-| `source`     | [Endpoint](#endpoint)                 |
-| `target`     | [Endpoint](#endpoint)                 |
-| `ends?`      | [LinkEnds](#linkends)                 |
-| `text?`      | string                                |
-| `layer?`     | string                                |
-| `class?`     | string                                |
-| `style?`     | [LineStyle](#linestyle)               |
-| `connector?` | [DiagramConnector](#diagramconnector) |
-| `constrain?` | [PartLayout](#partlayout)             |
-
-### LineLink
-
-A straight link. Extends [LinkBase](#linkbase).
-
-| Field  | Type   |
-| ------ | ------ |
-| `type` | `line` |
-
-### OrthoLink
-
-A link of horizontal and vertical segments. Extends [LinkBase](#linkbase).
-
-| Field  | Type    |
-| ------ | ------- |
-| `type` | `ortho` |
-
-### CurveLink
-
-A cubic curve that leaves each port along its normal. Extends [LinkBase](#linkbase).
-
-| Field  | Type    |
-| ------ | ------- |
-| `type` | `curve` |
-
-### SplineLink
-
-A smooth curve through control points. Extends [LinkBase](#linkbase).
-
-| Field    | Type              |
-| -------- | ----------------- |
-| `type`   | `spline`          |
-| `points` | [Point](#point)[] |
-
-### SmartLink
-
-A link that is routed between its ends. Extends [LinkBase](#linkbase).
-
-| Field  | Type    |
-| ------ | ------- |
-| `type` | `smart` |
-
-### Link
-
-Any link kind.
-
-One of [LineLink](#linelink), [OrthoLink](#ortholink), [CurveLink](#curvelink), [SplineLink](#splinelink), [SmartLink](#smartlink).
-
-### Endpoint
-
-A link's end: on a node, or free at a point.
-
-One of [PortEndpoint](#portendpoint), [PointEndpoint](#pointendpoint).
-
-### PortEndpoint
-
-A link end on a node.
-
-| Field   | Type   |
-| ------- | ------ |
-| `node`  | string |
-| `port?` | string |
-
-### PointEndpoint
-
-A free link end at a point.
-
-| Field   | Type            |
-| ------- | --------------- |
-| `point` | [Point](#point) |
-
-### LinkEnds
-
-The markers at the two ends of a link.
-
-| Field    | Type             |
-| -------- | ---------------- |
-| `start?` | [Marker](#enums) |
-| `end?`   | [Marker](#enums) |
-
-### DiagramConnector
-
-A link drawn as a diagram connector.
-
-| Field       | Type                              |
-| ----------- | --------------------------------- |
-| `relation?` | [Shape.Relation](#enums)          |
-| `head?`     | [Shape.ArrowHead](#enums)         |
-| `tail?`     | [Shape.ArrowTail](#enums)         |
-| `stroke?`   | [Shape.Stroke](#enums)            |
-| `color?`    | [Shape.Color](#enums)             |
-| `route?`    | [Point](#point)[]                 |
-| `caption?`  | [DiagramCaption](#diagramcaption) |
-
-### DiagramCaption
-
-Where a diagram connector's caption sits.
-
-| Field     | Type                   |
-| --------- | ---------------------- |
-| `x`       | number                 |
-| `y`       | number                 |
-| `w?`      | number                 |
-| `color?`  | [Shape.Color](#enums)  |
-| `weight?` | [Shape.Weight](#enums) |
-
-## Styles
-
-A style is the look an element takes, by name or as its own overrides.
-
-### LineStyle
-
-A link's style.
-
-| Field        | Type                      |
-| ------------ | ------------------------- |
-| `hue?`       | string                    |
-| `lineStyle?` | `solid` `dashed` `dotted` |
-| `fontSize?`  | number                    |
-
-### NodeStyle
-
-A node's style. Extends [LineStyle](#linestyle).
-
-| Field              | Type                    | Notes  |
-| ------------------ | ----------------------- | ------ |
-| `tone?`            | [NodeTone](#enums)      |        |
-| `opacity?`         | number                  | 0 to 1 |
-| `rounded?`         | boolean                 |        |
-| `fill?`            | boolean                 |        |
-| `border?`          | boolean                 |        |
-| `guide?`           | boolean                 |        |
-| `fontFamily?`      | `default` `monospace`   |        |
-| `textHue?`         | [StyleHue](#enums)      |        |
-| `textTone?`        | [TextTone](#enums)      |        |
-| `alignHorizontal?` | `left` `center` `right` |        |
-| `alignVertical?`   | `top` `middle` `bottom` |        |
-
-### Style2D
-
-A 2D look: the node style and the diagram vocabulary. Extends [NodeStyle](#nodestyle).
-
-| Field        | Type                                |
-| ------------ | ----------------------------------- |
-| `lineStyle?` | `solid` `dashed` `dotted` `sketchy` |
-| `pattern?`   | boolean                             |
-| `weight?`    | `s` `m` `l` `xl`                    |
-
-### Style3D
-
-A 3D look: a material over a hue and a tone.
-
-| Field        | Type                          |
-| ------------ | ----------------------------- |
-| `hue?`       | string                        |
-| `tone?`      | `0` `1` `2` `3`               |
-| `surface?`   | `solid` `tint` `glass` `none` |
-| `border?`    | boolean                       |
-| `rounded?`   | boolean                       |
-| `opacity?`   | number                        |
-| `metalness?` | number                        |
-| `roughness?` | number                        |
-| `emissive?`  | number                        |
-
-### NamedStyle2D
-
-A model's named 2D style. Extends [Style2D](#style2d).
-
-| Field   | Type   |
-| ------- | ------ |
-| `name?` | string |
-
-### NamedStyle3D
-
-A model's named 3D style. Extends [Style3D](#style3d).
-
-| Field   | Type   |
-| ------- | ------ |
-| `name?` | string |
-
-### StyleClass
-
-A named look that nodes and links take their style from.
-
-| Field    | Type                    |
-| -------- | ----------------------- |
-| `id`     | string                  |
-| `name`   | string                  |
-| `style?` | [NodeStyle](#nodestyle) |
-
-### StyleCatalog
-
-A reusable set of styles, as an ECHO object. ECHO type `org.dxos.type.scene.styleCatalog`, version 0.1.0.
-
-| Field    | Type                                 |
-| -------- | ------------------------------------ |
-| `key`    | string                               |
-| `name`   | string                               |
-| `dim`    | `2d` `3d`                            |
-| `styles` | map of [CatalogStyle](#catalogstyle) |
-| `id`     | string                               |
-
-### CatalogStyle
-
-One style of a catalog: the 2D and 3D fields in one struct.
-
-| Field              | Type                                | Notes  |
-| ------------------ | ----------------------------------- | ------ |
-| `hue?`             | string                              |        |
-| `tone?`            | [NodeTone](#enums)                  |        |
-| `surface?`         | `solid` `tint` `glass` `none`       |        |
-| `border?`          | boolean                             |        |
-| `rounded?`         | boolean                             |        |
-| `opacity?`         | number                              | 0 to 1 |
-| `metalness?`       | number                              |        |
-| `roughness?`       | number                              |        |
-| `emissive?`        | number                              |        |
-| `lineStyle?`       | `solid` `dashed` `dotted` `sketchy` |        |
-| `fill?`            | boolean                             |        |
-| `guide?`           | boolean                             |        |
-| `fontFamily?`      | `default` `monospace`               |        |
-| `fontSize?`        | number                              |        |
-| `textHue?`         | [StyleHue](#enums)                  |        |
-| `textTone?`        | [TextTone](#enums)                  |        |
-| `alignHorizontal?` | `left` `center` `right`             |        |
-| `alignVertical?`   | `top` `middle` `bottom`             |        |
-| `pattern?`         | boolean                             |        |
-| `weight?`          | `s` `m` `l` `xl`                    |        |
-
 ## Diagram shapes
 
 A diagram shape is a primitive of the diagram DSL, stored inside a `diagram` node.
@@ -966,17 +995,16 @@ A diagram shape is a primitive of the diagram DSL, stored inside a `diagram` nod
 
 The id and style fields every diagram shape shares.
 
-| Field       | Type                          | Notes                                                         |
-| ----------- | ----------------------------- | ------------------------------------------------------------- |
-| `id`        | string                        | Stable element id, unique within the object (e.g. "left-eye") |
-| `color?`    | [Shape.Color](#enums)         | Stroke/text color                                             |
-| `fill?`     | [Shape.Fill](#enums)          | Interior fill of closed shapes                                |
-| `stroke?`   | [Shape.Stroke](#enums)        | Stroke rendering                                              |
-| `weight?`   | [Shape.Weight](#enums)        | Stroke weight / text size                                     |
-| `border?`   | boolean                       | Whether a closed shape draws its outline                      |
-| `align?`    | [Shape.Align](#enums)         | Where the shape's text sits across it                         |
-| `valign?`   | [Shape.VerticalAlign](#enums) | Where the shape's text sits down it                           |
-| `fontSize?` | number                        | Text size in scene units                                      |
+| Field       | Type                    | Notes                                                         |
+| ----------- | ----------------------- | ------------------------------------------------------------- |
+| `id`        | string                  | Stable element id, unique within the object (e.g. "left-eye") |
+| `color?`    | [Color](#color)         | Stroke/text color                                             |
+| `fill?`     | [Fill](#enums)          | Interior fill of closed shapes                                |
+| `stroke?`   | [Stroke](#enums)        | Line or outline                                               |
+| `weight?`   | [Weight](#enums)        | Stroke weight / text size                                     |
+| `align?`    | [Align](#enums)         | Where the shape's text sits across it                         |
+| `valign?`   | [VerticalAlign](#enums) | Where the shape's text sits down it                           |
+| `fontSize?` | number                  | Text size in scene units                                      |
 
 ### Shape.Box
 
@@ -991,8 +1019,8 @@ A closed shape in a bounding box. Extends [ShapeBase](#shapebase).
 | `h`               | number                  |                                           |
 | `rotation?`       | number                  | Clockwise rotation in degrees             |
 | `text?`           | string                  | Centered label                            |
-| `corners?`        | [Shape.Corners](#enums) | Rects only                                |
-| `type?`           | string                  | A contributed element kind's name         |
+| `corners?`        | [Corners](#enums)       | Rects only                                |
+| `component?`      | string                  | A contributed element kind's name         |
 | `data?`           | map of any              | A contributed kind's own fields           |
 | `cols?`           | number or string        | Column tracks                             |
 | `rows?`           | number or string        | Row tracks                                |
@@ -1026,21 +1054,21 @@ A circle. Extends [ShapeBase](#shapebase).
 
 A straight segment or a polyline. Extends [ShapeBase](#shapebase).
 
-| Field     | Type                         | Notes                                                        |
-| --------- | ---------------------------- | ------------------------------------------------------------ |
-| `kind`    | `line`                       |                                                              |
-| `points`  | [Shape.Point](#shapepoint)[] | Two or more points (object-local units)                      |
-| `closed?` | boolean                      | Close the path back to the first point                       |
-| `guide?`  | boolean                      | A guide (lifeline, divider, outline) rather than a connector |
+| Field     | Type              | Notes                                                        |
+| --------- | ----------------- | ------------------------------------------------------------ |
+| `kind`    | `line`            |                                                              |
+| `points`  | [Point](#point)[] | Two or more points (object-local units)                      |
+| `closed?` | boolean           | Close the path back to the first point                       |
+| `guide?`  | boolean           | A guide (lifeline, divider, outline) rather than a connector |
 
 ### Shape.Curve
 
 A smooth curve through points. Extends [ShapeBase](#shapebase).
 
-| Field    | Type                         | Notes                                   |
-| -------- | ---------------------------- | --------------------------------------- |
-| `kind`   | `curve`                      |                                         |
-| `points` | [Shape.Point](#shapepoint)[] | Control points the curve passes through |
+| Field    | Type              | Notes                                   |
+| -------- | ----------------- | --------------------------------------- |
+| `kind`   | `curve`           |                                         |
+| `points` | [Point](#point)[] | Control points the curve passes through |
 
 ### Shape.Arc
 
@@ -1071,19 +1099,19 @@ Free-standing text. Extends [ShapeBase](#shapebase).
 
 A connector between two elements or points. Extends [ShapeBase](#shapebase).
 
-| Field       | Type                         | Notes                                                     |
-| ----------- | ---------------------------- | --------------------------------------------------------- |
-| `kind`      | `arrow`                      |                                                           |
-| `from?`     | string                       | Source element ref, optionally `#port`                    |
-| `to?`       | string                       | Target element ref, optionally `#port`                    |
-| `start?`    | [Shape.Point](#shapepoint)   | Explicit start (used when `from` is omitted)              |
-| `end?`      | [Shape.Point](#shapepoint)   | Explicit end (used when `to` is omitted)                  |
-| `text?`     | string                       | Label at the arrow midpoint                               |
-| `head?`     | [Shape.ArrowHead](#enums)    | Marker at the target end (default arrow)                  |
-| `tail?`     | [Shape.ArrowTail](#enums)    | Marker at the source end (default none)                   |
-| `route?`    | [Shape.Point](#shapepoint)[] | The connector's route, ends included                      |
-| `path?`     | [Shape.Path](#enums)         | How the connector runs between its ends (default `smart`) |
-| `relation?` | [Shape.Relation](#enums)     | What the connector means                                  |
+| Field       | Type                      | Notes                                                     |
+| ----------- | ------------------------- | --------------------------------------------------------- |
+| `kind`      | `arrow`                   |                                                           |
+| `from?`     | string                    | Source element ref, optionally `#port`                    |
+| `to?`       | string                    | Target element ref, optionally `#port`                    |
+| `start?`    | [Point](#point)           | Explicit start (used when `from` is omitted)              |
+| `end?`      | [Point](#point)           | Explicit end (used when `to` is omitted)                  |
+| `text?`     | string                    | Label at the arrow midpoint                               |
+| `head?`     | [Shape.ArrowHead](#enums) | Marker at the target end (default arrow)                  |
+| `tail?`     | [Shape.ArrowTail](#enums) | Marker at the source end (default none)                   |
+| `route?`    | [Point](#point)[]         | The connector's route, ends included                      |
+| `path?`     | [Shape.Path](#enums)      | How the connector runs between its ends (default `smart`) |
+| `relation?` | [Shape.Relation](#enums)  | What the connector means                                  |
 
 ### Shape.Portal
 
@@ -1105,45 +1133,37 @@ Any diagram shape.
 
 One of [Shape.Box](#shapebox), [Shape.Circle](#shapecircle), [Shape.Polyline](#shapepolyline), [Shape.Curve](#shapecurve), [Shape.Arc](#shapearc), [Shape.Text](#shapetext), [Shape.Arrow](#shapearrow), [Shape.Portal](#shapeportal).
 
-### Shape.Point
-
-A point.
-
-| Field | Type   |
-| ----- | ------ |
-| `x`   | number |
-| `y`   | number |
-
 ## Enums
 
 Each enum is a set of literal values.
 
-| Name                  | Values                                                                                                                       |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `Scene.LayoutKind`    | `view` `composite`                                                                                                           |
-| `PartConstraint`      | `min` `max` `stretch` `center` `scale`                                                                                       |
-| `Scene.InstanceFit`   | `none` `frame`                                                                                                               |
-| `Scene.Dimension`     | `2d` `3d`                                                                                                                    |
-| `Side`                | `n` `e` `s` `w`                                                                                                              |
-| `PortDirection`       | `in` `out` `any`                                                                                                             |
-| `Marker`              | `arrow` `circle` `diamond` `diamond-filled` `many` `triangle`                                                                |
-| `StyleHue`            | `neutral` `red` `orange` `amber` `green` `teal` `sky` `blue` `violet`                                                        |
-| `NodeTone`            | `0` `1` `2` `3`                                                                                                              |
-| `TextTone`            | `1` `2` `3`                                                                                                                  |
-| `Shape.BoxKind`       | `rect` `ellipse` `diamond` `triangle` `grid`                                                                                 |
-| `Shape.Corners`       | `top` `bottom` `none`                                                                                                        |
-| `Shape.Color`         | `black` `grey` `light-violet` `violet` `blue` `light-blue` `yellow` `orange` `green` `light-green` `light-red` `red` `white` |
-| `Shape.Fill`          | `none` `solid` `pattern` `tint`                                                                                              |
-| `Shape.Stroke`        | `sketchy` `solid` `dashed` `dotted`                                                                                          |
-| `Shape.Weight`        | `s` `m` `l` `xl`                                                                                                             |
-| `Shape.Align`         | `left` `center` `right`                                                                                                      |
-| `Shape.VerticalAlign` | `top` `middle` `bottom`                                                                                                      |
-| `Shape.Layout`        | `tracks` `pack`                                                                                                              |
-| `Shape.Place`         | `start` `center` `end`                                                                                                       |
-| `Shape.Path`          | `smart` `ortho` `line` `curve`                                                                                               |
-| `Shape.ArrowHead`     | `arrow` `triangle` `crowsfoot` `none`                                                                                        |
-| `Shape.ArrowTail`     | `none` `circle` `arrow`                                                                                                      |
-| `Shape.Relation`      | `association` `dependency` `inheritance` `implementation` `composition` `aggregation` `one-to-many` `many-to-many`           |
+| Name               | Values                                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `Scene.LayoutKind` | `view` `composite`                                                                                                 |
+| `Scene.Placement`  | `right-of` `left-of` `above` `below` `aligned`                                                                     |
+| `PartConstraint`   | `min` `max` `stretch` `center` `scale`                                                                             |
+| `InstanceFit`      | `fit` `fill` `none`                                                                                                |
+| `Scene.Dimension`  | `2d` `3d`                                                                                                          |
+| `PortDirection`    | `in` `out` `any`                                                                                                   |
+| `LinkPath`         | `line` `ortho` `curve` `spline` `smart`                                                                            |
+| `Marker`           | `arrow` `circle` `diamond` `diamond-filled` `crowsfoot` `triangle`                                                 |
+| `StyleHue`         | `neutral` `red` `orange` `amber` `green` `teal` `sky` `blue` `violet`                                              |
+| `NodeTone`         | `0` `1` `2` `3`                                                                                                    |
+| `TextTone`         | `1` `2` `3`                                                                                                        |
+| `Side`             | `top` `right` `bottom` `left`                                                                                      |
+| `Stroke`           | `none` `solid` `dashed` `dotted` `sketchy`                                                                         |
+| `Fill`             | `none` `solid` `tint` `pattern` `glass`                                                                            |
+| `Corners`          | `all` `top` `bottom` `none`                                                                                        |
+| `Weight`           | `s` `m` `l` `xl`                                                                                                   |
+| `Align`            | `left` `center` `right`                                                                                            |
+| `VerticalAlign`    | `top` `middle` `bottom`                                                                                            |
+| `Shape.BoxKind`    | `rect` `ellipse` `diamond` `triangle` `grid`                                                                       |
+| `Shape.Layout`     | `tracks` `pack`                                                                                                    |
+| `Shape.Place`      | `start` `center` `end`                                                                                             |
+| `Shape.Path`       | `smart` `ortho` `line` `curve`                                                                                     |
+| `Shape.ArrowHead`  | `arrow` `triangle` `crowsfoot` `none`                                                                              |
+| `Shape.ArrowTail`  | `none` `circle` `arrow`                                                                                            |
+| `Shape.Relation`   | `association` `dependency` `inheritance` `implementation` `composition` `aggregation` `one-to-many` `many-to-many` |
 
 ## Other kinds
 

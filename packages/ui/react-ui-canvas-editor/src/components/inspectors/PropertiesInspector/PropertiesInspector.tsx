@@ -61,19 +61,16 @@ import {
 import * as Input from '@dxos/react-ui/Input';
 import {
   BaseNode,
-  CurveLink,
   DEFAULT_GRID,
   type Element,
   type Layer,
-  LineLink,
-  LinkEnds,
-  type LinkType,
+  Link,
+  type LinkEnds,
+  LinkPath,
+  Marker,
   type Node,
-  type NodeStyle,
-  OrthoLink,
   ShapeNode,
-  SmartLink,
-  SplineLink,
+  type Style2D,
   type StyleClass,
   type StyleMap,
   isHullNode,
@@ -82,6 +79,8 @@ import {
   isNoteNode,
   isShapeNode,
   isViewNode,
+  linkMarkers,
+  linkPath,
   nodePadding,
   showsContents,
 } from '@dxos/scene';
@@ -96,8 +95,14 @@ import { FrameField } from './FrameField.tsx';
 import { GeometryField } from './GeometryField.tsx';
 import { HullField } from './HullField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
-import { LineStyleField } from './LineStyleField.tsx';
-import { FlipLinksContext, MarkerField } from './MarkerField.tsx';
+import {
+  DashMemory,
+  type FrameDefaults,
+  FrameDefaultsContext,
+  FrameTogglesField,
+  LineStyleField,
+} from './LineStyleField.tsx';
+import { EndsField, FlipLinksContext } from './MarkerField.tsx';
 import { OptionalPartsContext, PartsField } from './PartsField.tsx';
 import { PolygonFitField } from './PolygonFitField.tsx';
 import { LinkVariantsContext, VariantField } from './VariantField.tsx';
@@ -106,12 +111,12 @@ import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 /** Identity, ordering and geometry lists are the surface's, not the user's; so is a diagram shape's DSL form. */
 // `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached.
 // `composite`, `bind`, `optional`, `hidden`, `grow` and `follows` say how a tool's Object is put together: they are
-// written in the template, not set on a shape. `overrides` is where a part's switch writes (`PartsField`), and is
-// shown only for an Instance whose Object has an optional part. A solid's `op` and `operands` are Join's and
+// written in the template, not set on a shape. `partOverrides` is where a part's switch writes (`PartsField`), and
+// is shown only for an Instance whose Object has an optional part. A solid's `op` and `operands` are Join's and
 // Subtract's to write, and its `rings` are worked out from them.
 const HIDDEN = [
   'id',
-  'type',
+  'kind',
   'z',
   'ports',
   'points',
@@ -125,7 +130,7 @@ const HIDDEN = [
   'heading',
   'connector',
   'exposed',
-  'overrides',
+  'partOverrides',
   'composite',
   'bind',
   'optional',
@@ -136,9 +141,6 @@ const HIDDEN = [
   'group',
   'hullInset',
 ];
-
-/** A link's `type` is its variant, which the panel does show: straight, orthogonal, elbow, curve or spline. */
-const HIDDEN_LINK = HIDDEN.filter((name) => name !== 'type');
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
@@ -170,38 +172,32 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 /** Renderers by field path the panel always uses (the style grid); node types add their own (`NodeDef.fields`). */
 export const DEFAULT_FIELDS: FormFieldMap = {
   ...STYLE_FIELDS,
-  'style.alignHorizontal': AlignField,
-  'style.fontFamily': FontField,
-  'style.textHue': TextColorField,
-  'style.lineStyle': LineStyleField,
-  'ends.start': MarkerField,
-  'ends.end': MarkerField,
+  'overrides.align': AlignField,
+  'overrides.font': FontField,
+  'overrides.textColor': TextColorField,
+  'overrides.stroke': LineStyleField,
+  'overrides.fill': FrameTogglesField,
+  'tail': EndsField,
   'center': GeometryField,
   'rotation': FrameField,
   'params.fit': PolygonFitField,
   'shape': HullField,
   'scene': ViewField,
   'layer': LayerClassField,
-  'type': VariantField,
-  'overrides': PartsField,
+  'path': VariantField,
+  'partOverrides': PartsField,
 };
 
-/** Every way a link may be drawn: the panel's `type` field picks among them, so a link's form accepts any. */
-const LinkVariant = Schema.Literals(['line', 'ortho', 'curve', 'spline', 'smart']);
+const { path: linkPathField, ...linkFields } = Link.fields;
 
-// Each link type's schema with its `type` opened to any of them. A form validates what it is about to save, and
-// with the type held to the link's own a pick of another was refused before it could be written.
-const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
-  line: Schema.Struct({ ...LineLink.fields, type: LinkVariant }),
-  curve: Schema.Struct({ ...CurveLink.fields, type: LinkVariant }),
-  // A spline's points are its own, set by its handles: a link drawn another way has none to show the form.
-  spline: Schema.Struct({ ...SplineLink.fields, type: LinkVariant, points: Schema.optional(SplineLink.fields.points) }),
-  ortho: Schema.Struct({ ...OrthoLink.fields, type: LinkVariant }),
-  smart: Schema.Struct({ ...SmartLink.fields, type: LinkVariant }),
-};
+/** A link's form: its own schema, with how it runs leading the fields, where the panel shows the variant. */
+const LinkForm: Schema.Codec<any, any> = Schema.Struct({ path: linkPathField, ...linkFields });
 
-const isLinkType = Schema.is(LinkVariant);
-const isLinkEnds = Schema.is(LinkEnds);
+const isLinkPath = Schema.is(LinkPath);
+const isMarker = Schema.is(Marker);
+
+/** A marker a form wrote, or the link's own where the form wrote none; anything else is no marker. */
+const marker = (value: unknown) => (isMarker(value) ? value : undefined);
 
 /**
  * A parametric shape's form: its recipe as a choice among those known, and the recipe's parameters as numbers of
@@ -224,14 +220,10 @@ const shapeSchema = (recipe: ShapeRecipe): Schema.Codec<any, any> =>
 const recipeOf = (element: Element): ShapeRecipe | undefined =>
   !isLink(element) && isShapeNode(element) ? shapeRecipe(element.recipe) : undefined;
 
-/** An element's own schema; a type the registry does not know gets the core base's (`BaseNode`, or a line). */
+/** An element's own schema; a node kind the registry does not know gets the core base's (`BaseNode`). */
 const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> => {
   const recipe = recipeOf(element);
-  return recipe
-    ? shapeSchema(recipe)
-    : isLink(element)
-      ? (LINK_SCHEMAS[element.type] ?? LINK_SCHEMAS.line)
-      : (nodeDef(nodes, element)?.schema ?? BaseNode);
+  return recipe ? shapeSchema(recipe) : isLink(element) ? LinkForm : (nodeDef(nodes, element)?.schema ?? BaseNode);
 };
 
 /** A shape's parameters as its recipe reads them: those stored, and the recipe's default for each that is not. */
@@ -264,24 +256,22 @@ const shapeOverrides = (recipe: ShapeRecipe): Record<string, FormFieldOverride> 
   );
 
 /**
- * Where a type places its text unless styled otherwise: a note from the top left, a hull's name in its corner, a
+ * Where a kind places its text unless styled otherwise: a note from the top left, a hull's name in its corner, a
  * label in the middle.
  */
-const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertical'> =>
-  isNoteNode(node) || isHullNode(node)
-    ? { alignHorizontal: 'left', alignVertical: 'top' }
-    : { alignHorizontal: 'center', alignVertical: 'middle' };
+const textAlign = (node: Node): Pick<Style2D, 'align' | 'valign'> =>
+  isNoteNode(node) || isHullNode(node) ? { align: 'left', valign: 'top' } : { align: 'center', valign: 'middle' };
 
-/** The size a type draws its text at unless styled otherwise, where that is not a shape label's: a hull's name is a caption. */
-const textSize = (node: Node): Pick<NodeStyle, 'fontSize'> => (isHullNode(node) ? { fontSize: HULL_FONT_SIZE } : {});
+/** The size a kind draws its text at unless styled otherwise, where that is not a shape label's: a hull's name is a caption. */
+const textSize = (node: Node): Pick<Style2D, 'fontSize'> => (isHullNode(node) ? { fontSize: HULL_FONT_SIZE } : {});
 
-/** A node as the view draws it: its class's look under its own, and its type's fill and border where it sets none. */
+/** A node as the view draws it: its named style's look under its own, and its kind's fill and border where it sets none. */
 const drawnNode = (nodes: NodeRegistry, node: Node, styles: StyleMap): Node =>
   bareNode(classedNode(node, styles), nodeDef(nodes, node));
 
 /**
- * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show
- * contents read as they look and an unset port count as the type's.
+ * What the form shows for an element: what the view draws, so its named style's look, an unset fill, corner, path or
+ * Show contents read as they look and an unset port count as the kind's.
  */
 const formValues = (
   nodes: NodeRegistry,
@@ -291,14 +281,19 @@ const formValues = (
   grid: number,
 ): Record<string, unknown> =>
   isLink(element)
-    ? { ...element, layer: elementLayer(element, layers), style: classedLink(element, styles).style }
+    ? {
+        ...element,
+        path: linkPath(element),
+        layer: elementLayer(element, layers),
+        overrides: classedLink(element, styles).overrides,
+      }
     : {
         ...element,
         layer: elementLayer(element, layers),
-        style: {
+        overrides: {
           ...textAlign(element),
           ...textSize(element),
-          ...resolveStyle(drawnNode(nodes, element, styles).style),
+          ...resolveStyle(drawnNode(nodes, element, styles).overrides),
         },
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
@@ -308,15 +303,22 @@ const formValues = (
 
 /**
  * How the panel presents fields. Ranges are the editor's, not the model's: a check on the stored schema would
- * make a record outside them (an older or imported scene) fail validation and drop out of the scene. The style
- * grid at `style.hue` also sets `style.tone`, which has no field of its own.
+ * make a record outside them (an older or imported scene) fail validation and drop out of the scene.
  */
 const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   ...STYLE_FIELD_OVERRIDES,
-  'style.alignVertical': { hidden: true },
-  'style.fontSize': { hidden: true },
-  // Picked with the text's hue, in `TextColorField`'s grid.
-  'style.textTone': { hidden: true },
+  // The named style is the class, edited in the layer's row (`LayerClassField`).
+  'style': { hidden: true },
+  'overrides.stroke': { label: 'Line style' },
+  // Drawn with the fill's toggle by `FrameTogglesField`, in the panel's own order.
+  'overrides.corners': { hidden: true },
+  // A diagram's scale, which no shape of the canvas draws by.
+  'overrides.weight': { hidden: true },
+  'overrides.valign': { hidden: true },
+  'overrides.fontSize': { hidden: true },
+  'path': { label: 'Type' },
+  // Drawn beside the tail's marker by `EndsField`.
+  'head': { hidden: true },
   // Drawn beside the rotation by `FrameField`, and beside the centre by `GeometryField`.
   'portsPerSide': { hidden: true },
   'size': { hidden: true },
@@ -330,6 +332,12 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   // An extension kind's own fields, whatever the kind.
   'data': { label: 'Custom' },
 };
+
+/**
+ * The key a group's open state is stored under by a viewer who last saw the group at its earlier path (the look at
+ * `style`, a link's ends at `ends`), so a group left closed there is still closed.
+ */
+const STORED_GROUPS: Readonly<Record<string, string>> = { overrides: 'style', tail: 'ends' };
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
@@ -359,7 +367,7 @@ export type PropertiesInspectorProps = InspectorProps & {
   styles?: Atom.Writable<StyleMap>;
   /** The drawing's minor grid pitch in scene px, which a text's unset padding is drawn by; the default grid's unset. */
   grid?: number;
-  /** Whether each group (`style`, `center`, …) is open, by path, for a host that keeps it; unset, a group is open. */
+  /** Whether each group (`overrides`, `center`, …) is open, by path, for a host that keeps it; unset, a group is open. */
   groups?: Readonly<Record<string, boolean>>;
   onGroupsChange?: (groups: Record<string, boolean>) => void;
 };
@@ -390,12 +398,12 @@ export const PropertiesInspector = ({
   const styleMap = useAtomValue(styles ?? NO_STYLES);
   const layers = useMemo(() => viewLayers(scene), [scene]);
 
-  // Keyed by the selected types, so the schema (and the form built on it) holds while values change under it.
-  // A shape's form is its recipe's, so two recipes are two types here.
+  // Keyed by the selected kinds, so the schema (and the form built on it) holds while values change under it.
+  // A shape's form is its recipe's, so two recipes are two kinds here.
   const typesKey = [
     ...new Set(
       elements.map((element) =>
-        !isLink(element) && isShapeNode(element) ? `${element.type}:${element.recipe}` : element.type,
+        !isLink(element) && isShapeNode(element) ? `${element.kind}:${element.recipe}` : element.kind,
       ),
     ),
   ]
@@ -403,14 +411,15 @@ export const PropertiesInspector = ({
     .join();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
-  // A shape's text names it, so its label leads, ahead of the shared fields (style) its type's own fields follow.
-  // An extension kind's own fields (`data`) come last, after everything the shape shares with the core's.
+  // A shape's text names it, so its label leads, ahead of the shared fields (its look) its kind's own fields follow;
+  // a link's caption is already ahead of its look. An extension kind's own fields (`data`) come last, after everything
+  // the shape shares with the core's.
   const fieldOrder = useMemo(() => {
     const names =
       schema && SchemaAST.isObjects(schema.ast) ? schema.ast.propertySignatures.map(({ name }) => String(name)) : [];
-    const style = names.indexOf('style');
+    const style = names.indexOf('overrides');
     const labelled =
-      names.includes('label') && style >= 0
+      style >= 0 && names.indexOf('label') > style
         ? [
             ...names.slice(0, style).filter((name) => name !== 'label'),
             'label',
@@ -438,14 +447,12 @@ export const PropertiesInspector = ({
     const fieldOverrides: Record<string, FormFieldOverride> = {
       ...FIELD_OVERRIDES,
       ...(viewOptions ? {} : { scene: { hidden: true } }),
-      // The class is edited in the layer's row (`LayerClassField`).
-      class: { hidden: true },
       // A link has no font face, so its size is not drawn by `FontField` and needs its own row.
-      ...(elements.some(isLink) ? { 'style.fontSize': {} } : {}),
+      ...(elements.some(isLink) ? { 'overrides.fontSize': {} } : {}),
       // Text is all a note draws, so its colour is a setting of its own there; a shape's label takes its shape's.
       ...(elements.every((element) => !isLink(element) && isNoteNode(element))
         ? {}
-        : { 'style.textHue': { hidden: true } }),
+        : { 'overrides.textColor': { hidden: true } }),
       // Shapes of one recipe share its parameters' ranges; of several, each parameter is offered as the form finds it.
       ...(recipes.length === 1 ? shapeOverrides(recipes[0]) : {}),
       ...overrides?.(elements),
@@ -453,12 +460,13 @@ export const PropertiesInspector = ({
     for (const path of mixed) {
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
-    // Only a group reads these, so every top-level field may carry them.
+    // Only a group reads these, so every top-level field may carry them; a link's ends are a group at `tail`, which
+    // a link with a head alone has no value at.
     if (onGroupsChange) {
-      for (const path of Object.keys(values)) {
+      for (const path of new Set([...Object.keys(values), ...(elements.some(isLink) ? ['tail'] : [])])) {
         fieldOverrides[path] = {
           ...fieldOverrides[path],
-          open: groups?.[path],
+          open: groups?.[path] ?? groups?.[STORED_GROUPS[path] ?? path],
           onOpenChange: (open) => onGroupsChange({ ...groups, [path]: open }),
         };
       }
@@ -475,30 +483,35 @@ export const PropertiesInspector = ({
       let ends: LinkEnds | undefined;
       const edits = elements.map((element) => {
         const shown = formValues(nodes, element, styleMap, layers, grid);
-        // The element's own style as the base, so a field the panel shows resolved (an unset corner as on) is not written.
-        const { type: picked, ...patch } = patchValues({ ...shown, style: element.style }, values, paths);
-        if (isLink(element) && 'ends' in patch) {
-          ends = isLinkEnds(patch.ends) ? patch.ends : {};
+        // The element's own look as the base, so a field the panel shows resolved (an unset corner as on) is not written.
+        const patched = patchValues({ ...shown, overrides: element.overrides }, values, paths);
+        // A link's path changes with its control points (`retypeLink`), which a field update would leave behind.
+        const { path: picked, ...fields } = patched;
+        const patch = isLink(element) ? fields : patched;
+        if (isLink(element) && ('tail' in patch || 'head' in patch)) {
+          ends = linkMarkers({
+            tail: marker('tail' in patch ? patch.tail : element.tail),
+            head: marker('head' in patch ? patch.head : element.head),
+          });
         }
-        // A link drawn another way is a different link type, which a field update never changes.
-        const retype = isLink(element) && isLinkType(picked) ? [retypeLink(element.id, picked)] : [];
+        const retype = isLink(element) && isLinkPath(picked) ? [retypeLink(element.id, picked)] : [];
         const write = (next: Record<string, unknown>) =>
           chainEdits([...retype, ...(Object.keys(next).length > 0 ? [updateElement(element.id, next)] : [])]);
-        const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
+        const styleClass = styles && element.style ? (classes[element.style] ?? styleMap[element.style]) : undefined;
         // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
-        if (typeof patch.class === 'string') {
-          return write({ ...patch, style: undefined });
+        if (typeof patch.style === 'string') {
+          return write({ ...patch, overrides: undefined });
         }
-        if (!styleClass || !('style' in patch)) {
+        if (!styleClass || !('overrides' in patch)) {
           return write(patch);
         }
         // A link's look is the common base of its class's style; a node's, the whole of it.
         const look = isLink(element)
-          ? classedLink(element, styleMap).style
-          : resolveStyle(drawnNode(nodes, element, styleMap).style);
-        const split = splitClassEdit(look, patch.style, styleClass.style ?? {}, element.style);
+          ? classedLink(element, styleMap).overrides
+          : resolveStyle(drawnNode(nodes, element, styleMap).overrides);
+        const split = splitClassEdit(look, patch.overrides, styleClass.style ?? {}, element.overrides);
         classes[styleClass.id] = { ...styleClass, style: split.classLook };
-        return write({ ...patch, style: split.own });
+        return write({ ...patch, overrides: split.own });
       });
       if (styles && Object.keys(classes).length > 0) {
         registry.set(styles, { ...styleMap, ...classes });
@@ -518,11 +531,11 @@ export const PropertiesInspector = ({
     // A spline's control points run the other way after a flip, so a selected point's index names another one.
     registry.set(atoms.point, undefined);
   }, [draw, links, registry, atoms.point]);
-  // Every selected element is a link: only then is `type` theirs to pick, and only then does flipping mean anything.
+  // Every selected element is a link: only then does flipping mean anything.
   const onlyLinks = links.length > 0 && links.length === elements.length;
   const flip = !readonly && onlyLinks ? onFlip : undefined;
   // An Instance of a tool's Object shows a switch for each part its template marks optional (`PartsField`). Every
-  // other selection keeps `overrides` out of the panel, where there is nothing in it to set.
+  // other selection keeps `partOverrides` out of the panel, where there is nothing in it to set.
   const optionalParts = useMemo(() => {
     const [element] = elements;
     if (elements.length !== 1 || !element || isLink(element) || !isInstanceNode(element)) {
@@ -532,16 +545,25 @@ export const PropertiesInspector = ({
     return Object.values(definition?.nodes ?? {}).filter((part) => part.optional === true);
   }, [elements, nodes]);
   const exclude = useMemo(
-    () => (onlyLinks ? HIDDEN_LINK : optionalParts.length > 0 ? HIDDEN.filter((name) => name !== 'overrides') : HIDDEN),
-    [onlyLinks, optionalParts],
+    () => (optionalParts.length > 0 ? HIDDEN.filter((name) => name !== 'partOverrides') : HIDDEN),
+    [optionalParts],
   );
+  // What turning Fill or Border on writes: a kind that draws one unset needs none stated, a bare or outline kind does.
+  const frameDefaults = useMemo<FrameDefaults>(() => {
+    const defs = elements.flatMap((element) => (isLink(element) ? [] : [nodeDef(nodes, element)]));
+    return {
+      ...(defs.some((def) => def?.bare || def?.outline) ? { fill: 'solid' } : {}),
+      ...(defs.some((def) => def?.bare) ? { stroke: 'solid' } : {}),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typesKey, nodes]);
 
   // The selected node types' own renderers over the panel's; a host's `fields` win over both. One style picker for
   // every kind: its fill rows only when every element is a node, since a link has a colour but no fill.
   const fieldMap = useMemo(
     () => ({
       ...DEFAULT_FIELDS,
-      ...(elements.some(isLink) ? { 'style.hue': OutlineStyleField, 'style.fontSize': FontSizeField } : {}),
+      ...(elements.some(isLink) ? { 'overrides.color': OutlineStyleField, 'overrides.fontSize': FontSizeField } : {}),
       ...Object.assign(
         {},
         ...elements.map((element) => (isLink(element) ? {} : (nodeDef(nodes, element)?.fields ?? {}))),
@@ -567,27 +589,31 @@ export const PropertiesInspector = ({
               <LayersContext.Provider value={layers}>
                 <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
                   <ViewOptionsContext.Provider value={viewOptions ?? []}>
-                    <Form.Root
-                      key={[...selection].join()}
-                      schema={schema}
-                      values={values}
-                      fieldOverrides={fieldOverrides}
-                      fieldMap={fieldMap}
-                      db={db}
-                      getOptions={getOptions}
-                      readonly={readonly}
-                      autoSave
-                      // A typed value writes the scene once, when the field blurs, not on every keystroke.
-                      commitOn='blur'
-                      onSave={onSave}
-                    >
-                      {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
-                      <Form.Viewport scroll={false}>
-                        <Form.Content>
-                          <Form.Fields exclude={exclude} sort={fieldOrder} />
-                        </Form.Content>
-                      </Form.Viewport>
-                    </Form.Root>
+                    <FrameDefaultsContext.Provider value={frameDefaults}>
+                      <Form.Root
+                        key={[...selection].join()}
+                        schema={schema}
+                        values={values}
+                        fieldOverrides={fieldOverrides}
+                        fieldMap={fieldMap}
+                        db={db}
+                        getOptions={getOptions}
+                        readonly={readonly}
+                        autoSave
+                        // A typed value writes the scene once, when the field blurs, not on every keystroke.
+                        commitOn='blur'
+                        onSave={onSave}
+                      >
+                        <DashMemory>
+                          {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
+                          <Form.Viewport scroll={false}>
+                            <Form.Content>
+                              <Form.Fields exclude={exclude} sort={fieldOrder} />
+                            </Form.Content>
+                          </Form.Viewport>
+                        </DashMemory>
+                      </Form.Root>
+                    </FrameDefaultsContext.Provider>
                   </ViewOptionsContext.Provider>
                 </StyleClassesContext.Provider>
               </LayersContext.Provider>

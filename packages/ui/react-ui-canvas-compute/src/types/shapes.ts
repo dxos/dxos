@@ -18,7 +18,7 @@ const Size = Schema.Struct({ width: Schema.Number, height: Schema.Number });
 
 export const PathShape = Shape.mapFields(
   Struct.assign({
-    type: Schema.Literal('path'),
+    kind: Schema.Literal('path'),
     path: Schema.String,
     start: Schema.optional(Schema.String),
     end: Schema.optional(Schema.String),
@@ -49,7 +49,7 @@ export const isPolygon = Schema.is(Polygon);
 
 export const EllipseShape = Polygon.mapFields(
   Struct.assign({
-    type: Schema.Literal('ellipse'),
+    kind: Schema.Literal('ellipse'),
   }),
 );
 
@@ -57,7 +57,8 @@ export type EllipseShape = Schema.Schema.Type<typeof EllipseShape>;
 
 export const NoteShape = Polygon.mapFields(
   Struct.assign({
-    type: Schema.Literal('note'),
+    kind: Schema.Literal('note'),
+    label: Schema.String,
   }),
 );
 
@@ -65,7 +66,7 @@ export type NoteShape = Schema.Schema.Type<typeof NoteShape>;
 
 export const RectangleShape = Polygon.mapFields(
   Struct.assign({
-    type: Schema.Literal('rectangle'),
+    kind: Schema.Literal('rectangle'),
     rounded: Schema.optional(Schema.Number),
   }),
 );

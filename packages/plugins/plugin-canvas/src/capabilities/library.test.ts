@@ -11,7 +11,7 @@ describe('library', () => {
     'the %s is defined five units long, so it is placed at a vehicle size beside the unit shapes',
     async (_, item) => {
       const object = await item.make();
-      expect(object).toMatchObject({ type: 'mesh', scale: { x: 5, y: 5, z: 5 } });
+      expect(object).toMatchObject({ kind: 'mesh', scale: { x: 5, y: 5, z: 5 } });
     },
   );
 

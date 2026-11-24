@@ -22,7 +22,7 @@ export const OptionalPartsContext = createContext<readonly Node[]>([]);
  */
 const partName = (part: Node): string => part.id.charAt(0).toUpperCase() + part.id.slice(1);
 
-/** The Instance's overrides as a record of part id to the fields it overrides. */
+/** The Instance's part overrides as a record of part id to the fields it overrides. */
 const overridesOf = (value: unknown): Record<string, Record<string, unknown>> => {
   if (typeof value !== 'object' || value === null) {
     return {};
@@ -38,7 +38,7 @@ const overridesOf = (value: unknown): Record<string, Record<string, unknown>> =>
 
 export const PartsField: FormFieldRenderer = ({ jsonPath, readonly }) => {
   const parts = useContext(OptionalPartsContext);
-  const field = useFormFieldState('PartsField', (jsonPath ?? 'overrides').split('.'));
+  const field = useFormFieldState('PartsField', (jsonPath ?? 'partOverrides').split('.'));
   if (parts.length === 0) {
     return null;
   }
@@ -49,7 +49,7 @@ export const PartsField: FormFieldRenderer = ({ jsonPath, readonly }) => {
     // An override of nothing is dropped, so an Instance that hides no part carries no record of one.
     const next = shown ? kept : { ...kept, hidden: true };
     const merged = { ...rest, ...(Object.keys(next).length > 0 ? { [part.id]: next } : {}) };
-    field.onValueChange(InstanceNode.fields.overrides.ast, merged);
+    field.onValueChange(InstanceNode.fields.partOverrides.ast, merged);
     field.onBlur();
   };
   return (

@@ -57,7 +57,7 @@ describe('grid diagrams', () => {
         text: 'Services',
         parent: 'services',
         fill: 'none',
-        border: false,
+        stroke: 'none',
         align: 'center',
         valign: 'middle',
         fontSize: HEADING.fontSize,
@@ -110,7 +110,7 @@ describe('grid diagrams', () => {
         id: 'field',
         ...placed,
         parent: OBJECT,
-        type: 'substrate',
+        component: 'substrate',
         // `fill` is the node's own style, so the component's field of that name is written escaped.
         data: { seed: 29, fill: 0.55, hue: 'neutral', live: true },
       },
@@ -120,7 +120,7 @@ describe('grid diagrams', () => {
         ...placed,
         text: 'Calendar',
         parent: OBJECT,
-        type: 'card',
+        component: 'card',
         data: { icon: 'calendar-blank' },
         stroke: 'dashed',
       },
@@ -147,7 +147,7 @@ describe('grid diagrams', () => {
   test('a group sizes the tracks it does not state, says where they sit, and draws a frame', ({ expect }) => {
     const text = `
       diagram kind=grid size=800x600 alignContent=center
-      group cards "Cards" autoRows=88 gap=12 alignContent=center justifyContent=end border=true stroke=dashed {
+      group cards "Cards" autoRows=88 gap=12 alignContent=center justifyContent=end stroke=dashed {
         node a
       }
       group wide autoCols=384 fill=tint { node b }
@@ -172,7 +172,6 @@ describe('grid diagrams', () => {
       autoRows: 88,
       alignContent: 'center',
       justifyContent: 'end',
-      border: true,
       stroke: 'dashed',
       parent: 'cards',
     });
@@ -188,12 +187,12 @@ describe('grid diagrams', () => {
     expect(solveGrids(boxesOf(text)).get('a')?.h).toBe(88);
   });
 
-  test('a group packs its members where it says so, and a node says whether it draws its border', ({ expect }) => {
+  test('a group packs its members where it says so, and a node says how it draws its border', ({ expect }) => {
     const text = `
       diagram kind=grid size=800x600
       group field layout=pack packSeed=29 packMin=36 packMax=185 gap=10 {
-        node s0 kind=graph border=true seed=29
-        node s1 kind=graph border=false
+        node s0 kind=graph stroke=solid seed=29
+        node s1 kind=graph stroke=none
       }
     `;
     expect(messagesOf(text)).toEqual([]);
@@ -210,9 +209,35 @@ describe('grid diagrams', () => {
         parent: OBJECT,
       },
       // `seed` is the component's own; the packing's is named apart from it.
-      { kind: 'rect', id: 's0', ...placed, parent: 'field', type: 'graph', data: { seed: 29 }, border: true },
-      { kind: 'rect', id: 's1', ...placed, parent: 'field', type: 'graph', border: false },
+      { kind: 'rect', id: 's0', ...placed, parent: 'field', component: 'graph', data: { seed: 29 }, stroke: 'solid' },
+      { kind: 'rect', id: 's1', ...placed, parent: 'field', component: 'graph', stroke: 'none' },
     ]);
+  });
+
+  test('a diagram written with `border` draws the frames and borders it did', ({ expect }) => {
+    // A group and a component draw no outline unless told to, so `border=true` is a stroke, solid where none is
+    // stated; `border=false` is no stroke whatever else is said.
+    const text = `
+      diagram kind=grid size=800x600
+      group cards border=true stroke=dashed { node a border=false }
+      group field border=true {
+        node s0 kind=graph border=true
+        node s1 kind=graph border=false stroke=dotted
+      }
+    `;
+    expect(messagesOf(text)).toEqual([]);
+    expect(
+      boxesOf(text)
+        .slice(1)
+        .map(({ id, stroke }) => [id, stroke]),
+    ).toEqual([
+      ['cards', 'dashed'],
+      ['a', 'none'],
+      ['field', 'solid'],
+      ['s0', 'solid'],
+      ['s1', 'none'],
+    ]);
+    expect(boxesOf(text).some((box) => 'border' in box)).toBe(false);
   });
 
   test('a node keeps the size it states in its cell, and a component field of that name is escaped', ({ expect }) => {
@@ -225,7 +250,7 @@ describe('grid diagrams', () => {
     expect(boxesOf(text).slice(1)).toEqual([
       { kind: 'rect', id: 'a', ...placed, text: 'A', parent: OBJECT, width: 200, height: 50 },
       // `width` is the element's; the component's own field of that name stays in its bag.
-      { kind: 'rect', id: 'b', ...placed, text: 'B', parent: OBJECT, type: 'card', data: { width: 3 } },
+      { kind: 'rect', id: 'b', ...placed, text: 'B', parent: OBJECT, component: 'card', data: { width: 3 } },
     ]);
     const frames = solveGrids(boxesOf(text));
     // Two 400-wide cells: `a` sits in the middle of the first at its own size, `b` fills the second.
@@ -266,7 +291,7 @@ describe('grid diagrams', () => {
         ...placed,
         text: 'Types',
         parent: OBJECT,
-        type: 'card',
+        component: 'card',
         data: {
           icon: 'brackets-curly',
           items: [{ text: 'Effect Schema types' }, { text: 'Registered with ECHO', icon: 'database' }],
@@ -330,14 +355,27 @@ describe('the other kinds', () => {
   test('what only a grid reads says so', ({ expect }) => {
     const text = `
       diagram size=800x600 cols=2
-      group g rows=3 padding=4 autoRows=88 alignContent=center border=true { node a kind=card icon=x }
+      group g rows=3 padding=4 autoRows=88 alignContent=center stroke=solid border=true { node a kind=card icon=x }
       node b width=120 height=40
       node c kind=card { item "One" }
       edge a -> b path=line
     `;
     expect(messagesOf(text).sort()).toEqual(
       [
-        ...['size', 'cols', 'rows', 'padding', 'autoRows', 'alignContent', 'border', 'kind', 'width', 'height', 'path']
+        ...[
+          'size',
+          'cols',
+          'rows',
+          'padding',
+          'autoRows',
+          'alignContent',
+          'stroke',
+          'border',
+          'kind',
+          'width',
+          'height',
+          'path',
+        ]
           // `kind` is stated twice, on `a` and on `c`.
           .flatMap((name) => (name === 'kind' ? [name, name] : [name]))
           .map((name) => `"${name}"`),

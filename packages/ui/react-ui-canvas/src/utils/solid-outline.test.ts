@@ -26,9 +26,9 @@ const box = (x: number, y: number, width: number, height: number): Point[] => [
   { x, y: y + height },
 ];
 
-const node = (id: string, type: string, x: number, y: number, width: number, height: number, more = {}): NodeBase => ({
+const node = (id: string, kind: string, x: number, y: number, width: number, height: number, more = {}): NodeBase => ({
   id,
-  type,
+  kind,
   z: 'a0',
   center: { x: x + width / 2, y: y + height / 2 },
   size: { width, height },
@@ -36,7 +36,7 @@ const node = (id: string, type: string, x: number, y: number, width: number, hei
 });
 
 const solid = (id: string, op: string, operands: string, x: number, y: number, width: number, height: number) => {
-  const made: SolidNode = { ...node(id, 'solid', x, y, width, height), type: 'solid', op, operands };
+  const made: SolidNode = { ...node(id, 'solid', x, y, width, height), kind: 'solid', op, operands };
   return made;
 };
 

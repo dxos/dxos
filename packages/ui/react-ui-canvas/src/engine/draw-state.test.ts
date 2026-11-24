@@ -12,10 +12,10 @@ import { createDrawState } from './draw-state.ts';
 
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
 
-const viewNode = (id: string, scene: string): NodeBase & { scene: string } => ({ id, type: 'view', scene, ...box });
+const viewNode = (id: string, scene: string): NodeBase & { scene: string } => ({ id, kind: 'view', scene, ...box });
 const instance = (id: string, composite: string): NodeBase & { composite: string } => ({
   id,
-  type: 'instance',
+  kind: 'instance',
   composite,
   ...box,
 });

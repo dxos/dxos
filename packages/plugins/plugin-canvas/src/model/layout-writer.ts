@@ -68,17 +68,21 @@ const writeLayout = (
   const current: Record<string, Scene.Element2D> = plain(layout.elements);
   const next: Record<string, Scene.Element2D> = { ...current };
   for (const id of set) {
-    // Props other than the canvas's own belong to other writers, so they are kept, as is the DSL identity.
-    const { canvas: _canvas, ...kept } = current[id]?.props ?? {};
+    // Props belong to other writers, so they are kept, as is the DSL identity.
+    const kept = current[id]?.props ?? {};
     const written = plain(record.elements[id]);
-    const { type, ...element } = { ...written, props: { ...kept, ...written.props } };
+    for (const key of Object.keys(kept)) {
+      // A field those props hold is theirs alone, unless it shares a name with a field every element has.
+      !Object.hasOwn(Scene.Element2D.fields, key) && Reflect.deleteProperty(written, key);
+    }
+    const { kind, ...element } = { ...written, ...(Object.keys(kept).length > 0 ? { props: kept } : {}) };
     const dsl = element.dsl ?? current[id]?.dsl;
     const placed = current[id]?.object;
     const object = placed === undefined ? undefined : objectOf(placed);
     const value =
-      placed !== undefined && object && element.object === undefined && type === object.type
+      placed !== undefined && object && element.object === undefined && kind === object.kind
         ? overObject({ ...element, object: placed }, object)
-        : { ...element, ...(type === undefined ? {} : { type }) };
+        : { ...element, ...(kind === undefined ? {} : { kind }) };
     next[id] = dsl === undefined ? value : { ...value, dsl };
   }
   for (const id of remove) {
@@ -218,7 +222,7 @@ export const makeLayoutWriter = (scene: Scene.Scene2D, { canvas }: LayoutWriterO
       );
     for (const { view } of written) {
       if (view.id !== root && !reachedBy(view.id)) {
-        placed.push({ id: `${COMPOSITE_PREFIX}${view.id}`, type: 'rect', parts: view.id });
+        placed.push({ id: `${COMPOSITE_PREFIX}${view.id}`, kind: 'rect', parts: view.id });
       }
     }
     const model = placed.length > 0 ? rootModel() : undefined;

@@ -86,8 +86,8 @@ const constrained = (): RenderList2D =>
     {
       nodes: [{ id: 'A' }, { id: 'B' }, { id: 'C' }],
       constraints: [
-        { subject: 'B', relation: 'east', object: 'A' },
-        { subject: 'C', relation: 'south', object: 'A' },
+        { subject: 'B', relation: 'right-of', object: 'A' },
+        { subject: 'C', relation: 'below', object: 'A' },
       ],
     },
     { nodes: defaultNodeRegistry },

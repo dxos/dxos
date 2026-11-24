@@ -12,8 +12,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 /** The outcome of validating an element against its kind: valid, or the kind's schema issue. */
 export type KindCheck = { readonly ok: true } | { readonly ok: false; readonly issue: string };
 
-/** An element as a registry reads one: its type and whatever fields it carries. */
-export type KindElement = { readonly type?: string; readonly [field: string]: unknown };
+/** An element as a registry reads one: its kind and whatever fields it carries. */
+export type KindElement = { readonly kind?: string; readonly [field: string]: unknown };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -34,25 +34,25 @@ const dataFieldsOf = (schema: Schema.Codec<unknown, unknown>): readonly string[]
   return data?.propertySignatures.map(({ name }) => String(name)) ?? [];
 };
 
-/** Element kinds by type, each the full schema of its elements (the base plus the kind's `data`). */
+/** Element kinds by name, each the full schema of its elements (the base plus the kind's `data`). */
 export class KindRegistry {
   readonly #kinds = new Map<string, Schema.Codec<unknown, unknown>>();
   readonly #dataFields = new Map<string, readonly string[]>();
 
-  /** Registers the schema elements of `type` decode with; a later registration of the same type replaces it. */
-  register(type: string, schema: Schema.Codec<unknown, unknown>): this {
-    this.#kinds.set(type, schema);
-    this.#dataFields.set(type, dataFieldsOf(schema));
+  /** Registers the schema elements of `kind` decode with; a later registration of the same kind replaces it. */
+  register(kind: string, schema: Schema.Codec<unknown, unknown>): this {
+    this.#kinds.set(kind, schema);
+    this.#dataFields.set(kind, dataFieldsOf(schema));
     return this;
   }
 
-  has(type: string): boolean {
-    return this.#kinds.has(type);
+  has(kind: string): boolean {
+    return this.#kinds.has(kind);
   }
 
-  /** The names of the fields `type` keeps under `data`; none for a type that is not registered. */
-  dataFields(type: string): readonly string[] {
-    return this.#dataFields.get(type) ?? [];
+  /** The names of the fields `kind` keeps under `data`; none for a kind that is not registered. */
+  dataFields(kind: string): readonly string[] {
+    return this.#dataFields.get(kind) ?? [];
   }
 
   /**
@@ -61,7 +61,7 @@ export class KindRegistry {
    * it is.
    */
   normalize(element: KindElement): KindElement {
-    const fields = element.type === undefined ? [] : this.dataFields(element.type);
+    const fields = element.kind === undefined ? [] : this.dataFields(element.kind);
     const moved = fields.filter((field) => field in element);
     if (moved.length === 0) {
       return element;
@@ -73,7 +73,7 @@ export class KindRegistry {
 
   /** Checks an element against its kind's schema; an element of an unregistered kind is valid as stored. */
   validate(element: KindElement): KindCheck {
-    const schema = element.type === undefined ? undefined : this.#kinds.get(element.type);
+    const schema = element.kind === undefined ? undefined : this.#kinds.get(element.kind);
     if (!schema) {
       return { ok: true };
     }

@@ -33,7 +33,7 @@ const CELL = { width: 288, height: 192 };
 const board = (): RenderList2D => {
   const rows = Math.ceil(SHAPE_RECIPES.length / COLUMNS);
   const nodes: ShapeNode[] = SHAPE_RECIPES.map((recipe, index) => ({
-    type: 'shape',
+    kind: 'shape',
     id: recipe.id,
     z: `a${index}`,
     center: {
@@ -43,7 +43,7 @@ const board = (): RenderList2D => {
     size: { width: recipe.defaultSize.width * 48, height: recipe.defaultSize.height * 48 },
     recipe: recipe.id,
     label: recipe.name,
-    style: { hue: index % 2 === 0 ? 'indigo' : 'teal' },
+    overrides: { color: index % 2 === 0 ? 'indigo' : 'teal' },
   }));
   return {
     id: 'board',

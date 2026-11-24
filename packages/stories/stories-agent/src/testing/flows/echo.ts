@@ -90,8 +90,8 @@ const draft = (text: string): string =>
 /** Whether a canvas record is a group's dashed frame (a node styled as a guide) rather than a box. */
 const isGroupFrame = (record: unknown): boolean => {
   const node = typeof record === 'object' && record !== null && 'node' in record ? record.node : undefined;
-  const style = typeof node === 'object' && node !== null && 'style' in node ? node.style : undefined;
-  return typeof style === 'object' && style !== null && 'guide' in style && style.guide === true;
+  const overrides = typeof node === 'object' && node !== null && 'overrides' in node ? node.overrides : undefined;
+  return typeof overrides === 'object' && overrides !== null && 'guide' in overrides && overrides.guide === true;
 };
 
 /** Seeds the DXOS Architecture template, then strips its ECHO design document, diagrams and sheet back to the outline. */

@@ -26,7 +26,7 @@ const document: Scene.SceneDocument = {
       camera: { target: { x: 0, y: 0, z: 0 }, yaw: 0, pitch: 30, distance: 10, fov: 0.8, projection: 'perspective' },
     },
   ],
-  layouts: [{ id: 'root', dim: '3d', elements: { a: { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } } } }],
+  layouts: [{ id: 'root', dim: '3d', elements: { a: { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } } } }],
   models: [],
 };
 

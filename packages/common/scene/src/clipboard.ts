@@ -73,7 +73,7 @@ export const pasteIntent = (
   if (source.length === 0 || source.some((element) => element.object !== undefined && refuses?.(element.object))) {
     return undefined;
   }
-  const idMap = new Map(source.map((element) => [element.id, newId(element.type ?? element.object ?? 'element')]));
+  const idMap = new Map(source.map((element) => [element.id, newId(element.kind ?? element.object ?? 'element')]));
   const rebound = <E extends Element2D | Element3D>(element: E): E => ({
     ...element,
     id: idMap.get(element.id) ?? element.id,

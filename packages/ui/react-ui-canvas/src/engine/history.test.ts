@@ -14,7 +14,7 @@ import { type HistoryContext, createLocalHistory, createLocalStacks } from './hi
 
 const box = (id: string, x = 0): NodeBase => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   z: 'a0',
   center: { x, y: 0 },
   size: { width: 64, height: 64 },

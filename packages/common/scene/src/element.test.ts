@@ -27,7 +27,6 @@ describe('element base', () => {
       [
         'bind',
         'center',
-        'class',
         'composite',
         'constrain',
         'exposed',
@@ -41,6 +40,7 @@ describe('element base', () => {
         'optional',
         'overrides',
         'parent',
+        'partOverrides',
         'ports',
         'portsPerSide',
         'rotation',
@@ -51,27 +51,31 @@ describe('element base', () => {
     );
     expect(Object.keys(linkBase).sort()).toEqual(
       [
-        'class',
         'connector',
         'constrain',
-        'ends',
+        'head',
         'id',
+        'kind',
+        'label',
         'layer',
         'locked',
+        'overrides',
+        'path',
+        'points',
         'source',
         'style',
+        'tail',
         'target',
-        'text',
         'z',
       ].sort(),
     );
     expect(Object.keys(boxFields)).toEqual(['label']);
   });
 
-  test('a node type is the base plus its own fields', () => {
+  test('a node kind is the base plus its own fields', () => {
     // A rectangle draws a label in a box, so it carries the padding between the two as well as the box's own fields.
-    expect(Object.keys(RectNode.fields).sort()).toEqual(['type', ...Object.keys(nodeBase), 'label', 'padding'].sort());
-    expect(Object.keys(NodeStyle.fields)).toContain('hue');
+    expect(Object.keys(RectNode.fields).sort()).toEqual(['kind', ...Object.keys(nodeBase), 'label', 'padding'].sort());
+    expect(Object.keys(NodeStyle.fields)).toContain('color');
   });
 
   test('padding is on the types that draw text in a box, and reads back off a node', () => {
@@ -79,12 +83,12 @@ describe('element base', () => {
       expect(Object.keys(fields)).toContain('padding');
     }
     const node: NoteNode = {
-      type: 'note',
+      kind: 'note',
       id: 'a',
       z: 'a0',
       center: { x: 0, y: 0 },
       size: { width: 1, height: 1 },
-      text: '',
+      label: '',
     };
     expect(nodePadding(node)).toBeUndefined();
     // Zero is a padding, not an absent one: a card's region starts on its own edge.
@@ -97,17 +101,17 @@ describe('element base', () => {
   test('every shape that draws a label carries padding, in scene px', () => {
     const frame = { id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 96, height: 48 } };
     const padded = { ...frame, label: 'A', padding: { x: 24, y: 12 } };
-    expect(Schema.is(RectNode)({ ...padded, type: 'rect' })).toBe(true);
-    expect(Schema.is(EllipseNode)({ ...padded, type: 'ellipse' })).toBe(true);
-    expect(Schema.is(CloudNode)({ ...padded, type: 'cloud' })).toBe(true);
-    expect(Schema.is(PolygonNode)({ ...padded, type: 'polygon' })).toBe(true);
-    expect(Schema.is(ShapeNode)({ ...padded, type: 'shape', recipe: 'arrow' })).toBe(true);
-    expect(Schema.is(PolylineNode)({ ...padded, type: 'polyline', points: [] })).toBe(true);
+    expect(Schema.is(RectNode)({ ...padded, kind: 'rect' })).toBe(true);
+    expect(Schema.is(EllipseNode)({ ...padded, kind: 'ellipse' })).toBe(true);
+    expect(Schema.is(CloudNode)({ ...padded, kind: 'cloud' })).toBe(true);
+    expect(Schema.is(PolygonNode)({ ...padded, kind: 'polygon' })).toBe(true);
+    expect(Schema.is(ShapeNode)({ ...padded, kind: 'shape', recipe: 'arrow' })).toBe(true);
+    expect(Schema.is(PolylineNode)({ ...padded, kind: 'polyline', points: [] })).toBe(true);
     // A hull's name is a label too.
-    expect(Schema.is(HullNode)({ ...padded, type: 'hull' })).toBe(true);
+    expect(Schema.is(HullNode)({ ...padded, kind: 'hull' })).toBe(true);
     // One side alone may be set; the other then keeps its default.
-    const across: EllipseNode = { ...padded, type: 'ellipse', padding: { x: 6 } };
+    const across: EllipseNode = { ...padded, kind: 'ellipse', padding: { x: 6 } };
     expect(nodePadding(across)).toEqual({ x: 6 });
-    expect(Schema.is(EllipseNode)({ ...padded, type: 'ellipse', padding: { x: 'wide' } })).toBe(false);
+    expect(Schema.is(EllipseNode)({ ...padded, kind: 'ellipse', padding: { x: 'wide' } })).toBe(false);
   });
 });

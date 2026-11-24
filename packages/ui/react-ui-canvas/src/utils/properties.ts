@@ -3,7 +3,7 @@
 //
 
 //
-// Editing several elements in one form: the properties every selected type declares alike, the values
+// Editing several elements in one form: the properties every selected kind declares alike, the values
 // they share (and the paths they disagree on), and the patch an edit makes to each element.
 //
 
@@ -163,7 +163,7 @@ const equal = (left: unknown, right: unknown): boolean => {
 export type MergedValues = {
   /** The shared value at every path; where the objects disagree, the first object's, so the form still validates. */
   values: Values;
-  /** Json-paths (`style.hue`) whose value differs between the objects. */
+  /** Json-paths (`overrides.color`) whose value differs between the objects. */
   mixed: Set<string>;
 };
 
@@ -204,7 +204,7 @@ const setIn = (value: unknown, path: readonly string[], next: unknown): unknown 
 
 /**
  * The top-level values an edit writes to one element: each changed json-path set to the form's value,
- * leaving the element's other nested fields (the rest of its `style`) as they were.
+ * leaving the element's other nested fields (the rest of its `overrides`) as they were.
  */
 export const patchValues = (element: Values, values: Values, paths: readonly string[]): Record<string, unknown> => {
   const patch: Record<string, unknown> = {};

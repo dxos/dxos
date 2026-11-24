@@ -24,7 +24,7 @@ const grid = (count: number): RenderList2D => {
   for (let index = 0; index < count; index++) {
     const id = `n${index}`;
     nodes[id] = createNode({
-      type: 'rect',
+      kind: 'rect',
       id,
       z: keys[index],
       center: { x: (index % 20) * 64, y: Math.floor(index / 20) * 64 },

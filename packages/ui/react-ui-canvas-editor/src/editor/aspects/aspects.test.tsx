@@ -42,7 +42,7 @@ const CONFIG: DimensionConfig<{ zoom: number }> = {
 
 const documentWith = (ids: readonly string[]): Scene.SceneDocument => ({
   scenes: [{ id: 's', dim: '2d', layout: 'root', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
-  layouts: [{ id: 'root', dim: '2d', elements: Object.fromEntries(ids.map((id) => [id, { id, type: 'rect' }])) }],
+  layouts: [{ id: 'root', dim: '2d', elements: Object.fromEntries(ids.map((id) => [id, { id, kind: 'rect' }])) }],
   models: [],
 });
 
@@ -56,9 +56,9 @@ const ORDERED: Scene.SceneDocument = {
       id: 'root',
       dim: '2d',
       elements: {
-        a: { id: 'a', type: 'rect', z: 'a1' },
-        b: { id: 'b', type: 'rect', z: 'a2' },
-        ab: { id: 'ab', type: 'line', z: 'a3', source: { node: 'a' }, target: { node: 'b' } },
+        a: { id: 'a', kind: 'rect', z: 'a1' },
+        b: { id: 'b', kind: 'rect', z: 'a2' },
+        ab: { id: 'ab', kind: 'link', path: 'line', z: 'a3', source: { node: 'a' }, target: { node: 'b' } },
       },
     },
   ],
@@ -145,9 +145,9 @@ describe('SceneEditor aspects', () => {
           id: 'root',
           dim: '2d',
           elements: {
-            a: { id: 'a', type: 'rect', z: '1' },
-            b: { id: 'b', type: 'rect' },
-            c: { id: 'c', type: 'rect' },
+            a: { id: 'a', kind: 'rect', z: '1' },
+            b: { id: 'b', kind: 'rect' },
+            c: { id: 'c', kind: 'rect' },
           },
         },
       ],

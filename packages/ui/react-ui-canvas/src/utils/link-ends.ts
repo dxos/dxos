@@ -54,7 +54,7 @@ export const markerFrame = (marker: Marker, box: number, stroke: number): Marker
       const size = (box * 18) / 10;
       return { size, view: 18, refX: 16 + miter(stroke) / (size / 18), refY: 5 };
     }
-    case 'many': {
+    case 'crowsfoot': {
       // The toes' round caps reach the anchor, where an arrow's tip does.
       const size = (box * 12) / 10;
       return { size, view: 12, refX: 10 + stroke / 2 / (size / 12), refY: 5 };
@@ -79,14 +79,14 @@ export const markerTrim = (marker: Marker, box: number, stroke: number, shaft: S
     case 'diamond':
     case 'diamond-filled':
       return miter(stroke) + (size / 18) * 16;
-    case 'many':
+    case 'crowsfoot':
       return 0;
   }
 };
 
 /** A groove head's length for an end `size` long, at least a few channels so it reads as a head. */
 const grooveLength = (marker: Marker, width: number, size: number) =>
-  marker === 'arrow' || marker === 'many'
+  marker === 'arrow' || marker === 'crowsfoot'
     ? Math.max(size, width * 2.5)
     : marker === 'triangle'
       ? Math.max(size * 1.25, width * 4)
@@ -111,7 +111,7 @@ export const grooveTrim = (marker: Marker, width: number, size: number): number 
     case 'diamond':
     case 'diamond-filled':
       return miter(width) + length;
-    case 'many':
+    case 'crowsfoot':
       return width / 2;
   }
 };
@@ -144,7 +144,7 @@ export type GrooveHeads = {
 
 /**
  * The groove heads for a link's ends: an open chevron for `arrow`, a hollow triangle and a ring for `triangle` and
- * `circle`, a diamond, hollow or solid, for `diamond` and `diamond-filled`, and for `many` a chevron opening onto the
+ * `circle`, a diamond, hollow or solid, for `diamond` and `diamond-filled`, and for `crowsfoot` a chevron opening onto the
  * end. A pointed head's mitred tip, the ring's far side and a crow's foot's toes are at the route's end.
  */
 export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: number): GrooveHeads => {
@@ -204,7 +204,7 @@ export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: n
         hollow.push(ring);
         break;
       }
-      case 'many': {
+      case 'crowsfoot': {
         const toe = width / 2;
         outline.push(
           `M ${at(local(toe, length * MANY_SPREAD))} L ${at(local(toe + length, 0))} L ${at(local(toe, -length * MANY_SPREAD))}`,
@@ -215,8 +215,8 @@ export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: n
   };
   const first = points[0];
   const last = points[points.length - 1];
-  build(ends.start, first, arrival(points.slice(1), first));
-  build(ends.end, last, arrival([...points].reverse().slice(1), last));
+  build(ends.tail, first, arrival(points.slice(1), first));
+  build(ends.head, last, arrival([...points].reverse().slice(1), last));
   return { outline: outline.join(' '), hollow: hollow.join(' '), solid: solid.join(' ') };
 };
 
@@ -362,7 +362,7 @@ export const trimPath = (path: string, start: number, end: number): string => {
 
 /** The marker a link draws at the end on its `source` or its `target`. */
 export const endMarker = (ends: LinkEnds | undefined, end: 'source' | 'target'): Marker | undefined =>
-  end === 'source' ? ends?.start : ends?.end;
+  end === 'source' ? ends?.tail : ends?.head;
 
 /** A link's markers once the one at `end` is `marker` (none where it is undefined), the other end's as it was. */
 export const withEndMarker = (
@@ -370,8 +370,8 @@ export const withEndMarker = (
   end: 'source' | 'target',
   marker: Marker | undefined,
 ): LinkEnds => {
-  const [start, finish] = end === 'source' ? [marker, ends?.end] : [ends?.start, marker];
-  return { ...(start ? { start } : {}), ...(finish ? { end: finish } : {}) };
+  const [tail, head] = end === 'source' ? [marker, ends?.head] : [ends?.tail, marker];
+  return { ...(tail ? { tail } : {}), ...(head ? { head } : {}) };
 };
 
 /**
@@ -379,8 +379,8 @@ export const withEndMarker = (
  * give it a direction.
  */
 export const drawnLinkEnds = (remembered: LinkEnds | undefined, directed: boolean): LinkEnds | undefined => {
-  const { start, end }: LinkEnds = remembered ?? (directed ? { end: 'arrow' } : {});
-  return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
+  const { tail, head }: LinkEnds = remembered ?? (directed ? { head: 'arrow' } : {});
+  return tail || head ? { ...(tail ? { tail } : {}), ...(head ? { head } : {}) } : undefined;
 };
 
 /** Where a link's two ends are anchored. */

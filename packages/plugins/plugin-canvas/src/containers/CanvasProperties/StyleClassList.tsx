@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
-import { hueClasses } from '@dxos/react-ui-canvas';
+import { drawnColor, hueClasses } from '@dxos/react-ui-canvas';
 import { Form } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
@@ -37,7 +37,8 @@ export const StyleClassList = ({ classes, uses, readonly, onRename, onDelete }: 
           <OrderedList.Viewport>
             <OrderedList.Content data-testid='style-classes'>
               {items.map((styleClass) => {
-                const hue = hueClasses(styleClass.style?.hue, styleClass.style?.tone);
+                const drawn = drawnColor(styleClass.style?.color);
+                const hue = hueClasses(drawn.hue, drawn.tone);
                 const count = uses[styleClass.id] ?? 0;
                 return (
                   <OrderedList.Item
@@ -49,7 +50,12 @@ export const StyleClassList = ({ classes, uses, readonly, onRename, onDelete }: 
                     data-testid={`style-class-${styleClass.id}`}
                   >
                     <OrderedList.ItemIcon>
-                      <div aria-hidden className={mx('size-4 rounded-sm border', hue.surface, hue.border)} />
+                      <div
+                        aria-hidden
+                        className={mx('size-4 rounded-sm border', hue.surface, hue.border)}
+                        // A literal colour has no theme class to draw it.
+                        style={drawn.css ? { backgroundColor: drawn.css, borderColor: drawn.css } : undefined}
+                      />
                     </OrderedList.ItemIcon>
                     <OrderedList.ItemText />
                     <OrderedList.ItemDescription>{count === 1 ? '1 use' : `${count} uses`}</OrderedList.ItemDescription>

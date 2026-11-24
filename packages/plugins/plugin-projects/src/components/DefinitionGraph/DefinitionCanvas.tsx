@@ -40,7 +40,7 @@ import {
 } from './definition-scenes.ts';
 import { CHANGE_FRAME, type DefinitionViewModel } from './DefinitionChip.tsx';
 
-const CARD_TYPE = 'definition-card';
+const CARD_KIND = 'definition-card';
 
 /** How long one slice of laying out block levels holds the thread. */
 const LAYOUT_SLICE_MS = 30;
@@ -49,9 +49,9 @@ const LAYOUT_SLICE_MS = 30;
 const CardFields = Schema.Struct({ card: Schema.String });
 const isCard = Schema.is(CardFields);
 
-const CardNode = Schema.Struct({ type: Schema.Literal(CARD_TYPE), ...nodeBase });
+const CardNode = Schema.Struct({ kind: Schema.Literal(CARD_KIND), ...nodeBase });
 
-const createCardNode = (props: CreateProps): Node => ({ type: CARD_TYPE, ...props });
+const createCardNode = (props: CreateProps): Node => ({ kind: CARD_KIND, ...props });
 
 /** Node views get no host props, so the cards' data reaches them through context. */
 const CardContext = createContext<{
@@ -208,7 +208,7 @@ const createRegistry = (open: (node: Node) => (() => void) | undefined) =>
     {
       ...defaultNodeTypes,
       view: { ...defaultNodeTypes.view, component: DrillView, bare: true },
-      [CARD_TYPE]: {
+      [CARD_KIND]: {
         name: 'Definition',
         icon: 'ph--cube--regular',
         schema: CardNode,
@@ -313,11 +313,11 @@ export const DefinitionCanvas = ({ view, edges, onActivate }: DefinitionCanvasPr
     const document = diagramSetDocument(set, {
       node: (diagram, node) => {
         const key = cardKey(diagram, node.id);
-        return cards.has(key) ? { ...node, type: CARD_TYPE, card: key, center: onLattice(node.center) } : node;
+        return cards.has(key) ? { ...node, kind: CARD_KIND, card: key, center: onLattice(node.center) } : node;
       },
       link: (diagram, link) => {
-        const text = labels.get(cardKey(diagram, link.id));
-        return text ? { ...link, text } : link;
+        const label = labels.get(cardKey(diagram, link.id));
+        return label ? { ...link, label } : link;
       },
     });
     // Every level snaps a moved card to the lattice the engine laid it out on.

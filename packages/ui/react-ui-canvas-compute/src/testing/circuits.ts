@@ -72,7 +72,7 @@ export const createTransformCircuit = () => {
 
     // TODO(burdon): Make id optional.
     model.createNode(
-      createNote({ id: EntityId.random(), text: 'Random number generator', ...position({ x: 0, y: -4 }) }),
+      createNote({ id: EntityId.random(), label: 'Random number generator', ...position({ x: 0, y: -4 }) }),
     );
     model.createEdge({ source: a.id, target: c.id });
     model.createEdge({ source: b.id, target: c.id, input: 'expression' });
@@ -311,9 +311,9 @@ export const createAudioCircuit = () => {
 const createNote = ({
   id,
   ...rest
-}: Omit<NoteShape, 'type' | 'size'> & Partial<Pick<NoteShape, 'size'>>): NoteShape => ({
+}: Omit<NoteShape, 'kind' | 'size'> & Partial<Pick<NoteShape, 'size'>>): NoteShape => ({
   id,
-  type: 'note',
+  kind: 'note',
   size: { width: 4 * MAJOR_GRID, height: 2 * MAJOR_GRID },
   ...rest,
 });

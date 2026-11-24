@@ -10,7 +10,7 @@ import { NumberLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
 import { type Scene } from '@dxos/scene';
 import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
 
-import { LayerField, StyleGridField3D, applyStyleChoice } from '../components/index.ts';
+import { BorderField3D, LayerField, RoundedField3D, StyleGridField3D, applyStyleChoice } from '../components/index.ts';
 import {
   ELEMENT_FORM_FIELDS,
   ELEMENT_FORM_OVERRIDES,
@@ -19,7 +19,7 @@ import {
   elementFormValues,
 } from './element-form.ts';
 
-const cube: Scene.Element3D = { id: 'box', type: 'cube', label: 'Cube' };
+const cube: Scene.Element3D = { id: 'box', kind: 'cube', label: 'Cube' };
 
 /** Whether the struct `ast` marks `name` optional. */
 const optional = (ast: SchemaAST.AST, name: string) =>
@@ -89,30 +89,37 @@ describe('element form', () => {
     const names = SchemaAST.isObjects(ElementForm.ast)
       ? ElementForm.ast.propertySignatures.map(({ name }) => String(name))
       : [];
-    expect(names).toEqual(['center', 'rotation', 'scale', 'label', 'layer', 'style']);
+    expect(names).toEqual(['center', 'rotation', 'scale', 'label', 'layer', 'overrides']);
   });
 
   test('rotation takes the first of two columns, so it lines up under the centre', () => {
     expect(ELEMENT_FORM_FIELDS.rotation).toBeDefined();
   });
 
-  test("the style fields are the 2D canvas's: its colour grid at style.hue, the tone without a field of its own", () => {
-    expect(ELEMENT_FORM_FIELDS['style.hue']).toBe(StyleGridField3D);
-    expect(ELEMENT_FORM_OVERRIDES['style.tone']).toMatchObject({ hidden: true });
+  test("the style fields are the 2D canvas's: its colour grid at overrides.color, under the Style heading", () => {
+    expect(ELEMENT_FORM_FIELDS['overrides.color']).toBe(StyleGridField3D);
+    expect(ELEMENT_FORM_OVERRIDES['overrides.color']).toMatchObject({ hideLabel: true });
+    expect(ELEMENT_FORM_OVERRIDES.overrides).toMatchObject({ label: 'Style' });
+  });
+
+  test("a body's edges and corners are switches, and its fill is its surface", () => {
+    expect(ELEMENT_FORM_FIELDS['overrides.stroke']).toBe(BorderField3D);
+    expect(ELEMENT_FORM_FIELDS['overrides.corners']).toBe(RoundedField3D);
+    expect(ELEMENT_FORM_OVERRIDES['overrides.fill']).toMatchObject({ label: 'Surface' });
   });
 
   test("a pick in the colour grid writes the element's hue and tone, keeping its surface", () => {
-    const element: Scene.Element3D = { ...cube, overrides: { hue: 'blue', surface: 'glass' } };
+    const element: Scene.Element3D = { ...cube, overrides: { color: 'blue', fill: 'glass' } };
     const values = elementFormValues(element);
-    const style = applyStyleChoice(values.style ?? {}, { hue: 'red', tone: 1 }, true);
-    expect(elementFormIntents(element, { ...values, style })).toEqual([
-      { kind: 'update', id: 'box', path: ['overrides'], value: { hue: 'red', tone: 1, surface: 'glass' } },
+    const overrides = applyStyleChoice(values.overrides ?? {}, { hue: 'red', tone: 1 }, true);
+    expect(elementFormIntents(element, { ...values, overrides })).toEqual([
+      { kind: 'update', id: 'box', path: ['overrides'], value: { color: 'red/1', fill: 'glass' } },
     ]);
   });
 
   test('opacity steps by a tenth, as in 2D', () => {
     const style = SchemaAST.isObjects(ElementForm.ast)
-      ? ElementForm.ast.propertySignatures.find((field) => field.name === 'style')?.type
+      ? ElementForm.ast.propertySignatures.find((field) => field.name === 'overrides')?.type
       : undefined;
     const inner = style && SchemaAST.isUnion(style) ? style.types[0] : style;
     const opacity =

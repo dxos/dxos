@@ -16,16 +16,16 @@ const doc = (): Scene.SceneDocument => ({
     layout3D(
       'root',
       [
-        { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } },
-        { id: 'b', type: 'cube', center: { x: 2, y: 0, z: 0 } },
+        { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'b', kind: 'cube', center: { x: 2, y: 0, z: 0 } },
         { id: 'c', object: 'chair', center: { x: 4, y: 0, z: 0 } },
-        { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
-        { id: 'bc', type: 'link', source: { node: 'b' }, target: { node: 'c' } },
+        { id: 'ab', kind: 'link', source: { node: 'a' }, target: { node: 'b' } },
+        { id: 'bc', kind: 'link', source: { node: 'b' }, target: { node: 'c' } },
       ],
       'm',
     ),
   ],
-  models: [model3D('m', [{ id: 'chair', type: 'cube' }])],
+  models: [model3D('m', [{ id: 'chair', kind: 'cube' }])],
 });
 
 describe('applyModelIntent', () => {
@@ -34,31 +34,31 @@ describe('applyModelIntent', () => {
       kind: 'style',
       model: 'm',
       id: 'steel',
-      style: { name: 'Steel', hue: 'neutral', metalness: 0.8 },
+      style: { name: 'Steel', color: 'neutral', metalness: 0.8 },
     });
     expect(styled.problems).toEqual([]);
-    expect(styled.doc.models[0].styles?.steel).toEqual({ name: 'Steel', hue: 'neutral', metalness: 0.8 });
+    expect(styled.doc.models[0].styles?.steel).toEqual({ name: 'Steel', color: 'neutral', metalness: 0.8 });
     expect(validateDocument(styled.doc)).toEqual([]);
     const removed = applyModelIntent(styled.doc, { kind: 'style', model: 'm', id: 'steel' });
     expect(removed.doc.models[0].styles?.steel).toBeUndefined();
     // A value of the wrong type is no style.
-    expect(applyModelIntent(doc(), { kind: 'style', model: 'm', id: 'bad', style: { tone: 9 } }).problems).toHaveLength(
-      1,
-    );
+    expect(
+      applyModelIntent(doc(), { kind: 'style', model: 'm', id: 'bad', style: { fill: 'plaid' } }).problems,
+    ).toHaveLength(1);
   });
 
   test('define adds an object, and update changes it, both as valid documents', () => {
-    const defined = applyModelIntent(doc(), { kind: 'define', model: 'm', object: { id: 'lamp', type: 'cylinder' } });
+    const defined = applyModelIntent(doc(), { kind: 'define', model: 'm', object: { id: 'lamp', kind: 'cylinder' } });
     expect(defined.problems).toEqual([]);
-    expect(defined.doc.models[0].objects.lamp).toEqual({ id: 'lamp', type: 'cylinder' });
+    expect(defined.doc.models[0].objects.lamp).toEqual({ id: 'lamp', kind: 'cylinder' });
     const updated = applyModelIntent(defined.doc, {
       kind: 'update',
       model: 'm',
       id: 'lamp',
-      path: ['overrides', 'hue'],
+      path: ['overrides', 'color'],
       value: 'amber',
     });
-    expect(updated.doc.models[0].objects.lamp.overrides).toEqual({ hue: 'amber' });
+    expect(updated.doc.models[0].objects.lamp.overrides).toEqual({ color: 'amber' });
     expect(validateDocument(updated.doc)).toEqual([]);
   });
 
@@ -68,7 +68,7 @@ describe('applyModelIntent', () => {
     expect(removed.problems).toHaveLength(1);
     expect(removed.doc).toBe(before);
     const unplaced = applyModelIntent(
-      applyModelIntent(before, { kind: 'define', model: 'm', object: { id: 'lamp', type: 'cylinder' } }).doc,
+      applyModelIntent(before, { kind: 'define', model: 'm', object: { id: 'lamp', kind: 'cylinder' } }).doc,
       { kind: 'remove', model: 'm', id: 'lamp' },
     );
     expect(unplaced.problems).toEqual([]);
@@ -81,7 +81,7 @@ describe('applyModelIntent', () => {
       model: 'm',
       layout: 'root',
       ids: ['a', 'b'],
-      object: { id: 'pair', type: 'sphere' },
+      object: { id: 'pair', kind: 'sphere' },
     });
     expect(problems).toEqual([]);
     const parts = after.layouts.find((layout) => layout.id === 'pair-parts');
@@ -96,7 +96,7 @@ describe('applyModelIntent', () => {
     // A link that crossed out of the extracted elements now ends at the element placing them.
     expect(root.elements.bc.source).toEqual({ node: placing[0].id });
     expect(resolveLayout3D(after, root)[placing[0].id].parts).toBe('pair-parts');
-    expect(after.models[0].objects.pair).toEqual({ id: 'pair', type: 'sphere', parts: 'pair-parts' });
+    expect(after.models[0].objects.pair).toEqual({ id: 'pair', kind: 'sphere', parts: 'pair-parts' });
     expect(validateDocument(after)).toEqual([]);
   });
 
@@ -105,7 +105,7 @@ describe('applyModelIntent', () => {
       applyModelIntent(doc(), { kind: 'update', model: 'm', id: 'missing', path: ['kind'], value: 'x' }).problems,
     ).toHaveLength(1);
     expect(
-      applyModelIntent(doc(), { kind: 'define', model: 'missing', object: { id: 'x', type: 'cube' } }).problems,
+      applyModelIntent(doc(), { kind: 'define', model: 'missing', object: { id: 'x', kind: 'cube' } }).problems,
     ).toHaveLength(1);
   });
 
@@ -115,7 +115,7 @@ describe('applyModelIntent', () => {
       model: 'm',
       layout: 'root',
       ids: ['a', 'b', 'bc'],
-      object: { id: 'pair', type: 'sphere' },
+      object: { id: 'pair', kind: 'sphere' },
     });
     expect(problems).toEqual([]);
     const parts = after.layouts.find((layout) => layout.id === 'pair-parts');
@@ -137,7 +137,7 @@ describe('applyModelIntent', () => {
     const parts = grouped.doc.layouts.find((layout) => layout.id === 'root/g');
     expect(parts).toMatchObject({ kind: 'composite', anonymous: true, arrange: { kind: 'ring' }, model: 'm' });
     expect(Object.keys(parts?.elements ?? {}).sort()).toEqual(['a', 'ab', 'b']);
-    expect(grouped.doc.models[0].objects['root/g']).toEqual({ id: 'root/g', type: 'group', parts: 'root/g' });
+    expect(grouped.doc.models[0].objects['root/g']).toEqual({ id: 'root/g', kind: 'group', parts: 'root/g' });
     const host = grouped.doc.layouts.find((layout) => layout.id === 'root');
     expect(host?.elements.g).toEqual({ id: 'g', object: 'root/g', fit: 'none' });
     expect(host?.elements.bc?.source).toEqual({ node: 'g', port: 'b' });

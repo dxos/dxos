@@ -55,7 +55,7 @@ export const canvasNodes = (
         key: 'I',
         schema: ImageNode,
         component: ImageNodeView,
-        create: (props) => ({ type: 'image', ...props }),
+        create: (props) => ({ kind: 'image', ...props }),
         defaultSize: { width: 4, height: 3 },
         resizable: true,
         minSize: { width: 32, height: 32 },

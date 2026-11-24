@@ -12,7 +12,7 @@ describe('grid round trip', () => {
   test('a grid keeps its kind, its tracks and every membership', ({ expect }) => {
     const source = [
       'object demo @ 0,0 scale=1 {',
-      '  grid root 0,0 900x300 cols=3 gap=24 padding=24 stroke=dashed border=true {',
+      '  grid root 0,0 900x300 cols=3 gap=24 padding=24 stroke=dashed {',
       '    rect a "One"',
       '    rect b "Two"',
       '    rect c "Three"',

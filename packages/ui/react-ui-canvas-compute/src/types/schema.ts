@@ -18,9 +18,8 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 export const Shape = GraphNode.GraphNode.mapFields((fields) => Struct.omit(fields, ['type'])).pipe(
   // TODO(burdon): Breaks graph contract?
   Schema.fieldsAssign({
-    type: Schema.String,
+    kind: Schema.String,
     text: Schema.optional(Schema.String),
-    guide: Schema.optional(Schema.Boolean),
     classNames: Schema.optional(Schema.String),
   }),
 );

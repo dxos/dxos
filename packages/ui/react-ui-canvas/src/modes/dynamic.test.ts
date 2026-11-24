@@ -11,14 +11,14 @@ import { dynamicConstrain } from './dynamic.ts';
 
 const shape = (id: string, center = { x: 0, y: 0 }): Scene.Element2D => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   center,
   size: { width: 192, height: 128 },
 });
 
 const link = (id: string, from: string, to: string): Scene.Element2D => ({
   id,
-  type: 'link',
+  kind: 'link',
   source: { node: from },
   target: { node: to },
 });

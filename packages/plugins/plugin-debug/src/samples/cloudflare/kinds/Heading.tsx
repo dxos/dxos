@@ -34,7 +34,7 @@ export const HeadingData = Schema.Struct({
 
 export const HeadingNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('heading'),
+  kind: Schema.Literal('heading'),
   label: Schema.String,
   icon: Schema.optional(IconSpec),
   data: Schema.optional(HeadingData),
@@ -42,7 +42,7 @@ export const HeadingNode = Schema.Struct({
 
 const HeadingNodeView = ({ node, editing }: NodeViewProps) => {
   const data = kindData(HeadingData, node);
-  if (node.type !== 'heading' || !data) {
+  if (node.kind !== 'heading' || !data) {
     return null;
   }
   const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
@@ -73,7 +73,7 @@ export const headingSpec: ElementKindSpec = {
   key: 'J',
   schema: HeadingNode,
   component: HeadingNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'heading', id, z, center, size, label: 'Heading' }),
+  create: ({ id, z, center, size }) => ({ kind: 'heading', id, z, center, size, label: 'Heading' }),
   // The core card's title and glyph are what a heading shows; only its tone is its own.
   extends: 'card',
   // Nominal units (one unit is the major grid cell, 48px).

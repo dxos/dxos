@@ -102,7 +102,7 @@ export const FeedCardData = Schema.Struct({
  */
 export const FeedCardNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('feed-card'),
+  kind: Schema.Literal('feed-card'),
   label: Schema.String,
   icon: Schema.optional(IconSpec),
   body: Schema.optional(Schema.String.annotate({ title: 'Body' })),
@@ -150,7 +150,7 @@ const FeedStrip = ({ n, label, fill = 0, marks, editing }: FeedStripProps) => {
 
 export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
   const data = kindData(FeedCardData, node);
-  if (node.type !== 'feed-card' || !data) {
+  if (node.kind !== 'feed-card' || !data) {
     return null;
   }
   const tone = toneValue(data.tone);
@@ -192,7 +192,7 @@ export const feedCardSpec: ElementKindSpec = {
   schema: FeedCardNode,
   component: FeedCardNodeView,
   create: ({ id, z, center, size }) => ({
-    type: 'feed-card',
+    kind: 'feed-card',
     id,
     z,
     center,

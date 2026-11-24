@@ -8,7 +8,14 @@ import { type FormFieldMap, type FormFieldOverride, NumberLayoutAnnotation, Step
 import { type LayoutIntent, Scene, Style3D, styleFields } from '@dxos/scene';
 import { VECTOR_AXIS_LAYOUT, VectorAnnotationId } from '@dxos/ui-types';
 
-import { LayerField, STYLE_FIELD_OVERRIDES, StyleGridField3D, makeGeometryField } from '../components/index.ts';
+import {
+  BorderField3D,
+  LayerField,
+  RoundedField3D,
+  STYLE_FIELD_OVERRIDES,
+  StyleGridField3D,
+  makeGeometryField,
+} from '../components/index.ts';
 
 /** An axis as the form edits it: clearable while typing, and stepped by `step` with the stepper. */
 const axis = (step: number) =>
@@ -33,16 +40,18 @@ export const ElementForm = Schema.Struct({
   scale: Schema.optional(FormScale),
   label: Scene.Element3D.fields.label,
   layer: Scene.Element3D.fields.layer,
-  style: Schema.optional(Schema.Struct({ ...Style3D.fields, opacity: styleFields.opacity })),
+  overrides: Schema.optional(Schema.Struct({ ...Style3D.fields, opacity: styleFields.opacity })),
 });
 export type ElementForm = Schema.Schema.Type<typeof ElementForm>;
 
 /**
- * The 2D canvas's style fields (its colour grid at `style.hue`, which sets the tone too, an unset hue showing as the
- * Neutral it draws as) and its layer field.
+ * The 2D canvas's style fields (its colour grid at `overrides.color`, which sets hue and tone, an unset colour showing
+ * as the Neutral it draws as), a switch each for the body's edges and corners, and its layer field.
  */
 export const ELEMENT_FORM_FIELDS: FormFieldMap = {
-  'style.hue': StyleGridField3D,
+  'overrides.color': StyleGridField3D,
+  'overrides.stroke': BorderField3D,
+  'overrides.corners': RoundedField3D,
   'layer': LayerField,
   // Centre and scale side by side, as 2D draws centre and size.
   'center': makeGeometryField({ name: 'scale', label: 'Scale', type: FormScale.ast }),
@@ -50,10 +59,11 @@ export const ELEMENT_FORM_FIELDS: FormFieldMap = {
   'rotation': makeGeometryField(),
 };
 
-/** How those fields present, as in 2D. */
+/** How those fields present, as in 2D; a body's fill is its surface. */
 export const ELEMENT_FORM_OVERRIDES: Record<string, FormFieldOverride> = {
   ...STYLE_FIELD_OVERRIDES,
-  scale: { hidden: true },
+  'overrides.fill': { label: 'Surface' },
+  'scale': { hidden: true },
 };
 
 type Vec3 = { x: number; y: number; z: number };
@@ -75,7 +85,7 @@ const complete = (value: FormVec3 | undefined, fallback: Vec3): Vec3 => ({
 export const elementFormValues = (element: Scene.Element3D): ElementForm => ({
   label: element.label,
   layer: element.layer,
-  style: element.overrides,
+  overrides: element.overrides,
   center: element.center ?? IDENTITY.center,
   rotation: element.rotation ?? IDENTITY.rotation,
   scale: element.scale ?? IDENTITY.scale,
@@ -88,10 +98,10 @@ export const elementFormIntents = (element: Scene.Element3D, values: ElementForm
       ? []
       : [{ kind: 'update', id: element.id, path: [field], value: values[field] }],
   ),
-  // The form's style is the element's own overrides; its named style is the Library's.
-  ...(JSON.stringify(values.style) === JSON.stringify(element.overrides)
+  // The form edits the element's own overrides; its named style is the Library's.
+  ...(JSON.stringify(values.overrides) === JSON.stringify(element.overrides)
     ? []
-    : [{ kind: 'update' as const, id: element.id, path: ['overrides'], value: values.style }]),
+    : [{ kind: 'update' as const, id: element.id, path: ['overrides'], value: values.overrides }]),
   ...(['center', 'rotation', 'scale'] as const).flatMap((field): LayoutIntent[] => {
     const before = element[field] ?? IDENTITY[field];
     const after = complete(values[field], before);

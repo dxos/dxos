@@ -35,7 +35,7 @@ describe('the mode lives on the layout', () => {
       layout.props = { constrained: { nodes: [{ id: 'a' }, { id: 'b' }], constraints } };
     });
     adoptLayoutMode(canvas);
-    expect(layout.constraints).toEqual(constraints);
+    expect(layout.constraints).toEqual([{ subject: 'a', relation: 'right-of', object: 'b' }]);
   });
 
   test('a canvas set to dynamic arranges its layouts dynamically', () => {

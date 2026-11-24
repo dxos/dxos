@@ -139,8 +139,11 @@ feat F-6: Looks and materials
     solids), each a default style catalog: CAD offers Part, Highlight and Clearance, Presentation Metal, Glass and
     Glow, the two Neu looks Body, Accent and Ghost. Every look can be picked in a read-only scene and in a
     host that stores no look.
-  req F-6.2: An element's `Style3D` draws as a material over its hue and tone: a solid, tinted or glass surface,
-    edges, opacity, metalness, roughness and glow.
+  req F-6.2: An element's `Style3D` (`color`, `fill`, `stroke`, `corners`, `opacity`, `metalness`, `roughness`,
+    `emissive`) draws as a material over its colour: a `solid`, `tint` or `glass` fill, edges where it states a
+    `stroke` other than `none`, a cube's corners rounded where it states `corners` other than `none`, and opacity,
+    metalness, roughness and glow. A material draws a colour's hue and not its tone, and a hex or `rgb()` literal as
+    written; a `pattern` fill draws solid.
   req F-6.3: Neu Light is always light and Neu Dark always dark, whatever the app's mode: its bodies and the ground
     plane under them are the 2D Neu ground of that mode (`NEU_PALETTE`), lit softly, each solid body casting a soft
     contact shadow at its foot; an element's hue draws only as its edges, or as a rim on a solid sphere.
@@ -353,6 +356,22 @@ decision D-20: The 3D renderer, the solids, `Scene3DView` and mesh import and ex
   for: user:richburdon
   affects: [Viewport3D, Scene3DEditor, SceneRenderer3D]
   why: react-ui-scene is removed, and its 3D parts split along the surface and the application as the 2D ones do.
+```
+
+```mdl
+decision D-21: A 3D look is written in the normalized vocabulary: its type names and attributes are standardized so that they are consistent, and its colour property takes the same generic colour patterns and named theme colours as every other.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-6.2]
+```
+
+```mdl
+decision D-22: `Style3D` states what it shares with the 2D look in the 2D look's words: `color`, `fill` (the surface: `solid`, `tint`, `glass`), `stroke` (the solid's edges, drawn where one other than `none` is stated), `corners` (rounded where one other than `none` is stated) and `opacity`; `metalness`, `roughness` and `emissive` stay its own. A material draws a colour's hue and not its tone, and a `pattern` fill, which has no material, draws solid. A Neu body is still edged whatever its `stroke`, as [D-13] says of `border`. Fills in [D-21], with the scene model's words ([org.dxos.scene#D-112]).
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.2, F-6.3]
+  why: With the shared fields named alike, a style lifts to 3D and flattens to 2D field for field.
 ```
 
 ---

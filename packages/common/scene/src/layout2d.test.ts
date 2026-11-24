@@ -15,11 +15,11 @@ import { layout2D, scene2D } from './testing.ts';
 /** A plugin kind: the element base, and the kind's own fields under `data`. */
 const Sticky = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('sticky'),
+  kind: Schema.Literal('sticky'),
   data: Schema.Struct({ author: Schema.String, votes: Schema.optional(Schema.Number) }),
 });
 
-const sticky = { id: 's', type: 'sticky', center: { x: 0, y: 0 }, data: { author: 'ada', votes: 3 } };
+const sticky = { id: 's', kind: 'sticky', center: { x: 0, y: 0 }, data: { author: 'ada', votes: 3 } };
 
 describe('Layout2D', () => {
   test('an unknown kind keeps its fields', () => {
@@ -37,7 +37,7 @@ describe('Layout2D', () => {
     const registry = new KindRegistry().register('sticky', Sticky);
     expect(registry.validate(sticky)).toEqual({ ok: true });
     expect(registry.validate({ ...sticky, data: { author: 7 } }).ok).toBe(false);
-    expect(registry.validate({ id: 'r', type: 'rect', data: { author: 7 } })).toEqual({ ok: true });
+    expect(registry.validate({ id: 'r', kind: 'rect', data: { author: 7 } })).toEqual({ ok: true });
   });
 
   test("an element stored with its kind's fields at its top reads with them under data, where data wins", () => {
@@ -46,14 +46,14 @@ describe('Layout2D', () => {
     // A kind whose fields are all optional may leave `data` out altogether; its fields are still known.
     const Tag = Schema.Struct({
       ...Scene.Element2D.fields,
-      type: Schema.Literal('tag'),
+      kind: Schema.Literal('tag'),
       data: Schema.optional(Schema.Struct({ tone: Schema.optional(Schema.String) })),
     });
     const tags = new KindRegistry().register('tag', Tag);
     expect(tags.dataFields('tag')).toEqual(['tone']);
-    expect(tags.normalize({ id: 't', type: 'tag', tone: 'ink' })).toEqual({
+    expect(tags.normalize({ id: 't', kind: 'tag', tone: 'ink' })).toEqual({
       id: 't',
-      type: 'tag',
+      kind: 'tag',
       data: { tone: 'ink' },
     });
     const { data, ...base } = sticky;
@@ -63,21 +63,21 @@ describe('Layout2D', () => {
     expect(registry.normalize({ ...flat, data: { votes: 9 } })).toEqual({ ...base, data: { author: 'ada', votes: 9 } });
     // Nothing of the kind's at the top, and a type that is not registered: as stored.
     expect(registry.normalize(sticky)).toBe(sticky);
-    const rect = { id: 'r', type: 'rect', author: 'ada' };
+    const rect = { id: 'r', kind: 'rect', author: 'ada' };
     expect(registry.normalize(rect)).toBe(rect);
   });
 
   test('a layout carries the View fields: layers, kind, lattice and constraints', () => {
     const layout: Scene.LayoutRecord2D = {
       ...layout2D('main', [
-        { id: 'a', type: 'rect' },
-        { id: 'b', type: 'rect' },
+        { id: 'a', kind: 'rect' },
+        { id: 'b', kind: 'rect' },
       ]),
       layers: { front: { id: 'front', name: 'Front', z: 'a1' } },
       kind: 'composite',
       anonymous: true,
       lattice: { width: 256, height: 128, gutterX: 128, gutterY: 64 },
-      constraints: [{ subject: 'a', relation: 'east', object: 'b' }],
+      constraints: [{ subject: 'a', relation: 'right-of', object: 'b' }],
     };
     const document: Scene.SceneDocument = { scenes: [scene2D('root', 'main')], layouts: [layout], models: [] };
     expect(fromEcho(toEcho(document).root).layouts[0]).toEqual(layout);

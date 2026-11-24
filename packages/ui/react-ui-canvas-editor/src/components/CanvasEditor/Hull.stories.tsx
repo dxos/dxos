@@ -40,10 +40,10 @@ import {
   type HullNode,
   type HullShape,
   type Link,
-  type NodeStyle,
   type Point,
   type RectNode,
   type Scene,
+  type Style2D,
 } from '@dxos/scene';
 
 import { FullEditor, SceneEditorStory } from '../../testing/index.ts';
@@ -56,7 +56,7 @@ type Shape = {
   label: string;
   cell: readonly [col: number, row: number];
   free: Point;
-  hue: NodeStyle['hue'];
+  color: Style2D['color'];
   inside?: boolean;
 };
 
@@ -67,12 +67,12 @@ type Shape = {
 //   row  0 .       Index   .       Agent
 //   row  1 Edge    .       .       .
 const SHAPES: readonly Shape[] = [
-  { id: 'space', label: 'Space', cell: [0, -1], free: { x: -48, y: -144 }, hue: 'blue', inside: true },
-  { id: 'queue', label: 'Queue', cell: [1, -1], free: { x: 288, y: -192 }, hue: 'blue', inside: true },
-  { id: 'index', label: 'Index', cell: [0, 0], free: { x: 48, y: 96 }, hue: 'blue', inside: true },
-  { id: 'client', label: 'Client', cell: [-1, -1], free: { x: -480, y: -192 }, hue: 'neutral' },
-  { id: 'agent', label: 'Agent', cell: [2, 0], free: { x: 672, y: 48 }, hue: 'neutral' },
-  { id: 'edge', label: 'Edge', cell: [-1, 1], free: { x: -384, y: 336 }, hue: 'green' },
+  { id: 'space', label: 'Space', cell: [0, -1], free: { x: -48, y: -144 }, color: 'blue', inside: true },
+  { id: 'queue', label: 'Queue', cell: [1, -1], free: { x: 288, y: -192 }, color: 'blue', inside: true },
+  { id: 'index', label: 'Index', cell: [0, 0], free: { x: 48, y: 96 }, color: 'blue', inside: true },
+  { id: 'client', label: 'Client', cell: [-1, -1], free: { x: -480, y: -192 }, color: 'neutral' },
+  { id: 'agent', label: 'Agent', cell: [2, 0], free: { x: 672, y: 48 }, color: 'neutral' },
+  { id: 'edge', label: 'Edge', cell: [-1, 1], free: { x: -384, y: 336 }, color: 'green' },
 ];
 
 /** The links, the same in every story: three inside Storage, three into it, two between shapes outside it. */
@@ -90,7 +90,7 @@ const LINKS: readonly (readonly [source: string, target: string])[] = [
 const FREE_SIZE = { width: 192, height: 96 };
 
 const boardOf = (shape: HullShape, lattice: boolean): RenderList2D => {
-  const nodes = SHAPES.map(({ id, label, cell: [col, row], free, hue, inside }, index): RectNode => {
+  const nodes = SHAPES.map(({ id, label, cell: [col, row], free, color, inside }, index): RectNode => {
     const bounds = cellBounds({ col, row, spanX: 1, spanY: 1 }, DEFAULT_LATTICE);
     const placed = lattice
       ? {
@@ -99,17 +99,17 @@ const boardOf = (shape: HullShape, lattice: boolean): RenderList2D => {
         }
       : { center: free, size: FREE_SIZE };
     return {
-      type: 'rect',
+      kind: 'rect',
       id,
       z: `b${index + 1}`,
       ...placed,
       label,
-      style: { hue },
+      overrides: { color },
       ...(inside ? { parent: HULL } : {}),
     };
   });
   const hull: HullNode = {
-    type: 'hull',
+    kind: 'hull',
     id: HULL,
     z: 'a1',
     // Its frame and border are fitted round the shapes inside it as the drawing is read.
@@ -117,11 +117,11 @@ const boardOf = (shape: HullShape, lattice: boolean): RenderList2D => {
     size: FREE_SIZE,
     label: 'Storage',
     shape,
-    style: { ...HULL_STYLE, hue: 'blue' },
+    overrides: { ...HULL_STYLE, color: 'blue/0' },
   };
   const links: Link[] = LINKS.map(([source, target], index) =>
     createLink({
-      type: 'smart',
+      path: 'smart',
       id: `${source}-${target}`,
       z: `c${index + 1}`,
       source: { node: source },

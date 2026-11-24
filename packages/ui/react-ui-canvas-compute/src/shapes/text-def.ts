@@ -16,7 +16,7 @@ import { TextComponent } from './Text.tsx';
 
 export const TextShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('text'),
+    kind: Schema.Literal('text'),
   }),
 );
 
@@ -25,7 +25,7 @@ export type TextShape = Schema.Schema.Type<typeof TextShape>;
 export type CreateTextProps = CreateShapeProps<TextShape>;
 
 export const createText = (props: CreateTextProps) =>
-  createShape<TextShape>({ type: 'text', size: { width: 6 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
+  createShape<TextShape>({ kind: 'text', size: { width: 6 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
 
 export const textNodeDef = defineComputeNode<TextShape>({
   type: 'text',

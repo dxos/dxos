@@ -23,7 +23,7 @@ const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Type.getSche
 
 export const TableShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('table'),
+    kind: Schema.Literal('table'),
   }),
 );
 
@@ -32,7 +32,7 @@ export type TableShape = Schema.Schema.Type<typeof TableShape>;
 export type CreateTableProps = CreateShapeProps<TableShape>;
 
 export const createTable = (props: CreateTableProps) =>
-  createShape<TableShape>({ type: 'table', size: { width: 5 * MAJOR_GRID, height: 8 * MAJOR_GRID }, ...props });
+  createShape<TableShape>({ kind: 'table', size: { width: 5 * MAJOR_GRID, height: 8 * MAJOR_GRID }, ...props });
 
 export const tableNodeDef = defineComputeNode<TableShape>({
   type: 'table',

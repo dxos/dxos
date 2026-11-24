@@ -21,7 +21,7 @@ import { TemplateComponent } from './Template.tsx';
 
 export const TemplateShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('template'),
+    kind: Schema.Literal('template'),
     data: computeData({ valueType: Schema.optional(ComputeValueType) }),
   }),
 );
@@ -35,7 +35,7 @@ export type TemplateShape = Schema.Schema.Type<typeof TemplateShape>;
 export type CreateTemplateProps = CreateShapeProps<TemplateShape> & { text?: string };
 
 export const createTemplate = (props: CreateTemplateProps) =>
-  createShape<TemplateShape>({ type: 'template', size: { width: 4 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
+  createShape<TemplateShape>({ kind: 'template', size: { width: 4 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
 
 export const templateNodeDef = defineComputeNode<TemplateShape>({
   type: 'template',

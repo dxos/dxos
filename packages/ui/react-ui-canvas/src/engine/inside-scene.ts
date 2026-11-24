@@ -32,7 +32,7 @@ const EMPTY: RenderList2D = { id: '', nodes: {}, links: {} };
 
 /**
  * `outer` with the entered Instance replaced by its parts. An edit lands on the parts as they are drawn and is then
- * written to the definition — or, for a part's text, to this Instance's overrides — as one change.
+ * written to the definition — or, for a part's text, to this Instance's part overrides — as one change.
  */
 export const createInsideScene = ({ registry, store, outer, inside, nodeRegistry }: InsideSceneOptions): DrawScene => {
   const parts = () => {
@@ -69,13 +69,13 @@ export const createInsideScene = ({ registry, store, outer, inside, nodeRegistry
         registry.set(store.views, { ...registry.get(store.views), [current.composite.id]: writes.composite });
       }
       // The Instance changes when a part's text is its own, or when a bound part wrote one of its fields.
-      if ('overrides' in writes || writes.bound) {
-        const { overrides, ...rest } = current.instance;
+      if ('partOverrides' in writes || writes.bound) {
+        const { partOverrides, ...rest } = current.instance;
         const next = {
           ...rest,
           ...writes.bound,
-          ...(writes.overrides ? { overrides: writes.overrides } : {}),
-          ...('overrides' in writes ? {} : overrides ? { overrides } : {}),
+          ...(writes.partOverrides ? { partOverrides: writes.partOverrides } : {}),
+          ...('partOverrides' in writes ? {} : partOverrides ? { partOverrides } : {}),
         };
         outer.apply((scene) => ({ ...scene, nodes: { ...scene.nodes, [current.instance.id]: next } }));
       }

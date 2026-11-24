@@ -9,8 +9,8 @@
 // a parameter blob. The geometry is the same module either way (`generator/space-graph.generator.ts`), so the golden check
 // covers both.
 //
-// What a kind still cannot do: anchor a link to an object *inside* it. A `Port` sits on a side of the frame at an
-// offset, so there is no port at an interior point. The canvas link therefore ends on the circle.
+// What the kind does not do: anchor a link to an object *inside* it. Its ports are the frame's own, so the canvas
+// link ends on the circle.
 //
 
 import * as Schema from 'effect/Schema';
@@ -129,7 +129,7 @@ export const GraphData = Schema.Struct(graphFields).pipe(
 
 export const GraphNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('graph'),
+  kind: Schema.Literal('graph'),
   data: GraphData,
 });
 
@@ -216,7 +216,7 @@ export const graphSpec: ElementKindSpec = {
   key: 'G',
   schema: GraphNode,
   component: GraphNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'graph', id, z, center, size, data: { seed: 7 } }),
+  create: ({ id, z, center, size }) => ({ kind: 'graph', id, z, center, size, data: { seed: 7 } }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 392-unit circle, give or take.
   defaultSize: { width: 8, height: 8 },
   resizable: true,

@@ -12,7 +12,7 @@ import { type KindRegistry, Scene } from '@dxos/scene';
 
 import { SIZE, TEMPLATE } from './template.ts';
 
-/** The element type a UML class is stored as. */
+/** The element kind a UML class is stored as. */
 export const TYPE = 'class';
 
 /** A class's own fields, kept under its element's `data`. */
@@ -31,23 +31,23 @@ export type ClassFields = { readonly label: string; readonly data: ClassData };
 /** UML class box, an element kind (decision 13): a name compartment over attribute and method compartments. */
 export const ClassNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal(TYPE),
+  kind: Schema.Literal(TYPE),
   label: Schema.String,
   data: ClassData,
 });
 export type ClassNode = Schema.Schema.Type<typeof ClassNode>;
 
 /** Narrows an element, or the canvas node drawing one, to a class. */
-export const isClassNode = <T extends { readonly type?: string }>(
+export const isClassNode = <T extends { readonly kind?: string }>(
   node: T,
-): node is T & { type: 'class' } & ClassFields => node.type === TYPE;
+): node is T & { kind: 'class' } & ClassFields => node.kind === TYPE;
 
 /**
  * A new class with placeholder members, so the compartments read as a class before it is edited. It is an Instance of
  * the class template: the typed fields stay on the element and the composite's bound parts draw them.
  */
 export const make = ({ id, z, center, size }: CreateProps): ClassNode => ({
-  type: TYPE,
+  kind: TYPE,
   id,
   z,
   center,

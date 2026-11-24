@@ -17,7 +17,7 @@ import { GptComponent } from './Gpt.tsx';
 
 export const GptShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('gpt'),
+    kind: Schema.Literal('gpt'),
   }),
 );
 
@@ -27,7 +27,7 @@ export type CreateGptProps = CreateShapeProps<GptShape>;
 
 export const createGpt = (props: CreateGptProps) =>
   createShape<GptShape>({
-    type: 'gpt',
+    kind: 'gpt',
     size: { width: 4 * MAJOR_GRID, height: Math.max(getHeight(GptInput), getHeight(GptOutput)) },
     ...props,
   });

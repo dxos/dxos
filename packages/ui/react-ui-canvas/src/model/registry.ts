@@ -19,10 +19,10 @@ import type { ComponentType } from 'react';
 import type { FormFieldMap } from '@dxos/react-ui-form';
 import {
   type InstanceNode,
-  type LinkType,
+  type LinkPath,
   type Node,
   type NodeBase,
-  type NodeType,
+  type NodeKind,
   type Point,
   type Port,
   type Size,
@@ -62,7 +62,7 @@ export type CreateProps = { id: string; z: string; center: Point; size: Size };
 export type NodeEditor = 'label' | 'vertices';
 
 export type NodeDef = {
-  type: NodeType;
+  type: NodeKind;
   name: string;
   icon: string;
   /** Tools panel shortcut; a registry of many types leaves most without one. */
@@ -172,7 +172,7 @@ export type NodeDefSpec = Partial<Omit<NodeDef, 'type'>> & {
  * field every type needs.
  */
 export const createNodeRegistry = (
-  types: Readonly<Record<NodeType, NodeDefSpec>>,
+  types: Readonly<Record<NodeKind, NodeDefSpec>>,
   prototypes: Readonly<Record<string, NodeDefSpec>> = {},
 ): NodeRegistry => {
   const inherit = (spec: NodeDefSpec, chain: readonly string[]): NodeDefSpec => {
@@ -201,7 +201,7 @@ export const createNodeRegistry = (
           ? {
               ...inherited,
               create: (props: CreateProps): InstanceNode => ({
-                type: 'instance',
+                kind: 'instance',
                 ...props,
                 composite: templateCompositeId(type),
               }),
@@ -218,11 +218,11 @@ export const createNodeRegistry = (
 };
 
 export type LinkDef = {
-  type: LinkType;
+  type: LinkPath;
   name: string;
   icon: string;
   key: string;
 };
 
-export type NodeRegistry = Readonly<Record<NodeType, NodeDef>>;
-export type LinkRegistry = Readonly<Record<LinkType, LinkDef>>;
+export type NodeRegistry = Readonly<Record<NodeKind, NodeDef>>;
+export type LinkRegistry = Readonly<Record<LinkPath, LinkDef>>;

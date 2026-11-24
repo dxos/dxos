@@ -22,7 +22,7 @@ import {
 } from './polyline.ts';
 
 const polyline = (rotation?: number): PolylineNode => ({
-  type: 'polyline',
+  kind: 'polyline',
   id: 'polyline-1',
   z: 'a0',
   center: { x: 100, y: 50 },
@@ -415,7 +415,7 @@ describe('bends', () => {
 
   test('a refit keeps a bend where it is in the scene', () => {
     const node: PolylineNode = {
-      type: 'polyline',
+      kind: 'polyline',
       id: 'polyline-2',
       z: 'a1',
       center: { x: 100, y: 50 },

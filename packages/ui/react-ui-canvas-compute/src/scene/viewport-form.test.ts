@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { fromViewportIntent, toViewportLayout } from '@dxos/react-ui-canvas';
-import { type LayoutIntent } from '@dxos/scene';
+import { type LayoutIntent, sidePort } from '@dxos/scene';
 
 import { createComputeGraph } from '../hooks/index.ts';
 import { computeKinds } from '../registry.ts';
@@ -18,10 +18,10 @@ createComputeGraph(template);
 const circuit = boardLayout('circuit', template);
 const layout = () => circuit;
 
-const elementOf = (type: string): BoardElement => {
-  const element = Object.values(circuit.elements).find((element) => element.type === type);
+const elementOf = (kind: string): BoardElement => {
+  const element = Object.values(circuit.elements).find((element) => element.kind === kind);
   if (!element) {
-    throw new Error(`no ${type} element`);
+    throw new Error(`no ${kind} element`);
   }
   return element;
 };
@@ -30,16 +30,16 @@ describe('viewport form', () => {
   test("a compute element is drawn with its kind's fields where the 2D viewport reads a node's own", ({ expect }) => {
     const gpt = elementOf('gpt');
     const drawn = toViewportLayout(layout(), computeKinds).elements[gpt.id];
-    expect(drawn.props?.canvas).toEqual({ data: { node: computeNodeId(gpt) } });
-    expect('data' in drawn).toBe(false);
-    expect(drawn).toMatchObject({ id: gpt.id, type: 'gpt', z: gpt.z, center: gpt.center, size: gpt.size });
+    expect(drawn.data).toEqual({ node: computeNodeId(gpt) });
+    expect('props' in drawn).toBe(false);
+    expect(drawn).toMatchObject({ id: gpt.id, kind: 'gpt', z: gpt.z, center: gpt.center, size: gpt.size });
   });
 
   test('runtime ports are drawn, and never written back', ({ expect }) => {
     const gpt = elementOf('gpt');
-    const ports = [{ id: 'input.prompt', side: 'w' as const, offset: 0.5 }];
+    const ports = [sidePort('input.prompt', 'left', 0.5)];
     const drawn = toViewportLayout(layout(), computeKinds, (element) => (element.id === gpt.id ? ports : undefined));
-    expect(drawn.elements[gpt.id].props?.canvas).toMatchObject({ ports });
+    expect(drawn.elements[gpt.id]).toMatchObject({ ports });
     const moved = { ...drawn.elements[gpt.id], center: { x: 1, y: 2 } };
     const intent = fromViewportIntent({ kind: 'update', id: gpt.id, path: [], value: moved }, layout(), computeKinds, [
       'ports',
@@ -84,7 +84,8 @@ describe('viewport form', () => {
     const flat = { ...constant, node: computeNodeId({ data }), value: 'DXOS' };
     const current = { ...stored, elements: { ...stored.elements, [flat.id]: flat } };
     const drawn = toViewportLayout(current, computeKinds).elements[flat.id];
-    expect(drawn.props?.canvas).toEqual({ data: { node: flat.node, value: 'DXOS' } });
+    expect(drawn.data).toEqual({ node: flat.node, value: 'DXOS' });
+    expect('node' in drawn || 'value' in drawn).toBe(false);
     const updated = fromViewportIntent({ kind: 'update', id: flat.id, path: [], value: drawn }, current, computeKinds);
     expect(updated.kind === 'update' && updated.value).toEqual({
       ...constant,
@@ -95,7 +96,7 @@ describe('viewport form', () => {
   test('links and other kinds are drawn as stored', ({ expect }) => {
     const stored = layout();
     const drawn = toViewportLayout(stored, computeKinds);
-    const link = Object.values(stored.elements).find((element) => element.type === 'link');
+    const link = Object.values(stored.elements).find((element) => element.kind === 'link');
     expect(link && drawn.elements[link.id]).toEqual(link);
   });
 });

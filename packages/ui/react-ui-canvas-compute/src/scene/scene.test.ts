@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { nodePorts } from '@dxos/react-ui-canvas';
 import { createHistory } from '@dxos/react-ui-canvas-editor';
+import { portOffset, portSide } from '@dxos/scene';
 
 import { isValidComputeNode } from '../graph/index.ts';
 import { createComputeGraph } from '../hooks/index.ts';
@@ -25,17 +26,17 @@ const setup = () => {
   const store = createBoardStore(board, { projection: createComputeProjection({ controller: { graph: model } }) });
   const history = createHistory({ steps: { done: [], undone: [] }, source: store.source });
   const write = (intent: Parameters<typeof store.write>[0]) => history.record(() => store.write(intent));
-  const elementOf = (type: string): BoardElement => {
-    const element = Object.values(store.read().elements).find((element) => element.type === type);
+  const elementOf = (kind: string): BoardElement => {
+    const element = Object.values(store.read().elements).find((element) => element.kind === kind);
     if (!element) {
-      throw new Error(`no ${type} element`);
+      throw new Error(`no ${kind} element`);
     }
     return element;
   };
-  const computeIdOf = (type: string): string => {
-    const node = computeNodeId(elementOf(type));
+  const computeIdOf = (kind: string): string => {
+    const node = computeNodeId(elementOf(kind));
     if (node === undefined) {
-      throw new Error(`${type} carries no compute node`);
+      throw new Error(`${kind} carries no compute node`);
     }
     return node;
   };
@@ -44,7 +45,7 @@ const setup = () => {
 
 const link = (id: string, source: BoardElement['source'], target: BoardElement['target']): BoardElement => ({
   id,
-  type: 'link',
+  kind: 'link',
   z: 'z',
   source,
   target,
@@ -55,16 +56,16 @@ describe('compute scene', () => {
     const circuit = createTemplateCircuit();
     createComputeGraph(circuit);
     const layout = boardLayout('circuit', circuit);
-    const shapes = Object.values(layout.elements).filter((element) => element.type !== 'link');
+    const shapes = Object.values(layout.elements).filter((element) => element.kind !== 'link');
     expect(shapes.length).toBe(circuit.nodes.length);
     expect(Object.keys(layout.elements).length).toBe(circuit.nodes.length + circuit.edges.length);
     for (const shape of shapes) {
-      expect(computeKinds.has(shape.type ?? ''), shape.type).toBe(true);
-      expect(computeKinds.validate(shape), shape.type).toEqual({ ok: true });
+      expect(computeKinds.has(shape.kind ?? ''), shape.kind).toBe(true);
+      expect(computeKinds.validate(shape), shape.kind).toEqual({ ok: true });
     }
     expect(
       shapes
-        .filter((shape) => isValidComputeNode(shape.type ?? ''))
+        .filter((shape) => isValidComputeNode(shape.kind ?? ''))
         .every((shape) => computeNodeId(shape) !== undefined && !('node' in shape)),
     ).toBe(true);
   });
@@ -77,36 +78,39 @@ describe('compute scene', () => {
     expect(computeKinds.dataFields('template')).toEqual(['node', 'valueType']);
     expect(computeKinds.dataFields('rng')).toEqual(['node', 'min', 'max']);
     expect(computeKinds.dataFields('trigger')).toEqual(['node', 'functionTrigger']);
-    // The engine's note is no compute kind, so its `text` stays its own.
+    // The engine's note is no compute kind, so its `label` stays its own.
     expect(computeKinds.dataFields('note')).toEqual([]);
   });
 
   test('a kind refuses an element whose own fields are not its shape', ({ expect }) => {
     const layout = boardLayout('circuit', createTemplateCircuit());
-    const gpt = Object.values(layout.elements).find((element) => element.type === 'gpt');
+    const gpt = Object.values(layout.elements).find((element) => element.kind === 'gpt');
     expect(gpt && computeKinds.validate({ ...gpt, center: 'here' }).ok).toBe(false);
     expect(gpt && computeKinds.validate({ ...gpt, data: { node: 7 } }).ok).toBe(false);
   });
 
-  test('a note keeps its text, and links pin the property ports', ({ expect }) => {
+  test('a note keeps its label, and links pin the property ports', ({ expect }) => {
     const layout = boardLayout('circuit', createTransformCircuit());
     const elements = Object.values(layout.elements);
-    expect(elements.find((element) => element.type === 'note')?.text).toBe('Random number generator');
+    expect(elements.find((element) => element.kind === 'note')?.label).toBe('Random number generator');
     const expression = elements.find((element) => element.target?.port === 'input.expression');
     expect(expression?.source?.port).toBe(`output.${DEFAULT_OUTPUT}`);
   });
 
-  test('ports follow the anchors: stacked inputs on the west side, outputs east, exact offsets', ({ expect }) => {
-    const ifElse = createControlCircuit().nodes.find((node) => node.type === 'if-else');
+  test('ports follow the anchors: stacked inputs on the left side, outputs right, exact offsets', ({ expect }) => {
+    const ifElse = createControlCircuit().nodes.find((node) => node.kind === 'if-else');
     if (!ifElse) {
       throw new Error('no if-else node');
     }
     const ports = nodePorts(computeNodeRegistry, { ...ifElse, z: 'a' });
     const inputs = ports.filter((port) => port.accepts === 'in');
     const outputs = ports.filter((port) => port.accepts === 'out');
-    expect(inputs.map((port) => port.side)).toEqual(['w', 'w', 'w']);
-    expect(outputs.map((port) => port.side)).toEqual(['e']);
-    const offsets = inputs.map((port) => port.offset);
+    expect(inputs.map(portSide)).toEqual(['left', 'left', 'left']);
+    expect(outputs.map(portSide)).toEqual(['right']);
+    // A port's point is a fraction of the frame, so one on a side sits on that side's edge.
+    expect(inputs.map((port) => port.x)).toEqual([0, 0, 0]);
+    expect(outputs.map((port) => port.x)).toEqual([1]);
+    const offsets = inputs.map(portOffset);
     expect([...offsets].sort((left, right) => left - right)).toEqual(offsets);
     expect(createRowPorts({ size: { width: 10, height: 10 }, inputs: [], outputs: [] })).toEqual([]);
   });
@@ -116,7 +120,7 @@ describe('compute projection', () => {
   test('a new compute shape gets a compute node, and a pasted copy one of its own', ({ expect }) => {
     const { model, board, write, store } = setup();
     const nodes = model.nodes.length;
-    const shape = { type: 'constant', z: 'zz', center: { x: 0, y: 0 }, size: { width: 192, height: 128 } };
+    const shape = { kind: 'constant', z: 'zz', center: { x: 0, y: 0 }, size: { width: 192, height: 128 } };
     write({ kind: 'create', element: { id: 'k', ...shape } });
     const node = computeNodeId(store.read().elements.k);
     expect(typeof node).toBe('string');
@@ -192,7 +196,7 @@ describe('compute projection', () => {
     const gpt = elementOf('gpt');
     // A peer's delete removes the compute node first.
     model.removeNodes([computeIdOf('gpt')]);
-    expect(store.read().elements[gpt.id]?.type).toBe('gpt');
+    expect(store.read().elements[gpt.id]?.kind).toBe('gpt');
     write({ kind: 'delete', ids: [gpt.id] });
     expect(store.read().elements[gpt.id]).toBeUndefined();
   });
@@ -217,7 +221,7 @@ describe('compute projection', () => {
 
     write({
       kind: 'create',
-      element: { id: 'k', type: 'constant', z: 'zz', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
+      element: { id: 'k', kind: 'constant', z: 'zz', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
     });
     expect(model.nodes.length).toBe(nodes + 1);
     history.undo();

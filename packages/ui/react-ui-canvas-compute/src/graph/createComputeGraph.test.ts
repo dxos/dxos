@@ -50,10 +50,10 @@ describe('createComputeGraph', () => {
     test(`the ${name} circuit reads as registered compute kinds carrying the nodes it made`, ({ expect }) => {
       const circuit = build();
       const model = createComputeGraph(circuit);
-      const shapes = Object.values(boardLayout('circuit', circuit).elements).filter(({ type }) => type !== 'link');
+      const shapes = Object.values(boardLayout('circuit', circuit).elements).filter(({ kind }) => kind !== 'link');
       for (const shape of shapes) {
-        expect(computeKinds.validate(shape), `${name} ${shape.type}`).toEqual({ ok: true });
-        expect(computeKinds.has(shape.type ?? ''), `${name} ${shape.type}`).toBe(true);
+        expect(computeKinds.validate(shape), `${name} ${shape.kind}`).toEqual({ ok: true });
+        expect(computeKinds.has(shape.kind ?? ''), `${name} ${shape.kind}`).toBe(true);
       }
       const nodes = shapes.flatMap((shape) => computeNodeId(shape) ?? []);
       expect(nodes.every((id) => model.findNode(id) !== undefined)).toBe(true);

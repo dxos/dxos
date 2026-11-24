@@ -91,9 +91,34 @@ ambiguous between a ref and a flag, and an LR(1) parser cannot settle it without
 word for an `=`. One form for every attribute is the cheaper rule anyway.
 
 Their values are exactly the schema's literals, so `stroke=dashed` and `head=crowsfoot` are the
-whole of the style vocabulary. Bare words are reserved for those literals; every free-text value
+whole of the style vocabulary, `color` apart. Bare words are reserved for those literals; every free-text value
 (`index`, `ref`, labels, and any id that is not a bare word) is quoted. `solid` means two different
 things — a `Fill` and a `Stroke` — which is why the attribute name is never elided.
+
+`stroke` is `solid`, `dashed`, `dotted`, `sketchy` or `none`. A shape with no outline says `stroke=none`
+(a label, a heading). `fill` is `none`, `solid`, `tint`, `pattern` or `glass`; `corners` is `all`, `top`, `bottom`
+or `none`.
+
+### Colours
+
+`color` is the `Color` of `@dxos/scene`, an open set that the schema checks by its spelling:
+
+| Spelling                                     | Meaning                                                 |
+| -------------------------------------------- | ------------------------------------------------------- |
+| `color=blue`, `color=teal`                   | a name the theme resolves: a named colour, or a hue     |
+| `color=blue/2`, `color=default/0`            | that name at a tone, 0 (an outline) to 3 (the lightest) |
+| `color="#1e90ff"`, `color="rgb(30 144 255)"` | a CSS colour, drawn as written in every theme           |
+
+A name is a bare word, with or without a tone. A CSS colour is quoted, because a bare `#` begins a comment. The
+names a diagram has always used (`black`, `grey`, `light-violet`, `violet`, `blue`, `light-blue`, `yellow`,
+`orange`, `green`, `light-green`, `light-red`, `red`, `white`) draw as they always have.
+
+### Text written before `stroke=none`
+
+Older text says `border=false` for a shape with no outline, and `border=true` for a frame or a component that
+draws one. Both are still read: `border=false` is `stroke=none`, and `border=true` is the stroke the statement
+states, or `stroke=solid` where it states none. On a line or an arrow the flag says nothing. The printer writes
+`stroke` only.
 
 ### Ids and refs
 
@@ -176,15 +201,17 @@ edge calendar -- field stroke=dashed
   not all fit are drawn at one factor of what was asked, the largest that fits, so asking for more than the frame
   holds fills it.
 - A group with a label draws it as a heading over its members; a group without one is only their grid.
-- `border=true`, `fill`, `stroke` and `color` on a group draw a frame round its members. The heading stays
-  outside it; for a frame round the heading too, put the labelled group inside a framed one.
+- `stroke`, `fill` and `color` on a group draw a frame round its members (`stroke=solid` for a plain one); a
+  group that states neither a stroke nor a fill draws none. The heading stays outside it; for a frame round the
+  heading too, put the labelled group inside a framed one.
 - An empty group (`group port { }`) draws nothing and holds its cell: a spacer, or a place for an edge to end.
 - `node … kind=card` places a component. Every attribute the node does not define itself is the component's own
   field; one whose name the node does define is written escaped (`data-fill=0.55`).
 - A node that names a component may list the component's rows in braces, one `item "…"` to a line, each with
   attributes of its own (`item "Registered with ECHO" icon=database`). A row is the component's content: it has no
   id, nothing places it, and it is stored on the node's own record. A node without `kind=` takes none.
-- `border=true|false` on a node says whether its box draws a border.
+- `stroke` on a node says how its box draws its border: `stroke=none` draws none, and `stroke=solid` gives one to
+  a component that draws none of its own.
 - `width=240` and `height=48` on a node are the size it keeps in its cell, centred there; an axis left out fills
   the cell. In a packed group the larger is the diameter of its circle. They are the only way a node states a
   size: a component's own field named `width` is written `data-width`.

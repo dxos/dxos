@@ -28,7 +28,11 @@ const CHAR_EM = Diagnostics.CHAR_EM;
 
 const RADIUS = 8;
 
-const colorClass = (color?: Shape.Color) => (color ? SvgFile.COLOR_CLASS[color] : undefined);
+/** A literal colour as the `color` attribute, which is what `currentColor` reads where no class sets it. */
+const literalOf = (color?: Shape.Color): string | undefined => SvgFile.drawnColor(color).css;
+
+/** The class of a closed shape's outline: `none` draws none. */
+const outlineClass = (stroke?: Shape.Stroke): string => (stroke === 'none' ? 'stroke-none' : 'stroke-current');
 
 const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
 
@@ -117,9 +121,10 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       const rect = rectOf(object, element);
       const mid = center(rect);
       const tinted = element.fill === 'tint';
+      // There is no material here, so glass draws as a solid surface.
       const fill = tinted
         ? undefined
-        : element.fill === 'solid'
+        : element.fill === 'solid' || element.fill === 'glass'
           ? 'fill-neutral-100 dark:fill-neutral-800'
           : 'fill-transparent';
       const style = tinted ? TINT : undefined;
@@ -153,7 +158,8 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
         );
       return (
         <g
-          className={mx('stroke-current', colorClass(element.color))}
+          className={mx(outlineClass(element.stroke), SvgFile.colorClass(element.color))}
+          color={literalOf(element.color)}
           strokeWidth={1.5}
           strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
         >
@@ -165,7 +171,11 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
     case 'circle': {
       const mid = map({ x: element.cx, y: element.cy });
       return (
-        <g className={mx('stroke-current fill-transparent', colorClass(element.color))} strokeWidth={1.5}>
+        <g
+          className={mx(outlineClass(element.stroke), 'fill-transparent', SvgFile.colorClass(element.color))}
+          color={literalOf(element.color)}
+          strokeWidth={1.5}
+        >
           <circle cx={mid.x} cy={mid.y} r={element.r * scale} />
           {element.text && <MultilineText cx={mid.x} cy={mid.y} text={element.text} weight={weight} />}
         </g>
@@ -180,16 +190,17 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
         ? object.elements.find((other) => other.kind === 'arrow' && other.id === element.id.slice(0, -'-path'.length))
         : undefined;
       const derived = arrow?.kind === 'arrow' ? Shape.markersOf(arrow) : undefined;
-      const start = derived?.start;
+      const tail = derived?.tail;
       // The route takes its arrow's relation dash unless the polyline sets its own stroke.
       const stroke = element.stroke ?? (derived?.dashed ? 'dashed' : undefined);
       return (
         <polyline
           points={points.map((point) => `${point.x},${point.y}`).join(' ')}
-          className={mx('stroke-current fill-none', colorClass(element.color))}
+          className={mx('stroke-current fill-none', SvgFile.colorClass(element.color))}
+          color={literalOf(element.color)}
           strokeWidth={1.5}
           strokeDasharray={stroke ? strokeDash[stroke] : undefined}
-          markerStart={start ? `url(#${markers[start]})` : undefined}
+          markerStart={tail ? `url(#${markers[tail]})` : undefined}
         />
       );
     }
@@ -197,6 +208,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       const anchor = map(element);
       const textWeight = element.weight ?? 's';
       const fontSize = FONT_SIZE(textWeight);
+      const muted = SvgFile.drawnColor(element.color).name === 'grey';
       const maxChars = element.w ? Math.max(4, Math.floor((element.w * scale) / (fontSize * CHAR_EM))) : Infinity;
       const lines = SvgFile.wrapLines(element.text, maxChars);
       return (
@@ -205,8 +217,9 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
           y={anchor.y + LINE_H(textWeight) / 2}
           fontSize={fontSize}
           // Muted text (group titles) is still text to read: grey strokes stay light, grey type meets 4.5:1.
-          fontWeight={element.color === 'grey' ? 500 : undefined}
-          className={mx('fill-current', element.color === 'grey' ? MUTED_TEXT : colorClass(element.color))}
+          fontWeight={muted ? 500 : undefined}
+          className={mx('fill-current', muted ? MUTED_TEXT : SvgFile.colorClass(element.color))}
+          color={literalOf(element.color)}
         >
           {lines.map((line, index) => (
             <tspan key={index} x={anchor.x} dy={index === 0 ? 0 : LINE_H(textWeight)}>
@@ -221,7 +234,8 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       const rect = rectOf(object, element);
       return (
         <g
-          className={mx('stroke-current fill-transparent', colorClass(element.color))}
+          className={mx(outlineClass(element.stroke), 'fill-transparent', SvgFile.colorClass(element.color))}
+          color={literalOf(element.color)}
           strokeWidth={1.5}
           strokeDasharray={strokeDash[element.stroke ?? 'dashed']}
         >
@@ -246,7 +260,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
       }
       const [start, end] = [points[points.length - 2], points[points.length - 1]];
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
-      const { start: tail, end: head, dashed } = Shape.markersOf(element);
+      const { tail, head, dashed } = Shape.markersOf(element);
       // On a routed connector the source marker is drawn by its `-path` polyline instead.
       const routed = object.elements.some(
         (other) => (other.kind === 'line' || other.kind === 'curve') && other.id === `${element.id}-path`,
@@ -258,7 +272,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
         markerStart: tail && !routed ? `url(#${markers[tail]})` : undefined,
       };
       return (
-        <g className={mx('stroke-current', colorClass(element.color))}>
+        <g className={mx('stroke-current', SvgFile.colorClass(element.color))} color={literalOf(element.color)}>
           {points.length === 2 ? (
             <line x1={start.x} y1={start.y} x2={end.x} y2={end.y} {...stroke} />
           ) : (

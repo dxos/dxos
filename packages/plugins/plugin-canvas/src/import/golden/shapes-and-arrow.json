@@ -5,7 +5,6 @@
     "elements": {
       "box": {
         "id": "box",
-        "type": "rect",
         "z": "V",
         "center": {
           "x": 96,
@@ -15,19 +14,15 @@
           "width": 192,
           "height": 96
         },
-        "label": "Box",
         "overrides": {
-          "hue": "blue",
-          "tone": 1,
-          "lineStyle": "dashed"
+          "color": "blue/1",
+          "stroke": "dashed"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Box",
+        "kind": "rect"
       },
       "oval": {
         "id": "oval",
-        "type": "ellipse",
         "z": "l",
         "center": {
           "x": 456,
@@ -37,37 +32,28 @@
           "width": 144,
           "height": 96
         },
-        "label": "Oval",
         "overrides": {
-          "hue": "red",
-          "tone": 3,
+          "color": "red/3",
           "fontSize": 26
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Oval",
+        "kind": "ellipse"
       },
       "arrow": {
+        "kind": "link",
+        "path": "line",
         "id": "arrow",
-        "type": "link",
         "z": "t",
+        "head": "arrow",
+        "label": "calls",
+        "overrides": {
+          "color": "teal"
+        },
         "source": {
           "node": "box"
         },
         "target": {
           "node": "oval"
-        },
-        "label": "calls",
-        "overrides": {
-          "hue": "teal"
-        },
-        "props": {
-          "canvas": {
-            "type": "line",
-            "ends": {
-              "end": "arrow"
-            }
-          }
         }
       }
     }
@@ -79,7 +65,6 @@
       "kind": "create",
       "element": {
         "id": "box",
-        "type": "rect",
         "z": "V",
         "center": {
           "x": 96,
@@ -89,22 +74,18 @@
           "width": 192,
           "height": 96
         },
-        "label": "Box",
         "overrides": {
-          "hue": "blue",
-          "tone": 1,
-          "lineStyle": "dashed"
+          "color": "blue/1",
+          "stroke": "dashed"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Box",
+        "kind": "rect"
       }
     },
     {
       "kind": "create",
       "element": {
         "id": "oval",
-        "type": "ellipse",
         "z": "l",
         "center": {
           "x": 456,
@@ -114,40 +95,31 @@
           "width": 144,
           "height": 96
         },
-        "label": "Oval",
         "overrides": {
-          "hue": "red",
-          "tone": 3,
+          "color": "red/3",
           "fontSize": 26
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Oval",
+        "kind": "ellipse"
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "link",
+        "path": "line",
         "id": "arrow",
-        "type": "link",
         "z": "t",
+        "head": "arrow",
+        "label": "calls",
+        "overrides": {
+          "color": "teal"
+        },
         "source": {
           "node": "box"
         },
         "target": {
           "node": "oval"
-        },
-        "label": "calls",
-        "overrides": {
-          "hue": "teal"
-        },
-        "props": {
-          "canvas": {
-            "type": "line",
-            "ends": {
-              "end": "arrow"
-            }
-          }
         }
       }
     }

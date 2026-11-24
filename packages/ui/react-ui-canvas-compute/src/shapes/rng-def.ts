@@ -16,7 +16,7 @@ import { RandomComponent } from './RNG.tsx';
 
 export const RandomShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('rng'),
+    kind: Schema.Literal('rng'),
     data: computeData({ min: Schema.optional(Schema.Number), max: Schema.optional(Schema.Number) }),
   }),
 );
@@ -27,7 +27,7 @@ export type CreateRandomProps = CreateShapeProps<RandomShape>;
 
 export const createRandom = (props: CreateRandomProps) =>
   createShape<RandomShape>({
-    type: 'rng',
+    kind: 'rng',
     size: { width: MAJOR_GRID, height: MAJOR_GRID },
     ...props,
   });

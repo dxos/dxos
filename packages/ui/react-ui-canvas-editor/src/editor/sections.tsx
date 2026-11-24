@@ -376,21 +376,21 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
   const selection = useAtomValue(useSceneSelection('SceneEditor.Styles').atoms.selection);
   const record = useOpenLayout('SceneEditor.Styles');
   const model = document.models[0];
-  const modelStyles: Readonly<Record<string, NamedStyle<{ hue?: string }>>> = model?.styles ?? {};
+  const modelStyles: Readonly<Record<string, NamedStyle<{ color?: string }>>> = model?.styles ?? {};
   const entries = useMemo<StyleEntry[]>(
     () => [
       ...Object.entries(modelStyles).map(([id, style]) => ({
         id,
         name: style.name ?? id,
         source: 'model',
-        hue: style.hue,
+        color: style.color,
       })),
       ...catalogs.flatMap((catalog) =>
         Object.entries(catalog.styles).map(([key, style]) => ({
           id: `${catalog.id}:${key}`,
           name: style.name ?? key,
           source: catalog.name,
-          hue: style.hue,
+          color: style.color,
         })),
       ),
     ],

@@ -26,7 +26,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { type NodeBase, STYLE_HUES, nodeBase } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type NodeViewProps } from '../../model/index.ts';
+import { useSceneLook } from '../../hooks/index.ts';
+import { type NodeViewProps, type SceneLook } from '../../model/index.ts';
+import { drawnColor } from '../../utils/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
 import { LINE_ON_GRID, PAD_TO_GRID, PARAGRAPH_ON_GRID } from './text.ts';
 
@@ -68,12 +70,12 @@ export const IconSpec = Schema.Struct({
 export type IconSpec = Schema.Schema.Type<typeof IconSpec>;
 
 /**
- * The `card` type's schema: the three regions the prototype draws, and the glyph in its header. Declared here
- * rather than in `@dxos/scene` because it is a type of the 2D editor, not of the scene model — the same place
+ * The `card` kind's schema: the three regions the prototype draws, and the glyph in its header. Declared here
+ * rather than in `@dxos/scene` because it is a kind of the 2D editor, not of the scene model — the same place
  * `image` is declared.
  */
 export const CardNode = Schema.Struct({
-  type: Schema.Literal('card'),
+  kind: Schema.Literal('card'),
   ...nodeBase,
   icon: Schema.optional(IconSpec),
   label: Schema.optional(Schema.String.annotate({ title: 'Title' })),
@@ -82,14 +84,14 @@ export const CardNode = Schema.Struct({
 });
 export type CardNode = Schema.Schema.Type<typeof CardNode>;
 
-export const isCardNode = (node: NodeBase): node is CardNode => node.type === 'card';
+export const isCardNode = (node: NodeBase): node is CardNode => node.kind === 'card';
 
 /**
- * The `icon` type's schema: a glyph and an optional caption. Declared here rather than in `@dxos/scene` because it
- * is a type of the 2D editor, not of the scene model — the same place `image` is declared.
+ * The `icon` kind's schema: a glyph and an optional caption. Declared here rather than in `@dxos/scene` because it
+ * is a kind of the 2D editor, not of the scene model — the same place `image` is declared.
  */
 export const IconNode = Schema.Struct({
-  type: Schema.Literal('icon'),
+  kind: Schema.Literal('icon'),
   ...nodeBase,
   icon: Schema.optional(IconSpec),
   /** A caption under the glyph. */
@@ -97,11 +99,11 @@ export const IconNode = Schema.Struct({
 });
 export type IconNode = Schema.Schema.Type<typeof IconNode>;
 
-export const isIconNode = (node: NodeBase): node is IconNode => node.type === 'icon';
+export const isIconNode = (node: NodeBase): node is IconNode => node.kind === 'icon';
 
-/** The hue a node's style names, which an icon draws its glyph in (`STYLE_HUES` are theme hues). */
-const hueOf = (node: NodeViewProps['node']): Icon.IconHue | undefined => {
-  const hue = node.style?.hue;
+/** The hue a node's colour resolves to in `look`, which an icon draws its glyph in (`STYLE_HUES` are theme hues). */
+const hueOf = (node: NodeViewProps['node'], look: SceneLook): Icon.IconHue | undefined => {
+  const { hue } = drawnColor(node.overrides?.color, look);
   return STYLE_HUES.find((value) => value === hue);
 };
 
@@ -171,6 +173,7 @@ export type CardFrameProps = PropsWithChildren<{
  * the same frame serves a title-only card and a full one.
  */
 export const CardFrame = ({ node, editing, children, classNames }: CardFrameProps) => {
+  const look = useSceneLook();
   const icon = iconOf(node);
   const symbol = icon && iconSymbol(icon);
   const label = textOf(node, 'label');
@@ -185,7 +188,7 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
       {(symbol || label !== undefined) && (
         // The glyph is three cells and sets the row's height: a card is read by its icon before its title.
         <div className={mx('flex items-center shrink-0', HEADER_GAP)} data-part='card-header'>
-          {symbol && <Icon.Icon icon={symbol} hue={hueOf(node)} classNames={mx('shrink-0', HEADER_GLYPH)} />}
+          {symbol && <Icon.Icon icon={symbol} hue={hueOf(node, look)} classNames={mx('shrink-0', HEADER_GLYPH)} />}
           {label !== undefined && (
             <TextPart part='label' text={label} editing={editing} classNames={mx('grow truncate', LINE_ON_GRID)}>
               {label}
@@ -234,22 +237,23 @@ export const CardNodeView = ({ node, editing }: NodeViewProps) => (
 );
 
 /**
- * An icon alone, filling the frame, or at its style's `fontSize` where it sets one (a card's glyph is the size of its
+ * An icon alone, filling the frame, or at its look's `fontSize` where it sets one (a card's glyph is the size of its
  * two cells): the glyph a type names in its `icon` field. Any Phosphor name works — the icon
  * registry fetches a symbol it does not have (`providers/ThemeProvider/icon-registry.ts`), so the set is not limited
  * to the ones the UI already draws.
  */
 export const IconNodeView = ({ node, editing }: NodeViewProps) => {
+  const look = useSceneLook();
   const icon = iconOf(node);
   const symbol = icon && iconSymbol(icon);
   const label = textOf(node, 'label');
-  const size = node.style?.fontSize;
+  const size = node.overrides?.fontSize;
   return (
     <div className='dx-cover flex flex-col items-center justify-center gap-1 overflow-hidden' data-part='icon'>
       {symbol && (
         <Icon.Icon
           icon={symbol}
-          hue={hueOf(node)}
+          hue={hueOf(node, look)}
           classNames={mx('min-w-0', size === undefined && 'w-[70%] h-[70%]')}
           style={size === undefined ? undefined : { width: size, height: size }}
         />

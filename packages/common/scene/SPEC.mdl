@@ -30,8 +30,8 @@ The ECHO objects below are parts of a drawing, not user types: none carries `Ann
 type Model
   desc: >
     `Model<O, S>`: a library of reusable objects of type O and the drawing's named styles of type S, with no
-    positions; `Model2D` and `Model3D` are its ECHO objects (typenames `org.dxos.type.scene.model2d` and `.model3d`),
-    keyed by `key` because ECHO reserves `id`.
+    positions; `Model2D` and `Model3D` are its ECHO objects (typenames `org.dxos.type.scene.model2d` and `.model3d`,
+    version 0.2.0), keyed by `key` because ECHO reserves `id`.
   fields:
     name?: string
     objects: Record<string, O>
@@ -42,15 +42,15 @@ type Model
 ```mdl
 type Object
   desc: >
-    A reusable definition an element places: a type, a size (2D `size`, 3D `scale`), a named style with overrides,
+    A reusable definition an element places: a kind, a size (2D `size`, 3D `scale`), a named style with overrides,
     and props. A composite object's `parts` is a nested Layout in its own local units, drawn through the transform of
     each element that places it.
   fields:
     id: string
-    type: string
+    kind: string
     style?: string                    # a named style; overrides win over it
     overrides?: Style2D | Style3D
-    size?: Size2                      # 2D
+    size?: Size                       # 2D
     scale?: Vec3                      # 3D
     props?: Record<string, any>
     parts?: Ref<Layout2D | Layout3D>  # an id in record form
@@ -60,8 +60,8 @@ type Object
 type Layout
   desc: >
     `Layout<E, S>`: elements of type E positioned in one coordinate space, placing objects of its model;
-    `Layout2D` and `Layout3D` are its ECHO objects (`org.dxos.type.scene.layout2d` and `.layout3d`), keyed as Model
-    is. Element records keep any field beyond the shared base, for the kind registry to validate.
+    `Layout2D` and `Layout3D` are its ECHO objects (`org.dxos.type.scene.layout2d` and `.layout3d`, version 0.2.0),
+    keyed as Model is. Element records keep any field beyond the shared base, for the kind registry to validate.
   fields:
     name?: string
     model?: Ref<Model2D | Model3D>    # an id in record form
@@ -72,7 +72,7 @@ type Layout
     anonymous?: boolean               # a composite the Group command made, kept out of the library
     arrange?: Arrangement             # places the layout's unplaced, unpinned elements
     lattice?: Lattice                 # 2D only
-    constraints?: Constraint[]        # 2D only
+    constraints?: Constraint[]        # 2D only; a relation is `right-of`, `left-of`, `above`, `below` or `aligned`
     props?: Record<string, any>       # renderer-specific fields
 ```
 
@@ -93,12 +93,12 @@ type Scene
 type BaseElement
   desc: >
     Every item in a layout, in either dimension, with the canvas element base's names ([D-93]): a shape, a link, a
-    label or a placed object. An element places a model `object` or has a `type` of its own; its own fields win over
-    the object's. A link is an element with endpoints.
+    label or a placed object. An element places a model `object` or has a `kind` of its own; its own fields win over
+    the object's. A link is an element of kind `link`, with endpoints.
   fields:
     id: string                        # fixed when the element is created
     object?: string                   # the model object it places
-    type?: string                     # its own type, when it places no object
+    kind?: string                     # its own kind, when it places no object
     z?: string                        # paint order, a fractional index
     layer?: string
     hidden?: boolean
@@ -109,7 +109,8 @@ type BaseElement
     target?: Endpoint
     pinned?: boolean                  # placed by a person; arranging leaves it
     dsl?: DslIdentity                 # the DSL statement that made it ([D-97])
-    props?: Record<string, any>       # kind-specific fields
+    data?: Record<string, any>        # an extension kind's own fields, validated by its registration
+    props?: Record<string, any>       # what other writers keep that the base has no slot for (a solid's `op` and `operands`)
 ```
 
 ```mdl
@@ -118,21 +119,38 @@ type Endpoint
   fields:
     node?: string
     port?: string
-    point?: Vec2 | Vec3
+    point?: Point
 ```
 
 ```mdl
 type Element2D
   desc: >
-    BaseElement with 2D geometry, in canvas pixels. On an element that places a composite, `scale` maps the parts'
-    units to the layout's and `fit` says whether the parts fill the frame instead.
+    BaseElement with 2D geometry, in canvas pixels, and every field of the 2D editor's node and link, so a stored
+    element is the node or the link itself ([F-4.4]). On an element that places a composite, `scale` maps the parts'
+    units to the layout's and `fit` says how the parts are drawn in its frame. A stored record (`ElementRecord2D`)
+    keeps a built-in kind's own fields beside these, and an extension kind's under `data`.
   fields:
-    center?: Vec2
-    size?: Size2
+    center?: Point
+    size?: Size
     rotation?: number                 # degrees
-    scale?: Vec2
-    fit?: 'none' | 'frame'
+    scale?: Point
+    fit?: 'fit' | 'fill' | 'none'     # scaled to fit inside the frame, to fill it, or at true size
     overrides?: Style2D
+    ports?: Port[]                    # a node's own ports; absent, its kind's
+    portsPerSide?: number
+    partOverrides?: Record<string, Record<string, unknown>>   # values of a placed composite's parts, by part id
+    parent?: string                   # the hull the node is inside
+    extent?: { width?: number, height?: number }   # the size it keeps in a grid's cell
+    exposed?: boolean                 # a composite part's own: `exposed`, `bind`, `optional`, `grow`, `follows`
+    bind?: string
+    optional?: boolean
+    grow?: string
+    follows?: string
+    path?: LinkPath                   # a link's own, as `Link` states them
+    points?: Point[]
+    tail?: Marker
+    head?: Marker
+    connector?: DiagramConnector
 ```
 
 ```mdl
@@ -142,7 +160,7 @@ type Element3D
     center?: Vec3
     scale?: Vec3
     rotation?: Vec3                   # Euler degrees
-    fit?: 'none' | 'frame'
+    fit?: 'fit' | 'fill' | 'none'
     overrides?: Style3D
 ```
 
@@ -155,26 +173,87 @@ type Arrangement
 ```
 
 ```mdl
+type Link
+  desc: >
+    The typed form of a 2D element that joins two ends. Every link is of kind `link`, and how it runs is its `path`.
+    Nothing of its route is stored but a spline's control points, so it follows its nodes as they move.
+  fields:
+    kind: 'link'
+    source: Endpoint
+    target: Endpoint
+    path?: 'line' | 'ortho' | 'curve' | 'spline' | 'smart'    # unset is `smart`
+    points?: Point[]                  # the control points a spline runs through
+    tail?: Marker                     # the marker at the source: arrow, circle, triangle, diamond, diamond-filled or crowsfoot
+    head?: Marker                     # the marker at the target; an arrow here reads as the link's direction
+    label?: string                    # a caption at the middle of the route
+    overrides?: LineStyle             # its own `color`, `stroke` and caption `fontSize`
+```
+
+```mdl
+type Port
+  desc: >
+    An attachment point on a node, as a fraction of its frame (`0,0` the top-left corner, `1,1` the bottom-right), so
+    it keeps its place however the node is resized: the point a draw.io `<constraint x y>` states. `sidePort` makes
+    one on a side at an offset along it; `portSide` and `portOffset` read those back.
+  fields:
+    id: string
+    x: number
+    y: number
+    side?: 'top' | 'right' | 'bottom' | 'left'    # the side a link leaves from; unset, the nearest edge of the frame
+    accepts?: 'in' | 'out' | 'any'    # default any
+```
+
+```mdl
+type Color
+  desc: >
+    Every colour a drawing stores, as one string. `blue` is a name the theme resolves, among its named colours first
+    and then its hues. `blue/2` is that name at a tone, 0 (an outline) to 3 (the lightest fill); a text has no tone
+    0. `default/2` is the look's own colour at a tone. `#1e90ff` or `rgb(30 144 255)` is a literal CSS colour, drawn
+    as written in every theme.
+```
+
+```mdl
+type ThemeSlots
+  desc: >
+    The slots a theme fills, by name, so a style names what a colour or a face is for and the theme says what it
+    looks like. A named colour is one of the theme's hues at a tone, another name, or a literal. Every theme fills
+    the fonts `body` and `mono`. `DEFAULT_THEME_SLOTS` is what a theme that defines none draws with.
+  fields:
+    colors?: Record<string, Color>
+    fonts?: Record<string, string>    # each a CSS `font-family`
+```
+
+```mdl
 type Style2D
   desc: >
-    A 2D look ([D-92]): the canvas node style (hue, tone, fill, border, rounded, guide, font and alignment) extended
-    with the diagram vocabulary, so one set serves both. Hues include the theme-independent `black` and `white`.
+    A 2D look ([D-92]): what a node draws with (`NodeStyle` is its alias), what a model's named style states, and
+    the vocabulary a diagram styles with, so one set serves all three. A link takes its `color`, `stroke` and
+    `fontSize` (`LineStyle`).
   fields:
-    hue?: string
-    lineStyle?: string                # the canvas line styles, or 'sketchy'
-    pattern?: boolean                 # a hatched fill
+    color?: Color                     # fill, text and border together
+    opacity?: number                  # 0 to 1
+    stroke?: 'none' | 'solid' | 'dashed' | 'dotted' | 'sketchy'    # a node's border, a link's line
+    fill?: 'none' | 'solid' | 'tint' | 'pattern' | 'glass'         # unset, a closed shape is filled with its colour
+    corners?: 'all' | 'top' | 'bottom' | 'none'                    # unset is the look's own corner
     weight?: 's' | 'm' | 'l' | 'xl'   # scales stroke and text together
+    guide?: boolean                   # dashed and unfilled: an annotation
+    font?: string                     # a font slot of the theme; unset is `body`
+    fontSize?: number
+    textColor?: Color                 # the text alone
+    align?: 'left' | 'center' | 'right'
+    valign?: 'top' | 'middle' | 'bottom'
 ```
 
 ```mdl
 type Style3D
-  desc: A 3D look ([D-92]): a material over the theme's hue and tone.
+  desc: >
+    A 3D look ([D-92]): a material over the theme's colour, in the 2D look's words for what the two share (`color`,
+    `fill`, `stroke`, `corners`, `opacity`).
   fields:
-    hue?: string
-    tone?: 0 | 1 | 2 | 3
-    surface?: 'solid' | 'tint' | 'glass' | 'none'
-    border?: boolean
-    rounded?: boolean
+    color?: Color
+    fill?: 'none' | 'solid' | 'tint' | 'pattern' | 'glass'         # the surface
+    stroke?: 'none' | 'solid' | 'dashed' | 'dotted' | 'sketchy'    # the solid's edges
+    corners?: 'all' | 'top' | 'bottom' | 'none'
     opacity?: number
     metalness?: number
     roughness?: number
@@ -185,9 +264,9 @@ type Style3D
 type StyleCatalog
   desc: >
     A reusable set of named styles that drawings reference by `catalog:key` (ECHO,
-    `org.dxos.type.scene.styleCatalog`); a theme's defaults are a catalog too. `resolveStyle` reads an element's look
-    nearest first, field by field: its overrides, the layout's override of its named style, the model's definition,
-    each catalog in order, then the defaults.
+    `org.dxos.type.scene.styleCatalog`, version 0.2.0); a theme's defaults are a catalog too. `resolveStyle` reads
+    an element's look nearest first, field by field: its overrides, the layout's override of its named style, the
+    model's definition, each catalog in order, then the defaults.
   fields:
     key: string
     name: string
@@ -199,7 +278,7 @@ type StyleCatalog
 type Camera2D
   desc: Where a 2D view looks: the scene point at the view's centre and the zoom.
   fields:
-    center: Vec2
+    center: Point
     zoom: number
 ```
 
@@ -224,7 +303,7 @@ feat F-1: One model for 2D and 3D
   req F-1.1: A drawing is a Model of objects, Layouts of elements and Scenes over layouts, each one ECHO object whose records live inside it; types are shared only where 2D and 3D share properties.
   req F-1.2: There is one record kind, Element, for shapes and links alike; a link's ends are endpoints on other elements of its layout, or free points.
   req F-1.3: Element ids are never positional, and the id `camera` is reserved for the animator's camera target.
-  req F-1.4: A composite object's parts are a nested layout in its own local units; the element that places it carries the transform (centre, scale, rotation, and `fit: frame` to fill its frame instead), and parts draw through it with strokes and text scaled too.
+  req F-1.4: A composite object's parts are a nested layout in its own local units; the element that places it carries the transform (centre, scale, rotation, and `fit`: its parts scaled to fit inside its frame, to fill it, or drawn at true size), and parts draw through it with strokes and text scaled too.
   req F-1.5: A group is a composite placed by an instance: its members live in an anonymous composite layout placed with fit `none`, so they keep their places; a layout's arrangement places its unplaced elements and can be re-run, and a pinned element is not moved.
   req F-1.6: A solid is an operation tree (union, difference, extrude) over operand elements, recomputed when drawn.
   req F-1.7: A layout (its elements and its own fields) changes only through `LayoutIntent`s, applied by one pure reducer, and a model only through `ModelIntent`s, which refuse an intent with its problems and leave the document unchanged. A `layout` intent writes a 2D layout's `lattice` and `constraints` in the same batch as the elements they place.
@@ -244,6 +323,33 @@ feat F-3: Drawing and animation
   req F-3.1: 2D scenes draw through react-ui-canvas, 3D scenes through Babylon, and a 2D scene may also be drawn in 3D on the ground plane.
   req F-3.2: A renderer skips a link whose end is missing and stops at a parts layout already on its path.
   req F-3.3: Each scene type is an animator stage whose targets are the drawn elements of its layout, keyed by their annotated paths; playback never writes the stored layout.
+```
+
+```mdl
+feat F-4: One vocabulary
+  uses: [BaseElement, Element2D, Link, Port, Color, ThemeSlots, Style2D, Style3D]
+
+  req F-4.1: Every part of a drawing states a thing with one word. A stored element, the 2D editor's node and link, a model object and a diagram shape each have a `kind`. A look states `color`, `fill`, `stroke`, `corners` and `opacity` in both dimensions, and in 2D `textColor`, `font`, `align` and `valign` too. A link's markers are `tail` and `head`, and a caption or a note's text is `label`. A side is `top`, `right`, `bottom` or `left`.
+  req F-4.2: A colour resolves through a theme's slots (`resolveColor`): a name the theme defines among its named colours resolves to what that names, through at most four names, and takes the tone the drawing states over the theme's; a name the theme does not define is one of its hues; a literal is drawn as written.
+  req F-4.3: A style's `font` names a font slot of the theme; unset is `body`, and a slot the theme does not define draws as its body face (`resolveFont`). The default theme's named colours are the names diagrams use that are not hues: `grey`, `light-violet`, `light-blue`, `light-green` and `light-red`.
+  req F-4.4: A stored 2D element is the editor's node or link itself: `Element2D` carries every field of a node and of a link at its top, a built-in kind's own fields sit beside them and an extension kind's under `data`. `props` holds only what other writers keep there.
+  req F-4.5: Lifting a 2D style to 3D and flattening a 3D one to 2D copy the fields the two share (`color`, `fill`, `stroke`, `corners`, `opacity`) and drop the rest.
+```
+
+```mdl
+feat F-5: Stored versions
+  uses: [Layout, Model, StyleCatalog]
+
+  req F-5.1: `Layout2D`, `Layout3D`, `Model2D`, `Model3D` and `StyleCatalog` are stored at version 0.2.0. `Scene2D` and `Scene3D` hold none of the changed words and stay at 0.1.0.
+  req F-5.2: `Legacy` holds the 0.1.0 types and `Legacy.Migrations`, one migration per type to 0.2.0. Each rewrites every element, object, style and constraint in the current words, and an element the 2D editor wrote comes out holding its node's or link's fields itself, not in a bag under `props.canvas`.
+  req F-5.3: A migrated record is checked field by field. Where the current schema refuses the whole record, each declared field whose value its own schema refuses is dropped and the rest is kept. A record that is still no record of its kind is left out, and the object that holds it still migrates.
+  req F-5.4: The record readers (`upgradeDocument`, `upgradeElement2D`, `upgradeElement3D`, `upgradeObject`, `upgradeStyle`, `upgradePort`, `upgradeConstraint`) take a record in either spelling and return one already in the current words unchanged, so a reader of data from outside ECHO may run them over anything. Read this way, a record the schema refuses even field by field is kept as stored.
+```
+
+```mdl
+feat F-6: One description of the format
+
+  req F-6.1: Every schema a stored drawing is made of is in one ordered registry, from which the JSON Schema document and the docs page are printed. Its groups are Document, Scenes, Layouts, Models, Elements, Nodes, Links, Styles, Theme, Vocabulary and Diagram shapes: Theme holds `ThemeSlots` and `Font`, and Vocabulary holds `Color`, the geometry (`Point`, `Size`, `Bounds`, `Side`) and the style values (`Stroke`, `Fill`, `Corners`, `Weight`, `Align`, `VerticalAlign`).
 ```
 
 ## Changelog
@@ -1089,3 +1195,120 @@ decision D-108: A packing whose sizes do not fit draws every circle at one facto
     - Keeping stated sizes exact and shrinking only the rest: an author fills a field by over-asking, and exact sizes would then leave members out.
 ```
 
+```mdl
+decision D-109: The scene model's vocabulary is normalized. Type names and attributes are standardized so that they are consistent. A property such as the font family is general and names a slot of a theme, the default and the monospace face being slots. Every colour property takes the same generic colour patterns and named theme colours. A port states its place in draw.io's constraint format.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [Object, BaseElement, Element2D, Element3D, Link, Port, Color, ThemeSlots, Style2D, Style3D, F-4]
+```
+
+```mdl
+decision D-110: The 2D editor's node and link are the stored element, and the stored format changes once for [D-109], with a migration from the one before.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [Element2D, F-4.4, F-5]
+```
+
+```mdl
+decision D-111: A stored element, the editor's node and link, a model object and a diagram shape state a thing with one word. Each has a `kind`, replacing the `type` of [D-93]. A link's markers are `tail` and `head` (the many-end marker is `crowsfoot`), and a caption or a note's text is `label`. An element names a style in `style` and keeps its own look in `overrides`; a placed composite's per-part values are `partOverrides`. A side is `top`, `right`, `bottom` or `left`, and a constraint's relation `right-of`, `left-of`, `above`, `below` or `aligned`. A composite's `fit` is `fit`, `fill` or `none`. `Point` and `Size` replace `Vec2` and `Size2`. Fills in [D-109].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Object, BaseElement, Endpoint, Element2D, Element3D, Link, Layout, Camera2D, F-1.4, F-4.1]
+  why: The stored elements, the editor's nodes and links and the diagram's shapes then state these in the same words, so one word means one thing.
+```
+
+```mdl
+decision D-112: A look states what 2D and 3D share in the same words: `color`, `fill` (`none`, `solid`, `tint`, `pattern`, `glass`), `stroke` (`none`, `solid`, `dashed`, `dotted`, `sketchy`), `corners` (`all`, `top`, `bottom`, `none`) and `opacity`. `Style2D` adds `weight`, `guide`, `font`, `fontSize`, `textColor`, `align` and `valign`, and is the node style itself; `Style3D` adds `metalness`, `roughness` and `emissive`. Lift and flatten copy the shared fields. This replaces the property sets of [D-92] and its mapping of `fill` to `surface`; its resolution order stands. Fills in [D-109].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Style2D, Style3D, F-4.1, F-4.5]
+  why: With the shared fields named alike, a style lifts and flattens field for field. A renderer without a hatching, a translucent material or a hand-drawn stroke draws `pattern`, `glass` or `sketchy` in its plain form.
+```
+
+```mdl
+decision D-113: A colour is one string, `Color`: a theme name, alone or at a tone 0 to 3, or a literal CSS colour. A named theme colour has no sigil and shares one namespace with the hues: a name resolves among the theme's named colours first, then as a hue. Fills in [D-109].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Color, ThemeSlots, F-4.2, F-4.3]
+  why: The 13 colour names existing diagrams use stay valid; `grey` and the four `light-` names are named colours of the default theme.
+  rejected:
+    - A `$name` sigil on a named theme colour.
+```
+
+```mdl
+decision D-114: `default` names the look's own colour, so `default/<tone>` states a tone with no hue. Fills in [D-113].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Color]
+  why: The earlier style allowed a tone with no hue, which a name at a tone could not say without a name for the look's own colour.
+```
+
+```mdl
+decision D-115: A theme fills slots by name (`ThemeSlots`): named colours, each a hue at a tone, another name or a literal, and fonts, each a CSS `font-family`. Every theme fills `body` and `mono`; a text with no font is set in `body`, and a slot the theme does not define draws as its body face. A drawing's tone wins over the tone a theme's named colour states. Fills in [D-109].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [ThemeSlots, F-4.2, F-4.3]
+  why: A style then says what a colour or a face is for and the theme says what it looks like, so one drawing reads right in every theme; slots that every theme fills can be named whatever theme draws the drawing.
+```
+
+```mdl
+decision D-116: A port is a point of its node's frame, `x` and `y` as fractions of it: the point a draw.io `<constraint x y>` states. `side` is optional and says which way a link leaves; unset, it is the edge of the frame the port is nearest. A port stored on a side at an offset is read as the point where that put it (`sidePort`). Fills in [D-109].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Port]
+  why: A fraction of the frame keeps the port's place however the node is resized.
+```
+
+```mdl
+decision D-117: Every link is of kind `link`, and how it runs is its `path` (`line`, `ortho`, `curve`, `spline` or `smart`; unset is `smart`). `points` is a field of every link, which only a spline uses. Fills in [D-109].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Link, Element2D]
+  why: `path` is the word the DSL's arrow already uses for how it runs.
+  rejected:
+    - Keeping five link kinds, one for each path.
+```
+
+```mdl
+decision D-118: `Element2D` carries every field of the editor's node and link at its top; a built-in kind's own fields sit beside them and an extension kind's under `data`. Nothing is kept under `props.canvas`: `props` holds only what other writers keep there, and a layout still carries `props` of its own. A placed composite is stored with the object it places (`view:<scene>`, `instance:<composite>`) and its own `kind`. This also replaces the `props.canvas` half of [D-38]. Fills in [D-110].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-34
+  affects: [BaseElement, Element2D, F-4.4]
+  why: A layout the editor wrote then reads back as the nodes and links it was written from, and a kind that draws a composite reads back as that kind.
+```
+
+```mdl
+decision D-119: The stored types whose records changed (`Layout2D`, `Layout3D`, `Model2D`, `Model3D`, `StyleCatalog`) are at version 0.2.0, each with a migration from 0.1.0 in `Legacy.Migrations`; `Scene2D` and `Scene3D` stay at 0.1.0. The record readers the migrations use return a record already in the current words unchanged. Fills in [D-110].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout, Model, StyleCatalog, Scene, F-5.1, F-5.2, F-5.4]
+  why: A scene stores a name, a theme, a layout and a camera, none of which changed. Readers that leave a current record alone can run over a record whatever version wrote it, so data from outside ECHO is read by the same code.
+```
+
+```mdl
+decision D-120: The migration validates a record field by field: where the current schema refuses the upgraded record, each declared field whose value is refused is dropped and the rest kept, and only a record that is still not one of its kind is left out. Fills in [D-119].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.3]
+  why: One bad field, such as a colour that is no colour, must not hide a whole element, and one bad record must not fail the object that holds it.
+```
+
+```mdl
+decision D-121: The registry of the stored format's schemas has a Theme group (`ThemeSlots`, `Font`) and a Vocabulary group (`Color`, the geometry and the style values). Fills in [D-109].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1]
+  why: Colours, geometry and style values are named by the schemas of every other group, so the JSON Schema document and the docs page describe each once.
+```

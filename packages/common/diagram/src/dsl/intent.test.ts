@@ -55,17 +55,31 @@ const SOURCES: Record<string, string> = {
   `,
   'track sizes, placement and frames': `
     diagram kind=grid size=800x600 alignContent=center justifyContent=end autoRows=120
-    group cards "Cards" autoRows=88 gap=12 alignContent=center border=true stroke=dashed { node a }
+    group cards "Cards" autoRows=88 gap=12 alignContent=center stroke=dashed { node a }
     group wide autoCols=384 fill=tint color=red { node b }
   `,
   'packing and node borders': `
     diagram kind=grid size=800x600
     group field layout=pack packSeed=29 packMin=36 packMax=185 gap=10 {
-      node s0 kind=graph border=true seed=29 tones="violet | green"
-      node s1 kind=graph border=false
+      node s0 kind=graph stroke=solid seed=29 tones="violet | green"
+      node s1 kind=graph stroke=none
     }
     group frame cols=2 { node left "L" }
     edge s0#e3 -- frame#w2 path=line
+  `,
+  'frames and borders written with the older flag': `
+    diagram kind=grid size=800x600
+    group cards "Cards" border=true stroke=dashed { node a border=false }
+    group field border=true {
+      node s0 kind=graph border=true
+      node s1 kind=graph border=false
+    }
+  `,
+  'colours a theme names, at a tone, and written out': `
+    diagram kind=grid size=800x600
+    group wide fill=tint color=teal { node a "A" color=blue/2 }
+    node b "B" color="#1e90ff" fill=glass
+    edge a -> b color=light-blue/3
   `,
   'a node that states its own size': `
     diagram kind=grid size=800x600 cols=2
@@ -153,14 +167,14 @@ describe('printIntent', () => {
       object slide @ 0,0 {
         grid page 0,0 800x600 cols=2 gap=16 {
           grid left rows="${HEADING.height} 1fr" gap=${HEADING.gap} {
-            rect title-left "Left" fill=none border=false align=center valign=middle fontSize=${HEADING.fontSize}
+            rect title-left "Left" fill=none stroke=none align=center valign=middle fontSize=${HEADING.fontSize}
             grid stack gap=8 {
               custom a "A" kind=card icon=x
-              rect gap-1 fill=none border=false
+              rect gap-1 fill=none stroke=none
             }
           }
-          grid right rows="${HEADING.height} 1fr" gap=${HEADING.gap} padding=24 border=true {
-            rect title-right "Right" fill=none border=false align=center valign=middle fontSize=${HEADING.fontSize}
+          grid right rows="${HEADING.height} 1fr" gap=${HEADING.gap} padding=24 stroke=solid {
+            rect title-right "Right" fill=none stroke=none align=center valign=middle fontSize=${HEADING.fontSize}
             grid list { rect b "B" }
           }
         }
@@ -179,7 +193,7 @@ describe('printIntent', () => {
         '}',
         '',
         // The heading's grid is also padded and framed, which is two groups: the frame, round the labelled one.
-        'group right padding=24 border=true {',
+        'group right padding=24 stroke=solid {',
         `  group ${innerId('right')} "Right" {`,
         '    node b "B"',
         '  }',
@@ -254,7 +268,9 @@ describe('printIntent', () => {
     });
 
     test('a frame on the outermost grid', ({ expect }) => {
-      expect(refused([{ ...root, border: true }, box('a')]).reasons).toEqual(['A frame drawn round a group differs.']);
+      expect(refused([{ ...root, stroke: 'solid' }, box('a')]).reasons).toEqual([
+        'A frame drawn round a group differs.',
+      ]);
     });
   });
 });

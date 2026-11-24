@@ -14,10 +14,10 @@ describe('ComputeGraphController', () => {
   test('a switch turned on lights the beacon it feeds', async ({ expect }) => {
     const { controller, graph } = createComputeGraphController(createBasicCircuit(), createStoryRuntime());
     await controller.open();
-    const computeIdOf = (type: string): string => {
-      const node = graph.nodes.find((node) => node.type === type)?.data?.node;
+    const computeIdOf = (kind: string): string => {
+      const node = graph.nodes.find((node) => node.kind === kind)?.data?.node;
       if (!node) {
-        throw new Error(`no ${type} node`);
+        throw new Error(`no ${kind} node`);
       }
       return node;
     };

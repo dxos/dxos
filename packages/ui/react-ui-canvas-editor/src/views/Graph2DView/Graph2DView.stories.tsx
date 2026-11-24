@@ -37,7 +37,7 @@ const DefaultStory = ({ arrange }: StoryProps) => {
     () => ({
       lattice: { width: 192, height: 96, gutterX: 64, gutterY: 64 },
       arrange,
-      link: { ends: { end: 'arrow' } },
+      link: { ends: { head: 'arrow' } },
     }),
     [arrange],
   );

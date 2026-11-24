@@ -74,7 +74,7 @@ export const AppFrameData = Schema.Struct(appFrameFields);
 
 export const AppFrameNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('app-frame'),
+  kind: Schema.Literal('app-frame'),
   data: Schema.optional(AppFrameData),
 });
 
@@ -208,7 +208,7 @@ export const Assistant = () => (
 
 export const AppFrameNodeView = ({ node }: NodeViewProps) => {
   const data = kindData(AppFrameData, node);
-  if (node.type !== 'app-frame' || !data) {
+  if (node.kind !== 'app-frame' || !data) {
     return null;
   }
   const { highlight, colors } = data;
@@ -305,7 +305,7 @@ export const appFrameSpec: ElementKindSpec = {
   key: 'W',
   schema: AppFrameNode,
   component: AppFrameNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'app-frame', id, z, center, size, data: { highlight: true } }),
+  create: ({ id, z, center, size }) => ({ kind: 'app-frame', id, z, center, size, data: { highlight: true } }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 660 x 650 window, give or take.
   defaultSize: { width: 14, height: 13.5 },
   resizable: true,

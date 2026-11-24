@@ -11,9 +11,9 @@ import { type StyleClass } from '@dxos/scene';
 import { StyleClassList } from './StyleClassList.tsx';
 
 const CLASSES: StyleClass[] = [
-  { id: 'warn', name: 'Warning', style: { hue: 'red' } },
-  { id: 'ok', name: 'Done', style: { hue: 'green', tone: 3 } },
-  { id: 'flow', name: 'Flow', style: { hue: 'blue', lineStyle: 'dashed', tone: 0 } },
+  { id: 'warn', name: 'Warning', style: { color: 'red' } },
+  { id: 'ok', name: 'Done', style: { color: 'green/3' } },
+  { id: 'flow', name: 'Flow', style: { color: 'blue/0', stroke: 'dashed' } },
 ];
 
 const DefaultStory = () => {

@@ -13,7 +13,7 @@ import { compileTemplate, isCompiled, templateComposite } from './template.ts';
 
 /** A card as a tool would ship it: a frame, a glyph pinned to the corner, a body that grows, a footer on the floor. */
 const CARD = `composite tile size=288x192 name="Card" {
-  element frame rect @ 0,0 size=288x192 constrain=stretch rounded=true
+  element frame rect @ 0,0 size=288x192 constrain=stretch corners=all
   element icon icon @ -114,-66 size=36x36 constrain=min
   element title note "Card" @ -24,-66 size=204x24 constrain=stretch,min
   element body note "Body" @ 0,6 size=264x84 constrain=stretch

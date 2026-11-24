@@ -13,23 +13,24 @@ import * as Schema from 'effect/Schema';
 
 import { DEFAULT_LAYER, ROOT_VIEW_ID, between, initialKeys } from '@dxos/react-ui-canvas/headless';
 import {
+  type Align,
   type Bounds,
   type BuiltinNode,
   type CloudNode,
+  DEFAULT_COLOR,
   type ElementEndpoint,
   type EllipseNode,
   Endpoint,
-  type HorizontalAlign,
   type InstanceNode,
   type Layer,
   type LayoutIntent,
   type LineStyle,
   type Link,
+  LINK_KIND,
   type LinkEnds,
   MAJOR_GRID,
   type Marker,
   type Node,
-  type NodeStyle,
   type NodeTone,
   type NoteNode,
   type Point,
@@ -38,9 +39,13 @@ import {
   type RectNode,
   type Scene,
   type Side,
+  type Style2D,
   STYLE_HUES,
   type StyleHue,
   endpointNode,
+  formatColor,
+  isInstanceNode,
+  sidePort,
 } from '@dxos/scene';
 
 //
@@ -279,12 +284,12 @@ export const tldrawToLayout = (
         };
         add(
           geo === 'ellipse' || geo === 'oval'
-            ? ({ ...base, type: 'ellipse' } satisfies EllipseNode)
+            ? ({ ...base, kind: 'ellipse' } satisfies EllipseNode)
             : geo === 'cloud'
-              ? ({ ...base, type: 'cloud' } satisfies CloudNode)
+              ? ({ ...base, kind: 'cloud' } satisfies CloudNode)
               : sides !== undefined
-                ? ({ ...base, type: 'polygon', params: { sides } } satisfies PolygonNode)
-                : ({ ...base, type: 'rect' } satisfies RectNode),
+                ? ({ ...base, kind: 'polygon', params: { sides } } satisfies PolygonNode)
+                : ({ ...base, kind: 'rect' } satisfies RectNode),
         );
         break;
       }
@@ -293,9 +298,9 @@ export const tldrawToLayout = (
         const scale = num(shape.props, 'scale', 1);
         const size = { width: NOTE_SIZE * scale, height: (NOTE_SIZE + num(shape.props, 'growY', 0)) * scale };
         // A sticky is filled by default, so its fill style is not read.
-        const { tone: _tone, ...style } = shapeStyle(shape.props, LABEL_FONT_SIZES);
+        const style = shapeStyle(shape.props, LABEL_FONT_SIZES, 1, false);
         add({
-          type: 'rect',
+          kind: 'rect',
           id,
           z: '',
           center: centerOf(local, size),
@@ -313,17 +318,17 @@ export const tldrawToLayout = (
         const fontSize = (FONT_SIZES[str(shape.props, 'size', 'm')] ?? FONT_SIZES.m) * scale;
         const lines = Math.max(1, text.split('\n').length);
         const size = { width: num(shape.props, 'w', 0) * scale, height: Math.round(lines * fontSize * LINE_HEIGHT) };
-        const { tone: _tone, ...style } = shapeStyle(shape.props, FONT_SIZES, scale);
+        const style = shapeStyle(shape.props, FONT_SIZES, scale, false);
         const align = str(shape.props, 'textAlign', str(shape.props, 'align', 'start'));
         add({
-          type: 'note',
+          kind: 'note',
           id,
           z: '',
           center: centerOf(local, size),
           size,
           ...rotation,
-          text,
-          ...withStyle({ ...style, ...(align === 'start' ? {} : { alignHorizontal: horizontal(align) }) }),
+          label: text,
+          ...withStyle({ ...style, ...(align === 'start' ? {} : { align: horizontal(align) }) }),
         } satisfies NoteNode);
         break;
       }
@@ -332,7 +337,7 @@ export const tldrawToLayout = (
         const size = { width: num(shape.props, 'w', 0), height: num(shape.props, 'h', 0) };
         const name = str(shape.props, 'name', '');
         add({
-          type: 'rect',
+          kind: 'rect',
           id,
           z: '',
           center: centerOf(local, size),
@@ -340,7 +345,7 @@ export const tldrawToLayout = (
           ...rotation,
           ...(name ? { label: name } : {}),
           // An outline with its name in the corner, as tldraw draws a frame, clear of the shapes inside.
-          style: { tone: 0, alignHorizontal: 'left', alignVertical: 'top' },
+          overrides: { color: formatColor(DEFAULT_COLOR, 0), align: 'left', valign: 'top' },
         } satisfies RectNode);
         frames.add(id);
         // A frame's children are placed in its space, as a group's are.
@@ -377,13 +382,14 @@ export const tldrawToLayout = (
           pending: true,
           build: (resolve) => [
             {
-              type: num(shape.props, 'bend', 0) === 0 ? 'line' : 'curve',
+              kind: LINK_KIND,
+              path: num(shape.props, 'bend', 0) === 0 ? 'line' : 'curve',
               id,
               z: '',
               source: start(resolve),
               target: end(resolve),
               ...withEnds(shape.props),
-              ...withText(shape.props),
+              ...withLabel(shape.props),
               ...withStyle(lineStyle(shape.props)),
             },
           ],
@@ -407,7 +413,8 @@ export const tldrawToLayout = (
           str(shape.props, 'spline', 'line') === 'cubic' && points.length > 2
             ? [
                 {
-                  type: 'spline',
+                  kind: LINK_KIND,
+                  path: 'spline',
                   id,
                   z: '',
                   source: { point: points[0] },
@@ -417,7 +424,8 @@ export const tldrawToLayout = (
                 },
               ]
             : points.slice(1).map((_, index) => ({
-                type: 'line' as const,
+                kind: LINK_KIND,
+                path: 'line' as const,
                 id: index === 0 ? id : `${id}-${index}`,
                 z: '',
                 ...ends(index),
@@ -490,7 +498,7 @@ export const tldrawToLayout = (
     kind: 'composite' as const,
     anonymous: true,
   }));
-  const objects = composites.map(({ id }): Scene.Object2D => ({ id: objectId(id), type: 'rect', parts: id }));
+  const objects = composites.map(({ id }): Scene.Object2D => ({ id: objectId(id), kind: 'rect', parts: id }));
   const ordered = Object.values(layout.elements);
   return {
     layout,
@@ -498,8 +506,8 @@ export const tldrawToLayout = (
     objects,
     // A link is created after its ends, since a create bound to a missing element is refused.
     intents: [
-      ...ordered.filter((element) => element.type !== 'link'),
-      ...ordered.filter((element) => element.type === 'link'),
+      ...ordered.filter((element) => element.kind !== LINK_KIND),
+      ...ordered.filter((element) => element.kind === LINK_KIND),
     ].map((element) => ({ kind: 'create', element })),
     skipped,
     approximated,
@@ -570,8 +578,8 @@ const sideToward = (frame: Bounds, point: Point): { side: Side; offset: number }
   const dy = (point.y - (frame.y + halfHeight)) / halfHeight;
   const clamp = (value: number) => Math.min(1, Math.max(0, value));
   return Math.abs(dx) >= Math.abs(dy)
-    ? { side: dx >= 0 ? 'e' : 'w', offset: clamp((point.y - frame.y) / (frame.height || 1)) }
-    : { side: dy >= 0 ? 's' : 'n', offset: clamp((point.x - frame.x) / (frame.width || 1)) };
+    ? { side: dx >= 0 ? 'right' : 'left', offset: clamp((point.y - frame.y) / (frame.height || 1)) }
+    : { side: dy >= 0 ? 'bottom' : 'top', offset: clamp((point.x - frame.x) / (frame.width || 1)) };
 };
 
 /** Where a composite point lands in `frame` when the placing element fits the composite's `content` into it, centred. */
@@ -637,21 +645,24 @@ const composeGroup = (
     ...link,
     source: shiftEnd(link.source),
     target: shiftEnd(link.target),
-    ...(link.type === 'spline' ? { points: link.points.map(shiftPoint) } : {}),
+    ...(link.points ? { points: link.points.map(shiftPoint) } : {}),
     layer: layerOf(link),
   }));
   const used = new Set([...childNodes, ...childLinks].map((element) => element.layer));
   const place = fitInto(bounds, unionBounds(childNodes.map(nodeBounds)));
   const ports: Port[] = childNodes
     .filter((node) => node.exposed)
-    .map((node) => ({ id: node.id, ...sideToward(bounds, place(node.center)) }));
+    .map((node) => {
+      const { side, offset } = sideToward(bounds, place(node.center));
+      return sidePort(node.id, side, offset);
+    });
   const reattach = (end: Endpoint): Endpoint => {
     const node = endpointNode(end);
     return node !== undefined && inside.has(node) ? { node: instanceId, port: node } : end;
   };
   const gone = new Set([...inside, ...moved.map((link) => link.id)]);
   const instance: InstanceNode = {
-    type: 'instance',
+    kind: 'instance',
     id: instanceId,
     z: nodes.map((node) => node.z).sort()[0],
     center: centre,
@@ -686,30 +697,6 @@ const composeGroup = (
 // Elements.
 //
 
-type Fields = Record<string, unknown>;
-
-/** The node fields an element keeps in its own slots; the rest are the canvas's, under `props.canvas`. */
-const NODE_SLOTS = [
-  'type',
-  'id',
-  'z',
-  'center',
-  'size',
-  'rotation',
-  'label',
-  'layer',
-  'locked',
-  'style',
-  'class',
-  'frame',
-];
-
-/** The link fields an element keeps in its own slots. */
-const LINK_SLOTS = ['id', 'z', 'source', 'target', 'text', 'layer', 'locked', 'style', 'class'];
-
-const canvasFields = (record: object, slots: readonly string[]): Fields =>
-  Object.fromEntries(Object.entries(record).filter(([key]) => !slots.includes(key)));
-
 const elementEndpoint = (end: Endpoint): ElementEndpoint =>
   'node' in end
     ? end.port === undefined
@@ -717,42 +704,16 @@ const elementEndpoint = (end: Endpoint): ElementEndpoint =>
       : { node: end.node, port: end.port }
     : { point: end.point };
 
-/** The element the canvas writes for a node: a group's placing element names its composite's object. */
-const nodeElement = (node: Node): Scene.Element2D => {
-  const canvas = canvasFields(node, NODE_SLOTS);
-  const composite = node.type === 'instance' ? canvas.composite : undefined;
-  if (typeof composite === 'string') {
-    canvas.type = 'instance';
-  }
-  const label = Reflect.get(node, 'label');
-  return {
-    id: node.id,
-    ...(typeof composite === 'string' ? { object: objectId(composite) } : { type: node.type }),
-    z: node.z,
-    center: node.center,
-    size: node.size,
-    ...(node.rotation !== undefined ? { rotation: node.rotation } : {}),
-    ...(typeof label === 'string' ? { label } : {}),
-    ...(node.layer !== undefined ? { layer: node.layer } : {}),
-    ...(node.locked !== undefined ? { locked: node.locked } : {}),
-    ...(node.class !== undefined ? { style: node.class } : {}),
-    ...(node.style ? { overrides: node.style } : {}),
-    props: { canvas },
-  };
-};
+/** The element the canvas writes for a node: the node itself, a group's placing element naming its composite's object. */
+const nodeElement = (node: Node): Scene.ElementRecord2D => ({
+  ...node,
+  ...(isInstanceNode(node) ? { object: objectId(node.composite) } : {}),
+});
 
-const linkElement = (link: Link): Scene.Element2D => ({
-  id: link.id,
-  type: 'link',
-  z: link.z,
-  source: elementEndpoint(link.source),
-  target: elementEndpoint(link.target),
-  ...(link.text !== undefined ? { label: link.text } : {}),
-  ...(link.layer !== undefined ? { layer: link.layer } : {}),
-  ...(link.locked !== undefined ? { locked: link.locked } : {}),
-  ...(link.class !== undefined ? { style: link.class } : {}),
-  ...(link.style ? { overrides: link.style } : {}),
-  props: { canvas: canvasFields(link, LINK_SLOTS) },
+const linkElement = ({ source, target, ...link }: Link): Scene.ElementRecord2D => ({
+  ...link,
+  source: elementEndpoint(source),
+  target: elementEndpoint(target),
 });
 
 const layoutRecord = (id: string, draft: Draft): Scene.LayoutRecord2D => ({
@@ -851,58 +812,59 @@ const toHsl = (value: string): { hue: number; saturation: number } | undefined =
 /** tldraw fill → the canvas tone: none is an outline, solid the strongest fill, semi the lightest. */
 const TONES: Readonly<Record<string, NodeTone>> = { none: 0, solid: 1, fill: 1, pattern: 2, semi: 3 };
 
-const shapeStyle = (props: Props, fontSizes: Record<string, number>, scale = 1): NodeStyle => {
+/** A hue at a tone as one colour; a grey is the look's own colour, which is named only to state a tone. */
+const colorOf = (hue: StyleHue, tone?: NodeTone): Pick<LineStyle, 'color'> =>
+  hue === 'neutral'
+    ? tone === undefined
+      ? {}
+      : { color: formatColor(DEFAULT_COLOR, tone) }
+    : { color: formatColor(hue, tone) };
+
+/** A shape's look; `filled` false leaves the tone to the kind, whatever the shape's fill says. */
+const shapeStyle = (props: Props, fontSizes: Record<string, number>, scale = 1, filled = true): Style2D => {
   const hue = nearestHue(str(props, 'color', 'black'));
-  const tone: NodeTone | undefined = TONES[str(props, 'fill', 'none')];
+  const tone: NodeTone | undefined = filled ? TONES[str(props, 'fill', 'none')] : undefined;
   const dash = str(props, 'dash', 'draw');
   const size = str(props, 'size', 'm');
   const fontSize = (fontSizes[size] ?? fontSizes.m) * scale;
   const vertical = str(props, 'verticalAlign', 'middle');
   return {
-    ...(hue === 'neutral' ? {} : { hue }),
-    ...(tone === undefined ? {} : { tone }),
-    ...(dash === 'dashed' || dash === 'dotted' ? { lineStyle: dash } : {}),
+    ...colorOf(hue, tone),
+    ...(dash === 'dashed' || dash === 'dotted' ? { stroke: dash } : {}),
     ...(size === 'm' && scale === 1 ? {} : { fontSize }),
-    ...(str(props, 'font', 'draw') === 'mono' ? { fontFamily: 'monospace' as const } : {}),
-    ...(str(props, 'align', 'middle') === 'middle'
-      ? {}
-      : { alignHorizontal: horizontal(str(props, 'align', 'middle')) }),
-    ...(vertical === 'middle' ? {} : { alignVertical: vertical === 'start' ? 'top' : 'bottom' }),
+    ...(str(props, 'font', 'draw') === 'mono' ? { font: 'mono' } : {}),
+    ...(str(props, 'align', 'middle') === 'middle' ? {} : { align: horizontal(str(props, 'align', 'middle')) }),
+    ...(vertical === 'middle' ? {} : { valign: vertical === 'start' ? 'top' : 'bottom' }),
   };
 };
 
 const lineStyle = (props: Props): LineStyle => {
-  const hue = nearestHue(str(props, 'color', 'black'));
   const dash = str(props, 'dash', 'draw');
   return {
-    ...(hue === 'neutral' ? {} : { hue }),
-    ...(dash === 'dashed' || dash === 'dotted' ? { lineStyle: dash } : {}),
+    ...colorOf(nearestHue(str(props, 'color', 'black'))),
+    ...(dash === 'dashed' || dash === 'dotted' ? { stroke: dash } : {}),
   };
 };
 
-const horizontal = (align: string): HorizontalAlign =>
+const horizontal = (align: string): Align =>
   align.startsWith('start') ? 'left' : align.startsWith('end') ? 'right' : 'center';
 
-const withStyle = <Style extends LineStyle>(style: Style) => (Object.keys(style).length > 0 ? { style } : {});
+const withStyle = <Style extends LineStyle>(overrides: Style) =>
+  Object.keys(overrides).length > 0 ? { overrides } : {};
 
 const withLabel = (props: Props) => {
   const text = str(props, 'text', '');
   return text ? { label: text } : {};
 };
 
-const withText = (props: Props) => {
-  const text = str(props, 'text', '');
-  return text ? { text } : {};
-};
-
 /** tldraw arrowheads the canvas draws; any other head reads as an arrow. */
 const marker = (head: string): Marker | undefined =>
   head === 'none' ? undefined : head === 'triangle' ? 'triangle' : head === 'dot' ? 'circle' : 'arrow';
 
-const withEnds = (props: Props): { ends?: LinkEnds } => {
-  const start = marker(str(props, 'arrowheadStart', 'none'));
-  const end = marker(str(props, 'arrowheadEnd', 'arrow'));
-  return start || end ? { ends: { ...(start ? { start } : {}), ...(end ? { end } : {}) } } : {};
+const withEnds = (props: Props): LinkEnds => {
+  const tail = marker(str(props, 'arrowheadStart', 'none'));
+  const head = marker(str(props, 'arrowheadEnd', 'arrow'));
+  return { ...(tail ? { tail } : {}), ...(head ? { head } : {}) };
 };
 
 //

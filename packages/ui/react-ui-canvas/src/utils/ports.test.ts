@@ -5,12 +5,13 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { type Bounds, NodeBase, type Port } from '@dxos/scene';
+import { type Bounds, NodeBase, type Port, portOffset, portSide, sidePort } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../components/index.ts';
 import {
   MAX_PORTS_PER_SIDE,
   defaultPorts,
+  frameExit,
   nodePorts,
   pairPorts,
   portAccepts,
@@ -43,74 +44,81 @@ describe('ports', () => {
       'w3',
     ]);
     expect(sidePorts(1).map((port) => port.id)).toEqual(['n1', 'e1', 's1', 'w1']);
-    expect(sidePorts(2).map((port) => port.offset)).toEqual([1 / 3, 2 / 3, 1 / 3, 2 / 3, 1 / 3, 2 / 3, 1 / 3, 2 / 3]);
+    expect(sidePorts(2).map(portOffset)).toEqual([1 / 3, 2 / 3, 1 / 3, 2 / 3, 1 / 3, 2 / 3, 1 / 3, 2 / 3]);
   });
 
   test('portPoint places the port exactly at its offset along the side', ({ expect }) => {
-    expect(portPoint(left, { id: 'e2', side: 'e', offset: 0.5 })).toEqual({ x: 256, y: 128 });
-    expect(portPoint(left, { id: 'n1', side: 'n', offset: 0.25 })).toEqual({ x: 64, y: 0 });
+    expect(portPoint(left, sidePort('e2', 'right', 0.5))).toEqual({ x: 256, y: 128 });
+    expect(portPoint(left, sidePort('n1', 'top', 0.25))).toEqual({ x: 64, y: 0 });
     // An off-grid offset or frame stays off the grid rather than jumping to a line.
-    expect(portPoint({ x: 40, y: 0, width: 100, height: 100 }, { id: 'n1', side: 'n', offset: 0.25 })).toEqual({
+    expect(portPoint({ x: 40, y: 0, width: 100, height: 100 }, sidePort('n1', 'top', 0.25))).toEqual({
       x: 65,
       y: 0,
     });
-    expect(portPoint({ x: 0, y: 0, width: 100, height: 100 }, { id: 'e3', side: 'e', offset: 0.9 })).toEqual({
+    expect(portPoint({ x: 0, y: 0, width: 100, height: 100 }, sidePort('e3', 'right', 0.9))).toEqual({
       x: 100,
       y: 90,
     });
     // A side shorter than a grid cell still spreads its ports.
-    expect(portPoint({ x: 0, y: 0, width: 64, height: 64 }, { id: 'n1', side: 'n', offset: 0.25 })).toEqual({
+    expect(portPoint({ x: 0, y: 0, width: 64, height: 64 }, sidePort('n1', 'top', 0.25))).toEqual({
       x: 16,
       y: 0,
     });
-    expect(portPoint({ x: 0, y: 0, width: 64, height: 64 }, { id: 'w', side: 'w', offset: 0.3 })).toEqual({
+    expect(portPoint({ x: 0, y: 0, width: 64, height: 64 }, sidePort('w', 'left', 0.3))).toEqual({
       x: 0,
       y: 19.2,
     });
   });
 
-  test('nodePorts keeps every distinct point and honours the type count', ({ expect }) => {
+  test('a port inside the frame sits at its point and leaves by the side it is nearest', ({ expect }) => {
+    const inner: Port = { id: 'p', x: 0.25, y: 0.75 };
+    expect(portPoint(left, inner)).toEqual({ x: 64, y: 192 });
+    expect(portSide(inner)).toBe('bottom');
+    // Its way out is measured from the frame's edge; a port on the edge leaves from where it is.
+    expect(frameExit(portPoint(left, inner), portSide(inner), left)).toEqual({ x: 64, y: 256 });
+    const edge = sidePort('e2', 'right', 0.5);
+    expect(frameExit(portPoint(left, edge), portSide(edge), left)).toEqual(portPoint(left, edge));
+    // A stated side wins over the nearest one.
+    expect(portSide({ ...inner, side: 'left' })).toBe('left');
+    expect(frameExit(portPoint(left, inner), 'left', left)).toEqual({ x: 0, y: 192 });
+  });
+
+  test('nodePorts keeps every distinct point and honours the kind count', ({ expect }) => {
     const wide = createNode({
-      type: 'rect',
+      kind: 'rect',
       id: 'r',
       z: 'a',
       center: { x: 128, y: 64 },
       size: { width: 256, height: 128 },
     });
     const ports = nodePorts(defaultNodeRegistry, wide);
-    // Three to a side, wherever the side's length puts them (north at 64, 128, 192; east at 32, 64, 96).
-    expect(ports.filter((port) => port.side === 'n').map((port) => port.id)).toEqual(['n2', 'n1', 'n3']);
-    expect(ports.filter((port) => port.side === 'e').map((port) => port.id)).toEqual(['e2', 'e1', 'e3']);
+    // Three to a side, wherever the side's length puts them (the top at 64, 128, 192; the right at 32, 64, 96).
+    expect(ports.filter((port) => port.side === 'top').map((port) => port.id)).toEqual(['n2', 'n1', 'n3']);
+    expect(ports.filter((port) => port.side === 'right').map((port) => port.id)).toEqual(['e2', 'e1', 'e3']);
     // One cell wide keeps all three a side too: the offsets no longer collapse onto one grid line.
     const narrow = createNode({
-      type: 'rect',
+      kind: 'rect',
       id: 'r',
       z: 'a',
       center: { x: 32, y: 32 },
       size: { width: 64, height: 64 },
     });
-    expect(nodePorts(defaultNodeRegistry, narrow).map((port) => port.side)).toEqual([
-      ...'nnn',
-      ...'eee',
-      ...'sss',
-      ...'www',
-    ]);
-    const ellipse = createNode({ type: 'ellipse', id: 'e', z: 'a', center: { x: 128, y: 128 } });
+    expect(nodePorts(defaultNodeRegistry, narrow).map((port) => port.side)).toEqual(
+      (['top', 'right', 'bottom', 'left'] as const).flatMap((side) => [side, side, side]),
+    );
+    const ellipse = createNode({ kind: 'ellipse', id: 'e', z: 'a', center: { x: 128, y: 128 } });
     expect(nodePorts(defaultNodeRegistry, ellipse).map((port) => port.id)).toEqual(['n1', 'e1', 's1', 'w1']);
     // Two ports at one point collapse to the first, so a definition cannot stack them.
     const stacked = {
       ...narrow,
-      ports: [
-        { id: 'a', side: 'n' as const, offset: 0.5 },
-        { id: 'b', side: 'n' as const, offset: 0.5 },
-      ],
+      ports: [sidePort('a', 'top', 0.5), sidePort('b', 'top', 0.5)],
     };
     expect(nodePorts(defaultNodeRegistry, stacked).map((port) => port.id)).toEqual(['a']);
   });
 
-  test('a node sets its own port count, overriding its type', ({ expect }) => {
+  test('a node sets its own port count, overriding its kind', ({ expect }) => {
     const rect = createNode({
-      type: 'rect',
+      kind: 'rect',
       id: 'r',
       z: 'a',
       center: { x: 128, y: 64 },
@@ -120,8 +128,8 @@ describe('ports', () => {
     const one = { ...rect, portsPerSide: 1 };
     expect(nodePorts(defaultNodeRegistry, one).map((port) => port.id)).toEqual(['n1', 'e1', 's1', 'w1']);
     expect(portsPerSideOf(defaultNodeRegistry, one)).toBe(1);
-    // The ellipse type has one a side; a node of it can have more.
-    const ellipse = createNode({ type: 'ellipse', id: 'e', z: 'a', center: { x: 128, y: 128 } });
+    // The ellipse kind has one a side; a node of it can have more.
+    const ellipse = createNode({ kind: 'ellipse', id: 'e', z: 'a', center: { x: 128, y: 128 } });
     expect(portsPerSideOf(defaultNodeRegistry, ellipse)).toBe(1);
     expect(nodePorts(defaultNodeRegistry, { ...ellipse, portsPerSide: 2 })).toHaveLength(8);
     // A stored count is not range-checked, so ports clamp it rather than trust it.
@@ -131,9 +139,9 @@ describe('ports', () => {
 
   test('a stored node outside the editor ranges still validates', ({ expect }) => {
     const node = {
-      ...createNode({ type: 'rect', id: 'r', z: 'a', center: { x: 0, y: 0 } }),
+      ...createNode({ kind: 'rect', id: 'r', z: 'a', center: { x: 0, y: 0 } }),
       portsPerSide: 40,
-      style: { fontSize: 200 },
+      overrides: { fontSize: 200 },
     };
     expect(Schema.is(NodeBase)(node)).toBe(true);
   });
@@ -157,8 +165,8 @@ describe('ports', () => {
   });
 
   test('curvePath starts and ends at the ports and its midpoint lies between them', ({ expect }) => {
-    const from = { point: { x: 100, y: 50 }, side: 'e' as const };
-    const to = { point: { x: 300, y: 50 }, side: 'w' as const };
+    const from = { point: { x: 100, y: 50 }, side: 'right' as const };
+    const to = { point: { x: 300, y: 50 }, side: 'left' as const };
     expect(curvePath(from, to)).toMatch(/^M 100 50 C .* 300 50$/);
     const mid = curvePoint(from, to, 0.5);
     expect(mid.x).toBeCloseTo(200);
@@ -168,9 +176,9 @@ describe('ports', () => {
 
 describe('port direction', () => {
   const box: Bounds = { x: 0, y: 0, width: 256, height: 256 };
-  const outOnly: Port = { id: 'e2', side: 'e', offset: 0.5, accepts: 'out' };
-  const inOnly: Port = { id: 'w2', side: 'w', offset: 0.5, accepts: 'in' };
-  const either: Port = { id: 'n2', side: 'n', offset: 0.5 };
+  const outOnly: Port = sidePort('e2', 'right', 0.5, 'out');
+  const inOnly: Port = sidePort('w2', 'left', 0.5, 'in');
+  const either: Port = sidePort('n2', 'top', 0.5);
 
   test('portAccepts reads the declared direction and defaults to either', ({ expect }) => {
     expect(portAccepts(outOnly, 'out')).toBe(true);

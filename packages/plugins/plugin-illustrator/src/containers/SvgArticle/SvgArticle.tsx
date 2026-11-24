@@ -4,13 +4,13 @@
 
 import React, { useMemo } from 'react';
 
-import { SvgHandler } from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { SceneSvg } from '#components';
+import { SvgContentHandler } from '#model';
 import { Drawing, type IllustratorCapabilities } from '#types';
 
 import { SvgCursors } from './SvgCursors.tsx';
@@ -35,7 +35,7 @@ const SvgSurface = ({
 }: SvgArticleProps & { cursors?: boolean }) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const [snapshot] = useObject(canvas);
-  const objects = useMemo(() => SvgHandler.read(snapshot?.content ?? {}).scene.objects, [snapshot]);
+  const objects = useMemo(() => SvgContentHandler.read(snapshot?.content ?? {}).scene.objects, [snapshot]);
 
   return (
     <Panel.Root>

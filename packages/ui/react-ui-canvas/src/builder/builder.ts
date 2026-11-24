@@ -14,14 +14,15 @@ import * as Schema from 'effect/Schema';
 
 import {
   type BuiltinNode,
-  type BuiltinNodeType,
+  type BuiltinNodeKind,
   type Endpoint,
   type Link,
-  type LinkType,
+  LINK_KIND,
+  type LinkPath,
   type Node,
   type NodeBase,
-  type NodeStyle,
   type Point,
+  type Style2D,
   type ViewId,
   type ViewNode,
 } from '@dxos/scene';
@@ -45,28 +46,24 @@ const endpoint = (ref: string): Endpoint => {
   return port ? { node, port } : { node };
 };
 
-type NodeOf<T extends BuiltinNodeType> = Extract<BuiltinNode, { type: T }>;
-type LinkOf<T extends LinkType> = Extract<Link, { type: T }>;
+type NodeOf<T extends BuiltinNodeKind> = Extract<BuiltinNode, { kind: T }>;
 
 /** What `properties()` may set on a node: everything but its identity, its paint order and the frame its box fixes. */
-export type NodeProperties<N> = Partial<Omit<N, 'id' | 'type' | 'z' | 'center' | 'size'>>;
+export type NodeProperties<N> = Partial<Omit<N, 'id' | 'kind' | 'z' | 'center' | 'size'>>;
 
 /** What `properties()` may set on a link: everything but its identity, its paint order and its ends. */
-export type LinkProperties<L> = Partial<Omit<L, 'id' | 'type' | 'z' | 'source' | 'target'>>;
+export type LinkProperties<L> = Partial<Omit<L, 'id' | 'kind' | 'z' | 'source' | 'target'>>;
 
 type NodeBody = Omit<NodeBase, 'z'> & Record<string, unknown>;
-type LinkBody = DistributiveOmit<Link, 'z' | 'id'>;
+type LinkBody = Omit<Link, 'z' | 'id'>;
 
-/** `Omit` over each member of a union, not over their intersection. */
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
-
-/** Later values win; `style` merges key by key, so one call can add a hue without dropping another's fill. */
-const mergeStyle = (base: { style?: NodeStyle }, values: { style?: NodeStyle }) =>
-  base.style || values.style ? { style: { ...base.style, ...values.style } } : {};
+/** Later values win; `overrides` merges key by key, so one call can add a colour without dropping another's fill. */
+const mergeOverrides = (base: { overrides?: Style2D }, values: { overrides?: Style2D }) =>
+  base.overrides || values.overrides ? { overrides: { ...base.overrides, ...values.overrides } } : {};
 
 /**
  * A node of the scene, as written: refine it with `properties()`, which returns a new value. `N` types
- * the properties; `build()` checks the result against the type's schema.
+ * the properties; `build()` checks the result against the kind's schema.
  */
 export class NodeElement<N extends NodeBase> {
   readonly kind = 'node';
@@ -74,7 +71,7 @@ export class NodeElement<N extends NodeBase> {
   constructor(readonly node: NodeBody) {}
 
   properties(values: NodeProperties<N>): NodeElement<N> {
-    return new NodeElement<N>({ ...this.node, ...values, ...mergeStyle(this.node, values) });
+    return new NodeElement<N>({ ...this.node, ...values, ...mergeOverrides(this.node, values) });
   }
 }
 
@@ -123,12 +120,12 @@ export class ViewElement {
     return new ViewElement(this.id, this.elements, box, this.viewName, this.portal);
   }
 
-  /** The view node's own properties (label, link, style). */
+  /** The view node's own properties (label, link, look). */
   properties(values: NodeProperties<ViewNode>): ViewElement {
     return new ViewElement(this.id, this.elements, this.frame, this.viewName, {
       ...this.portal,
       ...values,
-      ...mergeStyle(this.portal, values),
+      ...mergeOverrides(this.portal, values),
     });
   }
 
@@ -160,9 +157,9 @@ const buildView = (element: ViewElement, registry: NodeRegistry, views: RenderLi
     const z = keys[order];
     switch (child.kind) {
       case 'node': {
-        // A host's type starts from its own `create`, as a built-in starts from `createNode`, so a
-        // fixture sets only what it means and the type supplies the rest of its content.
-        const def = isBuiltinType(child.node.type) ? undefined : registry[child.node.type];
+        // A host's kind starts from its own `create`, as a built-in starts from `createNode`, so a
+        // fixture sets only what it means and the kind supplies the rest of its content.
+        const def = isBuiltinKind(child.node.kind) ? undefined : registry[child.node.kind];
         const fresh = def?.create({ id: child.node.id, z, center: child.node.center, size: child.node.size });
         const node = { layer: DEFAULT_LAYER.id, ...fresh, ...child.node, z };
         check(registry, node);
@@ -181,10 +178,10 @@ const buildView = (element: ViewElement, registry: NodeRegistry, views: RenderLi
           throw new Error(`Nested view ${child.id} needs a box: call at(box).`);
         }
         const node: ViewNode = {
-          ...createNode({ type: 'view', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
+          ...createNode({ kind: 'view', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
           layer: DEFAULT_LAYER.id,
           ...child.portal,
-          type: 'view',
+          kind: 'view',
           scene: child.id,
         };
         check(registry, node);
@@ -198,15 +195,15 @@ const buildView = (element: ViewElement, registry: NodeRegistry, views: RenderLi
   views[index] = { ...views[index], nodes: Object.fromEntries(nodes), links: Object.fromEntries(links) };
 };
 
-/** A node its type does not describe (a wrong value, or a property the type does not have) fails the build. */
+/** A node its kind does not describe (a wrong value, or a property the kind does not have) fails the build. */
 const check = (registry: NodeRegistry, node: Node): void => {
-  const def = registry[node.type];
+  const def = registry[node.kind];
   if (!def) {
     return;
   }
   const result = Schema.encodeExit(def.schema, { onExcessProperty: 'error' })(node);
   if (Exit.isFailure(result)) {
-    throw new Error(`Node ${node.id} is not a valid ${node.type}: ${result.cause}`);
+    throw new Error(`Node ${node.id} is not a valid ${node.kind}: ${result.cause}`);
   }
 };
 
@@ -232,20 +229,20 @@ const uniqueId = (taken: ReadonlyMap<string, unknown>, id: string): string => {
 
 const sizeOf = ({ width, height }: Box) => ({ width, height });
 
-/** A built-in node of `type` with the type's default content, refined by `properties()`. */
-function node<T extends BuiltinNodeType>(type: T, id: string, box: Box): NodeElement<NodeOf<T>>;
-/** A host node type: whatever the host's registry schema accepts. */
-function node(type: string, id: string, box: Box): NodeElement<NodeBase & Record<string, unknown>>;
-function node(type: string, id: string, box: Box): NodeElement<NodeBase> {
-  const base = { type, id, center: center(box), size: sizeOf(box) };
-  if (isBuiltinType(type)) {
-    const { z: _, ...fresh } = createNode({ ...base, type, z: '' });
+/** A built-in node of `kind` with the kind's default content, refined by `properties()`. */
+function node<T extends BuiltinNodeKind>(kind: T, id: string, box: Box): NodeElement<NodeOf<T>>;
+/** A host node kind: whatever the host's registry schema accepts. */
+function node(kind: string, id: string, box: Box): NodeElement<NodeBase & Record<string, unknown>>;
+function node(kind: string, id: string, box: Box): NodeElement<NodeBase> {
+  const base = { kind, id, center: center(box), size: sizeOf(box) };
+  if (isBuiltinKind(kind)) {
+    const { z: _, ...fresh } = createNode({ ...base, kind, z: '' });
     return new NodeElement<NodeBase>({ ...fresh });
   }
   return new NodeElement<NodeBase>(base);
 }
 
-const BUILTIN_TYPES: readonly string[] = [
+const BUILTIN_KINDS: readonly string[] = [
   'rect',
   'ellipse',
   'cloud',
@@ -253,22 +250,18 @@ const BUILTIN_TYPES: readonly string[] = [
   'polyline',
   'note',
   'view',
-] satisfies BuiltinNodeType[];
-const isBuiltinType = (type: string): type is BuiltinNodeType => BUILTIN_TYPES.includes(type);
+] satisfies BuiltinNodeKind[];
+const isBuiltinKind = (kind: string): kind is BuiltinNodeKind => BUILTIN_KINDS.includes(kind);
 
-type Ends = Pick<Link, 'source' | 'target'>;
-
-const LINKS: Record<LinkType, (ends: Ends) => LinkBody> = {
-  line: (ends) => ({ type: 'line', ...ends }),
-  ortho: (ends) => ({ type: 'ortho', ...ends }),
-  curve: (ends) => ({ type: 'curve', ...ends }),
-  spline: (ends) => ({ type: 'spline', ...ends, points: [] }),
-  smart: (ends) => ({ type: 'smart', ...ends }),
-};
-
-/** A link of `type` from one ref to another; a spline starts with no control points. */
-const link = <T extends LinkType>(type: T, from: string, to: string): LinkElement<LinkOf<T>> =>
-  new LinkElement<LinkOf<T>>(LINKS[type]({ source: endpoint(from), target: endpoint(to) }));
+/** A link running `path` from one ref to another; a spline starts with no control points. */
+const link = (path: LinkPath, from: string, to: string): LinkElement<Link> =>
+  new LinkElement<Link>({
+    kind: LINK_KIND,
+    path,
+    source: endpoint(from),
+    target: endpoint(to),
+    ...(path === 'spline' ? { points: [] } : {}),
+  });
 
 /** Factories for View fixtures; see the module comment. */
 export const ViewBuilder = {

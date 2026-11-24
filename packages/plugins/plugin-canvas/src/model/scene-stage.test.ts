@@ -60,7 +60,7 @@ describe('scene stage', () => {
     const [layout] = doc.layouts;
     expect(layout.dim === '2d' && layout.elements.a).toMatchObject({
       center: { x: 10, y: 20 },
-      overrides: { opacity: 0.5, hue: 'blue' },
+      overrides: { opacity: 0.5, color: 'blue' },
     });
     expect(original.layouts[0].elements.a.center).toEqual({ x: 0, y: 0 });
   });

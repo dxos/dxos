@@ -19,9 +19,7 @@ describe('diagram', () => {
     const scene = build([
       rect('scene:test/a', box(0, 0), 'A'),
       rect('scene:test/b', box(256, 0), 'B'),
-      ViewBuilder.link('line', 'scene:test/a', 'scene:test/b')
-        .id('scene:test/ab')
-        .properties({ ends: { end: 'arrow' } }),
+      ViewBuilder.link('line', 'scene:test/a', 'scene:test/b').id('scene:test/ab').properties({ head: 'arrow' }),
     ]);
     const { metrics, diagnostics } = Diagnostics.analyze(toDiagramObjects(scene, defaultNodeRegistry).objects);
     expect(metrics.nodes).toBe(2);
@@ -45,7 +43,7 @@ describe('diagram', () => {
     expect(diagnosticElements(converted, overlap.refs).sort()).toEqual(['scene/a', 'scene_a']);
   });
 
-  test('a diagram connector is measured along its own route, not the one its type would draw', ({ expect }) => {
+  test('a diagram connector is measured along its own route, not the one its path would draw', ({ expect }) => {
     const scene = build([
       rect('scene:test/a', box(0, 0), 'A'),
       rect('scene:test/b', box(256, 0), 'B'),

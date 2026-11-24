@@ -28,8 +28,8 @@ export const isValidComputeNode = (type: string): boolean => {
 };
 
 export const createComputeNode = (shape: ComputeShape): ComputeNode => {
-  const type = shape.type ?? raise(new Error('Type not specified'));
-  const factory = nodeFactory[type as NodeType] ?? raise(new Error(`Unknown shape type: ${type}`));
+  const kind = shape.kind ?? raise(new Error('Kind not specified'));
+  const factory = nodeFactory[kind as NodeType] ?? raise(new Error(`Unknown shape kind: ${kind}`));
   return factory(shape);
 };
 

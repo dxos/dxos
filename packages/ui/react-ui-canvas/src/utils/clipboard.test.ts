@@ -75,9 +75,9 @@ describe('clipboard', () => {
     const origin = scene.nodes['scene:r/b'].center;
     expect(next.nodes['ellipse-1'].center).toEqual({ x: origin.x + 64, y: origin.y + 64 });
     const source = scene.links['scene:r/bc'];
-    const controls = source.type === 'spline' ? source.points : [];
+    const controls = source.points ?? [];
     const spline = next.links['spline-3'];
-    expect(spline.type === 'spline' && spline.points).toEqual(controls.map(({ x, y }) => ({ x: x + 64, y: y + 64 })));
+    expect(spline.points).toEqual(controls.map(({ x, y }) => ({ x: x + 64, y: y + 64 })));
     expect(endpointNode(spline.source)).toBe('ellipse-1');
     expect(endpointNode(spline.target)).toBe('rect-2');
     // The originals are untouched.
@@ -108,7 +108,8 @@ describe('clipboard', () => {
   test('a free end is copied with its node and moves with the paste', ({ expect }) => {
     const scene = fixture();
     const free: Link = {
-      type: 'line',
+      kind: 'link',
+      path: 'line',
       id: 'f',
       z: 'z',
       source: { node: 'scene:r/a' },

@@ -7,7 +7,7 @@ import { type Database, Obj, type Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type DiagramSet, nestDrills } from '@dxos/react-ui-canvas';
 import { isNodeRecord, rootOf } from '@dxos/react-ui-canvas/headless';
-import { Scene } from '@dxos/scene';
+import { DEFAULT_COLOR, Scene, colorLiteral, resolveHue, withTone } from '@dxos/scene';
 
 import { CanvasLayoutBuilder, editCanvasContent, makeCanvas, readCanvasContent, setLayoutLattice } from '#model';
 import { Canvas } from '#types';
@@ -38,6 +38,18 @@ export const DIAGRAM_BOX_TONE = 1;
 
 /** The tone the reference diagrams' dashed group outlines take: the style set's fourth (index 3), its lightest. */
 export const DIAGRAM_GROUP_TONE = 3;
+
+/**
+ * How a reference diagram's box is coloured: the tone its colour states, and whether it is plain, drawn in no hue of
+ * its own (no colour, the look's own, or a grey).
+ */
+const diagramColor = (color: string | undefined): { plain: boolean; tone?: number } => {
+  const drawn = resolveHue(color);
+  return {
+    plain: colorLiteral(color) === undefined && (drawn?.hue ?? 'neutral') === 'neutral',
+    ...(drawn?.tone !== undefined ? { tone: drawn.tone } : {}),
+  };
+};
 
 /** Adds a canvas drawing built from scene commands to `db`. */
 export const addCanvasDrawing = (
@@ -115,16 +127,18 @@ export const loadDiagramDrawings = async (
   for (const drawing of drawings.values()) {
     editDrawingContent(drawing, (content) => {
       for (const [key, record] of Object.entries(content)) {
-        if (!isNodeRecord(record) || record.node.style?.tone !== undefined) {
+        if (!isNodeRecord(record)) {
           continue;
         }
-        const tone = record.node.style?.guide
-          ? DIAGRAM_GROUP_TONE
-          : (record.node.style?.hue ?? 'neutral') === 'neutral'
-            ? DIAGRAM_BOX_TONE
-            : undefined;
+        const { overrides } = record.node;
+        const drawn = diagramColor(overrides?.color);
+        if (drawn.tone !== undefined) {
+          continue;
+        }
+        const tone = overrides?.guide ? DIAGRAM_GROUP_TONE : drawn.plain ? DIAGRAM_BOX_TONE : undefined;
         if (tone !== undefined) {
-          content[key] = { ...record, node: { ...record.node, style: { ...record.node.style, tone } } };
+          const color = withTone(overrides?.color ?? DEFAULT_COLOR, tone);
+          content[key] = { ...record, node: { ...record.node, overrides: { ...overrides, color } } };
         }
       }
     });

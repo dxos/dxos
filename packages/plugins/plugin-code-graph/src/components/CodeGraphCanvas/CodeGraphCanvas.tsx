@@ -28,7 +28,7 @@ import { type CodeGraph } from '#types';
 
 import { KIND_ICONS } from '../icons.ts';
 
-const CODE_NODE_TYPE = 'code';
+const CODE_NODE_KIND = 'code';
 
 /** Frame node ids, apart from box ids, which are IRIs. */
 const FRAME_PREFIX = 'frame:';
@@ -36,9 +36,9 @@ const frameId = (group: string) => `${FRAME_PREFIX}${group}`;
 const isFrame = (id: string) => id.startsWith(FRAME_PREFIX);
 
 /** A box that shows one code-index resource; the node id is the resource's IRI. */
-const CodeNode = Schema.Struct({ type: Schema.Literal(CODE_NODE_TYPE), ...nodeBase });
+const CodeNode = Schema.Struct({ kind: Schema.Literal(CODE_NODE_KIND), ...nodeBase });
 
-const createCodeNode = (props: CreateProps): Node => ({ type: CODE_NODE_TYPE, ...props });
+const createCodeNode = (props: CreateProps): Node => ({ kind: CODE_NODE_KIND, ...props });
 
 /** Package frames sit on a layer of their own under the boxes and arrows, as the illustrator draws them. */
 const BACKDROP_LAYER: Layer = { id: 'backdrop', name: 'Packages', z: 'a0' };
@@ -46,7 +46,7 @@ const GRAPH_LAYER: Layer = { id: 'graph', name: 'Code', z: 'a1' };
 
 /** A package's frame as the canvas's own diagram shape: the illustrator's tinted box and title, locked in place. */
 const frameShape = (frame: Semantic.Frame): GraphShape => ({
-  type: 'diagram',
+  kind: 'diagram',
   size: frame.size,
   label: frame.label,
   layer: BACKDROP_LAYER.id,
@@ -107,7 +107,7 @@ const createRegistry = (open: (id: string) => void) =>
   createNodeRegistry(
     {
       ...defaultNodeTypes,
-      [CODE_NODE_TYPE]: {
+      [CODE_NODE_KIND]: {
         name: 'Code',
         icon: 'ph--code--regular',
         schema: CodeNode,
@@ -130,7 +130,7 @@ const LAYOUT: GraphLayoutOptions = {
   size: Semantic.BOX,
   pitch: Semantic.PITCH,
   layers: [BACKDROP_LAYER, GRAPH_LAYER],
-  link: { type: 'curve', ends: { end: 'arrow' }, layer: GRAPH_LAYER.id },
+  link: { path: 'curve', ends: { head: 'arrow' }, layer: GRAPH_LAYER.id },
 };
 
 const toGraph = (
@@ -154,7 +154,7 @@ const toGraph = (
         // Dependencies dash, as the illustrator draws them; containment and other facts are solid.
         ...(edge.kind &&
           edge.kind !== 'declares' &&
-          edge.kind !== 'inPackage' && { style: { lineStyle: 'dashed' as const } }),
+          edge.kind !== 'inPackage' && { overrides: { stroke: 'dashed' as const } }),
       })),
   };
 };
@@ -233,7 +233,7 @@ export const CodeGraphCanvas = ({
       arrange,
       shape: (node) => {
         const frame = framesById.get(node.id);
-        return frame ? frameShape(frame) : { type: CODE_NODE_TYPE, layer: GRAPH_LAYER.id };
+        return frame ? frameShape(frame) : { kind: CODE_NODE_KIND, layer: GRAPH_LAYER.id };
       },
     };
   }, [frames, arrange]);

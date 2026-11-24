@@ -11,11 +11,13 @@
 import { type AnimatableKind, animatableProperties } from '@dxos/animation';
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import {
+  DEFAULT_COLOR,
   type Resolved,
   type Resolved2D,
   type Resolved3D,
   Scene,
   findLayout,
+  parseColor,
   radiusOf,
   resolveLayout2D,
   resolveLayout3D,
@@ -24,7 +26,7 @@ import {
 
 /** Elements that are drawn and so may be keyed: hidden operands and groups draw nothing of their own. */
 const isTarget = (element: Resolved): boolean =>
-  !element.hidden && element.type !== 'group' && !Scene.RESERVED_IDS.includes(element.id);
+  !element.hidden && element.kind !== 'group' && !Scene.RESERVED_IDS.includes(element.id);
 
 const PROPERTIES_2D: Readonly<Record<string, AnimatableKind>> = animatableProperties(Scene.Element2D);
 const PROPERTIES_3D: Readonly<Record<string, AnimatableKind>> = animatableProperties(Scene.Element3D);
@@ -46,6 +48,13 @@ const setPath = <T extends object>(record: T, path: string, value: unknown): T =
       ? value
       : setPath(typeof current === 'object' && current !== null ? current : {}, rest.join('.'), value);
   return { ...record, [key]: next };
+};
+
+/** The colour effects draw a target in: its literal, or the name it states; none for the look's own colour. */
+const boundColor = (color: string | undefined): { color?: string } => {
+  const value = parseColor(color);
+  const drawn = value?.kind === 'css' ? value.css : value?.name === DEFAULT_COLOR ? undefined : value?.name;
+  return drawn === undefined ? {} : { color: drawn };
 };
 
 /** The root scene's layout's elements, resolved against its model, so a target's resting values include its object's. */
@@ -124,7 +133,7 @@ export const sceneBinding = (
       position,
       radius,
       opacity: element.overrides?.opacity ?? 1,
-      ...(element.overrides?.hue ? { color: element.overrides.hue } : {}),
+      ...boundColor(element.overrides?.color),
     };
   };
   if (root.dim === '2d') {
@@ -141,7 +150,7 @@ export const sceneBinding = (
       }
       // A group's members are drawn where they are relative to it, so effects find them there.
       const parts =
-        element.type === 'group' && element.parts !== undefined ? findLayout(doc, element.parts) : undefined;
+        element.kind === 'group' && element.parts !== undefined ? findLayout(doc, element.parts) : undefined;
       if (!element.hidden && parts?.dim === '3d') {
         groups.add(element.id);
         const offset = element.center ?? { x: 0, y: 0, z: 0 };
@@ -161,7 +170,7 @@ export const sceneBinding = (
   const links = elements.flatMap((element) => {
     const from = element.source && objects[nodeOf(element.source)];
     const to = element.target && objects[nodeOf(element.target)];
-    return element.type === 'link' && from && to
+    return element.kind === 'link' && from && to
       ? [{ id: element.id, from: from.id, to: to.id, points: [{ ...from.position }, { ...to.position }] }]
       : [];
   });

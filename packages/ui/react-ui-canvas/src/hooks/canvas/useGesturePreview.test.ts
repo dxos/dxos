@@ -18,7 +18,7 @@ const SPEC = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 const DETENT = 8;
 
 const box = (id: string, x: number, y: number) => ({
-  type: 'rect',
+  kind: 'rect',
   id,
   z: 'a0',
   center: { x, y },
@@ -98,7 +98,7 @@ describe('paramPreview', () => {
 
 const arrow = (params: Record<string, number>, locked?: boolean): RenderList2D => {
   const node: ShapeNode = {
-    type: 'shape',
+    kind: 'shape',
     id: 'arrow',
     z: 'a0',
     center: { x: 0, y: 0 },

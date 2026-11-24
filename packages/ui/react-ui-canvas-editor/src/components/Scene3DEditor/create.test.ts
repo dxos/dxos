@@ -56,13 +56,13 @@ describe('drag to create', () => {
     const base = { center: { x: 1, y: 0, z: 1 }, width: 2, depth: 4 };
     expect(createdElement('box-1', 'cube', base, 3)).toEqual({
       id: 'box-1',
-      type: 'cube',
+      kind: 'cube',
       center: { x: 1, y: 1.5, z: 1 },
       scale: { x: 2, y: 3, z: 4 },
     });
     expect(createdElement('ball-1', 'sphere', base, undefined)).toEqual({
       id: 'ball-1',
-      type: 'sphere',
+      kind: 'sphere',
       center: { x: 1, y: 2, z: 1 },
       scale: { x: 4, y: 4, z: 4 },
     });
@@ -71,14 +71,14 @@ describe('drag to create', () => {
   test('a placed object takes its model scale and rests on the ground, as a created shape does', () => {
     const point = { x: 1, y: 0, z: 2 };
     const mesh = { key: 'k', positions: [0, -0.25, 0, 1, 0.25, 0, 0, 0, 1], indices: [0, 1, 2] };
-    const race = { id: 'race', type: 'mesh', scale: { x: 5, y: 5, z: 5 }, props: { mesh } };
+    const race = { id: 'race', kind: 'mesh', scale: { x: 5, y: 5, z: 5 }, props: { mesh } };
     expect(placedElement('race-1', 'race', race, point)).toEqual({
       id: 'race-1',
       object: 'race',
       center: { x: 1, y: 1.25, z: 2 },
       scale: { x: 5, y: 5, z: 5 },
     });
-    expect(placedElement('lamp-1', 'lamp', { id: 'lamp', type: 'cylinder' }, point)).toEqual({
+    expect(placedElement('lamp-1', 'lamp', { id: 'lamp', kind: 'cylinder' }, point)).toEqual({
       id: 'lamp-1',
       object: 'lamp',
       center: { x: 1, y: 0.5, z: 2 },
@@ -88,7 +88,7 @@ describe('drag to create', () => {
   test('a library object dragged out with its aspect locked scales evenly to cover the base, and stands on it', () => {
     // One unit wide, half a unit high and two deep.
     const mesh = { key: 'k', positions: [-0.5, -0.25, -1, 0.5, 0.25, 1, 0, 0, 0], indices: [0, 1, 2] };
-    const taxi = { id: 'taxi', type: 'mesh', lockAspect: true, scale: { x: 5, y: 5, z: 5 }, props: { mesh } };
+    const taxi = { id: 'taxi', kind: 'mesh', lockAspect: true, scale: { x: 5, y: 5, z: 5 }, props: { mesh } };
     const base = { center: { x: 1, y: 0, z: 1 }, width: 3, depth: 4 };
     expect(placedOnBase('taxi-1', 'taxi', taxi, base, undefined)).toEqual({
       id: 'taxi-1',
@@ -100,7 +100,7 @@ describe('drag to create', () => {
 
   test('an object whose aspect is free stretches to the base and the dragged height', () => {
     const base = { center: { x: 1, y: 0, z: 1 }, width: 3, depth: 4 };
-    expect(placedOnBase('lamp-1', 'lamp', { id: 'lamp', type: 'cylinder' }, base, 2)).toEqual({
+    expect(placedOnBase('lamp-1', 'lamp', { id: 'lamp', kind: 'cylinder' }, base, 2)).toEqual({
       id: 'lamp-1',
       object: 'lamp',
       center: { x: 1, y: 1, z: 1 },
@@ -117,7 +117,7 @@ describe('drag to create', () => {
     expect(createdElement('a', 'cube', base, 2).center?.y).toBe(2);
     expect(createdElement('b', 'sphere', base, undefined).center?.y).toBe(2);
     expect(placedOnBase('c', 'crate', undefined, base, 3).center?.y).toBe(2.5);
-    expect(placedOnBase('d', 'crate', { id: 'crate', type: 'cube', lockAspect: true }, base, undefined).center?.y).toBe(
+    expect(placedOnBase('d', 'crate', { id: 'crate', kind: 'cube', lockAspect: true }, base, undefined).center?.y).toBe(
       2,
     );
   });
@@ -125,7 +125,7 @@ describe('drag to create', () => {
   test('a sphere and an aspect-locked object size from the base alone; other shapes take a height too', () => {
     expect(sizesInOneStep('sphere')).toBe(true);
     expect(sizesInOneStep('cube')).toBe(false);
-    expect(sizesInOneStep('mesh', { id: 'taxi', type: 'mesh', lockAspect: true })).toBe(true);
-    expect(sizesInOneStep('mesh', { id: 'rock', type: 'mesh' })).toBe(false);
+    expect(sizesInOneStep('mesh', { id: 'taxi', kind: 'mesh', lockAspect: true })).toBe(true);
+    expect(sizesInOneStep('mesh', { id: 'rock', kind: 'mesh' })).toBe(false);
   });
 });

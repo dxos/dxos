@@ -6,5 +6,5 @@ layout solid dim=3d {
   element box cube @ 0,0,0 scale=2 hidden=true
   element hole cylinder @ 0,0,0 scale=1x3x1 hidden=true
   element diff solid hidden=true op=difference operands="box hole"
-  element bracket solid "Bracket" hue=blue surface=solid border=true op=extrude target=diff face=0,1,0 distance=0.5
+  element bracket solid "Bracket" color=blue fill=solid stroke=solid op=extrude target=diff face=0,1,0 distance=0.5
 }

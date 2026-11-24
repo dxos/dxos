@@ -696,3 +696,65 @@ decision D-31: The language's namespace is exported as `DSL`, not `Dsl` (`import
     - Keeping `Dsl` as an alias: a moved name leaves no re-export behind, so every call site changes with it.
 ```
 
+```mdl
+decision D-32: The `.dx` grammar is normalized: its type names and attributes are standardized so that they are consistent, and every colour property takes the same generic colour patterns and named theme colours.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-1, DSL, Element, Diagram]
+```
+
+```mdl
+decision D-33: A shape's outline is its `stroke`: `solid`, `dashed`, `dotted`, `sketchy` or `none`. A shape, a group's frame or a node with no outline says `stroke=none`, and the `border` attribute of [D-25] and [D-27] is no longer written. A grid frame is drawn when it states a stroke other than `none`, or a fill. Fills in [D-32].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, DSL, Element, Diagram, GridEngine]
+  why: The stored look states its outline as `stroke`, with `none` for no outline, so the text and the records say it with one word.
+```
+
+```mdl
+decision D-34: Text written before `stroke=none` still reads. On a closed shape `border=false` is `stroke=none`, and `border=true` is the stroke the statement states, or `stroke=solid` where it states none. On a line or an arrow the flag says nothing. The printer writes `stroke` only. Fills in [D-33].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, DSL, GridEngine]
+  why: Group frames and component borders were drawn only when `border=true` was set, so text that set it must still draw them.
+```
+
+```mdl
+decision D-35: `color` takes the scene model's open `Color` string, in place of the 13 literals: a bare name the theme resolves, alone or at a tone (`blue`, `blue/2`, `default/0`), or a quoted CSS colour (`color="#1e90ff"`). Fills in [D-32].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, DSL, Element]
+  why: A bare `#` begins a comment, so a CSS colour is quoted; a digit follows the `/` of a tone where a ref (`A/box`) has a letter, so the two never lex alike.
+```
+
+```mdl
+decision D-36: A named theme colour has no sigil and shares one namespace with the hues: a name is looked up among the theme's named colours first, then as a hue. Fills in [D-32].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, DSL, Element]
+  why: The 13 colour names existing diagrams use stay valid; `grey` and the four `light-` names are named colours of the default theme.
+  rejected:
+    - A `$name` sigil on a named theme colour.
+```
+
+```mdl
+decision D-37: The component a node places is `Semantic.Node.component`, and `component` on the box it lowers to; the text still writes it `kind=`. `Semantic.Node` and `Semantic.Group` state their outline as `stroke` and have no `border`. Fills in [D-32].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Diagram, GridEngine]
+  why: On a box `kind` is its shape (`rect`, `ellipse`), so the component it draws takes a word of its own.
+```
+
+```mdl
+decision D-38: The positioned text (`scene`, `layout` and `model` statements) prints a look as `color`, `fill`, `stroke`, `corners`, `opacity`, `align` and `valign`, and still reads the words older text used (`hue`, `tone`, `surface`, `border`, `rounded`, `alignHorizontal`, `alignVertical`), with the meaning they have in a stored drawing. Fills in [D-32].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DSL]
+  why: Printed text then matches the records, and `.dx` text stored before the change keeps its meaning.
+```

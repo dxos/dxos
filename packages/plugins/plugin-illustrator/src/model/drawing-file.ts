@@ -19,7 +19,7 @@ import { EntityId } from '@dxos/keys';
 
 import { Drawing } from '#types';
 
-import { SvgBuilder } from './builder.ts';
+import { SvgBuilder, upgradeSvgContent } from './builder.ts';
 
 /** The diagram source the scene was compiled from, kept so it can be laid out again. */
 export type Source = { readonly language: 'mermaid' | 'uml' | 'dsl'; readonly text: string };
@@ -157,6 +157,22 @@ const fromSource = Effect.fn('DrawingFile.fromSource')(function* (raw: unknown) 
   return toPayload({ drawing, canvas, source });
 });
 
+const isContent = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * The payload with every SVG canvas's content in the current words, so a file written in the earlier words
+ * imports as the drawing it pictures. The other objects are stored as their own readers take them.
+ */
+const upgradePayload = (payload: Payload): Payload => ({
+  ...payload,
+  objects: payload.objects.map((object) =>
+    typeof object.schema === 'string' && Drawing.isSameFormat(object.schema, SVG_SCHEMA) && isContent(object.content)
+      ? { ...object, content: upgradeSvgContent(object.content) }
+      : object,
+  ),
+});
+
 /**
  * The payload of a `.dx.svg`, or undefined for a plain SVG. A drawing.sh file carries only its source, which
  * is compiled here, so both kinds import the same way.
@@ -167,7 +183,7 @@ export const fromDxSvg = (svg: string): Effect.Effect<Payload | undefined, Schem
     return Effect.succeed(undefined);
   }
   const hasObjects = typeof raw === 'object' && raw !== null && 'objects' in raw;
-  return hasObjects ? Schema.decodeUnknownEffect(Payload)(raw) : fromSource(raw);
+  return hasObjects ? Schema.decodeUnknownEffect(Payload)(raw).pipe(Effect.map(upgradePayload)) : fromSource(raw);
 };
 
 /** Adds a `.dx.svg`'s objects to the database under fresh ids and returns the drawing to open. */

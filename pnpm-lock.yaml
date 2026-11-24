@@ -3480,6 +3480,9 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor

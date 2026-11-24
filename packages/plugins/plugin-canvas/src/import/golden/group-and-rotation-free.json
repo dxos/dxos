@@ -5,7 +5,6 @@
     "elements": {
       "tilted": {
         "id": "tilted",
-        "type": "rect",
         "z": "zV",
         "center": {
           "x": -50,
@@ -17,15 +16,12 @@
         },
         "rotation": 180,
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "kind": "rect"
       },
       "neighbour": {
         "id": "neighbour",
-        "type": "rect",
         "z": "zl",
         "center": {
           "x": 750,
@@ -36,15 +32,13 @@
           "height": 100
         },
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "kind": "rect"
       },
       "group": {
+        "kind": "instance",
         "id": "group",
-        "object": "instance:group-object",
         "z": "V",
         "center": {
           "x": 975,
@@ -54,24 +48,26 @@
           "width": 100,
           "height": 250
         },
-        "props": {
-          "canvas": {
-            "composite": "group-object",
-            "ports": [
-              {
-                "id": "member",
-                "side": "n",
-                "offset": 0.5
-              }
-            ],
-            "type": "instance"
+        "composite": "group-object",
+        "ports": [
+          {
+            "id": "member",
+            "x": 0.5,
+            "y": 0,
+            "side": "top"
           }
-        }
+        ],
+        "object": "instance:group-object"
       },
       "polyline": {
+        "kind": "link",
+        "path": "line",
         "id": "polyline",
-        "type": "link",
         "z": "l",
+        "overrides": {
+          "color": "orange",
+          "stroke": "dotted"
+        },
         "source": {
           "point": {
             "x": 900,
@@ -83,21 +79,17 @@
             "x": 900,
             "y": 100
           }
-        },
-        "overrides": {
-          "hue": "orange",
-          "lineStyle": "dotted"
-        },
-        "props": {
-          "canvas": {
-            "type": "line"
-          }
         }
       },
       "polyline-1": {
+        "kind": "link",
+        "path": "line",
         "id": "polyline-1",
-        "type": "link",
         "z": "t",
+        "overrides": {
+          "color": "orange",
+          "stroke": "dotted"
+        },
         "source": {
           "point": {
             "x": 900,
@@ -109,35 +101,20 @@
             "x": 800,
             "y": 100
           }
-        },
-        "overrides": {
-          "hue": "orange",
-          "lineStyle": "dotted"
-        },
-        "props": {
-          "canvas": {
-            "type": "line"
-          }
         }
       },
       "tie": {
+        "kind": "link",
+        "path": "line",
         "id": "tie",
-        "type": "link",
         "z": "zt",
+        "head": "arrow",
         "source": {
           "node": "neighbour"
         },
         "target": {
           "node": "group",
           "port": "member"
-        },
-        "props": {
-          "canvas": {
-            "type": "line",
-            "ends": {
-              "end": "arrow"
-            }
-          }
         }
       }
     }
@@ -146,7 +123,6 @@
     {
       "id": "group-object",
       "dim": "2d",
-      "name": "Object",
       "layers": {
         "layer": {
           "id": "layer",
@@ -154,12 +130,9 @@
           "z": "V"
         }
       },
-      "kind": "composite",
-      "anonymous": true,
       "elements": {
         "member": {
           "id": "member",
-          "type": "rect",
           "z": "V",
           "center": {
             "x": 0,
@@ -170,19 +143,15 @@
             "height": 50
           },
           "rotation": 90,
-          "layer": "layer",
           "overrides": {
-            "tone": 0
+            "color": "default/0"
           },
-          "props": {
-            "canvas": {
-              "exposed": true
-            }
-          }
+          "kind": "rect",
+          "exposed": true,
+          "layer": "layer"
         },
         "partner": {
           "id": "partner",
-          "type": "rect",
           "z": "x",
           "center": {
             "x": 0,
@@ -193,41 +162,36 @@
             "height": 50
           },
           "rotation": 90,
-          "layer": "layer",
           "overrides": {
-            "tone": 0
+            "color": "default/0"
           },
-          "props": {
-            "canvas": {}
-          }
+          "kind": "rect",
+          "layer": "layer"
         },
         "pair": {
+          "kind": "link",
+          "path": "line",
           "id": "pair",
-          "type": "link",
           "z": "z",
+          "head": "arrow",
+          "layer": "layer",
           "source": {
             "node": "member"
           },
           "target": {
             "node": "partner"
-          },
-          "layer": "layer",
-          "props": {
-            "canvas": {
-              "type": "line",
-              "ends": {
-                "end": "arrow"
-              }
-            }
           }
         }
-      }
+      },
+      "name": "Object",
+      "kind": "composite",
+      "anonymous": true
     }
   ],
   "objects": [
     {
       "id": "instance:group-object",
-      "type": "rect",
+      "kind": "rect",
       "parts": "group-object"
     }
   ],
@@ -236,7 +200,6 @@
       "kind": "create",
       "element": {
         "id": "tilted",
-        "type": "rect",
         "z": "zV",
         "center": {
           "x": -50,
@@ -248,18 +211,15 @@
         },
         "rotation": 180,
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "kind": "rect"
       }
     },
     {
       "kind": "create",
       "element": {
         "id": "neighbour",
-        "type": "rect",
         "z": "zl",
         "center": {
           "x": 750,
@@ -270,18 +230,16 @@
           "height": 100
         },
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "kind": "rect"
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "instance",
         "id": "group",
-        "object": "instance:group-object",
         "z": "V",
         "center": {
           "x": 975,
@@ -291,27 +249,29 @@
           "width": 100,
           "height": 250
         },
-        "props": {
-          "canvas": {
-            "composite": "group-object",
-            "ports": [
-              {
-                "id": "member",
-                "side": "n",
-                "offset": 0.5
-              }
-            ],
-            "type": "instance"
+        "composite": "group-object",
+        "ports": [
+          {
+            "id": "member",
+            "x": 0.5,
+            "y": 0,
+            "side": "top"
           }
-        }
+        ],
+        "object": "instance:group-object"
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "link",
+        "path": "line",
         "id": "polyline",
-        "type": "link",
         "z": "l",
+        "overrides": {
+          "color": "orange",
+          "stroke": "dotted"
+        },
         "source": {
           "point": {
             "x": 900,
@@ -323,24 +283,20 @@
             "x": 900,
             "y": 100
           }
-        },
-        "overrides": {
-          "hue": "orange",
-          "lineStyle": "dotted"
-        },
-        "props": {
-          "canvas": {
-            "type": "line"
-          }
         }
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "link",
+        "path": "line",
         "id": "polyline-1",
-        "type": "link",
         "z": "t",
+        "overrides": {
+          "color": "orange",
+          "stroke": "dotted"
+        },
         "source": {
           "point": {
             "x": 900,
@@ -352,38 +308,23 @@
             "x": 800,
             "y": 100
           }
-        },
-        "overrides": {
-          "hue": "orange",
-          "lineStyle": "dotted"
-        },
-        "props": {
-          "canvas": {
-            "type": "line"
-          }
         }
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "link",
+        "path": "line",
         "id": "tie",
-        "type": "link",
         "z": "zt",
+        "head": "arrow",
         "source": {
           "node": "neighbour"
         },
         "target": {
           "node": "group",
           "port": "member"
-        },
-        "props": {
-          "canvas": {
-            "type": "line",
-            "ends": {
-              "end": "arrow"
-            }
-          }
         }
       }
     }

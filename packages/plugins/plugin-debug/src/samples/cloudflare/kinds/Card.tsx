@@ -4,9 +4,9 @@
 
 //
 // The deck's `card({ variant: 'simple' })` as a canvas element kind: a Phosphor icon, a title, a soft raised panel,
-// and an optional coloured outline. `tone` is the card's own field, under its `data`, rather than `style.tone`,
-// which is the hue's fill level. The look comes from the deck tokens in `theme.css`, so the card follows the
-// canvas's mode.
+// and an optional coloured outline. `tone` is the card's own field, under its `data`, rather than the tone of its
+// `color`, which is the colour's fill level. The look comes from the deck tokens in `theme.css`, so the card follows
+// the canvas's mode.
 //
 
 import './theme.css';
@@ -33,7 +33,8 @@ import { type Styled, TONES, toneValue } from './FeedCard.tsx';
 
 //
 // The card kind: the deck's `.d-card.simple` — a Phosphor icon, a title, a soft raised shadow, and an optional
-// coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's fill level.
+// coloured outline. `tone` is the card's own field rather than the tone of its `color`, which is the colour's fill
+// level.
 //
 
 /**
@@ -88,7 +89,7 @@ const CardRows = ({ items }: { items: readonly CardItem[] }) => (
 
 export const CardNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('card'),
+  kind: Schema.Literal('card'),
   /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
   label: Schema.String,
   /** The core card's glyph and its weight, at the element's top as the core card keeps it. */
@@ -98,7 +99,7 @@ export const CardNode = Schema.Struct({
 
 const CardNodeView = ({ node, editing }: NodeViewProps) => {
   const data = kindData(CardData, node);
-  if (node.type !== 'card' || !data) {
+  if (node.kind !== 'card' || !data) {
     return null;
   }
   const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
@@ -194,7 +195,7 @@ export const cardSpec: ElementKindSpec = {
   key: 'C',
   schema: CardNode,
   component: CardNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'card', id, z, center, size, label: 'Card' }),
+  create: ({ id, z, center, size }) => ({ kind: 'card', id, z, center, size, label: 'Card' }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 236 x 66 card, give or take.
   defaultSize: { width: 5, height: 1.5 },
   resizable: true,

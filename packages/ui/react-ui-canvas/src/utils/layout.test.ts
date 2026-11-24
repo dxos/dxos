@@ -12,7 +12,7 @@ import { layoutView } from './layout.ts';
 
 const node = (id: string, center = { x: 0, y: 0 }, size = { width: 128, height: 64 }): Node => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   z: id,
   center,
   size,
@@ -29,7 +29,7 @@ const fixture = (): RenderList2D => ({
       { id: 'ad', source: 'a', target: 'd' },
     ].map(({ id, source, target }) => [
       id,
-      { type: 'line' as const, id, z: id, source: { node: source }, target: { node: target } },
+      { kind: 'link' as const, path: 'line' as const, id, z: id, source: { node: source }, target: { node: target } },
     ]),
   ),
 });
@@ -53,7 +53,7 @@ describe('layout', () => {
       expect(node.center.x % MAJOR_GRID).toBe(0);
       expect(node.center.y % MAJOR_GRID).toBe(0);
       expect(node.size).toEqual(before.nodes[node.id].size);
-      expect(node.type).toBe(before.nodes[node.id].type);
+      expect(node.kind).toBe(before.nodes[node.id].kind);
     }
   });
 

@@ -4,7 +4,7 @@ group operator-row autoCols=320 justifyContent=center {
   node operator "Operator" kind=card icon=user iconTone=accent
 }
 
-group agent-box cols=3 rows=3 gap=64 padding=32 border=true {
+group agent-box cols=3 rows=3 gap=64 padding=32 stroke=solid {
   group cell-nw { }
   node feed "History" kind=card icon=queue iconTone=file
   group cell-ne { }

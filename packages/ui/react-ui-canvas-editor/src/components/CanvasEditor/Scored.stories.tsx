@@ -92,7 +92,7 @@ const fromMermaid = async (source: string): Promise<Seed> => {
     // Frames first, so their lower z keeps members clickable on top of them. Unlabelled guides: a rect
     // centres its label, where the members would cover it.
     ...placed(graph.groups).map(({ item, box }) =>
-      ViewBuilder.rect(nodeId(item.id), box).properties({ style: { guide: true } }),
+      ViewBuilder.rect(nodeId(item.id), box).properties({ overrides: { guide: true } }),
     ),
     ...placed(graph.nodes).map(({ item, box }) =>
       ViewBuilder.rect(nodeId(item.id), box).properties({ label: item.label }),
@@ -100,7 +100,7 @@ const fromMermaid = async (source: string): Promise<Seed> => {
     ...graph.edges.map(({ from, to }, index) =>
       ViewBuilder.link('smart', nodeId(from), nodeId(to))
         .id(nodeId(`${from}-${to}-${index}`))
-        .properties({ ends: { end: 'arrow' } }),
+        .properties({ head: 'arrow' }),
     ),
   ]).build();
   return { views, root: ROOT, engine: result.chosen.evaluation };

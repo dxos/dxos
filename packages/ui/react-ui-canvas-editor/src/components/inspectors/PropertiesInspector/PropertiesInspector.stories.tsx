@@ -43,13 +43,13 @@ const VIEW: RenderList2D = (() => {
   const {
     views: [scene],
   } = ViewBuilder.view('root', [
-    ViewBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram', style: { hue: 'teal' } }),
+    ViewBuilder.rect('a', box(0)).properties({ label: 'Rect', layer: 'diagram', overrides: { color: 'teal' } }),
     ViewBuilder.rect('b', box(400)).properties({ label: 'Other', layer: 'background' }),
     ViewBuilder.note('n', box(0, 200)).properties({ layer: 'notes' }),
     ViewBuilder.view('f').at(box(400, 200)).properties({ label: 'View', layer: 'diagram' }),
     ViewBuilder.link('smart', 'a', 'b')
       .id('ab')
-      .properties({ layer: 'diagram', style: { lineStyle: 'dashed' } }),
+      .properties({ layer: 'diagram', overrides: { stroke: 'dashed' } }),
   ]).build();
   return { ...scene, layers: Object.fromEntries(LAYERS.map((layer) => [layer.id, layer])) };
 })();

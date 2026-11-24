@@ -5,7 +5,16 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { MAJOR_GRID, type NodeBase, NoteNode, RectNode, isBuiltinNode, isShapeNode, nodeBase } from '@dxos/scene';
+import {
+  MAJOR_GRID,
+  type NodeBase,
+  NoteNode,
+  RectNode,
+  isBuiltinNode,
+  isShapeNode,
+  nodeBase,
+  sidePort,
+} from '@dxos/scene';
 
 import { type CreateProps, type NodeDef, type NodeRegistry, createNodeRegistry, nodeDef } from '../../model/index.ts';
 import { SHAPE_FOLD, SHAPE_RECIPES, createNode, nodeBounds, nodePorts, nominalSize } from '../../utils/index.ts';
@@ -13,7 +22,7 @@ import { boxPrototype, defaultNodeRegistry } from './registry.ts';
 import { UnknownNodeView } from './SceneLayer.tsx';
 
 /** A host type: a compute function with typed input and output ports. */
-const FunctionNode = Schema.Struct({ type: Schema.Literal('function'), ...nodeBase, fn: Schema.String });
+const FunctionNode = Schema.Struct({ kind: Schema.Literal('function'), ...nodeBase, fn: Schema.String });
 
 const functionDef: NodeDef = {
   type: 'function',
@@ -23,12 +32,9 @@ const functionDef: NodeDef = {
   group: 'compute',
   schema: FunctionNode,
   component: UnknownNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'function', id, z, center, size, fn: 'identity' }),
+  create: ({ id, z, center, size }) => ({ kind: 'function', id, z, center, size, fn: 'identity' }),
   defaultSize: { width: 2, height: 1 },
-  ports: () => [
-    { id: 'in', side: 'w', offset: 0.5, accepts: 'in' },
-    { id: 'out', side: 'e', offset: 0.5, accepts: 'out' },
-  ],
+  ports: () => [sidePort('in', 'left', 0.5, 'in'), sidePort('out', 'right', 0.5, 'out')],
 };
 
 const registry: NodeRegistry = { ...defaultNodeRegistry, function: functionDef };
@@ -51,7 +57,7 @@ describe('registry', () => {
 
   test('the registry supplies the ports, frame and definition of a host node', ({ expect }) => {
     const fn: NodeBase = {
-      type: 'function',
+      kind: 'function',
       id: 'f',
       z: 'a',
       center: { x: 64, y: 64 },
@@ -63,7 +69,7 @@ describe('registry', () => {
       ['out', 'out'],
     ]);
     // A type the registry does not know still has its frame and the default ports.
-    const stranger: NodeBase = { ...fn, type: 'stranger' };
+    const stranger: NodeBase = { ...fn, kind: 'stranger' };
     expect(nodeDef(registry, stranger)).toBeUndefined();
     expect(nodePorts(registry, stranger).length).toBeGreaterThan(0);
   });
@@ -84,7 +90,7 @@ describe('node registry', () => {
       ]);
       const node = tool.create({ id: 'a', z: 'a', center: { x: 96, y: 48 }, size: { width: 192, height: 96 } });
       expect(Schema.is(shape.schema)(node)).toBe(true);
-      expect(isShapeNode(node) && [node.type, node.recipe, node.params]).toEqual(['shape', recipe.id, undefined]);
+      expect(isShapeNode(node) && [node.kind, node.recipe, node.params]).toEqual(['shape', recipe.id, undefined]);
       // A shape to drag out to a size, not one placed point by point.
       expect(tool.createFromPoints).toBeUndefined();
     }
@@ -126,7 +132,7 @@ describe('node registry', () => {
           name: 'Sticky',
           icon: 'ph--note--regular',
           schema: NoteNode,
-          create: (props) => createNode({ type: 'note', ...props }),
+          create: (props) => createNode({ kind: 'note', ...props }),
           component: defaultNodeRegistry.note.component,
         },
       },
@@ -142,7 +148,7 @@ describe('node registry', () => {
       name: 'R',
       icon: 'i',
       schema: RectNode,
-      create: (props: CreateProps) => createNode({ type: 'rect', ...props }),
+      create: (props: CreateProps) => createNode({ kind: 'rect', ...props }),
     };
     expect(() => createNodeRegistry({ r: { ...spec, extends: 'nope' } })).toThrow(/Unknown node prototype/);
     expect(() =>

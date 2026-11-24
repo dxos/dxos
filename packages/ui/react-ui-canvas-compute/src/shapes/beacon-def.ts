@@ -16,7 +16,7 @@ import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ
 
 export const BeaconShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('beacon'),
+    kind: Schema.Literal('beacon'),
   }),
 );
 
@@ -25,7 +25,7 @@ export type BeaconShape = Schema.Schema.Type<typeof BeaconShape>;
 export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 
 export const createBeacon = (props: CreateBeaconProps) =>
-  createShape<BeaconShape>({ type: 'beacon', size: { width: MAJOR_GRID, height: MAJOR_GRID }, ...props });
+  createShape<BeaconShape>({ kind: 'beacon', size: { width: MAJOR_GRID, height: MAJOR_GRID }, ...props });
 
 export const beaconNodeDef = defineComputeNode<BeaconShape>({
   type: 'beacon',

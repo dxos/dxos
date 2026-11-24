@@ -3,31 +3,39 @@
 //
 
 import type { SyntaxNode } from '@lezer/common';
+import * as Schema from 'effect/Schema';
 
 import {
+  ALIGNS,
+  Color,
+  CORNERS,
   type ElementEndpoint,
-  HORIZONTAL_ALIGNS,
+  FILLS,
   Scene as Model,
   type Part,
   PartConstraint,
   type PartLayout,
+  type Point,
+  type Size,
+  STROKES,
   type Style2D,
   type Style3D,
-  VERTICAL_ALIGNS,
+  VALIGNS,
   applyArrangement,
   flattenStyle,
   layoutTree,
   liftStyle,
+  upgradeStyle,
   validateDocument,
 } from '@dxos/scene';
 
 import { parser } from './gen/diagram.ts';
 import { type Problem, type Range, childrenOf, optional, unquote } from './parse.ts';
-import { formatId, formatNumber, formatString } from './print.ts';
+import { formatColor, formatId, formatNumber, formatString } from './print.ts';
 import { BARE_ID } from './vocabulary.ts';
 
 /** A value an attribute can carry, as read from its `AttrValue`. */
-export type AttrValue = number | string | boolean | Model.Vec2 | Model.Vec3 | Model.Size2;
+export type AttrValue = number | string | boolean | Point | Model.Vec3 | Size;
 
 const DEFAULT_CAMERA_2D: Model.Camera2D = { center: { x: 0, y: 0 }, zoom: 1 };
 const DEFAULT_CAMERA_3D: Model.Camera3D = {
@@ -39,17 +47,24 @@ const DEFAULT_CAMERA_3D: Model.Camera3D = {
   projection: 'perspective',
 };
 
-const STYLE_KEYS = ['hue', 'tone', 'surface', 'border', 'rounded', 'opacity'] as const;
+/** The look both dimensions share, in the order the text writes it. */
+const STYLE_KEYS = ['color', 'fill', 'stroke', 'corners', 'opacity'] as const;
+/**
+ * The words a look was written in before the style named one colour, a fill, a stroke and its corners. They are
+ * still read, so text written with them keeps its meaning, and never printed.
+ */
+const LEGACY_STYLE_KEYS = ['hue', 'tone', 'surface', 'border', 'rounded'] as const;
 /**
  * How a 2D element's text is set, which no token of the shared style stands for: its size in scene px
- * (`fontSize=18`) and where it sits in the frame (`alignVertical=middle`). 3D has no text to set.
+ * (`fontSize=18`) and where it sits in the frame (`valign=middle`). 3D has no text to set.
  */
 const FONT_SIZE = 'fontSize';
-const ALIGN_HORIZONTAL = 'alignHorizontal';
-const ALIGN_VERTICAL = 'alignVertical';
-const TEXT_KEYS = [FONT_SIZE, ALIGN_HORIZONTAL, ALIGN_VERTICAL] as const;
-const SURFACES = ['solid', 'tint', 'glass', 'none'] as const;
-const TONES = [0, 1, 2, 3] as const;
+const ALIGN = 'align';
+const VALIGN = 'valign';
+const TEXT_KEYS = [FONT_SIZE, ALIGN, VALIGN] as const;
+/** The alignment words of older text, by the word that replaced each. */
+const LEGACY_TEXT_KEYS = { [ALIGN]: 'alignHorizontal', [VALIGN]: 'alignVertical' } as const;
+const isColor = Schema.is(Color);
 const ARRANGE_PARAM = 'arrange-';
 
 /** The model a `composite` statement puts its object in when it names none; a layout placing one declares it. */
@@ -131,10 +146,10 @@ const groupElements = <E extends Model.Element2D | Model.Element3D>(
   return { elements: outside, parts };
 };
 
-const isVec2 = (value: AttrValue | undefined): value is Model.Vec2 =>
+const isVec2 = (value: AttrValue | undefined): value is Point =>
   typeof value === 'object' && 'x' in value && !('z' in value);
 const isVec3 = (value: AttrValue | undefined): value is Model.Vec3 => typeof value === 'object' && 'z' in value;
-const isSize2 = (value: AttrValue | undefined): value is Model.Size2 => typeof value === 'object' && 'width' in value;
+const isSize2 = (value: AttrValue | undefined): value is Size => typeof value === 'object' && 'width' in value;
 const asNumber = (value: AttrValue | undefined): number | undefined => (typeof value === 'number' ? value : undefined);
 const asString = (value: AttrValue | undefined): string | undefined =>
   typeof value === 'string' ? value : typeof value === 'number' ? String(value) : undefined;
@@ -151,24 +166,17 @@ const parseBinding = (value: AttrValue | undefined): ElementEndpoint | undefined
 };
 
 /** The style tokens the text form writes, shared by both dimensions; each dimension reads them into its own style. */
-type StyleTokens = {
-  hue?: string;
-  tone?: (typeof TONES)[number];
-  surface?: (typeof SURFACES)[number];
-  border?: boolean;
-  rounded?: boolean;
-  opacity?: number;
-};
+type StyleTokens = { -readonly [K in (typeof STYLE_KEYS)[number]]?: Style3D[K] };
 
 /** A 3D style's tokens: the text form writes only the shared ones. */
 const tokensOf3D = (style: Style3D | undefined): StyleTokens => {
-  const { hue, tone, surface, border, rounded, opacity } = style ?? {};
+  const { color, fill, stroke, corners, opacity } = style ?? {};
   return Object.fromEntries(
-    Object.entries({ hue, tone, surface, border, rounded, opacity }).filter(([, value]) => value !== undefined),
+    Object.entries({ color, fill, stroke, corners, opacity }).filter(([, value]) => value !== undefined),
   );
 };
 
-/** A 2D style's tokens: its fill as a surface (the shared mapping in `liftStyle`). */
+/** A 2D style's tokens: the fields it shares with a 3D one (`liftStyle`). */
 const tokensOf2D = (style: Style2D | undefined): StyleTokens => tokensOf3D(style && liftStyle(style));
 
 /**
@@ -207,6 +215,8 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       case 'Word':
         return raw === 'true' ? true : raw === 'false' ? false : raw;
       case 'Dimension':
+      // A colour at a tone (`blue/2`).
+      case 'Toned':
         return raw;
       // A word pair (`constrain=stretch,max`) is handed on as its own text: the field that claims it reads the pair,
       // and one no field claims keeps its spelling through `props`.
@@ -247,20 +257,33 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     return attrs;
   };
 
+  /**
+   * The look a statement states. The words of older text (`hue`, `tone`, `surface`, `border`, `rounded`) are read
+   * through the scene's own reader of old styles, so they mean here what they mean in a stored drawing.
+   */
   const readStyle = (attrs: Map<string, AttrValue>, range: Range): StyleTokens | undefined => {
+    const stated = Object.fromEntries(
+      [...STYLE_KEYS, ...LEGACY_STYLE_KEYS].flatMap((key) => (attrs.has(key) ? [[key, attrs.get(key)]] : [])),
+    );
+    const look = upgradeStyle(stated) ?? {};
     const style: StyleTokens = {};
-    const hue = asString(attrs.get('hue'));
-    hue !== undefined && (style.hue = hue);
-    const tone = TONES.find((candidate) => candidate === attrs.get('tone'));
-    tone !== undefined && (style.tone = tone);
-    if (attrs.has('surface')) {
-      const surface = SURFACES.find((candidate) => candidate === attrs.get('surface'));
-      surface ? (style.surface = surface) : report(range, `surface must be one of ${SURFACES.join(', ')}.`);
+    /** One of `words`, or a problem naming the attribute that said something else. */
+    const word = <T extends string>(key: string, words: readonly T[], written = key): T | undefined => {
+      const found = words.find((candidate) => candidate === look[key]);
+      !found && attrs.has(written) && report(range, `${written} must be one of ${words.join(', ')}.`);
+      return found;
+    };
+    if (look.color !== undefined) {
+      isColor(look.color)
+        ? (style.color = look.color)
+        : report(range, 'color must be a name (blue), a name at a tone (blue/2), or a quoted CSS colour.');
     }
-    const border = asBoolean(attrs.get('border'));
-    border !== undefined && (style.border = border);
-    const rounded = asBoolean(attrs.get('rounded'));
-    rounded !== undefined && (style.rounded = rounded);
+    const fill = word('fill', FILLS, attrs.has('fill') ? 'fill' : 'surface');
+    fill && (style.fill = fill);
+    const stroke = word('stroke', STROKES);
+    stroke && (style.stroke = stroke);
+    const corners = word('corners', CORNERS);
+    corners && (style.corners = corners);
     const opacity = asNumber(attrs.get('opacity'));
     opacity !== undefined && (style.opacity = opacity);
     return Object.keys(style).length > 0 ? style : undefined;
@@ -290,7 +313,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
    * `points="0,0.5 1,0.5"`: a polyline's vertices, each a fraction of the element's own frame, so a line stretches
    * with the shape it is in. Quoted and space-separated, since an attribute value is one token.
    */
-  const readPoints = (value: AttrValue | undefined, range: Range): readonly Model.Vec2[] | undefined => {
+  const readPoints = (value: AttrValue | undefined, range: Range): readonly Point[] | undefined => {
     const text = asString(value);
     if (text === undefined) {
       return undefined;
@@ -325,7 +348,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     const points = readPoints(attrs.get('points'), statement);
     return {
       id,
-      ...(objects.has(word) ? { object: word } : { type: word }),
+      ...(objects.has(word) ? { object: word } : { kind: word }),
       ...(constrain ? { constrain } : {}),
       ...(labelNode ? { label: unquote(slice(labelNode)) } : {}),
       ...optionalString('z', attrs.get('order')),
@@ -380,19 +403,20 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     const { tokens, group, ...base } = readBase(statement, attrs, objects);
     // A 2D element's text has a size, which no token of the shared style stands for.
     const fontSize = asNumber(attrs.get(FONT_SIZE));
-    const align = <T extends string>(key: string, words: readonly T[]): T | undefined => {
-      const word = asString(attrs.get(key));
+    const aligned = <T extends string>(key: keyof typeof LEGACY_TEXT_KEYS, words: readonly T[]): T | undefined => {
+      const written = attrs.has(key) ? key : LEGACY_TEXT_KEYS[key];
+      const word = asString(attrs.get(written));
       const found = words.find((candidate) => candidate === word);
-      word !== undefined && !found && report(statement, `${key} must be one of ${words.join(', ')}.`);
+      word !== undefined && !found && report(statement, `${written} must be one of ${words.join(', ')}.`);
       return found;
     };
-    const alignHorizontal = align(ALIGN_HORIZONTAL, HORIZONTAL_ALIGNS);
-    const alignVertical = align(ALIGN_VERTICAL, VERTICAL_ALIGNS);
+    const align = aligned(ALIGN, ALIGNS);
+    const valign = aligned(VALIGN, VALIGNS);
     const overrides = {
       ...(tokens ? flattenStyle(tokens) : {}),
       ...(fontSize !== undefined ? { fontSize } : {}),
-      ...(alignHorizontal ? { alignHorizontal } : {}),
-      ...(alignVertical ? { alignVertical } : {}),
+      ...(align ? { align } : {}),
+      ...(valign ? { valign } : {}),
     };
     const record: Model.Element2D = {
       ...base,
@@ -427,7 +451,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     return { record, group };
   };
 
-  const readPosition = (node: SyntaxNode): Model.Vec2 | Model.Vec3 | undefined => {
+  const readPosition = (node: SyntaxNode): Point | Model.Vec3 | undefined => {
     const point = node.getChild('Point3') ?? node.getChild('Point');
     if (!point) {
       return undefined;
@@ -503,7 +527,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       ranges.set(`model:${head.id}/${id}`, object);
       return {
         id,
-        type: slice(object.getChild('Word') ?? object),
+        kind: slice(object.getChild('Word') ?? object),
         ...optionalString('parts', attrs.get('parts')),
         ...optionalBoolean('lockAspect', attrs.get('lockAspect')),
         ...(style ? { tokens: style } : {}),
@@ -570,7 +594,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     const size = attrs.get('size');
     const object: Model.Object2D = {
       id,
-      type: 'instance',
+      kind: 'instance',
       parts: id,
       ...(isSize2(size) ? { size } : {}),
     };
@@ -604,7 +628,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       }
       const created = [...groups.keys()].map((group) => ({
         id: composite(group),
-        type: 'group',
+        kind: 'group',
         parts: composite(group),
       }));
       const index = models.findIndex((candidate) => candidate.id === id && candidate.dim === head.dim);
@@ -635,7 +659,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
         elements[keyFor(elements, record.id, element)] = record;
         group && groups.set(record.id, group);
       }
-      const grouped = groupElements(elements, groups, composite, ({ type: _type, ...group }, object) => ({
+      const grouped = groupElements(elements, groups, composite, ({ kind: _kind, ...group }, object) => ({
         ...group,
         object,
         fit: 'none',
@@ -653,7 +677,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
         elements[keyFor(elements, record.id, element)] = record;
         group && groups.set(record.id, group);
       }
-      const grouped = groupElements(elements, groups, composite, ({ type: _type, ...group }, object) => ({
+      const grouped = groupElements(elements, groups, composite, ({ kind: _kind, ...group }, object) => ({
         ...group,
         object,
         fit: 'none',
@@ -717,11 +741,20 @@ const ELEMENT_KEYS: ReadonlySet<string> = new Set([
   'constrain',
   'points',
   ...TEXT_KEYS,
+  ...Object.values(LEGACY_TEXT_KEYS),
   ...STYLE_KEYS,
+  ...LEGACY_STYLE_KEYS,
 ]);
 
 /** Attributes the object reader maps to fields; any other attribute goes into `props`. */
-const OBJECT_KEYS: ReadonlySet<string> = new Set(['size', 'scale', 'parts', 'lockAspect', ...STYLE_KEYS]);
+const OBJECT_KEYS: ReadonlySet<string> = new Set([
+  'size',
+  'scale',
+  'parts',
+  'lockAspect',
+  ...STYLE_KEYS,
+  ...LEGACY_STYLE_KEYS,
+]);
 
 const optionalString = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, asString(value));
 const optionalBoolean = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, asBoolean(value));
@@ -735,7 +768,7 @@ const optionalBinding = <K extends string>(key: K, value: AttrValue | undefined)
 const formatWord = (value: string): string =>
   BARE_ID.test(value) && value !== 'true' && value !== 'false' ? value : formatString(value);
 
-const formatVec2 = ({ x, y }: Model.Vec2): string => `${formatNumber(x)},${formatNumber(y)}`;
+const formatVec2 = ({ x, y }: Point): string => `${formatNumber(x)},${formatNumber(y)}`;
 const formatVec3 = ({ x, y, z }: Model.Vec3): string => `${formatNumber(x)},${formatNumber(y)},${formatNumber(z)}`;
 
 /** A value in the form `readValue` reads back to the same value. */
@@ -791,7 +824,14 @@ const formatPoints = (value: unknown): string | undefined => {
 
 /** Style tokens, then props, the order every element and object ends with. */
 const formatStyleAndProps = (tokens: StyleTokens, item: { props?: Record<string, unknown> }): string[] => [
-  ...STYLE_KEYS.flatMap((key) => attr(key, tokens[key])),
+  // A colour has a spelling of its own: a tone is not a bare word, and a CSS literal is quoted.
+  ...STYLE_KEYS.flatMap((key) =>
+    key === 'color'
+      ? tokens.color === undefined
+        ? []
+        : [`color=${formatColor(tokens.color)}`]
+      : attr(key, tokens[key]),
+  ),
   ...Object.entries(item.props ?? {}).flatMap(([key, value]) => {
     if (key !== 'points') {
       return attr(key, value);
@@ -844,7 +884,7 @@ const formatBinding = ({ node, port }: ElementEndpoint, context: LayoutContext):
 const formatHead = (element: Model.Element): string[] => [
   'element',
   formatId(element.id),
-  formatWord(element.object ?? element.type ?? ''),
+  formatWord(element.object ?? element.kind ?? ''),
   ...(element.label === undefined ? [] : [formatString(element.label)]),
 ];
 
@@ -891,7 +931,7 @@ const formatObject = (object: Model.Object2D | Model.Object3D, tokens: StyleToke
   [
     'object',
     formatId(object.id),
-    formatWord(object.type),
+    formatWord(object.kind),
     ...('size' in object ? attr('size', object.size) : []),
     ...('scale' in object && object.scale ? [`scale=${formatScale(object.scale)}`] : []),
     ...attr('parts', object.parts),
@@ -960,7 +1000,7 @@ const formatLayoutRecord = (
             return parts?.dim === '2d' ? parts.elements : undefined;
           },
           (element) => formatElement2D(element, context),
-          ({ object: _object, fit: _fit, ...group }) => ({ ...group, type: 'group' }),
+          ({ object: _object, fit: _fit, ...group }) => ({ ...group, kind: 'group' }),
         )
       : elementLines(
           layout.elements,
@@ -969,7 +1009,7 @@ const formatLayoutRecord = (
             return parts?.dim === '3d' ? parts.elements : undefined;
           },
           (element) => formatElement3D(element, context),
-          ({ object: _object, fit: _fit, ...group }) => ({ ...group, type: 'group' }),
+          ({ object: _object, fit: _fit, ...group }) => ({ ...group, kind: 'group' }),
         ),
   );
 };
@@ -1007,7 +1047,7 @@ const declaredComposites = (doc: Model.SceneDocument): Map<string, DeclaredCompo
     }
     for (const model of doc.models) {
       const object = model.dim === '2d' ? model.objects[layout.id] : undefined;
-      if (object?.type === 'instance' && object.parts === layout.id) {
+      if (object?.kind === 'instance' && object.parts === layout.id) {
         found.set(layout.id, { layout, object, model: model.id });
         break;
       }
@@ -1036,7 +1076,7 @@ const groupComposites = (doc: Model.SceneDocument): Map<string, Model.LayoutReco
   const groupObjects = new Set(
     doc.models.flatMap((model) =>
       Object.values(model.objects).flatMap((object) =>
-        object.type === 'group' && object.parts === object.id ? [object.id] : [],
+        object.kind === 'group' && object.parts === object.id ? [object.id] : [],
       ),
     ),
   );

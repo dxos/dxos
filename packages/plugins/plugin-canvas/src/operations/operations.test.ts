@@ -66,7 +66,7 @@ describe('canvas generator operations', () => {
         if (!Obj.instanceOf(Scene.Layout2D, layout)) {
           throw new Error('The legacy drawing was migrated onto a scene canvas.');
         }
-        expect(layout.elements[node]).toMatchObject({ type: 'generator' });
+        expect(layout.elements[node]).toMatchObject({ kind: 'generator' });
         expect(readViews(legacy.content)[rootOf(legacy.content) ?? ''].nodes[node]).toBeUndefined();
 
         const report = yield* Operation.invoke(CanvasOperation.InspectGenerator, {
@@ -112,7 +112,7 @@ describe('canvas generator operations', () => {
           params: { count: 3 },
         });
         expect(layout.elements[node]).toMatchObject({
-          type: 'generator',
+          kind: 'generator',
           center: { x: 0, y: 0 },
           size: { width: 200, height: 200 },
         });
@@ -145,7 +145,7 @@ describe('canvas edit operations', () => {
         if (!Canvas.isCanvas(canvas)) {
           throw new Error('The legacy drawing was migrated onto a scene canvas.');
         }
-        const element = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const element = { id: 'n', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
 
         const refused = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: Ref.make(legacy),
@@ -192,7 +192,7 @@ describe('canvas edit operations', () => {
         expect(drawing.canvas.target).toBe(canvas);
 
         const root = rootOf(canvas.content) ?? '';
-        const node = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const node = { id: 'n', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
         const exit = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: Ref.make(canvas),
           intents: [{ kind: 'create', node }],
@@ -225,7 +225,7 @@ describe('canvas edit operations', () => {
 
         yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
-          intents: [{ kind: 'create', element: { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size } }],
+          intents: [{ kind: 'create', element: { id: 'n', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size } }],
         });
         // A copy, since the stored centre is live and the move below rewrites it.
         const start = { x: layout.elements.n.center?.x ?? 0, y: layout.elements.n.center?.y ?? 0 };
@@ -238,7 +238,7 @@ describe('canvas edit operations', () => {
         // A second shape on the first cell: moving `n` back onto it would overlap, so the mode refuses it.
         yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
-          intents: [{ kind: 'create', element: { id: 'm', type: 'rect', z: 'a1', center: start, size } }],
+          intents: [{ kind: 'create', element: { id: 'm', kind: 'rect', z: 'a1', center: start, size } }],
         });
         const exit = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
@@ -267,7 +267,7 @@ describe('canvas edit operations', () => {
         const size = { width: DEFAULT_LATTICE.width, height: DEFAULT_LATTICE.height };
         yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
-          intents: [{ kind: 'create', element: { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size } }],
+          intents: [{ kind: 'create', element: { id: 'n', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size } }],
         });
         yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
@@ -303,14 +303,14 @@ describe('scene revisions', () => {
         if (!Obj.instanceOf(Scene.Layout2D, layout)) {
           throw new Error('A scene canvas opens a 2D layout.');
         }
-        const element = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const element = { id: 'n', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
         const ref = Ref.make(canvas);
 
         const created = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
           intents: [{ kind: 'create', element }],
         });
-        expect(layout.elements.n).toMatchObject({ type: 'rect', center: { x: 0, y: 0 } });
+        expect(layout.elements.n).toMatchObject({ kind: 'rect', center: { x: 0, y: 0 } });
         expect(created.paths).toEqual([[layout.key, 'elements', 'n']]);
         const moved = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: ref,
@@ -355,7 +355,7 @@ describe('scene revisions', () => {
         if (!Obj.instanceOf(Scene.Layout2D, layout)) {
           throw new Error('A scene canvas opens a 2D layout.');
         }
-        const element = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const element = { id: 'n', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
         const exit = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: Ref.make(canvas),
           intents: [
@@ -382,12 +382,12 @@ describe('scene revisions', () => {
         if (!Obj.instanceOf(Scene.Layout3D, layout)) {
           throw new Error('A 3D canvas opens a 3D layout.');
         }
-        const element = { id: 'cube', type: 'box', z: 'a0' };
+        const element = { id: 'cube', kind: 'box', z: 'a0' };
         const created = yield* Operation.invoke(CanvasOperation.Apply, {
           canvas: Ref.make(canvas),
           intents: [{ kind: 'create', element }],
         });
-        expect(layout.elements.cube).toMatchObject({ type: 'box' });
+        expect(layout.elements.cube).toMatchObject({ kind: 'box' });
         expect(created.paths).toEqual([[layout.key, 'elements', 'cube']]);
       },
       Effect.provide(TestLayer),

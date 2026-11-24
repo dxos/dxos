@@ -469,7 +469,7 @@ export const Scene3DEditor = ({
           'create' in tool
             ? {
                 kind: 'create',
-                element: { id: freeId(layout, tool.create), type: tool.create, center: restingCenter(center) },
+                element: { id: freeId(layout, tool.create), kind: tool.create, center: restingCenter(center) },
               }
             : {
                 kind: 'create',
@@ -494,7 +494,7 @@ export const Scene3DEditor = ({
           const id = freeId(layout, 'link');
           onIntent(editing, {
             kind: 'bind',
-            link: { id, type: 'link', source: { node: linkFrom }, target: { node: element } },
+            link: { id, kind: 'link', source: { node: linkFrom }, target: { node: element } },
           });
           setLinkFrom(undefined);
           onSelect([id]);
@@ -680,7 +680,7 @@ export const Scene3DEditor = ({
   const oneStep = (shape: Shape) =>
     shape.kind === 'create'
       ? sizesInOneStep(shape.type)
-      : sizesInOneStep(shape.definition?.type ?? '', shape.definition);
+      : sizesInOneStep(shape.definition?.kind ?? '', shape.definition);
   const committed = useRef(false);
   const cancelSizing = () => {
     sizing.current = undefined;

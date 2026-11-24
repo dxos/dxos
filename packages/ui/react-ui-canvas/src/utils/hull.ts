@@ -16,8 +16,8 @@ import {
   type HullNode,
   type HullShape,
   type Node,
-  type NodeStyle,
   type Point,
+  type Style2D,
   isHullNode,
 } from '@dxos/scene';
 
@@ -28,13 +28,13 @@ import { createNode, nodeBounds } from './shapes.ts';
 import { restackZ } from './view-tree.ts';
 
 /**
- * The look a hull is made with: an outline, dashed. An ordinary style rather than a guide's, which is dashed and
- * unfilled whatever it is set to, so a hull's border, fill and line are the ones its style asks for.
+ * The look a hull is made with: an outline, dashed. An ordinary look rather than a guide's, which is dashed and
+ * unfilled whatever it is set to, so a hull's border, fill and line are the ones its look asks for.
  */
-export const HULL_STYLE: NodeStyle = { tone: 0, lineStyle: 'dashed' };
+export const HULL_STYLE: Style2D = { color: 'default/0', stroke: 'dashed' };
 
 /**
- * A hull's name in scene px when its style sets no size: small, as a caption in the corner of its border, where a
+ * A hull's name in scene px when its look sets no size: small, as a caption in the corner of its border, where a
  * shape's label fills the shape. The view draws it with the class of the same size (`text-sm`).
  */
 export const HULL_FONT_SIZE = 14;
@@ -630,14 +630,14 @@ export const enclose = (
   const bounds = boundsOf(members.flatMap((member) => boundsCorners(nodeBounds(member))));
   const hull: HullNode = {
     ...createNode({
-      type: 'hull',
+      kind: 'hull',
       id,
       z: topZ(Object.values(scene.nodes)),
       center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
       size: { width: bounds.width, height: bounds.height },
     }),
-    type: 'hull',
-    style: HULL_STYLE,
+    kind: 'hull',
+    overrides: HULL_STYLE,
     ...(shape ? { shape } : {}),
   };
   const held = encloseIn(scene, hull, ids);

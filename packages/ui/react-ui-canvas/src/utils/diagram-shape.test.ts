@@ -67,7 +67,7 @@ describe('diagramRoute', () => {
 describe('diagram markup', () => {
   test('a diagram node draws what the SVG file draws for its element', ({ expect }) => {
     const node: DiagramNode = {
-      type: 'diagram',
+      kind: 'diagram',
       id: 'box',
       z: 'a',
       center: { x: 96, y: 48 },
@@ -84,7 +84,15 @@ describe('diagram markup', () => {
   });
 
   test('a re-routed connector keeps its caption, beside its longest run', ({ expect }) => {
-    const link: Link = { type: 'line', id: 'a-b', z: 'a', source: { node: 'a' }, target: { node: 'b' }, text: 'calls' };
+    const link: Link = {
+      kind: 'link',
+      path: 'line',
+      id: 'a-b',
+      z: 'a',
+      source: { node: 'a' },
+      target: { node: 'b' },
+      label: 'calls',
+    };
     const elements = diagramLinkElements(
       link,
       { caption: { x: 0, y: 0 } },

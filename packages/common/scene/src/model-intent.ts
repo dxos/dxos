@@ -36,7 +36,7 @@ export type ModelIntent =
       readonly model: string;
       readonly layout: string;
       readonly ids: readonly string[];
-      readonly object: { readonly id: string; readonly type: string };
+      readonly object: { readonly id: string; readonly kind: string };
     }
   | {
       readonly kind: 'group';
@@ -154,7 +154,7 @@ const split = <E extends Element2D | Element3D>(
       ...(isBound(element) ? { source: rebind(element.source), target: rebind(element.target) } : {}),
     };
   }
-  const element = placing(Object.values(inside).filter((element) => element.type !== 'link'));
+  const element = placing(Object.values(inside).filter((element) => element.kind !== 'link'));
   return { inside, outside: { ...outside, [id]: element }, element };
 };
 
@@ -181,7 +181,7 @@ const extract = (
   const object = { ...intent.object, parts: partsId };
   const nextModel = withObject(model, object);
   if (!nextModel) {
-    return problem(`An object of type "${intent.object.type}" does not fit a ${model.dim} model.`);
+    return problem(`An object of kind "${intent.object.kind}" does not fit a ${model.dim} model.`);
   }
   let parts: LayoutRecord;
   let host: LayoutRecord;
@@ -244,7 +244,7 @@ const group = (
     problems: [{ part: 'layout', id: layout.id, message }],
   });
   const ids = new Set(
-    intent.members.filter((id) => layout.elements[id] !== undefined && layout.elements[id].type !== 'link'),
+    intent.members.filter((id) => layout.elements[id] !== undefined && layout.elements[id].kind !== 'link'),
   );
   if (ids.size === 0) {
     return problem('A group needs at least one element of the layout.');
@@ -256,7 +256,7 @@ const group = (
     (key) => doc.layouts.some((record) => record.id === key) || model.objects[key] !== undefined,
     `${layout.id}/${intent.id}`,
   );
-  const nextModel = withObject(model, { id: compositeId, type: 'group', parts: compositeId });
+  const nextModel = withObject(model, { id: compositeId, kind: 'group', parts: compositeId });
   if (!nextModel) {
     return problem(`A group does not fit a ${model.dim} model.`);
   }
@@ -315,7 +315,7 @@ const ungroup = (
   const element = layout.elements[intent.id];
   const object = element?.object === undefined ? undefined : model.objects[element.object];
   const parts = object?.parts === undefined ? undefined : doc.layouts.find((record) => record.id === object.parts);
-  if (!element || !object || object.type !== 'group' || !parts || parts.dim !== layout.dim) {
+  if (!element || !object || object.kind !== 'group' || !parts || parts.dim !== layout.dim) {
     return problem(`"${intent.id}" is not a group.`);
   }
   const fromPort = (end: ElementEndpoint | undefined) =>

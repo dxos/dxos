@@ -3,24 +3,27 @@
 //
 
 //
-// Pure geometry of the node and link types (§4): every node's frame is its `size` centred on `center`,
-// so the engine needs no registry to place, hit or route any type; the built-in types' defaults and
+// Pure geometry of the nodes and links (§4): every node's frame is its `size` centred on `center`,
+// so the engine needs no registry to place, hit or route any kind; the built-in kinds' defaults and
 // display text live here too. Rendering lives in the registry.
 //
 
 import {
   type Bounds,
   type BuiltinNode,
-  type BuiltinNodeType,
+  type BuiltinNodeKind,
   DEFAULT_GRID,
   type Endpoint,
   type Link,
+  LINK_KIND,
   type LinkEnds,
-  type LinkType,
+  type LinkPath,
   MAJOR_GRID_RATIO,
   type Node,
   type Point,
   type Size,
+  linkMarkers,
+  linkPath,
 } from '@dxos/scene';
 
 import { type LinkValues } from '../model/index.ts';
@@ -56,10 +59,10 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
 });
 
 /**
- * The built-in types' sizes when created, in nominal units: one unit is the drawing's major grid cell, so a
+ * The built-in kinds' sizes when created, in nominal units: one unit is the drawing's major grid cell, so a
  * new shape scales with the drawing's grid.
  */
-export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
+export const NOMINAL_SIZES: Record<BuiltinNodeKind, Size> = {
   rect: { width: 4, height: 2 },
   ellipse: { width: 2, height: 2 },
   cloud: { width: 3, height: 2 },
@@ -76,10 +79,10 @@ export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
 };
 
 /**
- * The built-in types' sizes in scene px at the default grid, for fixtures and imports, whose layouts are written
+ * The built-in kinds' sizes in scene px at the default grid, for fixtures and imports, whose layouts are written
  * against them: each a whole number of major cells, so they land on the grid move and resize snap to.
  */
-export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
+export const DEFAULT_SIZES: Record<BuiltinNodeKind, Size> = {
   rect: nominalSize({ width: 4, height: 4 }),
   ellipse: nominalSize({ width: 4, height: 4 }),
   cloud: nominalSize({ width: 6, height: 4 }),
@@ -99,7 +102,7 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
 export const DEFAULT_SHAPE_SIZE: Size = DEFAULT_SIZES.rect;
 
 export type CreateNodeProps = {
-  type: BuiltinNodeType;
+  kind: BuiltinNodeKind;
   id: string;
   z: string;
   center: Point;
@@ -108,49 +111,49 @@ export type CreateNodeProps = {
   scene?: string;
 };
 
-/** A new built-in node of `type` with its type's default content; a host type creates through its `NodeDef`. */
+/** A new built-in node of `kind` with its kind's default content; a host kind creates through its `NodeDef`. */
 export const createNode = ({
-  type,
+  kind,
   id,
   z,
   center,
-  size = DEFAULT_SIZES[type],
+  size = DEFAULT_SIZES[kind],
   scene,
 }: CreateNodeProps): BuiltinNode => {
-  switch (type) {
+  switch (kind) {
     // A new box carries no label: a placeholder would have to be cleared before a real one is typed.
     case 'rect':
-      return { type, id, z, center, size };
+      return { kind, id, z, center, size };
     case 'ellipse':
-      return { type, id, z, center, size };
+      return { kind, id, z, center, size };
     // The count is set, so the panel shows the shape's own value rather than an empty field.
     case 'cloud':
-      return { type, id, z, center, size, params: { bumps: DEFAULT_CLOUD_BUMPS } };
+      return { kind, id, z, center, size, params: { bumps: DEFAULT_CLOUD_BUMPS } };
     case 'polygon':
-      return { type, id, z, center, size, params: { sides: DEFAULT_POLYGON_SIDES } };
+      return { kind, id, z, center, size, params: { sides: DEFAULT_POLYGON_SIDES } };
     // Its recipe's defaults stand until a parameter is set, so `params` starts unset.
     case 'shape':
-      return { type, id, z, center, size, recipe: DEFAULT_SHAPE };
+      return { kind, id, z, center, size, recipe: DEFAULT_SHAPE };
     case 'polyline':
-      return { type, id, z, center, size, points: [...DEFAULT_POLYLINE_POINTS] };
+      return { kind, id, z, center, size, points: [...DEFAULT_POLYLINE_POINTS] };
     // Its frame and border follow the nodes that name it as their parent, once any does.
     case 'hull':
-      return { type, id, z, center, size };
+      return { kind, id, z, center, size };
     case 'note':
-      return { type, id, z, center, size, text: 'Note' };
+      return { kind, id, z, center, size, label: 'Note' };
     case 'view':
-      return { type, id, z, center, size, scene: scene ?? id };
+      return { kind, id, z, center, size, scene: scene ?? id };
     case 'instance':
-      return { type, id, z, center, size, composite: scene ?? '' };
+      return { kind, id, z, center, size, composite: scene ?? '' };
     case 'generator':
-      return { type, id, z, center, size, generator: scene ?? '', params: {} };
+      return { kind, id, z, center, size, generator: scene ?? '', params: {} };
     case 'diagram':
       // The element's geometry is the frame's, whatever the element says.
-      return { type, id, z, center, size, element: { kind: 'rect', id, x: 0, y: 0, w: size.width, h: size.height } };
+      return { kind, id, z, center, size, element: { kind: 'rect', id, x: 0, y: 0, w: size.width, h: size.height } };
     case 'path':
       // A diamond until the path is set.
       return {
-        type,
+        kind,
         id,
         z,
         center,
@@ -162,11 +165,11 @@ export const createNode = ({
 };
 
 /** What a shape copy keeps of its own (the fresh node's) rather than the source's: identity, place and child scene. */
-const OWN_FIELDS = new Set(['id', 'type', 'z', 'center', 'scene']);
+const OWN_FIELDS = new Set(['id', 'kind', 'z', 'center', 'scene']);
 
 /**
- * A new shape like `source` (its size, look and ports) built on `fresh`, the type's own new node at the
- * new place: it keeps its own identity and child scene, and the type's text rather than the source's.
+ * A new shape like `source` (its size, look and ports) built on `fresh`, the kind's own new node at the
+ * new place: it keeps its own identity and child scene, and the kind's text rather than the source's.
  */
 export const cloneShape = (source: Node, fresh: Node, parts: readonly PartField[] = []): Node => {
   const text = new Set(parts.map(({ field }) => field));
@@ -177,7 +180,7 @@ export const cloneShape = (source: Node, fresh: Node, parts: readonly PartField[
 };
 
 export type CreateLinkProps = {
-  type: LinkType;
+  path: LinkPath;
   id: string;
   z: string;
   source: Endpoint;
@@ -185,29 +188,27 @@ export type CreateLinkProps = {
   ends?: LinkEnds;
 };
 
-/** A new link of `type`; a spline starts with no control points, and its span's midpoint handle adds the first. */
-export const createLink = ({ type, id, z, source, target, ends }: CreateLinkProps): Link => {
-  const base = { id, z, source, target, ...(ends ? { ends } : {}) };
-  switch (type) {
-    case 'line':
-    case 'ortho':
-    case 'curve':
-    case 'smart':
-      return { type, ...base };
-    case 'spline':
-      return { type, ...base, points: [] };
-  }
-};
+/** A new link running `path`; a spline starts with no control points, and its span's midpoint handle adds the first. */
+export const createLink = ({ path, id, z, source, target, ends }: CreateLinkProps): Link => ({
+  kind: LINK_KIND,
+  id,
+  z,
+  source,
+  target,
+  path,
+  ...(path === 'spline' ? { points: [] } : {}),
+  ...linkMarkers(ends ?? {}),
+});
 
 /**
- * The `update` values that reverse a link: source and target swap while the markers stay at the start and
- * end, so an arrow comes to point the other way; a spline's control points run the other way, so the drawn
+ * The `update` values that reverse a link: source and target swap while the markers stay at the tail and
+ * head, so an arrow comes to point the other way; a spline's control points run the other way, so the drawn
  * path keeps its shape.
  */
 export const flipLink = (link: Link): LinkValues => ({
   source: link.target,
   target: link.source,
-  ...(link.type === 'spline' ? { points: [...link.points].reverse() } : {}),
+  ...(linkPath(link) === 'spline' ? { points: [...(link.points ?? [])].reverse() } : {}),
 });
 
 /** A fresh element or scene id: `prefix` and a random suffix. */

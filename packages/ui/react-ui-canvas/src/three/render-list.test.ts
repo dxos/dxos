@@ -34,8 +34,8 @@ describe('renderList', () => {
       scenes: [scene],
       layouts: [
         layout('a', [
-          { id: 'a', type: 'sphere', center: { x: 0, y: 0, z: 0 } },
-          { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
+          { id: 'a', kind: 'sphere', center: { x: 0, y: 0, z: 0 } },
+          { id: 'ab', kind: 'link', source: { node: 'a' }, target: { node: 'b' } },
         ]),
       ],
       models: [],
@@ -59,8 +59,8 @@ describe('renderList', () => {
           id: 'm',
           dim: '3d',
           objects: {
-            'of-a': { id: 'of-a', type: 'sphere', parts: 'a' },
-            'of-b': { id: 'of-b', type: 'sphere', parts: 'b' },
+            'of-a': { id: 'of-a', kind: 'sphere', parts: 'a' },
+            'of-b': { id: 'of-b', kind: 'sphere', parts: 'b' },
           },
         },
       ],
@@ -73,7 +73,7 @@ describe('renderList', () => {
     const list = renderList(
       {
         scenes: [scene],
-        layouts: [layout('a', [{ id: 'a', type: 'sphere', center: { x: 0, y: 0, z: 0 } }])],
+        layouts: [layout('a', [{ id: 'a', kind: 'sphere', center: { x: 0, y: 0, z: 0 } }])],
         models: [],
       },
       scene,

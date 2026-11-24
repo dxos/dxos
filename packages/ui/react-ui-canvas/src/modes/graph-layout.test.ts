@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { applyIntent } from '@dxos/scene';
+import { applyIntent, linkPath } from '@dxos/scene';
 
 import { toRenderList2D } from '../viewport2d/index.ts';
 import { dynamicConstrain } from './dynamic.ts';
@@ -27,14 +27,14 @@ describe('graphLayout', () => {
   test('a graph on a lattice is a dynamic layout with one shape per cell and a smart link per edge', ({ expect }) => {
     const layout = graphLayout(GRAPH, {
       lattice: LATTICE,
-      shape: () => ({ type: 'card' }),
-      link: { ends: { end: 'arrow' } },
+      shape: () => ({ kind: 'card' }),
+      link: { ends: { head: 'arrow' } },
     });
     expect(layout.lattice).toEqual(LATTICE);
     expect(layout.arrange).toEqual({ kind: 'dynamic', params: { arrange: 'crossings' } });
     const shapes = GRAPH.nodes.map(({ id }) => layout.elements[id]);
     for (const shape of shapes) {
-      expect(shape?.type).toBe('card');
+      expect(shape?.kind).toBe('card');
       expect(shape?.size).toEqual({ width: 192, height: 96 });
       // Every centre on a whole pitch, so each shape fills one cell.
       expect(Math.abs((shape?.center?.x ?? 0.5) % (192 + 64))).toBe(0);
@@ -44,21 +44,23 @@ describe('graphLayout', () => {
     // Ranked along the edges: the root above what it depends on.
     expect(layout.elements.app.center?.y).toBeLessThan(layout.elements.store.center?.y ?? 0);
     expect(layout.elements['app->ui']).toMatchObject({
-      type: 'link',
+      kind: 'link',
       source: { node: 'app' },
       target: { node: 'ui' },
-      props: { canvas: { type: 'smart', ends: { end: 'arrow' } } },
+      path: 'smart',
+      head: 'arrow',
     });
   });
 
-  test('the 2D viewport draws the host type and smart links', ({ expect }) => {
-    const layout = graphLayout(GRAPH, { lattice: LATTICE, shape: () => ({ type: 'card' }) });
+  test('the 2D viewport draws the host kind and smart links', ({ expect }) => {
+    const layout = graphLayout(GRAPH, { lattice: LATTICE, shape: () => ({ kind: 'card' }) });
     const view = toRenderList2D(graphDocument(layout), layout);
-    expect(Object.values(view.nodes).map(({ type }) => type)).toEqual(['card', 'card', 'card', 'card']);
-    expect(Object.values(view.links).map(({ type }) => type)).toEqual(['smart', 'smart', 'smart', 'smart']);
+    expect(Object.values(view.nodes).map(({ kind }) => kind)).toEqual(['card', 'card', 'card', 'card']);
+    expect(Object.values(view.links).map((link) => link.kind)).toEqual(['link', 'link', 'link', 'link']);
+    expect(Object.values(view.links).map(linkPath)).toEqual(['smart', 'smart', 'smart', 'smart']);
   });
 
-  test("a host type's fields, layer and lock reach the node the viewport draws", ({ expect }) => {
+  test("a host kind's fields, layer and lock reach the node the viewport draws", ({ expect }) => {
     const layers = [
       { id: 'backdrop', name: 'Backdrop', z: 'a0' },
       { id: 'graph', name: 'Graph', z: 'a1' },
@@ -67,19 +69,19 @@ describe('graphLayout', () => {
       layers,
       shape: (node) =>
         node.id === 'app'
-          ? { type: 'diagram', layer: 'backdrop', locked: true, label: 'App', fields: { heading: { id: 'title' } } }
-          : { type: 'card', layer: 'graph' },
-      link: { type: 'curve', layer: 'graph' },
+          ? { kind: 'diagram', layer: 'backdrop', locked: true, label: 'App', fields: { heading: { id: 'title' } } }
+          : { kind: 'card', layer: 'graph' },
+      link: { path: 'curve', layer: 'graph' },
     });
     const view = toRenderList2D(graphDocument(layout), layout);
     expect(view.nodes.app).toMatchObject({
-      type: 'diagram',
+      kind: 'diagram',
       layer: 'backdrop',
       locked: true,
       label: 'App',
       heading: { id: 'title' },
     });
-    expect(view.links['app->ui']).toMatchObject({ type: 'curve', layer: 'graph' });
+    expect(view.links['app->ui']).toMatchObject({ kind: 'link', path: 'curve', layer: 'graph' });
     expect(Object.keys(view.layers ?? {})).toEqual(['backdrop', 'graph']);
   });
 
@@ -131,7 +133,7 @@ describe('splitGraphEdit', () => {
       kind: 'batch',
       intents: [
         move,
-        { kind: 'create', element: { id: 'new', type: 'link', source: { node: 'ui' }, target: { node: 'store' } } },
+        { kind: 'create', element: { id: 'new', kind: 'link', source: { node: 'ui' }, target: { node: 'store' } } },
       ],
     });
     expect(edit).toEqual({ deleted: [], linked: [{ from: 'ui', to: 'store' }], rest: move });

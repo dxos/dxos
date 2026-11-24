@@ -14,7 +14,7 @@ import { print, printCommands } from './print.ts';
 const KITCHEN_SINK = `object pkgA @ -24,-24 scale=2 index="a1" ref="dxn:echo:@:01ABC" {
   rect frame 0,0 248x172 "Package A" rotation=45 corners=top color=grey stroke=dashed
   ellipse blob 4,4 20x10 fill=pattern
-  diamond gate 0,0 30x30
+  diamond gate 0,0 30x30 corners=all color=teal fill=glass stroke=none
   triangle warn 0,0 30x30 weight=xl
   circle dot 10,10 4 "o" color=red
   line path 0,0 10,10 20,0 closed=true stroke=dotted
@@ -126,7 +126,7 @@ describe('dsl round trip', () => {
 
   test("a kind's field escapes a name the element already claims", ({ expect }) => {
     // `substrate` keeps a numeric `fill` and `fill` is also the style attribute, so without an escape the reader
-    // resolves it against `none|solid|pattern|tint` and rejects the value. The prefix escapes itself, so a field
+    // resolves it against the fills the schema names and rejects the value. The prefix escapes itself, so a field
     // genuinely called `data-fill` is written `data-data-fill` and still reads back as its own name.
     // The element's own attributes print first, then the kind's, each by name: the order is what makes the text
     // stable, not the order the fields happened to be written in.
@@ -135,7 +135,7 @@ describe('dsl round trip', () => {
     const { commands, problems } = parse(source);
     expect(problems).toEqual([]);
     const [element] = toScene(commands).objects[0].elements;
-    expect(element.kind === 'rect' && [element.type, element.fill, element.data]).toEqual([
+    expect(element.kind === 'rect' && [element.component, element.fill, element.data]).toEqual([
       'substrate',
       'solid',
       { 'fill': 0.55, 'data-fill': 'on' },
@@ -163,7 +163,7 @@ describe('dsl round trip', () => {
     const { commands, problems } = parse(source);
     expect(problems).toEqual([]);
     const elements = toScene(commands).objects[0].elements;
-    const summary = elements.map((element) => [element.kind, element.id, Reflect.get(element, 'type')]);
+    const summary = elements.map((element) => [element.kind, element.id, Reflect.get(element, 'component')]);
     expect(summary).toEqual([
       ['grid', 'root', undefined],
       ['rect', 's0', 'graph'],
@@ -202,7 +202,7 @@ describe('dsl round trip', () => {
               y: 0,
               w: 10,
               h: 10,
-              type: 'card',
+              component: 'card',
               data: { 'text': 'hello', 'font.size': 12, 'half': 1 / 2 },
             },
           ],
@@ -303,6 +303,113 @@ describe('dsl round trip', () => {
     expect(roundTrip(flat)).toEqual('object A @ 0,0 {\n  grid root 0,0 900x300 cols=2 {\n    rect a\n  }\n}\n');
   });
 
+  test('a colour is a theme name, a name at a tone, or a quoted CSS colour, and each reads back', ({ expect }) => {
+    // A tone follows a `/` and is a digit, where a ref has a letter, so it is written bare; a literal is quoted,
+    // because a bare `#` opens a comment.
+    const source = [
+      'object A @ 0,0 {',
+      '  rect hue 0,0 10x10 color=teal',
+      '  rect toned 0,0 10x10 color=blue/2',
+      '  rect own 0,0 10x10 color=default/0',
+      '  rect hex 0,0 10x10 color="#1e90ff"',
+      '  text css 0,0 "hi" color="rgb(30 144 255)"',
+      '  arrow link hue -> toned color=light-blue/3',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    expect(toScene(commands).objects[0].elements.map(({ color }) => color)).toEqual([
+      'teal',
+      'blue/2',
+      'default/0',
+      '#1e90ff',
+      'rgb(30 144 255)',
+      'light-blue/3',
+    ]);
+    expect(roundTrip(source)).toEqual(source);
+    // A name may be quoted too; it prints bare.
+    expect(roundTrip('object A @ 0,0 {\n  rect box 0,0 10x10 color="blue/2"\n}\n')).toEqual(
+      'object A @ 0,0 {\n  rect box 0,0 10x10 color=blue/2\n}\n',
+    );
+  });
+
+  test('a toned colour is not a ref, and a `#` after an attribute is still a comment', ({ expect }) => {
+    const { commands, problems } = parse(
+      'object A @ 0,0 {\n  rect box 0,0 10x10 color=blue/2 #fff is not a colour here\n  arrow link A/box#left -> B/box\n}\n',
+    );
+    expect(problems).toEqual([]);
+    const [box, link] = toScene(commands).objects[0].elements;
+    expect(box.color).toEqual('blue/2');
+    expect(link.kind === 'arrow' && [link.from, link.to]).toEqual(['A/box#left', 'B/box']);
+  });
+
+  test('a shape with no outline says `stroke=none`', ({ expect }) => {
+    const source = 'object A @ 0,0 {\n  rect label 0,0 10x10 "Label" fill=none stroke=none\n}\n';
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    expect(toScene(commands).objects[0].elements[0]).toMatchObject({ fill: 'none', stroke: 'none' });
+    expect(roundTrip(source)).toEqual(source);
+  });
+
+  test('text written with `border` reads as the stroke it meant, and prints as one', ({ expect }) => {
+    // Before `stroke=none`, a flag said whether a shape drew its outline: `false` on a label, and `true` on a grid
+    // or a component, which draw none unless told to.
+    const source = [
+      'object A @ 0,0 {',
+      '  rect label 0,0 10x10 "Label" border=false',
+      '  rect dashed 0,0 10x10 stroke=dashed border=false',
+      '  grid frame 0,0 10x10 border=true',
+      '  grid ruled 0,0 10x10 stroke=dotted border=true',
+      '  custom graph 0,0 10x10 kind=graph border=true',
+      // A line has no outline apart from itself, so the flag never hid one.
+      '  line rule 0,0 10,0 stroke=dashed border=false',
+      '  arrow link label -> frame border=false',
+      '}',
+      '',
+    ].join('\n');
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const elements = toScene(commands).objects[0].elements;
+    expect(elements.map(({ stroke }) => stroke)).toEqual([
+      'none',
+      'none',
+      'solid',
+      'dotted',
+      'solid',
+      'dashed',
+      undefined,
+    ]);
+    expect(elements.some((element) => 'border' in element)).toBe(false);
+    // The component's box keeps the flag as its style, not as a field of the component.
+    expect(Reflect.get(elements[4], 'data')).toBeUndefined();
+    expect(printCommands(commands)).toEqual(
+      [
+        'object A @ 0,0 {',
+        '  rect label 0,0 10x10 "Label" stroke=none',
+        '  rect dashed 0,0 10x10 stroke=none',
+        '  grid frame 0,0 10x10 stroke=solid',
+        '  grid ruled 0,0 10x10 stroke=dotted',
+        '  custom graph 0,0 10x10 kind=graph stroke=solid',
+        '  line rule 0,0 10,0 stroke=dashed',
+        '  arrow link label -> frame',
+        '}',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  test("a component's own field called `border` is escaped, since the name is still read as the stroke", ({
+    expect,
+  }) => {
+    const source = 'object A @ 0,0 {\n  custom box 0,0 10x10 kind=card data-border=thick\n}\n';
+    const { commands, problems } = parse(source);
+    expect(problems).toEqual([]);
+    const [element] = toScene(commands).objects[0].elements;
+    expect(element.kind === 'rect' && [element.stroke, element.data]).toEqual([undefined, { border: 'thick' }]);
+    expect(roundTrip(source)).toEqual(source);
+  });
+
   test('whitespace is insignificant', ({ expect }) => {
     const dense = 'object A @ 0,0 {rect box 0,0 10x10 "hi" color=red}';
     const loose = 'object   A\n  @ 0 , 0\n{\n  rect\n    box\n    0,0\n    10x10\n    "hi"\n    color=red\n}\n';
@@ -364,9 +471,21 @@ describe('dsl diagnostics', () => {
   });
 
   test('a value outside the schema literals is reported', ({ expect }) => {
-    const { problems } = parse('object A @ 0,0 {\n  rect box 0,0 10x10 color=puce\n}\n');
+    const { problems } = parse('object A @ 0,0 {\n  rect box 0,0 10x10 fill=puce\n}\n');
     expect(problems).toHaveLength(1);
-    expect(problems[0].message).toContain('"color" takes one of');
+    expect(problems[0].message).toContain('"fill" takes one of');
+  });
+
+  test('a colour is an open set, checked by its spelling', ({ expect }) => {
+    const messages = (value: string) =>
+      parse(`object A @ 0,0 {\n  rect box 0,0 10x10 color=${value}\n}\n`).problems.map(({ message }) => message);
+    // Any name may be a theme's, so only what no colour can be spelled as is refused.
+    expect(messages('puce')).toEqual([]);
+    for (const value of ['Blue', '12', '"blue/12"', '"#12"', '"not a colour"']) {
+      expect(messages(value)).toEqual([
+        '"color" takes a colour: a name (blue), a name at a tone (blue/2), or a quoted CSS colour.',
+      ]);
+    }
   });
 
   test('a portal without a ref is reported', ({ expect }) => {

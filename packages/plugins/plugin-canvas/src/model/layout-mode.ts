@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas/headless';
-import { Scene } from '@dxos/scene';
+import { Scene, upgradeConstraint } from '@dxos/scene';
 
 import { Canvas } from '#types';
 
@@ -30,7 +30,13 @@ const keptConstraints = (props: unknown): readonly Scene.Constraint[] => {
     typeof props === 'object' && props !== null ? Reflect.get(props, 'constrained') : undefined;
   const constraints: unknown =
     typeof constrained === 'object' && constrained !== null ? Reflect.get(constrained, 'constraints') : undefined;
-  return isConstraints(constraints) ? plain(constraints) : [];
+  // Kept there before a relation was a placement (`east`), so each is read in either spelling.
+  const current = Array.isArray(constraints)
+    ? constraints.map((constraint: unknown) =>
+        typeof constraint === 'object' && constraint !== null ? upgradeConstraint({ ...constraint }) : constraint,
+      )
+    : constraints;
+  return isConstraints(current) ? plain(current) : [];
 };
 
 type ModeFields = Pick<Scene.LayoutRecord2D, 'lattice' | 'constraints' | 'arrange' | 'props'>;

@@ -59,11 +59,11 @@ describe('makeLayoutWriter', () => {
     expect(Obj.instanceOf(Scene.Layout2D, layout) && layout.elements.b).toMatchObject({
       object: 'box',
       center: { x: 320, y: 64 },
-      overrides: { hue: 'green' },
+      overrides: { color: 'green' },
     });
     // The size and the rest of the style are still the object's.
     expect(Obj.instanceOf(Scene.Layout2D, layout) && layout.elements.b.size).toBeUndefined();
-    expect(Obj.instanceOf(Scene.Layout2D, layout) && layout.elements.b.overrides).toEqual({ hue: 'green' });
+    expect(Obj.instanceOf(Scene.Layout2D, layout) && layout.elements.b.overrides).toEqual({ color: 'green' });
   });
 
   test('a portal and its View a write makes are listed on the canvas, and removed with the portal', () => {
@@ -85,10 +85,10 @@ describe('makeLayoutWriter', () => {
     const size = { width: 128, height: 128 };
     const inner: RenderList2D = {
       id: 'g',
-      nodes: { x: createNode({ type: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
+      nodes: { x: createNode({ kind: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
       links: {},
     };
-    const portal = createNode({ type: 'view', id: 'p', z: 'a5', center: { x: 0, y: 0 }, size, scene: 'g' });
+    const portal = createNode({ kind: 'view', id: 'p', z: 'a5', center: { x: 0, y: 0 }, size, scene: 'g' });
     const rootView = views[root];
     const withPortal = { ...views, g: inner, [root]: { ...rootView, nodes: { ...rootView.nodes, p: portal } } };
     writer.write(withPortal, views);

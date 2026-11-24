@@ -12,7 +12,7 @@ import { diffPaths, patchSource, readPath, recordChanges, sameValue, writePath }
 
 const box = (id: string, x = 0): NodeBase => ({
   id,
-  type: 'rectangle',
+  kind: 'rectangle',
   z: 'a0',
   center: { x, y: 0 },
   size: { width: 64, height: 64 },

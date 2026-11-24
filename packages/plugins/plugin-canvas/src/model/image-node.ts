@@ -15,7 +15,7 @@ import { type NodeBase, nodeBase } from '@dxos/scene';
 export const IMAGE_FITS = ['contain', 'cover', 'fill'] as const;
 
 export const ImageNode = Schema.Struct({
-  type: Schema.Literal('image'),
+  kind: Schema.Literal('image'),
   ...nodeBase,
   /** The linked picture. */
   src: Schema.optional(Schema.String.annotate({ title: 'URL', description: 'Link to the image (https://…)' })),
@@ -25,7 +25,7 @@ export const ImageNode = Schema.Struct({
 });
 export type ImageNode = Schema.Schema.Type<typeof ImageNode>;
 
-export const isImageNode = (node: NodeBase): node is ImageNode => node.type === 'image';
+export const isImageNode = (node: NodeBase): node is ImageNode => node.kind === 'image';
 
 /** Only web links are drawn: a `javascript:` or `data:` URL in shared data is not followed. */
 export const imageUrl = (src: string | undefined): string | undefined => {

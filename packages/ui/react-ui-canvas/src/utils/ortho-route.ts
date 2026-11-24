@@ -32,7 +32,7 @@ const HEADINGS: readonly Point[] = [
   { x: 0, y: -1 },
 ];
 
-const HEADING: Record<Side, number> = { e: 0, s: 1, w: 2, n: 3 };
+const HEADING: Record<Side, number> = { right: 0, bottom: 1, left: 2, top: 3 };
 
 const rectOf = ({ point, bounds }: RouteEnd): Rect =>
   bounds
@@ -42,13 +42,13 @@ const rectOf = ({ point, bounds }: RouteEnd): Rect =>
 /** Where an end's elbow turns at the soonest: straight out of its port, on the edge of the room kept round its shape. */
 const exitOf = ({ point, side }: RouteEnd, zone: Rect): Point => {
   switch (side) {
-    case 'e':
+    case 'right':
       return { x: zone.right, y: point.y };
-    case 'w':
+    case 'left':
       return { x: zone.left, y: point.y };
-    case 'n':
+    case 'top':
       return { x: point.x, y: zone.top };
-    case 's':
+    case 'bottom':
       return { x: point.x, y: zone.bottom };
   }
 };

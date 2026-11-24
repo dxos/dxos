@@ -18,6 +18,7 @@ import {
   type Point,
   type ViewId,
   isPointEndpoint,
+  linkPath,
 } from '@dxos/scene';
 
 import { type RenderList2D, type RenderLists2D, openedRecord } from '../model/index.ts';
@@ -114,18 +115,18 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ, layer
   const shift = (point: Point): Point => ({ x: point.x + offset.x, y: point.y + offset.y });
   const onLayer = layer !== undefined ? { layer } : {};
   const nodes: Node[] = clipboard.nodes.map((node, index) => {
-    const id = createId(node.type);
+    const id = createId(node.kind);
     idMap.set(node.id, id);
     // A pasted portal shares the child scene: two portals to one scene are Muse "linked cards" (§4).
     return { ...node, ...onLayer, id, z: nodeZ(index), center: shift(node.center) };
   });
   const links: Link[] = clipboard.links.map((link, index) => {
-    const id = createId(link.type);
+    const id = createId(linkPath(link));
     idMap.set(link.id, id);
     const remap = (end: Endpoint): Endpoint =>
       isPointEndpoint(end) ? { point: shift(end.point) } : { ...end, node: idMap.get(end.node) ?? end.node };
     const ends = { source: remap(link.source), target: remap(link.target) };
-    return link.type === 'spline'
+    return link.points
       ? { ...link, ...onLayer, id, z: linkZ(index), ...ends, points: link.points.map(shift) }
       : { ...link, ...onLayer, id, z: linkZ(index), ...ends };
   });

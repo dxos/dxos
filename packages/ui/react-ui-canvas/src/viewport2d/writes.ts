@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LayoutIntent, type Scene, type ViewId, applyIntent, findLayout, layoutChanges } from '@dxos/scene';
+import { type LayoutIntent, Scene, type ViewId, applyIntent, findLayout, layoutChanges } from '@dxos/scene';
 
 import {
   type ConstrainContext,
@@ -52,24 +52,29 @@ const overObject = (element: Element, object: Scene.Object2D): Element => {
 };
 
 /**
- * The element a changed node or link writes over the stored one: the canvas's fields from the RenderList2D, the props other
- * writers own and the DSL identity from the stored element, and an object placement kept while the node is still that
- * object's kind.
+ * The element a changed node or link writes over the stored one: the node or link itself, the props other writers own
+ * and the DSL identity from the stored element, and an object placement kept while the node is still that object's
+ * kind. A field those props hold is theirs alone, so the node's copy of it is not stored beside it.
  */
 const mergeElement = (
   current: Element | undefined,
   written: Element,
   objectOf: (id: string) => Scene.Object2D | undefined,
 ): Element => {
-  const { canvas: _canvas, ...kept } = current?.props ?? {};
-  const { type, ...element } = { ...clone(written), props: { ...kept, ...written.props } };
+  const kept = current?.props ?? {};
+  const own = clone(written);
+  for (const key of Object.keys(kept)) {
+    // A prop that shares a name with a field every element has is not that field.
+    !Object.hasOwn(Scene.Element2D.fields, key) && Reflect.deleteProperty(own, key);
+  }
+  const { kind, ...element } = { ...own, ...(Object.keys(kept).length > 0 ? { props: kept } : {}) };
   const dsl = element.dsl ?? current?.dsl;
   const placed = current?.object;
   const object = placed === undefined ? undefined : objectOf(placed);
   const value: Element =
-    placed !== undefined && object && element.object === undefined && type === object.type
+    placed !== undefined && object && element.object === undefined && kind === object.kind
       ? overObject({ ...element, object: placed }, object)
-      : { ...element, ...(type === undefined ? {} : { type }) };
+      : { ...element, ...(kind === undefined ? {} : { kind }) };
   return dsl === undefined ? value : { ...value, dsl };
 };
 

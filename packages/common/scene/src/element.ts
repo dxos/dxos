@@ -17,13 +17,12 @@ import {
   VectorAnnotationId,
 } from '@dxos/ui-types';
 
+import { Color } from './color.ts';
 import * as Shape from './shape.ts';
+import { Font } from './theme.ts';
+import { Align, Bounds, Corners, Fill, Point, Side, Stroke, VerticalAlign, Weight } from './vocabulary.ts';
 
-export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
-export type Point = Schema.Schema.Type<typeof Point>;
-
-export const Size = Schema.Struct({ width: Schema.Number, height: Schema.Number });
-export type Size = Schema.Schema.Type<typeof Size>;
+export * from './vocabulary.ts';
 
 /** Minor grid spacing in scene px (the finest line the grid draws at zoom 1). */
 export const DEFAULT_GRID = 12;
@@ -50,14 +49,6 @@ const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber(
   .annotate({ [VectorAnnotationId]: true })
   .pipe(AnimatableAnnotation.set('size'));
 
-export const Bounds = Schema.Struct({
-  x: Schema.Number,
-  y: Schema.Number,
-  width: Schema.Number,
-  height: Schema.Number,
-});
-export type Bounds = Schema.Schema.Type<typeof Bounds>;
-
 export type NodeId = string;
 export type LinkId = string;
 /** A node or link id; the two namespaces never collide within a scene. */
@@ -65,21 +56,53 @@ export type ElementId = string;
 export type ViewId = string;
 export type PortId = string;
 
-export const Side = Schema.Literals(['n', 'e', 's', 'w']);
-export type Side = Schema.Schema.Type<typeof Side>;
-
 /** What a port takes: links leaving it, links arriving at it, or either (the default). */
 export const PortDirection = Schema.Literals(['in', 'out', 'any']);
 export type PortDirection = Schema.Schema.Type<typeof PortDirection>;
 
-/** An attachment point on a node's frame: a side, a 0..1 offset along it, and what it accepts. */
+/**
+ * An attachment point on a node, as a fraction of its frame: `0,0` is the frame's top-left corner and `1,1` its
+ * bottom-right, so the port keeps its place however the node is resized. The same point a draw.io stencil's
+ * `<constraint x y>` states.
+ */
 export const Port = Schema.Struct({
   id: Schema.String,
-  side: Side,
-  offset: Schema.Number,
+  x: Schema.Number,
+  y: Schema.Number,
+  /** The side a link leaves the port from; unset, the side of the frame the port is nearest. */
+  side: Schema.optional(Side),
   accepts: Schema.optional(PortDirection),
 });
 export type Port = Schema.Schema.Type<typeof Port>;
+
+/** A port on a side of the frame, `offset` (0..1) along it from its left or top end. */
+export const sidePort = (id: PortId, side: Side, offset: number, accepts?: PortDirection): Port => ({
+  id,
+  x: side === 'left' ? 0 : side === 'right' ? 1 : offset,
+  y: side === 'top' ? 0 : side === 'bottom' ? 1 : offset,
+  side,
+  ...(accepts !== undefined ? { accepts } : {}),
+});
+
+/** The side a link leaves a port from: the one it states, else the side of the frame it is nearest (top first). */
+export const portSide = (port: Pick<Port, 'x' | 'y' | 'side'>): Side => {
+  if (port.side !== undefined) {
+    return port.side;
+  }
+  const distances: readonly [Side, number][] = [
+    ['top', port.y],
+    ['right', 1 - port.x],
+    ['bottom', 1 - port.y],
+    ['left', port.x],
+  ];
+  return distances.reduce((nearest, candidate) => (candidate[1] < nearest[1] ? candidate : nearest))[0];
+};
+
+/** How far along its side a port sits, 0..1 from the side's left or top end. */
+export const portOffset = (port: Pick<Port, 'x' | 'y' | 'side'>): number => {
+  const side = portSide(port);
+  return side === 'top' || side === 'bottom' ? port.x : port.y;
+};
 
 //
 // Nodes
@@ -90,38 +113,25 @@ export const STYLE_HUES = ['neutral', 'red', 'orange', 'amber', 'green', 'teal',
 export const StyleHue = Schema.Literals(STYLE_HUES);
 export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 
-/** How strongly a hue fills a frame: 0 is an outline (transparent), 1 to 3 are stronger to lighter fills. */
+/** How strongly a colour fills a frame: 0 is an outline (transparent), 1 to 3 are stronger to lighter fills. */
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
-/** The levels a text colour's hue is drawn at, light to dark. */
+/** The levels a text colour is drawn at, light to dark. */
 export const TEXT_TONES = [1, 2, 3] as const;
 export const TextTone = Schema.Literals(TEXT_TONES);
 export type TextTone = Schema.Schema.Type<typeof TextTone>;
 
-/** The typefaces a shape's text may use: the theme's body face, or its fixed-width one. */
-export const FONT_FAMILIES = ['default', 'monospace'] as const;
-export type FontFamily = (typeof FONT_FAMILIES)[number];
-
-/** Where text sits across a shape, and down it. */
-export const HORIZONTAL_ALIGNS = ['left', 'center', 'right'] as const;
-export const VERTICAL_ALIGNS = ['top', 'middle', 'bottom'] as const;
-export type HorizontalAlign = (typeof HORIZONTAL_ALIGNS)[number];
-export type VerticalAlign = (typeof VERTICAL_ALIGNS)[number];
-
-/** How a line is drawn: a link's stroke, or a node's border. */
-export const LINE_STYLES = ['solid', 'dashed', 'dotted'] as const;
-
 /**
  * The common base style every element shares, nodes and links alike: its colour and its line. Each kind extends it
- * (`NodeStyle`), and a selection of several kinds edits only what they share. One field object per property, so
+ * (`Style2D`), and a selection of several kinds edits only what they share. One field object per property, so
  * the kinds declare the same field and the properties panel sees it as shared.
  */
 export const lineStyleFields = {
-  /** One of the theme's hues: a link's stroke; a node's fill, text and border together. */
-  hue: Schema.optional(Schema.String.annotate({ title: 'Hue', [HueAnnotationId]: true })),
-  /** Solid, dashed or dotted: a link's stroke, or a node's border. */
-  lineStyle: Schema.optional(Schema.Literals(LINE_STYLES).annotate({ title: 'Line style' })),
+  /** A link's stroke; a node's fill, text and border together. */
+  color: Schema.optional(Color.annotate({ title: 'Color', [HueAnnotationId]: true })),
+  /** A link's line, or a node's border. */
+  stroke: Schema.optional(Stroke.annotate({ title: 'Stroke' })),
 };
 
 /** Text size in scene units; unset is the element's own (stored values outside the editor's range are kept). */
@@ -142,38 +152,39 @@ export const LINK_FONT_SIZE = 14;
  * (`Schema.Struct({ ...styleFields, … })`).
  */
 export const styleFields = {
-  hue: lineStyleFields.hue,
-  /** The hue's fill; unset is 2, the look a hue had before tones. */
-  tone: Schema.optional(NodeTone),
+  color: lineStyleFields.color,
   /** How opaque the whole node draws, 0 to 1; unset is 1. */
   opacity: Schema.optional(
     Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 })))
       .annotate({ title: 'Opacity', [StepAnnotationId]: 0.1 })
       .pipe(AnimatableAnnotation.set('number')),
   ),
-  lineStyle: lineStyleFields.lineStyle,
-  rounded: Schema.optional(Schema.Boolean),
-  fill: Schema.optional(Schema.Boolean),
-  border: Schema.optional(Schema.Boolean),
+  stroke: lineStyleFields.stroke,
+  /** Unset, a closed shape is filled with its colour. */
+  fill: Schema.optional(Fill.annotate({ title: 'Fill' })),
+  corners: Schema.optional(Corners.annotate({ title: 'Corners' })),
+  weight: Schema.optional(Weight.annotate({ title: 'Weight' })),
   /** A guide: drawn dashed and unfilled, an annotation rather than content. */
   guide: Schema.optional(Schema.Boolean),
-  /** The face of the shape's text; unset is the theme's body face. */
-  fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
+  /** The theme slot the shape's text is set in; unset is the theme's body face. */
+  font: Schema.optional(Font),
   /** Unset is `DEFAULT_FONT_SIZE`; the same field as a link's, so a mixed selection edits it once. */
   fontSize: fontSizeField,
-  /** One of the style hues, for the text alone; unset, the text takes the colour the shape's hue and fill give it. */
-  textHue: Schema.optional(StyleHue.annotate({ title: 'Text' })),
-  /** How light or dark the text's hue is drawn: 1 light, 2 (the default) medium, 3 dark. */
-  textTone: Schema.optional(TextTone),
-  /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
-  alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
-  /** Where the text sits down the shape; unset is the type's own (a label is middled, a note starts at the top). */
-  alignVertical: Schema.optional(Schema.Literals(VERTICAL_ALIGNS).annotate({ title: 'Vertical' })),
+  /** The text alone; unset, the text takes the colour the shape's colour and fill give it. */
+  textColor: Schema.optional(Color.annotate({ title: 'Text' })),
+  /** Where the text sits across the shape; unset is the kind's own (a label centres, a note starts at the left). */
+  align: Schema.optional(Align.annotate({ title: 'Horizontal' })),
+  /** Where the text sits down the shape; unset is the kind's own (a label is middled, a note starts at the top). */
+  valign: Schema.optional(VerticalAlign.annotate({ title: 'Vertical' })),
 };
 
-/** Presentation choices a node carries: the shape style. */
-export const NodeStyle = Schema.Struct(styleFields);
-export type NodeStyle = Schema.Schema.Type<typeof NodeStyle>;
+/** A 2D look: what a node draws with, and what a model's named style states. */
+export const Style2D = Schema.Struct(styleFields);
+export type Style2D = Schema.Schema.Type<typeof Style2D>;
+
+/** A node's style is the 2D look. */
+export const NodeStyle = Style2D;
+export type NodeStyle = Style2D;
 
 /**
  * How a part of a composite follows its frame on one axis when an instance is resized (ANIMATION.md §4.1): `min`
@@ -200,9 +211,10 @@ export const constrainFields = {
 
 /** How an instance draws its composite in its frame: scaled uniformly to fit inside, to fill it, or at true size. */
 export const INSTANCE_FITS = ['fit', 'fill', 'none'] as const;
-export type InstanceFit = (typeof INSTANCE_FITS)[number];
+export const InstanceFit = Schema.Literals(INSTANCE_FITS);
+export type InstanceFit = Schema.Schema.Type<typeof InstanceFit>;
 
-/** The fields every node type shares; a type's schema is `Schema.Struct({ ...nodeBase, type: Literal, ... })`. */
+/** The fields every node kind shares; a kind's schema is `Schema.Struct({ ...nodeBase, kind: Literal, ... })`. */
 export const nodeBase = {
   id: Schema.String,
   /** Fractional z-order key (see `order.ts`). */
@@ -217,15 +229,16 @@ export const nodeBase = {
       .annotate({ title: 'Rotation', [StepAnnotationId]: 15 })
       .pipe(AnimatableAnnotation.set('number')),
   ),
-  /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
+  /** Per-node ports; absent means the node kind's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
-  /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
+  /** Ports spread along each side, overriding the kind's layout; ignored when the node carries `ports`. */
   portsPerSide: Schema.optional(Schema.Number.annotate({ title: 'Ports per side' })),
-  /** A style class of the drawing (`StyleClass`) the node takes its look from; its own `style` wins over it. */
   /** The scene layer the element is on; unset, or naming no layer of the scene, it is on the bottom one. */
   layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
-  class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
-  style: Schema.optional(NodeStyle),
+  /** A named style of the drawing (`StyleClass`) the node takes its look from; its own `overrides` win over it. */
+  style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
+  /** The node's own look, field by field over its named style. */
+  overrides: Schema.optional(Style2D),
   /**
    * Inside a composite, the node offers a port on every instance's frame where it meets it, so links from outside the
    * instance attach to it (ANIMATION.md §4.1).
@@ -255,16 +268,16 @@ export const nodeBase = {
    */
   follows: Schema.optional(Schema.String.annotate({ title: 'Follows' })),
   /**
-   * The composite Object this node draws, where it places one: the generic `instance` always, and a type of its own
+   * The composite Object this node draws, where it places one: the generic `instance` always, and a kind of its own
    * that declares a template. Naming one is what makes a node a {@link PlacedComposite}.
    */
   composite: Schema.optional(Schema.String),
   /**
-   * Values of the composite's parts set for this node alone, shallow per field (`style` merges per key): what makes
-   * one card's own text, and the parts it switches off, its own while every card draws the same Object. Read only
-   * where the node names a `composite`.
+   * Values of the composite's parts set for this node alone, by part id and shallow per field (`overrides` merges per
+   * key): what makes one card's own text, and the parts it switches off, its own while every card draws the same
+   * Object. Read only where the node names a `composite`.
    */
-  overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
+  partOverrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
   /**
    * The hull this node is inside, by id, in the scene the 2D editor draws. It is not how a hull is stored: a hull is
    * a group, an Instance (`hull`) whose parts are the nodes inside it, and the editor reads that group opened out so
@@ -281,11 +294,11 @@ export const nodeBase = {
   ...constrainFields,
 };
 
-/** Any node as the engine sees it: the shared fields and a type name; the registry knows the rest. */
-export const NodeBase = Schema.Struct({ type: Schema.String, ...nodeBase });
+/** Any node as the engine sees it: the shared fields and a kind name; the registry knows the rest. */
+export const NodeBase = Schema.Struct({ kind: Schema.String, ...nodeBase });
 export type NodeBase = Schema.Schema.Type<typeof NodeBase>;
 
-/** The fields of the `box` prototype (a framed shape with a centred label), shared by the types built on it. */
+/** The fields of the `box` prototype (a framed shape with a centred label), shared by the kinds built on it. */
 export const boxFields = {
   label: Schema.optional(Schema.String),
 };
@@ -312,7 +325,7 @@ export const paddingFields = {
   padding: Schema.optional(Padding.annotate({ title: 'Padding' })),
 };
 
-/** A node's padding, when its type carries the field and the node sets it. */
+/** A node's padding, when its kind carries the field and the node sets it. */
 export const nodePadding = (node: NodeBase): Padding | undefined => {
   const padding: unknown = Reflect.get(node, 'padding');
   if (typeof padding !== 'object' || padding === null) {
@@ -328,11 +341,11 @@ export const nodePadding = (node: NodeBase): Padding | undefined => {
     : { ...(x !== undefined ? { x } : {}), ...(y !== undefined ? { y } : {}) };
 };
 
-export const BaseNode = Schema.Struct({ type: Schema.String, ...nodeBase, ...boxFields });
+export const BaseNode = Schema.Struct({ kind: Schema.String, ...nodeBase, ...boxFields });
 export type BaseNode = Schema.Schema.Type<typeof BaseNode>;
 
 export const RectNode = Schema.Struct({
-  type: Schema.Literal('rect'),
+  kind: Schema.Literal('rect'),
   ...nodeBase,
   ...boxFields,
   ...paddingFields,
@@ -341,7 +354,7 @@ export type RectNode = Schema.Schema.Type<typeof RectNode>;
 
 /** An ellipse inscribed in the frame. */
 export const EllipseNode = Schema.Struct({
-  type: Schema.Literal('ellipse'),
+  kind: Schema.Literal('ellipse'),
   ...nodeBase,
   label: Schema.optional(Schema.String),
   ...paddingFields,
@@ -359,7 +372,7 @@ export type CloudParams = Schema.Schema.Type<typeof CloudParams>;
 
 /** A cloud filling the frame, its outline a ring of bumps; labelled like a box. */
 export const CloudNode = Schema.Struct({
-  type: Schema.Literal('cloud'),
+  kind: Schema.Literal('cloud'),
   ...nodeBase,
   ...boxFields,
   ...paddingFields,
@@ -389,7 +402,7 @@ export type PolygonParams = Schema.Schema.Type<typeof PolygonParams>;
 
 /** A regular polygon, as large as fits the frame and centred in it, a vertex at the top; labelled like a box. */
 export const PolygonNode = Schema.Struct({
-  type: Schema.Literal('polygon'),
+  kind: Schema.Literal('polygon'),
   ...nodeBase,
   ...boxFields,
   ...paddingFields,
@@ -404,7 +417,7 @@ export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
  * Labelled like a box.
  */
 export const ShapeNode = Schema.Struct({
-  type: Schema.Literal('shape'),
+  kind: Schema.Literal('shape'),
   ...nodeBase,
   ...boxFields,
   ...paddingFields,
@@ -443,7 +456,7 @@ export type PolylineBend = Schema.Schema.Type<typeof PolylineBend>;
  * Labelled like a box.
  */
 export const PolylineNode = Schema.Struct({
-  type: Schema.Literal('polyline'),
+  kind: Schema.Literal('polyline'),
   ...nodeBase,
   ...boxFields,
   ...paddingFields,
@@ -470,7 +483,7 @@ export const DEFAULT_HULL_SHAPE: HullShape = 'box';
  * given.
  */
 export const HullNode = Schema.Struct({
-  type: Schema.Literal('hull'),
+  kind: Schema.Literal('hull'),
   ...nodeBase,
   ...boxFields,
   ...paddingFields,
@@ -494,10 +507,10 @@ export type HullNode = Schema.Schema.Type<typeof HullNode>;
 
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
-  type: Schema.Literal('note'),
+  kind: Schema.Literal('note'),
   ...nodeBase,
   ...paddingFields,
-  text: Schema.String,
+  label: Schema.String,
 });
 export type NoteNode = Schema.Schema.Type<typeof NoteNode>;
 
@@ -515,7 +528,7 @@ export type ViewLink = Schema.Schema.Type<typeof ViewLink>;
 
 /** A View onto the next depth: renders its child View (`scene`, the stored field name) scaled into its bounds. */
 export const ViewNode = Schema.Struct({
-  type: Schema.Literal('view'),
+  kind: Schema.Literal('view'),
   ...nodeBase,
   ...boxFields,
   scene: Schema.String,
@@ -527,11 +540,11 @@ export type ViewNode = Schema.Schema.Type<typeof ViewNode>;
 
 /**
  * A composite object placed in a scene (ANIMATION.md §4.1): it draws the composite scene `composite` scaled into its
- * frame. Every instance shares the definition; `overrides` set values of the definition's nodes for this instance
- * alone, shallow per field.
+ * frame. Every instance shares the definition; `partOverrides` set values of the definition's nodes for this
+ * instance alone, shallow per field.
  */
 export const InstanceNode = Schema.Struct({
-  type: Schema.Literal('instance'),
+  kind: Schema.Literal('instance'),
   ...nodeBase,
   // The generic Object always names one; every other type that draws a composite may.
   composite: Schema.String,
@@ -540,7 +553,7 @@ export const InstanceNode = Schema.Struct({
    * parts as a picture, so these stay here rather than on the base — a type with its own template places its parts
    * by their constraints. `fit` is also a polygon's own legacy field, which is the other reason not to share it.
    */
-  fit: Schema.optional(Schema.Literals(INSTANCE_FITS).annotate({ title: 'Fit' })),
+  fit: Schema.optional(InstanceFit.annotate({ title: 'Fit' })),
   /** The composite region the frame shows, fixed: its parts at the instance's scale (decision 18). */
   frame: Schema.optional(Bounds),
   /**
@@ -555,15 +568,14 @@ export type InstanceNode = Schema.Schema.Type<typeof InstanceNode>;
 
 /**
  * A vector shape: SVG path data in its own coordinates (`viewBox`), scaled to fill the frame and filled with the
- * node's hue. How a logo or a glyph becomes canvas nodes.
+ * node's colour: a theme colour's text colour, or a literal exactly as written, for artwork with brand colours. How a
+ * logo or a glyph becomes canvas nodes.
  */
 export const PathNode = Schema.Struct({
-  type: Schema.Literal('path'),
+  kind: Schema.Literal('path'),
   ...nodeBase,
   d: Schema.String,
   viewBox: Bounds,
-  /** An exact CSS colour, for artwork with brand colours; unset, the path takes its hue's text colour. */
-  fill: Schema.optional(Schema.String.annotate({ title: 'Fill colour' })),
 });
 export type PathNode = Schema.Schema.Type<typeof PathNode>;
 
@@ -573,7 +585,7 @@ export type PathNode = Schema.Schema.Type<typeof PathNode>;
  * parameters, which the timeline may key (`params.<name>`).
  */
 export const GeneratorNode = Schema.Struct({
-  type: Schema.Literal('generator'),
+  kind: Schema.Literal('generator'),
   ...nodeBase,
   generator: Schema.String,
   params: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
@@ -617,28 +629,24 @@ export const rebindEndpoint = <E extends Endpoint | ElementEndpoint>(end: E, map
   'node' in end && end.node !== undefined ? { ...end, node: map(end.node) } : end;
 
 /**
- * What is drawn at a link end: an open `arrow`, a `circle`, a hollow `triangle` (inheritance), `many` (a crow's foot),
+ * What is drawn at a link end: an open `arrow`, a `circle`, a hollow `triangle` (inheritance), a `crowsfoot` (many),
  * or, at the whole's end, a hollow `diamond` (aggregation) or a filled one (composition).
  */
-export const Marker = Schema.Literals(['arrow', 'circle', 'diamond', 'diamond-filled', 'many', 'triangle']);
+export const MARKERS = ['arrow', 'circle', 'diamond', 'diamond-filled', 'crowsfoot', 'triangle'] as const;
+export const Marker = Schema.Literals(MARKERS);
 export type Marker = Schema.Schema.Type<typeof Marker>;
 
-/** Markers at the source (`start`) and target (`end`) of a link. */
-/** A link's end markers; the properties form shows them side by side, as the two ends of the line. */
-export const LinkEnds = Schema.Struct({
-  start: Schema.optional(Marker),
-  end: Schema.optional(Marker),
-}).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('start', 'end') }));
-export type LinkEnds = Schema.Schema.Type<typeof LinkEnds>;
+/** A link's end markers: `tail` at its source and `head` at its target. */
+export type LinkEnds = { readonly tail?: Marker; readonly head?: Marker };
 
 /**
- * A named look of a drawing, kept beside its scenes: the nodes and links naming it derive their `style` from it (a
- * link takes the common base, its colour and line style), so one class restyles both together.
+ * A named look of a drawing, kept beside its scenes: the nodes and links naming it as their `style` derive their look
+ * from it (a link takes the common base, its colour and stroke), so one style restyles both together.
  */
 export const StyleClass = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-  style: Schema.optional(NodeStyle),
+  style: Schema.optional(Style2D),
 });
 export type StyleClass = Schema.Schema.Type<typeof StyleClass>;
 
@@ -650,8 +658,8 @@ export const DiagramCaption = Schema.Struct({
   x: Schema.Number,
   y: Schema.Number,
   w: Schema.optional(Schema.Number),
-  color: Schema.optional(Shape.Color),
-  weight: Schema.optional(Shape.Weight),
+  color: Schema.optional(Color),
+  weight: Schema.optional(Weight),
 });
 export type DiagramCaption = Schema.Schema.Type<typeof DiagramCaption>;
 
@@ -663,29 +671,52 @@ export const DiagramConnector = Schema.Struct({
   relation: Schema.optional(Shape.Relation),
   head: Schema.optional(Shape.ArrowHead),
   tail: Schema.optional(Shape.ArrowTail),
-  stroke: Schema.optional(Shape.Stroke),
-  color: Schema.optional(Shape.Color),
+  stroke: Schema.optional(Stroke),
+  color: Schema.optional(Color),
   route: Schema.optional(Schema.Array(Point)),
   caption: Schema.optional(DiagramCaption),
 });
 export type DiagramConnector = Schema.Schema.Type<typeof DiagramConnector>;
 
-/** The fields every link type shares; a type's schema is `Schema.Struct({ type: Literal, ...linkBase })`. */
+/**
+ * How a link runs between its ends, in the words a diagram's arrow uses: `smart` leaves each port along its side's
+ * normal and joins the two, `ortho` turns at right angles, `line` runs straight, `curve` bends, and `spline` runs
+ * through the link's own `points`.
+ */
+export const LINK_PATHS = ['line', 'ortho', 'curve', 'spline', 'smart'] as const;
+export const LinkPath = Schema.Literals(LINK_PATHS);
+export type LinkPath = Schema.Schema.Type<typeof LinkPath>;
+
+/** The path a link that names none takes. */
+export const DEFAULT_LINK_PATH: LinkPath = 'smart';
+
+/** The kind every link is; how it runs is its `path`. */
+export const LINK_KIND = 'link';
+
+/** The fields every link has. */
 export const linkBase = {
+  kind: Schema.Literal(LINK_KIND),
   id: Schema.String,
   z: Schema.String,
   locked: Schema.optional(Schema.Boolean),
   source: Endpoint,
   target: Endpoint,
-  /** End markers; an arrow at `end` reads as the link's direction. */
-  ends: Schema.optional(LinkEnds),
+  /** How the link runs between its ends; unset is `DEFAULT_LINK_PATH`. */
+  path: Schema.optional(LinkPath.annotate({ title: 'Path' })),
+  /** The control points a `spline` runs through, in order, between its ends. */
+  points: Schema.optional(Schema.Array(Point)),
+  /** The marker at the link's source. */
+  tail: Schema.optional(Marker.annotate({ title: 'Tail' })),
+  /** The marker at the link's target; an arrow here reads as the link's direction. */
+  head: Schema.optional(Marker.annotate({ title: 'Head' })),
   /** A caption drawn at the middle of the link's route. */
-  text: Schema.optional(Schema.String.annotate({ title: 'Label' })),
-  /** A style class of the drawing the link takes its style from; its own `style` wins over it. */
+  label: Schema.optional(Schema.String.annotate({ title: 'Label' })),
   /** The scene layer the element is on; unset, or naming no layer of the scene, it is on the bottom one. */
   layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
-  class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
-  style: Schema.optional(LineStyle),
+  /** A named style of the drawing the link takes its look from; its own `overrides` win over it. */
+  style: Schema.optional(Schema.String.annotate({ title: 'Style' })),
+  /** The link's own look, field by field over its named style. */
+  overrides: Schema.optional(LineStyle),
   /** Drawn as a diagram connector rather than in the canvas's own link style. */
   connector: Schema.optional(DiagramConnector),
   ...constrainFields,
@@ -714,8 +745,8 @@ export const DiagramHeading = Schema.Struct({
   x: Schema.Number,
   y: Schema.Number,
   w: Schema.optional(Schema.Number),
-  color: Schema.optional(Shape.Color),
-  weight: Schema.optional(Shape.Weight),
+  color: Schema.optional(Color),
+  weight: Schema.optional(Weight),
 });
 export type DiagramHeading = Schema.Schema.Type<typeof DiagramHeading>;
 
@@ -729,7 +760,7 @@ export type DiagramShape = Schema.Schema.Type<typeof DiagramShape>;
  * its text the node's `label` (the heading's, when it has one), so a move, a resize or a relabel edits the element.
  */
 export const DiagramNode = Schema.Struct({
-  type: Schema.Literal('diagram'),
+  kind: Schema.Literal('diagram'),
   ...nodeBase,
   ...boxFields,
   element: DiagramShape,
@@ -737,7 +768,7 @@ export const DiagramNode = Schema.Struct({
 });
 export type DiagramNode = Schema.Schema.Type<typeof DiagramNode>;
 
-/** The engine's own node types. A host may add its own (decision 1); those are `NodeBase` to the engine. */
+/** The engine's own node kinds. A host may add its own (decision 1); those are `NodeBase` to the engine. */
 export const BuiltinNode = Schema.Union([
   RectNode,
   EllipseNode,
@@ -754,8 +785,8 @@ export const BuiltinNode = Schema.Union([
   DiagramNode,
 ]);
 export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
-export type BuiltinNodeType = BuiltinNode['type'];
-export const NODE_TYPES: readonly BuiltinNodeType[] = [
+export type BuiltinNodeKind = BuiltinNode['kind'];
+export const NODE_KINDS: readonly BuiltinNodeKind[] = [
   'rect',
   'ellipse',
   'polygon',
@@ -773,71 +804,74 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
 
 /** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
 export type Node = NodeBase;
-/** A node type name; the engine's own are `BuiltinNodeType`. */
-export type NodeType = string;
+/** A node kind name; the engine's own are `BuiltinNodeKind`. */
+export type NodeKind = string;
 
-/** Narrows a node to one built-in type; sound because the registry maps each type name to one schema. */
-export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
-export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
-export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
-export const isShapeNode = (node: NodeBase): node is ShapeNode => node.type === 'shape';
-export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
-export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
-export const isHullNode = (node: NodeBase): node is HullNode => node.type === 'hull';
-export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
-export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
+/** Narrows a node to one built-in kind; sound because the registry maps each kind name to one schema. */
+export const isRectNode = (node: NodeBase): node is RectNode => node.kind === 'rect';
+export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.kind === 'ellipse';
+export const isCloudNode = (node: NodeBase): node is CloudNode => node.kind === 'cloud';
+export const isShapeNode = (node: NodeBase): node is ShapeNode => node.kind === 'shape';
+export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.kind === 'polygon';
+export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.kind === 'polyline';
+export const isHullNode = (node: NodeBase): node is HullNode => node.kind === 'hull';
+export const isNoteNode = (node: NodeBase): node is NoteNode => node.kind === 'note';
+export const isViewNode = (node: NodeBase): node is ViewNode => node.kind === 'view';
 /**
- * The fields a node placing a composite Object carries, whatever its own type: the generic `instance`, and a type of
- * its own that declares a template (a UML class), which keeps its type and its typed fields and draws through the
+ * The fields a node placing a composite Object carries, whatever its own kind: the generic `instance`, and a kind of
+ * its own that declares a template (a UML class), which keeps its kind and its typed fields and draws through the
  * composite all the same.
  */
 export type PlacedComposite = NodeBase & {
   readonly composite: ViewId;
-  readonly overrides?: InstanceNode['overrides'];
+  readonly partOverrides?: InstanceNode['partOverrides'];
   readonly fit?: InstanceFit;
   readonly frame?: Bounds;
 };
 
-/** Whether the node places a composite, which is what naming one makes it — not what its type is called. */
+/** Whether the node places a composite, which is what naming one makes it — not what its kind is called. */
 export const isInstanceNode = (node: NodeBase): node is PlacedComposite =>
   typeof Reflect.get(node, 'composite') === 'string';
 
 /** The fixed child region a portal or instance shows, when it places a composite at a scale. */
 export const nodeFrame = (node: NodeBase): Bounds | undefined =>
   isViewNode(node) || isInstanceNode(node) ? node.frame : undefined;
-export const isPathNode = (node: NodeBase): node is PathNode => node.type === 'path';
-export const isGeneratorNode = (node: NodeBase): node is GeneratorNode => node.type === 'generator';
-export const isDiagramNode = (node: NodeBase): node is DiagramNode => node.type === 'diagram';
+export const isPathNode = (node: NodeBase): node is PathNode => node.kind === 'path';
+export const isGeneratorNode = (node: NodeBase): node is GeneratorNode => node.kind === 'generator';
+export const isDiagramNode = (node: NodeBase): node is DiagramNode => node.kind === 'diagram';
 /** A node built on the `box` prototype, carrying a centred, editable label. */
 export const isBoxNode = (node: NodeBase): node is RectNode | ViewNode => isRectNode(node) || isViewNode(node);
 /** Whether a view node draws its child View: as set, else while it has no label to show instead. */
 export const showsContents = (node: ViewNode): boolean => node.link?.contents ?? node.label === undefined;
-export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
+export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_KINDS.some((kind) => kind === node.kind);
 
 /**
- * Node types stored under an earlier name: `frame` is what `view` was called before the View rename, and
+ * Node kinds stored under an earlier name: `frame` is what `view` was called before the View rename, and
  * `space-graph` is what plugin-canvas's `graph` kind was called while it was the only graph a canvas drew.
  */
-const LEGACY_NODE_TYPES: ReadonlyMap<string, NodeType> = new Map([
+const LEGACY_NODE_KINDS: ReadonlyMap<string, NodeKind> = new Map([
   ['frame', 'view'],
   ['space-graph', 'graph'],
 ]);
 
-/** An element stored under an earlier type name reads as its current type; any other is returned as it is. */
-export const withCurrentType = <T extends { type?: string }>(element: T): T => {
-  const type = element.type === undefined ? undefined : LEGACY_NODE_TYPES.get(element.type);
-  return type ? { ...element, type } : element;
+/** An element stored under an earlier kind name reads as its current kind; any other is returned as it is. */
+export const withCurrentKind = <T extends { kind?: string }>(element: T): T => {
+  const kind = element.kind === undefined ? undefined : LEGACY_NODE_KINDS.get(element.kind);
+  return kind ? { ...element, kind } : element;
 };
 
-/** A node stored under an earlier type name reads as its current type; any other node is returned as it is. */
-export const withLegacyNodeType = (node: NodeBase): NodeBase => withCurrentType(node);
+/** A node stored under an earlier kind name reads as its current kind; any other node is returned as it is. */
+export const withLegacyNodeKind = (node: NodeBase): NodeBase => withCurrentKind(node);
 
-/** The settings each type once stored beside the shared fields, which it now keeps in `params`. */
-const LEGACY_PARAMS: Readonly<Record<string, readonly string[]>> = { cloud: ['bumps'], polygon: ['sides', 'fit'] };
+/** The settings each kind once stored beside the shared fields, which it now keeps in `params`. */
+export const LEGACY_PARAMS: Readonly<Record<string, readonly string[]>> = {
+  cloud: ['bumps'],
+  polygon: ['sides', 'fit'],
+};
 
-/** A node storing its type's settings beside the shared fields reads with them in `params`; any other is returned as it is. */
+/** A node storing its kind's settings beside the shared fields reads with them in `params`; any other is returned as it is. */
 export const withLegacyParams = (node: NodeBase): NodeBase => {
-  const keys = (LEGACY_PARAMS[node.type] ?? []).filter((key) => key in node);
+  const keys = (LEGACY_PARAMS[node.kind] ?? []).filter((key) => key in node);
   if (keys.length === 0) {
     return node;
   }
@@ -853,45 +887,23 @@ export const withLegacyParams = (node: NodeBase): NodeBase => {
 // Links
 //
 
-export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
-export type LineLink = Schema.Schema.Type<typeof LineLink>;
-
 /**
- * Horizontal and vertical segments between its ends: straight where they line up, one corner where their sides are
- * perpendicular, and otherwise two turns at the midpoint between them. Nothing is stored, so the route follows the
- * shapes as they move, and it is deterministic — a shape moving elsewhere never re-routes it.
+ * A link: an element with two ends. How it runs is its `path`, and nothing of its route is stored but a spline's
+ * control points, so it follows its nodes as they move.
  */
-export const OrthoLink = Schema.Struct({ type: Schema.Literal('ortho'), ...linkBase });
-export type OrthoLink = Schema.Schema.Type<typeof OrthoLink>;
-
-/** Cubic Bézier leaving each port along its side's normal. */
-export const CurveLink = Schema.Struct({ type: Schema.Literal('curve'), ...linkBase });
-export type CurveLink = Schema.Schema.Type<typeof CurveLink>;
-
-/** Smooth curve through the ports and the control `points` in between, in order. */
-export const SplineLink = Schema.Struct({
-  type: Schema.Literal('spline'),
-  ...linkBase,
-  points: Schema.Array(Point),
-});
-export type SplineLink = Schema.Schema.Type<typeof SplineLink>;
-
-/**
- * Routed between its ends rather than drawn: a stub leaves each port along its side's normal and the
- * route joins the two. Nothing is stored, so the path follows the nodes as they move.
- */
-export const SmartLink = Schema.Struct({ type: Schema.Literal('smart'), ...linkBase });
-export type SmartLink = Schema.Schema.Type<typeof SmartLink>;
-
-export const Link = Schema.Union([LineLink, OrthoLink, CurveLink, SplineLink, SmartLink]);
+export const Link = Schema.Struct(linkBase);
 export type Link = Schema.Schema.Type<typeof Link>;
-export type LinkType = Link['type'];
-export const LINK_TYPES: readonly LinkType[] = ['line', 'ortho', 'curve', 'spline', 'smart'];
 
 export type Element = Node | Link;
 
+/** The path a link runs. */
+export const linkPath = (link: Pick<Link, 'path'>): LinkPath => link.path ?? DEFAULT_LINK_PATH;
+
 /** The markers a link draws. */
-export const linkMarkers = (link: Link): LinkEnds => link.ends ?? {};
+export const linkMarkers = (link: Pick<Link, 'tail' | 'head'>): LinkEnds => ({
+  ...(link.tail !== undefined ? { tail: link.tail } : {}),
+  ...(link.head !== undefined ? { head: link.head } : {}),
+});
 
 export const isNode = (element: Element): element is Node => 'center' in element;
 export const isLink = (element: Element): element is Link => 'source' in element;

@@ -8,10 +8,10 @@ import { copyElements, pasteIntent } from './clipboard.ts';
 import { applyIntent } from './intent.ts';
 import { layout2D, layout3D } from './testing.ts';
 
-const cube = (id: string, x = 0) => ({ id, type: 'cube', center: { x, y: 0, z: 0 } });
+const cube = (id: string, x = 0) => ({ id, kind: 'cube', center: { x, y: 0, z: 0 } });
 const link = (id: string, from: string, to: string) => ({
   id,
-  type: 'link',
+  kind: 'link',
   source: { node: from },
   target: { node: to },
 });
@@ -43,7 +43,7 @@ describe('clipboard', () => {
   });
 
   test('a paste refuses a fragment placing an object that would contain itself', () => {
-    const fragment = layout3D('clipboard', [{ id: 'x', type: 'sphere', object: 'team' }]);
+    const fragment = layout3D('clipboard', [{ id: 'x', kind: 'sphere', object: 'team' }]);
     expect(
       pasteIntent(scene(), fragment, {
         offset: { x: 1, y: 0, z: 1 },
@@ -54,7 +54,7 @@ describe('clipboard', () => {
   });
 
   test('a paste refuses a fragment of the other dimension', () => {
-    const fragment = layout2D('clipboard', [{ id: 'r', type: 'rect', center: { x: 0, y: 0 } }]);
+    const fragment = layout2D('clipboard', [{ id: 'r', kind: 'rect', center: { x: 0, y: 0 } }]);
     expect(pasteIntent(scene(), fragment, { offset: { x: 1, y: 0, z: 1 }, newId: counter() })).toBeUndefined();
   });
 });

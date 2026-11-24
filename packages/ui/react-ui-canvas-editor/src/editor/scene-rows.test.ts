@@ -70,9 +70,9 @@ describe('scene rows', () => {
       dim: '3d' as const,
       layers: { a: { id: 'a', name: 'A', z: 'a0' }, b: { id: 'b', name: 'B', z: 'a1', hidden: true } },
       elements: {
-        x: { id: 'x', type: 'cube', layer: 'a' },
-        y: { id: 'y', type: 'cube', layer: 'b' },
-        z: { id: 'z', type: 'cube' },
+        x: { id: 'x', kind: 'cube', layer: 'a' },
+        y: { id: 'y', kind: 'cube', layer: 'b' },
+        z: { id: 'z', kind: 'cube' },
       },
     };
     expect(layersOf(layout).map((layer) => layer.id)).toEqual(['a', 'b']);
@@ -101,9 +101,66 @@ describe('scene rows', () => {
   });
 });
 
+describe('the icon a views row draws', () => {
+  test("a 2D link's is its path's, the smart one where it names none; any other row's is its kind's", () => {
+    const doc: Scene.SceneDocument = {
+      scenes: [{ id: 's', dim: '2d', layout: 'root', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          elements: {
+            a: { id: 'a', kind: 'rect', z: 'a1' },
+            b: { id: 'b', kind: 'ellipse', z: 'a2' },
+            ab: { id: 'ab', kind: 'link', path: 'ortho', z: 'a3', source: { node: 'a' }, target: { node: 'b' } },
+            ba: { id: 'ba', kind: 'link', z: 'a4', source: { node: 'b' }, target: { node: 'a' } },
+          },
+        },
+      ],
+      models: [],
+    };
+    const rows = layoutTree(doc).children.map((row) => [row.id, row.kind, row.type]);
+    expect(rows).toEqual([
+      ['ba', 'link', 'smart'],
+      ['ab', 'link', 'ortho'],
+      ['b', 'node', 'ellipse'],
+      ['a', 'node', 'rect'],
+    ]);
+  });
+
+  test("a 3D link has no path, so its row's is the link kind's", () => {
+    const camera: Scene.Camera3D = {
+      target: { x: 0, y: 0, z: 0 },
+      yaw: 0,
+      pitch: 0,
+      distance: 10,
+      fov: 0.8,
+      projection: 'perspective',
+    };
+    const doc: Scene.SceneDocument = {
+      scenes: [{ id: 's', dim: '3d', layout: 'root', camera }],
+      layouts: [
+        {
+          id: 'root',
+          dim: '3d',
+          elements: {
+            a: { id: 'a', kind: 'cube', z: 'a1' },
+            aa: { id: 'aa', kind: 'link', z: 'a2', source: { node: 'a' }, target: { node: 'a' } },
+          },
+        },
+      ],
+      models: [],
+    };
+    expect(layoutTree(doc).children.map((row) => [row.id, row.kind, row.type])).toEqual([
+      ['aa', 'link', 'link'],
+      ['a', 'node', 'cube'],
+    ]);
+  });
+});
+
 const box = (id: string, z: string, layer: string): Scene.Element2D => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   center: { x: 0, y: 0 },
   size: { width: 10, height: 10 },
   z,
@@ -147,12 +204,12 @@ describe('inspector edits on the document', () => {
     const doc: Scene.SceneDocument = {
       scenes: [],
       layouts: [],
-      models: [{ id: 'm', dim: '2d', objects: { box: { id: 'box', type: 'rect', style: 'card' } } }],
+      models: [{ id: 'm', dim: '2d', objects: { box: { id: 'box', kind: 'rect', style: 'card' } } }],
     };
     expect(duplicateObject(doc, 'box')).toEqual({
       kind: 'define',
       model: 'm',
-      object: { id: 'box-2', type: 'rect', style: 'card' },
+      object: { id: 'box-2', kind: 'rect', style: 'card' },
     });
   });
 });
