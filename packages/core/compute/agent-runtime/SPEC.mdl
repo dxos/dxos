@@ -26,6 +26,9 @@ Delegation has three tiers:
 The base case of delegation is a message. The richer case sends a reference to a task, and the
 task is assigned to the receiver.
 
+Delegation is started by operations, and there can be many of them. Every one of them ends in
+either `AgentService` or `HarnessService`; no delegation path bypasses both.
+
 The task list in the project or session is the control plane. Ephemeral messages (wake, start,
 stop) sit on top of it and carry no state of their own.
 
@@ -190,6 +193,21 @@ feat F-9: Current process
     when: code with a `Process.ManagerService` that is not scoped to a process yields
           `Process.current`
     then: it fails with `NoCurrentProcessError`
+```
+
+```mdl
+feat F-10: Delegation entry points
+  status: planned
+
+  req F-10.1:
+    when: work is delegated at any tier
+    then: an operation starts it, and the operation goes through either `AgentService` or
+          `HarnessService`
+
+  req F-10.2:
+    when: the delegation strategy spawns a sub-agent, or the thread scheduler starts a thread
+    then: it does so through `AgentService` or `HarnessService`, not by spawning or scheduling
+          directly
 ```
 
 ## Changelog
@@ -398,4 +416,33 @@ decision D-23: `Process.current` fails with a typed `NoCurrentProcessError` when
   affects: [F-9.1, F-9.2]
   why: The process's own `ManagerService` already knows its process (it defaults `parentProcessId` to it), but a manager built outside any process has none, and callers need to tell that case apart.
   rejected: Dying instead of failing, since being outside a process is a normal state for app-level code.
+```
+
+```mdl
+decision D-24: Delegation is handled by different operations, but each eventually goes through either `AgentService` or `HarnessService`.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-25: The sub-agent spawns of the delegation strategy and the thread scheduler's threads count as delegation, so they also go through `AgentService` or `HarnessService`. Fills in [D-24].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-10.2]
+  why: Both start work in another process or thread on the agent's behalf, but today they reach `Process.spawn` and the thread lanes directly, outside both services.
+```
+
+```mdl
+question Q-4: How do `AgentService` and `HarnessService` relate to the intra-agent and cross-agent delegation services of [D-13]?
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3, F-3.2, F-10]
+  context: D-13 names two delegation services split by scope, while D-24 routes all delegation through two existing services split by role (session manager, in-session control surface).
+  options:
+    - By tier: `HarnessService` handles threads, `AgentService` handles sessions and, later, other agents; the two delegation services sit behind them.
+    - Layered: the intra-agent and cross-agent delegation services are new, and `AgentService` / `HarnessService` call into them.
+    - Same: the two delegation services are `AgentService` and `HarnessService`, renamed.
 ```
