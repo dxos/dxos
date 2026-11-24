@@ -40,18 +40,20 @@ goal G-2: The plugins have no import cycles.
 
 ```mdl
 goal G-3: The Assistant Chat story loads in the built storybook.
-  status: started
+  status: done
   notes:
     - The deployed storybook stops at `preparing story` after 60 seconds.
-    - The `Binding` and `SyncTemplate` cycle in plugin-connector causes the hang.
-    - A local storybook build runs. Then a script opens the story.
+    - Automerge wasm uses top-level await. Then module inits become async and wait on import cycles.
+    - The fix resolves automerge to slim in every storybook build, as the perf bundle does.
+    - The local build shows the chat in 2 seconds. 40 random stories also show.
 ```
 
 ```mdl
 goal G-4: The Form chunk loads in the built storybook.
-  status: todo
+  status: done
   notes:
-    - The Form chunk also stopped. It does not use `Binding`.
+    - The Form chunk also stopped. It has 19 import cycles in react-ui-form.
+    - The slim automerge fix removes the async inits, so the cycles do not stop the load.
 ```
 
 ```mdl
@@ -144,4 +146,32 @@ event T-8: CI failed on the first commit for the same plugin-inbox cause. The fi
   date: 2026-11-24T11:18Z
   by: agent:claude-code
   refs: [G-5, PR-1]
+```
+
+```mdl
+event T-9: The local build still stops on the Chat and Form stories. The cycle fix is not sufficient.
+  date: 2026-11-24T11:40Z
+  by: agent:claude-code
+  refs: [G-3, G-4]
+```
+
+```mdl
+event T-10: The cause is the automerge wasm top-level await. The perf bundle already removes it.
+  date: 2026-11-24T11:55Z
+  by: agent:claude-code
+  refs: [G-3, G-4]
+```
+
+```mdl
+event T-11: The published bundle now uses slim automerge. A new build started.
+  date: 2026-11-24T12:00Z
+  by: agent:claude-code
+  refs: [G-3, G-4]
+```
+
+```mdl
+event T-12: The Chat and Form stories show in the local build. 40 random stories also show.
+  date: 2026-11-24T12:12Z
+  by: agent:claude-code
+  refs: [G-3, G-4]
 ```
