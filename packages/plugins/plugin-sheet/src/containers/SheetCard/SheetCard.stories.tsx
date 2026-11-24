@@ -27,6 +27,9 @@ import { SheetCard } from './SheetCard.tsx';
 
 const sharedRegistry = new ComputeGraphRegistry({ computeRuntime: createMockedComputeRuntimeProvider() });
 
+// The story creates a client, a space and a compute graph before it renders, which takes longer than the 1 s default on a loaded CI runner.
+const SETUP_TIMEOUT = 10_000;
+
 type StoryArgs = {
   name: string;
   cells: Record<string, Sheet.CellValue>;
@@ -79,7 +82,9 @@ type Story = StoryObj<typeof meta>;
 export const Cells: Story = {
   args: { name: 'Budget', cells: createTestCells() },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).findByTestId('sheet.preview.grid')).resolves.toBeTruthy();
+    await expect(
+      within(canvasElement).findByTestId('sheet.preview.grid', undefined, { timeout: SETUP_TIMEOUT }),
+    ).resolves.toBeTruthy();
   },
 };
 
@@ -90,6 +95,8 @@ export const Chart: Story = {
     charts: [{ name: 'Sales by region', range: 'A1:C7', type: 'bar', header: true, grid: true }],
   },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).findByTestId('sheet.preview.chart')).resolves.toBeTruthy();
+    await expect(
+      within(canvasElement).findByTestId('sheet.preview.chart', undefined, { timeout: SETUP_TIMEOUT }),
+    ).resolves.toBeTruthy();
   },
 };

@@ -329,3 +329,15 @@ event T-16: The Land switch asked to land [PR-2]. It is ready for review, with a
   date: 2026-11-24T10:26Z
   by: user:dmaretskyi
 ```
+
+```mdl
+event T-17: [PR-2] is in the merge queue.
+  date: 2026-11-24T10:48Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-18: The merge queue removed [PR-2]. Two `plugin-sheet` stories wait only 1 s for the grid. The fix gives them 10 s.
+  date: 2026-11-24T11:05Z
+  by: agent:claude-code
+```
