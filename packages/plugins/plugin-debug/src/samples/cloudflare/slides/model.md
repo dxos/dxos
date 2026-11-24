@@ -26,8 +26,8 @@ class Person extends Type.makeObject<Person>(
 
 const alice = db.add(Obj.make(Person, { name: 'Alice'}));
 const bob = db.add(Obj.make(Person, { name: 'Bob' }));
-
-const [acme] = await db.query(Filter.text('Acme')).run();
+const [acme] = await db
+  .query(Filter.type(Organization, { name: 'Acme' })).run();
 
 // Graph traversal: Alice's managers.
 const objects = await db.query(
