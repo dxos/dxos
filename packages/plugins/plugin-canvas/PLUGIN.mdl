@@ -645,7 +645,7 @@ decision D-44: The architecture partial seeds no presentation, and its Architect
 ```
 
 ```mdl
-decision D-45: A Cursors toggle in the display toolbar, after the axes, hides collaborators' pointers. The choice is stored in the canvas view state beside snap, guides and axes, so it is per drawing and per device. Unset, the `showCursors` plugin setting decides, and it defaults to on. Hiding stops drawing peers' pointers but still shares this viewer's own.
+decision D-45: A Cursors toggle in the display toolbar, in its own group after the grid's, hides collaborators' pointers. The choice is stored in the canvas view state beside snap, guides and axes, so it is per drawing and per device. Unset, the `showCursors` plugin setting decides, and it defaults to on. Hiding stops drawing peers' pointers but still shares this viewer's own.
   date: 2026-11-24
   by: agent:claude-code
   for: user:wittjosiah
