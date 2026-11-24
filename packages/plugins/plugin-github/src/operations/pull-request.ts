@@ -170,12 +170,13 @@ export const githubWriteCredentials = () =>
 /**
  * The stored pull request behind an operation's input, and its database.
  *
- * The invoker carries no database resolver, so handlers derive one from the pull request itself; a
- * preview card's in-memory pull request has none and cannot be acted on.
+ * The invoker carries no database resolver, so handlers derive one from the pull request itself, loading
+ * it when the ref arrived unloaded; a preview card's in-memory pull request has none and cannot be acted on.
  */
 export const resolvePullRequest = (ref: Ref.Ref<PullRequest.PullRequest>) =>
   Effect.gen(function* () {
-    const pullRequest = ref.target;
+    // A ref decoded from an operation's input is bound but not loaded; `load` resolves at once when it is.
+    const pullRequest = yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined));
     const db = pullRequest ? Obj.getDatabase(pullRequest) : undefined;
     if (!pullRequest || !db) {
       return yield* Effect.die(new GitHubPullRequestUnstoredError());

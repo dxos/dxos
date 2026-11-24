@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { Pipeline } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type FactStoreApi } from '@dxos/pipeline-rdf';
@@ -27,4 +27,4 @@ export const readPipelines = (store: FactStoreApi): Promise<Pipeline.State[]> =>
 
 /** The run's diagram as the scene document `Scene2DView` draws. */
 export const pipelineDocument = (state: Pipeline.State): Scene.SceneDocument =>
-  Dsl.readScenes(pipelineScene(state)).document;
+  DSL.readScenes(pipelineScene(state)).document;

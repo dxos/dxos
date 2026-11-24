@@ -39,21 +39,26 @@
     --dx-card-trailing-min: var(--dx-gutter);
     display: grid;
   }
-  /* A leading poster is flush with the card's top edge, and every poster bleeds across the inline padding. */
+  /* A leading poster is flush with the card's top edge, and every poster bleeds across the inline padding. Not
+     child-scoped, since a poster from a surface sits inside its `dx-surface` hosts. */
   .dx-card:has(> .dx-card-poster:first-child) {
     padding-block-start: 0;
   }
-  .dx-card > .dx-card-poster {
-    margin-inline: calc(-1 * var(--dx-card-inset));
-  }
-  /* A wide card would otherwise grow its poster to dominate the card; the image covers the capped frame. */
   .dx-card-poster {
+    margin-inline: calc(-1 * var(--dx-card-inset));
+    /* A wide card would otherwise grow its poster to dominate the card; the content covers the capped frame. */
     max-height: 200px;
+    overflow: hidden;
   }
   /* Inside the border, so the inner radius is the card's less its border width. */
   .dx-card > .dx-card-poster:first-child {
     border-start-start-radius: calc(var(--radius-md, 0.375rem) - 1px);
     border-start-end-radius: calc(var(--radius-md, 0.375rem) - 1px);
+  }
+  .dx-card-poster[data-position='end'] {
+    margin-block-end: calc(-1 * var(--dx-gap-size));
+    border-end-start-radius: calc(var(--radius-md, 0.375rem) - 1px);
+    border-end-end-radius: calc(var(--radius-md, 0.375rem) - 1px);
   }
 
   /*
@@ -171,6 +176,10 @@
   .dx-card[data-border='false'] > .dx-card-poster:first-child {
     border-start-start-radius: 0;
     border-start-end-radius: 0;
+  }
+  .dx-card[data-border='false'] .dx-card-poster[data-position='end'] {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
   }
   .dx-card[data-selected] {
     border-color: var(--dx-selected-color);

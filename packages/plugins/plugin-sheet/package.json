@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sheet",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -183,6 +183,8 @@
     "codemirror-lang-spreadsheet": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/halo": "workspace:*",

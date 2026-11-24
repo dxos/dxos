@@ -17,6 +17,7 @@
 import { env } from 'cloudflare:test';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Predicate from 'effect/Predicate';
 import { describe, expect, test } from 'vitest';
 
 import type { BindingsContext, Dialect } from './Dialect.ts';
@@ -55,6 +56,8 @@ const makeWorkspace = () => {
   const printedValues: unknown[] = [];
   /** The inputs `assign` was invoked with. */
   const inputs: { task: Row; owner: RowRef }[] = [];
+  /** What `describe` was handed, as the host's bindings received it. */
+  const described: unknown[] = [];
   const byId = (target: Row | string) => (typeof target === 'string' ? target : target.id);
 
   const bindings = {
@@ -62,7 +65,10 @@ const makeWorkspace = () => {
       printedValues.push(...values);
       printed.push(values.map((value) => (typeof value === 'string' ? value : JSON.stringify(value))).join(' '));
     },
-    describe: async (row: Row) => `${row.typename} ${row.id} "${String(row.title)}"`,
+    describe: async (row: Row) => {
+      described.push(row);
+      return `${row.typename} ${row.id} "${String(row.title)}"`;
+    },
     children: async (target: Row | string) => [...rows.values()].filter((row) => row.parent === byId(target)),
     relations: async (target: Row | string, direction: 'out' | 'in' = 'out') =>
       [...rows.values()].filter((row) => row[direction === 'out' ? 'source' : 'target'] === byId(target)),
@@ -107,13 +113,14 @@ const makeWorkspace = () => {
     },
   };
 
-  return { rows, scored, printed, printedValues, inputs, bindings };
+  return { rows, scored, printed, printedValues, inputs, described, bindings };
 };
 
 /** Hands the sandbox the workspace above; the dialect seam is what makes this substitutable. */
 const dialectOver = (bindings: Record<string, unknown>): Dialect => ({
   name: 'plain',
   instructions: () => '',
+  operations: () => '',
   wrap: (code) => code,
   bindings: () => bindings,
 });
@@ -198,6 +205,36 @@ describe('workerd sandbox', () => {
     // The handler ran on the HOST, not in the isolate.
     expect(scored).toEqual(['Review the PR']);
     expect([...rows.values()].map((row) => row.title)).toEqual(['Review the PR']);
+  });
+
+  test('console output reaches the host printer', async () => {
+    const { run } = setup();
+    const output = await run(`
+      console.log('one', 1);
+      console.info('two');
+      print('three');
+      console.warn('four');
+      console.error('five');
+      console.debug(typeof console.table);
+      console.dir({ six: 6 }, { depth: null });
+    `);
+    expect(output).toEqual(['one 1', 'two', 'three', 'four', 'five', 'function', '{"six":6}'].join('\n'));
+  });
+
+  test('a program that returns nothing is told apart from one that returns null', async () => {
+    const { evaluate } = setup();
+    expect(await evaluate('const done = true;')).toEqual({ value: undefined });
+    expect(await evaluate('return null;')).toEqual({ value: null });
+  });
+
+  test("hands describe an operation's output with the objects in it live", async () => {
+    const { rows, described, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs' });
+    // An operation's output wraps the object it names; the host's `describe` takes the wrapper, not just the object.
+    await run(`print(await describe(await ops.find({ id: 'a' })));`);
+    expect(described).toEqual([{ found: rows.get('a') }]);
+    const [wrapper] = described;
+    expect(Predicate.isObject(wrapper) && wrapper.found).toBe(rows.get('a'));
   });
 
   test('reports a throw in the isolate as output rather than failing the turn', async () => {

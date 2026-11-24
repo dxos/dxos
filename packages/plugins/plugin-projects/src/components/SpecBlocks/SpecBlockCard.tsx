@@ -40,8 +40,17 @@ import * as Util from '@dxos/react-ui/Util';
 import { type WidgetProps } from '@dxos/ui-editor';
 import { type Hue, hues } from '@dxos/ui-types';
 
+import { focusBlockEffect, focusRequested } from '../../extensions/spec-blocks/block-commands.ts';
+import { type PartSource, partBinding } from '../../extensions/spec-blocks/part-binding.ts';
+import {
+  type BlockLocator,
+  type SpecBlocks,
+  findBlock,
+  labelOf,
+  specBlocksConfig,
+  specBlocksField,
+} from '../../extensions/spec-blocks/spec-blocks-state.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
-import { focusBlockEffect, focusRequested } from './block-commands.ts';
 import {
   type BlockFormContext,
   NAME,
@@ -58,15 +67,6 @@ import {
   toFormValues,
 } from './block-form.ts';
 import { isBlockName, updateBlock, useSpecBlocks } from './block-value.ts';
-import { type PartSource, partBinding } from './part-binding.ts';
-import {
-  type BlockLocator,
-  type SpecBlocks,
-  findBlock,
-  labelOf,
-  specBlocksConfig,
-  specBlocksField,
-} from './spec-blocks-state.ts';
 
 export type SpecBlockCardProps = WidgetProps<{ locator: BlockLocator }>;
 

@@ -19,8 +19,13 @@ import React, {
 import { createPortal, flushSync } from 'react-dom';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
-import { type SlideTheme } from '@dxos/react-ui-slides';
-import { SlideThemeProvider } from '@dxos/react-ui-slides';
+import {
+  type SlideFooter,
+  SlideFooterProvider,
+  type SlidePosition,
+  type SlideTheme,
+  SlideThemeProvider,
+} from '@dxos/react-ui-slides';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
@@ -104,6 +109,9 @@ type DeckContextValue = {
   fullscreen: boolean;
   setFullscreen: (fullscreen: boolean) => void;
   themeSettings: SlideTheme.Settings | undefined;
+  footer: SlideFooter.Settings | undefined;
+  /** A slide's place among the slides the deck presents, for the counters it draws. */
+  positionOf: (index: number) => SlidePosition;
   attendableId?: string;
   /** The element that takes focus when the deck mounts (opted in) or toggles fullscreen: the viewport or the grid. */
   focusRef: MutableRefObject<HTMLDivElement | null>;
@@ -123,6 +131,13 @@ type DeckRootProps = PropsWithChildren<{
   onFullscreenChange?: (fullscreen: boolean) => void;
   /** Deck theme; without a base theme, the first slide's `theme:` headmatter applies. */
   theme?: SlideTheme.Settings;
+  /** Drawn on every slide, unless the slide's frontmatter says otherwise. */
+  footer?: SlideFooter.Settings;
+  /**
+   * The positions in `slides` of those shown when the deck is presented (default: all of them). The slide number and
+   * total count only these, so a grid that also shows hidden slides numbers the rest as the presentation does.
+   */
+  presented?: readonly number[];
   attendableId?: string;
   /** Focus the deck on mount, so keys work without a click; it is refocused after every fullscreen toggle regardless. */
   autoFocus?: boolean;
@@ -140,6 +155,8 @@ const DeckRoot = ({
   fullscreen = false,
   onFullscreenChange,
   theme,
+  footer,
+  presented,
   attendableId,
   autoFocus = false,
 }: DeckRootProps) => {
@@ -162,6 +179,16 @@ const DeckRoot = ({
   const clicks = useSlideClicks(slide);
   const themeSettings = useDeckTheme(slides, theme);
   const step = stepState.index === index ? Math.min(stepState.step, clicks) : 0;
+
+  const positionOf = useMemo(() => {
+    const total = presented?.length ?? count;
+    // A slide the deck leaves out when presented has no number of its own, only the total.
+    const numbers = presented && new Map(presented.map((position, rank) => [position, rank + 1]));
+    return (slideIndex: number): SlidePosition => ({
+      current: numbers ? numbers.get(slideIndex) : slideIndex + 1,
+      total,
+    });
+  }, [presented, count]);
 
   const setFullscreen = useCallback((next: boolean) => onFullscreenChange?.(next), [onFullscreenChange]);
 
@@ -236,7 +263,7 @@ const DeckRoot = ({
         case 'ArrowLeft':
           return command || event.shiftKey ? go(0) : previousSlide();
         case 'ArrowRight':
-          return command || event.shiftKey ? go(count - 1) : nextSlide();
+          return command || event.shiftKey ? go(count - 1) : nextSlide(Number.POSITIVE_INFINITY);
         case 'ArrowUp':
           return backward();
         case 'ArrowDown':
@@ -281,6 +308,8 @@ const DeckRoot = ({
       fullscreen,
       setFullscreen,
       themeSettings,
+      footer,
+      positionOf,
       attendableId,
       focusRef,
       handleKeyDown,
@@ -295,6 +324,8 @@ const DeckRoot = ({
       fullscreen,
       setFullscreen,
       themeSettings,
+      footer,
+      positionOf,
       attendableId,
       handleKeyDown,
     ],
@@ -305,6 +336,17 @@ const DeckRoot = ({
 
 DeckRoot.displayName = 'Deck.Root';
 
+/** What every slide the deck draws shares, wherever it draws it: the viewport, the grid, or the print container. */
+const DeckSlides = ({
+  theme,
+  footer,
+  children,
+}: PropsWithChildren<{ theme: SlideTheme.Settings | undefined; footer: SlideFooter.Settings | undefined }>) => (
+  <SlideThemeProvider settings={theme}>
+    <SlideFooterProvider settings={footer}>{children}</SlideFooterProvider>
+  </SlideThemeProvider>
+);
+
 //
 // Content
 //
@@ -314,7 +356,8 @@ DeckRoot.displayName = 'Deck.Root';
  * printing while it holds focus (or is fullscreen) prints every slide.
  */
 const DeckContent = Util.composable<HTMLDivElement>(({ children, onKeyDown, ...props }, forwardedRef) => {
-  const { slides, fullscreen, themeSettings, attendableId, handleKeyDown } = useDeckContext('Deck.Content');
+  const { slides, fullscreen, themeSettings, footer, positionOf, attendableId, handleKeyDown } =
+    useDeckContext('Deck.Content');
   const contentRef = useRef<HTMLDivElement>(null);
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, contentRef);
 
@@ -361,12 +404,17 @@ const DeckContent = Util.composable<HTMLDivElement>(({ children, onKeyDown, ...p
       {children}
       {printing &&
         createPortal(
-          <SlideThemeProvider settings={themeSettings}>
+          <DeckSlides theme={themeSettings} footer={footer}>
             <div data-print-deck=''>
               {slides.map((source, slideIndex) => (
                 // An object linked twice yields two slides with one id.
                 <div key={`${source.id}:${slideIndex}`} data-print-slide=''>
-                  <Slide.Root source={source} attendableId={attendableId} step={Number.POSITIVE_INFINITY}>
+                  <Slide.Root
+                    source={source}
+                    attendableId={attendableId}
+                    step={Number.POSITIVE_INFINITY}
+                    position={positionOf(slideIndex)}
+                  >
                     <Slide.Frame scaled={false}>
                       <Slide.Content />
                     </Slide.Frame>
@@ -374,7 +422,7 @@ const DeckContent = Util.composable<HTMLDivElement>(({ children, onKeyDown, ...p
                 </div>
               ))}
             </div>
-          </SlideThemeProvider>,
+          </DeckSlides>,
           document.body,
         )}
     </div>
@@ -392,7 +440,7 @@ DeckContent.displayName = 'Deck.Content';
  * Children draw over the slide (speaker notes, another plugin's overlay).
  */
 const DeckViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { slide, step, fullscreen, setFullscreen, themeSettings, attendableId, focusRef } =
+  const { slide, index, step, fullscreen, setFullscreen, themeSettings, footer, positionOf, attendableId, focusRef } =
     useDeckContext('Deck.Viewport');
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
   const handleExit = useCallback(() => setFullscreen(false), [setFullscreen]);
@@ -408,15 +456,22 @@ const DeckViewport = Util.composable<HTMLDivElement>(({ children, ...props }, fo
       onExit={handleExit}
     >
       <div className='dx-cover flex flex-col'>
-        <SlideThemeProvider settings={themeSettings}>
+        <DeckSlides theme={themeSettings} footer={footer}>
+          {/* The frame outlives the slide: a new frame paints nothing until it has measured itself, which flashes. */}
           {slide && (
-            <Slide.Root key={slide.id} source={slide} attendableId={attendableId} step={step}>
-              <Slide.Frame inset={!fullscreen}>
+            <Slide.Frame inset={!fullscreen}>
+              <Slide.Root
+                key={slide.id}
+                source={slide}
+                attendableId={attendableId}
+                step={step}
+                position={positionOf(index)}
+              >
                 <Slide.Content />
-              </Slide.Frame>
-            </Slide.Root>
+              </Slide.Root>
+            </Slide.Frame>
           )}
-        </SlideThemeProvider>
+        </DeckSlides>
       </div>
       {fullscreen && <Overlay />}
       {children}
@@ -504,7 +559,8 @@ type DeckGridProps = {
  */
 const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
   ({ size, onMove, onOpen, onAddSlide, contextMenuId, onKeyDownCapture, ...props }, forwardedRef) => {
-    const { slides, count, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
+    const { slides, count, index, setIndex, setFullscreen, themeSettings, footer, positionOf, focusRef } =
+      useDeckContext('Deck.Grid');
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
     return (
       <div
@@ -532,7 +588,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
           }
         }}
       >
-        <SlideThemeProvider settings={themeSettings}>
+        <DeckSlides theme={themeSettings} footer={footer}>
           <SlideGallery
             slides={slides}
             index={index}
@@ -541,6 +597,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
             onMove={onMove}
             onAdd={onAddSlide}
             contextMenuId={contextMenuId}
+            positionOf={positionOf}
             onPresent={(slideIndex) => {
               setIndex(slideIndex);
               if (onOpen) {
@@ -550,7 +607,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
               }
             }}
           />
-        </SlideThemeProvider>
+        </DeckSlides>
       </div>
     );
   },

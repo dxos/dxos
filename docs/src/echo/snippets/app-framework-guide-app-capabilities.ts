@@ -38,8 +38,8 @@ export const SettingsModule = Capability.makeModule(() =>
 // #endregion
 
 // #region makers
-// Each maker declares the capability and its default activation event, so a
-// manifest names only the loader.
+// Each maker declares the capability and its default activation event, so
+// `dx.config.ts` names only the loader.
 export const modules = [
   AppCapability.settings(async () => ({ default: SettingsModule })),
   AppCapability.translations([

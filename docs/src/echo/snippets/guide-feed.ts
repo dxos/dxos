@@ -87,7 +87,13 @@ const alternate = await db
 // #endregion fork
 
 // #region remove
+// Items you hold.
 await db.deleteFromFeed(feed, [messages[1]]);
+// Items you know only by id.
+await db.removeFeedItemsByIds(
+  feed,
+  greetings.map((greeting) => greeting.id),
+);
 // #endregion remove
 
 export { alternate, greetings, next };

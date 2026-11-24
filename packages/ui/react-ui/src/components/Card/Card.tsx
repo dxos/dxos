@@ -94,12 +94,29 @@ CardRoot.displayName = 'Card.Root';
 // Poster
 //
 
-type CardPosterProps = ImageProps;
+type CardPosterPosition = {
+  /** `end` puts the poster at the card's bottom edge instead of its top. */
+  position?: 'start' | 'end';
+};
 
-/** A full-bleed Image across the card's gutters; first in the card, it takes the card's top corners. */
-const CardPoster = forwardRef<HTMLDivElement, CardPosterProps>(({ classNames, ...props }, forwardedRef) => (
-  <Image {...props} data-place='full' classNames={mx(recipes.cardPoster(), classNames)} ref={forwardedRef} />
-));
+type CardPosterProps =
+  | (ImageProps & CardPosterPosition)
+  | (ThemedClassName<ComponentPropsWithoutRef<'div'>> & CardPosterPosition & { alt?: undefined });
+
+/**
+ * A full-bleed Image, or other content (a grid, a chart) without `alt`, across the card's gutters. First in the card it
+ * takes the top corners; with `position='end'` it takes the bottom ones.
+ */
+const CardPoster = forwardRef<HTMLDivElement, CardPosterProps>(
+  ({ classNames, position = 'start', ...props }, forwardedRef) => {
+    const className = mx(recipes.cardPoster(), classNames);
+    return props.alt !== undefined ? (
+      <Image {...props} data-place='full' data-position={position} classNames={className} ref={forwardedRef} />
+    ) : (
+      <div {...props} data-place='full' data-position={position} className={className} ref={forwardedRef} />
+    );
+  },
+);
 
 CardPoster.displayName = 'Card.Poster';
 

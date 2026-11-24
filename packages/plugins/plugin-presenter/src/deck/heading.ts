@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { frontmatterTitle } from '@dxos/react-ui-slides/dialect';
+
 const HEADING = /^#{1,6}[ \t]+(.+?)[ \t#]*$/;
 const FENCE = /^[ \t]{0,3}(`{3,}|~{3,})/;
 
@@ -27,3 +29,10 @@ export const firstHeading = (content: string): string | undefined => {
   }
   return undefined;
 };
+
+/**
+ * The title a slide's content gives it: the one its frontmatter states (`title: Roadmap`), else its first heading.
+ * The frontmatter comes first so a slide whose first heading is not its name (a cover's product name, a card's
+ * caption) can still say what it is called.
+ */
+export const contentTitle = (content: string): string | undefined => frontmatterTitle(content) ?? firstHeading(content);

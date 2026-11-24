@@ -5,46 +5,70 @@ description: Register a plugin's ECHO types with the app, so it can create, name
 
 import Snippet from '../../../../../components/Snippet.astro';
 
-A plugin stores its data as ECHO objects in the person's spaces. The types themselves are ordinary ECHO types,
-which [Defining types](/docs/echo/learn/defining-types/) covers. This page covers what a plugin adds so the app knows
-about them.
+By the end of this guide, the app can create, name and list the objects of your plugin's type.
+
+A plugin stores its data as ECHO objects in the person's spaces. The types themselves are ordinary ECHO types, which
+[Defining types](/docs/echo/learn/defining-types/) covers. This page covers what a plugin adds so the app knows about
+them.
 
 ## Register the types
 
-The app can store, query and show an object only if its type is registered. A plugin registers its types with the
-`Schema` capability: a module returns the list, and `AppCapability.schema` contributes it.
+The app can create, name and list an object only if its type is registered. A plugin registers its types with the
+`Schema` capability. A module's file exports the list of types, and `AppCapability.schema` contributes it.
+
+**Example** (Exporting the plugin's types from a module)
 
 <Snippet file="plex-tutorial/src/capabilities/schema" region="schema" />
 
+In `dx.config.ts`, `AppCapability.schema` names that module:
+
 <Snippet file="plex-tutorial/dx.config" region="schema" />
 
-A type registered by no plugin still syncs, since ECHO stores any object, but the app cannot name, list or create it.
+The objects of a type that no enabled plugin registers still sync, because ECHO replicates a space's data whatever
+its types. The app cannot create, name or list them.
 
 ## Annotate the type for the app
 
 Annotations on the schema tell the app how to present an object:
 
-- `LabelAnnotation` names the property that holds the object's label, shown in the navigation tree and in search.
+- `LabelAnnotation` names the property that holds the object's label. The app shows the label in the navigation tree
+  and in search.
 - `IconAnnotation` gives the type an icon and a hue.
 - `UserType` marks a type people create themselves, so it appears in the app's create menus. Leave it off types
   that only a plugin creates, such as a sync cursor.
 
+**Example** (Annotating the link type)
+
 <Snippet file="plex-tutorial/src/types/StashedLink" region="type" />
+
+`StashedLink` pipes the three annotations onto its struct, inside `Type.makeObject`. They are part of the schema, so
+any plugin that imports the type gets them too.
 
 The type's name in the menus comes from the plugin's translations, keyed by its typename. See
 [App capabilities](/docs/plex/guides/app-capabilities/#translations).
 
 ## Create objects
 
-Give each type a `make` function that fills in defaults, so every plugin that creates one gets a valid object.
+Give each type a `make` function that fills in defaults, so that every plugin that creates one gets a valid object.
+
+**Example** (Making a link with defaults)
 
 <Snippet file="plex-tutorial/src/types/StashedLink" region="make" />
 
+`make` takes a partial set of fields, so a caller passes only what it has. The create-object entry below passes what
+the person typed into the create form.
+
 To add the type to the app's create menu, contribute a `SpaceCapabilities.CreateObjectEntry`. The Space plugin lists
 every entry, and calls `createObject` with the properties the person entered and the place they chose.
+
 `SpaceOperation.AddObject` adds the object to the space, so the change can be undone and other plugins see it.
 
+**Example** (Contributing a create-object entry)
+
 <Snippet file="plex-tutorial/src/capabilities/create-object" region="create-object" />
+
+`id` is the typename, which is how the Space plugin matches the entry to the type. `options.target` is the parent the
+person chose, such as a collection, and `options.db` is the database of the space they are in.
 
 ## Limits
 

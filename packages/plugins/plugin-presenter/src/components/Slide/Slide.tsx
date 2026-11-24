@@ -9,9 +9,17 @@ import React, { type PropsWithChildren, useMemo } from 'react';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { createContext } from '@dxos/react-hooks';
-import { MarkdownSlide, type MarkdownSlideProps } from '@dxos/react-ui-slides';
-import { SlideThemeScope } from '@dxos/react-ui-slides';
-import { SlideFrame, type SlideFrameProps } from '@dxos/react-ui-slides';
+import {
+  MarkdownSlide,
+  type MarkdownSlideProps,
+  SlideFooterLayer,
+  SlideFooterProvider,
+  SlideFrame,
+  type SlideFrameProps,
+  type SlidePosition,
+  SlidePositionProvider,
+  SlideThemeScope,
+} from '@dxos/react-ui-slides';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { type Text } from '@dxos/schema';
@@ -42,13 +50,22 @@ const SLIDE_NAME = 'Slide';
 
 const [SlideProvider, useSlideContext] = createContext<SlideContextValue>(SLIDE_NAME);
 
-type SlideRootProps = PropsWithChildren<SlideContextValue>;
+type SlideRootProps = PropsWithChildren<
+  SlideContextValue & {
+    /** The slide's place in the deck that draws it, for the slide's counters; a slide outside a deck has none. */
+    position?: SlidePosition;
+  }
+>;
 
 /**
  * One slide, whatever its source: owned markdown, a markdown string, a linked object, or one still loading. Headless:
  * it renders only its parts, typically `Slide.Frame` around `Slide.Content`.
  */
-const SlideRoot = ({ children, ...context }: SlideRootProps) => <SlideProvider {...context}>{children}</SlideProvider>;
+const SlideRoot = ({ children, position, ...context }: SlideRootProps) => (
+  <SlideProvider {...context}>
+    <SlidePositionProvider {...position}>{children}</SlidePositionProvider>
+  </SlideProvider>
+);
 
 SlideRoot.displayName = 'Slide.Root';
 
@@ -74,8 +91,12 @@ const SlideContent = () => {
     case 'object':
       return (
         <EmbedAncestor id={source.object.id}>
-          <SlideThemeScope>
-            <ObjectSurface object={source.object} role='slide' attendableId={attendableId} />
+          <SlideThemeScope classNames='relative'>
+            {/* The footer is this slide's: a slide the object embeds is part of its content, and draws none. */}
+            <SlideFooterProvider>
+              <ObjectSurface object={source.object} role='slide' attendableId={attendableId} />
+            </SlideFooterProvider>
+            <SlideFooterLayer />
           </SlideThemeScope>
         </EmbedAncestor>
       );

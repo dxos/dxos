@@ -17,44 +17,73 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 npm install @dxos/react-ui-menu @effect/atom-react
 ```
 
-`ActionToolbar` draws a list of actions as a toolbar. When the row is too narrow, it moves actions into an overflow menu. An action is a label, an icon and the function it runs. You build the list with `MenuBuilder` and
-`useMenuBuilder`, and because the list is data, other code can add to it, which is how Composer plugins add buttons to
-each other's toolbars. The actions live in an atom, so wrap your app in `RegistryProvider` from
-`@effect/atom-react/RegistryContext`, and register the strings from `@dxos/react-ui-menu/translations`.
+`ActionToolbar` draws a list of actions as a toolbar. When the row is too narrow, it moves actions into an overflow
+menu.
+
+An **action** is a label, an icon and the function it runs. You build the list with `MenuBuilder` and
+`useMenuBuilder`. Because the list is data, other code can add to it. This is how PLEX plugins add buttons to each
+other's toolbars.
+
+The actions live in an atom.
+
+Wrap your app in `RegistryProvider` from `@effect/atom-react`. This is best practice, because your app then controls
+the registry that the toolbar reads. Without a provider, the toolbar reads the library's default registry.
+
+Add the package's strings from `@dxos/react-ui-menu/translations` to the `resourceExtensions` of `Theme.Provider`.
 
 ## Props
 
 | Prop | Type | Effect |
 | --- | --- | --- |
-| `...menu` | `MenuActions` | The actions, from `useMenuBuilder` |
-| `attendableId` | `string` | The toolbar is dimmed while this surface lacks the user's attention |
-| `alwaysActive` | `boolean` | Never dimmed |
-| `customActions` | `Atom<ActionGraphProps>` | Actions another component adds to this toolbar |
+| `...menu` | `MenuActions` | Sets the actions, from `useMenuBuilder` |
+| `onAction` | `ActionExecutor` | The user ran an action. `onAction` runs it in place of the action's own function |
+| `attendableId` | `string` | Dims the toolbar while this surface lacks the user's attention |
+| `alwaysActive` | `boolean` | Keeps the toolbar from dimming |
+| `customActions` | `Atom<ActionGraphProps>` | Sets actions another component adds to this toolbar |
+| `bounds` | `HTMLElement \| null` | Sets the box whose width the toolbar may fill. Its own frame by default |
 
 ## Build a toolbar
 
-`useMenuBuilder` takes a function that builds the actions, and the values it depends on. Give an action `iconOnly` to
-show only its icon, with the label as its tooltip. `placement: { zone: 'end' }` puts it at the far end of the row. Pass
-`alwaysActive` when the toolbar does not belong to a surface that tracks the user's attention:
+`useMenuBuilder` takes a function that builds the actions, and the values that function depends on.
+
+- Give an action `iconOnly` to show only its icon, with the label as its tooltip.
+- Give it `placement: { zone: 'end' }` to put it at the far end of the row.
+
+Pass `alwaysActive` when the toolbar does not belong to a surface that tracks the user's attention.
+
+**Example** (Building a toolbar of three actions)
 
 <Snippet file="tile-guide-menus" region="toolbar" lang="tsx" />
 
 <TilePreview id="format-toolbar" height="6rem" />
 
+`iconOnly` leaves Bold and Italic as icons, and `placement` puts Share at the far end of the row. Each action's
+function records its name in state, and the text under the toolbar shows the last one run.
+
 ## Show state
 
-A switch shows whether something is on. Pass the state as `checked`, and list it in the dependencies so the actions are
-rebuilt when it changes:
+A switch shows whether something is on. Pass the state as `checked`, and list it in the dependencies, so
+`useMenuBuilder` rebuilds the actions when the state changes.
+
+**Example** (Showing word wrap as a switch)
 
 <Snippet file="tile-guide-menus" region="switch" lang="tsx" />
 
 <TilePreview id="view-toolbar" height="4rem" />
 
+`wrap` is both the switch's `checked` value and the one dependency, and the switch's function flips it.
+
 ## In a plugin
 
-In a Composer plugin, other plugins add actions to an object's node in the [app graph](/docs/plex/guides/app-graph/).
-`graphActions` reads the ones marked for the toolbar and adds them to yours. Pass the surface's `attendableId`, so the
-toolbar is active while its surface has the user's attention. `onAction` runs a graph action; plugin-graph's
-`useActionRunner` gives you one:
+In a PLEX plugin, other plugins add actions to an object's node in [App Graph](/docs/plex/guides/app-graph/).
+`graphActions` reads those actions from the graph, so you can add them to your toolbar.
+
+- Pass the surface's `attendableId`, so the toolbar is active while its surface has the user's attention.
+- Pass `onAction` to run a graph action. `useActionRunner` from `@dxos/plugin-graph` gives you one.
+
+**Example** (Adding other plugins' actions to a toolbar)
 
 <Snippet file="tile-guide-menus" region="plugin" lang="tsx" />
+
+`ObjectToolbar` has one action of its own, Refresh. `subgraph` adds the actions that `graphActions` reads from the
+graph, and `isToolbarAction` keeps the ones marked for the toolbar.

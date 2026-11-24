@@ -9,6 +9,7 @@ import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as TestClock from 'effect/testing/TestClock';
 import * as Tracer from 'effect/Tracer';
 
 import { OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
@@ -44,9 +45,9 @@ const toolkit = OpaqueToolkit.make(
 );
 
 // `RunRequirements` types several services `run()` never yields on this path, hence the noops below.
-const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
+const testLayer = (script: ScriptedLanguageModel.Script) =>
   Layer.mergeAll(
-    layer(turns),
+    layer(script),
     ToolExecutionService.layerEmpty,
     ToolResolverService.layerEmpty,
     TestDatabaseLayer(),
@@ -81,6 +82,26 @@ describe('AiRequest.Request.run (scripted model)', () => {
       ),
     ),
   );
+
+  it.effect("states today's date in the system prompt of every model call", () => {
+    const systems: string[] = [];
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(Date.UTC(2026, 10, 19, 9, 30));
+      yield* new AiRequest.Request().run({ toolkit, system: 'Base prompt.', prompt: 'Echo hello.', history: [] });
+
+      expect(systems).toHaveLength(2);
+      for (const system of systems) {
+        expect(system).toContain('## Current Date\n\nToday is Thursday, 2026-11-19 (UTC).');
+      }
+    }).pipe(
+      Effect.provide(
+        testLayer((request, index) => {
+          systems.push(request.system);
+          return index === 0 ? { parts: [toolCall('Echo', { value: 'hello' })] } : { parts: [text('Echoed.')] };
+        }),
+      ),
+    );
+  });
 
   it.effect('iterates until the model stops, feeding each tool result back', () =>
     Effect.gen(function* () {

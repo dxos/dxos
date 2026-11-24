@@ -16,6 +16,7 @@ import React, {
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 
 import { SyntaxHighlighter, type SyntaxHighlighterProps, renderRows } from '@dxos/react-ui-syntax-highlighter';
+import * as Icon from '@dxos/react-ui/Icon';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -29,8 +30,10 @@ import {
   parseSlide,
   parseSourceRange,
 } from '../../markdown/index.ts';
+import * as SlideFooter from '../../SlideFooter.ts';
 import * as SlideTheme from '../../SlideTheme.ts';
 import { useSlideScrim } from '../scrim.ts';
+import { SlideCurrentNo, SlideFooterProvider, SlidesTotal, useSlideFooter } from '../SlideDeck/index.ts';
 import {
   type SlideThemeStyle,
   slideThemeClasses,
@@ -102,8 +105,9 @@ export const MarkdownSlide = ({
   const handleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
       const element = event.target instanceof Element ? event.target.closest('[data-source]') : null;
-      // A slide embedded in this one has its own source offsets, which do not index this slide's markdown.
-      if (element?.closest('[data-slide]') !== event.currentTarget) {
+      // A slide embedded in this one has its own source offsets, which do not index this slide's markdown; nor do
+      // the footer's, which index the deck's footer text.
+      if (element?.closest('[data-slide]') !== event.currentTarget || element.closest('[data-slide-footer]')) {
         return;
       }
       const range = parseSourceRange(element.getAttribute('data-source'));
@@ -133,13 +137,41 @@ export const MarkdownSlide = ({
     >
       <SlideBackground frontmatter={frontmatter} layout={parsed.layout} />
       <div className='relative size-full'>
-        <RenderSurfaceContext.Provider value={renderSurface}>
-          <ActiveSlotContext.Provider value={outlinedSlot}>
-            <Layout slots={slots} frontmatter={frontmatter} />
-          </ActiveSlotContext.Provider>
-        </RenderSurfaceContext.Provider>
+        {/* The footer is this slide's: a slide embedded in it is part of its content, and draws none of its own. */}
+        <SlideFooterProvider>
+          <RenderSurfaceContext.Provider value={renderSurface}>
+            <ActiveSlotContext.Provider value={outlinedSlot}>
+              <Layout slots={slots} frontmatter={frontmatter} />
+            </ActiveSlotContext.Provider>
+          </RenderSurfaceContext.Provider>
+        </SlideFooterProvider>
       </div>
+      {SlideFooter.shownOn({ footer: parsed.frontmatter.footer, layout: parsed.layout }) && <SlideFooterLayer />}
     </div>
+  );
+};
+
+/**
+ * The footer of the deck the slide is drawn in, over the slide's bottom padding; nothing where the deck sets none.
+ * Drawn by a markdown slide for itself, and by whatever else draws a slide on the canvas (a linked object's).
+ */
+export const SlideFooterLayer = () => {
+  const settings = useSlideFooter();
+  const parts = useMemo(
+    () => SlideFooter.PARTS.map((part) => ({ part, content: renderInline(settings?.[part]) })),
+    [settings],
+  );
+  if (SlideFooter.isEmpty(settings)) {
+    return null;
+  }
+  return (
+    <footer data-slide-footer className={theme.footer.root}>
+      {parts.map(({ part, content }) => (
+        <div key={part} data-part={part} className={theme.footer[part]}>
+          {content}
+        </div>
+      ))}
+    </footer>
   );
 };
 
@@ -184,8 +216,15 @@ type SlideCodeProps = { 'language'?: string; 'meta'?: string; 'source'?: string;
 // `className` and `data-step` carry click-step visibility from `prepareElement`.
 type SlideSurfaceProps = { 'uri'?: string; 'role'?: string; 'className'?: string; 'data-step'?: string };
 
+// `className` carries the classes the card's variant gives its icon.
+type SlideIconProps = { icon?: string; className?: string };
+
 type SlideComponents = Partial<Components> & {
-  [tag: `slide-${string}`]: ComponentType<SlideCodeProps> | ComponentType<SlideSurfaceProps>;
+  [tag: `slide-${string}`]:
+    | ComponentType<SlideCodeProps>
+    | ComponentType<SlideSurfaceProps>
+    | ComponentType<SlideIconProps>
+    | ComponentType;
 };
 
 const isSurfaceRole = (role: string | undefined): role is SlideSurfaceRole =>
@@ -208,6 +247,9 @@ const SlideSurface = ({ uri = '', role, className, 'data-step': dataStep }: Slid
     </div>
   );
 };
+
+/** A card's icon: decorative, since the title beside it already names the card. */
+const SlideIcon = ({ icon = '', className }: SlideIconProps) => <Icon.Icon icon={icon} classNames={className} />;
 
 type Renderer = NonNullable<SyntaxHighlighterProps['renderer']>;
 
@@ -258,6 +300,9 @@ const CodeBlock = ({ language, meta, source = '', 'data-source': dataSource }: S
 const components: SlideComponents = {
   'slide-code': CodeBlock,
   'slide-surface': SlideSurface,
+  'slide-icon': SlideIcon,
+  'slide-current-no': SlideCurrentNo,
+  'slide-total': SlidesTotal,
 };
 
 // Bounds a range like `{1-100000000}` so a fence cannot allocate an enormous set.
@@ -323,6 +368,7 @@ const BLOCK_TAGS = new Set([
   'slide-grid',
   'slide-cell',
   'slide-card',
+  'slide-body',
 ]);
 
 const NODE_CLASSES: Record<string, string> = theme.nodes;
@@ -350,6 +396,8 @@ const VARIANT_PARTS: Record<string, string> = {
   'slide-grid': 'grid',
   'slide-cell': 'cell',
   'slide-card': 'card',
+  'slide-icon': 'icon',
+  'slide-body': 'body',
 };
 
 const variantPart = (tagName: string): string => VARIANT_PARTS[tagName] ?? tagName;
@@ -364,6 +412,48 @@ const TRACK_PROPERTIES: Record<string, Record<string, string>> = {
   'slide-card': { colSpan: '--slide-col-span', rowSpan: '--slide-row-span' },
 };
 
+/** The headings a card takes as its title. */
+const TITLE_TAGS = new Set(['h1', 'h2', 'h3']);
+
+/**
+ * An icon card's children as a header over a body: the icon and the title are the header, which the card's variant
+ * lays out as a row, and everything else is the body under it. The two are the card's only children, so the cards of
+ * a grid row can share one header track and start their bodies level. A card with no title still shows its icon.
+ */
+const withIconHeader = (children: ElementContent[], icon: string): ElementContent[] => {
+  const glyph: Element = { type: 'element', tagName: 'slide-icon', properties: { icon }, children: [] };
+  const index = children.findIndex((child) => child.type === 'element' && TITLE_TAGS.has(child.tagName));
+  const title = index < 0 ? [] : [children[index]];
+  const rest = index < 0 ? children : [...children.slice(0, index), ...children.slice(index + 1)];
+  const header: Element = { type: 'element', tagName: 'header', properties: {}, children: [glyph, ...title] };
+  const body: Element = { type: 'element', tagName: 'slide-body', properties: {}, children: rest };
+  return [header, body];
+};
+
+const isBlank = (node: ElementContent): boolean => node.type === 'text' && node.value.trim().length === 0;
+
+/**
+ * A grid's children, with each click tag written straight inside the grid replaced by what it holds: a card revealed
+ * on a click must stay the grid's own child to take a track and its share of the row's header. A `<v-click>` or
+ * `<v-after>` passes its step to the elements it held; one holding bare text stays a box, as text carries no step.
+ */
+const withoutClickBoxes = (children: ElementContent[]): ElementContent[] =>
+  children.flatMap((child) => {
+    if (
+      child.type !== 'element' ||
+      !CLICK_TAGS.has(child.tagName) ||
+      !child.children.every((inner) => inner.type === 'element' || isBlank(inner))
+    ) {
+      return [child];
+    }
+    const step = child.properties.step ?? undefined;
+    return withoutClickBoxes(child.children).map((inner) =>
+      inner.type === 'element' && step !== undefined && (inner.properties.step ?? undefined) === undefined
+        ? { ...inner, properties: { ...inner.properties, step } }
+        : inner,
+    );
+  });
+
 /** A variant in force: the kind of block that set it and the name it carries. */
 type ActiveVariant = { kind: string; name: string };
 
@@ -375,6 +465,26 @@ const textOf = (node: ElementContent): string =>
 
 const hasContent = (root: Root): boolean =>
   root.children.some((child) => child.type !== 'text' || child.value.trim().length > 0);
+
+/**
+ * One line of slide markdown as inline content, for a part of the footer: a part is a phrase, so the paragraph
+ * markdown puts around it is dropped and what it holds is drawn in the part's own type.
+ */
+const renderInline = (markdown: string | undefined): ReactNode => {
+  if (!markdown?.trim()) {
+    return null;
+  }
+  const root = parseSlide(markdown).slots.default;
+  const blocks = root.children.filter((child) => child.type !== 'text' || child.value.trim().length > 0);
+  const [only] = blocks;
+  const children = blocks.length === 1 && only.type === 'element' && only.tagName === 'p' ? only.children : blocks;
+  return toJsxRuntime(prepareRoot({ type: 'root', children }, Number.POSITIVE_INFINITY), {
+    Fragment,
+    jsx,
+    jsxs,
+    components,
+  });
+};
 
 const prepareRoot = (root: Root, step: number): Root => ({
   ...root,
@@ -405,7 +515,12 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName = element.children.some((child) => child.type === 'element' && BLOCK_TAGS.has(child.tagName))
       ? 'div'
       : 'span';
-  } else if (tagName === 'slide-box' || tagName === 'slide-grid' || tagName === 'slide-cell') {
+  } else if (
+    tagName === 'slide-box' ||
+    tagName === 'slide-grid' ||
+    tagName === 'slide-cell' ||
+    tagName === 'slide-body'
+  ) {
     tagName = 'div';
   } else if (tagName === 'slide-card') {
     // An article: a card is a titled, self-contained piece, which is what the element means.
@@ -428,10 +543,18 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   const block = VARIANT_BLOCKS[element.tagName];
   const name = block ? asVariant(properties.variant) : undefined;
   delete properties.variant;
-  // A nested list or table with no variant of its own starts clean rather than inheriting the one around it.
-  const activeVariant: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
-  const variantClass =
-    activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[variantPart(element.tagName)];
+  // A nested list or table with no variant of its own starts clean rather than inheriting the one around it, unless
+  // a block of another kind around it sets that part itself, as a card sets its own bullets.
+  const part = variantPart(element.tagName);
+  const inherited = variant && variant.kind !== block && theme.variants[variant.kind]?.[variant.name]?.[part];
+  const activeVariant: ActiveVariant | undefined = block
+    ? name
+      ? { kind: block, name }
+      : inherited
+        ? variant
+        : undefined
+    : variant;
+  const variantClass = activeVariant && theme.variants[activeVariant.kind]?.[activeVariant.name]?.[part];
   if (block && variantClass) {
     properties.dataVariant = name;
   }
@@ -461,6 +584,29 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     properties.style = declarations.join('; ');
   }
 
+  // Where a grid stands in the space left to it, which its classes read.
+  const align = element.tagName === 'slide-grid' ? asVariant(properties.align) : undefined;
+  if (element.tagName === 'slide-grid') {
+    delete properties.align;
+  }
+  if (align) {
+    properties.dataAlign = align;
+  }
+
+  // A card's icon joins its title; the card says it has one, so its variant can set the bullets under it.
+  const icon = element.tagName === 'slide-card' ? asVariant(properties.icon) : undefined;
+  if (element.tagName === 'slide-card') {
+    delete properties.icon;
+  }
+  if (icon) {
+    properties.dataIcon = icon;
+  }
+  const children = icon
+    ? withIconHeader(element.children, icon)
+    : element.tagName === 'slide-grid'
+      ? withoutClickBoxes(element.children)
+      : element.children;
+
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);
   if (themed) {
     properties.className = [themed, ...classList(properties.className)];
@@ -471,7 +617,7 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName,
     properties: withStep(properties),
     children: markActive(
-      element.children.map((child) =>
+      children.map((child) =>
         child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', activeVariant) : child,
       ),
       activeItem,

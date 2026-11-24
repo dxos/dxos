@@ -3,7 +3,6 @@
 //
 
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Memory from '@dxos/assistant-toolkit/Memory';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -25,7 +24,6 @@ const types: ReadonlyArray<Type.AnyEntity> = [
   Instructions.Instructions,
   Agent.Agent,
   Sequence.Sequence,
-  Memory.Memory,
   Text.Text,
 ];
 

@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 
 import { ProjectCapabilities } from '#types';
 
-import { blockTemplate } from '../components/SpecDocumentEditor/index.ts';
+import { blockTemplate } from '../extensions/index.ts';
 
 /** The sample video dialect: a script's scenes, shots, voiceover and captions. */
 export const DIALECT = 'org.dxos.spec.video';

@@ -6,6 +6,7 @@ import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Redacted from 'effect/Redacted';
@@ -16,7 +17,7 @@ import { Database, Error, type Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { DISCORD_API_BASE, DISCORD_USER_PROVIDER_ID } from '../constants.ts';
+import { DISCORD_API_BASE } from '../constants.ts';
 import { DISCORD_BOT_USER_AGENT, makeEdgeProxyHttpClientLayer } from './proxy-http-client.ts';
 
 /** Where the Discord REST client sends requests: the API base and whether the CORS proxy carries them. */
@@ -154,12 +155,26 @@ const makeRestLayer = (token: string, tokenKind: TokenKind): Layer.Layer<Discord
         : endpoint.via === 'direct'
           ? directFetchLayer(tokenKind)
           : makeEdgeProxyHttpClientLayer(tokenKind === 'Bearer' ? { tokenKind } : undefined);
+      const fetch = yield* FetchHttpClient.Fetch.pipe(Effect.provide(fetchLayer));
       return DiscordRESTMemoryLive.pipe(
         Layer.provide(DiscordConfig.layer({ token: Redacted.make(token), rest: { baseUrl: endpoint.baseUrl } })),
-        Layer.provide(FetchHttpClient.layer.pipe(Layer.provide(fetchLayer))),
+        Layer.provide(pinnedFetchClient(fetch)),
       );
     }),
   );
+
+/**
+ * The fetch HTTP client with `fetch` provided on every request. `FetchHttpClient` reads `Fetch` from the calling
+ * fiber, whose context wins over the layer's, so a caller with its own `Fetch` would otherwise route Discord requests
+ * past the proxy and its bearer rewrite.
+ */
+const pinnedFetchClient = (fetch: typeof globalThis.fetch): Layer.Layer<HttpClient.HttpClient> =>
+  Layer.effect(
+    HttpClient.HttpClient,
+    Effect.map(HttpClient.HttpClient, (client) =>
+      HttpClient.transformResponse(client, Effect.provideService(FetchHttpClient.Fetch, fetch)),
+    ),
+  ).pipe(Layer.provide(FetchHttpClient.layer));
 
 /**
  * Build a `DiscordREST` layer pinned to a specific bot token.
@@ -219,20 +234,3 @@ export const makeDiscordUserLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Error.EntityNotFoundError, Credential.CredentialsService> =>
   Layer.unwrap(Effect.map(resolveConnectionToken(connectionRef), makeDiscordUserLayerFromToken));
-
-/**
- * Build a `DiscordREST` layer from a persisted {@link Connection} ref with the token kind its connector issues: a
- * Discord user OAuth connection's token is a bearer token, any other a bot token.
- */
-export const makeDiscordConnectionLayer = (
-  connectionRef: Ref.Ref<Connection.Connection>,
-): Layer.Layer<DiscordREST, Error.EntityNotFoundError, Credential.CredentialsService> =>
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const connection = yield* Database.load(connectionRef);
-      const token = yield* resolveConnectionToken(connectionRef);
-      return connection.connectorId === DISCORD_USER_PROVIDER_ID
-        ? makeDiscordUserLayerFromToken(token)
-        : makeDiscordLayerFromToken(token);
-    }),
-  );

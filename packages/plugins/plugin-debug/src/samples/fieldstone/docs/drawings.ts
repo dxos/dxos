@@ -8,6 +8,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database } from '@dxos/echo';
 import * as Architecture from '@dxos/plugin-canvas/Architecture';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { type Shape } from '@dxos/scene';
 
 export type DrawingKey = 'orgChart' | 'architectureDiagram' | 'requestFlow' | 'roadmap' | 'escalation';
 
@@ -15,7 +16,9 @@ export type Drawings = Record<DrawingKey, Drawing.Drawing>;
 
 export type Commands = Architecture.CompiledDiagrams[string];
 type Element = Extract<Commands[number], { op: 'upsert-object' }>['object']['elements'][number];
-type Box = Extract<Element, { kind: 'rect' | 'ellipse' | 'diamond' | 'triangle' }>;
+// Through the scene's own union rather than a copy of it: `Extract` matches the box member only when the filter
+// covers every kind it can be, so a kind added there silently reduced this to `never` and every use of it with it.
+type Box = Extract<Element, { kind: Shape.BoxKind }>;
 type Arrow = Extract<Element, { kind: 'arrow' }>;
 type Style = Pick<Box, 'color' | 'fill' | 'stroke' | 'weight'>;
 

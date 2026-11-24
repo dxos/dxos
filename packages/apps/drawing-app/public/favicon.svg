@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#18202b"/><rect x="5" y="7" width="9" height="7" rx="1.5" fill="none" stroke="#fff" stroke-width="2"/><rect x="18" y="18" width="9" height="7" rx="1.5" fill="none" stroke="#fff" stroke-width="2"/><path d="M14 10.5h4.5v7.5" fill="none" stroke="#2f4bff" stroke-width="2.4"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <style>
+    g { stroke: #111; }
+    @media (prefers-color-scheme: dark) { g { stroke: #f2f2f2; } }
+  </style>
+  <g fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128,16L240,128L128,240L16,128Z"/>
+    <path d="M83.2,96.64L114.56,128L83.2,159.36L51.84,128Z"/>
+    <path d="M172.8,96.64L204.16,128L172.8,159.36L141.44,128Z"/>
+    <path d="M49.6,161.6L67.52,143.68"/>
+    <path d="M98.88,112.32L128,83.2L157.12,112.32"/>
+    <path d="M188.48,143.68L206.4,161.6"/>
+  </g>
+</svg>

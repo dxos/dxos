@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import defaultsDeep from 'lodash.defaultsdeep';
-
 import { Model } from '@dxos/ai';
 import * as Template from '@dxos/compute/Template';
 // Text is referenced in the inferred type of 'templates' (via Template.make → Template.Template.source → Ref.Ref(Text.Text));
@@ -17,21 +15,14 @@ import SYSTEM from './instructions/system.tpl?raw';
 /**
  * System template variables.
  */
-export type SystemPromptOptions = Model.Capabilities & {
-  DATETIME: string;
-};
+export type SystemPromptOptions = Model.Capabilities;
 
 /**
  * Base system prompt.
  * NOTE: This contains protocol instructions that can not be dynamically edited.
  */
 export const createSystemPrompt = (options: Partial<SystemPromptOptions> = {}) =>
-  Template.process<SystemPromptOptions>(
-    FORMAT,
-    defaultsDeep(options, {
-      DATETIME: new Date().toISOString(),
-    }),
-  );
+  Template.process<SystemPromptOptions>(FORMAT, options);
 
 /**
  * NOTE: We are forbidden from accessing randomness at model level in cloudflare, so we have to have pre-generated ids.

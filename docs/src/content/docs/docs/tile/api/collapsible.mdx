@@ -11,12 +11,13 @@ import ApiStory from '../../../../../components/ApiStory.astro';
 import * as Collapsible from '@dxos/react-ui/Collapsible';
 ```
 
-The trigger is a caret and a label. Without a label it is just the caret, for a list row.
+A collapsible is one region that opens and closes. `Collapsible.Trigger` is a caret and a label. Without a label,
+the trigger is only the caret. Use a caret-only trigger when the collapsible sits in a list row.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Collapsible.Root` | Holds the open state |
+| `Collapsible.Root` | The root, which holds the open state |
 | `Collapsible.Trigger` | The caret and label that open and close the region |
-| `Collapsible.Content` | The region; its height animates as it opens |
+| `Collapsible.Content` | The region. Its height animates as it opens |

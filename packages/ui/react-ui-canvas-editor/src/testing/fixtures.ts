@@ -3,7 +3,7 @@
 //
 
 import { createTimeline, setKey } from '@dxos/animation';
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { CONSTRAINED_GRID, constrainedPlacement, fromRenderLists2D } from '@dxos/react-ui-canvas';
 import { between } from '@dxos/react-ui-canvas/headless';
@@ -53,7 +53,7 @@ const withExtras = (
 
 /** A 2D board: three shapes on the diagram layer, a note on the background, two links and two named styles. */
 export const DOCUMENT_2D: Scene.SceneDocument = withExtras(
-  Dsl.readScenes(`scene board dim=2d layout=board name="Board" theme=flat {
+  DSL.readScenes(`scene board dim=2d layout=board name="Board" theme=flat {
   camera center=256,64 zoom=1
 }
 
@@ -81,7 +81,7 @@ model shapes dim=2d {
 
 /** A 3D cluster: a hub and three spokes placed from the model on a base, linked, with two named materials. */
 export const DOCUMENT_3D: Scene.SceneDocument = withExtras(
-  Dsl.readScenes(`scene cluster dim=3d layout=cluster name="Cluster" theme=cad {
+  DSL.readScenes(`scene cluster dim=3d layout=cluster name="Cluster" theme=cad {
   camera target=0,0,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
 }
 
@@ -229,4 +229,4 @@ export const NESTED_2D: Scene.SceneDocument = nested2D(createNestedSimpleTree())
 export const NESTED_DEEP_2D: Scene.SceneDocument = nested2D(createNestedDeepTree());
 
 /** A client beside a glass shell whose parts are a hub and four spokes: one composite to drill into. */
-export const NESTED_3D: Scene.SceneDocument = Dsl.readScenes(EXEMPLARS.encapsulated).document;
+export const NESTED_3D: Scene.SceneDocument = DSL.readScenes(EXEMPLARS.encapsulated).document;

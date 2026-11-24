@@ -24,7 +24,6 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
     - ReactSurface: the canvas properties panel of a drawing
     - Schema: the canvas generator types
     - SkillDefinition: the canvas generators skill
-    - SpaceTemplates: the architecture space template
     - TldrawConverter: the illustrator converter from a tldraw drawing to a canvas
     - Translations: the plugin's strings
     - UndoMappings: undo for canvas edits
@@ -82,6 +81,15 @@ feat F-1: Collaborator cursors
 feat F-2: Frame
 
   req F-2.1: The plugin exports `CanvasFrame`: the 2D article as a new drawing opens, over an empty scene, with the toolbars and panels the article draws, for an app to show before its plugins start. It needs no plugin context, so it offers the plugin's own node kinds, and its controls change nothing.
+```
+
+```mdl
+feat F-3: DSL companion
+
+  req F-3.1: A Canvas drawing has a `DSL` companion beside its article that shows the drawing's open scene as text. It shows the grid diagram the drawing says (`diagram kind=grid`) where there is one, and the drawing's boxes where there is not, with the reason in its footer. A drawing with both can switch between them.
+  req F-3.2: The text is printed again whenever the scene changes. An edit holds while the drawing is still the one it was typed over.
+  req F-3.3: The text can be edited. `Rebuild` makes the drawing what the text says: it clears the elements the DSL manages and draws the text, as one edit. Text that does not parse changes nothing and its errors show in the footer. `Discard edits` shows the drawing's text again.
+  req F-3.4: When the host contributes `ReadOnly`, the text can be read and switched between its two readings, and cannot be edited: `Rebuild` and `Discard edits` are withheld.
 ```
 
 ## QA
@@ -178,6 +186,7 @@ test QA-4: Showcase clip
     - an identity exists
     - space: a space is open
     - plugin-canvas enabled
+    - plugin-debug enabled (it contributes the DXOS Architecture template)
   steps:
     - name: Create the space from its template
       do: Open the app menu, choose Create space, pick DXOS Architecture, and open the Composer drawing.
@@ -222,7 +231,7 @@ test QA-3: DXOS Architecture tour
   status: passing           # 2026-10-16, recorded by autocue/architecture-tour.mjs
   given:
     - an identity exists, on a fresh profile
-    - plugin: Canvas is enabled in the plugin registry (the template is contributed only while it is)
+    - plugin: Canvas and Debug are enabled in the plugin registry (Debug contributes the template)
     - space: a space created from the "DXOS Architecture" template, open, with its Architecture collection expanded
   steps:
     - name: Read the Composer guide
@@ -580,4 +589,56 @@ decision D-38: When the host contributes `ReadOnly`, every canvas is locked and 
   affects: [CanvasPlugin, CanvasArticle]
   supersedes: D-36
   why: The capability lands at startup with no order against module activation, so it is read when the article renders and when the graph expands, never while a module activates.
+```
+
+```mdl
+decision D-39: The DSL companion ([F-3]) reads the drawing's text from its records each time and stores none. After a Rebuild the author's text stays in the editor until the drawing next changes.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3]
+  why: A stored copy of the text would disagree with the records as soon as someone moved a box; keeping the typed text after a Rebuild keeps comments and spacing, which the records do not hold.
+  rejected:
+    - Rebuilding on every keystroke: half-typed text parses to part of a drawing, and a rebuild is a full sync, so it would delete what the broken parse dropped.
+```
+
+```mdl
+decision D-40: The DSL companion follows [D-38]: under the host's `ReadOnly` its text is read-only and it offers no Rebuild.
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3]
+  why: Rebuild rewrites the drawing's records, so a companion that kept it would be a way round the lock on the article beside it.
+```
+
+```mdl
+decision D-41: The space graph's element kind is named `graph`; it was `space-graph`. A node stored under the old name reads as `graph` ([D-105] of `@dxos/scene`).
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: It is the one graph a canvas draws, and a drawing's text names it on every node (`node s0 kind=graph`).
+```
+
+```mdl
+decision D-42: The studio deck's diagrams, stories and element kinds leave this plugin; the Grids story moves from `experimental` to `src/dsl`. The deck is a presentation, and is added back as a sample of its own in a separate change.
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: The deck was here only while the diagram language was built against it; the canvas keeps the language's own stories and its one contributed kind.
+```
+
+```mdl
+decision D-43: The DXOS Architecture space template leaves this plugin for plugin-debug, where the DXOS Deck is merged into it and replaces the ECHO presentation it had. This plugin keeps the architecture partial that the template applies.
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-44: The architecture partial seeds no presentation, and its Architecture collection lists Composer, DXOS, EDGE, ECHO design, Overview, CF Workers and Plugin metrics. The plugin contributes no space template. Fills in [D-43].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The deck that replaces the ECHO presentation is drawn with plugin-debug's element kinds, so only that plugin can seed it.
 ```

@@ -48,7 +48,7 @@ const Signedin = ({
   identity: Identity.Info;
 }) => {
   // #region spaces
-  /** The spaces that are open, re-rendering on each change. */
+  /** The spaces that are ready, re-rendering on each change. */
   const spaces = useSpaces();
   /** The named ones, by name. */
   const named = useMemo(

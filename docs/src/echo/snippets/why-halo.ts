@@ -8,7 +8,7 @@ import { Identity, Invitation, Space } from '@dxos/halo';
 
 // #region pattern
 const start = Effect.gen(function* () {
-  // a key pair, made on this device
+  // the identity and this device's key, made on this device
   const me = yield* Identity.create({ displayName: 'Ada' });
   const team = yield* Space.create({ name: 'Team' });
 

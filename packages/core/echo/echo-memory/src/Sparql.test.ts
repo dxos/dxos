@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DataFactory } from 'n3';
 import { describe, test } from 'vitest';
 
 import * as Ontology from './Ontology.ts';
+import * as Rdf from './Rdf.ts';
 import * as Sparql from './Sparql.ts';
 
 const IS_A = Ontology.DEFAULT.resolve('is a').iri;
@@ -27,7 +27,7 @@ describe('matchingPredicates', () => {
   });
 });
 
-const { defaultGraph, literal, namedNode, quad } = DataFactory;
+const { defaultGraph, literal, namedNode, quad } = Rdf;
 
 const XSD_DECIMAL = 'http://www.w3.org/2001/XMLSchema#decimal';
 const GRAPH = 'https://example.com/graph/1';

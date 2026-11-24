@@ -5,8 +5,9 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import { ABRIDGED_UNION, type FieldDescription, type TypeDescription, renderFields } from '@dxos/assistant/Describe';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -66,11 +67,20 @@ export interface Dialect {
   /** The API reference rendered into the system prompt, ahead of the skills' own instructions. */
   readonly instructions: (context: InstructionsContext) => string;
 
+  /** The entries `instructions` lists for these operations, to announce ones bound after the system prompt was written. */
+  readonly operations: (operations: readonly SandboxOperation[]) => string;
+
   /** Wraps the model's code into the body the sandbox evaluates. */
   readonly wrap: (code: string) => string;
 
   /** Names bound in the code's scope, built per evaluation. */
   readonly bindings: (context: BindingsContext) => Record<string, unknown>;
+
+  /**
+   * Whether the code reads and changes objects itself, so the operations marked `Operation.hiddenInCodeMode` are left
+   * out of its operations.
+   */
+  readonly database?: boolean;
 }
 
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */
@@ -92,7 +102,7 @@ export const renderTypes = (
   name: (type: SandboxType) => string = ({ typename }) => typename,
 ): string =>
   types === undefined
-    ? "### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's `queryTypes`."
+    ? `### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's \`${Operation.toolName(SkillManagerSkill.Operations.QueryTypes)}\`, which searches every registered type.`
     : types.length === 0
       ? '### Types\n\nNo types are registered.'
       : trim`
@@ -117,16 +127,37 @@ const hasAbridgedUnion = ({ fields }: SandboxType): boolean => fields.some(({ ty
 
 /**
  * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
- * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path.
+ * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path, `output`,
+ * given, is what the call returns, and `tool`, given, is the tool name the skills' instructions use for it.
  */
 export const renderOperation = (
   operation: SandboxOperation,
   call: (name: string) => string,
   input: string = JSON.stringify(operation.parameters),
-): string => trim`
-  - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
-    input: ${input}
-`;
+  output?: string,
+  tool?: string,
+): string =>
+  trim`
+    - \`${call(operation.name)}\`${tool === undefined ? '' : ` (\`${tool}\`)`} — ${operation.description ?? 'No description.'}
+      input: ${input}
+  ` + (output === undefined ? '' : `\n  output: ${output}`);
+
+/**
+ * The `console` bound in the code's scope: its output methods print into the call's output, since the model writes
+ * `console.log` by habit and the host's console is a channel it never reads. Its other methods stay the host's.
+ * A value prints as it is: the Effect dialect's `yield* print` also adds an object's relation hints, which take a query
+ * this synchronous call cannot wait for. `workerd/prelude.mjs` repeats this list, since it cannot import it.
+ */
+export const printingConsole = (print: (...values: unknown[]) => void): Console => ({
+  ...console,
+  log: print,
+  info: print,
+  warn: print,
+  error: print,
+  debug: print,
+  // Only the value: the second argument is the host's formatting options.
+  dir: (value: unknown) => print(value),
+});
 
 /** Shown in place of the operations section when the conversation binds no skills. */
 export const NO_OPERATIONS = '### Operations\n\nNo operations are bound to this conversation.';

@@ -26,6 +26,7 @@ export const BOX_VARIANTS = [
   'card',
   'outline',
   'hero',
+  'brand',
   'fill',
   'lockup',
   'spread',
@@ -39,6 +40,44 @@ export type BoxVariant = (typeof BOX_VARIANTS)[number];
 export const CARD_VARIANTS = ['default', 'outline', 'plain'] as const;
 
 export type CardVariant = (typeof CARD_VARIANTS)[number];
+
+/**
+ * Named grid styles a `<Grid>` may request; the first is the bare grid, and `flow` draws an arrow in each gap between
+ * the children of a row, for a progression.
+ */
+export const GRID_VARIANTS = ['default', 'flow'] as const;
+
+export type GridVariant = (typeof GRID_VARIANTS)[number];
+
+/**
+ * Where a `<Grid>` stands in the space left to it; the first fills that space, and each of the others takes the
+ * height of what the grid holds and places it at the start, the middle or the end.
+ */
+export const GRID_ALIGNMENTS = ['stretch', 'start', 'center', 'end'] as const;
+
+export type GridAlignment = (typeof GRID_ALIGNMENTS)[number];
+
+/** The icon set a bare `<Card icon>` name belongs to, and the weight it is drawn at. */
+const ICON_SET = 'ph';
+const ICON_WEIGHT = 'regular';
+
+/** A glyph's bare name, as Phosphor writes it: `brain`, `shield-check`. */
+const ICON_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** A whole icon symbol (`set--name--weight`), as the icon registry resolves one. */
+const ICON_SYMBOL = /^[a-z0-9]+--[a-z0-9]+(?:-[a-z0-9]+)*--[a-z]+$/;
+
+/**
+ * The icon symbol a `<Card icon>` value names, or `undefined` when it names none: a bare Phosphor name (`brain`) is
+ * the regular glyph, and a whole symbol (`ph--brain--duotone`) is taken as written. Only the form is checked, since
+ * the host's icon registry is what knows which glyphs exist.
+ */
+export const iconSymbol = (value: string): string | undefined => {
+  if (ICON_NAME.test(value)) {
+    return `${ICON_SET}--${value}--${ICON_WEIGHT}`;
+  }
+  return ICON_SYMBOL.test(value) ? value : undefined;
+};
 
 /** The widest grid, and the furthest a cell may span: a slide holds no more legibly. */
 export const MAX_TRACKS = 12;
@@ -126,6 +165,18 @@ const toneName = (tag: ContainerTag, value: string | undefined, issues: SlideIss
   return SlideTheme.TONES[0];
 };
 
+/** The symbol of the icon a tag asks for, or none when it asks for none or for one that is not an icon's name. */
+const iconName = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): string | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const symbol = iconSymbol(value);
+  if (symbol === undefined) {
+    issues.push({ kind: 'html', message: `Invalid ${tagLabel(tag)} icon "${value}"; ignored.` });
+  }
+  return symbol;
+};
+
 /** A tag's name as it is written, for an issue message. */
 const tagLabel = (tag: ContainerTag): string => `<${tag[0].toUpperCase()}${tag.slice(1)}>`;
 
@@ -174,9 +225,22 @@ type Token =
 
 const isContainerTag = (name: string): name is ContainerTag => Object.hasOwn(CONTAINER_TAGS, name);
 
-/** Tags the renderer draws with nothing inside them: a line break, and an embedded object. */
+/** Tags the renderer draws with nothing inside them: a line break, an embedded object, and the deck's counters. */
 const BR_TAG = 'br';
 const SURFACE_TAG = 'surface';
+
+/**
+ * The deck's counters, under Slidev's names: the number of the slide they are drawn on, and how many slides the deck
+ * presents. Each is the element the renderer draws it with.
+ */
+const COUNTER_TAGS = {
+  slidecurrentno: 'slide-current-no',
+  slidestotal: 'slide-total',
+} as const;
+
+type CounterTag = keyof typeof COUNTER_TAGS;
+
+const isCounterTag = (name: string): name is CounterTag => Object.hasOwn(COUNTER_TAGS, name);
 
 /** How a tag is written, which decides whether the renderer draws it at all. */
 export type SlideTagForm = {
@@ -187,12 +251,17 @@ export type SlideTagForm = {
 };
 
 /** What the renderer makes of a tag it draws. */
-export type SlideTag = { kind: 'container'; tag: ContainerTag } | { kind: 'br' } | { kind: 'surface' };
+export type SlideTag =
+  | { kind: 'container'; tag: ContainerTag }
+  | { kind: 'br' }
+  | { kind: 'surface' }
+  | { kind: 'counter'; tag: CounterTag };
 
 /**
  * What the renderer draws for a tag, or `undefined` for one it leaves as literal text — the single rule for which
  * tags the slide dialect allows, shared with the editor's highlighting so the two cannot disagree. A container tag
- * may open or close but never close itself, since it styles what it wraps; `<br>` and `<Surface>` only ever open.
+ * may open or close but never close itself, since it styles what it wraps; `<br>`, `<Surface>` and the counters only
+ * ever open.
  * The name is matched case-insensitively, as a browser matches an HTML tag.
  */
 export const slideTag = (name: string, { closing, selfClosing }: SlideTagForm): SlideTag | undefined => {
@@ -208,6 +277,9 @@ export const slideTag = (name: string, { closing, selfClosing }: SlideTagForm): 
   }
   if (lower === SURFACE_TAG) {
     return { kind: 'surface' };
+  }
+  if (isCounterTag(lower)) {
+    return { kind: 'counter', tag: lower };
   }
   return undefined;
 };
@@ -454,6 +526,10 @@ const tokenize = (
         tokens.push({ kind: 'node', node: surfaceElement(parseAttributes(attributes ?? ''), issues) });
         break;
       }
+      case 'counter': {
+        tokens.push({ kind: 'node', node: slideElement(COUNTER_TAGS[tag.tag], {}) });
+        break;
+      }
     }
   }
   pending += node.value.slice(index);
@@ -556,11 +632,33 @@ const trackCount = (
   return undefined;
 };
 
-/** The tracks a `<Grid>` lays down. */
+const isGridAlignment = (value: string): value is GridAlignment => GRID_ALIGNMENTS.some((align) => align === value);
+
+/** The alignment a `<Grid>` asks for, or none when it asks for the default, which fills the space it is given. */
+const gridAlignment = (
+  tag: ContainerTag,
+  value: string | undefined,
+  issues: SlideIssue[],
+): GridAlignment | undefined => {
+  if (value === undefined || value === GRID_ALIGNMENTS[0]) {
+    return undefined;
+  }
+  if (isGridAlignment(value)) {
+    return value;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} align "${value}"; using "${GRID_ALIGNMENTS[0]}".`,
+  });
+  return undefined;
+};
+
+/** The tracks a `<Grid>` lays down, and where it stands in the space left to it. */
 const gridProperties = (tag: ContainerTag, attributes: Record<string, string>, issues: SlideIssue[]): Properties => {
   const cols = trackCount(tag, 'cols', attributes.cols, issues);
   const rows = trackCount(tag, 'rows', attributes.rows, issues);
-  return { ...(cols && { cols }), ...(rows && { rows }) };
+  const align = gridAlignment(tag, attributes.align, issues);
+  return { ...(cols && { cols }), ...(rows && { rows }), ...(align && { align }) };
 };
 
 /**
@@ -578,13 +676,15 @@ const containerNodes = (
   children: RootContent[],
   issues: SlideIssue[],
 ): RootContent[] => {
-  if (open.tag === 'grid' || open.tag === 'cell') {
-    // Neither takes a named style, but both carry the only one they have so the renderer finds their classes where
-    // every other tag's live.
-    const tracks =
-      open.tag === 'grid'
-        ? gridProperties(open.tag, open.attributes, issues)
-        : spanProperties(open.tag, open.attributes, issues);
+  if (open.tag === 'grid') {
+    const variant = variantName(open.tag, open.attributes.variant, GRID_VARIANTS, issues);
+    const tracks = gridProperties(open.tag, open.attributes, issues);
+    return [slideElement(CONTAINER_TAGS[open.tag], { variant, ...tracks }, children)];
+  }
+  if (open.tag === 'cell') {
+    // A cell takes no named style, but carries the only one it has so the renderer finds its classes where every
+    // other tag's live.
+    const tracks = spanProperties(open.tag, open.attributes, issues);
     return [slideElement(CONTAINER_TAGS[open.tag], { variant: 'default', ...tracks }, children)];
   }
   if (open.tag === 'box' || open.tag === 'card') {
@@ -593,7 +693,14 @@ const containerNodes = (
     const tone = toneName(open.tag, open.attributes.tone, issues);
     // A card is a grid child as often as not, so it takes a span of its own rather than needing a `<Cell>` around it.
     const tracks = open.tag === 'card' ? spanProperties(open.tag, open.attributes, issues) : {};
-    return [slideElement(CONTAINER_TAGS[open.tag], { variant, ...(tone && { tone }), ...tracks }, children)];
+    const icon = open.tag === 'card' ? iconName(open.tag, open.attributes.icon, issues) : undefined;
+    return [
+      slideElement(
+        CONTAINER_TAGS[open.tag],
+        { variant, ...(tone && { tone }), ...(icon && { icon }), ...tracks },
+        children,
+      ),
+    ];
   }
   if (isStyleTag(open.tag)) {
     return styleBlocks(open.tag, children, open.attributes, issues);

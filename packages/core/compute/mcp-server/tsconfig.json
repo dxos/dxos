@@ -25,10 +25,10 @@
       "path": "../../echo/echo-client"
     },
     {
-      "path": "../compute"
+      "path": "../agent-code-mode"
     },
     {
-      "path": "../compute-runtime"
+      "path": "../compute"
     }
   ]
 }

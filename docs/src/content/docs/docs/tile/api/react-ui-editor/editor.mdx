@@ -15,57 +15,92 @@ import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 ```
 
 ```sh
-npm install @dxos/react-ui-editor @dxos/ui-editor
+npm install @dxos/react-ui-editor @dxos/ui-editor @effect/atom-react
 ```
 
-`Editor` is the text editor Composer uses for documents, built on CodeMirror. The React parts draw the editor and
-its toolbar, and the extensions from `@dxos/ui-editor` decide what it does: markdown, formatting, themes, and binding
-the text to an ECHO object.
+`Editor` is the text editor Composer uses for documents, built on CodeMirror.
+
+- The React parts draw the editor and its toolbar.
+- The extensions from `@dxos/ui-editor` decide what the editor does: markdown, formatting, themes, and binding the
+  text to an ECHO object.
 
 ## Parts
 
 | Part | What it is |
 | --- | --- |
-| `Editor.Root` | Holds the extensions and the editor's state; `viewMode` sets source or preview |
-| `Editor.Content` | Fills its container, with the toolbar above the text |
-| `Editor.View` | The CodeMirror editor; `value` and `onChange` when the text lives in your state |
+| `Editor.Root` | The root, which holds the extensions and the editor's state. `viewMode` sets source, preview or read-only |
+| `Editor.Content` | The layout that fills its container, with the toolbar above the text |
+| `Editor.View` | The CodeMirror editor. Pass `value` and `onChange` when the text lives in your state |
 | `Editor.Toolbar` | The formatting actions, as an `ActionToolbar` |
 | `Editor.ToolbarMenu` | The same actions as a menu, for where a toolbar does not fit |
-| `Editor.Blocks` | Draws the embedded blocks the extensions contribute |
+| `Editor.Blocks` | The part that draws the embedded blocks the extensions contribute |
 | `Editor.BlockFrame` | The frame of one embedded block, which takes focus for it |
 | `Editor.Diagnostics` | A developer panel of live editor state |
 
 ## Plain text
 
-`createBasicExtensions` gives the editor its editing behavior, with options such as a placeholder and line wrapping.
-`createThemeExtensions` matches the app's light or dark theme; read the mode with `useThemeMode` and rebuild the
-extensions when it changes. Rebuilding recreates the editor, so keep its text in state and pass it as `value` with
-`onChange`:
+For plain text, the editor takes two sets of extensions:
+
+- `createBasicExtensions` gives the editor its editing behavior, with options such as a placeholder and line wrapping.
+- `createThemeExtensions` matches the app's light or dark theme. Read the mode with `useThemeMode`, and rebuild the
+  extensions when it changes.
+
+Rebuilding the extensions recreates the editor, so keep the editor's text in state and pass it as `value` with
+`onChange`.
+
+**Example** (Editing plain text held in state)
 
 <Snippet file="tile-guide-editor" region="plain" lang="tsx" />
 
 <TilePreview id="editor-plain" height="8rem" />
 
+`useMemo` rebuilds the extensions only when `themeMode` changes, so typing does not recreate the editor.
+
 ## Markdown with a toolbar
 
-`createMarkdownExtensions` parses markdown, and `decorateMarkdown` styles it as you type. `Editor.Toolbar` is an
-[`ActionToolbar`](/docs/tile/api/react-ui-menu/action-toolbar/), so the app needs a `RegistryProvider` and the strings
-from `@dxos/react-ui-menu/translations` and `@dxos/react-ui-editor/translations`. The toolbar is dimmed until its surface
-has the user's attention. Outside Composer, put a `RootAttentionProvider` around the app and an `AttendableContainer`
-around the toolbar and the editor, both from `@dxos/react-ui-attention`, and pass the container's id to the toolbar.
-The theme's `slots` add padding inside the scroller, so the text keeps off the container's edges:
+`createMarkdownExtensions` parses markdown, and `decorateMarkdown` styles it as you type.
+
+`Editor.Toolbar` is an [`ActionToolbar`](/docs/tile/api/react-ui-menu/action-toolbar/), so its actions live in an atom.
+
+Wrap your app in `RegistryProvider` from `@effect/atom-react`. This is best practice, because your app then controls
+the registry that the toolbar reads. Without a provider, the toolbar reads the library's default registry.
+
+Add the strings from `@dxos/react-ui-menu/translations` and `@dxos/react-ui-editor/translations` to the
+`resourceExtensions` of `Theme.Provider`.
+
+The toolbar is dimmed until its surface has the user's attention. Outside Composer, you set that up with two
+components from `@dxos/react-ui-attention`:
+
+- Put a `RootAttentionProvider` around the app.
+- Put an `AttendableContainer` around the toolbar and the editor.
+
+Then pass the container's id to the toolbar as `attendableId`.
+
+**Example** (Editing markdown with a formatting toolbar)
 
 <Snippet file="tile-guide-editor" region="markdown" lang="tsx" />
 
 <TilePreview id="editor-markdown" height="16rem" />
 
+`AttendableContainer` and `Editor.Toolbar` share the id `notes`. `RootAttentionProvider` wraps the editor here so
+that the sample stands alone. In an app it goes at the root, with the `RegistryProvider` and the strings, which the
+sample leaves out.
+
 ## Bind the text to ECHO
 
 An ECHO `Text` object from `@dxos/schema` holds a document's text. The `automerge` extension binds the editor to one of
-its properties: each edit goes into the object, and each change to the object, from another window or device, shows in
-the editor. With the binding, `Editor.View` needs no `value`:
+the object's properties:
+
+- Each edit goes into the object.
+- Each change to the object, from another window or device, shows in the editor.
+
+With the binding, `Editor.View` needs no `value`.
+
+**Example** (Binding the editor to a `Text` object)
 
 <Snippet file="tile-guide-editor" region="echo" lang="tsx" />
+
+`Doc.createAccessor` points the `automerge` extension at the `content` property of `text`.
 
 This preview binds to a `Text` object that is not in a database, so its edits stay in this page:
 

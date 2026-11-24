@@ -28,7 +28,7 @@ import {
   persistMessageStage,
   topicsStage,
 } from './stages/index.ts';
-import { ExtractedQuestionStore, MessageStore, QuestionStore } from './stores/index.ts';
+import { MessageStore, QuestionStore } from './stores/index.ts';
 import { type DetectOptions } from './topics/detect-topics.ts';
 
 export type RunOptions = {
@@ -74,7 +74,6 @@ export const DiscordPipeline = {
     | AgentRegistry.AgentRegistry
     | FactStore
     | QuestionStore.QuestionStore
-    | ExtractedQuestionStore.ExtractedQuestionStore
     | AiService.AiService
   > =>
     Effect.gen(function* () {

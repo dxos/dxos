@@ -1,5 +1,40 @@
 # @dxos/network-manager
 
+## 0.17.0
+
+### Minor Changes
+
+- 1ac444f: The compiled `dx` binary embeds each target's `node-datachannel` addon, so WebRTC device joins such as `dx account login --method composer` work from the binary again. `dx debug webrtc` opens a data channel between two local peers to check it. `dx account login` always prints the sign-in link, and `--no-open` skips opening it in the default browser. `@dxos/cli-util` adds `presentUrl`, and `@dxos/network-manager` exports `getRtcConnectionFactory`.
+
+### Patch Changes
+
+- Updated dependencies [a458aef]
+- Updated dependencies [034e231]
+- Updated dependencies [66304b6]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [3aef671]
+- Updated dependencies [ece15ab]
+- Updated dependencies [c9c3867]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+  - @dxos/protocols@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/messaging@0.17.0
+  - @dxos/teleport@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

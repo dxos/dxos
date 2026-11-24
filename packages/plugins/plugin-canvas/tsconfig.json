@@ -103,7 +103,7 @@
       "path": "../../ui/react-ui-list"
     },
     {
-      "path": "../../ui/react-ui-slides"
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/ui-editor"
@@ -128,9 +128,6 @@
     },
     {
       "path": "../plugin-mermaid"
-    },
-    {
-      "path": "../plugin-presenter"
     },
     {
       "path": "../plugin-sheet"

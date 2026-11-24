@@ -78,7 +78,7 @@ const SheetArticleInner = ({
           </Panel.Header>
         )}
         <Panel.Body asChild>
-          <SheetComponent.Content fit={slide} />
+          <SheetComponent.Content fit={slide ? 'contain' : undefined} />
         </Panel.Body>
         {!slide && (
           <Panel.Footer>

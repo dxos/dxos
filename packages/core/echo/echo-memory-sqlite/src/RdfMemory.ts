@@ -14,20 +14,18 @@ import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
 import * as Evaluator from '@dxos/brain/Evaluator';
-import {
-  Fact,
-  Graph,
-  Hash,
-  Mapping,
-  MemoryError,
-  MemoryQuery,
-  MemoryService,
-  Ontology,
-  RdfStore,
-  Sparql,
-  Subscription,
-  Vocab,
-} from '@dxos/echo-memory';
+import * as Fact from '@dxos/echo-memory/Fact';
+import * as Graph from '@dxos/echo-memory/Graph';
+import * as Hash from '@dxos/echo-memory/Hash';
+import * as Mapping from '@dxos/echo-memory/Mapping';
+import * as MemoryError from '@dxos/echo-memory/MemoryError';
+import * as MemoryQuery from '@dxos/echo-memory/MemoryQuery';
+import * as MemoryService from '@dxos/echo-memory/MemoryService';
+import * as Ontology from '@dxos/echo-memory/Ontology';
+import * as RdfStore from '@dxos/echo-memory/RdfStore';
+import * as Sparql from '@dxos/echo-memory/Sparql';
+import * as Subscription from '@dxos/echo-memory/Subscription';
+import * as Vocab from '@dxos/echo-memory/Vocab';
 
 //
 // A memory over any RdfStore: facts are quads in the store's shared part, and the memory's own records
@@ -376,23 +374,22 @@ export const make = (rdf: RdfStore.Service): Effect.Effect<MemoryService.Service
     });
 
     /** A batch another replica wrote: a clear starts the rules over, and the facts it adds are pushed. */
-    const applyRemote = (batch: RdfStore.Batch) =>
-      Effect.gen(function* () {
-        if (own.delete(batch.id)) {
-          return;
-        }
-        if (batch.writes.some((write) => write._tag === 'clear')) {
-          yield* restart;
-        }
-        const graphs = new Set(
-          batch.writes.flatMap((write) =>
-            write._tag === 'insert'
-              ? write.quads.flatMap(({ g }) => (g && g.value !== Vocab.ONTOLOGY_GRAPH ? [g.value] : []))
-              : [],
-          ),
-        );
-        yield* push(yield* factsIn([...graphs]));
-      });
+    const applyRemote = Effect.fnUntraced(function* (batch: RdfStore.Batch) {
+      if (own.delete(batch.id)) {
+        return;
+      }
+      if (batch.writes.some((write) => write._tag === 'clear')) {
+        yield* restart;
+      }
+      const graphs = new Set(
+        batch.writes.flatMap((write) =>
+          write._tag === 'insert'
+            ? write.quads.flatMap(({ g }) => (g && g.value !== Vocab.ONTOLOGY_GRAPH ? [g.value] : []))
+            : [],
+        ),
+      );
+      yield* push(yield* factsIn([...graphs]));
+    });
 
     // Following the store starts before hydrating, so no batch applied in between goes unseen.
     const applied = yield* Queue.unbounded<RdfStore.Batch>();

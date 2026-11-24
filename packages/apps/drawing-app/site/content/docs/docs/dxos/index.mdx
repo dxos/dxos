@@ -1,0 +1,39 @@
+---
+title: drawing.sh and DXOS
+description: Where the app keeps your diagrams, how they sync between people, and what a Composer account changes.
+---
+
+The app is built with [DXOS](https://dxos.org/), a technology stack and SDK for local-first, collaborative apps.
+[Composer](/docs/dxos/composer/) is built with it too. The app keeps diagrams the way Composer does, so the two apps
+and the [DX CLI](/docs/dxos/cli/) read and write the same spaces.
+
+## Identities and spaces
+
+An **identity** is a key pair kept in the browser, with no account and no email address behind it. On your first
+visit the app makes one for your browser.
+
+A **space** is a small database that every member keeps a full copy of. Your diagrams live in spaces. Members are
+identities: you, the people you shared the space with, and any Composer or CLI identity that joined it with a link.
+
+## Peer to peer only, without a Composer account
+
+The app has no sign-in, so its identity has no Composer account. For an identity like that, sync is peer to peer
+only:
+
+- Members' devices send changes to each other directly. DXOS's EDGE service helps them find each other, but it
+  does not store or relay the space.
+- Two members sync only while both are online. A change made while nobody else is online stays in your browser.
+  It reaches the others the next time two of you are online together.
+- The copy in your browser is the only copy that is yours. Clearing the site's data, or Reset in the app's error
+  dialog, deletes it. Export a diagram as a `.dx.svg`, or share the space, to keep it somewhere else.
+
+A Composer account adds EDGE sync. EDGE keeps a copy of your spaces and passes changes on to members who were
+offline when you made them.
+
+A drawing.sh member of a space that a Composer user shares still syncs peer to peer. It syncs with the Composer
+user's devices, whenever one of them is online at the same time.
+
+## Next
+
+- [Composer](/docs/dxos/composer/) covers moving spaces and diagrams between the two apps.
+- [The DX CLI](/docs/dxos/cli/) covers reading and writing a space's diagrams from a terminal.

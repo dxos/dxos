@@ -23,19 +23,23 @@ const createStorage = (): Storage => {
 
 /** Stands in for the window Vite dispatches `vite:preloadError` on. */
 const createTarget = () => {
-  const listeners = new Set<(event: Event) => void>();
+  const listeners = new Map<string, Set<(event: Event) => void>>();
   const target = {
-    addEventListener: (_type: string, listener: (event: Event) => void) => void listeners.add(listener),
+    addEventListener: (type: string, listener: (event: Event) => void) => {
+      listeners.set(type, (listeners.get(type) ?? new Set()).add(listener));
+    },
   };
-  const dispatch = (url: string, payload: unknown = { message: `Unable to preload CSS for ${url}` }) => {
-    const event = new Event('vite:preloadError', { cancelable: true });
-    Object.assign(event, { payload });
-    for (const listener of listeners) {
+  const fire = (event: Event) => {
+    for (const listener of listeners.get(event.type) ?? []) {
       listener(event);
     }
     return event;
   };
-  return { target, dispatch };
+  const dispatch = (url: string, payload: unknown = { message: `Unable to preload CSS for ${url}` }) =>
+    fire(Object.assign(new Event('vite:preloadError', { cancelable: true }), { payload }));
+  const leave = () => fire(new Event('beforeunload'));
+  const restore = () => fire(new Event('pageshow'));
+  return { target, dispatch, leave, restore };
 };
 
 describe('preload recovery', () => {
@@ -118,6 +122,22 @@ describe('preload recovery', () => {
     expect(reload).not.toHaveBeenCalled();
     expect(event.defaultPrevented).toBe(false);
     expect(sessionStorage.getItem(PRELOAD_RETRY_KEY)).toBeNull();
+  });
+
+  test('leaves the chunks a departing page abandons alone, until the page is shown again', () => {
+    const reload = vi.fn();
+    const { target, dispatch, leave, restore } = createTarget();
+    registerPreloadErrorHandler({ target, reload });
+
+    leave();
+    dispatch('https://composer.space/assets/src-abc123.js');
+    expect(reload).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem(PRELOAD_RETRY_KEY)).toBeNull();
+    expect(localStorage.getItem(BOOT_ASSET_FAILURE_KEY)).toBeNull();
+
+    restore();
+    dispatch('https://composer.space/assets/src-abc123.js');
+    expect(reload).toHaveBeenCalledTimes(1);
   });
 
   test('does not reload when storage is unavailable', () => {

@@ -63,7 +63,18 @@ export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
       [monitor],
     );
     const processes = useAtomValue(processesAtom);
-    const graph = useExecutionGraph(space, monitor?.processTreeAtom, { selectedPids });
+    // Operations run elsewhere (e.g. on EDGE) trace only their key; name and icon come from this client's definitions.
+    const handlerSets = Hooks.useCapabilities(Capabilities.OperationHandler);
+    const resolveOperation = useMemo(() => {
+      const byKey = new Map<string, { name?: string; icon?: string }>();
+      for (const set of handlerSets) {
+        for (const { meta } of set.definitions()) {
+          byKey.set(withoutDxnPrefix(String(meta.key)), { name: meta.name, icon: meta.icon });
+        }
+      }
+      return (key: string) => byKey.get(withoutDxnPrefix(key));
+    }, [handlerSets]);
+    const graph = useExecutionGraph(space, monitor?.processTreeAtom, { selectedPids, resolveOperation });
 
     // A process only knows the feed it serves, so the chat's name is joined in here rather than
     // carried on the process itself.
@@ -167,3 +178,6 @@ const useTraceDumpHatch: (space: TracePanelProps['space']) => void = import.meta
       }, [traceMessages]);
     }
   : () => {};
+
+/** An operation key without its `dxn:` prefix or `:version` suffix, which trace events and definitions spell differently. */
+const withoutDxnPrefix = (key: string): string => key.replace(/^dxn:/, '').replace(/:\d+\.\d+\.\d+$/, '');

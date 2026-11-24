@@ -5,7 +5,12 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { make as makePlugin } from '../../plex-tutorial/dx.config.ts';
@@ -33,7 +38,23 @@ console.log(schemas.length, typeof handlers);
 // #endregion
 
 // #region invoke
-const link = make({ title: 'DXOS', url: 'https://dxos.org' });
-await harness.invoke(MarkRead, { link: Ref.make(link) });
-console.log(link.read);
+// An operation that reads a space needs a client, an identity and the space's id.
+await using app = await Harness.createComposerTestApp({
+  plugins: [ClientPlugin.make({}), makePlugin()],
+});
+const { defaultSpace } = await EffectEx.runAndForwardErrors(
+  initializeIdentity(app.get(ClientCapabilities.Client)),
+);
+
+const link = defaultSpace.db.add(
+  make({ title: 'DXOS', url: 'https://dxos.org' }),
+);
+await app.runPromise(
+  Operation.invoke(
+    MarkRead,
+    { link: Ref.make(link) },
+    { spaceId: defaultSpace.id },
+  ),
+);
+console.log(link.read); // true
 // #endregion

@@ -1,27 +1,43 @@
 ---
-title: Publishing a Plugin
+title: Publishing a plugin
 description: Publish a plugin to your private registry, where Composer lists it only to you
 sidebar:
   order: 3
 ---
 
-This guide publishes a plugin to your **private registry**, so it appears in Composer's plugin registry for you on every device. It assumes you already have a working plugin. If you don't, start with the [learning path](/docs/plex/learn/create-plugin/) and use [`plugin-excalidraw`](https://github.com/dxos/plugin-excalidraw) as a reference implementation.
+A **private registry** is the list of plugins that DXOS hosts for your identity. By the end of this guide, your plugin
+is in yours, and Composer lists it for you on every device.
+
+The guide has five steps. The sections after them cover loading a plugin without publishing it, two worked examples,
+shipping a spec, and a command reference.
+
+You need a working plugin first. If you don't have one, build Stash in the learning path, which starts at
+[The PLEX plugin](/docs/plex/learn/the-plex-plugin/). [`plugin-excalidraw`](https://github.com/dxos/plugin-excalidraw)
+is a published plugin you can read as a reference.
 
 :::note[Public registry]
-There is also an experimental public registry, where plugins are published over AT Protocol and listed to everyone. If you'd like to try it, reach out on [Discord](https://dxos.org/discord).
+There is also an experimental public registry, where plugins are published over AT Protocol and listed to everyone.
+If you'd like to try it, reach out on [Discord](https://dxos.org/discord).
 :::
 
 ## How the private registry works
 
-DXOS hosts your plugin's bundle and records it against your DXOS identity. Composer lists it in its plugin registry only when you are signed in as that identity, and loads the bundle on demand. Nothing is written to AT Protocol, and no verification is needed. The first release of a plugin key claims it, so no other identity can publish that key privately afterwards.
+DXOS hosts your plugin's bundle and records it against your DXOS identity. Composer lists the plugin in its plugin
+registry only when you are signed in as that identity, and it loads the bundle on demand.
+
+Nothing is written to AT Protocol, and no verification is needed. The first release of a plugin key claims it, so no
+other identity can publish that key privately afterwards.
 
 ## Prerequisites
 
-- A built Composer plugin with a `dx.config.ts` (see [Describe your plugin](#3-describe-your-plugin-in-dxconfigts)).
-- A **DXOS identity**, the same one you use in Composer.
-- The DXOS CLI.
+- A Composer plugin with a `dx.config.ts`. The plugin from the learning path is ready as it is, and
+  [step 3](#3-describe-your-plugin-in-dxconfigts) says what you can add.
+- A DXOS identity, the same one you use in Composer.
+- The `dx` CLI, which step 1 installs.
 
 ## 1. Install the CLI
+
+Install the CLI from npm, then check that it runs:
 
 ```bash
 npm install -g @dxos/cli
@@ -30,28 +46,124 @@ dx --version
 
 ## 2. Log in
 
+Log in to your DXOS identity:
+
 ```bash
 dx account login
 ```
 
-`login` prompts for a method, mirroring Composer's sign-in: `atmosphere` (your Atmosphere account, i.e. Bluesky), `email`, `device-invitation`, or `recovery-code`. Log out with `dx account logout`.
+`login` prompts for a method, and the methods mirror Composer's sign-in: `email`, `passkey`, `atmosphere`, `composer`,
+`device-invitation` or `recovery-code`. `atmosphere` is your Atmosphere account, that is, Bluesky. `composer` joins
+the identity that is open in a Composer tab on this machine, once you approve it there.
 
-> `dx account login` signs in to an **existing** identity; it doesn't create one. Create your identity in Composer, or run `dx account signup <access-code>` if you have an access code.
+To log out, run `dx account logout`.
 
-A process with no identity of its own, such as a CLI in a sandbox or a CI job, sets an API token in `DX_API_TOKEN` instead. The token is bound to the account that minted it, so the plugin is listed to that account. In Composer, a sandbox gets one from its **Grant account access** action, which mints a token that expires with the sandbox.
+`dx account login` signs in to an identity that already exists. It doesn't create one. Create your identity in
+Composer, or run `dx account signup <access-code>` if you have an access code.
+
+Some processes have no identity of their own, such as a CLI in a sandbox or a CI job. For these, set an API token in
+`DX_API_TOKEN` instead. The token is bound to the account that minted it, so the plugin is listed to that account.
+
+In Composer, a sandbox gets a token from its **Grant account access** action, which mints one that expires with the
+sandbox.
 
 ## 3. Describe your plugin in `dx.config.ts`
 
-`dx.config.ts` at the root of your plugin package is the **single source of truth** for your plugin's registry metadata. The build reads it to emit the manifest, and `dx registry publish` reads that manifest to publish it.
+`dx.config.ts` sits at the root of your plugin's package. It is the one place that holds the plugin's registry
+metadata.
+
+A **manifest** is the `manifest.json` file that the build writes from `dx.config.ts`. `dx registry publish` reads the
+manifest to publish the plugin.
+
+If you built your plugin in the learning path, your `dx.config.ts` already works. `Plugin.config` takes the `plugin`
+fields that the registry reads, and `composerPlugin()` in your `vite.config.ts` builds from that file. You can add two
+things:
+
+- Registry fields, such as `source` and `screenshots`, go in `plugin`, beside `key` and `name`.
+- A `publish` block goes beside `plugin` and `modules`. You need one only when your build is not `vite build` into
+  `dist`.
+
+**Example** (Adding registry fields and a publish block to Stash)
+
+```ts
+// dx.config.ts
+const config: Plugin.PluginConfig = Plugin.config({
+  plugin: {
+    key: StashNamespace.key,
+    name: 'Stash',
+    description:
+      'A reading list: save links with a note, and mark them as read.',
+    icon: { key: 'ph--tray-arrow-down--regular', hue: 'indigo' },
+    tags: ['labs'],
+    // Registry fields.
+    source: 'https://github.com/your-org/stash',
+    screenshots: [
+      {
+        light: 'https://example.com/stash-light.png',
+        dark: 'https://example.com/stash-dark.png',
+      },
+    ],
+  },
+  publish: {
+    buildCommand: 'vite build', // how to build the bundle
+    outputDirectory: 'dist', // where the build writes manifest.json
+  },
+  modules: [
+    // ...the modules from the learning path.
+  ],
+});
+```
+
+`publish` states the defaults here, so Stash publishes the same with or without it.
+
+These are the fields of `plugin`:
+
+| Field         | Required | Notes                                                                                                                                            |
+| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `key`         | yes      | An NSID, a reverse-domain name such as `org.example.plugin.sketch`, whose last segment is camelCase with no hyphens. No other plugin may use it. |
+| `name`        | yes      | The name the registry shows.                                                                                                                     |
+| `description` | no       | A short description for the plugin's detail view.                                                                                                |
+| `author`      | no       | The author's or organization's name. The registry ignores it for a published plugin, and shows the publisher.                                    |
+| `icon`        | no       | `{ key, hue? }`. `key` is a [Phosphor](https://phosphoricons.com) icon name, and `hue` is an optional color such as `indigo`.                    |
+| `source`      | no       | The URL of the source repository.                                                                                                                |
+| `homePage`    | no       | The URL of the homepage.                                                                                                                         |
+| `tags`        | no       | A list of labels that the registry groups plugins by, such as `labs`.                                                                            |
+| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of URLs, one for each theme.                             |
+| `spec`        | no       | The path of the plugin's `.mdl` spec inside the package, such as `PLUGIN.mdl`. See [Ship a spec](#ship-a-spec).                                  |
+| `dependsOn`   | no       | The keys of the plugins this plugin needs at runtime. Enabling the plugin enables them too.                                                      |
+
+These are the fields of `publish`:
+
+| Field             | Required | Notes                                                                                                                                                            |
+| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildCommand`    | no       | The command that `dx registry publish` runs to build, unless you pass `--no-build`. If it is unset or `vite build`, the project's Vite runs in the `dx` process. |
+| `outputDirectory` | no       | The directory the build writes to, which must contain `manifest.json`. `dist` by default.                                                                        |
+
+The release's version comes from the `version` field of your `package.json`, not from `dx.config.ts`. Bump it before
+you publish a new release.
+
+Before you publish, pin every `@dxos/*` dependency to the build of the Composer that will load the plugin. The
+learning path pinned them to the build these docs run. The
+[first example](#example-a-plugin-with-its-own-group-in-the-navigation-tree) shows the two forms a pin takes, beside
+its `package.json`.
+
+:::caution[Match Composer's versions]
+Move every `@dxos/*` dependency to a new version together. A plugin built against a mix of versions can fail to load.
+:::
+
+A plugin can also keep its modules in an entry file, and use `dx.config.ts` for its metadata alone. `Config2.make`
+describes a plugin laid out that way.
+
+**Example** (Describing a plugin that has an entry file)
 
 ```ts
 import { Config2 } from '@dxos/app-framework/config';
 
 export default Config2.make({
   plugin: {
-    key: 'org.dxos.plugin.excalidraw', // required — a reverse-domain NSID; the plugin's globally-unique key
-    name: 'Excalidraw', // required
-    description: 'Professional diagramming powered by Excalidraw.',
+    key: 'org.example.plugin.sketch', // required: an NSID that no other plugin uses
+    name: 'Sketch', // required
+    description: 'A canvas for quick diagrams.',
     icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
     source: 'https://github.com/your-org/your-plugin',
     tags: ['labs'],
@@ -64,38 +176,13 @@ export default Config2.make({
   },
   publish: {
     buildCommand: 'vite build', // how to build the bundle
-    outputDirectory: 'dist', // where the build emits manifest.json
+    outputDirectory: 'dist', // where the build writes manifest.json
   },
 });
 ```
 
-> Import `Config2` from `@dxos/app-framework/config`, not from `@dxos/app-framework`. The `/config` subpath is a lightweight entry point with no heavy transitive dependencies — the main entry pulls in the full UI framework which is not needed at build/publish time.
-
-Field reference for `plugin`:
-
-| Field         | Required | Notes                                                                                                                                   |
-| ------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`) whose last segment is camelCase — no hyphens. The plugin's globally-unique key. |
-| `name`        | yes      | Human-readable name shown in the registry.                                                                                              |
-| `description` | no       | Short description shown on the plugin's detail view.                                                                                    |
-| `author`      | no       | Author or organization name.                                                                                                            |
-| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.                            |
-| `source`      | no       | Source repository URL.                                                                                                                  |
-| `homePage`    | no       | Homepage URL.                                                                                                                           |
-| `tags`        | no       | List of tags for categorization/discovery.                                                                                              |
-| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs.                         |
-| `spec`        | no       | Path of the plugin's `.mdl` spec inside the package, e.g. `PLUGIN.mdl`. See [Ship a spec](#ship-a-spec).                                |
-
-Field reference for `publish`:
-
-| Field             | Required | Notes                                                                                                                                      |
-| ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `buildCommand`    | no       | Build command run by `dx registry publish` (skipped with `--no-build`); unset or `vite build` runs the project's Vite in the `dx` process. |
-| `outputDirectory` | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`.                                                         |
-
-The release **version is taken from your `package.json` `version` field**, not from `dx.config.ts`. Bump it before publishing a new release.
-
-Wire `composerPlugin` into your `vite.config.ts` so the build emits the manifest:
+`Config2.make` takes `plugin` and `publish`, and no `modules`. The modules are in the entry file, which
+`vite.config.ts` names for `composerPlugin`:
 
 ```ts
 import { composerPlugin } from '@dxos/app-framework/vite-plugin';
@@ -108,97 +195,149 @@ export default defineConfig({
 });
 ```
 
-> Pin every `@dxos/*` dependency to the **same version** the Composer host runs, and bump them in lockstep. A plugin built against mismatched framework versions can fail to load.
+Without `entry`, `composerPlugin` builds such a plugin from `src/plugin.tsx`.
+
+:::tip[Import from the config subpath]
+Import `Config2` from `@dxos/app-framework/config`, not from `@dxos/app-framework`. The `/config` subpath is a small
+entry point. The main entry pulls in the whole UI framework, which a build or a publish does not need.
+:::
 
 ## 4. Publish
 
-From your plugin directory:
+Run the publish command from your plugin directory:
 
 ```bash
 dx registry publish --private
 ```
 
-This will:
+The command runs these steps:
 
-1. Build the bundle (skip with `--no-build` to publish a pre-built `dist`): with no `buildCommand`, or `vite build`, `dx` loads the Vite your project installs and runs it in its own process, so neither node nor a separate Vite process is needed; any other `buildCommand` runs in a shell.
-2. Read the emitted `manifest.json`.
-3. Upload the bundle to DXOS and record it against your identity.
+1. It builds the bundle. Pass `--no-build` to skip this step and publish a pre-built `dist`.
+   - If `buildCommand` is unset or is `vite build`, `dx` loads the Vite your project installs and runs it in its own
+     process. Neither node nor a separate Vite process is needed.
+   - If `buildCommand` is anything else, it runs in a shell.
+2. It reads the manifest that the build wrote.
+3. It checks the bundle by loading it the way [EDGE](/docs/edge/overview/) does. EDGE is the always-online peer that
+   DXOS runs, and it hosts the registry. If a module does not activate there, the publish fails before anything is
+   uploaded.
+4. It uploads the bundle to DXOS and records it against your identity.
 
 Useful flags:
 
-| Flag               | Purpose                                                                            |
-| ------------------ | ---------------------------------------------------------------------------------- |
-| `--dir <path>`     | Project directory containing `dx.config.ts` (defaults to the current directory).   |
-| `--no-build`       | Skip the build and publish the existing `dist`.                                    |
-| `--dry-run`        | Build and check the bundle, then stop: nothing is uploaded or recorded.            |
-| `--edge-url <url>` | Override the edge used for upload (mainly for local testing against a dev worker). |
+| Flag               | Purpose                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `--dir <path>`     | Names the project directory that holds `dx.config.ts`. The current directory by default. |
+| `--no-build`       | Skips the build and publishes the existing `dist`.                                       |
+| `--dry-run`        | Builds and checks the bundle, then stops. Nothing is uploaded or recorded.               |
+| `--edge-url <url>` | Uploads to the EDGE at another URL, mainly to test against a local one.                  |
 
 ## 5. Confirm it's published
 
-The command prints the bundle's URL. Open Composer's plugin registry while signed in as the same identity, and your plugin is listed there. Enable it like any other plugin.
+The command prints the bundle's URL. In Composer, signed in as the same identity, click **Plugin Settings** in the
+rail, open **Plugins**, and look under **Registry**. Your plugin is listed there, and you install it like any other
+plugin.
 
 ## Updating a plugin
 
-Bump the `version` in `package.json`, then run `dx registry publish --private` again. Each version is published once, so bump the version to ship changes.
+Bump the `version` in `package.json`, then run `dx registry publish --private` again. Each version is published once,
+so a change needs a new version.
 
-## Local development
+## Load a plugin without publishing it
 
-You don't need to publish to test your plugin against Composer. Composer loads a plugin from the URL of its
-**`manifest.json`**, so anything that serves a manifest and the entry module it names can be loaded. There are
-two ways to do it.
+You don't need to publish a plugin to test it in Composer. Composer loads a plugin from the URL of its manifest, so
+it can load from anything that serves a manifest and the code the manifest names.
+
+You can load a plugin in two ways, from its dev server or from a built bundle. The assistant can also build a plugin
+for you.
 
 ### From your plugin's dev server
 
-This is the loop to use while you work on a plugin. [Run it in Composer](/docs/plex/learn/run-in-composer/) walks
-through it: run `vite` in the plugin's directory, then enable it under **Dev Server** in Composer's Plugins settings.
+Use this loop while you work on a plugin. Run `npm run dev` in the plugin's directory, then enable the plugin under
+**Dev Server** in the Plugins settings of [Composer Preview](https://preview.composer.space). Only Composer Preview
+loads a plugin from a dev server. [Run it in Composer](/docs/plex/learn/run-in-composer/) walks through it.
 
-- **It is never installed.** A dev plugin is not saved in your profile or in the offline cache. If the dev
-  server is down at boot, Composer logs a warning, shows it under Dev Server, and tries again on the next
-  reload.
-- **It can stand in for an installed plugin.** When your `dx.config.ts` key matches a plugin you already have,
-  from the registry or built in, the dev plugin takes its place for the session. Disable restores the original.
-- **React fast refresh does not reach it.** It is served from another origin, so reload the app rather than
-  waiting for a hot update.
+A **dev plugin** is a plugin loaded this way. It differs from an installed plugin:
+
+- **It is never installed.** A dev plugin is not saved in your profile or in the offline cache. If the dev server is
+  down at boot, Composer logs a warning, shows it under **Dev Server**, and tries again on the next reload.
+- **It can stand in for an installed plugin.** If the key in your `dx.config.ts` matches a plugin you already have,
+  the dev plugin takes its place for the session. That plugin can come from the registry or be built in. **Disable**
+  restores the original.
+- **React fast refresh does not reach it.** It is served from another origin, so reload the app instead of waiting
+  for a hot update.
 
 ### From a built bundle
 
-Build the plugin (see [the example](#example-a-plugin-with-its-own-navtree-group)) and serve its `dist`
-directory, which contains `manifest.json` and `index.mjs`, with CORS if it is on another origin. In Composer,
-open **Plugins**, click **Load from URL** (the cloud icon in the Plugins header) and paste the manifest URL.
-Unlike a dev plugin, a plugin loaded this way is installed: it stays in your profile and its files are cached
-for offline use.
+1. Build the plugin. The [first example](#example-a-plugin-with-its-own-group-in-the-navigation-tree) shows a build.
+2. Serve its `dist` directory, which contains `manifest.json` and `index.mjs`. Serve it with CORS if it is on
+   another origin.
+3. In Composer, open **Plugins**, click **Load from URL**, the cloud icon in the Plugins header, and paste the
+   manifest URL.
 
-The URL must point at the manifest, not at a source file: the loader fetches the manifest first and imports
-the entry it names.
+Unlike a dev plugin, a plugin loaded this way is installed. It stays in your profile, and its files are cached for
+offline use.
 
-### With an assistant
+The URL must point at the manifest, not at a source file. The loader fetches the manifest first and imports the
+entry it names.
 
-To have the assistant build one for you, create a project from the **Composer Plugin** template in the Composer
-desktop app, with the Sandbox plugin on. Its parent task and four subtasks walk a chat through building a plugin
-in a sandbox on your computer, from fetching this guide to the load prompt; assign them to the agent to start
-it.
+### With the assistant
 
-In a browser, the template comes from the Dev Shell plugin and needs a Composer served locally by
-`vite preview`. There the chat writes the files and checks them against the plugin's dev server. The assistant
-cannot keep a dev server running, so start it yourself once the chat asks, from the Composer app directory, with
-`node_modules/.bin/vite` and the folder the chat names. When the chat says the plugin is ready, turn on **Dev
-Server** as above.
+The assistant, Composer's built-in AI agent, can build a plugin for you. A project template gives a chat a parent
+task with subtasks, and the chat works through them. Both templates here build the same example, a plugin named
+World Clock.
 
-The **Composer Plugin (Sandbox)** template, contributed by the Sandbox plugin, runs the same example against any
-bundled Composer, deployed ones included: the agent builds in an [EDGE](/docs/edge/concepts/compute/) sandbox with `@dxos/*` installed from
-[pkg.pr.new](https://pkg.pr.new) at the commit the app was built from, serves `dist/` from the container, and
-offers the manifest URL of the port it exposed.
+To start a run, create a project from a template and delegate its tasks to an agent. Which template you see depends
+on where Composer runs and which plugins are on. The two end differently:
 
-> Both ways need a **bundled build** of Composer (`vite build` + `vite preview`, or a deployed app). A bundled
-> Composer publishes an import map that resolves your plugin's bare `@dxos/*`, `react` and `effect` imports to
-> the host's own copies; Composer's own Vite dev server has no import map, so those imports fail there.
+- Composer Plugin ends with a prompt that loads the plugin by URL when Composer is the desktop app. In a browser, it
+  ends with the plugin in your private registry.
+- Composer Plugin (Sandbox) ends with a prompt that loads the plugin from the sandbox that built it. Nothing is
+  published.
 
-### Example: a plugin with its own navtree group
+**Composer Plugin.** This template comes from the Projects plugin. The chat uses the Sandbox skill, so turn the
+Sandbox plugin on first. Composer offers the template only when its build recorded the commit it was built from. In a
+browser, Composer also needs EDGE to build on.
 
-A small plugin in TypeScript that adds a group to every space's navtree, with one page under it, opened as an
-article. It builds with the official tooling into a `manifest.json` and an `index.mjs` that Composer loads by URL.
+The project has a parent task and four subtasks. The first three read this guide, write the plugin, then install,
+typecheck and build it. The fourth depends on where Composer runs:
 
-Four files:
+- In the Composer desktop app, the chat builds in a sandbox on your computer, which holds only `bun` and `bunx`. It
+  puts the sandbox's `dist` folder at a URL and shows a prompt with the manifest URL. The chat does not load the
+  plugin. You do, from that prompt.
+- In a browser, the chat builds in a sandbox on EDGE, which [Compute](/docs/edge/concepts/compute/) describes. It
+  publishes the plugin to your private registry with `dx registry publish --private`, so nothing is loaded by URL.
+  The publish acts as your account, so the chat asks you to run the sandbox's **Grant account access** action when
+  the sandbox has no token. The plugin then appears under **Registry** in **Plugins**, and you install it there.
+
+**Composer Plugin (Sandbox).** This template comes from the Sandbox plugin, and its project has six subtasks. Here is
+what the chat does:
+
+- It builds in an EDGE sandbox, with `@dxos/*` installed from [pkg.pr.new](https://pkg.pr.new) at the commit the app
+  was built from. If the build recorded no commit, it uses `main`.
+- It serves `dist/` from the sandbox, on a port that it exposes at a public URL.
+- It shows a prompt with the manifest URL of that port. You load the plugin from the prompt.
+
+:::caution[A bundled build of Composer]
+Every way of loading a plugin by URL needs a bundled build of Composer. That is a build made with `vite build` and
+served by `vite preview`, or a deployed app. A bundled Composer publishes an import map that resolves your plugin's
+bare `@dxos/*`, `react` and `effect` imports to Composer's own copies. Composer's own Vite dev server has no import
+map, so those imports fail there.
+:::
+
+## Examples
+
+The two examples lay a plugin out in the two ways that step 3 describes. The first keeps its modules in an entry
+file. The second, Stash, defines the whole plugin in `dx.config.ts`.
+
+### Example: a plugin with its own group in the navigation tree
+
+This example is a small plugin in TypeScript. It adds a group to every space's navigation tree, with one page under
+it that opens as an article. It builds with the official tooling into a `manifest.json` and an `index.mjs` that
+Composer loads by URL.
+
+The plugin has five files.
+
+`dx.config.ts` names the plugin:
 
 ```ts
 // dx.config.ts
@@ -214,6 +353,8 @@ export default Config2.make({
 });
 ```
 
+`vite.config.ts` builds it with `composerPlugin`:
+
 ```ts
 // vite.config.ts
 import react from '@vitejs/plugin-react';
@@ -227,7 +368,9 @@ export default defineConfig({
 });
 ```
 
-```json
+`tsconfig.json` configures the typecheck:
+
+```jsonc
 // tsconfig.json
 {
   "compilerOptions": {
@@ -239,11 +382,14 @@ export default defineConfig({
     "noEmit": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "types": []
+    "types": [],
   },
-  "include": ["src", "dx.config.ts"]
+  "include": ["src", "dx.config.ts"],
 }
 ```
+
+`src/plugin.tsx` defines the plugin. Its `appGraph` module adds the group and the page, and its `surface` module
+renders the page's article:
 
 ```tsx
 // src/plugin.tsx
@@ -346,10 +492,18 @@ export default Plugin.define(meta).pipe(
 );
 ```
 
-A `package.json` beside them names what the build needs. Pin every `@dxos/*` package to the build of the
-Composer you load the plugin into: a release's npm version, or for a build of an unreleased commit of `main`,
-its pkg.pr.new build (`https://pkg.pr.new/@dxos/<package>@<commit>`). `react`, `react-dom` and `effect` are
-the host's own copies at runtime, so match its versions too:
+`package.json` names what the build needs. Pin every `@dxos/*` package to the one version closest to the Composer you
+load the plugin into:
+
+- For Composer Preview, use the newest `@next` snapshot. Preview deploys `main` every day, and `@next` is published
+  from `main` every Monday. `npm view @dxos/app-framework@next version` prints it as `<version>-next-<commit>`.
+  `@dxos/plugin-*` packages are versioned apart from the SDK, so pin each to its own snapshot of the same commit, which
+  `npm view <package> versions` lists.
+- For a release, use its npm version.
+- For one particular commit of `main`, use its pkg.pr.new build, `https://pkg.pr.new/@dxos/<package>@<commit>`.
+
+At runtime, the plugin uses Composer's own copies of `react`, `react-dom` and `effect`, so match those versions too.
+In the file below, `<the host's version>` stands for the version Composer runs:
 
 ```json
 {
@@ -382,42 +536,54 @@ tsc -p tsconfig.json   # vite does not typecheck
 vite build             # writes dist/manifest.json and dist/index.mjs
 ```
 
-Bun alone does too, with no node on the machine: `bunx @pnpm/exe@10 install` (with `node-version=24.11.1` in
-an `.npmrc`, or pnpm skips the bundler's native binary), then `bun run --bun tsc -p tsconfig.json` and
-`bun run --bun vite build`. That is how the desktop app's Composer Plugin project template builds, in a
-sandbox that holds nothing else.
+Bun alone can do the same, with no node on the machine:
 
-Serve `dist/` (with CORS, if it is on another origin) and load `<URL of dist>/manifest.json`. After it loads,
-each space's navtree shows a HELLO group with a Hello page under it; selecting the page opens it. The version
-in the manifest comes from a `package.json` next to `dx.config.ts`, or `0.0.0` without one.
+1. Put `node-version=24.11.1` in an `.npmrc`. Without it, pnpm skips the bundler's native binary.
+2. Run `bunx @pnpm/exe@10 install`.
+3. Run `bun run --bun tsc -p tsconfig.json`, then `bun run --bun vite build`.
+
+That is how the desktop app's Composer Plugin project template builds, in a sandbox that holds nothing else.
+
+Serve `dist/`, with CORS if it is on another origin, and load `<URL of dist>/manifest.json`. After the plugin loads,
+each space's navigation tree shows a HELLO group with a Hello page under it. Select the page to open it.
+
+The version in the manifest comes from a `package.json` next to `dx.config.ts`. Without one, the version is `0.0.0`.
 
 Things to know:
 
-- A plugin can also be defined entirely in `dx.config.ts` with `Plugin.config({ plugin, modules })`, the way
-  plugins inside the DXOS repository are, naming each module body with
-  `import('./src/capabilities/x.ts', { with: { type: 'module-url' } })`. When `dx.config.ts` defines the plugin,
-  `composerPlugin` builds from it instead of `src/plugin.tsx` and turns it into a static manifest whose module
-  bodies are chunks of the bundle; the `Plugin.define(meta).pipe(...)` layout shown here keeps working.
-- Import only packages the host shares through its import map — the `@dxos/*` libraries and `react`,
-  `react-dom` and `effect`; the build leaves those as bare imports. `@dxos/plugin-*` packages are not shared,
-  so the build bundles whatever you use from them.
-- Ids are camelCase: the key's last segment (`org.example.plugin.helloWorld`, not `…hello-world`), module ids,
-  graph extension ids, node ids and surface ids. A hyphenated key makes the module throw `Invalid DXN` when it
-  is imported; a hyphenated extension or surface id is dropped without an error.
-- `AppGraphBuilder.createExtension` returns an `Effect`: `yield*` it and contribute the extensions it yields.
-- A group is a heading, not a page: it has no URL binding and shows only once something is under it. Its
-  `position` orders it among the built-in groups (content 200, system 900).
+- You can also define a plugin entirely in `dx.config.ts`, with `Plugin.config({ plugin, modules })`, as the learning
+  path and the next example do. Name each module body with
+  `import('./src/capabilities/x.ts', { with: { type: 'module-url' } })`. `composerPlugin` then builds from
+  `dx.config.ts` instead of `src/plugin.tsx`, and writes a manifest whose module bodies are chunks of the bundle.
+- Composer shares some packages through its import map: the `@dxos/*` libraries, `react`, `react-dom` and `effect`.
+  The build leaves those as bare imports, so the plugin uses Composer's copies. The build bundles every other package
+  you import. `@dxos/plugin-*` packages are not shared, so the build bundles whatever you use from them.
+- Ids are camelCase. This covers the key's last segment, module ids, graph extension ids, node ids and surface ids.
+  For example, write `org.example.plugin.helloWorld`, not `…hello-world`.
+  - If the key has a hyphen, the module throws `Invalid DXN` when it is imported.
+  - If an extension id or a surface id has a hyphen, it is dropped without an error.
+- `AppGraphBuilder.createExtension` returns an `Effect`. `yield*` it, and contribute the extensions it yields.
+- A group is a heading, not a page. It has no URL binding, and it shows only once something is under it. Its
+  `position` orders it among the built-in groups, where content is 200 and system is 900.
 - A `singleton` page's node id must equal its URL `key`, and `path` names the group it sits under.
 - Every module lists the capabilities its `activate` returns in `provides`.
-- A plugin that fails to activate is disabled; fix it and re-enable it from the Plugins list (or reload).
-- The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the
-  same URL.
+- A plugin that fails to activate is disabled. Fix it, then re-enable it from the Plugins list, or reload.
+- The browser caches a module that failed to import, so reload Composer before you load a fixed copy from the same
+  URL.
 
 ### Example: data, an operation and another plugin's menu
 
-Stash, the plugin the [learning path](/docs/plex/learn/the-plex-plugin/) builds, stores an ECHO type in the space, adds
-itself to the Space plugin's create menu, shows each link in an article, and marks links as read with an operation that
-people and the assistant both run. It is defined entirely in `dx.config.ts`, with one file per module body:
+Stash is the plugin that the learning path builds, from [The PLEX plugin](/docs/plex/learn/the-plex-plugin/) on. Here
+is what it does:
+
+- It stores an ECHO type in the space.
+- It adds itself to the Space plugin's create menu.
+- It shows each link in an article.
+- It marks links as read with an operation that people and the assistant both run.
+
+Stash is defined entirely in `dx.config.ts`, with one file per module body. The file below is a shortened version of
+the one the learning path builds. It writes the key inline, and it leaves out the `author` field and the App Graph
+module:
 
 ```ts
 // dx.config.ts
@@ -436,6 +602,12 @@ export default Plugin.config({
     tags: ['labs'],
   },
   modules: [
+    AppCapability.translations(
+      () =>
+        import('./src/translations.ts', {
+          with: { type: 'module-url' },
+        }),
+    ),
     AppCapability.schema(
       () =>
         import('./src/capabilities/schema.ts', {
@@ -473,8 +645,9 @@ export default Plugin.config({
 });
 ```
 
-The type, with the annotations Composer reads: the field that labels a link, its icon, and `UserType`, which puts
-it in pickers and the navigation tree. The schema module registers it, so the space can store it:
+The type carries the annotations Composer reads: the field that labels a link, and its icon. `UserType` marks the
+type as one a person creates, which puts it in the create menu and the navigation tree. The schema module registers
+the type, so the app can create and list links:
 
 ```ts
 // src/types/StashedLink.ts
@@ -516,8 +689,38 @@ import { StashedLink } from '../types/StashedLink.ts';
 export default [StashedLink];
 ```
 
+Composer names a type from the plugin's translations, keyed by its typename. Without them, the create menu and the
+navigation tree show the typename itself, `com.example.type.stashedLink`, and the create menu's add button has no
+label:
+
+```ts
+// src/translations.ts
+import { Type } from '@dxos/echo';
+import type * as Theme from '@dxos/react-ui/Theme';
+
+import { StashedLink } from './types/StashedLink.ts';
+
+export default [
+  {
+    'en-US': {
+      'com.example.plugin.stash': {
+        'plugin.name': 'Stash',
+      },
+      [Type.getTypename(StashedLink)]: {
+        'typename.label': 'Stashed link',
+        'typename.label_zero': 'Stashed links',
+        'typename.label_one': 'Stashed link',
+        'typename.label_other': 'Stashed links',
+        'object-name.placeholder': 'New link',
+        'add-object.label': 'Add link',
+      },
+    },
+  },
+] as const satisfies Theme.Resource[];
+```
+
 The create menu belongs to the Space plugin. It lists every `CreateObjectEntry` contribution, so Stash contributes
-one; the space shows its form, built from the type's fields, and calls `createObject` with what the person typed:
+one. The Space plugin shows a form built from the type's fields, and calls `createObject` with what the person typed:
 
 ```ts
 // src/capabilities/create-object.ts
@@ -546,7 +749,8 @@ export default Capability.makeModule(() =>
 );
 ```
 
-The operation is defined once, with a schema for its input and output, and its handler loads only when it first runs:
+You define the operation once, with a schema for its input and output. Its handler loads only when the operation
+first runs:
 
 ```ts
 // src/types/StashedLinkOperation.ts
@@ -654,7 +858,7 @@ export default Capability.makeModule(() =>
 );
 ```
 
-The article surface matches any link the person opens, and edits its title and note:
+The article surface matches any link the person opens, and edits its title, address and note:
 
 ```tsx
 // src/capabilities/react-surface.ts
@@ -752,25 +956,27 @@ export const StashedLinkArticle = ({
 
 Things to know:
 
-- Read an object you render with `useObject`: it re-renders on a field change. Reading `subject.note` directly in
-  render does not subscribe, so an update is saved but never shown.
-- Write inside `Obj.update`; a write outside it throws.
-- An operation that people and the assistant both run is one definition: a person runs it from the app, and
-  the skill gives it to the assistant as a tool.
-- A type without `UserType` is internal: Composer does not offer it in the create menu or show it in the
-  navigation tree.
+- Read an object you render with `useObject`, which re-renders the component on a field change. Reading
+  `subject.note` directly in render does not subscribe, so an update is saved but never shown.
+- Write inside `Obj.update`. A write outside it throws.
+- An operation that people and the assistant both run is one definition. A person runs it from the app, and the
+  skill gives it to the assistant as a tool.
+- A type without `UserType` is internal. Composer does not offer it in the create menu or show it in the navigation
+  tree.
 
-The [learning path](/docs/plex/learn/the-plex-plugin/) builds this plugin one module at a time, with each step running in
-the inspector.
+The learning path builds this plugin one module at a time, with each step running in the inspector.
 
-### Ship a spec
+## Ship a spec
 
-A plugin can carry its `.mdl` spec (a `PLUGIN.mdl` beside `dx.config.ts`). The registry's detail view then shows
-**Open Specification**, which renders the spec with its definitions sidebar. It takes three changes:
+A plugin can ship its spec, a `PLUGIN.mdl` file beside `dx.config.ts`. A `.mdl` spec is a text file that states the
+plugin's types, components and features. The registry's detail view then shows **Open Specification**, which renders
+the spec with its definitions sidebar.
+
+To ship a spec, make three changes:
 
 1. Name the file in `dx.config.ts`: `spec: 'PLUGIN.mdl'`.
 2. Contribute its text from the plugin, so the bundle carries it. The module loads the file only when the spec is
-   first opened, and `pluginId` must be the plugin's key:
+   first opened, and `pluginId` must be the plugin's key. In a plugin with an entry file, add the module there:
 
    ```tsx
    // src/plugin.tsx
@@ -790,8 +996,8 @@ A plugin can carry its `.mdl` spec (a `PLUGIN.mdl` beside `dx.config.ts`). The r
    );
    ```
 
-   When `dx.config.ts` defines the plugin with `Plugin.config`, add the module to its `modules` and give it a body
-   of its own:
+   In a plugin that `Plugin.config` defines, such as Stash, add the module to `modules` and give it a body of its
+   own:
 
    ```ts
    // dx.config.ts, in `modules`
@@ -805,6 +1011,8 @@ A plugin can carry its `.mdl` spec (a `PLUGIN.mdl` beside `dx.config.ts`). The r
      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
    ),
    ```
+
+   The body imports the file and contributes its text:
 
    ```ts
    // src/capabilities/plugin-asset.ts
@@ -827,7 +1035,7 @@ A plugin can carry its `.mdl` spec (a `PLUGIN.mdl` beside `dx.config.ts`). The r
    );
    ```
 
-3. Declare Vite's `?raw` imports for `tsc`, since the example `tsconfig.json` loads no ambient types:
+3. Declare Vite's `?raw` imports for `tsc`, since the `tsconfig.json` of the first example loads no ambient types:
 
    ```ts
    // src/raw.d.ts
@@ -839,11 +1047,11 @@ A plugin can carry its `.mdl` spec (a `PLUGIN.mdl` beside `dx.config.ts`). The r
 
 ## Command reference
 
-| Command                         | Purpose                                                                           |
-| ------------------------------- | --------------------------------------------------------------------------------- |
-| `dx account signup <code>`      | Redeem an access code to create an account, via your Atmosphere account or email. |
-| `dx account login`              | Log in to your DXOS identity.                                                     |
-| `dx account logout`             | Log out of the current profile.                                                   |
-| `dx registry publish --private` | Build and host the bundle, and list it only to your identity.                     |
+| Command                         | Purpose                                                                                |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| `dx account signup <code>`      | Redeems an access code to create an account, through your Atmosphere account or email. |
+| `dx account login`              | Logs in to your DXOS identity.                                                         |
+| `dx account logout`             | Logs out of the current profile.                                                       |
+| `dx registry publish --private` | Builds and hosts the bundle, and lists it only to your identity.                       |
 
 Run any command with `--help` for its full set of options.
