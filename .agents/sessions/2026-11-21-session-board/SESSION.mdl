@@ -103,7 +103,7 @@ pr PR-1: Build the status board from a session file.
 pr PR-2: Keep one agent directory, `.agents/`.
   ref: dxos/dxos#14650
   branch: dm/charming-knuth-lw1x6k
-  status: draft
+  status: landing
   goals: [G-10]
 ```
 
@@ -322,4 +322,10 @@ event T-14: Opened [PR-2] as a draft.
 event T-15: The draft checks on [PR-2] pass.
   date: 2026-11-21T15:28Z
   by: agent:claude-code
+```
+
+```mdl
+event T-16: The Land switch asked to land [PR-2]. It is ready for review, with auto-merge on.
+  date: 2026-11-24T10:26Z
+  by: user:dmaretskyi
 ```
