@@ -37,7 +37,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
-import { createComputeGraph } from '../hooks/index.ts';
+import { createComputeGraph } from '../hooks/useGraphMonitor.ts';
 import { type ComputeShape } from '../shapes/index.ts';
 import { type CanvasGraphModel } from '../types/index.ts';
 import { resolveComputeNode } from './node-defs.ts';

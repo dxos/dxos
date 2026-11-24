@@ -11,7 +11,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
-import { Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '../Mosaic/index.ts';
 
 export type SearchStackAction = {
   type: 'select';
