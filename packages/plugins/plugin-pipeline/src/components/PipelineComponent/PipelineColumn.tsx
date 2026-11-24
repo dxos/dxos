@@ -21,7 +21,7 @@ import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
 import { PipelineNamespace } from '../../namespace.ts';
-import { type ItemProps } from './PipelineComponent.tsx';
+import type { ItemProps } from './PipelineComponent.tsx';
 import { usePipeline } from './PipelineContext.tsx';
 
 //

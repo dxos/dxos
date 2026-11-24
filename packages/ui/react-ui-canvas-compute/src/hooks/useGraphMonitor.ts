@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { type ComputeEdge, ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { invariant } from '@dxos/invariant';
 
-import { deleteTriggerObjects, syncCreate, syncDelete, syncLink } from '../graph/index.ts';
+import { deleteTriggerObjects, syncCreate, syncDelete, syncLink } from '../graph/sync.ts';
 import { type ComputeShape } from '../shapes/index.ts';
 import { type CanvasBoard, type CanvasGraphModel } from '../types/index.ts';
 

@@ -18,7 +18,7 @@ and an agent tester execute from the same source. Flows live in a `## QA` sectio
 ### Major goal — the QA routine
 
 Part (c) has a front door: `/dxos:qa run <plugin> <testId>` and `run --suite|--tag`. Part (a) is
-the spec-sync Routine (`agents/routines/spec-sync.md`); (b) has no front door yet.
+the spec-sync Routine (`.agents/routines/spec-sync.md`); (b) has no front door yet.
 
 A Claude routine (skill + command) that closes the loop for any plugin:
 
@@ -72,7 +72,7 @@ Done:
 - [x] `composer-app/spec/APP.mdl`: QA-1..4 from `testing/scripts/basics.md` (deleted), suites
       `smoke`, `basics`, `assistant`, `editor`; `testing/README.md`, `reports/TEMPLATE.md` rewritten;
       `bin/qa-browser.mjs` moved to `testing/bin/`; `REMOTE.md` folded into the Routine.
-- [x] `agents/routines/composer-qa.md` (nightly / on-merge QA) and `agents/routines/spec-sync.md`
+- [x] `.agents/routines/composer-qa.md` (nightly / on-merge QA) and `.agents/routines/spec-sync.md`
       (incremental + sweep), with `.agents/spec-sync.yml` as the sync state.
 
 Later (tracked, not started):

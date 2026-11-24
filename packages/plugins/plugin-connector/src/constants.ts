@@ -13,6 +13,9 @@ export const SYNC_TARGETS_DIALOG = DXN.make(`${ConnectorNamespace.key}.syncTarge
 /** Surface id for the per-provider credential-form dialog (custom tokens, OAuth pre-flight inputs). */
 export const PROVIDER_FORM_DIALOG = DXN.make(`${ConnectorNamespace.key}.providerFormDialog`);
 
+/** Id of the connector sync template; lives here so `Binding` can name it without importing the template module. */
+export const SYNC_TEMPLATE_ID = 'org.dxos.routine.connectorSync';
+
 /** Provider id for manually entered access tokens. */
 export const CUSTOM_PROVIDER_ID = 'custom';
 

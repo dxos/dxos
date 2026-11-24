@@ -53,12 +53,10 @@ jobs:
       - name: Build dependencies
         run: moon run plugin-code:build ui-theme:build
 
-      # DX_PERF_BUNDLE avoids the static build's top-level-await deadlock (tools/storybook-react/.storybook/perf-bundle.ts).
       - name: Build storybook
         working-directory: tools/storybook-react
         env:
           DX_STORIES: plugins/plugin-code
-          DX_PERF_BUNDLE: '1'
           NODE_OPTIONS: --max-old-space-size=8192
         run: npx storybook build --output-dir out/storybook-specs
 

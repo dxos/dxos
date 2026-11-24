@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager.ts';
-import { Support } from './plugins/index.ts';
+import { Markdown, Support } from './plugins/index.ts';
 
 const GLOBAL_TOUR = ['Sharing', 'Creating content', 'Profile', 'Settings', 'Plugins', 'Companions', 'Feedback'];
 
@@ -72,7 +72,8 @@ test.describe('Tour tests', () => {
 
     await host.page.goto(documentUrl);
     await host.waitForBoot(new RegExp(new URL(documentUrl).pathname));
-    await expect(host.page.getByTestId('editor.toolbar.strong')).toBeVisible();
+    // The editor, not a toolbar button: the reopened Help companion narrows the toolbar until its buttons collapse.
+    await Markdown.waitForMarkdownTextbox(host.page);
     await expect(Support.card(host.page)).not.toBeVisible();
 
     await Support.startGlobal(host.page);

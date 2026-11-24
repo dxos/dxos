@@ -28,7 +28,7 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    now, from the whole diff against the base: a summary of what the PR changes
    for a consumer, not a log of the commits. If a file already exists, rewrite
    its body rather than appending. See
-   [`agents/instructions/changesets.md`](../../../agents/instructions/changesets.md)
+   [`.agents/instructions/changesets.md`](../../../.agents/instructions/changesets.md)
    for when one is needed, which package to name, and bump levels.
 6. **Account for every file.** `git status`; commit ALL modified/untracked
    files, including the changeset and edits the user made in the shared

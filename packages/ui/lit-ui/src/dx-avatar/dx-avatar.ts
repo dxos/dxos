@@ -214,8 +214,12 @@ export class DxAvatar extends LitElement {
               @error=${this.handleError}
             />`
         }
-      </svg>`}<span role="none" class="dx-lit-avatar__ring" style=${styleMap({ borderWidth: ringWidth + 'px' })}
-    /></span>`;
+      </svg>`}<span
+        role="none"
+        class="dx-lit-avatar__ring"
+        style=${styleMap({ borderWidth: ringWidth + 'px' })}
+      /></span
+    >`;
   }
 
   override createRenderRoot(): this {

@@ -5,13 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import { type HttpRequest } from './bindRequest.ts';
+import { FetchError } from './errors.ts';
 import { isCrxRenderAvailable, renderViaCrx } from './renderViaCrx.ts';
-
-export class FetchError extends BaseError.extend('CommerceFetchError', 'Fetch failed.') {}
 
 /** Perform an HTTP request through the DXOS edge proxy and return the response body as text. */
 export const fetchViaProxy = (request: HttpRequest): Effect.Effect<string, FetchError> =>

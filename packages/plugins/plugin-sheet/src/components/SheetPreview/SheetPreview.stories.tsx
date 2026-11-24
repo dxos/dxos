@@ -20,6 +20,9 @@ import { chartTypes } from '../../capabilities/chart-types.tsx';
 import { useComputeGraph } from '../ComputeGraph/index.ts';
 import { SheetPreview } from './SheetPreview.tsx';
 
+// The story creates a client, a space and a compute graph before it renders, which takes longer than the 1 s default on a loaded CI runner.
+const SETUP_TIMEOUT = 10_000;
+
 type StoryArgs = {
   cells: Record<string, Sheet.CellValue>;
   charts?: Sheet.ChartProperties[];
@@ -60,7 +63,9 @@ type Story = StoryObj<typeof meta>;
 export const Grid: Story = {
   args: { cells: createTestCells() },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).findByTestId('sheet.preview.grid')).resolves.toBeTruthy();
+    await expect(
+      within(canvasElement).findByTestId('sheet.preview.grid', undefined, { timeout: SETUP_TIMEOUT }),
+    ).resolves.toBeTruthy();
   },
 };
 
@@ -70,6 +75,8 @@ export const Chart: Story = {
     charts: [{ name: 'Sales by region', range: 'A1:C7', type: 'bar', header: true, grid: true }],
   },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).findByTestId('sheet.preview.chart')).resolves.toBeTruthy();
+    await expect(
+      within(canvasElement).findByTestId('sheet.preview.chart', undefined, { timeout: SETUP_TIMEOUT }),
+    ).resolves.toBeTruthy();
   },
 };

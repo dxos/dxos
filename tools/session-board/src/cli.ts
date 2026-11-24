@@ -369,7 +369,7 @@ const main = async () => {
     case 'build': {
       const source = args[0]
         ? resolve(args[0])
-        : (currentSource() ?? fail('no session; run `cli.ts start agents/sessions/<date>-<slug>`'));
+        : (currentSource() ?? fail('no session; run `cli.ts start .agents/sessions/<date>-<slug>`'));
       const result = await build(source, rest.includes('--strict'), rest.includes('--offline'));
       if (result.warnings.length > 0) {
         console.error(format(source, result.warnings));

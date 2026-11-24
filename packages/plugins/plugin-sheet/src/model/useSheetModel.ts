@@ -8,7 +8,7 @@ import { type ComputeGraph } from '@dxos/compute-hyperformula';
 
 import { Sheet } from '#types';
 
-import { SheetModel } from '../model/index.ts';
+import { SheetModel } from './sheet-model.ts';
 
 export type UseSheetModelOptions = {
   readonly?: boolean;

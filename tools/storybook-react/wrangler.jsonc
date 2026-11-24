@@ -6,12 +6,25 @@
   // Local dev: `moon run storybook-react:bundle && wrangler dev`.
   "name": "storybook-react",
   "compatibility_date": "2024-11-01",
+  // Served only on the custom domains in each env; both keys are inherited.
+  "workers_dev": false,
+  "preview_urls": false,
   "assets": {
     "directory": "./out/storybook-react",
     "not_found_handling": "single-page-application",
   },
   "env": {
-    "production": { "name": "storybook-react" },
-    "preview": { "name": "storybook-react-preview" },
+    "production": {
+      "name": "storybook-react",
+      "routes": [{ "pattern": "storybook-react.dxos.network", "custom_domain": true }],
+    },
+    "preview": {
+      "name": "storybook-react-preview",
+      "routes": [{ "pattern": "preview.storybook-react.dxos.network", "custom_domain": true }],
+    },
+    "dev": {
+      "name": "storybook-react-dev",
+      "routes": [{ "pattern": "dev.storybook-react.dxos.network", "custom_domain": true }],
+    },
   },
 }

@@ -10,7 +10,7 @@ import * as Typography from '@dxos/react-ui/Typography';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { FormField } from '../FormField.tsx';
+import { FormControlField } from '../FormFieldRow.tsx';
 import { presentationFor } from '../presentation.tsx';
 import { SelectControl } from './SelectField.tsx';
 
@@ -52,7 +52,7 @@ export const createSelectField = ({
   }: FormFieldRendererProps<string | undefined>) => {
     const value = getValue();
     return (
-      <FormField path={jsonPath} label={label} readonly={readonly} presentation={presentation}>
+      <FormControlField path={jsonPath} label={label} readonly={readonly} presentation={presentation}>
         {presentationFor(presentation).isStatic ? (
           <Typography.Text truncate>
             {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
@@ -68,7 +68,7 @@ export const createSelectField = ({
             }}
           />
         )}
-      </FormField>
+      </FormControlField>
     );
   };
   return SelectFieldRenderer;

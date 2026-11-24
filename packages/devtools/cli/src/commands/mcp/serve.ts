@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as References from 'effect/References';
 
+import { Sandbox } from '@dxos/agent-code-mode';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -84,7 +85,9 @@ const devPluginPaths = Effect.gen(function* () {
  * server over stdio already holds, but a caller should still choose to hand it a code interpreter.
  */
 const codeModeOption = Options.Boolean('code-mode').pipe(
-  Options.withDescription('Also serve runScript, which runs agent-written Effect programs against the operations.'),
+  Options.withDescription(
+    "Also serve runScript, which runs agent-written JavaScript against a space's database and the operations.",
+  ),
   Options.withDefault(false),
 );
 
@@ -153,7 +156,7 @@ export const serve = Command.make(
       Layer.mergeAll(
         McpServer.layer({
           reservedToolNames: STATIC_TOOL_NAMES,
-          script: codeMode ? { sandbox: McpServer.inProcessScriptSandbox } : undefined,
+          script: codeMode ? { sandbox: Sandbox.inProcess } : undefined,
         }).pipe(
           Layer.provide(
             Layer.mergeAll(

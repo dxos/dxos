@@ -4,28 +4,15 @@
 
 // @import-as-namespace
 
-import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { trackKeyboardModality } from '@dxos/react-focus';
-import { type ThemeFunction, type ThemeMode } from '@dxos/ui-types';
 
-import { type SafeAreaPadding, useSafeArea } from '../../hooks/useSafeArea.ts';
+import { useSafeArea } from '../../hooks/useSafeArea.ts';
 import { hasIosKeyboard } from '../../util/mobile.ts';
 import { IconRegistryProvider } from './IconRegistry.tsx';
+import { ThemeContext, type ThemeContextValue } from './ThemeContext.ts';
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider.tsx';
-
-export type ThemeContextValue<P extends Record<string, any> = Record<string, any>> = {
-  tx: ThemeFunction<P>;
-  themeMode: ThemeMode;
-  hasIosKeyboard: boolean;
-  safeAreaPadding?: SafeAreaPadding;
-  platform?: 'mobile' | 'desktop';
-};
-
-/**
- * @internal
- */
-export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 type ThemeProviderProps<P extends Record<string, any> = Record<string, any>> = Omit<
   TranslationsProviderProps,
@@ -81,6 +68,7 @@ export {
   useIconRegistry,
 } from './icon-registry.ts';
 export * from './IconRegistry.tsx';
+export { ThemeContext, type ThemeContextValue } from './ThemeContext.ts';
 export { TranslationsContext, useTranslation } from './TranslationsContext.ts';
 export { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider.tsx';
 export * from '../../hooks/useThemeContext.ts';

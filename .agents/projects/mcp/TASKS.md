@@ -2,7 +2,7 @@
 
 Goal: task-planning skill working with Composer so DESIGN and TASKS are Composer documents,
 over the loop Claude ⇔ MCP ⇔ EDGE ⇔ Composer.
-Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md](../../../agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md)
+Design: [.agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md](../../../.agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md)
 
 The tool-surface work-stream moved to the edge repo's `mcp-operations` project
 (`edge:.agents/projects/mcp-operations/{DESIGN,TASKS}.md`); its Phase 2b is the dxos-side work

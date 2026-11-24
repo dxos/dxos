@@ -3,7 +3,7 @@
 Scope: everything reachable from [`Project.ts`](./Project.ts), plus the current
 `Chat` ↔ companion wiring in `@dxos/assistant-toolkit` that this work stream normalizes.
 
-Companion plan: [`agents/superpowers/plans/project-chat-relationship.md`](../../../../../../agents/superpowers/plans/project-chat-relationship.md).
+Companion plan: [`.agents/superpowers/plans/project-chat-relationship.md`](../../../../../../.agents/superpowers/plans/project-chat-relationship.md).
 
 ## Types by package
 

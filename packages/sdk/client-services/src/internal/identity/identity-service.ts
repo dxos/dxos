@@ -41,7 +41,7 @@ import { type CreateIdentityOptions } from './identity-manager.ts';
 import { type EdgeIdentityRecoveryManager, EdgeIdentityRecoveryManagerService } from './identity-recovery-manager.ts';
 
 export class IdentityServiceImpl extends Resource implements IdentityService.Handlers {
-  'constructor'(
+  constructor(
     private readonly _identityManager: IdentityContract.Manager,
     private readonly _recoveryManager: EdgeIdentityRecoveryManager,
     private readonly _keyring: KeyringApi,
@@ -226,7 +226,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 
-  private '_getIdentity'(): IdentityProto | undefined {
+  private _getIdentity(): IdentityProto | undefined {
     if (!this._identityManager.identity) {
       return undefined;
     }

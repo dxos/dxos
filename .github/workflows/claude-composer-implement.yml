@@ -1,7 +1,7 @@
 # Implementation step for issues triaged ACTIONABLE by `claude-composer-triage.yml`.
 # Fires when (a) the triage agent adds `needs-implementation`, or (b) a human
 # reviewer adds it manually. Opens a DRAFT PR. See
-# `agents/prompts/claude-triage-and-implement-workflows.md` for design notes.
+# `.agents/prompts/claude-triage-and-implement-workflows.md` for design notes.
 name: Claude Composer implement
 
 on:

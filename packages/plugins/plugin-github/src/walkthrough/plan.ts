@@ -90,7 +90,7 @@ export const buildPlannerPrompt = (
  * and the recovery — falling back to one-shot — is worse than reading a fence.
  */
 export const parsePlan = (response: string, paths: readonly string[]): Plan | undefined => {
-  // A closer is its own line of at least as many backticks: a `​``text` sequence inside a JSON
+  // A closer is its own line of at least as many backticks: a run of three backticks inside a JSON
   // string would otherwise end the block early and leave `JSON.parse` a truncated payload.
   const fenced = response.match(/^[ \t]*(`{3,})[^\n]*\n([\s\S]*?)^[ \t]*\1`*[ \t]*$/m);
   const text = (fenced?.[2] ?? response).trim();

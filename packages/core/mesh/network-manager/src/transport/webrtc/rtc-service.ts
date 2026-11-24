@@ -51,12 +51,12 @@ export class RtcService implements RTCService.Handlers {
   readonly #connections = new ComplexMap<PublicKey, Connection>(PublicKey.hash);
   readonly #connectionFactory = getRtcConnectionFactory();
 
-  'constructor'(
+  constructor(
     private readonly _webrtcConfig?: RTCConfiguration,
     private readonly _iceProvider?: IceProvider,
   ) {}
 
-  public 'hasOpenConnections'(): boolean {
+  public hasOpenConnections(): boolean {
     return this.#connections.size > 0;
   }
 

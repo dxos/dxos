@@ -14,7 +14,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { GitHubRepoInaccessibleError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
-import { fetchPullRequestWithFallback } from './import-pull-request.ts';
+import { fetchPullRequestWithFallback } from './pull-request.ts';
 
 const reference = { owner: 'dxos', repo: 'dxos', number: 13188 };
 

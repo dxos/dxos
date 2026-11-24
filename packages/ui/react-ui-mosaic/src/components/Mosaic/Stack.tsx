@@ -24,7 +24,11 @@ import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type Axis } from '@dxos/ui-types';
 
-import { type VirtualizerPaginationController, useVirtualizerPagination, useVisibleItems } from '../../hooks/index.ts';
+import {
+  type VirtualizerPaginationController,
+  useVirtualizerPagination,
+} from '../../hooks/useVirtualizerPagination.ts';
+import { useVisibleItems } from '../../hooks/useVisibleItems.ts';
 import { useMosaicContainerContext } from './MosaicContainerContext.ts';
 import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder.tsx';
 import { styles } from './styles.ts';

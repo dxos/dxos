@@ -18,54 +18,54 @@ Two add-ons extend the flow; take each only when its condition holds:
 - [PUBLISHING.md](PUBLISHING.md): the user asks to publish the plugin or install it from the
   registry.
 
-Before step 1, put Node `>=22.12` on `PATH` for every command. In a new repository, `git init` and
-write a `.gitignore` naming `.dxos/`, `node_modules/` and `dist/`.
+In a new repository, `git init` and write a `.gitignore` naming `.dxos/`, `node_modules/` and
+`dist/`.
 
 When a command fails, look it up in [REFERENCE.md](REFERENCE.md).
 
 ## 1. Pin the toolchain
 
-The target supplies `@dxos/*`, `react` and `effect` to the plugin at runtime, so compile against an
-API-compatible build: the newest `main` commit with packages on pkg.pr.new. Find its first 7
-characters, `<commit7>`, and save `{ "commit": "<commit7>" }` as
-`.dxos/target.json`:
+The target supplies `@dxos/*`, `react` and `effect` to the plugin at runtime, so compile against the
+SDK snapshot closest to it: npm's `@next`, published from `main` every Monday. This prints its
+version, `<version>`, and saves it as `.dxos/target.json`:
 
 ```bash
-node --input-type=module -e 'const r = await fetch("https://api.github.com/repos/dxos/dxos/commits?sha=main&per_page=30"); for (const c of await r.json()) { const s = c.sha.slice(0, 7); if ((await fetch(`https://pkg.pr.new/dxos/dxos/@dxos/app-framework@${s}`, { method: "HEAD" })).ok) { console.log(s); break; } }'
+mkdir -p .dxos && v=$(npm view @dxos/app-framework@next version) && echo "{ \"version\": \"$v\" }" > .dxos/target.json && echo "$v"
 ```
 
-Use 7 characters everywhere; a longer SHA installs a second copy of the SDK.
-
-Fetch the plugin guide for that commit, and follow it for every file you write:
+`<version>` ends in the commit it was built from, `X.Y.Z-next-<commit>`. Fetch the plugin guide for
+that commit, and follow it for every file you write:
 
 ```bash
-mkdir -p .dxos && g=https://raw.githubusercontent.com/dxos/dxos/<commit7>/docs/src/content/docs/docs
-curl -fsSL $g/plex/publishing-plugins.md -o .dxos/guide.md || curl -fsSL $g/composer/publishing-plugins.md -o .dxos/guide.md
+curl -fsSL https://raw.githubusercontent.com/dxos/dxos/<commit>/docs/src/content/docs/docs/plex/publishing-plugins.md -o .dxos/guide.md
 ```
 
-A new plugin starts from this section of the guide:
-"Example: a plugin with its own group in the navigation tree". Read the "Things to know" list after
-it before writing code. In an existing plugin, change only the dependency pins.
+A new plugin starts from the guide's first example, "Example: a plugin with its own group in the
+navigation tree" ("…its own navtree group" in older guides). Read the "Things to know" list after it
+before writing code. In an existing plugin, change only the dependency pins.
 
 Pin `package.json`:
 
-- `@dxos/*`: `https://pkg.pr.new/dxos/dxos/@dxos/<name>@<commit7>`, in this form even where the
-  guide shows another. The example needs `app-framework`, `app-graph` and `app-toolkit`; add a
-  package when you import from it.
+- `@dxos/*`: each package's snapshot of `<commit>`, exactly, with no `^` or `~`, even where the
+  guide shows another form. SDK packages share `<version>`; `@dxos/plugin-*` and `@dxos/cli` are
+  versioned apart, so look each up. The example needs `app-framework`, `app-graph` and
+  `app-toolkit`; add a package when you import from it.
+
+  ```bash
+  npm view @dxos/<name> versions --json | grep -o '[^"]*-next-<commit>'
+  ```
 - `effect`, `react`, `react-dom`: the exact version the pinned `@dxos/app-framework` declares
   (`~19.3.1` → `19.3.1`):
 
   ```bash
-  curl -fsSL https://pkg.pr.new/dxos/dxos/@dxos/app-framework@<commit7> | tar -xzO package/package.json \
-    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const p=JSON.parse(s);const a={...p.peerDependencies,...p.dependencies};for(const k of ["effect","react","react-dom"])console.log(k,a[k])})'
+  npm view @dxos/app-framework@<version> peerDependencies.effect peerDependencies.react peerDependencies.react-dom
   ```
 
 - `@types/react`: the newest release with `react`'s major and minor (`npm view @types/react
 versions`). Its releases lag `react`'s, so `react`'s own version may not exist.
 - Other devDependencies: the guide's, as written.
 
-Install with `npm install --legacy-peer-deps`. Without the flag, npm takes peers of the pkg.pr.new
-packages from the npm registry, and their `react` ranges conflict.
+Install with `npm install`.
 
 **Done when** the install succeeds, this lists exactly one path per package, and `npx tsc --noEmit`
 exits 0:

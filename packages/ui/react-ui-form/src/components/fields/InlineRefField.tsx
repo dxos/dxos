@@ -18,7 +18,7 @@ import { translationKey } from '#translations';
 import { type FormFieldRendererProps, type RefFieldDataProps } from '#types';
 
 import { omitId } from '../../util/index.ts';
-import { FormFields } from '../FormFieldDispatch.tsx';
+import { useFormDispatch } from '../FormDispatchContext.ts';
 import { FormFieldSet } from '../FormFieldSet.tsx';
 import { FormRoot } from '../FormRoot.tsx';
 
@@ -129,6 +129,7 @@ type InlineFormProps = {
 
 /** The target's form, writing each changed path back to it. */
 const InlineForm = ({ target, db, readonly, useType = defaultUseType }: InlineFormProps) => {
+  const { FormFields } = useFormDispatch('InlineRefField');
   const typeFromRegistry = useType(db, target ? Obj.getTypeURI(target) : undefined);
   const targetType = (target && Obj.getType(target)) || typeFromRegistry;
   const schema = useMemo(() => (targetType ? omitId(Type.getSchema(targetType)) : undefined), [targetType]);

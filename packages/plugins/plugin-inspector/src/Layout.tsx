@@ -19,8 +19,8 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Select from '@dxos/react-ui/Select';
 import { useTranslation } from '@dxos/react-ui/Theme';
 
+import { ModuleErrors } from './capabilities.ts';
 import { useContributions, useInspectedPlugin } from './hooks.ts';
-import { ModuleErrors } from './InspectorPlugin.tsx';
 import { type Kind, type KindId, KINDS, kindOf } from './kinds.ts';
 import { useDevPlugin } from './load.ts';
 import { useCreateSample } from './sample.ts';

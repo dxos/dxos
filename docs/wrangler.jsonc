@@ -4,17 +4,37 @@
   // Local dev: `moon run docs:bundle && wrangler dev`.
   "name": "docs",
   "compatibility_date": "2024-11-01",
+  // Served only on the custom domains in each env; both keys are inherited.
+  "workers_dev": false,
+  "preview_urls": false,
   "assets": {
     "directory": "./dist",
     // Multi-page static site: serve /404.html for unmatched routes.
     "not_found_handling": "404-page",
   },
-  // Per-env Worker names (production = bare name / custom domain; others suffixed). Inherits assets.
+  // Per-env Worker names (production = bare name, others suffixed), each with its own custom domain.
+  // Inherits assets; routes are not inherited.
   "env": {
-    "production": { "name": "docs" },
-    "staging": { "name": "docs-staging" },
-    "preview": { "name": "docs-preview" },
+    "production": {
+      "name": "docs",
+      // www 301s to the apex through a zone redirect rule, which runs before the Worker.
+      "routes": [
+        { "pattern": "dxos.org", "custom_domain": true },
+        { "pattern": "www.dxos.org", "custom_domain": true },
+      ],
+    },
+    "staging": {
+      "name": "docs-staging",
+      "routes": [{ "pattern": "staging.dxos.org", "custom_domain": true }],
+    },
+    "preview": {
+      "name": "docs-preview",
+      "routes": [{ "pattern": "preview.dxos.org", "custom_domain": true }],
+    },
     // On demand, for a branch that needs a hosted copy of the site before it merges.
-    "dev": { "name": "docs-dev" },
+    "dev": {
+      "name": "docs-dev",
+      "routes": [{ "pattern": "dev.dxos.org", "custom_domain": true }],
+    },
   },
 }

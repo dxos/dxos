@@ -10,7 +10,7 @@
 // dir is already populated.
 //
 // The per-env Worker is selected with `--env <environment>`: each config's env.<environment> sets the
-// Worker name — production = the bare name that carries the custom domain, other envs = <name>-<env>.
+// Worker name (production = the bare name, other envs = <name>-<env>) and its custom-domain `routes`.
 //
 // Usage: deploy-env.mjs <environment> [app|all]
 

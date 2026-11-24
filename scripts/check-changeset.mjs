@@ -11,7 +11,7 @@
 // A change that isn't changelog-relevant simply omits the changeset (no empty changeset is required) —
 // the code still ships with the next release, just without a changelog entry. How *many* changesets a PR
 // may add is a separate, gating check — `check-changesets.mjs`.
-// See `agents/instructions/changesets.md`.
+// See `.agents/instructions/changesets.md`.
 
 import { execSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
@@ -119,7 +119,7 @@ const message = [
   '',
   'If this is consumer-relevant (worth a changelog entry), add one:  pnpm changeset',
   "If it isn't changelog-relevant (chore/refactor), no action is needed.",
-  'See agents/instructions/changesets.md.',
+  'See .agents/instructions/changesets.md.',
 ].join('\n');
 
 console.warn(`NOTE (advisory): ${message}`);

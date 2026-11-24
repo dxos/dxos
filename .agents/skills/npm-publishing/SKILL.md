@@ -8,7 +8,7 @@ description: Make a workspace package publishable on npm — the first (bootstra
 Regular releases are automatic and never run on a laptop: `publish-all.yml` publishes `@latest` when the
 "Version Packages" PR merges, and `@next` on manual dispatch; `pkg-pr-new.yml` publishes previews. The design
 is in `.github/RELEASE-SPEC.md`, the runbook in `REPOSITORY_GUIDE.md` §Releasing, changesets in
-`agents/instructions/changesets.md`.
+`.agents/instructions/changesets.md`.
 
 The one manual job is **bootstrapping a package**: npm can attach a trusted publisher only to a package that
 already exists on the registry, so each new package needs one manual publish and then a trusted-publisher
@@ -102,7 +102,7 @@ so use `--op` there only once the user chooses it.
 
 The script restores `package.json` after the publish, so the only change to commit is the removal of
 `"private": true` (plus any `publishConfig` fix). Tick the plan task that asked for the publishers. Add a changeset
-only if the PR also changes the package (`agents/instructions/changesets.md`).
+only if the PR also changes the package (`.agents/instructions/changesets.md`).
 
 ## npm bot account
 
