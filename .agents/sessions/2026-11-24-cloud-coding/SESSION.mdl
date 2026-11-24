@@ -1,0 +1,162 @@
+---
+id: org.dxos.session.2026-11-24-cloud-coding
+name: Cloud coding runs
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Cloud coding runs
+
+Claude Code works on Composer tasks in an EDGE sandbox and takes each task to a merged pull request.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: The runtime support is on main.
+  status: review
+  notes:
+    - Plugin bundles on EDGE get Process.ManagerService from the compute package.
+    - SandboxService starts jobs with a stdin stream, an output stream and a terminate call.
+    - One node test shard failed with no failed test. A re-run is in progress.
+```
+
+```mdl
+goal G-2: Sandbox jobs work on EDGE.
+  status: started
+  blockedBy: [Q-1]
+  notes:
+    - The sandbox-service routes for stdin, state, kill and output offsets are in edge#1568.
+    - The routes work on edge-dev. A job on other environments gets 404 until edge#1568 is deployed.
+```
+
+```mdl
+goal G-3: ClaudeAgent runs a coding task in a sandbox job.
+  status: started
+  notes:
+    - The ClaudeAgent definition and the ACP connection over a job are on dxos#14557.
+    - The handler is not written. It queues prompts, writes turns into the chat and watches the tasks.
+```
+
+```mdl
+goal G-4: Three control operations replace the cloud run operations.
+  status: todo
+  notes:
+    - startClaudeAgent, messageClaudeAgent and queryClaudeAgent use Process.ManagerService only.
+    - The drive timer and the coding-agent process in compute-service go away.
+```
+
+```mdl
+goal G-5: Unit tests cover the job calls of SandboxClient.
+  status: todo
+  notes:
+    - Codecov shows 13 percent of the changed lines of dxos#14640 under test.
+```
+
+```mdl
+goal G-6: The diff of edge#1537 shows only its own changes.
+  status: blocked
+  blockedBy: [Q-2]
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Runtime support for cloud coding (dxos)
+  ref: dxos/dxos#14640
+  status: queued
+  goals: [G-1]
+  notes:
+    - Main is merged in. The merge queue lands it when CI passes.
+```
+
+```mdl
+pr PR-2: Sandbox jobs and process host service (edge)
+  ref: dxos/edge#1568
+  goals: [G-2]
+  notes:
+    - Main is merged in. It is a draft.
+```
+
+```mdl
+pr PR-3: ClaudeAgent and the cloud coding plugins (dxos)
+  ref: dxos/dxos#14557
+  goals: [G-3, G-4]
+  notes:
+    - Main is merged in. Its diff also shows dxos#14640 until that lands.
+```
+
+```mdl
+pr PR-4: Compute-service wiring for cloud runs (edge)
+  ref: dxos/edge#1537
+  goals: [G-6]
+  notes:
+    - It is stacked on edge#1535 and also shows the commits of edge#1568.
+```
+
+```mdl
+pr PR-5: Sandbox workspace without R2 (edge)
+  ref: dxos/edge#1535
+  notes:
+    - It is ready for review and is behind main.
+```
+
+## Changelog
+
+```mdl
+question Q-1: Do you want edge#1568 landed after dxos#14640 merges?
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: Jobs on EDGE need the routes in edge#1568.
+  options:
+    - Land it: the jobs work on every environment after the deploy.
+    - Wait: you review it first.
+```
+
+```mdl
+question Q-2: The branch of edge#1535 is behind main. Who merges main into it?
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: A merge of main into edge#1537 alone puts the changes of main into its diff.
+  options:
+    - You merge main into edge#1535: then edge#1537 can merge it too.
+    - I merge main into edge#1535: it is your branch, so I need your permission.
+```
+
+## Timeline
+
+```mdl
+event T-1: The runtime changes moved to their own pull requests, dxos#14640 and edge#1568.
+  date: 2026-11-20T18:07Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-2: Review fixes for dxos#14640 are in, and the merge queue has it.
+  date: 2026-11-20T22:59Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-3: A node test shard of dxos#14640 failed with no failed test. It runs again.
+  date: 2026-11-21T09:00Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-4: Main is merged into dxos#14640, edge#1568 and dxos#14557.
+  date: 2026-11-24T13:20Z
+  by: agent:claude-code
+```
