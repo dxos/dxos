@@ -80,7 +80,7 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
         <ChatPlane.Cell menu={menu} title={name ?? `Chat ${index + 1}`}>
           <Panel.Body asChild>
             <Chat.Content>
-              <Chat.Thread />
+              <Chat.Thread tailLines={4} />
             </Chat.Content>
           </Panel.Body>
         </ChatPlane.Cell>

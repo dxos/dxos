@@ -354,11 +354,12 @@ const ChatPlaneRoot = ({
       onAdd={onAdd}
       onMove={onMove}
     >
-      {/* The height of a one-line prompt and its margin: a taller prompt floats over the columns rather than resizing them. */}
+      {/* A one-line prompt (5.625rem) over the footer's padding, under a gap the size of the strip's top one. Anything
+          taller, the activity line included, floats over the columns rather than resizing them. */}
       {/* Sunken, as the deck is behind its planks, so each column's own panel surface reads against the strip. */}
       <Panel.Root
         level='sunken'
-        classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:8rem]', classNames]}
+        classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:6.875rem]', classNames]}
       >
         {children}
       </Panel.Root>

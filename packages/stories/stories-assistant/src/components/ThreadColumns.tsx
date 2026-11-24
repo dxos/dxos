@@ -78,7 +78,7 @@ const ThreadColumn = ({ db, chat, lane, events }: ThreadColumnProps) => {
         <ChatPlane.Cell title={`${lane.purpose ?? 'Subagent'} · ${lane.status}`}>
           <Panel.Body asChild>
             <Chat.Content>
-              <Chat.Thread viewType='thinking' />
+              <Chat.Thread viewType='thinking' tailLines={4} />
             </Chat.Content>
           </Panel.Body>
           <LaneMemory events={memory} />
@@ -109,7 +109,7 @@ const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps
         <ChatPlane.Cell title='Agent'>
           <Panel.Body asChild>
             <Chat.Content>
-              <Chat.Thread />
+              <Chat.Thread tailLines={4} />
             </Chat.Content>
           </Panel.Body>
         </ChatPlane.Cell>
