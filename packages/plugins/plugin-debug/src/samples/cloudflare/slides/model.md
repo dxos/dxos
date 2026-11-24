@@ -27,12 +27,12 @@ class Person extends Type.makeObject<Person>(
 const alice = db.add(Obj.make(Person, { name: 'Alice'}));
 const bob = db.add(Obj.make(Person, { name: 'Bob' }));
 
-const [acme] = db.find({ type: Organization, text: 'Acme' });
+const [acme] = await db.query(Filter.text('Acme')).run();
 
 // Graph traversal: Alice's managers.
 const objects = await db.query(
   Query.select(
-    Filter.id(alice)).sourceOf(HasManager).target()
+    Filter.entity(alice)).sourceOf(HasManager).target()
   ).run();
 
 // Reactive updates.
