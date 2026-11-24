@@ -17,13 +17,14 @@ How agent work is identified, split and handed off.
 - **Thread** — a microtask inside a session, in the same process; what Claude calls a subagent. A
   thread has no task list of its own: it works from its session's.
 
-Delegation has three tiers:
+A session delegates work to one of three receivers, from nearest to farthest:
 
-| Tier    | Delegates to                         | Boundary               | Handled by                    |
-| ------- | ------------------------------------ | ---------------------- | ----------------------------- |
-| Thread  | a thread in the same session         | same process           | the intra-agent delegation service |
-| Session | another session of the same agent    | different process      | the intra-agent delegation service |
-| Agent   | another agent                        | different agent (DID)  | the cross-agent delegation service |
+1. **A thread of its own** — runs in the same process, on the session's task list.
+2. **Another session of the same agent** — runs in a different `SessionProcess`, on its own task list.
+3. **Another agent** — a different identity, addressed by its DID.
+
+The receiver is what differs; the session sending the work is the same in all three. `AgentService`
+handles every one of them, and is where permissions for each kind of delegation will later live.
 
 The base case of delegation is a message. The richer case sends a reference to a task, and the
 task is assigned to the receiver.
@@ -111,7 +112,7 @@ feat F-2: Intra-agent delegation
 
   req F-2.3:
     when: work is delegated to a thread or to a session of the same agent
-    then: the intra-agent delegation service handles it
+    then: `AgentService` handles it
 ```
 
 ```mdl
@@ -125,7 +126,7 @@ feat F-3: Cross-agent delegation
 
   req F-3.2:
     when: work is delegated to another agent
-    then: the cross-agent delegation service handles it
+    then: `AgentService` handles it
 
   req F-3.3:
     when: an agent delegates to another agent in the base case
@@ -722,4 +723,13 @@ decision D-42: "Without helpers" means the helpers that need the context binder 
   for: user:dmaretskyi
   affects: [F-14.2]
   why: The binder is what keeps those two in `@dxos/assistant`; the ECHO-only helpers have no such dependency, and `getFromChatContext` reads `HarnessService`, which D-31 deprecates.
+```
+
+```mdl
+decision D-43: There are no separate intra-agent and cross-agent delegation services: `AgentService` handles all delegation, and may later hold permissions for the different kinds of delegation.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  supersedes: D-13
+  answers: Q-4
+  affects: [F-2.3, F-3.2]
 ```
