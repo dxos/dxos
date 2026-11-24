@@ -30,7 +30,7 @@ export type ObjectCardProps = {
  * delegates to the object's own `CardContent` surface, so a document previews as a document.
  * Reactive via {@link useObject} so a rename shows without navigating away and back.
  */
-export const ObjectCard = ({ object: liveObject, onClick, onDelete, 'data-testid': testId }: ObjectCardProps) => {
+export const ObjectCard = ({ 'object': liveObject, onClick, onDelete, 'data-testid': testId }: ObjectCardProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const [object] = useObject(liveObject);
   const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: liveObject }), [liveObject]);

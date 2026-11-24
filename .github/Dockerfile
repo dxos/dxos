@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 
 # System packages, Node, pnpm and Playwright's native dependencies: `ci-packages.sh`.
-ARG NODE_VERSION=24.11.1
+ARG NODE_VERSION=24.22.3
 COPY ci-packages.sh /tmp/ci-packages.sh
 RUN NODE_VERSION=${NODE_VERSION} bash /tmp/ci-packages.sh \
   && rm -rf /var/lib/apt/lists/* /tmp/ci-packages.sh

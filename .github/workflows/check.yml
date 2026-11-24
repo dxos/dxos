@@ -523,8 +523,8 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.5.2'
-          proto-version: '0.60.2'
+          moon-version: '2.6.5'
+          proto-version: '0.64.1'
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
@@ -565,7 +565,7 @@ jobs:
     # rather than holding the queue; the forced or cold builds keep the long cap.
     timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     env:
-      NODE_VERSION: '24.11.1'
+      NODE_VERSION: '24.22.3'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
       VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
@@ -651,7 +651,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      NODE_VERSION: '24.11.1'
+      NODE_VERSION: '24.22.3'
       MOON_CONCURRENCY: 4
     steps:
       - name: Checkout
@@ -699,7 +699,7 @@ jobs:
       CELL_SHARD: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].shard }}
       CELL_TARGETS: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].targets }}
       DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
-      NODE_VERSION: '24.11.1'
+      NODE_VERSION: '24.22.3'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
       VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
@@ -1166,7 +1166,7 @@ jobs:
         if: always()
         uses: ./.github/actions/test-report
         with:
-          name: test-24.11.1
+          name: test-24.22.3
           result: ${{ needs.test.outputs.result }}
       - name: Send e2e report
         if: always()

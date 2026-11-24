@@ -145,11 +145,11 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   private '_updateQueries'!: DeferredTask;
 
   /** Reactive queries currently registered, across every space. */
-  get 'activeQueryCount'(): number {
+  get activeQueryCount(): number {
     return this._queries.size;
   }
 
-  'getQueryTraces'(): ExecutionTrace[] {
+  getQueryTraces(): ExecutionTrace[] {
     return Array.from(this._queries, (query) => query.executor.trace);
   }
 
@@ -205,7 +205,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   #wakeAt = Infinity;
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
-  'constructor'(private readonly _params: QueryServiceProps) {
+  constructor(private readonly _params: QueryServiceProps) {
     super();
     this.#debounce = { ...DEFAULT_QUERY_DEBOUNCE, ..._params.debounce };
 
@@ -230,12 +230,12 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     });
   }
 
-  override async '_open'(): Promise<void> {
+  override async _open(): Promise<void> {
     this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
   }
 
   @synchronized
-  override async '_close'(): Promise<void> {
+  override async _close(): Promise<void> {
     this.#clearWake();
     await this._updateQueries.join();
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
@@ -303,7 +303,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
    * Schedule re-execution of queries, optionally guided by a targeted hint.
    * When called without a hint, all queries are marked dirty (catch-all invalidation).
    */
-  'invalidateQueries'(hint?: InvalidationHint): void {
+  invalidateQueries(hint?: InvalidationHint): void {
     this.#stats.totalInvalidations++;
     if (!hint) {
       this.#pendingHint = 'all';
@@ -322,7 +322,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
    * waited for the index also sees the queries it changed. Debounced queries run now rather than
    * when their window closes.
    */
-  async 'awaitQueryUpdates'(): Promise<void> {
+  async awaitQueryUpdates(): Promise<void> {
     await this._updateQueries.join();
     const pending =
       this._updateQueries.scheduled ||
@@ -334,7 +334,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     }
   }
 
-  private '_createQuery'(
+  private _createQuery(
     ctx: Context,
     request: QueryService.QueryRequest,
     onResults: (respose: QueryService.QueryResponse) => void,
@@ -390,7 +390,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   }
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
-  private async '_executeQueries'(_ctx: Context) {
+  private async _executeQueries(_ctx: Context) {
     const hint = this.#pendingHint;
     this.#pendingHint = null;
 
