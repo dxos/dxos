@@ -47,11 +47,12 @@ export const normalizeRelation = (relation?: Node.RelationInput): Node.Relation 
 
 export type NodeArgsUnchangedOptions = {
   /**
-   * Called when an action's invoke closure differs from the previous run's only by identity. Returning true
-   * treats the action as unchanged; the callee is then responsible for making the stored node run `data`
-   * from now on (the app graph's `retargetAction`). Without it, a re-created closure reads as changed.
+   * Called for every action whose previous and offered `data` are both functions with the same context.
+   * Returning true treats the action as unchanged; the callee is then responsible for making the stored node
+   * run `data` with `context` from now on (the app graph's `retargetAction`). Without it, a re-created closure
+   * reads as changed.
    */
-  sameAction?: (id: string, data: (...args: any[]) => unknown) => boolean;
+  sameAction?: (id: string, data: (...args: any[]) => unknown, context: unknown) => boolean;
 };
 
 type ActionContextCarrier = { _actionContext?: unknown };
@@ -87,17 +88,20 @@ const dataUnchanged = (
   nextNode: Node.NodeArg<any>,
   { sameAction }: NodeArgsUnchangedOptions,
 ): boolean => {
-  if (shallowEqual(prevNode.data, nextNode.data)) {
-    return true;
-  }
   // Builders rebuild an action's closure inline on every connector run, so its identity carries no
   // information; the context it runs with is attached per extension and stays stable, so it is compared.
-  return (
+  // A closure equal to the baseline still goes through `sameAction`: the baseline only advances when output
+  // is applied, so the stored node may target a closure from a skipped run in between.
+  if (
     sameAction !== undefined &&
     nextNode.type === Node.ActionType &&
     typeof prevNode.data === 'function' &&
-    typeof nextNode.data === 'function' &&
-    (prevNode as ActionContextCarrier)._actionContext === (nextNode as ActionContextCarrier)._actionContext &&
-    sameAction(nextNode.id, nextNode.data)
-  );
+    typeof nextNode.data === 'function'
+  ) {
+    const context = (nextNode as ActionContextCarrier)._actionContext;
+    return (
+      (prevNode as ActionContextCarrier)._actionContext === context && sameAction(nextNode.id, nextNode.data, context)
+    );
+  }
+  return shallowEqual(prevNode.data, nextNode.data);
 };

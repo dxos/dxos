@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
@@ -68,25 +69,29 @@ describe('nodeArgsUnchanged', () => {
     expect(nodeArgsUnchanged(stable(), stable())).to.be.true;
   });
 
-  test('sameAction lets a re-created closure read as unchanged', ({ expect }) => {
-    const context = {} as Node.ActionContext;
-    const makeArgs = (actionContext = context) => [
-      node({
-        actions: [
-          {
-            ...Node.makeAction({ id: 'delete', data: () => Effect.void, properties: { label: 'Delete' } }),
-            _actionContext: actionContext,
-          } as Node.NodeArg<any>,
-        ],
-      }),
-    ];
+  test('sameAction decides every action whose closure and context it can compare', ({ expect }) => {
+    // Distinct contexts: `Context.empty()` is one shared instance, which would hide a differing one.
+    const Value = Context.Service<number>('app-graph/test/UtilValue');
+    const context = Context.make(Value, 1);
+    const makeArgs = (actionContext: Node.ActionContext = context, invoke = () => Effect.void) => {
+      const action = {
+        ...Node.makeAction({ id: 'delete', data: invoke, properties: { label: 'Delete' } }),
+        _actionContext: actionContext,
+      };
+      return [node({ actions: [action] })];
+    };
     const seen: string[] = [];
     const sameAction = (id: string) => (seen.push(id), true);
     expect(nodeArgsUnchanged(makeArgs(), makeArgs(), { sameAction })).to.be.true;
     expect(seen).to.deep.equal(['delete']);
 
+    // An identical closure is still handed over: the stored node may target a closure from a skipped run.
+    const invoke = () => Effect.void;
+    expect(nodeArgsUnchanged(makeArgs(context, invoke), makeArgs(context, invoke), { sameAction })).to.be.true;
+    expect(seen).to.deep.equal(['delete', 'delete']);
+
     // A differing action context, or a callee that cannot retarget, still reads as changed.
-    expect(nodeArgsUnchanged(makeArgs(), makeArgs({} as Node.ActionContext), { sameAction })).to.be.false;
+    expect(nodeArgsUnchanged(makeArgs(), makeArgs(Context.make(Value, 2)), { sameAction })).to.be.false;
     expect(nodeArgsUnchanged(makeArgs(), makeArgs(), { sameAction: () => false })).to.be.false;
   });
 });

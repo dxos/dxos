@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
-import { describe, expect, onTestFinished, test, vi } from 'vitest';
+import { assert, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
@@ -837,8 +837,47 @@ describe('GraphBuilder', () => {
         expect(changed).to.deep.equal([]);
         const [after] = registry.get(graph.actions('parent'));
         expect(after).to.equal(before);
-        (after.data as () => unknown)();
+        assert.ok(Node.isAction(after));
+        Effect.runSync(after.data());
         expect(invoked).to.deep.equal([1]);
+      });
+
+      test('an action whose closures alternate invokes the closure of the latest run', async ({ expect }) => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+        const tick = Atom.make(0);
+        const invoked: number[] = [];
+        // Cached per value, so the third run offers the very closure the first run's baseline holds.
+        const closures = [0, 1].map((value) => () => {
+          invoked.push(value);
+          return Effect.void;
+        });
+
+        GraphBuilder.addExtension(
+          builder,
+          Effect.runSync(
+            GraphBuilder.createExtension({
+              id: 'testExtension',
+              match: GraphNodeMatcher.whenNodeType(EXAMPLE_TYPE),
+              actions: (node, get) =>
+                Effect.succeed([{ id: 'act1', data: closures[get(tick) % 2], properties: { label: 'A' } }]),
+            }),
+          ),
+        );
+
+        Graph.addNode(graph as Graph.WritableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expandSync(graph, 'parent', Node.action);
+        await GraphBuilder.flush(builder);
+        for (const value of [1, 2]) {
+          registry.set(tick, value);
+          await GraphBuilder.flush(builder);
+        }
+
+        const [action] = registry.get(graph.actions('parent'));
+        assert.ok(Node.isAction(action));
+        Effect.runSync(action.data());
+        expect(invoked).to.deep.equal([0]);
       });
 
       test('a node attached through another relation stays out of the child relation', async ({ expect }) => {

@@ -889,13 +889,23 @@ const stableData = (graph: GraphImpl, id: string, type: string, existing: unknow
 
 /**
  * Points the stored action `id` at `data`, as re-adding it would, without re-adding it: the node, its
- * edges and the graph's version are untouched. Returns false when the graph holds no forwarder of its own
- * for `id` (the node is absent or is not an action), in which case the caller must add the node instead.
+ * edges and the graph's version are untouched. Returns false, so the caller adds the node instead, when the
+ * graph holds no forwarder of its own for `id` (the node is absent or is not an action) or when `context`
+ * differs from the stored one (another extension wrote the action last, and re-adding is what replaces it).
  */
-export const retargetAction = (graph: BaseGraph, id: string, data: (...args: any[]) => unknown): boolean => {
+export const retargetAction = (
+  graph: BaseGraph,
+  id: string,
+  data: (...args: any[]) => unknown,
+  context?: unknown,
+): boolean => {
   const internal = getInternal(graph);
   const existing = internal._currentNode(id);
-  if (Option.isNone(existing) || existing.value.type !== Node.ActionType) {
+  if (Option.isNone(existing) || !Node.isAction(existing.value)) {
+    return false;
+  }
+  // Mirrors `addNode`: an offer without a context keeps the stored one.
+  if (context !== undefined && existing.value._actionContext !== context) {
     return false;
   }
   const forwarder = existing.value.data;

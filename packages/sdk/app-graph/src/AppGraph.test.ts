@@ -333,6 +333,28 @@ describe('Graph', () => {
     expect(invoked).toEqual(['a', 'b']);
   });
 
+  test('retargetAction points a stored action at a new closure only while its context matches', () => {
+    const graph = Graph.make();
+    const invoked: string[] = [];
+    const run = (name: string) => () => Effect.sync(() => invoked.push(name));
+    const Value = Context.Service<number>('app-graph/test/RetargetValue');
+    const stored = Context.make(Value, 1);
+    const other = Context.make(Value, 2);
+    const action = { ...Node.makeAction({ id: EXAMPLE_ID, data: run('a'), properties: {} }), _actionContext: stored };
+    Graph.addNode(graph, action);
+
+    expect(Graph.retargetAction(graph, EXAMPLE_ID, run('b'), stored)).toBe(true);
+    // Another extension's context cannot ride a retarget: the caller re-adds the node instead.
+    expect(Graph.retargetAction(graph, EXAMPLE_ID, run('c'), other)).toBe(false);
+    expect(Graph.retargetAction(graph, exampleId(2), run('d'), stored)).toBe(false);
+
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    Effect.runSync(node.data());
+    expect(invoked).toEqual(['b']);
+    expect(node._actionContext).toBe(stored);
+  });
+
   test('re-offering an action with a new context updates it', () => {
     const graph = Graph.make();
     const invoke = () => Effect.void;
