@@ -78,6 +78,13 @@ question Q-1: Which work must follow the cache tests?
     - Stop: keep only the tests in PR-1.
 ```
 
+```mdl
+decision D-1: PR-1 adds only tests. The tests record the current cache breaks and do not change the source.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+```
+
 ## Timeline
 
 ```mdl
