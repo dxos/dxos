@@ -1,0 +1,92 @@
+---
+id: org.dxos.stories.brain.agent-memory
+name: AgentMemoryReference
+version: 0.1.0
+---
+
+A reference model of Cloudflare Agent Memory (private beta, docs dated 2026-06 to 2026-10), built from the
+published docs, the `AgentMemory*` declarations in `@cloudflare/workers-types` 5.20260719 and wrangler 4.122's
+`agent-memory` commands. The live service answers `10018 Not allowed` to the DXOS account, so every claim
+about its internals below is a deduction, labelled with its evidence. The model lives in
+`src/agent-memory/` and the story is `stories/stories-brain/AgentMemory`.
+
+## Extensions
+
+| Term       | URI                          |
+|------------|------------------------------|
+| `test`     | `org.dxos.mdl.test@1.0`      |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+## Deduced storage format
+
+One store per profile, addressed by `namespaceId:profileName` (the `getProfile` doc comment). The cold
+first call, the per-profile "retrieval indexes", SQL-flavoured wording ("rows", "soft-delete", "deferred
+purge") and the content-addressed message ids all fit a SQLite-backed Durable Object per profile, with FTS5
+for keyword search and a vector index (Vectorize or in-DO) for the embeddings. The namespace record that
+wrangler prints is a control-plane row: `{ id, name, account_id, created_at, updated_at }`.
+
+| table      | columns (public → hidden)                                                                                     | evidence |
+|------------|---------------------------------------------------------------------------------------------------------------|----------|
+| `messages` | `id` = hash(session, content), `session_id`, `role`, `content` (≤ 32 KB, verbatim), `timestamp`, `deleted_at` | "content-addressed", "stored verbatim … for full-text search" |
+| `memories` | `id` ULID, `type`, `summary`, `content`, `session_id`, `created_at`, `updated_at` → `topic_key`, `keywords`, `search_queries`, `source_message_ids`, superseded-by link, `deleted_at` | workers-types: "ULID", "source message IDs", "Superseded versions are excluded" |
+| FTS index  | over summary, content, keywords and raw messages                                                              | "full-text search indexes" |
+| vectors    | one per non-task memory                                                                                       | "Non-task memories are also embedded" |
+
+## Deduced processing model
+
+- `ingest()` resolves before any extraction; a queue consumer does extract → classify → dedupe → store, which
+  is why the guide waits 30 s before the first recall.
+- Classification yields `type ∈ {fact, event, instruction, task}`, a topic key, keywords and search queries.
+- Facts and instructions with an existing topic key write a new row and link the old one, which `list()`
+  then hides; events and tasks never supersede.
+- `recall()` makes one LLM call for query analysis, runs four retrievers in parallel (keyword, topic key,
+  vector, raw messages), fuses them with diversity across retrievers, and makes a second LLM call to write
+  `answer`. Scores are comparable only within one query, which fits rank fusion rather than raw similarity.
+- Deletes are soft: `deleted_at` is set now and a purge runs later.
+
+## QA
+
+```mdl
+test QA-1: Ingest, supersede and recall
+  desc: Two sessions go through the reference pipeline; the second revises a preference, and recall answers
+    from the latest version.
+  actors: human
+  status: unverified
+  given:
+    - the story stories/stories-brain/AgentMemory, with an empty profile ns_demo:dana
+  steps:
+    - name: Ingest the first session
+      do: Click ingest() under Session 1.
+      expect: the queue shows one pending job and nothing is stored yet
+    - name: Process the queue
+      do: Click Process queue.
+      expect: the four stages appear in turn; six memories are inserted, one per fact, event, instruction and task
+    - name: Ingest the second session
+      do: Click ingest() under Session 2, then Process queue.
+      expect: the Rust preference supersedes the TypeScript one; the rollback and the paging rule are inserted
+    - name: Re-ingest is idempotent
+      do: Click re-ingest() under Session 1, then Process queue.
+      expect: every message is already present and nothing is extracted
+    - name: Inspect the rows
+      do: Click Rows.
+      expect: the TypeScript preference is struck through as superseded and every id is a 26-character ULID
+    - name: Recall a revised fact
+      do: Ask "Which language does Dana use for backend services?"
+      expect: the answer names Rust and mentions TypeScript only as the earlier version
+    - name: Recall events
+      do: Ask "What happened with the ledger service?"
+      expect: both the deploy and the rollback are candidates, each marked by the retrievers that found it
+    - name: Recall with no match
+      do: Ask "What is the capital of France?"
+      expect: no candidates and an empty answer
+```
+
+## Changelog
+
+```mdl
+decision D-1: Model Agent Memory locally because the private-beta API refuses the DXOS account; the model mirrors the published types so the real binding can replace it.
+  date: 2026-11-17
+  by: agent:claude
+  for: user:dmaretskyi
+  affects: [QA-1]
+```
