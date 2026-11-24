@@ -1,0 +1,101 @@
+---
+id: org.dxos.session.2026-11-24-prompt-cache-tests
+name: Prompt cache tests
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Prompt cache tests
+
+Unit tests make sure that each model request extends the previous request, as in the DeepSeek harness.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: The analysis of the DeepSeek harness prompt cache is complete.
+  status: done
+  notes:
+    - Each request is a pure function of an append-only log.
+    - The harness sorts tools by name. Volatile values go at the end.
+    - A live test checks that each request after the first reads the cache.
+```
+
+```mdl
+goal G-2: Prompt tests check that each request extends the previous request.
+  status: review
+  notes:
+    - The file is `AiPreprocessor.cache.test.ts`, with 23 tests.
+    - Compaction, summaries and removed tools change history only at their own point.
+```
+
+```mdl
+goal G-3: DeepSeek wire tests check that the request body is stable.
+  status: review
+  notes:
+    - The file is `ChatCompletionsAdapter.cache.test.ts`, with 12 tests.
+    - The header, the tool order, `reasoning_content` and the arguments do not change.
+```
+
+```mdl
+goal G-4: A live test checks DeepSeek cache hits with a real key.
+  status: todo
+  blockedBy: [Q-1]
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Test prompt-cache prefix stability of the request encoding.
+  ref: dxos/dxos#14665
+  goals: [G-2, G-3]
+  notes:
+    - Six changes to the source each make the correct tests fail.
+```
+
+## Changelog
+
+```mdl
+question Q-1: Which work must follow the cache tests?
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: >
+    The window of 5 full turns moves on each new prompt, so a long conversation misses the cache from that turn.
+  options:
+    - Live test: add a manual DeepSeek test that reads the cache hit count.
+    - Sort tools: sort the toolkit by name, as the DeepSeek harness does.
+    - Stop: keep only the tests in PR-1.
+```
+
+## Timeline
+
+```mdl
+event T-1: The session started.
+  date: 2026-11-24T10:05Z
+```
+
+```mdl
+event T-2: The analysis of the DeepSeek harness is complete.
+  date: 2026-11-24T10:20Z
+```
+
+```mdl
+event T-3: All 35 new tests pass.
+  date: 2026-11-24T10:24Z
+```
+
+```mdl
+event T-4: Draft PR-1 is open.
+  date: 2026-11-24T10:27Z
+```
