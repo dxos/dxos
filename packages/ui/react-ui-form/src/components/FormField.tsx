@@ -8,7 +8,7 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import { useFormContext } from '../hooks/index.ts';
 import { useFormSchemaProperty } from './field-binding.tsx';
-import { FormFieldDispatch } from './FormFieldDispatch.tsx';
+import { FormDispatchScope, FormFieldDispatch } from './FormFieldDispatch.tsx';
 import { FormControlField, type FormFieldProps } from './FormFieldRow.tsx';
 
 export { type FormFieldProps, FormFieldRow, type FormFieldRowProps, FormStaticValue } from './FormFieldRow.tsx';
@@ -33,15 +33,17 @@ const FormBoundFieldDispatch = <T,>({ path, ...props }: Omit<FormFieldProps<T>, 
   }
   const segments = SchemaEx.isJsonPath(path) ? SchemaEx.splitJsonPath(path) : [];
   return (
-    <FormFieldDispatch
-      {...context}
-      type={property.type}
-      name={String(segments[segments.length - 1])}
-      label={props.label}
-      path={segments}
-      required={props.required ?? property.required}
-      readonly={props.readonly ?? context.readonly}
-      layout={props.presentation ?? context.layout}
-    />
+    <FormDispatchScope>
+      <FormFieldDispatch
+        {...context}
+        type={property.type}
+        name={String(segments[segments.length - 1])}
+        label={props.label}
+        path={segments}
+        required={props.required ?? property.required}
+        readonly={props.readonly ?? context.readonly}
+        layout={props.presentation ?? context.layout}
+      />
+    </FormDispatchScope>
   );
 };
