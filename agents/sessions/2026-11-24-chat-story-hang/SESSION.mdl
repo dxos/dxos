@@ -190,3 +190,10 @@ event T-14: You asked to land [PR-1]. It is ready for review, and the full CI su
   by: agent:claude-code
   refs: [PR-1]
 ```
+
+```mdl
+event T-15: The agentic review found 28 items. All are in old code or are false positives.
+  date: 2026-11-24T13:05Z
+  by: agent:claude-code
+  refs: [PR-1]
+```
