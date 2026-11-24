@@ -521,8 +521,21 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
         return cached.handle;
       });
 
+      // A verb names only the session, so it acts under the options the session was last opened with: falling back
+      // to the defaults would read as a reconfiguration and terminate the live process mid-turn.
+      const openedWith = new Map<string, Agent.OpenSessionOptions>();
+      const handleFor = (
+        chat: Agent.Session,
+        options?: Agent.OpenSessionOptions,
+      ): Effect.Effect<SessionHandle, never, Database.Service> => {
+        if (options !== undefined) {
+          openedWith.set(chat.id, options);
+        }
+        return getHandle(chat, options ?? openedWith.get(chat.id));
+      };
+
       const service: Agent.ServiceApi = {
-        ...serviceFromHandles(getHandle),
+        ...serviceFromHandles(handleFor),
         hydrate: hydrateAgents,
         currentSession,
         currentFeed,

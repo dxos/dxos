@@ -838,6 +838,36 @@ describe('Agent Service (control plane)', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'a verb that names only the session keeps the process it was opened with',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+        yield* Database.flush();
+        const target = Obj.getURI(chat);
+        const activePids = Effect.map(processManager.list({ target, key: SESSION_PROCESS_KEY }), (processes) =>
+          processes.filter((process) => !Process.isTerminal(process.status.state)).map(({ pid }) => String(pid)),
+        );
+
+        yield* Agent.open(chat, { provider: DXN.make('com.example.provider.opened') });
+        const opened = yield* activePids;
+        expect(opened).toHaveLength(1);
+
+        // The verbs carry no open options; the session's own must not read as a reconfiguration.
+        yield* Agent.running(chat);
+        yield* Agent.waitForCompletion(chat);
+        expect(yield* activePids).toEqual(opened);
+
+        yield* Agent.terminate(chat);
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   it.effect(
     'a session spawned under a guard is reused by a caller that names no guard, not by one that names another',
     Effect.fnUntraced(
