@@ -8518,6 +8518,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/shell':
+        specifier: workspace:*
+        version: link:../../sdk/shell
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
