@@ -63,7 +63,7 @@ pr PR-1: Test prompt-cache prefix stability and report cache hits.
   goals: [G-2, G-3, G-4]
   notes:
     - Six changes to the source each make the correct tests fail.
-    - CI fails in `composer-app:build` because a bad remote cache entry for `plugin-ste:build` has no `dx.config.d.ts`.
+    - CI passes. New input hashes skip the bad `plugin-ste:build` cache entry.
 ```
 
 ## Changelog
@@ -135,4 +135,9 @@ event T-7: A cancelled CI run wrote the bad cache entry. Moon does not check res
 ```mdl
 event T-8: The live DeepSeek test passes. The adapter reports cache hits.
   date: 2026-11-24T11:40Z
+```
+
+```mdl
+event T-9: CI passes on PR-1.
+  date: 2026-11-24T11:52Z
 ```
