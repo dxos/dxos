@@ -58,7 +58,7 @@ goal G-4: The Form chunk loads in the built storybook.
 
 ```mdl
 goal G-5: The Check workflow passes on the PR.
-  status: started
+  status: done
 ```
 
 ## Pull requests
@@ -174,4 +174,11 @@ event T-12: The Chat and Form stories show in the local build. 40 random stories
   date: 2026-11-24T12:12Z
   by: agent:claude-code
   refs: [G-3, G-4]
+```
+
+```mdl
+event T-13: The Check workflow passed on [PR-1] at 11:43Z. T-9 to T-12 have incorrect late times.
+  date: 2026-11-24T12:12Z
+  by: agent:claude-code
+  refs: [G-5, PR-1]
 ```
