@@ -17,10 +17,6 @@ import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from
 const meta: Meta<typeof ChatColumns> = {
   title: 'stories/stories-assistant/ChatColumns',
   component: ChatColumns,
-  decorators: createDecorators({
-    skills: [CalculatorSkill.key],
-    scriptedModels: { scenes: { hello: Scripts.hello }, select: 'hello' },
-  }),
   parameters: storyParameters,
 };
 
@@ -30,19 +26,36 @@ type Story = StoryObj<typeof meta>;
 
 const COLUMN = '[data-testid="chat-plane.column"]';
 
+/** Whether `column` is the selected one and has come to rest at the center of the strip, under which its prompt sits. */
+const isCentered = (canvasElement: HTMLElement, column: HTMLElement | undefined) => {
+  if (!column || column.getAttribute('aria-current') !== 'true') {
+    return false;
+  }
+  const frame = canvasElement.getBoundingClientRect();
+  const rect = column.getBoundingClientRect();
+  return Math.abs(rect.left + rect.width / 2 - (frame.left + frame.width / 2)) < 2;
+};
+
 /**
- * Scripted (offline), for a person to drive.
+ * Talks to the hosted AI service.
  *
  * Test:
- * 1. Send "What is 17 × 23": the chat answers in its column.
- * 2. Click the plus at the end of the strip: a second chat opens, selected, with an empty prompt of its own.
- * 3. Send "Write me a haiku": only the second chat answers.
+ * 1. Send a prompt: the chat answers in its column, which sits at the center with the prompt beneath it.
+ * 2. Click the plus at the end of the strip: a second chat opens, moves to the center and shows an empty prompt of
+ *    its own.
+ * 3. Send another prompt: only the second chat answers.
  * 4. Click the first column: it moves to the center and its prompt takes the second chat's place.
  */
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: createDecorators({}),
+};
 
-/** {@link Default} driven by a play function: two chats, each answering only its own prompt. */
+/** Scripted (offline) and driven by a play function: two chats, each answering only its own prompt. */
 export const Scripted: Story = {
+  decorators: createDecorators({
+    skills: [CalculatorSkill.key],
+    scriptedModels: { scenes: { hello: Scripts.hello }, select: 'hello' },
+  }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await submitPrompt(canvasElement, 'What is 17 × 23');
@@ -51,6 +64,11 @@ export const Scripted: Story = {
     // A second chat opens beside the first and takes the selection, and with it the prompt.
     await userEvent.click(await canvas.findByTestId('chat-plane.add-end'));
     await waitFor(() => expect(canvasElement.querySelectorAll(COLUMN).length).toBe(2), { timeout: 30_000 });
+    // A press on the prompt takes the strip over from a move in flight, so the new chat must have arrived first.
+    await waitFor(
+      () => expect(isCentered(canvasElement, canvasElement.querySelectorAll<HTMLElement>(COLUMN).item(1))).toBe(true),
+      { timeout: 30_000 },
+    );
     await submitPrompt(canvasElement, 'Write me a haiku');
     await canvas.findAllByText(/sync like the tide/, {}, { timeout: 30_000 });
 

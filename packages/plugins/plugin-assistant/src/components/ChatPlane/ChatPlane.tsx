@@ -50,13 +50,17 @@ const SCROLL_TIME_CONSTANT = 90;
 
 type ChatPlaneSide = 'start' | 'end';
 
-/** Where the strip rests the selected column, or every column while they all fit. */
+/** Where the strip rests the selected column: the viewport's center, or its start edge. */
 type ChatPlaneAlign = 'center' | 'start';
 
 type ChatPlaneSpan = Pick<DOMRect, 'left' | 'right'>;
 
-/** The span every column covers and whether it fits in the viewport; undefined without columns. */
-const groupSpan = (viewport: HTMLElement): (ChatPlaneSpan & { fits: boolean }) | undefined => {
+/**
+ * The span every column covers, and whether the strip rests it as a group: a start-aligned strip does while the span
+ * fits the viewport, so no column is cut off, and a centered one never does, so the selection is always at the center.
+ * Undefined without columns.
+ */
+const groupSpan = (viewport: HTMLElement, align: ChatPlaneAlign): (ChatPlaneSpan & { fits: boolean }) | undefined => {
   const rects = Array.from(viewport.querySelectorAll<HTMLElement>(COLUMN_SELECTOR), (column) =>
     column.getBoundingClientRect(),
   );
@@ -65,7 +69,7 @@ const groupSpan = (viewport: HTMLElement): (ChatPlaneSpan & { fits: boolean }) |
   }
   const left = Math.min(...rects.map((rect) => rect.left));
   const right = Math.max(...rects.map((rect) => rect.right));
-  return { left, right, fits: right - left <= viewport.getBoundingClientRect().width };
+  return { left, right, fits: align === 'start' && right - left <= viewport.getBoundingClientRect().width };
 };
 
 /** The scroll position that rests `span` where the strip aligns it, given the `group` every column covers. */
@@ -91,7 +95,7 @@ type ChatPlaneContextValue = {
   /** Returns the selected column to its resting place, e.g. once a column is added or removed. */
   recenter: () => void;
   scrolling: boolean;
-  /** Every column fits in the viewport, so the strip aligns them as a group. */
+  /** Every column fits a start-aligned strip, which rests them as a group. */
   fits: boolean;
   align: ChatPlaneAlign;
   dragging: boolean;
@@ -133,7 +137,7 @@ type ChatPlaneRootProps = Util.ThemedClassName<
     value?: string;
     /** Scrolling a column to its resting place selects it, as do the arrow keys and a click. */
     onValueChange?: (value: string) => void;
-    /** Rests the selection at the viewport's center (the default) or at its start edge, as it does a group that fits. */
+    /** Rests the selection at the viewport's center (the default), or at its start edge, where columns that all fit rest as a group. */
     align?: ChatPlaneAlign;
     onAdd?: (side: ChatPlaneSide) => void;
     /** A column was dragged to `index` in the list of columns. */
@@ -196,7 +200,7 @@ const ChatPlaneRoot = ({
   // One animation that only ever changes its target: a browser smooth scroll restarts from rest when it is called again,
   // so each key press would stall the strip. Snapping would also pull every frame back to a column.
   const [scrolling, setScrolling] = useState(false);
-  // Snapping would pull an aligned group back onto one column.
+  // Snapping would pull a group resting as one back onto a single column.
   const [fits, setFits] = useState(false);
   const scrollFrameRef = useRef<number | undefined>(undefined);
   const scrollColumnRef = useRef<HTMLElement | undefined>(undefined);
@@ -220,12 +224,12 @@ const ChatPlaneRoot = ({
       let position = viewport.scrollLeft;
       const step = (now: number) => {
         const target = scrollColumnRef.current;
-        const group = groupSpan(viewport);
+        const group = groupSpan(viewport, align);
         if (!target?.isConnected || !group || draggingRef.current) {
           stopScroll();
           return;
         }
-        // While every column fits, the strip aligns all of them rather than the selection, so none is cut off.
+        // A group rests as one rather than on the selection.
         const destination = restPosition(viewport, align, group, group.fits ? group : target.getBoundingClientRect());
         setFits(group.fits);
         if (align === 'start') {
@@ -257,8 +261,8 @@ const ChatPlaneRoot = ({
       return;
     }
     const handleScrollEnd = () => {
-      // A group that fits rests as one, so where the strip rests says nothing about the selection.
-      const group = groupSpan(viewport);
+      // A group resting as one puts the selection anywhere, so where the strip rests says nothing about it.
+      const group = groupSpan(viewport, align);
       if (draggingRef.current || scrollFrameRef.current !== undefined || !group || group.fits) {
         return;
       }
@@ -310,7 +314,7 @@ const ChatPlaneRoot = ({
     });
   }, [viewport, scrollToColumn]);
 
-  // Whether every column fits changes with the viewport's width as well as with the columns.
+  // Whether the columns rest as a group changes with the viewport's width as well as with the columns.
   useEffect(() => {
     if (!viewport) {
       return;
@@ -351,7 +355,11 @@ const ChatPlaneRoot = ({
       onMove={onMove}
     >
       {/* The height of a one-line prompt and its margin: a taller prompt floats over the columns rather than resizing them. */}
-      <Panel.Root classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:8rem]', classNames]}>
+      {/* Sunken, as the deck is behind its planks, so each column's own panel surface reads against the strip. */}
+      <Panel.Root
+        level='sunken'
+        classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:8rem]', classNames]}
+      >
         {children}
       </Panel.Root>
     </ChatPlaneProvider>
@@ -573,7 +581,7 @@ const ChatPlaneColumn = ({ value, children }: ChatPlaneColumnProps) => {
   const current = value === selected;
   const columnRef = useRef<HTMLDivElement>(null);
 
-  // A column arriving or leaving moves the others, and an aligned group must be aligned again.
+  // A column arriving or leaving moves the others, and the strip must come to rest again.
   useEffect(() => {
     recenter();
     return recenter;
