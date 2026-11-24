@@ -7,11 +7,13 @@ version: 0.1.0
 
 How agent work is identified, split and handed off.
 
-- **Agent** — one durable object named `Agent` plus one or more `SessionProcess`es. The `Agent`
-  object is the entry point for external events; it runs no inference of its own and delegates
-  work to its sessions. Every agent is addressed by a DID.
-- **Session** — a `SessionProcess`: the unit of work, with its own feed and task list. A session
-  exists on its own (standalone) or as part of an agent, whose permissions it then inherits.
+- **Agent** — an ECHO `Agent` object, run by an `AgentProcess` in one durable object named
+  `Agent`, plus one or more `SessionProcess`es. The `Agent` durable object is the entry point for
+  external events; it runs no inference of its own and delegates work to its sessions. Every agent
+  is addressed by a DID.
+- **Session** — an ECHO `Session` object (formerly `Chat`), run by a `SessionProcess`: the unit of
+  work, with its own feed and task list. A session exists on its own (standalone) or as part of an
+  agent, whose permissions it then inherits.
 - **Thread** — a microtask inside a session, in the same process; what Claude calls a subagent. A
   thread has no task list of its own: it works from its session's.
 
@@ -36,6 +38,15 @@ Memory is per space. `MemoryService` serves one space's memory to every session 
 not the session belongs to an agent, so agents in the same space share memory. Not every agent has
 an identity yet, and several agents can share a space; each still gets a generated DID.
 `DiscordService` is how agents interact with Discord.
+
+Each ECHO object maps to the process that runs it:
+
+| ECHO object | Process          |
+| ----------- | ---------------- |
+| `Session`   | `SessionProcess` |
+| `Agent`     | `AgentProcess`   |
+
+A process run on behalf of a session carries a session annotation naming that `Session`.
 
 The eventual goal is that every agent has its own identity and its own personal space.
 
@@ -208,6 +219,45 @@ feat F-10: Delegation entry points
     when: the delegation strategy spawns a sub-agent, or the thread scheduler starts a thread
     then: it does so through `AgentService` or `HarnessService`, not by spawning or scheduling
           directly
+```
+
+```mdl
+feat F-11: Session object
+  status: planned
+
+  req F-11.1:
+    when: code refers to the ECHO type that a session runs on
+    then: it is named `Session`; the name `Chat` is gone
+
+  req F-11.2:
+    when: a `Session` object is stored
+    then: its DXN stays `org.dxos.type.assistant.chat`, and the type definition carries a TODO to
+          rename the DXN later
+
+  req F-11.3:
+    when: a `Session` object is run
+    then: a `SessionProcess` runs it
+
+  req F-11.4:
+    when: an `Agent` object is run
+    then: an `AgentProcess` runs it, in the agent's `Agent` durable object
+```
+
+```mdl
+feat F-12: Session annotation on processes
+  status: planned
+
+  req F-12.1:
+    when: a process is spawned on behalf of a session
+    then: it carries a session annotation whose value is the URI of that `Session` object
+
+  req F-12.2:
+    when: a process with a session annotation spawns a child
+    then: the child carries the same session annotation unless the spawn names another session
+
+  req F-12.3:
+    when: code needs the session it runs for
+    then: it reads the session annotation of `Process.current` [F-9]
 ```
 
 ## Changelog
@@ -445,4 +495,44 @@ question Q-4: How do `AgentService` and `HarnessService` relate to the intra-age
     - By tier: `HarnessService` handles threads, `AgentService` handles sessions and, later, other agents; the two delegation services sit behind them.
     - Layered: the intra-agent and cross-agent delegation services are new, and `AgentService` / `HarnessService` call into them.
     - Same: the two delegation services are `AgentService` and `HarnessService`, renamed.
+```
+
+```mdl
+decision D-26: The ECHO type `Chat` is renamed to `Session`. Its DXN does not change for now; a TODO marks it for a later rename.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-11.1, F-11.2]
+```
+
+```mdl
+decision D-27: A `Session` object maps to a `SessionProcess`, and an `Agent` object maps to an `AgentProcess`.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-11.3, F-11.4]
+```
+
+```mdl
+decision D-28: A process has an annotation for its current session.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-12.1]
+```
+
+```mdl
+decision D-29: The `AgentProcess` of [D-27] runs inside the agent's `Agent` durable object of [D-10]; it is a new process, distinct from today's `AgentProcess`, which becomes `SessionProcess`. Fills in [D-27].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-11.4]
+  why: D-10 renames today's `AgentProcess` to `SessionProcess`, so the name is free for the process that runs an `Agent` object.
+```
+
+```mdl
+decision D-30: The session annotation holds the `Session` object's URI, a spawned child inherits it, and code reads it from `Process.current`. Fills in [D-28].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.1, F-12.2, F-12.3]
+  why: Tools and sub-agents run as child processes of the session's process, so inheriting the annotation lets them find their session without the harness-host lookup `HarnessService` does today.
+  rejected: Reusing `Process.TargetAnnotation`, because a child's target is the object it works on, not the session it works for.
 ```
