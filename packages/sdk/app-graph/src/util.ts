@@ -47,15 +47,16 @@ export const normalizeRelation = (relation?: Node.RelationInput): Node.Relation 
 
 export type NodeArgsUnchangedOptions = {
   /**
-   * Called for every action whose previous and offered `data` are both functions with the same context.
-   * Returning true treats the action as unchanged; the callee is then responsible for making the stored node
-   * run `data` with `context` from now on (the app graph's `retargetAction`). Without it, a re-created closure
-   * reads as changed.
+   * Called for every action whose previous and offered `data` are both functions with the same context, with
+   * the offered action. Returning true treats it as unchanged; the callee is then responsible for making the
+   * stored node run the offered closure from now on (the app graph's `retargetAction`). Without it, a
+   * re-created closure reads as changed.
    */
-  sameAction?: (id: string, data: (...args: any[]) => unknown, context: unknown) => boolean;
+  sameAction?: (offer: Node.NodeArg<any>) => boolean;
 };
 
-type ActionContextCarrier = { _actionContext?: unknown };
+/** The context an extension attaches to its actions, which `NodeArg` does not declare. */
+const actionContext = (node: Node.NodeArg<any> & { _actionContext?: unknown }): unknown => node._actionContext;
 
 /**
  * Returns true if two NodeArg arrays are semantically identical (same id, type, data, properties per index).
@@ -98,10 +99,7 @@ const dataUnchanged = (
     typeof prevNode.data === 'function' &&
     typeof nextNode.data === 'function'
   ) {
-    const context = (nextNode as ActionContextCarrier)._actionContext;
-    return (
-      (prevNode as ActionContextCarrier)._actionContext === context && sameAction(nextNode.id, nextNode.data, context)
-    );
+    return actionContext(prevNode) === actionContext(nextNode) && sameAction(nextNode);
   }
   return shallowEqual(prevNode.data, nextNode.data);
 };

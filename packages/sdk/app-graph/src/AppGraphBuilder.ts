@@ -248,8 +248,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
     let graph: Graph.ExpandableGraph | undefined;
     // A connector re-run that only rebuilt its actions' closures is a no-op apart from the closures: retarget
     // the stored forwarders and skip the flush, instead of re-offering every node of the relation.
-    const sameAction = (id: string, data: (...args: any[]) => unknown, context: unknown) =>
-      graph !== undefined && Graph.retargetAction(graph, id, data, context);
+    const sameAction = (offer: Node.NodeArg<any>) => graph !== undefined && Graph.retargetAction(graph, offer);
     super({
       registry,
       relationKey: (relation) => Graph.relationKey(relation ?? 'child'),

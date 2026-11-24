@@ -81,7 +81,7 @@ describe('nodeArgsUnchanged', () => {
       return [node({ actions: [action] })];
     };
     const seen: string[] = [];
-    const sameAction = (id: string) => (seen.push(id), true);
+    const sameAction = (offer: Node.NodeArg<any>) => (seen.push(offer.id), true);
     expect(nodeArgsUnchanged(makeArgs(), makeArgs(), { sameAction })).to.be.true;
     expect(seen).to.deep.equal(['delete']);
 

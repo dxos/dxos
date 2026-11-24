@@ -888,27 +888,30 @@ const stableData = (graph: GraphImpl, id: string, type: string, existing: unknow
 };
 
 /**
- * Points the stored action `id` at `data`, as re-adding it would, without re-adding it: the node, its
- * edges and the graph's version are untouched. Returns false, so the caller adds the node instead, when the
- * graph holds no forwarder of its own for `id` (the node is absent or is not an action) or when `context`
- * differs from the stored one (another extension wrote the action last, and re-adding is what replaces it).
+ * Points the stored action at the offered closure, as re-adding `offer` would, without re-adding it: the node,
+ * its edges and the graph's version are untouched. Returns false, so the caller adds the node instead, when the
+ * graph holds no forwarder of its own for the id (the node is absent or is not an action), or when re-adding
+ * would change anything else — another writer's context or properties are what re-adding replaces.
  */
 export const retargetAction = (
   graph: BaseGraph,
-  id: string,
-  data: (...args: any[]) => unknown,
-  context?: unknown,
+  offer: Node.NodeArg<any> & { _actionContext?: Node.ActionContext },
 ): boolean => {
   const internal = getInternal(graph);
+  const { id, data, properties = {}, _actionContext: context } = offer;
   const existing = internal._currentNode(id);
-  if (Option.isNone(existing) || !Node.isAction(existing.value)) {
+  if (Option.isNone(existing) || !Node.isAction(existing.value) || typeof data !== 'function') {
     return false;
   }
-  // Mirrors `addNode`: an offer without a context keeps the stored one.
-  if (context !== undefined && existing.value._actionContext !== context) {
+  const stored = existing.value;
+  // Mirrors `addNode`: an offer without a context keeps the stored one, and properties are merged per key.
+  if (context !== undefined && stored._actionContext !== context) {
     return false;
   }
-  const forwarder = existing.value.data;
+  if (Object.keys(properties).some((key) => !Equal.equals(stored.properties[key], properties[key]))) {
+    return false;
+  }
+  const forwarder = stored.data;
   if (!isForwarder(forwarder) || forwarder[ForwardedKey].graph !== internal || forwarder[ForwardedKey].id !== id) {
     return false;
   }
