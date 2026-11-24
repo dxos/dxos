@@ -69,7 +69,6 @@ Companions:
 
 - **`Plan.Plan`** (assistant-toolkit) — hierarchical tasks; lives entirely inside Agent.
 - **`Chat.Chat`** (assistant-toolkit) — feed-backed conversation; related to its Agent via `Chat.CompanionTo`.
-- **`Memory.Memory`** (assistant-toolkit) — knowledge unit, today space-global, candidate to become an Agent artifact.
 - **`Blueprint`** (compute) — the unit both types reference.
 - **`Template`** (compute) — handlebars source + inputs, used only by `Routine`.
 

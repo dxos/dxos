@@ -1037,7 +1037,7 @@ feat F-20: Feature blocks in the editor
   req F-20.2: `/feat` writes a new `feat` block in place (org.dxos.plugin.projects#F-4.10).
   req F-20.3: A `feat` block's `depends:` names the features it depends on by key or label, and its `spec:` cites the spec that
              breaks it down by object id (`echo:///<id>`) or spec id.
-  req F-20.4: SpecArticle draws a spec's blocks as forms too, and its view menu switches to Plain text and back. Diff
+  req F-20.4: SpecArticle draws a spec's blocks as forms too, and its view menu switches to Source and back. Diff
              mode draws the text. In a project's Specs tab its editor tools are in the project's toolbar
              (org.dxos.plugin.projects#F-4.7), and it draws no toolbar of its own.
 ```
@@ -1512,7 +1512,7 @@ test QA-8: Read a spec as text and as forms, then tour its companion tabs
       do: Scroll the spec down and back.
       expect: the title and description, then the plugin block and the blocks after it as MDL text
     - name: Switch to the forms
-      do: Pick Markdown in the toolbar's view menu.
+      do: Pick Preview in the toolbar's view menu.
       expect: each block drawn as a form, the plugin block headed by CodePlugin with its purpose under it
     - name: Add a requirement
       do: Press F-4's form, then the add button at the top right of its requirements, and type a requirement.
@@ -3059,4 +3059,12 @@ decision D-162: A breakdown nests in the Specs tab's spec picker by the `spec` f
   for: user:wittjosiah
   affects: [F-22.3]
   why: Specs left the nav tree for the picker, and with features as `feat` blocks a breakdown is linked to its feature only by the citation, so the picker nests by it.
+```
+
+```mdl
+decision D-163: SpecArticle's view menu names its views Preview and Source, as the editor's toolbar names them for every document. Amends [D-157].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-20.4, QA-8]
+  why: "Markdown" named the view that draws a spec's blocks as forms, which is not Markdown, and "Plain text" did not say it was the spec's source.
 ```

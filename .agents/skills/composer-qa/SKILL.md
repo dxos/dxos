@@ -225,7 +225,7 @@ invocation returned without throwing.
 
 Reports are gitignored, so a local run leaves no diff; say where the file is and paste the step
 tables in the reply. A Routine commits its report on the `qa` branch instead (see
-`agents/routines/composer-qa.md`).
+`.agents/routines/composer-qa.md`).
 
 ## 7. Feed findings back
 

@@ -19,7 +19,7 @@ import { DXN, EntityId } from '@dxos/keys';
 import { formatValue } from './describe.ts';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect } from './Dialect.ts';
+import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { EVAL_TOOL_NAME, evaluate } from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
 import * as Sandbox from './Sandbox.ts';
@@ -104,9 +104,14 @@ const seed = Effect.fnUntraced(function* () {
 });
 
 /** Runs `code` exactly as the eval tool does, returning what it printed. */
-const run = Effect.fnUntraced(function* (code: string, dialect: Dialect, skills: readonly string[] = []) {
+const run = Effect.fnUntraced(function* (
+  code: string,
+  dialect: Dialect,
+  skills: readonly string[] = [],
+  operations: readonly SandboxOperation[] = [],
+) {
   const runtime = yield* Effect.context<Database.Service | Operation.Service>();
-  return yield* evaluate({ code, dialect, sandbox: Sandbox.inProcess, runtime, operations: [], skills });
+  return yield* evaluate({ code, dialect, sandbox: Sandbox.inProcess, runtime, operations, skills });
 });
 
 describe('describe', () => {
@@ -377,6 +382,40 @@ describe('describe', () => {
           agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect: EffectDialect }) },
         }),
       ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    "the plain dialect describes an operation's output as the object it names",
+    Effect.fnUntraced(
+      function* (_) {
+        const { feature } = yield* seed();
+        // What the tool path hands the code: the object's JSON, wrapped as an operation that made it returns it.
+        const create: SandboxOperation = {
+          name: 'create',
+          parameters: {},
+          invoke: () => Effect.succeed({ object: JSON.parse(JSON.stringify(feature)) }),
+        };
+        const output = yield* run(
+          `const created = await ops.create({});
+           print(await describe(created));
+           print(await describe(created.object));
+           print(await describe({ id: 'result-1', object: created.object }));
+           print(await describe(created.object.id));
+           print(await describe([created.object]));
+           print(await describe({ count: 1 }));`,
+          PlainDialect,
+          [],
+          [create],
+        );
+        // The wrapper, the JSON, a wrapper whose own id is not an object id, and the bare id are each the stored
+        // object's card, with the counts only a query can tell; an array names no single object, so it prints as JSON.
+        expect(output.split(`await children('${feature.id}')  // 12 children`)).toHaveLength(5);
+        // A value that names no object prints as `print` shows it.
+        expect(output.endsWith('{\n  "count": 1\n}')).toBe(true);
+      },
+      Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
   );

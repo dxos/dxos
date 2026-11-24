@@ -5,31 +5,50 @@ description: How a device finds the peers in a space and sets up a direct link.
 
 import Diagram from '../../../../../components/Diagram.astro';
 
-Signaling is how a device learns which peers are on a topic and exchanges the messages that open a direct connection
-to one of them. EDGE is the signaling server.
+Signaling is how a device learns which peers are on a **topic**, the key that names one group of devices. It is also
+how the device exchanges the messages that open a direct link to one of those peers. EDGE is the signaling server.
 
 ## Model
 
-**The signal manager.** Each device has one signal manager. With `runtime.client.edgeFeatures.signaling` on, it is
-the EDGE signal manager, which sends everything over the device's [WebSocket to EDGE](/docs/edge/concepts/connecting/).
-Without it, the client uses an in-memory signal manager that only reaches peers in the same process, which is what tests
-use.
+Two browsers cannot open a connection to each other unaided. Neither knows the other's address, and most sit behind a
+router that hides it. WebRTC needs a server that both can already reach to pass the first messages between them. That
+server is the **signaling server**.
 
-**Topics.** A swarm is named by a topic, a key. A space's topic is its space ID, the first 20 bytes of the SHA-256
-of its space key, so every member of the space, and EDGE, computes the same one. An invitation has a topic of its own, carried in the invitation code.
+A space's topic is its space ID, which is the first 20 bytes of the SHA-256 of its space key. Every member of the
+space, and EDGE, computes the same topic. An invitation has a topic of its own, carried in the invitation code.
+
+On this page, a **peer** is another device on the same topic, and a **direct link** is a connection between two of
+them. The direct links a device keeps for one topic are its swarm. EDGE is a peer too, but a device reaches it over
+its WebSocket and needs no introduction.
+
+**The signal manager.** A **signal manager** is the part of the client that talks to the signaling server. Each device
+has one, and the `runtime.client.edgeFeatures.signaling` flag decides which:
+
+- If the flag is on and the client has an EDGE URL, it is the EDGE signal manager, which sends everything over the
+  device's [WebSocket to EDGE](/docs/edge/concepts/connecting/).
+- Otherwise, the client uses an in-memory signal manager that only reaches peers in the same process. Tests use this
+  one.
 
 **Join, query and leave.** A device joins a topic to say it is there, queries the topic to list the peers on it, and
 leaves when it closes the space. EDGE tells each peer on the topic when another joins or leaves.
 
-**Offers, answers and signals.** To connect, one peer sends an offer to another through EDGE, and the other accepts
-or rejects it with an answer. The two then trade WebRTC signals, the session description and ICE candidates, until
-the direct link opens. From then on, nothing for that connection goes through signaling.
+**Offers, answers and signals.** To open a direct link, one peer sends an offer to another through EDGE, and the other
+accepts or rejects it with an answer. The two then trade WebRTC signals until the link opens. From then on, nothing
+for that link goes through signaling.
+
+A signal is a session description or an ICE candidate, which is one address a device might be reached at.
 
 <Diagram name="mesh-signaling" alt="Both devices join a topic at EDGE, learn about each other, exchange an offer, an answer and ICE candidates through EDGE, then open a direct WebRTC link." />
 
-**ICE and TURN.** WebRTC finds a route between two devices from ICE candidates. Behind most home routers a direct
-route exists. Behind strict NATs and firewalls it does not, and the connection goes through a TURN server, which
-relays the encrypted bytes.
+The diagram reads from top to bottom. Each column is a party, and each arrow is one message. Every arrow but the last
+passes through EDGE. The last one is the direct link.
+
+**ICE and TURN.** **ICE**, short for Interactive Connectivity Establishment, is how WebRTC finds a route between two
+devices from their candidates.
+
+- Behind most home routers, a direct route exists.
+- Behind strict NATs and firewalls, it does not. The link then goes through a **TURN** server, which relays the link's
+  encrypted bytes. TURN is short for Traversal Using Relays around NAT.
 
 ## Configuration
 
@@ -37,17 +56,16 @@ relays the encrypted bytes.
 | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
 | `runtime.client.edgeFeatures.signaling`  | Uses EDGE as the signaling server. Without it, devices in different processes never meet   |
 | `runtime.services.ice`                   | A fixed list of ICE servers (STUN and TURN), passed straight to WebRTC                     |
-| `runtime.services.iceProviders`          | URLs that return ICE servers, fetched once and cached; DXOS runs one at `https://dxos.network/ice` |
+| `runtime.services.iceProviders`          | URLs that return ICE servers, fetched once and cached. DXOS runs one at `https://dxos.network/ice` |
 
 The configuration in [Installation](/docs/echo/learn/installation/) sets the signaling flag and the DXOS ICE provider.
 See EDGE's [Configuration](/docs/edge/resources/configuration/) for the rest.
 
 ## Behavior
 
-- Signaling carries only the messages that set up a connection. Replication never goes through it.
+- Signaling carries only the messages that set up a direct link. Replication never goes through it.
 - A device that loses its WebSocket keeps its open direct links. It cannot open new ones until it reconnects.
 
 ## Limits
 
-- Without signaling, two devices only meet if they share a process. Turning it off is for tests.
-- A TURN relay sees encrypted bytes only, but every byte of that connection goes through it.
+- A TURN relay sees encrypted bytes only, but every byte of that link goes through it.

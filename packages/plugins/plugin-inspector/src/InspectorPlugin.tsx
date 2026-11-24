@@ -13,12 +13,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 
+import { ModuleErrors } from './capabilities.ts';
 import { Layout, type LayoutProps } from './Layout.tsx';
-
-/** The error each module failed with, by module id. */
-export const ModuleErrors = Capability.makeSingleton<Atom.Writable<Readonly<Record<string, Error>>>>()(
-  'org.dxos.plugin.inspector.capability.moduleErrors',
-);
 
 export type InspectorPluginOptions = LayoutProps;
 

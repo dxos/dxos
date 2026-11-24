@@ -1,0 +1,54 @@
+---
+title: The .dx.svg file
+description: An ordinary SVG that carries what it takes to edit the drawing again.
+---
+
+A `.dx.svg` is an SVG image with the drawing's source inside it. Anything that shows an SVG shows it: GitHub,
+browsers, docs sites, slides. Anything that reads the source can turn it back into an editable drawing.
+
+## What it carries
+
+What the file carries depends on where it was made.
+
+| Made by                             | Carries                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------- |
+| `drawing render` or the agent skill | The `.dx` source. Opening it lays the source out again.                       |
+| Export in the app or in Composer    | The diagram's canvas: every shape where you put it, hand-drawn ones included. |
+
+`drawing render --plain` writes a bare `.svg` with no source. It shows the same picture, but you cannot edit it
+again.
+
+## Edit the source again
+
+`drawing source` recovers the `.dx` a rendered file carries. With `-o` it writes it to a file:
+
+```bash
+drawing source docs/arch.dx.svg -o arch.dx
+```
+
+Edit it, then render it over the same file:
+
+```bash
+drawing render arch.dx -o docs/arch.dx.svg
+```
+
+In a pull request the change to the diagram then reads as a change to a few lines of text.
+
+## Open it in the app
+
+In the app, **Import .dx.svg…** in the diagram menu adds a `.dx.svg` to the open space as a new diagram and opens
+it. A file the CLI rendered becomes a canvas you can rearrange by hand. A file the app or Composer exported comes
+back as it was.
+
+**Export** in a diagram's row menu downloads `<name>.dx.svg`.
+
+## Open it in Composer
+
+With the DXOS CLI, `dx drawing import arch.dx.svg` adds the drawing to a [Composer](https://dxos.org/composer/)
+space as an editable drawing.
+
+## From a URL
+
+A link of the form `https://app.drawing.sh/?src=<url>` imports the `.dx.svg` at that URL when the app opens. The
+server holding the file must allow the app's origin by CORS. [Links and the share API](/docs/sharing/) lists the
+other links the app reads.

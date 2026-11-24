@@ -19,6 +19,7 @@ import { type Client } from '@dxos/client';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { McpServer } from '@dxos/mcp-server';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { toPublicKey } from '@dxos/protocols/buf';
@@ -158,6 +159,18 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
               database: (id) => client.spaces.get(id)?.db,
             }),
             path: `${Protocol.MCP_PATH}/${server}`,
+            // The project skill confirms its space with `whoami` before any write; the chat's space is the only one.
+            whoami: () =>
+              Effect.suspend(() => {
+                const identity = client.halo.identity.get();
+                return identity
+                  ? Effect.succeed({
+                      identityDid: identity.did,
+                      ...(identity.profile?.displayName !== undefined && { displayName: identity.profile.displayName }),
+                      spaces: [McpServer.describeSpace(spaceId, client.spaces.get(spaceId))],
+                    })
+                  : Effect.fail(McpServer.failure('invalid_request', 'Composer has no identity yet.'));
+              }),
           });
           entry = { server, ...mcp };
           served.set(chat.id, entry);

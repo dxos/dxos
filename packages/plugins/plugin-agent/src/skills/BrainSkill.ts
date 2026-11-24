@@ -87,7 +87,10 @@ export const make = (): Skill.Skill =>
     }),
   });
 
-/** Fires after every turn: the turn's facts are recorded first, so a trigger sees what was just said. */
+/**
+ * Fires after every turn: the turn's facts are recorded first, so a trigger sees what was just said. In the background,
+ * since recording takes a model call or two: the next prompt's turn starts without waiting for it.
+ */
 export const hooks: Hook.Declaration[] = [
-  { key: 'org.dxos.hook.agent.runTriggers', event: 'end-request', skill: key, operation: RunTriggers },
+  { key: 'org.dxos.hook.agent.runTriggers', event: 'end-request', skill: key, operation: RunTriggers, async: true },
 ];

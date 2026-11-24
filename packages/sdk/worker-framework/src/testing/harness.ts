@@ -396,6 +396,10 @@ export const makeConnection = (
     maxLeaderFailures?: number;
     createWorker?: () => WorkerProtocol.WorkerOrPort;
     createCoordinator?: () => WorkerProtocol.WorkerCoordinator;
+    connection?: Pick<
+      Client.Options,
+      'generation' | 'onSuperseded' | 'onTakeoverRequired' | 'onLockStolen' | 'takeover'
+    >;
   } = {},
 ) => {
   const connectedTrigger = new Trigger<Connected>();
@@ -406,6 +410,7 @@ export const makeConnection = (
     leaderLockKey: keys.leaderLockKey,
     leaderTimeouts,
     maxLeaderFailures: options.maxLeaderFailures,
+    ...options.connection,
     onPersistentFailure: (error) => failures.push(error),
     onConnect: async ({ clientToWorker, workerToClient, isOwner, livenessLockKey, leaderId }) => {
       postRunnerReady(workerToClient);

@@ -12,62 +12,192 @@ import Snippet from '../../../../../components/Snippet.astro';
 import { Filter } from '@dxos/echo';
 ```
 
-Build a predicate, then pass it to `db.query` directly or through `Query.select`. Every builder is O(1): it creates an AST
-node and matches nothing until the query runs.
+A filter is a predicate that says which entities match. An entity is an object or a relation. You build a filter, then
+pass it to `db.query` directly or through `Query.select`.
+
+Every builder is O(1). It creates an AST node and matches nothing until the query runs.
+
+## Match by type
+
+`Filter.type` takes an ECHO type and an optional props shape, so field names and value types are checked. Use it when
+you know the type.
+
+`Filter.props` matches on shape alone. It does not look at the type. Use it when objects of several types share a
+field.
+
+**Example** (Matching by type and by shape)
+
+<Snippet file="filter" region="type" />
+
+`untyped` takes `{ name: string }` as a type argument, because with no ECHO type there is nothing else to check the
+field against. It matches an organization named Ada as well as a person.
+
+## Match by id, tag or key
+
+These three filters match on what ECHO keeps about an entity, whatever its type.
+
+- `Filter.id` matches the entities with the ids you pass. Use it when you already know which entities you want.
+- `Filter.tag` matches the entities that carry a tag. It takes the tag's URI, which `Obj.getURI` returns.
+- `Filter.key` matches the entities whose metadata carries a **registry key**, the dotted name of an entry in the
+  [registry](/docs/echo/concepts/spaces/#the-hypergraph). Pass `version` with a semver range when you want only some
+  versions. Without it, `key` matches any version.
+
+**Example** (Matching by id, by tag and by key)
+
+<Snippet file="filter" region="identity" />
+
+`'^1.0.0'` is a semver range, so `fromEntry` matches versions from 1.0.0 up to, and not including, 2.0.0. `speaker`
+goes through `db.add` before the filter is built, because a tag is an object and its URI names the stored one.
+
+## Match by foreign key
+
+`Filter.foreignKeys` matches the entities of a type that carry one of the foreign keys you pass. A **foreign key** is
+the id an entity has in another system, kept in its metadata as a `source` and an `id`. Use this filter in a sync, to
+find the object a record became before you write the record again.
+
+**Example** (Finding the person synced from a CRM record)
+
+<Snippet file="filter" region="foreign-keys" />
+
+`fromCrm` takes a list of keys, so one query can look up a whole batch of records.
+[Why ECHO?](/docs/echo/why-echo/#external-data-needs-somewhere-to-meet) shows the sync around it.
+
+## Compare a field
+
+Comparators go in the props shape, on the field they test. A plain value there tests for equality.
+
+- `Filter.eq` and `Filter.neq` test for a value, or for any other value.
+- `gt`, `gte`, `lt` and `lte` test against one bound. `between` tests against two, and its upper bound is exclusive.
+- `in` matches a field that equals one of several values.
+- `contains` matches an array field that holds a value.
+
+**Example** (Comparing by value, by range, by set and by element)
+
+<Snippet file="filter" region="compare" />
+
+`urgent` goes through `Filter.props`, because no tutorial type has a `labels` field. The other three sit inside
+`Filter.type`, so the compiler checks each comparator against the type of its field.
+
+## Combine filters
+
+`Filter.and`, `Filter.or` and `Filter.not` are the boolean combinators. Use them to build one filter from several.
+
+**Example** (Matching every person except Ada)
+
+<Snippet file="filter" region="combine" />
+
+`peopleNotAda` reuses `adas` from the first example, because a filter is a value you can pass around. `results` is
+typed as `Person[]`, since `Filter.and` keeps the type of the filters it joins.
+
+## Match everything or nothing
+
+`Filter.everything` matches every object, and `Filter.nothing` matches none. Use `Filter.nothing` when code has to
+pass a filter and should get no results. `Filter.id` returns it when you pass no ids.
+
+**Example** (Matching nothing while a search box is empty)
+
+<Snippet file="filter" region="everything" />
+
+[Querying](/docs/echo/learn/querying/) gives the tutorial app's search box a filter this way.
+
+## Search text
+
+`Filter.text` runs a full-text search for the words you pass. Use it for a search box.
+
+`options.type` is `'full-text'` by default. `'vector'` is declared for search by embedding. However, no query executor
+runs it yet, so a vector search matches nothing.
+
+**Example** (Searching the full text)
+
+<Snippet file="filter" region="text" />
+
+`matches` names no type, so it finds objects of any type. To search one type, join it to `Filter.type` with
+`Filter.and`.
+
+## Filter by time
+
+`Filter.created` matches by creation time, and `Filter.updated` by update time. Each takes a range with an `after`
+bound, a `before` bound or both.
+
+Both bounds accept a number of milliseconds or a `Date`. If you set both, the filter is the AND of the two.
+
+**Example** (Matching what changed since a date)
+
+<Snippet file="filter" region="time" />
+
+`recent` sets no `before` bound, so it matches everything updated from 1 November 2026 on.
+
+## Filter by parent
+
+`Filter.childOf` matches the children of one or more objects. By default, it also matches their children in turn.
+Set `transitive` to false when you want the direct children only.
+
+`childOf` takes objects or references, and it reads a reference's URI without loading the target.
+
+**Example** (Matching every descendant, or direct children only)
+
+<Snippet file="filter" region="parent" />
+
+## Filter changes
+
+`Filter.changes` selects the changes to some objects, or to every object in the space, instead of the objects. Use it
+when you show a history.
+
+You can order the changes by `time`, or count them with an [aggregate](/docs/echo/api/query/#aggregate-results).
+
+**Example** (Selecting the changes to one object)
+
+<Snippet file="filter" region="changes" />
+
+`history` is a query of `Change` records and not of events, so each of its 50 results has a `time` and an `actor`,
+and no `title`.
+
+## Filter a feed by cursor
+
+`Filter.feedCursor` matches the items of a feed between two cursors. A cursor marks one item. You read it from the
+item with `Feed.getCursor`, or with `Feed.getLocalCursor` in a walk.
+
+Use this filter when a reader keeps its place and wants only what is new. It works only in a query whose `from`
+names a feed.
+
+**Example** (Reading the next items after a cursor)
+
+<Snippet file="filter" region="feed-cursor" />
+
+`begin` names the last item already read, and that item is not in `unread`.
+[Feed](/docs/echo/api/feed/#read-a-feed) pages through a feed this way.
+
+## Members at a glance
 
 | Member                                | Signature                               | Summary                               |
 | ------------------------------------- | --------------------------------------- | ------------------------------------- |
 | [`type`](#match-by-type)              | `(type, props?) => Filter<T>`           | Objects of a type, optionally by props |
 | [`props`](#match-by-type)             | `(props) => Filter<T>`                  | Objects whose fields match            |
+| [`id`](#match-by-id-tag-or-key)       | `(...ids) => Filter`                    | Entities with one of the ids          |
+| [`tag`](#match-by-id-tag-or-key)      | `(tag) => Filter`                       | Entities that carry a tag             |
+| [`key`](#match-by-id-tag-or-key)      | `(key, options?) => Filter`             | Entities made from a registry entry   |
+| [`foreignKeys`](#match-by-foreign-key) | `(type, keys) => Filter<T>`            | Entities of a type that carry a foreign key |
 | [`eq` `neq`](#compare-a-field)        | `(value) => Filter<T>`                  | Equal, not equal                      |
 | [`gt` `gte` `lt` `lte`](#compare-a-field) | `(value) => Filter<T>`              | Ordered comparison                    |
 | [`between`](#compare-a-field)         | `(from, to) => Filter<T>`               | From inclusive, to exclusive          |
 | [`contains`](#compare-a-field)        | `(value) => Filter<readonly T[]>`       | Array field holds the value           |
 | [`in`](#compare-a-field)              | `(...values) => Filter<T>`              | Field equals one of the values        |
 | [`and` `or` `not`](#combine-filters)  | `(...filters) => Filter<T>`             | Boolean combinators                   |
-| [`text`](#search-text)                | `(text, options?) => Filter`            | Full-text or vector search            |
+| [`everything` `nothing`](#match-everything-or-nothing) | `() => Filter`         | Every object, or none                 |
+| [`text`](#search-text)                | `(text, options?) => Filter`            | Full-text search                      |
 | [`created` `updated`](#filter-by-time) | `({ after?, before? }) => Filter`      | Timestamp range                       |
 | [`childOf`](#filter-by-parent)        | `(parents, options?) => Filter`         | Children of an object                 |
+| `hasParent`                           | `(value?) => Filter`                    | Objects that have a parent, or with `false` the ones that have none |
 | [`changes`](#filter-changes)          | `(targets?) => Filter`                  | Changes instead of objects            |
+| [`feedCursor`](#filter-a-feed-by-cursor) | `(range?) => Filter`                 | Feed items between two cursors        |
+| `entity`                              | `(entity) => Filter<T>`                 | The entity you hold, by its id        |
+| `mnemonic`                            | `(mnemonic) => Filter`                  | The object with a mnemonic            |
+| `annotation`                          | `(annotation, value?) => Filter`        | Entities that carry an annotation set with `Annotation.set` |
 
-## Match by type
+The full list is in the [API reference](/docs/echo/resources/api-reference/).
 
-`type` takes an ECHO type and an optional props shape, so field names and value types are checked. `props` matches on shape alone.
+## Related
 
-<Snippet file="filter" region="type" />
-
-## Compare a field
-
-Comparators go in the props shape, on the field they test.
-
-<Snippet file="filter" region="compare" />
-
-## Combine filters
-
-<Snippet file="filter" region="combine" />
-
-## Search text
-
-`options.type` selects `full-text` or `vector`.
-
-<Snippet file="filter" region="text" />
-
-## Filter by time
-
-Both bounds accept a number of milliseconds or a `Date`. With both set, the filter is the AND of the two.
-
-<Snippet file="filter" region="time" />
-
-## Filter by parent
-
-`childOf` matches the children of one or more objects, and their children in turn unless `transitive` is false. It takes
-objects or references, and reads a reference's URI without loading the target.
-
-<Snippet file="filter" region="parent" />
-
-## Filter changes
-
-`changes` selects the changes to some objects, or to every object in the space, instead of the objects. Order them by
-`time`, or count them with an [aggregate](/docs/echo/api/query/#aggregate-results).
-
-<Snippet file="filter" region="changes" />
+- [Querying](/docs/echo/learn/querying/) builds filters for the tutorial app.
+- [Queries](/docs/echo/concepts/queries/) for the model of filters and queries.
+- [Query](/docs/echo/api/query/) for the shape around a filter.

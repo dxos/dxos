@@ -809,7 +809,7 @@ export const GetObjects = Operation.make({
   output: Schema.Struct({
     objects: Schema.Array(Schema.Unknown),
   }),
-}).pipe(Operation.mutation('none'));
+}).pipe(Operation.mutation('none'), Operation.hiddenInCodeMode);
 
 export const ResolveUrl = Operation.make({
   meta: {
@@ -872,7 +872,7 @@ export const UpdateObject = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-}).pipe(Operation.mutation('write'));
+}).pipe(Operation.mutation('write'), Operation.hiddenInCodeMode);
 
 export const QueryObjects = Operation.make({
   meta: {
@@ -912,7 +912,7 @@ export const QueryObjects = Operation.make({
       description: 'True when `limit` cut the result short, so a caller never reads a capped page as the whole set.',
     }),
   }),
-}).pipe(Operation.mutation('none'));
+}).pipe(Operation.mutation('none'), Operation.hiddenInCodeMode);
 
 export const AddTag = Operation.make({
   meta: {
@@ -979,8 +979,9 @@ export const QueryTypes = Operation.make({
     name: 'Query Types',
     description:
       'List the types objects in this space can have — those persisted in the space and those the ' +
-      'host itself registers. Returns a summary per type — typename, version, kind, name, ' +
-      'description, field names — or, for the typenames named, their full JSON Schema. Read the ' +
+      'host running this operation registers, which may lack a type another plugin contributes. ' +
+      'Returns a summary per type — typename, version, kind, name, ' +
+      'description, field names — or, for the typenames named, their full JSON Schema and any it did not find. Read the ' +
       "summary first and ask for a type's schema only when about to create or update one of it.",
     icon: 'ph--list--regular',
   },
@@ -993,5 +994,9 @@ export const QueryTypes = Operation.make({
   }),
   output: Schema.Struct({
     types: Schema.Array(Schema.Unknown),
+    notFound: Schema.optional(Schema.Array(Schema.String)).annotate({
+      description: 'The typenames asked for that neither the space nor this host has.',
+    }),
+    hint: Schema.optional(Schema.String),
   }),
 }).pipe(Operation.mutation('none'));

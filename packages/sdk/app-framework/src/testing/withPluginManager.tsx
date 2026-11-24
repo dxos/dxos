@@ -83,6 +83,7 @@ export const setupPluginManager = ({
 
 type ManagedPluginManagerState = {
   fallback?: UseAppOptions['fallback'];
+  placeholder?: UseAppOptions['placeholder'];
   fireEvents?: (ActivationEvent.ActivationEvent | string)[];
   pluginManager: PluginManager.PluginManager;
   setupEvents?: ActivationEvent.ActivationEvent[];
@@ -137,6 +138,7 @@ export const PluginManagerHost = ({ id, options, children }: PluginManagerHostPr
       setupEvents: options.setupEvents,
       fireEvents: options.fireEvents,
       fallback: options.fallback,
+      placeholder: options.placeholder,
       storyId: id,
     });
 
@@ -150,7 +152,7 @@ export const PluginManagerHost = ({ id, options, children }: PluginManagerHostPr
 
   // Avoid mounting useApp with a stale manager from the previous story.
   if (!managerState || managerState.storyId !== id) {
-    return <></>;
+    return <>{options.placeholder}</>;
   }
 
   return <WithPluginManagerApp {...managerState} />;
@@ -176,6 +178,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
 const WithPluginManagerApp = ({
   fallback,
+  placeholder,
   fireEvents,
   pluginManager,
   setupEvents,
@@ -213,8 +216,9 @@ const WithPluginManagerApp = ({
     pluginManager,
     setupEvents,
     fallback: fallback ?? globalThis.__STORY_ERROR_FALLBACK__ ?? ErrorFallback,
+    placeholder,
   });
-  return activated ? <App /> : <></>;
+  return activated ? <App /> : <>{placeholder}</>;
 };
 
 const storyMeta = Plugin.makeMeta({

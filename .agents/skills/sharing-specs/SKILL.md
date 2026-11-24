@@ -85,14 +85,12 @@ theme plugin). In a fresh container, build them first, in the background (it tak
 moon run plugin-code:build ui-theme:build
 ```
 
-Then build only plugin-code's stories. `DX_PERF_BUNDLE=1` is required: without it every story in a
-static build hangs on its loading spinner (automerge's top-level-await wasm init deadlocks the
-bundler's async module init; see `tools/storybook-react/.storybook/perf-bundle.ts`).
+Then build only plugin-code's stories.
 
 ```bash
 (
   cd tools/storybook-react
-  DX_STORIES=plugins/plugin-code DX_PERF_BUNDLE=1 NODE_OPTIONS=--max-old-space-size=8192 \
+  DX_STORIES=plugins/plugin-code NODE_OPTIONS=--max-old-space-size=8192 \
     npx storybook build --output-dir out/storybook-specs
 )
 ```

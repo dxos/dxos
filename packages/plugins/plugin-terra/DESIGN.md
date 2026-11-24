@@ -3,11 +3,11 @@
 A Composer plugin that renders a deterministic, stylized 3D planet with
 Babylon.js, and (Phase 2) simulates movable objects over it.
 
-- **Phase 1 spec:** [`agents/superpowers/specs/2026-07-26-plugin-terra-design.md`](../../../agents/superpowers/specs/2026-07-26-plugin-terra-design.md)
-- **Phase 1 plan:** [`agents/superpowers/plans/2026-07-26-plugin-terra.md`](../../../agents/superpowers/plans/2026-07-26-plugin-terra.md)
-- **Phase 2 spec:** [`agents/superpowers/specs/2026-07-26-plugin-terra-phase2-objects-design.md`](../../../agents/superpowers/specs/2026-07-26-plugin-terra-phase2-objects-design.md)
-- **Phase 2 plan:** [`agents/superpowers/plans/2026-07-27-plugin-terra-phase2-objects.md`](../../../agents/superpowers/plans/2026-07-27-plugin-terra-phase2-objects.md)
-- **Validated spike (reference code):** [`agents/superpowers/specs/2026-07-26-plugin-terra-spike/`](../../../agents/superpowers/specs/2026-07-26-plugin-terra-spike/)
+- **Phase 1 spec:** [`.agents/superpowers/specs/2026-07-26-plugin-terra-design.md`](../../../.agents/superpowers/specs/2026-07-26-plugin-terra-design.md)
+- **Phase 1 plan:** [`.agents/superpowers/plans/2026-07-26-plugin-terra.md`](../../../.agents/superpowers/plans/2026-07-26-plugin-terra.md)
+- **Phase 2 spec:** [`.agents/superpowers/specs/2026-07-26-plugin-terra-phase2-objects-design.md`](../../../.agents/superpowers/specs/2026-07-26-plugin-terra-phase2-objects-design.md)
+- **Phase 2 plan:** [`.agents/superpowers/plans/2026-07-27-plugin-terra-phase2-objects.md`](../../../.agents/superpowers/plans/2026-07-27-plugin-terra-phase2-objects.md)
+- **Validated spike (reference code):** [`.agents/superpowers/specs/2026-07-26-plugin-terra-spike/`](../../../.agents/superpowers/specs/2026-07-26-plugin-terra-spike/)
 
 ## Phase 1 — Deterministic planet
 

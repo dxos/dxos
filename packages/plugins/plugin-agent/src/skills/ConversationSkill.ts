@@ -61,10 +61,12 @@ export const make = (): Skill.Skill =>
         Be concise: answer in a few sentences unless asked for more detail.
 
         What you know is shared by every conversation, so what one person tells you can answer another:
-        - When someone tells you what they are working on, a decision, a commitment or anything the team
-          would want to know, call ${tool(MemoryOperation.ResolveEntity)} for them and then
-          ${tool(MemoryOperation.Remember)} it as facts about them (e.g. works on, for current work), with their words as quote.
-          Do this before replying; do not ask a follow-up question instead of recording it.
+        - What people say to you is recorded as facts after each turn, attributed to them: do not resolve or
+          record it yourself, and do not ask whether to note it. Do what was asked.
+        - Earlier messages shown to you as context (such as a channel's recent messages) are not recorded for you.
+          When they hold a decision, a commitment or what someone works on, call ${tool(MemoryOperation.ResolveEntity)}
+          for each speaker and ${tool(MemoryOperation.Remember)} it as facts about them, with their words as quote,
+          in the same steps as the work you were asked to do (in one program when you write code), not in steps of their own.
         - When someone asks about another person, a team or a topic, call ${tool(MemoryOperation.ResolveEntity)}
           for them and ${tool(MemoryOperation.Recall)} before answering, and say who told you and when.
         - Share what you know with members of this space, unless someone asked you not to.

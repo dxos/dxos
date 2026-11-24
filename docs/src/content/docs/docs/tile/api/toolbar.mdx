@@ -6,6 +6,8 @@ description: A row of controls that is one tab stop, with arrow keys between its
 import Snippet from '../../../../../components/Snippet.astro';
 import TilePreview from '../../../../../components/TilePreview.astro';
 
+<TilePreview id="sizes" />
+
 ```ts
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 ```
@@ -14,8 +16,6 @@ A toolbar is a row of buttons, inputs, selects and toggle groups. It is one tab 
 items. See [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/).
 
 <Snippet file="tile-components" region="sizes" lang="tsx" />
-
-<TilePreview id="sizes" />
 
 ## Parts
 
@@ -29,15 +29,17 @@ items. See [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/).
 
 ## `Toolbar.Root`
 
-| Prop          | Type                           | Effect                                                    |
-| ------------- | ------------------------------ | --------------------------------------------------------- |
-| `size`        | `Size`                         | The size of every control in it                           |
-| `orientation` | `'horizontal' \| 'vertical'`   | The axis the arrow keys move along                        |
-| `loop`        | boolean                        | Wrap from the last item to the first. On by default       |
-| `disabled`    | boolean                        | Disable every control                                     |
-| `inactive`    | boolean                        | Dim the controls without disabling them                   |
+`Toolbar.Root` takes these props:
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `size` | `Size` | Sets the size of every control in the toolbar |
+| `orientation` | `'horizontal' \| 'vertical'` | Sets the axis the arrow keys move along |
+| `loop` | `boolean` | Wraps from the last item to the first. `true` by default |
+| `disabled` | `boolean` | Disables every control |
+| `inactive` | `boolean` | Dims the controls without disabling them |
 
 ## Toolbars built from actions
 
-In a PLEX plugin, a toolbar is usually built from the app's actions with `@dxos/react-ui-menu`, so other plugins can add
-to it. See [ActionToolbar](/docs/tile/api/react-ui-menu/action-toolbar/).
+In a PLEX plugin, you usually build a toolbar from the app's actions with `@dxos/react-ui-menu`, so other plugins can
+add to it. See [ActionToolbar](/docs/tile/api/react-ui-menu/action-toolbar/).

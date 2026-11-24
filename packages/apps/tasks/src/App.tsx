@@ -17,7 +17,7 @@ import { Config, defs } from '@dxos/config';
 import { Filter, Obj, Query } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { parseId } from '@dxos/keys';
-import { ClientProvider, createClientServices, useShell } from '@dxos/react-client';
+import { type Client, ClientProvider, createClientServices, useShell } from '@dxos/react-client';
 import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { getConfig } from './config.ts';
@@ -120,6 +120,13 @@ const createServices = (config?: Config) =>
     },
   );
 
+const createFirstSpace = async (client: Client, searchProps: URLSearchParams) => {
+  if (client.halo.identity.get() && client.spaces.get().length === 0 && !searchProps.get('spaceInvitationCode')) {
+    const space = await client.spaces.create();
+    await space.waitUntilReady();
+  }
+};
+
 export const App = () => {
   // Create a registry instance for atom reactivity
   const registry = useMemo(() => AtomEx.makeRegistry(), []);
@@ -135,6 +142,8 @@ export const App = () => {
         if (!client.halo.identity.get() && !searchProps.has('deviceInvitationCode')) {
           await client.halo.createIdentity();
         }
+
+        await createFirstSpace(client, searchProps);
       }}
     >
       <RegistryContext.Provider value={registry}>

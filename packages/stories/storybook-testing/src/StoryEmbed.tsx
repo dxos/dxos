@@ -10,6 +10,7 @@ import React from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName, type ThemeMode } from '@dxos/ui-types';
 
+import { ReadyContext } from './internal/ready.ts';
 import * as StoryPeers from './StoryPeers.ts';
 
 /** A story file's exports: its meta and its stories. */
@@ -51,17 +52,21 @@ export type RootProps = ThemedClassName<{
   args?: Record<string, unknown>;
   /** A runtime the page shares between its stories, instead of each starting clients of its own. */
   shared?: StoryPeers.Shared;
+  /** Called once the story shows on every peer. */
+  onReady?: () => void;
 }>;
 
 /**
  * Renders a composed story in place; needs a height from its container. The transform makes the story's `fixed inset-0`
  * layout fill this element; under layout containment Safari composites it against the viewport and blanks it on scroll.
  */
-export const Root = ({ story: Story, args, shared, classNames }: RootProps) => {
+export const Root = ({ story: Story, args, shared, onReady, classNames }: RootProps) => {
   const content = (
-    <div className={mx('relative overflow-hidden [transform:translateZ(0)]', classNames)}>
-      <Story {...args} />
-    </div>
+    <ReadyContext.Provider value={onReady}>
+      <div className={mx('relative overflow-hidden [transform:translateZ(0)]', classNames)}>
+        <Story {...args} />
+      </div>
+    </ReadyContext.Provider>
   );
 
   return shared ? (

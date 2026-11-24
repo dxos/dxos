@@ -1,0 +1,62 @@
+/* drawing.sh's palette and type. Light by default; dark follows the system, or Starlight's theme picker where
+ * there is one. */
+
+:root {
+  color-scheme: light dark;
+  --paper: #f4f6f8;
+  --sheet: #ffffff;
+  --ink: #18202b;
+  --muted: #5e6875;
+  --grid: #dce2ea;
+  --route: #2f4bff;
+  --accent: #2f4bff;
+  --accent-hover: #2238e0;
+  --on-accent: #ffffff;
+  --string: #0f7a5c;
+  --emerald: #0f9b72;
+  --console: #18202b;
+  --console-muted: #8b96a6;
+  --selection: #d9e0ff;
+  --active-line: #f3f5fb;
+  --danger: #c2341b;
+  --sans: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'Martian Mono', ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #0d1015;
+    --sheet: #141920;
+    --ink: #e4e8ee;
+    --muted: #98a2b0;
+    --grid: #252d38;
+    --route: #8091ff;
+    --accent: #4a5fff;
+    --accent-hover: #6274ff;
+    --string: #5fd3a8;
+    --emerald: #4cc69a;
+    --console: #05070a;
+    --console-muted: #6c7888;
+    --selection: #2b3566;
+    --active-line: #19202a;
+    --danger: #ff8a73;
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #0d1015;
+  --sheet: #141920;
+  --ink: #e4e8ee;
+  --muted: #98a2b0;
+  --grid: #252d38;
+  --route: #8091ff;
+  --accent: #4a5fff;
+  --accent-hover: #6274ff;
+  --string: #5fd3a8;
+  --emerald: #4cc69a;
+  --console: #05070a;
+  --console-muted: #6c7888;
+  --selection: #2b3566;
+  --active-line: #19202a;
+  --danger: #ff8a73;
+}

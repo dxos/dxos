@@ -9,8 +9,8 @@ import { VoidInput, VoidOutput } from '@dxos/conductor';
 import { mx } from '@dxos/ui-theme';
 
 import { useComputeContext } from '../../hooks/compute-context.ts';
-import { Box, type BoxProps } from '../common/index.ts';
 import { type ComputeShape, getProperties } from '../defs.ts';
+import { Box, type BoxProps } from './Box.tsx';
 import { rowHeight } from './ports.ts';
 
 const expandedHeight = 200;

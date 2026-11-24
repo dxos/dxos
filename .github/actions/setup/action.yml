@@ -183,8 +183,8 @@ runs:
       if: ${{ inputs.prebuilt != 'true' }}
       with:
         # IMPORTANT: Keep in-sync with .prototools
-        moon-version: '2.5.2'
-        proto-version: '0.60.2'
+        moon-version: '2.6.5'
+        proto-version: '0.64.1'
 
     # Installs the toolchains `.moon/toolchains.yml` declares, which the first moon task would do anyway.
     # Deliberately not `auto-install` on setup-toolchain: that installs everything pinned, rust included as

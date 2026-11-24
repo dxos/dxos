@@ -5,7 +5,7 @@
 import { type Feature } from '#types';
 
 /**
- * View model for feature cards (`agents/superpowers/specs/2026-10-17-feature-map-ontology.md`).
+ * View model for feature cards (`.agents/superpowers/specs/2026-10-17-feature-map-ontology.md`).
  * Plain data so cards render the same from live objects ({@link buildFeatureModels}) and from stories.
  */
 

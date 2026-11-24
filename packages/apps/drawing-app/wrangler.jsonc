@@ -1,22 +1,84 @@
-// app.drawing.sh: the app bundle, served as static assets from a Worker on the drawing.sh zone, plus the share
-// API (`src/worker/main.ts`) that `drawing open` and the drawing.sh editor post a diagram's source to.
-// Deploy: `moon run drawing-app:bundle && pnpm exec wrangler deploy -c packages/apps/drawing-app/wrangler.jsonc`.
-// Local: `moon run drawing-app:bundle`, then `pnpm exec wrangler dev` here (local R2 and rate limiter).
 {
+  // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
+  // Local dev: `moon run drawing-app:bundle && wrangler dev` (local R2 and rate limiter; no landing host).
+  // Each env's Worker serves the site (home page and docs) on its landing hosts and the app on `app.` (spec F-13), the share API
+  // on both, and OTLP. Bindings, vars and routes are not inherited, so each env repeats them.
   "name": "drawing-app",
-  "main": "./src/worker/main.ts",
-  "compatibility_date": "2026-10-01",
+  "main": "./src/functions/worker.ts",
+  "compatibility_date": "2024-11-01",
+  "workers_dev": true,
+  "vars": {
+    "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
+  },
   "assets": {
     "directory": "./out/drawing-app",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // Everything else is asset-first; only the API needs the Worker.
-    "run_worker_first": ["/api/*"],
+    // Page addresses go through the Worker, which picks the site or the app by host; hashed assets do not.
+    "run_worker_first": ["/*", "!/assets/*"],
   },
-  // Each shared diagram's `.dx` source under its id. A lifecycle rule (see README) deletes an object 30 days after
-  // its last write, and the Worker rewrites a share opened more than a day after its last write.
-  "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares" }],
-  // Per-IP cap on `POST /api/share`.
-  "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1030", "simple": { "limit": 30, "period": 60 } }],
-  "routes": [{ "pattern": "app.drawing.sh", "custom_domain": true }],
+  // Each share's `.dx` source under its id. A lifecycle rule deletes an object 30 days after its last write, and the
+  // Worker rewrites a share opened more than a day after its last write (spec F-12.3).
+  "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares-dev" }],
+  "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1031", "simple": { "limit": 30, "period": 60 } }],
+  "env": {
+    // On demand, against EDGE preview, as Composer's `dev`.
+    "dev": {
+      "name": "drawing-app-dev",
+      "vars": {
+        "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
+        "APP_ORIGIN": "https://app.dev.drawing.sh",
+        "LANDING_HOSTS": "dev.drawing.sh",
+      },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
+      "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares-dev" }],
+      "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1031", "simple": { "limit": 30, "period": 60 } }],
+      "routes": [
+        { "pattern": "dev.drawing.sh", "custom_domain": true },
+        { "pattern": "app.dev.drawing.sh", "custom_domain": true },
+      ],
+    },
+    // Daily from `main`, against EDGE production, as Composer's `preview`.
+    // TODO(wittjosiah): Move drawing.sh, www.drawing.sh and app.drawing.sh back to production, and give preview back
+    //   preview.drawing.sh, app.preview.drawing.sh and the `drawing-sh-shares-preview` bucket (spec D-179).
+    // Until then preview serves the production hosts, so it binds production's bucket and existing `?d=` links keep opening.
+    "preview": {
+      "name": "drawing-app-preview",
+      "vars": {
+        "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
+        "APP_ORIGIN": "https://app.drawing.sh",
+        "LANDING_HOSTS": "drawing.sh,www.drawing.sh",
+      },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
+      "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares" }],
+      "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1032", "simple": { "limit": 30, "period": 60 } }],
+      "routes": [
+        { "pattern": "drawing.sh", "custom_domain": true },
+        { "pattern": "www.drawing.sh", "custom_domain": true },
+        { "pattern": "app.drawing.sh", "custom_domain": true },
+      ],
+    },
+    // App only, on its `workers.dev` host.
+    "staging": {
+      "name": "drawing-app-staging",
+      "vars": { "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i" },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
+      "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares-staging" }],
+      "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1033", "simple": { "limit": 30, "period": 60 } }],
+    },
+    // The Worker that has served app.drawing.sh since drawing-app, so its domain, bucket and rate limiter carry over.
+    // TODO(wittjosiah): Restore the drawing.sh, www.drawing.sh and app.drawing.sh custom domains (spec D-179). Until
+    //   then production has only its `workers.dev` host.
+    "production": {
+      "name": "drawing-app",
+      "vars": {
+        "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
+        "APP_ORIGIN": "https://app.drawing.sh",
+        "LANDING_HOSTS": "drawing.sh,www.drawing.sh",
+      },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
+      "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares" }],
+      "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1030", "simple": { "limit": 30, "period": 60 } }],
+    },
+  },
 }

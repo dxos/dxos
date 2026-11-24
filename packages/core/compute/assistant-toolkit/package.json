@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-toolkit",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Assistant toolkit, definitions, and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -62,16 +62,6 @@
       "source": "./src/DelegationStrategy.ts",
       "types": "./dist/types/src/DelegationStrategy.d.ts",
       "import": "./dist/lib/ns/DelegationStrategy.mjs"
-    },
-    "./Memory": {
-      "source": "./src/types/Memory.ts",
-      "types": "./dist/types/src/types/Memory.d.ts",
-      "import": "./dist/lib/Memory.mjs"
-    },
-    "./MemorySkill": {
-      "source": "./src/skills/memory/MemorySkill.ts",
-      "types": "./dist/types/src/skills/memory/MemorySkill.d.ts",
-      "import": "./dist/lib/ns/MemorySkill.mjs"
     },
     "./PlanningSkill": {
       "source": "./src/skills/planning/PlanningSkill.ts",

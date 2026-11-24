@@ -8,6 +8,7 @@ export {
   CommitSelector,
   type ExecutionGraph,
   type ExecutionGraphDetailsMap,
+  type OperationResolver,
   buildExecutionGraph,
   collectProcessActivityLines,
   deriveInFlightActivityLine,

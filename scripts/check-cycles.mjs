@@ -4,8 +4,7 @@ import { globby } from 'globby';
 import madge from 'madge';
 
 const CONFIG = {
-  // TODO(dmaretskyi): Add more packages.
-  include: ['packages/{common,core}/**/*.{ts,tsx}'],
+  include: ['packages/{common,core,plugins,ui}/**/*.{ts,tsx}'],
   ignoreGlobs: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
   ignorePathSegments: ['gen/', 'dist/'],
   gitignore: true,
@@ -23,6 +22,10 @@ console.log(`Running circular dependency check on ${filteredFiles.length} files`
 const res = await madge(filteredFiles, {
   detectiveOptions: {
     ts: {
+      skipTypeImports: true,
+    },
+    // madge picks detective options by extension, so `.tsx` needs its own entry to drop type-only imports.
+    tsx: {
       skipTypeImports: true,
     },
   },

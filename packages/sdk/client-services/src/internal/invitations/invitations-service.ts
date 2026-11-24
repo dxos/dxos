@@ -27,10 +27,10 @@ import * as InvitationsContract from '../../contracts/invitations.ts';
  * Adapts invitation service observable to client/service stream.
  */
 export class InvitationsServiceImpl implements InvitationsService.Handlers {
-  'constructor'(private readonly _invitationsManager: InvitationsContract.Manager) {}
+  constructor(private readonly _invitationsManager: InvitationsContract.Manager) {}
 
   // TODO(burdon): Guest/host label.
-  'getLoggingContext'() {
+  getLoggingContext() {
     return {
       // deviceKey: this._identityManager.identity?.deviceKey
     };

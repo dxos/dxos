@@ -6,8 +6,8 @@ comes back to it, or the value it returns when it prints nothing.
 
 ## Where it runs
 
-- **Composer**: the default turn engine for chats and agents; `Settings.disableCodeMode` turns it
-  off (plugin-assistant `F-5.4`, `F-5.5`, decision `D-18`). The app supplies the engine: the Effect
+- **Composer**: an opt-in turn engine for chats and agents; `Settings.codeMode` turns it on
+  (plugin-assistant `F-5.4`, `F-5.5`, decision `D-32`). The app supplies the engine: the Effect
   dialect, with the code in a Web Worker on its own ECHO client (`composer-app/src/plugin-defs.tsx`).
   Without the chunk or a client it falls back to tool calling, never to running code in the page.
 - **`dx eval`**: runs one program in either dialect. `dx eval --instructions` prints the API
@@ -35,7 +35,11 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
 ## The `eval` tool
 
 - **Input** is `code`; the **result** is what the code printed, or the value it returned when it
-  printed nothing, cut at 8,000 characters (`maxOutput`).
+  printed nothing, cut at 8,000 characters (`maxOutput`). `console.log`, `info`, `warn`, `error`,
+  `debug` and `dir` print their values into the same output, in every sandbox. In the Effect dialect
+  they print a value as it is: only `yield* print` adds an object's relation hints. A program that
+  printed and returned nothing is told it ran, so the model does not run it again to see what
+  happened.
 - **A throw** fails the call with what was printed before it and a short error (long serialized
   values cut, a hint for common mistakes), so the model reads it and writes different code.
 - **`print(obj)`** shows an object as a card: type, id, label and fields, references as
@@ -50,7 +54,9 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
 ### Plain ([`dialect-plain.ts`](./src/dialect-plain.ts))
 
 The body of an async function, over a small facade: `query`, `make`, `add`, `update`, `remove`,
-`ref`, `flush`, `relations`, `children`, `referrers`, `describe`, `print`. Every operation and MCP
+`ref`, `flush`, `relations`, `children`, `referrers`, `describe`, `print`. `describe` also takes
+an object's id or an operation's output — an object's JSON, or a record wrapping one such as
+`{ object }` — and describes the stored object with that id. Every operation and MCP
 tool is a function on `ops`: `await ops['name'](input)`, by the `tool` name `queryOperations`
 gives. Every binding takes and returns plain data, which is what lets a sandbox with no database run
 it.
@@ -87,8 +93,8 @@ operations' inputs, and the Skill Manager's lookups (`@dxos/assistant-toolkit`'s
 no other operation, no types. An enabled skill's rules apply to every request it touches, so they
 are in the prompt rather than looked up; a channel agent that had to look up how to reply did not.
 Listing every skill, operation and type, each operation as a tool, is what tool calling does, which
-runs when code mode is off (`Settings.disableCodeMode`); there the Skill Manager lists every skill in
-its instructions.
+runs when code mode is off (the default; `Settings.codeMode` turns it on); there the Skill
+Manager lists every skill in its instructions.
 
 The lookups are `querySkills`, `queryOperations`, `queryTypes` and `enableSkills`. The Skill
 Manager's MCP connection operations are not among them: a conversation gets those only by binding

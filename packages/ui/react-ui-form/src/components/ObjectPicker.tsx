@@ -23,10 +23,10 @@ import { arrayMove } from '@dxos/util';
 
 import { type CreateOptions, type RefOption } from '#types';
 
-import { FormActions, FormContent } from './Form.tsx';
-import { FormFields } from './FormFieldDispatch.tsx';
-// The parts, not the `Form` namespace: RefField renders this picker inside the Form's module cycle, and the namespace
+// The parts, never `Form.tsx`: RefField renders this picker inside the field modules' cycle, and the `Form` namespace
 // object reads every part when its module is evaluated.
+import { useFormDispatch } from './FormDispatchContext.ts';
+import { FormActions, FormContent } from './FormParts.tsx';
 import { FormRoot } from './FormRoot.tsx';
 
 type PickerCreateProps = Pick<CreateOptions, 'createInitialValuePath' | 'createFieldMap'> & {
@@ -102,24 +102,30 @@ type CreateFormProps = Pick<PickerCreateProps, 'createInitialValuePath' | 'creat
   onCancel: () => void;
 };
 
-/** The create form a picker's popup swaps its list for, seeded with the query at `createInitialValuePath`. */
-const CreateForm = ({ schema, query, createInitialValuePath, createFieldMap, onSave, onCancel }: CreateFormProps) => (
-  <FormRoot
-    testId='create-referenced-object-form'
-    schema={schema}
-    defaultValues={createInitialValuePath ? { [createInitialValuePath]: query } : {}}
-    fieldMap={createFieldMap}
-    onSave={onSave}
-    onCancel={onCancel}
-  >
-    <Layout.Container gutter='inset'>
-      <FormContent>
-        <FormFields />
-        <FormActions />
-      </FormContent>
-    </Layout.Container>
-  </FormRoot>
-);
+/**
+ * The create form a picker's popup swaps its list for, seeded with the query at `createInitialValuePath`. Throws in a
+ * picker rendered outside `Form.Root`, which has no dispatcher to render the fields with.
+ */
+const CreateForm = ({ schema, query, createInitialValuePath, createFieldMap, onSave, onCancel }: CreateFormProps) => {
+  const { FormFields } = useFormDispatch('ObjectPicker');
+  return (
+    <FormRoot
+      testId='create-referenced-object-form'
+      schema={schema}
+      defaultValues={createInitialValuePath ? { [createInitialValuePath]: query } : {}}
+      fieldMap={createFieldMap}
+      onSave={onSave}
+      onCancel={onCancel}
+    >
+      <Layout.Container gutter='inset'>
+        <FormContent>
+          <FormFields />
+          <FormActions />
+        </FormContent>
+      </Layout.Container>
+    </FormRoot>
+  );
+};
 
 export type ObjectPickerProps = PickerBaseProps & {
   /** The selected option's id. */

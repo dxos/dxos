@@ -8,8 +8,12 @@ import React, {
   type FC,
   type PropsWithChildren,
   type ReactNode,
+  Suspense,
+  createContext,
+  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
@@ -53,6 +57,7 @@ import * as StoryLayout from '../StoryLayout.ts';
 import * as StoryPeers from '../StoryPeers.ts';
 import * as StorySnapshot from '../StorySnapshot.ts';
 import { type ModuleLayout } from './module-container.tsx';
+import { ReadyContext } from './ready.ts';
 import { StorySpaceProvider } from './story-space.ts';
 
 type LazyPluginsResult = {
@@ -286,7 +291,8 @@ const PluginManagerHost = ({
     EffectEx.runDetached(activateDemandGatedModules(manager));
 
     return () => {
-      void EffectEx.runAndForwardErrors(manager.shutdown());
+      // A story can unmount mid-startup, and the interrupt that shutdown then returns is expected, not a failure.
+      EffectEx.runDetached(manager.shutdown());
     };
   }, [manager]);
 
@@ -294,7 +300,40 @@ const PluginManagerHost = ({
   return <App />;
 };
 
-const SingleHost = ({ props, contextId, Story }: { props: Options; contextId: string; Story: FC }) => {
+/** Calls `onReady` once, after the browser paints what mounted when `ready` turned true. */
+const useReportReady = (ready: boolean, onReady?: () => void) => {
+  const reported = useRef(false);
+  useEffect(() => {
+    if (!ready || !onReady || reported.current) {
+      return;
+    }
+    const report = () => {
+      reported.current = true;
+      onReady();
+    };
+    // The story mounts before it paints its content.
+    if (typeof requestIdleCallback === 'function') {
+      const handle = requestIdleCallback(report, { timeout: 2_000 });
+      return () => cancelIdleCallback(handle);
+    }
+    const handle = setTimeout(report, 200);
+    return () => clearTimeout(handle);
+  }, [ready, onReady]);
+};
+
+const SingleHost = ({
+  props,
+  contextId,
+  onReady,
+  Story,
+}: {
+  props: Options;
+  contextId: string;
+  onReady?: () => void;
+  Story: FC;
+}) => {
+  const [mounted, setMounted] = useState(false);
+  useReportReady(mounted, onReady);
   // Non-lazy stories start with options ready; lazy stories wait.
   const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(props.lazyPlugins ? null : { plugins: [] });
   useEffect(() => {
@@ -323,6 +362,7 @@ const SingleHost = ({ props, contextId, Story }: { props: Options; contextId: st
   const Wrapper = props.Wrapper;
   return (
     <PluginManagerHost options={options} contextId={contextId}>
+      <OnMount onMount={() => setMounted(true)} />
       {Wrapper ? (
         <Wrapper>
           <Story />
@@ -341,6 +381,7 @@ const SingleHost = ({ props, contextId, Story }: { props: Options; contextId: st
 type PeersHostProps = {
   props: Options;
   shared?: StoryPeers.Shared;
+  onReady?: () => void;
   contextId: string;
   themeMode: ThemeMode;
   Story: FC;
@@ -350,7 +391,7 @@ type PeersHostProps = {
  * Runs the story once per peer, each in a plugin app of its own over its peer's client, with a toolbar to show one
  * or every peer. Peers stay mounted while hidden: their plugin apps own their clients and would destroy them.
  */
-const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProps) => {
+const PeersHost = ({ props, shared, onReady, contextId, themeMode, Story }: PeersHostProps) => {
   const [own] = useState(() =>
     shared ? undefined : StoryPeers.make({ title: props.title ?? contextId, count: props.peers }),
   );
@@ -368,6 +409,9 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
 
   const [init, setInit] = useState<Init>();
   const [seeded, setSeeded] = useState(false);
+  const [mounted, setMounted] = useState<readonly number[]>([]);
+  const allMounted = mounted.length === runtime.peers.length;
+  useReportReady(allMounted, onReady);
   const [error, setError] = useState<string>();
   useEffect(() => {
     if (!lazy) {
@@ -457,7 +501,7 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
                 />
                 {/* Story layouts are `fixed inset-0`; layout containment confines each peer's app to its pane. */}
                 <div className='relative overflow-hidden contain-layout'>
-                  {lazy && (
+                  {lazy ? (
                     <PeerApp
                       id={`${contextId}-${index}`}
                       client={runtime.clients[index]}
@@ -466,9 +510,13 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
                       spaceId={state.spaceId}
                       layout={layoutOf(index)}
                       ready={seeded && state.joined[index]}
+                      status={state.joined[index] ? 'Loading' : 'Connecting'}
+                      onMounted={() => setMounted((mounted) => [...new Set([...mounted, index])])}
                       Wrapper={props.Wrapper}
                       Story={Story}
                     />
+                  ) : (
+                    <StatusCover status='Loading' />
                   )}
                 </div>
               </div>
@@ -528,15 +576,31 @@ type PeerAppProps = {
   layout?: ModuleLayout;
   /** Whether the peer has the space and the story its layout; until then the app boots behind a placeholder. */
   ready: boolean;
+  /** The pane's state until the story mounts. */
+  status: string;
+  onMounted: () => void;
   Wrapper?: FC<PropsWithChildren>;
   Story: FC;
 };
 
-const PeerApp = ({ id, client, plugins, setupEvents, spaceId, layout, ready, Wrapper, Story }: PeerAppProps) => {
+const PeerApp = ({
+  id,
+  client,
+  plugins,
+  setupEvents,
+  spaceId,
+  layout,
+  ready,
+  status,
+  onMounted,
+  Wrapper,
+  Story,
+}: PeerAppProps) => {
   const [layoutAtom] = useState(() => Atom.make<ModuleLayout | undefined>(undefined));
   const options = useMemo<WithPluginManagerOptions>(
     () => ({
       setupEvents,
+      placeholder: peerStatus,
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({ client }),
@@ -551,22 +615,46 @@ const PeerApp = ({ id, client, plugins, setupEvents, spaceId, layout, ready, Wra
   );
 
   return (
-    <AppPluginManagerHost id={id} options={options}>
-      <StorySpaceProvider value={spaceId}>
-        <PublishLayout atom={layoutAtom} layout={layout} />
-        {!ready ? (
-          <div className='dx-cover grid place-items-center text-description'>Connecting…</div>
-        ) : Wrapper ? (
-          <Wrapper>
-            <Story />
-          </Wrapper>
-        ) : (
-          <Story />
-        )}
-      </StorySpaceProvider>
-    </AppPluginManagerHost>
+    <StatusContext.Provider value={status}>
+      <AppPluginManagerHost id={id} options={options}>
+        <StorySpaceProvider value={spaceId}>
+          <PublishLayout atom={layoutAtom} layout={layout} />
+          {ready ? (
+            <Suspense fallback={peerStatus}>
+              <OnMount onMount={onMounted} />
+              {Wrapper ? (
+                <Wrapper>
+                  <Story />
+                </Wrapper>
+              ) : (
+                <Story />
+              )}
+            </Suspense>
+          ) : (
+            peerStatus
+          )}
+        </StorySpaceProvider>
+      </AppPluginManagerHost>
+    </StatusContext.Provider>
   );
 };
+
+const StatusContext = createContext('Loading');
+
+const PeerStatus = () => <StatusCover status={useContext(StatusContext)} />;
+
+const peerStatus = <PeerStatus />;
+
+const OnMount = ({ onMount }: { onMount: () => void }) => {
+  useEffect(onMount, []);
+  return null;
+};
+
+const StatusCover = ({ status }: { status: string }) => (
+  <div role='status' className='dx-cover grid place-items-center text-description bg-base-surface'>
+    {status}…
+  </div>
+);
 
 const PublishLayout = ({ atom, layout }: { atom: Atom.Writable<ModuleLayout | undefined>; layout?: ModuleLayout }) => {
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
@@ -596,12 +684,14 @@ export const decorators = <Args = any,>(input: DecoratorsInput<Args> = {}) => {
       [context.args],
     );
     const shared = StoryPeers.useShared();
+    const onReady = useContext(ReadyContext);
 
     if (shared || (props.peers ?? 1) > 1) {
       return (
         <PeersHost
           props={props}
           shared={shared}
+          onReady={onReady}
           contextId={context.id}
           // Storybook types globals as a record of unknowns; `theme` is the toolbar's theme mode.
           themeMode={(context.globals?.theme as ThemeMode) || 'dark'}
@@ -610,7 +700,7 @@ export const decorators = <Args = any,>(input: DecoratorsInput<Args> = {}) => {
       );
     }
 
-    return <SingleHost props={props} contextId={context.id} Story={Story} />;
+    return <SingleHost props={props} contextId={context.id} onReady={onReady} Story={Story} />;
   }) as any;
 
   return [withTheme(), withLayout({ layout: 'fullscreen' }), host];

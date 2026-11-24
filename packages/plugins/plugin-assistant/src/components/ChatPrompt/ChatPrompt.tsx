@@ -50,7 +50,7 @@ import { AssistantPreset } from '#types';
 
 import { type ChatModel, getChatModelState } from '../../chat-model/index.ts';
 import { AssistantNamespace } from '../../namespace.ts';
-import { type ChatEvent } from '../Chat/index.ts';
+import type { ChatEvent } from '../Chat/events.ts';
 import { attachmentAnchors, dropAnchor, insertAtAnchor, placeAnchor } from './attachment-anchors.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 import { ChatAddMenu } from './ChatAddMenu.tsx';

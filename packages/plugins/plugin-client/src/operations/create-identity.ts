@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -22,14 +21,12 @@ const handler: Operation.WithHandler<typeof ClientOperation.CreateIdentity> = Cl
       const identity = yield* Identity.create(profile);
       // Boot-waterfall milestone: the identity exists from here (first-run path).
       performance.mark('milestone:identity-created');
-      const spaceId = yield* Identity.personalSpaceId;
       // A reset rather than an activate: after an in-place identity deletion the event has already
       // fired for the previous identity, and a plain activate would not seed this one's spaces.
       yield* manager.reset(ClientEvents.IdentityCreated);
       yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
       return {
         identityDid: identity.did,
-        ...(Option.isSome(spaceId) && { spaceId: spaceId.value }),
         ...(identity.displayName !== undefined || identity.data !== undefined
           ? { profile: { displayName: identity.displayName, data: identity.data } }
           : {}),

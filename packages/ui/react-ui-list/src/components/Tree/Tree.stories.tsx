@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withRegistry, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 
@@ -1099,5 +1100,64 @@ export const DropBelowExpandedTest: Story = {
     } finally {
       dispatchDrag(grain, 'dragend', dataTransfer);
     }
+  },
+};
+
+/** A few open rows between two fillers in a page that scrolls, so the tree is as tall as its rows and never scrolls. */
+const EmbeddedStory = ({ size = 'md' }: StoryArgs) => {
+  const { model, onOpenChange, onSelect, onDrop } = useStaticTree(createFixedTree, true);
+  return (
+    <ScrollArea.Root style={{ height: '16rem' }} data-testid='page'>
+      <ScrollArea.Viewport>
+        <div style={{ height: '12rem' }} />
+        <Tree.Root
+          model={model}
+          rootId={model.rootId}
+          id={`tree-embedded-${size}`}
+          size={size}
+          onOpenChange={onOpenChange}
+          onSelect={onSelect}
+          onDrop={onDrop}
+        >
+          <Tree.Label srOnly>Tree</Tree.Label>
+          <Tree.Content />
+        </Tree.Root>
+        <div style={{ height: '24rem' }} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+};
+
+/**
+ * A tree that is not height-bound lets the wheel through to the page that scrolls it; a tree that overflows its own
+ * viewport still contains overscroll.
+ *
+ * 1. Wheel with a real pointer over the embedded tree's rows: the page scrolls.
+ * 2. A bound tree that overflows (`Large`) keeps `overscroll-behavior-y: contain`.
+ */
+export const EmbeddedTest: Story = {
+  render: EmbeddedStory,
+  play: async ({ canvasElement }) => {
+    const { userEvent: pointer } = await import('vitest/browser');
+    const page = within(canvasElement).getByTestId('page').querySelector<HTMLElement>(':scope > .dx-scroll-viewport');
+    const tree = within(canvasElement).getByRole('tree');
+    if (!page) {
+      throw new Error('missing page viewport');
+    }
+    await expect(tree.scrollHeight).toBeLessThanOrEqual(tree.clientHeight);
+    await expect(getComputedStyle(tree).overscrollBehaviorY).toBe('auto');
+    await expect(page.scrollTop).toBe(0);
+    await pointer.wheel(within(tree).getByText('Apple'), { delta: { y: 100 } });
+    await waitFor(() => expect(page.scrollTop).toBeGreaterThan(0));
+  },
+};
+
+/** A tree that fills its pane and overflows it keeps containing overscroll, so the wheel stops at its ends. */
+export const BoundTest: Story = {
+  args: Large.args,
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    await waitFor(() => expect(tree.closest('.dx-scroll-root')).toHaveAttribute('data-overflow-y'));
+    await expect(getComputedStyle(tree).overscrollBehaviorY).toBe('contain');
   },
 };

@@ -1,5 +1,155 @@
 # @dxos/plugin-deck
 
+## 0.17.0
+
+### Minor Changes
+
+- 812ae94: `AppCapability.surface({ roles })` now takes role tokens (`[AppSurface.Article]`) instead of NSID strings, and `@dxos/app-toolkit/AppSurface` can be imported without loading React, so a `dx.config.ts` can name roles as `AppSurface.*`. Breaking: plugin role modules are renamed to `<Plugin>Surface`: `@dxos/plugin-deck/DeckRole` is now `DeckSurface`, `@dxos/plugin-map/MapRole` is now `MapSurface`, `@dxos/plugin-assistant/ChatSurface` is now `AssistantSurface`, and the projects settings role moves from `ProjectView.Settings` to `@dxos/plugin-projects/ProjectSurface`.
+- 9a3313a: Workspace switches fade between two live decks instead of running a view transition, and objects open without one, so both settle several times faster in WebKit. `Hooks.createHeightMemory` and `Hooks.useReservedHeight` let a component hold the height it last rendered at while its content reloads; plugin-stack keeps section heights in `StackCapabilities.SectionHeights`, `mermaid()` takes a `cache` of rendered diagrams, and plugin-deck's `ShownDeckState` provides the deck state a non-live deck renders. CodeMirror themes are built once instead of per editor. `Carousel` mounts a slide's media only on its page (images on neighbouring slides too), and `Carousel.Root` no longer accepts `autoSize`, since a slide without its media would size to nothing.
+- 92ef425: A link can name an action that runs on the object it opens, so a public link to a presentation opens already presenting. The URL carries the action as `?action=<name>`, its DXN without the `dxn:` prefix. Plugins contribute actions with `AppCapabilities.LinkAction`, each scoped to internal or public links and to the objects it applies to; `@dxos/app-toolkit/LinkAction` adds the action to a link (`withAction`), finds it (`find`) and strips it (`withoutAction`). The deck runs the action once the object is open, and the boot loader stays up until it has run, for 10 seconds at most.
+- 0a4580c: `@dxos/plugin-deck` exports the deck's presentational pane parts as the `Pane` namespace (`Pane.Root`, `Toolbar`, `Sigil`, `Title`, `Tabs`, `Content`; also `@dxos/plugin-deck/Pane`), so a page outside the deck can render Composer's plank chrome.
+
+### Patch Changes
+
+- af82eb1: Folded planks in the sliding deck (Flatten deck off) render as full-height spines with the plank's icon and title, in both piles. A folded plank used to show as a small icon tile at the deck's mid-height, and planks scrolled past the start slid off-screen instead of piling up on the left.
+- 4514d15: Moving between two articles no longer empties the plank. The article already on screen is held for the commit the shell paints alone, instead of being replaced by the loading placeholder — which took the editor and its toolbar out of the DOM for about 90ms on every move, and tore down what was there so the next article measured its container from scratch.
+- 2176f79: A follower now lands where the leader is scrolled in any article inside a `ScrollArea`, with no follow code in its plugin, and an article comes back where you left it when its plank remounts. Plugins can opt a viewport out with `follow={false}` on `ScrollArea.Viewport`, follow only some fields of a `ViewState` aspect with `follow: { policy: 'write', fields }`, and mark a section with `HomeSection.Root`'s `anchor` so a follower at another width keeps it at the top.
+- 3d22d48: You can follow a peer around a space. Follow sits next to Jump and Go to on a peer's row and follows whichever of their sessions moved last; with the sessions toggle on, each session row has a Follow that stays on that session. While you follow, your deck shows theirs: the same planks in their order, scrolled to the plank at the front of theirs, with each plank keeping their top line at the top and the companions they have open. With no planks reported, it opens the object they attend, at the path they opened it from. None of it moves your caret or focus, and they send their location every 100 ms instead of every second. A plank your deck has no URL binding for (a type from a plugin you lack) is left out, and your deck scrolls to the nearest plank of theirs it holds instead. Scrolling, clicking or typing in a plank, attending an object outside what you show of them, going back or forward in history, or pressing Escape stops it, and so does the leader being gone from the space for five seconds. A follow pauses while you cannot open what they attend and picks up again once you can. The Members tab shows a dot while you follow, and the leader's row sits first in its list with Stop. A `Locator` reveal takes `follow` to scroll without moving the caret and answers whether it revealed the anchor, so a follower whose editor mounts late still lands on the leader's line, a deck companion's `badge` atom can hold `true` to draw a dot, and `LayoutOperation.Set` takes `focus: false` to focus no plank and a `workspace` to set the planks in, as `Open` does. View state can now be followed: a `ViewState` aspect declared with `follow: 'write'` has its values for the space and each open object sent with presence, and a follower writes the leader's into its own view state; one declared `follow: 'reveal'` is sent for the follow to apply. The deck reports its front plank as the space's `ViewLocation` and its open companions as `AppCapabilities.Companions`, and the follow applies them with `LayoutOperation.ScrollIntoView` and `UpdateCompanion`. A project's view state is followed, so a follower sees the leader's tab, spec and chart; so is a presentation's slide, and a drawing's camera in tldraw, excalidraw and the 2D canvas, which a drawing variant takes as `camera` and reports with `onCameraChange`. The 2D canvas editor applies a host camera that changes while it is open. A project's view state is now keyed by its EID, so the tab each project last showed resets once. `GraphPath.getEidFromPath` names the object a graph path points at. A schema form's boolean field carries its JSON path as `data-testid`, as text fields do. Leading shows too, in amber on every screen: the Members tab's dot appears on both sides, a follower's leader row rises to the top of Members and carries Stop, and a leader sees its followers under "Following you". Every plank heading, companions included, washes in amber over a one-pixel underline while you follow or are followed, through a new `AppCapabilities.LayoutAccent` the deck applies, and those people's avatars ring in amber. A deck companion takes a `badgeHue` for its rail dot.
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [c8d6d86]
+- Updated dependencies [f142d06]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [cfc5c42]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [6a37f4b]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [908c301]
+- Updated dependencies [78e96da]
+- Updated dependencies [416201f]
+- Updated dependencies [3aef671]
+- Updated dependencies [13bc40d]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2176f79]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [b15e5c3]
+- Updated dependencies [074e3e6]
+- Updated dependencies [92ef425]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [0ad95b7]
+- Updated dependencies [f175a2d]
+- Updated dependencies [9c5af4a]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [fba77f7]
+- Updated dependencies [02254b0]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [3d22d48]
+- Updated dependencies [7e07e49]
+- Updated dependencies [6cd526c]
+- Updated dependencies [b159f41]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [101f620]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+- Updated dependencies [fe3aaf6]
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-observability@0.17.0
+  - @dxos/react-ui-dnd@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-focus@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

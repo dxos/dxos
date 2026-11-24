@@ -4,6 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
@@ -14,6 +15,14 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+
+import { DebugSurface } from '#types';
+
+/** Fields whose values are secrets: shown as redacted in the JSON view. */
+const SECRET_KEYS = new Set(['token', 'refreshToken', 'apiKey', 'secret', 'password']);
+
+const redact = (key: string, value: unknown): unknown =>
+  SECRET_KEYS.has(key) && typeof value === 'string' && value.length > 0 ? '[redacted]' : value;
 
 export type DebugObjectPanelProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
@@ -60,9 +69,17 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
           )}
           <Syntax.Root
             data={selectedObject}
-            getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
+            getReplacer={(depth) => {
+              const refs = db ? Json.createRefReplacer({ db, depth }) : undefined;
+              return (key: string, value: unknown) => redact(key, refs ? refs(key, value) : value);
+            }}
           >
             <Panel.Root>
+              {selectedObject && (
+                <div className='divide-y divide-separator-subtle border-b border-separator-subtle'>
+                  <Surface.Surface type={DebugSurface.ObjectPanel} data={{ object: selectedObject }} />
+                </div>
+              )}
               <Panel.Header>
                 <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
                   <Syntax.Filter />

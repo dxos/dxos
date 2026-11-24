@@ -1,0 +1,174 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type PropsWithChildren, type ReactNode } from 'react';
+
+import { type Format } from '@dxos/echo';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Typography from '@dxos/react-ui/Typography';
+
+import { type FormFieldLabelPlacement, type FormPresentation } from '#types';
+
+import { useFormContext } from '../hooks/index.ts';
+import { formatStaticValue, isEmptyValue, useFormFieldBindingAt, useFormSchemaProperty } from './field-binding.tsx';
+import { type FormFieldBinding, FormFieldBindingProvider } from './FormFieldContext.ts';
+import { presentationFor } from './presentation.tsx';
+
+// Fields render these pieces, so they live apart from `FormField.tsx`, which imports the dispatcher that imports the
+// fields.
+
+const FORM_FIELD_NAME = 'Form.Field';
+
+/** A bound value rendered as text: what a `static` presentation shows in place of the control. */
+export const FormStaticValue = ({ value, format }: { value: unknown; format?: Format.TypeFormat }) => (
+  <Typography.Text truncate>{formatStaticValue(value, format)}</Typography.Text>
+);
+
+export type FormFieldProps<T = any> = PropsWithChildren<{
+  /** Binds the row to the form model at this path; with no children the dispatcher picks the control. */
+  path?: string;
+  label?: string;
+  description?: string;
+  error?: string;
+  required?: boolean;
+  readonly?: boolean;
+  /** The label is text rather than a `<label>`: the row holds no single control. */
+  standalone?: boolean;
+  /** Read-only content after the label text, a sibling of the label so its text stays exactly `label`. */
+  labelEnd?: ReactNode;
+  /** `beside`: the control carries its own label (a Switch), so the row draws no header. */
+  labelPlacement?: FormFieldLabelPlacement;
+  /** The label sits beside the control rather than above it. */
+  inlineLabel?: boolean;
+  /** The value's text colour. */
+  tone?: 'muted';
+  presentation?: FormPresentation;
+  renderStatic?: (value: T | undefined) => ReactNode;
+}>;
+
+/** A `Form.Field` whose control is its children: bound when it has a `path`, a plain row when not. */
+export const FormControlField = <T,>({ path, children, ...props }: FormFieldProps<T>) =>
+  path === undefined ? (
+    <FormFieldRow<T> {...props}>{children}</FormFieldRow>
+  ) : (
+    <FormBoundField<T> path={path} {...props}>
+      {children}
+    </FormBoundField>
+  );
+
+FormControlField.displayName = FORM_FIELD_NAME;
+
+type FormBoundFieldProps<T> = Omit<FormFieldProps<T>, 'path'> & { path: string };
+
+const FormBoundField = <T,>({ path, children, ...props }: FormBoundFieldProps<T>) => {
+  const property = useFormSchemaProperty(FORM_FIELD_NAME, path);
+  const binding = useFormFieldBindingAt<T>(FORM_FIELD_NAME, path, property, props);
+  return (
+    <FormFieldRow<T>
+      label={props.label ?? property?.label ?? ''}
+      description={props.description ?? property?.description}
+      format={property?.format}
+      {...props}
+      binding={binding}
+    >
+      {children}
+    </FormFieldRow>
+  );
+};
+
+export type FormFieldRowProps<T = any> = Omit<FormFieldProps<T>, 'path'> & {
+  format?: Format.TypeFormat;
+  binding?: FormFieldBinding<T>;
+};
+
+/**
+ * The row: `Field.Root` holding the header (label, `labelEnd`, error mark), the description, the control and the
+ * error text. In the `settings` variant it is a bordered row of the content's two tracks (AUDIT §3.2 option 1).
+ */
+export const FormFieldRow = <T,>({
+  children,
+  label,
+  description,
+  error: errorProp,
+  required: requiredProp,
+  readonly: readonlyProp,
+  standalone,
+  labelEnd,
+  labelPlacement = 'above',
+  inlineLabel,
+  tone,
+  presentation: presentationProp,
+  renderStatic,
+  format,
+  binding,
+}: FormFieldRowProps<T>) => {
+  const { variant = 'default', layout } = useFormContext(FORM_FIELD_NAME);
+  const settings = variant === 'settings';
+  const resolved = presentationFor(presentationProp ?? binding?.presentation ?? layout);
+  const error = binding?.error ?? errorProp;
+  const readonly = binding?.readonly ?? readonlyProp;
+  // An indeterminate value is unset only for display, not missing.
+  const required = binding ? binding.required && !binding.indeterminate && isEmptyValue(binding.value) : requiredProp;
+
+  let control: ReactNode = children;
+  if (binding && resolved.isStatic) {
+    if (binding.value == null) {
+      return null;
+    }
+    control = renderStatic?.(binding.value) ?? <FormStaticValue value={binding.value} format={format} />;
+  }
+
+  // A toggle labels itself, except in a settings row, whose header column holds every label.
+  const showHeader = resolved.showLabel && !!label && (labelPlacement !== 'beside' || settings);
+  const row = (
+    <Field.Root
+      layout={settings ? 'row' : inlineLabel ? 'inline' : 'stack'}
+      tone={tone}
+      level={settings ? '+1' : undefined}
+      invalid={!!error}
+      required={!!required}
+      readOnly={readonly}
+      // Focus leaving the row (not moving between its segments, steppers or triggers) marks it touched, so controls need
+      // no onBlur of their own.
+      onBlur={
+        binding
+          ? (event) => {
+              if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) {
+                binding.onBlur(event);
+              }
+            }
+          : undefined
+      }
+    >
+      {showHeader && (
+        <Field.Header>
+          {standalone || readonly ? (
+            <Typography.Text truncate>{label}</Typography.Text>
+          ) : (
+            <Field.Label>{label}</Field.Label>
+          )}
+          {labelEnd}
+          {error && (
+            <Layout.Block>
+              {/* The error itself, on hover: the icon alone says only that there is one. */}
+              <Tooltip.Trigger asChild content={error}>
+                <Icon.Icon icon='ph--warning--regular' valence='error' label={error} />
+              </Tooltip.Trigger>
+            </Layout.Block>
+          )}
+        </Field.Header>
+      )}
+      {settings && description && <Field.HelperText>{description}</Field.HelperText>}
+      {control}
+      {resolved.showError && error && <Field.ErrorText>{error}</Field.ErrorText>}
+    </Field.Root>
+  );
+
+  return binding ? <FormFieldBindingProvider {...binding}>{row}</FormFieldBindingProvider> : row;
+};
+
+FormFieldRow.displayName = 'Form.FieldRow';

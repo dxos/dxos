@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { CrawlState } from '@dxos/crawler';
-import { Database, Obj, Ref, type Type } from '@dxos/echo';
+import { Annotation, Database, Obj, Ref, type Type } from '@dxos/echo';
 
 import { DiscordOperation } from '#types';
 
@@ -25,7 +25,7 @@ const loadInput = Effect.fnUntraced(function* <S extends Type.AnyObj>(type: S, v
 const handler: Operation.WithHandler<typeof DiscordOperation.ConfigureBackIndex> =
   DiscordOperation.ConfigureBackIndex.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({ trigger: triggerRef, name, cron, enabled, ...config }) {
+      Effect.fn(function* ({ trigger: triggerRef, name, cron, enabled, connection: connectionRef, ...config }) {
         // A trigger that is gone fails the load: reconfiguring it must not silently start a second back-index.
         const existing = triggerRef ? yield* Database.load(triggerRef) : undefined;
         const state =
@@ -57,6 +57,17 @@ const handler: Operation.WithHandler<typeof DiscordOperation.ConfigureBackIndex>
         }
         // The frontier shows the configured channels at once, before the first run.
         Obj.update(state, (state) => CrawlState.reconcileChannels(state, input.channels));
+        if (connectionRef) {
+          const connection = yield* Database.load(connectionRef);
+          Obj.update(connection, (connection) => {
+            Annotation.set(connection, DiscordOperation.BackIndexAnnotation, {
+              trigger: Ref.make(trigger),
+              state: Ref.make(state),
+            });
+          });
+          Obj.setParent(trigger, connection);
+          Obj.setParent(state, connection);
+        }
         return { trigger: Ref.make(trigger), state: Ref.make(state) };
       }),
     ),

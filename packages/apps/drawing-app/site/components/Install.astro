@@ -1,0 +1,10 @@
+---
+// The agent skill's install command with a copy button, which the page script wires up.
+---
+
+<div class="install">
+  <code id="install-command">npx skills add dxos/dxos --skill drawing</code>
+  <button type="button" id="copy" data-state="idle" aria-live="polite">
+    <span data-label="idle">Copy</span><span data-label="copied">Copied</span><span data-label="failed">Failed</span>
+  </button>
+</div>

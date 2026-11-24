@@ -12,5 +12,5 @@ bots, each pointing at the object where the work lives.
   `MessengerOperation.Send`.
 
 The spec is [`PLUGIN.mdl`](./PLUGIN.mdl); the design is
-[`2026-10-04-plugin-messenger-design.md`](../../../agents/superpowers/specs/2026-10-04-plugin-messenger-design.md).
+[`2026-10-04-plugin-messenger-design.md`](../../../.agents/superpowers/specs/2026-10-04-plugin-messenger-design.md).
 The `Messenger/TwoUsers` story runs two clients over an in-memory relay.

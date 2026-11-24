@@ -39,7 +39,6 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
-import type * as Util from '@dxos/react-ui/Util';
 import { getHashHue, mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -49,6 +48,7 @@ import { NavTreeNamespace } from '../../namespace.ts';
 import { l0ItemType } from '../../util.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { UserAccountAvatar } from '../UserAccountAvatar/index.ts';
+import { L0ItemActiveTabIndicator } from './L0ItemActiveTabIndicator.tsx';
 import { L0PendingAvatar } from './L0PendingAvatar.tsx';
 
 //
@@ -160,15 +160,6 @@ const L0ItemRoot = memo(
       );
     },
   ),
-);
-
-export const L0ItemActiveTabIndicator = ({ classNames }: Util.ThemedClassName<{}>) => (
-  <div
-    className={mx(
-      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-bg rounded-sm',
-      classNames,
-    )}
-  />
 );
 
 // TODO(burdon): Factor out pinned (non-draggable) items.

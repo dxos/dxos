@@ -49,7 +49,7 @@ type Settings
     chatView?: ChatView
     modelProvider?: ModelProvider
     modelDefaults?: ModelDefaults
-    disableCodeMode?: boolean
+    codeMode?: boolean
     reportStruggles?: boolean
     tracePanelDebug?: boolean
 ```
@@ -286,10 +286,10 @@ feat F-5: Tool Execution
   req F-5.3:
     when: AI invokes a tool during a conversation
     then: operation is dispatched via the compute runtime and result returned to the model
-  req F-5.4: Code mode is on by default and opt-out via `Settings.disableCodeMode`; the host supplies the engine
+  req F-5.4: Code mode is off by default and opt-in via `Settings.codeMode`; the host supplies the engine
              through the `codeModeTurnProducer` plugin option, and without it the setting has no effect.
   req F-5.5:
-    when: Settings.disableCodeMode is false or absent, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
+    when: Settings.codeMode is true, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
     then: agent processes spawned afterwards run turns through the code-mode producer (one `eval` tool)
           instead of AiSession
 ```
@@ -905,6 +905,17 @@ decision D-31: The navtree keeps the AI group and the Chats section with no crea
   why: A read-only host shows a space its reader cannot edit, and an agent turn or AI request would act in it.
   rejected:
     - Unregister the operations, skills and slash commands: nothing a read-only host shows can invoke them, and the EDGE client check stops any that would call a model.
+```
+
+```mdl
+decision D-32: Code mode is off by default again; the setting goes back to `codeMode`, an opt-in. A saved `disableCodeMode` is ignored.
+  date: 2026-11-24
+  by: user:wittjosiah
+  affects: [F-5.4, F-5.5]
+  supersedes: D-18
+  why: Every user goes back to tool calling unless they opt in. A saved `codeMode: true` exists only for someone who opted in before [D-18], so honouring it keeps their choice.
+  rejected:
+    - Keep `disableCodeMode` and read a missing value as true: a saved `false` would keep code mode on for people who never opted in.
 ```
 
 ---

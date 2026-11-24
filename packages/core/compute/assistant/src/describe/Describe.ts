@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Entity, Ref, Type } from '@dxos/echo';
+import { Annotation, type Entity, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -181,6 +181,12 @@ export const labelOf = (ast: SchemaAST.AST, depth: number, abridge = false): str
     // A record or open struct (`Obj.Unknown`) has no closed field list to state.
     if (ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
       return 'object';
+    }
+    // An object of a registered type is named by its type, as a printed object is: its field list would read as a
+    // plain record, and code then goes looking for the object inside it.
+    const typename = Annotation.getTypeAnnotation(Schema.make(ast))?.typename;
+    if (typename !== undefined) {
+      return typename;
     }
     const fields = ast.propertySignatures.map(
       (property) =>

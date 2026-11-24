@@ -11,13 +11,14 @@ CodeMirror extensions that highlight and complete it.
 
 | Tag | Attributes |
 | --- | --- |
-| `<Grid>` | `cols`, `rows`: the tracks it lays down, 1 to 12; `align` (`stretch`, `start`, `center`, `end`) |
+| `<Grid>` | `cols`, `rows`: the tracks it lays down, 1 to 12; `align` (`stretch`, `start`, `center`, `end`); `variant` (`default`, `flow`) |
 | `<Cell>` | `colSpan`, `rowSpan`: the tracks it covers |
 | `<Card>` | `variant` (`default`, `outline`, `plain`), `tone`, `icon`, `colSpan`, `rowSpan` |
 | `<List>` | `variant` (`default`, `cards`, `steps`, `outline`, `flow`), `tone`, `active` |
 | `<Table>` | `variant` (`default`, `rows`, `cards`, `outline`), `tone` |
 | `<Box>` | `variant`, `tone` |
 | `<v-clicks>` | `depth`, `every` |
+| `<SlideCurrentNo />`, `<SlidesTotal />` | none: the slide's number, and the number of slides |
 
 A `tone` (`accent`, `info`, `success`, `warning`, `error`, `neutral`) repaints the accent for the block and what it
 holds.
@@ -25,6 +26,41 @@ holds.
 A `<Grid>` fills the space the slide leaves it (`align="stretch"`, the default). With `align="start"`, `"center"` or
 `"end"` it takes the height of what it holds and stands at the top, the middle or the bottom of that space. Either way
 the cards of a row share one height.
+
+`<Grid variant="flow">` draws an arrow in each gap between the children of a row, for a progression: into each child
+from the one beside it, and none into the first child of a row, whatever the children span. It is otherwise the grid,
+so its cards are one size and `align` places it. Its cards are narrower than a plain grid's, so a card's title is set
+at 48px in place of 56px, and its icon to match.
+A card in a flow grid does not clip what it holds, since its arrow stands outside it.
+
+A click tag (`<v-clicks>`, `<v-click>`, `<v-after>`) written straight inside a `<Grid>` is no box of its own: what it
+reveals stays the grid's children, so a card still to come holds its place and the row does not shift. In a flow
+grid an arrow appears with the card it points at, so reveal a card after the one beside it.
+
+```md
+<Grid cols="4" align="center" variant="flow">
+
+<v-clicks>
+
+<Card icon="chat-circle">
+
+### Chat
+
+- Search
+
+</Card>
+<Card icon="code">
+
+### Vibe coding
+
+- Describe it and the model builds it
+
+</Card>
+
+</v-clicks>
+
+</Grid>
+```
 
 A `<Card>` holds art or an icon, a title, and a line or a few bullets. `icon` names a
 [Phosphor](https://phosphoricons.com) glyph, bare (`icon="shield-check"`) or as a whole symbol
@@ -61,6 +97,24 @@ than its neighbours'.
 
 </Grid>
 ```
+
+## Footer and slide number
+
+A deck draws one footer on every slide: `SlideFooter.Settings` holds a `left`, a `center` and a `right` part, each a
+line of inline slide markdown. `SlideFooterProvider` sets it for the slides drawn below it, and a slide draws it over
+its own bottom padding, so no slide gives up room to it.
+
+`<SlideCurrentNo />` and `<SlidesTotal />` (Slidev's names) draw the slide's number and the number of slides,
+anywhere in a slide or in the footer. Whatever draws the slide says which they are with `SlidePositionProvider`;
+with none, each counter draws a dash.
+
+```ts
+const footer: SlideFooter.Settings = { left: 'DXOS', right: '<SlideCurrentNo /> / <SlidesTotal />' };
+```
+
+A slide switches the footer with its frontmatter: `footer: false` leaves it off, `footer: true` draws it. A slide
+that says neither shows it, except in the `cover` and `end` layouts. Something that draws a slide which is not
+markdown (a linked object) puts `<SlideFooterLayer />` on the canvas itself.
 
 ## Storage
 

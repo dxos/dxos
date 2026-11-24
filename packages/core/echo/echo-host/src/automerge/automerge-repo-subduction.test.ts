@@ -840,7 +840,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
     });
     await waitForSubductionSave(repos);
     const observed = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
-    await expect.poll(() => observed.doc()?.text, { timeout: SYNC_WINDOW_MS }).toEqual('first');
+    await waitForDoc(observed, (doc) => doc?.text === 'first');
 
     framesDelivered = 'off';
     handle.change((doc: any) => {
@@ -854,7 +854,7 @@ describe('AutomergeRepo with Subduction: connection loss', () => {
 
     framesDelivered = 'on';
     await reconnectAdapters(adapters);
-    await expect.poll(() => observed.doc()?.text, { timeout: 3_000 }).toEqual('third');
+    await waitForDoc(observed, (doc) => doc?.text === 'third', { timeout: 3_000 });
   });
 
   test('losing one peer mid-round does not hold back edits for the others', async () => {

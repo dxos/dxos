@@ -97,6 +97,9 @@
       "path": "../../ui/react-ui-rdf"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../plugin-client"
     },
     {

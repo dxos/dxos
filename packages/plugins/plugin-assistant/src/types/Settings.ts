@@ -73,11 +73,11 @@ export const Settings = Schema.Struct({
     }),
   ),
   modelDefaults: Schema.optional(ModelDefaults.annotate({ title: 'Model defaults' })),
-  disableCodeMode: Schema.optional(
+  codeMode: Schema.optional(
     Schema.Boolean.annotate({
-      title: 'Disable code mode',
+      title: 'Code mode (experimental)',
       description:
-        'Code mode is on by default: the model writes code against the workspace instead of calling a tool per action. The code runs off the page but can read your workspace data, make network requests, and access browser storage for this origin. Disable it to have agents call one tool per action instead. Applies to agents started after the change.',
+        'Run agent turns in code mode: the model writes code against the workspace instead of calling a tool per action. The code runs off the page but can read your workspace data, make network requests, and access browser storage for this origin, so enable it only for trusted content. Applies to agents started after the change.',
     }),
   ),
   parallelThreads: Schema.optional(
