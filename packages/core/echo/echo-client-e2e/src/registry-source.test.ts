@@ -122,6 +122,52 @@ describe('registry sources', () => {
     expect(registry.requests).toHaveLength(0);
   });
 
+  test('a query that negates a key enumerates instead of resolving the key', async ({ expect }) => {
+    const { db } = await setup();
+    const registry = makeMockRegistry();
+    db.graph.registerRegistrySource(registry.source);
+
+    await db
+      .query(Query.select(Filter.and(Filter.type(Type.Type), Filter.not(Filter.key(TYPENAME)))).from(Scope.registry()))
+      .run();
+    expect(registry.queries).toBe(1);
+    expect(registry.requests).toHaveLength(0);
+  });
+
+  test('a versioned key resolves its versioned URI', async ({ expect }) => {
+    const { db } = await setup();
+    const registry = makeMockRegistry();
+    db.graph.registerRegistrySource(registry.source);
+
+    await db.query(Query.select(Filter.key(TYPENAME, { version: VERSION })).from(Scope.registry())).run();
+    expect(registry.requests).toEqual([String(DXN.make(TYPENAME, VERSION))]);
+  });
+
+  test('a source added after a query has enumerated is asked by the next run of it', async ({ expect }) => {
+    const { db } = await setup();
+    const first = makeMockRegistry();
+    const second = makeMockRegistry();
+    db.graph.registerRegistrySource(first.source);
+    const listTypes = () => db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run();
+
+    await listTypes();
+    db.graph.registerRegistrySource(second.source);
+    await listTypes();
+    expect(second.queries).toBe(1);
+  });
+
+  test('a source that throws synchronously leaves the next source to answer', async ({ expect }) => {
+    const { db } = await setup();
+    db.graph.registerRegistrySource({
+      resolve: () => {
+        throw new Error('not a promise');
+      },
+    });
+    db.graph.registerRegistrySource(makeMockRegistry().source);
+
+    expect(await queryType(db, TYPENAME)).toBeDefined();
+  });
+
   test('a source that cannot enumerate leaves an unkeyed query to the local registry', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();

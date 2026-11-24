@@ -35,10 +35,14 @@ export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Sourc
   let catalog: Promise<PluginProtocol.SkillCatalog> | undefined;
   const skillCatalog = () => (catalog ??= registry.listSkills());
 
-  const skills = async (): Promise<Skill.Skill[]> =>
-    (await skillCatalog()).skills.filter((record) => !own.skills.has(bareKey(record.key))).map(fromSkillRecord);
+  // Converted once per source: each conversion mints new ids, and the registry tells entities apart by id.
+  let skillEntities: Promise<Skill.Skill[]> | undefined;
+  const skills = (): Promise<Skill.Skill[]> =>
+    (skillEntities ??= skillCatalog().then(({ skills }) =>
+      skills.filter((record) => !own.skills.has(bareKey(record.key))).map(fromSkillRecord),
+    ));
 
-  const operations = async (): Promise<Operation.PersistentOperation[]> => {
+  const readOperations = async (): Promise<Operation.PersistentOperation[]> => {
     const records: Operation.PersistentOperation[] = [];
     for (const json of (await skillCatalog()).operations) {
       // A record off the wire is untrusted: one that is not an operation is skipped rather than asserted.
@@ -53,6 +57,9 @@ export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Sourc
     }
     return records;
   };
+
+  let operationEntities: Promise<Operation.PersistentOperation[]> | undefined;
+  const operations = (): Promise<Operation.PersistentOperation[]> => (operationEntities ??= readOperations());
 
   return {
     resolve: async (uri: URI.URI) => {

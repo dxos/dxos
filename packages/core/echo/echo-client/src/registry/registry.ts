@@ -114,6 +114,8 @@ export class RegistryImpl implements Registry.Registry {
   clear(): void {
     this.#entitiesById.clear();
     this.#entitiesByUri.clear();
+    // What an enumeration added is gone, so each query enumerates again.
+    this.#fetched.clear();
     this.#changed.emit();
   }
 
@@ -157,8 +159,11 @@ export class RegistryImpl implements Registry.Registry {
    */
   addSource(source: RegistrySource): () => void {
     this.#sources.push(source);
+    // A query enumerated before this source was added has not asked it.
+    this.#fetched.clear();
     return () => {
       this.#sources = this.#sources.filter((entry) => entry !== source);
+      this.#fetched.clear();
     };
   }
 
@@ -188,14 +193,10 @@ export class RegistryImpl implements Registry.Registry {
     if (this.#sources.length === 0) {
       return Promise.resolve();
     }
-    const keys = queryKeys(query.ast);
-    if (keys.length > 0) {
-      return Promise.all(
-        keys.flatMap((key) => {
-          const dxn = DXN.tryMake(`dxn:${key}`);
-          return dxn === undefined ? [] : [this.resolve(dxn)];
-        }),
-      ).then(() => undefined);
+    const lookups = keyLookups(query.ast);
+    // Keys bound what the query selects only when nothing negates them or adds a branch beside them.
+    if (lookups.uris.length > 0 && lookups.bounded) {
+      return Promise.all(lookups.uris.map((uri) => this.resolve(uri))).then(() => undefined);
     }
     const id = JSON.stringify(query.ast);
     const pending = this.#fetched.get(id);
@@ -223,11 +224,14 @@ export class RegistryImpl implements Registry.Registry {
       return undefined;
     }
     for (const source of this.#sources) {
-      // A failing source reads as one that does not know the entity, so resolution reports it missing rather than throws.
-      const entity = await source.resolve(uri).catch((error) => {
-        log.warn('registry source failed', { uri, error });
-        return undefined;
-      });
+      // A failing source reads as one that does not know the entity, so resolution reports it missing rather than throws;
+      // started inside `then`, so a source that throws synchronously fails the same way.
+      const entity = await Promise.resolve()
+        .then(() => source.resolve(uri))
+        .catch((error) => {
+          log.warn('registry source failed', { uri, error });
+          return undefined;
+        });
       if (entity !== undefined) {
         this.add([entity]);
         return entity;
@@ -240,10 +244,12 @@ export class RegistryImpl implements Registry.Registry {
     if (source.query === undefined) {
       return;
     }
-    const entities = await source.query(query).catch((error) => {
-      log.warn('registry source query failed', { error });
-      return [];
-    });
+    const entities = await Promise.resolve()
+      .then(() => source.query?.(query) ?? [])
+      .catch((error) => {
+        log.warn('registry source query failed', { error });
+        return [];
+      });
     const missing = entities.filter((entity) => this.get(getEntityId(entity)) === undefined);
     if (missing.length > 0) {
       this.add(missing);
@@ -260,24 +266,38 @@ export class RegistryImpl implements Registry.Registry {
   }
 }
 
-/** The keys (`Filter.key`) a query names: a type's typename, a skill's or an operation's key. */
-export const queryKeys = (ast: QueryAST.Query): string[] => {
-  const keys = new Set<string>();
+/**
+ * The registry URIs a query's keys (`Filter.key`) name — a type's typename, a skill's or an operation's key, with the
+ * filter's version when it gives one — and whether they bound the selection: false when the query negates or unions,
+ * since a key inside `not` or beside an `or` branch does not name everything the query can select.
+ */
+export const keyLookups = (ast: QueryAST.Query): { uris: DXN.DXN[]; bounded: boolean } => {
+  const uris = new Map<string, DXN.DXN>();
+  let bounded = true;
   const collect = (node: unknown): void => {
     if (Array.isArray(node)) {
       node.forEach(collect);
-    } else if (node !== null && typeof node === 'object') {
-      for (const [field, value] of Object.entries(node)) {
-        if (field === 'metaKey' && typeof value === 'string') {
-          keys.add(value);
-        } else {
-          collect(value);
-        }
+      return;
+    }
+    if (node === null || typeof node !== 'object') {
+      return;
+    }
+    const type = Reflect.get(node, 'type');
+    if (type === 'not' || type === 'or') {
+      bounded = false;
+    }
+    const key = Reflect.get(node, 'metaKey');
+    if (typeof key === 'string') {
+      const version = Reflect.get(node, 'metaVersion');
+      const dxn = DXN.tryMake(typeof version === 'string' ? `dxn:${key}:${version}` : `dxn:${key}`);
+      if (dxn !== undefined) {
+        uris.set(String(dxn), dxn);
       }
     }
+    Object.values(node).forEach(collect);
   };
   collect(ast);
-  return [...keys];
+  return { uris: [...uris.values()], bounded };
 };
 
 /**
