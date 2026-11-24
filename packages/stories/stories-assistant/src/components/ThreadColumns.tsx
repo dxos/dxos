@@ -145,22 +145,13 @@ const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps
   );
 };
 
-/** Narrows the columns as more open, so all of them fit and the plane centers them as a group (static classes, which Tailwind can see). */
-const columnWidth = (count: number) =>
-  count <= 2
-    ? undefined
-    : count === 3
-      ? '[--chat-plane-width:30vw]'
-      : count === 4
-        ? '[--chat-plane-width:23vw]'
-        : '[--chat-plane-width:19vw]';
-
 /** How long a finished subagent's column stays open, so its result can be read before it closes. */
 const CLOSE_DELAY = 6_000;
 
 /**
- * The agent's conversation in the first column and each subagent thread in a column of its own: a column opens as the
- * agent delegates, and closes a few seconds after its subagent reports, leaving the result in the agent's column.
+ * The agent's conversation in the first column, at the start of the strip, and each subagent thread in a column of its
+ * own beside it: a column opens as the agent delegates, and closes a few seconds after its subagent reports, leaving the
+ * result in the agent's column. The columns keep their width, so the strip scrolls sideways once they outgrow it.
  */
 const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => {
   const view = useAtomValue(chatModel.trajectory);
@@ -182,15 +173,6 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
     [feedUri?.toString()],
   );
   const events = useQuery(db, query);
-
-  // Follows the newest thread as it opens, so the reader watches each column arrive.
-  const countRef = useRef(0);
-  useEffect(() => {
-    if (lanes.length > countRef.current) {
-      setCurrent(lanes[lanes.length - 1].id);
-    }
-    countRef.current = lanes.length;
-  }, [lanes]);
 
   // A finished thread's column closes once the reader has had a moment with its result.
   const done = useMemo(
@@ -224,7 +206,7 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
 
   return (
     <Dnd.Root>
-      <ChatPlane.Root value={selected} onValueChange={setCurrent} classNames={columnWidth(items.length)}>
+      <ChatPlane.Root value={selected} onValueChange={setCurrent} align='start'>
         <ChatPlane.Viewport>
           <ChatPlane.Columns items={items}>
             {(id) => {
