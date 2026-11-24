@@ -96,9 +96,11 @@ const evaluate = (client: SandboxClient, init: SandboxInit, execute: Execute) =>
       await echo.graph.registry.add(types);
     });
     // Types the host serves on demand (EDGE's published ones) are asked for when the code names one.
-    echo.graph.registerTypeSource(async (uri) => {
-      const type = await EffectEx.runPromise(client['Sandbox.resolveType']({ uri }));
-      return type === null ? undefined : rebuildType(type);
+    echo.graph.registerRegistrySource({
+      resolve: async (uri) => {
+        const type = await EffectEx.runPromise(client['Sandbox.resolveType']({ uri }));
+        return type === null ? undefined : rebuildType(type);
+      },
     });
 
     const db = echo.constructDatabase({
