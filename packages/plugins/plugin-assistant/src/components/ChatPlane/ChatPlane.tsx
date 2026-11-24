@@ -689,6 +689,8 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
       asChild
       classNames={[
         'w-(--chat-plane-width) dx-focus-group transition-opacity',
+        // Framed as the prompt beneath it is, so the two read as one column.
+        'rounded-sm border border-separator-subtle',
         align === 'start' ? 'snap-start scroll-ms-(--chat-plane-inset)' : 'snap-center',
         !current && 'opacity-50',
         // Floats over the gap the stack reserves.
