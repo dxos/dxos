@@ -26,7 +26,8 @@ Update the build tools in dxos and edge to the latest stable versions that are a
 goal G-1: Update the edge build tools.
   status: review
   notes:
-    - Node 24.22.3, pnpm 12.22.0, moon 2.6.5, vite 8.3.8, vitest 4.1.12, wrangler 4.163.
+    - Pnpm 12.22.0, moon 2.6.5, vite 8.3.8, vitest 4.1.12 and wrangler 4.163.
+    - Node stays at 24.11.1. Node 24.22 has a SQLite that rejects ECHO queries.
     - Unused jest, mocha, swc and ts-node packages are removed.
     - Lint and build are clean on all 52 projects.
 ```
@@ -49,10 +50,11 @@ goal G-3: Run the full test suites in both repositories.
 ```
 
 ```mdl
-goal G-4: Use the node 24.22.3 CI image after the dxos merge.
-  status: todo
+goal G-4: Make ECHO queries work with the SQLite in node 24.22.
+  status: backlog
   notes:
-    - Four dxos workflows use the gh-actions 24.11.1 image until main publishes 24.22.3.
+    - SQLite 3.54 stops with "VIEWs and/or subqueries nested too deep".
+    - Node can move to 24.22 after this change.
 ```
 
 ```mdl
@@ -74,12 +76,14 @@ goal G-6: Move sandbox-service to the new Artifacts API.
 ```mdl
 pr PR-1: Update the edge build tools.
   ref: dxos/edge#1576
+  status: landing
   goals: [G-1, G-3]
 ```
 
 ```mdl
 pr PR-2: Update the dxos build tools.
   ref: dxos/dxos#14666
+  status: landing
   goals: [G-2, G-3]
 ```
 
@@ -126,4 +130,19 @@ event T-5: Both pull requests have a committed agentic review.
 ```mdl
 event T-6: The status board started.
   date: 2026-11-24T11:25Z
+```
+
+```mdl
+event T-7: The dxos pull request has auto-merge. It merges after CI and a review pass.
+  date: 2026-11-24T11:28Z
+```
+
+```mdl
+event T-8: The edge pull request has auto-merge. It merges after CI and a review pass.
+  date: 2026-11-24T11:29Z
+```
+
+```mdl
+event T-9: Node 24.22 failed the dxos node tests, so node stays at 24.11.1 in both repositories.
+  date: 2026-11-24T12:05Z
 ```

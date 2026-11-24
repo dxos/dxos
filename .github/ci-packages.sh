@@ -9,7 +9,7 @@
 # PLAYWRIGHT_VERSION follows the `playwright` entry in pnpm-workspace.yaml's catalog.
 set -euo pipefail
 
-NODE_VERSION="${NODE_VERSION:-24.22.3}"
+NODE_VERSION="${NODE_VERSION:-24.11.1}"
 PNPM_VERSION="${PNPM_VERSION:-12.22.0}"
 PLAYWRIGHT_VERSION="${PLAYWRIGHT_VERSION:-1.63.0}"
 
