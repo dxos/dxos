@@ -108,6 +108,7 @@ export const fromRegistry = (registry: PluginProtocol.Registry, own: Own): Sourc
 export const fromSkillRecord = (record: PluginProtocol.SkillRecord): Skill.Skill =>
   Skill.make({
     key: record.key,
+    ...(record.version !== undefined ? { version: record.version } : {}),
     name: record.name,
     ...(record.description !== undefined ? { description: record.description } : {}),
     tools: record.tools.map((tool) => ToolId.make(tool)),

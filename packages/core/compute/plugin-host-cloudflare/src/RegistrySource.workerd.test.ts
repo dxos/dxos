@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
+import { DXN, Entity, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import type { PluginProtocol } from '@dxos/protocols';
 
@@ -71,13 +71,15 @@ describe('RegistrySource', () => {
       {
         ...makeRegistry([]),
         listSkills: async () => ({
-          skills: [{ key: SKILL_KEY, name: 'Remote', mcpPrompt: false, tools: [] }],
+          skills: [{ key: SKILL_KEY, version: '1.0.0', name: 'Remote', mcpPrompt: false, tools: [] }],
           operations: [],
         }),
       },
       own,
     );
     expect(await source.resolve(DXN.make(SKILL_KEY, '99.0.0'))).toBeUndefined();
+    const versioned = await source.resolve(DXN.make(SKILL_KEY, '1.0.0'));
+    expect(versioned && Entity.getMeta(versioned)?.version).toBe('1.0.0');
     expect(await source.resolve(DXN.make(SKILL_KEY))).toBeDefined();
   });
 

@@ -107,6 +107,8 @@ export class RegistryImpl implements Registry.Registry {
         this.#entitiesByUri.delete(uri);
       }
     }
+    // The removed entity may be one an enumeration added, so each query enumerates again.
+    this.#fetched.clear();
     this.#changed.emit();
     return true;
   }

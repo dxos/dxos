@@ -223,6 +223,8 @@ export type PluginRecord = {
 /** A skill as data: its instructions are resolved, since their `Text` lives in no database. */
 export type SkillRecord = {
   readonly key: string;
+  /** The skill's version (`Obj.getMeta(skill).version`), so a versioned `dxn:` reference can address it. */
+  readonly version?: string;
   readonly name: string;
   readonly description?: string;
   readonly instructions?: string;

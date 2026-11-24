@@ -188,6 +188,21 @@ describe('registry sources', () => {
     expect(queries).toBe(2);
   });
 
+  test('removing an enumerated entity lets the next run of the query enumerate again', async ({ expect }) => {
+    const { db } = await setup();
+    const registry = makeMockRegistry();
+    db.graph.registerRegistrySource(registry.source);
+    const listTypes = () => db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run();
+    const remote = (await listTypes()).find((type) => Type.getTypename(type) === TYPENAME);
+    if (remote === undefined) {
+      throw new Error('the source did not enumerate the remote type');
+    }
+
+    expect(db.graph.registry.remove(remote.id)).toBe(true);
+    expect((await listTypes()).map((type) => Type.getTypename(type))).toContain(TYPENAME);
+    expect(registry.queries).toBe(2);
+  });
+
   test('first() asks the sources, as run() does', async ({ expect }) => {
     const { db } = await setup();
     db.graph.registerRegistrySource(makeMockRegistry().source);
