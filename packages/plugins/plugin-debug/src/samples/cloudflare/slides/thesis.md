@@ -25,7 +25,7 @@ class: 'studio-lines-tight'
 </Cell>
 <Cell>
 
-- Chad Fowler: "Standardize the slow layers. Generate the fast layers."
+- Benioff: "Here, the UI is the AI — allowing you to build custom apps dynamically and answer any enterprise question."
 
 </Cell>
 <Cell>
@@ -55,7 +55,7 @@ class: 'studio-lines-tight'
 </Cell>
 <Cell>
 
-- Salesforce put its CRM inside Claude. Benioff: "the UI is the AI."
+- Salesforce put its entire CRM inside Claude.
 
 </Cell>
 

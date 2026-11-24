@@ -80,7 +80,6 @@ group edge-section rows="64 1fr" {
       node blobstore "R2" kind=card icon=files iconTone=sheet
       node registry "D1" kind=card icon=table iconTone=sheet
       node loader "Dynamic Workers" kind=card icon=lightning iconTone=sheet
-      node agents-sdk "Agents SDK" kind=card icon=robot iconTone=sheet
       node models "Workers AI" kind=card icon=cpu iconTone=sheet
       node calls "RealtimeKit" kind=card icon=video-camera iconTone=sheet
     }

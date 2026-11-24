@@ -16,9 +16,9 @@ class: 'studio-bullets-compact'
 </Card>
 <Cell colSpan="2">
 
-- One **hub that unifies** teams and agents across the enterprise.
-- Where Claude Cowork is heading, but open and extensible.
-- What WeChat did for consumers, for work.
+- One **hub** for teams and agents.
+- Like Claude Cowork, but open.
+- WeChat for work.
 
 </Cell>
 <Card icon="puzzle-piece" tone="success">
@@ -28,9 +28,9 @@ class: 'studio-bullets-compact'
 </Card>
 <Cell colSpan="2">
 
-- What iOS did for mobile: one framework redefined how apps are built.
-- OS-level services for every app: **AI**, access, search, sharing.
-- Manages the user's objectives, context and activities.
+- What iOS did for mobile.
+- OS-level services: **AI**, access, search, sharing.
+- Manages objectives, context and activities.
 
 </Cell>
 <Card icon="database" tone="info">
@@ -40,9 +40,9 @@ class: 'studio-bullets-compact'
 </Card>
 <Cell colSpan="2">
 
-- One virtual view of the enterprise: private, team, organization, external.
-- One **semantic model** for apps and agents, with access control for both.
-- Continuous sync with external systems of record.
+- One virtual view of the enterprise.
+- One **semantic model** for apps and agents.
+- Continuous sync with systems of record.
 
 </Cell>
 <Card icon="cloud">
@@ -52,9 +52,9 @@ class: 'studio-bullets-compact'
 </Card>
 <Cell colSpan="2">
 
-- The EDGE: secure, fast, scales on demand, pay for what you use.
-- Without the complexity of AWS or Google Cloud.
-- Open and **extensible**.
+- Workers: 330+ cities, no cold starts, scales from zero.
+- Isolate security model: every tenant sandboxed by default.
+- **Open source**, with any model.
 
 </Cell>
 
