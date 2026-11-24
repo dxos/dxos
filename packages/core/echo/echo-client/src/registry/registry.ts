@@ -34,6 +34,9 @@ export interface RegistrySource {
   query?(query: Query.Any): Promise<readonly Entity.Unknown[]>;
 }
 
+/** One `addSource` call: answers count only while it is registered. */
+type Registration = { readonly source: RegistrySource };
+
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
  *
@@ -67,14 +70,16 @@ export class RegistryImpl implements Registry.Registry {
   // serialized query against this registry.
   readonly #queryResultCache = new QueryResultCache();
 
-  #sources: RegistrySource[] = [];
+  // One entry per `addSource` call, so an answer from a removed registration is recognized even when the same source
+  // was added again.
+  #sources: Registration[] = [];
   // A reactive query and its one-shot run ask for the same entity at once; one request answers both.
   readonly #resolving = new Map<string, Promise<Entity.Unknown | undefined>>();
   // What an enumerating source answered stays registered, so each unkeyed query asks it once.
   readonly #fetched = new Map<string, Promise<void>>();
   // The ids each source added, so removing a source takes its entities with it and the registry holds only what live
   // sources publish.
-  readonly #provided = new Map<RegistrySource, Set<string>>();
+  readonly #provided = new Map<Registration, Set<string>>();
 
   constructor(options: Registry.Options) {
     this.#upstream = options.upstream;
@@ -172,14 +177,15 @@ export class RegistryImpl implements Registry.Registry {
    * @returns A function that removes the source.
    */
   addSource(source: RegistrySource): () => void {
-    this.#sources.push(source);
+    const registration: Registration = { source };
+    this.#sources.push(registration);
     // A query enumerated before this source was added has not asked it.
     this.#fetched.clear();
     return () => {
-      this.#sources = this.#sources.filter((entry) => entry !== source);
+      this.#sources = this.#sources.filter((entry) => entry !== registration);
       this.#fetched.clear();
-      const provided = this.#provided.get(source);
-      this.#provided.delete(source);
+      const provided = this.#provided.get(registration);
+      this.#provided.delete(registration);
       if (provided !== undefined && [...provided].map((id) => this.#delete(id)).some(Boolean)) {
         this.#changed.emit();
       }
@@ -222,12 +228,14 @@ export class RegistryImpl implements Registry.Registry {
     if (pending !== undefined) {
       return pending;
     }
-    const request = Promise.all(this.#sources.map((source) => this.#enumerate(source, query))).then((answered) => {
-      // A failed enumeration is not a completed one: the next run of the query asks again.
-      if (!answered.every(Boolean) && this.#fetched.get(id) === request) {
-        this.#fetched.delete(id);
-      }
-    });
+    const request = Promise.all(this.#sources.map((registration) => this.#enumerate(registration, query))).then(
+      (answered) => {
+        // A failed enumeration is not a completed one: the next run of the query asks again.
+        if (!answered.every(Boolean) && this.#fetched.get(id) === request) {
+          this.#fetched.delete(id);
+        }
+      },
+    );
     this.#fetched.set(id, request);
     return request;
   }
@@ -247,17 +255,17 @@ export class RegistryImpl implements Registry.Registry {
     if (!DXN.isDXN(uri)) {
       return undefined;
     }
-    for (const source of this.#sources) {
+    for (const registration of this.#sources) {
       // A failing source reads as one that does not know the entity, so resolution reports it missing rather than throws;
       // started inside `then`, so a source that throws synchronously fails the same way.
       const entity = await Promise.resolve()
-        .then(() => source.resolve(uri))
+        .then(() => registration.source.resolve(uri))
         .catch((error) => {
           log.warn('registry source failed', { uri, error });
           return undefined;
         });
-      if (entity !== undefined) {
-        this.#addFrom(source, [entity]);
+      // A registration removed while its answer was in flight no longer publishes it.
+      if (entity !== undefined && this.#addFrom(registration, [entity])) {
         return entity;
       }
     }
@@ -265,7 +273,8 @@ export class RegistryImpl implements Registry.Registry {
   }
 
   /** Adds what `source` enumerates for `query`; false when it failed, so the query is not marked fetched. */
-  async #enumerate(source: RegistrySource, query: Query.Any): Promise<boolean> {
+  async #enumerate(registration: Registration, query: Query.Any): Promise<boolean> {
+    const { source } = registration;
     if (source.query === undefined) {
       return true;
     }
@@ -298,20 +307,21 @@ export class RegistryImpl implements Registry.Registry {
       return true;
     });
     if (missing.length > 0) {
-      this.#addFrom(source, missing);
+      this.#addFrom(registration, missing);
     }
     return true;
   }
 
-  #addFrom(source: RegistrySource, entities: readonly Entity.Unknown[]): void {
-    // A source removed while its answer was in flight no longer publishes it.
-    if (!this.#sources.includes(source)) {
-      return;
+  /** Registers what a live registration answered; false when it was removed while the answer was in flight. */
+  #addFrom(registration: Registration, entities: readonly Entity.Unknown[]): boolean {
+    if (!this.#sources.includes(registration)) {
+      return false;
     }
-    const provided = this.#provided.get(source) ?? new Set<string>();
+    const provided = this.#provided.get(registration) ?? new Set<string>();
     entities.forEach((entity) => provided.add(getEntityId(entity)));
-    this.#provided.set(source, provided);
+    this.#provided.set(registration, provided);
     this.add(entities);
+    return true;
   }
 
   #put(entity: Entity.Unknown): void {

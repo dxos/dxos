@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { type Database, DXN, Filter, JsonSchema, Obj, Query, Scope, Type } from '@dxos/echo';
-import { type RegistrySource } from '@dxos/echo-client';
+import { type Database, DXN, Entity, Filter, JsonSchema, Obj, Query, Scope, Type } from '@dxos/echo';
+import { RegistryImpl, type RegistrySource } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { PublicKey, type URI } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
@@ -266,6 +266,56 @@ describe('registry sources', () => {
     unregister();
     db.graph.registerRegistrySource(publishing('com.example.thing.b'));
     expect(await listKeys()).toEqual(['com.example.thing.b']);
+  });
+
+  test('an answer that lands after its registration was removed is dropped, even if the source was added again', async ({
+    expect,
+  }) => {
+    const { db } = await setup();
+    const answers: ((entities: Entity.Unknown[]) => void)[] = [];
+    const source: RegistrySource = {
+      resolve: async () => undefined,
+      query: () => new Promise((resolve) => answers.push(resolve)),
+    };
+    const thing = (key: string) => Obj.make(Remote, { [Obj.Meta]: { key }, title: key });
+    const heldKeys = () =>
+      db.graph.registry
+        .list()
+        .map((entity) => Entity.getMeta(entity)?.key)
+        .filter((key) => key !== undefined);
+
+    const unregister = db.graph.registerRegistrySource(source);
+    const stale = db.query(Query.select(Filter.type(Remote)).from(Scope.registry())).run();
+    await expect.poll(() => answers.length).toBe(1);
+    unregister();
+    db.graph.registerRegistrySource(source);
+    answers[0]([thing('com.example.thing.stale')]);
+    await stale;
+    expect(heldKeys()).not.toContain('com.example.thing.stale');
+
+    const fresh = db.query(Query.select(Filter.type(Remote)).from(Scope.registry())).run();
+    await expect.poll(() => answers.length).toBe(2);
+    answers[1]([thing('com.example.thing.fresh')]);
+    await fresh;
+    expect(heldKeys()).toContain('com.example.thing.fresh');
+  });
+
+  test('a URI resolved by a source removed while it answered resolves to nothing', async ({ expect }) => {
+    const registry = new RegistryImpl({});
+    let answer: ((entity: Entity.Unknown | undefined) => void) | undefined;
+    const unregister = registry.addSource({
+      resolve: () =>
+        new Promise((resolve) => {
+          answer = resolve;
+        }),
+    });
+
+    const resolved = registry.resolve(DXN.make(THING_KEY));
+    await expect.poll(() => answer !== undefined).toBe(true);
+    unregister();
+    answer?.(Obj.make(Remote, { [Obj.Meta]: { key: THING_KEY }, title: 'Stale' }));
+    expect(await resolved).toBeUndefined();
+    expect(registry.getByURI(`dxn:${THING_KEY}`)).toBeUndefined();
   });
 
   test('a source that cannot enumerate leaves an unkeyed query to the local registry', async ({ expect }) => {
