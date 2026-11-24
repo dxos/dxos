@@ -451,7 +451,7 @@ export class ChatModel {
 
   async getTools(): Promise<Record<string, any>> {
     return this._runtime.runPromise(
-      Effect.provide(this._conversation.getTools(), ToolExecutionServices).pipe(Effect.provide(this._spaceLayer)),
+      Effect.provide(this._conversation.getTools(), ToolExecutionServices.pipe(Layer.provideMerge(this._spaceLayer))),
     );
   }
 

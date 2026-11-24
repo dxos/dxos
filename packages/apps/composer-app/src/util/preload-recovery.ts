@@ -64,8 +64,18 @@ export const registerPreloadErrorHandler = ({
   target = window,
   reload = () => window.location.reload(),
 }: PreloadErrorHandlerOptions = {}): void => {
+  // Firefox fails the pending chunk loads of a page it navigates away from, and a reload then would
+  // cancel that navigation; `beforeunload` is the only event that fires before those loads are stopped.
+  let leaving = false;
+  target.addEventListener('beforeunload', () => {
+    leaving = true;
+  });
+  target.addEventListener('pageshow', () => {
+    leaving = false;
+  });
+
   target.addEventListener('vite:preloadError', (event) => {
-    if (isModuleLinkFailure(event)) {
+    if (leaving || isModuleLinkFailure(event)) {
       return;
     }
     const url = preloadErrorUrl(event);

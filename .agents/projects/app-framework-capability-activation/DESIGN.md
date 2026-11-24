@@ -177,7 +177,7 @@ The bottleneck in Phase 7 is verification discipline more than model intelligenc
 
 **Delegation note**: throughout all phases, delegate down whenever a subtask doesn't need the main session's context or judgment. Candidates: broad code searches and call-site inventories (Explore agents), mechanical repo-wide renames/sweeps once a pattern is fixed (Sonnet), running and triaging build/test/lint gates (Sonnet, or Haiku for pure run-and-report), drafting per-plugin event audits for review, and changeset/doc boilerplate. Keep in the main Fable session anything that sets a pattern others will copy, touches the manager's concurrency, or resolves a type-inference problem. Match agent effort to the subtask (low for run-and-report, medium for mechanical edits) rather than inheriting the session's high effort.
 
-Changesets: `@dxos/app-framework` and `@dxos/app-toolkit` (major-leaning minor — API replacement) plus touched plugin packages per `agents/instructions/changesets.md`. No new dependencies. Follow no-cast rule (brand-boundary casts follow the existing capability.ts:113 idiom); namespace-export style throughout.
+Changesets: `@dxos/app-framework` and `@dxos/app-toolkit` (major-leaning minor — API replacement) plus touched plugin packages per `.agents/instructions/changesets.md`. No new dependencies. Follow no-cast rule (brand-boundary casts follow the existing capability.ts:113 idiom); namespace-export style throughout.
 
 ## Test plan
 

@@ -3649,8 +3649,9 @@ feat F-7: Relationship to dxos.org
 
   req F-7.6:
     when: a reader opens `/echo`
-    then: the demos start as the page loads, and each shows its content as soon as that content is in the space,
-          without waiting for the other demos
+    then: the selected demo starts as the page loads; the others start one at a time in tab order, each once the
+          demo before it shows its content, or at once when the reader selects its tab; each shows its content as
+          soon as that content is in the space, without waiting for the other demos
 
   req F-7.7:
     when: a reader is on `/echo`
@@ -3660,7 +3661,8 @@ feat F-7: Relationship to dxos.org
   req F-7.8:
     when: a reader reaches a demo on `/echo` before it has loaded
     then: the demo's place shows a placeholder of the demo's size that says it is loading, so the page does not
-          shift when the demo arrives
+          shift when the demo arrives; until a peer shows content, its pane shows one word for its state, such as
+          Connecting…, centered, so it never looks blank
 
   req F-7.9:
     when: a reader is on `/echo`
@@ -3672,7 +3674,8 @@ feat F-7: Relationship to dxos.org
     then: it shows the four demos from `/echo` under What you can build, each with a narrative about the
           plugins that render it: which plugins load, what each contributes, and how they share the objects
           without importing each other; each demo runs on its own page in an iframe, so its styles stay off
-          the docs page
+          the docs page; the demo frame most in view loads alone and the rest load together once it shows its
+          content, so the demo the reader reaches first shows it within 5 s
 
   req F-7.11:
     when: a reader comes back to a page with demos after its tab has been in the background
@@ -3680,8 +3683,8 @@ feat F-7: Relationship to dxos.org
 
   req F-7.12:
     when: a reader opens `/echo`
-    then: every demo shows its content on every peer no later than the shared-runtime demos did (a median of
-          7.8 s on a local production build), measured over the whole page rather than per demo
+    then: the first demo shows its content on every peer within 5 s on a local production build; the second
+          peer may show it after the first
 ```
 
 ```mdl
@@ -7209,6 +7212,59 @@ decision D-372: PLEX's Resources has an Examples page listing Composer, drawing.
   date: 2026-11-20
   by: user:wittjosiah
   affects: [plex-examples]
+```
+
+```mdl
+decision D-373: On `/echo` only the selected demo boots as the page loads. The others boot in the background one at a time, each once the demo before it shows its content on every peer, so a tab is ready by the time a reader picks it; a tab picked earlier boots at once. Each peer creates its own default and settings spaces alongside the shared space instead of before it. Until a peer shows content, its pane shows Connecting… over the booting app. The editor demo shows content on both peers in about 4.4 s on a local production build, down from 7 s. Amends [D-222], whose demos all started at load.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [F-7.6, F-7.8, F-7.12]
+  why: Data took 10 s or more to show up in the demos, and the panes looked blank and broken while it loaded.
+  rejected:
+    - Booting every demo at load, which D-222 chose so a tab switch is instant; the hidden demos' eight plugin apps and the canvas seed held the shown demo back by seconds.
+    - Booting a hidden demo only when its tab is picked, which left the reader waiting up to 3 s on a tab switch.
+```
+
+```mdl
+decision D-374: A docs page with demo frames loads the frame most in view alone, and the rest together once it reports that it shows on every peer, or after 20 s. A frame scrolled into view before then loads at once unless the one loading is in view too. Each frame says Loading live demo… until its demo starts. On the PLEX Overview the first demo shows its content in about 4.4 s on a local production build, down from 13 s.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [F-7.10]
+  why: The four frames booted together on one main thread and each took 13 s or more.
+  rejected:
+    - One queue shared by the frames from inside them; each frame still loaded and evaluated its whole bundle while it waited, which kept the first demo at 9 s.
+    - Loading every frame one at a time; on a real network a frame spends much of its boot waiting on chunk round trips, so the fourth demo finished at 21 s, against 11 s with all four together.
+```
+
+```mdl
+decision D-375: The `/echo` page's HTML lists every chunk the editor demo imports as a module preload, so the browser fetches them in parallel instead of finding them one import wave at a time. The list leaves out the other demos' stories, which load after the editor shows. On dev the editor shows content on both peers in about 5.75 s, against 6.2 s without the list, measured on the same deploy.
+  date: 2026-11-20
+  by: user:wittjosiah
+  affects: [F-7.12]
+  why: About 35 waves of dynamic imports stood between the page load and the editor demo's content, each a network round trip.
+  rejected:
+    - Preloading every demo's chunks, which would compete with the editor demo for bandwidth, as D-373 keeps the hidden demos from doing for the CPU.
+```
+
+```mdl
+decision D-376: A plugin pins every `@dxos/*` package to the newest npm `@next` snapshot to load into Composer Preview, and Publishing a plugin says so first, ahead of a release's npm version and a pkg.pr.new build of one commit. `publish-all.yml` publishes a `@next` snapshot from `main` every Monday at 07:00 UTC, the hour Composer Preview deploys, and a manual dispatch still publishes one on demand. Every run versions both release groups, so each `@dxos/*` package has a snapshot of the run's commit; plugins and the CLI keep their own version numbers, and a plugin pins each package to its snapshot of one commit. The `composer-plugin-dev` skill, which the coding-agent prompts install, pins to `@next` and installs without `--legacy-peer-deps`.
+  date: 2026-11-23
+  by: user:wittjosiah
+  affects: [app-framework-publishing, plex-build-with-agent]
+  why: Production deploys and `@latest` npm publishing now run, so a plugin can install the SDK from npm. A weekly `@next` keeps that within a week of `main`, which Composer Preview runs, while manual `@next` publishes stay possible.
+  rejected:
+    - Pinning to `@latest`, which tracks Preview less closely than a weekly `@next`.
+    - Pinning to the newest pkg.pr.new commit of `main`, as the skill did before npm publishing ran.
+```
+
+```mdl
+decision D-377: The Tournament bracket example has the person pick a game and choose players from the space's members, and each match is a game between two members. Publishing a plugin's data example keeps its translations module, which names the type in the create menu and the navigation tree. Amends [D-184].
+  date: 2026-11-23
+  by: user:wittjosiah
+  affects: [plex-build-with-agent, app-framework-publishing]
+  why: A control run of the tournament prompt built a bracket of typed-in names, which a game in the space cannot seat. Its type showed as its typename with no create-menu label, because the guide's example, which the skill follows, left the translations out.
+  rejected:
+    - A skill rule that a plugin's people are space members, which would misfire for plugins where a name is free text.
 ```
 
 ## Appendix: Extension Definitions

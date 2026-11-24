@@ -14,7 +14,9 @@ live call:
 1. **Normalize** both prompts (`normalizePromptForMemoization`):
    - any object key named `timestamp` → `<memoized-timestamp>` (turn metadata carries the live clock
      and is fed back into every later turn's prompt);
-   - the `The current date and time is …` system line → `<memoized-datetime>`.
+   - the `## Current Date` section `formatSystemPrompt` ends a system prompt with → removed, and a
+     system prompt left empty by that is dropped (an Effect `Prompt`'s system message, or an
+     Anthropic body's top-level `system`), so a recording outlives its day and predates the section.
 2. **Canonicalize opt-in dynamic tokens** (`dynamicValuePatterns`, e.g. `SPACE_ID_PATTERN`,
    `ENTITY_ID_PATTERN`): each distinct token is rewritten to a **positional** placeholder
    `<memoized-dynamic-N>`, where `N` is its order of first appearance.

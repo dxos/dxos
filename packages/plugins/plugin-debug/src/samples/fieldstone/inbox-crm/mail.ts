@@ -2304,11 +2304,7 @@ const MONOREPO_NOTES = sender('Monorepo Notes', 'hello@monoreponotes.dev');
 
 /** GitHub handle for a teammate: first name, accents stripped. */
 const loginOf = (person: Person.Person): string =>
-  (person.fullName ?? '')
-    .split(' ')[0]
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
+  (person.fullName ?? '').split(' ')[0].normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const GITHUB_FOOTER = `Reply to this email directly, view it on GitHub, or unsubscribe.
 You are receiving this because your review was requested.`;

@@ -9,6 +9,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownSlide, type MarkdownSlideProps } from '../components/MarkdownSlide/index.ts';
+import { SlidePositionProvider } from '../components/SlideDeck/index.ts';
 import { SlideThemeProvider } from '../components/SlideTheme/index.ts';
 import { query, slide } from '../testing/slideStory.tsx';
 import { SUITE } from '../testing/suiteArt.ts';
@@ -605,6 +606,50 @@ export const FlowGridBuild: Story = {
   },
 };
 
+const COUNTERS = slide(
+  { layout: 'center' },
+  '# Slide <SlideCurrentNo /> of <SlidesTotal />',
+  '',
+  'The counters are text like any other: here in a heading, and in **<SlideCurrentNo />** a paragraph.',
+);
+
+const counterValues = (canvasElement: HTMLElement, counter: 'current' | 'total') =>
+  [...canvasElement.querySelectorAll(`[data-slide] [data-slide-counter="${counter}"]`)].map(
+    (element) => element.textContent,
+  );
+
+/**
+ * `<SlideCurrentNo />` and `<SlidesTotal />` (Slidev's names) draw the slide's number and the deck's count, wherever
+ * they are written. The deck that draws the slide says which they are; here the story stands in for one.
+ */
+export const Counters: Story = {
+  render: (props: MarkdownSlideProps) => (
+    <SlidePositionProvider current={3} total={12}>
+      <TestContainer {...props} />
+    </SlidePositionProvider>
+  ),
+  args: { content: COUNTERS },
+  play: async ({ canvasElement }) => {
+    const heading = await query(canvasElement, '[data-slide] h1');
+    await expect(heading.textContent).toBe('Slide 3 of 12');
+    await expect(counterValues(canvasElement, 'current')).toEqual(['3', '3']);
+    await expect(counterValues(canvasElement, 'total')).toEqual(['12']);
+    // Digits of one width, so a number that changes from slide to slide does not move what follows it.
+    const counter = await query(canvasElement, '[data-slide] [data-slide-counter="current"]');
+    await expect(getComputedStyle(counter).fontVariantNumeric).toBe('tabular-nums');
+  },
+};
+
+/** Outside a deck a slide has no number, so each counter draws a dash that shows where one goes. */
+export const CountersOutsideDeck: Story = {
+  args: { content: COUNTERS },
+  play: async ({ canvasElement }) => {
+    const heading = await query(canvasElement, '[data-slide] h1');
+    await expect(heading.textContent).toBe('Slide \u2013 of \u2013');
+    await expect(counterValues(canvasElement, 'total')).toEqual(['\u2013']);
+  },
+};
+
 /** `<List variant>` styles a markdown list without changing what it is: numbered cards beside outlined claims. */
 export const ListVariants: Story = {
   args: {
@@ -881,6 +926,52 @@ export const HeadingColors: Story = {
     await expect(await color('div[data-tone="warning"] h1')).toBe(getComputedStyle(box).borderTopColor);
     await expect(await color('div[data-tone="warning"] h1')).not.toBe('rgb(45, 111, 255)');
     await expect(await color('div[data-tone="warning"] h2')).toBe('rgb(51, 98, 136)');
+  },
+};
+
+/**
+ * Bold text is set in the subheading color at the body's weight, so color alone marks it. A flow card is the
+ * exception: there bold is the card's title, which keeps the card's color and a bold weight. The deck here gives each
+ * heading level a color of its own, which shows that bold follows the second.
+ */
+export const StrongText: Story = {
+  render: (props: MarkdownSlideProps) => (
+    <SlideThemeProvider settings={{ heading: '#CA6346', subheading: '#336288' }}>
+      <TestContainer {...props} />
+    </SlideThemeProvider>
+  ),
+  args: {
+    content: slide(
+      { layout: 'default' },
+      '# Bold text',
+      '',
+      '## Takes the subheading color',
+      '',
+      '- **ECHO** holds the data',
+      '- **Agents** act on it',
+      '',
+      '<List variant="flow">',
+      '',
+      '1. **Chat** A model in a separate window',
+      '2. **Cowork** Claude working inside your existing apps',
+      '',
+      '</List>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const color = async (selector: string) => getComputedStyle(await query(canvasElement, selector)).color;
+    await expect(await color('[data-slide] h1')).toBe('rgb(202, 99, 70)');
+    await expect(await color('[data-slide] h2')).toBe('rgb(51, 98, 136)');
+
+    const item = await query(canvasElement, '[data-slide] ul > li');
+    const strong = await query(canvasElement, '[data-slide] ul > li strong');
+    await expect(getComputedStyle(strong).color).toBe('rgb(51, 98, 136)');
+    await expect(getComputedStyle(strong).fontWeight).toBe(getComputedStyle(item).fontWeight);
+
+    const card = await query(canvasElement, 'ol[data-variant="flow"] > li');
+    const title = await query(canvasElement, 'ol[data-variant="flow"] > li strong');
+    await expect(getComputedStyle(title).color).toBe(getComputedStyle(card).color);
+    await expect(getComputedStyle(title).fontWeight).toBe('700');
   },
 };
 

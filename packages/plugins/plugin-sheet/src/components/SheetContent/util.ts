@@ -56,7 +56,7 @@ const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
   );
 };
 
-const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCellValue => {
+export const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCellValue => {
   const address = { col, row };
   const rawValue = model.getValue(address);
   const ranges = model.sheet.ranges?.filter(({ range }) =>

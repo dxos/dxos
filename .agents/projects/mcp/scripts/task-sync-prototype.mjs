@@ -1,5 +1,5 @@
 // Prototype for the task-planning ⇄ Composer sync design
-// (agents/superpowers/specs/2026-08-01-task-planning-composer-sync-design.md):
+// (.agents/superpowers/specs/2026-08-01-task-planning-composer-sync-design.md):
 // locate a tasks outline by name, read its checklist through the content ref, and apply a
 // `$track`-style append as a CRDT text edit (updateObject.edits — never a whole-file rewrite,
 // so Automerge history and concurrent Composer edits are preserved).

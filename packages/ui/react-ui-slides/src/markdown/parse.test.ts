@@ -395,6 +395,31 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <Box> tone') }]);
   });
 
+  test('`footer:` switches the deck\u2019s footer on or off for the slide, and anything but a boolean is an issue', () => {
+    expect(parseSlide('---\nfooter: false\n---\n\n# One').frontmatter.footer).toBe(false);
+    expect(parseSlide('---\nlayout: cover\nfooter: true\n---\n\n# One').frontmatter.footer).toBe(true);
+    expect(parseSlide('# One').frontmatter.footer).toBeUndefined();
+    const invalid = parseSlide('---\nfooter: sometimes\n---\n\n# One');
+    expect(invalid.frontmatter.footer).toBeUndefined();
+    expect(invalid.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('footer') }]);
+  });
+
+  test('the deck\u2019s counters are tags of the dialect, under Slidev\u2019s names', () => {
+    const slide = parseSlide('Slide <SlideCurrentNo /> of <SlidesTotal />');
+    expect(elements(slide.slots.default, 'slide-current-no')).toHaveLength(1);
+    expect(elements(slide.slots.default, 'slide-total')).toHaveLength(1);
+    expect(textOf(slide.slots.default)).toBe('Slide  of ');
+    expect(slide.issues).toEqual([]);
+    // Written without the closing slash, as a browser reads a tag, and whatever its case.
+    const loose = parseSlide('<slidecurrentno> / <SLIDESTOTAL>');
+    expect(elements(loose.slots.default, 'slide-current-no')).toHaveLength(1);
+    expect(elements(loose.slots.default, 'slide-total')).toHaveLength(1);
+    // A counter holds nothing, so it has no closing tag: one written is shown as text.
+    const closed = parseSlide('<SlideCurrentNo></SlideCurrentNo>');
+    expect(elements(closed.slots.default, 'slide-current-no')).toHaveLength(1);
+    expect(textOf(closed.slots.default)).toContain('</SlideCurrentNo>');
+  });
+
   test('a slide overrides theme colors in its own frontmatter', () => {
     const slide = parseSlide('---\naccent: "#ff7a1a"\nseparator: "oklch(0.5 0 0)"\n---\n\n# Title');
     expect(slide.frontmatter.accent).toBe('#ff7a1a');

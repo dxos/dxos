@@ -20,13 +20,13 @@ import { bootLoader } from './loader.ts';
 
 let relayedGateStatus: string | undefined;
 
-export type AppProps = Pick<UseAppOptions, 'debounce' | 'verboseStatus'> & {
+export type AppProps = Pick<UseAppOptions, 'debounce' | 'verboseStatus' | 'placeholder'> & {
   ready: boolean;
   error: unknown;
   progress?: StartupProgress;
 };
 
-export const App = ({ ready, error, debounce, progress, verboseStatus = false }: AppProps) => {
+export const App = ({ ready, error, debounce, progress, verboseStatus = false, placeholder = null }: AppProps) => {
   const reactContexts = useCapabilities(Capabilities.ReactContext);
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
   const sortedContexts = useMemo(() => topologicalSort(reactContexts), [reactContexts]);
@@ -160,7 +160,7 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
   // loader anyway).
   // TODO(wittjosiah): Consider using Suspense instead.
   if (!shellMounted) {
-    return null;
+    return <>{placeholder}</>;
   }
 
   return (

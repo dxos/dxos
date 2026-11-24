@@ -9,7 +9,7 @@ It has three aspects: a Model of reusable objects, a Layout of positioned elemen
 views a layout through a camera. `@dxos/scene` holds the schemas, validation, arrangement and the ECHO form;
 `@dxos/diagram` holds its text form (the `scene`, `layout` and `model` blocks of `.dx`); react-ui-canvas-editor's `SceneEditor`
 edits it in both dimensions, through `LayoutIntent`s and `ModelIntent`s only; react-ui-canvas draws it; plugin-canvas
-makes it an animator stage. This spec states the data and its edits; how the editor behaves is the editor's spec. The design is `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
+makes it an animator stage. This spec states the data and its edits; how the editor behaves is the editor's spec. The design is `.agents/superpowers/specs/2026-10-28-scene-model-design.md`.
 
 ## Extensions
 
@@ -1089,3 +1089,10 @@ decision D-108: A packing whose sizes do not fit draws every circle at one facto
     - Keeping stated sizes exact and shrinking only the rest: an author fills a field by over-asking, and exact sizes would then leave members out.
 ```
 
+```mdl
+decision D-109: The design link points at `.agents/superpowers/`, where the design now lives.
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The repo keeps one agent directory, `.agents/`, because `npx skills` and `.claude/skills` need the dot; the design moved with it.
+```

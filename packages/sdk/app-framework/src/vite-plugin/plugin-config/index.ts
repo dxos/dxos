@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { basename, dirname, relative } from 'node:path';
+import { basename, dirname, posix, relative } from 'node:path';
 import type * as Vite from 'vite';
 import { type RunnableDevEnvironment, type Plugin as VitePlugin } from 'vite';
 
@@ -127,6 +127,73 @@ export const moduleBodyAttributePlugin = (): VitePlugin => ({
     return CONFIG_FILE.test(id.split('?')[0]) ? stripModuleBodyAttributes(code, this.parse(code)) : null;
   },
 });
+
+// The sole element of a manifest `css` list until the bundle is generated, when the emitted chunk's stylesheets
+// are known. Matched with its quotes, whichever the minifier chose, and replaced by the list's elements.
+const CSS_TOKEN = '__DX_CSS_';
+const CSS_TOKEN_PATTERN = /(["'`])__DX_CSS_([0-9a-f]+)__\1/g;
+const toCssToken = (chunkRef: string): string => `${CSS_TOKEN}${Buffer.from(chunkRef).toString('hex')}__`;
+
+type BundleChunk = {
+  type: string;
+  isEntry?: boolean;
+  facadeModuleId?: string | null;
+  imports?: readonly string[];
+  dynamicImports?: readonly string[];
+  viteMetadata?: { importedCss: ReadonlySet<string> };
+};
+
+type Bundle = Readonly<Record<string, BundleChunk>>;
+
+/**
+ * The stylesheets Vite extracted from the chunk `fileName` and the chunks it statically imports,
+ * dependencies first. Vite links these from the helper it wraps `import()` with, which a body imported
+ * from its manifest URL never passes through.
+ */
+export const collectChunkCss = (bundle: Bundle, fileName: string): string[] => {
+  const css = new Set<string>();
+  const visited = new Set<string>();
+  const visit = (file: string) => {
+    const chunk = bundle[file];
+    if (visited.has(file) || chunk?.type !== 'chunk') {
+      return;
+    }
+    visited.add(file);
+    chunk.imports?.forEach(visit);
+    chunk.viteMetadata?.importedCss.forEach((cssFile) => css.add(cssFile));
+  };
+  visit(fileName);
+  return [...css];
+};
+
+/**
+ * Looks up the stylesheets a chunk can rely on its page to link: those of the static imports of an HTML
+ * entry, which Vite writes into the page, kept only if every page that can load the chunk has them.
+ * @param loads The chunks each chunk imports by URL, which the bundle does not record as imports.
+ */
+export const collectPageCss = (
+  bundle: Bundle,
+  loads: ReadonlyMap<string, readonly string[]> = new Map(),
+): ((fileName: string) => ReadonlySet<string>) => {
+  const pages = Object.entries(bundle)
+    .filter(([, chunk]) => chunk.type === 'chunk' && chunk.isEntry && /\.html?$/.test(chunk.facadeModuleId ?? ''))
+    .map(([entry]) => {
+      const reachable = new Set<string>();
+      const pending = [entry];
+      for (let file = pending.pop(); file !== undefined; file = pending.pop()) {
+        if (!reachable.has(file)) {
+          reachable.add(file);
+          const { imports = [], dynamicImports = [] } = bundle[file] ?? {};
+          pending.push(...imports, ...dynamicImports, ...(loads.get(file) ?? []));
+        }
+      }
+      return { reachable, css: collectChunkCss(bundle, entry) };
+    });
+  return (fileName) => {
+    const [first, ...rest] = pages.filter(({ reachable }) => reachable.has(fileName));
+    return new Set(first?.css.filter((cssFile) => rest.every(({ css }) => css.includes(cssFile))));
+  };
+};
 
 /** Query parameter on a library entry for `dx.config.ts` that limits it to one runtime's modules. */
 export const LIBRARY_ENV_PARAM = 'dx-env';
@@ -261,7 +328,10 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
       const loaders: string[] = [];
       const chunkRefs: string[] = [];
       // Dev serves the source file directly; a build emits it as a chunk whose URL replaces the token.
-      const toUrl = (moduleFile: string, specifier = `./${relative(dirname(file), moduleFile)}`) => {
+      const locate = (
+        moduleFile: string,
+        specifier = `./${relative(dirname(file), moduleFile)}`,
+      ): { url: string; css?: readonly string[] } => {
         if (moduleFile.startsWith('/')) {
           this.addWatchFile(moduleFile);
         }
@@ -269,23 +339,24 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
           loaders.push(
             `${JSON.stringify(specifier)}: () => import(${JSON.stringify(specifier.startsWith('.') ? moduleFile : specifier)})`,
           );
-          return specifier;
+          return { url: specifier };
         }
         if (this.environment.mode !== 'build') {
           // A package the dev server leaves external, such as a shared adapter, stays bare for the host's import map.
           if (!moduleFile.startsWith('/')) {
-            return moduleFile;
+            return { url: moduleFile };
           }
           const url = `/@fs${moduleFile}`;
           // A static import, so the dev server's hot-module transform finds the body and makes it hot-replaceable.
           if (specifier.startsWith('.') || specifier.startsWith('#')) {
             loaders.push(`${JSON.stringify(url)}: () => import(${JSON.stringify(specifier)})`);
           }
-          return url;
+          return { url };
         }
         // App builds drop entry exports; the body's `default` is the contract the manifest loads.
-        chunkRefs.push(this.emitFile({ type: 'chunk', id: moduleFile, preserveSignature: 'exports-only' }));
-        return `__DX_CHUNK_${chunkRefs.length - 1}__`;
+        const chunkRef = this.emitFile({ type: 'chunk', id: moduleFile, preserveSignature: 'exports-only' });
+        chunkRefs.push(chunkRef);
+        return { url: `__DX_CHUNK_${chunkRefs.length - 1}__`, css: [toCssToken(chunkRef)] };
       };
       const modules: Plugin.ManifestModule[] = [];
       for (const module of config.modules) {
@@ -317,12 +388,12 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
         }
         modules.push({
           id: name,
-          url: external || !library ? toUrl(bodyFile, bodySpecifier) : toUrl(bodyFile),
+          ...(external || !library ? locate(bodyFile, bodySpecifier) : locate(bodyFile)),
           activatesOn: module.activatesOn,
           requires: toManifestTags(module.requires),
           provides: toManifestTags(module.provides),
           ...(adapter && adapterFile
-            ? { adapter: { url: toUrl(adapterFile, adapter.module), args: adapter.args } }
+            ? { adapter: { ...locate(adapterFile, adapter.module), args: adapter.args } }
             : {}),
           ...(library && module.environments ? { environments: module.environments } : {}),
         });
@@ -347,6 +418,47 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
           ? ['export const { meta, make } = plugin;', 'export default plugin;']
           : ['export default plugin.make;']),
       ].join('\n');
+    },
+    generateBundle(_options, bundle) {
+      const { base } = this.environment.config;
+      // A relative base has no root to name, so the stylesheet is located from the chunk that needs it.
+      const relativeBase = base === '' || base.startsWith('.');
+      const toChunkFile = (token: string) => this.getFileName(Buffer.from(token, 'hex').toString());
+      const manifests = new Map<string, string[]>();
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type === 'chunk' && chunk.code.includes(CSS_TOKEN)) {
+          manifests.set(
+            chunk.fileName,
+            Array.from(chunk.code.matchAll(CSS_TOKEN_PATTERN), ([, , token]) => toChunkFile(token)),
+          );
+        }
+      }
+      if (manifests.size === 0) {
+        return;
+      }
+      const pageCss = collectPageCss(bundle, manifests);
+      for (const manifestFile of manifests.keys()) {
+        const chunk = bundle[manifestFile];
+        if (chunk.type !== 'chunk') {
+          continue;
+        }
+        const linked = pageCss(manifestFile);
+        chunk.code = chunk.code.replace(CSS_TOKEN_PATTERN, (_match, _quote, token: string) => {
+          const chunkFile = toChunkFile(token);
+          return collectChunkCss(bundle, chunkFile)
+            .filter((cssFile) => !linked.has(cssFile))
+            .map((cssFile) =>
+              JSON.stringify(
+                relativeBase ? `./${posix.relative(posix.dirname(chunkFile), cssFile)}` : `${base}${cssFile}`,
+              ),
+            )
+            .join(',');
+        });
+        // A token left behind would reach the browser as a stylesheet URL.
+        if (chunk.code.includes(CSS_TOKEN)) {
+          this.error(`Cannot write the stylesheets of a module body into ${chunk.fileName}.`);
+        }
+      }
     },
   };
 };

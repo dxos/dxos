@@ -53,6 +53,25 @@ describe('Presentation', () => {
     expect(await contents(presentation)).toEqual(['a', 'b']);
   });
 
+  test('make takes the deck\u2019s footer, and a presentation made without one has none', async ({ expect }) => {
+    const { db } = await setup();
+    const footer = { left: 'DXOS', right: '<SlideCurrentNo /> / <SlidesTotal />' };
+    const presentation = db.add(Presentation.make({ slides: ['a'], footer }));
+    const plain = db.add(Presentation.make({ slides: ['a'] }));
+    await db.flush({ indexes: true });
+    expect(presentation.footer).toEqual(footer);
+    expect(plain.footer).toBeUndefined();
+    // A part can be dropped again, and the whole footer with it.
+    Obj.update(presentation, (presentation) => {
+      presentation.footer = { left: 'DXOS' };
+    });
+    expect(presentation.footer).toEqual({ left: 'DXOS' });
+    Obj.update(presentation, (presentation) => {
+      presentation.footer = undefined;
+    });
+    expect(presentation.footer).toBeUndefined();
+  });
+
   test('link adds a slide showing the object without owning it, once', async ({ expect }) => {
     const { db } = await setup();
     const presentation = db.add(Presentation.make());

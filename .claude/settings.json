@@ -75,6 +75,15 @@
             "statusMessage": "Checking autonomous mode"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/status-board-stop.sh\"",
+            "statusMessage": "Updating the status board"
+          }
+        ]
       }
     ],
     "SessionStart": [

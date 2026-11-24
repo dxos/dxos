@@ -66,6 +66,8 @@ export const modules = [
   'ui/react-primitives/*/src/**',
   // autocue's on-screen UI lives under `tools/` beside the skill scripts that inject it.
   '../tools/autocue/src/**',
+  // The status-board skill's page, filled from Markdown by its CLI.
+  '../tools/session-board/src/**',
 ];
 
 /**
