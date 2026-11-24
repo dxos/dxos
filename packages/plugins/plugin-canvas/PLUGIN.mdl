@@ -652,7 +652,7 @@ decision D-45: The stored format takes one revision for the scene model's normal
 ```
 
 ```mdl
-decision D-46: The `Migrations` module contributes the scene model's migrations after a legacy drawing's content steps: one each for `Layout2D`, `Layout3D`, `Model2D`, `Model3D` and `StyleCatalog`, from version 0.1.0 to 0.2.0. A layout, model or style catalog stored in the earlier words is rewritten in the current ones when its space loads. Fills in [D-45] and [org.dxos.scene#D-119].
+decision D-46: The `Migrations` module contributes the scene model's migrations after a legacy drawing's content steps: one each for `Layout2D`, `Layout3D`, `Model2D`, `Model3D` and `StyleCatalog`, from version 0.1.0 to 0.2.0. A layout, model or style catalog stored in the earlier words is rewritten in the current ones when its space loads. Fills in [D-45] and [org.dxos.scene#D-120].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -661,7 +661,7 @@ decision D-46: The `Migrations` module contributes the scene model's migrations 
 ```
 
 ```mdl
-decision D-47: A contributed kind's element schema names its kind in `kind` (`Schema.Struct({ ...Scene.Element2D.fields, kind, data: Schema.Struct({ … }) })`), where [D-25] wrote `type`; its own fields stay under `data`, as [D-25] says. The `NodeType` capability and a contribution's `type` keep their names: they are the registry's key, not a field of a stored element. Follows [org.dxos.scene#D-111].
+decision D-47: A contributed kind's element schema names its kind in `kind` (`Schema.Struct({ ...Scene.Element2D.fields, kind, data: Schema.Struct({ … }) })`), where [D-25] wrote `type`; its own fields stay under `data`, as [D-25] says. The `NodeType` capability and a contribution's `type` keep their names: they are the registry's key, not a field of a stored element. Follows [org.dxos.scene#D-112].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon

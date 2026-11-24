@@ -26,9 +26,9 @@ import { type FormFieldStateProps } from '#types';
 
 import { useFormValues } from '../../hooks/index.ts';
 import { getFormProperties } from '../../util/index.ts';
-import { FormFieldDispatch } from '../FormFieldDispatch.tsx';
+import { useFormDispatch } from '../FormDispatchContext.ts';
 import { FormFieldSet } from '../FormFieldSet.tsx';
-import { CELL, LayoutHeader, rowLayout } from '../FormLayout.tsx';
+import { CELL, LayoutHeader, rowLayout } from '../layout/LayoutHeader.tsx';
 import { gridTracks } from '../layout/parser.ts';
 import { resolveLayoutField } from '../layout/resolve-layout-field.ts';
 import { type FormFieldDispatchProps } from '../resolve-field.ts';
@@ -75,6 +75,7 @@ export const ArrayField = ({
   ...props
 }: ArrayFieldProps) => {
   const { t } = Hooks.useTranslation(translationKey);
+  const { FormFieldDispatch } = useFormDispatch('ArrayField');
   // A suspended element (a recursive or circular schema) renders as the type it resolves to.
   const element = SchemaEx.getArrayElementType(type);
   const elementType = element && SchemaAST.isSuspend(element) ? element.thunk() : element;

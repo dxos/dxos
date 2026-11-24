@@ -12,7 +12,7 @@ import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
 import { type FormFieldRenderer, type FormPresentation } from '#types';
 
 import { useFormFieldState } from '../../hooks/index.ts';
-import { FormStaticValue } from '../FormField.tsx';
+import { FormStaticValue } from '../FormFieldRow.tsx';
 import { presentationFor } from '../presentation.tsx';
 import { toPathSegments } from '../property-walk.ts';
 import { useNumberFieldInput } from './NumberField.tsx';

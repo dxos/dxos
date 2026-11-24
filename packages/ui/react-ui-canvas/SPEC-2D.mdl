@@ -1762,7 +1762,7 @@ decision D-70: The editor's node and link are the stored element, and the stored
 ```
 
 ```mdl
-decision D-71: The engine's node and link, the stored element and the diagram's shapes state a thing with one word. A node and a link have a `kind`. A link's markers are `tail` and `head`, and its caption, like a note's text, is `label`. An element names a style class in `style` and keeps its own look in `overrides`; a placed composite's per-part values are `partOverrides`. A look states `color`, `textColor`, `stroke`, `fill`, `corners`, `font`, `align` and `valign`, and a side is `top`, `right`, `bottom` or `left`. Fills in [D-69], with the scene model's words ([org.dxos.scene#D-111]).
+decision D-71: The engine's node and link, the stored element and the diagram's shapes state a thing with one word. A node and a link have a `kind`. A link's markers are `tail` and `head`, and its caption, like a note's text, is `label`. An element names a style class in `style` and keeps its own look in `overrides`; a placed composite's per-part values are `partOverrides`. A look states `color`, `textColor`, `stroke`, `fill`, `corners`, `font`, `align` and `valign`, and a side is `top`, `right`, `bottom` or `left`. Fills in [D-69], with the scene model's words ([org.dxos.scene#D-112]).
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1771,7 +1771,7 @@ decision D-71: The engine's node and link, the stored element and the diagram's 
 ```
 
 ```mdl
-decision D-72: Every link is of kind `link`, and how it runs is its `path` (`line`, `ortho`, `curve`, `spline` or `smart`; unset is `smart`). `points` is a field of every link, which only a spline uses. Fills in [D-69], as [org.dxos.scene#D-117] does for the model.
+decision D-72: Every link is of kind `link`, and how it runs is its `path` (`line`, `ortho`, `curve`, `spline` or `smart`; unset is `smart`). `points` is a field of every link, which only a spline uses. Fills in [D-69], as [org.dxos.scene#D-118] does for the model.
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1782,7 +1782,7 @@ decision D-72: Every link is of kind `link`, and how it runs is its `path` (`lin
 ```
 
 ```mdl
-decision D-73: A colour is one string: a theme name, alone or at a tone (`blue`, `blue/2`), or a CSS literal. `default` names the look's own colour, so `default/<tone>` states a tone with no hue. A node's tone is 0 (an outline) to 3 (the lightest fill) and a text's 1 to 3. Fills in [D-69], as [org.dxos.scene#D-113] and [org.dxos.scene#D-114] do for the model.
+decision D-73: A colour is one string: a theme name, alone or at a tone (`blue`, `blue/2`), or a CSS literal. `default` names the look's own colour, so `default/<tone>` states a tone with no hue. A node's tone is 0 (an outline) to 3 (the lightest fill) and a text's 1 to 3. Fills in [D-69], as [org.dxos.scene#D-114] and [org.dxos.scene#D-115] do for the model.
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1791,7 +1791,7 @@ decision D-73: A colour is one string: a theme name, alone or at a tone (`blue`,
 ```
 
 ```mdl
-decision D-74: A named theme colour has no sigil and shares one namespace with the hues: the canvas looks a name up among the theme's named colours first, then as a hue. Fills in [D-69], as [org.dxos.scene#D-113] does for the model.
+decision D-74: A named theme colour has no sigil and shares one namespace with the hues: the canvas looks a name up among the theme's named colours first, then as a hue. Fills in [D-69], as [org.dxos.scene#D-114] does for the model.
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1802,7 +1802,7 @@ decision D-74: A named theme colour has no sigil and shares one namespace with t
 ```
 
 ```mdl
-decision D-75: A style's `font` names a font slot of the theme. Every theme fills `body` and `mono`; a text with no font is set in `body`, and a slot the theme does not define draws as its body face. Fills in [D-69], as [org.dxos.scene#D-115] does for the model.
+decision D-75: A style's `font` names a font slot of the theme. Every theme fills `body` and `mono`; a text with no font is set in `body`, and a slot the theme does not define draws as its body face. Fills in [D-69], as [org.dxos.scene#D-116] does for the model.
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1811,7 +1811,7 @@ decision D-75: A style's `font` names a font slot of the theme. Every theme fill
 ```
 
 ```mdl
-decision D-76: A port is a point of its node's frame, `x` and `y` as fractions of it (`0,0` the top-left corner, `1,1` the bottom-right): the point a draw.io `<constraint x y>` states. `side` is optional and says which way a link leaves; unset, it is the nearest edge. A generated port keeps its id (`e2`). Fills in [D-69], as [org.dxos.scene#D-116] does for the model.
+decision D-76: A port is a point of its node's frame, `x` and `y` as fractions of it (`0,0` the top-left corner, `1,1` the bottom-right): the point a draw.io `<constraint x y>` states. `side` is optional and says which way a link leaves; unset, it is the nearest edge. A generated port keeps its id (`e2`). Fills in [D-69], as [org.dxos.scene#D-117] does for the model.
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1820,7 +1820,7 @@ decision D-76: A port is a point of its node's frame, `x` and `y` as fractions o
 ```
 
 ```mdl
-decision D-77: An `Element2D` carries every node and link field at its top, a built-in kind's own fields beside them and a plugin kind's under `data`. Nothing is kept under `props.canvas`: `props` holds only what other writers keep there (a solid's `op` and `operands`, a `.dx` link's `end`). A placed composite is stored with the object it places and its own `kind`. Fills in [D-70], as [org.dxos.scene#D-118] does for the model.
+decision D-77: An `Element2D` carries every node and link field at its top, a built-in kind's own fields beside them and a plugin kind's under `data`. Nothing is kept under `props.canvas`: `props` holds only what other writers keep there (a solid's `op` and `operands`, a `.dx` link's `end`). A placed composite is stored with the object it places and its own `kind`. Fills in [D-70], as [org.dxos.scene#D-119] does for the model.
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon

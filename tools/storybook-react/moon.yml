@@ -52,7 +52,7 @@ tasks:
       - --output-dir=out/storybook-perf
     env:
       DX_STORIES: stories/stories-assistant
-      # See `.storybook/perf-bundle.ts`: without it the built chat story never mounts.
+      # See `.storybook/perf-bundle.ts`: builds the stories as one chunk.
       DX_PERF_BUNDLE: '1'
     deps:
       # See `bundle`.

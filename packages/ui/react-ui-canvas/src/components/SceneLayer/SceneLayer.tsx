@@ -1270,25 +1270,24 @@ const NodeFrame = memo(
     const relief = silhouette && silhouetteFilled ? nodeRelief(drawn, look) : undefined;
     return (
       <>
-        {silhouette &&
-          relief && (
-            // Beside the frame, which clips: a raised shadow falls outside the shape.
-            <SilhouetteRelief
-              outline={silhouette}
-              node={drawn}
-              border={border}
-              radius={silhouetteRadius}
-              relief={relief}
-              className={mx(ghost && 'opacity-50')}
-              style={{
-                left: bounds.x,
-                top: bounds.y,
-                ...(drawn.rotation ? { transform: `rotate(${drawn.rotation}deg)` } : {}),
-                ...fade,
-                ...nodeOpacity(drawn, fade),
-              }}
-            />
-          )}
+        {silhouette && relief && (
+          // Beside the frame, which clips: a raised shadow falls outside the shape.
+          <SilhouetteRelief
+            outline={silhouette}
+            node={drawn}
+            border={border}
+            radius={silhouetteRadius}
+            relief={relief}
+            className={mx(ghost && 'opacity-50')}
+            style={{
+              left: bounds.x,
+              top: bounds.y,
+              ...(drawn.rotation ? { transform: `rotate(${drawn.rotation}deg)` } : {}),
+              ...fade,
+              ...nodeOpacity(drawn, fade),
+            }}
+          />
+        )}
         <div
           className={mx(
             'absolute box-border',
@@ -1345,15 +1344,14 @@ const NodeFrame = memo(
           ) : (
             <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
           )}
-          {(framed || selected) &&
-            circled && (
-              // Inside the frame, which clips: the circle the shape fits, as wide as the frame's shorter side.
-              <div
-                aria-hidden
-                className='absolute top-1/2 left-1/2 -translate-1/2 aspect-square rounded-full border-solid border-focus/40 pointer-events-none'
-                style={{ height: Math.min(bounds.width, bounds.height), borderWidth: hairline }}
-              />
-            )}
+          {(framed || selected) && circled && (
+            // Inside the frame, which clips: the circle the shape fits, as wide as the frame's shorter side.
+            <div
+              aria-hidden
+              className='absolute top-1/2 left-1/2 -translate-1/2 aspect-square rounded-full border-solid border-focus/40 pointer-events-none'
+              style={{ height: Math.min(bounds.width, bounds.height), borderWidth: hairline }}
+            />
+          )}
           {debug && (
             <div
               className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
@@ -1683,33 +1681,31 @@ export const ViewNodeView = (props: NodeViewProps) => {
           </span>
         </div>
       )}
-      {tier === 'live' &&
-        child &&
-        bounds && (
-          // The nested layer is read-only: only the root scene receives handlers.
-          // Pulled out by the frame's border, so the child's origin is the node's corner as
-          // `portalTransform` and `enterPortal` assume; inside the padding box it sat a border in and
-          // the scene jumped by that at the drill-in swap. The width is the frame's own (`FRAME_BORDER`),
-          // since a fading frame trades its border for padding.
-          <div
-            className='absolute pointer-events-none'
-            style={{
-              top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
-              left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
-              transform: portalTransform(node, bounds),
-              transformOrigin: '0 0',
-            }}
-          >
-            <SceneLayer
-              lists={lists}
-              scene={child}
-              registry={registry}
-              zoom={zoom * portalScale(node, bounds)}
-              depth={depth + 1}
-              liveDepth={liveDepth}
-            />
-          </div>
-        )}
+      {tier === 'live' && child && bounds && (
+        // The nested layer is read-only: only the root scene receives handlers.
+        // Pulled out by the frame's border, so the child's origin is the node's corner as
+        // `portalTransform` and `enterPortal` assume; inside the padding box it sat a border in and
+        // the scene jumped by that at the drill-in swap. The width is the frame's own (`FRAME_BORDER`),
+        // since a fading frame trades its border for padding.
+        <div
+          className='absolute pointer-events-none'
+          style={{
+            top: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+            left: `calc(-1 * var(${FRAME_BORDER}, 2px))`,
+            transform: portalTransform(node, bounds),
+            transformOrigin: '0 0',
+          }}
+        >
+          <SceneLayer
+            lists={lists}
+            scene={child}
+            registry={registry}
+            zoom={zoom * portalScale(node, bounds)}
+            depth={depth + 1}
+            liveDepth={liveDepth}
+          />
+        </div>
+      )}
       {/* The preview centres the title already; the live scene fills the frame, so it names it in the corner. */}
       {!opening && tier === 'live' && (
         <span className='absolute top-1 left-2 text-xs text-fg-subtle pointer-events-none'>{title}</span>

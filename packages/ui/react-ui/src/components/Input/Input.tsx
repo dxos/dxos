@@ -40,7 +40,7 @@ export const Input = composable<HTMLInputElement, InputProps>(
       variant = 'default',
       noAutoFill,
       start,
-      end: endProp,
+      'end': endProp,
       copyable,
       disabled,
       onFocus,

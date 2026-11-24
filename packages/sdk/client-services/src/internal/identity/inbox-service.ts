@@ -145,7 +145,7 @@ export class InboxServiceImpl implements InboxService.Handlers {
   #subscribers = 0;
   #ctx?: Context;
 
-  'constructor'(
+  constructor(
     private readonly _identityManager: InboxIdentitySource,
     private readonly _edgeClient?: InboxEdgeClient,
     private readonly _pushSource?: InboxPushSource,

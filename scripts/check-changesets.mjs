@@ -16,7 +16,7 @@
 // Every rule fails on something invisible until `changeset version` runs on `main`, where the cost is a
 // dead `publish` job rather than a red PR. Advisory checks live elsewhere: `check-changeset.mjs` reminds
 // a PR that it *has* no changeset and deliberately never fails, so it stays its own (non-gating) job.
-// See `agents/instructions/changesets.md` and `.github/RELEASE-SPEC.md`.
+// See `.agents/instructions/changesets.md` and `.github/RELEASE-SPEC.md`.
 
 import { parseChangesetFile } from '@changesets/parse';
 import { execSync } from 'node:child_process';
@@ -289,5 +289,5 @@ for (const failure of failures) {
   console.error(failure);
   console.error('');
 }
-console.error('See agents/instructions/changesets.md.');
+console.error('See .agents/instructions/changesets.md.');
 process.exit(1);

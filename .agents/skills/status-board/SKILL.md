@@ -9,14 +9,14 @@ The user reads the board, not the chat. You write the session as mdl. A script c
 publish the page.
 
 ```
-agents/sessions/<date>-<slug>/SESSION.mdl  →  cli.ts build  →  .claude/.status-board/<date>-<slug>.html  →  Artifact tool
+.agents/sessions/<date>-<slug>/SESSION.mdl  →  cli.ts build  →  .claude/.status-board/<date>-<slug>.html  →  Artifact tool
           (you write, committed)              (parse, check)        (prebuilt page + data)                   (you publish)
 ```
 
 ## 1. Start a session
 
 ```bash
-node --conditions=source tools/session-board/src/cli.ts start agents/sessions/2026-11-21-status-board
+node --conditions=source tools/session-board/src/cli.ts start .agents/sessions/2026-11-21-status-board
 ```
 
 - It writes `SESSION.mdl` from a skeleton if the file does not exist.

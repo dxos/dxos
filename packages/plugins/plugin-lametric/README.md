@@ -146,4 +146,4 @@ moon run plugin-lametric:test
 moon run plugin-lametric:test-storybook
 ```
 
-Design: [`agents/superpowers/specs/2026-08-19-lametric-design.md`](../../../agents/superpowers/specs/2026-08-19-lametric-design.md).
+Design: [`.agents/superpowers/specs/2026-08-19-lametric-design.md`](../../../.agents/superpowers/specs/2026-08-19-lametric-design.md).

@@ -11,7 +11,7 @@ import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
 import { useFormContext } from '../../hooks/index.ts';
-import { FormStaticValue } from '../FormField.tsx';
+import { FormStaticValue } from '../FormFieldRow.tsx';
 import { presentationFor } from '../presentation.tsx';
 
 /**

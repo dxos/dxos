@@ -8,7 +8,7 @@ import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Layout from '@dxos/react-ui/Layout';
 import { hexToFallback } from '@dxos/util';
 
-import { L0ItemActiveTabIndicator } from '../Sidebar/index.ts';
+import { L0ItemActiveTabIndicator } from '../Sidebar/L0ItemActiveTabIndicator.tsx';
 
 export type UserAccountAvatarProps = {
   size?: ComponentProps<typeof Avatar.Root>['size'];

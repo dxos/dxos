@@ -26,7 +26,7 @@ import {
 import { NetworkService } from '@dxos/protocols/rpc';
 
 export class NetworkServiceImpl implements NetworkService.Handlers {
-  'constructor'(
+  constructor(
     private readonly networkManager: SwarmNetworkManager,
     private readonly signalManager: SignalManager,
     private readonly edgeConnection?: EdgeConnection,

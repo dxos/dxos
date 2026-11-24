@@ -366,7 +366,7 @@ decision D-21: A 3D look is written in the normalized vocabulary: its type names
 ```
 
 ```mdl
-decision D-22: `Style3D` states what it shares with the 2D look in the 2D look's words: `color`, `fill` (the surface: `solid`, `tint`, `glass`), `stroke` (the solid's edges, drawn where one other than `none` is stated), `corners` (rounded where one other than `none` is stated) and `opacity`; `metalness`, `roughness` and `emissive` stay its own. A material draws a colour's hue and not its tone, and a `pattern` fill, which has no material, draws solid. A Neu body is still edged whatever its `stroke`, as [D-13] says of `border`. Fills in [D-21], with the scene model's words ([org.dxos.scene#D-112]).
+decision D-22: `Style3D` states what it shares with the 2D look in the 2D look's words: `color`, `fill` (the surface: `solid`, `tint`, `glass`), `stroke` (the solid's edges, drawn where one other than `none` is stated), `corners` (rounded where one other than `none` is stated) and `opacity`; `metalness`, `roughness` and `emissive` stay its own. A material draws a colour's hue and not its tone, and a `pattern` fill, which has no material, draws solid. A Neu body is still edged whatever its `stroke`, as [D-13] says of `border`. Fills in [D-21], with the scene model's words ([org.dxos.scene#D-113]).
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon

@@ -9,7 +9,7 @@ import { hues } from '@dxos/ui-types';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormStaticValue } from '../FormField.tsx';
+import { FormStaticValue } from '../FormFieldRow.tsx';
 import { presentationFor } from '../presentation.tsx';
 import { SelectControl } from './SelectField.tsx';
 

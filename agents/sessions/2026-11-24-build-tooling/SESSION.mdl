@@ -1,0 +1,171 @@
+---
+id: org.dxos.session.2026-11-24-build-tooling
+name: Build tooling update
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Build tooling update
+
+Update the build tools in dxos and edge to the latest stable versions that are at least one week old.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: Update the edge build tools.
+  status: review
+  notes:
+    - Pnpm 12.22.0, moon 2.6.5, vite 8.3.8, vitest 4.1.12 and wrangler 4.163.
+    - Node stays at 24.11.1. Node 24.22 has a SQLite that rejects ECHO queries.
+    - Unused jest, mocha, swc and ts-node packages are removed.
+    - Lint and build are clean on all 52 projects.
+```
+
+```mdl
+goal G-2: Update the dxos build tools.
+  status: review
+  notes:
+    - Same toolchain as edge. Wrangler 4.116 is the last release on miniflare 4.
+    - The two vitest patches apply to 4.1.12 without change.
+    - Lint and build are clean on all projects.
+```
+
+```mdl
+goal G-3: Run the full test suites in both repositories.
+  status: started
+  notes:
+    - The edge tests and the dxos node tests run locally now.
+    - CI runs on both pull requests.
+```
+
+```mdl
+goal G-4: Make ECHO queries work with the SQLite in node 24.22.
+  status: backlog
+  notes:
+    - SQLite 3.54 stops with "VIEWs and/or subqueries nested too deep".
+    - Node can move to 24.22 after this change.
+```
+
+```mdl
+goal G-5: Turn on the new React Compiler lint rules again.
+  status: backlog
+  notes:
+    - The rules are off in both repositories because current code does not obey them.
+```
+
+```mdl
+goal G-6: Move sandbox-service to the new Artifacts API.
+  status: backlog
+  notes:
+    - Edge keeps workers-types at 5.20260719 until this change.
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Update the edge build tools.
+  ref: dxos/edge#1576
+  goals: [G-1, G-3]
+```
+
+```mdl
+pr PR-3: Hold node at 24.11.1 in edge.
+  ref: dxos/edge#1577
+  status: landing
+  goals: [G-1]
+```
+
+```mdl
+pr PR-2: Update the dxos build tools.
+  ref: dxos/dxos#14666
+  status: landing
+  goals: [G-2, G-3]
+```
+
+## Changelog
+
+```mdl
+question Q-1: Do you want the major upgrades now, or in a later session?
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: The pull requests keep the current major versions. Vitest 5 also needs a new Cloudflare test pool.
+  options:
+    - Later: merge the two pull requests first.
+    - Now: start Node 26, bun 1.4 and vitest 5 after the merge.
+```
+
+```mdl
+decision D-1: Node stays at 24.11.1 in both repositories until ECHO queries work with SQLite 3.54.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+```
+
+## Timeline
+
+```mdl
+event T-1: The session started.
+  date: 2026-11-24T10:05Z
+```
+
+```mdl
+event T-2: The edge pull request opened.
+  date: 2026-11-24T10:35Z
+```
+
+```mdl
+event T-3: The dxos pull request opened.
+  date: 2026-11-24T11:17Z
+```
+
+```mdl
+event T-4: Both pull requests are ready, so CI runs.
+  date: 2026-11-24T11:17Z
+```
+
+```mdl
+event T-5: Both pull requests have a committed agentic review.
+  date: 2026-11-24T11:20Z
+```
+
+```mdl
+event T-6: The status board started.
+  date: 2026-11-24T11:25Z
+```
+
+```mdl
+event T-7: The dxos pull request has auto-merge. It merges after CI and a review pass.
+  date: 2026-11-24T11:28Z
+```
+
+```mdl
+event T-8: The edge pull request has auto-merge. It merges after CI and a review pass.
+  date: 2026-11-24T11:29Z
+```
+
+```mdl
+event T-9: Node 24.22 failed the dxos node tests, so node stays at 24.11.1 in both repositories.
+  date: 2026-11-24T12:05Z
+```
+
+```mdl
+event T-10: The edge pull request merged with node 24.22.3 before the node hold.
+  date: 2026-11-24T12:06Z
+```
+
+```mdl
+event T-11: A new edge pull request holds node at 24.11.1. It has auto-merge.
+  date: 2026-11-24T12:07Z
+```

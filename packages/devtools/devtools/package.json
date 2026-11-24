@@ -62,6 +62,7 @@
     "@dxos/react-ui-trace": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/ui-types": "workspace:*",

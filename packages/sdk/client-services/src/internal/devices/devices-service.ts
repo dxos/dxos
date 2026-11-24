@@ -27,7 +27,7 @@ import { DevicesService } from '@dxos/protocols/rpc';
 import * as IdentityContract from '../../contracts/identity.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
-  'constructor'(
+  constructor(
     private readonly _identityManager: IdentityContract.Manager,
     private readonly _edgeConnection?: EdgeConnection,
   ) {}

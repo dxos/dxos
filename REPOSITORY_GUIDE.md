@@ -301,14 +301,14 @@ DXOS is **trunk-based**: `main` is the only long-lived integration branch.
 
 - Work happens on feature branches that merge to `main` via PRs; the **Check** workflow (build, test, lint, fmt) must pass. External contributors fork and PR from their fork.
 - Feature branches are **squashed** on merge, keeping `main` linear.
-- Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). PR titles and commit messages use `scope: description`.
+- Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./.agents/instructions/changesets.md). PR titles and commit messages use `scope: description`.
 - `dev` / `preview` / `staging` / `production` are **deploy environments**, not long-lived branches — `preview` deploys `main`'s tip daily on a schedule, the rest deploy a chosen commit via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
 
 Full design (versioning policy, publish groups, cross-repo contract): [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md).
 
 ## Releasing
 
-Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` / `git tag` on a laptop. The _why_ is in [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md); how to write a changeset is in the [authoring guide](./agents/instructions/changesets.md).
+Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` / `git tag` on a laptop. The _why_ is in [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md); how to write a changeset is in the [authoring guide](./.agents/instructions/changesets.md).
 
 Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/client`, …) and **B: Plugins + CLI** (`@dxos/plugin-*`, `@dxos/cli`). Naming one member in a changeset bumps its whole group, and both share one "Version Packages" PR. **Apps are not in a group — they deploy, never publish.**
 
@@ -330,12 +330,12 @@ You can still pull a specific one on demand: `git fetch origin tag composer/prev
 `--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
 check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
 
-| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                                                                       |
-| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
-| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
-| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only                                                                 |
-| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                                                                   |
-| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
+| Env            | URL                      | EDGE         | Trigger                           | Apps                                            | Notes                                                                                       |
+| -------------- | ------------------------ | ------------ | --------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer + docs + drawing-app + storybook-react | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
+| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled                           | dogfood build; desktop only                                                                 |
+| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs + drawing-app                   | kept, deliberately unused                                                                   |
+| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                                             | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
 
 Local dev talks to EDGE preview by default; point it at EDGE dev or a local EDGE with `DX_EDGE_BASE_URL`.
 
@@ -345,10 +345,10 @@ Every environment ships a **desktop** Composer on its own CrabNebula channel, so
 
 **Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop via `deploy-tauri.yaml`, CrabNebula; iOS builds on `dev` alone). This is the only path that advances Composer's version — it is not a Changesets package.
 
-**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`dev` \| `preview` \| `staging` \| `production`, default `dev`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
+**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`dev` \| `preview` \| `staging` \| `production`, default `dev`), `app` (`all` default, or one of `composer` / `docs` / `drawing-app` / `storybook-react` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
 
 ```bash
-# Composer → dev (the default env). `app` defaults to `all`, which for dev is just composer.
+# Composer → dev (the default env). `app` defaults to `all`, which for dev also deploys docs, drawing-app and storybook-react.
 gh workflow run deploy-apps.yml -f environment=dev
 
 # Composer + docs → staging.
@@ -607,7 +607,7 @@ pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 12.21.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
+This project requires Node.js 24.x, pnpm 12.22.0, and moon 2.6.5, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
 
 ```bash
 export PROTO_HOME="$HOME/.proto"

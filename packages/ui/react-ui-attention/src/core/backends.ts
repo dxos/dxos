@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
-import { ViewState } from '../types/index.ts';
+import * as ViewState from '../types/ViewState.ts';
 
 // Only the stable `key` string is needed to form the map key; avoids variance issues with Aspect<T>.
 const cacheKey = (aspect: { key: string }, contextId: string) => `${aspect.key}:${contextId}`;

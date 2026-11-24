@@ -98,7 +98,7 @@ What SURVIVED the deletion, because it turned out not to be process-specific:
   have removed the only way to reset the classify cursor, which its test relies on.
 - `CrmOperation.ProcessMailbox` is a DIFFERENT operation in plugin-crm and is untouched.
 
-Spec: `agents/superpowers/specs/2026-08-10-mailbox-pipeline-routine-design.md`. A manually
+Spec: `.agents/superpowers/specs/2026-08-10-mailbox-pipeline-routine-design.md`. A manually
 triggerable routine driving a **cursored** pipeline over the Mailbox feed — the cursor machinery
 (incremental + reset) is the thing under test; the pipeline body is a log-title walking skeleton.
 
@@ -521,7 +521,7 @@ categorization) but fall below on synthetic tasks (thread/topic summaries, draft
 
 ## Next experiment: Active Topics (overnight)
 
-Spec: `agents/superpowers/specs/2026-07-13-active-topics-experiment-design.md`. Build fully-populated
+Spec: `.agents/superpowers/specs/2026-07-13-active-topics-experiment-design.md`. Build fully-populated
 topic structures from the private fixture + a confidence-ranked active/suggested split, for morning
 human review. Harness-only (informs the product `Topic` schema). Prereqs: Ollama + `.env` (opus/haiku).
 
@@ -611,7 +611,7 @@ These deliverables come AFTER the full experiment run + review.
       CRM) with cited web research; Part B the FactStore question + 5 concrete validation experiments
       (B1 fact-vs-thread QA is the decisive test, B3 N3 rules, B4 faithfulness gate, B5 facts-as-memory);
       Part C the parallelizable experiment roadmap; Part D near-term follow-ups.
-- [x] **CRM product spec** (`agents/superpowers/specs/2026-07-13-crm-workflow-design.md`) — drafted:
+- [x] **CRM product spec** (`.agents/superpowers/specs/2026-07-13-crm-workflow-design.md`) — drafted:
       vision (Topic as the organizing primitive), 7-layer architecture, the 7 features + 6 proposed
       additions (workflow engine, triage/two-tier, relationship graph, provenance layer, team mode,
       digest), tests per feature, cross-cutting eval/model-routing/FactStore, open questions. For morning refinement.
@@ -762,7 +762,7 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 ### Topic suggestions (opt-in)
 
 - [x] **Lightweight topic suggestions on Mailbox** → shipped as **Phase B** in the Topics UX v2 plan
-      below (spec `agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`).
+      below (spec `.agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`).
 - [x] **Message → "Create Topic" menu** → shipped as **Phase C** in the Topics UX v2 plan below
       (single-thread seed in v1).
 
@@ -781,7 +781,7 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 
 ## Topics UX v2 — implementation plan
 
-> Spec: `agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`. Build order **A → B → C**; each
+> Spec: `.agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`. Build order **A → B → C**; each
 > phase is a separate commit, build/lint/fmt clean with its storybook play test green. TDD where a pure
 > unit exists. Single-file test runs: `pnpm --filter <pkg> exec vitest run --project=node <file>`;
 > storybook: `pnpm --filter @dxos/stories-inbox exec vitest run --project=storybook <file>`.

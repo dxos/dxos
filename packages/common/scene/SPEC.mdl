@@ -9,7 +9,7 @@ It has three aspects: a Model of reusable objects, a Layout of positioned elemen
 views a layout through a camera. `@dxos/scene` holds the schemas, validation, arrangement and the ECHO form;
 `@dxos/diagram` holds its text form (the `scene`, `layout` and `model` blocks of `.dx`); react-ui-canvas-editor's `SceneEditor`
 edits it in both dimensions, through `LayoutIntent`s and `ModelIntent`s only; react-ui-canvas draws it; plugin-canvas
-makes it an animator stage. This spec states the data and its edits; how the editor behaves is the editor's spec. The design is `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
+makes it an animator stage. This spec states the data and its edits; how the editor behaves is the editor's spec. The design is `.agents/superpowers/specs/2026-10-28-scene-model-design.md`.
 
 ## Extensions
 
@@ -1196,21 +1196,29 @@ decision D-108: A packing whose sizes do not fit draws every circle at one facto
 ```
 
 ```mdl
-decision D-109: The scene model's vocabulary is normalized. Type names and attributes are standardized so that they are consistent. A property such as the font family is general and names a slot of a theme, the default and the monospace face being slots. Every colour property takes the same generic colour patterns and named theme colours. A port states its place in draw.io's constraint format.
+decision D-109: The design link points at `.agents/superpowers/`, where the design now lives.
+  date: 2026-11-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The repo keeps one agent directory, `.agents/`, because `npx skills` and `.claude/skills` need the dot; the design moved with it.
+```
+
+```mdl
+decision D-110: The scene model's vocabulary is normalized. Type names and attributes are standardized so that they are consistent. A property such as the font family is general and names a slot of a theme, the default and the monospace face being slots. Every colour property takes the same generic colour patterns and named theme colours. A port states its place in draw.io's constraint format.
   date: 2026-11-24
   by: user:richburdon
   affects: [Object, BaseElement, Element2D, Element3D, Link, Port, Color, ThemeSlots, Style2D, Style3D, F-4]
 ```
 
 ```mdl
-decision D-110: The 2D editor's node and link are the stored element, and the stored format changes once for [D-109], with a migration from the one before.
+decision D-111: The 2D editor's node and link are the stored element, and the stored format changes once for [D-110], with a migration from the one before.
   date: 2026-11-24
   by: user:richburdon
   affects: [Element2D, F-4.4, F-5]
 ```
 
 ```mdl
-decision D-111: A stored element, the editor's node and link, a model object and a diagram shape state a thing with one word. Each has a `kind`, replacing the `type` of [D-93]. A link's markers are `tail` and `head` (the many-end marker is `crowsfoot`), and a caption or a note's text is `label`. An element names a style in `style` and keeps its own look in `overrides`; a placed composite's per-part values are `partOverrides`. A side is `top`, `right`, `bottom` or `left`, and a constraint's relation `right-of`, `left-of`, `above`, `below` or `aligned`. A composite's `fit` is `fit`, `fill` or `none`. `Point` and `Size` replace `Vec2` and `Size2`. Fills in [D-109].
+decision D-112: A stored element, the editor's node and link, a model object and a diagram shape state a thing with one word. Each has a `kind`, replacing the `type` of [D-93]. A link's markers are `tail` and `head` (the many-end marker is `crowsfoot`), and a caption or a note's text is `label`. An element names a style in `style` and keeps its own look in `overrides`; a placed composite's per-part values are `partOverrides`. A side is `top`, `right`, `bottom` or `left`, and a constraint's relation `right-of`, `left-of`, `above`, `below` or `aligned`. A composite's `fit` is `fit`, `fill` or `none`. `Point` and `Size` replace `Vec2` and `Size2`. Fills in [D-110].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1219,7 +1227,7 @@ decision D-111: A stored element, the editor's node and link, a model object and
 ```
 
 ```mdl
-decision D-112: A look states what 2D and 3D share in the same words: `color`, `fill` (`none`, `solid`, `tint`, `pattern`, `glass`), `stroke` (`none`, `solid`, `dashed`, `dotted`, `sketchy`), `corners` (`all`, `top`, `bottom`, `none`) and `opacity`. `Style2D` adds `weight`, `guide`, `font`, `fontSize`, `textColor`, `align` and `valign`, and is the node style itself; `Style3D` adds `metalness`, `roughness` and `emissive`. Lift and flatten copy the shared fields. This replaces the property sets of [D-92] and its mapping of `fill` to `surface`; its resolution order stands. Fills in [D-109].
+decision D-113: A look states what 2D and 3D share in the same words: `color`, `fill` (`none`, `solid`, `tint`, `pattern`, `glass`), `stroke` (`none`, `solid`, `dashed`, `dotted`, `sketchy`), `corners` (`all`, `top`, `bottom`, `none`) and `opacity`. `Style2D` adds `weight`, `guide`, `font`, `fontSize`, `textColor`, `align` and `valign`, and is the node style itself; `Style3D` adds `metalness`, `roughness` and `emissive`. Lift and flatten copy the shared fields. This replaces the property sets of [D-92] and its mapping of `fill` to `surface`; its resolution order stands. Fills in [D-110].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1228,7 +1236,7 @@ decision D-112: A look states what 2D and 3D share in the same words: `color`, `
 ```
 
 ```mdl
-decision D-113: A colour is one string, `Color`: a theme name, alone or at a tone 0 to 3, or a literal CSS colour. A named theme colour has no sigil and shares one namespace with the hues: a name resolves among the theme's named colours first, then as a hue. Fills in [D-109].
+decision D-114: A colour is one string, `Color`: a theme name, alone or at a tone 0 to 3, or a literal CSS colour. A named theme colour has no sigil and shares one namespace with the hues: a name resolves among the theme's named colours first, then as a hue. Fills in [D-110].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1239,7 +1247,7 @@ decision D-113: A colour is one string, `Color`: a theme name, alone or at a ton
 ```
 
 ```mdl
-decision D-114: `default` names the look's own colour, so `default/<tone>` states a tone with no hue. Fills in [D-113].
+decision D-115: `default` names the look's own colour, so `default/<tone>` states a tone with no hue. Fills in [D-114].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1248,7 +1256,7 @@ decision D-114: `default` names the look's own colour, so `default/<tone>` state
 ```
 
 ```mdl
-decision D-115: A theme fills slots by name (`ThemeSlots`): named colours, each a hue at a tone, another name or a literal, and fonts, each a CSS `font-family`. Every theme fills `body` and `mono`; a text with no font is set in `body`, and a slot the theme does not define draws as its body face. A drawing's tone wins over the tone a theme's named colour states. Fills in [D-109].
+decision D-116: A theme fills slots by name (`ThemeSlots`): named colours, each a hue at a tone, another name or a literal, and fonts, each a CSS `font-family`. Every theme fills `body` and `mono`; a text with no font is set in `body`, and a slot the theme does not define draws as its body face. A drawing's tone wins over the tone a theme's named colour states. Fills in [D-110].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1257,7 +1265,7 @@ decision D-115: A theme fills slots by name (`ThemeSlots`): named colours, each 
 ```
 
 ```mdl
-decision D-116: A port is a point of its node's frame, `x` and `y` as fractions of it: the point a draw.io `<constraint x y>` states. `side` is optional and says which way a link leaves; unset, it is the edge of the frame the port is nearest. A port stored on a side at an offset is read as the point where that put it (`sidePort`). Fills in [D-109].
+decision D-117: A port is a point of its node's frame, `x` and `y` as fractions of it: the point a draw.io `<constraint x y>` states. `side` is optional and says which way a link leaves; unset, it is the edge of the frame the port is nearest. A port stored on a side at an offset is read as the point where that put it (`sidePort`). Fills in [D-110].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1266,7 +1274,7 @@ decision D-116: A port is a point of its node's frame, `x` and `y` as fractions 
 ```
 
 ```mdl
-decision D-117: Every link is of kind `link`, and how it runs is its `path` (`line`, `ortho`, `curve`, `spline` or `smart`; unset is `smart`). `points` is a field of every link, which only a spline uses. Fills in [D-109].
+decision D-118: Every link is of kind `link`, and how it runs is its `path` (`line`, `ortho`, `curve`, `spline` or `smart`; unset is `smart`). `points` is a field of every link, which only a spline uses. Fills in [D-110].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1277,7 +1285,7 @@ decision D-117: Every link is of kind `link`, and how it runs is its `path` (`li
 ```
 
 ```mdl
-decision D-118: `Element2D` carries every field of the editor's node and link at its top; a built-in kind's own fields sit beside them and an extension kind's under `data`. Nothing is kept under `props.canvas`: `props` holds only what other writers keep there, and a layout still carries `props` of its own. A placed composite is stored with the object it places (`view:<scene>`, `instance:<composite>`) and its own `kind`. This also replaces the `props.canvas` half of [D-38]. Fills in [D-110].
+decision D-119: `Element2D` carries every field of the editor's node and link at its top; a built-in kind's own fields sit beside them and an extension kind's under `data`. Nothing is kept under `props.canvas`: `props` holds only what other writers keep there, and a layout still carries `props` of its own. A placed composite is stored with the object it places (`view:<scene>`, `instance:<composite>`) and its own `kind`. This also replaces the `props.canvas` half of [D-38]. Fills in [D-111].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1287,7 +1295,7 @@ decision D-118: `Element2D` carries every field of the editor's node and link at
 ```
 
 ```mdl
-decision D-119: The stored types whose records changed (`Layout2D`, `Layout3D`, `Model2D`, `Model3D`, `StyleCatalog`) are at version 0.2.0, each with a migration from 0.1.0 in `Legacy.Migrations`; `Scene2D` and `Scene3D` stay at 0.1.0. The record readers the migrations use return a record already in the current words unchanged. Fills in [D-110].
+decision D-120: The stored types whose records changed (`Layout2D`, `Layout3D`, `Model2D`, `Model3D`, `StyleCatalog`) are at version 0.2.0, each with a migration from 0.1.0 in `Legacy.Migrations`; `Scene2D` and `Scene3D` stay at 0.1.0. The record readers the migrations use return a record already in the current words unchanged. Fills in [D-111].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1296,7 +1304,7 @@ decision D-119: The stored types whose records changed (`Layout2D`, `Layout3D`, 
 ```
 
 ```mdl
-decision D-120: The migration validates a record field by field: where the current schema refuses the upgraded record, each declared field whose value is refused is dropped and the rest kept, and only a record that is still not one of its kind is left out. Fills in [D-119].
+decision D-121: The migration validates a record field by field: where the current schema refuses the upgraded record, each declared field whose value is refused is dropped and the rest kept, and only a record that is still not one of its kind is left out. Fills in [D-120].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -1305,7 +1313,7 @@ decision D-120: The migration validates a record field by field: where the curre
 ```
 
 ```mdl
-decision D-121: The registry of the stored format's schemas has a Theme group (`ThemeSlots`, `Font`) and a Vocabulary group (`Color`, the geometry and the style values). Fills in [D-109].
+decision D-122: The registry of the stored format's schemas has a Theme group (`ThemeSlots`, `Font`) and a Vocabulary group (`Color`, the geometry and the style values). Fills in [D-110].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon

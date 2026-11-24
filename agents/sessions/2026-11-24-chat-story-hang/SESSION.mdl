@@ -1,0 +1,199 @@
+---
+id: org.dxos.session.2026-11-24-chat-story-hang
+name: Assistant Chat story hang
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Assistant Chat story hang
+
+The Assistant Chat story loads in the built storybook, and CI finds import cycles in plugins.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: The cycle check includes all plugins.
+  status: done
+  notes:
+    - The script scripts/check-cycles.mjs reads packages/plugins.
+    - The check ignores type imports in tsx files.
+```
+
+```mdl
+goal G-2: The plugins have no import cycles.
+  status: done
+  notes:
+    - The check found 11 cycles in 9 plugins. All have a fix.
+    - The check passes after the merge of main.
+```
+
+```mdl
+goal G-3: The Assistant Chat story loads in the built storybook.
+  status: done
+  notes:
+    - The deployed storybook stops at `preparing story` after 60 seconds.
+    - Automerge wasm uses top-level await. Then module inits become async and wait on import cycles.
+    - The fix resolves automerge to slim in every storybook build, as the perf bundle does.
+    - The local build shows the chat in 2 seconds. 40 random stories also show.
+```
+
+```mdl
+goal G-4: The Form chunk loads in the built storybook.
+  status: done
+  notes:
+    - The Form chunk also stopped. It has 19 import cycles in react-ui-form.
+    - The slim automerge fix removes the async inits, so the cycles do not stop the load.
+```
+
+```mdl
+goal G-5: The Check workflow passes on the PR.
+  status: done
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Include plugins in the cycle check and remove the cycles.
+  ref: dxos/dxos#14664
+  status: landing
+  goals: [G-1, G-2, G-3, G-5]
+```
+
+## Changelog
+
+```mdl
+question Q-1: Do you want the branch on the current main?
+  date: 2026-11-24T10:27Z
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: The checkout came from the desktop on 18 November. Main has 57 new commits.
+  options:
+    - Merge after the story check: the build does not restart.
+    - Merge now: the build restarts.
+    - Keep the old base: the old status board stays.
+```
+
+```mdl
+decision D-1: Use main anyway.
+  date: 2026-11-24T10:29Z
+  by: user:dmaretskyi
+  answers: Q-1
+```
+
+## Timeline
+
+```mdl
+event T-1: The deployed Chat story stops at preparing story.
+  date: 2026-11-24T10:05Z
+  by: agent:claude-code
+  refs: [G-3]
+```
+
+```mdl
+event T-2: The cycle check passes on all plugins.
+  date: 2026-11-24T10:20Z
+  by: agent:claude-code
+  refs: [G-1, G-2]
+```
+
+```mdl
+event T-3: Opened [PR-1] as a draft.
+  date: 2026-11-24T10:25Z
+  by: agent:claude-code
+  refs: [PR-1]
+```
+
+```mdl
+event T-4: The branch has main now. The cycle check still passes.
+  date: 2026-11-24T10:31Z
+  by: agent:claude-code
+  refs: [D-1, G-2]
+```
+
+```mdl
+event T-5: The storybook build started again on the new base.
+  date: 2026-11-24T10:32Z
+  by: agent:claude-code
+  refs: [G-3]
+```
+
+```mdl
+event T-6: The build stopped in plugin-inbox. It used the removed SyncTemplate ID.
+  date: 2026-11-24T10:58Z
+  by: agent:claude-code
+  refs: [G-3]
+```
+
+```mdl
+event T-7: SyncTemplate ID is public again. The storybook build started again.
+  date: 2026-11-24T11:02Z
+  by: agent:claude-code
+  refs: [G-3, PR-1]
+```
+
+```mdl
+event T-8: CI failed on the first commit for the same plugin-inbox cause. The fix is pushed.
+  date: 2026-11-24T11:18Z
+  by: agent:claude-code
+  refs: [G-5, PR-1]
+```
+
+```mdl
+event T-9: The local build still stops on the Chat and Form stories. The cycle fix is not sufficient.
+  date: 2026-11-24T11:40Z
+  by: agent:claude-code
+  refs: [G-3, G-4]
+```
+
+```mdl
+event T-10: The cause is the automerge wasm top-level await. The perf bundle already removes it.
+  date: 2026-11-24T11:55Z
+  by: agent:claude-code
+  refs: [G-3, G-4]
+```
+
+```mdl
+event T-11: The published bundle now uses slim automerge. A new build started.
+  date: 2026-11-24T12:00Z
+  by: agent:claude-code
+  refs: [G-3, G-4]
+```
+
+```mdl
+event T-12: The Chat and Form stories show in the local build. 40 random stories also show.
+  date: 2026-11-24T12:12Z
+  by: agent:claude-code
+  refs: [G-3, G-4]
+```
+
+```mdl
+event T-13: The Check workflow passed on [PR-1] at 11:43Z. T-9 to T-12 have incorrect late times.
+  date: 2026-11-24T12:12Z
+  by: agent:claude-code
+  refs: [G-5, PR-1]
+```
+
+```mdl
+event T-14: You asked to land [PR-1]. It is ready for review, and the full CI suite runs.
+  date: 2026-11-24T12:50Z
+  by: agent:claude-code
+  refs: [PR-1]
+```
+
+```mdl
+event T-15: The agentic review found 28 items. All are in old code or are false positives.
+  date: 2026-11-24T13:05Z
+  by: agent:claude-code
+  refs: [PR-1]
+```
