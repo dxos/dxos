@@ -157,6 +157,24 @@ feat F-7: Agent identity and personal space
     then: it has its own identity and its own personal space
 ```
 
+```mdl
+feat F-8: Agent picker in the prompt input
+  status: planned
+
+  req F-8.1:
+    when: the user opens the prompt input
+    then: it offers a selection of agents, with "Composer" always listed and "Claude Code" listed
+          when plugin-claude is installed
+
+  req F-8.2:
+    when: the user selects "Composer"
+    then: the prompt runs in an agent-less (standalone) session [F-1.4]
+
+  req F-8.3:
+    when: custom agents exist
+    then: each appears in the same selection, and selecting one runs the prompt with that agent
+```
+
 ## Changelog
 
 ```mdl
@@ -330,4 +348,20 @@ decision D-19: Addressing, memory, Discord and the identity goal are their own f
   for: user:dmaretskyi
   affects: [F-2.3, F-3.2, F-4, F-5, F-6, F-7]
   why: Each decision constrains a different component, so separate features keep each review verdict about one thing.
+```
+
+```mdl
+decision D-20: The prompt input has an agent selection: "Composer", and "Claude Code" when plugin-claude is installed. Custom agents also appear there, and "Composer" stands for an agent-less session.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-8]
+```
+
+```mdl
+decision D-21: Selecting a custom agent runs the prompt with that agent, and the selection is a feature of its own (F-8). Fills in [D-20].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.3]
+  why: D-20 lists custom agents in the selection, and choosing one mirrors how choosing Composer selects the agent-less session.
 ```
