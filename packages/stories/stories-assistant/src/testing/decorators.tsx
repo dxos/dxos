@@ -157,8 +157,11 @@ type DecoratorsProps = Merge<
      * beside the real models; the chat starts on `select`. Unlike `scripted`, every other model still resolves as usual.
      */
     scriptedModels?: { scenes: Readonly<Record<string, ScriptedScene.Scene>>; select?: string };
-    /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
-    assistantSettings?: Partial<Assistant.Settings>;
+    /**
+     * Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. A story that
+     * names none starts from the defaults, whatever an earlier story set.
+     */
+    assistantSettings?: StorySettings;
   },
   Omit<StoryHarness.Options, 'Wrapper' | 'setupEvents'>,
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent' | 'onReady'>
@@ -218,17 +221,35 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   return <>{children}</>;
 };
 
+/** The settings a story decides, each of which changes how its agent runs. */
+type StorySettings = Pick<Assistant.Settings, 'parallelThreads' | 'parallelThreadLimit' | 'parallelThreadAgents'>;
+
 /**
- * Applies story assistant settings before rendering its children, so an agent spawned by the first prompt already
- * reads them.
+ * The settings without the ones a story decides. The store outlives a story (it is persisted, and every story shares
+ * the origin), so a setting one story turned on would otherwise run the next story's agent too.
  */
-const SettingsApplier = ({ settings, children }: { settings: Partial<Assistant.Settings>; children: ReactNode }) => {
+const withoutStorySettings = ({
+  parallelThreads: _threads,
+  parallelThreadLimit: _limit,
+  parallelThreadAgents: _agents,
+  ...rest
+}: Assistant.Settings): Omit<Assistant.Settings, keyof StorySettings> => rest;
+
+// Stable, since the applier re-applies whenever its settings change identity.
+const NO_STORY_SETTINGS: StorySettings = {};
+
+/**
+ * Sets the story's assistant settings, over the defaults, before rendering its children, so an agent spawned by the
+ * first prompt already reads them; and puts the defaults back when the story goes, for stories outside this harness.
+ */
+const SettingsApplier = ({ settings, children }: { settings: StorySettings; children: ReactNode }) => {
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
   const atom = Hooks.useCapability(AssistantCapabilities.Settings);
   const [applied, setApplied] = useState(false);
   useEffect(() => {
-    atomRegistry.set(atom, { ...atomRegistry.get(atom), ...settings });
+    atomRegistry.set(atom, { ...withoutStorySettings(atomRegistry.get(atom)), ...settings });
     setApplied(true);
+    return () => atomRegistry.set(atom, withoutStorySettings(atomRegistry.get(atom)));
   }, [atomRegistry, atom, settings]);
   return applied ? <>{children}</> : null;
 };
@@ -283,13 +304,11 @@ const toStoryDecoratorsProps = ({
     ...(scriptedModels ? [ScriptedModelPlugin({ scenes: scriptedModels.scenes })] : []),
     ...plugins,
   ],
-  Wrapper:
-    skills?.length || assistantSettings
-      ? ({ children }) => {
-          const bound = skills?.length ? <SkillBinder skills={skills}>{children}</SkillBinder> : children;
-          return assistantSettings ? <SettingsApplier settings={assistantSettings}>{bound}</SettingsApplier> : bound;
-        }
-      : undefined,
+  Wrapper: ({ children }) => (
+    <SettingsApplier settings={assistantSettings ?? NO_STORY_SETTINGS}>
+      {skills?.length ? <SkillBinder skills={skills}>{children}</SkillBinder> : children}
+    </SettingsApplier>
+  ),
 });
 
 /**
