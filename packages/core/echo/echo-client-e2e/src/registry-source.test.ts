@@ -344,6 +344,47 @@ describe('registry sources', () => {
     expect(replaced && Entity.getMeta(replaced)?.key).toBe(THING_KEY);
   });
 
+  test("an entity added directly over a source's survives that source's removal", async ({ expect }) => {
+    const registry = new RegistryImpl({});
+    const removeSource = registry.addSource({
+      resolve: async () => Obj.make(Remote, { [Obj.Meta]: { key: THING_KEY }, title: 'From the source' }),
+    });
+    const fromSource = await registry.resolve(DXN.make(THING_KEY));
+    if (fromSource === undefined) {
+      throw new Error('the source did not resolve the key');
+    }
+
+    registry.remove(fromSource.id);
+    registry.add([fromSource]);
+    removeSource();
+    expect(registry.get(fromSource.id)).toBeDefined();
+  });
+
+  test('a lookup that resumes after another resolved the URI returns that entity, not a second copy', async ({
+    expect,
+  }) => {
+    const registry = new RegistryImpl({});
+    let answerA: ((entity: Entity.Unknown | undefined) => void) | undefined;
+    const removeA = registry.addSource({
+      resolve: () =>
+        new Promise((resolve) => {
+          answerA = resolve;
+        }),
+    });
+    const pending = registry.resolve(DXN.make(THING_KEY));
+    await expect.poll(() => answerA !== undefined).toBe(true);
+
+    removeA();
+    // B rebuilds the entity under a new id each time it is asked.
+    registry.addSource({
+      resolve: async () => Obj.make(Remote, { [Obj.Meta]: { key: THING_KEY }, title: 'From B' }),
+    });
+    const fresh = await registry.resolve(DXN.make(THING_KEY));
+    answerA?.(undefined);
+    expect((await pending)?.id).toBe(fresh?.id);
+    expect(registry.list().filter((entity) => Entity.getMeta(entity)?.key === THING_KEY)).toHaveLength(1);
+  });
+
   test('a source that cannot enumerate leaves an unkeyed query to the local registry', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();

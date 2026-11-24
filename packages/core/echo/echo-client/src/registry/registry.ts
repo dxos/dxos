@@ -98,6 +98,8 @@ export class RegistryImpl implements Registry.Registry {
 
   add(entities: readonly Entity.Unknown[]): void {
     for (const entity of entities) {
+      // An entity added directly is no source's, so removing a source never takes it.
+      this.#disown(getEntityId(entity));
       this.#put(entity);
     }
     this.#changed.emit();
@@ -119,6 +121,7 @@ export class RegistryImpl implements Registry.Registry {
     if (entity == null) {
       return false;
     }
+    this.#disown(id);
     this.#entitiesById.delete(id);
     // Remove any URI index entries that pointed to this entity.
     for (const [uri, indexed] of this.#entitiesByUri) {
@@ -271,6 +274,11 @@ export class RegistryImpl implements Registry.Registry {
       registration = this.#sources.find((entry) => !asked.has(entry))
     ) {
       asked.add(registration);
+      // Another lookup may have resolved the URI while this one waited; reuse it rather than register a second copy.
+      const resolved = this.#held(uri);
+      if (resolved !== undefined) {
+        return resolved;
+      }
       const { source } = registration;
       // A failing source reads as one that does not know the entity, so resolution reports it missing rather than throws;
       // started inside `then`, so a source that throws synchronously fails the same way.
@@ -280,8 +288,15 @@ export class RegistryImpl implements Registry.Registry {
           log.warn('registry source failed', { uri, error });
           return undefined;
         });
+      if (entity === undefined) {
+        continue;
+      }
+      const held = this.#held(uri);
+      if (held !== undefined) {
+        return held;
+      }
       // A registration removed while its answer was in flight no longer publishes it.
-      if (entity !== undefined && this.#addFrom(registration, [entity])) {
+      if (this.#addFrom(registration, [entity])) {
         return entity;
       }
     }
@@ -333,11 +348,18 @@ export class RegistryImpl implements Registry.Registry {
     if (!this.#sources.includes(registration)) {
       return false;
     }
+    this.add(entities);
     const provided = this.#provided.get(registration) ?? new Set<string>();
     entities.forEach((entity) => provided.add(getEntityId(entity)));
     this.#provided.set(registration, provided);
-    this.add(entities);
     return true;
+  }
+
+  /** Drops any source's claim on an entity, so that source's removal leaves it alone. */
+  #disown(id: string): void {
+    for (const provided of this.#provided.values()) {
+      provided.delete(id);
+    }
   }
 
   #put(entity: Entity.Unknown): void {

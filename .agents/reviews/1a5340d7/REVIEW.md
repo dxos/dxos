@@ -128,14 +128,14 @@ System One judges this a likely violation of `no-try-catch-in-effect-code` (Hand
 
 ### Triage
 
-- 620396cc-1, -2, -3, -4: `code-mode.test.ts` and `dialect-effect.ts` are not this PR's beyond one call each (`registerRegistrySource`, `describeTypes(registry.list())`); the flagged fixtures, template-string programs, Promise bridges and `ArgumentError` predate it.
-- 620396cc-5, -6, -7, -8: `protocol.ts`'s imports, the `any` on the handler's return and its try/catch predate the PR, which only renames the `typeSource` option to `registrySource`.
-- 620396cc-9: `operationRecord`'s try/catch predates the PR.
-- 620396cc-10: `rebuildType` is plain synchronous code, not an Effect: the rule's Effect error channel is not in play, and the catch keeps one malformed published type from costing the whole listing.
-- 620396cc-11: the e2e suite drives the real registry and query path; the source is the boundary under test, so it is stubbed. The EDGE path is driven end to end by edge's agent suites against bundles built from this branch.
-- 620396cc-12: the try/finally at `hypergraph.ts:749` is the existing ref-resolution trace, not Effect code.
-- 620396cc-13: `OBJECT_DIAGNOSTICS` predates the PR.
-- 620396cc-14: the registry is an in-memory cache by design, and what sources add is bounded by what the live sources publish. Removing a source removes every entity it added. An enumerated entity whose most specific URI (its versioned key, or its type's typename and version) is already registered or already in the same answer is not added again, even when a source rebuilt it under a new id. The per-query enumeration cache is cleared when a source is added or removed, on `remove()` and `clear()`, and when an enumeration fails.
+- 1a5340d7-1, -2, -3, -4: `code-mode.test.ts` and `dialect-effect.ts` are not this PR's beyond one call each (`registerRegistrySource`, `describeTypes(registry.list())`); the flagged fixtures, template-string programs, Promise bridges and `ArgumentError` predate it.
+- 1a5340d7-10, -11, -12, -13: `protocol.ts`'s imports, the `any` on the handler's return and its try/catch predate the PR, which only renames the `typeSource` option to `registrySource`.
+- 1a5340d7-15: the try/catch in `invoke` predates the PR, and turns a failed operation into the protocol's `{ ok: false }` answer at the worker boundary.
+- 1a5340d7-16: `rebuildType` is plain synchronous code, not an Effect: the rule's Effect error channel is not in play, and the catch keeps one malformed published type from costing the whole listing.
+- 1a5340d7-17: the e2e suite drives the real registry and query path; the source is the boundary under test, so it is stubbed. The EDGE path is driven end to end by edge's agent suites against bundles built from this branch.
+- 1a5340d7-18: the try/finally at `hypergraph.ts:749` is the existing ref-resolution trace, not Effect code.
+- 1a5340d7-19: `OBJECT_DIAGNOSTICS` predates the PR.
+- 1a5340d7-20: the registry is an in-memory cache by design, and what sources add is bounded by what the live sources publish. Removing a source removes every entity it added. An enumerated entity whose most specific URI (its versioned key, or its type's typename and version) is already registered or already in the same answer is not added again, even when a source rebuilt it under a new id. The per-query enumeration cache is cleared when a source is added or removed, on `remove()` and `clear()`, and when an enumeration fails.
 - 1a5340d7-5, -6, -7: `WorkerSandboxRuntime.ts` code this PR does not write; the PR only renames the `registerTypeSource` call to `registerRegistrySource`. The sandbox runtime is plain Promise code at the worker boundary, not Effect code.
 - 1a5340d7-8, -9: the same rename in `WorkerSandboxWorkerd.test.ts`; the flagged fixtures predate this PR.
 - 1a5340d7-14: `serializeOperations` predates this PR, which adds one line to `toSkillRecord`; it is synchronous, not Effect code.
