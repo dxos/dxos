@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -21,7 +20,7 @@ import { sessionSkills } from './modes.ts';
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
 
 export const loadAgentObjects = Effect.fnUntraced(function* (agent: Agent.Agent) {
-  const chat = yield* Agent.loadChat(agent);
+  const chat = yield* Agent.loadSession(agent);
   if (!chat) {
     return [Ref.make<Obj.Unknown>(agent)];
   }
@@ -32,7 +31,7 @@ export const loadAgentObjects = Effect.fnUntraced(function* (agent: Agent.Agent)
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
   return binder
     .getObjects()
-    .filter((object) => !Obj.instanceOf(Chat.Chat, object))
+    .filter((object) => !Obj.instanceOf(Agent.Session, object))
     .map((object): Ref.Ref<Obj.Unknown> => Ref.make(object));
 });
 
@@ -58,7 +57,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
 }: EnsureChannelChatProps) {
   const key = AgentChannels.chatKey(channel.id, thread);
   // The same conversation may be bridged to more than one agent.
-  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
+  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Agent.Session, [key]))).run;
   const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
   if (match) {
     // A chat first made without `direct` (e.g. by `EnsureChannelChat`) still needs the key the host finds pending DMs by.
@@ -71,13 +70,13 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
     return match;
   }
 
-  // Read before the new chat exists: `Agent.loadChat` resolves the agent's latest chat.
+  // Read before the new chat exists: `Agent.loadSession` resolves the agent's latest chat.
   const objects = yield* loadAgentObjects(agent);
   const skills = yield* sessionSkills(agent);
 
   const feed = yield* Database.add(TrajectoryStore.makeFeed());
   const chat = yield* Database.add(
-    Chat.make({
+    Agent.makeSession({
       [Obj.Meta]: { keys: direct ? [key, AgentChannels.directKey(channel.id)] : [key] },
       [Obj.Parent]: agent,
       name: title,
@@ -109,7 +108,7 @@ const channelSkills = Effect.fnUntraced(function* (channel: Channel.Channel) {
 });
 
 /** Binds the channel's skills to a chat made before the channel declared them; a skill already bound is skipped. */
-const bindChannelSkills = Effect.fnUntraced(function* (chat: Chat.Chat, channel: Channel.Channel) {
+const bindChannelSkills = Effect.fnUntraced(function* (chat: Agent.Session, channel: Channel.Channel) {
   const skills = yield* channelSkills(channel);
   if (skills.length === 0) {
     return;

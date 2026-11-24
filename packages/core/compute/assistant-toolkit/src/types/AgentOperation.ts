@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { mcpServerTypes } from '@dxos/agent-runtime/mcp-server-types';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -36,7 +36,7 @@ export const RunInstructions = Operation.make({
     /**
      * When set, runs in this chat (history, queue, and bound context). Routine skills and context objects are merged into the conversation for this request.
      */
-    chat: Schema.optional(Ref.Ref(Chat.Chat)),
+    chat: Schema.optional(Ref.Ref(Agent.Session)),
 
     /**
      * @default `dxn:com.anthropic.model.claude-opus-5.default`.
@@ -51,7 +51,7 @@ export const RunInstructions = Operation.make({
   // ECHO types that the handler loads via Database.load(). Declaring them here ensures the
   // runtime registers their schema before remote invocation (e.g. via the EDGE function service).
   // `mcpServerTypes` are read each step to connect the space's MCP servers.
-  types: [Instructions.Instructions, Text.Text, Feed.Feed, Chat.Chat, ...mcpServerTypes],
+  types: [Instructions.Instructions, Text.Text, Feed.Feed, Agent.Session, ...mcpServerTypes],
   services: [
     AiService.AiService,
     // Resolves an MCP connection's key.

@@ -13,7 +13,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
@@ -85,7 +85,7 @@ const SlideAssistantStory = () => {
   const variant = useResolveRef(artifact?.variants?.[0]);
   const file = variant?.content;
   const { invokePromise } = Hooks.useOperationInvoker();
-  const [chat, setChat] = useState<Chat.Chat>();
+  const [chat, setChat] = useState<Agent.Session>();
   useEffect(() => {
     if (slide) {
       // As the companion does on opening: find or create the slide's chat, bound to the slide (and its skills).
@@ -136,7 +136,7 @@ const meta = {
             Presentation.Slide,
             Text.Text,
             Markdown.Document,
-            Chat.Chat,
+            Agent.Session,
             Feed.Feed,
             MediaArtifact.MediaArtifact,
             Variant.Variant,

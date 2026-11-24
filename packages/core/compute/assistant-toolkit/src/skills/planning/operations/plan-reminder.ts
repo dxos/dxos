@@ -7,8 +7,8 @@ import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
-import { Harness } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import { TrajectoryStore } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { concat, trim } from '@dxos/util';
 
@@ -26,18 +26,18 @@ export default PlanReminder.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* () {
-        const chat = yield* Harness.getChat.pipe(Effect.orElseSucceed(() => undefined));
+        const chat = yield* Agent.currentSession.pipe(Effect.orElseSucceed(() => undefined));
         if (!chat) {
           return {};
         }
 
-        const tasks = yield* Chat.loadTasks(chat);
-        if (!tasks.some(Chat.isOpenTask)) {
+        const tasks = yield* Agent.loadTasks(chat);
+        if (!tasks.some(Agent.isOpenTask)) {
           return {};
         }
-        const checklist = yield* Chat.formatChecklist(chat);
+        const checklist = yield* Agent.formatChecklist(chat);
 
-        const history = yield* Harness.history;
+        const history = yield* TrajectoryStore.currentHistory;
         const prompt = Prompt.concat(
           yield* AiPreprocessor.preprocessPrompt(history, { system: checklistCompletionCheckSystem }),
           checklistCompletionCheckPrompt(checklist),

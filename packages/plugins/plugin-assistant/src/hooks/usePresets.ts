@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -35,10 +35,10 @@ export type UsePresets = {
  * Resolves the chat model presets: every EDGE model, then the models this device serves (the bundled
  * sidecar's installed models, a reachable LM Studio, or the external server settings name). Each preset
  * carries its own provider, so the model picked decides where inference runs. The selection is the chat's
- * own (`Chat.session.model`), written back to it when the user picks; a chat that has not selected one
+ * own (`Agent.session.model`), written back to it when the user picks; a chat that has not selected one
  * shows the configured default.
  */
-export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
+export const usePresets = (settings: Assistant.Settings, chat?: Agent.Session): UsePresets => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
   // same chat, and the stamp the chat model writes before the first request.

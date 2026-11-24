@@ -5,9 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Harness } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -57,7 +58,7 @@ export const UpdateTasks = Operation.make({
     changes: Schema.Array(TaskChange),
   }),
   output: Schema.Any,
-  services: [Harness.HarnessService, Database.Service, Trace.TraceService],
+  services: [Agent.Service, Process.ManagerService, Database.Service, Trace.TraceService],
 });
 
 export const AskQuestion = Operation.make({
@@ -97,7 +98,7 @@ export const AskQuestion = Operation.make({
     ),
   }),
   output: Schema.Any,
-  services: [Harness.HarnessService, Database.Service, Trace.TraceService],
+  services: [Agent.Service, Process.ManagerService, Database.Service, Trace.TraceService],
 });
 
 export const PlanReminder = Operation.make({
@@ -108,5 +109,5 @@ export const PlanReminder = Operation.make({
   },
   input: Schema.Struct({}),
   output: Hook.Output,
-  services: [Harness.HarnessService, Database.Service, AiService.AiService],
+  services: [Agent.Service, Process.ManagerService, Database.Service, AiService.AiService],
 });

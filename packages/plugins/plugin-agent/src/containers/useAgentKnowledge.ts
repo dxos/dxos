@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { type Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { Fact, Graph, Mapping, Ontology, Vocab } from '@dxos/echo-memory';
 import { useObject, useQuery } from '@dxos/echo-react';

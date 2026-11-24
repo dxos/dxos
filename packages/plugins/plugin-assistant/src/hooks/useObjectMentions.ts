@@ -7,7 +7,7 @@ import { useCallback, useMemo } from 'react';
 
 import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { type AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { type Database, EID, Obj, type Ref, type URI } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 import { parseMentions } from '@dxos/react-ui-assistant';
@@ -18,7 +18,7 @@ import { isNonNullable } from '@dxos/util';
 
 const MAX_MENTIONS = 20;
 
-const notChat = (object: Obj.Unknown) => !Obj.instanceOf(Chat.Chat, object);
+const notChat = (object: Obj.Unknown) => !Obj.instanceOf(Agent.Session, object);
 
 const escapeLinkLabel = (label: string): string => label.replace(/[[\]\\]/g, '\\$&').replace(/\s*\r?\n\s*/g, ' ');
 

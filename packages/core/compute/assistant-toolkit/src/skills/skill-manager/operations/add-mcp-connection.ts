@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AiContext, Harness } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
@@ -72,10 +72,13 @@ export default AddMcpConnection.pipe(
         }
       }
 
-      const binder = yield* Harness.binder.pipe(Effect.orDie);
-      yield* Effect.promise(() => binder.setConnection(AiContext.connectionRef(connection), true));
+      const connections = yield* AiContext.useCurrentBinder((binder) =>
+        Effect.promise(() => binder.setConnection(AiContext.connectionRef(connection), true)).pipe(
+          Effect.map(() => binder.getConnections()),
+        ),
+      ).pipe(Effect.orDie);
       return {
-        ...describe(connection, binder.getConnections()),
+        ...describe(connection, connections),
         ...(probe._tag === 'Success' ? { tools: probe.success.tools } : { problem: probe.failure.message }),
       };
     }),

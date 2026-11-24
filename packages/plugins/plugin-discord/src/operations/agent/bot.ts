@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Agent } from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { Database, Filter, Query, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
@@ -13,7 +13,7 @@ import { Person } from '@dxos/types';
 import { DiscordBot, DiscordChannel } from '#types';
 
 /** The bot that serves the agent's Discord channels; an agent is in Discord through one bot. */
-export const agentBot = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent>) {
+export const agentBot = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agent>) {
   const agent = yield* Database.load(agentRef);
   const { db } = yield* Database.Service;
   for (const channel of yield* AgentChannels.loadChannels(agent)) {

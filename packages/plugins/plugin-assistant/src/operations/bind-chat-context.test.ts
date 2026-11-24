@@ -12,7 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -32,7 +32,7 @@ const GATED = 'from the gated provider';
 // the manager, so it must read the binding rather than capture one.
 const TestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
-  types: [Chat.Chat, Feed.Feed, Text.Text, ...TrajectoryStore.types],
+  types: [Agent.Session, Feed.Feed, Text.Text, ...TrajectoryStore.types],
   extraServices: Layer.sync(Capability.Service, () => manager),
 });
 
@@ -175,14 +175,14 @@ describe('BindChatContext over a stable subject', () => {
 });
 
 /** The binding events (`contextBind`) a chat's feed holds. */
-const bindEvents = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const bindEvents = Effect.fnUntraced(function* (chat: Agent.Session) {
   const feed = yield* Database.load(chat.feed);
   return (yield* TrajectoryStore.read(feed)).flatMap((event) =>
     event.payload._tag === 'contextBind' ? [event.payload] : [],
   );
 });
 
-const bindingCount = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const bindingCount = Effect.fnUntraced(function* (chat: Agent.Session) {
   return (yield* bindEvents(chat)).length;
 });
 
@@ -203,13 +203,13 @@ const makeText = Effect.fnUntraced(function* (content: string) {
 
 const makeChat = Effect.fnUntraced(function* () {
   const { db } = yield* Database.Service;
-  const chat = db.add(Chat.make({ feed: Ref.make(db.add(Feed.make())) }));
+  const chat = db.add(Agent.makeSession({ feed: Ref.make(db.add(Feed.make())) }));
   yield* Database.flush();
   return chat;
 });
 
 /** Content of the text objects the feed's binding events add up to. */
-const boundText = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const boundText = Effect.fnUntraced(function* (chat: Agent.Session) {
   const bindings = yield* bindEvents(chat);
   const objects = yield* Effect.forEach(
     bindings.flatMap((binding) => binding.objects),

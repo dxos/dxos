@@ -9,7 +9,7 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Ref } from '@dxos/echo';
 import * as EchoError from '@dxos/echo/Error';
@@ -151,12 +151,12 @@ export const seed = ({
 
     // The chat the session runs on, carrying the four steps and filed under the project.
     const feed = yield* Database.add(Feed.make());
-    const chat = yield* Database.add(Chat.make({ name: PROJECT_NAME, feed: Ref.make(feed) }));
-    Chat.assignTasks(
+    const chat = yield* Database.add(Agent.makeSession({ name: PROJECT_NAME, feed: Ref.make(feed) }));
+    Agent.assignTasks(
       chat,
       steps.map((step: Task.Task) => Ref.make(step)),
     );
-    Chat.linkCompanion({ chat, subject: project });
+    Agent.linkCompanion({ chat, subject: project });
     yield* Database.flush();
 
     return { objects: [Ref.make(project)], chat: Ref.make(chat) };

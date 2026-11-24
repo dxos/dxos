@@ -11,7 +11,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -35,7 +35,7 @@ manager.contribute({
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
-  types: [Chat.Chat, Feed.Feed, Message.Message],
+  types: [Agent.Session, Feed.Feed, Message.Message],
   extraServices: Layer.succeed(Capability.Service, manager),
   disableLlmMemoization: true,
 });
@@ -228,11 +228,11 @@ const setupChat = Effect.fnUntraced(function* ({
   messages,
 }: {
   channel: boolean;
-  messages: (chat: Chat.Chat) => Message.Message[];
+  messages: (chat: Agent.Session) => Message.Message[];
 }) {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
-    Chat.make({
+    Agent.makeSession({
       ...(channel ? { [Obj.Meta]: { keys: [AgentChannels.chatKey('channel', 'thread')] } } : {}),
       feed: Ref.make(feed),
     }),

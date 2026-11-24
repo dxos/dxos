@@ -16,7 +16,7 @@ import { TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Reducer from '@dxos/compute/Reducer';
@@ -255,12 +255,7 @@ describe('AssistantPlugin', () => {
           yield* agent.waitForCompletion();
         }).pipe(
           Effect.provide(
-            ServiceResolver.provide(
-              { space: defaultSpace.id },
-              Database.Service,
-              AgentService.AgentService,
-              Registry.Service,
-            ),
+            ServiceResolver.provide({ space: defaultSpace.id }, Database.Service, Agent.Service, Registry.Service),
           ),
         ),
       );

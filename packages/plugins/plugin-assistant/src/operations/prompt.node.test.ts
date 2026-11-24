@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -48,7 +48,7 @@ describe('Agent prompt (composer plugin harness)', () => {
 
           const messageCountBefore = yield* TrajectoryStore.messages(feed).pipe(Effect.map(Array.length));
 
-          const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+          const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
           const instructions = yield* Database.add(
             Instructions.make({
               name: 'chat-mode-test',

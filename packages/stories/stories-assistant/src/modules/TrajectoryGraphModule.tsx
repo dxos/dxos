@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { Feed, Filter, Order, Query, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
@@ -21,7 +21,7 @@ import { toCommits } from './trajectory-commits.ts';
  */
 export const TrajectoryGraphModule = (_props: Surface.ComponentProps<Record<string, unknown>>) => {
   const space = Hooks.useActiveSpace();
-  const chats = useQuery(space?.db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(space?.db, Filter.type(Agent.Session));
   const chat = chats.at(-1);
   const [feedRef] = useObject(chat, 'feed');
   const feed = useResolveRef(feedRef);

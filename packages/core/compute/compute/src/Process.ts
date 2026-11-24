@@ -93,6 +93,8 @@ export const NotifyAnnotation = Annotation.make({
 
 /**
  * Marks a process as the harness host for its conversation (discovery substrate).
+ *
+ * @deprecated Find a session's process by {@link SessionAnnotation} instead.
  */
 export const HarnessHostAnnotation = Annotation.make({
   id: 'org.dxos.process.harnessHost',

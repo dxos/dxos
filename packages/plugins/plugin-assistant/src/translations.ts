@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
@@ -60,7 +59,7 @@ export const translations: Theme.Resource[] = [
         'delete-object.label': 'Delete sequence',
         'object-deleted.label': 'Sequence deleted',
       },
-      [Type.getTypename(Chat.Chat)]: {
+      [Type.getTypename(Agent.Session)]: {
         'typename.label': 'Session',
         'typename.label_zero': 'Sessions',
         'typename.label_one': 'Session',

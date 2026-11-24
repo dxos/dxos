@@ -4,8 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Harness } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -28,7 +29,7 @@ export const DelegateTask = Operation.make({
     }),
   }),
   output: Schema.Any,
-  services: [Harness.HarnessService, Database.Service],
+  services: [Agent.Service, Process.ManagerService, Database.Service],
 });
 
 export const DelegateTasks = Operation.make({
@@ -49,5 +50,41 @@ export const DelegateTasks = Operation.make({
     }),
   }),
   output: Schema.Any,
-  services: [Harness.HarnessService, Database.Service],
+  services: [Agent.Service, Process.ManagerService, Database.Service],
+});
+
+export const ThreadDelegate = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.delegateToThread'),
+    name: 'Delegate to thread',
+    description: trim`
+      Delegates a self-contained task to a subagent that runs in a background thread of this session, in parallel
+      with you, and returns its thread id at once. The subagent starts with nothing but the task, so state
+      everything it needs. Call thread-wait with the id when you need its answer.
+    `,
+    icon: 'ph--git-fork--regular',
+  },
+  input: Schema.Struct({
+    task: Schema.String.annotate({ description: 'The complete instructions for the subagent.' }),
+    purpose: Schema.String.annotate({ description: 'A short title for the task, shown to the reader.' }),
+  }),
+  output: Schema.String,
+  services: [Agent.Service, Process.ManagerService, Database.Service],
+});
+
+export const ThreadWait = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.waitForThread'),
+    name: 'Wait for thread',
+    description: trim`
+      Waits until another thread of this session has finished, then returns what it did. Call it only when your
+      request depends on a result that thread has not produced yet.
+    `,
+    icon: 'ph--hourglass--regular',
+  },
+  input: Schema.Struct({
+    thread: Schema.String.annotate({ description: 'Id of the thread to wait for.' }),
+  }),
+  output: Schema.String,
+  services: [Agent.Service, Process.ManagerService, Database.Service],
 });

@@ -16,15 +16,15 @@ import * as Scope from 'effect/Scope';
 
 import {
   AgentInput,
-  type AgentProcessDefinition,
   type McpEndpointOf,
+  type SessionProcessDefinition,
   loadMcpServers,
   makeInputMessage,
   mcpServerTypes,
   withTurnStatus,
 } from '@dxos/agent-runtime';
 import { Alarm, HarnessControl, type PendingState, SessionStore, TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -52,7 +52,7 @@ export type Command = Pick<ShellService.SpawnOptions, 'command' | 'args' | 'env'
 /** How the agent runs, less how it is started: the process starts it through {@link ShellService}. */
 export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
   command?: Command;
-  /** The MCP server a connection exposes; see `AgentProcessOptions.mcpEndpoint`. */
+  /** The MCP server a connection exposes; see `SessionProcessOptions.mcpEndpoint`. */
   mcpEndpoint?: McpEndpointOf;
 };
 
@@ -64,14 +64,14 @@ export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
  * mid-turn waits its turn and one left by a process that died is redelivered. The agent stays
  * running between turns, so a follow-up does not pay for starting it again.
  */
-export const make = (options: Options): AgentProcessDefinition =>
+export const make = (options: Options): SessionProcessDefinition =>
   Operation.makeDurable({
     key: KEY,
     input: AgentInput,
     output: Schema.Void,
     // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
     // the agent's subscription token is found with one, and the chat's MCP connections with others.
-    types: [Chat.Chat, Feed.Feed, ...TrajectoryStore.types, ...mcpServerTypes],
+    types: [Agent.Session, Feed.Feed, ...TrajectoryStore.types, ...mcpServerTypes],
     services: [Database.Service, Registry.Service, Credential.CredentialsService, ShellService.ShellService],
     // Where the host has one, `TrajectoryCache` keeps its checkpoints there, shared with the chat UI on this device.
     optionalServices: [SqlService.SqlService],
@@ -85,7 +85,7 @@ export const make = (options: Options): AgentProcessDefinition =>
         if (chatDxn == null) {
           return yield* Effect.die(new Error('Claude Code process requires spawn options.target set to a Chat DXN.'));
         }
-        const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
+        const chat = yield* Database.resolve(chatDxn, Agent.Session).pipe(Effect.orDie);
         const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
         const shell = yield* ShellService.ShellService;
         const database = yield* Database.Service;

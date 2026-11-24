@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import type * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Project from '@dxos/compute/Project';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -1505,7 +1504,7 @@ export type HistoryInput = {
 };
 
 export type HistoryResult = {
-  readonly chats: Record<string, Chat.Chat>;
+  readonly chats: Record<string, Agent.Session>;
   readonly trace: Feed.Feed;
 };
 
@@ -1741,7 +1740,7 @@ export const makeHistory = (input: HistoryInput) =>
     const trace = yield* Database.add(
       Feed.make({ kind: TRACE_FEED_KIND, name: 'Execution Trace', namespace: 'trace' }),
     );
-    const chats: Record<string, Chat.Chat> = {};
+    const chats: Record<string, Agent.Session> = {};
     const traceMessages: Trace.Message[] = [];
     for (const run of plan.runs) {
       const { seed } = run;
@@ -1749,14 +1748,14 @@ export const makeHistory = (input: HistoryInput) =>
       const project = projects[seed.project];
       const feed = yield* Database.add(Feed.make());
       const chat = yield* Database.add(
-        Chat.make({
+        Agent.makeSession({
           name: seed.name ?? `${agent.name}: ${seedFor(seed.tasks[0]).title}`,
           feed: Ref.make(feed),
           ...(project.instructions && { instructions: project.instructions }),
           tasks: seed.tasks.map((key) => Ref.make(tasks[key])),
         }),
       );
-      Chat.linkCompanion({ chat, subject: project });
+      Agent.linkCompanion({ chat, subject: project });
       chats[seed.key] = chat;
 
       const delegator = plan.runs.find((candidate) => candidate.delegation?.run === seed.key)?.seed.agent;

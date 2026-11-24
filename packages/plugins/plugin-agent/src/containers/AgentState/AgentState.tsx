@@ -7,8 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Organization, Person, Task } from '@dxos/types';
@@ -40,9 +39,9 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const [did] = useObject(agent, 'did');
 
   // Child-of filters rather than `.children()` traversals, which EDGE's query planner cannot run.
-  const chatFilter = useMemo(() => Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)), [agent]);
+  const chatFilter = useMemo(() => Filter.and(Filter.type(Agent.Session), Filter.childOf(agent)), [agent]);
   // `Filter.and` widens to the child-of filter's untyped result, so the element type is restated here.
-  const chats: Chat.Chat[] = useQuery(db, chatFilter);
+  const chats: Agent.Session[] = useQuery(db, chatFilter);
   const goals = useQuery(db, Filter.type(Goal.Goal));
   const people = useQuery(db, Filter.type(Person.Person));
   const organizations = useQuery(db, Filter.type(Organization.Organization));
@@ -119,7 +118,7 @@ AgentState.displayName = 'AgentState';
  * The skills bound to the agent's primary chat. Bindings are resolved by an operation (the binder is
  * heavy), so the list is re-read whenever the chat's feed gains a binding entry.
  */
-const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentStateSkill[] => {
+const useBoundSkills = (agent: Agent.Agent, chat: Agent.Session | undefined): AgentStateSkill[] => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const spaceId = Obj.getDatabase(agent)?.spaceId;
   const bindings = useBindingCount(chat);
@@ -155,7 +154,7 @@ const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentS
  */
 const useChannels = (
   agent: Agent.Agent,
-  chats: readonly Chat.Chat[],
+  chats: readonly Agent.Session[],
   people: readonly Person.Person[],
 ): AgentStateChannel[] => {
   const { invokePromise } = Hooks.useOperationInvoker();

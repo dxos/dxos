@@ -5,9 +5,9 @@
 export * from './trajectory/index.ts';
 export * from './types/index.ts';
 
+export * as Agent from './Agent.ts';
 export * as AgentIdentity from './AgentIdentity.ts';
 export * as AiMetering from './AiMetering.ts';
-export * as AgentService from './AgentService.ts';
 export * as Cancellation from './Cancellation.ts';
 export * as Credential from './Credential.ts';
 export * as FunctionsAiError from './FunctionsAiError.ts';

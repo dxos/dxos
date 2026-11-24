@@ -3,7 +3,7 @@
 `AgentService` spawns and caches a process-backed **agent** per `Chat`. The chat is the process's
 spawn target, and the message feed, the steering instructions and the checklist are all read from
 it — so a rehydrated process recovers them by re-reading the chat. 
-The agent is a long-lived `AgentProcess` that handles user turns; 
+The agent is a long-lived `SessionProcess` that handles user turns; 
 when a `DelegationStrategy` is injected it also acts as a **supervisor** that delegates work 
 to linked child processes and folds their results back into the conversation.
 
@@ -20,7 +20,7 @@ flowchart TB
 
   subgraph fr["@dxos/functions-runtime · agent-service"]
     AS["AgentService.layer({ delegationStrategy? })"]
-    AP["AgentProcess<br/>onAlarm (turn) · onChildEvent (wake)<br/>DelegationsKey: pid → id"]
+    AP["SessionProcess<br/>onAlarm (turn) · onChildEvent (wake)<br/>DelegationsKey: pid → id"]
     SS["DelegationStrategy <i>(type-only seam)</i><br/>reconcile() / onComplete()"]
     AS --> AP
     AP -. "calls" .-> SS
@@ -43,7 +43,7 @@ flowchart TB
 - **`Process.ManagerService`** (runtime primitive, no AI): the process's own manager links every child
   it spawns to the process. `Process.spawn` spawns an operation as such a child and returns its
   `Process.Process`; `attach(pid)` + `Process.awaitOutput` reads the finished child's result.
-- **`DelegationStrategy`** (this dir, type-only): the pluggable policy `AgentProcess` calls —
+- **`DelegationStrategy`** (this dir, type-only): the pluggable policy `SessionProcess` calls —
   `reconcile` (what to delegate) and `onComplete` (how to fold a result back). Absent → plain chat.
 - **`makeDelegationStrategy()`** (assistant-toolkit): the concrete, agent/plan-aware implementation,
   contributed by `plugin-automation` and injected through `AgentService.layer`.
@@ -57,7 +57,7 @@ The child's exit is only a **wake signal** — its output value is read separate
 ```mermaid
 sequenceDiagram
   participant U as User
-  participant AP as AgentProcess (supervisor)
+  participant AP as SessionProcess (supervisor)
   participant ST as DelegationStrategy
   participant POI as Process.ManagerService
   participant CH as Sub-agent (child process)
@@ -86,8 +86,8 @@ sequenceDiagram
 
 | Symbol | Where | Role |
 | --- | --- | --- |
-| `AgentService` / `layer` | `AgentService.ts` | Per-chat session cache (model-aware); wires `delegationStrategy` into `AgentProcess`. |
-| `AgentProcess` | `agent-process.ts` | Turn loop (`onAlarm`) + child-exit wake (`onChildEvent`); owns `DelegationsKey`. |
+| `AgentService` / `layer` | `AgentService.ts` | Per-chat session cache (model-aware); wires `delegationStrategy` into `SessionProcess`. |
+| `SessionProcess` | `session-process.ts` | Turn loop (`onAlarm`) + child-exit wake (`onChildEvent`); owns `DelegationsKey`. |
 | `DelegationStrategy`, `Delegation` | `delegation-strategy.ts` | Type-only seam: `reconcile` / `onComplete`; `Delegation = { id, spawn }`. |
 | `Process.spawn` / `Process.Manager.attach` | `@dxos/compute` | Linked-child spawn + result read. |
 | `makeDelegationStrategy()` | `@dxos/assistant-toolkit` | Concrete agent/plan-aware strategy. |

@@ -28,8 +28,8 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
 import { OperationProcess } from '@dxos/compute-runtime';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
@@ -54,7 +54,7 @@ import { type ThreadingOptions, runLanes, tenantOf } from './thread-scheduler.ts
 import { type MakeTurnProducer, type TurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 import { withTurnStatus } from './turn-status.ts';
 
-export interface AgentProcessOptions {
+export interface SessionProcessOptions {
   // TODO(burdon): Instructions?
   systemPrompt?: string;
 
@@ -117,7 +117,7 @@ export interface AgentProcessOptions {
   hooks?: () => readonly Hook.Definition[];
 }
 
-export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
+export const SESSION_PROCESS_KEY = 'org.dxos.testing.process.agent';
 
 /** `SpaceProperties` (`@dxos/client-protocol`), by typename: the space's hook settings are on it. */
 const SPACE_PROPERTIES_TYPENAME = 'org.dxos.type.spaceProperties';
@@ -131,7 +131,7 @@ const AgentPrompt = Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]
 const AgentInputSender = Actor.Actor.mapFields(Struct.pick(['role', 'name', 'identityDid', 'email']));
 
 /**
- * Input accepted by {@link AgentProcess}: a bare prompt, or a prompt attributed to a sender (e.g. a
+ * Input accepted by {@link SessionProcess}: a bare prompt, or a prompt attributed to a sender (e.g. a
  * relayed Discord author) whose identity the appended `Message` records.
  */
 export const AgentInput = Schema.Union([
@@ -163,11 +163,11 @@ export const makeInputMessage = (input: AgentInput): Message.Message => {
 };
 
 /**
- * A process that can run a chat in place of {@link AgentProcess}: it takes the same input and serves
+ * A process that can run a chat in place of {@link SessionProcess}: it takes the same input and serves
  * the same `HarnessControl` RPCs, so a session drives it without knowing which one it is. Its
  * requirements are its own; the host resolves them when it spawns the process.
  */
-export type AgentProcessDefinition = Operation.Durable<AgentInput, void, any, HarnessControlRpcs>;
+export type SessionProcessDefinition = Operation.Durable<AgentInput, void, any, HarnessControlRpcs>;
 
 /**
  * How long to wait before re-reading a queue that contradicts a write this process just made, and
@@ -207,9 +207,9 @@ const MAX_UNSEEN_WRITE_WAKES = 20;
  * Hosts a persistent, suspendible AiAgent that can process a number of prompts.
  * The process target is a queue DXN string.
  */
-export const AgentProcess = (options: AgentProcessOptions) =>
+export const SessionProcess = (options: SessionProcessOptions) =>
   Operation.makeDurable({
-    key: AGENT_PROCESS_KEY,
+    key: SESSION_PROCESS_KEY,
     input: AgentInput,
     output: Schema.Void,
     // The conversation's own data model. `SessionStore` reads the queue with a TYPED query
@@ -221,7 +221,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     // not know matches nothing. Without them a hosted agent reads its own skill bindings back
     // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
     // `mcpServerTypes` (bindings among them) are read each turn to connect the MCP servers.
-    types: [Chat.Chat, Feed.Feed, ...TrajectoryStore.types, Skill.Skill, ...mcpServerTypes],
+    types: [Agent.Session, Feed.Feed, ...TrajectoryStore.types, Skill.Skill, ...mcpServerTypes],
     services: [
       Database.Service,
       OpaqueToolkit.OpaqueToolkitProvider,
@@ -249,7 +249,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // The process is bound to the chat, not to its feed: the queue, the steering instructions
         // and the checklist are all read from the chat, and a rehydrated process recovers them by
         // re-reading it rather than from spawn annotations.
-        const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
+        const chat = yield* Database.resolve(chatDxn, Agent.Session).pipe(Effect.orDie);
         const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
         // A broken instructions ref degrades to an unsteered session rather than failing the process.
         const instructions = chat.instructions

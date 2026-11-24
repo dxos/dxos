@@ -8,7 +8,7 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -50,7 +50,7 @@ const seedProject = async ({
   binder,
 }: {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   binder: { bind: (props: { objects: Ref.Ref<Project.Project>[] }) => Promise<void> };
 }) => {
   const project = await EffectEx.runPromise(
@@ -62,7 +62,7 @@ const seedProject = async ({
   if (!parent) {
     throw new Error('The Composer Plugin template seeded no parent task.');
   }
-  AssistantChat.assignTasks(chat, [Ref.make(parent), ...(parent.subtasks ?? [])]);
+  Agent.assignTasks(chat, [Ref.make(parent), ...(parent.subtasks ?? [])]);
   await binder.bind({ objects: [Ref.make(project)] });
   await db.flush();
 };

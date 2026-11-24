@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof ModeOperation.SwitchMode> = ModeOper
   Operation.withHandler(
     Effect.fnUntraced(function* ({ chat: chatRef, mode }) {
       const chat = yield* Database.load(chatRef);
-      const agent = yield* Agent.loadForChat(chat);
+      const agent = yield* Agent.loadForSession(chat);
       if (!agent) {
         return yield* Effect.fail(new AgentOperationError({ message: 'The chat does not belong to an agent.' }));
       }

@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -44,7 +44,7 @@ export default Capability.makeModule(
           const feed = yield* Effect.promise(() => thread.feed.load());
 
           const children = yield* Effect.promise(() => db.query(Query.select(Filter.id(thread.id)).children()).run());
-          let chat = children.find(Obj.instanceOf(Chat.Chat));
+          let chat = children.find(Obj.instanceOf(Agent.Session));
           if (!chat) {
             const { object } = yield* invoker.invoke(
               AssistantOperation.CreateChat,
@@ -54,7 +54,7 @@ export default Capability.makeModule(
             chat = db.add(object);
             // The thread's companion: parented to it (and referenced from it), so it is deleted with the thread and
             // stays out of the space's chat lists.
-            Chat.linkCompanion({ chat, subject: thread });
+            Agent.linkCompanion({ chat, subject: thread });
           }
           yield* invoker.invoke(AssistantOperation.BindChatContext, { chat, subject }, { spaceId });
 

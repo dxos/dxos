@@ -10,7 +10,8 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import { AiAssistantError, type Chat } from '@dxos/assistant';
+import { AiAssistantError } from '@dxos/assistant';
+import type * as Agent from '@dxos/compute/Agent';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import type * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -40,12 +41,12 @@ const STOP_TIMEOUT_MS = 5_000;
 const START_TIMEOUT_MS = 30_000;
 
 /** The workspace chat a Composer chat continues, recorded on the chat after its first turn. */
-export const chatIdOf = (chat: Chat.Chat): number | undefined => {
+export const chatIdOf = (chat: Agent.Session): number | undefined => {
   const key = Obj.getMeta(chat).keys.find(({ source }) => source === CHAT_KEY_SOURCE);
   return key ? Number(key.id) : undefined;
 };
 
-const recordChatId = (chat: Chat.Chat, chatId: number): void => {
+const recordChatId = (chat: Agent.Session, chatId: number): void => {
   Obj.update(chat, (chat) => {
     Obj.deleteKeys(chat, CHAT_KEY_SOURCE);
     Obj.getMeta(chat).keys.push({ source: CHAT_KEY_SOURCE, id: String(chatId) });
@@ -102,7 +103,7 @@ const poll = (account: Account.Account, workspaceId: string, chatId: number) =>
 
 /** Runs one turn of the workspace agent for a Composer chat. */
 const runTurn: (
-  context: { chat: Chat.Chat; feed: Feed.Feed },
+  context: { chat: Agent.Session; feed: Feed.Feed },
   request: TurnRequest,
 ) => Effect.Effect<Message.Message[], CloudflareOsError, Database.Service> = Effect.fnUntraced(function* (
   { chat, feed },

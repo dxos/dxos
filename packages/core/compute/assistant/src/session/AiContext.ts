@@ -12,6 +12,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
+import * as Agent from '@dxos/compute/Agent';
+import type * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { Resource } from '@dxos/context';
@@ -784,3 +786,37 @@ const refKey = (uri: URI.URI): URI.URI => {
   const echoUri = EID.tryParse(uri);
   return echoUri ? EID.toLocal(echoUri) : uri;
 };
+
+/** Services the current-session helpers below read the session through. */
+type CurrentSessionServices = Agent.Service | Process.ManagerService | Database.Service;
+
+/**
+ * Runs `use` with a {@link Binder} open on the feed of the session the calling process works for.
+ */
+export const useCurrentBinder = <A, E, R>(
+  use: (binder: Binder) => Effect.Effect<A, E, R>,
+): Effect.Effect<A, E | Agent.NoCurrentSessionError, R | CurrentSessionServices> =>
+  Effect.gen(function* () {
+    const session = yield* Agent.currentSession;
+    const feed = yield* Database.load(session.feed).pipe(Effect.orDie);
+    const runtime = yield* Effect.context<Database.Service>();
+    const binder = yield* EffectEx.acquireReleaseResource(() => new Binder({ feed, runtime }));
+    return yield* use(binder);
+  }).pipe(Effect.scoped);
+
+/** Objects bound to the current session that match `filter`. */
+export const queryCurrent = <T extends Obj.Unknown>(
+  filter: Filter.Filter<T>,
+): Effect.Effect<T[], Agent.NoCurrentSessionError, CurrentSessionServices> =>
+  useCurrentBinder((binder) =>
+    Effect.sync(() => {
+      const match = Filter.toPredicate(filter);
+      return binder.getObjects().filter(match);
+    }),
+  );
+
+/** Binds skills and/or objects to the current session. */
+export const bindCurrent = (
+  props: BindingProps,
+): Effect.Effect<void, Agent.NoCurrentSessionError, CurrentSessionServices> =>
+  useCurrentBinder((binder) => Effect.promise(() => binder.bind(props)));

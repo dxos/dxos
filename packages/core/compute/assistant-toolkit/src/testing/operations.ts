@@ -4,9 +4,8 @@
 
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
 import { SpaceProperties } from '@dxos/client-protocol';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Routine from '@dxos/compute/Routine';
@@ -42,7 +41,7 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
   types: [
     Agent.Agent,
     ...TrajectoryStore.types,
-    Chat.Chat,
+    Agent.Session,
     Collection.Collection,
     Employer.Employer,
     Feed.Feed,

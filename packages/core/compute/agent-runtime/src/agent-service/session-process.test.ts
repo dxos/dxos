@@ -9,7 +9,7 @@ import { Alarm } from '@dxos/assistant';
 import * as Process from '@dxos/compute/Process';
 import { Message } from '@dxos/types';
 
-import { AgentInput, computeAlarmDelay, isAgentWorkPending, makeInputMessage } from './agent-process.ts';
+import { AgentInput, computeAlarmDelay, isAgentWorkPending, makeInputMessage } from './session-process.ts';
 
 describe('makeInputMessage', () => {
   it('keeps a bare string prompt as a plain user message', ({ expect }) => {

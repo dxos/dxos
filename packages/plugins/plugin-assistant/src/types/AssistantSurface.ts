@@ -4,7 +4,7 @@
 
 import * as Role from '@dxos/app-framework/Role';
 import { type AiContext } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import { type Database } from '@dxos/echo';
 import { type ThreadCardProps } from '@dxos/react-ui-assistant';
 
@@ -25,7 +25,7 @@ export const ChatSurface: Role.Role<{
  * coding plugin's diff, its worktree) by contributing a surface on this role.
  */
 export const ChatDetails: Role.Role<{
-  chat: Chat.Chat;
+  chat: Agent.Session;
   /** The chat's space, which a chat not yet stored has no database for. */
   db?: Database.Database;
   context?: AiContext.Binder;

@@ -21,9 +21,8 @@ import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
 import { type Space, isSpace } from '@dxos/client/echo';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Sequence } from '@dxos/conductor';
@@ -52,7 +51,7 @@ const whenNonChatObject = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObject,
   GraphNodeMatcher.whenNot(
     GraphNodeMatcher.whenAny(
-      AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+      AppNodeMatcher.whenEchoTypeMatches(Agent.Session),
       AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
     ),
   ),
@@ -63,7 +62,7 @@ const whenNonChatObject = GraphNodeMatcher.whenAll(
  * assistant companion (which has no chat until one is provisioned) and a space's home.
  */
 const whenPromptHost = GraphNodeMatcher.whenAny(
-  AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+  AppNodeMatcher.whenEchoTypeMatches(Agent.Session),
   AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
   (node: AppGraphNode.Node) =>
     node.type === AppNode.PLANK_COMPANION_TYPE &&
@@ -120,7 +119,7 @@ export const createChatSectionExtensions = (readOnly = WRITABLE) =>
         ]),
     }),
 
-    TypeSection.createTypeSectionExtension(Chat.Chat, {
+    TypeSection.createTypeSectionExtension(Agent.Session, {
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
       groupSegment: GraphPath.GroupSegments.ai,
       urlKey: 'chat',
@@ -131,7 +130,7 @@ export const createChatSectionExtensions = (readOnly = WRITABLE) =>
       id: 'chatsSectionActions',
       match: ReadOnly.unless<Space>(readOnly, (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return node.type === Type.getTypename(Chat.Chat) && space ? Option.some(space) : Option.none();
+        return node.type === Type.getTypename(Agent.Session) && space ? Option.some(space) : Option.none();
       }),
       actions: (space) =>
         Effect.succeed([
@@ -183,7 +182,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createTypeExtension({
         id: 'root',
-        type: Chat.Chat,
+        type: Agent.Session,
         actions: (chat, get) => {
           if (get(readOnly)) {
             return Effect.succeed([]);

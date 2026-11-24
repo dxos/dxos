@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database, Feed, Filter, Order, Query, Scope } from '@dxos/echo';
@@ -27,7 +27,7 @@ type ChatModel = NonNullable<ReturnType<typeof AssistantHooks.useChatModel>>;
 /** The chat model of the agent's conversation, or of one subagent thread when `lane` is given. */
 const useThreadModel = (
   db: Database.Database | undefined,
-  chat: AssistantChat.Chat | undefined,
+  chat: Agent.Session | undefined,
   lane?: Trajectory.ThreadId,
 ) => {
   const registry = useRegistry();
@@ -81,7 +81,7 @@ const LaneMemory = ({ events }: { events: readonly Trajectory.Event[] }) => {
 
 type ThreadColumnProps = {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   lane: Reducer.Lane;
   events: readonly Trajectory.Event[];
 };
@@ -112,7 +112,7 @@ const ThreadColumn = ({ db, chat, lane, events }: ThreadColumnProps) => {
 
 type AgentColumnProps = {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   chatModel: ChatModel;
   /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
   suggestions?: readonly string[];
@@ -245,7 +245,7 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
 export const ThreadColumns = ({ suggestions }: { suggestions?: readonly string[] }) => {
   const [space] = useSpaces();
   const db = space?.db;
-  const chats = useQuery(db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(db, Filter.type(Agent.Session));
   const chat = chats.at(-1);
   const chatModel = useThreadModel(db, chat);
   if (!db || !chat || !chatModel) {

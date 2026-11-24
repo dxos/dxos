@@ -10,7 +10,8 @@ import * as Option from 'effect/Option';
 import { AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Harness from '@dxos/assistant/Harness';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -47,13 +48,13 @@ const handler: Operation.WithHandler<typeof TurnReviewSkill.AnalyzeTurn> = TurnR
           return;
         }
 
-        const chat = yield* Harness.getChat;
+        const chat = yield* Agent.currentSession;
         const spaceId = Obj.getDatabase(chat)?.spaceId;
         if (!spaceId || !contentCaptureAllowed(spaceId)) {
           return;
         }
 
-        const history = yield* Harness.history;
+        const history = yield* TrajectoryStore.currentHistory;
         if (history.length === 0) {
           return;
         }
@@ -69,16 +70,13 @@ const handler: Operation.WithHandler<typeof TurnReviewSkill.AnalyzeTurn> = TurnR
         }
 
         const codeModeAvailable = yield* Capability.getAll(AssistantCapabilities.CodeModeAvailable);
-        const binder = yield* Harness.binder;
+        const skills = yield* AiContext.useCurrentBinder((binder) => Effect.sync(() => binder.getSkills()));
         const feed = yield* Database.load(chat.feed);
         const header: TrajectoryHeader = {
           sessionId: Obj.getURI(feed, { prefer: 'absolute' }),
           model: chat.session?.model,
           codeMode: codeModeAvailable.length > 0 && (settings.codeMode ?? false),
-          skills: binder
-            .getSkills()
-            .filter((skill) => Obj.getMeta(skill).key !== TurnReviewSkill.key)
-            .map((skill) => skill.name),
+          skills: skills.filter((skill) => Obj.getMeta(skill).key !== TurnReviewSkill.key).map((skill) => skill.name),
           verdict,
         };
         const trajectoryKey = yield* Effect.promise(() =>
