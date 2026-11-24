@@ -4,26 +4,27 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
+import { Pipeline } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type FactStoreApi, RDF } from '@dxos/pipeline-rdf';
+import { type FactStoreApi } from '@dxos/pipeline-rdf';
 import { type Scene } from '@dxos/scene';
 
 import { pipelineScene } from './pipeline-diagram.ts';
 
 /** Every run state the store records, newest first; none when the store cannot be read. */
-export const readPipelines = (store: FactStoreApi): Promise<RDF.Pipeline.State[]> =>
+export const readPipelines = (store: FactStoreApi): Promise<Pipeline.State[]> =>
   EffectEx.runPromise(
-    store.rows(RDF.Pipeline.SPARQL).pipe(
+    store.rows(Pipeline.SPARQL).pipe(
       Effect.map((rows) =>
-        RDF.Pipeline.fromValues(rows.flatMap(({ state }) => (state ? [state.value] : []))).sort((left, right) =>
+        Pipeline.fromValues(rows.flatMap(({ state }) => (state ? [state.value] : []))).sort((left, right) =>
           (right.startedAt ?? '').localeCompare(left.startedAt ?? ''),
         ),
       ),
-      Effect.orElseSucceed((): RDF.Pipeline.State[] => []),
+      Effect.orElseSucceed((): Pipeline.State[] => []),
     ),
   );
 
 /** The run's diagram as the scene document `Scene2DView` draws. */
-export const pipelineDocument = (state: RDF.Pipeline.State): Scene.SceneDocument =>
-  Dsl.readScenes(pipelineScene(state)).document;
+export const pipelineDocument = (state: Pipeline.State): Scene.SceneDocument =>
+  DSL.readScenes(pipelineScene(state)).document;

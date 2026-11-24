@@ -20,7 +20,7 @@ import { type ElementKindSpec, type NodeViewProps, kindData } from '@dxos/react-
 import { DEFAULT_LAYOUT_NAME, FormLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
 import { Scene } from '@dxos/scene';
 
-import { layout } from './generator/space-graph.generator.ts';
+import { layout, rng, subgraph } from './generator/space-graph.generator.ts';
 
 /**
  * A hue of the canvas theme, and its classes written out. Tailwind only emits the classes it reads verbatim in
@@ -99,7 +99,23 @@ export const graphFields = {
   hue: Schema.optional(Schema.Literals(HUES).annotate({ title: 'Hue', default: DEFAULTS.hue })),
   /** Whether the lattice points that hold no object are drawn, as faint dots under the graph; unset, they are not. */
   dots: Schema.optional(Schema.Boolean.annotate({ title: 'Base dots' })),
+  /**
+   * A subgraph drawn in colour: the object it grows from, how many hops out it reaches, and the hues it draws
+   * from, dealt by the same seed. A walk over the graph this seed produces, so it is a rule like the rest of these
+   * fields — nothing here is a position, and the same objects light up at any size.
+   */
+  root: Schema.optional(Schema.Number.check(Schema.isInt()).annotate({ title: 'Root object' })),
+  depth: Schema.optional(Schema.Number.check(Schema.isInt()).annotate({ title: 'Depth' })),
+  tones: Schema.optional(
+    Schema.Union([Schema.Array(Schema.Literals(HUES)), Schema.String]).annotate({ title: 'Subgraph hues' }),
+  ),
 };
+
+/** The hues a marked subgraph draws from, from either form; a name that is not a hue of the canvas is dropped. */
+const tonesOf = (tones: readonly string[] | string | undefined): Hue[] =>
+  (typeof tones === 'string' ? tones.split('|').map((name) => name.trim()) : (tones ?? [])).filter(
+    (name): name is Hue => (HUES as readonly string[]).includes(name),
+  );
 
 /** The kind's own fields, kept under `data`: they share names with the element (`size`) and its style (`fill`, `hue`). */
 export const GraphData = Schema.Struct(graphFields).pipe(
@@ -113,7 +129,7 @@ export const GraphData = Schema.Struct(graphFields).pipe(
 
 export const GraphNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('space-graph'),
+  type: Schema.Literal('graph'),
   data: GraphData,
 });
 
@@ -132,6 +148,17 @@ export const GraphNodeView = ({ node }: NodeViewProps) => {
 
   const on = new Set(nodes.map((point) => `${point.x},${point.y}`));
   const hue = params.hue;
+  // The marked subgraph: which objects, then a hue each, dealt once from this graph's own seed so an object keeps
+  // its colour across renders and a link takes the colour of the end it leaves.
+  const palette = tonesOf(data.tones);
+  const marked = new Map<number, Hue>();
+  if (palette.length && data.depth !== undefined) {
+    const walk = subgraph(links, data.root ?? 0, data.depth);
+    const random = rng(params.seed + 977);
+    for (const index of [...walk.nodes].sort((left, right) => left - right)) {
+      marked.set(index, palette[Math.floor(random() * palette.length)]);
+    }
+  }
   return (
     <svg
       className='dx-cover overflow-visible'
@@ -152,21 +179,33 @@ export const GraphNodeView = ({ node }: NodeViewProps) => {
             opacity={0.35}
           />
         ))}
-      {links.map(([from, to], index) => (
-        <line
-          key={`link-${index}`}
-          x1={nodes[from].x}
-          y1={nodes[from].y}
-          x2={nodes[to].x}
-          y2={nodes[to].y}
-          className='stroke-neutral-border'
-          strokeWidth={Math.max(1.6, nodeR * 0.36)}
-          opacity={0.6}
-        />
-      ))}
-      {nodes.map((point, index) => (
-        <circle key={`object-${index}`} cx={point.x} cy={point.y} r={nodeR} className={FILL[hue]} />
-      ))}
+      {links.map(([from, to], index) => {
+        const tone = marked.has(from) && marked.has(to) ? marked.get(from) : undefined;
+        return (
+          <line
+            key={`link-${index}`}
+            x1={nodes[from].x}
+            y1={nodes[from].y}
+            x2={nodes[to].x}
+            y2={nodes[to].y}
+            className={tone ? STROKE[tone] : 'stroke-neutral-border'}
+            strokeWidth={Math.max(1.6, nodeR * (tone ? 0.46 : 0.36))}
+            opacity={tone ? 0.95 : 0.6}
+          />
+        );
+      })}
+      {nodes.map((point, index) => {
+        const tone = marked.get(index);
+        return (
+          <circle
+            key={`object-${index}`}
+            cx={point.x}
+            cy={point.y}
+            r={tone ? nodeR * 1.25 : nodeR}
+            className={FILL[tone ?? hue]}
+          />
+        );
+      })}
     </svg>
   );
 };
@@ -177,7 +216,7 @@ export const graphSpec: ElementKindSpec = {
   key: 'G',
   schema: GraphNode,
   component: GraphNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'space-graph', id, z, center, size, data: { seed: 7 } }),
+  create: ({ id, z, center, size }) => ({ type: 'graph', id, z, center, size, data: { seed: 7 } }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 392-unit circle, give or take.
   defaultSize: { width: 8, height: 8 },
   resizable: true,

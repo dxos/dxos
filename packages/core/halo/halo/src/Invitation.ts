@@ -26,7 +26,7 @@ export type AuthMethod = 'none' | 'shared-secret' | 'known-public-key';
  * Interactive (online host+guest handshake) vs delegated (offline-redeemable) invitation.
  * Mirrors the legacy `Invitation.Type` protobuf enum.
  */
-export type Type = 'interactive' | 'delegated' | 'multiuse';
+export type Type = 'interactive' | 'delegated';
 
 /**
  * Options for initiating an invitation. Passed to {@link Identity.share} / {@link Space.share}.

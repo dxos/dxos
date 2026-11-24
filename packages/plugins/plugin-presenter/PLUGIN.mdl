@@ -28,8 +28,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 type Presentation
   desc: |
     An ordered deck of slides. Typename `org.dxos.type.presentation@0.2.0`. Each slide is a `Slide` object owned
-    by the presentation. It is tagged as a collection item, so it is filed into the space's Collections. Its
-    navtree node lists `slides`; deleting a slide deletes its `Slide` (and the slide's owned `Text`), while a
+    by the presentation. It is tagged as a collection item, so it is filed into the space's Collections. Its type
+    icon is indigo. Its navtree node lists `slides`; deleting a slide deletes its `Slide` (and the slide's owned `Text`), while a
     linked object it shows is only unlinked. Deleting the Presentation deletes its slides; linked objects stay.
     Version 0.1.0 held `sections: Ref<Obj>[]` directly; its migration wraps each section in a `Slide`.
     A plugin-projects showcase is a Presentation (see CreateShowcase); a `Showcase` 0.1.0 migrates into one in
@@ -39,6 +39,7 @@ type Presentation
     description?: string
     slides: Ref<Slide>[]        # slide order
     theme?: SlideTheme.Settings # deck theme; overrides the first slide's `theme:` headmatter
+    footer?: SlideFooter.Settings # deck footer, drawn on every slide (F-14)
 ```
 
 ```mdl
@@ -49,10 +50,10 @@ type Slide
     ECHO object, rendered through its `role=slide` surface. The fields hold what applies to any content, so a
     linked object can be hidden, annotated and given an image as a markdown slide can; `layout` and
     `background` stay in a markdown slide's frontmatter. A slide opened from the navtree or the grid opens the
-    `Slide`, so the assistant beside it has the slide as its context.
+    `Slide`, so the assistant beside it has the slide as its context. Its type icon is indigo.
   fields:
     content: Ref<Obj>           # owned Text or a linked object
-    title?: string              # overrides the label read from the content's first heading
+    title?: string              # overrides the label read from the content (frontmatter `title`, else first heading)
     hidden?: boolean            # left out when presenting; replaces frontmatter `hide:`
     notes?: Ref<Text>           # speaker notes for any slide
     image?: Ref<MediaArtifact>  # the image a layout places (cover and image layouts), from plugin-studio
@@ -92,6 +93,17 @@ type SlideTheme
 ```
 
 ```mdl
+type SlideFooter
+  desc: |
+    A deck's footer settings (`SlideFooter.Settings`): three parts, each one line of inline slide markdown (text, a
+    link, an image, or the `<SlideCurrentNo />` and `<SlidesTotal />` tags). A footer with no part set draws nothing.
+  fields:
+    left?: string               # at the slide's start edge
+    center?: string             # in the slide's middle
+    right?: string              # at the slide's end edge
+```
+
+```mdl
 type SlideSource
   literals: text | object | markdown | pending
   desc: |
@@ -113,7 +125,7 @@ component Deck
     and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: Cmd (or Ctrl) with
     left or right, Shift with left or right, and Home and End jump to first and last, `f` toggles fullscreen,
     Escape exits fullscreen. Space and Down advance a click step, else the slide; Up retreats a click step,
-    else lands on the previous slide fully revealed. Right moves to the next slide at its first step, `]` to the next slide fully revealed, and Left and `[` to the
+    else lands on the previous slide fully revealed. Right and `]` move to the next slide fully revealed, and Left and `[` to the
     previous slide fully revealed, past any remaining click steps; none of them acts at the deck's end.
     Click steps are ephemeral and reset on slide change; Space
     does not act on a focused button or link. While the focused (or fullscreen) deck prints, it renders every
@@ -124,6 +136,8 @@ component Deck
     index: number               # Deck.Root
     fullscreen: boolean         # Deck.Root
     theme?: SlideTheme          # Deck.Root; without a name, the first slide's `theme:` headmatter applies
+    footer?: SlideFooter        # Deck.Root; drawn on every slide the deck draws (F-14)
+    presented?: number[]        # Deck.Root; positions of the slides shown when presenting (default: all), which the slide numbers count
   actions:
     onIndexChange(index: number)              # Deck.Root
     onFullscreenChange(fullscreen: boolean)   # Deck.Root
@@ -384,6 +398,7 @@ feat F-1: Presentation Mode
   req F-1.4:
     when: user activates TogglePresentation on a Presentation
     then: the Presentation's own plank fills the screen in the fullscreen overlay and the URL does not change
+  req F-1.5: The plugin contributes the `org.dxos.linkAction.presenter.present` link action, carried by the public link Composer copies for a Presentation, so that link opens the Presentation presenting. The viewer's own URL, once the action has run, opens the slides. An internal link opens it to edit, and links to a markdown document carry no action.
 ```
 
 ```mdl
@@ -456,7 +471,7 @@ feat F-4: Presentation Deck
 feat F-6: Markdown Slides
   uses: [Presentation]
 
-  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and F-8.5 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `two-by-two` also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
+  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1, F-8.5 and F-14.5 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `two-by-two` also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
   req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full and none.
   req F-6.3:
     when: a slide names an unknown layout
@@ -464,7 +479,7 @@ feat F-6: Markdown Slides
   req F-6.4:
     when: a slide's frontmatter YAML is malformed
     then: the body still renders, the frontmatter is ignored and a validation issue is reported
-  req F-6.5: Raw HTML other than `v-click`, `v-clicks`, `v-after`, `Surface` and `br` is escaped, never rendered or executed; URLs with unsafe schemes are not followed.
+  req F-6.5: Raw HTML other than `v-click`, `v-clicks`, `v-after`, `Surface`, `SlideCurrentNo`, `SlidesTotal` and `br` is escaped, never rendered or executed; URLs with unsafe schemes are not followed.
   req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised, and Slidev's `{lines:true}` option numbers the lines.
   req F-6.7: In the preview companion `---` splits slides except inside a fenced code block, and a leading frontmatter block is slide metadata.
   req F-6.8: A deck has one theme, `default`, `light`, `dark` or `serif`, named by the first slide's `theme:` headmatter; `default` follows the app's light/dark mode and `light`/`dark` force one, code highlighting included.
@@ -532,7 +547,7 @@ feat F-5: Navtree Folder
   uses: [Presentation, Slide, SlideEditorArticle]
 
   req F-5.1: A Presentation node lists its sections as children.
-  req F-5.2: An owned slide is labelled by its name, else its first markdown heading, else "Slide N".
+  req F-5.2: An owned slide is labelled by its name, else the `title` its frontmatter states, else its first markdown heading, else "Slide N".
   req F-5.3:
     when: user drags a child to a new position
     then: `sections` is reordered to match
@@ -572,6 +587,25 @@ feat F-12: Speaker Notes
   req F-12.5: When the browser refuses the notes window, the deck shows a button that opens it.
   req F-12.6: A slide has an optional desired length (`duration`, seconds), edited with its other properties.
   req F-12.7: Other plugins add toolbar items and overlays through `PresenterSurface.Toolbar` and `PresenterSurface.Overlay`, and follow a presentation through `PresentationEventHandler`.
+```
+
+```mdl
+feat F-13: Read-only Host
+
+  req F-13.1: When the host contributes `ReadOnly`, a Presentation's grid plays the deck: no slide can be added, moved, hidden or edited, a tile plays from its slide, and a markdown document's Presenter companion previews it without editing.
+```
+
+```mdl
+feat F-14: Deck Footer and Slide Number
+  uses: [Deck, Presentation, Slide, MarkdownSlide, SlideFooter]
+
+  req F-14.1: `<SlideCurrentNo />` and `<SlidesTotal />` draw, anywhere in a slide and in the footer, the slide's number (from 1) and the number of slides, as the deck that draws the slide gives them. The number counts slides, never click steps.
+  req F-14.2: Both count only the slides shown when the deck is presented, so the slides after a hidden one close the gap. A counter with no number, on a slide drawn outside a deck or on one the deck leaves out when presented, draws an en dash.
+  req F-14.3: A Presentation's `footer` sets a left, a center and a right part, each one line of inline slide markdown; the properties companion edits the three as a group beside the theme. A slide cannot replace the text.
+  req F-14.4: The footer is drawn on the slide's own canvas, once on every slide the deck draws: the presented slide, each grid thumbnail, each printed page, and a linked object's slide as well as a markdown one. It overlays the slide's bottom padding, so no slide reflows and no content area shrinks.
+  req F-14.5: A slide's frontmatter `footer: false` leaves the footer off it and `footer: true` draws it; a slide that says neither shows it, except in the `cover` and `end` layouts.
+  req F-14.6: The footer is small, quiet type in the slide's own text color and font, with digits of one width, and follows the deck's theme in light and dark.
+  req F-14.7: A slide embedded in another slide draws no footer of its own. The slide editor's preview and a markdown document's preview draw none, having no Presentation to take one from.
 ```
 
 ## Acceptance
@@ -1624,7 +1658,189 @@ decision D-93: `SlideGrid` is `SlideGallery`: the panel of slide thumbnails, nam
 ```
 
 
+```mdl
+decision D-94: The Presentation type's icon hue is indigo, and a new Presentation is filed into a collection when it is created, as documents and sheets are.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [Presentation, F-3.1]
+```
+
 ---
+
+```mdl
+decision D-95: A Slide's type icon is indigo, as the Presentation's is.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [Slide]
+```
+
+```mdl
+decision D-96: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-16
+  by: user:wittjosiah
+  affects: [F-13.1]
+```
+
+```mdl
+decision D-97: A `readOnly` option drops the slide preview and slide actions from the graph and makes the Presentation grid play rather than edit. Fills in [D-96].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.1]
+  why: A read-only slide already opens as its preview, and hiding a slide writes to the deck.
+```
+
+```mdl
+decision D-98: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-13.1]
+  supersedes: D-96
+```
+
+```mdl
+decision D-99: When the host contributes `ReadOnly`, the graph has no slide preview companion and no slide actions, a Slide opens as its preview, and the Presentation grid plays rather than edits. The graph builder checks it when it matches a slide, and the articles read it with `useReadOnly`. Fills in [D-98].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.1]
+  supersedes: D-97
+  why: A read-only slide already opens as its preview, and hiding a slide writes to the deck; the capability lands at startup with no order against module activation, so it is read when the graph expands and when an article renders.
+```
+
+```mdl
+decision D-100: Every public link to a presentation opens it presenting. An internal link opens it to edit.
+  date: 2026-11-18
+  by: user:wittjosiah
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-101: The present link action applies to Presentations only; a markdown document's public link opens the document. Fills in [D-100].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: A document is presented through its Presenter companion, but a public link to a document is most likely shared to be read.
+  rejected: Presenting markdown documents from public links too.
+```
+
+```mdl
+decision D-102: The public link that presents is the one Composer copies, which carries the action; a viewer URL without it, such as the address bar after the action has run, opens the slides. Fills in [D-100].
+  date: 2026-11-18
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.5]
+  why: The deck removes the action from the address bar once it has run, so a reload or a copied address bar shows the slides, and the viewer has no other signal that a link was shared to present.
+  rejected: Presenting every viewer URL to a Presentation, which would leave no way to link to its slides.
+```
+
+```mdl
+decision D-103: Approve [D-102].
+  date: 2026-11-18
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-104: Left and right skip a slide's click steps and land on the neighbouring slide fully revealed; Up, Down and Space step through the builds. Fills in [D-82], and replaces Right starting the next slide at its first step in [D-90].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [Deck]
+  why: A speaker steps through the builds once, forward; for the rest of a talk, such as Q&A, they jump between slides and do not want to replay them.
+```
+
+```mdl
+decision D-105: A slide's label reads the `title` its frontmatter states before its first heading, in the gallery and in the navtree. Refines [D-15].
+  date: 2026-11-18
+  by: user:richburdon
+  affects: [F-5]
+  why: A slide's first heading is not always its name: a cover's is the product, and a slide of cards has only the cards' captions.
+```
+
+```mdl
+decision D-106: A slide has two counters, `<SlideCurrentNo />` and `<SlidesTotal />`, under Slidev's names. They work in any slide and in the deck's footer, and read the slide's number (from 1) and the total from the deck that draws the slide. The number counts slides, not click steps.
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [F-14.1, Deck]
+```
+
+```mdl
+decision D-107: A Presentation has an optional `footer` beside its `theme`, of three parts, `left`, `center` and `right`, each inline slide markdown: text, a link, an image or the two counters. It is a deck-wide definition only: a slide cannot replace the text, only switch the footer on or off. `PresentationProperties` edits it where it edits the theme.
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [Presentation, SlideFooter, F-14.3]
+```
+
+```mdl
+decision D-108: The footer is drawn on the slide canvas, one copy per slide drawn, so it shows when presenting, in the grid thumbnails, in print and on linked-object slides, not only markdown ones. It overlays the slide's existing bottom padding rather than taking a band of its own, so no slide reflows. Its type is small and quiet, in the theme's tokens and the deck's font, with tabular digits for the number.
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [F-14.4, F-14.6, Slide, MarkdownSlide]
+```
+
+```mdl
+decision D-109: A slide's frontmatter key `footer` is a boolean: `false` hides the footer and `true` forces it. The default is shown, except on the `cover` and `end` layouts, which show none unless the slide says `footer: true`.
+  date: 2026-11-20
+  by: user:richburdon
+  affects: [F-14.5, F-6.1]
+```
+
+```mdl
+decision D-110: The counters count only the slides shown when the deck is presented. `Deck.Root` takes their positions as `presented`, so the grid, which also shows hidden slides, numbers the rest as the presentation does; a hidden slide has no number and still shows the total. Fills in [D-106].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.2, Deck]
+  why: A number that counted hidden slides would skip one in front of the audience, and a grid numbered differently from the presentation would not say which slide "7" is.
+  rejected: Numbering every slide in the grid by its position, which the tile's own label already shows.
+```
+
+```mdl
+decision D-111: A counter with no number draws an en dash: on a slide drawn outside a deck, such as the slide editor's preview, and on a slide the deck leaves out when presented. Fills in [D-106].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.2]
+  why: The dash shows where a number goes without stating one that is wrong, and an empty counter would leave "Slide  of " reading as a mistake.
+  rejected: Drawing nothing; drawing 1.
+```
+
+```mdl
+decision D-112: `footer` is added to `org.dxos.type.presentation@0.2.0` as an optional field, with no new version and no migration. Fills in [D-107].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation]
+  why: A stored presentation without the field is valid and draws no footer; the type's version changed only when the shape of existing data did, as the optional `Slide` fields were added without one.
+```
+
+```mdl
+decision D-113: A footer part is drawn as a phrase: the paragraph markdown puts around it is dropped, a part too long for its third of the slide is cut with an ellipsis, and an image is one line tall. The footer is 28px type at 60% opacity in a band 64px tall, the height of the slide's bottom padding, on the content's side margins; it takes no clicks but a link's own. Fills in [D-108].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.4, F-14.6]
+  why: A paragraph would bring the slide's 48px body size into a 64px band, and a band that took clicks would cover the editor's click-to-source and controls at a slide's foot.
+```
+
+```mdl
+decision D-114: A layout with no bottom padding (`full`, `none`, `image`, and a column that bleeds) is overlaid by the footer on its content. Fills in [D-108].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.4]
+  why: The footer never reflows a slide, so a slide that fills its canvas keeps doing so; such a slide says `footer: false` where the line gets in the way.
+  rejected: Leaving the footer off those layouts by default, as on `cover` and `end`, which [D-109] names as the only two.
+```
+
+```mdl
+decision D-115: A slide embedded in another slide draws no footer of its own, and the slide editor's preview and a markdown document's preview draw none. A document deck's counters still number its slides. Fills in [D-108].
+  date: 2026-11-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.7, F-2]
+  why: An embedded slide is part of the content of the slide around it, which already carries the footer. The two previews draw a slide with no Presentation to read a footer from.
+```
 
 ## Appendix: Extension Definitions
 

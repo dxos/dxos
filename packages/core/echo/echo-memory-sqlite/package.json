@@ -1,0 +1,62 @@
+{
+  "name": "@dxos/echo-memory-sqlite",
+  "version": "0.17.0",
+  "description": "Local MemoryService implementations: an RDF quad store and goal-rule subscriptions over SQLite.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./LocalRdfStore": {
+      "source": "./src/LocalRdfStore.ts",
+      "types": "./dist/types/src/LocalRdfStore.d.ts",
+      "import": "./dist/lib/LocalRdfStore.mjs"
+    },
+    "./MemorySqlite": {
+      "source": "./src/MemorySqlite.ts",
+      "types": "./dist/types/src/MemorySqlite.d.ts",
+      "import": "./dist/lib/MemorySqlite.mjs"
+    },
+    "./RdfMemory": {
+      "source": "./src/RdfMemory.ts",
+      "types": "./dist/types/src/RdfMemory.d.ts",
+      "import": "./dist/lib/RdfMemory.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/brain": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
+    "@dxos/sparql-sqlite": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/keys": "workspace:*",
+    "@effect/sql-sqlite-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

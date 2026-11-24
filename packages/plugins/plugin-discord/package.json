@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-discord",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "DXOS plugin that integrates Discord as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -83,6 +83,11 @@
       "types": "./dist/types/src/types/DiscordOperation.d.ts",
       "import": "./dist/lib/DiscordOperation.mjs"
     },
+    "./DiscordService": {
+      "source": "./src/types/DiscordService.ts",
+      "types": "./dist/types/src/types/DiscordService.d.ts",
+      "import": "./dist/lib/DiscordService.mjs"
+    },
     "./DiscordPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
@@ -128,6 +133,9 @@
       "DiscordOperation": [
         "dist/types/src/types/DiscordOperation.d.ts"
       ],
+      "DiscordService": [
+        "dist/types/src/types/DiscordService.d.ts"
+      ],
       "DiscordTargetOptions": [
         "dist/types/src/types/DiscordTargetOptions.d.ts"
       ]
@@ -152,6 +160,7 @@
     "@dxos/crawler": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -179,6 +188,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-memory-sqlite": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",

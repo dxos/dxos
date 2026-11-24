@@ -154,8 +154,8 @@
     "node-gyp": "catalog:",
     "nyc": "catalog:",
     "oxc-resolver": "catalog:",
-    "oxfmt": "^0.63.0",
-    "oxlint": "1.78.0",
+    "oxfmt": "0.79.0",
+    "oxlint": "1.93.0",
     "oxlint-tsgolint": "catalog:",
     "pkg-pr-new": "catalog:",
     "pkg-up": "catalog:",
@@ -194,7 +194,7 @@
     "yargs": "catalog:",
     "zx": "catalog:"
   },
-  "packageManager": "pnpm@12.21.0",
+  "packageManager": "pnpm@12.22.0",
   "engines": {
     "node": "^24.0.0"
   }

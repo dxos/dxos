@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -48,6 +49,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       'expose',
       { requires: [AppCapabilities.AppGraph, AppCapabilities.Layout, Capabilities.OperationInvoker], provides: [] },
       () => import('./src/capabilities/expose.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'RaillessLayout',
+      {
+        requires: [Capabilities.AtomRegistry],
+        provides: [],
+        activatesOn: ActivationEvents.Startup,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/railless-layout.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'Keyboard',

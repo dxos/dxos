@@ -3,8 +3,8 @@
 _Resume: nothing in flight — waiting on the merge queue. Phases 1–2 landed (#12353); everything below it (planet cache, map view, behaviors, rocket work) is PR #12425 on `claude/plugin-terra-layout-cache-c82b1b`, all required checks green on 99ae1c9906, all five review threads resolved, auto-merge armed. Next after it merges: (1) pull the chase camera back when its target is destroyed — inside the blast, front-face-only shells show nothing; (2) still-pending visual confirmation of the flush bow and retuned wakes; (3) the backlog below. Uncommitted: none. Note the browser pane reports a 0x0 viewport (screenshots come back black) — drive storybook with Playwright instead, which does render._
 
 Design and decisions: [DESIGN.md](./DESIGN.md).
-Plans: [Phase 1](../../../agents/superpowers/plans/2026-07-26-plugin-terra.md) ·
-[Phase 2](../../../agents/superpowers/plans/2026-07-27-plugin-terra-phase2-objects.md).
+Plans: [Phase 1](../../../.agents/superpowers/plans/2026-07-26-plugin-terra.md) ·
+[Phase 2](../../../.agents/superpowers/plans/2026-07-27-plugin-terra-phase2-objects.md).
 
 Executed with the `subagent-driven-development` skill: one implementer subagent
 per task, a spec+quality review gate after each. Controller-side ledger:
@@ -43,7 +43,7 @@ orbiting camera, and a live config panel — rendered from a `Terra` ECHO object
 ### References
 
 - Per-task review findings and commit ranges: `.superpowers/sdd/progress.md`.
-- Spike reference code: `agents/superpowers/specs/2026-07-26-plugin-terra-spike/`.
+- Spike reference code: `.agents/superpowers/specs/2026-07-26-plugin-terra-spike/`.
 
 ## Phase 2: Objects & simulation
 

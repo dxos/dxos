@@ -23,6 +23,7 @@ A `.mdl` file is the authoritative description of a component: Markdown prose pl
 | `lang/changelog.mdl`               | `decision`, `question` — the attributed changelog                    |
 | `lang/sql.mdl`                     | `table` — a SQL table a component owns                               |
 | `lang/worker.mdl`                  | `binding`, `actor`, `route`, `keyspace` — a worker's surface         |
+| `lang/session.mdl`                 | `goal`, `pr`, `event` — a session's `SESSION.mdl` (`status-board`)   |
 | `lang/PLUGIN-.template.mdl`        | Starting point for a new `PLUGIN.mdl`                                |
 
 Read the dialect file before you use one of its blocks. Copy `ext` definitions from `lang/`; do not
@@ -36,7 +37,7 @@ invent fields.
    Do not leave "previously…" or "changed from…" prose in it; that history belongs in a
    `decision` entry.
 3. **The code is the truth about what exists; the spec is the truth about why.** When code and spec
-   disagree on structure, follow `agents/routines/spec-sync.md`. When they disagree on intent, ask.
+   disagree on structure, follow `.agents/routines/spec-sync.md`. When they disagree on intent, ask.
 4. **Cross-reference by id** — `[F-2.1]`, `type:Scene`, `op:Name` — never by prose paraphrase.
 5. **Name code, never its path.** Refer to code by component or symbol (`FeedStore`, `IndexEngine`) and
    to another spec by its frontmatter `id` (`org.dxos.feed`), not by file path: files move, names stay.

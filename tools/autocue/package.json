@@ -1,6 +1,6 @@
 {
   "name": "@dxos/autocue",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "autocue's browser UI: the Frame overlay injected into recorded pages, the Player for autocue bundles, the Grid showcase, and the DXOS ident compositions for Remotion.",
   "homepage": "https://dxos.org",

@@ -14,7 +14,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
-import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, extractDocFacts } from '@dxos/pipeline-rdf';
+import { type ExtractOptions } from '@dxos/pipeline-rdf';
 import { Expando } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -42,7 +43,7 @@ describe.skipIf(!fixtureExists())('runFactPipeline over a mailbox feed fixture (
 
       // Extract options target the local Ollama model; `strict: false` because local models are
       // unreliable at structured output.
-      const extractOptions: RDF.ExtractOptions = {
+      const extractOptions: ExtractOptions = {
         ...EMAIL_EXTRACT_OPTIONS,
         model: MODEL,
         provider: Provider.ollama.id,

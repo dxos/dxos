@@ -31,7 +31,8 @@ export const semanticDiagrams = trim`
   a grid, arrows through the gutters with the fewest bends, ports spread along each side, labels
   beside their own arrow. Prefer this to coordinates for any boxes-and-arrows diagram, and never
   write mermaid: it is deprecated. Write it directly; there is no intermediate step. \`diagram kind=\`
-  picks what is drawn: \`structure\` (the default, below), \`sequence\` and \`dataflow\` (after it).
+  picks what is drawn: \`structure\` (the default, below), then \`sequence\`, \`dataflow\` and \`grid\`
+  (after it).
 
   \`\`\`
   diagram flow=down                     # optional: flow=down|up|right|left
@@ -202,6 +203,55 @@ export const semanticDiagrams = trim`
   The result warns where data moves without a process (an external or a store straight to another
   external or store), where a process takes data but gives none or gives data but takes none, and
   where a store is written but never read. Fix them unless the drawing is meant to show the gap.
+
+  ## Grid diagrams
+
+  For a slide or a poster (rows and columns of boxes or cards under headings, with few arrows or
+  none), declare \`diagram kind=grid size=WxH\`. The frame is divided by tracks, as CSS grid does it.
+  Every \`group\` is a grid in the cell it was given, groups nest, and each member takes the next
+  cell in the order you write it. So the order of the statements IS the layout: state no
+  coordinates and no placement hints. Both are ignored here with a warning.
+
+  \`\`\`
+  diagram kind=grid size=1200x600 cols="1fr 2fr 1fr" gap=48 padding=32
+  group clients "Clients" gap=16 autoRows=72 alignContent=center {
+    node web "Web app"
+    node cli "CLI"
+  }
+  group core "Core" cols=2 gap=16 border=true padding=16 {
+    node graph "Graph"
+    node feeds "Feeds"
+    node sync "Sync"
+    node index "Index"
+  }
+  group services "Services" gap=16 autoRows=72 alignContent=center {
+    node mail "Mail"
+    node search "Search"
+  }
+  edge web -> graph
+  edge sync -- mail stroke=dashed path=line
+  \`\`\`
+
+  - \`size=WxH\` on the diagram is required and is the only geometry you state.
+  - Tracks: \`cols\` and \`rows\` are a count (\`3\`) or a list (\`"1fr 2fr"\`, \`"48 1fr"\`, \`"auto 1fr"\`); an
+    axis with none takes one track per member, so a group with no tracks is a column of equal rows.
+    \`gap\` is the space between cells, \`padding\` the space inside the frame.
+  - \`autoRows=72\` (or \`autoCols\`) gives every track you did not state one size, so a run of cards
+    comes out the same height. \`alignContent\` and \`justifyContent\` (\`start\`, \`center\`, \`end\`) say
+    where the tracks sit when they leave space over.
+  - A group with a label draws it as a heading over its members; a group without one is only their
+    grid. \`border=true\` (with \`fill\`, \`stroke\`, \`color\`) frames the members; for a frame round the
+    heading too, put the labelled group inside a framed one.
+  - An empty group (\`group spacer { }\`) draws nothing and holds its cell.
+  - A node fills its cell. \`width=240\` and \`height=48\` make it keep that size in the middle of the
+    cell instead; state one and the other axis still fills.
+  - \`node id "Label" kind=<component>\` places a component the canvas provides (a card, a panel);
+    every other attribute on it is that component's own field (\`icon=calendar-blank\`). Use only
+    kinds you know the canvas has; without \`kind\` a node is a plain box with its label.
+  - An edge joins two boxes, or a box and a group. \`path=line|ortho|curve|smart\` says how it runs;
+    \`--\` draws it with no arrowhead.
+  - The result is ONE object, \`diagram\`, holding every box and arrow. To change the drawing, edit
+    the statements and draw again, rather than moving a box.
 `;
 
 export const make = () =>
@@ -215,8 +265,9 @@ export const make = () =>
 
         You can draw and edit diagrams on a shared canvas.
 
-        For any boxes-and-arrows diagram (architecture, data flow, a sequence of messages), state the boxes, arrows and
-        groups and let the layout engine place them: call ${Operation.toolName(DrawingOperation.Draw)} with semantic statements (below).
+        For any boxes-and-arrows diagram (architecture, data flow, a sequence of messages) and any slide of boxes in
+        rows and columns, state the boxes, arrows and groups and let the layout engine place them: call
+        ${Operation.toolName(DrawingOperation.Draw)} with semantic statements (below).
         Never position the boxes of such a diagram by hand. Use coordinates (the scene model below) only for a
         picture that is not a graph, or to touch up one object the engine placed.
 

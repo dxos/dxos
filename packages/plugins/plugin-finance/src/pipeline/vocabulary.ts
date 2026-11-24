@@ -1,8 +1,7 @@
+import { Ontology, Vocab, Vocabularies } from '@dxos/echo-memory';
 //
 // Copyright 2026 DXOS.org
 //
-
-import { RDF } from '@dxos/pipeline-rdf';
 
 /** Namespace of the finance terms schema.org lacks; the names follow FIBO (corporate actions, securities, ratings). */
 export const FIN = 'https://dxos.org/ontology/finance/';
@@ -10,30 +9,30 @@ export const FIN = 'https://dxos.org/ontology/finance/';
 /** Namespace of the company entities the mention index links articles to, keyed by ticker. */
 export const COMPANY = 'https://dxos.org/finance/company/';
 
-const schema = (name: string) => `${RDF.Vocab.SCHEMA}${name}`;
+const schema = (name: string) => `${Vocab.SCHEMA}${name}`;
 const fin = (name: string) => `${FIN}${name}`;
 
 const CORPORATION = schema('Corporation');
 const ARTICLE = schema('NewsArticle');
 
-type Term = Omit<RDF.Ontology.Entry, 'iri' | 'name' | 'label' | 'definedBy'> & { readonly label?: string };
+type Term = Omit<Ontology.Entry, 'iri' | 'name' | 'label' | 'definedBy'> & { readonly label?: string };
 
 const pack = (
   id: string,
   label: string,
   namespace: string,
   terms: Record<string, [local: string, Term]>,
-): RDF.Vocabularies.Pack => ({
+): Vocabularies.Pack => ({
   id,
   label,
   namespace,
   entries: Object.entries(terms).map(([name, [local, term]]) =>
-    RDF.Ontology.entry(name, { ...term, iri: `${namespace}${local}`, definedBy: namespace }),
+    Ontology.entry(name, { ...term, iri: `${namespace}${local}`, definedBy: namespace }),
   ),
 });
 
 /** schema.org's company and security terms. */
-export const SCHEMA_FINANCE: RDF.Vocabularies.Pack = pack('schema-finance', 'schema.org finance', RDF.Vocab.SCHEMA, {
+export const SCHEMA_FINANCE: Vocabularies.Pack = pack('schema-finance', 'schema.org finance', Vocab.SCHEMA, {
   ticker_symbol: [
     'tickerSymbol',
     { label: 'has ticker symbol', synonyms: ['trades as', 'ticker'], domain: CORPORATION },
@@ -51,7 +50,7 @@ export const SCHEMA_FINANCE: RDF.Vocabularies.Pack = pack('schema-finance', 'sch
  * Corporate actions, results, analyst coverage and market moves news states, named after FIBO's concepts
  * (`fibo-fbc`, `fibo-sec`, `fibo-be`) in a namespace of their own, since FIBO spreads them over many modules.
  */
-export const FINANCE: RDF.Vocabularies.Pack = pack('finance', 'Finance (FIBO-inspired)', FIN, {
+export const FINANCE: Vocabularies.Pack = pack('finance', 'Finance (FIBO-inspired)', FIN, {
   listed_on: ['listedOn', { label: 'listed on', synonyms: ['trades on exchange', 'is listed on'] }],
   acquires: [
     'acquires',
@@ -121,49 +120,48 @@ export const FINANCE: RDF.Vocabularies.Pack = pack('finance', 'Finance (FIBO-ins
 });
 
 /** The packs finance extraction is seeded with. */
-export const PACKS: ReadonlyArray<RDF.Vocabularies.Pack> = [SCHEMA_FINANCE, FINANCE];
+export const PACKS: ReadonlyArray<Vocabularies.Pack> = [SCHEMA_FINANCE, FINANCE];
 
 /** The finance ontology: the seed, schema.org and the finance packs. */
-export const ontology = (
-  base: ReadonlyArray<RDF.Vocabularies.Pack> = [RDF.Vocabularies.SCHEMA],
-): RDF.Ontology.Ontology => RDF.Vocabularies.compose([...base, ...PACKS]);
+export const ontology = (base: ReadonlyArray<Vocabularies.Pack> = [Vocabularies.SCHEMA]): Ontology.Ontology =>
+  Vocabularies.compose([...base, ...PACKS]);
 
 /**
  * Predicates the deterministic and classification stages write: the mention index, sentiment and event type. They
  * never reach the extractor's prompt, so they are entries of their own rather than part of a pack.
  */
 export const ANNOTATIONS = {
-  mentions: RDF.Ontology.entry('mentions', { iri: schema('mentions'), definedBy: RDF.Vocab.SCHEMA }),
-  headline: RDF.Ontology.entry('headline', { iri: schema('headline'), definedBy: RDF.Vocab.SCHEMA, domain: ARTICLE }),
-  publisher: RDF.Ontology.entry('published_by', {
+  mentions: Ontology.entry('mentions', { iri: schema('mentions'), definedBy: Vocab.SCHEMA }),
+  headline: Ontology.entry('headline', { iri: schema('headline'), definedBy: Vocab.SCHEMA, domain: ARTICLE }),
+  publisher: Ontology.entry('published_by', {
     iri: schema('publisher'),
     label: 'published by',
-    definedBy: RDF.Vocab.SCHEMA,
+    definedBy: Vocab.SCHEMA,
   }),
-  datePublished: RDF.Ontology.entry('date_published', {
+  datePublished: Ontology.entry('date_published', {
     iri: schema('datePublished'),
     label: 'date published',
-    definedBy: RDF.Vocab.SCHEMA,
+    definedBy: Vocab.SCHEMA,
   }),
-  url: RDF.Ontology.entry('url', { iri: schema('url'), definedBy: RDF.Vocab.SCHEMA }),
-  tickerSymbol: RDF.Ontology.entry('ticker_symbol', {
+  url: Ontology.entry('url', { iri: schema('url'), definedBy: Vocab.SCHEMA }),
+  tickerSymbol: Ontology.entry('ticker_symbol', {
     iri: schema('tickerSymbol'),
     label: 'has ticker symbol',
-    definedBy: RDF.Vocab.SCHEMA,
+    definedBy: Vocab.SCHEMA,
   }),
-  sentiment: RDF.Ontology.entry('sentiment', { iri: fin('sentiment'), label: 'has sentiment', definedBy: FIN }),
-  sentimentScore: RDF.Ontology.entry('sentiment_score', {
+  sentiment: Ontology.entry('sentiment', { iri: fin('sentiment'), label: 'has sentiment', definedBy: FIN }),
+  sentimentScore: Ontology.entry('sentiment_score', {
     iri: fin('sentimentScore'),
     label: 'has sentiment score',
     definedBy: FIN,
   }),
-  sentimentAbout: RDF.Ontology.entry('sentiment_about', { iri: fin('sentimentAbout'), label: 'about', definedBy: FIN }),
-  expressedIn: RDF.Ontology.entry('expressed_in', { iri: fin('expressedIn'), label: 'expressed in', definedBy: FIN }),
-  eventType: RDF.Ontology.entry('event_type', { iri: fin('eventType'), label: 'reports event', definedBy: FIN }),
+  sentimentAbout: Ontology.entry('sentiment_about', { iri: fin('sentimentAbout'), label: 'about', definedBy: FIN }),
+  expressedIn: Ontology.entry('expressed_in', { iri: fin('expressedIn'), label: 'expressed in', definedBy: FIN }),
+  eventType: Ontology.entry('event_type', { iri: fin('eventType'), label: 'reports event', definedBy: FIN }),
 } as const;
 
-const term = (name: string, local: string, label: string): RDF.Ontology.Entry =>
-  RDF.Ontology.entry(name, { iri: fin(local), label, definedBy: FIN });
+const term = (name: string, local: string, label: string): Ontology.Entry =>
+  Ontology.entry(name, { iri: fin(local), label, definedBy: FIN });
 
 /**
  * Predicates the structured sources (prices, short volume, Form 4, 13F, filings, House disclosures) are written with,
@@ -171,7 +169,7 @@ const term = (name: string, local: string, label: string): RDF.Ontology.Entry =>
  * news about the same {@link companyIri}.
  */
 export const MARKET = {
-  about: RDF.Ontology.entry('about', { iri: schema('about'), definedBy: RDF.Vocab.SCHEMA }),
+  about: Ontology.entry('about', { iri: schema('about'), definedBy: Vocab.SCHEMA }),
   observedOn: term('observed_on', 'observedOn', 'observed on'),
   open: term('open_price', 'openPrice', 'open price'),
   high: term('high_price', 'highPrice', 'high price'),
@@ -189,7 +187,7 @@ export const MARKET = {
   shares: term('shares', 'shares', 'shares'),
   pricePerShare: term('price_per_share', 'pricePerShare', 'price per share'),
   sharesAfter: term('shares_owned_after', 'sharesOwnedAfter', 'shares owned after'),
-  holdsPositionIn: RDF.Ontology.entry('holds_position_in', {
+  holdsPositionIn: Ontology.entry('holds_position_in', {
     iri: fin('holdsPositionIn'),
     label: 'holds position in',
     definedBy: FIN,

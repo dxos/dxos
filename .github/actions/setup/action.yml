@@ -183,8 +183,8 @@ runs:
       if: ${{ inputs.prebuilt != 'true' }}
       with:
         # IMPORTANT: Keep in-sync with .prototools
-        moon-version: '2.5.2'
-        proto-version: '0.60.2'
+        moon-version: '2.6.5'
+        proto-version: '0.64.1'
 
     # Installs the toolchains `.moon/toolchains.yml` declares, which the first moon task would do anyway.
     # Deliberately not `auto-install` on setup-toolchain: that installs everything pinned, rust included as
@@ -282,6 +282,9 @@ runs:
           ${{ inputs.cache-scope }}-${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-
 
     - name: Install dependencies
+      env:
+        # The CPU runtime ships in the package; the optional CUDA download 404s on onnxruntime's releases.
+        ONNXRUNTIME_NODE_INSTALL_CUDA: skip
       run: |
         if [ "${{ inputs.verify-integrity }}" = "true" ]; then
           pnpm set verify-store-integrity true

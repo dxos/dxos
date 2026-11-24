@@ -3,11 +3,13 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
-import type * as SqlClient from 'effect/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -25,6 +27,15 @@ import { type SyncTransport } from '../sync/protocol.ts';
 import { SpaceSync } from '../sync/space-sync.ts';
 
 type Runtime = ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, unknown>;
+
+/**
+ * A Node SQLite file connection as a native host would configure it: in WAL mode, `synchronous = NORMAL`
+ * syncs only at checkpoints, so a power loss can drop the last commits but never corrupts the file.
+ */
+export const nodeFileLayer = (filename: string) =>
+  SqliteClient.layer({ filename }).pipe(
+    Layer.tap((context) => Context.get(context, SqlClient.SqlClient)`PRAGMA synchronous = NORMAL`),
+  );
 
 /**
  * End-to-end test fixture: peers with their own SQLite files, each holding databases of spaces, and
@@ -107,7 +118,7 @@ export class TestPeer {
     spaceId: SpaceId = SpaceId.random(),
     options: { types?: readonly Type.AnyEntity[] } = {},
   ): Promise<SqliteDatabase> {
-    this.#runtime ??= ManagedRuntime.make(SqliteClient.layer({ filename: this.#path }));
+    this.#runtime ??= ManagedRuntime.make(nodeFileLayer(this.#path));
     this.#scope ??= await EffectEx.runPromise(Scope.make());
     const scope = this.#scope;
     this.#lastSpaceId = spaceId;

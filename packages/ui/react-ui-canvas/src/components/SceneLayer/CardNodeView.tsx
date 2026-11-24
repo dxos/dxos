@@ -33,6 +33,16 @@ import { LINE_ON_GRID, PAD_TO_GRID, PARAGRAPH_ON_GRID } from './text.ts';
 /** Every region of a card is half a cell from the next. Spelled out: Tailwind emits only what it can read verbatim. */
 const GAP_ON_GRID = 'gap-[calc(var(--dx-minor-grid)/2)]';
 
+/** Between the header's glyph and its title; a type with its own type scale sets `--dx-card-gap`. */
+const HEADER_GAP = 'gap-[var(--dx-card-gap,calc(var(--dx-minor-grid)/2))]';
+
+/**
+ * The card's content column: where the title starts, past the glyph and its gap. The body and the footer start
+ * there too, so a card reads as a rail of one glyph beside a column of text.
+ */
+const CONTENT_COLUMN =
+  'ps-[calc(var(--dx-card-glyph,calc(var(--dx-minor-grid)*3))+var(--dx-card-gap,calc(var(--dx-minor-grid)/2)))]';
+
 /**
  * The header's glyph: three minor cells, so the row it sets is three cells tall. A type whose own type scale is not
  * the canvas's (the studio deck's cards) sets `--dx-card-glyph` to the size its header was drawn at.
@@ -101,9 +111,23 @@ const stringAt = (value: unknown, field: string): string | undefined => {
   return typeof found === 'string' ? found : undefined;
 };
 
+/**
+ * A field of a node, from the node itself or from the `data` bag a plugin kind keeps its own fields in (as
+ * `parts.ts` addresses them, `data.<field>`). Both are read because a kind that paints itself has historically put
+ * a few fields on the node directly, and only the bag survives being written down as text.
+ */
+const fieldOf = (node: NodeViewProps['node'], field: string): unknown => {
+  const own: unknown = Reflect.get(node, field);
+  if (own !== undefined) {
+    return own;
+  }
+  const bag: unknown = Reflect.get(node, 'data');
+  return typeof bag === 'object' && bag !== null ? Reflect.get(bag, field) : undefined;
+};
+
 /** The glyph a node declares, if it declares one; a bare string is the older spelling and still reads. */
 export const iconOf = (node: NodeViewProps['node']): IconSpec | undefined => {
-  const icon: unknown = Reflect.get(node, 'icon');
+  const icon: unknown = fieldOf(node, 'icon');
   if (typeof icon === 'string') {
     return { type: icon };
   }
@@ -117,9 +141,17 @@ export const iconOf = (node: NodeViewProps['node']): IconSpec | undefined => {
 
 /** A node's text field, which only a type declaring it has. */
 export const textOf = (node: NodeViewProps['node'], field: string): string | undefined => {
-  const value = Reflect.get(node, field);
+  const value = fieldOf(node, field);
   return typeof value === 'string' ? value : undefined;
 };
+
+/**
+ * The part key for a node's text field: its own name where the node carries it, and the kind's bag otherwise.
+ * A part edits the field it names, so a kind keeping its text under `data` needs the part to say `data.<field>`
+ * or editing writes a second copy on the node that nothing reads.
+ */
+export const textPartOf = (node: NodeViewProps['node'], field: string): string =>
+  Reflect.get(node, field) !== undefined ? field : `data.${field}`;
 
 /** The symbol the icon component takes; a name that already names a set and weight is passed through. */
 export const iconSymbol = ({ type, weight }: IconSpec): string | undefined =>
@@ -152,7 +184,7 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
     >
       {(symbol || label !== undefined) && (
         // The glyph is three cells and sets the row's height: a card is read by its icon before its title.
-        <div className={mx('flex items-center shrink-0', GAP_ON_GRID)} data-part='card-header'>
+        <div className={mx('flex items-center shrink-0', HEADER_GAP)} data-part='card-header'>
           {symbol && <Icon.Icon icon={symbol} hue={hueOf(node)} classNames={mx('shrink-0', HEADER_GLYPH)} />}
           {label !== undefined && (
             <TextPart part='label' text={label} editing={editing} classNames={mx('grow truncate', LINE_ON_GRID)}>
@@ -165,10 +197,14 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
       {body !== undefined && (
         // The body takes what the header and the footer leave, its text at the top of it.
         <TextPart
-          part='body'
+          part={textPartOf(node, 'body')}
           text={body}
           editing={editing}
-          classNames={mx('grow overflow-hidden text-sm whitespace-pre-wrap', PARAGRAPH_ON_GRID)}
+          classNames={mx(
+            'grow overflow-hidden text-sm whitespace-pre-wrap',
+            symbol && CONTENT_COLUMN,
+            PARAGRAPH_ON_GRID,
+          )}
         >
           {body}
         </TextPart>
@@ -176,11 +212,12 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
       {footer !== undefined && (
         // Half a cell above the text, less the hairline's own pixel, so the whole block is two cells tall.
         <TextPart
-          part='footer'
+          part={textPartOf(node, 'footer')}
           text={footer}
           editing={editing}
           classNames={mx(
             'mt-auto shrink-0 pt-[calc(var(--dx-minor-grid)/2-1px)] border-bs border-separator text-xs text-description truncate',
+            symbol && CONTENT_COLUMN,
             LINE_ON_GRID,
           )}
         >

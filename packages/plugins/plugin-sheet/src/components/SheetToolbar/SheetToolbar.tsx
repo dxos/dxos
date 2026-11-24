@@ -65,7 +65,7 @@ export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((
         <FormattingToolbar
           formatting={formatting}
           onChange={handleChange}
-          disabled={!cursorFallbackRange}
+          disabled={!!model.readonly || !cursorFallbackRange}
           testId='grid.toolbar'
         />
       </Toolbar.Root>

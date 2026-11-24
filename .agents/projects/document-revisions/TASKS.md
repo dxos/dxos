@@ -86,7 +86,7 @@ Option on the table: revert the view-mode refactor (506b37c37c) to a clean #1230
 B6/B4/comment-flash/change-bar, and rebuild the view-mode feature storybook-first.
 
 Convergence plan (+ resolved decisions):
-[`agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../agents/superpowers/plans/2026-07-17-branching-convergence.md).
+[`.agents/superpowers/plans/2026-07-17-branching-convergence.md`](../../../.agents/superpowers/plans/2026-07-17-branching-convergence.md).
 PRs: [#12237](https://github.com/dxos/dxos/pull/12237) (landed 2026-07-16); stage 1 on branch
 `claude/document-revisions-a2994d`.
 
@@ -234,7 +234,7 @@ Deferred from the CodeRabbit round (stage 3/4):
 
 - [ ] **Agent suggestion identity — DECIDED (2026-07-21): synthetic DIDs now, real identities +
       multi-agent later.** Design:
-      [`agents/superpowers/specs/2026-07-21-agent-identity.md`](../../../agents/superpowers/specs/2026-07-21-agent-identity.md).
+      [`.agents/superpowers/specs/2026-07-21-agent-identity.md`](../../../.agents/superpowers/specs/2026-07-21-agent-identity.md).
       Implementation (this branch):
   - [x] `Agent.did` field (`IdentityDid`, seeded via `IdentityDid.random()` in `makeInitialized`;
         optional for back-compat) — persisted, import-stable, `did:halo:` format.
@@ -308,7 +308,7 @@ an advanced/history path (reached via explicit selection); ambient overlay is th
       (the plugin design file), not a separate superpowers spec. (tracked 2026-07-21)
 - Spec: [`plugin-comments/DESIGN.md` § Ambient review model](../../../packages/plugins/plugin-comments/DESIGN.md).
   Implementation plan:
-  [`agents/superpowers/plans/2026-07-21-ambient-review-model.md`](../../../agents/superpowers/plans/2026-07-21-ambient-review-model.md)
+  [`.agents/superpowers/plans/2026-07-21-ambient-review-model.md`](../../../.agents/superpowers/plans/2026-07-21-ambient-review-model.md)
   (Milestone A: modes + policy + Editing/Viewing ambient overlay + review — fully specified;
   Milestone B: Suggesting-mode authoring — spike-gated, tasks appended after Task B0).
 - [x] **PR #12301 MERGED (2026-07-22 02:53Z)** — Milestone A shipped. Preview:
@@ -462,14 +462,14 @@ label:'view-mode.suggesting.label', reviewMode:'suggesting', order:3 }` — no p
   the "New branch" button is disabled on a branch / branch revision, and the checkpoint banner's
   "Branch from" is hidden for branch revisions (previously they silently forked from main).
   Design + estimate (~5–6.5 eng-days, parent-pointer model, 3-part PR):
-  [`agents/superpowers/specs/2026-07-17-nested-branches-design.md`](../../../agents/superpowers/specs/2026-07-17-nested-branches-design.md).
+  [`.agents/superpowers/specs/2026-07-17-nested-branches-design.md`](../../../.agents/superpowers/specs/2026-07-17-nested-branches-design.md).
 - Generalize `@dxos/versioning` record refs over `Ref(Obj.Any)` so non-Text objects (sketches,
   sheets) can be versioned; branch-level access control; subduction fragment compaction alignment.
 
 ## 2026-07-24 — selection→assistant, markdown inversion, plugin-review merge (session hydrate)
 
 Workstream folded in from `claude/markdown-selection-assistant-visibility-833995`. Specs:
-`agents/superpowers/specs/2026-07-23-markdown-selection-assistant-context-design.md`,
+`.agents/superpowers/specs/2026-07-23-markdown-selection-assistant-context-design.md`,
 `2026-07-24-markdown-versioning-decoupling-design.md`, `2026-07-24-plugin-review-consolidation-design.md`.
 
 - [x] **Selection → assistant context — MERGED (PR #12328, squash `9f7d5ad`).** `AppCapabilities.AnchorResolver`
@@ -673,7 +673,7 @@ different ways — needs a designed model + headless unit tests, not more per-sy
 
 ### Lifecycle design executed (2026-07-25)
 
-All four steps of `agents/superpowers/specs/2026-07-25-review-mode-lifecycle-design.md` landed:
+All four steps of `.agents/superpowers/specs/2026-07-25-review-mode-lifecycle-design.md` landed:
 fast-forward (F1.2), pure `deriveBinding` + transition table, permanent change-bar gutter (F1.1),
 stale-readonly resolution (F1.7), and the MarkdownArticle event collapse — the dropdown now forwards
 one `ViewModeSelection` to the binding, and `applyViewModeSelection` writes both halves of the

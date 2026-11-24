@@ -9,10 +9,21 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj } from '@dxos/echo';
+import { AccessToken } from '@dxos/link';
 import * as Position from '@dxos/util/Position';
 
-import { DebugPanelDrawer, DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
+import {
+  AccessTokenPanel,
+  DebugPanelDrawer,
+  DebugPanelStatus,
+  DebugStatus,
+  LoggerPanel,
+  StatsPanel,
+  TriggerStatePanel,
+  Wireframe,
+} from '#containers';
 import { DebugNodes, DebugSurface } from '#types';
 
 import { DebugNamespace } from '../namespace.ts';
@@ -37,6 +48,21 @@ export default Capability.makeModule(
         filter: AppSurface.settings(AppSurface.Article, DebugNamespace.key),
         component: DebugSettingsSurface,
         props: ({ data: { subject } }) => ({ subject, logStore, onUpload: fileUploader }),
+      }),
+      // Panels in the Debug companion about the selected object, stacked above its JSON.
+      Surface.create({
+        id: 'accessTokenPanel',
+        filter: Surface.makeFilter(DebugSurface.ObjectPanel, ({ object }) =>
+          Obj.instanceOf(AccessToken.AccessToken, object),
+        ),
+        component: AccessTokenPanel,
+        props: ({ data: { object } }) => ({ object }),
+      }),
+      Surface.create({
+        id: 'triggerStatePanel',
+        filter: Surface.makeFilter(DebugSurface.ObjectPanel, ({ object }) => Obj.instanceOf(Trigger.Trigger, object)),
+        component: TriggerStatePanel,
+        props: ({ data: { object } }) => ({ object }),
       }),
       Surface.create({
         id: 'space',

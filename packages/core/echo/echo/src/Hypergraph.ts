@@ -49,7 +49,7 @@ export interface Hypergraph extends Database.Queryable {
   /**
    * In-process registry of keyed objects and static schema types.
    * Populated at startup via `registry.add(objects)` / `registry.add(schemas)`.
-   * Queries that include no explicit from() clause will fan out to this registry automatically.
+   * A query reads this registry only when its from() clause names `Scope.registry()`.
    */
   get registry(): Registry.Registry;
 

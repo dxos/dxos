@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RDF, hashText } from '@dxos/pipeline-rdf';
+import { Fact, Graph, Hash, Ontology, Vocab } from '@dxos/echo-memory';
 
 import { type TextItem, itemSource, itemText } from '../sources/text-item.ts';
 import { type Sentiment } from './sentiment-lexicon.ts';
@@ -10,7 +10,7 @@ import { type TickerMention } from './tickers.ts';
 import { ANNOTATIONS, companyIri, ontology } from './vocabulary.ts';
 
 /** Which program wrote a set of annotation facts. */
-export type Extractor = RDF.Fact['extractor'];
+export type Extractor = Fact.Fact['extractor'];
 
 /** An event type the classifier assigns. */
 export const EVENT_TYPES = [
@@ -45,7 +45,7 @@ export type Annotation = {
 const ONTOLOGY = ontology();
 
 /** The article as an entity: its link is its IRI, so every graph that names it names one node. */
-export const articleTerm = (item: TextItem): RDF.EntityTerm => ({
+export const articleTerm = (item: TextItem): Fact.EncodedEntityTerm => ({
   kind: 'entity',
   entity: item.link,
   label: item.title,
@@ -53,7 +53,7 @@ export const articleTerm = (item: TextItem): RDF.EntityTerm => ({
 });
 
 /** The company a ticker names, under its {@link companyIri}. */
-export const companyTerm = (ticker: string, name?: string): RDF.EntityTerm => ({
+export const companyTerm = (ticker: string, name?: string): Fact.EncodedEntityTerm => ({
   kind: 'entity',
   entity: companyIri(ticker),
   label: name ?? ticker,
@@ -64,12 +64,12 @@ export const companyTerm = (ticker: string, name?: string): RDF.EntityTerm => ({
 export const publisherAgent = (item: Pick<TextItem, 'publisher'>): string => agentIri(item.publisher);
 
 /** An agent (outlet, regulator, exchange) as an entity IRI. */
-export const agentIri = (name: string): string => `${RDF.Vocab.ENTITY}${encodeURIComponent(name.toLowerCase())}`;
+export const agentIri = (name: string): string => `${Vocab.ENTITY}${encodeURIComponent(name.toLowerCase())}`;
 
-export const literal = (value: string): RDF.LiteralTerm => ({ kind: 'literal', literal: value });
+export const literal = (value: string): Fact.LiteralTerm => ({ kind: 'literal', literal: value });
 
 /** One statement: subject, predicate entry, object. */
-export type Statement = readonly [subject: RDF.Term, predicate: RDF.Ontology.Entry, object: RDF.Term];
+export type Statement = readonly [subject: Fact.EncodedTerm, predicate: Ontology.Entry, object: Fact.EncodedTerm];
 
 /** Where a graph's statements come from: the item's foreign key as `source`, who published it, and when. */
 export type Provenance = {
@@ -88,7 +88,7 @@ export const itemProvenance = (item: TextItem): Provenance => ({
   agent: publisherAgent(item),
   agentLabel: item.publisher,
   time: item.published,
-  hash: hashText(itemText(item)),
+  hash: Hash.text(itemText(item)),
 });
 
 /**
@@ -101,7 +101,7 @@ export const graphOf = (
   extractor: Extractor,
   statements: ReadonlyArray<Statement>,
   confidence?: number,
-): RDF.Fact[] => {
+): Fact.Fact[] => {
   const base = {
     id: '',
     factuality: { value: 'CT+', polarity: '+', ...(confidence !== undefined ? { confidence } : {}) },
@@ -114,8 +114,8 @@ export const graphOf = (
     recordedAt: provenance.time,
     extractor,
     sourceHash: provenance.hash,
-  } satisfies Omit<RDF.Fact, 'assertion'>;
-  return RDF.Graph.assign(
+  } satisfies Omit<Fact.Encoded, 'assertion'>;
+  return Graph.assign(
     statements.map(([subject, predicate, object]) => ({
       ...base,
       assertion: { subject, predicate: predicate.label, predicateIri: predicate.iri, object },
@@ -130,10 +130,10 @@ const graph = (
   extractor: Extractor,
   statements: ReadonlyArray<Statement>,
   confidence?: number,
-): RDF.Fact[] => graphOf(itemProvenance(item), name, extractor, statements, confidence);
+): Fact.Fact[] => graphOf(itemProvenance(item), name, extractor, statements, confidence);
 
 /** The article's own record: headline, outlet and date. */
-export const articleFacts = (item: TextItem, extractor: Extractor): RDF.Fact[] => {
+export const articleFacts = (item: TextItem, extractor: Extractor): Fact.Fact[] => {
   const article = articleTerm(item);
   return graph(item, 'article', extractor, [
     [article, ANNOTATIONS.headline, literal(item.title)],
@@ -154,7 +154,7 @@ export const mentionFacts = (
   item: TextItem,
   mentions: ReadonlyArray<TickerMention>,
   extractor: Extractor,
-): RDF.Fact[] => {
+): Fact.Fact[] => {
   const article = articleTerm(item);
   const statements = (found: ReadonlyArray<TickerMention>): Statement[] =>
     found.flatMap(({ ticker, name }) => [
@@ -169,7 +169,7 @@ export const mentionFacts = (
   ];
 };
 
-const score = (value: number): RDF.LiteralTerm => literal(value.toFixed(2));
+const score = (value: number): Fact.LiteralTerm => literal(value.toFixed(2));
 
 /**
  * Sentiment: the article's (`article —has sentiment→ "positive"`, `—has sentiment score→ "0.60"`), and per ticker a
@@ -180,7 +180,7 @@ export const sentimentFacts = (
   sentiment: Sentiment,
   tickers: ReadonlyArray<TickerSentiment>,
   extractor: Extractor,
-): RDF.Fact[] => {
+): Fact.Fact[] => {
   const article = articleTerm(item);
   return [
     ...graph(item, 'sentiment', extractor, [
@@ -188,7 +188,7 @@ export const sentimentFacts = (
       [article, ANNOTATIONS.sentimentScore, score(sentiment.score)],
     ]),
     ...tickers.flatMap(({ ticker, name, polarity, score: value }) => {
-      const node: RDF.EntityTerm = {
+      const node: Fact.EncodedEntityTerm = {
         kind: 'entity',
         entity: 'sentiment',
         label: `${ticker} sentiment`,
@@ -205,7 +205,7 @@ export const sentimentFacts = (
 };
 
 /** Event types: `article —reports event→ "earnings"`. */
-export const eventFacts = (item: TextItem, events: ReadonlyArray<EventType>, extractor: Extractor): RDF.Fact[] =>
+export const eventFacts = (item: TextItem, events: ReadonlyArray<EventType>, extractor: Extractor): Fact.Fact[] =>
   events.length === 0
     ? []
     : graph(

@@ -80,16 +80,15 @@ type TooltipTriggerProps = Omit<TooltipPrimitive.TriggerProps, 'content'> & {
  * focus only; the delay runs here because zag skips it while any tooltip is marked open, so a click would flash one
  * (DESIGN.md follow-up 33). With `content` it needs no Root or Content around it.
  */
-const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
-  ({ content, side, ...props }, forwardedRef) =>
-    content === undefined ? (
+const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(({ content, side, ...props }, forwardedRef) =>
+  content === undefined ? (
+    <TooltipTriggerImpl {...props} ref={forwardedRef} />
+  ) : (
+    <TooltipRoot positioning={side ? { placement: side } : undefined}>
       <TooltipTriggerImpl {...props} ref={forwardedRef} />
-    ) : (
-      <TooltipRoot positioning={side ? { placement: side } : undefined}>
-        <TooltipTriggerImpl {...props} ref={forwardedRef} />
-        <TooltipContent>{content}</TooltipContent>
-      </TooltipRoot>
-    ),
+      <TooltipContent>{content}</TooltipContent>
+    </TooltipRoot>
+  ),
 );
 
 TooltipTrigger.displayName = 'Tooltip.Trigger';

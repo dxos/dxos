@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Ontology, Predicate } from '@dxos/pipeline-rdf/types';
+import { Ontology, Predicate } from '@dxos/echo-memory';
 
 /** A canonical predicate and the surface forms extraction maps onto it. */
 export type Entry = {

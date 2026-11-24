@@ -29,7 +29,11 @@ export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view' | 'expo
 
 export type TableExportFormat = 'csv' | 'json' | 'xml';
 
-type TableToolbarState = Partial<{ viewDirty: boolean }>;
+type TableToolbarState = Partial<{
+  viewDirty: boolean;
+  /** Disables adding rows; exporting still works. */
+  readonly: boolean;
+}>;
 
 const createTableToolbarActions = ({
   stateAtom,
@@ -48,6 +52,7 @@ const createTableToolbarActions = ({
     if (onAdd) {
       const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
         type: 'add-row' as const,
+        disabled: get(stateAtom).readonly,
         icon: 'ph--plus--regular',
         label: ['add-row.label', { ns: translationKey }],
         testId: 'table.toolbar.add-row',
@@ -110,14 +115,13 @@ export type TableToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'custo
   };
 
 export const TableToolbar = Util.composable<HTMLDivElement, TableToolbarProps>(
-  ({ attendableId, viewDirty, onAdd, onSave, onExport, customActions, ...props }, forwardedRef) => {
+  ({ attendableId, viewDirty, readonly, onAdd, onSave, onExport, customActions, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
-    const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
+    const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty, readonly }), []);
 
-    // Update state.viewDirty when the prop changes.
     useEffect(() => {
-      registry.set(stateAtom, { viewDirty });
-    }, [registry, stateAtom, viewDirty]);
+      registry.set(stateAtom, { viewDirty, readonly });
+    }, [registry, stateAtom, viewDirty, readonly]);
 
     const actionsCreator = useMemo(
       () => createTableToolbarActions({ stateAtom, onAdd, onSave, onExport }),

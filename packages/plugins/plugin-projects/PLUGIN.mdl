@@ -40,7 +40,8 @@ feat F-4: A project's specs
   req F-4.5: The project article's Specs tab shows one spec, picked from a dropdown in its toolbar that also offers Add
              spec. The dropdown lists the project's specs in order, each followed by the specs nested beneath it,
              indented, by name, to any depth; its trigger names the spec shown. It opens on the spec picked last, or
-             the project's first.
+             the project's first; a link to a spec, a comment's notification among them, opens its project on that
+             spec.
   req F-4.6: A spec nests beneath each spec whose block's `Ref<spec>` field cites it, by object id (`echo:///<id>`) or
              spec id. The dropdown lists it once, under the first spec that reaches it, and a cycle stops before a
              spec repeats. The nav tree lists no specs beneath a project: the Specs tab's dropdown is where a
@@ -71,8 +72,8 @@ feat F-4: A project's specs
               other plugins give Markdown documents (`MarkdownCapabilities.ExtensionProvider`), such as diagrams. Its
               packages add their own editing on top.
   req F-4.13: A spec's text, and each block form drawn in it, shows the carets of the other peers editing it, each
-              with the peer's name.
-  req F-4.14: A spec's text opens in preview unless the Default spec view setting (F-4.16) names another view. In
+              with the peer's name, and a form shows a peer's caret only in the field it is in.
+  req F-4.14: A spec's text opens in source unless the Default spec view setting (F-4.16) names another view. In
               preview each block of a kind its schemas define is drawn as a form over that kind's fields, and the text
               offers readonly and source views. The text is the only store: a form edit changes only
               the source of the field it edits, and the title, the prose and each prose field are editors of their own
@@ -110,10 +111,15 @@ feat F-4: A project's specs
               naming a block by key or positional label. A write is checked against the kind's schema and changes only
               the parts it names; a new block of a numbered kind, and each new keyed entry, gets a fresh key.
   req F-4.16: The projects plugin's Default spec view setting picks the view a spec opens in, named as the toolbar's
-              view menu names them: Markdown (the forms), Read only or Plain text. Unset, a spec opens as Markdown;
+              view menu names them: Preview (the forms), Read only or Source. Unset, a spec opens as Source;
               changing it leaves a spec already open in the view it shows.
   req F-4.17: A peer following another (org.dxos.plugin.space#F-8.21) shows the tab, the spec and the chart the
               leader has open in each project, since the article's view state aspect is followed.
+  req F-4.18: A numbered item reads by its positional label (`F-3`, `F-3.2`) in the plain text as in the forms: the
+              text draws each key it writes, as a block's id, a keyed line's key or a reference field's value, as the
+              item's label. A key cannot be edited there: the caret steps over it, and an edit that changes part of it is
+              dropped. A label can be selected on its own, and copying it copies the label. Enter in a requirement
+              starts the next one under a fresh key, and Backspace on an empty one removes it.
 ```
 
 ```mdl
@@ -221,6 +227,12 @@ feat F-8: Review
              and shows only that status's verdicts; each status is a button of its own, its icon beside its count.
              The summary, filter and cards scroll together under the picker, and the current card shows its note in
              full.
+```
+
+```mdl
+feat F-9: Read-only Host
+  req F-9.1: When the host contributes `ReadOnly`, a project reads without editing: its header, configuration and spec text are read-only, the spec views take no answers or approvals, and nothing adds or removes an artifact or spec, changes a spec's extensions, delegates a task or starts a chat. The tabs, the spec picker, the pipeline chart and opening artifacts and tasks still work.
+  req F-9.2: When the host contributes `ReadOnly`, the nav tree lists each project with its Chats and Artifacts branches, which open their chats and artifacts, and offers no create, create-chat, add-artifact, drop, rearrange or Set up project action. The move-task dialog renders nothing and the project tour does not start.
 ```
 
 ## QA
@@ -562,7 +574,8 @@ test QA-10: Two peers see each other's carets in every project editor
       do: Both open Config > Agent; Bob types in the instructions, then Alice puts her cursor there.
       expect: each instructions editor shows the other peer's caret with that peer's name
     - name: Spec prose
-      do: Both open the Specs tab; Alice puts her cursor at the end of the prose, then Bob types after it.
+      do: Both open the Specs tab and pick Preview; Alice puts her cursor at the end of the prose, then Bob types after
+        it.
       expect: each spec shows the other peer's caret with that peer's name
     - name: Feature title and description
       do: Bob puts his cursor at the end of "Landing page"'s title in its form, then Alice types at the end of its
@@ -571,14 +584,14 @@ test QA-10: Two peers see each other's carets in every project editor
     - name: Feature requirement
       do: Alice types at the end of the feature's requirement, then Bob puts his cursor there.
       expect: each requirement row shows the other peer's caret with that peer's name
-    - name: Plain text and the form
-      do: Bob switches the Specs tab to Plain text; Alice types at the end of the feature's description in its form,
+    - name: Source and the form
+      do: Bob switches the Specs tab to Source; Alice types at the end of the feature's description in its form,
         then Bob types at the end of the requirement's line in the text.
       expect: Bob's description line shows Alice's caret and Alice's requirement row shows Bob's, each with that peer's name
     - name: Comments in plain text and the form
-      do: With Bob still in Plain text, Alice selects "Dark mode included" in the feature's description in its form and
+      do: With Bob still in Source, Alice selects "Dark mode included" in the feature's description in its form and
         comments on it; Bob selects "the footer" on the requirement's line in the text and comments on it; then Bob
-        switches back to Markdown.
+        switches back to Preview.
       expect: each comment is highlighted over its words in both peers' views, in the text and in the form's field
 ```
 
@@ -611,6 +624,89 @@ test QA-11: Pick a nested spec from the Specs tab
         subfeatures on the map.
       expect: the dropdown's trigger reads "Go / no-go" and the tab shows that spec again
 ```
+
+```mdl
+test QA-12: Two people write a chess plugin's spec with the agent
+  desc: |
+    Alice and Bob turn a few bullets into the spec for a Composer chess plugin. They write the draft together in real
+    time, Alice in the spec's plain text and Bob in its forms, then turn bullets into `feat` blocks in the text while
+    Bob watches the features land on his Board. Bob
+    leaves a question on a feature, starts a second spec and goes; Alice asks the agent to flesh the spec out and
+    answers him. Bob's notification brings him back to the first spec, where he has the thread's agent add a
+    requirement, and he picks a feature's dependencies in its form while Alice watches them light up on her Board. The spec they end with is enough to build the plugin from: its
+    features, their requirements, and `type` and `op` blocks. Walked by the autocue
+    flow `packages/plugins/plugin-projects/autocue/chess-spec.mjs`, recorded side by side.
+  actors: human
+  covers: [F-4.5, F-4.8, F-4.10, F-4.13]
+  status: passing            # 2026-11-17, recorded by autocue/chess-spec.mjs
+  given:
+    - alice: a booted app named "Alice", with plugin-code on
+    - bob: a second browser profile named "Bob", with plugin-code on, joined to Alice's space by invitation
+    - the Assistant's model is one the EDGE ai-service serves, and a comment thread's agent answers an @mention
+    - no "Chess" project exists in the space
+  steps:
+    - name: Create the project and its spec
+      do: Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab, checks Software in
+        Extensions and sets the tab's view to Source.
+      expect: the Specs tab shows the empty spec's plain text
+    - name: Write the draft
+      do: Alice types a line saying what the plugin is and two bullets under it.
+      expect: the spec's text holds the line and the two bullets
+    - name: Bob joins the draft
+      do: Bob opens "Chess" from Projects in the navigation tree, then its Specs tab, and picks Preview.
+      expect: each plank heading shows the other person among its viewers, and Bob's spec shows Alice's caret with her
+        name
+    - name: Type at the same time
+      do: Alice adds a bullet while Bob adds two of his own at the end.
+      expect: both texts hold all five bullets, and each shows the other's caret where they are typing
+    - name: Features from the bullets
+      do: Bob opens Board in the Structure companion. Alice turns her first bullet into the feature "Gameboard" by
+        typing `Gameboard /feat` over it, then Bob turns the lobby bullet into "Start Game" and Alice the move bullet
+        into "Make Move" the same way. Each describes the feature with the bullet's words, Bob in its form and Alice on
+        the indented line under its header.
+      expect: Bob's Board shows each card as its feature is made. Bob's text shows the three features as forms, with
+        Alice's caret only in the field she is typing in, and Alice's text shows them as `feat` blocks
+      note: The text before `/feat` becomes the feature's title, and the block replaces the bullet, marker and all.
+    - name: Bob asks a question and leaves
+      do: Bob comments on "Make Move"'s description, "Who checks a move, the board or the engine?", adds the spec
+        "Openings" from the spec dropdown with a line saying what it will cover, then closes his tab.
+      expect: the thread shows in Bob's Comments, and his Specs tab shows "Openings" when he leaves
+      note: Commenting on the spec follows it, so Bob hears of replies while he is away.
+    - name: Ask the agent to flesh it out
+      do: Alice opens the Assistant in the companion, picks `/feature-map` and asks it to turn the draft into the spec
+        for a Composer chess plugin, with requirements for every feature and the plugin's types and operations as
+        `type` and `op` blocks, keeping the features already written as they are, where they are.
+      expect: |
+        features for the remaining bullets appear in Alice's text as the agent makes them. When the agent finishes,
+        the spec's text holds at least five `feat` blocks, Gameboard, Make Move, Start Game and Move Validation among
+        them, every feature has requirements, and the text holds `type` and `op` blocks
+      note: The agent names the features it adds, so only the three made by hand and Move Validation, which Bob's
+        bullet names, are checked by name.
+    - name: Alice answers Bob
+      do: Alice answers Bob's question on "Make Move", "Move Validation does; the agent just added it."
+      expect: the answer shows under Bob's question in Alice's Comments
+    - name: Bob comes back to a notification
+      do: Bob opens Composer again.
+      expect: "Chess" opens on "Openings", the spec he picked last; his notifications tab shows a badge of one, and
+        the panel holds a notification for "Chess plugin"
+    - name: Bob asks the agent in the thread
+      do: Bob opens the "Chess plugin" notification and replies "@Kai add a requirement to Make Move that a finished
+        game takes no more moves".
+      expect: the notification switches "Chess" to "Chess plugin" with its Comments companion on the thread, "Make
+        Move" gains a requirement, and Kai replies in the thread with what it changed
+      note: A spec opens as part of its project, so its notification opens the project on that spec.
+    - name: Resolve the thread
+      do: Bob resolves the thread.
+      expect: the thread leaves Active comments on both sides
+    - name: Pick the dependencies
+      do: Alice opens Board in the Structure companion. Bob opens "Chess" again, picks Preview and, in "Make
+        Move"'s form, picks "Gameboard" and "Move Validation" as features it depends on. Alice selects "Make Move" on her Board.
+      expect: Alice's Board marks "Gameboard" and "Move Validation" as features "Make Move" depends on
+    - name: Read the finished spec
+      do: Both scroll through the spec's text from the top.
+      expect: the summary and bullets, the features each with requirements, and the `type` and `op` blocks
+```
+
 
 ## Changelog
 
@@ -3006,4 +3102,162 @@ decision D-270: The project reveal (`ProjectOperation.ScrollToAnchor`) takes `fo
   date: 2026-11-16
   by: user:wittjosiah
   why: A follow moved the follower's selection in a project's text fields with every move of the leader's.
+```
+
+```mdl
+decision D-271: Read-only handling is per plugin, through each plugin's options.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+```
+
+```mdl
+decision D-272: A `readOnly` option draws the project article, the spec text and the spec views without editing, and leaves out what creates, links, moves or delegates, or needs the assistant: the Chats branch, the task actions, the move-task dialog, the templates, the create entries and the tour. Fills in [D-271].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.2]
+  why: A reader still wants a project's configuration and spec, so they show read-only rather than hidden. Chats open in the assistant, and every task action hands the task to an agent or moves it.
+  rejected:
+    - Hiding the Config section; it holds the instructions and context that explain the project.
+    - Keeping Copy prompt; the prompt tells an agent to claim the task in a space the reader cannot write to.
+```
+
+```mdl
+decision D-273: In read-only mode a project's chats can be opened and read.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-9.2]
+```
+
+```mdl
+decision D-274: A `readOnly` option draws the project article, the spec text and the spec views without editing, and leaves out what creates, links, moves or delegates: the create-chat action, the task actions, the move-task dialog, the templates, the create entries and the tour. The Chats branch and its chats stay, without drag or rearrange, and a pipeline lane still opens its chat. Fills in [D-273].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-272
+  affects: [F-9.1, F-9.2]
+  why: A lane only navigates to a chat that exists, and the assistant's own read-only mode keeps the chat from resuming its session.
+```
+
+```mdl
+decision D-275: Read-only is an app-wide singleton capability the host contributes, which any plugin reads.
+  date: 2026-11-17
+  by: user:wittjosiah
+  supersedes: D-271
+  affects: [F-9.1, F-9.2]
+```
+
+```mdl
+decision D-276: When the host contributes `ReadOnly`, the project article, the spec text and the spec views draw without editing, and nothing creates, links, moves or delegates: the nav tree has no create, create-chat, add-artifact, drop, rearrange or Set up project action, the move-task dialog renders nothing, and the project tour does not start. The Chats branch and its chats stay, without drag or rearrange. Fills in [D-275].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-274
+  affects: [F-9.1, F-9.2]
+  why: The host contributes `ReadOnly` at startup with no ordering against the plugin's modules, so the plugin contributes everything and reads it where each piece is used: the containers through `useReadOnly`, each graph action and draggable flag inside its extension, the tour in its match. The Projects section's `+`, drops and rearranges come from the type section, which leaves them out itself while `ReadOnly` is contributed. Templates, create entries and task actions are always contributed, since every place that offers them leaves them out when read-only.
+  rejected:
+    - Withholding the plugin's modules on a read-only host: a module cannot see a capability contributed in the same startup wave.
+```
+
+```mdl
+decision D-277: QA-12 checks that two people can write a plugin's spec together in one project: both edit its text at once, both make features in that text, the agent adds features, requirements and `type` and `op` blocks that both see as they appear, dependencies are picked in a feature's form and show on the Board, and comments made while one person is offline wait as notifications. The spec it ends with is enough to build the plugin from. Its agent steps run on a live model, not recorded responses.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [QA-12]
+```
+
+```mdl
+decision D-278: In QA-12, Alice follows the two features by commenting on them, since Comments has no bell for a feature, and Bob answers while she is away. Being away is closing her tab, not losing the network: the app comes back to the notifications either way. She asks for the missing requirement by @mentioning the thread's agent, Kai, rather than in a chat. Fills in [D-277].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-12]
+  why: A comment notifies the followers of the feature it is on, and following the project does not cover its features. Composer has no control that takes it offline, so the browser's network is cut instead. The thread's own agent sees the comment it answers.
+  rejected:
+    - Following the project alone, which leaves Alice with no notifications.
+```
+
+```mdl
+decision D-279: In QA-12, Bob is the one who leaves, while the agent works: he follows "Make Move" by asking about it, Alice watches the agent and answers him, and he comes back to that one notification, has Kai add the requirement in the thread and resolves it. Bob picks the dependencies after he returns, with Alice watching them show on her Board. Alice asks the agent for the spec, not the full spec. Replaces [D-278].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [QA-12]
+  supersedes: D-278
+  why: An agent is something to leave running, so both people waiting on it misread it; asking for the full spec and then adding what it missed read as the agent falling short; and two notifications opened one after the other flapped the sidebar and companion.
+```
+
+```mdl
+decision D-280: QA-12 edits the spec only in its document: features are made with `/feat` over a bullet and described in their forms, and Make Move's dependencies are picked in its form. The Board in the Structure companion is drawn from the spec's `feat` blocks, so Bob watches features arrive there and Alice sees Make Move's dependencies when she selects it. Bob's question is on Make Move's description in the spec, so its notification names the spec. Fills in [D-277] and [D-279].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-12]
+  why: A spec's features are `feat` blocks in its text, and the views beside it only show them, so the text is the one place a person edits them.
+```
+
+```mdl
+decision D-281: A spec resolves, as a navigation target, to its project's path, since a spec has no node of its own; a link to a spec, a comment's notification among them, opens its project. Fills in [D-280].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-12]
+  why: The database path a spec would otherwise get names no node, so opening it left a plank loading forever with no companion beside it.
+  rejected:
+    - Giving a spec a node of its own; a spec is read and edited on its project's Specs tab.
+```
+
+```mdl
+decision D-282: A spec's type names the feature-map skill, so the agent answering a comment on a spec can edit its blocks, as a project's type names the project skill. Fills in [D-280].
+  date: 2026-11-16
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-12]
+  why: A comment's agent gets only the skills its subject's type names, and a spec named none, so "@Kai add a requirement" could answer but not edit the `feat` block.
+  rejected:
+    - Binding the skill from plugin-projects' subject context; the type already carries a project's skill the same way.
+```
+
+```mdl
+decision D-283: A navigation target can carry view state, as patches the Open operation applies before its planks open, so a spec's target opens its project on that spec. In QA-12, Bob leaves on a second spec, "Openings", and his notification opens "Chess plugin". Fills in [D-281].
+  date: 2026-11-17
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.5, QA-12]
+  why: The project's path names no spec, so a notification opened the spec the reader picked last, which in a project of several specs can be another one.
+  rejected:
+    - A path segment for the spec under its project; [D-281] keeps a spec off the graph.
+    - Writing the view state while resolving the target; resolving also serves menus, search and agents that open nothing.
+```
+
+```mdl
+decision D-284: In QA-12 Alice writes in the spec's plain text and Bob in its forms, and a form shows a peer's caret only in the field it is in. A field redraws the other peers' carets when the spec's text changes, not only when a caret moves.
+  date: 2026-11-17
+  by: user:wittjosiah
+  affects: [F-4.13, QA-12]
+  why: The demo showed one peer's caret twice, at the end of a feature's title and in its description. A caret names the character after it, so typing ahead of it changes no presence state, and the title kept the caret it drew while the empty description shared its end.
+```
+
+```mdl
+decision D-285: The plain text draws each numbered item's key as its positional label and never shows or edits the key: the caret steps over it and a typed edit that changes part of it is dropped, but the label alone can be selected and copies as the label. Enter in a requirement writes the next one under a fresh key; Backspace on an empty one removes it. Keys stay what the text stores. Fills in [D-244].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.18]
+  why: A feature read as `F-3` in its form and as a random key in the plain text, and a key typed or edited by hand could collide or break the links that cite it.
+```
+
+```mdl
+decision D-286: The view menu names a spec's views Preview, Read only and Source, as the editor's toolbar names them for every document, and so does the Default spec view setting. Amends [D-267].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.16, QA-10, QA-12]
+  why: "Markdown" named the view that draws a spec's blocks as forms, which is not Markdown, and "Plain text" did not say it was the spec's source.
+```
+
+```mdl
+decision D-287: Unset, the Default spec view setting opens a spec on its source, not its forms. QA-10 and QA-12 pick Preview where their steps read a feature's form. Amends [D-267].
+  date: 2026-11-19
+  by: user:wittjosiah
+  affects: [F-4.14, F-4.16, QA-10, QA-12]
+  why: The source now reads by the same labels as the forms and keeps its keys safe, so it is the view a spec opens in.
 ```

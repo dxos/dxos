@@ -106,21 +106,27 @@ const recoverWithPasskey = Effect.gen(function* () {
 // #endregion recover
 
 // #region revoke
-const revokePasskeys = Effect.gen(function* () {
+/** The lookup keys of the passkeys that still work. */
+const activePasskeys = Effect.gen(function* () {
   const [credentials] = yield* Identity.credentials.pipe(
     Stream.take(1),
     Stream.runCollect,
   );
-  for (const { recovery } of credentials) {
-    if (
-      recovery?.kind === 'passkey' &&
-      !recovery.revoked &&
-      recovery.lookupKey
-    ) {
-      yield* Identity.revokeRecoveryCredential(recovery.lookupKey);
-    }
-  }
+  return credentials.flatMap(({ recovery }) =>
+    recovery?.kind === 'passkey' && !recovery.revoked && recovery.lookupKey
+      ? [recovery.lookupKey]
+      : [],
+  );
 });
+
+/** Replaces the passkey registered under `lookupKey` with a new one. */
+const replacePasskey = (lookupKey: string) =>
+  Effect.gen(function* () {
+    // The new passkey goes in first, because HALO refuses to revoke the
+    // last recovery credential that still works.
+    yield* registerPasskey;
+    yield* Identity.revokeRecoveryCredential(lookupKey);
+  });
 // #endregion revoke
 
-export { recoverWithPasskey, registerPasskey, revokePasskeys };
+export { activePasskeys, recoverWithPasskey, registerPasskey, replacePasskey };

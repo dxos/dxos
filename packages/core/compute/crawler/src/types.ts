@@ -63,6 +63,11 @@ export type Event =
   | { readonly _tag: 'Message'; readonly target: Target; readonly message: Message }
   | { readonly _tag: 'ThreadStart'; readonly target: Target; readonly parentMessageId?: string }
   | { readonly _tag: 'ThreadEnd'; readonly target: Target }
+  /**
+   * A page whose messages the source filtered out (e.g. system messages): nothing to extract, but the cursor moves past
+   * it. It travels the pipeline like a message so the commit sink moves the cursor in order, after earlier messages.
+   */
+  | { readonly _tag: 'Skipped'; readonly target: Target; readonly cursor: string }
   | { readonly _tag: 'ChannelEnd'; readonly target: Target };
 
 export type EventTag = Event['_tag'];

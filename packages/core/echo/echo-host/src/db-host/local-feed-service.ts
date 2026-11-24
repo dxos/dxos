@@ -28,7 +28,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   #feedStore: FeedStore;
   #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
 
-  'constructor'(
+  constructor(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
     feedStore: FeedStore,
     options?: {

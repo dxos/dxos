@@ -735,7 +735,8 @@ const openLight = (state: PromptState, event: Trajectory.Event, payload: Traject
           {
             role: 'event',
             name: 'threads',
-            blocks: [{ _tag: 'text', text: Transcript.snapshot(siblings, id) }],
+            // Synthetic, as the system wrote it: it is context for the thread's prompt, not a prompt of its own.
+            blocks: [{ _tag: 'text', text: Transcript.snapshot(siblings, id), disposition: 'synthetic' }],
             source: [event.id],
             at: state.position,
             ephemeral: true,

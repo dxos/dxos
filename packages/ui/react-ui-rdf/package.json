@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-rdf",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Presentational components for extracted semantic facts: an entity browser, a fact viewer with type filters, and a Turtle snippet.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,6 +37,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",

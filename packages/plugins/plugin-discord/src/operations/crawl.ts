@@ -7,73 +7,67 @@ import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as EffectRef from 'effect/Ref';
 
 import * as Operation from '@dxos/compute/Operation';
-import { AgentRegistry, Crawler, CrawlState, StateStore, extractFactsStage } from '@dxos/crawler';
+import { AgentRegistry, Crawler, CrawlState, StateStore } from '@dxos/crawler';
 import { Database, Obj } from '@dxos/echo';
-import { Pipeline } from '@dxos/pipeline';
+import { DiscordPipeline, MessageStore, QuestionStore } from '@dxos/pipeline-discord';
 
 import { DiscordOperation } from '#types';
 
-import { discordSourceLayerFromConnection, factFeedStoreLayer } from '../services/index.ts';
+import { discordSourceLayerFromService, spaceMemoryFactStoreLayer } from '../services/index.ts';
 
 /**
- * Runs one bounded slice of the crawl with every store taken from ECHO for this invocation: the frontier and fact
- * hashes in the `CrawlState`, facts appended to the fact feed. Authors resolve in a per-run registry: an author's
- * canonical id is their Discord user id, so it is the same in every run without a store.
+ * Runs one bounded slice of `DiscordPipeline` with its stores injected for this invocation: the frontier and fact
+ * hashes in the `CrawlState`, facts put into the space's memory, Topics and Persons in the space, and Discord read as
+ * the bot through `DiscordService`. Authors, messages and questions live in per-run stores: an author's canonical id
+ * is their Discord user id, so it is the same in every run without a store.
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannels> =
   DiscordOperation.CrawlDiscordChannels.pipe(
     Operation.withHandler(
-      Effect.fn(function* ({
-        connection,
-        channels,
-        descendThreads,
-        maxDays,
-        maxDepth,
-        maxSteps,
-        state: stateRef,
-        facts: factsRef,
-      }) {
+      Effect.fn(function* ({ applicationId, channels, descendThreads, maxDays, maxDepth, maxSteps, state: stateRef }) {
         const state = yield* Database.load(stateRef);
-        const feed = yield* Database.load(factsRef);
         Obj.update(state, (state) => {
           CrawlState.reconcileChannels(state, channels);
           CrawlState.setRunStatus(state, 'running');
         });
 
-        const steps = yield* EffectRef.make(0);
-        let messages = 0;
-        const run = Crawler.stream(
-          {
-            channels,
-            descendThreads: descendThreads ?? true,
-            ...(maxDepth !== undefined ? { maxDepth } : {}),
-            ...(maxDays !== undefined ? { seed: { maxDays } } : {}),
-          },
-          { maxSteps: maxSteps ?? DiscordOperation.DEFAULT_BACK_INDEX_STEPS, steps },
-        ).pipe(
-          extractFactsStage({ batchSize: DiscordOperation.BACK_INDEX_PAGE_SIZE }),
-          Pipeline.run({
-            sink: (event) =>
-              Crawler.commit(event).pipe(
-                Effect.tap(() =>
-                  Effect.sync(() => {
-                    if (event._tag === 'Message') {
-                      messages++;
-                    }
-                  }),
-                ),
-              ),
-          }),
-          Effect.andThen(Crawler.summarize()),
+        const { db } = yield* Database.Service;
+        const run = Effect.gen(function* () {
+          const summary = yield* DiscordPipeline.run(
+            {
+              channels,
+              descendThreads: descendThreads ?? true,
+              ...(maxDepth !== undefined ? { maxDepth } : {}),
+              ...(maxDays !== undefined ? { seed: { maxDays } } : {}),
+            },
+            {
+              maxSteps: maxSteps ?? DiscordOperation.DEFAULT_BACK_INDEX_STEPS,
+              extract: { batchSize: DiscordOperation.BACK_INDEX_PAGE_SIZE },
+              db,
+            },
+          );
+          return { ...summary, messages: yield* MessageStore.count() };
+        }).pipe(
           Effect.provide(
             Layer.mergeAll(
-              discordSourceLayerFromConnection(connection, { pageLimit: DiscordOperation.BACK_INDEX_PAGE_SIZE }),
+              discordSourceLayerFromService(
+                { applicationId, spaceId: db.spaceId },
+                { pageLimit: DiscordOperation.BACK_INDEX_PAGE_SIZE },
+              ),
+              // Durable across runs: the frontier and cursors in the CrawlState, the facts in the space's memory.
               StateStore.layerEcho(state),
+              spaceMemoryFactStoreLayer({ state }),
+              // Per run, safe to lose: the extractor resolves mentions and links people only among this run's
+              // authors, and each author's identity is already durable as a Person and as the facts naming them.
               AgentRegistry.layerMemory,
-              factFeedStoreLayer({ feed, state }),
+              // Per run, safe to lose: it buffers the page batch for topic detection, and the CrawlState cursors,
+              // not this store, keep a message from being read twice.
+              MessageStore.layerMemory,
+              // Per run, safe to lose: it holds standing questions put to the pipeline, which nothing here writes;
+              // the questions people ask in Discord are recorded as facts in the space's memory.
+              QuestionStore.layerMemory,
             ),
           ),
         );
@@ -84,18 +78,27 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
         const error = failure === undefined ? undefined : failure instanceof Error ? failure.message : String(failure);
         const summary = Exit.isSuccess(exit)
           ? exit.value
-          : yield* Crawler.summarize().pipe(Effect.provide(StateStore.layerEcho(state)));
+          : {
+              ...(yield* Crawler.summarize().pipe(Effect.provide(StateStore.layerEcho(state)))),
+              steps: 0,
+              messages: 0,
+            };
         const result = {
           done: summary.done,
           errored: summary.errored,
-          steps: yield* EffectRef.get(steps),
-          messages,
+          steps: summary.steps,
+          messages: summary.messages,
           ...(error !== undefined ? { error } : {}),
         };
         const at = new Date(yield* Clock.currentTimeMillis).toISOString();
         Obj.update(state, (state) => {
           CrawlState.recordRun(state, { at, ...result });
-          CrawlState.setRunStatus(state, error !== undefined ? 'error' : summary.done ? 'done' : 'running');
+          // Every run reopens the finished channels to check for new messages, so a run that reads none is caught up
+          // even when its step budget did not reach every reopened channel.
+          CrawlState.setRunStatus(
+            state,
+            error !== undefined ? 'error' : summary.done || summary.messages === 0 ? 'done' : 'running',
+          );
         });
         return result;
       }),

@@ -80,7 +80,7 @@ type ArchiveFeed = NonNullable<ReturnType<typeof readSerializedSpaceArchive>['fe
 
 /** Reads the space as the buf message the service returns. */
 export class SpacesServiceImpl implements SpacesService.Handlers {
-  'constructor'(
+  constructor(
     private readonly _identityManager: IdentityContract.Manager,
     private readonly _spaceManager: SpaceManager,
     private readonly _echoHost: EchoHost,
@@ -521,7 +521,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
    * Each object is written into a document of its own, linked from the space directory; feed messages are appended
    * to the appropriate feed via {@link EchoHost.feedService}.
    */
-  private async '_hydrateSpaceFromSerialized'(
+  private async _hydrateSpaceFromSerialized(
     ctx: Context,
     space: DataSpace,
     serialized: ReturnType<typeof readSerializedSpaceArchive>,
@@ -549,7 +549,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
    * Fills a space created for an import; on failure the space is deleted again, so an import either lands whole or
    * leaves nothing behind.
    */
-  private async '_populateImportedSpace'(ctx: Context, space: DataSpace, populate: () => Promise<void>): Promise<void> {
+  private async _populateImportedSpace(ctx: Context, space: DataSpace, populate: () => Promise<void>): Promise<void> {
     try {
       await populate();
     } catch (err) {
@@ -560,7 +560,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   }
 
   /** Appends each feed's messages; a merge skips messages the space's feed already holds. */
-  private async '_importFeeds'(
+  private async _importFeeds(
     space: DataSpace,
     feeds: readonly ArchiveFeed[],
     { merge = false }: { merge?: boolean } = {},
@@ -596,7 +596,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     }
   }
 
-  private async '_joinByAdmission'(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
+  private async _joinByAdmission(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
     invariant(credential, 'Admission carries no credential.');
     const assertion = getCredentialAssertion(credential);
     invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
@@ -618,7 +618,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     return buf.create(JoinSpaceResponseSchema, { space: await this._serializeSpace(dataSpace) });
   }
 
-  private async '_serializeSpace'(space: DataSpace): Promise<Space> {
+  private async _serializeSpace(space: DataSpace): Promise<Space> {
     const lastEpoch = space.automergeSpaceState.lastEpoch?.credential;
     return buf.create(SpaceSchema, {
       id: space.id,
@@ -666,7 +666,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  private '_requireIdentity'() {
+  private _requireIdentity() {
     if (!this._identityManager.identity) {
       throw new IdentityNotInitializedError({
         message: 'This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo',
@@ -675,7 +675,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     return this._identityManager.identity;
   }
 
-  private async '_updateMetrics'(): Promise<void> {
+  private async _updateMetrics(): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const identity = this._identityManager.identity?.identityKey.truncate();
     if (identity) {

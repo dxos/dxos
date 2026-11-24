@@ -23,7 +23,7 @@ Design: [`./DESIGN.md`](./DESIGN.md). Studio's own ledger: `packages/plugins/plu
 - [x] Dev server brands as the `dev` channel: boot mark filter + favicon middleware (`channel-branding.ts`).
 - [x] `TaskSet` hidden from the Database section (`HiddenAnnotation`, like `Milestone`).
 
-## Phase 3: Project as the studio root (design: `agents/superpowers/specs/2026-09-13-studio-projects-design.md`)
+## Phase 3: Project as the studio root (design: `.agents/superpowers/specs/2026-09-13-studio-projects-design.md`)
 
 - [x] plugin-studio contributes a `ProjectCapabilities.Template` ("Studio") whose scaffold parents a `Lightbox` to the project and files it in `project.artifacts`.
 - [x] Remove the Studio navtree section, the virtual Artifacts node, `ArtifactsArticle`, and the `ARTIFACTS_*` paths/constants.

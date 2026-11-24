@@ -104,9 +104,11 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
         roles: [
           AssistantSurface.ChatDetails,
           AssistantSurface.ChatSurface,
+          AssistantSurface.ThreadCard,
           SpaceSurface.SpaceHomeContent,
           SpaceSurface.SpaceHomePinBottom,
           AppSurface.Article,
+          AppSurface.CardContent,
           AppSurface.deckCompanion('trace'),
           AppSurface.Dialog,
           AppSurface.ObjectProperties,

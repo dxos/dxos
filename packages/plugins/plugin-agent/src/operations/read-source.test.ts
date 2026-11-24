@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -15,9 +15,9 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Fact } from '@dxos/echo-memory';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { type RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
@@ -61,6 +61,14 @@ const FACTS = [
     quote: 'The race is in the v12 index migration.',
   },
   { subject: 'Josiah', predicate: 'reviews', object: 'fix', quote: 'I will review the fix.', force: 'commissive' },
+  // What the chat rules make of "we" from a line whose speaker nothing identifies.
+  { subject: 'User', predicate: 'decided', object: 'ship offline mode', quote: 'We decided to ship offline mode.' },
+  {
+    subject: 'offline mode',
+    predicate: 'depends on',
+    object: 'background sync',
+    quote: 'Offline mode depends on background sync.',
+  },
 ];
 
 /** Extraction calls made so far, so a test can tell a read that reached the model from one that did not. */
@@ -80,6 +88,9 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
 };
 
 const brain = makeTestBrain();
+
+// One memory stands in for each test's space, so every test starts with an empty one.
+afterEach(() => brain.reset());
 
 const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
@@ -286,6 +297,37 @@ describe('ReadSource', () => {
   );
 
   it.effect(
+    'omits a decision whose speaker nothing identifies, and keeps the rest of the line',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const chat = yield* Agent.loadChat(agent);
+        if (!chat) {
+          return expect.unreachable('The agent has a chat.');
+        }
+        const feed = yield* Database.load(chat.feed);
+        yield* Feed.append(feed, [
+          Message.make({
+            sender: { role: 'user' },
+            blocks: [
+              { _tag: 'text', text: 'We decided to ship offline mode. Offline mode depends on background sync.' },
+            ],
+          }),
+        ]);
+        yield* Database.flush();
+
+        yield* Operation.invoke(AgentOperation.ReadSource, { agent: agentRef, source: Ref.make<Obj.Unknown>(chat) });
+        const facts = yield* brainFacts(agent);
+        expect(facts.map(({ assertion }) => assertion.predicate)).toEqual(['depends on']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
     'reads a chat again from the start once the brain has lost its facts',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -391,17 +433,18 @@ describe('ReadSource', () => {
           id: string,
           subject: string,
           predicate: string,
-          object: RDF.Fact['assertion']['object'],
+          object: Fact.Encoded['assertion']['object'],
           source: string,
-        ): RDF.Fact => ({
-          id,
-          assertion: { subject: { kind: 'entity', entity: subject }, predicate, object },
-          factuality: { value: 'CT+', polarity: '+' },
-          attribution: { source, generatedAtTime: '2026-10-14T10:00:00.000Z' },
-          recordedAt: '2026-10-14T10:00:00.000Z',
-          extractor: { id: 'test', model: 'test', version: '1' },
-          sourceHash: id,
-        });
+        ): Fact.Fact =>
+          Fact.make({
+            id,
+            assertion: { subject: { kind: 'entity', entity: subject }, predicate, object },
+            factuality: { value: 'CT+', polarity: '+' },
+            attribution: { source, generatedAtTime: '2026-10-14T10:00:00.000Z' },
+            recordedAt: '2026-10-14T10:00:00.000Z',
+            extractor: { id: 'test', model: 'test', version: '1' },
+            sourceHash: id,
+          });
         const brain = yield* BrainService.BrainService;
         yield* brain.push(agent.id, [
           // The roster resolved the name to the Person and named their Discord account.

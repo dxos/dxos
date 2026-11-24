@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { DXN } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { type HintSyntax, makeDescriber } from './describe.ts';
@@ -17,6 +18,7 @@ import {
   type InstructionsContext,
   NO_OPERATIONS,
   type SandboxOperation,
+  printingConsole,
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
@@ -48,6 +50,8 @@ export const PlainDialect: Dialect = {
 
   wrap: (code) => code,
 
+  operations: (operations) => renderPlainOperationList(operations),
+
   bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
     const run = RuntimeProvider.runPromise(Effect.succeed(runtime));
     const describe = makeDescriber({ syntax: PLAIN_HINTS, skills });
@@ -55,9 +59,17 @@ export const PlainDialect: Dialect = {
       Query.select(Filter.id(typeof target === 'string' ? target : target.id));
     return {
       print,
+      console: printingConsole(print),
 
       /** The object's card with what only a query can tell: its relations, children and referrers. */
-      describe: (value: unknown) => run(describe(value)),
+      describe: (value: unknown) =>
+        run(
+          Effect.gen(function* () {
+            const id = Obj.isObject(value) || Relation.isRelation(value) ? undefined : objectIdOf(value);
+            const stored = id === undefined ? undefined : yield* findById(id);
+            return yield* describe(stored ?? value);
+          }),
+        ),
 
       /** Relations whose source (`out`) or target (`in`) is the object, optionally of one relation type. */
       relations: (target: Obj.Unknown | string, direction: 'out' | 'in' = 'out', type?: string) =>
@@ -97,9 +109,29 @@ export const PlainDialect: Dialect = {
             // Matched on the typename rather than by URI: a registered type is indexed under its
             // VERSIONED DXN, and the model names a type the same way it does in a query —
             // unversioned. Objects only: a relation needs a source and target `make` cannot take.
-            const type = db.registry
-              .list()
-              .find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
+            const registered = () =>
+              db.registry.list().find((entity) => Type.isType(entity) && Type.getTypename(entity) === typename);
+            // A type the registry lacks is asked of the graph's type sources: on EDGE an agent's database registers
+            // only its own types, and the rest are published by the plugin bundles that contribute them. A name that
+            // is not a valid unversioned typename, or a resolver that fails, is an unknown type, never a defect.
+            const resolved = (): Effect.Effect<unknown> =>
+              Schema.is(DXN.NameSchema)(typename)
+                ? Effect.tryPromise(
+                    () =>
+                      db.graph
+                        .createRefResolver({ context: { space: db.spaceId } })
+                        .resolveType?.(DXN.make(typename)) ?? Promise.resolve(undefined),
+                  ).pipe(Effect.orElseSucceed(() => undefined))
+                : Effect.succeed(undefined);
+            const type = registered() ?? (yield* resolved());
+            if (type !== undefined && Type.isType(type) && Type.isRelation(type)) {
+              return yield* Effect.fail(
+                new UnknownObjectTypeError({
+                  typename,
+                  message: `${typename} is a relation type; make creates objects only`,
+                }),
+              );
+            }
             if (type === undefined || !Type.isType(type) || !Type.isObject(type)) {
               return yield* Effect.fail(
                 new UnknownObjectTypeError({ typename, message: `Unknown object type: ${typename}` }),
@@ -140,7 +172,8 @@ export const PlainDialect: Dialect = {
     in scope.
 
     Prefer one \`eval\` call that does the whole job — query, inspect, change, print — over a call
-    per step. Print the specific values you need to reason about, not whole objects, and keep the
+    per step. Each call is a fresh program: nothing defined in an earlier call exists in the next,
+    so load again what you need. Print the specific values you need to reason about, not whole objects, and keep the
     output small. Stay on the objects the request names or the conversation is attached to: reading
     or changing others the request did not ask about spends calls and risks unasked-for writes.
 
@@ -179,6 +212,35 @@ const PLAIN_HINTS: HintSyntax = {
   referrers: (id, type, field) => `await referrers('${id}', '${type}'${field === undefined ? '' : `, '${field}'`})`,
 };
 
+/**
+ * The id of the object `describe` is given in another form, since a card of its JSON counts none of its relations: the
+ * id itself, an object's JSON (as an operation answers), or a record with exactly one field holding an object
+ * (`{ object }`, or a `{ task, note }` the code built). Only an object id counts, so a wrapper's own id does not hide
+ * the object it holds; an array names no single object.
+ */
+const objectIdOf = (value: unknown): EntityId | undefined => {
+  if (Predicate.isString(value)) {
+    return EntityId.isValid(value) ? value : undefined;
+  }
+  if (!Predicate.isObject(value)) {
+    return undefined;
+  }
+  if (Predicate.isString(value.id) && EntityId.isValid(value.id)) {
+    return value.id;
+  }
+  const ids = Object.values(value).flatMap((field) =>
+    Predicate.isObject(field) && Predicate.isString(field.id) && EntityId.isValid(field.id) ? [field.id] : [],
+  );
+  return ids.length === 1 ? ids[0] : undefined;
+};
+
+/** The stored object with `id`, or undefined when the database has no such object. */
+const findById = (id: EntityId): Effect.Effect<Entity.Unknown | undefined, never, Database.Service> =>
+  Database.query(Filter.id(id)).run.pipe(
+    Effect.map(([found]) => found),
+    Effect.orElseSucceed(() => undefined),
+  );
+
 /** Whether `object`'s `field` holds a ref (directly or in an array) to the object `id`. */
 const referencesVia = (object: object, field: string, id: string): boolean => {
   const value: unknown = Reflect.get(object, field);
@@ -196,10 +258,13 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
   operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
   so they are indexed rather than dotted.
 
-  ${operations
-    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
-    .join('\n')}
+  ${renderPlainOperationList(operations)}
 `;
+
+const renderPlainOperationList = (operations: readonly SandboxOperation[]): string =>
+  operations
+    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
+    .join('\n');
 
 /** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
 export const camelCase = (name: string): string =>

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Dsl } from '@dxos/diagram';
+import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
@@ -38,7 +38,7 @@ const camera3dFor = (camera: Scene.Camera2D, preset: StoryProps['camera']): Scen
 };
 
 const DefaultStory = ({ exemplar, theme, camera, renderer }: StoryProps) => {
-  const document = useMemo(() => Dsl.readScenes(EXEMPLARS[exemplar]).document, [exemplar]);
+  const document = useMemo(() => DSL.readScenes(EXEMPLARS[exemplar]).document, [exemplar]);
   const root = document.scenes[0];
   const sceneCamera = root?.dim === '2d' ? root.camera : undefined;
   const lifted = useMemo(() => (renderer === '3d' ? liftScene(document) : undefined), [renderer, document]);

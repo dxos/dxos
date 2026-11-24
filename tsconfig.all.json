@@ -148,9 +148,6 @@
       "path": "packages/common/diagram/tsconfig.json"
     },
     {
-      "path": "packages/apps/diagram-app/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
@@ -164,9 +161,6 @@
     },
     {
       "path": "packages/apps/drawing-app/tsconfig.json"
-    },
-    {
-      "path": "packages/devtools/drawing/site/tsconfig.json"
     },
     {
       "path": "tools/dx-tools/tsconfig.json"
@@ -191,6 +185,15 @@
     },
     {
       "path": "packages/core/echo/echo-host/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-memory/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-memory-sqlite/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-native/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-panproto/tsconfig.json"
@@ -968,6 +971,9 @@
     },
     {
       "path": "packages/sdk/schema/tsconfig.json"
+    },
+    {
+      "path": "tools/session-board/tsconfig.json"
     },
     {
       "path": "packages/sdk/shell/tsconfig.json"

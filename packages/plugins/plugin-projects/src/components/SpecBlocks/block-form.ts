@@ -21,8 +21,8 @@ import { Annotation, Format } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { OptionsLookupAnnotation, type OptionsLookupEntry, optionsLookup } from '@dxos/react-ui-form';
 
+import { type SpecBlocks } from '../../extensions/spec-blocks/spec-blocks-state.ts';
 import type * as ProjectCapabilities from '../../types/ProjectCapabilities.ts';
-import { type SpecBlocks } from './spec-blocks-state.ts';
 
 /**
  * Form keys for a block's header name and title and its inline prose; not MDL field names, which start with a letter. The

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-agent",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Autonomous agents that converse in channels (Discord, freeq, local feeds) and Composer chats.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -134,6 +134,11 @@
       "types": "./dist/types/src/types/BrainService.d.ts",
       "import": "./dist/lib/BrainService.mjs"
     },
+    "./BrainMemory": {
+      "source": "./src/brain/BrainMemory.ts",
+      "types": "./dist/types/src/brain/BrainMemory.d.ts",
+      "import": "./dist/lib/BrainMemory.mjs"
+    },
     "./BrainWire": {
       "source": "./src/brain/BrainWire.ts",
       "types": "./dist/types/src/brain/BrainWire.d.ts",
@@ -153,11 +158,6 @@
       "source": "./src/types/ChatParticipant.ts",
       "types": "./dist/types/src/types/ChatParticipant.d.ts",
       "import": "./dist/lib/ChatParticipant.mjs"
-    },
-    "./FactFeed": {
-      "source": "./src/types/FactFeed.ts",
-      "types": "./dist/types/src/types/FactFeed.d.ts",
-      "import": "./dist/lib/FactFeed.mjs"
     },
     "./ConversationSkill": {
       "source": "./src/skills/ConversationSkill.ts",
@@ -345,6 +345,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -379,6 +380,7 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-memory-sqlite": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/plugin-builder": "workspace:*",

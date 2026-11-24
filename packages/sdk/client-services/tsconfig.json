@@ -76,6 +76,9 @@
       "path": "../../core/compute/compute-runtime"
     },
     {
+      "path": "../../core/compute/sparql-sqlite"
+    },
+    {
       "path": "../../core/echo/blob"
     },
     {
@@ -89,6 +92,12 @@
     },
     {
       "path": "../../core/echo/echo-host"
+    },
+    {
+      "path": "../../core/echo/echo-memory"
+    },
+    {
+      "path": "../../core/echo/echo-memory-sqlite"
     },
     {
       "path": "../../core/echo/echo-protocol"

@@ -6,6 +6,7 @@ import React, { forwardRef, useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
@@ -24,6 +25,7 @@ export type MarkdownContainerProps = AppSurface.ObjectArticleProps<Markdown.Docu
  */
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
   ({ id, attendableId, subject, role }, forwardedRef) => {
+    const readOnly = ToolkitHooks.useReadOnly();
     const viewState = Hooks.useCapability(AttentionCapabilities.ViewState);
     const settings = Hooks.useAtomCapability(MarkdownCapabilities.Settings);
     const editorState = Hooks.useCapability(MarkdownCapabilities.EditorState);
@@ -32,7 +34,9 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     // `defaultViewMode` setting when the user has picked a mode for this document.
     const perDocumentViewMode = useViewState(editorViewModeAspect, id);
     const { set: setViewMode } = useViewStateActions(editorViewModeAspect, id);
-    const viewMode: EditorViewMode = perDocumentViewMode ?? settings?.defaultViewMode ?? 'source';
+    const viewMode: EditorViewMode = readOnly
+      ? 'readonly'
+      : (perDocumentViewMode ?? settings?.defaultViewMode ?? 'source');
     const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
       (mode) => setViewMode(mode),
       [setViewMode],
@@ -48,7 +52,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         viewState={viewState}
         editorStateStore={editorState}
         viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
+        onViewModeChange={readOnly ? undefined : handleViewModeChange}
         ref={forwardedRef}
       />
     );

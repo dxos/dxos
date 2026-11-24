@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { FactStore, type SemanticIndexError, type SemanticQuery, RDF as SemanticType } from '@dxos/pipeline-rdf';
+import { Fact } from '@dxos/echo-memory';
+import { FactStore, type SemanticIndexError, type SemanticQuery } from '@dxos/pipeline-rdf';
 
 /** A topic discussed across the corpus, ranked by reach (distinct agents) then volume. */
 export type Topic = {
@@ -34,7 +35,7 @@ export type TopicOptions = {
 
 const humanize = (slug: string) => slug.replace(/-/g, ' ');
 
-const entityId = (term: SemanticType.Term): string | undefined => (term.kind === 'entity' ? term.entity : undefined);
+const entityId = (term: Fact.Term): string | undefined => (term.kind === 'entity' ? term.entity : undefined);
 
 /**
  * Aggregate the fact graph into a ranked list of topics. Entities that are themselves agents
@@ -47,7 +48,7 @@ export const extractTopics = (options?: TopicOptions): Effect.Effect<TopicReport
     const facts = yield* store.query({});
 
     // Senders are attributed agents; exclude them from the topic ranking.
-    const agentSlugs = new Set(facts.map((fact) => fact.attribution.agent).filter((slug): slug is string => !!slug));
+    const agentSlugs = new Set<string>(facts.flatMap((fact) => fact.attribution.agent ?? []));
 
     type Accumulator = { mentions: number; agents: Set<string>; sources: Set<string> };
     const byEntity = new Map<string, Accumulator>();
@@ -103,9 +104,9 @@ export const listFacts = (query: SemanticQuery = {}): Effect.Effect<FactLine[], 
     const store = yield* FactStore;
     const facts = yield* store.query(query);
     return facts.map((fact) => ({
-      subject: SemanticType.termValue(fact.assertion.subject),
+      subject: Fact.termValue(fact.assertion.subject),
       predicate: fact.assertion.predicate,
-      object: SemanticType.termValue(fact.assertion.object),
+      object: Fact.termValue(fact.assertion.object),
       ...(fact.attribution.agent ? { agent: fact.attribution.agent } : {}),
       source: fact.attribution.source,
     }));

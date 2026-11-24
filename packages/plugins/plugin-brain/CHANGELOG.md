@@ -1,5 +1,224 @@
 # @dxos/plugin-brain
 
+## 0.17.0
+
+### Minor Changes
+
+- 342ff5a: A fact store moves in and out as TriG (Turtle with a named graph per fact): `FactStoreApi.exportTrig` and `importTrig`, served by `FactStoreHttp` too. `RDF.Pipeline` keeps the state of the run that filled a store beside its facts — each source's cursor and first and last item, each stage's model calls, tokens and catalog cost, the run's time and the facts written — and the Discord facts CLI's `trig` mode writes it from a crawl's `crawl.db` and `trace.jsonl`.
+
+  Brain adds a Memory view, under a space's settings and as a context-sidebar panel, that imports and exports the space's store as TriG, runs SPARQL, and shows every query an agent runs against the store, with its rows, as it runs; and a Pipeline panel that draws the recorded run on a read-only canvas with its counters, cost, models and busiest channels. The Brain skill now has a description, so the Skill Manager offers it as the space's memory.
+
+  Breaking: `FactStoreApi` gains `exportTrig` and `importTrig`, which every implementation must provide; `FactStoreRegistry` gains `logged`, `queries` and `subscribeQueries`, and operations now get the logged store.
+
+- d699067: Fact extraction now seeds its ontology with curated predicates from published vocabularies by default (`RDF.Vocabularies.DEFAULT`: schema.org, FOAF, Dublin Core, W3C ORG and SIOC under their own IRIs) and a `uses` seed predicate; pass an `ontology` to narrow it, and `ExtractOptions.closed` drops relations no listed predicate fits instead of minting new ones. The extractor defaults to Claude Haiku 5.5, sends its stable instructions as a cached system message (predicates learned from the store follow in a second, uncached one), and takes `ExtractOptions.thinking` (on by default); `ExtractOptions.extractor: 'system-one'` extracts with Cloudflare's Clairic and Clef models, falling back to the LLM per uncertain claim, a claim the caller's rules can't be checked against, or an unresolved reference; `ExtractDocument.context` carries earlier messages for resolving references. The model catalog lists Haiku 5.5 with list and cache prices (`Model.pricing`), and the Anthropic resolver sends `thinking: disabled` when a thinking model is asked not to think.
+
+  Model calls can be metered: `AiUsage.instrument` reports each language-model call's tokens, `AiUsage.withStage` attributes them to a pipeline stage, and `AiMetering.metered` (in `@dxos/compute`) is an `AiService` layer that writes each call as a durable `Trace.ModelCall` event, with `AiMetering.summarize` totalling them by model and stage at catalog prices. `Stage.batch` and the crawler's `tapStage` take a `concurrency`, which the crawler's fact extraction (`ExtractFactsOptions.concurrency`) and the Discord pipeline's topics stage (`RunOptions.topicsConcurrency`) pass through. Brain gains a Query SPARQL tool for raw SELECTs, and the fact tools cap what they return to the agent (50 rows, 500 characters a value) with a note to page with `LIMIT`/`OFFSET`; Query Facts takes an `offset` and returns `{ facts, total, note }`.
+
+  The fact explorer's lists (`react-ui-rdf`'s entity browser, fact viewer and ontology list) render only the rows near the viewport, and the entity browser gains a row of type toggles with counts; new exports `VirtualList`, `TypeFilter` and `entityTypeCounts`. `@dxos/plugin-magazine` exports its RSS and Atom parser as `@dxos/plugin-magazine/FeedParser`. `@dxos/plugin-sheet` adds an Add Chart operation (`SheetOperation.AddChart`, in the sheet skill) so an agent can chart a range of a sheet it made. `@dxos/plugin-brain/RemoteFactStorePlugin` gives every space a fact store served over HTTP (`RemoteFactStorePlugin.make(url)`) with the Brain skill and its operations, so a story or app can point an agent's memory at a fact server.
+
+  Breaking: extraction without an explicit `ontology` now shows the model the vocabulary packs as well as the seed predicates, so it reuses published predicates and its prompt is longer; Query Facts returns `{ facts, total, note? }` instead of an array.
+
+### Patch Changes
+
+- 89ad65c: Slides: `<Grid variant="flow">` joins the cards of a row with arrows, with card titles a step smaller, and a click tag (`<v-clicks>`, `<v-click>`, `<v-after>`) written straight inside a `<Grid>` reveals the grid's children in place, where before they stacked in a single cell. A `<Grid>` of icon cards keeps its rows beside a `<Box>`, a `<Cell>` or a card with no icon; a list nested in a `<List variant="flow">` card takes the card's size; and `<Box variant="title">` sets its name in Poiret One whatever font the deck picked, as `variant="brand"` does. The brain plugin's Facts panel no longer raises an unhandled rejection when the client shuts down during a read.
+- Updated dependencies [c9a38c1]
+- Updated dependencies [b6d1c9c]
+- Updated dependencies [9314c91]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [2ffc301]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [710da43]
+- Updated dependencies [d338edb]
+- Updated dependencies [5ee83e7]
+- Updated dependencies [a761a74]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [82f2242]
+- Updated dependencies [a5742a9]
+- Updated dependencies [cab57d0]
+- Updated dependencies [58b36b7]
+- Updated dependencies [a349ae0]
+- Updated dependencies [df16fba]
+- Updated dependencies [40271d5]
+- Updated dependencies [e82b80a]
+- Updated dependencies [9b2b0fe]
+- Updated dependencies [10a11da]
+- Updated dependencies [08c2910]
+- Updated dependencies [6eb0aae]
+- Updated dependencies [e8029c3]
+- Updated dependencies [81d2cd2]
+- Updated dependencies [f142d06]
+- Updated dependencies [2fb32b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [d105c19]
+- Updated dependencies [cfc5c42]
+- Updated dependencies [7a8b279]
+- Updated dependencies [b0113a1]
+- Updated dependencies [e343467]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [6a37f4b]
+- Updated dependencies [1302e04]
+- Updated dependencies [7067fec]
+- Updated dependencies [bc50a90]
+- Updated dependencies [dd40958]
+- Updated dependencies [08f8784]
+- Updated dependencies [d45bf58]
+- Updated dependencies [39eb10b]
+- Updated dependencies [f82b258]
+- Updated dependencies [94df7d2]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [3585abc]
+- Updated dependencies [f7e965a]
+- Updated dependencies [2f78880]
+- Updated dependencies [9bcc167]
+- Updated dependencies [b3a41d3]
+- Updated dependencies [0737c44]
+- Updated dependencies [908c301]
+- Updated dependencies [d95ffc3]
+- Updated dependencies [78e96da]
+- Updated dependencies [9f97660]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [df1380a]
+- Updated dependencies [13bc40d]
+- Updated dependencies [870af94]
+- Updated dependencies [a1c19cc]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2176f79]
+- Updated dependencies [2bba392]
+- Updated dependencies [38ebf5e]
+- Updated dependencies [22f07db]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [9471682]
+- Updated dependencies [6030742]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [c5d4212]
+- Updated dependencies [7d807f6]
+- Updated dependencies [074e3e6]
+- Updated dependencies [05e0b67]
+- Updated dependencies [92ef425]
+- Updated dependencies [17a9e75]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [0910d74]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [342ff5a]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [de0606c]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [392bed0]
+- Updated dependencies [34643a3]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [20a14b9]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [d699067]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [0ad95b7]
+- Updated dependencies [f071de2]
+- Updated dependencies [f175a2d]
+- Updated dependencies [9c5af4a]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [d159a7d]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [fba77f7]
+- Updated dependencies [02254b0]
+- Updated dependencies [8bd7730]
+- Updated dependencies [bf1dc0c]
+- Updated dependencies [4514d15]
+- Updated dependencies [b8e76f9]
+- Updated dependencies [3d22d48]
+- Updated dependencies [7e07e49]
+- Updated dependencies [6cd526c]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [13486b1]
+- Updated dependencies [2c9d3c1]
+- Updated dependencies [1545eff]
+- Updated dependencies [a8e68c5]
+- Updated dependencies [9f2cacf]
+- Updated dependencies [9864a15]
+- Updated dependencies [101f620]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [76b7f2f]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [10b3963]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+- Updated dependencies [6191e3f]
+  - @dxos/types@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/react-ui-canvas@0.17.0
+  - @dxos/diagram@0.17.0
+  - @dxos/scene@0.17.0
+  - @dxos/plugin-projects@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/pipeline-rdf@0.17.0
+  - @dxos/echo-memory@0.17.0
+  - @dxos/plugin-inbox@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/pipeline-email@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-rdf@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

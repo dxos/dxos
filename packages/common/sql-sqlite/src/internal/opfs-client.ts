@@ -37,6 +37,7 @@ import {
 import { recordSqliteQueryMetrics, summarizeLoggedParams } from './query-log.ts';
 import { readRow } from './row-decode.ts';
 import { instantiateSqliteModule } from './sqlite-module.ts';
+import { makeStatementCache } from './statement-cache.ts';
 import {
   type StatementKind,
   instrumentVfs,
@@ -151,6 +152,10 @@ export const makeOpfs = (
         (handle) => Effect.sync(() => sqlite3.close(handle)),
       );
 
+      const statements = makeStatementCache(sqlite3, db);
+      // Finalizers run in reverse, so the cached statements are finalized before the connection closes.
+      yield* Effect.addFinalizer(() => Effect.sync(statements.clear));
+
       const sampler = makeCacheSampler(yield* initModule, db);
       if (sampler) {
         // Released before the connection's own finalizer runs, since scope finalizers run in reverse.
@@ -183,7 +188,7 @@ export const makeOpfs = (
             const results: Array<any> = [];
             const begin = performance.now();
             const kind = statementKind(sql);
-            for (const stmt of sqlite3.statements(db, sql)) {
+            statements.forEach(sql, (stmt) => {
               let columns: Array<string> | undefined;
               const rowsBefore = results.length;
               // wa-sqlite bind_collection is typed for SQLiteCompatibleType[] only.
@@ -203,7 +208,7 @@ export const makeOpfs = (
                 }
               }
               recordStatement(kind, results.length - rowsBefore, isWrite(kind) ? sqlite3.changes(db) : 0);
-            }
+            });
             recordSqliteQueryMetrics(sql, params, results.length, begin);
             return results;
           },
@@ -293,6 +298,8 @@ export const makeOpfs = (
           Effect.try({
             try: () => {
               log('opfs import', { bytes: data.byteLength });
+              // The import replaces the schema the cached statements were prepared against.
+              statements.clear();
               importDatabase(sqlite3, db, data, options);
             },
             catch: (cause) =>

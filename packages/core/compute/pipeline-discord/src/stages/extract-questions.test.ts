@@ -9,12 +9,12 @@ import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
 import { type Type } from '@dxos/crawler';
+import { type Fact } from '@dxos/echo-memory';
 import { Pipeline } from '@dxos/pipeline';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf';
 
 import { DiscordPipeline } from '../pipeline.ts';
 import { replayStream } from '../replay.ts';
-import { ExtractedQuestionStore } from '../stores/index.ts';
 import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing/index.ts';
 import { detectQuestions, extractQuestionsStage } from './extract-questions.ts';
 
@@ -43,38 +43,11 @@ describe('detectQuestions', () => {
 
 describe('extractQuestionsStage', () => {
   it.effect(
-    'replay over a crawled store extracts user questions idempotently',
-    Effect.fnUntraced(function* () {
-      // First: the live crawl fills the message store (fixture channel + thread).
-      yield* DiscordPipeline.run(CONFIG);
-
-      // Then: replay the stored messages through the question-extraction assembly.
-      const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
-      yield* replay;
-
-      const store = yield* ExtractedQuestionStore.ExtractedQuestionStore;
-      const extracted = yield* store.list();
-      // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
-      expect(extracted.length).toBe(1);
-      expect(extracted[0]).toMatchObject({
-        authorId: 'Alice',
-        targetId: 'chan-1',
-        messageId: '1000',
-        question: 'Should Composer use OPFS for local storage?',
-      });
-
-      // Replaying again changes nothing (idempotent upsert).
-      yield* replay;
-      expect((yield* store.list()).length).toBe(1);
-    }, Effect.provide(TestLayer)),
-  );
-
-  it.effect(
     'records each question in the fact store around an anonymous question node',
     Effect.fnUntraced(function* () {
       yield* DiscordPipeline.run(CONFIG);
       const facts = yield* FactStore;
-      const questionGraph = (all: readonly RDF.Fact[]) =>
+      const questionGraph = (all: readonly Fact.Fact[]) =>
         all.filter((fact) => fact.extractor.id === 'extract-questions');
 
       const recorded = questionGraph(yield* facts.query({ source: 'discord:1000' }));

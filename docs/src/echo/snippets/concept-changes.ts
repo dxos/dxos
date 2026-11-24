@@ -28,6 +28,16 @@ Obj.update(launch, (launch) => {
 });
 // #endregion text
 
+// #region detect
+// Every change to the title, each with the device that made it.
+const titleChanges = Obj.getChanges(launch, { property: 'title' });
+const writers = new Set(titleChanges.map((change) => change.actor));
+if (writers.size > 1) {
+  // Several devices set the title; show the history so a person can confirm
+  // the result.
+}
+// #endregion detect
+
 // #region history
 const changes = Obj.getChanges(launch, { property: 'title' });
 for (const { actor, time, before, after } of changes) {
@@ -49,14 +59,6 @@ const perDay = await db
   )
   .run();
 // #endregion history
-
-// #region detect
-const writers = new Set(changes.map((change) => change.actor));
-if (writers.size > 1) {
-  // Several devices set the title; show the history so a person can confirm
-  // the result.
-}
-// #endregion detect
 
 // #region branch
 // A draft of the event and everything it references.

@@ -45,7 +45,7 @@ export const FormFieldSet = ({
   description,
   collapsible,
   defaultOpen = true,
-  open: openProp,
+  'open': openProp,
   onOpenChange,
   actions,
   nested,

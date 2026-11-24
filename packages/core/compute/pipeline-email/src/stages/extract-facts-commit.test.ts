@@ -5,15 +5,15 @@
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
 import { type FactExtractor, type FactUnit, extractFactsUnitStage } from './extract-facts-commit.ts';
 
-const ALICE_FACT: RDF.Fact = {
+const ALICE_FACT = Fact.make({
   id: 'fact-1',
   assertion: {
     subject: { kind: 'entity', entity: 'alice' },
@@ -31,7 +31,7 @@ const ALICE_FACT: RDF.Fact = {
   recordedAt: '2026-06-06T12:00:00.000Z',
   extractor: { id: 'default', model: 'ai.claude.model.claude-haiku-4-5', version: '1' },
   sourceHash: 'abc123',
-};
+});
 
 const makeMessage = () =>
   Message.make({

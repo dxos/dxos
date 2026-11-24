@@ -51,18 +51,25 @@ export const CLAUSE_KEYWORDS = ['cell', 'via', 'bus', 'compact'] as const;
  */
 export const RESERVED: ReadonlySet<string> = new Set<string>([
   ...RESERVED_STATEMENTS,
-  ...ELEMENT_KINDS,
+  // `grid` is contextual, so an id may still be called that; every other element kind is reserved.
+  ...ELEMENT_KINDS.filter((kind) => kind !== 'grid'),
   ...CLAUSE_KEYWORDS,
   '_',
 ]);
 
-/** Attribute value shapes; `enum` carries the literals the schema allows, `size` is `WxH`, `ratio` is `W:H`. */
+/**
+ * Attribute value shapes; `enum` carries the literals the schema allows, `size` is `WxH`, `ratio` is `W:H`.
+ * `name` is a bare word from an open set a plugin extends, and `scalar` is a value of whichever of those three
+ * shapes it reads as — the shape a contributed kind's own field takes, which no table here can know.
+ */
 export type AttrType =
   | { type: 'number' }
   | { type: 'string' }
   | { type: 'boolean' }
   | { type: 'size' }
   | { type: 'ratio' }
+  | { type: 'name' }
+  | { type: 'scalar' }
   | { type: 'enum'; values: readonly string[] };
 
 export type AttrSpec = AttrType & { name: string };
@@ -72,11 +79,41 @@ const STYLE: readonly AttrSpec[] = [
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
   { name: 'weight', type: 'enum', values: Shape.Weight.literals },
+  { name: 'border', type: 'boolean' },
+  { name: 'align', type: 'enum', values: Shape.Align.literals },
+  { name: 'valign', type: 'enum', values: Shape.VerticalAlign.literals },
+  { name: 'fontSize', type: 'number' },
+];
+
+/** What a `grid` places with, and what a child needs to be placed by one. */
+const GRID: readonly AttrSpec[] = [
+  { name: 'cols', type: 'scalar' },
+  { name: 'rows', type: 'scalar' },
+  { name: 'gap', type: 'number' },
+  { name: 'padding', type: 'number' },
+  { name: 'layout', type: 'enum', values: Shape.Layout.literals },
+  { name: 'packSeed', type: 'number' },
+  { name: 'packMin', type: 'number' },
+  { name: 'packMax', type: 'number' },
+  { name: 'autoCols', type: 'scalar' },
+  { name: 'autoRows', type: 'scalar' },
+  { name: 'justifyContent', type: 'enum', values: Shape.Place.literals },
+  { name: 'alignContent', type: 'enum', values: Shape.Place.literals },
+  { name: 'parent', type: 'name' },
+  { name: 'width', type: 'number' },
+  { name: 'height', type: 'number' },
 ];
 
 const BOX_ATTRS: readonly AttrSpec[] = [
+  /**
+   * The contributed element kind the box really is (`kind=card`). An open set: a plugin contributes kinds, so
+   * unlike every other attribute here the values cannot be read off a schema. A box naming one also accepts that
+   * kind's own attributes, which ride on `data` (see `KIND_ATTR`).
+   */
+  { name: 'kind', type: 'name' },
   { name: 'rotation', type: 'number' },
   { name: 'corners', type: 'enum', values: Shape.Corners.literals },
+  ...GRID,
   ...STYLE,
 ];
 
@@ -87,6 +124,7 @@ const BOX_ATTRS: readonly AttrSpec[] = [
  */
 export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
   rect: BOX_ATTRS,
+  grid: BOX_ATTRS,
   ellipse: BOX_ATTRS,
   diamond: BOX_ATTRS,
   triangle: BOX_ATTRS,
@@ -98,11 +136,43 @@ export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
   arrow: [
     { name: 'head', type: 'enum', values: Shape.ArrowHead.literals },
     { name: 'tail', type: 'enum', values: Shape.ArrowTail.literals },
+    { name: 'path', type: 'enum', values: Shape.Path.literals },
     { name: 'relation', type: 'enum', values: Shape.Relation.literals },
     ...STYLE,
   ],
   portal: [{ name: 'ref', type: 'string' }, ...STYLE],
 };
+
+/**
+ * The attribute that names a contributed kind. A box carrying it takes that kind's own attributes too: no table
+ * can list them, since the plugin that defines the kind is what decides them.
+ */
+export const KIND_ATTR = 'kind';
+
+/**
+ * Prefix that marks a kind's own field whose name an element attribute already claims: `substrate` keeps a numeric
+ * `fill`, and `fill` is also the style attribute, so it is written `data-fill=0.55`. The prefix escapes itself, so
+ * a kind field genuinely named `data-fill` is written `data-data-fill` and reads back as its own name.
+ */
+export const DATA_PREFIX = 'data-';
+
+/**
+ * The DSL spelling of a kind's field, or `undefined` where the name has none. A name is escaped when an element
+ * attribute claims it, when the grammar reserves it (`text=hello` would not parse, since `AttrName` is a plain
+ * name token and `text` is a keyword), and when it already starts with the prefix, so the escape is reversible.
+ * A name that is not a bare word at all — `font.size`, which no `AttrName` can spell — has no escape: prefixing
+ * it leaves it just as unparseable, so it is left out, as a value the DSL cannot spell is.
+ */
+export const dataAttrName = (name: string, claimed: ReadonlySet<string>): string | undefined => {
+  if (!BARE_ID.test(name)) {
+    return undefined;
+  }
+  return claimed.has(name) || RESERVED.has(name) || name.startsWith(DATA_PREFIX) ? `${DATA_PREFIX}${name}` : name;
+};
+
+/** The field name a DSL attribute spells, the inverse of {@link dataAttrName}. */
+export const dataFieldName = (name: string): string =>
+  name.startsWith(DATA_PREFIX) ? name.slice(DATA_PREFIX.length) : name;
 
 /** Object attributes other than `@ <origin>`, in the order they print. */
 export const OBJECT_ATTRS: readonly AttrSpec[] = [
@@ -111,6 +181,28 @@ export const OBJECT_ATTRS: readonly AttrSpec[] = [
   { name: 'ref', type: 'string' },
 ];
 
+/** The rule a grid diagram's frame divides by; a group states the same. */
+const RULE: readonly AttrSpec[] = [
+  { name: 'cols', type: 'scalar' },
+  { name: 'rows', type: 'scalar' },
+  { name: 'gap', type: 'number' },
+  { name: 'padding', type: 'number' },
+  { name: 'autoCols', type: 'scalar' },
+  { name: 'autoRows', type: 'scalar' },
+  { name: 'justifyContent', type: 'enum', values: Shape.Place.literals },
+  { name: 'alignContent', type: 'enum', values: Shape.Place.literals },
+  { name: 'layout', type: 'enum', values: Shape.Layout.literals },
+  { name: 'packSeed', type: 'number' },
+  { name: 'packMin', type: 'number' },
+  { name: 'packMax', type: 'number' },
+];
+
+/** The rule's attributes other than `gap`, which every kind's group reads. */
+export const GRID_RULE_ATTRS: readonly string[] = RULE.map(({ name }) => name).filter((name) => name !== 'gap');
+
+/** The frame a grid diagram draws round a group's members. */
+export const GROUP_FRAME_ATTRS: readonly string[] = ['fill', 'stroke', 'border'];
+
 /** `diagram` attributes. */
 export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
   { name: 'kind', type: 'enum', values: Semantic.DIAGRAM_KINDS },
@@ -118,29 +210,40 @@ export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
   { name: 'grid', type: 'size' },
   { name: 'box', type: 'size' },
   { name: 'aspect', type: 'ratio' },
+  { name: 'size', type: 'size' },
+  ...RULE,
 ];
 
 /** `group` attributes. */
 export const GROUP_ATTRS: readonly AttrSpec[] = [
-  { name: 'gap', type: 'number' },
+  ...RULE,
   { name: 'max-width', type: 'number' },
   { name: 'color', type: 'enum', values: Shape.Color.literals },
+  { name: 'fill', type: 'enum', values: Shape.Fill.literals },
+  { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
+  { name: 'border', type: 'boolean' },
 ];
 
-/** `node` attributes. */
+/** `node` attributes. A node naming a component (`kind=card`) also takes that component's own, as a box does. */
 export const NODE_ATTRS: readonly AttrSpec[] = [
+  { name: 'kind', type: 'name' },
   { name: 'ref', type: 'string' },
   { name: 'role', type: 'enum', values: Semantic.ROLES },
   { name: 'shape', type: 'enum', values: Shape.BoxKind.literals },
   { name: 'color', type: 'enum', values: Shape.Color.literals },
   { name: 'fill', type: 'enum', values: Shape.Fill.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
+  { name: 'border', type: 'boolean' },
+  // The size the node keeps in its cell. Not `size`, which a component may name a field of its own.
+  { name: 'width', type: 'number' },
+  { name: 'height', type: 'number' },
 ];
 
 /** `edge` attributes. */
 export const EDGE_ATTRS: readonly AttrSpec[] = [
   { name: 'head', type: 'enum', values: Shape.ArrowHead.literals },
   { name: 'tail', type: 'enum', values: Shape.ArrowTail.literals },
+  { name: 'path', type: 'enum', values: Shape.Path.literals },
   { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
   { name: 'color', type: 'enum', values: Shape.Color.literals },
 ];

@@ -6,8 +6,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 import { type SparqlTerm } from '@dxos/pipeline-rdf';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
@@ -17,9 +20,10 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { BrainCapabilities } from '#types';
 
-import { type FactStoreRegistry, type SparqlQueryRecord } from '../../capabilities/fact-store.ts';
+import { type FactStoreRegistry } from '../../capabilities/fact-store-registry.ts';
 import { BrainNamespace } from '../../namespace.ts';
-import { downloadText, exportTrig, importTrig, runQuery, statementCount } from './memory.ts';
+import type * as QueryLog from '../../QueryLog.ts';
+import { clearStore, downloadText, exportTrig, importTrig, runQuery, statementCount } from './memory.ts';
 import { useQueryLog } from './use-query-log.ts';
 
 const STARTER_QUERY = `SELECT ?p (COUNT(*) AS ?n) WHERE { GRAPH ?g { ?s ?p ?o } }
@@ -32,7 +36,7 @@ GROUP BY ?p ORDER BY DESC(?n) LIMIT 20`;
 export const MemoryArticle = () => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const space = ToolkitHooks.useActiveSpace();
-  return space ? <MemoryPanel registry={registry} spaceId={space.id} /> : null;
+  return space ? <MemoryPanel key={space.id} registry={registry} spaceId={space.id} /> : null;
 };
 
 MemoryArticle.displayName = 'MemoryArticle';
@@ -41,7 +45,8 @@ const MemoryPanel = ({ registry, spaceId }: { registry: FactStoreRegistry; space
   const { t } = UiHooks.useTranslation(BrainNamespace.key);
   const queryLog = useQueryLog(registry, spaceId);
   const [statements, setStatements] = useState<number | undefined>();
-  const [status, setStatus] = useState<string | undefined>();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [draft, setDraft] = useState(STARTER_QUERY);
   // Follows the newest query until the viewer picks an older one; picking the newest again resumes following.
   const [pinned, setPinned] = useState<number | undefined>();
@@ -56,27 +61,48 @@ const MemoryPanel = ({ registry, spaceId }: { registry: FactStoreRegistry; space
   const newest = queryLog.at(-1);
   const shown = (pinned !== undefined ? queryLog.find((entry) => entry.id === pinned) : undefined) ?? newest;
 
+  const notify = useCallback(
+    (id: string, title: string, failed: boolean) =>
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `brain.memory.${id}`,
+        title,
+        icon: failed ? 'ph--warning--regular' : 'ph--check--regular',
+      }),
+    [invokePromise],
+  );
+
   const handleImport = useCallback(
     async (file: File) => {
-      setStatus(t('memory-importing.message', { name: file.name }));
       const result = await importTrig(registry.forSpace(spaceId), await file.text());
-      setStatus(
+      notify(
+        'import',
         'error' in result
           ? t('memory-import-failed.message', { error: result.error })
           : t('memory-imported.message', { total: result.quads.toLocaleString(), name: file.name }),
+        'error' in result,
       );
     },
-    [registry, spaceId, t],
+    [registry, spaceId, t, notify],
   );
 
   const handleExport = useCallback(async () => {
     const result = await exportTrig(registry.forSpace(spaceId));
     if ('error' in result) {
-      setStatus(t('memory-export-failed.message', { error: result.error }));
+      notify('export', t('memory-export-failed.message', { error: result.error }), true);
       return;
     }
     downloadText(result.trig, `memory-${spaceId}.trig`, 'application/trig');
-  }, [registry, spaceId, t]);
+  }, [registry, spaceId, t, notify]);
+
+  const handleClear = useCallback(async () => {
+    setConfirmClearOpen(false);
+    const result = await clearStore(registry.forSpace(spaceId));
+    notify(
+      'clear',
+      'error' in result ? t('memory-clear-failed.message', { error: result.error }) : t('memory-cleared.message'),
+      'error' in result,
+    );
+  }, [registry, spaceId, t, notify]);
 
   const handleRun = useCallback(() => {
     setPinned(undefined);
@@ -120,9 +146,31 @@ const MemoryPanel = ({ registry, spaceId }: { registry: FactStoreRegistry; space
             onClick={() => void handleExport()}
             data-testid='brain.memory.export'
           />
-          {status && <Toolbar.Text classNames='text-description truncate'>{status}</Toolbar.Text>}
+          <Button.Root
+            variant='ghost'
+            icon='ph--trash--regular'
+            label={t('memory-clear.button')}
+            onClick={() => setConfirmClearOpen(true)}
+            data-testid='brain.memory.clear'
+          />
         </Toolbar.Root>
       </Panel.Header>
+      <AlertDialog.Root open={confirmClearOpen} onOpenChange={({ open }) => setConfirmClearOpen(open)}>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('memory-clear-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>
+              {t('memory-clear-dialog.description', { total: (statements ?? 0).toLocaleString() })}
+            </AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <AlertDialog.Cancel>{t('cancel.label')}</AlertDialog.Cancel>
+            <AlertDialog.Action variant='destructive' onClick={() => void handleClear()}>
+              {t('memory-clear.button')}
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
       <Panel.Body classNames='grid grid-rows-[min-content_min-content_1fr] min-h-0'>
         <div className='flex flex-col gap-1 p-2 border-b border-separator'>
           <Input.Textarea
@@ -159,7 +207,7 @@ const QueryHistory = ({
   selected,
   onSelect,
 }: {
-  log: readonly SparqlQueryRecord[];
+  log: readonly QueryLog.Entry[];
   selected: number | undefined;
   onSelect: (id: number) => void;
 }) => {
@@ -187,7 +235,7 @@ const QueryHistory = ({
 };
 
 /** One query: its text, whether it is still running, and its solutions as a table. */
-const QueryView = ({ entry, following }: { entry: SparqlQueryRecord | undefined; following: boolean }) => {
+const QueryView = ({ entry, following }: { entry: QueryLog.Entry | undefined; following: boolean }) => {
   const { t } = UiHooks.useTranslation(BrainNamespace.key);
   if (!entry) {
     return null;
@@ -211,9 +259,14 @@ const QueryView = ({ entry, following }: { entry: SparqlQueryRecord | undefined;
                   : t('memory-rows.message', { total: result.count.toLocaleString() })}
             </span>
           </div>
-          <pre className='font-mono text-sm whitespace-pre-wrap break-words p-2 rounded-sm bg-group-surface'>
+          <SyntaxHighlighter
+            language='sparql'
+            scroll={false}
+            wrapLongLines
+            classNames='text-sm p-2 rounded-sm bg-group-surface'
+          >
             {entry.sparql.trim()}
-          </pre>
+          </SyntaxHighlighter>
           {result && 'error' in result && <p className='text-sm text-error-text'>{result.error}</p>}
           {result && 'preview' in result && result.preview.length > 0 && (
             <table className='text-sm border-collapse' data-testid='brain.memory.results'>

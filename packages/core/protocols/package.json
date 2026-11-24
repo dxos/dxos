@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -61,6 +61,7 @@
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",

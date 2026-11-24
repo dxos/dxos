@@ -8,6 +8,7 @@ import {
   SNIPPETS,
   applyEdit,
   columnSnippet,
+  frontmatterTitle,
   insertSnippet,
   isHiddenSlide,
   notesEdit,
@@ -51,6 +52,16 @@ describe('isHiddenSlide', () => {
     expect(isHiddenSlide('---\nhide: true\n---\n\n# Slide')).toBe(true);
     expect(isHiddenSlide('---\nhide: false\n---\n\n# Slide')).toBe(false);
     expect(isHiddenSlide('# Slide\n\nhide: true')).toBe(false);
+  });
+});
+
+describe('frontmatterTitle', () => {
+  test('reads `title` from the frontmatter only, and nothing from an empty one', () => {
+    expect(frontmatterTitle("---\ntitle: 'DXOS'\nlayout: cover\n---\n\n# composer")).toBe('DXOS');
+    expect(frontmatterTitle('---\ntitle: Road map\n---\n')).toBe('Road map');
+    expect(frontmatterTitle("---\ntitle: '  '\n---\n\n# Slide")).toBeUndefined();
+    expect(frontmatterTitle('---\nlayout: cover\n---\n\n# Slide')).toBeUndefined();
+    expect(frontmatterTitle('# Slide\n\ntitle: Body text')).toBeUndefined();
   });
 });
 

@@ -13,41 +13,76 @@ import SpecCite from '../../../../../components/SpecCite.astro';
 import { Ref } from '@dxos/echo';
 ```
 
-A reference is a field that points at another entity. It stores the target's DXN, not a copy, and resolves the target
-only when you ask. <SpecCite item="org.dxos.echo#F-4.1" /> [References and DXNs](/docs/echo/concepts/references/)
-explains the model; this page is the API.
+A reference is a field that points at another object or relation. It stores the target's URI, not a copy, and it
+resolves the target only when you ask. <SpecCite item="org.dxos.echo#F-4.1" />
+
+See [References and DXNs](/docs/echo/concepts/references/) for the model. This page is the API.
 
 ## Declare a reference field
 
-`Ref.Ref(Type)` is the schema of a field that points at that type. Use it inside `Schema.optional` or `Schema.Array` like
-any other field schema. The tutorial's Person and Event declare both:
+`Ref.Ref(Type)` is the schema of a field that points at that type. Use it inside `Schema.optional` or `Schema.Array`
+like any other field schema. The tutorial's Person and Event declare both.
+
+**Example** (Declaring an optional reference)
 
 <Snippet file="echo-tutorial/schema" region="person" />
 
+`employer` can hold a reference to an `Organization` and nothing else, so the compiler rejects a reference to a
+`Person` there.
+
+**Example** (Declaring an array of references)
+
+<Snippet file="echo-tutorial/schema" region="event" />
+
+`attendees` is an array of references, so an event with ten attendees stores ten URIs and no copy of a person.
+
 ## Make a reference
 
-`Ref.make` takes an object you already hold. `db.makeRef` takes a URI and returns a reference bound to the database, so it
-can load its target. `Ref.fromURI` also takes a URI, but its reference has nothing to load from until a database binds
-it.
+You can make a reference in three ways:
+
+- `Ref.make` takes an object you already hold.
+- `db.makeRef` takes a URI and returns a reference bound to the database, so it can load its target. Use it when you
+  have a URI and no object.
+- `Ref.fromURI` also takes a URI. However, its reference has nothing to load from until a database binds it.
+
+**Example** (Making references from objects and from a URI)
 
 <Snippet file="guide-ref" region="make" />
 
+`Obj.getURI` returns the URI that a reference to `ada` stores. `again` is made from that URI alone, which is how you
+get a reference back from a URI you saved or received.
+
 ## Resolve a reference
 
-`peek` returns the target if it is already in memory and never starts a load. `load` waits for the target, reading it
-from disk or the network, and throws if it cannot be found; `tryLoad` returns `undefined` instead. `Ref.loadAll` loads an
-array of references at once.
+A reference field holds the reference, not the target. You ask the reference for its target in one of four ways:
 
-Avoid `ref.target`. It is deprecated because reading it starts a load as a side effect and can throw.
+- `peek` returns the target if it is already in memory, and never starts a load. Use it where the code cannot wait.
+- `load` waits for the target, reading it from disk or the network, and throws if it cannot be found.
+- `tryLoad` does the same, but returns `undefined` instead of throwing. Use it when a missing target is not an error.
+- `Ref.loadAll` loads an array of references at once.
+
+**Example** (Peeking at, loading and batch-loading references)
 
 <Snippet file="guide-ref" region="resolve" />
 
+`Ref.loadAll` leaves out the targets that are missing or removed, so its result can be shorter than
+`launch.attendees`.
+
+Avoid `ref.target`. It is deprecated because reading it starts a load as a side effect and can throw.
+
 ## Compare references
 
-Each read of a reference field returns a new wrapper, so `===` never matches. Compare with `Ref.equals`, or test the target
-id with `Ref.hasEntityId`.
+Each read of a reference field returns a new wrapper, so `===` never matches.
+
+- Use `Ref.equals` when you compare two references, or two arrays of references element by element.
+- Use `Ref.hasEntityId` when you test a reference against a target id.
+
+**Example** (Comparing references and testing a target id)
 
 <Snippet file="guide-ref" region="compare" />
+
+`Ref.hasEntityId` returns a predicate, which is why `some` takes it directly. `same` comes from `Ref.equals`, which
+compares the targets the two references name and ignores the wrappers.
 
 ## Members at a glance
 
@@ -57,12 +92,12 @@ id with `Ref.hasEntityId`.
 | `Array(Type)`             | Schema of an array of references                          |
 | `make`                    | A reference to an object you hold                         |
 | `fromURI`                 | An unbound reference from a URI                           |
-| `loadAll`                 | Load many targets, skipping missing and deleted ones      |
+| `loadAll`                 | Load many targets, skipping missing and removed ones      |
 | `equals` `hasEntityId`    | Compare references                                        |
 | `isRef`                   | Predicate                                                 |
 | `ref.peek()` `ref.load()` `ref.tryLoad()` | Read the target in memory, or load it     |
 
-The full list is in the [API reference](/docs/additional-resources/api-reference/).
+The full list is in the [API reference](/docs/echo/resources/api-reference/).
 
 ## Related
 

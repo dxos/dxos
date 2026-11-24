@@ -409,6 +409,25 @@ const queueWindowStatements = (sql: SqlClient.SqlClient, window: QueueWindow | u
 /** SQLite stores booleans as integers. */
 const withDeletedFlag = (row: EntityMeta): EntityMeta => ({ ...row, deleted: !!row.deleted });
 
+/** The columns `update` carries over from an object's existing row. */
+type ExistingRow = {
+  recordId: number;
+  entityKind: string;
+  typeDXN: string;
+  source: string | null;
+  target: string | null;
+  parent: string | null;
+  parentId: string | null;
+  sourceId: string | null;
+  targetId: string | null;
+  convergenceKey: string | null;
+  annotations: string | null;
+  queueBranch: string | null;
+};
+
+const documentRowKey = (spaceId: string, documentId: string, objectId: string): string =>
+  `${spaceId}\u0000${documentId}\u0000${objectId}`;
+
 export class EntityMetaIndex implements Index {
   readonly #sql: SqlClient.SqlClient;
 
@@ -638,10 +657,45 @@ export class EntityMetaIndex implements Index {
       }),
   );
 
-  // TODO(dmaretskyi): Update recordId on objects so that we don't need to look it up separately.
+  /**
+   * Writes each object's row and sets its `recordId`, so {@link lookupRecordIds} has nothing left to read.
+   */
   update = Effect.fn('EntityMetaIndex.update')((objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError> =>
     Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
+      // Read once and counted up here: each row takes the next version, as one read per row gave, without
+      // a statement per object.
+      const [{ v: maxVersion }] = yield* sql<{ v: number | null }>`SELECT MAX(version) as v FROM objectMeta`;
+      let nextVersion = (maxVersion ?? 0) + 1;
+
+      // Document objects' existing rows in one read per chunk of documents rather than one per object;
+      // kept current below, so an object written twice in one batch finds its first row.
+      const documentRows = new Map<string, ExistingRow>();
+      const documentsBySpace = new Map<string, Set<string>>();
+      for (const { spaceId, documentId } of objects) {
+        if (documentId) {
+          const documents = documentsBySpace.get(spaceId) ?? new Set<string>();
+          documents.add(documentId);
+          documentsBySpace.set(spaceId, documents);
+        }
+      }
+      for (const [spaceId, documentIds] of documentsBySpace) {
+        for (const chunk of chunkArray([...documentIds])) {
+          const rows = yield* sql<ExistingRow & { documentId: string; objectId: string }>`
+            SELECT documentId, objectId, recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId,
+              targetId, convergenceKey, annotations, queueBranch
+            FROM objectMeta
+            WHERE spaceId = ${spaceId} AND ${sql.in('documentId', chunk)}
+          `;
+          for (const { documentId, objectId, ...row } of rows) {
+            const key = documentRowKey(spaceId, documentId, objectId);
+            // The first row by key, as the per-object `LIMIT 1` read returned.
+            if (!documentRows.has(key)) {
+              documentRows.set(key, row);
+            }
+          }
+        }
+      }
 
       yield* Effect.forEach(
         objects,
@@ -654,24 +708,10 @@ export class EntityMetaIndex implements Index {
             const objectId = castData.id;
 
             // Check for existing record by (spaceId, queueId) or (spaceId, documentId).
-            type ExistingRow = {
-              recordId: number;
-              entityKind: string;
-              typeDXN: string;
-              source: string | null;
-              target: string | null;
-              parent: string | null;
-              parentId: string | null;
-              sourceId: string | null;
-              targetId: string | null;
-              convergenceKey: string | null;
-              annotations: string | null;
-              queueBranch: string | null;
-            };
             let existing: readonly ExistingRow[];
             if (documentId) {
-              existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations, queueBranch FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+              const known = documentRows.get(documentRowKey(spaceId, documentId, objectId));
+              existing = known ? [known] : [];
             } else if (queueId) {
               existing =
                 yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations, queueBranch FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
@@ -680,10 +720,7 @@ export class EntityMetaIndex implements Index {
               existing = [];
             }
 
-            // Get max version + 1.
-            const result = yield* sql<{ v: number | null }>`SELECT MAX(version) as v FROM objectMeta`;
-            const [{ v }] = result;
-            const version = (v ?? 0) + 1;
+            const version = nextVersion++;
 
             // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }`
             // tombstone appended by `Feed.remove`. Preserve the prior row's body-derived columns
@@ -781,8 +818,9 @@ export class EntityMetaIndex implements Index {
                     queueBranch = ${queueBranch}
                   WHERE recordId = ${existing[0].recordId}
                 `;
+              object.recordId = existing[0].recordId;
             } else {
-              yield* sql`
+              const [inserted] = yield* sql<{ recordId: number }>`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
@@ -794,7 +832,25 @@ export class EntityMetaIndex implements Index {
                     ${convergenceKey}, ${annotations}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}, ${queueInsertionId ?? null}, ${queueBranch}
                   )
+                  RETURNING recordId
                 `;
+              object.recordId = inserted.recordId;
+            }
+            if (documentId) {
+              documentRows.set(documentRowKey(spaceId, documentId, objectId), {
+                recordId: object.recordId,
+                entityKind,
+                typeDXN,
+                source,
+                target,
+                parent,
+                parentId,
+                sourceId,
+                targetId,
+                convergenceKey,
+                annotations,
+                queueBranch,
+              });
             }
           }),
         { discard: true },
@@ -812,6 +868,10 @@ export class EntityMetaIndex implements Index {
         const sql = this.#sql;
 
         for (const object of objects) {
+          // Set by `update`, which wrote the row.
+          if (object.recordId !== null) {
+            continue;
+          }
           const { spaceId, queueId, documentId, data } = object;
           const objectId = data.id;
 

@@ -53,7 +53,6 @@ A drawing.sh file carries only its source; the importer lays it out again.
 | -------------------- | -------------------------------------------------------------------- |
 | `src/`               | `render` and the `drawing` CLI                                        |
 | `skills/drawing/`    | Build output: a copy of the root `skills/drawing` skill, for npm      |
-| `site/`              | The drawing.sh landing page and live editor (`@dxos/drawing-site`): `moon run site:serve`, `moon run site:deploy` |
 | `autocue/`           | The agent-first demo flow (`agent-demo.mjs`) and its sample repo      |
 | `docs/launch/`       | Launch post drafts                                                    |
 | `DRAWING.mdl`        | Spec and QA                                                           |

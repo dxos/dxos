@@ -1,0 +1,91 @@
+diagram kind=grid size=1968x880 cols="616 284 908" gap=64 padding=16 autoRows=744 alignContent=center
+
+group client-cell rows="496 1fr" {
+  group client-section cols=2 gap=32 padding=8 border=true {
+    group client-col rows=2 gap=16 {
+      node client "Client" kind=card icon=browser iconTone=teal {
+        item "Composer app tab"
+        item "Plugins and surfaces"
+      }
+      group client-parts rows=3 gap=16 {
+        node cache "Cache" kind=card icon=lightning iconTone=teal
+      }
+    }
+    group worker-col rows=2 gap=16 {
+      node worker "Worker" kind=card icon=cpu iconTone=teal {
+        item "Shared by every tab"
+        item "Local replica in SQLite"
+      }
+      group worker-parts gap=16 {
+        node service-registry "Service Registry" kind=card icon=plugs-connected iconTone=teal
+        node plugin-registry "Plugin Registry" kind=card icon=puzzle-piece iconTone=teal
+        node vault "Vault" kind=card icon=vault iconTone=teal
+      }
+    }
+  }
+  group client-below { }
+}
+
+group router-section rows="8 1fr 8" {
+  group router-above { }
+  group router-col rows=3 gap=16 {
+    node router "Router" kind=card icon=arrows-left-right iconTone=rose {
+      item "Routes clients"
+      item "Routes spaces"
+    }
+    group router-rest { }
+  }
+  group router-below { }
+}
+
+group edge-section cols="284 1fr" gap=32 padding=8 border=true {
+  group registry-col rows=3 gap=16 {
+    node registry "ServiceRegistry" kind=card icon=plugs-connected iconTone=sheet {
+      item "Resolves services by tag"
+      item "ECHO, AI, identity, blobs"
+    }
+    group registry-rest { }
+  }
+  group services-col gap=16 {
+    group echo-block cols=2 gap=8 {
+      node echo "ECHO" kind=card icon=database iconTone=accent {
+        item "Realtime graph database"
+        item "Durable Objects per space"
+      }
+      group echo-parts gap=16 {
+        node graph "Graph" kind=card icon=graph iconTone=accent
+        node feeds "Feeds" kind=card icon=queue iconTone=accent
+        node blobs "Blobs" kind=card icon=files iconTone=accent
+      }
+    }
+    group compute-block cols=2 gap=8 {
+      node compute "Compute" kind=card icon=lightning iconTone=teal {
+        item "Runs next to the data"
+        item "Workers and bindings"
+      }
+      group compute-parts gap=16 {
+        node scheduler "Scheduler" kind=card icon=clock iconTone=teal
+        node agents "Agents" kind=card icon=robot iconTone=teal
+        node pipeline "Pipeline" kind=card icon=flow-arrow iconTone=teal
+      }
+    }
+    group plugins-block cols=2 gap=8 {
+      node plugins "Plugin Registry" kind=card icon=puzzle-piece iconTone=violet {
+        item "Client and EDGE halves"
+        item "Loaded per space"
+      }
+      group plugins-parts gap=16 {
+        node calls "Calls" kind=card icon=video-camera iconTone=violet
+        node email "Email" kind=card icon=envelope iconTone=violet
+        node discord "Discord" kind=card icon=discord-logo iconTone=violet
+      }
+    }
+  }
+}
+
+edge client#e3 -- worker#w3
+edge worker#e3 -- router#w3
+edge router#e3 -- registry#w3
+edge registry#e3 -- echo#w3
+edge registry#e3 -- compute#w3 path=ortho
+edge registry#e3 -- plugins#w3 path=ortho

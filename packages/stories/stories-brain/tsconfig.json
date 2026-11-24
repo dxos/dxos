@@ -86,6 +86,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-memory"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {

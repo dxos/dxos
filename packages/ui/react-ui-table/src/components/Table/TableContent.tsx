@@ -17,6 +17,7 @@ import {
   type DxGridElement,
   type DxGridPlane,
   type DxGridPlaneRange,
+  FitWidthBox,
   Grid,
   type GridAddressing,
   type GridAwareness,
@@ -33,6 +34,7 @@ import { tableButtons, tableControls } from '../../util/index.ts';
 import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor/index.ts';
 import { ColumnActionsMenu } from './ColumnActionsMenu.tsx';
 import { ColumnSettings } from './ColumnSettings.tsx';
+import { useTableFitWidth } from './fit.ts';
 import { RowActionsMenu } from './RowActionsMenu.tsx';
 import { type TableController } from './Table.tsx';
 import { useTableContext } from './TableContext.ts';
@@ -61,11 +63,25 @@ export type TableContentProps = {
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;
+  /** `width` shows the table inert at `FIT_WIDTH_SCALE`, its first fields filling the box's width and its rows cropped: a card. */
+  fit?: 'width';
 };
 
 export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
   (
-    { schema, model, presentation, ignoreAttention, attendableId, awareness, onCreate, onRowClick, testId, ...props },
+    {
+      schema,
+      model,
+      presentation,
+      ignoreAttention,
+      attendableId,
+      awareness,
+      onCreate,
+      onRowClick,
+      testId,
+      fit,
+      ...props
+    },
     forwardedRef,
   ) => {
     const registry = useContext(RegistryContext);
@@ -121,11 +137,24 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
 
       return {
         frozenRowsStart: 1,
-        frozenRowsEnd: Math.max(1, draftRowCount),
+        frozenRowsEnd: model?.features.dataEditable === false ? draftRowCount : Math.max(1, draftRowCount),
         frozenColsStart: model?.frozenColsStart ?? 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };
     }, [model, draftRowCount, columnCount]);
+
+    const fitWidth = useTableFitWidth({
+      grid: fit === 'width' ? dxGrid : null,
+      model,
+      rows,
+      cellUpdate: cellUpdateCounter,
+      columnMeta,
+      actionColumn: frozen.frozenColsEnd > 0,
+    });
+    const fitFrozen = useMemo(
+      () => (fit === 'width' ? { ...frozen, frozenColsStart: fitWidth.frozenColsStart } : frozen),
+      [fit, frozen, fitWidth.frozenColsStart],
+    );
 
     const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
       (range: DxGridPlaneRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
@@ -425,6 +454,34 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
       return <span className='dx-attention-surface' />;
     }
 
+    const gridContent = (
+      <Grid.Content
+        className={mx(
+          // The cursor is the app's selection colour here, as in a list; the grid's own blue ring
+          // belongs to the sheet, where a selected range and a focused cell must read apart.
+          // Cells sit on the host's surface too: a table is a view of a pane's content rather
+          // than a sheet laid over it, so only the grid lines separate it from the panel.
+          '[--dx-grid-base:var(--color-base-surface)] [--color-grid-surface:var(--color-base-surface)] [--color-grid-focus-ring:var(--color-focus)]',
+          gridSeparatorInlineEnd,
+          gridSeparatorBlockEnd,
+        )}
+        frozen={fitFrozen}
+        columns={fit === 'width' ? fitWidth.columnMeta : columnMeta}
+        columnDefault={columnDefault}
+        rowDefault={rowDefault}
+        limitRows={rows.length}
+        limitColumns={fit === 'width' ? fitWidth.columns : columnCount}
+        overscroll='trap'
+        addressing={addressing}
+        onAxisResize={handleAxisResize}
+        onClick={handleGridClick}
+        onKeyDownCapture={handleKeyDown}
+        onWheelCapture={handleWheel}
+        {...(testId && { 'data-testid': testId })}
+        ref={setDxGrid}
+      />
+    );
+
     return (
       <div {...Util.composableProps(props, { classNames: 'dx-expand relative' })} ref={forwardedRef}>
         <Grid.Root id={model.id ?? 'table-grid'} awareness={awareness}>
@@ -436,31 +493,7 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
             onSave={handleSave}
             onCreate={onCreate}
           />
-          <Grid.Content
-            className={mx(
-              // The cursor is the app's selection colour here, as in a list; the grid's own blue ring
-              // belongs to the sheet, where a selected range and a focused cell must read apart.
-              // Cells sit on the host's surface too: a table is a view of a pane's content rather
-              // than a sheet laid over it, so only the grid lines separate it from the panel.
-              '[--dx-grid-base:var(--color-base-surface)] [--color-grid-surface:var(--color-base-surface)] [--color-grid-focus-ring:var(--color-focus)]',
-              gridSeparatorInlineEnd,
-              gridSeparatorBlockEnd,
-            )}
-            frozen={frozen}
-            columns={columnMeta}
-            columnDefault={columnDefault}
-            rowDefault={rowDefault}
-            limitRows={rows.length}
-            limitColumns={columnCount}
-            overscroll='trap'
-            addressing={addressing}
-            onAxisResize={handleAxisResize}
-            onClick={handleGridClick}
-            onKeyDownCapture={handleKeyDown}
-            onWheelCapture={handleWheel}
-            {...(testId && { 'data-testid': testId })}
-            ref={setDxGrid}
-          />
+          {fit === 'width' ? <FitWidthBox fit={fitWidth.fit}>{gridContent}</FitWidthBox> : gridContent}
           <RowActionsMenu model={model} modals={modals} />
           <ColumnActionsMenu model={model} modals={modals} />
           <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />

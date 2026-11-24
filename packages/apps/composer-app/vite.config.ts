@@ -48,6 +48,7 @@ import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
+import { viewerRoutePlugin } from './src/vite/viewer-route.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -343,6 +344,9 @@ export default defineConfig((env) => ({
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
     '__DX_DEV_SERVER_BOOT_ID__': JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    // When this build was made (a dev server: when it started). Tabs compare it to tell which of two
+    // builds open at once is newer, and the older one pauses.
+    '__DX_BUILD_TIME__': JSON.stringify(Date.now()),
     // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
     '__DX_DEBUG_PORT_SESSION__': JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
     // Pins the desktop app's Composer Plugin template (plugin-projects) to what this bundle was built from.
@@ -446,7 +450,9 @@ export default defineConfig((env) => ({
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
+        paused: path.resolve(dirname, './paused.html'),
         recovery: path.resolve(dirname, './recovery.html'),
+        viewer: path.resolve(dirname, './viewer.html'),
       },
       // NOTE: Vite 8 / rolldown eagerly walks into the `test` config imported via
       // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
@@ -538,6 +544,7 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
+      './paused.html',
       // Under a reduced DX_PLUGIN_SET, scan only the plugins that set can reach, read from its
       // sources themselves — the hand-maintained list this replaces had drifted from them
       // (missing `tasks`/`progress`, still naming a removed `outliner`).
@@ -741,7 +748,11 @@ export default defineConfig((env) => ({
     // inline markup. Wrapped in try/catch so an asset rename or move only
     // loses the brand mark — the loader still renders the bar + status
     // without it.
+    viewerRoutePlugin(),
+
     bootLoaderPlugin({
+      // `paused.html` shows the loader stopped, with one action, rather than a screen of its own.
+      include: ['index.html', 'viewer.html', 'paused.html'],
       // A prerelease bundle and the dev server recolour the released mark; production shows it as is.
       markFilter: bootMarkFilter(channelVariant(env.command)),
       markSvg: (() => {

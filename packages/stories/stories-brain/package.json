@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories-brain",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "Cross-cutting storybook stories for semantic facts (brain).",
   "homepage": "https://dxos.org",
@@ -22,6 +22,7 @@
     "@dxos/crawler": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-memory": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",

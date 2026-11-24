@@ -137,7 +137,9 @@ export const evaluate = Effect.fnUntraced(function* ({
     // A tool failure reaches the model as a failed result, not a failed turn, so it can still
     // read the message and write different code.
     log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
-    printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
+    printer.fail(
+      `Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}${keptHint(invocations)}`,
+    );
     return yield* Effect.fail(printer.output());
   }
 
@@ -146,9 +148,13 @@ export const evaluate = Effect.fnUntraced(function* ({
     printer.print(result.success);
   }
 
-  const hint = dialect.name === 'effect' && printer.isEmpty() ? emptyOutputHint(code) : undefined;
-  if (hint) {
-    printer.print(hint);
+  if (printer.isEmpty()) {
+    const ran = ranOperations(invocations);
+    printer.print(
+      ran.length === 0
+        ? NO_OUTPUT
+        : `${NO_OUTPUT} It ran ${ran.join(', ')}; what they did is done, so do not run them again.`,
+    );
   }
 
   return printer.output();
@@ -374,17 +380,51 @@ const hintFor = (message: string): string => {
   if (undefinedName) {
     return `\nHint: each eval call is a fresh program, so \`${undefinedName}\` from an earlier call does not exist here. Resolve or load it again in this call.`;
   }
+  if (/Not a valid effect/.test(message)) {
+    return '\nHint: a function passed to an Effect combinator (`Effect.catch`, `Effect.flatMap`) must return an Effect: `Effect.succeed(value)`, not the value.';
+  }
+  const refField = /(\w+): Expected Ref<dxn:([\w.]+)/.exec(message);
+  if (refField && /Invalid draft/.test(message)) {
+    return `\nHint: \`${refField[1]}\` holds a reference: make or load the ${refField[2]} object first and pass \`Ref.make(object)\`.`;
+  }
+  if (/reserved word/.test(message)) {
+    return '\nHint: `yield*` works only directly in your code, not inside a callback such as `.map((x) => …)`: loop with `for … of` instead. `await` does not work at all: `yield*` an Effect.';
+  }
+  const effect3Name = /Effect\.(catchAll|catchAllCause|either) is not a function/.exec(message)?.[1];
+  if (effect3Name) {
+    return `\nHint: this is Effect 4, where \`Effect.${EFFECT_4_NAMES[effect3Name]}\` replaces \`Effect.${effect3Name}\`.`;
+  }
+  const missing = /Entity not found: \{"uri":"(dxn:[^"]+)"\}/.exec(message)?.[1];
+  if (missing) {
+    return "\nHint: resolve a DXN exactly as `DOCS['catalog/types.md']` or `DOCS['catalog/operations.md']` lists it, a type's with its version (`dxn:org.dxos.type.document:0.1.0`); the Skill Manager's `queryTypes` and `queryOperations` find the ones not listed there.";
+  }
   return '';
 };
 
+/** The Effect 3 names a model reaches for, and what Effect 4 calls them. */
+const EFFECT_4_NAMES: Record<string, string> = { catchAll: 'catch', catchAllCause: 'catchCause', either: 'result' };
+
 /**
- * A pointer for an Effect-dialect program that printed nothing because it called `print` without
- * `yield*`, which builds the effect and drops it.
+ * What already ran when a program failed. An operation's effects stay, so a model that runs the whole program again
+ * repeats them: a second document of the same name.
  */
-const emptyOutputHint = (code: string): string | undefined =>
-  /(?<!yield\*\s*)\bprint\(|console\.log\(/.test(code)
-    ? 'Nothing was printed. `print` is an effect: write `yield* print(...)`; `console.log` does not reach you.'
-    : undefined;
+const keptHint = (invocations: readonly ContentBlock.Invocation[]): string => {
+  const ran = ranOperations(invocations);
+  return ran.length === 0
+    ? ''
+    : `\nHint: these operations ran before the failure, and what they did was kept: ${ran.join(', ')}. Check for it before you run them again.`;
+};
+
+/** The operations a program ran to completion, each once. */
+const ranOperations = (invocations: readonly ContentBlock.Invocation[]): string[] => [
+  ...new Set(invocations.flatMap(({ operationKey, error }) => (error === undefined ? [operationKey] : []))),
+];
+
+/**
+ * What a program that printed nothing and returned nothing is told: an empty result reads as a call that did not run,
+ * and a model that runs it again repeats whatever it wrote.
+ */
+const NO_OUTPUT = 'No output: the code ran without error but printed nothing. Print the values you need to see.';
 
 /**
  * A failure's message cut to what the model can act on.

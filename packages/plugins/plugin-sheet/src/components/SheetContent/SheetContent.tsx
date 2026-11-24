@@ -37,6 +37,7 @@ import {
   type DxGridPosition,
   type EditorBlurHandler,
   type EditorKeyHandler,
+  FitWidthBox,
   Grid,
   GridCellEditor,
   type GridContentProps,
@@ -55,7 +56,7 @@ import { type RangeController, rangeExtension, sheetExtension } from '../../exte
 import { useSelectThreadOnCellFocus } from '../../integrations/index.ts';
 import { SheetNamespace } from '../../namespace.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
-import { FitBox, naturalSize, useUsedExtent } from './fit.tsx';
+import { FitBox, naturalSize, useSheetFitWidth, useUsedExtent } from './fit.tsx';
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util.ts';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
@@ -86,9 +87,17 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
+const readonlyColDefault = {
+  frozenColsStart: sheetColDefault.frozenColsStart,
+  grid: { size: defaultColSize, readonly: true },
+};
+const readonlyRowDefault = {
+  frozenRowsStart: sheetRowDefault.frozenRowsStart,
+  grid: { size: defaultRowSize, readonly: true },
+};
+
 export type SheetContentProps = {
-  /** Shows the used range only, scaled down to fit the box (never past 1:1) and inert: a sheet on a slide. */
-  fit?: boolean;
+  fit?: 'contain' | 'width';
 };
 
 export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>(({ fit, ...props }, forwardedRef) => {
@@ -108,6 +117,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   // The grid spans the sheet's own rows and columns, which grow past the defaults.
   const [sheetRows] = useObject(model.sheet, 'rows');
   const [sheetColumns] = useObject(model.sheet, 'columns');
+  const readonly = !!model.readonly;
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
@@ -262,6 +272,14 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      if (readonly) {
+        if ((event.metaKey || event.ctrlKey) && (event.key === 'c' || event.key === 'C')) {
+          event.preventDefault();
+          return cursorFallbackRange && model.copy(cursorFallbackRange);
+        }
+        return;
+      }
+
       switch (event.key) {
         case 'Backspace':
         case 'Delete':
@@ -302,21 +320,24 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
         }
       }
     },
-    [cursorFallbackRange, model, cursor, extraplanarFocus, selectEntireAxis],
+    [readonly, cursorFallbackRange, model, cursor, extraplanarFocus, selectEntireAxis],
   );
 
   const contextMenuAnchorRef = useRef<HTMLButtonElement | null>(null);
   const [contextMenuOpen, setContextMenuOpen] = useState<DxGridPosition | null>(null);
   const contextMenuAxis = contextMenuOpen?.plane.startsWith('frozenRows') ? 'col' : 'row';
 
-  const handleContextMenu = useCallback((event: MouseEvent) => {
-    const cell = closestCell(event.target);
-    if (cell && cell.plane.startsWith('frozen')) {
-      event.preventDefault();
-      contextMenuAnchorRef.current = event.target as HTMLButtonElement;
-      setContextMenuOpen(cell);
-    }
-  }, []);
+  const handleContextMenu = useCallback(
+    (event: MouseEvent) => {
+      const cell = closestCell(event.target);
+      if (!readonly && cell && cell.plane.startsWith('frozen')) {
+        event.preventDefault();
+        contextMenuAnchorRef.current = event.target as HTMLButtonElement;
+        setContextMenuOpen(cell);
+      }
+    },
+    [readonly],
+  );
 
   const handleAxisMenuAction = useCallback(
     (operation: 'insert-before' | 'insert-after' | 'drop') => {
@@ -342,6 +363,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
   const extent = useUsedExtent(model.sheet);
   const natural = useMemo(() => naturalSize(extent, { columns, rows }), [extent, columns, rows]);
+  const { fitWidth, columns: fitWidthColumns } = useSheetFitWidth(fit === 'width' ? dxGrid : null, model, extent);
 
   const extensions = useMemo(
     () => [
@@ -384,17 +406,23 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     <Grid.Content
       className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
       initialCells={initialCells}
-      limitColumns={fit ? extent.columns : (sheetColumns?.length ?? SheetUtil.DEFAULT_COLS)}
-      limitRows={fit ? extent.rows : (sheetRows?.length ?? SheetUtil.DEFAULT_ROWS)}
-      columns={columns}
+      limitColumns={
+        fit === 'width'
+          ? fitWidth.sizes.length
+          : fit
+            ? extent.columns
+            : (sheetColumns?.length ?? SheetUtil.DEFAULT_COLS)
+      }
+      limitRows={fit === 'contain' ? extent.rows : (sheetRows?.length ?? SheetUtil.DEFAULT_ROWS)}
+      columns={fit === 'width' ? fitWidthColumns : columns}
       rows={rows}
-      columnDefault={sheetColDefault}
-      rowDefault={sheetRowDefault}
+      columnDefault={readonly ? readonlyColDefault : sheetColDefault}
+      rowDefault={readonly ? readonlyRowDefault : sheetRowDefault}
       activeRefs={activeRefs}
       frozen={frozen}
       overscroll='trap'
       addressing={addressing}
-      onAxisResize={handleAxisResize}
+      onAxisResize={readonly ? undefined : handleAxisResize}
       onSelect={handleSelect}
       onFocus={handleFocus}
       onWheelCapture={handleWheel}
@@ -408,7 +436,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   return (
     <div ref={forwardedRef} {...Util.composableProps(props, { classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
-      {fit ? (
+      {fit === 'contain' ? (
         <FitBox width={natural.width} height={natural.height}>
           {/* Inert, not only pointer-proof: no cell takes focus, so no key or clipboard edit reaches the sheet. The grid is
               uncapped by the viewport so it renders every cell of its natural size before the box scales it. */}
@@ -416,6 +444,8 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
             {grid}
           </div>
         </FitBox>
+      ) : fit === 'width' ? (
+        <FitWidthBox fit={fitWidth}>{grid}</FitWidthBox>
       ) : (
         grid
       )}

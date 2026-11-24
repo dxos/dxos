@@ -448,6 +448,60 @@ export const ExportSpace = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * Bakes the space into a JSON archive and uploads it as a read-only publication, replacing the
+ * space's previous publication if it has one. Copies the public link.
+ */
+export const PublishSpace = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.publish'),
+    name: 'Publish Space',
+    description: 'Publish a read-only copy of a space at a public link.',
+    icon: 'ph--globe--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }),
+  output: Schema.Struct({
+    publicId: Schema.String,
+    url: Schema.String,
+  }),
+});
+
+export const UnpublishSpace = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.removePublication'),
+    name: 'Unpublish Space',
+    description: 'Take down the public copy of a space.',
+    icon: 'ph--globe-x--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }),
+  output: Schema.Void,
+});
+
+/** Imports a publication as a new space the caller owns, and opens `path` in it. */
+export const ForkPublication = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.forkPublication'),
+    name: 'Fork Publication',
+    description: 'Copy a published space into a new space.',
+    icon: 'ph--git-fork--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    publicId: Schema.String,
+    /** Object path (`db/<typeSlug>+<objectId>`) to open once the fork lands. */
+    path: Schema.optional(Schema.String),
+  }),
+  output: Schema.Struct({
+    space: SpaceSchema,
+  }),
+});
+
 export const Migrate = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.migrate'),
@@ -755,7 +809,7 @@ export const GetObjects = Operation.make({
   output: Schema.Struct({
     objects: Schema.Array(Schema.Unknown),
   }),
-}).pipe(Operation.mutation('none'));
+}).pipe(Operation.mutation('none'), Operation.hiddenInCodeMode);
 
 export const ResolveUrl = Operation.make({
   meta: {
@@ -818,7 +872,7 @@ export const UpdateObject = Operation.make({
   output: Schema.Struct({
     object: Schema.Unknown,
   }),
-}).pipe(Operation.mutation('write'));
+}).pipe(Operation.mutation('write'), Operation.hiddenInCodeMode);
 
 export const QueryObjects = Operation.make({
   meta: {
@@ -840,7 +894,8 @@ export const QueryObjects = Operation.make({
     typename: Schema.optional(typenameParameter),
     text: Schema.optional(Schema.String).annotate({ description: 'Full-text search terms.' }),
     includeContent: Schema.optional(Schema.Boolean).annotate({
-      description: 'Return full object data (default false); false returns id/type/label only.',
+      description:
+        "Also return each object's fields in its result (default false). Every result has `dxn` and `typename`, and `label` when the object has one.",
     }),
     limit: Schema.optional(Schema.Number).annotate({
       description: 'Maximum number of results (default 10). A capped result sets `truncated`.',
@@ -857,7 +912,7 @@ export const QueryObjects = Operation.make({
       description: 'True when `limit` cut the result short, so a caller never reads a capped page as the whole set.',
     }),
   }),
-}).pipe(Operation.mutation('none'));
+}).pipe(Operation.mutation('none'), Operation.hiddenInCodeMode);
 
 export const AddTag = Operation.make({
   meta: {
@@ -924,8 +979,9 @@ export const QueryTypes = Operation.make({
     name: 'Query Types',
     description:
       'List the types objects in this space can have — those persisted in the space and those the ' +
-      'host itself registers. Returns a summary per type — typename, version, kind, name, ' +
-      'description, field names — or, for the typenames named, their full JSON Schema. Read the ' +
+      'host running this operation registers, which may lack a type another plugin contributes. ' +
+      'Returns a summary per type — typename, version, kind, name, ' +
+      'description, field names — or, for the typenames named, their full JSON Schema and any it did not find. Read the ' +
       "summary first and ask for a type's schema only when about to create or update one of it.",
     icon: 'ph--list--regular',
   },
@@ -938,5 +994,9 @@ export const QueryTypes = Operation.make({
   }),
   output: Schema.Struct({
     types: Schema.Array(Schema.Unknown),
+    notFound: Schema.optional(Schema.Array(Schema.String)).annotate({
+      description: 'The typenames asked for that neither the space nor this host has.',
+    }),
+    hint: Schema.optional(Schema.String),
   }),
 }).pipe(Operation.mutation('none'));

@@ -521,7 +521,7 @@ shared `Style` tokens → `overrides: Partial<Style3D>`, groups (`members`/`arra
 ## Diagram DSL mapping
 
 Only the output target changes. Grammar changes: **none** (the `.dx` text is unchanged; the scene-statement
-reader/printer map `kind`/`from`/`to`/groups onto `type`/`source`/`target`/composites). `Dsl.compile`'s result type
+reader/printer map `kind`/`from`/`to`/groups onto `type`/`source`/`target`/composites). `DSL.compile`'s result type
 changes (`ParseResult.commands` → `{ document, layout, intents }`).
 
 | `@dxos/diagram` (`scene.ts`)                                                         | → `@dxos/scene`                                                                                                                                                               |                 |
@@ -607,7 +607,7 @@ changes (`ParseResult.commands` → `{ document, layout, intents }`).
 The `.dx` semantic statements (`diagram`/`node`/`edge`/`group`) and the layout engines currently produce
 `@dxos/diagram` `Scene.Command`s (`UpsertObject`/`UpsertElements`/`RemoveElements`/`RemoveObject`/`MoveObject` over
 `WorldObject`s of `Box`/`Circle`/`Polyline`/`Curve`/`Arc`/`Text`/`Arrow`/`Portal`, `common/diagram/src/scene.ts`);
-`Dsl.compile` returns `ParseResult { commands, problems, ranges }` (`dsl/parse.ts`). Phase 0 makes every engine emit
+`DSL.compile` returns `ParseResult { commands, problems, ranges }` (`dsl/parse.ts`). Phase 0 makes every engine emit
 `@dxos/scene` `Layout2D` elements + model objects through one `LayoutIntent` batch, and moves every reader onto
 `Layout2D`.
 

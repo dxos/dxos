@@ -17,6 +17,10 @@ import { SpaceOperation } from '#types';
 const EXCLUDED_TYPES = [Type.Type, View.View, Instructions.Instructions, Skill.Skill, Feed.Feed];
 const excludedTypenames = EXCLUDED_TYPES.map((type) => Type.getTypename(type));
 
+const NOT_FOUND_HINT =
+  'Not registered where this ran: a type another plugin contributes may still exist. ' +
+  "Look it up with the Skill Manager's queryTypes, which searches every registered type.";
+
 const handler: Operation.WithHandler<typeof SpaceOperation.QueryTypes> = SpaceOperation.QueryTypes.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ typenames, limit }) {
@@ -34,6 +38,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryTypes> = SpaceOp
       const bounded = limit === undefined ? sorted : sorted.slice(0, limit);
 
       if (requested) {
+        // An empty answer reads as "no such type"; on a host that runs this apart from other plugins (an EDGE plugin
+        // bundle) the type may well exist, so say which were not found and where to look.
+        const found = new Set(sorted.map((schema) => Type.getTypename(schema)));
+        const notFound = [...requested].filter((typename) => !found.has(typename));
         return {
           types: bounded.map((schema) => ({
             typename: Type.getTypename(schema),
@@ -41,6 +49,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryTypes> = SpaceOp
             kind: Type.isRelation(schema) ? 'relation' : 'record',
             jsonSchema: JsonSchema.toJsonSchema(schema),
           })),
+          ...(notFound.length > 0 ? { notFound, hint: NOT_FOUND_HINT } : {}),
         };
       }
 

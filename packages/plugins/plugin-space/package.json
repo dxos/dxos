@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-space",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -99,6 +99,16 @@
       "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./package.json": "./package.json",
+    "./PublicationLink": {
+      "source": "./src/types/PublicationLink.ts",
+      "types": "./dist/types/src/types/PublicationLink.d.ts",
+      "import": "./dist/lib/PublicationLink.mjs"
+    },
+    "./PublicationManifest": {
+      "source": "./src/types/PublicationManifest.ts",
+      "types": "./dist/types/src/types/PublicationManifest.d.ts",
+      "import": "./dist/lib/PublicationManifest.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
@@ -165,6 +175,12 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "PublicationLink": [
+        "dist/types/src/types/PublicationLink.d.ts"
+      ],
+      "PublicationManifest": [
+        "dist/types/src/types/PublicationManifest.d.ts"
+      ],
       "SpaceCapabilities": [
         "dist/types/src/types/SpaceCapabilities.d.ts"
       ],

@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import { describeFields, describeInput } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
@@ -70,6 +70,13 @@ describe('prompt', () => {
     // `Operation.make` does not require a struct, so any other input is labelled as it is.
     expect(describeInput(Schema.String)).toEqual('string');
     expect(describeInput(Schema.suspend(() => Schema.Struct({ id: Schema.String })))).toEqual('{ id: string }');
+  });
+
+  test('an object of a registered type is named by its type, not spelled out as a record', ({ expect }) => {
+    // As a create operation's output holds the object it made: code uses it, rather than looking inside it.
+    expect(describeInput(Schema.Struct({ object: Type.getSchema(Task), any: Obj.Unknown }))).toEqual(
+      '{ object: com.example.type.task, any: object }',
+    );
   });
 
   test("a type's union of more than four tagged variants is named by its tags", ({ expect }) => {

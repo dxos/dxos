@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "DXOS developer debugging utilities plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -51,6 +51,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./ArchitectureSpace": {
+      "source": "./src/samples/architecture/ArchitectureSpace.ts",
+      "types": "./dist/types/src/samples/architecture/ArchitectureSpace.d.ts",
+      "import": "./dist/lib/ArchitectureSpace.mjs"
     },
     "./Debug": {
       "source": "./src/types/Debug.ts",
@@ -203,7 +208,9 @@
     "@dxos/compute-hyperformula": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/devtools": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -229,6 +236,7 @@
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-presenter": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
@@ -239,6 +247,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
@@ -268,6 +277,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
+    "@dxos/storybook-testing": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",

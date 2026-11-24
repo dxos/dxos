@@ -19,6 +19,13 @@ export const isHiddenSlide = (content: string): boolean => {
   return match ? parseFrontmatter(match[1]).frontmatter.hide === true : false;
 };
 
+/** The title a slide's frontmatter states (`title: Roadmap`), which names the slide where it has one. */
+export const frontmatterTitle = (content: string): string | undefined => {
+  const match = FRONTMATTER.exec(content);
+  const title = match ? parseFrontmatter(match[1]).frontmatter.title?.trim() : undefined;
+  return title ? title : undefined;
+};
+
 /**
  * Sets (or, for `undefined`, removes) frontmatter keys, keeping the block's other keys, order and comments;
  * adds a block when the slide has none and removes it when it ends up empty.

@@ -20,6 +20,10 @@ export const WAIVER = 'Spec-Changelog-Skip';
 /** Language definitions, review rules, spec reviews and test fixtures are .mdl files but not specs. */
 const EXEMPT = [/^packages\/reflect\/deus\/lang\//, /\/__fixtures__\//, /(^|\/)rules\//, /\.review\.mdl$/];
 
+// A SESSION.mdl is a log whose goals change state every turn (lang/session.mdl), so it needs no decision per edit; its
+// decisions and questions still may not be edited in place.
+const NO_DECISION_NEEDED = /(^|\/)SESSION\.mdl$/;
+
 export const DEFAULT_BASE_REF = 'origin/main';
 
 export type ChangelogCheckOptions = {
@@ -77,7 +81,9 @@ export const checkChangelog = Effect.fnUntraced(function* ({ base: baseRef, cwd,
     const after = yield* fs.readFileString(path.join(root, file));
     const before = basePath === undefined ? undefined : yield* git(root, 'show', `${base}:${basePath}`);
     const errors = [
-      ...checkChangelogChange(before, after).filter((error) => waivers.length === 0 || error !== MISSING_DECISION),
+      ...checkChangelogChange(before, after).filter(
+        (error) => error !== MISSING_DECISION || (waivers.length === 0 && !NO_DECISION_NEEDED.test(file)),
+      ),
       ...lintMdl(after)
         .filter(({ source }) => source === 'mdl/decision')
         .map(({ message }) => message),

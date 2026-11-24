@@ -10,11 +10,10 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Main from '@dxos/react-ui/Main';
 
-import { useBreakpoints } from '#hooks';
+import { useComplementarySidebarState, useTopbar } from '#hooks';
 import { DeckSchema } from '#types';
 
 import { DeckNamespace } from '../../namespace.ts';
-import { layoutAppliesTopbar } from '../../util/index.ts';
 import { ComplementarySidebar, Sidebar } from '../Sidebar/index.ts';
 import { Banner } from './Banner.tsx';
 import { useDeckContext } from './DeckRoot.tsx';
@@ -40,8 +39,8 @@ export const DeckContent = ({ children }: DeckContentProps) => {
   const { t } = Hooks.useTranslation(DeckNamespace.key);
   // Controlled height would drop every mid-drag move, so the drag is mirrored locally until it ends.
   const [liveHeight, setLiveHeight] = useState<number>();
-  const breakpoint = useBreakpoints();
-  const topbar = layoutAppliesTopbar(breakpoint, !!fullscreen);
+  const topbar = useTopbar(!!fullscreen);
+  const complementaryState = useComplementarySidebarState(complementarySidebarState, !!fullscreen);
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
@@ -97,7 +96,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
   return (
     <Main.Root
       navigationSidebarState={fullscreen ? 'closed' : sidebarState}
-      complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
+      complementarySidebarState={complementaryState}
       drawerState={effectiveDrawerState}
       drawerHeight={liveHeight ?? drawerHeight ?? DeckSchema.DRAWER_DEFAULT_HEIGHT}
       onNavigationSidebarStateChange={handleNavigationSidebarStateChange}

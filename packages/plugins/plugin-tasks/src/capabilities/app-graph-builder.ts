@@ -11,6 +11,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -26,10 +27,11 @@ const matchTaskSet = (node: AppGraphNode.Node) =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const readOnly = yield* ReadOnly.atom;
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'quickEntry',
-        match: GraphNodeMatcher.whenRoot,
+        match: ReadOnly.unless(readOnly, GraphNodeMatcher.whenRoot),
         actions: () =>
           Effect.succeed([
             AppGraphNode.makeAction({

@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { type FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
+import { type MemoryError, type MemoryService } from '@dxos/echo-memory';
 import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
@@ -48,8 +48,8 @@ export const summarizeSubject = ({
   focus,
 }: typeof BrainOperation.SummarizeSubject.input.Type): Effect.Effect<
   typeof BrainOperation.SummarizeSubject.output.Type,
-  SemanticIndexError,
-  FactStore | AiService.AiService
+  MemoryError.MemoryError,
+  MemoryService.MemoryService | AiService.AiService
 > =>
   Effect.gen(function* () {
     const facts = yield* queryResolvedFacts({ entity: subject });

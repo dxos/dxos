@@ -35,12 +35,14 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Filter, Obj } from '@dxos/echo';
+import { type Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
 import { EmailPipeline, type FactIndexer, Thread } from '@dxos/pipeline-email';
 import { loadEnronMessages } from '@dxos/pipeline-email/testing';
-import { type DocumentFacts, type RDF, extractFactsStage, normalizeFactsStage } from '@dxos/pipeline-rdf';
+import { type DocumentFacts, extractFactsStage, normalizeFactsStage } from '@dxos/pipeline-rdf';
+import { type ExtractOptions, type KnownEntity } from '@dxos/pipeline-rdf';
 import {
   type CommitFn,
   TranscriptEvent,
@@ -157,7 +159,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const progress = Hooks.useCapability(AppCapabilities.ProgressRegistry);
   // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
-  const extractOptions = useMemo<RDF.ExtractOptions | undefined>(
+  const extractOptions = useMemo<ExtractOptions | undefined>(
     () => (ai.preset === 'ollama' ? { model: ai.model, provider: Provider.ollama.id, strict: false } : undefined),
     [ai],
   );
@@ -187,7 +189,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
         // The space's people and organizations, so a mention of one is stored under its ECHO URI.
         const people = yield* Effect.promise(() => space.db.query(Filter.type(Person.Person)).run());
         const organizations = yield* Effect.promise(() => space.db.query(Filter.type(Organization.Organization)).run());
-        const entities: RDF.KnownEntity[] = [
+        const entities: KnownEntity[] = [
           ...people.flatMap((person) =>
             person.fullName ? [{ iri: Obj.getURI(person), label: person.fullName, type: 'person' as const }] : [],
           ),
@@ -239,7 +241,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
       const startedMs = Date.now();
       const aiLayer = Layer.fresh(AiServiceTestingPreset(ai.preset));
 
-      const collected: RDF.Fact[] = [];
+      const collected: Fact.Fact[] = [];
       const indexFacts: FactIndexer = (message) =>
         EffectEx.runPromise(
           Effect.gen(function* () {
@@ -425,7 +427,7 @@ const toDocs = (text: string): { readonly text: string; readonly source: string 
     .filter((part) => part.length > 0)
     .map((part, index) => ({ text: part, source: `doc-${index}` }));
 
-const factEntities = (fact: RDF.Fact): string[] =>
+const factEntities = (fact: Fact.Fact): string[] =>
   [fact.assertion.subject, fact.assertion.object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
 
 const round = (value: number): number => Math.round(value * 100) / 100;

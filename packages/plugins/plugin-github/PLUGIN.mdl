@@ -782,6 +782,24 @@ test QA-4: Import a pull request from the search dialog
       expect: the pull request no longer appears in the space
 ```
 
+## Rules
+
+Conventions this plugin's code must hold that a linter cannot express; each block is discovered by the
+agentic-review harness.
+
+```mdl
+rule load-refs-not-target: Read a Ref with `Database.load(ref)`, never `ref.target`
+  A Ref decoded from an operation's input is bound to a database but not loaded, so `ref.target` is empty
+  where the object exists. `Database.load(ref)` resolves at once for a loaded ref and loads an unloaded one.
+  Flag a read of `.target` on a Ref in an operation handler's source, including a fallback of the form
+  `ref.target ?? load(ref)`.
+  scope: repo
+  files:
+    - packages/plugins/plugin-github/src/operations/**/*.ts
+  grep: \.target\b
+  severity: warn
+```
+
 ## Changelog
 
 ```mdl
@@ -856,6 +874,15 @@ decision D-7: Cmd+K offers "Import owner/repo#N from GitHub" for a pasted pull r
   rejected:
     - Reusing the preview LinkResolver: it builds an object for a popover and never stores it, while Cmd+K has to store and navigate.
   source: https://github.com/dxos/dxos/pull/13811
+```
+
+```mdl
+decision D-8: Operation handlers read a Ref with `Database.load(ref)`, never `ref.target`, with no `target` fast path before it.
+  date: 2026-11-18
+  by: user:dmaretskyi
+  affects: [F-9.12]
+  why: A Ref decoded from an operation's input is bound but not loaded, and `load` resolves at once for a loaded ref, so a `target` read adds a second path that is empty exactly where it matters.
+  source: https://github.com/dxos/dxos/pull/14574#discussion_r4616910154
 ```
 
 ## Appendix: Extension Definitions

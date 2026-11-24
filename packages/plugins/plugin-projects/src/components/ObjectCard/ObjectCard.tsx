@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEventHandler, useCallback } from 'react';
+import React, { type KeyboardEventHandler, useCallback, useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -30,11 +30,12 @@ export type ObjectCardProps = {
  * delegates to the object's own `CardContent` surface, so a document previews as a document.
  * Reactive via {@link useObject} so a rename shows without navigating away and back.
  */
-export const ObjectCard = ({ object: objectProp, onClick, onDelete, 'data-testid': testId }: ObjectCardProps) => {
+export const ObjectCard = ({ 'object': liveObject, onClick, onDelete, 'data-testid': testId }: ObjectCardProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  const [object] = useObject(objectProp);
+  const [object] = useObject(liveObject);
+  const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: liveObject }), [liveObject]);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
-  const { archived, item: archiveItem } = SpaceHooks.useArchiveMenuItem(objectProp);
+  const { archived, item: archiveItem } = SpaceHooks.useArchiveMenuItem(liveObject);
   const menuItems = [
     ...(onDelete ? [{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }] : []),
     ...(archiveItem ? [archiveItem] : []),
@@ -93,7 +94,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete, 'data-testid
       {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it —
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}
-      <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
+      <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />
     </ToolkitObjectCard.Root>
   );
 };

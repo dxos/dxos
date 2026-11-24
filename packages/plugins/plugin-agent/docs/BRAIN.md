@@ -19,11 +19,12 @@ asked.
   feed item per fact (so a fact can be forgotten on its own), each extraction pass closed by a marker;
   append-only apart from forgetting, with no second fact shape; the feeds are the record and the
   brain's index (pipeline-rdf's SQLite schema) is derived and rebuildable.
-- **Back-indexing is a trigger-run operation outside the brain; the brain only consumes fact feeds:**
-  a remote timer trigger runs plugin-discord's `CrawlDiscordChannels`, which reads a channel's history
-  live with `@dxos/crawler` (the Discord token comes from the space, where the Discord OAuth sign-in
-  stored it), keeps its progress in a `CrawlState` ECHO object and appends the facts it extracts to a
-  fact feed. The brain is told only which fact feeds to index.
+- **Back-indexing is a trigger-run operation outside the brain:** a remote timer trigger runs
+  plugin-discord's `CrawlDiscordChannels`, which reads a channel's history live with `@dxos/crawler`
+  (reading as the bot installed in the server through plugin-discord's `DiscordService`, whose host on EDGE
+  holds the bot's token, so the space holds none for Kai), keeps its
+  progress in a `CrawlState` ECHO object and puts the facts it extracts into the space's memory
+  (`MemoryService`), whose replicated `facts` feed every replica, EDGE's included, follows.
 - **Goals are directives, not tasks:** plain-text outcomes or conditions, owned by an `Actor` (user,
   group or agent), hierarchical (steps are sub-goals), carrying priority, a budget and optional
   instructions; a goal creates a concrete `Task` only for substantive, assignable work.
@@ -123,6 +124,10 @@ runtime `eval`, or a bundle beyond Workers' script size limit — which is what 
 
 ### Feeds are the record; the index is derived
 
+> Superseded 2026-11-18 (echo-memory D-59, plugin-agent D-14): a space has one feed of facts, the replicated `facts`
+> feed its memory is logged to. `FactFeed.FactItem` feeds, `AddFactFeed`/`RemoveFactFeed` and the brain's fact-feed
+> indexer are gone; producers write with `MemoryService.put` or import TriG. The history below is kept for context.
+
 ECHO fact feeds are the durable, exportable record of what the agent believes; the brain's index is
 derived from what the brain extracted. People can read, correct and export facts in Composer, and a
 fact feed travels with a space export.
@@ -150,15 +155,14 @@ invocation; its output is a fact feed. The brain consumes fact feeds and knows n
 | Concern    | Where it lives                                                                                                                                                              |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Schedule   | A remote `Trigger` with a timer spec (every 2 minutes by default) and `CrawlDiscordChannels` as its runnable; pause and resume switch `trigger.enabled`                     |
-| Config     | The trigger's input: the Discord `Connection`, the channels, `descendThreads`, `maxDays`, `maxDepth`, `maxSteps`, and refs to the `CrawlState` and the fact feed            |
-| Setup      | `DiscordOperation.ConfigureBackIndex` creates or updates the `CrawlState`, the fact feed and the trigger together                                                           |
+| Config     | The trigger's input: the Discord `Connection`, the channels, `descendThreads`, `maxDays`, `maxDepth`, `maxSteps`, and a ref to the `CrawlState`                             |
+| Setup      | `DiscordOperation.ConfigureBackIndex` creates or updates the `CrawlState` and the trigger together                                                                          |
 | Token      | The space's: the Discord OAuth sign-in stores an `AccessToken` on a `Connection`, which EDGE resolves through `CredentialsService` (a user token travels as `Bearer`)       |
 | Runner     | `Crawler.stream(config, { maxSteps })` drained by `Pipeline.run({ sink: Crawler.commit })`; two steps (a page of 25 messages each) per invocation by default                |
 | Cursors    | `StateStore.layerEcho` over the `CrawlState`; moved only by `Crawler.commit`, once an event cleared every stage. Reset rewinds targets there; each run reopens the channels |
 | Identities | `AgentRegistry.layerMemory` per invocation: an author's canonical id is their Discord user id, so it is stable across runs without a store                                  |
 | Extraction | `extractFactsStage`: a page of messages per model request; a fact's `source` is `discord:<message id>`                                                                      |
-| Record     | A write-only `FactStore` that appends each fact to the fact feed as a `FactFeed.FactItem`; its content hashes live in the `CrawlState`                                      |
-| Brain      | `POST/DELETE/GET /compute/brain/:space/:agent/fact-feeds` (space members): the brain's alarm reads registered feeds from its cursor, every 30 s while any is registered     |
+| Record     | A `FactStore` over the space's `MemoryService` (`spaceMemoryFactStoreLayer`): each fact is put into the space's memory; its content hashes live in the `CrawlState`         |
 
 Why not the crawl in the brain Durable Object: the brain then owned scheduling, the Discord source
 (over discord-service's bot), the crawl state (in its SQLite, invisible to the space) and controls

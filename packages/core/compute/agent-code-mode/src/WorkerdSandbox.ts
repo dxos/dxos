@@ -163,6 +163,7 @@ const COMPATIBILITY_FLAGS = ['no_handle_cross_request_promise_resolution'];
 /** The names `prelude.mjs` exports for the model's code. */
 const FACADE = [
   'print',
+  'console',
   'describe',
   'relations',
   'children',
@@ -230,7 +231,8 @@ const dispatch = async (state: HostState, binding: string, args: readonly unknow
       context.print(...args.map(revive));
       return null;
     case 'describe':
-      return await call<Promise<string>>('describe', target(args[0]));
+      // Revived rather than resolved: `describe` also takes an operation's output, which wraps the object it names.
+      return await call<Promise<string>>('describe', revive(args[0]));
     case 'relations':
       return (
         await call<Promise<HostObject[]>>('relations', target(args[0]), args[1] ?? undefined, args[2] ?? undefined)

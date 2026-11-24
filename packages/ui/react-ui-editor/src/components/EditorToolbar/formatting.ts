@@ -9,6 +9,7 @@ import { type Formatting, Inline, addLink, removeLink, setStyle } from '@dxos/ui
 
 import { translationKey } from '#translations';
 
+import { isReadonly } from './readonly.ts';
 import { type EditorToolbarState } from './types.ts';
 
 const formats = {
@@ -32,6 +33,7 @@ export const addFormatting =
         variant: 'toggleGroup',
         selectCardinality: 'multiple',
         value: Object.keys(formats).filter((key) => !!formatting[key as keyof Formatting]),
+        disabled: isReadonly(state),
       } as ToolbarMenuActionGroupProperties,
       (group) => {
         for (const [type, icon] of Object.entries(formats)) {
@@ -43,6 +45,7 @@ export const addFormatting =
               testId: `editor.toolbar.${type}`,
               checked,
               icon,
+              disabled: isReadonly(state),
             },
             () => {
               const view = getView();

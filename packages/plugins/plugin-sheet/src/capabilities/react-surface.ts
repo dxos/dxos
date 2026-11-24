@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 
-import { ChartArticle, RangeList, SheetArticle, SheetChartsCompanion } from '#containers';
+import { ChartArticle, RangeList, SheetArticle, SheetCard, SheetChartsCompanion } from '#containers';
 import { Sheet } from '#types';
 
 export default Capability.makeModule(() =>
@@ -26,6 +26,12 @@ export default Capability.makeModule(() =>
         ),
         component: SheetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'sheetCard',
+        filter: AppSurface.object(AppSurface.CardContent, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
+        component: SheetCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
         id: 'charts',

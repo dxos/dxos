@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Fact } from '@dxos/echo-memory';
+
 import { type DocumentFacts } from '../stages/index.ts';
-import { type Assertion, type ExtractDocument } from '../types/index.ts';
+import { type ExtractDocument } from '../types/index.ts';
 
 // Gold-standard corpus for the multi-model extraction benchmark: each document is paired with the RDF
 // facts a correct extraction should yield, so the benchmark can score precision/recall/F1 in addition
@@ -100,7 +102,7 @@ const normalize = (value: string): string =>
     .replace(/[-\s]+/g, ' ')
     .replace(/[.,;:!?]+$/, '');
 
-const termLabel = (term: Assertion['subject']): string =>
+const termLabel = (term: Fact.Assertion['subject']): string =>
   term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
 // Two surfaces "align" when equal or one contains the other after normalization — tolerates phrasing
