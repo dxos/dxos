@@ -42,8 +42,8 @@ goal G-2: The plugins have no import cycles.
 goal G-3: The Assistant Chat story loads in the built storybook.
   status: started
   notes:
-    - The deployed storybook stops at preparing story after 60 seconds.
-    - The Binding and SyncTemplate cycle in plugin-connector causes the hang.
+    - The deployed storybook stops at `preparing story` after 60 seconds.
+    - The `Binding` and `SyncTemplate` cycle in plugin-connector causes the hang.
     - A local storybook build runs. Then a script opens the story.
 ```
 
@@ -51,7 +51,7 @@ goal G-3: The Assistant Chat story loads in the built storybook.
 goal G-4: The Form chunk loads in the built storybook.
   status: todo
   notes:
-    - The Form chunk also stopped. It does not use Binding.
+    - The Form chunk also stopped. It does not use `Binding`.
 ```
 
 ```mdl
@@ -137,4 +137,11 @@ event T-7: SyncTemplate ID is public again. The storybook build started again.
   date: 2026-11-24T11:02Z
   by: agent:claude-code
   refs: [G-3, PR-1]
+```
+
+```mdl
+event T-8: CI failed on the first commit for the same plugin-inbox cause. The fix is pushed.
+  date: 2026-11-24T11:18Z
+  by: agent:claude-code
+  refs: [G-5, PR-1]
 ```
