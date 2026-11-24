@@ -455,12 +455,12 @@ test QA-3: A live assistant draws while live Claude Code edits files
 
 ```mdl
 test QA-4: Three subagents compare savings plans
-  desc: The scripted story `stories-assistant/Subagents` (Demo) walked by a person.
+  desc: The scripted story `stories-assistant/Subagents` (Default) walked by a person.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4, T-6]
   status: draft
   given:
-    - the story `stories/stories-assistant/Subagents` Demo, with Parallel threads on
+    - the story `stories/stories-assistant/Subagents` Default, with Parallel threads on
   steps:
     - name: Ask for a comparison
       do: Send "Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years."
@@ -993,4 +993,20 @@ decision D-43: The agent's column stays selected while subagent columns open, so
   why: A strip that rests the selection at its start would scroll the agent's column, and its prompt, out of view each time the selection followed a new thread.
   rejected:
     - Keep following the newest thread — the reader would lose the agent's conversation as soon as the columns outgrow the strip.
+```
+
+```mdl
+decision D-44: The Subagents story file has a story named `Default` that has no play function, and `test QA-4` walks it.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-45: `Default` is the story that was `Demo`: the chat with the trace beside it. The story with the play function keeps the name `Scripted`. Fills in [D-44].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  why: `Demo` was already the play-free story a person and the recorded walkthrough drive, so renaming it adds no third story that differs only by its play function.
 ```
