@@ -64,6 +64,8 @@ export const EdgeSelector = () => {
   const identity = useIdentity();
   const target = useMemo(() => getTarget(), [window.location.search]);
   const [pending, setPending] = useState<string>();
+  // Once deletion starts it runs to the reload, so the dialog cannot be cancelled or dismissed mid-way.
+  const [switching, setSwitching] = useState(false);
   const current = config.values.runtime?.services?.edge?.url;
 
   const switchEnvironment = async (value: string) => {
@@ -101,7 +103,7 @@ export const EdgeSelector = () => {
       <Dialog.Root
         open={pending !== undefined}
         onOpenChange={({ open }) => {
-          if (!open) {
+          if (!open && !switching) {
             setPending(undefined);
           }
         }}
@@ -112,12 +114,20 @@ export const EdgeSelector = () => {
           </Dialog.Header>
           <Dialog.Description srOnly>Sign out and switch the EDGE environment.</Dialog.Description>
           <ConfirmReset
-            active
+            active={!switching}
             message={`Your identity belongs to the current environment. Switching signs you out and deletes this device's identity and spaces, then reloads at the login screen for ${pendingLabel}.`}
             confirmLabel='Sign out and switch'
             onConfirm={async () => {
-              if (pending) {
+              if (!pending) {
+                return;
+              }
+              setSwitching(true);
+              try {
                 await switchEnvironment(pending);
+              } catch (err) {
+                // ConfirmReset shows the failure; cancelling is allowed again.
+                setSwitching(false);
+                throw err;
               }
             }}
             onCancel={() => setPending(undefined)}
