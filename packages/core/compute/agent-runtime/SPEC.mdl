@@ -29,7 +29,12 @@ The base case of delegation is a message. The richer case sends a reference to a
 task is assigned to the receiver.
 
 Delegation is started by operations, and there can be many of them. Every one of them ends in
-either `AgentService` or `HarnessService`; no delegation path bypasses both.
+`AgentService`; an operation never spawns a process itself.
+
+`AgentService` is a global singleton that manages agents and sessions. Code finds where it runs
+through `AgentService.currentAgent` and `AgentService.currentSession`, which read the current
+process (`Process.current`) and discover the `Agent` and `Session` from its annotations.
+`HarnessService` is deprecated; what it serves moves to `AgentService`.
 
 The task list in the project or session is the control plane. Ephemeral messages (wake, start,
 stop) sit on top of it and carry no state of their own.
@@ -46,7 +51,8 @@ Each ECHO object maps to the process that runs it:
 | `Session`   | `SessionProcess` |
 | `Agent`     | `AgentProcess`   |
 
-A process run on behalf of a session carries a session annotation naming that `Session`.
+A process run on behalf of a session carries a session annotation naming that `Session`, and one
+run on behalf of an agent carries an agent annotation naming that `Agent`.
 
 The eventual goal is that every agent has its own identity and its own personal space.
 
@@ -212,13 +218,21 @@ feat F-10: Delegation entry points
 
   req F-10.1:
     when: work is delegated at any tier
-    then: an operation starts it, and the operation goes through either `AgentService` or
-          `HarnessService`
+    then: an operation starts it, and the operation goes through `AgentService`
 
   req F-10.2:
     when: the delegation strategy spawns a sub-agent, or the thread scheduler starts a thread
-    then: it does so through `AgentService` or `HarnessService`, not by spawning or scheduling
-          directly
+    then: it does so through `AgentService`, not by spawning or scheduling directly
+
+  req F-10.3:
+    when: an operation needs a new process for agent work
+    then: it asks `AgentService`; it never calls `Process.spawn` or `Process.ManagerService.spawn`
+          itself
+
+  req F-10.4:
+    when: a model delegates to a thread
+    then: it calls operations (today's `thread_delegate` and `thread_wait` tools), which go through
+          `AgentService`
 ```
 
 ```mdl
@@ -258,6 +272,42 @@ feat F-12: Session annotation on processes
   req F-12.3:
     when: code needs the session it runs for
     then: it reads the session annotation of `Process.current` [F-9]
+
+  req F-12.4:
+    when: a process is spawned on behalf of an agent
+    then: it carries an agent annotation whose value is the URI of that `Agent` object, and a
+          spawned child inherits it
+```
+
+```mdl
+feat F-13: AgentService
+  status: planned
+  desc: |
+    The one service for agent work. It is a global singleton, not scoped to a process or a
+    conversation.
+
+  req F-13.1:
+    when: code creates, finds or runs an agent or a session
+    then: it goes through `AgentService`, which manages both
+
+  req F-13.2:
+    when: code yields `AgentService.currentSession`
+    then: it gets the `Session` named by the session annotation of `Process.current`, and fails
+          with `NoCurrentSessionError` when there is none
+
+  req F-13.3:
+    when: code yields `AgentService.currentAgent`
+    then: it gets the `Agent` named by the agent annotation of `Process.current`, or none for a
+          standalone session
+
+  req F-13.4:
+    when: code needs to find other agents or sessions
+    then: `AgentService` discovers them from the annotations of the processes it manages
+
+  req F-13.5:
+    when: code uses `HarnessService`
+    then: the service is deprecated; each of its reads and control verbs has an `AgentService`
+          replacement scoped by `currentSession`
 ```
 
 ## Changelog
@@ -535,4 +585,61 @@ decision D-30: The session annotation holds the `Session` object's URI, a spawne
   affects: [F-12.1, F-12.2, F-12.3]
   why: Tools and sub-agents run as child processes of the session's process, so inheriting the annotation lets them find their session without the harness-host lookup `HarnessService` does today.
   rejected: Reusing `Process.TargetAnnotation`, because a child's target is the object it works on, not the session it works for.
+```
+
+```mdl
+decision D-31: `HarnessService` is deprecated.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-13.5]
+```
+
+```mdl
+decision D-32: `AgentService` is extended to manage agents and sessions.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-13.1]
+```
+
+```mdl
+decision D-33: `AgentService` is a global singleton. It exposes `AgentService.currentAgent` and `AgentService.currentSession`, which query the current process and discover the others through annotations.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-13.2, F-13.3, F-13.4]
+```
+
+```mdl
+decision D-34: Operations do not spawn processes directly; they go through `AgentService`.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-10.3]
+```
+
+```mdl
+decision D-35: With `HarnessService` deprecated, every delegation path in F-10 goes through `AgentService` alone, and `HarnessService`'s reads and control verbs move to `AgentService`, scoped by `currentSession`. Supersedes [D-25] and fills in [D-31] to [D-34].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-25
+  affects: [F-10.1, F-10.2, F-13.5]
+  why: D-24 names two services and D-31 deprecates one of them, so the routing rule keeps only the other.
+```
+
+```mdl
+decision D-36: `currentSession` fails with `NoCurrentSessionError` outside a session; `currentAgent` returns none for a standalone session instead of failing. A process run for an agent carries an agent annotation, inherited like the session annotation. Fills in [D-33].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.4, F-13.2, F-13.3]
+  why: A standalone session is normal (F-1.4), so having no agent is a value; having no session means the caller is outside agent work. `currentAgent` needs an annotation to read, as `currentSession` has one in F-12.
+```
+
+```mdl
+decision D-37: Thread delegation (today's `thread_delegate` and `thread_wait` tools) becomes operations that go through `AgentService`. Fills in [D-24] and [D-34].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-10.4]
+  why: Light threads are delegation started by plain toolkit tools that bypass operations, which D-24 does not allow.
+  rejected: Exempting the thread tier from F-10, which leaves thread delegation unguarded and invisible to the operation catalog.
 ```
