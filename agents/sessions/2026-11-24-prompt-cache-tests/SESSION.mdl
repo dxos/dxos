@@ -49,8 +49,10 @@ goal G-3: DeepSeek wire tests check that the request body is stable.
 
 ```mdl
 goal G-4: A live test checks DeepSeek cache hits with a real key.
-  status: todo
-  blockedBy: [Q-1]
+  status: review
+  notes:
+    - The adapter reports DeepSeek cache hits as `inputTokens.cacheRead`.
+    - With a real key, the second and third requests read 384 tokens from the cache.
 ```
 
 ## Pull requests
@@ -58,7 +60,7 @@ goal G-4: A live test checks DeepSeek cache hits with a real key.
 ```mdl
 pr PR-1: Test prompt-cache prefix stability of the request encoding.
   ref: dxos/dxos#14665
-  goals: [G-2, G-3]
+  goals: [G-2, G-3, G-4]
   notes:
     - Six changes to the source each make the correct tests fail.
     - CI fails in `composer-app:build` because a bad remote cache entry for `plugin-ste:build` has no `dx.config.d.ts`.
@@ -84,6 +86,13 @@ decision D-1: PR-1 adds only tests. The tests record the current cache breaks an
   date: 2026-11-24
   by: agent:claude-code
   for: user:dmaretskyi
+```
+
+```mdl
+decision D-2: Chat-completions models report the prompt tokens read from the provider cache as `inputTokens.cacheRead`.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  answers: Q-1
 ```
 
 ## Timeline
@@ -116,4 +125,14 @@ event T-5: The changelog check failed. A decision for the session file fixes it.
 ```mdl
 event T-6: Node test shard 3 fails two times in `composer-app:build`, from a bad remote cache entry.
   date: 2026-11-24T10:55Z
+```
+
+```mdl
+event T-7: A cancelled CI run wrote the bad cache entry. Moon does not check restored outputs.
+  date: 2026-11-24T11:30Z
+```
+
+```mdl
+event T-8: The live DeepSeek test passes. The adapter reports cache hits.
+  date: 2026-11-24T11:40Z
 ```

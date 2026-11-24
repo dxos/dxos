@@ -127,6 +127,37 @@ describe('DeepSeekResolver', () => {
   );
 
   it.effect(
+    'a repeated prompt prefix is read from the prefix cache',
+    Effect.fn(
+      function* ({ expect }) {
+        // DeepSeek caches in 64-token blocks, so the shared prefix must span several blocks to count.
+        const system = Array.from(
+          { length: 40 },
+          (_, index) => `Rule ${index + 1}: answer in one short sentence and never repeat the question.`,
+        ).join('\n');
+        const ask = (question: string) =>
+          LanguageModel.generateText({
+            prompt: [
+              { role: 'system', content: system },
+              { role: 'user', content: [{ type: 'text', text: question }] },
+            ],
+          });
+
+        // The cache fills in the background after a request, so the later requests are where a hit can show.
+        const responses = [];
+        for (const question of ['What is 2 + 2?', 'What is 3 + 3?', 'What is 4 + 4?']) {
+          responses.push(yield* ask(question));
+        }
+        const cacheReads = responses.map((response) => response.usage.inputTokens.cacheRead ?? 0);
+        log.info('prefix cache', { cacheReads, inputs: responses.map((response) => response.usage.inputTokens.total) });
+        expect(Math.max(...cacheReads.slice(1))).toBeGreaterThan(0);
+      },
+      Effect.provide(modelLayer({ thinking: false })),
+    ),
+    { timeout: 180_000, tags: ['manual'] },
+  );
+
+  it.effect(
     'generateText with tools',
     Effect.fn(
       function* ({ expect }) {

@@ -436,6 +436,61 @@ describe('streamed finish part', () => {
     }),
   );
 
+  // DeepSeek reports its prefix-cache hits beside the prompt count; without them a cache hit cannot be told apart.
+  it.effect(
+    'reports the prompt tokens read from the provider cache',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi' }).pipe(
+        Stream.runCollect,
+        Effect.provide(
+          serveSseStream([
+            delta('ok', 'stop'),
+            '',
+            chunk({
+              choices: [],
+              usage: {
+                prompt_tokens: 1_000,
+                completion_tokens: 5,
+                total_tokens: 1_005,
+                prompt_cache_hit_tokens: 896,
+                prompt_cache_miss_tokens: 104,
+              },
+            }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      const [finish] = parts.filter((part) => part.type === 'finish');
+      expect(finish.usage.inputTokens).toMatchObject({ total: 1_000, cacheRead: 896, uncached: 104 });
+    }),
+  );
+
+  it.effect(
+    'leaves the cached share unset when the provider reports none',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi' }).pipe(
+        Stream.runCollect,
+        Effect.provide(
+          serveSseStream([
+            delta('ok', 'stop'),
+            '',
+            chunk({ choices: [], usage: { prompt_tokens: 11, completion_tokens: 5, total_tokens: 16 } }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      const [finish] = parts.filter((part) => part.type === 'finish');
+      expect(finish.usage.inputTokens.cacheRead).toBeUndefined();
+      expect(finish.usage.inputTokens.uncached).toBeUndefined();
+    }),
+  );
+
   // A stream cut off before any `finish_reason` reports no finish, rather than a synthetic one.
   it.effect(
     'is omitted when the stream never finishes',

@@ -61,7 +61,10 @@ const CacheToolkitLayer = CacheToolkit.toLayer({
 });
 
 /** A DeepSeek model whose every request body is recorded into `bodies`, answered with a plain reply. */
-const recordingDeepSeek = (bodies: WireBody[], { thinking = true }: { thinking?: boolean } = {}) => {
+const recordingDeepSeek = (
+  bodies: WireBody[],
+  { thinking = true, usage }: { thinking?: boolean; usage?: Record<string, number> } = {},
+) => {
   const stub = HttpClient.make((request) =>
     Effect.gen(function* () {
       const body = request.body;
@@ -73,6 +76,7 @@ const recordingDeepSeek = (bodies: WireBody[], { thinking = true }: { thinking?:
         created: 0,
         model: 'deepseek-v4-flash',
         choices: [{ index: 0, message: { role: 'assistant', content: 'ok' }, finish_reason: 'stop' }],
+        ...(usage ? { usage } : {}),
       };
       return HttpClientResponse.fromWeb(
         request,
@@ -330,6 +334,26 @@ describe('DeepSeek prompt cache: across turns', () => {
       const [off] = yield* record([history], { thinking: false });
       expect(messageBytes(off)).toEqual(messageBytes(on));
       expect(headerBytes(off)).not.toBe(headerBytes(on));
+    }),
+  );
+});
+
+describe('DeepSeek prompt cache: usage', () => {
+  it.effect(
+    'a response reports the prompt tokens DeepSeek read from its prefix cache',
+    Effect.fn(function* ({ expect }) {
+      // The hit count is the only signal that a request reused the cache; `AiParser` records it on the turn's stats.
+      const usage = {
+        prompt_tokens: 2_048,
+        completion_tokens: 12,
+        total_tokens: 2_060,
+        prompt_cache_hit_tokens: 1_984,
+        prompt_cache_miss_tokens: 64,
+      };
+      const response = yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
+        Effect.provide(recordingDeepSeek([], { usage })),
+      );
+      expect(response.usage.inputTokens).toMatchObject({ total: 2_048, cacheRead: 1_984, uncached: 64 });
     }),
   );
 });
