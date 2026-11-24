@@ -11,8 +11,8 @@ From a fresh clone:
 3. Start the app you need:
    - Storybook: `moon run storybook-react:serve`, then open <http://localhost:9009>
      ([Storybooks](#storybooks)).
-   - Composer: `moon run composer-app:serve`, then open <http://localhost:5173>
-     ([Run commands](#run-commands)).
+   - Composer: `moon run composer-app:serve`, then open the URL it prints. That is
+     <http://localhost:5173> unless the port is busy ([Run commands](#run-commands)).
 
 ## Prerequisites
 
@@ -35,8 +35,12 @@ eval "$(proto activate zsh --config-mode all)"
 ```
 
 Shells that don't read `~/.zshrc`, such as a coding agent's, skip the activation and quietly use
-whatever node and moon are on `PATH`. Run the `eval` line in each of those shells, then check that
-`node -v` prints the version pinned in `.prototools`.
+whatever node and moon are on `PATH`. Run the activation line for that shell in each of them, then
+check that `node -v` prints the version pinned in `.prototools`. The zsh line is above. For bash:
+
+```bash
+eval "$(proto activate bash --config-mode all)"
+```
 
 ## Monorepo workspace
 
