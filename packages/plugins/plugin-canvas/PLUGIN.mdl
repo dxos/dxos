@@ -75,6 +75,7 @@ feat F-1: Collaborator cursors
 
   req F-1.1: A 2D Canvas drawing's article and section show the other members' pointers on the drawing, each tagged with the member's name in their hue, on the illustrator's shared pointer channel. Pointers are shared in scene coordinates, so each sits over the same place for every peer whatever their pan and zoom.
   req F-1.2: A pointer shows only to peers in the same drilled-in view, and leaves when its member's pointer leaves the canvas. A slide, a card and a 3D Canvas show none.
+  req F-1.3: The display toolbar's Cursors toggle hides or shows the other members' pointers for this viewer, per drawing and per device. Hidden, the viewer's own pointer is still shared. The `showCursors` setting picks the default, which is on.
 ```
 
 ```mdl
@@ -641,4 +642,13 @@ decision D-44: The architecture partial seeds no presentation, and its Architect
   for: user:richburdon
   affects: [CanvasPlugin]
   why: The deck that replaces the ECHO presentation is drawn with plugin-debug's element kinds, so only that plugin can seed it.
+```
+
+```mdl
+decision D-45: A Cursors toggle in the display toolbar, after the axes, hides collaborators' pointers. The choice is stored in the canvas view state beside snap, guides and axes, so it is per drawing and per device. Unset, the `showCursors` plugin setting decides, and it defaults to on. Hiding stops drawing peers' pointers but still shares this viewer's own.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1, CanvasArticle]
+  why: The user asked for a per-device toggle near the grid toggles, stored where the other toggles are, with a setting for the default since the plugin already has settings.
 ```

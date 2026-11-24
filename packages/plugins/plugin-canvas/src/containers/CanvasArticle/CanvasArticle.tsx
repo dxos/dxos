@@ -55,9 +55,9 @@ const DimensionArticle = (props: DimensionArticleProps) => {
 
 const CanvasArticle2D = (props: DimensionArticleProps) => {
   const host = useCanvasEditor(props.canvas, '2d');
-  const dimension = useDimension2D(props.canvas);
-  // The drawing's camera is the view a follower shares; the 3D camera is an orbit, which it does not carry. A slide is a
-  // picture placed on another drawing, where collaborators point at the drawing itself.
+  // A slide is a picture placed on another drawing, where collaborators point at the drawing itself.
+  const dimension = useDimension2D(props.canvas, { cursors: props.role !== AppSurface.Slide.role });
+  // The drawing's camera is the view a follower shares; the 3D camera is an orbit, which it does not carry.
   return (
     <SceneEditorArticle
       {...props}
@@ -65,7 +65,6 @@ const CanvasArticle2D = (props: DimensionArticleProps) => {
       dimension={dimension}
       sharedCamera={props.camera}
       onSharedCameraChange={props.onCameraChange}
-      cursors={props.role !== AppSurface.Slide.role}
     />
   );
 };
@@ -83,8 +82,6 @@ type SceneEditorArticleProps<C> = Omit<DimensionArticleProps, 'camera' | 'onCame
   /** The view a peer follows, in the dimension's terms. */
   sharedCamera?: C;
   onSharedCameraChange?: (camera: C) => void;
-  /** Shows collaborators' pointers; 2D only, since they read the 2D camera. */
-  cursors?: boolean;
 };
 
 /** The shared editor over the host's scene, in the dimension's config. */
@@ -97,7 +94,6 @@ const SceneEditorArticle = <C,>({
   dimension,
   sharedCamera,
   onSharedCameraChange,
-  cursors,
 }: SceneEditorArticleProps<C>) => {
   const [element, setElement] = useState<HTMLElement | null>(null);
   const { hasAttention } = useAttention(attendableId);
@@ -150,7 +146,12 @@ const SceneEditorArticle = <C,>({
               sceneChoice={host.sceneChoice}
               shots={host.shots}
               onShotChange={host.onShotChange}
-              overlay={cursors && <CanvasCursors object={canvas} />}
+              // Only the 2D dimension draws cursors, since they read the 2D camera.
+              overlay={
+                dimension.display.cursors !== undefined && (
+                  <CanvasCursors object={canvas} visible={dimension.display.cursors} />
+                )
+              }
             >
               <CanvasEditCommands element={element} />
               <SceneEditorParts catalogs={dimension.catalogs} />
