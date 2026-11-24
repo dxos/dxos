@@ -26,6 +26,12 @@ A session delegates work to one of three receivers, from nearest to farthest:
 The receiver is what differs; the session sending the work is the same in all three. `AgentService`
 handles every one of them, and is where permissions for each kind of delegation will later live.
 
+The model decides which receiver to use. The working criteria, still in flux:
+
+- **Thread** — light parallelisation of the same work-stream.
+- **Session** — a separate work-stream.
+- **Agent** — only when another agent is needed, for its permissions or its specialization.
+
 The base case of delegation is a message. The richer case sends a reference to a task, and the
 task is assigned to the receiver.
 
@@ -350,6 +356,29 @@ feat F-14: Agent module
           subscribes to its trace)
     then: it calls a standalone verb on the `Agent` module that takes the `Agent.Session` as its
           first argument; there is no session handle with methods
+```
+
+```mdl
+feat F-15: Choosing the receiver
+  status: planned
+  desc: The criteria are still in flux.
+
+  req F-15.1:
+    when: work is delegated
+    then: the model decides whether a thread, another session of the agent, or another agent
+          receives it
+
+  req F-15.2:
+    when: the model delegates part of the same work-stream to run in parallel
+    then: it delegates to a thread
+
+  req F-15.3:
+    when: the model delegates a separate work-stream
+    then: it delegates to another session
+
+  req F-15.4:
+    when: the model delegates to another agent
+    then: it does so only because that agent's permissions or specialization are needed
 ```
 
 ## Changelog
@@ -732,4 +761,12 @@ decision D-43: There are no separate intra-agent and cross-agent delegation serv
   supersedes: D-13
   answers: Q-4
   affects: [F-2.3, F-3.2]
+```
+
+
+```mdl
+decision D-44: The model decides which receiver delegated work goes to: threads for light parallelisation of the same work-stream, sessions for separate work-streams, and agents only when another agent is needed (for permissions, specialization, etc.). These criteria are still in flux.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-15]
 ```
