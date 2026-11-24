@@ -1,6 +1,6 @@
 # Agents, sessions and delegation — tasks
 
-Work items for the API changes in [SPEC.mdl](./SPEC.mdl) (`org.dxos.agent-delegation`). The API surface lands
+Work items for the API changes in [AGENT-DELEGATION.mdl](./AGENT-DELEGATION.mdl) (`org.dxos.agent-delegation`). The API surface lands
 first with stub implementations; behaviour follows. Each item names the spec requirement it serves.
 
 ## Phase 1 — API surface (stubs allowed)
@@ -15,12 +15,29 @@ first with stub implementations; behaviour follows. Each item names the spec req
       F-3.2, F-3.3, F-3.4).
 - [ ] Remove `HarnessService`; its 52 consumers read the session through `AgentService` (D-31, F-13.5).
 - [ ] Rename `AgentProcess` to `SessionProcess` (D-10).
-- [ ] Rename the ECHO type `Chat` to `Session`; keep the DXN `org.dxos.type.assistant.chat` with a TODO to rename
-      it (F-11.1, F-11.2). About 220 files; its own PR.
-- [ ] Rename `AgentService.Conversation` and the `Session` handle type to match the `Session` object (F-11).
 - [ ] Move the `AgentService` key from `@dxos/functions-runtime/AgentService` to `@dxos/compute` (D-33).
 - [ ] Mark `Process.HarnessHostAnnotation` deprecated once the session annotation replaces host discovery (F-13.5).
 - [ ] `thread_delegate` / `thread_wait` as operations going through `AgentService.delegate` (F-10.4).
+
+## Phase 1b — `Agent` module in `@dxos/compute`
+
+One namespace module, `Agent`, holds the agent types and the service (F-14). Its own PR: about 220 files import
+`Chat` and about 124 import `Agent`, and no compat re-export is left behind.
+
+- [ ] Create the `Agent` module (`@dxos/compute/Agent`, `// @import-as-namespace`).
+- [ ] Move the ECHO type `Chat` from `@dxos/assistant` into it as `Agent.Session`; keep the DXN
+      `org.dxos.type.assistant.chat` with a TODO to rename it (F-11.1, F-11.2).
+- [ ] Move the ECHO type `Agent` from `@dxos/assistant` into it as `Agent.Agent`, with its pure helpers (`loadChat`,
+      `loadForChat`, `chatLocation`, `isAgentChat`, `loadInstructions`).
+- [ ] Leave the binder-based helpers (`makeInitialized`, `resetChatHistory`) in `@dxos/assistant`; they need
+      `AiContext.Binder`. `getFromChatContext` is replaced by `Agent.currentAgent`.
+- [ ] Rename `AgentService` to `Agent.Service`, with its accessors (`Agent.currentSession`, `Agent.currentAgent`,
+      `Agent.currentThread`, `Agent.spawn`, `Agent.delegate`, …) on the module.
+- [ ] Remove `AgentService.Conversation`; the service uses `Agent.Session` directly.
+- [ ] Replace the `AgentService.Session` handle's methods (`getContext`, `addContext`, `submitPrompt`, `running`,
+      `waitForCompletion`, `terminate`, `subscribeEphemeral`) with standalone verbs that take an `Agent.Session` as
+      their first argument (e.g. `Agent.submitPrompt(session, prompt)`), and remove the handle type.
+- [ ] Update every call site in the repo.
 
 ## Phase 2 — behaviour
 

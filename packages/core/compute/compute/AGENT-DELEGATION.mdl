@@ -328,6 +328,29 @@ feat F-13: AgentService
           work on the session's main thread
 ```
 
+```mdl
+feat F-14: Agent module
+  status: planned
+  desc: |
+    `@dxos/compute` holds one namespace module, `Agent`, for the agent types and the service.
+    `AgentService` elsewhere in this spec is `Agent.Service`.
+
+  req F-14.1:
+    when: code refers to the agent types or the service
+    then: it uses `Agent.Agent` (the ECHO `Agent` type), `Agent.Session` (the ECHO `Session` type,
+          formerly `Chat`) and `Agent.Service`, all from `@dxos/compute`
+
+  req F-14.2:
+    when: the types move from `@dxos/assistant`
+    then: `Agent.Agent` moves without the helpers that need `@dxos/assistant` (the context binder)
+
+  req F-14.3:
+    when: code acts on a session (submits a prompt, reads or adds context, waits, terminates,
+          subscribes to its trace)
+    then: it calls a standalone verb on the `Agent` module that takes the `Agent.Session` as its
+          first argument; there is no session handle with methods
+```
+
 ## Changelog
 
 ```mdl
@@ -683,4 +706,20 @@ decision D-40: Q-2 stays open. A session that is part of an agent may live in th
   date: 2026-11-24
   by: user:dmaretskyi
   affects: [F-1.5]
+```
+
+```mdl
+decision D-41: The ECHO types `Chat` (becoming `Session`) and `Agent` move from `@dxos/assistant` to `@dxos/compute`; `Agent` moves without its helpers. They live in one module with `Agent.Agent`, `Agent.Session` and `Agent.Service`, and the methods of the `AgentService.Session` handle become standalone verbs that take an `Agent.Session` as their first argument.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-14]
+```
+
+```mdl
+decision D-42: "Without helpers" means the helpers that need the context binder of `@dxos/assistant` (`makeInitialized`, `resetChatHistory`); the helpers that need only ECHO move with the type, and `getFromChatContext` gives way to `currentAgent`. Fills in [D-41].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-14.2]
+  why: The binder is what keeps those two in `@dxos/assistant`; the ECHO-only helpers have no such dependency, and `getFromChatContext` reads `HarnessService`, which D-31 deprecates.
 ```
