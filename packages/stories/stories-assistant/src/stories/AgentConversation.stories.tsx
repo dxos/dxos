@@ -125,6 +125,23 @@ const waitForReply = async (db: Database.Database, participant: Participant, bef
   );
 };
 
+const decorators = createDecorators({
+  plugins: [ThreadPlugin.make(), AgentPlugin.make()],
+  types: TYPES,
+  onReady: async ({ db, invoker }) => {
+    storyDb = db;
+    await setupPlayground({ db, invoker, model: PLAYGROUND_MODEL, read: true, refs });
+  },
+});
+
+/** Starts the people's chats on the live model and waits, for a person to type as any of them. */
+export const Default: Story = {
+  decorators,
+  args: { layout: LAYOUT },
+  // Reaches the live model's service to set the chats up, so it is not a CI start-up check.
+  tags: ['!test'],
+};
+
 /**
  * A scripted conversation on the live model: each step types a prompt as one person and waits for Kai
  * to answer before the next person speaks, so cross-chat effects (relays, watches) have landed. Edit
@@ -132,14 +149,7 @@ const waitForReply = async (db: Database.Database, participant: Participant, bef
  * excluded from CI.
  */
 export const Conversation: Story = {
-  decorators: createDecorators({
-    plugins: [ThreadPlugin.make(), AgentPlugin.make()],
-    types: TYPES,
-    onReady: async ({ db, invoker }) => {
-      storyDb = db;
-      await setupPlayground({ db, invoker, model: PLAYGROUND_MODEL, read: true, refs });
-    },
-  }),
+  decorators,
   args: { layout: LAYOUT },
   tags: ['!test'],
   play: async ({ canvasElement }) => {

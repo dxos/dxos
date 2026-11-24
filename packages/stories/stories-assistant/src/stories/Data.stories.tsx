@@ -67,7 +67,7 @@ const DXOS_DOCUMENT = trim`
 /**
  * PROMPT: "Create a research note for the organization."
  */
-export const WithResearch: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [MarkdownPlugin, TablePlugin, ThreadPlugin] = await Promise.all([

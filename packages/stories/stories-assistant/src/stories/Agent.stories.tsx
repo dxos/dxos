@@ -196,7 +196,7 @@ export const WithSidecar: Story = {
  *
  * Runs in the test runner but NOT under `storybook dev` where DXOS services are unreachable: the
  * plugin stack stalls in `SpaceProxy._initializeDb` waiting on EDGE and blows `useApp`'s 30s budget
- * (`Edge connection closed` on the remote config, `ERR_CONNECTION_REFUSED` on local). {@link Console}
+ * (`Edge connection closed` on the remote config, `ERR_CONNECTION_REFUSED` on local). {@link Default}
  * is the variant that opens in a browser. Not caused by the agent host — every client-backed story
  * here behaves the same.
  */
@@ -219,7 +219,7 @@ export const ConsoleModule: Story = {
  * finish inside `useApp`'s 30s budget under `storybook dev` (~5s per Automerge doc open). This is
  * the variant that actually opens in a browser until that is fixed.
  */
-export const Console: Story = {
+export const Default: Story = {
   render: () => <AgentModule />,
 };
 

@@ -108,8 +108,8 @@ const waitForColumns = (canvasElement: HTMLElement, count: number, timeout: numb
     timeout,
   });
 
-/** Clicks "Build." itself and waits for the plugin to be offered: the end-to-end check. */
-export const Default: StoryObj = {
+/** {@link Default} driven by a play function: clicks "Build." itself and waits for the plugin to be offered. */
+export const Scripted: StoryObj = {
   render: () => <ThreadColumns suggestions={SUGGESTIONS} />,
   decorators,
   // Writes and runs on the machine serving storybook, so it runs only where that is asked for.
@@ -128,8 +128,8 @@ export const Default: StoryObj = {
   },
 };
 
-/** {@link Default} without its play function: the run starts when you click "Build.". */
-export const Manual: StoryObj = {
+/** Starts up and waits: the run begins when you click "Build.". */
+export const Default: StoryObj = {
   render: () => <ThreadColumns suggestions={SUGGESTIONS} />,
   decorators,
   // Not a test: nothing happens until someone clicks.

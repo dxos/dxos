@@ -33,7 +33,7 @@ agent records them. Edit the skill's instructions
 (`packages/plugins/plugin-agent/src/skills/InterviewSkill.ts`), let the story hot-reload, and talk to
 it. Tagged `!test`, so CI never runs it.
 
-**Agent playground** (`stories-stories-assistant-agentplayground--playground`): one agent, Kai, and
+**Agent playground** (`stories-stories-assistant-agentplayground--default`): one agent, Kai, and
 three chat panels — Rich, Dima, Josiah — plus the agent state panel. Each panel is that person's chat
 with Kai (`ensureParticipantChat`, `ChatParticipant`) and attributes every prompt to them: the panel
 passes a `sender` to `useChatModel`, the agent process records it on the user message, and the

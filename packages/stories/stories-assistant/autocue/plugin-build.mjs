@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
  * @title Build a plugin with subagents
  * @mdl packages/plugins/plugin-dev-shell/PLUGIN.mdl test QA-3
  * @app storybook via `DX_STORIES=stories/stories-assistant moon run storybook-react:serve` on :9009,
- *   story `stories-stories-assistant-pluginbuild--manual` in isolation mode; the plugin's own Vite dev server on
+ *   story `stories-stories-assistant-pluginbuild--default` in isolation mode; the plugin's own Vite dev server on
  *   :3967, which the setup step starts
  */
 

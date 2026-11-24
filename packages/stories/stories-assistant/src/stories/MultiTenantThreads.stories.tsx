@@ -200,7 +200,7 @@ export const Scripted: Story = {
 };
 
 /** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself. */
-export const Demo: Story = {
+export const Default: Story = {
   decorators: decorators(),
   args: { layout: [[StoryRole.Chat]] },
   tags: ['!test'],

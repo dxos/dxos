@@ -29,7 +29,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithChess: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ Chess }, ChessPlugin, { Game }, GamePlugin] = await Promise.all([

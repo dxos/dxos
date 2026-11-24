@@ -39,7 +39,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Test with prompt: Summarize my mailbox and write the summary in a new document.
-export const WithMail: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [InboxPlugin, MarkdownPlugin, ThreadPlugin] = await Promise.all([

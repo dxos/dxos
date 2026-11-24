@@ -100,7 +100,7 @@ const LAYOUT = makeLayout();
  * 4. As Rich: "Take notes", then dictate (mic button) — the channel's mode becomes Note-taker and notes appear.
  * 5. As Josiah: "Interview me" — his channel switches to Interviewer.
  */
-export const Playground: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     plugins: [ThreadPlugin.make(), AgentPlugin.make()],
     types: TYPES,
@@ -111,7 +111,7 @@ export const Playground: Story = {
 };
 
 /**
- * {@link Playground} with every chat hosted on EDGE: turns, tools and the end-of-turn hook run in a local
+ * {@link Default} with every chat hosted on EDGE: turns, tools and the end-of-turn hook run in a local
  * EDGE stack (`moon run edge:dev` in dxos/edge, on :8787), and the agent's brain is EDGE's Durable Object.
  * A relay or a watch firing starts a turn in the recipient's chat there, so the agent itself tells them.
  * The model is EDGE's (Anthropic); live, so excluded from CI.

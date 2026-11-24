@@ -31,7 +31,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithTriggers: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     plugins: [],
     onInit: async ({ space }) => {

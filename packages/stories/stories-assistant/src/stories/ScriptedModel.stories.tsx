@@ -38,6 +38,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Try "Write me a haiku", or "What is 17 × 23?" for a tool call. */
-export const Hello: Story = {
+export const Default: Story = {
   args: { script: 'hello' },
 };

@@ -182,7 +182,7 @@ export const Live: Story = {
 
 /** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself; the trace
  * panel beside the chat draws each thread as a lane of its own. */
-export const Demo: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     skills: [CalculatorSkill.key],
     scripted: script,
@@ -195,7 +195,7 @@ export const Demo: Story = {
 };
 
 /**
- * {@link Demo} with the conversation's trajectory as a git graph beside the chat: a commit per event, a branch per feed
+ * {@link Default} with the conversation's trajectory as a git graph beside the chat: a commit per event, a branch per feed
  * branch (main, each turn, each light thread), and a merge where a thread ends.
  */
 export const Graph: Story = {
