@@ -2,6 +2,18 @@
 
 Instructions and documentation for developer workflows in this DXOS repository.
 
+## Quickstart
+
+From a fresh clone:
+
+1. Install the [prerequisites](#prerequisites).
+2. Run `proto install` and `pnpm i` ([Monorepo workspace](#monorepo-workspace)).
+3. Start the app you need:
+   - Storybook: `moon run storybook-react:serve`, then open <http://localhost:9009>
+     ([Storybooks](#storybooks)).
+   - Composer: `moon run composer-app:serve`, then open <http://localhost:5173>
+     ([Run commands](#run-commands)).
+
 ## Prerequisites
 
 - Native libraries:
@@ -16,17 +28,21 @@ brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-se
 bash <(curl -fsSL https://moonrepo.dev/install/proto.sh)
 ```
 
-Setup proto for shell activation:
+Setup proto for shell activation, and add the same line to `~/.zshrc`:
 
 ```bash
 eval "$(proto activate zsh --config-mode all)"
 ```
 
+Shells that don't read `~/.zshrc`, such as a coding agent's, skip the activation and quietly use
+whatever node and moon are on `PATH`. Run the `eval` line in each of those shells, then check that
+`node -v` prints the version pinned in `.prototools`.
+
 ## Monorepo workspace
 
 This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [Changesets](https://github.com/changesets/changesets) for release automation (see [Releasing](#releasing)).
 
-Setup:
+Setup, which installs node, pnpm, moon, bun and rust at the versions pinned in `.prototools`:
 
 ```bash
 proto install
@@ -52,6 +68,8 @@ pnpm build
 ```
 
 > Don't forget to install and build when switching branches
+
+A dev server doesn't need this first. Each `serve` task builds only the packages it needs.
 
 Run all unit tests:
 
@@ -80,6 +98,14 @@ Examples of ways to start up different workloads in dev mode:
 
 Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
 Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
+
+Run one `moon run` at a time in a checkout. Two runs that build the same packages at once can leave
+broken output in moon's cache, so start a second server only after the first prints its URL.
+
+`composer-app:serve` listens on <http://localhost:5173>, or the next free port. Open it in desktop
+Chrome. Embedded browsers, such as an agent's browser pane, can fail to start Composer's
+SharedWorker and show "System Error". To check it from an agent, use headless Chromium through the
+root `@playwright/test` (run `pnpm exec playwright install chromium` once).
 
 ### Plugin sets
 
@@ -160,6 +186,9 @@ The following command generates storybooks across the individual packages:
 ```bash
 moon run storybook-react:serve
 ```
+
+It serves on <http://localhost:9009>. If that port is busy, pass another:
+`moon run storybook-react:serve -- --port=9010`.
 
 ### When the server wedges
 
