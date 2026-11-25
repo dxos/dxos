@@ -17,11 +17,11 @@ import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
-import { StoryRole } from '../modules/index.ts';
-import { createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Interview',
+  title: 'stories/stories-assistant/chat/Interview',
   render: ModuleContainer.Root,
   parameters: {
     ...storyParameters,

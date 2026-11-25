@@ -12,8 +12,8 @@ import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
-import { SpaceTemplateToolbar, StoryRole } from '../modules/index.ts';
-import { applyStagedProfileImport } from '../modules/profile-archive.ts';
+import { SpaceTemplateToolbar, StoryRole } from '../../modules/index.ts';
+import { applyStagedProfileImport } from '../../modules/profile-archive.ts';
 import {
   HelpdeskSpacePlugin,
   VoyageSpacePlugin,
@@ -21,11 +21,11 @@ import {
   createDecorators,
   findPromptEditor,
   storyParameters,
-} from '../testing/index.ts';
-import { isPersistent } from '../testing/persistence.ts';
+} from '../../testing/index.ts';
+import { isPersistent } from '../../testing/persistence.ts';
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Projects',
+  title: 'stories/stories-assistant/chat/Projects',
   // Rows, not a fragment: `ModuleContainer.Root` pins itself to its nearest positioned ancestor, so a
   // bare sibling of the toolbar would cover it.
   render: (args) => (

@@ -22,11 +22,11 @@ import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/index.ts';
-import { createDecorators, findPromptEditor, storyParameters } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, findPromptEditor, storyParameters } from '../../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Documents',
+  title: 'stories/stories-assistant/chat/Documents',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };
@@ -80,7 +80,7 @@ const addSpellingMistakes = (text: string, mistakeCount: number, noise = ''): st
 /**
  * Test with prompt: Propose changes to my document based on the style guide.
  */
-export const WithMarkdown: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       // SpacePlugin contributes the `versioning-state` capability that the Comments article surface
@@ -241,7 +241,7 @@ export const WithScript: Story = {
  * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
  */
 export const WithMarkdownStyleGuide: Story = {
-  ...WithMarkdown,
+  ...Default,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(canvasElement, 'Update the Document to obey the Style Guide');
@@ -258,7 +258,7 @@ export const WithMarkdownStyleGuide: Story = {
  * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
  */
 export const WithMarkdownStyleGuideBranch: Story = {
-  ...WithMarkdown,
+  ...Default,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(canvasElement, 'Update the Document in a new branch to obey the Style Guide');

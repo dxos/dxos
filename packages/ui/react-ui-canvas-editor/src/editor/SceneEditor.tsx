@@ -709,6 +709,9 @@ const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: 
       dim: config.dim,
       axes,
       onAxesToggle: setDisplay && toggle('axes', axes),
+      cursors: display.cursors,
+      onCursorsToggle:
+        setDisplay && display.cursors !== undefined ? () => setDisplay({ cursors: !display.cursors }) : undefined,
       // A lattice's cells are its guides, so only a lattice has any to show.
       guides: options.guides ? guides : undefined,
       onGuidesToggle: options.guides && setDisplay && (!aids || lattice) ? toggle('guides', guides) : undefined,

@@ -14,10 +14,10 @@ import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/index.ts';
-import { createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Sketch',
+  title: 'stories/stories-assistant/chat/Sketch',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };

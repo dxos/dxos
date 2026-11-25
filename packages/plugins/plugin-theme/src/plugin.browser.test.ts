@@ -167,6 +167,22 @@ describe('ThemePlugin', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
+  test('followDocument leaves the root theme class to the host page', async ({ expect }) => {
+    // System preference is light; the host page (storybook's theme switch, say) chose dark.
+    document.documentElement.classList.add('dark');
+    await using harness = await createTestApp({
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({ followDocument: true })],
+    });
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+    // Nor does the appearance setting override the host.
+    const registry = harness.get(Capabilities.AtomRegistry);
+    const settingsAtom = harness.get(ThemeCapabilities.Settings);
+    registry.set(settingsAtom, { appearance: 'light' });
+    await Promise.resolve();
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
   test('cross-tab storage event re-applies the theme', async ({ expect }) => {
     // System preference is light; another tab writes 'dark'.
     await using _harness = await createTestApp({

@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { SpaceProperties } from '@dxos/client-protocol/types';
 import * as Operation from '@dxos/compute/Operation';
@@ -37,6 +38,13 @@ export class TestContainer extends Type.makeObject<TestContainer>(DXN.make('com.
     name: Schema.optional(Schema.String),
     items: Schema.Array(Ref.Ref(TestObject)),
   }).pipe(Annotation.UserType.set()),
+) {}
+
+/** Lists its `items` in the navtree and owns them, as a presentation owns its slides. */
+export class TestDeck extends Type.makeObject<TestDeck>(DXN.make('com.example.type.testDeck', '0.1.0'))(
+  Schema.Struct({
+    items: Schema.Array(Ref.Ref(TestObject)),
+  }).pipe(Annotation.UserType.set(), AppAnnotation.ContainerAnnotation.set({ property: 'items', deleteOwned: true })),
 ) {}
 
 export const TestRelation = Type.makeRelation(DXN.make('com.example.relation.testRelation', '0.1.0'))({
@@ -92,6 +100,7 @@ export const makeTestLayer = (...handlers: Operation.WithHandler<Operation.Defin
       TestObject,
       TestArchivable,
       TestContainer,
+      TestDeck,
       TestRelation,
     ],
     disableLlmMemoization: true,

@@ -389,7 +389,7 @@ plugin-inbox's [PLUGIN.mdl](../../plugin-inbox/PLUGIN.mdl).
 
 - **Interview, scripted:** the `stories-assistant` **Interview** story runs the interview skill against a scripted
   model and shows the profile filling in
-  (`pnpm exec vitest run --project=storybook src/stories/Interview.stories.tsx` in `packages/stories/stories-assistant`).
+  (`pnpm exec vitest run --project=storybook src/stories/chat/Interview.stories.tsx` in `packages/stories/stories-assistant`).
 - **Back-index, faked:** the stories-agent **DiscordPipeline → Scripted** story fakes EDGE and Discord entirely.
 - **Bot, fake Discord:** edge's workerd test `test/discord-bot.node.test.ts` runs the bot against a fake Discord (REST
   and gateway).

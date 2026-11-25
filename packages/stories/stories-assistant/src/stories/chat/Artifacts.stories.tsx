@@ -17,10 +17,10 @@ import { ViewModel } from '@dxos/schema';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/index.ts';
-import { createDecorators, storyParameters } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, storyParameters } from '../../testing/index.ts';
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Artifacts',
+  title: 'stories/stories-assistant/chat/Artifacts',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };
@@ -29,7 +29,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithChess: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     lazyPlugins: async () => {
       const [{ Chess }, ChessPlugin, { Game }, GamePlugin] = await Promise.all([
