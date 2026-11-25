@@ -420,7 +420,10 @@ describe('answer mapping', () => {
       instructions: 'Does this convey urgency?',
     });
     expect(TypeSafeResolver.toQuestion(team)).toMatchObject({ type: 'choice', criteria: team.criteria });
-    expect(TypeSafeResolver.toQuestion(frustration)).toMatchObject({ type: 'score', criteria: frustration.criteria });
+    expect(TypeSafeResolver.toQuestion(frustration)).toMatchObject({
+      type: 'score',
+      criteria: ['Calm', 'Frustrated', 'Very angry'],
+    });
   });
 
   test('a choice distribution covers every label, filling the ones System One omitted', ({ expect }) => {
@@ -455,7 +458,7 @@ describe('answer mapping', () => {
     });
 
     expect(answer._tag).toBe('Rate');
-    const probabilities = answer._tag === 'Rate' ? answer.probabilities : {};
+    const probabilities = (answer._tag === 'Rate' ? answer.probabilities : undefined) ?? {};
     expect(Object.keys(probabilities)).toEqual(['Calm', 'Frustrated', 'Very angry']);
     expect(Object.values(probabilities).reduce((sum, value) => sum + value, 0)).toBeCloseTo(1, 9);
   });
