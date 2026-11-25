@@ -44,6 +44,8 @@ export type Goal = {
   blockedBy: string[];
   blocked: boolean;
   notes: string[];
+  /** The Composer task the goal mirrors, as an `echo:` URI; `cli.ts tasks` keeps its status in step. */
+  task?: string;
 };
 
 /** A `pr PR-n` block. */

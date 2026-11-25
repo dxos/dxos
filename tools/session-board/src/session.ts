@@ -303,6 +303,10 @@ export const parseSession = (text: string, options: ParseOptions = {}): ParseRes
       case 'goal': {
         checkTitle(LIMITS.titleWords);
         const status = fields.scalars.get('status');
+        const task = fields.scalars.get('task');
+        if (task !== undefined && !task.startsWith('echo:')) {
+          error(line, `${block.id}: task must be an echo: URI, as Composer returns it`);
+        }
         if (!GOAL_STATUSES.some((value) => value === status)) {
           error(line, `${block.id}: status must be one of ${GOAL_STATUSES.join(', ')}`);
         }
@@ -313,6 +317,7 @@ export const parseSession = (text: string, options: ParseOptions = {}): ParseRes
           blockedBy: refList(fields.scalars.get('blockedBy')),
           blocked: false,
           notes: notes(),
+          ...(task ? { task } : {}),
         });
         break;
       }
