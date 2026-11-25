@@ -27,7 +27,7 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { PlainDialect } from './dialect-plain.ts';
+import { EffectDialect } from './dialect-effect.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import * as Runner from './Runner.ts';
@@ -37,7 +37,7 @@ import * as Sandbox from './Sandbox.ts';
 export type CodeModeOptions = {
   /**
    * What the model writes and what it writes it against.
-   * @default PlainDialect
+   * @default the sandbox's `defaultDialect`, else EffectDialect
    */
   dialect?: Dialect;
 
@@ -102,11 +102,11 @@ const runCodeModeTurn = ({
   options,
 }: RunTurnOptions): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements> =>
   Effect.gen(function* () {
-    const dialect = options.dialect ?? PlainDialect;
     // Resolved from the environment when a host provided one, so an out-of-process sandbox can be
     // installed as a layer without every caller passing it; the in-process one is the fallback.
     const sandbox =
       options.sandbox ?? Option.getOrElse(yield* Effect.serviceOption(Sandbox.Service), () => Sandbox.inProcess);
+    const dialect = options.dialect ?? sandbox.defaultDialect ?? EffectDialect;
 
     // The turn's own services, not the producer's database-only runtime: the sandbox runs the
     // model's effects, and `Operation.invoke` resolves its handler through `Operation.Service`.

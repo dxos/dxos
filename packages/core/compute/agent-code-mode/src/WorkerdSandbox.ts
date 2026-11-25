@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import { PlainDialect } from './dialect-plain.ts';
 import { type BindingsContext } from './Dialect.ts';
 import * as Sandbox from './Sandbox.ts';
 import MAIN from './workerd/main.mjs?raw';
@@ -68,6 +69,8 @@ export type WorkerdSandboxOptions = {
  * is forced by the boundary rather than chosen — a live object cannot be structured-cloned.
  */
 export const make = (options: WorkerdSandboxOptions): Sandbox.Sandbox => ({
+  // The isolate holds no database, so its bindings must be plain data and RPC stubs.
+  defaultDialect: PlainDialect,
   evaluate: ({ code, dialect, context, timeout }) =>
     Effect.gen(function* () {
       const bindings = dialect.bindings(context);

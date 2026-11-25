@@ -51,6 +51,9 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
 
 ## Dialects
 
+A producer writes the Effect dialect unless it is given one, or its sandbox names another in
+`Sandbox.defaultDialect`: `WorkerdSandbox` does, with plain, since its isolate holds no database.
+
 ### Plain ([`dialect-plain.ts`](./src/dialect-plain.ts))
 
 The body of an async function, over a small facade: `query`, `make`, `add`, `update`, `remove`,

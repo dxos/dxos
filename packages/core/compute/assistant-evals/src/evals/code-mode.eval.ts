@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { EffectDialect, makeCodeModeTurnProducer } from '@dxos/agent-code-mode';
+import { PlainDialect, makeCodeModeTurnProducer } from '@dxos/agent-code-mode';
 import { type MakeTurnProducer } from '@dxos/agent-runtime';
 import { Model } from '@dxos/ai';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -35,8 +35,9 @@ import { getDefaultSkills } from '../skills.ts';
 const ENGINES: { name: string; makeTurnProducer?: MakeTurnProducer }[] = [
   // No producer: the default `AiSession`, where every action is its own tool call.
   { name: 'tools' },
-  { name: 'code-mode-plain', makeTurnProducer: makeCodeModeTurnProducer() },
-  { name: 'code-mode-effect', makeTurnProducer: makeCodeModeTurnProducer({ dialect: EffectDialect }) },
+  // The default dialect, as Composer runs it.
+  { name: 'code-mode-effect', makeTurnProducer: makeCodeModeTurnProducer() },
+  { name: 'code-mode-plain', makeTurnProducer: makeCodeModeTurnProducer({ dialect: PlainDialect }) },
 ];
 
 /**

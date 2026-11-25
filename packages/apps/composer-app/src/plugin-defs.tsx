@@ -215,7 +215,7 @@ const codeModeTurnProducer =
     return Effect.tryPromise(() => import('@dxos/agent-code-mode')).pipe(
       Effect.matchEffect({
         onFailure: standard,
-        onSuccess: ({ EffectDialect, WorkerSandbox, WorkerSandboxBrowser, makeCodeModeTurnProducer }) => {
+        onSuccess: ({ WorkerSandbox, WorkerSandboxBrowser, makeCodeModeTurnProducer }) => {
           const [client] = capabilities.getAll(ClientCapabilities.Client);
           if (client === undefined) {
             return standard('no client to connect the sandbox worker to');
@@ -227,7 +227,7 @@ const codeModeTurnProducer =
               () => new Worker(new URL('./workers/code-mode-worker.ts', import.meta.url), { type: 'module' }),
             ),
           });
-          return makeCodeModeTurnProducer({ dialect: EffectDialect, sandbox })(options);
+          return makeCodeModeTurnProducer({ sandbox })(options);
         },
       }),
     );
