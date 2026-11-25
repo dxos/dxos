@@ -12,7 +12,7 @@ import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from
 /**
  * A column per chat: every chat in the space is a conversation of its own, and the selected one rests at the center of
  * the strip with its prompt beneath it. Chats are added at either end and reordered by dragging. For one chat beside
- * the threads it delegates, see the ThreadColumns stories.
+ * the threads it delegates, see the threads Subagents stories.
  */
 const meta: Meta<typeof ChatColumns> = {
   title: 'stories/stories-assistant/chat/Columns',

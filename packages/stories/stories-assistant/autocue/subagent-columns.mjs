@@ -11,7 +11,7 @@
  * @title Subagent columns
  * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-6
  * @app storybook via `DX_STORIES=stories/stories-assistant moon run storybook-react:serve` on :9009,
- *   story `stories-stories-assistant-threads-threadcolumns--default` in isolation mode
+ *   story `stories-stories-assistant-threads-subagents--launch-kit` in isolation mode
  */
 
 const PROMPT = '[data-testid="assistant.prompt"] .cm-content';
@@ -54,9 +54,6 @@ export const steps = [
     narration: 'The agent breaks the request into a checklist you can see in the chat.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'The agent writes a task list', subtitle: 'one task per document' });
-      const toggle = '[data-testid="assistant.toggle-tasks"]';
-      await page.locator(toggle).waitFor({ state: 'visible', timeout: 30_000 });
-      await demo.click({ selector: toggle, label: 'Tasks' });
       await page
         .getByText('Announcement email', { exact: true })
         .first()
@@ -69,7 +66,7 @@ export const steps = [
     narration: 'Each task goes to a subagent, and each subagent opens a column with its own stream of thought.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'A column per subagent', subtitle: 'each thinks out loud' });
-      await waitForCount(page, COLUMN, 5, 60_000);
+      await waitForCount(page, COLUMN, 6, 60_000);
       await demo.sleep({ ms: 1_500 });
     },
   },
@@ -100,7 +97,7 @@ export const steps = [
     narration: 'As each subagent finishes, its column closes and its task is checked off.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Finished threads close', subtitle: 'their tasks are checked off' });
-      await waitForCount(page, COLUMN, 1, 90_000);
+      await waitForCount(page, COLUMN, 2, 90_000);
     },
   },
   {

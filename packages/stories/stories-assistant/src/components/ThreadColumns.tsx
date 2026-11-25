@@ -6,6 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import type * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -94,17 +96,21 @@ type AgentColumnProps = {
   chatModel: ChatModel;
   /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
   suggestions?: readonly string[];
+  /** The drawer open above the agent's prompt at the start, e.g. its task list. */
+  defaultDrawer?: Chat.RootProps['defaultDrawer'];
+  /** Adds a column beside the agent's with every process and thread of the run in one view. */
+  trace?: boolean;
 };
 
 /** The agent's own conversation, with the prompt and its checklist. */
-const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps) => {
+const AgentColumn = ({ db, chat, chatModel, suggestions = [], defaultDrawer }: AgentColumnProps) => {
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
   // One chip at a time: the side question only makes sense once the launch is under way.
   const [sent, setSent] = useState(0);
   const handleSelect = useCallback(() => setSent((count) => count + 1), []);
   return (
-    <Chat.Root chat={chat} db={db} chatModel={chatModel}>
+    <Chat.Root chat={chat} db={db} chatModel={chatModel} defaultDrawer={defaultDrawer}>
       <ChatPlane.Column value={chat.id}>
         <ChatPlane.Cell title='Agent'>
           <Panel.Body asChild>
@@ -123,6 +129,26 @@ const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps
   );
 };
 
+const TRACE_COLUMN = 'trace';
+const TRACE_ROLE = AppSurface.deckCompanion('trace');
+
+/**
+ * The whole run in one column: the space's processes, and every thread of the conversation as a lane of one graph,
+ * where the subagent columns each show only their own.
+ */
+const TraceColumn = ({ db, chat, chatModel }: Pick<AgentColumnProps, 'db' | 'chat' | 'chatModel'>) => (
+  // Read-only: the column needs the chat only for the plane's focus and selection wiring.
+  <Chat.Root chat={chat} db={db} chatModel={chatModel} readonly>
+    <ChatPlane.Column value={TRACE_COLUMN}>
+      <ChatPlane.Cell title='Processes and threads'>
+        <Panel.Body>
+          <Surface.Surface type={TRACE_ROLE} limit={1} />
+        </Panel.Body>
+      </ChatPlane.Cell>
+    </ChatPlane.Column>
+  </Chat.Root>
+);
+
 /** How long a finished subagent's column stays open, so its result can be read before it closes. */
 const CLOSE_DELAY = 6_000;
 
@@ -131,7 +157,7 @@ const CLOSE_DELAY = 6_000;
  * own beside it: a column opens as the agent delegates, and closes a few seconds after its subagent reports, leaving the
  * result in the agent's column. The columns keep their width, so the strip scrolls sideways once they outgrow it.
  */
-const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => {
+const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer, trace = false }: AgentColumnProps) => {
   const view = useAtomValue(chatModel.trajectory);
   const lanes = useMemo(() => view.lanes.filter((lane) => lane.kind === 'fresh'), [view.lanes]);
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
@@ -179,7 +205,10 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
   }, []);
 
   const open = useMemo(() => lanes.filter(({ id }) => !closed.has(id)), [lanes, closed]);
-  const items = useMemo(() => [{ id: chat.id }, ...open.map(({ id }) => ({ id }))], [chat, open]);
+  const items = useMemo(
+    () => [{ id: chat.id }, ...(trace ? [{ id: TRACE_COLUMN }] : []), ...open.map(({ id }) => ({ id }))],
+    [chat, trace, open],
+  );
   const selected = current !== undefined && items.some(({ id }) => id === current) ? current : chat.id;
 
   return (
@@ -189,7 +218,18 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
           <ChatPlane.Columns items={items}>
             {(id) => {
               if (id === chat.id) {
-                return <AgentColumn db={db} chat={chat} chatModel={chatModel} suggestions={suggestions} />;
+                return (
+                  <AgentColumn
+                    db={db}
+                    chat={chat}
+                    chatModel={chatModel}
+                    suggestions={suggestions}
+                    defaultDrawer={defaultDrawer}
+                  />
+                );
+              }
+              if (id === TRACE_COLUMN) {
+                return <TraceColumn db={db} chat={chat} chatModel={chatModel} />;
               }
               const lane = open.find((candidate) => candidate.id === id);
               return lane && <ThreadColumn db={db} chat={chat} lane={lane} events={events} />;
@@ -202,7 +242,11 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
 };
 
 /** The space's newest chat as columns: the agent's own, and one per subagent thread while it runs. */
-export const ThreadColumns = ({ suggestions }: { suggestions?: readonly string[] }) => {
+export const ThreadColumns = ({
+  suggestions,
+  defaultDrawer,
+  trace,
+}: Pick<AgentColumnProps, 'suggestions' | 'defaultDrawer' | 'trace'>) => {
   const [space] = useSpaces();
   const db = space?.db;
   const chats = useQuery(db, Filter.type(AssistantChat.Chat));
@@ -212,5 +256,14 @@ export const ThreadColumns = ({ suggestions }: { suggestions?: readonly string[]
     return null;
   }
 
-  return <ThreadPlane db={db} chat={chat} chatModel={chatModel} suggestions={suggestions} />;
+  return (
+    <ThreadPlane
+      db={db}
+      chat={chat}
+      chatModel={chatModel}
+      suggestions={suggestions}
+      defaultDrawer={defaultDrawer}
+      trace={trace}
+    />
+  );
 };
