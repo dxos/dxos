@@ -251,7 +251,11 @@ export type HookRecord = {
   readonly skill?: string;
   /** Key of the operation the hook runs. */
   readonly operation: string;
-  readonly input?: Record<string, unknown>;
+  /**
+   * The operation's input, a JSON object. Typed `object`, as the catalog's operations are, since the catalog crosses
+   * Workers RPC, whose types reject `unknown` values.
+   */
+  readonly input?: object;
   /** Runs in the background: the request settles without waiting for it. */
   readonly async?: boolean;
 };
