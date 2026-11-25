@@ -12,6 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Agent from '@dxos/compute/Agent';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,7 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Filter, Obj, Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId } from '@dxos/keys';
@@ -248,6 +249,42 @@ const RecordThenDelegateHandler = RecordThenDelegate.pipe(
   ),
 );
 
+/** Adds a feed to the space, for an invocation to name as its conversation. */
+export const MakeFeed = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.makeFeed'), name: 'Make feed' },
+  types: [Feed.Feed],
+  services: [Database.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({ id: Schema.String }),
+});
+
+const MakeFeedHandler = MakeFeed.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      const feed = yield* Database.add(Feed.make());
+      return { id: feed.id };
+    }),
+  ),
+);
+
+/** Reads the feed of the session the invocation works for, as a hook such as `ensureReplySent` does. */
+export const CurrentFeed = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.currentFeed'), name: 'Current feed' },
+  types: [Feed.Feed],
+  services: [Agent.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({ id: Schema.String }),
+});
+
+const CurrentFeedHandler = CurrentFeed.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      const feed = yield* Agent.currentFeed.pipe(Effect.orDie);
+      return { id: feed.id };
+    }),
+  ),
+);
+
 /** Makes a person, as an operation that returns an ECHO object does. */
 export const MakePerson = Operation.make({
   meta: { key: DXN.make('com.example.operation.hostTest.makePerson'), name: 'Make person' },
@@ -311,6 +348,8 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             FailsHandler,
             ResolveRegistryHandler,
             HiddenHandler,
+            MakeFeedHandler,
+            CurrentFeedHandler,
           ),
         ),
       ),

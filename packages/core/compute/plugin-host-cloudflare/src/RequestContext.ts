@@ -5,13 +5,20 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
+import * as Agent from '@dxos/compute/Agent';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { messageOf } from '@dxos/errors';
+import { type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { PluginProtocol, TraceProtocol } from '@dxos/protocols';
 
@@ -162,3 +169,72 @@ const disposeStub = (target: unknown): void => {
 /** Gives the handler the invocation's {@link Cancellation.Service}; cooperative, so nothing is interrupted. */
 export const withCancellation = (handler: Handler, signal: AbortSignal): Handler =>
   mapHandler(handler, (effect) => effect.pipe(Effect.provideService(Cancellation.Service, { signal })));
+
+/**
+ * Runs an invocation that names a conversation as a process working for that session, as `ProcessOperationInvoker` runs
+ * one locally: `Agent.currentSession` and the other current-process verbs read the session from the process's
+ * `SessionAnnotation`, and the process supplies `Agent.Service` and `Process.ManagerService` to an operation that
+ * declares them (a hook such as `ensureReplySent`). The body still runs with every service the wrappers outside it
+ * provide. The runtimes are imported only for an invocation with a conversation.
+ */
+export const withSession = (
+  handler: Handler,
+  conversation: string | undefined,
+  spaceId: SpaceId | undefined,
+): Handler =>
+  conversation === undefined
+    ? handler
+    : {
+        ...handler,
+        handler: (input: unknown) =>
+          Effect.gen(function* () {
+            const session = URI.make(conversation);
+            const invocation = yield* Effect.context<never>();
+            const inProcess: Handler = {
+              ...handler,
+              handler: (processInput: unknown) => handler.handler(processInput).pipe(Effect.provide(invocation)),
+            };
+            // `Agent.Service` is built over the stack the process is spawned from, so the resolver reads it once the
+            // stack is up: the process asks for it only when it spawns.
+            const agents: { service?: Agent.ServiceApi } = {};
+            const resolver = ServiceResolver.compose(
+              ServiceResolver.fromContext(invocation),
+              ServiceResolver.succeed(Agent.Service, () =>
+                agents.service === undefined
+                  ? Effect.die(new Error('The agent service is not up yet.'))
+                  : Effect.succeed(agents.service),
+              ),
+            );
+            const { OperationProcess, stack } = yield* Effect.promise(() => sessionStack(inProcess, resolver));
+            return yield* Effect.gen(function* () {
+              agents.service = yield* Agent.Service;
+              const process = yield* Process.spawn(OperationProcess.make(handler), input, {
+                environment: { conversation: session, ...(spaceId === undefined ? {} : { space: spaceId }) },
+                annotations: Annotation.buildDictionary((dictionary) => {
+                  Annotation.setDictionary(dictionary, Process.SessionAnnotation, session);
+                }),
+              });
+              return yield* Process.awaitOutput(process);
+            }).pipe(Effect.provide(stack));
+          }).pipe(Effect.scoped),
+      };
+
+/** One invocation's process stack: a local process manager running `handler`, no remote runtime, and `Agent.Service`. */
+const sessionStack = async (handler: Handler, resolver: ServiceResolver.ServiceResolver) => {
+  const [
+    { OperationProcess, ProcessManager, RemoteProcessManager, RemoteTraceMonitor, UnifiedProcessManager },
+    { AgentService },
+  ] = await Promise.all([import('@dxos/compute-runtime'), import('@dxos/agent-runtime')]);
+  const stack = AgentService.layer().pipe(
+    Layer.provideMerge(UnifiedProcessManager.layer),
+    Layer.provide(ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.edgeWorkerLoader })),
+    Layer.provide(RemoteProcessManager.layerNoop),
+    Layer.provide(RemoteTraceMonitor.layerNoop),
+    Layer.provide(KeyValueStore.layerMemory),
+    Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, resolver)),
+    Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.make(handler))),
+    Layer.provide(Trace.layerNoop),
+    Layer.provide(Layer.succeed(AtomRegistry.AtomRegistry, AtomRegistry.make())),
+  );
+  return { OperationProcess, stack };
+};

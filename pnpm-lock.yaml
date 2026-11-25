@@ -6498,6 +6498,9 @@ importers:
 
   packages/core/compute/plugin-host-cloudflare:
     dependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../agent-runtime
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai

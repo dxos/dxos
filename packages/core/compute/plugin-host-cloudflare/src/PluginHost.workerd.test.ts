@@ -26,6 +26,7 @@ import { QueryResponseSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import * as PluginHost from './PluginHost.ts';
 import {
   Adopt,
+  CurrentFeed,
   Delegate,
   Fails,
   Followup,
@@ -35,6 +36,7 @@ import {
   Hidden,
   Inspect,
   InspectEvent,
+  MakeFeed,
   Nest,
   OtherSkill,
   RecordThenDelegate,
@@ -222,6 +224,26 @@ describe('PluginHost', () => {
       ).toMatchObject({
         ok: false,
         error: { code: 'invalid-request', message: expect.stringContaining('conversation') },
+      });
+    });
+
+    // A hook such as `ensureReplySent` finds its session through `Agent.Service`, which only the session process supplies.
+    test('an invocation that names a conversation runs in its session', { timeout: 20_000 }, async ({ expect }) => {
+      const spaceId = SpaceId.random();
+      const env = makeSpaceEnv(spaceId);
+      const host = makeHost();
+      const made = await host.invoke({ operationKey: String(MakeFeed.meta.key), spaceId, input: {} }, env);
+      invariant(made.ok, 'the feed was not made');
+      const { id } = Schema.decodeUnknownSync(Schema.Struct({ id: Schema.String }))(made.output);
+
+      const current = { operationKey: String(CurrentFeed.meta.key), spaceId, input: {} };
+      expect(await host.invoke(current, env, { conversation: `echo://${spaceId}/${id}` })).toEqual({
+        ok: true,
+        output: { id },
+      });
+      expect(await host.invoke(current, env)).toMatchObject({
+        ok: false,
+        error: { message: expect.stringContaining('Agent/Service') },
       });
     });
   });

@@ -145,7 +145,9 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       // Set once the invocation's context exists; a nested call can only return after that.
       let serviceContainer: ServiceContainer | undefined;
       // Innermost first: the nested-operation service captures the context every wrapper outside it provides.
-      const withOperations = HostServices.withOperations(handler, {
+      // The session process runs inside them all, so its body keeps every service they provide.
+      const inSession = RequestContext.withSession(handler, scope.conversation, spaceId);
+      const withOperations = HostServices.withOperations(inSession, {
         refreshWorkingSet: async () => serviceContainer?.refreshWorkingSet(),
         handlers: activation.operationHandlers,
         host: scope.operations,
