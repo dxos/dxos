@@ -45,6 +45,7 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
             delegationStrategy: strategies[0],
             makeTurnProducer: (options) => resolveTurnProducer(manager, codeMode)(options),
             processes: () => manager.getAll(AssistantCapabilities.SessionProcess),
+            serviceResolver: () => manager.getAll(Capabilities.ServiceResolver)[0],
             // Read when a process spawns, so the setting applies to agents started after it changes.
             threading: () => {
               const [settings] = manager.getAll(AssistantCapabilities.Settings);

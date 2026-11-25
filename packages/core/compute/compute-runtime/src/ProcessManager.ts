@@ -342,7 +342,7 @@ export class Impl implements Manager {
    */
   #childServices(pid: Process.ID, origin: Database.Origin | undefined, tracer: Tracer.Tracer): Context.Context<never> {
     const manager: Process.Manager = {
-      current: this.attach(pid),
+      current: Process.current,
       processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
       processTreeAtom: this.#processTreeAtom,
       list: (filter) => Process.listFromTree(Effect.sync(() => this.#registry.get(this.#processTreeAtom)))(filter),
