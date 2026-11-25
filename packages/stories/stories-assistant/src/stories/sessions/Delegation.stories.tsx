@@ -105,7 +105,6 @@ const launchKit: Story = {
     ],
     // The project's tasks and artifacts a chat column wide.
     columns: 'min(32vw,40rem)_1fr',
-    tiling: 'flush',
   },
 };
 

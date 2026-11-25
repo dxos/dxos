@@ -22,7 +22,6 @@ const meta: Meta<typeof ModuleContainer.Root> = {
   parameters: storyParameters,
   args: {
     layout: [[{ type: StoryRole.ChatPlane, data: { kind: 'chats' } satisfies ChatPlaneModuleData }]],
-    tiling: 'flush',
   },
 };
 

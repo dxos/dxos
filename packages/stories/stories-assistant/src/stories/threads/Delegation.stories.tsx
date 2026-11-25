@@ -89,7 +89,6 @@ const savingsPlans: Story = {
   args: {
     layout: [[threadPlane({ suggestions: [SAVINGS_PROMPTS.compare, SAVINGS_PROMPTS.quick] })], [TRACE]],
     columns: '1fr_min(32vw,40rem)',
-    tiling: 'flush',
   },
 };
 
@@ -157,7 +156,6 @@ const launchKit: Story = {
       ],
     ],
     columns: 'min(32vw,40rem)_1fr',
-    tiling: 'flush',
   },
 };
 
@@ -244,7 +242,6 @@ export const LaunchKitReplay: StoryObj<ReplayArgs> = {
           },
         ],
       ]}
-      tiling='flush'
     />
   ),
   decorators: createDecorators({

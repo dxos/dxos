@@ -46,7 +46,6 @@ const meta: Meta<typeof ModuleContainer.Root> = {
         },
       ],
     ],
-    tiling: 'flush',
   },
 };
 
