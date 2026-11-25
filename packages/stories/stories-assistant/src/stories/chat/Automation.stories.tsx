@@ -19,10 +19,10 @@ import * as Cell from '@dxos/storybook-testing/Cell';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
-import { StoryRole } from '../modules/index.ts';
-import { createDecorators, storyParameters } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, storyParameters } from '../../testing/index.ts';
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Automation',
+  title: 'stories/stories-assistant/chat/Automation',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };
@@ -31,7 +31,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithTriggers: Story = {
+export const Default: Story = {
   decorators: createDecorators({
     plugins: [],
     onInit: async ({ space }) => {

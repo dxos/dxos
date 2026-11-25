@@ -29,6 +29,8 @@ const CanvasViewStateSchema = Schema.Struct({
   guides: Schema.optional(Schema.Boolean),
   /** The axes through the origin are drawn; hidden until turned on. */
   axes: Schema.optional(Schema.Boolean),
+  /** Collaborators' pointers are drawn; unset, the `showCursors` setting decides. */
+  cursors: Schema.optional(Schema.Boolean),
   /** The camera keeps the scene framed as the view resizes or opens another scene, until the viewer pans or zooms. */
   fit: Schema.optional(Schema.Boolean),
   /** Whether each group of the properties panel (`overrides`, `center`, …) is open, by path; unset, it is open. */

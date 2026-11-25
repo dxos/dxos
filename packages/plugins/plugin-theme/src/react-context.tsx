@@ -22,6 +22,11 @@ import { ThemeNamespace } from './namespace.ts';
 export type ThemePluginOptions = Partial<Pick<Theme.ProviderProps, 'tx' | 'resourceExtensions'>> & {
   appName?: string;
   platform?: 'mobile' | 'desktop';
+  /**
+   * The host page owns the root `dark` class, as storybook's theme switch does: the plugin follows that class rather
+   * than applying the appearance setting, which would otherwise undo the host's choice.
+   */
+  followDocument?: boolean;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
@@ -48,7 +53,7 @@ const parseSettings = (value: string | null): Settings.Settings => {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ tx: propsTx = Theme.defaultTx, platform }: ThemePluginOptions = {}) {
+  Effect.fnUntraced(function* ({ tx: propsTx = Theme.defaultTx, platform, followDocument }: ThemePluginOptions = {}) {
     const registry: Registry.AtomRegistry = yield* Capabilities.AtomRegistry;
     const settingsAtom = yield* ThemeCapabilities.Settings;
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
@@ -58,10 +63,17 @@ export default Capability.makeModule(
     // 'system' follows the OS; 'light'/'dark' override it. The accent and focus hues rewrite their tokens on
     // the root, or clear them back to the stylesheet's default.
     const applyTheme = ({ appearance = 'system', accent, focus }: Settings.Settings) => {
-      const dark = appearance === 'system' ? modeQuery.matches : appearance === 'dark';
-      document.documentElement.classList[dark ? 'add' : 'remove']('dark');
-      applyAccent(document.documentElement, accent);
-      applyFocusHue(document.documentElement, focus);
+      const root = document.documentElement;
+      const dark = followDocument
+        ? root.classList.contains('dark')
+        : appearance === 'system'
+          ? modeQuery.matches
+          : appearance === 'dark';
+      if (!followDocument) {
+        root.classList[dark ? 'add' : 'remove']('dark');
+      }
+      applyAccent(root, accent);
+      applyFocusHue(root, focus);
       registry.set(themeAtom, { themeMode: dark ? 'dark' : 'light' });
     };
 
@@ -85,8 +97,15 @@ export default Capability.makeModule(
     };
     window.addEventListener('storage', handleStorage);
 
+    // The host changing its theme class is the only signal that the mode changed.
+    const classObserver = new MutationObserver(() => applyTheme(registry.get(settingsAtom)));
+    if (followDocument) {
+      classObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    }
+
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
+        classObserver.disconnect();
         modeQuery.removeEventListener('change', handleModeChange);
         window.removeEventListener('storage', handleStorage);
         unsubscribe();

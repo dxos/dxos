@@ -23,7 +23,7 @@ import { type Space } from '@dxos/react-client/echo';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
-import { StoryRole } from '../modules/index.ts';
+import { StoryRole } from '../../modules/index.ts';
 import {
   Calculate,
   CalculatorSkill,
@@ -33,10 +33,10 @@ import {
   seedBlankSpace,
   seedBusySpace,
   storyParameters,
-} from '../testing/index.ts';
+} from '../../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Chat',
+  title: 'stories/stories-assistant/chat/Chat',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };

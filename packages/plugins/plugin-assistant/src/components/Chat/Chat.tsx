@@ -1179,14 +1179,18 @@ const ChatSuggestions = ({ classNames, suggestions, onSelect }: ChatSuggestionsP
           key={text}
           classNames='max-w-full'
           icon='ph--lightning--regular'
-          label={text}
           size='sm'
           data-testid='chat.suggestion'
           onClick={() => {
             event.emit({ type: 'submit', text });
             onSelect?.(text);
           }}
-        />
+        >
+          {/* A prompt longer than the composer would otherwise spill out of both sides of its chip. */}
+          <span className='min-w-0 truncate' title={text}>
+            {text}
+          </span>
+        </Button.Root>
       ))}
     </div>
   );

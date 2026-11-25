@@ -76,6 +76,7 @@ feat F-1: Collaborator cursors
 
   req F-1.1: A 2D Canvas drawing's article and section show the other members' pointers on the drawing, each tagged with the member's name in their hue, on the illustrator's shared pointer channel. Pointers are shared in scene coordinates, so each sits over the same place for every peer whatever their pan and zoom.
   req F-1.2: A pointer shows only to peers in the same drilled-in view, and leaves when its member's pointer leaves the canvas. A slide, a card and a 3D Canvas show none.
+  req F-1.3: The display toolbar's Cursors toggle hides or shows the other members' pointers for this viewer, per drawing and per device. Hidden, the viewer's own pointer is still shared. The `showCursors` setting picks the default, which is on.
 ```
 
 ```mdl
@@ -645,14 +646,60 @@ decision D-44: The architecture partial seeds no presentation, and its Architect
 ```
 
 ```mdl
-decision D-45: The stored format takes one revision for the scene model's normalized vocabulary, with a migration from the one before.
+decision D-45: The Canvas editor's display toolbar has a toggle near the grid toggles that shows or hides collaborators' cursors. Cursors are on by default. The choice is view state, stored where the other toolbar toggles store theirs, and is per device. A Canvas plugin setting changes the default to off.
+  date: 2026-11-24
+  by: user:wittjosiah
+  affects: [F-1, CanvasArticle]
+```
+
+```mdl
+decision D-46: The Cursors toggle sits near the grid group, not inside it.
+  date: 2026-11-24
+  by: user:wittjosiah
+  affects: [F-1.3, CanvasArticle]
+```
+
+```mdl
+decision D-47: The Cursors toggle is a group of its own, directly after the grid controls and before the Timeline toggle. Fills in [D-46].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.3, CanvasArticle]
+  why: Guides, axes and the grid kinds draw the drawing's own geometry; cursors show other people, so they share neither that group nor the Timeline's, which stages shots.
+  rejected:
+    - Beside the axes in the grid group, which [D-46] rules out.
+    - In the Timeline group, which is about playing shots.
+```
+
+```mdl
+decision D-48: The toggle is stored in the canvas view state beside snap, guides and axes, so it is per drawing as well as per device. Unset, the `showCursors` setting decides, and it defaults to on. Fills in [D-45].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.3, CanvasArticle]
+  why: The other toolbar toggles are keyed by the drawing in that view state, and a setting read only when the drawing stores no choice lets a viewer change the default without overriding drawings they already set.
+```
+
+```mdl
+decision D-49: Hiding cursors only stops drawing the other members' pointers; this viewer's own pointer is still shared. Fills in [D-45].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.3, CanvasArticle]
+  why: The toggle is this viewer's view of the drawing, so it should not change what collaborators see.
+  rejected:
+    - Unpublishing this viewer's pointer too, which would hide them from others as a side effect of a view choice.
+```
+
+```mdl
+decision D-50: The stored format takes one revision for the scene model's normalized vocabulary, with a migration from the one before.
   date: 2026-11-24
   by: user:richburdon
   affects: [CanvasPlugin]
 ```
 
 ```mdl
-decision D-46: The `Migrations` module contributes the scene model's migrations after a legacy drawing's content steps: one each for `Layout2D`, `Layout3D`, `Model2D`, `Model3D` and `StyleCatalog`, from version 0.1.0 to 0.2.0. A layout, model or style catalog stored in the earlier words is rewritten in the current ones when its space loads. Fills in [D-45] and [org.dxos.scene#D-120].
+decision D-51: The `Migrations` module contributes the scene model's migrations after a legacy drawing's content steps: one each for `Layout2D`, `Layout3D`, `Model2D`, `Model3D` and `StyleCatalog`, from version 0.1.0 to 0.2.0. A layout, model or style catalog stored in the earlier words is rewritten in the current ones when its space loads. Fills in [D-50] and [org.dxos.scene#D-120].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon
@@ -661,7 +708,7 @@ decision D-46: The `Migrations` module contributes the scene model's migrations 
 ```
 
 ```mdl
-decision D-47: A contributed kind's element schema names its kind in `kind` (`Schema.Struct({ ...Scene.Element2D.fields, kind, data: Schema.Struct({ … }) })`), where [D-25] wrote `type`; its own fields stay under `data`, as [D-25] says. The `NodeType` capability and a contribution's `type` keep their names: they are the registry's key, not a field of a stored element. Follows [org.dxos.scene#D-112].
+decision D-52: A contributed kind's element schema names its kind in `kind` (`Schema.Struct({ ...Scene.Element2D.fields, kind, data: Schema.Struct({ … }) })`), where [D-25] wrote `type`; its own fields stay under `data`, as [D-25] says. The `NodeType` capability and a contribution's `type` keep their names: they are the registry's key, not a field of a stored element. Follows [org.dxos.scene#D-112].
   date: 2026-11-24
   by: agent:claude-code
   for: user:richburdon

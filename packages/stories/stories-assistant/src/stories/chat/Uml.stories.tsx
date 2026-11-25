@@ -17,8 +17,8 @@ import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules/index.ts';
-import { createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 
 type StoryArgs = {
   /** Name of the seeded document. */
@@ -28,7 +28,7 @@ type StoryArgs = {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'stories/stories-assistant/Uml',
+  title: 'stories/stories-assistant/chat/Uml',
   // Args feed the decorator's seeding, not the container (its layout arrives via StoryLayout.Atom).
   render: () => <ModuleContainer.Root />,
   parameters: storyParameters,

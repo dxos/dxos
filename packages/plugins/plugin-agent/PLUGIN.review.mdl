@@ -189,7 +189,7 @@ verdict AgentAdmission: The admission capability invites each admitted agent thi
 verdict ProfileGraph: ProfileGraph renders labelled Goals and Facts regions, or an empty line.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/components/ProfileGraph/ProfileGraph.tsx#ProfileGraph]
-  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/chat/Interview.stories.tsx]
 ```
 
 ```mdl
@@ -232,7 +232,7 @@ verdict AgentsPanel: AgentsPanel wires AgentList to the client through AgentSpac
 verdict ProfileProperties: ProfileProperties shows the live goals and current facts about the subject, polling brains and subscribing to goals.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/ProfileProperties/ProfileProperties.tsx#ProfileProperties]
-  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/chat/Interview.stories.tsx]
 ```
 
 ```mdl
@@ -409,21 +409,21 @@ verdict F-4.7: updateProfile keeps one ProfileOf document and rewrites it.
 verdict F-5.1: The scripted interview story resolves the person, records facts, proposes and confirms goals.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/skills/InterviewSkill.ts]
-  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/chat/Interview.stories.tsx]
 ```
 
 ```mdl
 verdict F-5.2: The properties panel lists live goals and current facts.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/ProfileProperties/ProfileProperties.tsx#ProfileProperties]
-  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/chat/Interview.stories.tsx]
 ```
 
 ```mdl
 verdict F-5.3: The panel updates as goals and facts change, as the story checks after confirmation.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-agent/src/containers/ProfileProperties/ProfileProperties.tsx#ProfileProperties]
-  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/chat/Interview.stories.tsx]
 ```
 
 ```mdl
@@ -597,7 +597,7 @@ verdict T-6: relay.test covers direct threads, reply-channel reports, refusals a
 ```mdl
 verdict T-8: The TestInterviewScripted story play runs four scripted turns and checks goals, facts and the space.
   status: done
-  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/chat/Interview.stories.tsx]
 ```
 
 ```mdl
@@ -647,7 +647,7 @@ verdict QA-1: No automation runs the Discord channel journey.
 ```mdl
 verdict QA-2: Only the scripted-model story runs the interview; nothing runs it against a live model.
   status: partial
-  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/Interview.stories.tsx]
+  tests: [github:dxos/dxos/packages/stories/stories-assistant/src/stories/chat/Interview.stories.tsx]
   note: |
     TestInterviewScripted covers the same steps and assertions with a scripted model; the live-model run is manual.
 ```

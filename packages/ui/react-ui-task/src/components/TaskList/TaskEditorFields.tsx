@@ -47,6 +47,8 @@ export type TaskEditorValues = {
 
 export type TaskTitleBehavior = {
   placeholder: string;
+  /** Drops the field's well, for a list whose host already frames it. */
+  subdued?: boolean;
   canSave: boolean;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onBlur: () => void;
@@ -200,6 +202,7 @@ const TitleField = ({ type, getValue, onValueChange }: FormFieldRendererProps<st
     <Field.Root classNames='min-w-0'>
       <Input.Root
         classNames='grow text-ellipsis'
+        variant={title.subdued ? 'subdued' : 'default'}
         data-testid='taskList.edit.title'
         placeholder={title.placeholder}
         value={getValue() ?? ''}

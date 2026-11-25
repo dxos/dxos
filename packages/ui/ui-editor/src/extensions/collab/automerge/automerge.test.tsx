@@ -3,6 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
+import { history, undo, undoDepth } from '@codemirror/commands';
 import { EditorState, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
@@ -56,8 +57,6 @@ const Test = ({ accessor }: { accessor: Doc.Accessor<TestType> }) => {
   return <div ref={ref} data-testid='editor' />;
 };
 
-// TODO(burdon): Test history/undo.
-
 describe('Automerge', () => {
   test('basic sync', ({ expect }) => {
     const obj = Obj.make(TestType, { text: '' });
@@ -96,6 +95,24 @@ describe('Automerge', () => {
     const { view, remote } = createRecordedView(Obj.make(TestType, { text: 'hello' }));
     await expect.poll(() => view.state.doc.toString()).toBe('hello');
     expect(remote).toEqual([true]);
+  });
+
+  // An editor created empty loads the document on attach; undo must not take that load back and blank the text.
+  test('the attach-time sync is not an undo step', async ({ expect }) => {
+    const obj = Obj.make(TestType, { text: 'hello' });
+    const view = new EditorView({
+      state: EditorState.create({ extensions: [history(), automerge(Doc.createAccessor(obj, ['text']))] }),
+      parent: document.body,
+    });
+    onTestFinished(() => view.destroy());
+    await expect.poll(() => view.state.doc.toString()).toBe('hello');
+    expect(undoDepth(view.state)).toBe(0);
+
+    view.dispatch({ changes: { from: 5, insert: '!' }, userEvent: 'input' });
+    expect(undo(view)).toBe(true);
+    expect(undo(view)).toBe(false);
+    expect(view.state.doc.toString()).toBe('hello');
+    expect(obj.text).toBe('hello');
   });
 });
 

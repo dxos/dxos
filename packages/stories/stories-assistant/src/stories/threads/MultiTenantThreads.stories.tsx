@@ -24,8 +24,8 @@ import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Message } from '@dxos/types';
 
-import { StoryRole } from '../modules/index.ts';
-import { Calculate, CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { Calculate, CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
@@ -37,7 +37,7 @@ const { text, reasoning, toolCall } = ScriptedLanguageModel;
  * adapter's process. See `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` QA-2.
  */
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/MultiTenantThreads',
+  title: 'stories/stories-assistant/threads/MultiTenantThreads',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };
@@ -182,6 +182,13 @@ const decorators = () =>
     },
   });
 
+/** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself. */
+export const Default: Story = {
+  decorators: decorators(),
+  args: { layout: [[StoryRole.Chat]] },
+  tags: ['!test'],
+};
+
 /** Scripted: the plan runs on DeepSeek while Claude Code answers a request addressed to it, and a quick one lands. */
 export const Scripted: Story = {
   decorators: decorators(),
@@ -197,13 +204,6 @@ export const Scripted: Story = {
     const headers = await canvas.findAllByTestId('chat.lane-header');
     await expect(headers.some((header) => header.textContent?.includes('claude'))).toBe(true);
   },
-};
-
-/** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself. */
-export const Demo: Story = {
-  decorators: decorators(),
-  args: { layout: [[StoryRole.Chat]] },
-  tags: ['!test'],
 };
 
 //

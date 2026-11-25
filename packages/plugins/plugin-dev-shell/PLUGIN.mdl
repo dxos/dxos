@@ -18,6 +18,7 @@ to load (QA-2). The desktop app has no vite server, so it offers plugin-projects
 |------|----------------------------|
 | `op` | `org.dxos.mdl.op@1.1`      |
 | `test` | `org.dxos.mdl.test@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Operations
 
@@ -210,7 +211,7 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
 ```mdl
 test QA-3: A scripted agent builds the World Clock plugin in storybook
   desc: |
-    The story `stories/stories-assistant/PluginBuild` (Manual) walked by a person: the Composer Plugin project from
+    The story `stories/stories-assistant/threads/PluginBuild` (Default) walked by a person: the Composer Plugin project from
     this plugin's template, its tasks on the chat's checklist, worked by the `buildPlugin` scripted model with this
     plugin's real harness. The agent hands the work to three subagents, each in a column of its own: a planner
     first, then a diagram subagent and a code subagent in parallel. Storybook mounts the shell route rooted at the
@@ -299,4 +300,24 @@ decision D-6: `test QA-3` walks the World Clock build in storybook with a script
   by: agent:claude-code
   for: user:dmaretskyi
   why: A scripted run takes a minute rather than twenty, never depends on a model's choices, and still exercises the harness, the template and the guide's code for real.
+```
+
+```mdl
+decision D-7: In every story file a story named `Default` only starts up, with no play function, so the story `test QA-3` walks is `PluginBuild` `Default`.
+  date: 2026-11-24
+  by: user:richburdon
+```
+
+```mdl
+decision D-8: `Default` is the story that was `Manual`, and the story with the play function, which was `Default`, is `Scripted`. Fills in [D-7].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  why: The two stories already differed only by the play function, so they swap names rather than gain a third.
+```
+
+```mdl
+decision D-9: The `stories-assistant` stories sit in three groups, `chat`, `threads` and `agents`, and the story `test QA-3` walks is in `threads`.
+  date: 2026-11-24
+  by: user:richburdon
 ```

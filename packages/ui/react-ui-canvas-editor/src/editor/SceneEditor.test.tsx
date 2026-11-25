@@ -66,6 +66,7 @@ const DISPLAY: EditorDisplay = { theme: 'default', grid: true, snap: false };
 
 const Editor = ({
   dim,
+  display = DISPLAY,
   role,
   readonly,
   onDisplayChange,
@@ -76,6 +77,7 @@ const Editor = ({
 }: {
   commands?: DimensionConfig<TestCamera>['commands'];
   dim: Scene.Dimension;
+  display?: EditorDisplay;
   role?: string;
   readonly?: boolean;
   onDisplayChange?: (display: Partial<EditorDisplay>) => void;
@@ -90,7 +92,7 @@ const Editor = ({
     role={role}
     readonly={readonly}
     onIntent={() => {}}
-    display={DISPLAY}
+    display={display}
     onDisplayChange={onDisplayChange}
     camera={{ zoom: 1 }}
     authoredCamera={{ zoom: 1 }}
@@ -297,6 +299,16 @@ describe('SceneEditor', () => {
     await userEvent.click(screen.getByTestId('toolbar-axes'));
     expect(onDisplayChange).toHaveBeenLastCalledWith({ axes: true });
     expect(screen.getByTestId('viewport').dataset.grid).toBe('true');
+  });
+
+  test('the cursors toggle shows only where the host draws cursors', async () => {
+    const onDisplayChange = vi.fn();
+    render(<Editor dim='2d' onDisplayChange={onDisplayChange} />);
+    expect(screen.queryByTestId('toolbar-cursors')).toBeNull();
+    cleanup();
+    render(<Editor dim='2d' display={{ ...DISPLAY, cursors: true }} onDisplayChange={onDisplayChange} />);
+    await userEvent.click(screen.getByTestId('toolbar-cursors'));
+    expect(onDisplayChange).toHaveBeenLastCalledWith({ cursors: false });
   });
 
   test("Actual size returns to the dimension's reset camera, which frames the content at the authored scale", async () => {

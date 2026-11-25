@@ -6,6 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import type * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -14,36 +16,14 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as ChatPlane from '@dxos/plugin-assistant/ChatPlane';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
-import { useObject, useQuery, useRegistry, useResolveRef, useSpaces } from '@dxos/react-client/echo';
+import { useObject, useQuery, useResolveRef, useSpaces } from '@dxos/react-client/echo';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Timeline } from '@dxos/react-ui-trace';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { toCommits } from '../modules/trajectory-commits.ts';
-
-type ChatModel = NonNullable<ReturnType<typeof AssistantHooks.useChatModel>>;
-
-/** The chat model of the agent's conversation, or of one subagent thread when `lane` is given. */
-const useThreadModel = (
-  db: Database.Database | undefined,
-  chat: AssistantChat.Chat | undefined,
-  lane?: Trajectory.ThreadId,
-) => {
-  const registry = useRegistry();
-  const runtime = Hooks.useProcessManagerRuntime();
-  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
-  const { preset } = AssistantHooks.usePresets(settings, chat);
-  return AssistantHooks.useChatModel({
-    db,
-    chat,
-    preset,
-    runtime,
-    registry,
-    settings,
-    ...(lane ? { thread: lane } : {}),
-  });
-};
+import { type ChatModel, useThreadModel } from './hooks.ts';
 
 /** The events written in `lane` and in every turn or thread nested in it, in feed order. */
 const laneEvents = (events: readonly Trajectory.Event[], lane: Trajectory.ThreadId): Trajectory.Event[] => {
@@ -100,7 +80,7 @@ const ThreadColumn = ({ db, chat, lane, events }: ThreadColumnProps) => {
         <ChatPlane.Cell title={`${lane.purpose ?? 'Subagent'} · ${lane.status}`}>
           <Panel.Body asChild>
             <Chat.Content>
-              <Chat.Thread viewType='thinking' />
+              <Chat.Thread viewType='thinking' tailLines={4} />
             </Chat.Content>
           </Panel.Body>
           <LaneMemory events={memory} />
@@ -116,22 +96,26 @@ type AgentColumnProps = {
   chatModel: ChatModel;
   /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
   suggestions?: readonly string[];
+  /** The drawer open above the agent's prompt at the start, e.g. its task list. */
+  defaultDrawer?: Chat.RootProps['defaultDrawer'];
+  /** Adds a column beside the agent's with every process and thread of the run in one view. */
+  trace?: boolean;
 };
 
 /** The agent's own conversation, with the prompt and its checklist. */
-const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps) => {
+const AgentColumn = ({ db, chat, chatModel, suggestions = [], defaultDrawer }: AgentColumnProps) => {
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
   // One chip at a time: the side question only makes sense once the launch is under way.
   const [sent, setSent] = useState(0);
   const handleSelect = useCallback(() => setSent((count) => count + 1), []);
   return (
-    <Chat.Root chat={chat} db={db} chatModel={chatModel}>
+    <Chat.Root chat={chat} db={db} chatModel={chatModel} defaultDrawer={defaultDrawer}>
       <ChatPlane.Column value={chat.id}>
         <ChatPlane.Cell title='Agent'>
           <Panel.Body asChild>
             <Chat.Content>
-              <Chat.Thread />
+              <Chat.Thread tailLines={4} />
             </Chat.Content>
           </Panel.Body>
         </ChatPlane.Cell>
@@ -145,24 +129,35 @@ const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps
   );
 };
 
-/** Narrows the columns as more open, so all of them fit and the plane centers them as a group (static classes, which Tailwind can see). */
-const columnWidth = (count: number) =>
-  count <= 2
-    ? undefined
-    : count === 3
-      ? '[--chat-plane-width:30vw]'
-      : count === 4
-        ? '[--chat-plane-width:23vw]'
-        : '[--chat-plane-width:19vw]';
+const TRACE_COLUMN = 'trace';
+const TRACE_ROLE = AppSurface.deckCompanion('trace');
+
+/**
+ * The whole run in one column: the space's processes, and every thread of the conversation as a lane of one graph,
+ * where the subagent columns each show only their own.
+ */
+const TraceColumn = ({ db, chat, chatModel }: Pick<AgentColumnProps, 'db' | 'chat' | 'chatModel'>) => (
+  // Read-only: the column needs the chat only for the plane's focus and selection wiring.
+  <Chat.Root chat={chat} db={db} chatModel={chatModel} readonly>
+    <ChatPlane.Column value={TRACE_COLUMN}>
+      <ChatPlane.Cell title='Processes and threads'>
+        <Panel.Body>
+          <Surface.Surface type={TRACE_ROLE} limit={1} />
+        </Panel.Body>
+      </ChatPlane.Cell>
+    </ChatPlane.Column>
+  </Chat.Root>
+);
 
 /** How long a finished subagent's column stays open, so its result can be read before it closes. */
 const CLOSE_DELAY = 6_000;
 
 /**
- * The agent's conversation in the first column and each subagent thread in a column of its own: a column opens as the
- * agent delegates, and closes a few seconds after its subagent reports, leaving the result in the agent's column.
+ * The agent's conversation in the first column, at the start of the strip, and each subagent thread in a column of its
+ * own beside it: a column opens as the agent delegates, and closes a few seconds after its subagent reports, leaving the
+ * result in the agent's column. The columns keep their width, so the strip scrolls sideways once they outgrow it.
  */
-const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => {
+const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer, trace = false }: AgentColumnProps) => {
   const view = useAtomValue(chatModel.trajectory);
   const lanes = useMemo(() => view.lanes.filter((lane) => lane.kind === 'fresh'), [view.lanes]);
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
@@ -182,15 +177,6 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
     [feedUri?.toString()],
   );
   const events = useQuery(db, query);
-
-  // Follows the newest thread as it opens, so the reader watches each column arrive.
-  const countRef = useRef(0);
-  useEffect(() => {
-    if (lanes.length > countRef.current) {
-      setCurrent(lanes[lanes.length - 1].id);
-    }
-    countRef.current = lanes.length;
-  }, [lanes]);
 
   // A finished thread's column closes once the reader has had a moment with its result.
   const done = useMemo(
@@ -219,17 +205,31 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
   }, []);
 
   const open = useMemo(() => lanes.filter(({ id }) => !closed.has(id)), [lanes, closed]);
-  const items = useMemo(() => [{ id: chat.id }, ...open.map(({ id }) => ({ id }))], [chat, open]);
+  const items = useMemo(
+    () => [{ id: chat.id }, ...(trace ? [{ id: TRACE_COLUMN }] : []), ...open.map(({ id }) => ({ id }))],
+    [chat, trace, open],
+  );
   const selected = current !== undefined && items.some(({ id }) => id === current) ? current : chat.id;
 
   return (
     <Dnd.Root>
-      <ChatPlane.Root value={selected} onValueChange={setCurrent} classNames={columnWidth(items.length)}>
+      <ChatPlane.Root value={selected} onValueChange={setCurrent} align='start'>
         <ChatPlane.Viewport>
           <ChatPlane.Columns items={items}>
             {(id) => {
               if (id === chat.id) {
-                return <AgentColumn db={db} chat={chat} chatModel={chatModel} suggestions={suggestions} />;
+                return (
+                  <AgentColumn
+                    db={db}
+                    chat={chat}
+                    chatModel={chatModel}
+                    suggestions={suggestions}
+                    defaultDrawer={defaultDrawer}
+                  />
+                );
+              }
+              if (id === TRACE_COLUMN) {
+                return <TraceColumn db={db} chat={chat} chatModel={chatModel} />;
               }
               const lane = open.find((candidate) => candidate.id === id);
               return lane && <ThreadColumn db={db} chat={chat} lane={lane} events={events} />;
@@ -242,7 +242,11 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
 };
 
 /** The space's newest chat as columns: the agent's own, and one per subagent thread while it runs. */
-export const ThreadColumns = ({ suggestions }: { suggestions?: readonly string[] }) => {
+export const ThreadColumns = ({
+  suggestions,
+  defaultDrawer,
+  trace,
+}: Pick<AgentColumnProps, 'suggestions' | 'defaultDrawer' | 'trace'>) => {
   const [space] = useSpaces();
   const db = space?.db;
   const chats = useQuery(db, Filter.type(AssistantChat.Chat));
@@ -252,12 +256,14 @@ export const ThreadColumns = ({ suggestions }: { suggestions?: readonly string[]
     return null;
   }
 
-  return <ThreadPlane db={db} chat={chat} chatModel={chatModel} suggestions={suggestions} />;
+  return (
+    <ThreadPlane
+      db={db}
+      chat={chat}
+      chatModel={chatModel}
+      suggestions={suggestions}
+      defaultDrawer={defaultDrawer}
+      trace={trace}
+    />
+  );
 };
-
-/**
- * Scripted (offline): the reader asks for a launch kit; the agent puts four tasks on its checklist and delegates each
- * to a subagent, whose thread opens as a column showing its reasoning, the document it writes and its slice of memory.
- * The reader keeps talking meanwhile; each column closes once its subagent reports, and the result lands in the agent's
- * column.
- */

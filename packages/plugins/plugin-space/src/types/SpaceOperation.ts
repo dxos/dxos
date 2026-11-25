@@ -224,12 +224,25 @@ export const AddObject = Operation.make({
 }).pipe(Operation.mutation('write'));
 
 // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
+/** Where a removed object was listed by its parent's `ContainerAnnotation` list, so a restore can put it back. */
+export const ContainerSlot = Schema.Struct({
+  id: Schema.String.annotate({ description: 'ID of the removed object.' }),
+  container: Obj.Unknown.annotate({ description: 'The parent that listed the object.' }),
+  property: Schema.String.annotate({ description: 'The ref-array field the parent lists it in.' }),
+  index: Schema.Number.annotate({ description: 'The position it was at, when it was unlinked.' }),
+});
+
+export type ContainerSlot = Schema.Schema.Type<typeof ContainerSlot>;
+
 export const RemoveObjectsOutput = Schema.Struct({
   objects: Schema.Array(Entity.Unknown).annotate({ description: 'The removed entities.' }),
   parentCollection: Schema.optional(Type.getSchema(Collection.Collection)).annotate({
     description: 'The collection removed from; absent when the space has no root collection.',
   }),
   indices: Schema.Array(Schema.Number).annotate({ description: 'The indices the objects were at.' }),
+  containerSlots: Schema.optional(Schema.Array(ContainerSlot)).annotate({
+    description: 'The container lists the objects were unlinked from, in the order they were unlinked.',
+  }),
   wasActive: Schema.Array(Schema.String).annotate({
     description: 'IDs of objects that were active before removal.',
   }),
@@ -725,6 +738,9 @@ export const RestoreObjects = Operation.make({
       description: 'The collection to restore to; omitted when they were in none.',
     }),
     indices: Schema.Array(Schema.Number).annotate({ description: 'The indices to restore at.' }),
+    containerSlots: Schema.optional(Schema.Array(ContainerSlot)).annotate({
+      description: 'The container lists to relink the objects into, as RemoveObjects returned them.',
+    }),
     wasActive: Schema.Array(Schema.String).annotate({
       description: 'IDs of objects that were active before deletion.',
     }),
