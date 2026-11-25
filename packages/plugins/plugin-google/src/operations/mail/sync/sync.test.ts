@@ -476,7 +476,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
     // The committed page is durable, a contiguous newest suffix (backward walks newest-first); `min` is
     // the oldest committed key, `max` the newest — no completion (the run errored, not exhausted).
-    // At least the first full page; the partial page fetched before the fault is committed too.
+    // At least the first full page; part of the next page may also have reached the commit before the fault.
     const committedAfterFault = await syncedIdsOf(db, mailbox);
     const committed = committedAfterFault.length;
     expect(committed).toBeGreaterThanOrEqual(10);
