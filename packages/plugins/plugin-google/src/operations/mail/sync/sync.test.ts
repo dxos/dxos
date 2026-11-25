@@ -476,14 +476,17 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
     // The committed page is durable, a contiguous newest suffix (backward walks newest-first); `min` is
     // the oldest committed key, `max` the newest — no completion (the run errored, not exhausted).
+    // At least the first full page; part of the next page may also have reached the commit before the fault.
     const committedAfterFault = await syncedIdsOf(db, mailbox);
-    expect(committedAfterFault).toHaveLength(10);
+    const committed = committedAfterFault.length;
+    expect(committed).toBeGreaterThanOrEqual(10);
+    expect(committed).toBeLessThan(dataset.messages.length);
     const sortedDesc = [...dataset.messages].sort(
       (left, right) => Number(right.internalDate) - Number(left.internalDate),
     );
-    expect(new Set(committedAfterFault)).toEqual(new Set(sortedDesc.slice(0, 10).map((message) => message.id)));
+    expect(new Set(committedAfterFault)).toEqual(new Set(sortedDesc.slice(0, committed).map((message) => message.id)));
     expect(Number.parseInt(binding.max!, 10)).toBe(maxKey(dataset));
-    expect(Number.parseInt(binding.min!, 10)).toBe(Number(sortedDesc[9].internalDate));
+    expect(Number.parseInt(binding.min!, 10)).toBe(Number(sortedDesc[committed - 1].internalDate));
 
     // Recovery: a healthy run resumes the backward half from `min` and picks up nothing new forward
     // (no new mail arrived) — everything lands exactly once.

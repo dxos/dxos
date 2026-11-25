@@ -179,8 +179,7 @@ describe('useKanbanBoardModel', () => {
     const columnsAfter = registry.get(result.current.columns) ?? [];
     const orderAfter = columnsAfter.map((c) => c.columnValue);
     expect(orderAfter).toEqual(['__uncategorized__', 'b', 'a']);
-    // TODO(wittjosiah): Try to reduce to 1.
-    expect(columnsUpdateCount).toBe(2);
+    expect(columnsUpdateCount).toBe(1);
   });
 
   test('getItems returns items in column ordered by arrangement ids', ({ expect }) => {

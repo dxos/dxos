@@ -170,10 +170,13 @@ export const RULES: readonly Rule[] = [
   ),
 ];
 
+/** What the model reads: the content, with the rendered page as `Decision.Image` fields that `decide` attaches. */
+const Input = Schema.Struct({ ...Content.fields, images: Schema.optional(Schema.Array(Decision.Image)) });
+
 /** The decision definition for a set of rules: one probability per rule, answered in one call. */
 export const definition = (rules: readonly Rule[] = RULES) =>
   Decision.make({
-    input: Content,
+    input: Input,
     decisions: Object.fromEntries(
       rules.map(({ key, instructions, criteria }) => [key, Decision.probability({ instructions, criteria })]),
     ),
@@ -198,7 +201,7 @@ export const judge = (
   return {
     entries: rules.map(({ id, description }) => ({ id, kind, description })),
     evaluate: ({ content, images }) =>
-      DecisionModel.decide(decisions, { input: content, ...(images?.length ? { images } : {}) }).pipe(
+      DecisionModel.decide(decisions, { input: { ...content, ...(images?.length ? { images } : {}) } }).pipe(
         Effect.map(({ answers }) =>
           rules.map(({ key }) => {
             const answer = answers[key];

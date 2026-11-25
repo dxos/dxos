@@ -80,17 +80,43 @@ export const EvaluateResponse = Schema.Struct({
 
 export type EvaluateResponse = typeof EvaluateResponse.Type;
 
+/** A decision description as System One takes it: text, with structured descriptions as JSON. */
+const toText = (description: Decision.Description): string =>
+  typeof description === 'string' ? description : JSON.stringify(description);
+
 /** The System One question for an Effect decision. */
 export const toQuestion = (decision: Decision.Any): Question => {
   switch (decision._tag) {
-    case 'Probability':
+    case 'Probability': {
+      const instructions = toText(decision.instructions);
       return decision.criteria
-        ? { type: 'noul', instructions: decision.instructions, criteria: decision.criteria }
-        : { type: 'noul', instructions: decision.instructions };
+        ? {
+            type: 'noul',
+            instructions,
+            criteria: { true: toText(decision.criteria.true), false: toText(decision.criteria.false) },
+          }
+        : { type: 'noul', instructions };
+    }
     case 'Classify':
-      return { type: 'choice', instructions: decision.instructions, criteria: decision.criteria };
+      return {
+        type: 'choice',
+        instructions: toText(decision.instructions),
+        criteria: Object.fromEntries(
+          Object.entries(decision.criteria).map(([label, description]) => [
+            label,
+            description === null ? label : toText(description),
+          ]),
+        ),
+      };
     case 'Rate':
-      return { type: 'score', instructions: decision.instructions, criteria: decision.criteria };
+      return {
+        type: 'score',
+        instructions: toText(decision.instructions),
+        criteria: decision.criteria.map(({ description }) => toText(description)),
+      };
+    case 'Locate':
+      // Unreachable: the model is made without `supportsLocate`, so `DecisionModel` refuses these first.
+      throw new Error(`System One does not answer locate decisions (image field "${decision.image}").`);
   }
 };
 
@@ -129,7 +155,7 @@ export const toProviderAnswer = (decision: Decision.Any, answer: Answer): Decisi
       };
     }
     case 'score': {
-      const levels = decision._tag === 'Rate' ? decision.criteria : [];
+      const levels = decision._tag === 'Rate' ? decision.criteria.map(({ label }) => label) : [];
       return {
         _tag: 'Rate',
         rating: answer.score,
@@ -225,7 +251,7 @@ export const makeDecisionModel = <R = never>(
       decide: ({ state, decisions, images }) =>
         Effect.gen(function* () {
           const key = yield* apiKey;
-          const dataUrls = images ? yield* Effect.forEach(images, toDataUrl) : undefined;
+          const dataUrls = images ? yield* Effect.forEach(images, ({ image }) => toDataUrl(image)) : undefined;
           const request = HttpClientRequest.post(endpoint()).pipe(
             (request) => (key ? HttpClientRequest.bearerToken(request, key) : request),
             HttpClientRequest.bodyJsonUnsafe({

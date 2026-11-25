@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as EffectArray from 'effect/Array';
 import * as Clock from 'effect/Clock';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -1241,7 +1242,7 @@ export class FeedStore {
       const missing = feedIds.filter((feedId) => !feedPrivateIds.has(feedId));
       for (const chunk of chunked(missing, FEED_INSERT_CHUNK)) {
         const rows = yield* sql<{ feedId: string; feedPrivateId: number }>`
-          INSERT INTO feeds ${sql.insert(chunk.map((feedId) => ({ spaceId, feedId, feedNamespace: namespace })))}
+          INSERT INTO feeds ${sql.insert(EffectArray.map(chunk, (feedId) => ({ spaceId, feedId, feedNamespace: namespace })))}
           RETURNING feedId, feedPrivateId
         `;
         for (const row of rows) {
@@ -2237,10 +2238,14 @@ const FEED_INSERT_CHUNK = 30;
 /** Block keys per lookup, at three variables each. */
 const BLOCK_KEY_CHUNK = 30;
 
-const chunked = <T>(items: readonly T[], size: number): T[][] => {
-  const chunks: T[][] = [];
+// Sliced batch by batch: `Array.chunksOf` copies the remaining suffix per chunk, which is quadratic.
+const chunked = <T>(items: readonly T[], size: number): EffectArray.NonEmptyArray<T>[] => {
+  const chunks: EffectArray.NonEmptyArray<T>[] = [];
   for (let start = 0; start < items.length; start += size) {
-    chunks.push(items.slice(start, start + size));
+    const chunk = items.slice(start, start + size);
+    if (EffectArray.isArrayNonEmpty(chunk)) {
+      chunks.push(chunk);
+    }
   }
   return chunks;
 };

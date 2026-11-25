@@ -9,6 +9,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { log } from '@dxos/log';
@@ -39,7 +40,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
 )(function* (toolkit, toolCall) {
   // Empty input means a tool without parameters; unparseable input is reported back as a tool
   // error so the model can retry rather than the tool running with no arguments.
-  const input = toolCall.input.trim().length === 0 ? {} : safeParseJson<Record<string, unknown>>(toolCall.input);
+  const input = toolCall.input.trim().length === 0 ? {} : safeParseJson<Schema.JsonObject>(toolCall.input);
   yield* AiTelemetry.annotateKind(AiTelemetry.KIND.tool);
   yield* Effect.annotateCurrentSpan(AiTelemetry.ATTRIBUTES.name, toolCall.name);
   const inputTruncated = yield* AiTelemetry.annotateContent(
@@ -61,13 +62,11 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
   log('toolCall', { toolCall: toolCall.name, input });
   const toolResult: ContentBlock.ToolResult = yield* toolkit
     .handle(
-      // `toolCall.name`/`input` are untrusted runtime data from the model response, so nothing
-      // statically ties them to one tool's key and parameters; a mismatch surfaces as a normal
-      // `handle` failure below rather than corrupting state.
+      // `toolCall.name` is untrusted runtime data from the model response, so nothing statically ties
+      // it to one tool's key; a mismatch surfaces as a normal `handle` failure below.
       toolCall.name as keyof Toolkit.WithHandlerTools<typeof toolkit>,
-      input as Tool.Parameters<
-        Toolkit.WithHandlerTools<typeof toolkit>[keyof Toolkit.WithHandlerTools<typeof toolkit>]
-      >,
+      // `handle` decodes the JSON against the tool's parameter schema itself.
+      input,
       // Handed to the handler's context, so a handler can tell which call it is answering.
       toolCall.toolCallId,
     )
