@@ -237,6 +237,25 @@ export type SkillRecord = {
   readonly agentCanEnable?: boolean;
 };
 
+/**
+ * A lifecycle hook the bundle's plugin contributes (`AppCapabilities.HookDefinition`), as data: its operation is named
+ * by key and is one of the catalog's operations, so the hook runs in the bundle.
+ */
+export type HookRecord = {
+  /** Stable id the trace names the hook by. */
+  readonly key: string;
+  /** Id of the plugin that contributes the hook; settings turn hooks on and off by plugin. */
+  readonly plugin: string;
+  readonly event: 'end-request';
+  /** Key of the skill that must be bound for the hook to fire; absent fires for every conversation. */
+  readonly skill?: string;
+  /** Key of the operation the hook runs. */
+  readonly operation: string;
+  readonly input?: Record<string, unknown>;
+  /** Runs in the background: the request settles without waiting for it. */
+  readonly async?: boolean;
+};
+
 /** An ECHO type the bundle contributes. */
 export type TypeRecord = {
   readonly typename: string;
@@ -261,6 +280,8 @@ export type Catalog = {
   readonly plugin: PluginRecord;
   readonly operations: readonly object[];
   readonly skills: readonly SkillRecord[];
+  /** Absent from a catalog written by a host published before hooks were listed. */
+  readonly hooks?: readonly HookRecord[];
   readonly types: readonly TypeRecord[];
   readonly failures: readonly FailureRecord[];
   /** The {@link PROTOCOL_VERSION} of the host that produced the catalog; absent before versioning. */
