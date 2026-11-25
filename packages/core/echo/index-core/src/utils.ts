@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import type * as SqlClient from 'effect/sql/SqlClient';
@@ -66,18 +67,14 @@ export const SQL_CHUNK_SIZE: number = chunkSizeForBoundVariables(1);
  * Split rows for a multi-row `sql.insert`, sizing the batch by the columns the rows actually
  * carry — so adding a column narrows the batch instead of silently overrunning the limit.
  */
-export const chunkRows = <T extends Record<string, unknown>>(rows: readonly T[]): T[][] =>
+export const chunkRows = <T extends Record<string, unknown>>(rows: readonly T[]): Array.NonEmptyArray<T>[] =>
   rows.length === 0 ? [] : chunkArray(rows, chunkSizeForBoundVariables(Object.keys(rows[0]).length));
 
 /** Split an array into chunks of at most `size` for batched SQL `IN (...)` clauses. */
-export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE): T[][] => {
+export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE): Array.NonEmptyArray<T>[] => {
   // A non-positive or fractional size would fail to advance the loop and spin forever.
   invariant(Number.isInteger(size) && size > 0, 'chunk size must be a positive integer');
-  const chunks: T[][] = [];
-  for (let index = 0; index < items.length; index += size) {
-    chunks.push(items.slice(index, index + size));
-  }
-  return chunks;
+  return Array.chunksOf(items, size);
 };
 
 /**
