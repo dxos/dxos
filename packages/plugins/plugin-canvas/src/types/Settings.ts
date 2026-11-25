@@ -53,6 +53,12 @@ export const Settings = Schema.Struct({
       description: 'Display the node and link palette over the canvas.',
     }),
   ),
+  showCursors: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Show cursors',
+      description: "Display collaborators' pointers over a drawing, unless its toolbar toggle says otherwise.",
+    }),
+  ),
   liveDepth: Schema.optional(
     Schema.Number.annotate({
       title: 'Live depth',

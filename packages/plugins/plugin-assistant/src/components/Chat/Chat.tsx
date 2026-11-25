@@ -14,8 +14,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import { TrajectoryStore } from '@dxos/assistant';
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -276,7 +276,8 @@ const ChatRoot = ({
           prepare: async () => {
             await onSubmit?.(text);
             const currentDb = (chat && Obj.getDatabase(chat)) || db;
-            if (currentDb) {
+            // A model with no conversation behind it (a replay) has nothing to bind mentions to.
+            if (currentDb && chatModel.context) {
               await bindMentions(chatModel.context, currentDb, text);
             }
           },
@@ -984,7 +985,9 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     ({ title, ...props }: Task.Draft) => {
       const db = chat && Obj.getDatabase(chat);
       if (chat && db) {
-        AssistantChat.addTask(db, chat, title, props);
+        Effect.runSync(
+          Agent.addTask(chat, title, props).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+        );
       }
     },
     [chat],
@@ -996,7 +999,9 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     (task: Task.Task) => {
       const db = chat && Obj.getDatabase(chat);
       if (chat && db) {
-        AssistantChat.deleteTask(db, chat, tasks, task);
+        Effect.runSync(
+          Agent.deleteTask(chat, tasks, task).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+        );
       }
     },
     [chat, tasks],
@@ -1179,14 +1184,18 @@ const ChatSuggestions = ({ classNames, suggestions, onSelect }: ChatSuggestionsP
           key={text}
           classNames='max-w-full'
           icon='ph--lightning--regular'
-          label={text}
           size='sm'
           data-testid='chat.suggestion'
           onClick={() => {
             event.emit({ type: 'submit', text });
             onSelect?.(text);
           }}
-        />
+        >
+          {/* A prompt longer than the composer would otherwise spill out of both sides of its chip. */}
+          <span className='min-w-0 truncate' title={text}>
+            {text}
+          </span>
+        </Button.Root>
       ))}
     </div>
   );

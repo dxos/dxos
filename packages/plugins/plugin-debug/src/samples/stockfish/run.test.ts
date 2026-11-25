@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Provider } from '@dxos/ai';
 import { LanguageModelFixture } from '@dxos/ai/testing';
@@ -12,9 +13,8 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { AiContext } from '@dxos/assistant';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
-import * as Chat from '@dxos/assistant/Chat';
 import { SpaceProperties } from '@dxos/client-protocol';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
@@ -94,7 +94,7 @@ const TestLayer = AssistantTestLayer({
   types: [
     ...template.schemas,
     SpaceProperties,
-    Chat.Chat,
+    Agent.Session,
     AiContext.Binding,
     Feed.Feed,
     Message.Message,
@@ -123,9 +123,9 @@ const instantiateTemplate = Effect.fnUntraced(function* () {
 
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
-    Chat.make({ name: 'Chess MCP on Workers', feed: Ref.make(feed), instructions: Ref.make(instructions) }),
+    Agent.makeSession({ name: 'Chess MCP on Workers', feed: Ref.make(feed), instructions: Ref.make(instructions) }),
   );
-  Chat.linkCompanion({ chat, subject: project });
+  Agent.linkCompanion({ session: chat, subject: project });
   Obj.setParent(feed, chat);
 
   const runtime = yield* Effect.context<Database.Service>();
@@ -167,7 +167,7 @@ describe('Chess MCP template, run live', { tags: ['manual'] }, () => {
         const root = yield* rootTask;
         expect(root.status).toBe('todo');
 
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         yield* session.submitPrompt(
           'Read the task list for this project, then pick up the work: set the root task to started ' +
             'and tell me, in one sentence each, what the first stage is and which of its steps are ' +

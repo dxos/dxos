@@ -44,8 +44,8 @@ const agent = ScriptedScene.conversation('agent', [
   ScriptedScene.turn(
     'assistant',
     [
-      ScriptedScene.reasoning('Each plan is independent, so each can be worked out by a subagent in parallel.'),
-      ScriptedScene.text('I will hand each plan to a subagent and compare their results.'),
+      ScriptedScene.reasoning('Each plan is independent, so each can be worked out by a thread in parallel.'),
+      ScriptedScene.text('I will hand each plan to a thread and compare their results.'),
       ...PLANS.map((plan) =>
         ScriptedScene.toolCall('thread_delegate', { task: taskOf(plan), purpose: purposeOf(plan) }),
       ),
@@ -87,16 +87,23 @@ const agent = ScriptedScene.conversation('agent', [
   ),
 ]);
 
-/** A subagent computes its plan one calculator call at a time, then reports. */
+/**
+ * A subagent computes its plan one calculator call at a time, then reports. Each step names the plan's rate and the
+ * balance so far, so that subagents shown side by side read as different pieces of work.
+ */
 const subagent = (plan: Plan) =>
   ScriptedScene.conversation(plan.name, [
     ScriptedScene.turn('user', taskOf(plan)),
-    ...YEARS.map((years) =>
+    ...YEARS.map((years, index) =>
       ScriptedScene.turn(
         'assistant',
         [
           ScriptedScene.reasoning(`Balance after ${years} years at ${plan.rate}%.`),
-          ScriptedScene.text(`After ${years} years…`),
+          ScriptedScene.text(
+            index === 0
+              ? `${plan.name} grows at ${plan.rate}% a year. After ${years} years…`
+              : `$${plan.values[index - 1]} after ${YEARS[index - 1]} years. After ${years} years…`,
+          ),
           ScriptedScene.toolCall(CALCULATE, { expression: `10000*(1+${plan.rate}/100)^${years}` }),
         ],
         { delay: `${4 + plan.rate / 2} seconds` },

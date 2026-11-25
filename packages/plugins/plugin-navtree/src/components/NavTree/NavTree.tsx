@@ -17,8 +17,6 @@ import { useLoadDescendents } from '#hooks';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar/index.ts';
 
-export const NAV_TREE_ITEM = 'NavTreeItem';
-
 export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string; rail?: boolean } & Pick<
   L1TabsProps,
   'open' | 'unavailable'

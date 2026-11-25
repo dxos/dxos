@@ -302,7 +302,7 @@ export const claimDecisions = (
   predicates: ReadonlyMap<string, Ontology.Entry>,
   entities: ReadonlyMap<string, KnownEntity>,
   rules: readonly string[] = [],
-): Record<string, Decision.Any> => {
+): Record<string, Decision.Probability | Decision.Classify<string>> => {
   const firstPerson = `First-person words (I, me, my, we) refer to the author, ${author}.`;
   const entityCriteria = {
     ...Object.fromEntries([...entities].map(([key, entity]) => [key, entityCriterion(entity)])),

@@ -79,9 +79,15 @@ export const automerge = (accessor: Doc.Accessor): Extension => {
             const value = Doc.getValue<string | undefined>(accessor) ?? '';
             const current = this._view.state.doc.toString();
             if (value !== current) {
+              // Kept out of the undo history: undoing a load would blank the text and write that to the document.
               this._view.dispatch({
                 changes: { from: 0, to: this._view.state.doc.length, insert: value },
-                annotations: [initialSync, reconcileAnnotation.of(true), Transaction.remote.of(true)],
+                annotations: [
+                  initialSync,
+                  reconcileAnnotation.of(true),
+                  Transaction.remote.of(true),
+                  Transaction.addToHistory.of(false),
+                ],
               });
             }
           });

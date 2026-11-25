@@ -11,7 +11,7 @@
  * @title Findings from memory
  * @mdl packages/plugins/plugin-sheet/PLUGIN.mdl test QA-6
  * @app storybook via `VITE_FACT_SERVER_URL=http://127.0.0.1:7701 DX_STORIES=stories/stories-assistant
- *   moon run storybook-react:serve`, story `stories-stories-assistant-artifacts--from-memory` in isolation mode, with
+ *   moon run storybook-react:serve`, story `stories-stories-assistant-chat-artifacts--from-memory` in isolation mode, with
  *   a live model and `DISCORD_FACTS_DB=<cloudflare-60d facts.db> DISCORD_FACT_SERVER_PORT=7701
  *   moon run plugin-discord:fact-server`
  */

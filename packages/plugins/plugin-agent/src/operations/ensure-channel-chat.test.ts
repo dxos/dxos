@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -30,7 +29,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
   types: [
     Agent.Agent,
-    Chat.Chat,
+    Agent.Session,
     Skill.Skill,
     Feed.Feed,
     Text.Text,
@@ -53,7 +52,7 @@ describe('EnsureChannelChat', () => {
           instructions: 'Greet people.',
         });
         const agent = yield* Database.load(agentRef);
-        const primary = yield* Agent.loadChat(agent);
+        const primary = yield* Agent.loadSession(agent);
         const channel = yield* Database.add(makeTestChannel());
         const channelRef = Ref.make(channel);
         yield* Database.flush();
@@ -98,7 +97,7 @@ describe('EnsureChannelChat', () => {
         expect(AgentChannels.conversationOf(yield* Database.load(whole.chat))).toEqual({ channelId: channel.id });
 
         // A bridged chat never shadows the agent's primary chat.
-        expect((yield* Agent.loadChat(agent))?.id).toBe(primary?.id);
+        expect((yield* Agent.loadSession(agent))?.id).toBe(primary?.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

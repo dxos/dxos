@@ -7,7 +7,7 @@ import * as AlarmSkill from '@dxos/assistant-toolkit/AlarmSkill';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
@@ -31,5 +31,5 @@ const defaultChatSkills = (pluginManager: boolean): Ref.Ref<Skill.Skill>[] =>
 
 export const bindChatDefaults = (
   binder: AiContext.Binder,
-  { chat, pluginManager }: { chat: Chat.Chat; pluginManager: boolean },
+  { chat, pluginManager }: { chat: Agent.Session; pluginManager: boolean },
 ): Promise<void> => binder.bind({ skills: defaultChatSkills(pluginManager), objects: [Ref.make(chat)] });

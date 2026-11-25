@@ -1,0 +1,43 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type ComponentProps } from 'react';
+
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+
+import { StoryRole } from '../../modules/index.ts';
+import { type ScriptName, Scripts } from '../../scripts/index.ts';
+import { CalculatorSkill, createDecorators, storyParameters } from '../../testing/index.ts';
+
+type StoryArgs = ComponentProps<typeof ModuleContainer.Root> & { script: ScriptName };
+
+/**
+ * A chat on a scripted model: every script in `src/scripts` that needs no seeded project is served as a model of its
+ * own and offered in the model picker, and the chat starts on the one the `script` arg names.
+ */
+const meta: Meta<StoryArgs> = {
+  title: 'stories/stories-assistant/chat/ScriptedModel',
+  render: ModuleContainer.Root,
+  parameters: storyParameters,
+  decorators: createDecorators<StoryArgs>(({ args }) => ({
+    // Every script but `buildPlugin`, which needs the project PluginBuild seeds, is offered in the model picker; the
+    // chat starts on the one the `script` arg names.
+    scriptedModels: {
+      scenes: Object.fromEntries(Object.entries(Scripts).filter(([name]) => name !== 'buildPlugin')),
+      select: args.script,
+    },
+    skills: [CalculatorSkill.key],
+  })),
+  args: { layout: [[StoryRole.Chat]] },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/** Try "Write me a haiku", or "What is 17 × 23?" for a tool call. */
+export const Default: Story = {
+  args: { script: 'hello' },
+};

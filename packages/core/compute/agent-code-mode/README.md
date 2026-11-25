@@ -6,8 +6,8 @@ comes back to it, or the value it returns when it prints nothing.
 
 ## Where it runs
 
-- **Composer**: the default turn engine for chats and agents; `Settings.disableCodeMode` turns it
-  off (plugin-assistant `F-5.4`, `F-5.5`, decision `D-18`). The app supplies the engine: the Effect
+- **Composer**: an opt-in turn engine for chats and agents; `Settings.codeMode` turns it on
+  (plugin-assistant `F-5.4`, `F-5.5`, decision `D-32`). The app supplies the engine: the Effect
   dialect, with the code in a Web Worker on its own ECHO client (`composer-app/src/plugin-defs.tsx`).
   Without the chunk or a client it falls back to tool calling, never to running code in the page.
 - **`dx eval`**: runs one program in either dialect. `dx eval --instructions` prints the API
@@ -93,8 +93,8 @@ operations' inputs, and the Skill Manager's lookups (`@dxos/assistant-toolkit`'s
 no other operation, no types. An enabled skill's rules apply to every request it touches, so they
 are in the prompt rather than looked up; a channel agent that had to look up how to reply did not.
 Listing every skill, operation and type, each operation as a tool, is what tool calling does, which
-runs when code mode is off (`Settings.disableCodeMode`); there the Skill Manager lists every skill in
-its instructions.
+runs when code mode is off (the default; `Settings.codeMode` turns it on); there the Skill
+Manager lists every skill in its instructions.
 
 The lookups are `querySkills`, `queryOperations`, `queryTypes` and `enableSkills`. The Skill
 Manager's MCP connection operations are not among them: a conversation gets those only by binding

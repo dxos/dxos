@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, type Database, Ref, Type } from '@dxos/echo';
+import { Annotation, type Entity, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -36,13 +36,12 @@ export type TypeDescription = {
 };
 
 /**
- * Every object and relation type the database's registry holds, with its fields: what the model is
- * told it may resolve. Read from the registry the code will run against, so a sandbox that could not
- * rebuild a type does not list it.
+ * The object and relation types among `entities`, with their fields: what the model is told it may resolve. Callers
+ * pass what the registry the code runs against holds (`registry.list()`), or what a registry query answered
+ * (`Registry.runQuery(Filter.type(Type.Type))`), which also asks the registry's sources.
  */
-export const describeTypes = (db: Database.Database, options: DescribeOptions = {}): TypeDescription[] =>
-  db.registry
-    .list()
+export const describeTypes = (entities: readonly Entity.Unknown[], options: DescribeOptions = {}): TypeDescription[] =>
+  entities
     .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
     .flatMap((type) => {
       const typename = Type.getTypename(type) ?? '';

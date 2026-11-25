@@ -2,6 +2,18 @@
 
 Instructions and documentation for developer workflows in this DXOS repository.
 
+## Quickstart
+
+From a fresh clone:
+
+1. Install the [prerequisites](#prerequisites).
+2. Run `proto install` and `pnpm i` ([Monorepo workspace](#monorepo-workspace)).
+3. Start the app you need:
+   - Storybook: `moon run storybook-react:serve`, then open <http://localhost:9009>
+     ([Storybooks](#storybooks)).
+   - Composer: `moon run composer-app:serve`, then open the URL it prints. That is
+     <http://localhost:5173> unless the port is busy ([Run commands](#run-commands)).
+
 ## Prerequisites
 
 - Native libraries:
@@ -16,17 +28,25 @@ brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-se
 bash <(curl -fsSL https://moonrepo.dev/install/proto.sh)
 ```
 
-Setup proto for shell activation:
+Setup proto for shell activation, and add the same line to `~/.zshrc`:
 
 ```bash
 eval "$(proto activate zsh --config-mode all)"
+```
+
+Shells that don't read `~/.zshrc`, such as a coding agent's, skip the activation and quietly use
+whatever node and moon are on `PATH`. Run the activation line for that shell in each of them, then
+check that `node -v` prints the version pinned in `.prototools`. The zsh line is above. For bash:
+
+```bash
+eval "$(proto activate bash --config-mode all)"
 ```
 
 ## Monorepo workspace
 
 This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [Changesets](https://github.com/changesets/changesets) for release automation (see [Releasing](#releasing)).
 
-Setup:
+Setup, which installs node, pnpm, moon, bun and rust at the versions pinned in `.prototools`:
 
 ```bash
 proto install
@@ -52,6 +72,8 @@ pnpm build
 ```
 
 > Don't forget to install and build when switching branches
+
+A dev server doesn't need this first. Each `serve` task builds only the packages it needs.
 
 Run all unit tests:
 
@@ -80,6 +102,14 @@ Examples of ways to start up different workloads in dev mode:
 
 Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
 Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
+
+Run one `moon run` at a time in a checkout. Two runs that build the same packages at once can leave
+broken output in moon's cache, so start a second server only after the first prints its URL.
+
+`composer-app:serve` listens on <http://localhost:5173>, or the next free port. Open it in desktop
+Chrome. Embedded browsers, such as an agent's browser pane, can fail to start Composer's
+SharedWorker and show "System Error". To check it from an agent, use headless Chromium through the
+root `@playwright/test` (run `pnpm exec playwright install chromium` once).
 
 ### Plugin sets
 
@@ -160,6 +190,9 @@ The following command generates storybooks across the individual packages:
 ```bash
 moon run storybook-react:serve
 ```
+
+It serves on <http://localhost:9009>. If that port is busy, pass another:
+`moon run storybook-react:serve -- --port=9010`.
 
 ### When the server wedges
 
@@ -330,12 +363,12 @@ You can still pull a specific one on demand: `git fetch origin tag composer/prev
 `--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
 check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
 
-| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                                                                       |
-| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
-| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
-| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only                                                                 |
-| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                                                                   |
-| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
+| Env            | URL                      | EDGE         | Trigger                           | Apps                                            | Notes                                                                                       |
+| -------------- | ------------------------ | ------------ | --------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **dev**        | `dev.composer.space`     | EDGE preview | manual → `dev`                    | composer + docs + drawing-app + storybook-react | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
+| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled                           | dogfood build; desktop only                                                                 |
+| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs + drawing-app                   | kept, deliberately unused                                                                   |
+| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                                             | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
 
 Local dev talks to EDGE preview by default; point it at EDGE dev or a local EDGE with `DX_EDGE_BASE_URL`.
 
@@ -345,10 +378,10 @@ Every environment ships a **desktop** Composer on its own CrabNebula channel, so
 
 **Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop via `deploy-tauri.yaml`, CrabNebula; iOS builds on `dev` alone). This is the only path that advances Composer's version — it is not a Changesets package.
 
-**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`dev` \| `preview` \| `staging` \| `production`, default `dev`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
+**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`dev` \| `preview` \| `staging` \| `production`, default `dev`), `app` (`all` default, or one of `composer` / `docs` / `drawing-app` / `storybook-react` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
 
 ```bash
-# Composer → dev (the default env). `app` defaults to `all`, which for dev is just composer.
+# Composer → dev (the default env). `app` defaults to `all`, which for dev also deploys docs, drawing-app and storybook-react.
 gh workflow run deploy-apps.yml -f environment=dev
 
 # Composer + docs → staging.

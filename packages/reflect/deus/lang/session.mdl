@@ -55,6 +55,7 @@ ext goal
     status: todo | backlog | started | review | done | duplicate | blocked | cancelled | failed
     blockedBy?: RefList         # questions the goal waits on, e.g. [Q-1]
     notes?: ProseList           # the details the page shows when the goal is opened
+    task?: Identifier           # the Composer task it mirrors, an echo: URI; `cli.ts tasks` syncs its status
   links:
     blockedBy: depends-on
   role: anchor

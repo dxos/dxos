@@ -9,11 +9,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, expect } from 'vitest';
 
-import { type AgentProcessDefinition } from '@dxos/agent-runtime';
+import { AgentService, type SessionProcessDefinition } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import * as Chat from '@dxos/assistant/Chat';
 import * as NodeShell from '@dxos/compute-runtime/node-shell';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
@@ -82,7 +81,7 @@ const TYPES = [
 let adapter: { dir: string; entry: string };
 
 /** Set per test, since the process needs the sessions and tools that test made. */
-let definition: AgentProcessDefinition | undefined;
+let definition: SessionProcessDefinition | undefined;
 
 const TestLayer = AssistantTestLayer({
   types: TYPES,
@@ -140,9 +139,11 @@ const setup = Effect.fnUntraced(function* ({ composer = false, decide = () => 'a
   });
 
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.KEY } }));
+  const chat = yield* Database.add(
+    Agent.makeSession({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.KEY } }),
+  );
   const asked = yield* answerPermissions({ chat, feed, sessions, decide });
-  const session = yield* AgentService.getSession(chat);
+  const session = yield* AgentService.bindSession(chat);
   return { workspace, sessions, host, chat, feed, asked, session };
 });
 
@@ -310,7 +311,7 @@ describe.skipIf(!HAS_CREDENTIAL)('Claude Code, end to end', { tags: ['manual'] }
             () => 'the killed agent is still running',
           );
 
-          const next = yield* AgentService.getSession(chat);
+          const next = yield* AgentService.bindSession(chat);
           const reply = yield* turn(next, 'What code word did I ask you to remember? Answer with the word only.');
           expect(reply.toUpperCase()).toContain('ORCHID');
           expect(processesUnder(adapter.dir).length).toBeGreaterThan(0);

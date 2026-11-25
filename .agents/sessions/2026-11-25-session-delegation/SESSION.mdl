@@ -1,0 +1,147 @@
+---
+id: org.dxos.session.2026-11-25-session-delegation
+name: Session delegation and thread stories
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Session delegation and thread stories
+
+Agents can give a task to another session. The chat shows parallel threads as rows.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: An agent can give a task to another session.
+  status: done
+  notes:
+    - Agent.delegate with a session target makes a new session, or uses a named one.
+    - The new session gets the model, skills and context of the caller.
+    - The task goes on its checklist, and the session is the delegate of the task.
+    - The delegation skill gives it to the model as the delegateToSession tool.
+```
+
+```mdl
+goal G-2: The main thread shows as one thread with no rail.
+  status: done
+  notes:
+    - A new request does not fold the active turn into a card.
+    - A thread that works out of view is one row after the transcript.
+    - The task of a thread does not show as a prompt from the reader.
+```
+
+```mdl
+goal G-3: The delegation stories show the project and a replay.
+  status: done
+  notes:
+    - A panel on the left shows the tasks of the project and the documents.
+    - Launch Kit Replay steps through a recorded run, and keeps the step in the URL.
+    - The recorded run stays in IndexedDB, so a reload does not record it again.
+```
+
+```mdl
+goal G-4: Scripted tests cover session delegation in CI.
+  status: done
+  notes:
+    - AgentService.test.ts has a scripted suite with 17 tests.
+    - It also covers the cases of the model-fixture suite.
+```
+
+```mdl
+goal G-5: The pull request merges.
+  status: backlog
+  notes:
+    - The user stopped the landing. Auto-merge is off.
+```
+
+```mdl
+goal G-6: Storybook deploys to preview and production after the merge.
+  status: todo
+  notes:
+    - Deploy Apps runs with app storybook-react, one time for each environment.
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Delegate to sessions, show threads as rows, add delegation stories.
+  ref: dxos/dxos#14688
+  goals: [G-1, G-2, G-3, G-4]
+  notes:
+    - A storybook test timed out in CI. The last turn of the agent now has 90 seconds.
+```
+
+## Changelog
+
+```mdl
+question Q-1: Which two environments get the storybook deploy?
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: Storybook has dev, preview and production. Preview deploys each day.
+  options:
+    - Dev and production: preview already deploys each day.
+    - Preview and production: the two public environments.
+```
+
+```mdl
+decision D-1: Deploy storybook to preview and production when the PR lands.
+  date: 2026-11-25
+  by: user:dmaretskyi
+  answers: Q-1
+```
+
+## Timeline
+
+```mdl
+event T-1: Main merged into the branch with the Agent module.
+  date: 2026-11-25T13:52Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-2: PR-1 opened and became ready for review.
+  date: 2026-11-25T14:23Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-3: Auto-merge is on for PR-1.
+  date: 2026-11-25T14:24Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-4: A storybook test of the sessions story failed in CI on a timeout.
+  date: 2026-11-25T14:49Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-5: The fix for the timeout is pushed, and Check runs again.
+  date: 2026-11-25T15:00Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-6: The storybook deploy goes to preview and production, as the user decided.
+  date: 2026-11-25T15:08Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-7: The user stopped the landing of PR-1. Auto-merge is off.
+  date: 2026-11-25T15:10Z
+  by: user:dmaretskyi
+```

@@ -15,7 +15,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { TrajectoryStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Feed, Filter, Ref, type Registry } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -131,7 +131,7 @@ const fakeAiServiceMiddleware = () => {
 };
 
 type ThreadColumnProps = {
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   current: boolean;
   db: Database.Database;
   runtime?: Capabilities.ProcessManagerRuntime;
@@ -141,7 +141,7 @@ type ThreadColumnProps = {
   index: number;
   count: number;
   onMove: (id: string, index: number) => void;
-  onDelete: (chat: AssistantChat.Chat) => void;
+  onDelete: (chat: Agent.Session) => void;
 };
 
 /** One thread with its own chat model, so a turn keeps running after the reader moves to another thread. */
@@ -200,7 +200,7 @@ const ThreadColumn = ({
         <ChatPlane.Cell menu={menu}>
           <Panel.Body asChild>
             <Chat.Content>
-              <Chat.Thread />
+              <Chat.Thread tailLines={4} />
             </Chat.Content>
           </Panel.Body>
         </ChatPlane.Cell>
@@ -216,7 +216,7 @@ const ThreadColumn = ({
 const DefaultStory = ({ selected = 0 }: StoryArgs) => {
   const [space] = useSpaces();
   const db = space?.db;
-  const chats = useQuery(db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(db, Filter.type(Agent.Session));
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const registry = useRegistry();
   const runtime = useChatServices({ id: db?.spaceId });
@@ -225,7 +225,7 @@ const DefaultStory = ({ selected = 0 }: StoryArgs) => {
   const [order, setOrder] = useState<readonly string[]>([]);
   const threads = useMemo(() => {
     const sorted = chats.toSorted((a, b) => a.id.localeCompare(b.id));
-    const position = ({ id }: AssistantChat.Chat) => {
+    const position = ({ id }: Agent.Session) => {
       const index = order.indexOf(id);
       return index === -1 ? order.length : index;
     };
@@ -247,7 +247,7 @@ const DefaultStory = ({ selected = 0 }: StoryArgs) => {
     (side: 'start' | 'end' = 'end') => {
       if (db) {
         const feed = db.add(Feed.make());
-        const chat = db.add(AssistantChat.make({ name: `Thread ${threads.length + 1}`, feed: Ref.make(feed) }));
+        const chat = db.add(Agent.makeSession({ name: `Thread ${threads.length + 1}`, feed: Ref.make(feed) }));
         if (side === 'start') {
           setOrder([chat.id, ...threads.map(({ id }) => id)]);
         }
@@ -265,7 +265,7 @@ const DefaultStory = ({ selected = 0 }: StoryArgs) => {
     [threads],
   );
 
-  const handleDelete = useCallback((chat: AssistantChat.Chat) => db?.remove(chat), [db]);
+  const handleDelete = useCallback((chat: Agent.Session) => db?.remove(chat), [db]);
 
   if (!db || !current) {
     return <Loading />;
@@ -315,7 +315,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [AssistantChat.Chat, Feed.Feed, Message.Message, Task.Task],
+          types: [Agent.Session, Feed.Feed, Message.Message, Task.Task],
           config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -325,7 +325,7 @@ const meta = {
               const exchanges = seed ?? [undefined];
               for (const [index, exchange] of exchanges.entries()) {
                 const feed = space.db.add(Feed.make());
-                space.db.add(AssistantChat.make({ name: `Thread ${index + 1}`, feed: Ref.make(feed) }));
+                space.db.add(Agent.makeSession({ name: `Thread ${index + 1}`, feed: Ref.make(feed) }));
                 if (exchange) {
                   yield* TrajectoryStore.appendExchange(feed, exchange).pipe(Effect.provide(Database.layer(space.db)));
                 }

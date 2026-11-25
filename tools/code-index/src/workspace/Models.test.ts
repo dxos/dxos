@@ -18,7 +18,8 @@ const networkError = (url: string) =>
     method: 'generateText',
     reason: new AiError.NetworkError({
       reason: 'TransportError',
-      request: { method: 'POST', url, urlParams: [], hash: undefined, headers: {} },
+      method: 'POST',
+      url,
       description: 'connection refused',
     }),
   });

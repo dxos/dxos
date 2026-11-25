@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';

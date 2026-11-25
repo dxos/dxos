@@ -6,7 +6,7 @@ import type * as Cause from 'effect/Cause';
 import type * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import type * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import type * as Process from '@dxos/compute/Process';
 import { type Database } from '@dxos/echo';
@@ -14,7 +14,7 @@ import { type Database } from '@dxos/echo';
 /**
  * A unit of work the supervisor delegates to a linked child process. `spawn` is an existential over
  * the child operation's input/output types: the strategy constructs it (e.g. via `Process.spawn`)
- * so {@link AgentProcess} can remain agnostic to the operation type and just track the returned pid.
+ * so {@link SessionProcess} can remain agnostic to the operation type and just track the returned pid.
  */
 export interface Delegation {
   /**
@@ -35,7 +35,7 @@ export interface Delegation {
 }
 
 /**
- * Services the strategy callbacks may use. The hosting {@link AgentProcess} provides these.
+ * Services the strategy callbacks may use. The hosting {@link SessionProcess} provides these.
  */
 export type StrategyServices = Database.Service;
 
@@ -44,7 +44,7 @@ export type StrategyServices = Database.Service;
  * work into linked child processes, and folds their results back into the conversation on completion.
  *
  * Implemented outside `@dxos/functions-runtime` (which cannot depend on the agent/plan types)
- * and passed to {@link AgentService.layer} so {@link AgentProcess} stays generic.
+ * and passed to {@link AgentService.layer} so {@link SessionProcess} stays generic.
  * Absent by default — a plain conversational agent.
  */
 export interface DelegationStrategy {
@@ -54,7 +54,7 @@ export interface DelegationStrategy {
    * @param activeIds - Ids of delegations already running, so reconcile does not double-spawn.
    */
   readonly reconcile: (
-    chat: Chat.Chat,
+    chat: Agent.Session,
     activeIds: ReadonlySet<string>,
   ) => Effect.Effect<readonly Delegation[], never, StrategyServices>;
 
@@ -63,7 +63,7 @@ export interface DelegationStrategy {
    * update the plan task status and append a message to the conversation feed).
    */
   readonly onComplete: (
-    chat: Chat.Chat,
+    chat: Agent.Session,
     id: string,
     exit: Exit.Exit<unknown>,
   ) => Effect.Effect<void, never, StrategyServices>;
@@ -74,7 +74,7 @@ export interface DelegationStrategy {
    * that the work the conversation held has stopped.
    */
   readonly onTurnFailed?: (
-    chat: Chat.Chat,
+    chat: Agent.Session,
     cause: Cause.Cause<unknown>,
   ) => Effect.Effect<void, never, StrategyServices>;
 }

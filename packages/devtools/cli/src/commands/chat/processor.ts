@@ -12,8 +12,8 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices, TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
 import { type Space } from '@dxos/client/echo';
+import * as Agent from '@dxos/compute/Agent';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Entity, Filter, Obj, Ref } from '@dxos/echo';
@@ -111,7 +111,7 @@ export class ChatProcessor {
       .filter(isTruthy);
 
     const feed = space.db.add(TrajectoryStore.makeFeed());
-    const chat = Chat.make({ feed: Ref.make(feed) });
+    const chat = Agent.makeSession({ feed: Ref.make(feed) });
     space.db.add(chat);
 
     const runtime = await EffectEx.runAndForwardErrors(

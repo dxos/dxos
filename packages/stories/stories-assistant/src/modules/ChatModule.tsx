@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Filter } from '@dxos/echo';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Profile from '@dxos/plugin-agent/Profile';
@@ -61,7 +61,7 @@ const ChatModuleContainer = ({
   hue?: string;
   initialPrompt?: string;
 }) => {
-  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(space.db, Filter.type(Agent.Session));
   const people = useQuery(space.db, Filter.type(Person.Person));
   const person = participant
     ? people.find(({ preferredName, fullName }) => preferredName === participant || fullName === participant)
@@ -79,7 +79,7 @@ const ChatModuleContainer = ({
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
-  const onSelect = useCallback((chat: AssistantChat.Chat) => setSelected(chat.id), []);
+  const onSelect = useCallback((chat: Agent.Session) => setSelected(chat.id), []);
   const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
 
   const registry = useRegistry();

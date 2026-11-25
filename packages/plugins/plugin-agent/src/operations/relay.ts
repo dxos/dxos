@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { Organization, Person, TaskSet } from '@dxos/types';
 

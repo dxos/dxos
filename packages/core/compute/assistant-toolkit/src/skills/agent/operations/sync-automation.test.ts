@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import * as Agent from '@dxos/assistant/Agent';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -28,7 +28,7 @@ describe('SyncAutomation', () => {
     Effect.fnUntraced(
       function* (_) {
         const cron = '*/5 * * * *';
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           { name: 'Scheduled agent', instructions: 'A scheduled agent that runs on a timer.' },
           skill,
         );
@@ -70,7 +70,7 @@ describe('SyncAutomation', () => {
     Effect.fnUntraced(
       function* (_) {
         const cron = '0 9 * * *';
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           { name: 'Toggle agent', instructions: 'Test enabled propagation.', enabled: false },
           skill,
         );

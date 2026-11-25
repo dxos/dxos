@@ -26,10 +26,11 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Main from '@dxos/react-ui/Main';
 import { arrayMove } from '@dxos/util';
 
-import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
+import { NavTree, NavTreeContext } from '#components';
 import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { NavTreeNode } from '#types';
 
+import { NAV_TREE_ITEM } from '../../constants.ts';
 import { NavTreeNamespace } from '../../namespace.ts';
 import { filterItems, getParent, getRearrangeIndex, resolveDropKind } from '../../util.ts';
 

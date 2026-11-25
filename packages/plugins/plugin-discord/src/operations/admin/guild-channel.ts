@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { Database } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import { type Channel } from '@dxos/types';

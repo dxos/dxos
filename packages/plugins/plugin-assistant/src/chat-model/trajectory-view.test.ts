@@ -218,4 +218,32 @@ describe('selectThread', () => {
     ]);
     expect(selectThread(view, blog.thread).lanes.map((lane) => lane.id)).toEqual([blog.thread]);
   });
+
+  test("main never shows a subagent's waiting task as a prompt; the subagent's thread does", ({ expect }) => {
+    const { read, set } = setup();
+    const id = Obj.ID.random();
+    const thread = Trajectory.ThreadId.make(id);
+    const task = say('Draft the blog post.', 'user', thread);
+    set([
+      say('Write the launch posts.', 'user'),
+      Trajectory.make({
+        id,
+        payload: { _tag: 'threadOpen', mode: 'fresh', purpose: 'Blog post' },
+        sender: { role: 'assistant' },
+        thread,
+      }),
+      task,
+    ]);
+
+    const view = read();
+    expect(Legacy.isQueued(view.messages.at(-1) ?? task)).toBe(true);
+    expect(texts(selectThread(view).messages)).toEqual(['Write the launch posts.']);
+    expect(texts(selectThread(view, thread).messages)).toEqual(['Draft the blog post.']);
+  });
+
+  test("a reader's prompt still waiting stays on main", ({ expect }) => {
+    const { read, set } = setup();
+    set([say('earlier'), say('question', 'user')]);
+    expect(texts(selectThread(read()).messages)).toEqual(['earlier', 'question']);
+  });
 });

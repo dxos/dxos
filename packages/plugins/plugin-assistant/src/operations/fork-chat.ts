@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -64,7 +64,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       if (companionTo) {
         // Wire the forked chat as a companion and switch to it without navigating away.
-        Chat.linkCompanion({ chat: newChat, subject: companionTo });
+        Agent.linkCompanion({ session: newChat, subject: companionTo });
         yield* Database.flush();
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
         yield* Effect.promise(() =>

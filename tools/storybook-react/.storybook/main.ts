@@ -17,7 +17,7 @@ import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { withRetry } from './indexers.ts';
-import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
+import { isPerfBundle, perfBundlePlugin, slimWasmPlugin } from './perf-bundle.ts';
 import { specFilesPlugin } from './spec-files.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -508,7 +508,7 @@ export const createConfig = (
         },
         worker: {
           format: 'es',
-          plugins: () => [isPerfBundle && perfBundlePlugin(), wasm()],
+          plugins: () => [slimWasmPlugin(), wasm()],
         },
         plugins: [
           //
@@ -546,6 +546,7 @@ export const createConfig = (
           !isVitestRun && rearmWatchPlugin(),
 
           // Ahead of `importSource`, which would otherwise resolve the automerge packages first.
+          slimWasmPlugin(),
           isPerfBundle && perfBundlePlugin(),
 
           // `?module-url` imports: stories that hand module URLs to a worker to `import()`.

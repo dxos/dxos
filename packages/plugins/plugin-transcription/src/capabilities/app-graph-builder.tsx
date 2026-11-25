@@ -11,7 +11,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { Mic } from '#components';
@@ -23,7 +23,7 @@ import { TranscriptionNamespace } from '../namespace.ts';
 const whenDictatable = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObjectMatches,
   GraphNodeMatcher.whenAny(...Dictatable.types.map((type) => AppNodeMatcher.whenEchoTypeMatches(type))),
-  GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Chat.Chat)),
+  GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Agent.Session)),
 );
 
 // The control owns recording state, mode, device selection, and entity-extraction — interactions the

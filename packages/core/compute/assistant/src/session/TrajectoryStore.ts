@@ -10,6 +10,8 @@ import * as Exit from 'effect/Exit';
 import * as HashMap from 'effect/HashMap';
 import * as Option from 'effect/Option';
 
+import * as Agent from '@dxos/compute/Agent';
+import type * as Process from '@dxos/compute/Process';
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import * as Transcript from '@dxos/compute/Transcript';
@@ -106,6 +108,16 @@ export const history = Effect.fnUntraced(function* (
   const origin = state.origin ? yield* originHistory(state.origin) : [];
   const status = thread === undefined ? undefined : siblingStatus(state, thread, policy);
   return [...origin, ...Reducer.promptFor(state, thread).map(toMessage), ...(status ? [status] : [])];
+});
+
+/** The message history of the session the calling process works for. */
+export const currentHistory: Effect.Effect<
+  Message.Message[],
+  Agent.NoCurrentSessionError,
+  Agent.Service | Process.ManagerService | Database.Service
+> = Effect.gen(function* () {
+  const feed = yield* Agent.currentFeed;
+  return yield* history(feed);
 });
 
 /** The top-level thread (or main turn) `thread` nests in: a lane of the chat. */

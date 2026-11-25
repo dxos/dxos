@@ -16,7 +16,7 @@ import { type Dimension, type DimensionConfig, type DisplayOptions } from '../co
 import { type MenuAnchor } from '../store.ts';
 import { type EditorShot } from '../timeline.ts';
 
-/** What the display panel shows and sets: this viewer's look, grid, snapping, guides and axes. */
+/** What the display panel shows and sets: this viewer's look, grid, snapping, guides, axes and collaborators' cursors. */
 export type EditorDisplay = {
   /** The look's id: the viewer's pick over the scene's own. */
   theme: string;
@@ -29,6 +29,8 @@ export type EditorDisplay = {
   guides?: boolean;
   /** The axes through the origin drawn. */
   axes?: boolean;
+  /** Collaborators' pointers drawn; unset where the host draws none, and then the panel offers no toggle. */
+  cursors?: boolean;
 };
 
 /** The config's parts beside its dimension's aspects, which the parts read through the services. */

@@ -9,11 +9,11 @@ import * as Effect from 'effect/Effect';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -24,7 +24,7 @@ import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 import { consentGuard } from '../util/consent-guard.ts';
-import { ChatModel } from './chat-model.ts';
+import { LiveChatModel } from './chat-model.ts';
 import { ChatModelRecorder } from './testing/chat-model-recorder.ts';
 import { makeSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
@@ -85,7 +85,7 @@ const gateCall = { parts: [toolCall(Operation.toolName(Gate), { label: 'gate' })
 
 const testLayer = (script: ScriptedLanguageModel.Script) =>
   AssistantTestLayer({
-    types: [Chat.Chat, Feed.Feed, Message.Message],
+    types: [Agent.Session, Feed.Feed, Message.Message],
     operationHandlers: [GateHandlers],
     skills: [GateSkill],
     aiService: scriptedAiService(script),
@@ -106,7 +106,7 @@ const providerFailure = (description: string) => ({
  */
 const setup = Effect.fn(function* ({ skills = [] }: { skills?: Skill.Skill[] } = {}) {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Agent.makeSession({ name: 'Test', feed: Ref.make(feed) }));
   const runtime = yield* Effect.context<Database.Service>();
   const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
   if (skills.length > 0) {
@@ -115,12 +115,12 @@ const setup = Effect.fn(function* ({ skills = [] }: { skills?: Skill.Skill[] } =
 
   // The UI reads the app-wide registry, which is also where the agent process writes its status.
   const registry = yield* AtomRegistry.AtomRegistry;
-  const chatModel = new ChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
+  const chatModel = new LiveChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
     chat: Ref.make(chat),
     observableRegistry: registry,
   });
   // Same options the chat model resolves with, so this is the session it drives rather than a rival.
-  const agent = yield* AgentService.getSession(chat, { location: 'local', guard: yield* consentGuard(chat) });
+  const agent = yield* AgentService.bindSession(chat, { location: 'local', guard: yield* consentGuard(chat) });
   const recorder = new ChatModelRecorder(registry, chatModel, { agentRunning: agent.running });
   yield* Effect.addFinalizer(() => Effect.sync(() => recorder.dispose()));
   return { chat, feed, chatModel, recorder };
@@ -364,11 +364,11 @@ describe('ChatModel (scripted agent)', { timeout: 30_000 }, () => {
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const registry = yield* AtomRegistry.AtomRegistry;
-        const remounted = new ChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
+        const remounted = new LiveChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
           chat: Ref.make(chat),
           observableRegistry: registry,
         });
-        const agent = yield* AgentService.getSession(chat, { location: 'local' });
+        const agent = yield* AgentService.bindSession(chat, { location: 'local' });
         const adopted = new ChatModelRecorder(registry, remounted, { agentRunning: agent.running });
         const dispose = remounted.adopt();
         yield* Effect.addFinalizer(() =>

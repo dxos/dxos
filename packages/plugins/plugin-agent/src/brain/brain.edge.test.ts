@@ -11,13 +11,12 @@ import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation } from '@dxos/client/testing';
 import { ProcessManager, RemoteTraceMonitor, UnifiedProcessManager } from '@dxos/compute-runtime';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -65,7 +64,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
 
   const TYPES = [
     Agent.Agent,
-    Chat.Chat,
+    Agent.Session,
     Skill.Skill,
     Feed.Feed,
     Text.Text,
@@ -118,11 +117,11 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
       Layer.provideMerge(Database.layer(spaceOf(peer).db)),
     );
 
-  const run = <A, E>(peer: Peer, effect: Effect.Effect<A, E, AgentService.AgentService | Database.Service>) =>
+  const run = <A, E>(peer: Peer, effect: Effect.Effect<A, E, Agent.Service | Database.Service>) =>
     EffectEx.runPromise(effect.pipe(Effect.provide(stack(peer)), Effect.scoped));
 
   /** Kai, bound to the brain's skills by registry URI (EDGE resolves them from operation-service's registry). */
-  const makeAgent = Agent.makeInitialized(
+  const makeAgent = AgentSetup.makeInitialized(
     {
       name: SCENARIO.agent,
       instructions: baseInstructions(SCENARIO.agent),
@@ -214,11 +213,11 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
   };
 
   /** A peer talks to Kai in their own chat, as themselves. */
-  const say = (peer: Peer, chat: Chat.Chat, prompt: string) =>
+  const say = (peer: Peer, chat: Agent.Session, prompt: string) =>
     run(
       peer,
       Effect.gen(function* () {
-        const session = yield* AgentService.getSession(chat, { location: 'edge' });
+        const session = yield* AgentServiceRuntime.bindSession(chat, { location: 'edge' });
         yield* session.submitPrompt(prompt, { sender: { name: peer.name, identityDid: peer.did } });
         yield* session.waitForCompletion();
       }),
@@ -243,7 +242,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
   };
 
   /** The agent's replies in a chat, as the peer's own replica has them. */
-  const replies = (peer: Peer, chat: Chat.Chat) =>
+  const replies = (peer: Peer, chat: Agent.Session) =>
     run(
       peer,
       Effect.gen(function* () {

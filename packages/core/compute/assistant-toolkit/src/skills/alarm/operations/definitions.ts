@@ -4,8 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Harness } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
+import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -39,7 +41,7 @@ export const SetAlarm = Operation.make({
     ),
   }),
   output: Schema.String,
-  services: [Harness.HarnessService],
+  services: [Agent.Service, Process.ManagerService, Database.Service],
 });
 
 export const GetCurrentDate = Operation.make({

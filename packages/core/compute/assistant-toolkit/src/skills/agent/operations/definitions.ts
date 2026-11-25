@@ -5,11 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Harness } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -23,7 +21,7 @@ export const Relay = Operation.make({
   },
   input: Schema.Struct({
     /** The chat whose durable session receives the event (carries feed, instructions, and agent). */
-    chat: Schema.suspend(() => Ref.Ref(Chat.Chat)),
+    chat: Schema.suspend(() => Ref.Ref(Agent.Session)),
     event: Schema.optional(TriggerEvent.TriggerEvent),
     /** Synthetic wake prompt (e.g. a cron tick) delivered instead of an event payload. */
     prompt: Schema.optional(Schema.String),
@@ -31,7 +29,7 @@ export const Relay = Operation.make({
     qualify: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,
-  services: [AiService.AiService, Database.Service, AgentService.AgentService],
+  services: [AiService.AiService, Database.Service, Agent.Service],
 });
 
 export const GetContext = Operation.make({
@@ -48,7 +46,7 @@ export const GetContext = Operation.make({
     instructions: Schema.String,
     checklist: Schema.String,
   }),
-  services: [Harness.HarnessService, Database.Service],
+  services: [Agent.Service, Process.ManagerService, Database.Service],
 });
 
 export const SyncAutomation = Operation.make({

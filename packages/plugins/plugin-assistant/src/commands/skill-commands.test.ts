@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -16,12 +16,12 @@ import { Text } from '@dxos/schema';
 import { makeSkillCommands, runDraftCommand } from './skill-commands.ts';
 
 describe('makeSkillCommands', () => {
-  const TestLayer = TestDatabaseLayer({ types: [Chat.Chat, Feed.Feed, Skill.Skill, Text.Text] });
+  const TestLayer = TestDatabaseLayer({ types: [Agent.Session, Feed.Feed, Skill.Skill, Text.Text] });
 
   test('loads the skill and hands the rest back as the prompt', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+      const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
       const db = yield* Database.Service;
       const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime });
@@ -46,7 +46,7 @@ describe('makeSkillCommands', () => {
   test('a draft runs its leading skill command and sends the rest', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+      const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
       const db = yield* Database.Service;
       const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime });

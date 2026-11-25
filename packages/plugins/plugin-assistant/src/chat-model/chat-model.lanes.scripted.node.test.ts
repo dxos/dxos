@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -22,7 +22,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { ChatModel } from './chat-model.ts';
+import { LiveChatModel } from './chat-model.ts';
 import { ChatModelRecorder } from './testing/chat-model-recorder.ts';
 import { makeSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
@@ -120,7 +120,7 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
 
 const testLayer = () =>
   AssistantTestLayer({
-    types: [Chat.Chat, Feed.Feed, Message.Message],
+    types: [Agent.Session, Feed.Feed, Message.Message],
     operationHandlers: [GateHandlers],
     skills: [GateSkill],
     agent: { threading: () => ({ limit: 3 }) },
@@ -130,16 +130,16 @@ const testLayer = () =>
 /** A chat model over the test layer's agent service with the gate bound, and a recorder attached before anything runs. */
 const setup = Effect.fn(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Agent.makeSession({ name: 'Test', feed: Ref.make(feed) }));
   const runtime = yield* Effect.context<Database.Service>();
   const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
   yield* Effect.promise(() => session.context.bind({ skills: [Skill.makeRef(GateSkill)], objects: [] }));
   const registry = yield* AtomRegistry.AtomRegistry;
-  const chatModel = new ChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
+  const chatModel = new LiveChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
     chat: Ref.make(chat),
     observableRegistry: registry,
   });
-  const agent = yield* AgentService.getSession(chat, { location: 'local' });
+  const agent = yield* AgentService.bindSession(chat, { location: 'local' });
   const recorder = new ChatModelRecorder(registry, chatModel, { agentRunning: agent.running });
   yield* Effect.addFinalizer(() => Effect.sync(() => recorder.dispose()));
   return { chatModel, recorder };
@@ -153,7 +153,7 @@ const threads = (recorder: ChatModelRecorder) => recorder.values('thread');
 
 describe('ChatModel light threads (scripted agent)', { timeout: 30_000 }, () => {
   it.live(
-    'a lane sent to the background stays one card in its place, and its answer lands where it completes',
+    'main keeps its turn in place while a quick request runs beside it, and its answer lands where it completes',
     Effect.fn(
       function* ({ expect }) {
         const { chatModel, recorder } = yield* setup();
@@ -161,36 +161,33 @@ describe('ChatModel light threads (scripted agent)', { timeout: 30_000 }, () => 
         chatModel.send({ message: 'Research the sea.' });
         yield* Deferred.await(started);
 
-        // The quick question runs beside the research, which goes to the background as a card where it began.
+        // The quick question runs beside the research, in a gutter of its own; the research is main, so it keeps
+        // its rows where they are, with no gutter.
         chatModel.send({ message: 'Quick: what is 17 × 23?' });
         yield* until(recorder, (thread) => thread.includes('assistant<Quick:>:"391."'));
         expect(recorder.state.thread).toBe(
-          'card<Research:running> | user[read]<Quick:>:"Quick: what is 17 × 23?" | assistant<Quick:>:"391."',
-        );
-
-        // The quick lane has ended and the research is the only lane running, yet it stays a card.
-        yield* until(recorder, () => true);
-        expect(recorder.state.thread.startsWith('card<Research:running>')).toBe(true);
-
-        // The research finishes: its card stays where it began, and its answer lands after what came meanwhile.
-        yield* Deferred.succeed(release, undefined);
-        yield* Effect.promise(() => recorder.untilSettled());
-        yield* until(recorder, (thread) => thread.includes('assistant<Research'));
-        expect(recorder.state.thread).toBe(
           [
-            'card<Research:done>',
+            'user[read]:"Research the sea."',
+            'assistant:call(com-example-operation-lanes-gate)',
             'user[read]<Quick:>:"Quick: what is 17 × 23?"',
             'assistant<Quick:>:"391."',
-            'assistant<Research>:"The sea is wide."',
           ].join(' | '),
         );
 
-        // Once in the background, the research never showed a row of its own until its answer: no interleaving,
-        // and no switching back inline.
-        const sinceCard = threads(recorder).slice(threads(recorder).findIndex((thread) => thread.startsWith('card<')));
-        for (const thread of sinceCard) {
-          expect(thread.startsWith('card<Research:')).toBe(true);
-          expect(thread.replace(/assistant<Research>:"The sea is wide\."/, '')).not.toMatch(/<Research>/);
+        // The research finishes: its answer lands after what came meanwhile, still on main.
+        yield* Deferred.succeed(release, undefined);
+        yield* Effect.promise(() => recorder.untilSettled());
+        yield* until(recorder, (thread) => thread.includes('The sea is wide.'));
+        const rows = recorder.state.thread.split(' | ');
+        expect(rows[0]).toBe('user[read]:"Research the sea."');
+        expect(rows.findIndex((row) => row.includes('The sea is wide.'))).toBeGreaterThan(
+          rows.findIndex((row) => row.includes('391.')),
+        );
+
+        // Main never wore a gutter and never folded into a row of its own.
+        for (const thread of threads(recorder)) {
+          expect(thread).not.toMatch(/<Research/);
+          expect(thread).not.toMatch(/^card</);
         }
         expect(recorder.violations).toEqual([]);
       },
@@ -200,7 +197,7 @@ describe('ChatModel light threads (scripted agent)', { timeout: 30_000 }, () => 
   );
 
   it.live(
-    'a lane that waits for the background lane answers after the background answer lands',
+    'a request that waits for main answers after main answer lands',
     Effect.fn(
       function* ({ expect }) {
         const { chatModel, recorder } = yield* setup();
@@ -210,18 +207,18 @@ describe('ChatModel light threads (scripted agent)', { timeout: 30_000 }, () => 
 
         chatModel.send({ message: 'Translate the research into French.' });
         yield* until(recorder, (thread) => thread.includes('call(thread_wait)'));
-        expect(recorder.state.thread.startsWith('card<Research:running>')).toBe(true);
+        expect(recorder.state.thread.startsWith('user[read]:"Research the sea."')).toBe(true);
 
         yield* Deferred.succeed(release, undefined);
         yield* until(recorder, (thread) => thread.includes('"La mer est vaste."'));
         yield* Effect.promise(() => recorder.untilSettled());
         const rows = recorder.state.thread.split(' | ');
-        expect(rows[0]).toBe('card<Research:done>');
+        expect(rows[0]).toBe('user[read]:"Research the sea."');
         // The research answer lands at its completion, before the answer that waited for it.
         expect(rows.findIndex((row) => row.includes('The sea is wide.'))).toBeLessThan(
           rows.findIndex((row) => row.includes('La mer est vaste.')),
         );
-        expect(rows.filter((row) => row.includes('<Research>'))).toEqual(['assistant<Research>:"The sea is wide."']);
+        expect(rows.filter((row) => row.includes('<Research'))).toEqual([]);
       },
       Effect.provide(testLayer()),
       TestHelpers.provideTestContext,

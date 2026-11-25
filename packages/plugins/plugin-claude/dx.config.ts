@@ -49,7 +49,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       'ClaudeCodeAgent',
       {
         environments: ['browser', 'node', 'tauri'],
-        provides: [AssistantCapabilities.Agent, AssistantCapabilities.AgentProcess],
+        provides: [AssistantCapabilities.Agent, AssistantCapabilities.SessionProcess],
         // Off the boot path: loading it pulls in the MCP SDK, and agents are only read once the assistant runs a turn.
         activatesOn: AppActivationEvents.AssistantStart,
       },

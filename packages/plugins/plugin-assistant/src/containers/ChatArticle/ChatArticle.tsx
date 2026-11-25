@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { TrajectoryStore } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -34,8 +34,8 @@ import { AssistantCapabilities } from '#types';
 import { AssistantNamespace } from '../../namespace.ts';
 
 export type ChatArticleProps = Merge<
-  Omit<AppSurface.ObjectSectionProps<Chat.Chat>, 'subject'> & {
-    subject?: Chat.Chat;
+  Omit<AppSurface.ObjectSectionProps<Agent.Session>, 'subject'> & {
+    subject?: Agent.Session;
     companionTo?: Obj.Unknown;
   },
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
@@ -246,7 +246,7 @@ ChatTranscript.displayName = 'ChatTranscript';
 
 const isChatView = Schema.is(ChatView);
 
-const useViewType = (chat: Chat.Chat | undefined, fallback: ChatView | undefined): ChatView | undefined => {
+const useViewType = (chat: Agent.Session | undefined, fallback: ChatView | undefined): ChatView | undefined => {
   const [viewType] = useObject(chat, 'viewType');
   return isChatView(viewType) ? viewType : fallback;
 };

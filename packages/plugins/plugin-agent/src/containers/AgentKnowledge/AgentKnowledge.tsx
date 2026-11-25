@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { Filter, Obj, Ref } from '@dxos/echo';
 
 import { type AgentKnowledgeBrainStatus, AgentKnowledge as AgentKnowledgeComponent } from '#components';

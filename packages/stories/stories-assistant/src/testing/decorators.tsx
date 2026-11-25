@@ -28,8 +28,8 @@ import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
 import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as DelegationStrategy from '@dxos/assistant-toolkit/DelegationStrategy';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -60,7 +60,7 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
@@ -157,8 +157,11 @@ type DecoratorsProps = Merge<
      * beside the real models; the chat starts on `select`. Unlike `scripted`, every other model still resolves as usual.
      */
     scriptedModels?: { scenes: Readonly<Record<string, ScriptedScene.Scene>>; select?: string };
-    /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
-    assistantSettings?: Partial<Assistant.Settings>;
+    /**
+     * Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. A story that
+     * names none starts from the defaults, whatever an earlier story set.
+     */
+    assistantSettings?: StorySettings;
   },
   Omit<StoryHarness.Options, 'Wrapper' | 'setupEvents'>,
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent' | 'onReady'>
@@ -176,7 +179,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat
   // would never re-run, leaving the chat without its story-declared skills.
-  const chats = useQuery(space?.db, Filter.type(Chat.Chat));
+  const chats = useQuery(space?.db, Filter.type(Agent.Session));
 
   UiHooks.useAsyncEffect(async () => {
     if (!space) {
@@ -218,17 +221,71 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   return <>{children}</>;
 };
 
+/** The settings a story decides, each of which changes how its agent runs. */
+type StorySettings = Pick<Assistant.Settings, 'parallelThreads' | 'parallelThreadLimit' | 'parallelThreadAgents'>;
+
 /**
- * Applies story assistant settings before rendering its children, so an agent spawned by the first prompt already
- * reads them.
+ * The settings without the ones a story decides. The store outlives a story (it is persisted, and every story shares
+ * the origin), so a setting one story turned on would otherwise run the next story's agent too.
  */
-const SettingsApplier = ({ settings, children }: { settings: Partial<Assistant.Settings>; children: ReactNode }) => {
+const withoutStorySettings = ({
+  parallelThreads: _threads,
+  parallelThreadLimit: _limit,
+  parallelThreadAgents: _agents,
+  ...rest
+}: Assistant.Settings): Omit<Assistant.Settings, keyof StorySettings> => rest;
+
+// Stable, since the applier re-applies whenever its settings change identity.
+const NO_STORY_SETTINGS: StorySettings = {};
+
+/** The operation every chat's system prompt runs (the skill manager's), the last one to reach the registry as a story boots. */
+const QUERY_SKILLS_URI = 'dxn:org.dxos.operation.assistantToolkit.querySkills';
+
+/** Longest wait for {@link QUERY_SKILLS_URI}; past it the story renders anyway and shows whatever error follows. */
+const REGISTRY_TIMEOUT = 30_000;
+
+/**
+ * Renders its children once the operations an agent's first turn needs are registered: a prompt sent earlier (a play
+ * function's first click, a story that prompts on mount) fails its turn with `FunctionNotFound` building the system
+ * prompt.
+ */
+const OperationsReady = ({ children }: { children: ReactNode }) => {
+  const registry = useRegistry();
+  const [ready, setReady] = useState(() => registry.getByURI(QUERY_SKILLS_URI) !== undefined);
+  useEffect(() => {
+    if (ready) {
+      return;
+    }
+    const finish = () => setReady(true);
+    const timer = setTimeout(finish, REGISTRY_TIMEOUT);
+    const check = () => {
+      if (registry.getByURI(QUERY_SKILLS_URI) !== undefined) {
+        finish();
+      }
+    };
+    const unsubscribe = registry.changed.on(check);
+    // The operation can register between the first render's check and this subscription, which no event reports.
+    check();
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
+  }, [registry, ready]);
+  return ready ? <>{children}</> : null;
+};
+
+/**
+ * Sets the story's assistant settings, over the defaults, before rendering its children, so an agent spawned by the
+ * first prompt already reads them; and puts the defaults back when the story goes, for stories outside this harness.
+ */
+const SettingsApplier = ({ settings, children }: { settings: StorySettings; children: ReactNode }) => {
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
   const atom = Hooks.useCapability(AssistantCapabilities.Settings);
   const [applied, setApplied] = useState(false);
   useEffect(() => {
-    atomRegistry.set(atom, { ...atomRegistry.get(atom), ...settings });
+    atomRegistry.set(atom, { ...withoutStorySettings(atomRegistry.get(atom)), ...settings });
     setApplied(true);
+    return () => atomRegistry.set(atom, withoutStorySettings(atomRegistry.get(atom)));
   }, [atomRegistry, atom, settings]);
   return applied ? <>{children}</> : null;
 };
@@ -251,7 +308,7 @@ const toStoryDecoratorsProps = ({
   config: configProp,
   types: [
     AccessToken.AccessToken,
-    Chat.Chat,
+    Agent.Session,
     Collection.Collection,
     Outline.Outline,
     Task.Task,
@@ -283,13 +340,13 @@ const toStoryDecoratorsProps = ({
     ...(scriptedModels ? [ScriptedModelPlugin({ scenes: scriptedModels.scenes })] : []),
     ...plugins,
   ],
-  Wrapper:
-    skills?.length || assistantSettings
-      ? ({ children }) => {
-          const bound = skills?.length ? <SkillBinder skills={skills}>{children}</SkillBinder> : children;
-          return assistantSettings ? <SettingsApplier settings={assistantSettings}>{bound}</SettingsApplier> : bound;
-        }
-      : undefined,
+  Wrapper: ({ children }) => (
+    <SettingsApplier settings={assistantSettings ?? NO_STORY_SETTINGS}>
+      <OperationsReady>
+        {skills?.length ? <SkillBinder skills={skills}>{children}</SkillBinder> : children}
+      </OperationsReady>
+    </SettingsApplier>
+  ),
 });
 
 /**
@@ -323,7 +380,7 @@ type StoryPluginOptions = {
    */
   createAgent?: boolean | CreateAgentOptions;
 
-  onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
+  onChatCreated?: (props: { db: Database.Database; chat: Agent.Session; binder: AiContext.Binder }) => Promise<void>;
 
   /**
    * Runs once the space is available and operations can be invoked — for seeding that goes through
@@ -443,7 +500,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       // Create agent.
       if (createAgent) {
         const agentOptions = typeof createAgent === 'object' ? createAgent : {};
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           {
             name: agentOptions.name ?? 'Default',
             instructions: agentOptions.instructions ?? '',
@@ -460,7 +517,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const project = space.db.add(Project.make({ name: agentOptions.project }));
           Obj.setParent(agent, project);
         }
-        const chat = yield* Agent.loadChat(agent).pipe(Effect.provide(Database.layer(space.db)));
+        const chat = yield* Agent.loadSession(agent).pipe(Effect.provide(Database.layer(space.db)));
         invariant(chat, 'Agent chat not found.');
         // An agent's chat runs on EDGE unless told otherwise; the harness runs its agents in the story.
         Obj.update(chat, (chat) => {
@@ -485,7 +542,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // make every reload write a chat, its feed and its bindings. Matched by key rather than by any
         // chat, since a seeded space can hold earlier chats of its own.
         const [existing] = yield* Effect.promise(() =>
-          space.db.query(Filter.foreignKeys(Chat.Chat, [HARNESS_CHAT_KEY])).run(),
+          space.db.query(Filter.foreignKeys(Agent.Session, [HARNESS_CHAT_KEY])).run(),
         );
         if (existing) {
           return;

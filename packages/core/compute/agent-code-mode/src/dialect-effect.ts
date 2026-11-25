@@ -109,7 +109,7 @@ export const EffectDialect: Dialect = {
       /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
       catalog: renderCatalog({
         operations,
-        types: describeTypes(Context.get(runtime, Database.Service).db),
+        types: describeTypes(Context.get(runtime, Database.Service).db.registry.list()),
       }),
 
       /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */

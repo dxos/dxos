@@ -6,10 +6,11 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
-import { Annotation, Collection, Database, Entity, Filter, Obj, Query } from '@dxos/echo';
+import { Annotation, Collection, Database, Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -56,7 +57,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
             .filter(isNonNullable),
       });
 
+      const containerSlots: SpaceOperation.ContainerSlot[] = [];
       for (const entity of entities) {
+        const slot = unlinkFromContainer(entity);
+        if (slot) {
+          containerSlots.push(slot);
+        }
+
         if (Obj.instanceOf(Collection.Collection, parentCollection)) {
           const index = parentCollection.objects.findIndex((ref) => ref.peek() === entity);
           if (index !== -1) {
@@ -77,12 +84,36 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         objects: entities,
         parentCollection,
         indices,
+        containerSlots,
         wasActive,
       };
     }),
   ),
 );
 export default handler;
+
+/**
+ * Drops the object from the list its parent declares with `ContainerAnnotation` (a presentation's slides), which
+ * `db.remove` leaves behind as a dangling ref; returns where it was so a restore can relink it.
+ */
+const unlinkFromContainer = (entity: unknown): SpaceOperation.ContainerSlot | undefined => {
+  const container = Obj.isObject(entity) ? getContainer(Obj.getParent(entity)) : undefined;
+  const index = container && Obj.isObject(entity) ? ContainerModel.indexOf(container, entity) : -1;
+  if (!container || !Obj.isObject(entity) || index === -1) {
+    return undefined;
+  }
+  ContainerModel.unlink({ container, object: entity });
+  return { id: entity.id, container: container.object, property: container.property, index };
+};
+
+const getContainer = (object: Obj.Unknown | undefined): ContainerModel.Container | undefined => {
+  const type = object && Obj.getType(object);
+  const annotation = type && Option.getOrUndefined(AppAnnotation.ContainerAnnotation.get(Type.getSchema(type)));
+  // An optional list field may be unset, and ContainerModel requires a list.
+  return object && annotation && Array.isArray(Obj.getValue(object, [annotation.property]))
+    ? { object, property: annotation.property }
+    : undefined;
+};
 
 const loadRootCollection = Effect.fnUntraced(function* () {
   const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;

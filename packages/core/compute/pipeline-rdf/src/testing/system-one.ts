@@ -31,7 +31,12 @@ const toProviderAnswer = (decision: Decision.Any, answer: ScriptedAnswer): Decis
     return { _tag: 'Probability', probability: answer };
   }
   const { label, confidence } = typeof answer === 'string' ? { label: answer, confidence: 1 } : answer;
-  const labels = decision._tag === 'Rate' ? decision.criteria : Object.keys(decision.criteria ?? {});
+  const labels =
+    decision._tag === 'Rate'
+      ? decision.criteria.map((level) => level.label)
+      : decision._tag === 'Locate'
+        ? []
+        : Object.keys(decision.criteria ?? {});
   const rest = labels.length > 1 ? (1 - confidence) / (labels.length - 1) : 0;
   return {
     _tag: 'Classify',

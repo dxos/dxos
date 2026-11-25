@@ -67,6 +67,7 @@ export const database = (options: DatabaseOptions): Layer.Layer<SqlClient.SqlCli
         return makeConnection(service, name, state);
       });
       return yield* SqlClient.make({
+        driver: 'dxos-sql-service',
         acquirer: Effect.succeed(connection),
         transactionAcquirer,
         compiler: Statement.makeCompilerSqlite(),

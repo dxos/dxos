@@ -317,7 +317,8 @@ describe('EchoHost index status', () => {
 
     await expect.poll(() => received).toEqual([{ phase: 'idle', done: 0, total: 0 }]);
     await host.indexStatus.opened(async () => ({ documents: 5, blocks: 0, catchUp: 0 }));
-    await expect.poll(() => received.at(-1)).toEqual({ phase: 'indexing', done: 0, total: 5 });
+    // An indexing pass may drain the backlog straight after, so the change need not be the latest.
+    await expect.poll(() => received).toContainEqual({ phase: 'indexing', done: 0, total: 5 });
   });
 
   test('the data service streams the current activity, then each change', async () => {

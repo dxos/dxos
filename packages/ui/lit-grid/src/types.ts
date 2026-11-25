@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { separator } from './defs.ts';
 import { type DxGrid } from './dx-grid.ts';
 import { toPlaneCellIndex } from './util.ts';
-
-export const separator = ',' as const;
 
 export type DxGridPlaneCellIndex = `${string}${typeof separator}${string}`;
 export type DxGridCellIndex = `${DxGridPlane}${typeof separator}${string}${typeof separator}${string}`;

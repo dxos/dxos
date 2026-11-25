@@ -10,7 +10,7 @@ import { type Ref, createRef, ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
-import { defaultColSize, defaultRowSize, focusUnfurlDefault } from './defs.ts';
+import { defaultColSize, defaultRowSize, focusUnfurlDefault, separator } from './defs.ts';
 import {
   DxAxisResize,
   type DxAxisResizeInternal,
@@ -43,7 +43,6 @@ import {
   type DxGridRange,
   type DxGridRemoteSelection,
   type DxGridSelectionProps,
-  separator,
 } from './types.ts';
 import {
   cellSelected,

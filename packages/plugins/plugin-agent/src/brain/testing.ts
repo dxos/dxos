@@ -14,8 +14,7 @@ import * as Stream from 'effect/Stream';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import * as Agent from '@dxos/assistant/Agent';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
@@ -62,7 +61,7 @@ export type TestBrainOptions = {
  */
 export const createLocalAgent = Effect.fnUntraced(function* (name: string) {
   const created = yield* Operation.invoke(AgentOperation.CreateAgent, { name });
-  const chat = yield* Agent.loadChat(yield* Database.load(created.agent));
+  const chat = yield* Agent.loadSession(yield* Database.load(created.agent));
   if (chat) {
     Obj.update(chat, (chat) => {
       chat.remote = false;
@@ -109,10 +108,10 @@ export const makeTestBrain = ({ wake = 'session', now }: TestBrainOptions = {}) 
     yield* (yield* MemoryService.MemoryService).reset();
     wakes.length = 0;
   });
-  const layer: Layer.Layer<BrainService.BrainService, never, AgentService.AgentService> = Layer.effect(
+  const layer: Layer.Layer<BrainService.BrainService, never, Agent.Service> = Layer.effect(
     BrainService.BrainService,
     Effect.gen(function* () {
-      const agents = yield* AgentService.AgentService;
+      const agents = yield* Agent.Service;
       // Built once per layer, each with its own host's agents, over the same memory.
       const { service } = BrainMemory.make(yield* memory, { triggers, wake: BrainMemory.wakeVia(agents) });
       return wake === 'session'
