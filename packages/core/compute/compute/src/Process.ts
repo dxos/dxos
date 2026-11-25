@@ -20,6 +20,7 @@ import { BaseError } from '@dxos/errors';
 import { type SpaceId, URI } from '@dxos/keys';
 import type { SerializedError } from '@dxos/protocols';
 
+import { type ServiceNotAvailableError } from './errors.ts';
 import * as Operation from './Operation.ts';
 import * as Trace from './Trace.ts';
 
@@ -597,6 +598,27 @@ export const current: Effect.Effect<Process, NoCurrentProcessError, ManagerServi
   ManagerService,
   (manager) => manager.current,
 );
+
+/**
+ * What the runtime knows about the process the calling fiber runs in, readable without any service in scope.
+ */
+export interface CurrentInfo {
+  readonly pid: ID;
+  readonly params: Params;
+  readonly environment: Environment;
+  /** The manager scoped to this process: its spawns default to the process as their parent. */
+  readonly manager: Manager;
+  /** Resolves a service for this process (its space, its conversation) as the runtime would provide it. */
+  readonly resolve: <Id, S>(tag: Context.Key<Id, S>) => Effect.Effect<S, ServiceNotAvailableError>;
+}
+
+/**
+ * The process the calling fiber runs in; none outside a process. The process manager sets it on each process it
+ * runs, so a global service can find its caller's process without asking the caller for a process-scoped service.
+ */
+export const CurrentProcess: Context.Reference<Option.Option<CurrentInfo>> = Context.Reference<
+  Option.Option<CurrentInfo>
+>('@dxos/compute/Process/CurrentProcess', { defaultValue: () => Option.none() });
 
 /**
  * Spawns `definition` — a durable operation or a script operation — through the ambient

@@ -75,6 +75,12 @@ const Traced = Operation.make({
   output: Schema.Void,
 });
 
+const WhoAmI = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.whoAmI'), name: 'WhoAmI' },
+  input: Schema.Void,
+  output: Schema.Struct({ pid: Schema.optional(Schema.String), space: Schema.optional(Schema.String) }),
+});
+
 const Failing = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.failing'), name: 'Failing' },
   input: Schema.Void,
@@ -162,6 +168,17 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* () {
         yield* Effect.void.pipe(Effect.withSpan('Handler.span'));
+      }),
+    ),
+  ),
+  WhoAmI.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const current = yield* Process.CurrentProcess;
+        return Option.match(current, {
+          onNone: () => ({}),
+          onSome: ({ pid, environment }) => ({ pid, space: environment.space }),
+        });
       }),
     ),
   ),
@@ -486,6 +503,20 @@ describe('ManagerImpl', () => {
 
       const outputs = yield* Fiber.join(outputFiber);
       expect(outputs).toEqual([10]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a process reads itself from Process.CurrentProcess',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const space = Key.SpaceId.random();
+      const handle = yield* manager.spawn(OperationProcess.make(WhoAmI), { environment: { space } });
+      const outputs = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
+      expect(outputs).toEqual([{ pid: handle.pid, space }]);
+
+      // Outside a process the reference reads as none.
+      expect(Option.isNone(yield* Process.CurrentProcess)).toBe(true);
     }, Effect.provide(TestLayer)),
   );
 

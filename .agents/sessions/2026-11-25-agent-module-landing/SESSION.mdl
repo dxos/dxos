@@ -24,10 +24,10 @@ This session makes CI pass on the Agent module PR, answers its review, and lands
 
 ```mdl
 goal G-1: The Check workflow passes on the PR.
-  status: started
+  status: done
   notes:
     - Session verbs keep the live process. The storybook tests pass.
-    - The second commit for the review runs Check now.
+    - Check passes after the review commit and the merge of main.
 ```
 
 ```mdl
@@ -40,14 +40,14 @@ goal G-2: Each review comment has an answer.
 
 ```mdl
 goal G-3: The PR merges through the merge queue.
-  status: started
+  status: done
   notes:
     - Auto-merge is on, with squash.
 ```
 
 ```mdl
 goal G-4: The Agent verbs need no service requirements.
-  status: todo
+  status: started
   notes:
     - A next PR adds a current-process context reference.
     - Session verbs get their database from the session.
@@ -58,7 +58,6 @@ goal G-4: The Agent verbs need no service requirements.
 ```mdl
 pr PR-1: One Agent module for agents, sessions and the service.
   ref: dxos/dxos#14677
-  status: landing
   goals: [G-1, G-2, G-3]
 ```
 
@@ -136,5 +135,29 @@ event T-6: Auto-merge is on for the PR.
 ```mdl
 event T-7: The PR had a merge conflict with main. A merge of main removes the conflict.
   date: 2026-11-25T11:10Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-8: Check passes on the PR. The PR is in the merge queue.
+  date: 2026-11-25T11:38Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-9: The PR is merged into main.
+  date: 2026-11-25T11:50Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-10: Work starts on the next PR, which removes the service requirements from the Agent verbs.
+  date: 2026-11-25T11:52Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-11: The Agent verbs need no service requirements. The tests pass for the next PR.
+  date: 2026-11-25T12:30Z
   by: agent:claude-code
 ```
