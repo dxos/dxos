@@ -23,17 +23,21 @@ const CHECKPOINT_DOCUMENT = Operation.toolName(MarkdownOperation.CreateCheckpoin
 /** What the agent says once every task has a session; the story waits for it. */
 export const SESSIONS_STARTED = 'Four sessions are working on the launch kit';
 
-/** The agent: plans the work, hands each task to a session of its own, and leaves the sessions to it. */
+/**
+ * The agent: reads the project's tasks off its checklist, hands each to a session of its own, and leaves the sessions
+ * to it. The project already holds the tasks (the story seeds them), so the agent plans nothing itself.
+ */
 const agent = ScriptedScene.conversation('agent', [
   ScriptedScene.turn('user', LAUNCH_REQUEST),
   ScriptedScene.turn(
     'assistant',
     [
       ScriptedScene.reasoning(
-        'Four documents with no dependencies between them: each can go to a session with an agent of its own.',
+        'The project already lists four documents with no dependencies between them: each can go to a session with an agent of its own.',
       ),
-      ScriptedScene.text('I will split this into four tasks and start a session for each one.'),
-      ScriptedScene.toolCall(UPDATE_TASKS, { changes: LAUNCH_TASKS.map(({ title }) => ({ create: true, title })) }),
+      ScriptedScene.text("I will check the project's tasks and start a session for each one."),
+      // No changes: update-tasks answers with the checklist, which is where each task's URI comes from.
+      ScriptedScene.toolCall(UPDATE_TASKS, { changes: [] }),
     ],
     { delay: '1500 millis' },
   ),

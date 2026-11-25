@@ -9,7 +9,7 @@ import * as Trajectory from '@dxos/compute/Trajectory';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { arrangeLanes } from './lanes.ts';
+import { arrangeLanes, laneHues } from './lanes.ts';
 
 /** Message ids by the short names the cases use. */
 const ids = new Map<string, string>();
@@ -21,10 +21,14 @@ const message = (name: string, role: 'user' | 'assistant', value: string) =>
 const lane = (
   id: string,
   status: Reducer.LaneStatus,
-  { overlapped = true, backgrounded = false }: { overlapped?: boolean; backgrounded?: boolean } = {},
+  {
+    overlapped = true,
+    backgrounded = false,
+    kind = id === 'a' ? 'turn' : 'light',
+  }: { overlapped?: boolean; backgrounded?: boolean; kind?: Reducer.Lane['kind'] } = {},
 ): Reducer.Lane => ({
   id: Trajectory.ThreadId.make(id),
-  kind: id === 'a' ? 'turn' : 'light',
+  kind,
   status,
   owner: { role: 'assistant' },
   created: '2026-10-21T00:00:00.000Z',
@@ -32,12 +36,13 @@ const lane = (
   ...(backgrounded ? { backgrounded } : {}),
 });
 
-/** Each row's text; a lane's card as `card:<lane>`. */
+/** Each row's text; the pinned row of lanes working out of view as `pinned:<lanes>`. */
 const texts = (messages: readonly Message.Message[]) =>
   messages.map((entry) => {
     const value = Message.extractText(entry);
-    const card = /^<lane>.*?"id":"(\w)"/.exec(value);
-    return card ? `card:${card[1]}` : value;
+    return value.startsWith('<lane>')
+      ? `pinned:${[...value.matchAll(/"lane":\{"id":"(\w)"/g)].map((match) => match[1]).join('')}`
+      : value;
   });
 
 describe('arrangeLanes', () => {
@@ -64,58 +69,56 @@ describe('arrangeLanes', () => {
     expect(arranged.lanes.size).to.eq(0);
   });
 
-  test('a lane sent to the background is one card in its original place; the queued tail stays last', ({ expect }) => {
+  test('main keeps every row of its turns, with no gutter, even once a newer request sends one to the background', ({
+    expect,
+  }) => {
     const arranged = arrangeLanes({
       messages,
       tail: 1,
       lanes: [lane('a', 'running', { backgrounded: true }), lane('b', 'done'), lane('c', 'waiting')],
       laneOf,
     });
-    expect(texts(arranged.messages)).to.deep.eq(['card:a', '17 x 23', '391', 'translate', 'queued']);
+    expect(texts(arranged.messages)).to.deep.eq(['research', '17 x 23', 'computing', '391', 'translate', 'queued']);
+    expect(arranged.lanes.has(idOf('a1'))).to.eq(false);
     expect(arranged.lanes.get(idOf('c1'))?.status).to.eq('waiting');
     expect(arranged.lanes.get(idOf('b1'))?.first).to.eq(idOf('b1'));
-    // Each lane wears its own colour.
+    // Each lane beside main wears its own colour.
     expect(arranged.lanes.get(idOf('b1'))?.hue).not.to.eq(arranged.lanes.get(idOf('c1'))?.hue);
-    const card = arranged.messages[0].blocks[0];
-    expect(card._tag === 'text' && card.text).to.include('computing');
   });
 
-  test('a finished background lane keeps its card and shows its answer where it completed', ({ expect }) => {
+  test('a thread working out of view is one row pinned after the transcript, before the queued tail', ({ expect }) => {
     const arranged = arrangeLanes({
-      messages: [...messages.slice(0, 5), message('a3', 'assistant', 'summary'), message('c2', 'assistant', 'résumé')],
-      tail: 0,
-      lanes: [lane('a', 'done', { backgrounded: true }), lane('b', 'done'), lane('c', 'done')],
-      laneOf: new Map([...laneOf, [idOf('a3'), 'a'], [idOf('c2'), 'c']]),
-    });
-    expect(texts(arranged.messages)).to.deep.eq(['card:a', '17 x 23', '391', 'translate', 'summary', 'résumé']);
-    // The answer carries the lane's header.
-    expect(arranged.lanes.get(idOf('a3'))?.first).to.eq(idOf('a3'));
-  });
-
-  test('adjacent background lanes share one row, and a row between them splits it', ({ expect }) => {
-    const arranged = arrangeLanes({
-      messages: [
-        message('x1', 'user', 'first'),
-        message('y1', 'user', 'second'),
-        message('x2', 'assistant', 'more'),
-        message('m1', 'assistant', 'main'),
-        message('z1', 'user', 'third'),
-      ],
-      tail: 0,
+      messages,
+      tail: 1,
       lanes: [
-        lane('x', 'running', { backgrounded: true }),
-        lane('y', 'running', { backgrounded: true }),
-        lane('z', 'running', { backgrounded: true }),
+        lane('a', 'running'),
+        lane('b', 'running', { backgrounded: true, kind: 'fresh' }),
+        lane('c', 'waiting', { backgrounded: true, kind: 'fresh' }),
       ],
-      laneOf: new Map([
-        [idOf('x1'), 'x'],
-        [idOf('y1'), 'y'],
-        [idOf('x2'), 'x'],
-        [idOf('z1'), 'z'],
-      ]),
+      laneOf,
     });
-    expect(texts(arranged.messages)).to.deep.eq(['card:x', 'main', 'card:z']);
-    expect(Message.extractText(arranged.messages[0])).to.include('"id":"y"');
+    expect(texts(arranged.messages)).to.deep.eq(['research', 'computing', 'pinned:bc', 'queued']);
+    // A delegated lane is named as a thread of the chat.
+    expect(Message.extractText(arranged.messages[2])).to.include('"owner":"thread"');
+  });
+
+  test('a finished thread leaves the pinned rows and shows its answer where it completed', ({ expect }) => {
+    const arranged = arrangeLanes({
+      messages: [...messages.slice(0, 4), message('b3', 'assistant', 'answer'), message('m2', 'assistant', 'later')],
+      tail: 0,
+      lanes: [lane('a', 'done'), lane('b', 'done', { backgrounded: true, kind: 'fresh' })],
+      laneOf: new Map([...laneOf, [idOf('b3'), 'b'], [idOf('m2'), 'a']]),
+    });
+    expect(texts(arranged.messages)).to.deep.eq(['research', 'computing', 'answer', 'later']);
+    // The answer carries the thread's header and colour.
+    expect(arranged.lanes.get(idOf('b3'))?.first).to.eq(idOf('b3'));
+  });
+
+  test('turns on main take no colour, so a thread keeps its colour however many turns main runs', ({ expect }) => {
+    const threads = [lane('x', 'running', { kind: 'fresh' }), lane('y', 'running', { kind: 'fresh' })];
+    const hues = laneHues([lane('a', 'done'), ...threads]);
+    expect(hues.has('a')).to.eq(false);
+    expect(laneHues([lane('a', 'done'), lane('a2', 'done', { kind: 'turn' }), ...threads])).to.deep.eq(hues);
   });
 
   test('lanes of different agents are not backgrounded, so they interleave', ({ expect }) => {

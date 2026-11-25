@@ -80,7 +80,16 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete, suggestions, def
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit} defaultDrawer={defaultDrawer}>
       <ChatPlane.Column value={chat.id}>
-        <ChatPlane.Cell menu={menu} title={name ?? `Chat ${index + 1}`}>
+        <ChatPlane.Cell
+          menu={menu}
+          title={
+            // Named as the agent's thread rows name what they stand for, so a session reads as one at a glance.
+            <span className='flex min-w-0 items-center gap-2'>
+              <span className='truncate'>{name ?? `Chat ${index + 1}`}</span>
+              <span className='shrink-0 text-xs text-fg-muted'>session</span>
+            </span>
+          }
+        >
           <Panel.Body asChild>
             <Chat.Content>
               <Chat.Thread tailLines={4} />
@@ -102,13 +111,15 @@ export type ChatColumnsProps = {
   suggestions?: readonly string[];
   /** The drawer open above the first chat's prompt at the start, e.g. its task list. */
   defaultDrawer?: Chat.RootProps['defaultDrawer'];
+  /** Where the strip rests the selected column: centered (the default), or from the start edge. */
+  align?: ChatPlane.RootProps['align'];
 };
 
 /**
  * Every chat in the space as a column of its own: the selected chat rests at the center of the strip with its prompt
  * beneath it, a new chat is added at either end, and a column is dragged, or moved from its menu, to reorder.
  */
-export const ChatColumns = ({ suggestions, defaultDrawer }: ChatColumnsProps) => {
+export const ChatColumns = ({ suggestions, defaultDrawer, align }: ChatColumnsProps) => {
   const [space] = useSpaces();
   const db = space?.db;
   const chats = useQuery(db, Filter.type(Agent.Session));
@@ -184,7 +195,13 @@ export const ChatColumns = ({ suggestions, defaultDrawer }: ChatColumnsProps) =>
 
   return (
     <Dnd.Root>
-      <ChatPlane.Root value={current.id} onValueChange={setCurrentId} onAdd={handleAdd} onMove={handleMove}>
+      <ChatPlane.Root
+        value={current.id}
+        align={align}
+        onValueChange={setCurrentId}
+        onAdd={handleAdd}
+        onMove={handleMove}
+      >
         <ChatPlane.Viewport>
           <ChatPlane.Add side='start' />
           <ChatPlane.Columns items={ordered}>

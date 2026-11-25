@@ -13,9 +13,16 @@ import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import type * as Chat from '@dxos/plugin-assistant/Chat';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 
-import { RecordedReplay, type ReplayArgs, ThreadColumns } from '../../components/index.ts';
+import { ProjectPanel, RecordedReplay, type ReplayArgs, ThreadColumns } from '../../components/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, PLANS, SAVINGS_PROMPTS, Scripts, SIDE_QUESTION } from '../../scripts/index.ts';
-import { CalculatorSkill, ReplayCache, createDecorators, storyParameters } from '../../testing/index.ts';
+import {
+  CalculatorSkill,
+  ReplayCache,
+  createDecorators,
+  launchProjectPlugins,
+  seedLaunchProject,
+  storyParameters,
+} from '../../testing/index.ts';
 
 type StoryArgs = {
   /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
@@ -119,19 +126,25 @@ export const Scripted: Story = {
 //
 
 const launchKit: Story = {
+  // The project on the left, a column wide: its tasks, and the documents the subagents write.
+  render: (args) => (
+    <div className='flex dx-fill min-h-0'>
+      <ProjectPanel />
+      <div className='flex-1 min-w-0 h-full'>
+        <ThreadColumns {...args} />
+      </div>
+    </div>
+  ),
   decorators: createDecorators({
-    lazyPlugins: async () => {
-      const SpacePlugin = await import('@dxos/plugin-space/SpacePlugin');
-      // Files the documents the subagents create.
-      return { plugins: [SpacePlugin.make({})] };
-    },
+    onChatCreated: seedLaunchProject,
+    lazyPlugins: launchProjectPlugins,
     skills: [MarkdownSkill.key, PlanningSkill.key],
     scriptedModels: { scenes: { launchKit: Scripts.launchKit }, select: 'launchKit' },
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),
   args: {
     suggestions: [LAUNCH_REQUEST, SIDE_QUESTION],
-    // Open from the start, so the checklist is seen filling in as the agent plans and ticking off as subagents report.
+    // Open from the start, so the agent's checklist is seen ticking off as subagents report.
     defaultDrawer: 'tasks',
   },
 };
@@ -140,11 +153,13 @@ const launchKit: Story = {
  * Launch kit, scripted (offline), for a person or a recorded walkthrough to drive.
  *
  * Test:
- * 1. Click the chip that asks for the Composer 1.0 launch kit: the task list above the prompt fills with four tasks,
- *    a column opens beside the chat for each of the four documents, and the chat's own column stays where it was.
- * 2. Scroll the strip sideways to reach the columns past the edge.
- * 3. Click the chip that asks which day to launch: the chat answers while the subagents keep working.
- * 4. Wait: each column closes once its subagent reports, and the summary lands in the chat's column.
+ * 1. Look left: the project's task list holds the four launch tasks.
+ * 2. Click the chip that asks for the Composer 1.0 launch kit: a column opens beside the chat for each of the four
+ *    documents, and the chat's own column stays where it was.
+ * 3. Scroll the strip sideways to reach the columns past the edge.
+ * 4. Click the chip that asks which day to launch: the chat answers while the subagents keep working.
+ * 5. Wait: each column closes once its subagent reports, its document appears as a card under the project's tasks,
+ *    and the summary lands in the chat's column.
  */
 export const LaunchKit: Story = { ...launchKit };
 
@@ -210,11 +225,8 @@ export const LaunchKitReplay: StoryObj<ReplayArgs> = {
     />
   ),
   decorators: createDecorators({
-    lazyPlugins: async () => {
-      const SpacePlugin = await import('@dxos/plugin-space/SpacePlugin');
-      // Files the documents the subagents create.
-      return { plugins: [SpacePlugin.make({})] };
-    },
+    onChatCreated: seedLaunchProject,
+    lazyPlugins: launchProjectPlugins,
     skills: [MarkdownSkill.key, PlanningSkill.key],
     scriptedModels: { scenes: { launchKit: launchKitReplay.scene }, select: 'launchKit' },
     assistantSettings: launchKitReplay.assistantSettings,

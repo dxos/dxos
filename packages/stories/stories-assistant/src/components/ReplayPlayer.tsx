@@ -10,13 +10,13 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Space, importSpace } from '@dxos/client/echo';
 import * as Agent from '@dxos/compute/Agent';
 import * as Trajectory from '@dxos/compute/Trajectory';
-import { DXN, Filter, Obj, type Registry, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { type SerializedSpace, decodeDXNFromJSON } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { SpacesService } from '@dxos/protocols/rpc';
-import { useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -67,50 +67,20 @@ type Replay = {
  */
 const replays = new Map<string, Replay>();
 
-/** The operation the agent's system prompt runs, the last one to reach the registry as a story boots. */
-const QUERY_SKILLS_URI = 'dxn:org.dxos.operation.assistantToolkit.querySkills';
-
-/** Longest wait for {@link QUERY_SKILLS_URI}; past it the run starts anyway and shows whatever error follows. */
-const REGISTRY_TIMEOUT = 30_000;
-
-/** Resolves once `uri` is in the registry, or after `timeout`. */
-const whenRegistered = (registry: Registry.Registry, uri: string, timeout: number): Promise<void> =>
-  new Promise((resolve) => {
-    if (registry.getByURI(uri)) {
-      resolve();
-      return;
-    }
-    const finish = () => {
-      clearTimeout(timer);
-      unsubscribe();
-      resolve();
-    };
-    const timer = setTimeout(finish, timeout);
-    const unsubscribe = registry.changed.on(() => {
-      if (registry.getByURI(uri)) {
-        finish();
-      }
-    });
-  });
-
 /** Runs `prompts` to the end, then records the space so the next boot imports it instead of running again. */
 const record = async ({
   space,
   chat,
   invoker,
-  registry,
   cache,
   prompts,
 }: {
   space: Space;
   chat: Agent.Session;
   invoker: Capabilities.OperationInvoker;
-  registry: Registry.Registry;
   cache: ReplayCache;
   prompts: readonly string[];
 }): Promise<readonly Trajectory.Event[]> => {
-  // Prompting on mount races the operations' registration, which the agent needs to build its system prompt.
-  await whenRegistered(registry, QUERY_SKILLS_URI, REGISTRY_TIMEOUT);
   const started = performance.now();
   const events = await runToEnd({ invoker, chat, prompts });
   const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
@@ -287,7 +257,6 @@ export const RecordedReplay = ({ cache, prompts, initial, onChange }: RecordedRe
   const chats = useQuery(space?.db, Filter.type(Agent.Session));
   const chat = chats.at(-1);
   const invoker = Hooks.useOperationInvoker();
-  const registry = useRegistry();
   // `null` once the store answered with nothing recorded, so the run knows to record rather than wait.
   const [archive, setArchive] = useState<SerializedSpace | null>();
   const [error, setError] = useState<Error>();
@@ -305,7 +274,7 @@ export const RecordedReplay = ({ cache, prompts, initial, onChange }: RecordedRe
   const replay = useMemo(
     () =>
       space && chat && archive !== undefined
-        ? getReplay({ space, chat, invoker, registry, cache, prompts, archive: archive ?? undefined })
+        ? getReplay({ space, chat, invoker, cache, prompts, archive: archive ?? undefined })
         : undefined,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [chat, archive],

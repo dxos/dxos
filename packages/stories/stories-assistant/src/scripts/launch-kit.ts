@@ -112,17 +112,18 @@ export const LAUNCH_CHECKLIST = new RegExp(
   ),
 );
 
-/** The agent: plans the work, delegates one task per turn, then waits for each subagent and checks its task off. */
+/** The agent: reads the project's tasks, delegates one per turn, then waits for each subagent and checks its task off. */
 const agent = ScriptedScene.conversation('agent', [
   ScriptedScene.turn('user', LAUNCH_REQUEST),
   ScriptedScene.turn(
     'assistant',
     [
       ScriptedScene.reasoning(
-        'Four documents with no dependencies between them: each can go to a subagent of its own.',
+        'The project already lists four documents with no dependencies between them: each can go to a thread of its own.',
       ),
-      ScriptedScene.text('I will split this into four tasks and hand each one to a subagent.'),
-      ScriptedScene.toolCall(UPDATE_TASKS, { changes: LAUNCH_TASKS.map(({ title }) => ({ create: true, title })) }),
+      ScriptedScene.text("I will check the project's tasks and hand each one to a thread."),
+      // No changes: update-tasks answers with the checklist, which is where each task's URI comes from.
+      ScriptedScene.toolCall(UPDATE_TASKS, { changes: [] }),
     ],
     { delay: '1500 millis' },
   ),
@@ -155,7 +156,7 @@ const agent = ScriptedScene.conversation('agent', [
     ]),
   ),
   ScriptedScene.turn('assistant', [
-    ScriptedScene.text('Every subagent has reported.'),
+    ScriptedScene.text('Every thread has reported.'),
     ScriptedScene.toolCall(UPDATE_TASKS, {
       changes: [{ task: ScriptedScene.capture(LAUNCH_TASKS[LAUNCH_TASKS.length - 1].key), status: 'done' }],
     }),

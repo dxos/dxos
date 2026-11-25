@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ScriptedScene } from '@dxos/ai/testing';
@@ -13,21 +14,30 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { Task } from '@dxos/types';
 
-import { ChatColumns, type ChatColumnsProps } from '../../components/index.ts';
+import { ChatColumns, type ChatColumnsProps, ProjectPanel } from '../../components/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, Scripts, SESSIONS_STARTED, SIDE_QUESTION } from '../../scripts/index.ts';
-import { createDecorators, storyParameters } from '../../testing/index.ts';
+import { createDecorators, launchProjectPlugins, seedLaunchProject, storyParameters } from '../../testing/index.ts';
 
 /**
- * Subagents as sessions: the agent hands each task on its checklist to a new chat with an agent process of its own,
- * rather than to a light thread inside its conversation. Every chat in the space is a column, so each session opens
- * beside the agent's chat as it starts, writes its document there, and ticks its task off the agent's checklist.
- * There is no waiting: the agent's turn ends once the sessions are started, and the checklist reports their progress.
+ * Subagents as sessions: the agent hands each of its project's tasks to a new chat with an agent process of its own,
+ * rather than to a light thread inside its conversation. The project is on the left: its task list on top, and a
+ * mosaic of the documents the sessions write beneath it. Every chat in the space is a column to its right, so each
+ * session opens beside the agent's chat as it starts, writes its document there, and ticks its task off. There is no
+ * waiting: the agent's turn ends once the sessions are started, and the task list reports their progress.
  *
  * Compare `threads/Delegation`, which plays the same launch kit on light threads.
  */
 const meta: Meta<ChatColumnsProps> = {
   title: 'stories/stories-assistant/sessions/Delegation',
   component: ChatColumns,
+  render: (args) => (
+    <div className='flex dx-fill min-h-0'>
+      <ProjectPanel />
+      <div className='flex-1 min-w-0 h-full'>
+        <ChatColumns {...args} />
+      </div>
+    </div>
+  ),
   parameters: storyParameters,
 };
 
@@ -41,7 +51,7 @@ const waitForSessions = (canvasElement: HTMLElement, sessions: number, timeout: 
     timeout,
   });
 
-// Captured by `onInit`, so the play can check who each task was delegated to rather than read it off the page.
+// Captured when the chat is created, so the play can check who each task was delegated to rather than read it off the page.
 let storyDb: Database.Database | undefined;
 
 /** Each launch task's delegate: the session it was handed to, which holds the task on its own checklist. */
@@ -65,14 +75,11 @@ const expectDelegatedToSessions = async () => {
 
 const launchKit: Story = {
   decorators: createDecorators({
-    onInit: async ({ space }) => {
-      storyDb = space.db;
+    onChatCreated: async ({ db, chat }) => {
+      storyDb = db;
+      await seedLaunchProject({ db, chat });
     },
-    lazyPlugins: async () => {
-      const SpacePlugin = await import('@dxos/plugin-space/SpacePlugin');
-      // Files the documents the sessions create.
-      return { plugins: [SpacePlugin.make({})] };
-    },
+    lazyPlugins: launchProjectPlugins,
     skills: [MarkdownSkill.key, PlanningSkill.key, DelegationSkill.key],
     // Every model call, not only the chat's: the planning skill checks an unfinished checklist on a model of its own
     // when the agent's turn ends with its sessions still working, and that check must not reach the network.
@@ -81,7 +88,9 @@ const launchKit: Story = {
   }),
   args: {
     suggestions: [LAUNCH_REQUEST, SIDE_QUESTION],
-    // Open from the start, so the checklist is seen filling in as the agent plans and ticking off as sessions finish.
+    // From the left, so the agent's chat sits beside the project panel and sessions open to its right.
+    align: 'start',
+    // Open from the start, so the agent's checklist is seen ticking off as sessions finish.
     defaultDrawer: 'tasks',
   },
 };
@@ -90,11 +99,13 @@ const launchKit: Story = {
  * Launch kit on sessions, scripted (offline), for a person or a recorded walkthrough to drive.
  *
  * Test:
- * 1. Click the chip that asks for the Composer 1.0 launch kit: the task list above the prompt fills with four tasks,
- *    and a column opens beside the agent's chat for each session the agent starts, named after its task.
- * 2. Scroll the strip sideways to reach the columns past the edge: each session writes its document in its own chat.
- * 3. Click the chip that asks which day to launch: the agent answers while the sessions keep working.
- * 4. Wait: each session ticks its task off the agent's checklist once its document is written.
+ * 1. Look left: the project's task list holds the four launch tasks.
+ * 2. Click the chip that asks for the Composer 1.0 launch kit: a column opens beside the agent's chat for each session
+ *    the agent starts, named after its task, and its task shows as started.
+ * 3. Scroll the strip sideways to reach the columns past the edge: each session writes its document in its own chat,
+ *    and the document appears as a card under the project's task list.
+ * 4. Click the chip that asks which day to launch: the agent answers while the sessions keep working.
+ * 5. Wait: each session ticks its task off once its document is written.
  */
 export const LaunchKit: Story = { ...launchKit };
 
@@ -136,5 +147,14 @@ export const LaunchKitScripted: Story = {
 
     // Each task was handed to a session of its own, which is now the task's delegate.
     await expectDelegatedToSessions();
+
+    // The project panel shows each document the sessions wrote as a card.
+    await waitFor(
+      () =>
+        expect(canvasElement.querySelectorAll('[data-testid="project-panel.artifact"]').length).toBe(
+          LAUNCH_TASKS.length,
+        ),
+      { timeout: 30_000 },
+    );
   },
 };

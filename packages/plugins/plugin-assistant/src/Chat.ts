@@ -25,3 +25,5 @@ export type {
 } from './components/Chat/index.ts';
 export { ReplayChatModel } from './chat-model/index.ts';
 export type { ChatModel as Model } from './chat-model/index.ts';
+export { laneHues } from './chat-model/lanes.ts';
+export { LaneHeader, type ThreadLane } from '@dxos/react-ui-assistant';
