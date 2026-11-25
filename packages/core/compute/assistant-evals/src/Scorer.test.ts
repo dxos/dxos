@@ -20,3 +20,16 @@ describe('Scorer.failedCall', () => {
     expect(Scorer.failedCall(call({ result: undefined }))).toBe(false);
   });
 });
+
+describe('Scorer.withinBudget', () => {
+  test('full marks up to the target', ({ expect }) => {
+    expect(Scorer.withinBudget(0, 0, 5)).toBe(1);
+    expect(Scorer.withinBudget(3, 3, 15)).toBe(1);
+  });
+
+  test('falls linearly to nothing at the budget', ({ expect }) => {
+    expect(Scorer.withinBudget(9, 3, 15)).toBe(0.5);
+    expect(Scorer.withinBudget(2, 0, 5)).toBeCloseTo(0.6);
+    expect(Scorer.withinBudget(15, 3, 15)).toBe(0);
+  });
+});

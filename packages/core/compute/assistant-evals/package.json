@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/keys": "workspace:*"
   },

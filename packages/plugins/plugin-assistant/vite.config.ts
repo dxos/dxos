@@ -27,6 +27,7 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'AssistantEvents': 'src/types/AssistantEvents.ts',
     'AssistantOptions': 'src/types/AssistantOptions.ts',
+    'ChatRequest': 'src/chat-model/prompt.ts',
     'AssistantPreset': 'src/types/AssistantPreset.ts',
     'AssistantService': 'src/types/AssistantService.ts',
     'AssistantSurface': 'src/types/AssistantSurface.ts',

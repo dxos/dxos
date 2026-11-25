@@ -5260,6 +5260,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../../sdk/app-toolkit
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../echo/echo-doc
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
