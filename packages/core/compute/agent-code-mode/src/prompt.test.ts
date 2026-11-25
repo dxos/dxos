@@ -12,7 +12,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
-import { EffectDialect } from './dialect-effect.ts';
+import { EffectDialect, renderCatalog } from './dialect-effect.ts';
 import { renderTypes } from './Dialect.ts';
 import { STATIC_DOCS, loadDocs } from './docs/index.ts';
 import { conciseError } from './eval-tool.ts';
@@ -114,23 +114,22 @@ describe('prompt', () => {
       input: Schema.Struct({ task: Ref.Ref(Task) }),
       output: Schema.Void,
     });
-    const instructions = EffectDialect.instructions({
-      types: [],
-      operations: [
-        {
-          name: 'close',
-          description: 'Closes a task.',
-          // What the tool projection states: a URI string, which `Operation.invoke` would reject.
-          parameters: { type: 'object', properties: { task: { type: 'string' } } },
-          definition: Close,
-          invoke: () => Effect.void,
-        },
-      ],
-    });
-    expect(instructions).toContain('input: { task: Ref<com.example.type.task> }');
-    expect(instructions).not.toContain('"type":"string"');
-    expect(instructions).toContain("yield* Database.resolve('dxn:com.example.operation.close')");
-    expect(instructions).toContain('`catalog/operations.md`');
+    const close = {
+      name: 'close',
+      description: 'Closes a task.',
+      // What the tool projection states: a URI string, which `Operation.invoke` would reject.
+      parameters: { type: 'object', properties: { task: { type: 'string' } } },
+      definition: Close,
+      invoke: () => Effect.void,
+    };
+    const instructions = EffectDialect.instructions({ types: [], operations: [close] });
+    // The prompt has the model discover operations; the catalog it reads documents each one.
+    expect(instructions).not.toContain('Closes a task.');
+    expect(instructions).toContain("DOCS['catalog/operations.md']");
+    const catalog = renderCatalog({ operations: [close], types: [] })['catalog/operations.md'];
+    expect(catalog).toContain('input: { task: Ref<com.example.type.task> }');
+    expect(catalog).not.toContain('"type":"string"');
+    expect(catalog).toContain("yield* Database.resolve('dxn:com.example.operation.close')");
   });
 
   test('the prompt and the README list every doc', async ({ expect }) => {

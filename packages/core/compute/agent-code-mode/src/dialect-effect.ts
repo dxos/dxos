@@ -44,8 +44,9 @@ export const EffectDialect: Dialect = {
   name: 'effect',
   database: true,
 
+  // Named only: the model reads an operation's input in `DOCS['catalog/operations.md']`, which each evaluation rebuilds.
   operations: (operations) =>
-    [renderOperationList(operations), renderEffectTools(operations)].filter((part) => part !== '').join('\n\n'),
+    [renderOperationNames(operations), renderEffectTools(operations)].filter((part) => part !== '').join('\n\n'),
 
   // `DOCS` is assembled ahead of the program so the model reads it as the plain object it is told it is.
   wrap: (code) =>
@@ -137,7 +138,7 @@ export const EffectDialect: Dialect = {
 
     ${renderTypes(types, ({ dxn }) => dxn)}
 
-    ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
+    ${operations.some((operation) => operation.definition) ? EFFECT_OPERATIONS : NO_OPERATIONS}
 
     ${renderEffectTools(operations)}
   `,
@@ -215,7 +216,7 @@ export const EFFECT_API = trim`
  * The catalog files of `DOCS`, from the same renderers as the prompt. Built from the registry the
  * code runs against, so the list is what `Database.resolve` will actually answer there.
  */
-const renderCatalog = ({
+export const renderCatalog = ({
   operations,
   types,
 }: {
@@ -323,26 +324,45 @@ class ArgumentError extends Schema.TaggedError<ArgumentError>('ArgumentError')('
 const describeKind = (value: unknown): string =>
   value === null || value === undefined ? String(value) : `a ${typeof value}`;
 
-const renderEffectOperations = (operations: readonly SandboxOperation[]): string => trim`
+/**
+ * How the model finds the operations, in place of listing them: a skill's operations, with their inputs, run to
+ * thousands of tokens that most turns never read, and `DOCS['catalog/operations.md']` holds the same list on demand.
+ */
+const EFFECT_OPERATIONS = trim`
   ### Operations
 
-  The skills' instructions describe their capabilities as tools; in code mode they are NOT tools. Resolve an
-  operation by its DXN and invoke it the way any other DXOS code does (\`DOCS['operations.md']\` has
-  the details):
+  The skills' instructions describe their capabilities as tools; in code mode they are NOT tools. The
+  operations are not listed here: discover them before you use one. \`DOCS['catalog/operations.md']\` lists
+  every operation this conversation can run, with its DXN, the tool name the skills use for it, its input and
+  its output; search it rather than printing it whole:
+
+  \`\`\`js
+  const catalog = DOCS['catalog/operations.md'];
+  const at = catalog.indexOf('create');
+  yield* print(catalog.slice(Math.max(0, at - 200), at + 800));
+  \`\`\`
+
+  An operation of a skill that is not enabled yet is found with the Skill Manager's \`queryOperations\`.
+  Resolve an operation by its DXN and invoke it the way any other DXOS code does (\`DOCS['operations.md']\`
+  has the details):
 
   \`\`\`js
   const Example = yield* Database.resolve('dxn:com.example.operation.example');
   const result = yield* Operation.invoke(Example, { ...input });
   \`\`\`
 
-  Each \`input\` below is the operation's own schema: pass objects you hold (or \`Ref.make(obj)\`)
-  where it takes an object or a \`Ref<typename>\`, never an id or a URI string. A skill that spells a
-  reference as a \`{"/": "echo:..."}\` envelope or a URI string is describing the tool form; this
-  reference wins. Most of what an operation does to one object is a line of \`Obj\`/\`Database\`
-  code; prefer that.
-
-  ${renderOperationList(operations)}
+  Each listed \`input\` is the operation's own schema: pass objects you hold (or \`Ref.make(obj)\`) where it
+  takes an object or a \`Ref<typename>\`, never an id or a URI string. A skill that spells a reference as a
+  \`{"/": "echo:..."}\` envelope or a URI string is describing the tool form; the catalog wins. Most of what an
+  operation does to one object is a line of \`Obj\`/\`Database\` code; prefer that.
 `;
+
+/** Operations by tool name and DXN, for a notice that more became available: their inputs are in the catalog. */
+const renderOperationNames = (operations: readonly SandboxOperation[]): string =>
+  operations
+    .flatMap(({ name, definition }) => (definition ? [`- \`${name}\` — \`${operationKey(definition)}\``] : []))
+    .join('\n') +
+  (operations.some(({ definition }) => definition) ? "\n\nTheir inputs are in `DOCS['catalog/operations.md']`." : '');
 
 /** The tools no operation backs, which `Tools` binds by name; nothing when there are none. */
 const renderEffectTools = (operations: readonly SandboxOperation[]): string => {

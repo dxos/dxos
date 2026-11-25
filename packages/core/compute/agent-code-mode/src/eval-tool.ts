@@ -22,6 +22,16 @@ import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { formatPrinted } from './format.ts';
 import * as Sandbox from './Sandbox.ts';
 
+/**
+ * Said after every result the model reads: a model that reads a program's output as a live session writes its next
+ * program against variables the last one defined, and that program fails (`doc is not defined`).
+ */
+export const STATE_TRAILER =
+  '[The program has ended and its state is gone: nothing it defined exists in your next `eval` call. ' +
+  'Load again what you need.]';
+
+const withStateTrailer = (output: string): string => `${output}\n\n${STATE_TRAILER}`;
+
 /** The single tool a code-mode agent carries. */
 export const EVAL_TOOL_NAME = 'eval';
 
@@ -181,9 +191,10 @@ export const makeEvalToolkit = (
     EvalToolkitDefinition,
     EvalToolkitDefinition.toLayer({
       [EVAL_TOOL_NAME]: ({ code }: { code: string }, { toolCallId }) =>
-        options.runner !== undefined
+        (options.runner !== undefined
           ? runThroughRunner(options.runner({ toolCallId }), options, code)
-          : evaluate({ ...options, code, toolCallId }),
+          : evaluate({ ...options, code, toolCallId })
+        ).pipe(Effect.map(withStateTrailer), Effect.mapError(withStateTrailer)),
     }),
   );
 

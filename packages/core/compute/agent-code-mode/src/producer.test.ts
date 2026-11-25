@@ -224,14 +224,17 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           const [system] = systems;
           expect(system).toContain('Today is Thursday, 2026-11-19 (UTC).');
           expect(system).toContain('The skills enabled in this conversation are stated in this prompt');
-          expect(system).toContain(querySkillsCall);
+          // The plain dialect lists its operations; the Effect dialect has the model discover them in its catalog.
+          const lists = dialect !== EffectDialect;
+          expect(system.includes(querySkillsCall)).toBe(lists);
+          expect(system.includes("DOCS['catalog/operations.md']")).toBe(!lists);
           // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
           expect(system).toContain(
             "find them, and their fields, with the Skill Manager's `assistant-toolkit-query-types`, which searches every registered type",
           );
           // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
           expect(system).toContain('Score titles before ranking them');
-          expect(system).toContain('Scores a title for urgency');
+          expect(system.includes('Scores a title for urgency')).toBe(lists);
           // An operation the database API replaces is left out of the Effect dialect, though its skill is enabled; the
           // plain dialect has no database API to replace it with.
           expect(system.includes('Reads a ticket by reference')).toBe(dialect !== EffectDialect);
@@ -249,7 +252,7 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
               expect(conversation).toContain('Skills enabled in this turn');
               expect(conversation).toContain('Write notes in lower case');
               expect(conversation).toContain('Operations available in this turn');
-              expect(conversation).toContain('Adds a note to the notebook');
+              expect(conversation).toContain(lists ? 'Adds a note to the notebook' : keyOf(AddNote));
             }
           });
 
