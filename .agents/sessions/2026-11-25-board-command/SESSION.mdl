@@ -164,3 +164,9 @@ event T-12: The sync skips tasks with no echo URI and merges many files in one p
   date: 2026-11-25T13:45Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-13: The merge queue removed [PR-1] after two Subagents story tests failed.
+  date: 2026-11-25T13:52Z
+  by: agent:claude-code
+```
