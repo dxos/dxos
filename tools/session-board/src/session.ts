@@ -52,7 +52,7 @@ const ID_PREFIXES: Record<string, string> = { question: 'Q', decision: 'D', goal
 const GITHUB_REF = /^([\w.-]+)\/([\w.-]+)#(\d+)$/;
 
 /** Where a goal's Composer task opens; `SESSION_BOARD_COMPOSER_ORIGIN` points the links at another deployment. */
-const COMPOSER_ORIGIN = process.env.SESSION_BOARD_COMPOSER_ORIGIN ?? 'https://composer.space';
+const COMPOSER_ORIGIN = process.env.SESSION_BOARD_COMPOSER_ORIGIN ?? 'https://preview.composer.space';
 
 /**
  * The Composer URL that opens a task, in the shape `space.getObjectLink` returns (`/w/<space>/db/<type>+<id>`); none for

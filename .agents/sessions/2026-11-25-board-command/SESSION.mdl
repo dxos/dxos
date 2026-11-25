@@ -145,3 +145,9 @@ event T-9: The skill now forbids questions about process.
   date: 2026-11-25T13:06Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-10: Task links open in preview.composer.space.
+  date: 2026-11-25T13:10Z
+  by: agent:claude-code
+```

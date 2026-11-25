@@ -42,7 +42,7 @@ describe('syncTasks', () => {
   test('links a goal to its task in Composer', ({ expect }) => {
     const { text } = syncTasks(SAMPLE_SESSION, [{ dxn: `echo://${SPACE}/01TASKA`, title: 'A' }]);
     expect(parseSession(text).board?.goals.at(-1)?.taskUrl).toBe(
-      `https://composer.space/w/${SPACE}/db/org.dxos.type.task+01TASKA`,
+      `https://preview.composer.space/w/${SPACE}/db/org.dxos.type.task+01TASKA`,
     );
     // The local form names no space, so there is nothing to open.
     expect(composerTaskUrl('echo:///01TASKA')).toBeUndefined();
