@@ -9,6 +9,7 @@ import { evalite } from 'evalite';
 import { PlainDialect, makeCodeModeTurnProducer } from '@dxos/agent-code-mode';
 import { type MakeTurnProducer } from '@dxos/agent-runtime';
 import { Model } from '@dxos/ai';
+import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { getTextInAnchorRange, toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
@@ -16,7 +17,10 @@ import { type DXN } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
-import { Organization, Person } from '@dxos/types';
+import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
+import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { completedBlocks, findObject } from '../assertions.ts';
@@ -120,6 +124,14 @@ const assistantText = Scorer.shared(
 type RunnerOptions = Parameters<typeof createEvalRunner>[0];
 
 /**
+ * The object id a ref points at: its URI's last path segment. The URI's shape is not ours to predict —
+ * an agent writes whichever form it writes (`echo:<id>`, say), which `Database.load` rejects as an
+ * unsupported URI kind and `EID.tryParse` cannot read — and the last segment keeps a space id from
+ * standing in for an object's.
+ */
+const refTarget = (ref: Ref.Ref<unknown>): string | undefined => String(ref.uri).split(/[:/]/).filter(Boolean).at(-1);
+
+/**
  * One task, run on every engine in the matrix. Declared as a function so each task's scorers are
  * written against its own outcome rather than switched on at grading time.
  */
@@ -130,6 +142,7 @@ const defineTask = ({
   seed,
   skills,
   plugins,
+  types = [],
   turns = { target: 3, budget: 15 },
 }: {
   title: string;
@@ -138,6 +151,8 @@ const defineTask = ({
   seed?: RunnerOptions['seed'];
   skills?: RunnerOptions['skills'];
   plugins?: RunnerOptions['plugins'];
+  /** ECHO types beyond the organizations and people every task registers. */
+  types?: NonNullable<RunnerOptions['types']>;
   /** Model round trips the task should take, and the count at which it scores nothing. */
   turns?: { target: number; budget: number };
 }) => {
@@ -146,7 +161,7 @@ const defineTask = ({
     instructions,
     input: Schema.Null,
     output: Schema.Unknown,
-    types: [Organization.Organization, Person.Person],
+    types: [Organization.Organization, Person.Person, ...types],
     ...(skills ? { skills } : {}),
     ...(plugins ? { plugins } : {}),
     timeout: TIMEOUT,
@@ -329,11 +344,6 @@ defineTask({
     Scorer.make({
       name: 'organization-linked',
       description: "The person's organization ref points at the seeded Initech organization.",
-      // Matched on the ref URI's last path segment, because the URI's shape is not ours to
-      // predict: an agent writes whichever form it writes (`echo:<id>` here), `Database.load`
-      // rejects that one as an unsupported URI kind, `Ref.hasEntityId` accepts only the local
-      // `echo:///<id>` form, and `EID.tryParse` returns nothing for it. Comparing the segment
-      // rather than searching the whole string keeps a space id from standing in for an object's.
       score: Effect.gen(function* () {
         const [people, organizations] = [
           yield* Database.query(Filter.type(Person.Person)).run,
@@ -344,8 +354,7 @@ defineTask({
         if (ada?.organization === undefined || initech === undefined) {
           return false;
         }
-        const target = String(ada.organization.uri).split(/[:/]/).filter(Boolean).at(-1);
-        return target === initech.id;
+        return refTarget(ada.organization) === initech.id;
       }),
     }),
     Scorer.database({
@@ -468,6 +477,355 @@ defineTask({
       description: 'The passage was edited in place, not written into a second document.',
       query: Query.select(Filter.type(Markdown.Document)),
       score: (documents) => documents.length === 1,
+    }),
+  ],
+});
+
+//
+// The tasks below come from real agent chats on EDGE: what users asked for, and where the agents
+// struggled (refs passed as URI strings, a decoy picked, nothing persisting between `eval` calls).
+//
+
+const documents = Query.select(Filter.type(Markdown.Document));
+const tasks = Query.select(Filter.type(Task.Task));
+
+/** The text of the markdown document with `name`, read back outside the agent. */
+const documentText = (name: string) =>
+  Effect.gen(function* () {
+    const document = yield* findObject(Markdown.Document, (candidate) => candidate.name === name);
+    return document ? (yield* Database.load(document.content)).content : undefined;
+  });
+
+/** The tasks a named task set holds, in order. */
+const taskSetTasks = (name: string) =>
+  Effect.gen(function* () {
+    const taskSet = yield* findObject(TaskSet.TaskSet, (candidate) => candidate.name === name);
+    return taskSet ? yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref)) : undefined;
+  });
+
+const PROJECT_TYPES = [Project.Project, Milestone.Milestone, Task.Task, TaskSet.TaskSet];
+const projectSkills = () => [...getDefaultSkills(), Ref.make(ProjectSkill.make())];
+const projectPlugins = () => [ProjectsPlugin.make(), TasksPlugin.make(), MarkdownPlugin.make()];
+
+//
+// 6. Several writes across objects: two tasks closed, and the right document filed on one of them.
+//
+
+const LAUNCH_TASKS = [
+  { title: 'Draft the brief', status: 'started' as const },
+  { title: 'Collect quotes', status: 'todo' as const },
+  { title: 'Book venue', status: 'todo' as const },
+  { title: 'Send invites', status: 'backlog' as const },
+];
+const CLOSED = ['Draft the brief', 'Collect quotes'];
+const BRIEF = 'Launch brief';
+
+/** The launch tasks as the run left them, by title. */
+const launchTasks = Scorer.shared(
+  Database.query(Filter.type(Task.Task)).run.pipe(
+    Effect.map((results) => new Map(results.map((task) => [task.title, task]))),
+  ),
+);
+
+defineTask({
+  title: 'closes tasks and files the right artifact',
+  skills: projectSkills,
+  plugins: projectPlugins(),
+  types: PROJECT_TYPES,
+  turns: { target: 4, budget: 15 },
+  seed: () =>
+    Effect.gen(function* () {
+      const seeded = yield* Effect.forEach(LAUNCH_TASKS, (task) => Database.add(Task.make(task)));
+      const taskSet = yield* Database.add(
+        TaskSet.make({ name: 'Launch tasks', tasks: seeded.map((task) => Ref.make(task)) }),
+      );
+      const project = yield* Database.add(Project.make({ name: 'Launch', taskSet: Ref.make(taskSet) }));
+      yield* Database.add(Markdown.make({ name: BRIEF, content: '# Launch brief\n\nWe launch in March.\n' }));
+      yield* Database.add(
+        Markdown.make({ name: `${BRIEF} (old)`, content: '# Launch brief\n\nWe launch in January.\n' }),
+      );
+      yield* Database.flush();
+      return { objects: [Ref.make(project)] };
+    }),
+  instructions: trim`
+    In the "Launch" project, mark "Draft the brief" and "Collect quotes" as done, and attach the
+    "${BRIEF}" document to "Draft the brief" as its artifact. Leave the other tasks alone.
+  `,
+  scorers: [
+    Scorer.make({
+      name: 'named-tasks-done',
+      description: 'Both named tasks are done.',
+      score: launchTasks.pipe(
+        Effect.map((byTitle) => CLOSED.filter((title) => byTitle.get(title)?.status === 'done').length / CLOSED.length),
+      ),
+    }),
+    Scorer.make({
+      name: 'right-artifact-filed',
+      description: `"Draft the brief" holds exactly one artifact: the "${BRIEF}" document, not the old one.`,
+      score: Effect.gen(function* () {
+        const task = (yield* launchTasks).get('Draft the brief');
+        const brief = yield* findObject(Markdown.Document, (candidate) => candidate.name === BRIEF);
+        const artifacts = task?.artifacts ?? [];
+        return brief !== undefined && artifacts.length === 1 && refTarget(artifacts[0]) === brief.id;
+      }),
+    }),
+    Scorer.make({
+      name: 'others-untouched',
+      description: 'The tasks not named keep their status, and only "Draft the brief" holds an artifact.',
+      score: launchTasks.pipe(
+        Effect.map(
+          (byTitle) =>
+            LAUNCH_TASKS.every(
+              ({ title, status }) =>
+                CLOSED.includes(title) ||
+                (byTitle.get(title)?.status === status && !byTitle.get(title)?.artifacts?.length),
+            ) && !byTitle.get('Collect quotes')?.artifacts?.length,
+        ),
+      ),
+    }),
+    Scorer.database({
+      name: 'nothing-created',
+      description: 'No task or document was added: the existing ones were updated and filed.',
+      query: tasks,
+      score: (results) => results.length === LAUNCH_TASKS.length,
+    }),
+    Scorer.database({
+      name: 'documents-kept',
+      description: 'Both briefs are still there; neither was copied or removed.',
+      query: documents,
+      score: (results) => results.length === 2,
+    }),
+  ],
+});
+
+//
+// 7. Many writes from one long read: a task per requirement in a long spec, and nothing else.
+//
+
+const SPEC_NAME = 'SyncService spec';
+const SPEC_SET = 'Spec work';
+const REQUIREMENTS = [
+  'Replicas converge after a partition heals',
+  'Writes are acknowledged only once durable',
+  'A client resumes from its last cursor',
+  'Deletes propagate as tombstones',
+  'Snapshots are taken every thousand changes',
+  'Large blobs are stored out of line',
+  'Sync traffic is compressed',
+  'Each space has its own rate limit',
+  'Clock skew is tolerated up to five minutes',
+  'Schema changes are versioned',
+  'Conflicts are reported to the client',
+  'Metrics are exported per space',
+];
+/** Headings in the spec that are not requirements, which a careless read turns into tasks too. */
+const NOT_REQUIREMENTS = ['Glossary', 'Prior art'];
+const OTHER_TASKS = ['Renew the certificate', 'Rotate the API keys'];
+
+/** Long, varied prose, so the requirements sit far apart in a document of about 30,000 characters. */
+const prose = (topic: string, paragraphs: number): string =>
+  Array.from(
+    { length: paragraphs },
+    (_, index) =>
+      `Paragraph ${index + 1} on ${topic.toLowerCase()}: the service keeps every replica's history so a ` +
+      'peer that was offline can catch up without a full reload, and the operators who run it need to ' +
+      'understand what happens to in-flight writes when a node restarts, which this section explains in ' +
+      'terms of the guarantees a client can rely on and the ones it cannot.',
+  ).join('\n\n');
+
+const SPEC_TEXT = [
+  `# ${SPEC_NAME}`,
+  '## Background',
+  prose('background', 12),
+  '## Requirements',
+  ...REQUIREMENTS.flatMap((requirement) => [`### ${requirement}`, prose(requirement, 4)]),
+  '## Appendix',
+  ...NOT_REQUIREMENTS.flatMap((heading) => [`### ${heading}`, prose(heading, 6)]),
+  '',
+].join('\n\n');
+
+defineTask({
+  title: 'files a task for every requirement in a long document',
+  skills: projectSkills,
+  plugins: projectPlugins(),
+  types: PROJECT_TYPES,
+  turns: { target: 4, budget: 20 },
+  seed: () =>
+    Effect.gen(function* () {
+      const spec = yield* Database.add(Markdown.make({ name: SPEC_NAME, content: SPEC_TEXT }));
+      yield* Database.add(TaskSet.make({ name: SPEC_SET }));
+      const others = yield* Effect.forEach(OTHER_TASKS, (title) => Database.add(Task.make({ title, status: 'todo' })));
+      yield* Database.add(TaskSet.make({ name: 'Ops', tasks: others.map((task) => Ref.make(task)) }));
+      yield* Database.flush();
+      return { objects: [Ref.make(spec)] };
+    }),
+  instructions: trim`
+    Read the "${SPEC_NAME}" document and create a task for every requirement in its Requirements
+    section, titled exactly with the requirement's heading. Put them in the "${SPEC_SET}" task list.
+  `,
+  scorers: [
+    Scorer.make({
+      name: 'requirements-filed',
+      description: `Share of the ${REQUIREMENTS.length} requirements filed as a task in "${SPEC_SET}", titled exactly.`,
+      score: taskSetTasks(SPEC_SET).pipe(
+        Effect.map(
+          (filed) =>
+            REQUIREMENTS.filter((title) => filed?.some((task) => task.title === title)).length / REQUIREMENTS.length,
+        ),
+      ),
+    }),
+    Scorer.make({
+      name: 'nothing-extra-filed',
+      description: 'The list holds only the requirements, once each: no appendix heading, no duplicate.',
+      score: taskSetTasks(SPEC_SET).pipe(
+        Effect.map(
+          (filed) =>
+            filed !== undefined &&
+            filed.length === REQUIREMENTS.length &&
+            new Set(filed.map((task) => task.title)).size === REQUIREMENTS.length,
+        ),
+      ),
+    }),
+    Scorer.make({
+      name: 'other-tasks-untouched',
+      description: 'The unrelated task list still holds just its two tasks, unchanged.',
+      score: taskSetTasks('Ops').pipe(
+        Effect.map(
+          (ops) =>
+            ops?.length === OTHER_TASKS.length &&
+            OTHER_TASKS.every((title) => ops.some((task) => task.title === title && task.status === 'todo')),
+        ),
+      ),
+    }),
+    Scorer.make({
+      name: 'document-unchanged',
+      description: 'The spec itself was only read.',
+      score: documentText(SPEC_NAME).pipe(Effect.map((text) => text === SPEC_TEXT)),
+    }),
+  ],
+});
+
+//
+// 8. Editing a section by its heading: one section rewritten, its links kept, a decoy left alone.
+//
+
+const OVERVIEW_NAME = 'DXOS';
+const DECOY_NAME = 'Composer';
+const HTTPS_LINK = 'https://docs.dxos.org/guide/services';
+
+/** A document's `## ` sections, by heading, each with its body as written. */
+const sections = (text: string): Map<string, string> =>
+  new Map(
+    text
+      .split(/^## /m)
+      .slice(1)
+      .map((section) => {
+        const newline = section.indexOf('\n');
+        return [section.slice(0, newline).trim(), section.slice(newline + 1)] as const;
+      }),
+  );
+
+const UNTOUCHED_SECTIONS = ['Overview', 'Storage', 'Roadmap'];
+
+/** The seeded texts, which need the linked documents' ids, so they are built at seed time. */
+const overviewText = (edgeId: string, hubId: string) =>
+  [
+    `# ${OVERVIEW_NAME}`,
+    '## Overview',
+    'DXOS is a platform for local-first collaborative software.\n',
+    '## Services',
+    `Every device talks to [EDGE](echo:///${edgeId}), which relays sync traffic and runs agents, and to ` +
+      `the [Hub](echo:///${hubId}), which issues accounts and invitations; both are described in the ` +
+      `[services guide](${HTTPS_LINK}) along with how to run them locally.\n`,
+    '## Storage',
+    'Each space is stored as Automerge documents, replicated to every member.\n',
+    '## Roadmap',
+    'Next: faster cold start, and sharing beyond a single space.\n',
+  ].join('\n\n');
+
+const DECOY_TEXT = [
+  `# ${DECOY_NAME}`,
+  '## Services',
+  'Composer reaches the same services through the client, with no configuration of its own.\n',
+].join('\n\n');
+
+/** The linked documents' ids in this run's space, which the seeded links name. */
+const linkedIds = Effect.gen(function* () {
+  const edge = yield* findObject(Markdown.Document, (candidate) => candidate.name === 'EDGE design');
+  const hub = yield* findObject(Markdown.Document, (candidate) => candidate.name === 'Hub design');
+  return { edgeId: edge?.id ?? '', hubId: hub?.id ?? '' };
+});
+
+/** The overview's links, as seeded. */
+const overviewLinks = linkedIds.pipe(
+  Effect.map(({ edgeId, hubId }) => [`echo:///${edgeId}`, `echo:///${hubId}`, HTTPS_LINK]),
+);
+
+defineTask({
+  title: 'rewrites one section in place and keeps its links',
+  skills: () => [...getDefaultSkills(), Ref.make(MarkdownSkill.make())],
+  plugins: [MarkdownPlugin.make()],
+  turns: { target: 4, budget: 15 },
+  seed: () =>
+    Effect.gen(function* () {
+      const edge = yield* Database.add(Markdown.make({ name: 'EDGE design', content: '# EDGE\n' }));
+      const hub = yield* Database.add(Markdown.make({ name: 'Hub design', content: '# Hub\n' }));
+      const overview = yield* Database.add(
+        Markdown.make({ name: OVERVIEW_NAME, content: overviewText(edge.id, hub.id) }),
+      );
+      yield* Database.add(Markdown.make({ name: DECOY_NAME, content: DECOY_TEXT }));
+      yield* Database.flush();
+      return { objects: [Ref.make(overview)] };
+    }),
+  instructions: trim`
+    In the "${OVERVIEW_NAME}" document, rewrite the "Services" section as a bulleted list. Keep every
+    link, and don't touch the other sections.
+  `,
+  scorers: [
+    Scorer.make({
+      name: 'section-bulleted',
+      description: 'The Services section is now a list of at least three bullets.',
+      score: documentText(OVERVIEW_NAME).pipe(
+        Effect.map((text) => {
+          const services = text === undefined ? undefined : sections(text).get('Services');
+          return (services?.split('\n').filter((line) => /^\s*[-*] /.test(line)).length ?? 0) >= 3;
+        }),
+      ),
+    }),
+    Scorer.make({
+      name: 'links-kept',
+      description: 'Every link the section held is still in it.',
+      score: Effect.gen(function* () {
+        const text = yield* documentText(OVERVIEW_NAME);
+        const links = yield* overviewLinks;
+        const services = text === undefined ? '' : (sections(text).get('Services') ?? '');
+        return links.filter((link) => services.includes(link)).length / links.length;
+      }),
+    }),
+    Scorer.make({
+      name: 'other-sections-untouched',
+      description: 'Every other section reads exactly as it did.',
+      score: Effect.gen(function* () {
+        const text = yield* documentText(OVERVIEW_NAME);
+        if (text === undefined) {
+          return false;
+        }
+        const { edgeId, hubId } = yield* linkedIds;
+        const before = sections(overviewText(edgeId, hubId));
+        const after = sections(text);
+        return UNTOUCHED_SECTIONS.every((heading) => after.get(heading) === before.get(heading));
+      }),
+    }),
+    Scorer.make({
+      name: 'decoy-untouched',
+      description: 'The other document with a Services section was left alone.',
+      score: documentText(DECOY_NAME).pipe(Effect.map((text) => text === DECOY_TEXT)),
+    }),
+    Scorer.database({
+      name: 'no-new-document',
+      description: 'The section was rewritten in place, not into a new document.',
+      query: documents,
+      score: (results) => results.length === 4,
     }),
   ],
 });
