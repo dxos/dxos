@@ -36,6 +36,7 @@ import {
   Inspect,
   InspectEvent,
   Nest,
+  OtherSkill,
   RecordThenDelegate,
   ResolveRegistry,
   TEST_PLUGIN_KEY,
@@ -226,6 +227,42 @@ describe('PluginHost', () => {
         expect(operations).toContain(String(ResolveRegistry.meta.key));
         expect(operations).not.toContain(String(Fibonacci.meta.key));
         expect(operations).not.toContain(String(Hidden.meta.key));
+      },
+    );
+
+    test(
+      "resolves another plugin's skill by registry URI from EDGE's registry",
+      { timeout: 20_000 },
+      async ({ expect }) => {
+        const spaceId = SpaceId.random();
+        const result = await makeHost().invoke(
+          { operationKey: String(ResolveRegistry.meta.key), spaceId, input: {} },
+          {
+            ...makeSpaceEnv(spaceId),
+            REGISTRY: makeEdgeRegistry({
+              skills: [
+                { key: OtherSkill.key, name: 'Other plugin', mcpPrompt: false, tools: [] },
+                // The primary's own definition wins over EDGE's record of the same key.
+                { key: TestSkill.key, name: 'Stale copy', mcpPrompt: false, tools: [] },
+              ],
+            }),
+          },
+        );
+        expect(result).toMatchObject({ ok: true, output: { own: TestSkill.key, other: OtherSkill.key } });
+      },
+    );
+
+    test(
+      'an EDGE registry that cannot be read costs only what it would have answered',
+      { timeout: 20_000 },
+      async ({ expect }) => {
+        const spaceId = SpaceId.random();
+        const failing = () => Promise.reject(new Error('registry down'));
+        const result = await makeHost().invoke(
+          { operationKey: String(ResolveRegistry.meta.key), spaceId, input: {} },
+          { ...makeSpaceEnv(spaceId), REGISTRY: { resolveType: failing, listTypes: failing, listSkills: failing } },
+        );
+        expect(result).toMatchObject({ ok: true, output: { own: TestSkill.key, other: null } });
       },
     );
 
@@ -560,6 +597,13 @@ const UnserializablePlugin = Plugin.define(
   ),
   Plugin.make,
 );
+
+/** EDGE's registry, answering with `skills` and no types or operation records. */
+const makeEdgeRegistry = ({ skills }: { skills: PluginProtocol.SkillRecord[] }): PluginProtocol.Registry => ({
+  resolveType: async () => undefined,
+  listTypes: async () => [],
+  listSkills: async () => ({ skills, operations: [] }),
+});
 
 /** A plugin whose one skill throws when made, as a skill with a broken definition does. */
 const BrokenSkillPlugin = Plugin.define(

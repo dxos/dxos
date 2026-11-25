@@ -1,0 +1,266 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+
+import { ToolId } from '@dxos/ai';
+import * as Script from '@dxos/compute/Script';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
+import { Filter, Query, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
+import { Text } from '@dxos/schema';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
+import { trim } from '@dxos/util';
+
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, findPromptEditor, storyParameters } from '../../testing/index.ts';
+
+const meta: Meta<typeof ModuleContainer.Root> = {
+  title: 'stories/stories-assistant/chat/Documents',
+  render: ModuleContainer.Root,
+  parameters: storyParameters,
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const MARKDOWN_DOCUMENT = trim`
+  # DXOS
+
+  DXOS is an open-source platform for building local-first, decentralized, and collaborative applications. 
+  Its core premise is that user data should live on user devices and synchronize directly between peers, rather than being locked inside centralized cloud servers. 
+  This approach preserves privacy, keeps apps responsive and functional offline, and removes the operational burden of running backend infrastructure. 
+  Developers use DXOS to add real-time, multiplayer collaboration to their applications without having to design and maintain their own sync engine.
+
+  At the heart of DXOS is **ECHO**, a decentralized database that handles data storage, replication, and automatic conflict resolution. 
+  ECHO is built on Automerge, a Conflict-free Replicated Data Type (CRDT) that allows many users to edit the same data concurrently without losing changes or producing conflicts. 
+  The result is transparent, peer-to-peer data synchronization that behaves reliably even when devices go offline and reconnect later, making shared state feel seamless across collaborators and devices.
+
+  For developers, DXOS packages these protocols into SDKs and tooling that lower the barrier to building sophisticated collaborative software.
+  Rather than assembling authentication, real-time sync, and networking from scratch, teams can focus on their application's features while DXOS handles the hard distributed-systems problems underneath. 
+  This makes it a compelling foundation for anyone building modern apps that prioritize user ownership of data, offline capability, and privacy-preserving collaboration.
+`;
+
+const STYLE_GUIDE = trim`
+  # Style Guide
+
+  - Use short, simple sentences.
+  - Organize content with headings and bullet points.
+  - Avoid jargon and explain technical terms.
+  - Use active voice whenever possible.
+  - Highlight key points in bold.
+  - Keep paragraphs brief and focused on one idea.
+  - Proofread for clarity and correctness.
+`;
+
+const addSpellingMistakes = (text: string, mistakeCount: number, noise = ''): string => {
+  const words = text.split(' ');
+  for (let mistakeIndex = 0; mistakeIndex < mistakeCount; mistakeIndex++) {
+    const idx = Math.floor(Math.random() * words.length);
+    const word = words[idx];
+    const charIdx = Math.floor(Math.random() * word.length);
+    const typoChar = String.fromCharCode(word.charCodeAt(charIdx) + 1);
+    words[idx] = word.slice(0, charIdx) + typoChar + word.slice(charIdx + 1) + noise;
+  }
+
+  return words.join(' ');
+};
+
+/**
+ * Test with prompt: Propose changes to my document based on the style guide.
+ */
+export const Default: Story = {
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      // SpacePlugin contributes the `versioning-state` capability that the Comments article surface
+      // (and the versioning UI) reads; without it the story throws "No capability found".
+      // ReviewPlugin contributes the `history` companion surface the HistoryModule renders into.
+      const [MarkdownPlugin, ReviewPlugin, SpacePlugin] = await Promise.all([
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-review/ReviewPlugin'),
+        import('@dxos/plugin-space/SpacePlugin'),
+      ]);
+      return {
+        plugins: [MarkdownPlugin.make(), ReviewPlugin.make(), SpacePlugin.make({})],
+      };
+    },
+    onInit: async ({ space }) => {
+      const document = space.db.add(
+        Markdown.make({
+          name: 'DXOS',
+          content: addSpellingMistakes(MARKDOWN_DOCUMENT, 3, '!!!').replaceAll(/(?<!\n)\n(?!\n)/g, '\n\n'),
+        }),
+      );
+      const guide = space.db.add(
+        Markdown.make({
+          name: 'Style Guide',
+          content: STYLE_GUIDE,
+        }),
+      );
+      // Register the documents in the space root collection so plugin-space builds app-graph nodes
+      // for them — this is what makes the editor's comment toolbar (a graph action) resolvable.
+      StoryHarness.addToRootCollection(space, [document, guide]);
+      return [
+        [StoryRole.Chat],
+        [Cell.article(document)],
+        [Cell.companion(document, 'history'), Cell.companion(document, 'comments')],
+        [StoryRole.Logging],
+      ];
+    },
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+    skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
+  }),
+};
+
+/** Types a prompt into the chat's CodeMirror editor and submits it, asserting it lands as a message. */
+const submitPrompt = async (canvasElement: HTMLElement, prompt: string) => {
+  const canvas = within(canvasElement);
+
+  const editor = await findPromptEditor(canvasElement, 30_000);
+
+  await userEvent.click(editor);
+  await userEvent.type(editor, prompt);
+  await userEvent.keyboard('{Enter}');
+
+  // Submitting clears the editor (its text reverts to the placeholder) and posts the prompt as a
+  // message in the thread. The live agent then responds — not asserted here.
+  await waitFor(() => expect(editor.textContent).not.toContain(prompt));
+  await canvas.findByText(prompt, {}, { timeout: 30_000 });
+};
+
+export const WithSkills: Story = {
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      const [InboxPlugin, MarkdownPlugin, TablePlugin] = await Promise.all([
+        import('@dxos/plugin-inbox/InboxPlugin'),
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-table/TablePlugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin.make(), MarkdownPlugin.make(), TablePlugin.make()],
+      };
+    },
+    onInit: async ({ space }) => {
+      const document = space.db.add(Markdown.make({ name: 'Tasks' }));
+      const skill = space.db.add(
+        Skill.make({
+          key: 'org.dxos.skill.tasks',
+          name: 'Tasks',
+          instructions: Template.make({ source: 'Help manage the task list.' }),
+        }),
+      );
+      StoryHarness.addToRootCollection(space, [document, skill]);
+      return [[StoryRole.Chat], [StoryRole.Tasks, Cell.article(skill)]];
+    },
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+};
+
+export const WithScript: Story = {
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      const [MarkdownPlugin, ScriptPlugin] = await Promise.all([
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-script/ScriptPlugin'),
+      ]);
+      return {
+        plugins: [MarkdownPlugin.make(), ScriptPlugin.make()],
+      };
+    },
+    types: [Script.Script, Text.Text],
+    onInit: async ({ client, space }) => {
+      const [{ getAccessCredential }, { templates }] = await Promise.all([
+        import('@dxos/plugin-script/ScriptFunction'),
+        import('@dxos/plugin-script/Templates'),
+      ]);
+      const identityKey = client.halo.identity.get()?.identityKey;
+      invariant(identityKey, 'Identity key not found');
+      await client.halo.writeCredentials([getAccessCredential(PublicKey.from(identityKey.data))]);
+
+      const template = templates.find((template) => template.id === 'com.example.operation.script.forex-effect');
+      invariant(template, 'Template not found');
+      invariant(template.name, 'Template name not found');
+
+      // Ensure at least one Script exists so the React surface can render.
+      const script = space.db.add(
+        Script.make({
+          name: template.name,
+          description: 'Function to get the exchange rates between two currencies.',
+          changed: true,
+          source: template.source,
+        }),
+      );
+
+      space.db.add(
+        Skill.make({
+          key: 'org.dxos.skill.forex',
+          name: 'Forex',
+          instructions: Template.make({
+            source: trim`
+              You can get the exchange rate between two currencies.
+            `,
+          }),
+          tools: [ToolId.make('com.example.operation.script.forex-effect')],
+        }),
+      );
+
+      await space.db.flush();
+      StoryHarness.addToRootCollection(space, [script]);
+      return [[StoryRole.Chat], [Cell.article(script)]];
+    },
+    onChatCreated: async ({ db, binder }) => {
+      const skills = await db.query(Query.select(Filter.type(Skill.Skill))).run();
+      await binder.bind({ skills: skills.map((skill) => Ref.make(skill)) });
+    },
+  }),
+};
+
+/**
+ * Enters a prompt into the chat that asks the assistant to rewrite the document to match the style
+ * guide (both are bound into the chat context). The assistant uses the markdown update tool to edit
+ * the live document in place.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithMarkdownStyleGuide: Story = {
+  ...Default,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Update the Document to obey the Style Guide');
+  },
+};
+
+/**
+ * As above, but asks the assistant to make the edits on a NEW branch rather than the live document.
+ * The assistant creates a branch (create-branch tool) and applies the style-guide edits to it
+ * (update tool with the branchId), leaving the branch unmerged for review — the input to Phase 2's
+ * branch-diff view.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithMarkdownStyleGuideBranch: Story = {
+  ...Default,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'Update the Document in a new branch to obey the Style Guide');
+  },
+};

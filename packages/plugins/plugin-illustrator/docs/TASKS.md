@@ -194,7 +194,7 @@ read/edit operations and the `org.dxos.skill.sketch` skill. Design:
 ### References
 
 - Design: `.agents/superpowers/specs/2026-07-23-sketch-scene-dsl-design.md` (incl. project log: start 04:48 UTC, live-verified 05:47–05:51 UTC).
-- Storybook: `packages/stories/stories-assistant/src/stories/Sketch.stories.tsx` (serve: `pnpm exec storybook dev --port 9019` from stories-assistant).
+- Storybook: `packages/stories/stories-assistant/src/stories/chat/Sketch.stories.tsx` (serve: `pnpm exec storybook dev --port 9019` from stories-assistant).
 
 ## Phase 3: plugin-illustrator base extraction (2026-07-28)
 

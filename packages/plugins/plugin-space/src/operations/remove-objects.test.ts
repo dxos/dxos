@@ -23,12 +23,12 @@ import { SpaceOperation } from '#types';
 
 import RemoveObjectsHandler from './remove-objects.ts';
 import RestoreObjectsHandler from './restore-objects.ts';
-import { TestObject } from './testing.ts';
+import { TestDeck, TestObject } from './testing.ts';
 
 // A capability manager with no layout contributed, as on a headless host.
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(RemoveObjectsHandler, RestoreObjectsHandler),
-  types: [Collection.Collection, SpaceProperties, TestObject],
+  types: [Collection.Collection, SpaceProperties, TestObject, TestDeck],
   extraServices: Layer.sync(Capability.Service, () => CapabilityManager.make({ registry: AtomRegistry.make() })),
   disableLlmMemoization: true,
 });
@@ -165,6 +165,37 @@ describe('SpaceOperation.RemoveObjects', () => {
         expect(rootCollection.objects.map((ref) => ref.uri)).toEqual([Ref.make(object).uri]);
         const remaining = yield* Database.query(Query.select(Filter.type(TestObject))).run;
         expect(remaining.map((entity) => entity.id)).toEqual([object.id]);
+      },
+      WithProperties,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+  // A container lists its owned children in a ref array; removing a child must not leave a dangling ref there.
+  it.effect(
+    'unlinks an owned child from its container, and restores it to the same place',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const first = Obj.make(TestObject, { name: 'first' });
+        const second = Obj.make(TestObject, { name: 'second' });
+        const third = Obj.make(TestObject, { name: 'third' });
+        const deck = yield* Database.add(
+          Obj.make(TestDeck, { items: [Ref.make(first), Ref.make(second), Ref.make(third)] }),
+        );
+        for (const item of [first, second, third]) {
+          Obj.setParent(item, deck);
+          yield* Database.add(item);
+        }
+        yield* Database.flush();
+
+        const removed = yield* Operation.invoke(SpaceOperation.RemoveObjects, { objects: [second, first] });
+        yield* Database.flush();
+        expect(deck.items.map((ref) => ref.uri)).toEqual([Ref.make(third).uri]);
+
+        yield* Operation.invoke(SpaceOperation.RestoreObjects, removed);
+        yield* Database.flush();
+        expect(deck.items.map((ref) => ref.uri)).toEqual([first, second, third].map((item) => Ref.make(item).uri));
+        expect(deck.items.map((ref) => ref.target?.id)).toEqual([first.id, second.id, third.id]);
       },
       WithProperties,
       Effect.provide(TestLayer),

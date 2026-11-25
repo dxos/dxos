@@ -58,6 +58,7 @@ const serializeOperations = (
 
 const toSkillRecord = (key: string, skill: Skill.Skill): PluginProtocol.SkillRecord => ({
   key,
+  ...(Obj.getMeta(skill).version !== undefined ? { version: Obj.getMeta(skill).version } : {}),
   name: skill.name,
   description: skill.description,
   instructions: skill.instructions?.source?.target?.content,

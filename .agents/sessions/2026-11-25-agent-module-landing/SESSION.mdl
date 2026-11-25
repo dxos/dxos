@@ -132,3 +132,9 @@ event T-6: Auto-merge is on for the PR.
   date: 2026-11-25T10:57Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-7: The PR had a merge conflict with main. A merge of main removes the conflict.
+  date: 2026-11-25T11:10Z
+  by: agent:claude-code
+```

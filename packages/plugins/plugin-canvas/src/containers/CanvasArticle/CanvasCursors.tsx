@@ -12,6 +12,8 @@ import { type Camera, sceneToScreen, screenToScene, useCanvasNavigation } from '
 
 export type CanvasCursorsProps = {
   object: Obj.Unknown;
+  /** Draws the peers' pointers; hidden, this viewer's own is still shared. */
+  visible?: boolean;
 };
 
 /** The viewport's pixels are the layer's: both cover the canvas root, under which the camera transform is drawn. */
@@ -24,7 +26,7 @@ const makeProjection = (camera: Camera): CursorProjection => ({
  * Collaborators' pointers over the 2D viewport, shared in scene coordinates so peers with different pan and zoom
  * agree, and only among peers in the same drilled-in view. Must render inside `Canvas.Root`, as a viewport child.
  */
-export const CanvasCursors = ({ object }: CanvasCursorsProps) => {
+export const CanvasCursors = ({ object, visible = true }: CanvasCursorsProps) => {
   const navigation = useCanvasNavigation('CanvasCursors');
   const camera = useAtomValue(navigation.atoms.camera);
   const path = useAtomValue(navigation.atoms.path);
@@ -33,7 +35,10 @@ export const CanvasCursors = ({ object }: CanvasCursorsProps) => {
   const { cursors, update } = ToolkitHooks.usePointerCursors(object);
   // A point published in the view being left would stay over it for its peers until the pointer moved again.
   useEffect(() => () => update(undefined), [view, update]);
-  const shown = useMemo(() => cursors.filter((cursor) => cursor.view === view), [cursors, view]);
+  const shown = useMemo(
+    () => (visible ? cursors.filter((cursor) => cursor.view === view) : []),
+    [cursors, view, visible],
+  );
   const projection = useMemo(() => makeProjection(camera), [camera]);
   const handlePointerChange = useCallback(
     // An absent `view` must stay absent: a JSON round trip turns `undefined` into `null`, which peers reject.

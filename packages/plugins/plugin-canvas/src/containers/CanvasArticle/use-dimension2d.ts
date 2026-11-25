@@ -38,9 +38,12 @@ const DEFAULT_GRID_KIND = 'lines';
 /**
  * A 2D canvas's dimension: react-ui-canvas's engine as the viewport, each layout in the mode its own fields name
  * (`constrain2D`), with the canvas's node types and generators; the look and grid are the drawing's, snapping, guides, axes and the camera this
- * viewer's own.
+ * viewer's own. With `cursors`, the display carries whether collaborators' pointers are drawn, also this viewer's own.
  */
-export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Camera> => {
+export const useDimension2D = (
+  canvas: CanvasFormat.Canvas,
+  { cursors: offersCursors = false }: { cursors?: boolean } = {},
+): SceneDimension<Camera> => {
   const [snapshot] = useObject(canvas);
   const settings = snapshot.settings;
   const handleSettingsChange = useCallback(
@@ -98,7 +101,7 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   );
 
   const contextId = Entity.getURI(canvas);
-  const { camera, grid: snap, guides, axes } = useViewState(canvasViewAspect, contextId);
+  const { camera, grid: snap, guides, axes, cursors } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   const onCameraChange = useCallback(
     (next: Camera) => updateViewState((state) => ({ ...state, camera: next })),
@@ -117,8 +120,20 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
       snap: snap ?? true,
       guides: guides ?? true,
       axes: axes ?? false,
+      ...(offersCursors ? { cursors: cursors ?? appSettings.showCursors ?? true } : {}),
     }),
-    [theme, backgroundGrid, appSettings.theme, themeMode, snap, guides, axes],
+    [
+      theme,
+      backgroundGrid,
+      appSettings.theme,
+      appSettings.showCursors,
+      themeMode,
+      snap,
+      guides,
+      axes,
+      offersCursors,
+      cursors,
+    ],
   );
   const onDisplayChange = useCallback(
     (next: Partial<EditorDisplay>) => {
@@ -128,12 +143,13 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
         handleSettingsChange({
           backgroundGrid: next.grid === false ? 'none' : (next.gridKind ?? DEFAULT_GRID_KIND),
         });
-      (next.snap !== undefined || next.guides !== undefined || next.axes !== undefined) &&
+      (next.snap !== undefined || next.guides !== undefined || next.axes !== undefined || next.cursors !== undefined) &&
         updateViewState((state) => ({
           ...state,
           ...(next.snap !== undefined ? { grid: next.snap } : {}),
           ...(next.guides !== undefined ? { guides: next.guides } : {}),
           ...(next.axes !== undefined ? { axes: next.axes } : {}),
+          ...(next.cursors !== undefined ? { cursors: next.cursors } : {}),
         }));
     },
     [handleSettingsChange, updateViewState],

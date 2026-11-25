@@ -3,10 +3,6 @@ title: 'ECHO'
 layout: 'default'
 ---
 
-# ECHO DB
+# ECHO DB: The Enterprise Data Model
 
 <Surface ref="{{echo}}" />
-
-<!--
-Notes.
--->

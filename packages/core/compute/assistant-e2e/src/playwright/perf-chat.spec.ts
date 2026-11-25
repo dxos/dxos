@@ -42,8 +42,8 @@ const FLOW = 'assistant-chat';
  * 20-turn calculator loop over a scripted model; the label is the row's `scale`, the trend's join key.
  */
 const FIXTURES = [
-  { scale: 'blank', storyId: 'stories-stories-assistant-chat--perf-scripted' },
-  { scale: 'busy', storyId: 'stories-stories-assistant-chat--perf-scripted-busy' },
+  { scale: 'blank', storyId: 'stories-stories-assistant-chat-chat--perf-scripted' },
+  { scale: 'busy', storyId: 'stories-stories-assistant-chat-chat--perf-scripted-busy' },
 ] as const;
 
 type Fixture = (typeof FIXTURES)[number];
