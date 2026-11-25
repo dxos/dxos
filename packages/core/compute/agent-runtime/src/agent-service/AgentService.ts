@@ -679,13 +679,24 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           Effect.map(processManager.list(), (processes) => uniqueAnnotations(processes, Process.AgentAnnotation)),
         // TODO(dmaretskyi): Stamp the caller's session, agent and thread annotations (F-12.2).
         spawn: (definition, spawnOptions) =>
-          Effect.flatMap(Effect.option(Process.current), (caller) =>
-            // The caller is the parent unless the spawn names its own.
-            processManager.spawn(definition, {
+          Effect.gen(function* () {
+            const caller = yield* Effect.option(Process.current);
+            // The caller's guard still applies when the spawn names another parent, so a child never escapes it.
+            const callerGuard = yield* Effect.serviceOption(Process.GuardService);
+            const guards = [Option.getOrUndefined(callerGuard), spawnOptions?.guard].filter(
+              (guard) => guard !== undefined,
+            );
+            const guard = guards.reduce<Process.Guard | undefined>(
+              (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
+              undefined,
+            );
+            return yield* processManager.spawn(definition, {
+              // The caller is the parent unless the spawn names its own.
               ...(Option.isSome(caller) ? { parentProcessId: caller.value.pid } : {}),
               ...spawnOptions,
-            }),
-          ),
+              ...(guard !== undefined ? { guard } : {}),
+            });
+          }),
         delegate: (request) =>
           request.target.kind === 'session'
             ? withCurrentDatabase(delegateToSession(request, request.target.session))
