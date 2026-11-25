@@ -1114,6 +1114,7 @@ export const toolsLayer = ({
     if (script == null) {
       return McpServer$.toolkit(ServerToolkit).pipe(
         Layer.provide(ServerToolkit.toLayer(Effect.map(handlers, ({ handlers }) => ServerToolkit.of(handlers)))),
+        Layer.provide(McpServer$.McpServer.layer),
       );
     }
     // Built once, so the toolkit's handlers and the plain-text runScript share one skill gate.

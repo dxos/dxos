@@ -206,7 +206,7 @@ export const explainFailure = (cause: unknown): string | undefined => {
   if (!AiError.isAiError(cause) || cause.reason._tag !== 'NetworkError') {
     return undefined;
   }
-  const url = cause.reason.request.url;
+  const url = cause.reason.url;
   return url.endsWith(OLLAMA_CHAT_PATH)
     ? `Cannot reach Ollama at ${url.slice(0, -OLLAMA_CHAT_PATH.length)}: start it with \`ollama serve\`, or restart with --provider anthropic and DX_ANTHROPIC_API_KEY set.`
     : `Cannot reach the model at ${url || 'its endpoint'}: ${cause.reason.description ?? cause.reason.reason}.`;

@@ -102,7 +102,6 @@ describe('parseError', () => {
       method: 'streamText',
       reason: new AiError.QuotaExhaustedError({
         http: {
-          request: { method: 'POST', url: 'http://edge.internal/v1/messages', urlParams: [], headers: {} },
           response: { status: 429, headers: {} },
           body: JSON.stringify({ error: { message: 'You have exceeded your usage quota.' } }),
         },
