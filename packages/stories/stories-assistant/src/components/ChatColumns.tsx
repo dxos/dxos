@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
@@ -22,12 +22,12 @@ import { useThreadModel } from './hooks.ts';
 
 type ChatColumnProps = {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   /** The chat's place in the strip, which decides what its menu offers. */
   index: number;
   count: number;
   onMove: (id: string, index: number) => void;
-  onDelete: (chat: AssistantChat.Chat) => void;
+  onDelete: (chat: Agent.Session) => void;
 };
 
 /** One chat with a chat model of its own, so a turn keeps running after the reader moves to another column. */
@@ -100,14 +100,14 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
 export const ChatColumns = () => {
   const [space] = useSpaces();
   const db = space?.db;
-  const chats = useQuery(db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(db, Filter.type(Agent.Session));
   const { invokePromise } = Hooks.useOperationInvoker();
 
   // Ids are time-ordered, so a chat lands at the end of the strip unless it was added at the start or dragged.
   const [order, setOrder] = useState<readonly string[]>([]);
   const ordered = useMemo(() => {
     const sorted = chats.toSorted((a, b) => a.id.localeCompare(b.id));
-    const position = ({ id }: AssistantChat.Chat) => {
+    const position = ({ id }: Agent.Session) => {
       const index = order.indexOf(id);
       return index === -1 ? order.length : index;
     };
@@ -163,7 +163,7 @@ export const ChatColumns = () => {
     [ordered],
   );
 
-  const handleDelete = useCallback((chat: AssistantChat.Chat) => db?.remove(chat), [db]);
+  const handleDelete = useCallback((chat: Agent.Session) => db?.remove(chat), [db]);
 
   if (!db || !current) {
     return null;

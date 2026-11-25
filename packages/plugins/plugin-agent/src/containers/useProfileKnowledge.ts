@@ -7,8 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Fact, Mapping, Ontology } from '@dxos/echo-memory';
 import { useQuery } from '@dxos/echo-react';
@@ -30,13 +29,13 @@ const POLL_MS = 3_000;
 const useSpaceFacts = (db: ReturnType<typeof Obj.getDatabase>): Fact.Fact[] => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const agents = useQuery(db, Filter.type(Agent.Agent));
-  const chats = useQuery(db, Filter.type(Chat.Chat));
+  const chats = useQuery(db, Filter.type(Agent.Session));
   const remote = useMemo(
     () =>
       new Set(
         chats.flatMap((chat) => {
           const parent = Obj.getParent(chat);
-          return parent && Agent.chatLocation(chat) === 'edge' ? [parent.id] : [];
+          return parent && Agent.sessionLocation(chat) === 'edge' ? [parent.id] : [];
         }),
       ),
     [chats],

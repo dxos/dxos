@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { DXN, Feed, Filter, Obj, Query, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -21,7 +21,7 @@ const isBindingEntry = (item: Obj.Unknown): boolean =>
     : true;
 
 /** The agent's primary chat: the newest one without a foreign key, since channel conversations carry one. */
-export const selectPrimaryChat = (chats: readonly Chat.Chat[]): Chat.Chat | undefined =>
+export const selectPrimaryChat = (chats: readonly Agent.Session[]): Agent.Session | undefined =>
   chats
     .filter((chat) => Obj.getMeta(chat).keys.length === 0)
     .sort((left, right) => left.id.localeCompare(right.id))
@@ -31,7 +31,7 @@ export const selectPrimaryChat = (chats: readonly Chat.Chat[]): Chat.Chat | unde
  * How many binding entries the chat's feed holds: legacy binding records and `contextBind`/`contextUnbind` events. It changes whenever a skill is bound or unbound (a mode
  * switch, a customization), so a skill list read through `ListSkills` re-reads on it rather than going stale.
  */
-export const useBindingCount = (chat: Chat.Chat | undefined): number => {
+export const useBindingCount = (chat: Agent.Session | undefined): number => {
   const [feedRef] = useObject(chat, 'feed');
   const feed = useResolveRef(feedRef);
   // Every branch: the agent's turns are written on branches of their own.

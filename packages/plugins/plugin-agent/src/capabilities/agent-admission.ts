@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import type * as Operation from '@dxos/compute/Operation';
 import { PublicKey, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';

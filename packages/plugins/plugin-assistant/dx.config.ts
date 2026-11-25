@@ -163,14 +163,6 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
         name: 'AiService',
         requires: [AppCapabilities.AiModelResolver],
       }),
-      // Process-affinity `Harness.HarnessService` LayerSpec — needed so operations
-      // dispatched as their own processes (e.g. via `Operation.invoke` from
-      // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
-      // conversation-scoped services without an inline `Effect.provideService`
-      // upstream. See `capabilities/ai-context.ts` for the rationale.
-      AppCapability.layerSpec(() => import('./src/capabilities/ai-context.ts', { with: { type: 'module-url' } }), {
-        name: 'AiContext',
-      }),
       AppCapability.layerSpec(() => import('./src/capabilities/agent-service.ts', { with: { type: 'module-url' } }), {
         name: 'AgentRuntime',
       }),

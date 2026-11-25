@@ -54,7 +54,7 @@ export type EdgeFunctionServices =
   | Trace.TraceService
   | Operation.Service
   | Registry.Service
-  // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `AgentProcess`)
+  // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `SessionProcess`)
   // is satisfied by the same layer rather than having to merge its own provider.
   | OpaqueToolkit.OpaqueToolkitProvider;
 

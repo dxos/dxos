@@ -14,7 +14,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
@@ -118,7 +118,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // Parent edge before the add, as the project's own create-chat action does: it files the
         // chat under the project rather than the space root.
         if (project) {
-          Chat.linkCompanion({ chat, subject: project });
+          Agent.linkCompanion({ session: chat, subject: project });
           // The project's instructions say how its tasks are worked; the binding below brings their skills
           // and context, but only the chat's own `instructions` ref reaches the system prompt.
           if (project.instructions) {
@@ -313,7 +313,7 @@ const currentActor = Effect.gen(function* () {
  * makes this one unresolvable on a host that does not provide it.
  */
 const bindDelegationContext = Effect.fnUntraced(function* (
-  chat: Chat.Chat,
+  chat: Agent.Session,
   project: Project.Project | undefined,
   sources: readonly Obj.Unknown[],
 ) {

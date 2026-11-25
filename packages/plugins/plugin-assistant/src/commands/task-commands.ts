@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
-import { Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { type Task } from '@dxos/types';
@@ -21,7 +23,9 @@ export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
       if (title.length === 0) {
         return new Error('Usage: /task:create <description>');
       }
-      Chat.addTask(db, chat, title);
+      Effect.runSync(
+        Agent.addTask(chat, title).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+      );
       await db.flush();
       return { summary: `Created task “${title}”.` };
     },
@@ -46,7 +50,9 @@ export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
         if (seen.has(task.id)) {
           continue;
         }
-        for (const member of Chat.deleteTask(db, chat, tasks, task)) {
+        for (const member of Effect.runSync(
+          Agent.deleteTask(chat, tasks, task).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+        )) {
           seen.add(member.id);
         }
         deleted.push(task);
@@ -123,11 +129,11 @@ const run = async <I, O>(
  * The checklist in full: a reopened chat's refs are unresolved until loaded, and an unresolved
  * entry is invisible to both selector matching and the subtree sweep.
  */
-const hydrate = async (chat: Chat.Chat): Promise<Task.Task[]> => {
+const hydrate = async (chat: Agent.Session): Promise<Task.Task[]> => {
   // `tryLoad`, not `load`: the latter throws on an entry whose object is gone, failing the whole
   // command instead of proceeding with the tasks that do resolve.
   await Promise.all(chat.tasks.map((ref) => ref.tryLoad()));
-  return Chat.resolveTasks(chat);
+  return Agent.resolveTasks(chat);
 };
 
 /** Resolves selectors against `tasks`, in the order the user named them. */

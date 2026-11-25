@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -60,7 +60,7 @@ export const syncAgentAutomation = (
   Effect.gen(function* () {
     // Resolve the chat before the destructive phase: a transient resolution gap must not wipe
     // existing automation without recreating it.
-    const chat = yield* Agent.loadChat(agent);
+    const chat = yield* Agent.loadSession(agent);
     if (!chat) {
       return;
     }

@@ -5,33 +5,86 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
+import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
+import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
+import * as Stream from 'effect/Stream';
 
 import { SessionConfig } from '@dxos/ai';
 import { AiContext, type HarnessControlRpcs, TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Hook from '@dxos/compute/Hook';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
 
-import { AGENT_PROCESS_KEY, type AgentInput, AgentProcess, type AgentProcessDefinition } from './agent-process.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type McpEndpointOf } from './mcp-servers.ts';
+import {
+  type AgentInput,
+  SESSION_PROCESS_KEY,
+  SessionProcess,
+  type SessionProcessDefinition,
+} from './session-process.ts';
 import { type ThreadingOptions } from './thread-scheduler.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** Live handle to a spawned agent process, carrying its `HarnessControl` RPC surface. */
 type AgentHandle = Process.Process<AgentInput, void, HarnessControlRpcs>;
+
+/**
+ * A session with the `Agent` verbs bound to it, for callers (mostly tests) that drive one session at a time.
+ */
+export interface SessionHandle {
+  readonly chat: Agent.Session;
+  readonly feed: Feed.Feed;
+  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Database.Service>;
+  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Database.Service>;
+  submitPrompt: (prompt: string | ContentBlock.Any[], options?: Agent.SubmitPromptOptions) => Effect.Effect<void>;
+  readonly running: Atom.Atom<boolean>;
+  waitForCompletion: () => Effect.Effect<void>;
+  terminate: () => Effect.Effect<void>;
+  subscribeEphemeral: (options?: Process.SubscribeEphemeralOptions) => Stream.Stream<Trace.Message>;
+}
+
+/**
+ * Opens `chat` and binds the `Agent` verbs to it.
+ */
+export const bindSession = (
+  chat: Agent.Session,
+  options?: Agent.OpenSessionOptions,
+): Effect.Effect<SessionHandle, never, Agent.Service | Database.Service> =>
+  Effect.gen(function* () {
+    yield* Agent.open(chat, options);
+    const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+    const service = yield* Agent.Service;
+    const context = yield* Effect.context<Agent.Service | Database.Service>();
+    const running = yield* Agent.running(chat);
+    return {
+      chat,
+      feed,
+      getContext: () => Agent.getContext(chat).pipe(Effect.provideService(Agent.Service, service)),
+      addContext: (refs) => Agent.addContext(chat, refs).pipe(Effect.provideService(Agent.Service, service)),
+      submitPrompt: (prompt, submitOptions) =>
+        Agent.submitPrompt(chat, prompt, submitOptions).pipe(Effect.provide(context)),
+      running,
+      waitForCompletion: () => Agent.waitForCompletion(chat).pipe(Effect.provide(context)),
+      terminate: () => Agent.terminate(chat).pipe(Effect.provide(context)),
+      subscribeEphemeral: (ephemeralOptions) =>
+        Agent.subscribeEphemeral(chat, ephemeralOptions).pipe(Stream.provideContext(context)),
+    };
+  });
 
 // TODO(burdon): Agent identity?
 export interface CreateSessionOptions {
@@ -40,9 +93,9 @@ export interface CreateSessionOptions {
   readonly model?: DXN.DXN;
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
-  /** Where the session's agent runs (see `AgentService.GetSessionOptions.location`). */
-  readonly location?: AgentService.AgentLocation;
-  /** Admits the operations the agent invokes that declare requirements (see `AgentService.GetSessionOptions.guard`). */
+  /** Where the session's agent runs (see `Agent.OpenSessionOptions.location`). */
+  readonly location?: Agent.AgentLocation;
+  /** Admits the operations the agent invokes that declare requirements (see `Agent.OpenSessionOptions.guard`). */
   readonly guard?: Process.Guard;
   /** Steers the session's chat; its hook settings apply to the session's requests. */
   readonly instructions?: Instructions.Instructions;
@@ -53,37 +106,38 @@ export interface CreateSessionOptions {
  */
 export const createSession: (
   opts?: CreateSessionOptions,
-) => Effect.Effect<AgentService.Session, never, Database.Service | Registry.Service | AgentService.AgentService> =
-  Effect.fn('createSession')(function* (opts) {
-    // By registry URI unless the skill is a space copy, so the registry stays the one pristine copy.
-    const skills = (opts?.skills ?? []).map(Skill.makeRef);
+) => Effect.Effect<SessionHandle, never, Database.Service | Registry.Service | Agent.Service> = Effect.fn(
+  'createSession',
+)(function* (opts) {
+  // By registry URI unless the skill is a space copy, so the registry stays the one pristine copy.
+  const skills = (opts?.skills ?? []).map(Skill.makeRef);
 
-    const feed = yield* Database.add(TrajectoryStore.makeFeed());
-    const runtime = yield* Effect.context<Database.Service>();
-    const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+  const feed = yield* Database.add(TrajectoryStore.makeFeed());
+  const runtime = yield* Effect.context<Database.Service>();
+  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 
-    yield* Effect.promise(() =>
-      binder.bind({
-        skills,
-        objects: opts?.context ?? [],
-      }),
-    );
+  yield* Effect.promise(() =>
+    binder.bind({
+      skills,
+      objects: opts?.context ?? [],
+    }),
+  );
 
-    // The agent process runs on a chat, so the conversation gets one even when the caller only
-    // wanted a bare session; the model is the chat's own, which is where the process reads it from.
-    const chat = yield* Database.add(
-      Chat.make({
-        feed: Ref.make(feed),
-        ...(opts?.instructions ? { instructions: Ref.make(opts.instructions) } : {}),
-        ...(opts?.model ? { session: { model: opts.model } } : {}),
-      }),
-    );
-    return yield* AgentService.getSession(chat, {
-      provider: opts?.provider,
-      ...(opts?.location !== undefined ? { location: opts.location } : {}),
-      ...(opts?.guard !== undefined ? { guard: opts.guard } : {}),
-    });
-  }, Effect.scoped);
+  // The agent process runs on a chat, so the conversation gets one even when the caller only
+  // wanted a bare session; the model is the chat's own, which is where the process reads it from.
+  const chat = yield* Database.add(
+    Agent.makeSession({
+      feed: Ref.make(feed),
+      ...(opts?.instructions ? { instructions: Ref.make(opts.instructions) } : {}),
+      ...(opts?.model ? { session: { model: opts.model } } : {}),
+    }),
+  );
+  return yield* bindSession(chat, {
+    provider: opts?.provider,
+    ...(opts?.location !== undefined ? { location: opts.location } : {}),
+    ...(opts?.guard !== undefined ? { guard: opts.guard } : {}),
+  });
+}, Effect.scoped);
 
 export interface Options {
   systemPrompt?: string;
@@ -95,7 +149,7 @@ export interface Options {
   makeTurnProducer?: MakeTurnProducer;
 
   /**
-   * Model for a chat that has not selected one (`Chat.session.model` unset).
+   * Model for a chat that has not selected one (`Agent.session.model` unset).
    */
   defaultModel?: DXN.DXN;
 
@@ -120,17 +174,17 @@ export interface Options {
 
   /**
    * Process definitions a chat can name in `chat.session.process` to run on instead of
-   * {@link AgentProcess}. Read per session, so a definition contributed after the layer was built
+   * {@link SessionProcess}. Read per session, so a definition contributed after the layer was built
    * is still found.
    */
-  processes?: () => readonly AgentProcessDefinition[];
-  /** Keep each session's process resident between turns (see `AgentProcessOptions.resident`). */
+  processes?: () => readonly SessionProcessDefinition[];
+  /** Keep each session's process resident between turns (see `SessionProcessOptions.resident`). */
   resident?: boolean;
-  /** Light threads for processes spawned from now on (see `AgentProcessOptions.threading`). */
+  /** Light threads for processes spawned from now on (see `SessionProcessOptions.threading`). */
   threading?: () => ThreadingOptions | undefined;
-  /** The MCP server a connection exposes (see `AgentProcessOptions.mcpEndpoint`). */
+  /** The MCP server a connection exposes (see `SessionProcessOptions.mcpEndpoint`). */
   mcpEndpoint?: McpEndpointOf;
-  /** Lifecycle hooks the agent process can run (see `AgentProcessOptions.hooks`). */
+  /** Lifecycle hooks the agent process can run (see `SessionProcessOptions.hooks`). */
   hooks?: () => readonly Hook.Definition[];
 }
 
@@ -142,9 +196,9 @@ export interface Options {
  * `RemoteProcessManager.layerNoop`, so an edge session fails at spawn rather than silently running
  * locally.
  */
-export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, never, Process.ManagerService> =>
+export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process.ManagerService> =>
   Layer.effect(
-    AgentService.AgentService,
+    Agent.Service,
     Effect.gen(function* () {
       const processManager = yield* Process.ManagerService;
 
@@ -157,7 +211,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
        * and a chat with no space cannot name where its agent would run.
        */
       const locationFor = (
-        location: AgentService.AgentLocation | undefined,
+        location: Agent.AgentLocation | undefined,
         spaceId: SpaceId | undefined,
       ): Process.Location => {
         if (location !== 'edge') {
@@ -180,11 +234,11 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           harness: string;
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
-          location: AgentService.AgentLocation;
+          location: Agent.AgentLocation;
           process: string;
           guard: Process.Guard | undefined;
           handle: AgentHandle;
-          session: AgentService.Session;
+          session: SessionHandle;
         }
       >();
 
@@ -204,7 +258,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
       };
 
       const makeExecutable = (provider?: DXN.DXN) =>
-        AgentProcess({
+        SessionProcess({
           systemPrompt: opts?.systemPrompt,
           makeTurnProducer: opts?.makeTurnProducer,
           defaultModel: opts?.defaultModel,
@@ -221,9 +275,9 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
        * The process a chat runs on: the one its session names, or ours. A name nothing contributed
        * (its plugin was removed) falls back to ours rather than leaving the chat unable to run.
        */
-      const executableFor = (chat: AgentService.Conversation, provider?: DXN.DXN): AgentProcessDefinition => {
+      const executableFor = (chat: Agent.Session, provider?: DXN.DXN): SessionProcessDefinition => {
         const key = chat.session?.process;
-        if (key === undefined || key === AGENT_PROCESS_KEY) {
+        if (key === undefined || key === SESSION_PROCESS_KEY) {
           return makeExecutable(provider);
         }
         const definition = opts?.processes?.().find((candidate) => candidate.key === key);
@@ -239,21 +293,21 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
         sessionCache.clear();
 
         // Contributed processes run only locally (see `getSession`), so only ours is looked for on edge.
-        const contributed = (opts?.processes?.() ?? []).filter(({ key }) => key !== AGENT_PROCESS_KEY);
+        const contributed = (opts?.processes?.() ?? []).filter(({ key }) => key !== SESSION_PROCESS_KEY);
         const executable = makeExecutable();
         // Local, plus every space a session has already been opened on this run. A fresh client knows
         // no edge spaces yet and cannot enumerate them (one manager spans them all), but an edge agent
         // does not need the pre-warm: `getSession` reattaches to a process still running for its
         // chat, which is the path opening one takes.
         const agents = [
-          ...(yield* processManager.handles({ key: AGENT_PROCESS_KEY })).map((agent) => ({ agent, executable })),
+          ...(yield* processManager.handles({ key: SESSION_PROCESS_KEY })).map((agent) => ({ agent, executable })),
           ...(yield* Effect.forEach(contributed, (definition) =>
             processManager
               .handles({ key: definition.key })
               .pipe(Effect.map((agents) => agents.map((agent) => ({ agent, executable: definition })))),
           )).flat(),
           ...(yield* Effect.forEach([...remoteSpaces], (space) =>
-            processManager.handles({ key: AGENT_PROCESS_KEY, location: { kind: 'edge', space } }),
+            processManager.handles({ key: SESSION_PROCESS_KEY, location: { kind: 'edge', space } }),
           ))
             .flat()
             .map((agent) => ({ agent, executable })),
@@ -270,168 +324,326 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
         }
       });
 
-      const service: AgentService.Service = {
-        getSession: (chat: AgentService.Conversation, options?: AgentService.GetSessionOptions) =>
-          Effect.suspend(() =>
-            lockFor(chat.id).withPermits(1)(
-              Effect.gen(function* () {
-                const provider = options?.provider ?? opts?.provider;
-                // Read off the chat rather than passed in: the process is bound to the chat, so its
-                // model and steering are whatever the chat points at when the process is spawned.
-                const model = chat.session?.model;
-                const harness = SessionConfig.harnessOf(chat.session);
-                const instructions = chat.instructions?.uri;
-                const location: AgentService.AgentLocation = options?.location ?? 'local';
-                const guard = options?.guard;
-                const executable = executableFor(chat, provider);
-                if (location === 'edge' && executable.key !== AGENT_PROCESS_KEY) {
-                  // EDGE spawns by key from its own registry, which holds no process a plugin contributed.
-                  return yield* Effect.die(
-                    new Error(`Agent process ${executable.key} runs only locally, but the chat asked for edge.`),
-                  );
-                }
-                const cached = sessionCache.get(chat.id);
-                if (cached) {
-                  if (
-                    cached.model === model &&
-                    cached.harness === harness &&
-                    cached.provider === provider &&
-                    cached.instructions === instructions &&
-                    cached.location === location &&
-                    cached.process === executable.key &&
-                    // No guard asked for is no demand for an unguarded process, so it reuses a guarded one.
-                    (guard === undefined || cached.guard === guard) &&
-                    !Process.isTerminal(cached.handle.status.state)
-                  ) {
-                    return cached.session;
-                  }
-
-                  if (!Process.isTerminal(cached.handle.status.state)) {
-                    // Model, harness, provider, steering instructions, location or process changed (e.g. the user
-                    // toggled online/offline, or moved the chat to the cloud): terminate the
-                    // existing process so the conversation continues on a fresh process bound to the new
-                    // configuration. Conversation history is preserved via the feed, which the new
-                    // process replays.
-                    yield* cached.handle.terminate();
-                  }
-                  sessionCache.delete(chat.id);
-                }
-
-                const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
-                const target = Obj.getURI(chat);
-                const parsedEchoUri = EID.tryParse(target);
-                const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-                const processLocation = locationFor(options?.location, spaceId);
-
-                // Reuse a still-running process for this feed only when there was no cached session
-                // (e.g. after the UI remounted). A process adopted this way re-reads the chat when it
-                // hydrates, so it picks up a model selected while this client was away.
-                const processes = yield* processManager.handles({
-                  target,
-                  key: executable.key,
-                  location: processLocation,
-                });
-                let activeProcess = processes.find((process) => !Process.isTerminal(process.status.state));
-                if (activeProcess && guard !== undefined) {
-                  // A running process keeps the guard it was spawned with, so one asked for under a guard is never adopted.
-                  yield* activeProcess.terminate();
-                  activeProcess = undefined;
-                }
-
-                let handle: AgentHandle;
-                if (activeProcess) {
-                  // `hydrate` returns the live handle; the listed one may be a dormant view whose
-                  // methods die with "Process not hydrated" (see ProcessManager's DormantHandle).
-                  handle = yield* activeProcess.hydrate(executable);
-                } else {
-                  handle = yield* processManager.spawn(executable, {
-                    location: processLocation,
-                    name: 'Agent',
-                    target,
-                    ...(guard !== undefined ? { guard } : {}),
-                    // Stamp the host marker so the harness control surface is discoverable by annotation
-                    // lookup (set once at spawn, immutable — the identity plane).
-                    annotations: Annotation.buildDictionary((dictionary) => {
-                      Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
-                    }),
-                    environment: {
-                      ...(spaceId !== undefined ? { space: spaceId } : {}),
-                      conversation: Obj.getURI(feed),
-                    },
-                    traceMeta: {
-                      conversation: Ref.make(feed),
-                    },
-                  });
-                }
-
-                const releaseSession = () => {
-                  sessionCache.delete(chat.id);
-                };
-                // A process that finished its turn releases its host, so the NEXT prompt on this
-                // session has nowhere to land — it is dropped as "input dropped (already finished)"
-                // and the conversation silently stops accepting turns. Re-entering `getSession`
-                // spawns a fresh process for the same feed (history is replayed from it), which is
-                // the path an app already takes when it re-reads the session per prompt.
-                const databaseContext = yield* Effect.context<Database.Service>();
-                // A REMOTE handle's status is a snapshot the client polls, so a process that finished
-                // moments ago still reads as running here — and the host then drops the prompt. What
-                // the host actually knows is the manager's `list`. A local handle is the live process
-                // itself, so its status is authoritative, and the local `list` reads every persisted
-                // process record — a storage round trip per record before every prompt.
-                const isFinished: Effect.Effect<boolean> = Effect.suspend(() =>
-                  Process.isTerminal(handle.status.state) || location !== 'edge'
-                    ? Effect.succeed(Process.isTerminal(handle.status.state))
-                    : processManager.handles({ target, key: executable.key, location: processLocation }).pipe(
-                        Effect.map((live) => {
-                          const current = live.find((process) => process.pid === handle.pid);
-                          return current === undefined || Process.isTerminal(current.status.state);
-                        }),
-                        Effect.orElseSucceed(() => false),
-                      ),
+      const getHandle = (
+        chat: Agent.Session,
+        options?: Agent.OpenSessionOptions,
+      ): Effect.Effect<SessionHandle, never, Database.Service> =>
+        Effect.suspend(() =>
+          lockFor(chat.id).withPermits(1)(
+            Effect.gen(function* () {
+              const provider = options?.provider ?? opts?.provider;
+              // Read off the chat rather than passed in: the process is bound to the chat, so its
+              // model and steering are whatever the chat points at when the process is spawned.
+              const model = chat.session?.model;
+              const harness = SessionConfig.harnessOf(chat.session);
+              const instructions = chat.instructions?.uri;
+              const location: Agent.AgentLocation = options?.location ?? 'local';
+              const guard = options?.guard;
+              const executable = executableFor(chat, provider);
+              if (location === 'edge' && executable.key !== SESSION_PROCESS_KEY) {
+                // EDGE spawns by key from its own registry, which holds no process a plugin contributed.
+                return yield* Effect.die(
+                  new Error(`Agent process ${executable.key} runs only locally, but the chat asked for edge.`),
                 );
-                // Releasing the cache first is what keeps this from recursing: `getSession` then
-                // takes its spawn path and returns a NEW session whose process is live, so that
-                // session's own `submitPrompt` submits directly.
-                const resubmit = (
-                  prompt: string | ContentBlock.Any[],
-                  submitOptions?: AgentService.SubmitPromptOptions,
-                ): Effect.Effect<void> =>
-                  Effect.sync(releaseSession).pipe(
-                    Effect.andThen(service.getSession(chat, options)),
-                    Effect.flatMap((next) => next.submitPrompt(prompt, submitOptions)),
-                    Effect.provide(databaseContext),
-                  );
-                const session = makeSession(handle, chat, feed, releaseSession, isFinished, resubmit);
-                sessionCache.set(chat.id, {
-                  model,
-                  harness,
-                  provider,
-                  instructions,
-                  location,
-                  process: executable.key,
-                  guard,
-                  handle,
-                  session,
+              }
+              const cached = sessionCache.get(chat.id);
+              if (cached) {
+                if (
+                  cached.model === model &&
+                  cached.harness === harness &&
+                  cached.provider === provider &&
+                  cached.instructions === instructions &&
+                  cached.location === location &&
+                  cached.process === executable.key &&
+                  // No guard asked for is no demand for an unguarded process, so it reuses a guarded one.
+                  (guard === undefined || cached.guard === guard) &&
+                  !Process.isTerminal(cached.handle.status.state)
+                ) {
+                  return cached.session;
+                }
+
+                if (!Process.isTerminal(cached.handle.status.state)) {
+                  // Model, harness, provider, steering instructions, location or process changed (e.g. the user
+                  // toggled online/offline, or moved the chat to the cloud): terminate the
+                  // existing process so the conversation continues on a fresh process bound to the new
+                  // configuration. Conversation history is preserved via the feed, which the new
+                  // process replays.
+                  yield* cached.handle.terminate();
+                }
+                sessionCache.delete(chat.id);
+              }
+
+              const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+              const target = Obj.getURI(chat);
+              const parsedEchoUri = EID.tryParse(target);
+              const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
+              const processLocation = locationFor(options?.location, spaceId);
+
+              // Reuse a still-running process for this feed only when there was no cached session
+              // (e.g. after the UI remounted). A process adopted this way re-reads the chat when it
+              // hydrates, so it picks up a model selected while this client was away.
+              const processes = yield* processManager.handles({
+                target,
+                key: executable.key,
+                location: processLocation,
+              });
+              let activeProcess = processes.find((process) => !Process.isTerminal(process.status.state));
+              if (activeProcess && guard !== undefined) {
+                // A running process keeps the guard it was spawned with, so one asked for under a guard is never adopted.
+                yield* activeProcess.terminate();
+                activeProcess = undefined;
+              }
+
+              const agent = yield* Agent.loadForSession(chat);
+              let handle: AgentHandle;
+              if (activeProcess) {
+                // `hydrate` returns the live handle; the listed one may be a dormant view whose
+                // methods die with "Process not hydrated" (see ProcessManager's DormantHandle).
+                handle = yield* activeProcess.hydrate(executable);
+              } else {
+                handle = yield* processManager.spawn(executable, {
+                  location: processLocation,
+                  name: 'Agent',
+                  target,
+                  ...(guard !== undefined ? { guard } : {}),
+                  // Stamp the host marker so the harness control surface is discoverable by annotation
+                  // lookup (set once at spawn, immutable — the identity plane).
+                  annotations: Annotation.buildDictionary((dictionary) => {
+                    Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+                    Annotation.setDictionary(dictionary, Process.SessionAnnotation, target);
+                    if (agent !== undefined) {
+                      Annotation.setDictionary(dictionary, Process.AgentAnnotation, Obj.getURI(agent));
+                    }
+                  }),
+                  environment: {
+                    ...(spaceId !== undefined ? { space: spaceId } : {}),
+                    conversation: Obj.getURI(feed),
+                  },
+                  traceMeta: {
+                    conversation: Ref.make(feed),
+                  },
                 });
-                return session;
-              }),
-            ),
+              }
+
+              const releaseSession = () => {
+                sessionCache.delete(chat.id);
+              };
+              // A process that finished its turn releases its host, so the NEXT prompt on this
+              // session has nowhere to land — it is dropped as "input dropped (already finished)"
+              // and the conversation silently stops accepting turns. Re-entering `getSession`
+              // spawns a fresh process for the same feed (history is replayed from it), which is
+              // the path an app already takes when it re-reads the session per prompt.
+              const databaseContext = yield* Effect.context<Database.Service>();
+              // A REMOTE handle's status is a snapshot the client polls, so a process that finished
+              // moments ago still reads as running here — and the host then drops the prompt. What
+              // the host actually knows is the manager's `list`. A local handle is the live process
+              // itself, so its status is authoritative, and the local `list` reads every persisted
+              // process record — a storage round trip per record before every prompt.
+              const isFinished: Effect.Effect<boolean> = Effect.suspend(() =>
+                Process.isTerminal(handle.status.state) || location !== 'edge'
+                  ? Effect.succeed(Process.isTerminal(handle.status.state))
+                  : processManager.handles({ target, key: executable.key, location: processLocation }).pipe(
+                      Effect.map((live) => {
+                        const current = live.find((process) => process.pid === handle.pid);
+                        return current === undefined || Process.isTerminal(current.status.state);
+                      }),
+                      Effect.orElseSucceed(() => false),
+                    ),
+              );
+              // Releasing the cache first is what keeps this from recursing: `getSession` then
+              // takes its spawn path and returns a NEW session whose process is live, so that
+              // session's own `submitPrompt` submits directly.
+              const resubmit = (
+                prompt: string | ContentBlock.Any[],
+                submitOptions?: Agent.SubmitPromptOptions,
+              ): Effect.Effect<void> =>
+                Effect.sync(releaseSession).pipe(
+                  Effect.andThen(getHandle(chat, options)),
+                  Effect.flatMap((next) => next.submitPrompt(prompt, submitOptions)),
+                  Effect.provide(databaseContext),
+                );
+              const session = makeSession(handle, chat, feed, releaseSession, isFinished, resubmit);
+              sessionCache.set(chat.id, {
+                model,
+                harness,
+                provider,
+                instructions,
+                location,
+                process: executable.key,
+                guard,
+                handle,
+                session,
+              });
+              return session;
+            }),
           ),
+        );
+
+      const currentSession = Effect.gen(function* () {
+        const uri = yield* currentAnnotation(Process.SessionAnnotation);
+        if (Option.isNone(uri)) {
+          return yield* Effect.fail(new Agent.NoCurrentSessionError());
+        }
+        // An invocation that names its conversation by feed (`Operation.withInvocationOptions`) carries the feed's URI.
+        const target = yield* Database.resolve(uri.value);
+        if (Obj.instanceOf(Agent.Session, target)) {
+          return target;
+        }
+        const session = Obj.instanceOf(Feed.Feed, target) ? yield* Agent.loadSessionForFeed(target) : undefined;
+        if (session === undefined) {
+          return yield* Effect.fail(new Agent.NoCurrentSessionError());
+        }
+        return session;
+      });
+
+      const currentFeed = Effect.gen(function* () {
+        const uri = yield* currentAnnotation(Process.SessionAnnotation);
+        if (Option.isNone(uri)) {
+          return yield* Effect.fail(new Agent.NoCurrentSessionError());
+        }
+        const target = yield* Database.resolve(uri.value);
+        if (Obj.instanceOf(Feed.Feed, target)) {
+          return target;
+        }
+        if (Obj.instanceOf(Agent.Session, target)) {
+          return yield* Database.load(target.feed).pipe(Effect.mapError(() => new Agent.NoCurrentSessionError()));
+        }
+        return yield* Effect.fail(new Agent.NoCurrentSessionError());
+      });
+
+      /** The live process of the current session, which owns its queue and alarms. */
+      const currentHost = Effect.gen(function* () {
+        const session = yield* currentSession;
+        const cached = sessionCache.get(session.id);
+        if (cached === undefined || Process.isTerminal(cached.handle.status.state)) {
+          return yield* Effect.fail(new Agent.NoCurrentSessionError());
+        }
+        return cached.handle;
+      });
+
+      // A verb names only the session, so it acts under the options the session was last opened with: falling back
+      // to the defaults would read as a reconfiguration and terminate the live process mid-turn.
+      const openedWith = new Map<string, Agent.OpenSessionOptions>();
+      const handleFor = (
+        chat: Agent.Session,
+        options?: Agent.OpenSessionOptions,
+      ): Effect.Effect<SessionHandle, never, Database.Service> => {
+        if (options !== undefined) {
+          openedWith.set(chat.id, options);
+        }
+        return getHandle(chat, options ?? openedWith.get(chat.id));
+      };
+
+      const service: Agent.ServiceApi = {
+        ...serviceFromHandles(handleFor),
         hydrate: hydrateAgents,
+        currentSession,
+        currentFeed,
+        currentAgent: Effect.gen(function* () {
+          const uri = yield* currentAnnotation(Process.AgentAnnotation);
+          if (Option.isNone(uri)) {
+            return Option.none();
+          }
+          return yield* Database.resolve(uri.value, Agent.Agent).pipe(Effect.option);
+        }),
+        currentThread: Effect.map(
+          currentAnnotation(Process.ThreadAnnotation),
+          Option.flatMap(Schema.decodeUnknownOption(Trajectory.ThreadId)),
+        ),
+        enqueueMessage: ({ content }) =>
+          Effect.flatMap(currentHost, (host) => host.rpc.enqueueMessage({ content: [...content] }).pipe(Effect.orDie)),
+        setAlarm: ({ at, message }) =>
+          Effect.flatMap(currentHost, (host) =>
+            host.rpc.setAlarm({ at: DateTime.toUtc(at), message }).pipe(Effect.orDie),
+          ),
+        listSessions: (listOptions) =>
+          Effect.map(
+            Process.ManagerService.use((manager) => manager.list()),
+            (processes) =>
+              uniqueAnnotations(
+                processes.filter(
+                  (process) =>
+                    listOptions?.agent === undefined ||
+                    Option.getOrUndefined(
+                      Annotation.getDictionary(process.params.annotations, Process.AgentAnnotation),
+                    ) === listOptions.agent,
+                ),
+                Process.SessionAnnotation,
+              ),
+          ),
+        listAgents: () =>
+          Effect.map(
+            Process.ManagerService.use((manager) => manager.list()),
+            (processes) => uniqueAnnotations(processes, Process.AgentAnnotation),
+          ),
+        // TODO(dmaretskyi): Stamp the caller's session, agent and thread annotations (F-12.2).
+        spawn: (definition, spawnOptions) =>
+          Process.ManagerService.use((manager) => manager.spawn(definition, spawnOptions)),
+        delegate: () => Effect.die(new Error('Agent.delegate is not implemented.')),
       };
 
       return service;
     }),
   );
 
+/**
+ * An {@link Agent.ServiceApi} whose session verbs act on the handle `handleFor` returns; every other member dies.
+ * The live service builds on it, and tests stub the service with it.
+ */
+export const serviceFromHandles = (
+  handleFor: (
+    chat: Agent.Session,
+    options?: Agent.OpenSessionOptions,
+  ) => Effect.Effect<SessionHandle, never, Database.Service>,
+): Agent.ServiceApi => ({
+  open: (chat, options) => Effect.asVoid(handleFor(chat, options)),
+  hydrate: () => Effect.void,
+  getContext: (chat) => Effect.flatMap(handleFor(chat), (handle) => handle.getContext()),
+  addContext: (chat, context) => Effect.flatMap(handleFor(chat), (handle) => handle.addContext(context)),
+  submitPrompt: (chat, prompt, options) =>
+    Effect.flatMap(handleFor(chat), (handle) => handle.submitPrompt(prompt, options)),
+  running: (chat) => Effect.map(handleFor(chat), (handle) => handle.running),
+  waitForCompletion: (chat) => Effect.flatMap(handleFor(chat), (handle) => handle.waitForCompletion()),
+  terminate: (chat) => Effect.flatMap(handleFor(chat), (handle) => handle.terminate()),
+  subscribeEphemeral: (chat, options) =>
+    Stream.unwrap(Effect.map(handleFor(chat), (handle) => handle.subscribeEphemeral(options))),
+  currentSession: Effect.die(new Error('Agent.currentSession is not implemented.')),
+  currentFeed: Effect.die(new Error('Agent.currentFeed is not implemented.')),
+  currentAgent: Effect.die(new Error('Agent.currentAgent is not implemented.')),
+  currentThread: Effect.die(new Error('Agent.currentThread is not implemented.')),
+  enqueueMessage: () => Effect.die(new Error('Agent.enqueueMessage is not implemented.')),
+  setAlarm: () => Effect.die(new Error('Agent.setAlarm is not implemented.')),
+  listSessions: () => Effect.succeed([]),
+  listAgents: () => Effect.succeed([]),
+  spawn: () => Effect.die(new Error('Agent.spawn is not implemented.')),
+  delegate: () => Effect.die(new Error('Agent.delegate is not implemented.')),
+  waitForThread: () => Effect.die(new Error('Agent.waitForThread is not implemented.')),
+});
+
+/** The value of `annotation` on the calling process; none outside a process. */
+const currentAnnotation = <T>(
+  annotation: Annotation.Annotation<T>,
+): Effect.Effect<Option.Option<T>, never, Process.ManagerService> =>
+  Process.current.pipe(
+    Effect.map((process) => Annotation.getDictionary(process.params.annotations, annotation)),
+    Effect.orElseSucceed(() => Option.none<T>()),
+  );
+
+/** The distinct values of `annotation` across `processes`. */
+const uniqueAnnotations = <T>(processes: readonly Process.Process[], annotation: Annotation.Annotation<T>): T[] => [
+  ...new Set(
+    processes.flatMap((process) => Option.toArray(Annotation.getDictionary(process.params.annotations, annotation))),
+  ),
+];
+
 const makeSession = (
   process: AgentHandle,
-  chat: AgentService.Conversation,
+  chat: Agent.Session,
   feed: Feed.Feed,
   releaseSession: () => void,
   isFinished: Effect.Effect<boolean>,
-  resubmit: (prompt: string | ContentBlock.Any[], options?: AgentService.SubmitPromptOptions) => Effect.Effect<void>,
-): AgentService.Session => ({
+  resubmit: (prompt: string | ContentBlock.Any[], options?: Agent.SubmitPromptOptions) => Effect.Effect<void>,
+): SessionHandle => ({
   chat,
   feed,
   getContext: () =>
@@ -453,7 +665,7 @@ const makeSession = (
     }).pipe(Effect.scoped),
   // Suspended so the state is read per call: a session outlives the process that served its last
   // turn, and submitting to a finished one drops the prompt.
-  submitPrompt: (prompt: string | ContentBlock.Any[], options?: AgentService.SubmitPromptOptions) =>
+  submitPrompt: (prompt: string | ContentBlock.Any[], options?: Agent.SubmitPromptOptions) =>
     Effect.flatMap(isFinished, (finished) =>
       finished
         ? resubmit(prompt, options)

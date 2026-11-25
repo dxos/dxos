@@ -12,7 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -28,7 +28,7 @@ import { AssistantOperationHandlerSet } from '#operations';
 EntityId.dangerouslyDisableRandomness();
 
 /** Chats the stubbed agent was asked to run in; reset per test. */
-let ranInChats: Ref.Ref<Chat.Chat>[] = [];
+let ranInChats: Ref.Ref<Agent.Session>[] = [];
 
 // Stand-ins for handlers other plugins contribute: filing the chat, and the agent run itself.
 const StubHandlers = OperationHandlerSet.make(
@@ -58,7 +58,7 @@ const headlessManager = CapabilityManager.make({ registry: AtomRegistry.make() }
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: [AssistantOperationHandlerSet, StubHandlers],
-  types: [Chat.Chat, Feed.Feed, Text.Text, ...TrajectoryStore.types],
+  types: [Agent.Session, Feed.Feed, Text.Text, ...TrajectoryStore.types],
   extraServices: Layer.succeed(Capability.Service, headlessManager),
 });
 

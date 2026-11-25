@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Type } from '@dxos/echo';
 
 import * as AssistantPlugin from '#meta';
@@ -16,6 +16,6 @@ describe('AssistantPlugin in workerd', () => {
     const { failures, operationKeys, typenames } = await activateHeadlessPlugins([AssistantPlugin.make()]);
     expect(failures).toEqual([]);
     expect(operationKeys).toContain(String(AssistantOperation.CreateChat.meta.key));
-    expect(typenames).toContain(Type.getTypename(Chat.Chat));
+    expect(typenames).toContain(Type.getTypename(Agent.Session));
   });
 });

@@ -8,8 +8,7 @@ import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import type * as Chat from '@dxos/assistant/Chat';
-import type * as AgentService from '@dxos/compute/AgentService';
+import type * as Agent from '@dxos/compute/Agent';
 import type { Database } from '@dxos/echo';
 import { Fact } from '@dxos/echo-memory';
 import { BaseError } from '@dxos/errors';
@@ -35,9 +34,9 @@ export interface FactQuery extends Schema.Schema.Type<typeof FactQuery> {}
 
 /** A request to start a turn in a chat: the prompt lands as a synthetic note ({@link wakeBlocks}), so the agent replies there. */
 export type WakeRequest = {
-  readonly chat: Chat.Chat;
+  readonly chat: Agent.Session;
   readonly prompt: string;
-  readonly sender?: AgentService.PromptSender;
+  readonly sender?: Agent.PromptSender;
 };
 
 /** The brain refused or could not be reached; the message says which. */

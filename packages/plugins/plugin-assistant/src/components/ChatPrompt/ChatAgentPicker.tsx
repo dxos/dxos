@@ -5,8 +5,7 @@
 import React, { Fragment, useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -29,7 +28,7 @@ const LOCATION_ICONS: Record<AssistantCapabilities.AgentLocation, string> = {
 const AGENT_SETTINGS: readonly AssistantCapabilities.AgentSetting[] = ['agentModel', 'agentEffort', 'agentMode'];
 
 export type ChatAgentPickerProps = AssistantPreset.ChatPresetProps & {
-  chat?: Chat.Chat;
+  chat?: Agent.Session;
   started?: boolean;
 };
 
@@ -200,11 +199,11 @@ export const choosePlacement = (
   return candidates.find((placement) => placement.location === location) ?? candidates[0];
 };
 
-export const usePlacement = (chat: Chat.Chat | undefined, option: AgentOption | undefined, harness: string) => {
+export const usePlacement = (chat: Agent.Session | undefined, option: AgentOption | undefined, harness: string) => {
   const [remote] = useObject(chat, 'remote');
   const client = Hooks.useOptionalCapability(ClientCapabilities.Client);
   const edgeConfigured = Boolean(client?.config.values.runtime?.services?.edge?.url);
-  const agentOnEdge = chat !== undefined && Agent.isAgentChat(chat) && chat.remote !== false;
+  const agentOnEdge = chat !== undefined && Agent.isAgentSession(chat) && chat.remote !== false;
 
   const offered = useCallback(
     (option: AgentOption | undefined): AgentPlacement[] => {

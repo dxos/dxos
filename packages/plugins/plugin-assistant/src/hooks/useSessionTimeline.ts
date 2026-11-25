@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Process from '@dxos/compute/Process';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
@@ -23,21 +23,21 @@ import { Task } from '@dxos/types';
 const atomEmpty = Atom.make(() => [] as const as readonly Process.Process[]);
 
 /** A chat as the timeline's session: its uri is the agent process's target, its feed the trace meta's. */
-export const sessionFromChat = (chat: Chat.Chat): Session => ({
+export const sessionFromChat = (chat: Agent.Session): Session => ({
   id: chat.id,
   label: chat.name,
   uri: Obj.getURI(chat),
-  feedId: Chat.feedEntityId(chat),
+  feedId: Agent.feedEntityId(chat),
   taskIds: chat.tasks.map((ref) => Task.refEntityId(ref)).filter((id): id is string => id !== undefined),
 });
 
 /** What a session is drawn from, as a comparable string. */
-const sessionKey = (chat: Chat.Chat): string =>
+const sessionKey = (chat: Agent.Session): string =>
   `${chat.id}:${chat.name ?? ''}:${chat.tasks.map((ref) => Task.refEntityId(ref)).join(',')}`;
 
 export type UseSessionTimelineOptions = {
   /** The chats whose sessions are shown; each contributes a session lane and its checklist's task lanes. */
-  chats: readonly Chat.Chat[];
+  chats: readonly Agent.Session[];
   tasks?: readonly Task.Task[];
 };
 

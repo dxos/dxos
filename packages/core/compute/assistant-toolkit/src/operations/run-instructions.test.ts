@@ -12,7 +12,7 @@ import { mcpServerTypes } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext, TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -36,7 +36,7 @@ describe('RunInstructions', () => {
         const feed = yield* Database.add(Feed.make());
         const messageCountBefore = yield* countFeedMessages(feed);
 
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
         const instructions = yield* Database.add(
           Instructions.make({
             name: 'chat-mode-test',
@@ -171,7 +171,7 @@ describe('RunInstructions', () => {
 function layerWithToolCall(input: unknown) {
   return AssistantTestLayer({
     operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
-    types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline],
+    types: [Agent.Session, Message.Message, AiContext.Binding, Text.Text, Outline.Outline],
     aiService: ScriptedLanguageModel.scriptedAiService([
       { parts: [ScriptedLanguageModel.toolCall('completeJob', input)] },
       // The loop asks again once the tool result is fed back; a text-only turn stops it.

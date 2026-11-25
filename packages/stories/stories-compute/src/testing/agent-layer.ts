@@ -12,7 +12,6 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService, Model, OpaqueToolkit, Provider } from '@dxos/ai';
 import { RemoteEdgeAiServiceLayer } from '@dxos/ai/testing';
-import { Harness } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
 import {
   ProcessManager,
@@ -21,7 +20,7 @@ import {
   UnifiedProcessManager,
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -56,7 +55,7 @@ const captureProcessManager = (holder: ProcessManagerHolder): Layer.Layer<never,
     }),
   );
 
-/** What operations and the agent process resolve: the space's database, the model, and the harness for a conversation. */
+/** What operations and the agent process resolve: the space's database and the model. */
 const serviceResolverLayer = (holder: ProcessManagerHolder) =>
   Layer.effect(
     ServiceResolver.ServiceResolver,
@@ -64,15 +63,6 @@ const serviceResolverLayer = (holder: ProcessManagerHolder) =>
       const runtime = yield* Effect.context<Database.Service>().pipe(Effect.map(Context.pick(Database.Service)));
       const { db } = yield* Database.Service;
       return ServiceResolver.compose(
-        ServiceResolver.succeed(Harness.HarnessService, (context) =>
-          Effect.gen(function* () {
-            const processManager = holder.current;
-            if (!context.conversation || !processManager) {
-              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(Harness.HarnessService.key));
-            }
-            return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
-          }),
-        ),
         ServiceResolver.succeed(Hypergraph.Service, () => Effect.succeed(Hypergraph.makeService(db.graph))),
         yield* ServiceResolver.fromRequirements(
           Database.Service,
@@ -97,7 +87,7 @@ const operationRegistryLayer = Layer.effect(
 ).pipe(Layer.provide(registryLayer()));
 
 /**
- * The agent runtime of the permissions story: {@link AgentService.AgentService} over a local process
+ * The agent runtime of the permissions story: {@link Agent.Service} over a local process
  * manager (and EDGE's, when `edge`), a real model through the EDGE AI service, and the story's
  * declared operations as the only tools.
  */
@@ -107,7 +97,7 @@ export const makeAgentLayer = ({
   db,
   edge,
 }: AgentLayerOptions): Layer.Layer<
-  AgentService.AgentService | Process.ManagerService | Database.Service | EchoRegistry.Service
+  Agent.Service | Process.ManagerService | Database.Service | EchoRegistry.Service
 > => {
   const holder: ProcessManagerHolder = {};
   return Layer.empty.pipe(

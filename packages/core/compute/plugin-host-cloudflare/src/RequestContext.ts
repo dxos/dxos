@@ -4,18 +4,14 @@
 
 // @import-as-namespace
 
-import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import * as Cancellation from '@dxos/compute/Cancellation';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, type Entity, Feed, Obj } from '@dxos/echo';
-import * as EffectEx from '@dxos/effect/EffectEx';
+import { Obj } from '@dxos/echo';
 import { messageOf } from '@dxos/errors';
-import { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { PluginProtocol, TraceProtocol } from '@dxos/protocols';
 
@@ -166,43 +162,3 @@ const disposeStub = (target: unknown): void => {
 /** Gives the handler the invocation's {@link Cancellation.Service}; cooperative, so nothing is interrupted. */
 export const withCancellation = (handler: Handler, signal: AbortSignal): Handler =>
   mapHandler(handler, (effect) => effect.pipe(Effect.provideService(Cancellation.Service, { signal })));
-
-/**
- * Gives the handler the conversation's `HarnessService`, rebuilt from the chat or feed `conversation` names, since the
- * caller's session binder does not cross RPC. `@dxos/assistant` is imported only for an invocation with a conversation.
- */
-export const withConversation = (handler: Handler, conversation: string | undefined): Handler =>
-  conversation === undefined
-    ? handler
-    : mapHandler(handler, (effect) =>
-        Effect.promise(() => harnessLayer(conversation)).pipe(
-          Effect.flatMap((layer) => effect.pipe(Effect.provide(layer))),
-          Effect.scoped,
-        ),
-      );
-
-const harnessLayer = async (conversation: string) => {
-  const [AiContext, Chat, Harness] = await Promise.all([
-    import('@dxos/assistant/AiContext'),
-    import('@dxos/assistant/Chat'),
-    import('@dxos/assistant/Harness'),
-  ]);
-
-  /** A hosted agent names its chat; a brain wake names the feed itself. */
-  const feedOf = (object: Entity.Unknown): Effect.Effect<Feed.Feed, never, Database.Service> =>
-    Obj.instanceOf(Chat.Chat, object)
-      ? Database.load(object.feed).pipe(Effect.orDie)
-      : Obj.instanceOf(Feed.Feed, object)
-        ? Effect.succeed(object)
-        : Effect.die(new Error(`The conversation is not a chat or a feed: ${object.id}`));
-
-  return Layer.effect(
-    Harness.HarnessService,
-    Effect.gen(function* () {
-      const feed = yield* Database.resolve(URI.make(conversation)).pipe(Effect.orDie, Effect.flatMap(feedOf));
-      const runtime: Context.Context<Database.Service> = yield* Effect.context<Database.Service>();
-      const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-      return Harness.fromBinder({ feed, runtime, binder });
-    }),
-  );
-};

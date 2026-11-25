@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { log } from '@dxos/log';
 
@@ -29,10 +29,10 @@ export default Capability.makeModule(
           return;
         }
 
-        const service = yield* AgentService.AgentService;
+        const service = yield* Agent.Service;
         yield* service.hydrate();
       }).pipe(
-        Effect.provide(ServiceResolver.provide({}, AgentService.AgentService)),
+        Effect.provide(ServiceResolver.provide({}, Agent.Service)),
         Effect.catchCause((cause) =>
           Effect.sync(() => log.warn('agent hydrate failed', { cause: Cause.pretty(cause) })),
         ),

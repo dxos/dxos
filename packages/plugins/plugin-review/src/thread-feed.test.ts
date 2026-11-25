@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Message, Thread } from '@dxos/types';
@@ -59,10 +59,10 @@ describe('comment thread feed', () => {
   });
 
   test('a chat running on a thread feed leaves the feed with the thread', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Thread.Thread, Message.Message, Feed.Feed, Chat.Chat] });
+    const { db } = await builder.createDatabase({ types: [Thread.Thread, Message.Message, Feed.Feed, Agent.Session] });
     const thread = db.add(Thread.make({ status: 'active' }));
     const feed = await thread.feed.load();
-    const chat = db.add(Chat.make({ feed: Ref.make(feed) }));
+    const chat = db.add(Agent.makeSession({ feed: Ref.make(feed) }));
     expect(Obj.getParent(feed)).toBe(thread);
     expect(chat.feed.target).toBe(feed);
   });

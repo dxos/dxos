@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 
@@ -15,7 +14,7 @@ const handler: Operation.WithHandler<typeof AgentOperation.ListAgents> = AgentOp
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
-      const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
+      const chats = yield* Database.query(Filter.type(Agent.Session)).run;
       return {
         agents: agents.map((agent) => ({
           agent: Ref.make(agent),

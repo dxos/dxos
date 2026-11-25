@@ -3,9 +3,10 @@
 //
 
 import { AiService } from '@dxos/ai';
-import { Harness } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Registry } from '@dxos/echo';
@@ -22,7 +23,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
  */
 export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
   [
-    Harness.HarnessService,
+    Agent.Service,
+    Process.ManagerService,
     AiService.AiService,
     Registry.Service,
     Credential.CredentialsService,

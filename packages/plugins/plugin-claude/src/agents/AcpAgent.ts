@@ -16,7 +16,8 @@ import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import { AiAssistantError, type Chat, TrajectoryStore } from '@dxos/assistant';
+import { AiAssistantError, TrajectoryStore } from '@dxos/assistant';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -43,7 +44,7 @@ export const IDLE_TIMEOUT = Duration.minutes(30);
 export const sessionKeySource = (agent: string): string => `${AGENT_KEY_PREFIX}.acp-session.${agent}`;
 
 /** The agent's session id recorded on the chat, to continue it after a restart. */
-export const sessionIdOf = (chat: Chat.Chat, agent: string): string | undefined =>
+export const sessionIdOf = (chat: Agent.Session, agent: string): string | undefined =>
   Obj.getKeys(chat, sessionKeySource(agent)).at(-1)?.id;
 
 /**
@@ -196,20 +197,20 @@ export type AgentOptions = {
   /** Starts the agent process in `cwd`, with Composer's tools token in its environment, and returns its ACP stream. */
   connect: (cwd: string, toolsToken?: string) => Effect.Effect<acp.Stream, AgentError>;
   /** The directory the agent works in for this chat. */
-  workspace: (chat: Chat.Chat) => Effect.Effect<string, AgentError>;
+  workspace: (chat: Agent.Session) => Effect.Effect<string, AgentError>;
   /** Permission mode a chat's new session starts in. */
-  mode?: (chat: Chat.Chat) => string | undefined;
+  mode?: (chat: Agent.Session) => string | undefined;
   /** Agent-specific options every session opens with (ACP `_meta`). */
-  sessionMeta?: Record<string, unknown> | ((chat: Chat.Chat) => Record<string, unknown>);
+  sessionMeta?: Record<string, unknown> | ((chat: Agent.Session) => Record<string, unknown>);
   /** Composer's MCP tools for the chat, and the token the agent presents for them; fresh for each session. */
-  tools?: (chat: Chat.Chat) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
+  tools?: (chat: Agent.Session) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
   /**
    * The MCP servers of the chat's connections as the agent reaches them, a proxied one with `token`, the
    * bearer the session was started with. Called after `tools` when a session opens and again on every
    * turn, so a credential refreshed since then applies; without it the agent gets none of them.
    */
   connections?: (
-    chat: Chat.Chat,
+    chat: Agent.Session,
     servers: readonly McpConnection[],
     token: string | undefined,
   ) => Effect.Effect<acp.McpServer[]>;
@@ -276,7 +277,7 @@ export const makeTurnProducer =
 /** One turn of an ACP agent against a chat; what the turn producer runs. */
 export const runTurn = (
   options: AgentOptions,
-  { chat, feed }: { chat: Chat.Chat; feed: Feed.Feed },
+  { chat, feed }: { chat: Agent.Session; feed: Feed.Feed },
   request: TurnRequest,
 ): Effect.Effect<Message.Message[], AgentError, Database.Service | Trace.TraceService> =>
   Effect.gen(function* () {
@@ -449,7 +450,7 @@ export const runTurn = (
   });
 
 export type RespondOptions = {
-  chat: Chat.Chat;
+  chat: Agent.Session;
   feed: Feed.Feed;
   /** The message holding the request block. */
   message: Message.Message;

@@ -13,7 +13,7 @@ import {
   isToolResultHandled,
   toolResultPrompt,
   wakeUpPrompt,
-} from './agent-process.ts';
+} from './session-process.ts';
 
 // Recovering a tool result across a reload was, until now, exercised only when a race inside
 // `AgentService.test.ts`'s `recovers queued tool results after reload` happened to land on it, and no

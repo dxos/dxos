@@ -7,12 +7,13 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Harness from '@dxos/assistant/Harness';
+import * as Agent from '@dxos/compute/Agent';
 import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { DXN } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { AgentOperation, MemoryOperation } from '#types';
@@ -39,7 +40,7 @@ export const EnsureReplySent = Operation.make({
     description: 'Reminds the agent to send its reply when it answered a channel conversation in plain text.',
     icon: 'ph--paper-plane-tilt--regular',
   },
-  services: [Harness.HarnessService, Capability.Service],
+  services: [Agent.Service, Process.ManagerService, Database.Service, Capability.Service],
   input: Schema.Struct({}),
   output: Hook.Output,
 });

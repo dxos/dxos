@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Skill from '@dxos/compute/Skill';
 import { Fact } from '@dxos/echo-memory';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -97,7 +97,7 @@ const meta = {
   render: ExplorerRoot,
   decorators: StoryHarness.decorators({
     config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
-    types: [Chat.Chat, Skill.Skill],
+    types: [Agent.Session, Skill.Skill],
     // Skill definitions ride the assistant's start event.
     setupEvents: [AppActivationEvents.AssistantStart],
     plugins: [

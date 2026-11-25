@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Filter, Obj } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
@@ -31,7 +31,7 @@ export const ConversationModule = (_props: Surface.ComponentProps<Record<string,
 };
 
 const ConversationPanel = ({ space }: { space: Space }) => {
-  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(space.db, Filter.type(Agent.Session));
   // In the order they started, as the Activity panel lists them (ULID ids sort by creation); the last is the newest.
   const conversations = useMemo(
     () =>
@@ -82,7 +82,7 @@ const ConversationPanel = ({ space }: { space: Space }) => {
           {conversations.length === 0 && <Status.Empty>No channel conversations yet.</Status.Empty>}
           {[visible, chat]
             .filter(
-              (conversation, index, all): conversation is AssistantChat.Chat =>
+              (conversation, index, all): conversation is Agent.Session =>
                 conversation !== undefined && all.indexOf(conversation) === index,
             )
             .map((conversation) => (
@@ -102,7 +102,7 @@ const ConversationPanel = ({ space }: { space: Space }) => {
 
 type ConversationThreadProps = {
   space: Space;
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   hidden: boolean;
   /** Called with the chat's id once its model is ready. */
   onReady?: (id: string) => void;
@@ -136,4 +136,4 @@ const ConversationThread = ({ space, chat, hidden, onReady }: ConversationThread
   );
 };
 
-const titleOf = (chat: AssistantChat.Chat): string => Obj.getLabel(chat) ?? chat.name ?? chat.id;
+const titleOf = (chat: Agent.Session): string => Obj.getLabel(chat) ?? chat.name ?? chat.id;

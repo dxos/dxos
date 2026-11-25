@@ -14,7 +14,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { ProcessManager } from '@dxos/compute-runtime';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -22,7 +22,7 @@ import { Database, Registry } from '@dxos/echo';
 
 import { type SpaceServices } from '../chat-model.ts';
 
-type BaseSpaceServices = Exclude<SpaceServices, AgentService.AgentService>;
+type BaseSpaceServices = Exclude<SpaceServices, Agent.Service>;
 
 /** The ambient services a chat model needs besides the agent service. */
 const pickBaseServices = Effect.map(Effect.context<BaseSpaceServices>(), (services) =>
@@ -40,15 +40,15 @@ const pickBaseServices = Effect.map(Effect.context<BaseSpaceServices>(), (servic
 /** The chat model's space layer over the ambient services, including the real agent service. */
 export const makeSpaceLayer: Effect.Effect<Layer.Layer<SpaceServices>, never, SpaceServices> = Effect.gen(function* () {
   const base = yield* pickBaseServices;
-  const agentService = yield* AgentService.AgentService;
-  return Layer.mergeAll(base, Layer.succeed(AgentService.AgentService, agentService));
+  const agentService = yield* Agent.Service;
+  return Layer.mergeAll(base, Layer.succeed(Agent.Service, agentService));
 });
 
 /** The chat model's space layer with a stub agent service, to script the trace stream directly. */
 export const makeStubSpaceLayer = (
-  agentService: AgentService.Service,
+  agentService: Agent.ServiceApi,
 ): Effect.Effect<Layer.Layer<SpaceServices>, never, BaseSpaceServices> =>
-  Effect.map(pickBaseServices, (base) => Layer.mergeAll(base, Layer.succeed(AgentService.AgentService, agentService)));
+  Effect.map(pickBaseServices, (base) => Layer.mergeAll(base, Layer.succeed(Agent.Service, agentService)));
 
 /**
  * A sound {@link Capabilities.ProcessManagerRuntime} for tests: a `ManagedRuntime` over the

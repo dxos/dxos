@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { AiRequest, AiSession, GenerationObserver, Harness } from '@dxos/assistant';
+import { AiContext, AiRequest, AiSession, GenerationObserver } from '@dxos/assistant';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -50,5 +50,5 @@ export const addSkills = Effect.fnUntraced(function* (skills: Skill.Definition[]
     Effect.forEach(Database.add),
     Effect.map(Arr.map(Ref.make)),
   );
-  yield* Harness.bindContext({ skills: skillRefs });
+  yield* AiContext.bindCurrent({ skills: skillRefs });
 });

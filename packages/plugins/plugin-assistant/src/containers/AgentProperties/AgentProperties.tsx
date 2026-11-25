@@ -7,7 +7,7 @@ import React, { useCallback, useRef } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';

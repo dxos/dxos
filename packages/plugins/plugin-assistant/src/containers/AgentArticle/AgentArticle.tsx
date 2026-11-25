@@ -7,7 +7,8 @@ import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as Agent from '@dxos/assistant/Agent';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
@@ -37,7 +38,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     spaceId,
     [Database.Service],
     Effect.fnUntraced(function* () {
-      yield* Agent.resetChatHistory(agent);
+      yield* AgentSetup.resetChatHistory(agent);
     }),
     [agent],
   );
