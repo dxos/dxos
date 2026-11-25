@@ -206,7 +206,7 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer }: AgentC
   return (
     <Dnd.Root>
       <ChatPlane.Root value={selected} onValueChange={setCurrent} align='start'>
-        <ChatPlane.Viewport>
+        <ChatPlane.Viewport inset={false}>
           <ChatPlane.Columns items={items}>
             {(id) => {
               if (id === chat.id) {
