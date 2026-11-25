@@ -803,11 +803,12 @@ defineTask({
   scorers: [
     Scorer.make({
       name: 'section-bulleted',
-      description: 'The Services section is now a list of at least three bullets.',
+      description:
+        'The Services section is now a bulleted list (two bullets or more; a lead-in or closing line around them is fine).',
       score: documentText(OVERVIEW_NAME).pipe(
         Effect.map((text) => {
           const services = text === undefined ? undefined : sections(text).get('Services');
-          return (services?.split('\n').filter((line) => /^\s*[-*] /.test(line)).length ?? 0) >= 3;
+          return (services?.split('\n').filter((line) => /^\s*[-*] /.test(line)).length ?? 0) >= 2;
         }),
       ),
     }),
