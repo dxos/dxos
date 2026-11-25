@@ -135,7 +135,8 @@ export const moduleSurfaces: Surface.Definition[] = [
 ];
 
 export { AgentModule } from './AgentModule.tsx';
+export type { ArtifactsModuleData } from './ArtifactsModule.tsx';
 export type { ChatPlaneModuleData } from './ChatPlaneModule.tsx';
-export type { ProjectModuleData } from './ProjectModule.tsx';
 export type { ReplayArgs, ReplayModuleData } from './ReplayModule.tsx';
 export { SpaceTemplateToolbar } from './SpaceTemplateToolbar.tsx';
+export type { TasksModuleData } from './TasksModule.tsx';

@@ -15,11 +15,12 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
 import {
+  type ArtifactsModuleData,
   type ChatPlaneModuleData,
-  type ProjectModuleData,
   type ReplayArgs,
   type ReplayModuleData,
   StoryRole,
+  type TasksModuleData,
 } from '../../modules/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, PLANS, SAVINGS_PROMPTS, Scripts, SIDE_QUESTION } from '../../scripts/index.ts';
 import {
@@ -140,9 +141,13 @@ const launchKit: Story = {
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),
   args: {
-    // The project on the left, a chat column wide: its tasks and the documents the subagents write, above the trace.
+    // A chat column wide on the left: the project's tasks, the documents the subagents write, and the trace.
     layout: [
-      [{ type: StoryRole.Project, data: { view: 'board' } satisfies ProjectModuleData }, TRACE],
+      [
+        { type: StoryRole.Tasks, data: { source: 'project' } satisfies TasksModuleData },
+        { type: StoryRole.Artifacts, data: { view: 'cards' } satisfies ArtifactsModuleData },
+        TRACE,
+      ],
       [
         threadPlane({
           suggestions: [LAUNCH_REQUEST, SIDE_QUESTION],

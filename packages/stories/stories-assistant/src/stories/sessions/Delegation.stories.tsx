@@ -14,7 +14,12 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Task } from '@dxos/types';
 
-import { type ChatPlaneModuleData, type ProjectModuleData, StoryRole } from '../../modules/index.ts';
+import {
+  type ArtifactsModuleData,
+  type ChatPlaneModuleData,
+  StoryRole,
+  type TasksModuleData,
+} from '../../modules/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, Scripts, SESSIONS_STARTED, SIDE_QUESTION } from '../../scripts/index.ts';
 import { createDecorators, launchProjectPlugins, seedLaunchProject, storyParameters } from '../../testing/index.ts';
 
@@ -80,7 +85,10 @@ const launchKit: Story = {
   }),
   args: {
     layout: [
-      [{ type: StoryRole.Project, data: { view: 'board' } satisfies ProjectModuleData }],
+      [
+        { type: StoryRole.Tasks, data: { source: 'project' } satisfies TasksModuleData },
+        { type: StoryRole.Artifacts, data: { view: 'cards' } satisfies ArtifactsModuleData },
+      ],
       [
         {
           type: StoryRole.ChatPlane,
@@ -95,7 +103,7 @@ const launchKit: Story = {
         },
       ],
     ],
-    // The project a chat column wide.
+    // The project's tasks and artifacts a chat column wide.
     columns: 'min(32vw,40rem)_1fr',
     tiling: 'flush',
   },
@@ -155,10 +163,10 @@ export const LaunchKitScripted: Story = {
     // Each task was handed to a session of its own, which is now the task's delegate.
     await expectDelegatedToSessions();
 
-    // The project shows each document the sessions wrote as a card.
+    // The artifacts show each document the sessions wrote as a card.
     await waitFor(
       () =>
-        expect(canvasElement.querySelectorAll('[data-testid="project-module.document"]').length).toBe(
+        expect(canvasElement.querySelectorAll('[data-testid="artifacts-module.card"]').length).toBe(
           LAUNCH_TASKS.length,
         ),
       { timeout: 30_000 },
