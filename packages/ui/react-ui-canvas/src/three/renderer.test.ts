@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { NullEngine } from '@babylonjs/core';
+import { NullEngine, PointerDragBehavior, Vector3 } from '@babylonjs/core';
 import { describe, expect, test } from 'vitest';
 
 import { type Scene } from '@dxos/scene';
@@ -164,6 +164,48 @@ describe('SceneRenderer3D.pick', () => {
     scene?.render();
     expect(view.boxes.a?.min.x).toBeCloseTo(2);
     expect(view.boxes.a?.max.x).toBeCloseTo(4);
+    view.dispose();
+  });
+
+  test('a scale handle sizes the item in step with its travel: the side it pulls follows it, however far it has gone', () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 }, scale: { x: 2, y: 1, z: 1 } }]));
+    view.select(['a']);
+    view.attachGizmo('a', 'scale', () => {});
+    const mesh = view.gizmoLayer?.originalScene.getMeshByName('item-a');
+    // The handles' drags, in the order Babylon makes them: the even one, then x, y and z.
+    const handles =
+      view.gizmoLayer?.utilityLayerScene.meshes.flatMap((handle) =>
+        handle.behaviors.flatMap((behavior) => (behavior instanceof PointerDragBehavior ? [behavior] : [])),
+      ) ?? [];
+    expect(handles).toHaveLength(4);
+    const press = { dragPlanePoint: Vector3.Zero(), pointerId: 1, pointerInfo: null };
+    const pull = (handle: PointerDragBehavior, axis: Vector3, distance: number) =>
+      handle.onDragObservable.notifyObservers({
+        ...press,
+        delta: axis.scale(distance),
+        dragPlaneNormal: Vector3.Forward(),
+        dragDistance: distance,
+      });
+
+    // The cube is 2 long: a handle taken 0.5 along x takes that side 0.5 on, and the far side as far the other way.
+    handles[1].onDragStartObservable.notifyObservers(press);
+    const lengths = [0.5, 0.5, 0.5].map(() => {
+      pull(handles[1], Vector3.Right(), 0.5);
+      return view.extent('a', { x: 1, y: 0, z: 0 });
+    });
+    expect(lengths[0]).toBeCloseTo(3);
+    expect(lengths[1]).toBeCloseTo(4);
+    expect(lengths[2]).toBeCloseTo(5);
+    expect(mesh?.scaling.y).toBeCloseTo(1);
+    handles[1].onDragEndObservable.notifyObservers(press);
+
+    // The even handle keeps the proportions: its travel goes onto the height, and the other sides in the same ratio.
+    handles[0].onDragStartObservable.notifyObservers(press);
+    pull(handles[0], Vector3.Up(), 0.25);
+    pull(handles[0], Vector3.Up(), 0.25);
+    expect(view.extent('a', { x: 0, y: 1, z: 0 })).toBeCloseTo(2);
+    expect(view.extent('a', { x: 1, y: 0, z: 0 })).toBeCloseTo(10);
+    handles[0].onDragEndObservable.notifyObservers(press);
     view.dispose();
   });
 

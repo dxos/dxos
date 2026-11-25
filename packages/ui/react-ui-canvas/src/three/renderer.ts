@@ -12,6 +12,7 @@ import {
   type AbstractMesh,
   ArcRotateCamera,
   AxisDragGizmo,
+  type IAxisScaleGizmo,
   Camera,
   Color3,
   Color4,
@@ -218,6 +219,12 @@ const SETTLE_FRAMES = 120;
 /** Frames drawn after a selection changes, so the outline's effect compiles and shows. */
 const OUTLINE_FRAMES = 3;
 
+/** The least a scale gizmo sizes an axis to, so a handle pulled through the item never turns it inside out. */
+const MIN_GIZMO_SCALE = 0.01;
+
+/** A handle of the scale gizmo: one axis, or the even one in the middle. */
+type ScaleHandle = 'x' | 'y' | 'z' | 'even';
+
 /** The rendering group selection boxes draw in, after the scene with its depth cleared. */
 const OVERLAY_GROUP = 1;
 
@@ -252,6 +259,8 @@ export class SceneRenderer3D {
     /** The boxes of the items not moving, which the lead's sides are held flush against. */
     others: Record<string, Box>;
     group: { mesh: AbstractMesh; position: Vector3; turn: Quaternion; scaling: Vector3 }[];
+    /** The scale handle being pulled and how far it has gone along its axis, in world units. */
+    pull?: { handle: ScaleHandle; distance: number };
   };
   readonly #observed = new WeakSet<object>();
   // Whether a gizmo is on an item; it, or the face arrow, keeps the view drawing every frame so a drag shows.
@@ -616,6 +625,28 @@ export class SceneRenderer3D {
     this.#applySnap();
     this.#gizmoEnd = onEnd;
     this.#group = group.filter((other) => other !== key);
+    const handles: [ScaleHandle, IAxisScaleGizmo][] =
+      scale && !this.#observed.has(scale)
+        ? [
+            ['x', scale.xGizmo],
+            ['y', scale.yGizmo],
+            ['z', scale.zGizmo],
+            ['even', scale.uniformScaleGizmo],
+          ]
+        : [];
+    for (const [handle, { dragBehavior }] of handles) {
+      // First in line, so a move's travel is counted before the gizmo tells of the move.
+      dragBehavior.onDragObservable.add(
+        ({ dragDistance }) => {
+          const drag = this.#drag;
+          if (drag) {
+            drag.pull = { handle, distance: (drag.pull?.handle === handle ? drag.pull.distance : 0) + dragDistance };
+          }
+        },
+        undefined,
+        true,
+      );
+    }
     for (const gizmo of [gizmos.gizmos.positionGizmo, gizmos.gizmos.rotationGizmo, gizmos.gizmos.scaleGizmo]) {
       if (gizmo && !this.#observed.has(gizmo)) {
         this.#observed.add(gizmo);
@@ -651,6 +682,7 @@ export class SceneRenderer3D {
           const attached = gizmo.attachedMesh;
           if (attached && this.#drag) {
             gizmo === gizmos.gizmos.positionGizmo && this.#moveTo(attached, false);
+            gizmo === gizmos.gizmos.scaleGizmo && this.#scaleTo(attached);
             this.#follow(attached);
           }
         });
@@ -1025,6 +1057,33 @@ export class SceneRenderer3D {
     mesh.computeWorldMatrix(true);
     drag.last = target;
     this.snapFaces(flush);
+  }
+
+  /**
+   * Sizes a mesh the scale gizmo is dragging by how far its handle has gone, so the side it pulls follows the handle;
+   * the gizmo's own step multiplies the size on every move, which compounds.
+   */
+  #scaleTo(mesh: AbstractMesh): void {
+    const drag = this.#drag;
+    const pull = drag?.pull;
+    if (!drag || !pull) {
+      return;
+    }
+    const half = mesh.getBoundingInfo().boundingBox.extendSize;
+    // An axis's scale once its half-length, in the mesh's own frame, is the handle's travel longer.
+    const grown = (axis: 'x' | 'y' | 'z') => {
+      const from = drag.scaling[axis];
+      const to = Math.abs(from) + pull.distance / (half[axis] > 0 ? half[axis] : 0.5);
+      return (from < 0 ? -1 : 1) * Math.max(to, MIN_GIZMO_SCALE);
+    };
+    mesh.scaling.copyFrom(drag.scaling);
+    if (pull.handle === 'even') {
+      // The even handle travels up the mesh's own y, and the other axes keep their proportion to it.
+      mesh.scaling.scaleInPlace(drag.scaling.y === 0 ? 1 : grown('y') / drag.scaling.y);
+    } else {
+      mesh.scaling[pull.handle] = grown(pull.handle);
+    }
+    mesh.computeWorldMatrix(true);
   }
 
   /** Carries the group along by the move, turn and scale the gizmo has given `lead` since the drag began. */
