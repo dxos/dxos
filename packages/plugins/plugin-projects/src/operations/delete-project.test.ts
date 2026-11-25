@@ -55,7 +55,7 @@ describe('deleting a project', () => {
     // Mirrors a project companion chat: the chat is owned by the parent edge, not a ref field.
     const feed = db.add(Feed.make());
     const chat = db.add(Agent.makeSession({ name: 'Chat', feed: Ref.make(feed) }));
-    Agent.linkCompanion({ chat, subject: project });
+    Agent.linkCompanion({ session: chat, subject: project });
 
     const ownedRoutine = Routine.make({ name: 'Owned', triggers: [] });
     Project.addRoutine(project, ownedRoutine);

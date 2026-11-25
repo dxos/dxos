@@ -331,7 +331,7 @@ export const createProjectActionExtension = Effect.fnUntraced(function* () {
               const spaceId = db.spaceId;
               const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId });
               // Parent edge before the add: it files the chat under the project, not the space root.
-              Agent.linkCompanion({ chat, subject: project });
+              Agent.linkCompanion({ session: chat, subject: project });
               yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId });
               yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
             }),

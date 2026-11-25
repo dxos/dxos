@@ -10,6 +10,7 @@ import { AiPreprocessor, AiService } from '@dxos/ai';
 import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
+import { Task } from '@dxos/types';
 import { concat, trim } from '@dxos/util';
 
 import { PlanReminder } from './definitions.ts';
@@ -32,7 +33,7 @@ export default PlanReminder.pipe(
         }
 
         const tasks = yield* Agent.loadTasks(chat);
-        if (!tasks.some(Agent.isOpenTask)) {
+        if (!tasks.some(Task.isOpen)) {
           return {};
         }
         const checklist = yield* Agent.formatChecklist(chat);

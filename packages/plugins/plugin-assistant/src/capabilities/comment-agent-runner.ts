@@ -54,7 +54,7 @@ export default Capability.makeModule(
             chat = db.add(object);
             // The thread's companion: parented to it (and referenced from it), so it is deleted with the thread and
             // stays out of the space's chat lists.
-            Agent.linkCompanion({ chat, subject: thread });
+            Agent.linkCompanion({ session: chat, subject: thread });
           }
           yield* invoker.invoke(AssistantOperation.BindChatContext, { chat, subject }, { spaceId });
 

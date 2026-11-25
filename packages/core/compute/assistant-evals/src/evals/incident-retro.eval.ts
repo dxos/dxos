@@ -283,7 +283,7 @@ const task = createEvalRunner({
       Obj.update(chat, (chat) => {
         chat.tasks.push(...tasks.map((task) => Ref.make(task)));
       });
-      Agent.linkCompanion({ chat, subject: project });
+      Agent.linkCompanion({ session: chat, subject: project });
       for (const task of tasks) {
         Task.setStatus(task, 'started', { actor: REVIEWER });
         Obj.update(task, (task) => {

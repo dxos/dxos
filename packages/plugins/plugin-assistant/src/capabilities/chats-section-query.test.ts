@@ -33,11 +33,11 @@ describe('chats section query', () => {
 
     const companionSubject = db.add(Project.make({ name: 'Subject' }));
     const companion = makeChat('Companion');
-    Agent.linkCompanion({ chat: companion, subject: companionSubject });
+    Agent.linkCompanion({ session: companion, subject: companionSubject });
 
     const project = db.add(Project.make({ name: 'Project' }));
     const projectChat = makeChat('Project chat');
-    Agent.linkCompanion({ chat: projectChat, subject: project });
+    Agent.linkCompanion({ session: projectChat, subject: project });
 
     await db.flush({ indexes: true });
 

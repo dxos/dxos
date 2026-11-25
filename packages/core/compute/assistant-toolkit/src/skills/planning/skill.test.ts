@@ -75,7 +75,7 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         // The reminder is only worth firing if it actually drives the plan to completion.
         const tasks = yield* Agent.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual(TASKS);
-        expect(tasks.filter(Agent.isOpenTask)).toEqual([]);
+        expect(tasks.filter(Task.isOpen)).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -101,7 +101,7 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         expect(messages.some((message) => Message.extractText(message).includes(REMINDER))).toBe(false);
 
         const tasks = yield* Agent.loadTasks(chat);
-        expect(tasks.filter(Agent.isOpenTask).map((task) => task.title)).toEqual(TASKS.slice(1));
+        expect(tasks.filter(Task.isOpen).map((task) => task.title)).toEqual(TASKS.slice(1));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

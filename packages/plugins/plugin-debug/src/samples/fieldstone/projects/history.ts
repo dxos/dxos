@@ -1755,7 +1755,7 @@ export const makeHistory = (input: HistoryInput) =>
           tasks: seed.tasks.map((key) => Ref.make(tasks[key])),
         }),
       );
-      Agent.linkCompanion({ chat, subject: project });
+      Agent.linkCompanion({ session: chat, subject: project });
       chats[seed.key] = chat;
 
       const delegator = plan.runs.find((candidate) => candidate.delegation?.run === seed.key)?.seed.agent;

@@ -34,7 +34,7 @@ describe('withTurnStatus', () => {
     const { updates, layer } = collect();
     const chat = makeChat();
     const subject = makeChat();
-    Agent.linkCompanion({ chat, subject });
+    Agent.linkCompanion({ session: chat, subject });
     return Effect.gen(function* () {
       yield* Effect.void.pipe(withTurnStatus(chat));
       expect(updates.slice(0, 2)).toEqual([

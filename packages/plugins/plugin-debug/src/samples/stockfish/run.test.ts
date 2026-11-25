@@ -125,7 +125,7 @@ const instantiateTemplate = Effect.fnUntraced(function* () {
   const chat = yield* Database.add(
     Agent.makeSession({ name: 'Chess MCP on Workers', feed: Ref.make(feed), instructions: Ref.make(instructions) }),
   );
-  Agent.linkCompanion({ chat, subject: project });
+  Agent.linkCompanion({ session: chat, subject: project });
   Obj.setParent(feed, chat);
 
   const runtime = yield* Effect.context<Database.Service>();

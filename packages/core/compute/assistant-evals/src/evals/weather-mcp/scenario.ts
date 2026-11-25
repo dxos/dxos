@@ -156,7 +156,7 @@ export const seed = ({
       chat,
       steps.map((step: Task.Task) => Ref.make(step)),
     );
-    Agent.linkCompanion({ chat, subject: project });
+    Agent.linkCompanion({ session: chat, subject: project });
     yield* Database.flush();
 
     return { objects: [Ref.make(project)], chat: Ref.make(chat) };

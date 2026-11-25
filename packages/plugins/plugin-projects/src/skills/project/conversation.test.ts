@@ -68,7 +68,7 @@ const seedProjectChat = Effect.fnUntraced(function* () {
       instructions: Ref.make(instructions),
     }),
   );
-  Agent.linkCompanion({ chat, subject: project });
+  Agent.linkCompanion({ session: chat, subject: project });
   Obj.setParent(feed, chat);
 
   const skill = yield* Database.add(ProjectSkill.make());

@@ -117,7 +117,7 @@ describe('project chats graph extension', () => {
     const addChat = async (name: string) => {
       const feed = db.add(Feed.make());
       const chat = db.add(Agent.makeSession({ name, feed: Ref.make(feed) }));
-      Agent.linkCompanion({ chat, subject: project });
+      Agent.linkCompanion({ session: chat, subject: project });
       await db.flush();
       await context.flush();
       return chat;

@@ -181,7 +181,7 @@ const task = createEvalRunner({
       const chat = yield* Database.add(
         Agent.makeSession({ name: `${PROJECT_NAME} Chat`, feed: Ref.make(feed), instructions: Ref.make(instructions) }),
       );
-      Agent.linkCompanion({ chat, subject: project });
+      Agent.linkCompanion({ session: chat, subject: project });
       yield* Database.flush();
 
       return { objects: [Ref.make(project)], chat: Ref.make(chat) };

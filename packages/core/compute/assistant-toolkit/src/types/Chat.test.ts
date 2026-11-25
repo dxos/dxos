@@ -226,16 +226,16 @@ describe('Chat', () => {
       function* (_) {
         const chat = yield* makeChat;
         const subject = yield* Database.add(Instructions.make({ text: 'Steer.' }));
-        Agent.linkCompanion({ chat, subject });
+        Agent.linkCompanion({ session: chat, subject });
         yield* Database.flush();
 
         expect(Obj.getParent(chat)?.id).toBe(subject.id);
-        const chats = Annotation.get(subject, Agent.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        const chats = Annotation.get(subject, Agent.CompanionSessionAnnotation).pipe(Option.getOrElse(() => []));
         expect(chats.map((ref) => ref.uri)).toEqual([Ref.make(chat).uri]);
 
         // Idempotent per chat: linking again adds no duplicate ref.
-        Agent.linkCompanion({ chat, subject });
-        const again = Annotation.get(subject, Agent.CompanionChatAnnotation).pipe(Option.getOrElse(() => []));
+        Agent.linkCompanion({ session: chat, subject });
+        const again = Annotation.get(subject, Agent.CompanionSessionAnnotation).pipe(Option.getOrElse(() => []));
         expect(again).toHaveLength(1);
       },
       Effect.provide(TestLayer),

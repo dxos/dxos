@@ -25,7 +25,7 @@ import { type ContentBlock, Task } from '@dxos/types';
 import type * as Operation from './Operation.ts';
 import type * as Process from './Process.ts';
 import type * as Trace from './Trace.ts';
-import type * as Trajectory from './trajectory/Trajectory.ts';
+import * as Trajectory from './trajectory/Trajectory.ts';
 import * as Instructions from './types/Instructions.ts';
 import * as Project from './types/Project.ts';
 
@@ -38,23 +38,26 @@ import * as Project from './types/Project.ts';
 //
 
 /**
- * An agent session (formerly `Session`): the durable conversation a `SessionProcess` runs.
+ * An agent session (formerly `Chat`): the durable conversation a `SessionProcess` runs.
  */
 // TODO(dmaretskyi): Rename the DXN to `org.dxos.type.assistant.session`; kept as `chat` so stored sessions still resolve.
 export class Session extends Type.makeObject<Session>(DXN.make('org.dxos.type.assistant.chat', '0.2.0'))(
   Schema.Struct({
+    /** Display name; named after the first prompt unless the reader sets one. */
     name: Schema.String.pipe(Schema.optional),
+
+    /** How the transcript renders (`normal`, `summary`, `thinking`, `debug`), as the reader last chose; `normal` when unset. */
     viewType: Schema.String.pipe(Schema.optional),
 
     /**
-     * Runs this conversation's agent on the edge rather than locally, mirroring a trigger's own
+     * Runs this session's agent on the edge rather than locally, mirroring a trigger's own
      * `remote` flag. When unset, the agent runs locally on the client.
      */
     remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
 
     /**
-     * Message feed. The chat owns a feed nothing else owns, so `SetParent` cascades it; a feed another object
-     * already owns (a comment thread's) stays with that owner while the chat runs on it.
+     * Message feed. The session owns a feed nothing else owns, so `SetParent` cascades it; a feed another object
+     * already owns (a comment thread's) stays with that owner while the session runs on it.
      */
     feed: Ref.Ref(Feed.Feed).pipe(
       Annotation.SetParent.set({ override: false }),
@@ -62,22 +65,22 @@ export class Session extends Type.makeObject<Session>(DXN.make('org.dxos.type.as
     ),
 
     /**
-     * Instructions steering this conversation, rendered into the system prompt at request time.
-     * Held by reference (never copied), so a project's chats follow edits to its instructions.
+     * Instructions steering this session, rendered into the system prompt at request time.
+     * Held by reference (never copied), so a project's sessions follow edits to its instructions.
      */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
-     * How this conversation runs (its model), chosen in the chat rather than globally so it survives
-     * a remount and travels with the chat. Unset fields fall back to the project's, then the agent's.
+     * How this session runs (its model), chosen in the session rather than globally so it survives
+     * a remount and travels with the session. Unset fields fall back to the project's, then the agent's.
      */
     session: Schema.optional(SessionConfig.SessionConfig.pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
      * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
-     * chat may work on a task that belongs somewhere else — a project's task set delegates one here
-     * — and an owning field re-parents every resolved member on each update of the chat, which
-     * would silently move that task out of the set that owns it. Tasks the chat itself creates are
+     * session may work on a task that belongs somewhere else — a project's task set delegates one here
+     * — and an owning field re-parents every resolved member on each update of the session, which
+     * would silently move that task out of the set that owns it. Tasks the session itself creates are
      * parented to it explicitly; see {@link addTask}.
      */
     tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false)),
@@ -95,93 +98,100 @@ export class Session extends Type.makeObject<Session>(DXN.make('org.dxos.type.as
 /** Module-level alias so callers avoid the doubled `Agent.Session.fields`. */
 export const sessionFields = Session.fields;
 
+/** Creates a session; its checklist starts empty unless `tasks` is given. */
 export const makeSession = (
   props: Omit<Obj.MakeProps<typeof Session>, 'tasks'> & { tasks?: ReadonlyArray<Ref.Ref<Task.Task>> },
 ): Session => Obj.make(Session, { ...props, tasks: props.tasks ?? [] });
 
 /**
- * Refs to the chats accompanying an object, stored on the subject itself (replaces the former
+ * Refs to the sessions accompanying an object, stored on the subject itself (replaces the former
  * `CompanionTo` relation): the annotation is deleted with the subject, and its refs make the
- * parented chats real children — referenced and cascaded — rather than ref-less parent-edge
+ * parented sessions real children — referenced and cascaded — rather than ref-less parent-edge
  * orphans reachable only by index query.
  */
-export const CompanionChatAnnotation = Annotation.make({
+export const CompanionSessionAnnotation = Annotation.make({
+  // Stored id; kept so existing companion links still resolve.
   id: 'org.dxos.assistant.companionChats',
   schema: Schema.Array(Ref.Ref(Session)),
 });
 
 /**
- * Links a chat to the subject it accompanies (a Project, an Agent, a document, ...): a ref on the
- * subject via {@link CompanionChatAnnotation} plus the ECHO parent edge. Idempotent per chat.
+ * Links a session to the subject it accompanies (a Project, an Agent, a document, ...): a ref on the
+ * subject via {@link CompanionSessionAnnotation} plus the ECHO parent edge. Idempotent per session.
  */
-export const linkCompanion = ({ chat, subject }: { chat: Session; subject: Obj.Unknown }): void => {
-  const existing = Annotation.get(subject, CompanionChatAnnotation);
-  const chats = existing.pipe(Option.getOrElse((): readonly Ref.Ref<Session>[] => []));
-  if (!chats.some((ref) => ref.uri === Ref.make(chat).uri)) {
+export const linkCompanion = ({ session, subject }: { session: Session; subject: Obj.Unknown }): void => {
+  const existing = Annotation.get(subject, CompanionSessionAnnotation);
+  const sessions = existing.pipe(Option.getOrElse((): readonly Ref.Ref<Session>[] => []));
+  if (!sessions.some((ref) => ref.uri === Ref.make(session).uri)) {
     if (Option.isNone(existing)) {
       Obj.update(subject, (subject) => {
-        Annotation.set(subject, CompanionChatAnnotation, [Ref.make(chat)]);
+        Annotation.set(subject, CompanionSessionAnnotation, [Ref.make(session)]);
       });
     } else {
       // Splice in place so only this ref is appended; Annotation.update validates the result.
-      Annotation.update(subject, CompanionChatAnnotation, (chats) => {
-        chats.push(Ref.make(chat));
+      Annotation.update(subject, CompanionSessionAnnotation, (sessions) => {
+        sessions.push(Ref.make(session));
       });
     }
   }
-  Obj.setParent(chat, subject);
-};
-
-/** The subject a companion chat accompanies: its ECHO parent, when that names the chat in {@link CompanionChatAnnotation}. */
-export const getCompanionSubject = (chat: Session): Obj.Unknown | undefined => {
-  const subject = Obj.getParent(chat);
-  const chats = subject
-    ? Annotation.get(subject, CompanionChatAnnotation).pipe(Option.getOrElse((): readonly Ref.Ref<Session>[] => []))
-    : [];
-  return chats.some((ref) => ref.uri === Ref.make(chat).uri) ? subject : undefined;
+  Obj.setParent(session, subject);
 };
 
 /**
- * Starts a chat on a default session config — a project's, say — copied rather than referenced, so
- * a model later picked in the chat is the chat's own. A chat already carrying a config keeps it.
+ * The subject a companion session accompanies: its ECHO parent, when that names the session in
+ * {@link CompanionSessionAnnotation}.
  */
-export const seedSession = (chat: Session, session: SessionConfig.SessionConfig | undefined): void => {
-  if (!session || chat.session) {
+export const getCompanionSubject = (session: Session): Obj.Unknown | undefined => {
+  const subject = Obj.getParent(session);
+  const sessions = subject
+    ? Annotation.get(subject, CompanionSessionAnnotation).pipe(Option.getOrElse((): readonly Ref.Ref<Session>[] => []))
+    : [];
+  return sessions.some((ref) => ref.uri === Ref.make(session).uri) ? subject : undefined;
+};
+
+/**
+ * Starts a session on a default session config — a project's, say — copied rather than referenced, so
+ * a model later picked in the session is the session's own. A session already carrying a config keeps it.
+ */
+export const seedSession = (session: Session, config: SessionConfig.SessionConfig | undefined): void => {
+  if (!config || session.session) {
     return;
   }
 
-  Obj.update(chat, (chat) => {
-    chat.session = { ...session };
+  Obj.update(session, (session) => {
+    session.session = { ...config };
   });
 };
 
-/** Creates a task the chat owns and appends it to the checklist. */
+/** Creates a task the session owns and appends it to the checklist. */
 export const addTask = (
-  chat: Session,
+  session: Session,
   title: string,
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
 ): Effect.Effect<Task.Task, never, Database.Service> =>
   Effect.gen(function* () {
-    // Ownership is decided at creation rather than by membership, so a task the chat made cascades
+    // Ownership is decided at creation rather than by membership, so a task the session made cascades
     // with it while a delegated one keeps the parent it arrived with.
-    const task = yield* Database.add(Task.make({ title: title.trim(), status: 'todo', ...props, [Obj.Parent]: chat }));
-    Obj.update(chat, (chat) => {
-      chat.tasks.push(Ref.make(task));
+    const task = yield* Database.add(
+      Task.make({ title: title.trim(), status: 'todo', ...props, [Obj.Parent]: session }),
+    );
+    Obj.update(session, (session) => {
+      session.tasks.push(Ref.make(task));
     });
     return task;
   });
 
 /**
  * Appends existing tasks to the checklist. Ownership is deliberately untouched — the task keeps the
- * parent it arrived with (contrast {@link addTask}, which parents what the chat creates), so a task
+ * parent it arrived with (contrast {@link addTask}, which parents what the session creates), so a task
  * borrowed from a project's set stays in that set. Refs already on the checklist are skipped.
  * Returns the refs actually appended.
  */
-export const assignTasks = (chat: Session, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
+export const assignTasks = (session: Session, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
   const added: Ref.Ref<Task.Task>[] = [];
-  Obj.update(chat, (chat) => {
+  Obj.update(session, (session) => {
     // Matched on entity id rather than target, so an unloaded ref still de-duplicates.
-    const present = new Set(chat.tasks.map((ref) => Task.refEntityId(ref)).filter((id) => id !== undefined));
+    const present = new Set(session.tasks.map((ref) => Task.refEntityId(ref)).filter((id) => id !== undefined));
     for (const ref of tasks) {
       const id = Task.refEntityId(ref);
       if (id === undefined || present.has(id)) {
@@ -190,25 +200,25 @@ export const assignTasks = (chat: Session, tasks: readonly Ref.Ref<Task.Task>[])
       present.add(id);
       added.push(ref);
     }
-    chat.tasks.push(...added);
+    session.tasks.push(...added);
   });
   return added;
 };
 
 /**
  * Takes tasks off the checklist without destroying them — the inverse of {@link assignTasks}, and
- * distinct from {@link deleteTask}, which also removes the members the chat owns. Returns the refs
+ * distinct from {@link deleteTask}, which also removes the members the session owns. Returns the refs
  * actually removed.
  */
-export const unassignTasks = (chat: Session, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
+export const unassignTasks = (session: Session, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
   const ids = new Set(tasks.map((ref) => Task.refEntityId(ref)).filter((id) => id !== undefined));
-  const removed = chat.tasks.filter((ref) => {
+  const removed = session.tasks.filter((ref) => {
     const id = Task.refEntityId(ref);
     return id !== undefined && ids.has(id);
   });
   if (removed.length > 0) {
-    Obj.update(chat, (chat) => {
-      chat.tasks = chat.tasks.filter((ref) => {
+    Obj.update(session, (session) => {
+      session.tasks = session.tasks.filter((ref) => {
         const id = Task.refEntityId(ref);
         return id === undefined || !ids.has(id);
       });
@@ -218,42 +228,42 @@ export const unassignTasks = (chat: Session, tasks: readonly Ref.Ref<Task.Task>[
 };
 
 /**
- * Remove a task and its sub-tasks from `tasks`, the chat's checklist loaded in full (see
+ * Remove a task and its sub-tasks from `tasks`, the session's checklist loaded in full (see
  * {@link loadTasks}) — an unloaded child is invisible to the walk and would be left orphaned in
  * the array. Returns everything dropped from the checklist.
  *
- * Only members the chat owns are destroyed: a delegated task belongs to the set that parents it,
+ * Only members the session owns are destroyed: a delegated task belongs to the set that parents it,
  * so taking it off this checklist must not delete it from there.
  */
 export const deleteTask = (
-  chat: Session,
+  session: Session,
   tasks: readonly Task.Task[],
   task: Task.Task,
 ): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
     const subtree = Task.subtree(tasks, task);
     const ids = new Set(subtree.map((member) => member.id));
-    Obj.update(chat, (chat) => {
+    Obj.update(session, (session) => {
       // Matched on the ref's own entity id rather than its target, so an entry whose object is not
       // loaded is still swept.
-      chat.tasks = chat.tasks.filter((ref) => {
+      session.tasks = session.tasks.filter((ref) => {
         const id = Task.refEntityId(ref);
         return id === undefined || !ids.has(id);
       });
     });
     for (const member of subtree) {
-      if (Obj.getParent(member)?.id === chat.id) {
+      if (Obj.getParent(member)?.id === session.id) {
         yield* Database.remove(member);
       }
     }
     return subtree;
   });
 
-/** The chat's feed entity id, readable without resolving the ref. */
-export const feedEntityId = (chat: Session): string | undefined => Task.refEntityId(chat.feed);
+/** The session's feed entity id, readable without resolving the ref. */
+export const feedEntityId = (session: Session): string | undefined => Task.refEntityId(session.feed);
 
 /**
- * The chat that owns `feed`. The chat owns its feed (`SetParent`), so the parent edge answers this
+ * The session that owns `feed`. The session owns its feed (`SetParent`), so the parent edge answers this
  * without a query; the scan is the fallback for a feed whose parent was never stamped.
  */
 export const loadSessionForFeed = (feed: Feed.Feed): Effect.Effect<Session | undefined, never, Database.Service> =>
@@ -262,31 +272,34 @@ export const loadSessionForFeed = (feed: Feed.Feed): Effect.Effect<Session | und
     if (parent && Obj.instanceOf(Session, parent)) {
       return parent;
     }
-    const chats = yield* Database.query(Filter.type(Session)).run;
-    return chats.find((chat) => feedEntityId(chat) === feed.id);
-    // A chat-less feed is legitimate (a bare `AiSession`, or a database with the type unregistered),
+    const sessions = yield* Database.query(Filter.type(Session)).run;
+    return sessions.find((session) => feedEntityId(session) === feed.id);
+    // A session-less feed is legitimate (a bare `AiSession`, or a database with the type unregistered),
     // so callers get `undefined` rather than a failure — but a query that actually broke is logged,
-    // since it is otherwise indistinguishable from the feed simply having no chat.
+    // since it is otherwise indistinguishable from the feed simply having no session.
   }).pipe(
     Effect.catchCause((cause) =>
       Effect.sync(() => {
-        log.warn('chat lookup failed; treating feed as chat-less', { feed: feed.id, cause: Cause.pretty(cause) });
+        log.warn('session lookup failed; treating feed as session-less', {
+          feed: feed.id,
+          cause: Cause.pretty(cause),
+        });
         return undefined;
       }),
     ),
   );
 
-/** Bound on the parent walk below; a conversation sits one or two edges under its project. */
+/** Bound on the parent walk below; a session sits one or two edges under its project. */
 const MAX_OWNER_DEPTH = 8;
 
 /**
- * The project a conversation belongs to, if any.
+ * The project a session belongs to, if any.
  *
- * Walks the parent chain rather than reading the immediate parent, because a chat reaches its project
- * through whatever owns it — directly for a project chat, through the agent for an agent's chat.
+ * Walks the parent chain rather than reading the immediate parent, because a session reaches its project
+ * through whatever owns it — directly for a project session, through the agent for an agent's session.
  */
-export const peekProject = (chat: Session): Project.Project | undefined => {
-  let owner: Obj.Unknown | undefined = Obj.getParent(chat);
+export const peekProject = (session: Session): Project.Project | undefined => {
+  let owner: Obj.Unknown | undefined = Obj.getParent(session);
   for (let depth = 0; owner && depth < MAX_OWNER_DEPTH; depth++) {
     if (Obj.instanceOf(Project.Project, owner)) {
       return owner;
@@ -297,9 +310,9 @@ export const peekProject = (chat: Session): Project.Project | undefined => {
 };
 
 /** Loads the checklist in order, de-duplicated: a concurrent merge can land the same ref twice. */
-export const loadTasks = (chat: Session): Effect.Effect<Task.Task[], never, Database.Service> =>
+export const loadTasks = (session: Session): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
-    const tasks = yield* Effect.forEach(chat.tasks, (task) =>
+    const tasks = yield* Effect.forEach(session.tasks, (task) =>
       Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
     );
 
@@ -307,56 +320,22 @@ export const loadTasks = (chat: Session): Effect.Effect<Task.Task[], never, Data
   });
 
 /** Sync twin of {@link loadTasks}; an unresolved ref contributes nothing rather than throwing. */
-export const resolveTasks = (chat: Session): Task.Task[] =>
-  Task.dedupeById(chat.tasks.filter((ref) => ref.isAvailable).map((ref) => ref.target));
-
-/** A task is open until it reaches a terminal status. */
-export const isOpenTask = (task: Task.Task): boolean => (task.status ?? 'todo') === 'todo' || task.status === 'started';
+export const resolveTasks = (session: Session): Task.Task[] =>
+  Task.dedupeById(session.tasks.filter((ref) => ref.isAvailable).map((ref) => ref.target));
 
 /**
- * The conversation's tasks rendered as a numbered checklist (the format the planning prompts
- * speak), or a placeholder when none exist. Ordinals match the task list UI, and non-default
- * status/dependencies are noted so the model can reason about readiness.
+ * The session's tasks rendered as a numbered checklist (the format the planning prompts speak; see
+ * {@link Task.formatChecklist}), or a placeholder when none exist.
  */
-export const formatChecklist = (chat: Session): Effect.Effect<string, never, Database.Service> =>
+export const formatChecklist = (session: Session): Effect.Effect<string, never, Database.Service> =>
   Effect.gen(function* () {
-    const tasks = yield* loadTasks(chat);
+    const tasks = yield* loadTasks(session);
     if (tasks.length === 0) {
       return 'No checklist found.';
     }
 
-    return formatTasks(tasks);
+    return Task.formatChecklist(tasks);
   });
-
-/**
- * Renders tasks as `1. [ ] Title` lines, ordinals in checklist order, each followed by an indented
- * note line carrying the task's ref and any status/dependency notes — appended to the title, models
- * paste the notes back into it. The ref renders as `[MNEMONIC](uri)` so the mnemonic the user reads
- * and the handle the tools take travel together and get pasted back verbatim.
- */
-const formatTasks = (tasks: readonly Task.Task[]): string => {
-  const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
-  return tasks
-    .map((task, index) => {
-      const line = `${index + 1}. [${task.status === 'done' ? 'x' : ' '}] ${task.title}`;
-      // The ref is the handle update-tasks takes, so every line carries one the model can pass back.
-      const notes: string[] = [`ref: [${Obj.getMnemonic(task)}](${Obj.getURI(task)})`];
-      if (task.status && task.status !== 'todo' && task.status !== 'done') {
-        notes.push(task.status);
-      }
-
-      const deps = (task.dependsOn ?? [])
-        .map((ref) => ref.target)
-        .filter((target) => target !== undefined)
-        .map((target) => ordinals.get(target.id) ?? target.title);
-      if (deps.length > 0) {
-        notes.push(`depends on ${deps.join(', ')}`);
-      }
-
-      return `${line}\n   (${notes.join('; ')})`;
-    })
-    .join('\n');
-};
 
 //
 // Agent.
@@ -399,7 +378,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
     }),
 
     /**
-     * Instructions for the agent — the preset payload (text, skills, objects, commands) a chat
+     * Instructions for the agent — the preset payload (text, skills, objects, commands) a session
      * receives when the agent is applied to it. Owned: `SetParent` cascades it with the agent.
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(
@@ -434,46 +413,46 @@ export const loadInstructions = (
   });
 
 /**
- * Resolves the agent's primary chat (the agent holds no chat ref): the latest chat parented to the
+ * Resolves the agent's primary session (the agent holds no session ref): the latest session parented to the
  * agent. Entity ids are ULIDs, so the id order is creation order — `AgentSetup.resetChatHistory` makes the
- * replacement chat primary simply by creating it later.
+ * replacement session primary simply by creating it later.
  */
 export const loadSession = (agent: Agent): Effect.Effect<Session | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     // A child-of filter rather than a `.children()` traversal: EDGE's query planner has no hierarchy
-    // traversal, so an agent hosted there could not resolve its chat.
-    const chats = yield* Database.query(Filter.and(Filter.type(Session), Filter.childOf(agent))).run;
+    // traversal, so an agent hosted there could not resolve its session.
+    const sessions = yield* Database.query(Filter.and(Filter.type(Session), Filter.childOf(agent))).run;
     return (
-      chats
-        // Chats bridged from an external conversation (a Discord thread) carry its foreign key; they are
-        // the agent's too, but never its own primary chat.
-        .filter((chat) => Obj.getMeta(chat).keys.length === 0)
+      sessions
+        // Sessions bridged from an external conversation (a Discord thread) carry its foreign key; they are
+        // the agent's too, but never its own primary session.
+        .filter((session) => Obj.getMeta(session).keys.length === 0)
         .sort((left, right) => left.id.localeCompare(right.id))
         .at(-1)
     );
   }).pipe(Effect.orDie);
 
 /**
- * Resolves the agent a chat runs as, if any. Plain (agentless) chats yield `undefined`.
+ * Resolves the agent a session runs as, if any. Plain (agentless) sessions yield `undefined`.
  * The parent is loaded with the object, so this is synchronous — no query.
  */
-export const loadForSession = (chat: Session): Effect.Effect<Agent | undefined> =>
+export const loadForSession = (session: Session): Effect.Effect<Agent | undefined> =>
   Effect.sync(() => {
-    const parent = Obj.getParent(chat);
+    const parent = Obj.getParent(session);
     return parent && Obj.instanceOf(Agent, parent) ? parent : undefined;
   });
 
 /**
- * Where a chat's turns run: as its `remote` flag says, else on EDGE for an agent's chat, since its chats share
- * the agent's one brain, which only EDGE holds. An explicit `remote: false` keeps an agent's chats local, for
- * a runtime with no EDGE to reach (a story or test), where every chat shares the client's brain instead.
+ * Where a session's turns run: as its `remote` flag says, else on EDGE for an agent's session, since its sessions
+ * share the agent's one brain, which only EDGE holds. An explicit `remote: false` keeps an agent's sessions local,
+ * for a runtime with no EDGE to reach (a story or test), where every session shares the client's brain instead.
  */
-export const sessionLocation = (chat: Session): AgentLocation =>
-  (chat.remote ?? isAgentSession(chat)) ? 'edge' : 'local';
+export const sessionLocation = (session: Session): AgentLocation =>
+  (session.remote ?? isAgentSession(session)) ? 'edge' : 'local';
 
-/** Whether the chat runs as an agent (the agent parents it); synchronous, like {@link loadForSession}. */
-export const isAgentSession = (chat: Session): boolean => {
-  const parent = Obj.getParent(chat);
+/** Whether the session runs as an agent (the agent parents it); synchronous, like {@link loadForSession}. */
+export const isAgentSession = (session: Session): boolean => {
+  const parent = Obj.getParent(session);
   return parent !== undefined && Obj.instanceOf(Agent, parent);
 };
 
@@ -483,6 +462,10 @@ export const isAgentSession = (chat: Session): boolean => {
 
 /** Where an agent session runs. */
 export type AgentLocation = 'local' | 'edge';
+
+/** A thread of a session: a fork of its trajectory, named by its branch id. */
+export const Thread = Trajectory.ThreadId;
+export type Thread = Trajectory.ThreadId;
 
 /**
  * Who a prompt is from, when it is not the session's own reader: the plain-data subset of `Actor`,
@@ -494,13 +477,15 @@ export type PromptSender = {
   readonly email?: string;
 };
 
+/** Options for {@link submitPrompt}. */
 export type SubmitPromptOptions = {
   /** Recorded on the appended user message; a named sender is shown to the model as the speaker. */
   readonly sender?: PromptSender;
   /** The fork to send the prompt into; main when absent. */
-  readonly thread?: Trajectory.ThreadId;
+  readonly thread?: Thread;
 };
 
+/** Options for {@link open}: how the session's process is spawned. */
 export interface OpenSessionOptions {
   // The model is read off the session (see `Session.session`), but the catalog's shared model ids are
   // served by several providers, so the provider must still accompany it into the session process —
@@ -527,26 +512,32 @@ export interface OpenSessionOptions {
 /** Raised when the calling process works for no session. */
 export class NoCurrentSessionError extends BaseError.extend('NoCurrentSessionError', 'Not running in a session') {}
 
+/** Options for {@link enqueueMessage}. */
 export interface EnqueueMessageOptions {
+  /** The message to enqueue. */
   readonly content: readonly ContentBlock.Any[];
 }
 
+/** Options for {@link setAlarm}. */
 export interface SetAlarmOptions {
+  /** When the alarm fires. */
   readonly at: DateTime.DateTime;
   /** Message delivered when the alarm fires. */
   readonly message: string | null;
 }
 
+/** Options for {@link listSessions}. */
 export interface ListSessionsOptions {
   /** Only the sessions of this agent. */
   readonly agent?: URI.URI;
 }
 
+/** Options for {@link spawn}: process spawn options plus the session and thread the process works for. */
 export interface SpawnOptions extends Process.SpawnOptions {
   /** The session the process works for; the caller's when absent. */
   readonly session?: URI.URI;
   /** The thread the process works for; the caller's when absent. */
-  readonly thread?: Trajectory.ThreadId;
+  readonly thread?: Thread;
 }
 
 /** Where delegated work goes. */
@@ -555,7 +546,9 @@ export type DelegationTarget =
   | { readonly kind: 'session'; readonly session?: URI.URI }
   | { readonly kind: 'agent'; readonly agent: URI.URI };
 
+/** What {@link delegate} hands off, and to whom. */
 export interface DelegateRequest {
+  /** Where the work goes. */
   readonly target: DelegationTarget;
   /** The base case: a message for the receiver. */
   readonly message?: readonly ContentBlock.Any[];
@@ -565,9 +558,10 @@ export interface DelegateRequest {
   readonly purpose?: string;
 }
 
+/** Where delegated work runs, as {@link delegate} reports it. */
 export interface DelegateResult {
   /** The thread the work runs in, for thread delegation. */
-  readonly thread?: Trajectory.ThreadId;
+  readonly thread?: Thread;
   /** The session the work runs in, for session delegation. */
   readonly session?: URI.URI;
 }
@@ -645,7 +639,7 @@ export interface ServiceApi {
    * The thread the calling process works for, named by its {@link Process.ThreadAnnotation}; none for work
    * on the session's main thread.
    */
-  readonly currentThread: Effect.Effect<Option.Option<Trajectory.ThreadId>, never, Process.ManagerService>;
+  readonly currentThread: Effect.Effect<Option.Option<Thread>, never, Process.ManagerService>;
 
   /** Enqueues a message into the current session's input queue. */
   enqueueMessage: (
@@ -682,35 +676,45 @@ export interface ServiceApi {
 
   /** Waits until a thread of the current session has finished, and returns what it answered. */
   waitForThread: (
-    thread: Trajectory.ThreadId,
+    thread: Thread,
   ) => Effect.Effect<string, NoCurrentSessionError, Process.ManagerService | Database.Service>;
 }
 
+/** The agent service; see {@link ServiceApi}. */
 export class Service extends Context.Service<Service, ServiceApi>()('@dxos/compute/Agent/Service') {}
 
 //
 // Verbs.
 //
 
+/** Opens a session: gets or spawns its process. See {@link ServiceApi.open}. */
 export const open = (session: Session, options?: OpenSessionOptions) =>
   Service.use((service) => service.open(session, options));
 
+/** Hydrates session processes persisted by a previous run. */
 export const hydrate = () => Service.use((service) => service.hydrate());
 
+/** The context objects bound to the session. */
 export const getContext = (session: Session) => Service.use((service) => service.getContext(session));
 
+/** Binds context objects to the session. */
 export const addContext = (session: Session, context: Ref.Ref<Obj.Unknown>[]) =>
   Service.use((service) => service.addContext(session, context));
 
+/** Submits a turn to the session: a plain prompt, or pre-built content blocks. */
 export const submitPrompt = (session: Session, prompt: string | ContentBlock.Any[], options?: SubmitPromptOptions) =>
   Service.use((service) => service.submitPrompt(session, prompt, options));
 
+/** An atom that is true while the session is working on a turn. */
 export const running = (session: Session) => Service.use((service) => service.running(session));
 
+/** Waits until the session has completed its work. */
 export const waitForCompletion = (session: Session) => Service.use((service) => service.waitForCompletion(session));
 
+/** Terminates the session's process and clears its durable storage. */
 export const terminate = (session: Session) => Service.use((service) => service.terminate(session));
 
+/** Streams the session's ephemeral trace events; see {@link ServiceApi.subscribeEphemeral}. */
 export const subscribeEphemeral = (
   session: Session,
   options?: Process.SubscribeEphemeralOptions,
@@ -740,26 +744,33 @@ export const currentAgent: Effect.Effect<
 
 /** The thread the calling process works for; none for the session's main thread. */
 export const currentThread: Effect.Effect<
-  Option.Option<Trajectory.ThreadId>,
+  Option.Option<Thread>,
   never,
   Service | Process.ManagerService
 > = Effect.flatMap(Service, (service) => service.currentThread);
 
+/** Enqueues a message into the current session's input queue. */
 export const enqueueMessage = (options: EnqueueMessageOptions) =>
   Service.use((service) => service.enqueueMessage(options));
 
+/** Schedules a self-wake of the current session. */
 export const setAlarm = (options: SetAlarmOptions) => Service.use((service) => service.setAlarm(options));
 
+/** Sessions with a live process. */
 export const listSessions = (options?: ListSessionsOptions) => Service.use((service) => service.listSessions(options));
 
+/** Agents with a live process. */
 export const listAgents = () => Service.use((service) => service.listAgents());
 
+/** Spawns a process for agent work, stamped with the caller's session, agent and thread. */
 export const spawn = <I, O, Rpcs extends Rpc.Any = never>(
   definition: Operation.Durable<I, O, any, Rpcs>,
   options?: SpawnOptions,
 ): Effect.Effect<Process.Process<I, O, Rpcs>, never, Service | Process.ManagerService> =>
   Effect.flatMap(Service, (service) => service.spawn(definition, options));
 
+/** Delegates work to a thread, another session of the current agent, or another agent. */
 export const delegate = (request: DelegateRequest) => Service.use((service) => service.delegate(request));
 
-export const waitForThread = (thread: Trajectory.ThreadId) => Service.use((service) => service.waitForThread(thread));
+/** Waits until a thread of the current session has finished, and returns what it answered. */
+export const waitForThread = (thread: Thread) => Service.use((service) => service.waitForThread(thread));

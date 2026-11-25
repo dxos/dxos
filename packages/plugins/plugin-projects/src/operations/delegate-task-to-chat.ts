@@ -118,7 +118,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // Parent edge before the add, as the project's own create-chat action does: it files the
         // chat under the project rather than the space root.
         if (project) {
-          Agent.linkCompanion({ chat, subject: project });
+          Agent.linkCompanion({ session: chat, subject: project });
           // The project's instructions say how its tasks are worked; the binding below brings their skills
           // and context, but only the chat's own `instructions` ref reaches the system prompt.
           if (project.instructions) {

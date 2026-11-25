@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         // the first request, so the agent process can resolve a durable conversation feed and space.
         const db = companionTo !== undefined ? Obj.getDatabase(companionTo) : undefined;
         if (companionTo !== undefined && db && !Obj.getDatabase(chat)) {
-          Agent.linkCompanion({ chat, subject: companionTo });
+          Agent.linkCompanion({ session: chat, subject: companionTo });
           yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
           yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo, chat });
           yield* Effect.promise(() => db.flush());

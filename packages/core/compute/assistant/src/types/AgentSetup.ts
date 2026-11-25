@@ -89,7 +89,7 @@ export const makeInitialized = (
         instructions: Ref.make(instructions),
       }),
     );
-    Agent.linkCompanion({ chat, subject: agent });
+    Agent.linkCompanion({ session: chat, subject: agent });
     yield* Effect.promise(() =>
       contextBinder.bind({
         skills: [agentSkill, ...persistedPropsSkills],
@@ -140,7 +140,7 @@ export const resetChatHistory = (
         instructions: agent.instructions,
       }),
     );
-    Agent.linkCompanion({ chat, subject: agent });
+    Agent.linkCompanion({ session: chat, subject: agent });
     yield* Effect.promise(() =>
       contextBinder.bind({
         skills,

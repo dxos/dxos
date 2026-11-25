@@ -64,7 +64,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       if (companionTo) {
         // Wire the forked chat as a companion and switch to it without navigating away.
-        Agent.linkCompanion({ chat: newChat, subject: companionTo });
+        Agent.linkCompanion({ session: newChat, subject: companionTo });
         yield* Database.flush();
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
         yield* Effect.promise(() =>
