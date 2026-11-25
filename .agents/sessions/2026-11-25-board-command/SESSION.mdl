@@ -1,0 +1,97 @@
+---
+id: org.dxos.session.2026-11-25-board-command
+name: Board command and Composer task sync
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Board command and Composer task sync
+
+The session board has a `/board` command and can copy Composer tasks into its goals.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: The `/board` command runs the status board skill.
+  status: review
+  notes:
+    - Verbs are start, sync and build.
+```
+
+```mdl
+goal G-2: Board goals copy the status of Composer tasks.
+  status: review
+  blockedBy: [Q-1]
+  notes:
+    - A goal links to a task with the task field.
+    - The recordSession operation fails on the production server.
+    - The fallback reads sessions and tasks in each bound space.
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Add the board command and the Composer task sync.
+  ref: dxos/dxos#14683
+  goals: [G-1, G-2]
+```
+
+## Changelog
+
+```mdl
+question Q-1: Do you want a real test of the sync?
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: This session has no Composer record, so no task is assigned to it.
+  options:
+    - Yes: record this session in the default space, then assign a task to it.
+    - No: keep the unit tests as the proof.
+```
+
+```mdl
+question Q-2: Do you want the PR ready for review?
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: The draft checks pass. Ready adds the browser, storybook and e2e suites.
+  options:
+    - Yes: mark it ready.
+    - No: keep it as a draft.
+```
+
+## Timeline
+
+```mdl
+event T-1: The session started.
+  date: 2026-11-25T11:00Z
+```
+
+```mdl
+event T-2: Opened [PR-1] as a draft.
+  date: 2026-11-25T11:35Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-3: All draft checks on [PR-1] pass.
+  date: 2026-11-25T11:45Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-4: The sync found no Composer record for this session.
+  date: 2026-11-25T11:55Z
+  by: agent:claude-code
+```
