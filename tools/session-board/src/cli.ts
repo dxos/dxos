@@ -411,7 +411,10 @@ const main = async () => {
             fail(`--session-object needs an echo: URI, got ${uri ?? 'nothing'}`);
           }
           sessionObjects.push(uri);
-        } else if (!rest[index].startsWith('--')) {
+        } else if (rest[index].startsWith('--')) {
+          // Silently dropping an unknown option (e.g. `--session-object=<uri>`) would disable the filter.
+          fail(`unknown option ${rest[index]}; use --session-object <echo URI>`);
+        } else {
           files.push(rest[index]);
         }
       }
