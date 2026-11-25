@@ -160,11 +160,11 @@ which the `dxos` plugin's `recordSession` hook sends. `cli.ts session-id` prints
    call `tasks.listSessions { sessionId }`. A row gives the session object's `@uri`. Then, for each project
    (`space.queryObjects { typename: 'org.dxos.type.project' }`), call
    `tasks.list { project, includeSubtasks: true }` and save each result to its own file. Pass every file in one
-   call, so a goal counts as missing only when no project returned its task, and pass each space's session object so
-   that only this session's tasks count:
+   call, so a goal counts as missing only when no project returned its task. Pass each space's session object with its
+   own `--session-object`, so that only this session's tasks count:
 
    ```bash
-   node --conditions=source tools/session-board/src/cli.ts tasks <file>... --session-object <session @uri>...
+   node --conditions=source tools/session-board/src/cli.ts tasks <file>... --session-object <uri-a> --session-object <uri-b>
    ```
 
 4. The command prints the goals it added and updated, and the tasks it skipped because the input gave no `echo:` URI

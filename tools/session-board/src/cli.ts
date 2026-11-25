@@ -400,9 +400,21 @@ const main = async () => {
       break;
     }
     case 'tasks': {
-      // `--session-object` repeats: a session recorded in several spaces has one object in each.
-      const sessionObjects = rest.flatMap((arg, index) => (rest[index - 1] === '--session-object' ? [arg] : []));
-      const files = rest.filter((arg, index) => !arg.startsWith('--') && rest[index - 1] !== '--session-object');
+      // `--session-object` repeats, one per space the session is recorded in; a flag with no URI after it is an
+      // error, since dropping it would sync every task in the project instead of this session's.
+      const sessionObjects: string[] = [];
+      const files: string[] = [];
+      for (let index = 0; index < rest.length; index++) {
+        if (rest[index] === '--session-object') {
+          const uri = rest[++index];
+          if (!uri?.startsWith('echo:')) {
+            fail(`--session-object needs an echo: URI, got ${uri ?? 'nothing'}`);
+          }
+          sessionObjects.push(uri);
+        } else if (!rest[index].startsWith('--')) {
+          files.push(rest[index]);
+        }
+      }
       tasks(
         files.length > 0 ? files : fail('usage: cli.ts tasks <tasks.json>... [--session-object <echo URI>]...'),
         sessionObjects,
