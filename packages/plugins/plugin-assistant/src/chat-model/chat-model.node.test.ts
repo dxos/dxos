@@ -22,7 +22,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { AiUsageQuotaError, ChatModel, parseError } from './chat-model.ts';
+import { AiUsageQuotaError, LiveChatModel, parseError } from './chat-model.ts';
 import { type ThreadProjection } from './thread.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Agent.Session, Feed.Feed, Message.Message] });
@@ -38,7 +38,7 @@ describe('ChatModel', () => {
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as Capabilities.ProcessManagerRuntime;
         const registry = AtomRegistry.make();
-        const chatModel = new ChatModel(session, managedRuntime, feed, Layer.empty as any, {
+        const chatModel = new LiveChatModel(session, managedRuntime, feed, Layer.empty as any, {
           observableRegistry: registry,
         });
         expect(chatModel).toBeDefined();

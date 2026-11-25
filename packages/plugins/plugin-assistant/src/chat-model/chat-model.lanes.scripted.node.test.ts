@@ -22,7 +22,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { ChatModel } from './chat-model.ts';
+import { LiveChatModel } from './chat-model.ts';
 import { ChatModelRecorder } from './testing/chat-model-recorder.ts';
 import { makeSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
@@ -135,7 +135,7 @@ const setup = Effect.fn(function* () {
   const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
   yield* Effect.promise(() => session.context.bind({ skills: [Skill.makeRef(GateSkill)], objects: [] }));
   const registry = yield* AtomRegistry.AtomRegistry;
-  const chatModel = new ChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
+  const chatModel = new LiveChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
     chat: Ref.make(chat),
     observableRegistry: registry,
   });

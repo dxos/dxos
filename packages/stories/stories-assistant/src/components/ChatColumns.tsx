@@ -28,16 +28,19 @@ type ChatColumnProps = {
   count: number;
   onMove: (id: string, index: number) => void;
   onDelete: (chat: Agent.Session) => void;
-};
+} & ChatColumnsProps;
 
 /** One chat with a chat model of its own, so a turn keeps running after the reader moves to another column. */
-const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProps) => {
+const ChatColumn = ({ db, chat, index, count, onMove, onDelete, suggestions, defaultDrawer }: ChatColumnProps) => {
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
   const chatModel = useThreadModel(db, chat);
   const [name] = useObject(chat, 'name');
   // Sending before a new chat reaches the database would leave the agent unable to resolve it.
   const handleSubmit = useCallback(() => db.flush(), [db]);
+  // One chip at a time, since a later prompt only makes sense once the earlier one is under way.
+  const [sent, setSent] = useState(0);
+  const handleSelect = useCallback(() => setSent((count) => count + 1), []);
   const menu = useMenuBuilder(
     () =>
       MenuBuilder.make()
@@ -75,7 +78,7 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
   }
 
   return (
-    <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit}>
+    <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit} defaultDrawer={defaultDrawer}>
       <ChatPlane.Column value={chat.id}>
         <ChatPlane.Cell menu={menu} title={name ?? `Chat ${index + 1}`}>
           <Panel.Body asChild>
@@ -86,6 +89,7 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
         </ChatPlane.Cell>
         <ChatPlane.Prompt>
           <Chat.Activity />
+          {suggestions && <Chat.Suggestions suggestions={suggestions.slice(sent, sent + 1)} onSelect={handleSelect} />}
           <Chat.Prompt {...chatProps} outline preset={preset?.id} />
         </ChatPlane.Prompt>
       </ChatPlane.Column>
@@ -93,11 +97,18 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
   );
 };
 
+export type ChatColumnsProps = {
+  /** Prompts offered as chips above the first chat's composer, one at a time, in the order they are meant to be sent. */
+  suggestions?: readonly string[];
+  /** The drawer open above the first chat's prompt at the start, e.g. its task list. */
+  defaultDrawer?: Chat.RootProps['defaultDrawer'];
+};
+
 /**
  * Every chat in the space as a column of its own: the selected chat rests at the center of the strip with its prompt
  * beneath it, a new chat is added at either end, and a column is dragged, or moved from its menu, to reorder.
  */
-export const ChatColumns = () => {
+export const ChatColumns = ({ suggestions, defaultDrawer }: ChatColumnsProps) => {
   const [space] = useSpaces();
   const db = space?.db;
   const chats = useQuery(db, Filter.type(Agent.Session));
@@ -123,6 +134,8 @@ export const ChatColumns = () => {
     lastIndexRef.current = found;
   }
   const current = ordered.at(index);
+  // The oldest chat, wherever it has been moved, is the one the story's prompts and drawer belong to.
+  const firstId = useMemo(() => chats.map(({ id }) => id).toSorted()[0], [chats]);
 
   const handleAdd = useCallback(
     async (side: ChatPlane.Side) => {
@@ -187,6 +200,7 @@ export const ChatColumns = () => {
                     count={ordered.length}
                     onMove={handleMove}
                     onDelete={handleDelete}
+                    {...(id === firstId ? { suggestions, defaultDrawer } : {})}
                   />
                 )
               );

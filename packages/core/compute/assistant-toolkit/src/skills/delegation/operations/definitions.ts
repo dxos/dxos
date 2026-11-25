@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
-import { Database } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export const DelegateTask = Operation.make({
@@ -84,6 +85,28 @@ export const ThreadWait = Operation.make({
   },
   input: Schema.Struct({
     thread: Schema.String.annotate({ description: 'Id of the thread to wait for.' }),
+  }),
+  output: Schema.String,
+  services: [Agent.Service, Process.ManagerService, Database.Service],
+});
+
+export const SessionDelegate = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.delegateToSession'),
+    name: 'Delegate to session',
+    description: trim`
+      Hands one task from your checklist to another session: a separate conversation, run by its own process,
+      that starts on your model, skills and context. The task becomes the session's, it starts at once, and it
+      marks the task done when finished. Use it for a separate work-stream; for light parallel work on your own
+      request, delegate to a thread instead.
+    `,
+    icon: 'ph--chats--regular',
+  },
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task).annotate({
+      description: 'The task to hand over: the `echo://` URI inside the link on its checklist line, as a plain string.',
+    }),
+    purpose: Schema.String.annotate({ description: 'A short name for the session, shown as its title.' }),
   }),
   output: Schema.String,
   services: [Agent.Service, Process.ManagerService, Database.Service],

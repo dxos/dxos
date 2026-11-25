@@ -19,7 +19,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { ChatModel } from './chat-model.ts';
+import { LiveChatModel } from './chat-model.ts';
 import { makeStubSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Agent.Session, Feed.Feed] });
@@ -52,7 +52,7 @@ describe('ChatModel streaming', () => {
 
         const observableRegistry = AtomRegistry.make();
         const chatModelRuntime = yield* makeTestRuntime;
-        const chatModel = new ChatModel(session, chatModelRuntime, feed, spaceLayer, {
+        const chatModel = new LiveChatModel(session, chatModelRuntime, feed, spaceLayer, {
           chat: Ref.make(chat),
           observableRegistry,
         });
@@ -123,7 +123,7 @@ describe('ChatModel streaming', () => {
 
         const idleSession = yield* makeStubSession(chat, feed, batches, { running: false });
         const idleRegistry = AtomRegistry.make();
-        const idleChatModel = new ChatModel(
+        const idleChatModel = new LiveChatModel(
           session,
           yield* makeTestRuntime,
           feed,
@@ -142,7 +142,7 @@ describe('ChatModel streaming', () => {
 
         const runningSession = yield* makeStubSession(chat, feed, batches, { running: true });
         const observableRegistry = AtomRegistry.make();
-        const chatModel = new ChatModel(
+        const chatModel = new LiveChatModel(
           session,
           yield* makeTestRuntime,
           feed,
@@ -190,7 +190,7 @@ describe('ChatModel streaming', () => {
         );
 
         const observableRegistry = AtomRegistry.make();
-        const chatModel = new ChatModel(
+        const chatModel = new LiveChatModel(
           session,
           yield* makeTestRuntime,
           feed,
@@ -244,7 +244,7 @@ describe('ChatModel streaming', () => {
 
         const observableRegistry = AtomRegistry.make();
         const chatModelRuntime = yield* makeTestRuntime;
-        const chatModel = new ChatModel(session, chatModelRuntime, feed, spaceLayer, {
+        const chatModel = new LiveChatModel(session, chatModelRuntime, feed, spaceLayer, {
           chat: Ref.make(chat),
           observableRegistry,
         });
@@ -311,7 +311,7 @@ describe('ChatModel streaming', () => {
         ];
         const stubSession = yield* makeStubSession(chat, feed, batches);
         const observableRegistry = AtomRegistry.make();
-        const chatModel = new ChatModel(
+        const chatModel = new LiveChatModel(
           session,
           yield* makeTestRuntime,
           feed,

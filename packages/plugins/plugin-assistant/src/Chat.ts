@@ -23,3 +23,5 @@ export type {
   ChatThreadProps as ThreadProps,
   ChatToolbarProps as ToolbarProps,
 } from './components/Chat/index.ts';
+export { ReplayChatModel } from './chat-model/index.ts';
+export type { ChatModel as Model } from './chat-model/index.ts';

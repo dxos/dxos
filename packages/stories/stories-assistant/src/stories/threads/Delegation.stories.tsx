@@ -3,15 +3,19 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
+import { STORY_ARGS_UPDATED } from 'storybook/internal/core-events';
+import { addons } from 'storybook/preview-api';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { ScriptedScene } from '@dxos/ai/testing';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import type * as Chat from '@dxos/plugin-assistant/Chat';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 
-import { ThreadColumns } from '../../components/index.ts';
+import { RecordedReplay, type ReplayArgs, ThreadColumns } from '../../components/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, PLANS, SAVINGS_PROMPTS, Scripts, SIDE_QUESTION } from '../../scripts/index.ts';
-import { CalculatorSkill, createDecorators, storyParameters } from '../../testing/index.ts';
+import { CalculatorSkill, ReplayCache, createDecorators, storyParameters } from '../../testing/index.ts';
 
 type StoryArgs = {
   /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
@@ -35,7 +39,7 @@ type StoryArgs = {
  * write a document. See `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8, QA-4, QA-6).
  */
 const meta: Meta<StoryArgs> = {
-  title: 'stories/stories-assistant/threads/Subagents',
+  title: 'stories/stories-assistant/threads/Delegation',
   component: ThreadColumns,
   parameters: storyParameters,
   args: {
@@ -165,4 +169,54 @@ export const LaunchKitScripted: Story = {
       await canvas.findAllByText(document, { exact: false });
     }
   },
+};
+
+/** What the recorded launch kit depends on; a change to any of it records the run again. */
+const launchKitReplay = {
+  scene: ScriptedScene.withoutDelays(Scripts.launchKit),
+  prompts: [LAUNCH_REQUEST, SIDE_QUESTION],
+  assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
+};
+
+const launchKitCache = new ReplayCache('threads/Delegation/LaunchKitReplay', launchKitReplay);
+
+/**
+ * The launch kit, scripted with no delays and run to its end, then stepped through one trajectory event at a time: the
+ * chat shows what the live chat showed when that event landed. The finished space is kept in IndexedDB, so a reload
+ * imports it rather than running again; the step and the bookmarks are story args, so they persist in the URL.
+ *
+ * Test:
+ * 1. Wait for the run to finish: the toolbar shows the last step and the chat shows the whole conversation.
+ * 2. Press ← and →, or the toolbar buttons: the thread grows and shrinks one event at a time.
+ * 3. Press Home: the thread empties; press End: it is whole again.
+ * 4. Bookmark a step, move away, and click its chip: the chat returns to it.
+ * 5. Reload the page: the replay opens at once, at the step and with the bookmarks from the URL.
+ * 6. Click Re-record: the recording is dropped and the run records again.
+ */
+export const LaunchKitReplay: StoryObj<ReplayArgs> = {
+  // Declared so Storybook reads them back from the URL, which only accepts args it has a control for.
+  argTypes: {
+    step: { control: { type: 'number', min: 0 } },
+    bookmarks: { control: 'object' },
+  },
+  // Tells the manager the new args, which it writes to the URL, without updating them in the preview: an arg update
+  // reboots the whole harness (a new space), which would start the run again.
+  render: (args, { id }) => (
+    <RecordedReplay
+      cache={launchKitCache}
+      prompts={launchKitReplay.prompts}
+      initial={args}
+      onChange={(next) => addons.getChannel().emit(STORY_ARGS_UPDATED, { storyId: id, args: { ...args, ...next } })}
+    />
+  ),
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      const SpacePlugin = await import('@dxos/plugin-space/SpacePlugin');
+      // Files the documents the subagents create.
+      return { plugins: [SpacePlugin.make({})] };
+    },
+    skills: [MarkdownSkill.key, PlanningSkill.key],
+    scriptedModels: { scenes: { launchKit: launchKitReplay.scene }, select: 'launchKit' },
+    assistantSettings: launchKitReplay.assistantSettings,
+  }),
 };
