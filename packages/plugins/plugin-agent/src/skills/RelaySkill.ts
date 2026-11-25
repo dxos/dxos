@@ -53,7 +53,7 @@ export const make = (): Skill.Skill =>
         - Call ${tool(RelayOperation.UpdateRelay)} with the outcome if you learned anything worth keeping on the relay.
 
         When delivery fails:
-        - If ${tool(RelayOperation.SendMessage)} could not reach the recipient and you know their Discord user id, send the same message with ${DISCORD_DIRECT_MESSAGE} instead (\`to\` is that id), then carry on as if it was delivered.
+        - If ${tool(RelayOperation.SendMessage)} could not reach the recipient and you know their Discord user id, send the same message with ${DISCORD_DIRECT_MESSAGE} instead (\`to\` is that id). Only if that succeeds, carry on as if it was delivered; if it fails too, follow the next rule.
         - Otherwise call ${tool(RelayOperation.UpdateRelay)} with status "failed" and the reason, and tell the requester plainly what went wrong and what would help (for example, the recipient's handle on one of your channels, such as their Discord user id).
 
         Housekeeping:
