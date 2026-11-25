@@ -3,17 +3,14 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Agent from '@dxos/compute/Agent';
 import type * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database, Feed, Filter, Order, Query, Scope } from '@dxos/echo';
-import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as ChatPlane from '@dxos/plugin-assistant/ChatPlane';
-import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Timeline } from '@dxos/react-ui-trace';
@@ -106,52 +103,21 @@ const ThreadColumn = ({ db, chat, lane, hue, events }: ThreadColumnProps) => {
   );
 };
 
-type AgentColumnProps = {
+type ThreadPlaneProps = {
   db: Database.Database;
   chat: Agent.Session;
   chatModel: ChatModel;
-  /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
-  suggestions?: readonly string[];
-  /** The drawer open above the agent's prompt at the start, e.g. its task list. */
-  defaultDrawer?: Chat.RootProps['defaultDrawer'];
-};
-
-/** The agent's own conversation, with the prompt and its checklist. */
-const AgentColumn = ({ db, chat, chatModel, suggestions = [], defaultDrawer }: AgentColumnProps) => {
-  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
-  const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
-  // One chip at a time: the side question only makes sense once the launch is under way.
-  const [sent, setSent] = useState(0);
-  const handleSelect = useCallback(() => setSent((count) => count + 1), []);
-  return (
-    <Chat.Root chat={chat} db={db} chatModel={chatModel} defaultDrawer={defaultDrawer}>
-      <ChatPlane.Column value={chat.id}>
-        <ChatPlane.Cell title='Agent'>
-          <Panel.Body asChild>
-            <Chat.Content>
-              <Chat.Thread tailLines={4} />
-            </Chat.Content>
-          </Panel.Body>
-        </ChatPlane.Cell>
-        <ChatPlane.Prompt>
-          <Chat.Activity />
-          <Chat.Suggestions suggestions={suggestions.slice(sent, sent + 1)} onSelect={handleSelect} />
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} />
-        </ChatPlane.Prompt>
-      </ChatPlane.Column>
-    </Chat.Root>
-  );
 };
 
 /** How long a finished subagent's column stays open, so its result can be read before it closes. */
 const CLOSE_DELAY = 6_000;
 
 /**
- * The agent's conversation in the first column, at the start of the strip, and each subagent thread in a column of its
- * own beside it: a column opens as the agent delegates, and closes a few seconds after its subagent reports, leaving the
- * result in the agent's column. The columns keep their width, so the strip scrolls sideways once they outgrow it.
+ * Each subagent thread in a column of its own: a column opens as the agent delegates, and closes a few seconds after its
+ * subagent reports, leaving the result in the agent's chat. The columns keep their width, so the strip scrolls sideways
+ * once they outgrow it.
  */
-const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer }: AgentColumnProps) => {
+const ThreadPlane = ({ db, chat, chatModel }: ThreadPlaneProps) => {
   const view = useAtomValue(chatModel.trajectory);
   const lanes = useMemo(() => view.lanes.filter((lane) => lane.kind === 'fresh'), [view.lanes]);
   const hues = useMemo(() => Chat.laneHues(view.lanes), [view.lanes]);
@@ -200,26 +166,15 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer }: AgentC
   }, []);
 
   const open = useMemo(() => lanes.filter(({ id }) => !closed.has(id)), [lanes, closed]);
-  const items = useMemo(() => [{ id: chat.id }, ...open.map(({ id }) => ({ id }))], [chat, open]);
-  const selected = current !== undefined && items.some(({ id }) => id === current) ? current : chat.id;
+  const items = useMemo(() => open.map(({ id }) => ({ id })), [open]);
+  const selected = current !== undefined && items.some(({ id }) => id === current) ? current : items[0]?.id;
 
   return (
     <Dnd.Root>
       <ChatPlane.Root value={selected} onValueChange={setCurrent} align='start'>
-        <ChatPlane.Viewport inset={false}>
+        <ChatPlane.Viewport>
           <ChatPlane.Columns items={items}>
             {(id) => {
-              if (id === chat.id) {
-                return (
-                  <AgentColumn
-                    db={db}
-                    chat={chat}
-                    chatModel={chatModel}
-                    suggestions={suggestions}
-                    defaultDrawer={defaultDrawer}
-                  />
-                );
-              }
               const lane = open.find((candidate) => candidate.id === id);
               return (
                 lane && (
@@ -234,12 +189,8 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer }: AgentC
   );
 };
 
-/** The space's newest chat as columns: the agent's own, and one per subagent thread while it runs. */
-export const ThreadColumns = ({
-  db,
-  suggestions,
-  defaultDrawer,
-}: Pick<AgentColumnProps, 'db' | 'suggestions' | 'defaultDrawer'>) => {
+/** The subagent threads of the space's newest chat, one column each while it runs. */
+export const ThreadColumns = ({ db }: { db: Database.Database }) => {
   const chats = useQuery(db, Filter.type(Agent.Session));
   const chat = chats.at(-1);
   const chatModel = useThreadModel(db, chat);
@@ -247,7 +198,5 @@ export const ThreadColumns = ({
     return null;
   }
 
-  return (
-    <ThreadPlane db={db} chat={chat} chatModel={chatModel} suggestions={suggestions} defaultDrawer={defaultDrawer} />
-  );
+  return <ThreadPlane db={db} chat={chat} chatModel={chatModel} />;
 };

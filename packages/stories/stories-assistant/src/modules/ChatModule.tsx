@@ -13,6 +13,7 @@ import { Filter } from '@dxos/echo';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Profile from '@dxos/plugin-agent/Profile';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
@@ -33,6 +34,10 @@ export type ChatModuleData = {
   hue?: string;
   /** Submitted once, as the participant, when the panel's chat is first ready. */
   initialPrompt?: string;
+  /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
+  suggestions?: readonly string[];
+  /** The drawer open above the prompt at the start, e.g. the chat's task list. */
+  defaultDrawer?: Chat.RootProps['defaultDrawer'];
 };
 
 export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => {
@@ -40,14 +45,7 @@ export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => 
   if (!space) {
     return null;
   }
-  return (
-    <ChatModuleContainer
-      space={space}
-      participant={data?.participant}
-      hue={data?.hue}
-      initialPrompt={data?.initialPrompt}
-    />
-  );
+  return <ChatModuleContainer space={space} {...data} />;
 };
 
 const ChatModuleContainer = ({
@@ -55,12 +53,9 @@ const ChatModuleContainer = ({
   participant,
   hue,
   initialPrompt,
-}: {
-  space: Space;
-  participant?: string;
-  hue?: string;
-  initialPrompt?: string;
-}) => {
+  suggestions = [],
+  defaultDrawer,
+}: ChatModuleData & { space: Space }) => {
   const chats = useQuery(space.db, Filter.type(Agent.Session));
   const people = useQuery(space.db, Filter.type(Person.Person));
   const person = participant
@@ -75,7 +70,8 @@ const ChatModuleContainer = ({
   const chat = chats.find(({ id }) => id === selected) ?? (participant ? participantChat : chats.at(-1));
 
   // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
-  const { preset, ...chatProps } = AssistantHooks.usePresets({}, chat);
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
+  const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
@@ -84,7 +80,11 @@ const ChatModuleContainer = ({
 
   const registry = useRegistry();
   const runtime = Hooks.useProcessManagerRuntime();
-  const chatModel = AssistantHooks.useChatModel({ runtime, db: space.db, chat, preset, registry, sender });
+  const chatModel = AssistantHooks.useChatModel({ runtime, db: space.db, chat, preset, registry, settings, sender });
+
+  // One chip at a time: a later prompt only makes sense once the one before it is under way.
+  const [sent, setSent] = useState(0);
+  const handleSelect = useCallback(() => setSent((count) => count + 1), []);
 
   const [viewValue] = useObject(chat, 'viewType');
   const view = Assistant.ChatViews.find((value) => value === viewValue);
@@ -126,8 +126,8 @@ const ChatModuleContainer = ({
   }
 
   return (
-    <Chat.Root chat={chat} chatModel={chatModel}>
-      <Panel.Root data-testid={participant ? `chat-panel-${participant}` : undefined}>
+    <Chat.Root chat={chat} chatModel={chatModel} defaultDrawer={defaultDrawer}>
+      <Panel.Root data-testid={participant ? `chat-panel-${participant}` : 'chat-module'}>
         <Panel.Header>
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher} customActions={customActions} />
         </Panel.Header>
@@ -136,6 +136,7 @@ const ChatModuleContainer = ({
             <Chat.Thread viewType={view} userHue={hue} />
             <div className='flex flex-col gap-1 p-1'>
               <Chat.Activity />
+              <Chat.Suggestions suggestions={suggestions.slice(sent, sent + 1)} onSelect={handleSelect} />
               <Chat.Prompt {...chatProps} outline preset={preset?.id} />
             </div>
           </Chat.Content>

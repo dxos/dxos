@@ -18,7 +18,7 @@ import * as Templates from '@dxos/plugin-projects/Templates';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Task, TaskSet } from '@dxos/types';
 
-import { type ChatPlaneModuleData, StoryRole } from '../../modules/index.ts';
+import { type ChatModuleData, type ChatPlaneModuleData, StoryRole } from '../../modules/index.ts';
 import { BUILD_PROMPT, PLUGIN_SIDE_QUESTION, Scripts, WORLD_CLOCK_KEY } from '../../scripts/index.ts';
 import { createDecorators, storyParameters } from '../../testing/index.ts';
 
@@ -39,13 +39,10 @@ const meta: Meta<typeof ModuleContainer.Root> = {
   parameters: storyParameters,
   args: {
     layout: [
-      [
-        {
-          type: StoryRole.ChatPlane,
-          data: { kind: 'threads', suggestions: [BUILD_PROMPT, PLUGIN_SIDE_QUESTION] } satisfies ChatPlaneModuleData,
-        },
-      ],
+      [{ type: StoryRole.Chat, data: { suggestions: [BUILD_PROMPT, PLUGIN_SIDE_QUESTION] } satisfies ChatModuleData }],
+      [{ type: StoryRole.ChatPlane, data: { kind: 'threads' } satisfies ChatPlaneModuleData }],
     ],
+    columns: 'min(32vw,40rem)_1fr',
   },
 };
 
@@ -113,7 +110,7 @@ const decorators = createDecorators({
   assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
 });
 
-/** Waits until exactly `count` subagent and agent columns are open. */
+/** Waits until exactly `count` subagent columns are open. */
 const waitForColumns = (canvasElement: HTMLElement, count: number, timeout: number) =>
   waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="chat-plane.column"]').length).toBe(count), {
     timeout,
@@ -136,11 +133,11 @@ export const Scripted: Story = {
     await userEvent.click(await canvas.findByRole('button', { name: BUILD_PROMPT }, { timeout: 60_000 }));
 
     // The planner's column opens first; the diagram's and the code's open together once it reports.
-    await waitForColumns(canvasElement, 2, 60_000);
-    await waitForColumns(canvasElement, 3, 120_000);
+    await waitForColumns(canvasElement, 1, 60_000);
+    await waitForColumns(canvasElement, 2, 120_000);
 
     // Every column closes once its subagent reports, and the agent offers the plugin with the plan and the diagram.
     await canvas.findAllByText(/World Clock is ready/, {}, { timeout: 300_000 });
-    await waitForColumns(canvasElement, 1, 60_000);
+    await waitForColumns(canvasElement, 0, 60_000);
   },
 };

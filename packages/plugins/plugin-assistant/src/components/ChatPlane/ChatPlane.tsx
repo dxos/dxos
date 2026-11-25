@@ -381,16 +381,10 @@ ChatPlaneRoot.displayName = 'ChatPlane.Root';
 // Viewport
 //
 
-type ChatPlaneViewportProps = PropsWithChildren<{
-  /**
-   * Spaces the columns in from the strip's edges (the default); `false` lets them meet the edges, for a host that
-   * frames the plane itself. Gaps between columns are kept either way.
-   */
-  inset?: boolean;
-}>;
+type ChatPlaneViewportProps = PropsWithChildren;
 
 /** The scrolling strip. */
-const ChatPlaneViewport = ({ inset = true, children }: ChatPlaneViewportProps) => {
+const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
   const { viewport, setViewport, selection, select, scrolling, fits, align, dragging, onMove } =
     useChatPlaneContext('ChatPlane.Viewport');
   const stripRef = useRef<HTMLDivElement>(null);
@@ -467,11 +461,7 @@ const ChatPlaneViewport = ({ inset = true, children }: ChatPlaneViewportProps) =
             {/* The frame less a column, split across both sides or all after the last, so every column can reach its resting place. */}
             <div
               className={[
-                'relative flex w-max h-full',
-                inset
-                  ? 'py-2'
-                  : // The stack's first and last drop gaps are the side insets; each opens again while a drag aims at it.
-                    '[&>*>[data-mosaic-placeholder-location]:nth-child(2):not([data-mosaic-placeholder-state=active])]:hidden [&>*>[data-mosaic-placeholder-location]:nth-last-child(2):not([data-mosaic-placeholder-state=active])]:hidden',
+                'relative flex w-max h-full py-2',
                 align === 'start'
                   ? 'pe-[calc(100cqw-var(--chat-plane-width))]'
                   : 'px-[calc(50cqw-var(--chat-plane-width)/2)]',

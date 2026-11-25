@@ -202,7 +202,7 @@ export const ChatColumns = ({
         onAdd={handleAdd}
         onMove={handleMove}
       >
-        <ChatPlane.Viewport inset={false}>
+        <ChatPlane.Viewport>
           <ChatPlane.Add side='start' />
           <ChatPlane.Columns items={ordered}>
             {(id) => {
