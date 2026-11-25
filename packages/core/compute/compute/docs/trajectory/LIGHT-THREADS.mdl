@@ -464,16 +464,16 @@ test QA-4: Three subagents compare savings plans
   steps:
     - name: Ask for a comparison
       do: Send "Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years."
-      expect: the agent delegates one plan to each of three subagents; three cards appear, one per plan
+      expect: the agent delegates one plan to each of three subagents; a column opens beside the chat for each plan, and a card for each shows in the chat
     - name: Watch the subagents work
       do: Wait a few seconds.
-      expect: each card shows its subagent computing its plan, one calculator call at a time
+      expect: each column shows its subagent computing its plan, one calculator call at a time, naming its own rate and balances
     - name: Ask a quick question
       do: Send "Meanwhile, what is 17 × 23?"
       expect: a light thread answers 391 at once while the subagents keep working
     - name: Watch the comparison arrive
       do: Wait for the subagents to finish.
-      expect: the agent's comparison table shows each plan's balance after 10, 20 and 30 years
+      expect: each column closes once its subagent reports, and the agent's comparison table shows each plan's balance after 10, 20 and 30 years
 ```
 
 ```mdl
@@ -1032,4 +1032,20 @@ decision D-48: The `stories-assistant` stories sit in three groups, `chat`, `thr
   date: 2026-11-24
   by: user:richburdon
   affects: [F-1, F-7, F-8]
+```
+
+```mdl
+decision D-49: The Subagents story shows each active subagent in a column of its own.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-50: The Subagents story renders the agent's chat and a column per subagent, as the ThreadColumns story does, on the savings-plans script; a card for each subagent still shows in the chat. Each subagent's steps name its plan's rate and the balance so far. Fills in [D-49].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  why: The three plans are the same task at different rates, so steps that said only "After 10 years" made every column read the same.
 ```

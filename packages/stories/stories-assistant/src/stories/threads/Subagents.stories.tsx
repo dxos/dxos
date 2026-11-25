@@ -3,25 +3,28 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
-
-import { StoryRole } from '../../modules/index.ts';
+import { ThreadColumns } from '../../components/index.ts';
 import { PLANS, SAVINGS_PROMPTS, Scripts } from '../../scripts/index.ts';
-import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
+import { CalculatorSkill, createDecorators, storyParameters } from '../../testing/index.ts';
+
+type StoryArgs = {
+  /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
+  suggestions?: readonly string[];
+};
 
 /**
  * Subagents on light threads: the agent delegates self-contained tasks with `thread_delegate`; each runs in a
- * background thread of its own that starts with nothing but its task, shown as a card, and only its final answer joins
- * the conversation. The agent waits for the subagents with `thread_wait` while the reader keeps chatting. For the same
- * delegation with a column per subagent instead of a card, see the ThreadColumns stories. See
- * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8, QA-4).
+ * background thread of its own that starts with nothing but its task, and only its final answer joins the
+ * conversation. The agent's chat stays in the first column, where each subagent also shows as a card, and every
+ * active subagent has a column of its own beside it, which closes once the subagent reports. The agent waits for the
+ * subagents with `thread_wait` while the reader keeps chatting. For subagents that write documents, see the
+ * ThreadColumns stories. See `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8, QA-4).
  */
-const meta: Meta<typeof ModuleContainer.Root> = {
+const meta: Meta<StoryArgs> = {
   title: 'stories/stories-assistant/threads/Subagents',
-  render: ModuleContainer.Root,
+  component: ThreadColumns,
   decorators: createDecorators({
     skills: [CalculatorSkill.key],
     scriptedModels: { scenes: { savingsPlans: Scripts.savingsPlans }, select: 'savingsPlans' },
@@ -29,24 +32,24 @@ const meta: Meta<typeof ModuleContainer.Root> = {
   }),
   parameters: storyParameters,
   args: {
-    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
-    // The chat keeps a reading width and the trace takes what is left.
-    columns: 'minmax(0,40rem)_minmax(0,1fr)',
+    suggestions: [SAVINGS_PROMPTS.compare, SAVINGS_PROMPTS.quick],
   },
 };
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
+
+const COLUMN = '[data-testid="chat-plane.column"]';
 
 /**
- * Scripted (offline), for a person or a recorded walkthrough to drive, with the trace beside the chat.
+ * Scripted (offline), for a person or a recorded walkthrough to drive.
  *
  * Test:
- * 1. Send "Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years.": a card opens in the chat
- *    for each of the three plans, and each shows its subagent working.
- * 2. Send "Meanwhile, what is 17 × 23?" while they work: the agent answers 391 at once.
- * 3. Wait: once every subagent has reported, the agent compares the three plans.
+ * 1. Click the chip that asks to compare three savings plans: a column opens beside the chat for each plan, showing
+ *    its subagent working, and a card for each shows in the chat.
+ * 2. Click the chip that asks what 17 × 23 is while they work: the agent answers 391 at once.
+ * 3. Wait: each column closes once its subagent reports, and the agent compares the three plans.
  */
 export const Default: Story = {};
 
@@ -54,13 +57,22 @@ export const Default: Story = {};
 export const Scripted: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await submitPrompt(canvasElement, SAVINGS_PROMPTS.compare);
-    // Every subagent works in a card of its own.
+    await userEvent.click(await canvas.findByRole('button', { name: SAVINGS_PROMPTS.compare }, { timeout: 60_000 }));
+
+    // Every subagent works in a column of its own, and shows as a card in the agent's chat.
+    await waitFor(() => expect(canvasElement.querySelectorAll(COLUMN).length).toBe(1 + PLANS.length), {
+      timeout: 60_000,
+    });
     await waitFor(() => expect(canvas.getAllByTestId('chat.lane-card').length).toBeGreaterThanOrEqual(PLANS.length), {
       timeout: 30_000,
     });
-    await submitPrompt(canvasElement, SAVINGS_PROMPTS.quick);
+
+    // The reader keeps talking while they work.
+    await userEvent.click(await canvas.findByRole('button', { name: SAVINGS_PROMPTS.quick }, { timeout: 30_000 }));
     await canvas.findAllByText(/17 × 23 = 391/, {}, { timeout: 30_000 });
+
+    // Every column closes once its subagent reports, and the comparison lands in the agent's chat.
     await canvas.findAllByText(/two extra points a year/, {}, { timeout: 120_000 });
+    await waitFor(() => expect(canvasElement.querySelectorAll(COLUMN).length).toBe(1), { timeout: 60_000 });
   },
 };
