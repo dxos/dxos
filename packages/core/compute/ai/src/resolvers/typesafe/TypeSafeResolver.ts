@@ -116,7 +116,7 @@ export const toQuestion = (decision: Decision.Any): Question => {
       };
     case 'Locate':
       // Unreachable: the model is made without `supportsLocate`, so `DecisionModel` refuses these first.
-      throw new Error('System One does not answer locate decisions.');
+      throw new Error(`System One does not answer locate decisions (image field "${decision.image}").`);
   }
 };
 
