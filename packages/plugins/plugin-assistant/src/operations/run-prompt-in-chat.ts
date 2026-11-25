@@ -8,9 +8,7 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -46,7 +44,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         // the first request, so the agent process can resolve a durable conversation feed and space.
         const db = companionTo !== undefined ? Obj.getDatabase(companionTo) : undefined;
         if (companionTo !== undefined && db && !Obj.getDatabase(chat)) {
-          Chat.linkCompanion({ chat, subject: companionTo });
+          Agent.linkCompanion({ session: chat, subject: companionTo });
           yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
           yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo, chat });
           yield* Effect.promise(() => db.flush());
@@ -62,8 +60,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         // The model is the chat's, so the provider has to be the one that serves THAT model rather
         // than whichever the settings now name — a chat outlives a provider change.
         const model = chat.session?.model ?? preset?.model;
-        const location = Agent.chatLocation(chat);
-        const session = yield* AgentService.getSession(chat, {
+        const location = Agent.sessionLocation(chat);
+        yield* Agent.open(chat, {
           provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
           location,
           // The same guard the chat's own UI asks with, so the session is shared rather than respawned.
@@ -71,11 +69,12 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         });
         // A plain string is submitted as-is so the default path keeps its existing shape; a stated
         // disposition needs the block form, which is the only place it can be carried.
-        yield* session.submitPrompt(
+        yield* Agent.submitPrompt(
+          chat,
           disposition === undefined ? prompt : [ContentBlock.Text.make({ text: prompt, disposition })],
         );
         if (wait) {
-          yield* session.waitForCompletion();
+          yield* Agent.waitForCompletion(chat);
         }
       }),
     ),

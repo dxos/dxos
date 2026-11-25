@@ -9,8 +9,7 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -44,7 +43,7 @@ const tool = Operation.toolName;
 
 const TYPES = [
   Agent.Agent,
-  Chat.Chat,
+  Agent.Session,
   Skill.Skill,
   Feed.Feed,
   Text.Text,
@@ -86,7 +85,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** The registry keys a chat binds, read through `ListSkills`. */
-const boundKeys = (agent: Ref.Ref<Agent.Agent>, chat: Chat.Chat) =>
+const boundKeys = (agent: Ref.Ref<Agent.Agent>, chat: Agent.Session) =>
   Operation.invoke(AgentOperation.ListSkills, { agent, chat: Ref.make(chat) }).pipe(
     Effect.map(({ skills }) => skills.map(({ key }) => key)),
   );
@@ -98,7 +97,7 @@ describe('Modes', () => {
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         expect(chat).toBeDefined();
         if (!chat) {
           return;
@@ -196,7 +195,7 @@ describe('Modes', () => {
         expect(yield* boundKeys(agentRef, chat)).not.toContain(RelaySkill.key);
 
         // The agent's own chat started with Relay, and an edit to the instructions never takes it away.
-        const primary = yield* Agent.loadChat(agent);
+        const primary = yield* Agent.loadSession(agent);
         expect(primary).toBeDefined();
         if (!primary) {
           return;
@@ -263,7 +262,7 @@ describe('Modes', () => {
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
-        const primary = yield* Agent.loadChat(agent);
+        const primary = yield* Agent.loadSession(agent);
         const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
         yield* Database.flush();
 
@@ -281,7 +280,7 @@ describe('Modes', () => {
         const chat = yield* Database.load(first.chat);
         expect(ChatParticipant.get(chat)).toBe(dima.id);
         expect(Mode.getCurrent(chat)).toBe(Mode.DEFAULT);
-        expect((yield* Agent.loadChat(agent))?.id).toBe(primary?.id);
+        expect((yield* Agent.loadSession(agent))?.id).toBe(primary?.id);
         expect(yield* boundKeys(agentRef, chat)).toEqual(
           expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]),
         );

@@ -112,6 +112,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/shell"
+    },
+    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {

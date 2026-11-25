@@ -167,7 +167,7 @@ const sqliteLayerFromParams = ({
     createOpfsWorker: !!createOpfsWorker,
     sqlitePath: sqlitePath,
   });
-  let sqliteLayer: Layer.Layer<SqlClient.SqlClient, unknown>;
+  let sqliteLayer: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
   switch (sqliteMode) {
     case Runtime_Client_Storage_SqliteMode.OPFS: {
       const createWorker = createOpfsWorker;
@@ -176,9 +176,13 @@ const sqliteLayerFromParams = ({
           'LocalClientServices: runtime.client.storage.sqlite_mode=OPFS requires a createOpfsWorker option.',
         );
       }
-      sqliteLayer = Layer.unwrap(
-        Effect.map(OpfsWorker, (worker) => SqliteClient.layer({ worker: Effect.succeed(worker) })),
-      ).pipe(Layer.provide(opfsWorkerLayer(createWorker)));
+      sqliteLayer = sqlExportLayer.pipe(
+        Layer.provideMerge(
+          Layer.unwrap(Effect.map(OpfsWorker, (worker) => SqliteClient.layer({ worker: Effect.succeed(worker) }))).pipe(
+            Layer.provide(opfsWorkerLayer(createWorker)),
+          ),
+        ),
+      );
       log('using sqlite opfs worker');
       break;
     }
@@ -203,7 +207,7 @@ const sqliteLayerFromParams = ({
     }
   }
 
-  return sqlExportLayer.pipe(Layer.provideMerge(sqliteLayer), Layer.provideMerge(Reactivity.layer));
+  return sqliteLayer.pipe(Layer.provideMerge(Reactivity.layer));
 };
 
 /**

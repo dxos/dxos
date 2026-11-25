@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
-import * as Agent from '@dxos/assistant/Agent';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Obj, Ref } from '@dxos/echo';
@@ -37,7 +38,7 @@ export const makeAgent = ({
 }: MakeAgentProps): Effect.Effect<Agent.Agent, never, Database.Service> =>
   Effect.gen(function* () {
     // Bound by registry URI so the agent follows the compiled skills until `customizeSkill` forks one.
-    const agent = yield* Agent.makeInitialized(
+    const agent = yield* AgentSetup.makeInitialized(
       {
         name,
         instructions: instructions ?? baseInstructions(name),
@@ -55,7 +56,7 @@ export const makeAgent = ({
       Ref.fromURI(Skill.registryURI(ConversationSkill.key)),
     );
     yield* ensureModes(agent);
-    const chat = yield* Agent.loadChat(agent);
+    const chat = yield* Agent.loadSession(agent);
     if (chat) {
       Obj.update(chat, (chat) => Mode.setCurrent(chat, Mode.DEFAULT));
     }

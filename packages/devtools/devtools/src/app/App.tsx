@@ -9,6 +9,7 @@ import { translations as logPanelTranslations } from '@dxos/react-ui-debug/trans
 import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import * as Status from '@dxos/react-ui/Status';
 import * as Theme from '@dxos/react-ui/Theme';
+import { translations as shellTranslations } from '@dxos/shell/translations';
 import { type ThemeMode } from '@dxos/ui-types';
 
 import { Devtools } from './Devtools.tsx';
@@ -37,7 +38,7 @@ export const App = (props: ClientProviderProps) => {
   return (
     <Theme.Provider
       {...{ tx: Theme.defaultTx, themeMode }}
-      resourceExtensions={[...logPanelTranslations, ...queryTranslations]}
+      resourceExtensions={[...logPanelTranslations, ...queryTranslations, ...shellTranslations]}
     >
       <Status.ErrorBoundary name='devtools.app'>
         <ClientProvider {...props}>

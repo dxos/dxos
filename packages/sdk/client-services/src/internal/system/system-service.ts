@@ -52,11 +52,11 @@ export class SystemServiceImpl implements SystemService.Handlers {
   #resetting = false;
   #resetFiber: Fiber.Fiber<void> | undefined;
 
-  'constructor'(options: SystemServiceOptions) {
+  constructor(options: SystemServiceOptions) {
     this.#options = options;
   }
 
-  get 'status'(): SystemStatus {
+  get status(): SystemStatus {
     return this.#status.get();
   }
 
@@ -64,7 +64,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
    * Reports the host's status to subscribers. Ignored once a reset is under way: that status is
    * final because the app reloads.
    */
-  'setStatus'(status: SystemStatus): void {
+  setStatus(status: SystemStatus): void {
     if (this.#resetting) {
       return;
     }
@@ -76,7 +76,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
    * inactive first so the app falls back at once, and that status is never cleared because the app
    * reloads.
    */
-  'reset'(): Effect.Effect<void> {
+  reset(): Effect.Effect<void> {
     const chain = Effect.gen({ self: this }, function* () {
       log.info('resetting...');
       this.#resetting = true;

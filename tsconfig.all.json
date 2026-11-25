@@ -970,6 +970,9 @@
       "path": "packages/sdk/schema/tsconfig.json"
     },
     {
+      "path": "tools/session-board/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/shell/tsconfig.json"
     },
     {

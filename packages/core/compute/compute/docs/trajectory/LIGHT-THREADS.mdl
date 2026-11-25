@@ -376,12 +376,12 @@ scenario T-7: A fork stays apart
 
 ```mdl
 test QA-1: Three prompts sent while the agent researches
-  desc: The scripted story `stories-assistant/LightThreads` (Scripted) walked by a person.
+  desc: The scripted story `stories-assistant/threads/Threads` (Default) walked by a person.
   actors: human
   covers: [F-1.1, F-1.2, F-3.1, F-3.2, F-4.1, F-4.2, F-4.3, T-4]
   status: draft
   given:
-    - the story `stories/stories-assistant/LightThreads` Scripted, with Parallel threads on
+    - the story `stories/stories-assistant/threads/Threads` Default, with Parallel threads on
   steps:
     - name: Start the research
       do: Send "Research the factorials of 5 to 9 and summarise them."
@@ -402,12 +402,12 @@ test QA-1: Three prompts sent while the agent researches
 
 ```mdl
 test QA-2: Two agents share one chat
-  desc: The scripted story `stories-assistant/MultiTenantThreads` (Demo) walked by a person; both agents are scripted stand-ins.
+  desc: The scripted story `stories-assistant/threads/MultiTenantThreads` (Default) walked by a person; both agents are scripted stand-ins.
   actors: human
   covers: [F-1.1, F-2.1, F-4.1, F-4.2, F-4.3, F-7.1, F-7.2]
   status: draft
   given:
-    - the story `stories/stories-assistant/MultiTenantThreads` Demo, with Parallel threads on and the agent `claude` sharing the chat
+    - the story `stories/stories-assistant/threads/MultiTenantThreads` Default, with Parallel threads on and the agent `claude` sharing the chat
   steps:
     - name: Ask the default agent for a plan
       do: Send "Draft a three-step plan for migrating the chat store to events."
@@ -425,7 +425,7 @@ test QA-2: Two agents share one chat
 
 ```mdl
 test QA-3: A live assistant draws while live Claude Code edits files
-  desc: The story `stories-assistant/MultiTenantThreads` (Live) walked by a person, against real models: the chat's
+  desc: The story `stories-assistant/threads/MultiTenantThreads` (Live) walked by a person, against real models: the chat's
     agent runs DeepSeek V4 Flash through the remote EDGE AI service, and Claude Code runs through the ACP agent helper.
   actors: human
   covers: [F-1.1, F-4.1, F-7.1, F-7.2, F-7.3]
@@ -433,7 +433,7 @@ test QA-3: A live assistant draws while live Claude Code edits files
   given:
     - the agent helper serving `claude-code` with an Anthropic key, and its port, token and a scratch folder holding
       `notes.txt` passed to the story as `helperPort`, `helperToken` and `cwd`
-    - the story `stories/stories-assistant/MultiTenantThreads` Live, with the Drawing skill and an empty drawing
+    - the story `stories/stories-assistant/threads/MultiTenantThreads` Live, with the Drawing skill and an empty drawing
       "Launch plan" beside the chat
   steps:
     - name: Ask the assistant for a diagram
@@ -455,25 +455,25 @@ test QA-3: A live assistant draws while live Claude Code edits files
 
 ```mdl
 test QA-4: Three subagents compare savings plans
-  desc: The scripted story `stories-assistant/Subagents` (Demo) walked by a person.
+  desc: The scripted story `stories-assistant/threads/Delegation` (Default) walked by a person.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4, T-6]
   status: draft
   given:
-    - the story `stories/stories-assistant/Subagents` Demo, with Parallel threads on
+    - the story `stories/stories-assistant/threads/Delegation` Default, with Parallel threads on
   steps:
     - name: Ask for a comparison
       do: Send "Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years."
-      expect: the agent delegates one plan to each of three subagents; three cards appear, one per plan
+      expect: the agent delegates one plan to each of three subagents; a column opens beside the chat for each plan, and a card for each shows in the chat
     - name: Watch the subagents work
       do: Wait a few seconds.
-      expect: each card shows its subagent computing its plan, one calculator call at a time
+      expect: each column shows its subagent computing its plan, one calculator call at a time, naming its own rate and balances
     - name: Ask a quick question
       do: Send "Meanwhile, what is 17 × 23?"
       expect: a light thread answers 391 at once while the subagents keep working
     - name: Watch the comparison arrive
       do: Wait for the subagents to finish.
-      expect: the agent's comparison table shows each plan's balance after 10, 20 and 30 years
+      expect: each column closes once its subagent reports, and the agent's comparison table shows each plan's balance after 10, 20 and 30 years
 ```
 
 ```mdl
@@ -504,26 +504,26 @@ test QA-5: Fork a chat at an earlier answer
 
 ```mdl
 test QA-6: Subagent threads open as columns
-  desc: The scripted story `stories-assistant/Subagents` (Columns) walked by a person. Each subagent thread renders as a
+  desc: The scripted story `stories-assistant/threads/Delegation` (LaunchKit) walked by a person. Each subagent thread renders as a
     column of its own beside the agent's conversation, holding its reasoning, the document it wrote and its slice of
     the trajectory, and closes once the subagent reports.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4]
   status: draft
   given:
-    - the story `stories/stories-assistant/Subagents` ColumnsDemo, with Parallel threads on and the `launchKit` scripted model
+    - the story `stories/stories-assistant/threads/Delegation` LaunchKit, with Parallel threads on and the `launchKit` scripted model
   steps:
     - name: Describe a complex task
       do: Click the chip "Plan the Composer 1.0 launch: we need a blog post, release notes, an FAQ and an announcement email."
       expect: the prompt shows in the agent's column
     - name: See the task list
-      do: Open the tasks drawer above the prompt.
+      do: Look at the task list above the prompt, which is open from the start.
       expect: the agent's checklist holds four tasks, one per document
     - name: Watch the columns open
       do: Wait while the agent delegates.
       expect: a column opens for each task, one at a time, showing its subagent's reasoning as it works
     - name: Keep talking
-      do: Select the agent's column and click the chip "While they work: which day should we launch?"
+      do: Click the chip "While they work: which day should we launch?"
       expect: the agent answers once its current wait returns, while the other subagents keep working
     - name: Look inside a subagent's column
       do: Click the FAQ column.
@@ -975,4 +975,116 @@ decision D-41: `test QA-6` walks subagent threads as columns: the Subagents Colu
   why: A card shows a subagent's tail; a column shows its whole conversation and the artifacts it made, side by side with the others, which is what a reader following several delegated tasks needs.
   rejected:
     - Expand the lane cards in place — the agent's conversation would grow sideways and lose its reading order.
+```
+
+```mdl
+decision D-42: In the story `test QA-6` walks, the agent's column rests at the start of the strip instead of its center, the columns keep their width so the strip scrolls sideways, and the story is a file of its own, apart from the story that shows a column per chat.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-43: The agent's column stays selected while subagent columns open, so `test QA-6` no longer selects it before the side question. The story is `stories/stories-assistant/ThreadColumns`. Fills in [D-42].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  why: A strip that rests the selection at its start would scroll the agent's column, and its prompt, out of view each time the selection followed a new thread.
+  rejected:
+    - Keep following the newest thread — the reader would lose the agent's conversation as soon as the columns outgrow the strip.
+```
+
+```mdl
+decision D-44: The Subagents story file has a story named `Default` that has no play function, and `test QA-4` walks it.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-45: `Default` is the story that was `Demo`: the chat with the trace beside it. The story with the play function keeps the name `Scripted`. Fills in [D-44].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  why: `Demo` was already the play-free story a person and the recorded walkthrough drive, so renaming it adds no third story that differs only by its play function.
+```
+
+```mdl
+decision D-46: In every story file a story named `Default` only starts up, with no play function. The tests a person walks name that story.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-1, F-7]
+```
+
+```mdl
+decision D-47: `test QA-1` and `test QA-2` walk `Default`, the story that was `Demo` in the LightThreads and MultiTenantThreads files. Fills in [D-46].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, F-7]
+  why: `test QA-1` named `Scripted`, which runs a play function and so cannot be walked by a person; `Demo` was the play-free story in both files.
+```
+
+```mdl
+decision D-48: The `stories-assistant` stories sit in three groups, `chat`, `threads` and `agents`, and the stories the tests of this spec walk are in `threads`.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-1, F-7, F-8]
+```
+
+```mdl
+decision D-49: The Subagents story shows each active subagent in a column of its own.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-50: The Subagents story renders the agent's chat and a column per subagent, as the ThreadColumns story does, on the savings-plans script; a card for each subagent still shows in the chat. Each subagent's steps name its plan's rate and the balance so far. Fills in [D-49].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  why: The three plans are the same task at different rates, so steps that said only "After 10 years" made every column read the same.
+```
+
+```mdl
+decision D-51: The Subagents and ThreadColumns stories are one story file with two scenarios.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-52: The merged file is Subagents: `Default` and `Scripted` are the savings-plans scenario that `test QA-4` walks, and `LaunchKit` and `LaunchKitScripted` are the launch-kit scenario that `test QA-6` walks. Fills in [D-51].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  why: Both stories already rendered the same columns and differed only in script, and each test needs a play-free story of its own scenario to walk.
+```
+
+```mdl
+decision D-53: The launch-kit story starts with the task list open.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-54: The Subagents story has a column with the global view of the run's processes and threads.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-8]
+```
+
+```mdl
+decision D-55: The global view is the second column, beside the agent's chat and before the subagents' columns, and stays open for the whole run. Fills in [D-54].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  why: After the subagents' columns it would be pushed past the edge of the strip as soon as they open.
 ```

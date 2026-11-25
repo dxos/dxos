@@ -4,7 +4,8 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
 
 - `CLAUDE.md` and `GEMINI.md` are symlinks to it.
 - Keep it thin and durable — deep how-to lives in `.agents/skills/*`;
-- environment setup lives in `REPOSITORY_GUIDE.md`.
+- environment setup and running an app (Storybook, Composer) live in `REPOSITORY_GUIDE.md`
+  §Quickstart.
 
 ## Start of session
 
@@ -232,7 +233,7 @@ is invisible there until something publishes it.
 - **Skills edge shares live here.** edge installs them with `npx skills` (recorded in its
   `skills-lock.json`), so change a skill here, never in edge's copy; a skill folder holds no
   repo-specific content (rules go in each repo's `.agents/rules/`). `scripts/skills-sync.ts` reports
-  which copies are behind or edited in place, and `agents/routines/skills-sync.md` acts on it.
+  which copies are behind or edited in place, and `.agents/routines/skills-sync.md` acts on it.
 
 ## Long-running tasks
 
@@ -317,7 +318,7 @@ Deeper conventions:
   whether or not `submit-pr` is in use.
 - Consumer-relevant changes need a `.changeset/*.md`: written when opening the
   PR and rewritten before landing, as a summary of the whole PR — see
-  [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
+  [`.agents/instructions/changesets.md`](.agents/instructions/changesets.md)
   for when to add one, which package to name, and bump levels.
 
 ## Handing an agent a credential
@@ -377,19 +378,20 @@ Do not paste real credential values into any shell command, and do not paste the
   commentable Claude Artifact → `sharing-specs` skill (`.agents/skills/sharing-specs/SKILL.md`).
 - **Cloud sandbox / Claude Code on the web** — hooks that don't run, missing tooling, and the
   HTTPS egress proxy → `cloud-sandbox` skill (`.agents/skills/cloud-sandbox/SKILL.md`).
-- **`.agents/` vs `agents/`** — `.agents/` (dot) holds agent **control state**
-  (skills, the project registry); `agents/` (no dot) holds **user-visible
-  artifacts** (instructions, prompts, superpowers specs/plans/handoffs).
+- **`.agents/`** — everything for and from agents: skills, rules, the project registry,
+  reviews, instructions, prompts, routines, sessions and superpowers specs/plans/handoffs.
+  There is no `agents/` (no dot); `npx skills` and `.claude/skills` need the dot.
 - **Superpowers artifacts** — brainstorming specs, writing-plans plans, and
-  handoffs live in **`agents/superpowers/{specs,plans,handoffs}/`**, NEVER
+  handoffs live in **`.agents/superpowers/{specs,plans,handoffs}/`**, NEVER
   `docs/superpowers/`. This **overrides the superpowers plugin's default path**:
   whenever a superpowers skill says to write to or read from `docs/superpowers/…`,
-  use `agents/superpowers/…` instead.
+  use `.agents/superpowers/…` instead.
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, pr-description, land, …).
-- **A status page for a long session** — one Artifact board with questions, work in progress and
-  results, each a short STE line that expands → `status-board` skill (`.agents/skills/status-board/SKILL.md`).
+- **A status page for a long session** — one Artifact board with questions, goals, PRs and a timeline; you write a
+  `SESSION.mdl` and `tools/session-board` makes the page, never hand-written HTML →
+  `status-board` skill (`.agents/skills/status-board/SKILL.md`).
 - **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
   list, and `scripts/ste_check.py` → `simplified-technical-english` skill
   (`.agents/skills/simplified-technical-english/SKILL.md`).

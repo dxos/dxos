@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import { type Context } from '@dxos/context';
 import { Database, Obj, Ref } from '@dxos/echo';

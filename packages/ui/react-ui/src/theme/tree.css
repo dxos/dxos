@@ -27,6 +27,15 @@
   }
 
   /*
+   * A tree that is not height-bound (embedded in a page that scrolls) never overflows, and Chrome still stops a wheel at
+   * a `contain` viewport that cannot scroll; overscroll is contained only while the rows overflow, which the scroll
+   * root publishes as `data-overflow-y`.
+   */
+  .dx-scroll-root:not([data-overflow-y]) > .dx-tree-content {
+    overscroll-behavior-y: auto;
+  }
+
+  /*
    * The space an icon has inside its block: with `rowInset` (`data-row-inset`) a row's ends are padded by it, so the
    * disclosure and a trailing count sit as far from the row's edges as its icon sits from its cell. Declared on the row
    * so it resolves against the row's size.

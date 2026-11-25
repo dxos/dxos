@@ -6,8 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
@@ -26,7 +26,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DelegationSkillHandlers,
-  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed, Project.Project],
+  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Agent.Session, Skill.Skill, Feed.Feed, Project.Project],
   skills: [DelegationSkill.make()],
   disableLlmMemoization: true,
 });
@@ -36,10 +36,13 @@ const TestLayer = AssistantTestLayer({
  * project parent is here so the tests cover the shape the app actually runs.
  */
 const makeProjectAgent = Effect.gen(function* () {
-  const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: 'Test.' }, DelegationSkill.make());
+  const agent = yield* AgentSetup.makeInitialized(
+    { name: 'Supervisor', instructions: 'Test.' },
+    DelegationSkill.make(),
+  );
   const project = yield* Database.add(Project.make({ name: 'Test project' }));
   // The agent is parented, not its chat: the chat reaches the project through the agent, and
-  // `Agent.loadChat` finds the chat by ITS parent edge.
+  // `Agent.loadSession` finds the chat by ITS parent edge.
   Obj.setParent(agent, project);
   yield* Database.flush();
   return { agent, project };
@@ -57,15 +60,15 @@ describe('DelegateTask', () => {
       function* ({ expect }) {
         const { agent, project } = yield* makeProjectAgent;
 
-        const agentChat = yield* Agent.loadChat(agent);
+        const agentChat = yield* Agent.loadSession(agent);
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Agent.loadTasks(chat);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({
           title: 'Research widgets',
@@ -88,16 +91,16 @@ describe('DelegateTask', () => {
       function* ({ expect }) {
         const { agent } = yield* makeProjectAgent;
 
-        const agentChat = yield* Agent.loadChat(agent);
+        const agentChat = yield* Agent.loadSession(agent);
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
         yield* invokeDelegateTask({ title: 'Summarize findings' }, chatFeed);
 
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Agent.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual(['Research widgets', 'Summarize findings']);
       },
       Effect.provide(TestLayer),
@@ -110,21 +113,21 @@ describe('DelegateTask', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         // No project parent: the checklist is the chat's own either way, so delegation still promotes.
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationSkill.make(),
         );
         yield* Database.flush();
 
-        const agentChat = yield* Agent.loadChat(agent);
+        const agentChat = yield* Agent.loadSession(agent);
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
-        expect(yield* Chat.loadTasks(chat)).toHaveLength(1);
+        expect(yield* Agent.loadTasks(chat)).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -135,13 +138,13 @@ describe('DelegateTask', () => {
     'fails on an empty title',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationSkill.make(),
         );
         yield* Database.flush();
 
-        const agentChat = yield* Agent.loadChat(agent);
+        const agentChat = yield* Agent.loadSession(agent);
         const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 

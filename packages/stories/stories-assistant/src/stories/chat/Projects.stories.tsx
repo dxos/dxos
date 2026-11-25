@@ -1,0 +1,223 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
+import { userEvent } from 'storybook/test';
+
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { log } from '@dxos/log';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+
+import { SpaceTemplateToolbar, StoryRole } from '../../modules/index.ts';
+import { applyStagedProfileImport } from '../../modules/profile-archive.ts';
+import {
+  HelpdeskSpacePlugin,
+  VoyageSpacePlugin,
+  config,
+  createDecorators,
+  findPromptEditor,
+  storyParameters,
+} from '../../testing/index.ts';
+import { isPersistent } from '../../testing/persistence.ts';
+
+const meta: Meta<typeof ModuleContainer.Root> = {
+  title: 'stories/stories-assistant/chat/Projects',
+  // Rows, not a fragment: `ModuleContainer.Root` pins itself to its nearest positioned ancestor, so a
+  // bare sibling of the toolbar would cover it.
+  render: (args) => (
+    <div className='dx-grow grid grid-rows-[min-content_1fr]'>
+      <SpaceTemplateToolbar />
+      <div className='relative'>
+        <ModuleContainer.Root {...args} />
+      </div>
+    </div>
+  ),
+  parameters: storyParameters,
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const storyOptions = {
+  skills: [AssistantSkill.key, Sandbox.SKILL_KEY],
+  lazyPlugins: async () => {
+    const [
+      { Instructions, Project, Routine },
+      { Collection, Feed },
+      { Text, TagIndex },
+      { Mailbox },
+      { Task, TaskSet },
+      { SpacePlugin },
+      { InboxPlugin },
+      ProjectsPlugin,
+      TasksPlugin,
+      CrmPlugin,
+      DebugPlugin,
+      SandboxPlugin,
+    ] = await Promise.all([
+      import('@dxos/compute'),
+      import('@dxos/echo'),
+      import('@dxos/schema'),
+      import('@dxos/plugin-inbox'),
+      import('@dxos/types'),
+      import('@dxos/plugin-space/testing'),
+      import('@dxos/plugin-inbox/testing'),
+      import('@dxos/plugin-projects/ProjectsPlugin'),
+      import('@dxos/plugin-tasks/TasksPlugin'),
+      import('@dxos/plugin-crm/CrmPlugin'),
+      import('@dxos/plugin-debug/DebugPlugin'),
+      import('@dxos/plugin-sandbox/SandboxPlugin'),
+    ]);
+    return {
+      plugins: [
+        // A space template's `apply` writes through the space DB, and the objects it creates surface
+        // through these plugins' articles.
+        SpacePlugin.make({}),
+        InboxPlugin.make(),
+        ProjectsPlugin.make(),
+        // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
+        TasksPlugin.make(),
+        CrmPlugin.make(),
+        // Contributes the space templates (Northwind Sales, Tidepool, Chess MCP) as space
+        // templates — the ones the app's create-space dialog offers.
+        DebugPlugin.make(),
+        // Contributes the Sandbox skill and its operations: without it the agent has no
+        // command-execution tool and answers every shell task as blocked.
+        SandboxPlugin.make(),
+        VoyageSpacePlugin,
+        // Contributes the Helpdesk template, whose first task forces the agent to ask a question.
+        HelpdeskSpacePlugin,
+      ],
+      types: [
+        Project.Project,
+        Instructions.Instructions,
+        Routine.Routine,
+        Collection.Collection,
+        Text.Text,
+        Mailbox.Mailbox,
+        Feed.Feed,
+        TagIndex.TagIndex,
+        Sandbox.Sandbox,
+        // The Helpdesk template's ledger; an agent's questions live in its tasks' history.
+        TaskSet.TaskSet,
+        Task.Task,
+      ],
+    };
+  },
+  // No seeding here: each template owns a space of its own, created by the toolbar.
+};
+
+/**
+ * Persistent storage for the story a human drives: the spaces the templates create — and the
+ * conversations held in them — survive a reload, so switching back to a template reopens its work
+ * rather than scaffolding it again. The toolbar's checkbox turns it off; the function form reads
+ * the choice at mount, which is when the client boots.
+ */
+const persistentDecorators = createDecorators(() => ({
+  ...storyOptions,
+  config: isPersistent() ? config.persistent : config.remote,
+  // A profile imported from the toolbar lands here: plugins resolve before the client starts, which
+  // is the only moment this tab has yet to open the database. Never fatal — the harness renders
+  // nothing until `lazyPlugins` resolves, so a rejection here would leave a blank story rather than
+  // one booted on the profile the import did not replace.
+  lazyPlugins: async () => {
+    await applyStagedProfileImport().catch((error) => log.error('profile import failed', { error }));
+    return storyOptions.lazyPlugins();
+  },
+}));
+
+/** Ephemeral, for the play test: a fixture that outlives the run would make the next one lie. */
+const decorators = createDecorators(storyOptions);
+
+const sharedArgs = {
+  layout: [[StoryRole.Project], [StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
+};
+
+/**
+ * Submit a prompt through the chat's CodeMirror editor. Submission is dropped silently while the
+ * runtime is still activating or a previous response is streaming, so retry until the message
+ * actually shows up in the thread (the editor clearing is NOT proof of submission).
+ */
+const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
+  const editor = await findPromptEditor(canvasElement, 60_000);
+  const needle = text.slice(0, 30);
+  const promptRoot = editor.closest('.cm-editor');
+  const submitted = () =>
+    [...canvasElement.querySelectorAll('*')].some(
+      (node) =>
+        node.childElementCount === 0 && node.closest('.cm-editor') !== promptRoot && node.textContent?.includes(needle),
+    );
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (!editor.textContent?.includes(needle)) {
+      await userEvent.click(editor);
+      await userEvent.type(editor, text);
+    }
+    await userEvent.keyboard('{Enter}');
+    const deadline = Date.now() + 10_000;
+    while (Date.now() < deadline) {
+      if (submitted()) {
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+  throw new Error('Prompt did not reach the thread.');
+};
+
+/** Poll the rendered thread until some element (outside the prompt editor) contains the needle. */
+const waitForResponse = async (canvasElement: HTMLElement, needle: string, timeout = 240_000) => {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const found = [...canvasElement.querySelectorAll('*')].some(
+      (node) => node.childElementCount === 0 && node.textContent?.includes(needle),
+    );
+    if (found) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`timed out waiting for response containing "${needle}"`);
+};
+
+/**
+ * Project-bound chat over a live AI stack, in three columns: the project, its chat, and the trace
+ * panel. The toolbar lists the contributed space templates; picking one resets the space to that
+ * template's content — project, mailbox, accounts, documents — and binds a fresh chat to the
+ * project it created. Instructions (text + sentinel commands) reach the system prompt through that
+ * binding.
+ *
+ * Test:
+ * 1. Wait for the chat prompt to activate (context chips show "Voyage" and "Instructions").
+ * 2. Send "What project are you assisting with?" — the reply names Voyage and ends with AHOY.
+ * 3. Send "$track buy milk" — the reply is exactly "TRACKED: buy milk" (plus AHOY per the instructions).
+ * 4. Type "$" in the prompt — the autocomplete offers `$track`.
+ * 5. Pick "Tidepool — Offline sync v2" — the project column shows that work-stream with its task
+ *    tree and documents, and the chat starts empty against it.
+ */
+export const Default: Story = {
+  decorators: persistentDecorators,
+  args: sharedArgs,
+};
+
+/**
+ * Asserts the bound project instructions actually steer the model (marker word) and that sentinel
+ * commands are followed. Live AI and slow, so excluded from CI runs (`tags: ['!test']`); run
+ * manually in storybook against a reachable EDGE AI service.
+ */
+export const InstructionsTest: Story = {
+  decorators,
+  args: sharedArgs,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    await submitPrompt(canvasElement, 'In one short sentence: what project are you assisting with?');
+    await waitForResponse(canvasElement, 'AHOY');
+
+    await submitPrompt(canvasElement, '$track buy milk');
+    await waitForResponse(canvasElement, 'TRACKED: buy milk');
+  },
+};

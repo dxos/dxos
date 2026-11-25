@@ -10,7 +10,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';

@@ -12,8 +12,8 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import * as Chat from '@dxos/assistant/Chat';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Trace from '@dxos/compute/Trace';
@@ -66,7 +66,7 @@ const makeCapabilityManager = () => {
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.merge(StubRunPrompt, AssistantOperationHandlerSet),
-  types: [Chat.Chat, Feed.Feed, Text.Text, Task.Task],
+  types: [Agent.Session, Feed.Feed, Text.Text, Task.Task],
   tracing: 'feed',
   extraServices: Layer.sync(Capability.Service, makeCapabilityManager),
 });
@@ -74,7 +74,7 @@ const TestLayer = AssistantTestLayer({
 /** A question filed on a task of a chat, exactly as `ask-question` leaves it. */
 const setup = Effect.gen(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
   const task = yield* Database.add(Task.make({ title: 'Draft the reply', status: 'blocked' }));
   const question = Task.ask(task, {
     text: 'What is our refund window?',

@@ -112,6 +112,17 @@ const AddNote = Operation.make({
   output: Schema.String,
 });
 
+/** Replaced by the database API, so code mode must not offer it although its skill is enabled. */
+const ReadTicket = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.readTicket'),
+    name: 'Read ticket',
+    description: 'Reads a ticket by reference.',
+  },
+  input: Schema.Struct({ id: Schema.String }),
+  output: Schema.String,
+}).pipe(Operation.hiddenInCodeMode);
+
 /** The scenario's operations, made per test with the record of what each was asked to do. */
 const makeHandlers = () => {
   const scored: string[] = [];
@@ -133,6 +144,7 @@ const makeHandlers = () => {
         }),
       ),
     ),
+    ReadTicket.pipe(Operation.withHandler(({ id }) => Effect.succeed(id))),
   );
   return { scored, noted, handlers };
 };
@@ -143,7 +155,7 @@ const ScoreSkill = Skill.make({
   name: 'Scoring',
   description: 'Scores titles.',
   instructions: Template.make({ source: 'Score titles before ranking them.' }),
-  tools: Skill.toolDefinitions({ operations: [Score] }),
+  tools: Skill.toolDefinitions({ operations: [Score, ReadTicket] }),
 });
 
 /** Not enabled, but the agent may enable it. */
@@ -220,6 +232,9 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
           expect(system).toContain('Score titles before ranking them');
           expect(system).toContain('Scores a title for urgency');
+          // An operation the database API replaces is left out of the Effect dialect, though its skill is enabled; the
+          // plain dialect has no database API to replace it with.
+          expect(system.includes('Reads a ticket by reference')).toBe(dialect !== EffectDialect);
           expect(system).not.toContain('Write notes in lower case');
           // No types, and no skill that is not enabled.
           expect(system).not.toContain('com.example.type.ticket');

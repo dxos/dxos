@@ -70,8 +70,3 @@ AI agents with their own identity, tools and skills.
 </Card>
 
 </Grid>
-
-<!--
-Notes:
-- Goals
--->

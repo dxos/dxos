@@ -4,7 +4,6 @@
 
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -12,9 +11,6 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
 import { type LaneCardData, type ThreadLane } from '../../types.ts';
-
-/** Lines a collapsed card shows: its tail, few enough that several running lanes stay on one screen. */
-const COLLAPSED_LINES = 5;
 
 const elapsed = (started: string, now: number): string => {
   const seconds = Math.max(0, Math.round((now - Date.parse(started)) / 1_000));
@@ -62,7 +58,16 @@ const StatusLabel = ({ lane }: { lane: ThreadLane }) => {
 };
 
 /** One line naming a lane in the transcript: its colour, title, owner and state. */
-export const LaneHeader = ({ lane, classNames }: { lane: ThreadLane; classNames?: string }) => {
+export const LaneHeader = ({
+  lane,
+  classNames,
+  statusEnd = false,
+}: {
+  lane: ThreadLane;
+  classNames?: string;
+  /** Pushes the state to the end of the line, for a row that spans the thread. */
+  statusEnd?: boolean;
+}) => {
   const { t } = Hooks.useTranslation(translationKey);
   return (
     <div
@@ -73,7 +78,7 @@ export const LaneHeader = ({ lane, classNames }: { lane: ThreadLane; classNames?
       <span className={mx('inline-block size-2 shrink-0 rounded-full', getStyles(lane.hue).bg)} />
       <span className='truncate text-fg'>{lane.title ?? t('lane.untitled')}</span>
       {lane.owner && <span className='truncate'>{lane.owner}</span>}
-      <span className='flex min-w-0 items-center gap-1'>
+      <span className={mx('flex min-w-0 items-center gap-1', statusEnd && 'ms-auto')}>
         <StatusIcon status={lane.status} />
         <StatusLabel lane={lane} />
       </span>
@@ -82,66 +87,31 @@ export const LaneHeader = ({ lane, classNames }: { lane: ThreadLane; classNames?
 };
 
 export type ThreadCardProps = LaneCardData & {
-  /** The card changed height, for a host that must measure it again. */
+  /** The row changed height, for a host that must measure it again. */
   onResize?: () => void;
 };
 
-/** A lane as a card: its title, the tail of its work as one truncated line per message, and its state in a last row. */
-export const ThreadCard = ({ lane, lines, onResize }: ThreadCardProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
-  const [expanded, setExpanded] = useState(false);
-  const shown = expanded ? lines : lines.slice(-COLLAPSED_LINES);
-
+/** A lane working out of view as one row: its colour, title, who runs it and its state. */
+export const ThreadCard = ({ lane, onResize }: ThreadCardProps) => {
   useEffect(() => {
     const frame = requestAnimationFrame(() => onResize?.());
     return () => cancelAnimationFrame(frame);
-  }, [onResize, expanded, lines]);
+  }, [onResize, lane.status]);
 
   return (
-    <Card.Root grid classNames='w-[20rem] max-w-full' data-testid='chat.lane-card'>
-      <Card.Header>
-        <Layout.Block>
-          <span className={mx('inline-block size-2 rounded-full', getStyles(lane.hue).bg)} />
-        </Layout.Block>
-        <Card.Title truncate>{lane.title ?? t('lane.untitled')}</Card.Title>
-        <Card.Action
-          icon={expanded ? 'ph--caret-up--regular' : 'ph--caret-down--regular'}
-          label={t(expanded ? 'lane.collapse' : 'lane.expand')}
-          aria-expanded={expanded}
-          onClick={() => setExpanded((value) => !value)}
-        />
-      </Card.Header>
-      <Card.Body>
-        <Card.Row span='full'>
-          <div className='flex min-w-0 flex-col px-2'>
-            {shown.map((line, index) => (
-              <Card.Text
-                key={index}
-                truncate={!expanded}
-                classNames={mx('py-0 text-sm leading-5', expanded && 'whitespace-pre-wrap wrap-break-word')}
-              >
-                <span className='text-fg-muted'>{line.name ?? line.role}: </span>
-                {line.text}
-              </Card.Text>
-            ))}
-          </div>
-        </Card.Row>
-      </Card.Body>
-      <Card.Row
-        leading={<StatusIcon status={lane.status} />}
-        trailing={lane.owner && <span className='text-xs text-fg-muted'>{lane.owner}</span>}
-      >
-        <StatusLabel lane={lane} />
-      </Card.Row>
-    </Card.Root>
+    <Layout.Flex align='center' classNames='min-w-0 px-2 py-1' data-testid='chat.lane-card'>
+      <LaneHeader lane={lane} classNames='flex-1' statusEnd />
+    </Layout.Flex>
   );
 };
 
 ThreadCard.displayName = 'ThreadCard';
 
-/** Lays cards out in the thread: side by side, wrapping at its width, each as tall as its own content. */
+/** Stacks lane rows in the thread, one under another. */
 export const ThreadCardFlow = ({ children }: PropsWithChildren) => (
-  <div className='flex flex-wrap items-start gap-2'>{children}</div>
+  <Layout.Flex column gap='xs'>
+    {children}
+  </Layout.Flex>
 );
 
 ThreadCardFlow.displayName = 'ThreadCardFlow';

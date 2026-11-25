@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import * as HashSet from 'effect/HashSet';
 import * as Ref from 'effect/Ref';
 
 import type * as Operation from '@dxos/compute/Operation';
@@ -63,7 +62,8 @@ export interface FollowupScheduler {
 //
 
 type FollowupState = {
-  fibers: HashSet.HashSet<Fiber.Fiber<unknown, unknown>>;
+  // A native set: fibers are tracked by identity, and a fiber's structural hash changes once it completes.
+  fibers: ReadonlySet<Fiber.Fiber<unknown, unknown>>;
 };
 
 //
@@ -77,15 +77,19 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   constructor(invoke: InvokeFn) {
     this._invoke = invoke;
     // Ref.make is synchronous and safe to run with Effect.runSync.
-    this._state = Effect.runSync(Ref.make<FollowupState>({ fibers: HashSet.empty() }));
+    this._state = Effect.runSync(Ref.make<FollowupState>({ fibers: new Set() }));
   }
 
   private _addFiber(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
-    return Ref.update(this._state, (s) => ({ fibers: HashSet.add(s.fibers, fiber) }));
+    return Ref.update(this._state, (s) => ({ fibers: new Set(s.fibers).add(fiber) }));
   }
 
   private _removeFiber(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
-    return Ref.update(this._state, (s) => ({ fibers: HashSet.remove(s.fibers, fiber) }));
+    return Ref.update(this._state, (s) => {
+      const fibers = new Set(s.fibers);
+      fibers.delete(fiber);
+      return { fibers };
+    });
   }
 
   // Arrow function to preserve `this` context when destructured.
@@ -136,7 +140,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   };
 
   get pending(): Effect.Effect<number> {
-    return Ref.get(this._state).pipe(Effect.map((s) => HashSet.size(s.fibers)));
+    return Ref.get(this._state).pipe(Effect.map((s) => s.fibers.size));
   }
 
   get awaitAll(): Effect.Effect<void> {
@@ -146,7 +150,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
       // followup may schedule further followups while this is awaiting.
       while (true) {
         const { fibers } = yield* Ref.get(this._state);
-        if (HashSet.size(fibers) === 0) {
+        if (fibers.size === 0) {
           return;
         }
         yield* Effect.forEach(fibers, (fiber) => Fiber.await(fiber).pipe(Effect.andThen(this._removeFiber(fiber))), {

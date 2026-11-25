@@ -1,0 +1,772 @@
+---
+id: org.dxos.agent-delegation
+name: Agents, Sessions and Delegation
+version: 0.1.0
+---
+
+
+How agent work is identified, split and handed off.
+
+- **Agent** — an ECHO `Agent` object, run by an `AgentProcess` in one durable object named
+  `Agent`, plus one or more `SessionProcess`es. The `Agent` durable object is the entry point for
+  external events; it runs no inference of its own and delegates work to its sessions. Every agent
+  is addressed by a DID.
+- **Session** — an ECHO `Session` object (formerly `Chat`), run by a `SessionProcess`: the unit of
+  work, with its own feed and task list. A session exists on its own (standalone) or as part of an
+  agent, whose permissions it then inherits.
+- **Thread** — a microtask inside a session, in the same process; what Claude calls a subagent. A
+  thread has no task list of its own: it works from its session's.
+
+A session delegates work to one of three receivers, from nearest to farthest:
+
+1. **A thread of its own** — runs in the same process, on the session's task list.
+2. **Another session of the same agent** — runs in a different `SessionProcess`, on its own task list.
+3. **Another agent** — a different identity, addressed by its DID.
+
+The receiver is what differs; the session sending the work is the same in all three. `AgentService`
+handles every one of them, and is where permissions for each kind of delegation will later live.
+
+The model decides which receiver to use. The working criteria, still in flux:
+
+- **Thread** — light parallelisation of the same work-stream.
+- **Session** — a separate work-stream.
+- **Agent** — only when another agent is needed, for its permissions or its specialization.
+
+The base case of delegation is a message. The richer case sends a reference to a task, and the
+task is assigned to the receiver.
+
+Delegation is started by operations, and there can be many of them. Every one of them ends in
+`AgentService`; an operation never spawns a process itself.
+
+`AgentService` is a global singleton that manages agents and sessions. Code finds where it runs
+through `AgentService.currentAgent`, `AgentService.currentSession` and
+`AgentService.currentThread`, which read the current process (`Process.current`) and discover the
+`Agent`, `Session` and thread from its annotations.
+`HarnessService` is deprecated; what it serves moves to `AgentService`.
+
+The task list in the project or session is the control plane. Ephemeral messages (wake, start,
+stop) sit on top of it and carry no state of their own.
+
+Memory is per space. `MemoryService` serves one space's memory to every session in it, whether or
+not the session belongs to an agent, so agents in the same space share memory. Not every agent has
+an identity yet, and several agents can share a space; each still gets a generated DID.
+`DiscordService` is how agents interact with Discord.
+
+Each ECHO object maps to the process that runs it:
+
+| ECHO object | Process          |
+| ----------- | ---------------- |
+| `Session`   | `SessionProcess` |
+| `Agent`     | `AgentProcess`   |
+
+A process run on behalf of a session carries a session annotation naming that `Session`, and one
+run on behalf of an agent carries an agent annotation naming that `Agent`. When a `SessionProcess`
+spawns a process for a thread (a tool call, or code execution), it adds a thread annotation naming
+that thread.
+
+The eventual goal is that every agent has its own identity and its own personal space.
+
+## Extensions
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `question` | `org.dxos.mdl.question@1.0` |
+
+## Features
+
+```mdl
+feat F-1: Agents and sessions
+  status: planned
+
+  req F-1.1:
+    when: an agent is created
+    then: it is one `Agent` durable object, which receives external events, runs no inference, and
+          delegates work to its `SessionProcess`es
+
+  req F-1.2:
+    when: a session holds work
+    then: the tasks are in the session's task list; a thread has no task list of its own
+
+  req F-1.3:
+    when: a session is part of an agent
+    then: the session has its own `SessionProcess`, feed and task list, and inherits the agent's
+          permissions
+
+  req F-1.4:
+    when: a session is created with no agent
+    then: it runs as a standalone session
+
+  req F-1.5:
+    when: a session that is part of an agent is created
+    then: its home space is either the current space or, when the agent has an identity, the
+          agent's home space; nothing assumes one of the two [Q-2]
+```
+
+```mdl
+feat F-2: Intra-agent delegation
+  status: planned
+
+  req F-2.1:
+    when: a session delegates a task to a thread
+    then: the thread runs in the same session and process, and works from the session's task list
+
+  req F-2.2:
+    when: an agent delegates a task to another of its sessions
+    then: the task runs in that session's own `SessionProcess` and is recorded in its task list
+
+  req F-2.3:
+    when: work is delegated to a thread or to a session of the same agent
+    then: `AgentService` handles it
+```
+
+```mdl
+feat F-3: Cross-agent delegation
+  status: planned
+
+  req F-3.1:
+    when: an agent looks for another agent
+    then: it finds it through HALO contacts, which return ECHO objects of type actor (people or
+          agents) for the members of the spaces they share
+
+  req F-3.2:
+    when: work is delegated to another agent
+    then: `AgentService` handles it
+
+  req F-3.3:
+    when: an agent delegates to another agent in the base case
+    then: it sends a durable message to the other agent's `Agent` object
+
+  req F-3.4:
+    when: an agent delegates a tracked task to another agent
+    then: it sends a reference to the task, and the task is assigned to the other agent
+```
+
+```mdl
+feat F-4: Agent addressing
+  status: planned
+
+  req F-4.1:
+    when: an agent is referenced
+    then: it is addressed by its DID, as a URI inside ECHO
+
+  req F-4.2:
+    when: an agent is created without an identity
+    then: it still gets a generated DID
+
+  req F-4.3:
+    when: several agents are in one space
+    then: each has its own DID and they co-exist in that space
+```
+
+```mdl
+feat F-5: Per-space memory
+  status: planned
+
+  req F-5.1:
+    when: a session in a space reads or writes memory
+    then: it uses that space's `MemoryService`, whether or not the session belongs to an agent
+
+  req F-5.2:
+    when: several agents are in one space
+    then: they share that space's memory
+```
+
+```mdl
+feat F-6: Discord
+  status: planned
+
+  req F-6.1:
+    when: an agent interacts with Discord
+    then: it goes through `DiscordService`
+```
+
+```mdl
+feat F-7: Agent identity and personal space
+  status: planned
+  desc: The eventual goal; [F-4.2] and [F-5.2] are the interim state.
+
+  req F-7.1:
+    when: an agent is created
+    then: it has its own identity and its own personal space
+```
+
+```mdl
+feat F-8: Agent picker in the prompt input
+  status: planned
+
+  req F-8.1:
+    when: the user opens the prompt input
+    then: it offers a selection of agents, with "Composer" always listed and "Claude Code" listed
+          when plugin-claude is installed
+
+  req F-8.2:
+    when: the user selects "Composer"
+    then: the prompt runs in an agent-less (standalone) session [F-1.4]
+
+  req F-8.3:
+    when: custom agents exist
+    then: each appears in the same selection, and selecting one runs the prompt with that agent
+```
+
+```mdl
+feat F-9: Current process
+  status: planned
+  desc: |
+    `Process.current: Effect<Process.Process, NoCurrentProcessError, Process.ManagerService>`
+    returns the process the calling code runs in.
+
+  req F-9.1:
+    when: code running inside a process yields `Process.current`
+    then: it gets that process's `Process.Process`, read from the ambient `Process.ManagerService`
+
+  req F-9.2:
+    when: code with a `Process.ManagerService` that is not scoped to a process yields
+          `Process.current`
+    then: it fails with `NoCurrentProcessError`
+```
+
+```mdl
+feat F-10: Delegation entry points
+  status: planned
+
+  req F-10.1:
+    when: work is delegated at any tier
+    then: an operation starts it, and the operation goes through `AgentService`
+
+  req F-10.2:
+    when: the delegation strategy spawns a sub-agent, or the thread scheduler starts a thread
+    then: it does so through `AgentService`, not by spawning or scheduling directly
+
+  req F-10.3:
+    when: an operation needs a new process for agent work
+    then: it asks `AgentService`; it never calls `Process.spawn` or `Process.ManagerService.spawn`
+          itself
+
+  req F-10.4:
+    when: a model delegates to a thread
+    then: it calls operations (today's `thread_delegate` and `thread_wait` tools), which go through
+          `AgentService`
+```
+
+```mdl
+feat F-11: Session object
+  status: planned
+
+  req F-11.1:
+    when: code refers to the ECHO type that a session runs on
+    then: it is named `Session`; the name `Chat` is gone
+
+  req F-11.2:
+    when: a `Session` object is stored
+    then: its DXN stays `org.dxos.type.assistant.chat`, and the type definition carries a TODO to
+          rename the DXN later
+
+  req F-11.3:
+    when: a `Session` object is run
+    then: a `SessionProcess` runs it
+
+  req F-11.4:
+    when: an `Agent` object is run
+    then: an `AgentProcess` runs it, in the agent's `Agent` durable object
+```
+
+```mdl
+feat F-12: Session annotation on processes
+  status: planned
+
+  req F-12.1:
+    when: a process is spawned on behalf of a session
+    then: it carries a session annotation whose value is the URI of that `Session` object
+
+  req F-12.2:
+    when: a process with a session annotation spawns a child
+    then: the child carries the same session annotation unless the spawn names another session
+
+  req F-12.3:
+    when: code needs the session it runs for
+    then: it reads the session annotation of `Process.current` [F-9]
+
+  req F-12.4:
+    when: a process is spawned on behalf of an agent
+    then: it carries an agent annotation whose value is the URI of that `Agent` object, and a
+          spawned child inherits it
+
+  req F-12.5:
+    when: a `SessionProcess` spawns a process for a thread's tool call or code execution
+    then: the new process carries a thread annotation whose value is that thread's id, beside the
+          session annotation, and a spawned child inherits it
+```
+
+```mdl
+feat F-13: AgentService
+  status: planned
+  desc: |
+    The one service for agent work. It is a global singleton, not scoped to a process or a
+    conversation.
+
+  req F-13.1:
+    when: code creates, finds or runs an agent or a session
+    then: it goes through `AgentService`, which manages both
+
+  req F-13.2:
+    when: code yields `AgentService.currentSession`
+    then: it gets the `Session` named by the session annotation of `Process.current`, and fails
+          with `NoCurrentSessionError` when there is none
+
+  req F-13.3:
+    when: code yields `AgentService.currentAgent`
+    then: it gets the `Agent` named by the agent annotation of `Process.current`, or none for a
+          standalone session
+
+  req F-13.4:
+    when: code needs to find other agents or sessions
+    then: `AgentService` discovers them from the annotations of the processes it manages
+
+  req F-13.5:
+    when: code uses `HarnessService`
+    then: the service is deprecated; each of its reads and control verbs has an `AgentService`
+          replacement scoped by `currentSession`
+
+  req F-13.6:
+    when: code yields `AgentService.currentThread`
+    then: it gets the thread named by the thread annotation of `Process.current`, or none for
+          work on the session's main thread
+```
+
+```mdl
+feat F-14: Agent module
+  status: planned
+  desc: |
+    `@dxos/compute` holds one namespace module, `Agent`, for the agent types and the service.
+    `AgentService` elsewhere in this spec is `Agent.Service`.
+
+  req F-14.1:
+    when: code refers to the agent types or the service
+    then: it uses `Agent.Agent` (the ECHO `Agent` type), `Agent.Session` (the ECHO `Session` type,
+          formerly `Chat`) and `Agent.Service`, all from `@dxos/compute`
+
+  req F-14.2:
+    when: the types move from `@dxos/assistant`
+    then: `Agent.Agent` moves without the helpers that need `@dxos/assistant` (the context binder)
+
+  req F-14.3:
+    when: code acts on a session (submits a prompt, reads or adds context, waits, terminates,
+          subscribes to its trace)
+    then: it calls a standalone verb on the `Agent` module that takes the `Agent.Session` as its
+          first argument; there is no session handle with methods
+```
+
+```mdl
+feat F-15: Choosing the receiver
+  status: planned
+  desc: The criteria are still in flux.
+
+  req F-15.1:
+    when: work is delegated
+    then: the model decides whether a thread, another session of the agent, or another agent
+          receives it
+
+  req F-15.2:
+    when: the model delegates part of the same work-stream to run in parallel
+    then: it delegates to a thread
+
+  req F-15.3:
+    when: the model delegates a separate work-stream
+    then: it delegates to another session
+
+  req F-15.4:
+    when: the model delegates to another agent
+    then: it does so only because that agent's permissions or specialization are needed
+```
+
+## Changelog
+
+```mdl
+decision D-1: Agent, Session and Thread are the three tiers of agent work: Agent is identity and access, Session is the durable worker with its own feed and task list, Thread is a microtask inside a session.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-2: An agent has one main durable object that receives external events, runs no inference and delegates to sessions; it has a home space for memory, ECHO database, access tokens and skills. Attached sessions inherit the agent's permissions, and standalone sessions stay supported.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.1, F-1.2, F-1.3, F-1.4]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-3: Delegation has an intra-agent scope (sessions and threads of one agent) and a cross-agent scope (separate identities, spaces and entry points).
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-2, F-3]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-4: Cross-agent delegation is push-based: a durable message to the other agent's main durable object, optionally with a task object in a shared space assigned to that agent. Agents find each other through HALO contacts in shared spaces and are addressed by DID.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-3]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-5: The task list in the project or session is the control plane; ephemeral messages (wake, start, stop) sit on top of it.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-2, F-3]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-6: Requirements are written as when/then pairs derived from [D-1] to [D-5], grouped as ontology (F-1), intra-agent (F-2) and cross-agent (F-3) delegation, all planned.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1, F-2, F-3]
+  why: The baseline notes state the model, not testable behavior; grouping by delegation scope matches [D-3].
+```
+
+```mdl
+question Q-1: What is the agent's main durable object called, given that "router" collides with the idea of an agent that routes?
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.1]
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+question Q-2: Which space is a session's home when it is attached to an agent?
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.3]
+  context: The notes start with the agent's own space and revisit later.
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+question Q-3: Is memory per agent (in the agent's home space) or per space (shared by every agent in it)?
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.2]
+  context: Today there is one memory object per space; per-agent memory is the stated ideal, deferred.
+  source: https://preview.composer.space/w/BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/object/01M879PMFK98ARXFN9FVSKM01B
+```
+
+```mdl
+decision D-7: Delegation has three tiers: to a thread within one session (same process), to another session of the same agent (different process), and to another agent.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-2, F-3]
+```
+
+```mdl
+decision D-8: A session holds tasks; threads do not have their own tasks.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.2, F-2.1]
+```
+
+```mdl
+decision D-9: A session exists on its own or as part of an agent.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.3, F-1.4]
+```
+
+```mdl
+decision D-10: An agent is one durable object named `Agent` (formerly `AgentRouter`) plus one or more `SessionProcess`es (renamed from `AgentProcess`).
+  date: 2026-11-24
+  by: user:dmaretskyi
+  answers: Q-1
+  affects: [F-1.1, F-1.3, F-2.2]
+```
+
+```mdl
+decision D-11: `MemoryService` is per space; sessions with and without an agent can both access it.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  answers: Q-3
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-12: `DiscordService` handles Discord interaction.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-6]
+```
+
+```mdl
+decision D-13: Two services handle delegation: an intra-agent one (to threads or sessions) and a cross-agent one (to another agent).
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-2.3, F-3.2]
+```
+
+```mdl
+decision D-14: The base case of delegation is sending a message; the more complex case is sending a reference to a task that is then assigned.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-3.3, F-3.4]
+```
+
+```mdl
+decision D-15: Each agent is addressed by a DID.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-4.1]
+```
+
+```mdl
+decision D-16: For now not every agent has an identity, and several agents can co-exist in one space. Each agent still gets a generated DID without an identity, and agents in one space share its memory.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-4.2, F-4.3, F-5.2]
+```
+
+```mdl
+decision D-17: The eventual goal is that each agent always has its own identity and its own personal space.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-7]
+```
+
+```mdl
+decision D-18: The agent's home space holding memory, ECHO database, access tokens and skills is not the current design: memory is per space ([D-11]) and an agent's own space is the eventual goal ([D-17]). The rest of [D-2] stands: the `Agent` object runs no inference and delegates to sessions, attached sessions inherit the agent's permissions, and standalone sessions are supported.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-2
+  affects: [F-1, F-7]
+  why: The home-space part of [D-2] contradicts [D-11], [D-16] and [D-17], and the log is append-only, so D-2 is replaced by what still holds.
+```
+
+```mdl
+decision D-19: Addressing, memory, Discord and the identity goal are their own features (F-4 to F-7), and the delegation service for each tier is a requirement of its feature ([F-2.3], [F-3.2]). Fills in [D-10] to [D-17].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3, F-3.2, F-4, F-5, F-6, F-7]
+  why: Each decision constrains a different component, so separate features keep each review verdict about one thing.
+```
+
+```mdl
+decision D-20: The prompt input has an agent selection: "Composer", and "Claude Code" when plugin-claude is installed. Custom agents also appear there, and "Composer" stands for an agent-less session.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-8]
+```
+
+```mdl
+decision D-21: Selecting a custom agent runs the prompt with that agent, and the selection is a feature of its own (F-8). Fills in [D-20].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.3]
+  why: D-20 lists custom agents in the selection, and choosing one mirrors how choosing Composer selects the agent-less session.
+```
+
+```mdl
+decision D-22: Add `Process.current: Effect<Process.Process, ..., Process.Manager>`, which returns the current process.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-9]
+```
+
+```mdl
+decision D-23: `Process.current` fails with a typed `NoCurrentProcessError` when the ambient manager is not scoped to a process, and `Process.Manager` in [D-22] is the `Process.ManagerService` tag. Fills in [D-22].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1, F-9.2]
+  why: The process's own `ManagerService` already knows its process (it defaults `parentProcessId` to it), but a manager built outside any process has none, and callers need to tell that case apart.
+  rejected: Dying instead of failing, since being outside a process is a normal state for app-level code.
+```
+
+```mdl
+decision D-24: Delegation is handled by different operations, but each eventually goes through either `AgentService` or `HarnessService`.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-10.1]
+```
+
+```mdl
+decision D-25: The sub-agent spawns of the delegation strategy and the thread scheduler's threads count as delegation, so they also go through `AgentService` or `HarnessService`. Fills in [D-24].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-10.2]
+  why: Both start work in another process or thread on the agent's behalf, but today they reach `Process.spawn` and the thread lanes directly, outside both services.
+```
+
+```mdl
+question Q-4: How do `AgentService` and `HarnessService` relate to the intra-agent and cross-agent delegation services of [D-13]?
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3, F-3.2, F-10]
+  context: D-13 names two delegation services split by scope, while D-24 routes all delegation through two existing services split by role (session manager, in-session control surface).
+  options:
+    - By tier: `HarnessService` handles threads, `AgentService` handles sessions and, later, other agents; the two delegation services sit behind them.
+    - Layered: the intra-agent and cross-agent delegation services are new, and `AgentService` / `HarnessService` call into them.
+    - Same: the two delegation services are `AgentService` and `HarnessService`, renamed.
+```
+
+```mdl
+decision D-26: The ECHO type `Chat` is renamed to `Session`. Its DXN does not change for now; a TODO marks it for a later rename.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-11.1, F-11.2]
+```
+
+```mdl
+decision D-27: A `Session` object maps to a `SessionProcess`, and an `Agent` object maps to an `AgentProcess`.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-11.3, F-11.4]
+```
+
+```mdl
+decision D-28: A process has an annotation for its current session.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-12.1]
+```
+
+```mdl
+decision D-29: The `AgentProcess` of [D-27] runs inside the agent's `Agent` durable object of [D-10]; it is a new process, distinct from today's `AgentProcess`, which becomes `SessionProcess`. Fills in [D-27].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-11.4]
+  why: D-10 renames today's `AgentProcess` to `SessionProcess`, so the name is free for the process that runs an `Agent` object.
+```
+
+```mdl
+decision D-30: The session annotation holds the `Session` object's URI, a spawned child inherits it, and code reads it from `Process.current`. Fills in [D-28].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.1, F-12.2, F-12.3]
+  why: Tools and sub-agents run as child processes of the session's process, so inheriting the annotation lets them find their session without the harness-host lookup `HarnessService` does today.
+  rejected: Reusing `Process.TargetAnnotation`, because a child's target is the object it works on, not the session it works for.
+```
+
+```mdl
+decision D-31: `HarnessService` is deprecated.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-13.5]
+```
+
+```mdl
+decision D-32: `AgentService` is extended to manage agents and sessions.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-13.1]
+```
+
+```mdl
+decision D-33: `AgentService` is a global singleton. It exposes `AgentService.currentAgent` and `AgentService.currentSession`, which query the current process and discover the others through annotations.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-13.2, F-13.3, F-13.4]
+```
+
+```mdl
+decision D-34: Operations do not spawn processes directly; they go through `AgentService`.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-10.3]
+```
+
+```mdl
+decision D-35: With `HarnessService` deprecated, every delegation path in F-10 goes through `AgentService` alone, and `HarnessService`'s reads and control verbs move to `AgentService`, scoped by `currentSession`. Supersedes [D-25] and fills in [D-31] to [D-34].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-25
+  affects: [F-10.1, F-10.2, F-13.5]
+  why: D-24 names two services and D-31 deprecates one of them, so the routing rule keeps only the other.
+```
+
+```mdl
+decision D-36: `currentSession` fails with `NoCurrentSessionError` outside a session; `currentAgent` returns none for a standalone session instead of failing. A process run for an agent carries an agent annotation, inherited like the session annotation. Fills in [D-33].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.4, F-13.2, F-13.3]
+  why: A standalone session is normal (F-1.4), so having no agent is a value; having no session means the caller is outside agent work. `currentAgent` needs an annotation to read, as `currentSession` has one in F-12.
+```
+
+```mdl
+decision D-37: Thread delegation (today's `thread_delegate` and `thread_wait` tools) becomes operations that go through `AgentService`. Fills in [D-24] and [D-34].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-10.4]
+  why: Light threads are delegation started by plain toolkit tools that bypass operations, which D-24 does not allow.
+  rejected: Exempting the thread tier from F-10, which leaves thread delegation unguarded and invisible to the operation catalog.
+```
+
+```mdl
+decision D-38: `AgentService.currentThread` returns the current thread. Whenever a `SessionProcess` makes a tool call or runs code for a thread, it annotates the new process with that thread.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-12.5, F-13.6]
+```
+
+```mdl
+decision D-39: The thread annotation holds the thread's id and sits beside the session annotation; a spawned child inherits it; `currentThread` returns none for work on the session's main thread. Fills in [D-38].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.5, F-13.6]
+  why: Main has no thread id in the trajectory, so a tool call made on main has no thread to name, and a tool's own child processes still work for the thread that called it.
+```
+
+```mdl
+decision D-40: Q-2 stays open. A session that is part of an agent may live in the current space or, when the agent has an identity, in the agent's home space, and the design expects both.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-1.5]
+```
+
+```mdl
+decision D-41: The ECHO types `Chat` (becoming `Session`) and `Agent` move from `@dxos/assistant` to `@dxos/compute`; `Agent` moves without its helpers. They live in one module with `Agent.Agent`, `Agent.Session` and `Agent.Service`, and the methods of the `AgentService.Session` handle become standalone verbs that take an `Agent.Session` as their first argument.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-14]
+```
+
+```mdl
+decision D-42: "Without helpers" means the helpers that need the context binder of `@dxos/assistant` (`makeInitialized`, `resetChatHistory`); the helpers that need only ECHO move with the type, and `getFromChatContext` gives way to `currentAgent`. Fills in [D-41].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-14.2]
+  why: The binder is what keeps those two in `@dxos/assistant`; the ECHO-only helpers have no such dependency, and `getFromChatContext` reads `HarnessService`, which D-31 deprecates.
+```
+
+```mdl
+decision D-43: There are no separate intra-agent and cross-agent delegation services: `AgentService` handles all delegation, and may later hold permissions for the different kinds of delegation.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  supersedes: D-13
+  answers: Q-4
+  affects: [F-2.3, F-3.2]
+```
+
+
+```mdl
+decision D-44: The model decides which receiver delegated work goes to: threads for light parallelisation of the same work-stream, sessions for separate work-streams, and agents only when another agent is needed (for permissions, specialization, etc.). These criteria are still in flux.
+  date: 2026-11-24
+  by: user:dmaretskyi
+  affects: [F-15]
+```

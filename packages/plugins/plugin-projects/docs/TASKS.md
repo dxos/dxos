@@ -41,7 +41,7 @@ Design: [`./DESIGN.md`](./DESIGN.md) — Tasks ledger: this file.
 
 ## Phase 1: Core plugin + Project type (milestone 1) — DONE
 
-Plan: agents/superpowers/plans/2026-07-24-plugin-projects.md (all 10 tasks complete, per-task + final reviews clean)
+Plan: .agents/superpowers/plans/2026-07-24-plugin-projects.md (all 10 tasks complete, per-task + final reviews clean)
 
 ### Tasks
 
@@ -73,7 +73,7 @@ Initial priority (user, 2026-07-24):
 - [x] **Context-stub labels** — object stubs in the system prompt carry `<label>` so the model doesn't tool-load just to identify a binding.
 - [x] **Chip labeling** — plugin-assistant Instructions typename translations were legacy "Routine"; now "Instructions"; create-object names the owned Instructions.
 - [x] **Minimal plugin set** — Projects/Routine/Outliner in plugin-defs.minimal.tsx + defaults + vite optimizeDeps glob.
-- [x] **Live-AI story** — stories/stories-assistant/Projects ("Voyage": AHOY marker + $track command; Default manual + InstructionsTest play, !test-tagged).
+- [x] **Live-AI story** — stories/stories-assistant/chat/Projects ("Voyage": AHOY marker + $track command; Default manual + InstructionsTest play, !test-tagged).
 - [ ] **P1 remaining: delete flow** — navtree ⋮ delete DONE (#12386): Project rows do get Rename/Delete
       (plugin-space's `objectActions` matches any node whose `data` is an ECHO object with
       `typename === node.type`, which `AppNode.makeObject` satisfies), the cascade is covered by
@@ -792,7 +792,7 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
 - Delegation strategy: `packages/core/compute/assistant-toolkit/src/supervisor/delegation-strategy.ts`
 - RunInstructions/completeJob: `packages/core/compute/assistant-toolkit/src/operations/run-instructions.ts`
 - Tool projection pattern (verbatim schema rationale): `packages/core/compute/assistant/src/tool-runtime/services.ts` (`projectFunctionToTool`)
-- Stories: `packages/stories/stories-assistant/src/stories/Chat.stories.tsx`
+- Stories: `packages/stories/stories-assistant/src/stories/chat/Chat.stories.tsx`
 - Related project: `plugin-projects` (registry) — task model, delegation-as-promotion
 
 ## Phase 2: Task execution and delegation demos

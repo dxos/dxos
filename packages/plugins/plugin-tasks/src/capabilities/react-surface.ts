@@ -38,7 +38,13 @@ const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSe
 const TaskSetSection: Role.Role<
   AppSurface.SectionData<
     TaskSetType.TaskSet,
-    { showDescription?: boolean; scope?: readonly string[]; onTaskCreated?: (task: Task.Task) => Promise<void> }
+    {
+      showDescription?: boolean;
+      scope?: readonly string[];
+      onTaskCreated?: (task: Task.Task) => Promise<void>;
+      filter?: boolean;
+      editor?: boolean;
+    }
   >
 > = Role.make('org.dxos.role.section');
 
@@ -112,13 +118,15 @@ export default Capability.makeModule(
         id: 'section.taskSet',
         filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
         component: TaskSetArticle,
-        props: ({ role, data: { subject, attendableId, showDescription, scope, onTaskCreated } }) => ({
+        props: ({ role, data: { subject, attendableId, showDescription, scope, onTaskCreated, filter, editor } }) => ({
           role,
           subject,
           attendableId,
           showDescription,
           scope,
           onTaskCreated,
+          filter,
+          editor,
         }),
       }),
       Surface.create({

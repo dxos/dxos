@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schedule from 'effect/Schedule';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';

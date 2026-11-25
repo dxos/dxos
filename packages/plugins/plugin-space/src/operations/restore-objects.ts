@@ -3,6 +3,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj, Ref } from '@dxos/echo';
@@ -42,6 +43,15 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RestoreObjects> = Spa
             }
           });
         });
+      }
+
+      // Relinked in reverse of the order they were unlinked, so each index is the one it was taken from.
+      const restoredById = new Map(restored.map((entity) => [entity.id, entity]));
+      for (const { id, container, property, index } of [...(input.containerSlots ?? [])].reverse()) {
+        const object = restoredById.get(id);
+        if (Obj.isObject(object)) {
+          ContainerModel.link({ container: { object: container, property }, object, index });
+        }
       }
 
       if (input.wasActive.length > 0) {

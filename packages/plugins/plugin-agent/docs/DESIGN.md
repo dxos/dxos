@@ -409,5 +409,5 @@ needs server-side receiving brings its own EDGE worker the same way.
 - plugin-discord (REST sync into `Channel` feeds), `@dxos/pipeline-discord`, `@dxos/crawler`.
 - EDGE compute-service process DOs and operation-service, identity-service keyrings, kms-service.
 - plugin-crm `ProfileOf`; pipeline-rdf facts and the agent brain (`BrainService`).
-- Prior specs: `agents/superpowers/specs/2026-07-08-discord-bot-design.md`,
+- Prior specs: `.agents/superpowers/specs/2026-07-08-discord-bot-design.md`,
   `2026-07-21-agent-identity.md`, `.agents/projects/agent-process-edge/DESIGN.md`.

@@ -7,9 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import * as Harness from '@dxos/assistant/Harness';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, DXN } from '@dxos/echo';
@@ -30,7 +31,14 @@ export const RunTriggers = Operation.make({
     description: "Records the facts of the conversation's latest turn and fires the agent's triggers they match.",
     icon: 'ph--lightning--regular',
   },
-  services: [Harness.HarnessService, Database.Service, AiService.AiService, BrainService.BrainService, Space.Service],
+  services: [
+    Agent.Service,
+    Process.ManagerService,
+    Database.Service,
+    AiService.AiService,
+    BrainService.BrainService,
+    Space.Service,
+  ],
   input: Schema.Struct({}),
   output: Schema.Struct({
     facts: Schema.Number.annotate({ description: 'Facts recorded from the turn.' }),

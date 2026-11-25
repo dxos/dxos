@@ -198,6 +198,7 @@ export const makeIdb = (
 
     return Object.assign(
       (yield* SqlClient.make({
+        driver: 'sqlite-idb',
         acquirer,
         compiler,
         transactionAcquirer,

@@ -3,7 +3,7 @@
 _2026-07-14. Design for reconciling `Topic` / `Project` / `Task` into a single primary "nexus" object:
 the focus of attention from which users manage complex, multi-source workflows. Companion to
 [`AUDIT.md`](./AUDIT.md) (the Topic refactor inventory) and the CRM spec
-(`agents/superpowers/specs/2026-07-13-crm-workflow-design.md`)._
+(`.agents/superpowers/specs/2026-07-13-crm-workflow-design.md`)._
 
 ## 1. Concept
 

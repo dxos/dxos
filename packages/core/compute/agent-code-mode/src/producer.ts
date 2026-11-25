@@ -69,7 +69,7 @@ export type CodeModeOptions = {
  * skills are not projected as tools at all — they are functions the code calls, so a task spanning
  * several of them costs one turn instead of one turn each.
  *
- * Substituted for {@link makeAiSessionTurnProducer} through `AgentProcessOptions.makeTurnProducer`;
+ * Substituted for {@link makeAiSessionTurnProducer} through `SessionProcessOptions.makeTurnProducer`;
  * the process's queue, alarms, redelivery and hydration are untouched.
  */
 export const makeCodeModeTurnProducer =
@@ -172,7 +172,9 @@ const runCodeModeTurn = ({
               const enabled = skills.filter(
                 (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
               );
-              const operations = yield* projectOperations([lookups, ...skills], mcps);
+              const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(
+                ({ definition }) => !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition),
+              );
               labelCall = labelEvalCall(operations);
               const evalOptions = {
                 dialect,

@@ -1,6 +1,6 @@
 # plugin-messenger — Tasks
 
-Design: [`agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`](../../../agents/superpowers/specs/2026-10-04-plugin-messenger-design.md).
+Design: [`.agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`](../../../.agents/superpowers/specs/2026-10-04-plugin-messenger-design.md).
 
 ## Phase 0: design
 

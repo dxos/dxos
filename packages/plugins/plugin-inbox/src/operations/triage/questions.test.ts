@@ -34,7 +34,10 @@ describe('triage questions', () => {
 
     expect(Object.keys(decisions)).toEqual(['needsReply', 'urgency', 'label']);
     expect(decisions.needsReply._tag).toBe('Probability');
-    expect(decisions.urgency).toMatchObject({ _tag: 'Rate', criteria: [...URGENCY_SCALE] });
+    expect(decisions.urgency).toMatchObject({
+      _tag: 'Rate',
+      criteria: URGENCY_SCALE.map((level) => ({ label: level, description: level })),
+    });
     // A single tag is still a choice: "none of these" is always an option, so the model can decline.
     expect(decisions.label).toMatchObject({
       _tag: 'Classify',

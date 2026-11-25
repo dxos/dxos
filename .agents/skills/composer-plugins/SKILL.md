@@ -91,10 +91,10 @@ When creating a brand-new plugin, do NOT start with `PLUGIN.mdl`. Instead:
 
 1. Run the `superpowers:brainstorming` flow and write the approved design to
    `packages/plugins/plugin-<name>/docs/DESIGN.md`, then add a short stub at
-   `agents/superpowers/specs/YYYY-MM-DD-<name>-design.md` that links to it. The
+   `.agents/superpowers/specs/YYYY-MM-DD-<name>-design.md` that links to it. The
    doc ships with the package it describes and the specs index still finds it;
    the stub carries a link and nothing else, so there is one source of truth.
-   (`agents/superpowers/specs/` is the DXOS override of the superpowers default
+   (`.agents/superpowers/specs/` is the DXOS override of the superpowers default
    `docs/superpowers/…` path; a design doc that belongs to no package is written
    there directly.)
 2. The user approves that design doc before any code is written.
@@ -118,7 +118,7 @@ The authoritative references live under [`packages/reflect/deus/`](../../../pack
 Use the template as the starting structure and `packages/plugins/plugin-chess/PLUGIN.mdl`
 as a reference. `PLUGIN.mdl` is a **record of what has been built — not a
 working document**. Design exploration for new features (in any session) happens
-in a design doc under the plugin's `docs/` (indexed from `agents/superpowers/specs/`);
+in a design doc under the plugin's `docs/` (indexed from `.agents/superpowers/specs/`);
 `PLUGIN.mdl` is updated only after the design AND implementation have settled. It must be:
 
 - **Present before a new plugin's first PR merges** — created at the close of

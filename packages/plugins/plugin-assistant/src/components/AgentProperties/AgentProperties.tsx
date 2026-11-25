@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';

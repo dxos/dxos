@@ -22,6 +22,20 @@ export const make = (bridge: TerminalBridge): Terminal.Terminal =>
   Terminal.make({
     columns: Effect.sync(() => bridge.columns),
     rows: Effect.sync(() => bridge.rows),
+    size: Effect.gen(function* () {
+      // Sliding with capacity 1 because `Terminal.size` promises only the latest dimensions.
+      const queue = yield* Queue.sliding<Terminal.Size, Cause.Done>(1);
+      const offer = () => Queue.offerUnsafe(queue, { columns: bridge.columns, rows: bridge.rows });
+      const unsubscribe = bridge.onResize(offer);
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          unsubscribe();
+          Queue.endUnsafe(queue);
+        }),
+      );
+      offer();
+      return Queue.asDequeue(queue);
+    }),
     readInput: Effect.gen(function* () {
       const queue = yield* Queue.unbounded<Terminal.UserInput, Cause.Done>();
       const unsubscribe = bridge.subscribe((input) => {

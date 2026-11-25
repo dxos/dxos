@@ -339,13 +339,135 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
     ),
   );
 
+  // Operation inputs and printed objects name a type without its version, so the model resolves it that way.
   it.effect(
-    'print without yield* says why nothing came back',
+    'a type DXN without its version resolves to the version registered',
     Effect.fnUntraced(
       function* (_) {
-        const output = yield* runEval("print('hello');", EffectDialect);
-        expect(output).toContain('write `yield* print(...)`');
-        expect(yield* runEval("yield* print('hello');", EffectDialect)).toEqual('hello');
+        const output = yield* runEval(
+          `const Task = yield* Database.resolve('dxn:${TASK_TYPENAME}'); yield* print(Type.getVersion(Task));`,
+          EffectDialect,
+        );
+        expect(output).toEqual('0.1.0');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // As models write them, after the typenames printed objects and operation inputs show.
+  it.effect(
+    'a typename, a versionless DXN and a bare object id each name what they mean',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval(
+          [
+            `const Task = yield* Database.resolve('${TASK_DXN}');`,
+            "const task = yield* Database.add(Obj.make(Task, { title: 'Named', status: 'open' }));",
+            `const byTypename = yield* Database.query(Filter.type('${TASK_TYPENAME}', { title: 'Named' })).run;`,
+            `const byDxn = yield* Database.query(Filter.type('dxn:${TASK_TYPENAME}', { title: 'Named' })).run;`,
+            'const byId = yield* Database.resolve(task.id);',
+            'yield* print(byTypename.length, byDxn.length, byId.title);',
+          ].join('\n'),
+          EffectDialect,
+        );
+        expect(output).toEqual('1 1 Named');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // Found on EDGE: a program that created a document and then failed was run again whole, creating a second one.
+  it.effect(
+    'a failure after an operation ran says what it did was kept',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult(
+          `yield* Operation.invoke(yield* Database.resolve('${SCORE_KEY}'), { title: 'a' }); throw new Error('boom');`,
+          EffectDialect,
+        );
+        expect(ok).toBe(false);
+        expect(output).toContain(`these operations ran before the failure, and what they did was kept: ${SCORE_KEY}`);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'yield* inside a callback points at a for loop',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('[1, 2].map((n) => yield* print(n));', EffectDialect);
+        expect(ok).toBe(false);
+        expect(output).toContain('loop with `for … of` instead');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a combinator handler that returns a plain value points at Effect.succeed',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult(
+          "yield* Effect.fail('x').pipe(Effect.catch(() => null));",
+          EffectDialect,
+        );
+        expect(ok).toBe(false);
+        expect(output).toContain('`Effect.succeed(value)`, not the value');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'an Effect 3 name points at its Effect 4 one',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult(
+          'yield* Effect.void.pipe(Effect.catchAll(() => Effect.void));',
+          EffectDialect,
+        );
+        expect(ok).toBe(false);
+        expect(output).toContain('`Effect.catch` replaces `Effect.catchAll`');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a DXN that does not resolve points at the catalogs; an object URI behind dxn: resolves',
+    Effect.fnUntraced(
+      function* (_) {
+        const type = yield* runEvalResult("yield* Database.resolve('dxn:com.example.type.nothing');", EffectDialect);
+        expect(type.output).toContain("a type's with its version");
+        const object = yield* runEval(
+          [
+            `const Task = yield* Database.resolve('${TASK_DXN}');`,
+            "const task = yield* Database.add(Obj.make(Task, { title: 'Found again', status: 'open' }));",
+            "const again = yield* Database.resolve('dxn:' + Obj.getURI(task));",
+            'yield* print(again.title);',
+          ].join('\n'),
+          EffectDialect,
+        );
+        expect(object).toEqual('Found again');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'print without yield* still prints, once the program ends',
+    Effect.fnUntraced(
+      function* (_) {
+        expect(yield* runEval("print('hello');", EffectDialect)).toEqual('hello');
+        expect(yield* runEval("print('later'); yield* print('first');", EffectDialect)).toEqual('first\nlater');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -622,9 +744,11 @@ describe('code mode types', () => {
           throw new Error('The test database is not backed by echo-client.');
         }
         const asked: string[] = [];
-        const unregister = graph.registerTypeSource(async (uri) => {
-          asked.push(String(uri));
-          return DXN.isDXN(uri) && DXN.getName(uri) === NOTE_TYPENAME ? Note : undefined;
+        const unregister = graph.registerRegistrySource({
+          resolve: async (uri) => {
+            asked.push(String(uri));
+            return DXN.isDXN(uri) && DXN.getName(uri) === NOTE_TYPENAME ? Note : undefined;
+          },
         });
         yield* Effect.addFinalizer(() => Effect.sync(unregister));
 
@@ -681,15 +805,41 @@ describe('code mode output', () => {
     'a program that printed and returned nothing says it ran',
     Effect.fnUntraced(
       function* (_) {
+        // The operation it ran is named, so a model reading the empty result does not run it again.
         const { output, ok } = yield* runEvalResult('const score = await ops.score({ title: "abc" });');
         expect(ok).toBe(true);
-        expect(output).toEqual(
-          'No output: the code ran without error but printed nothing. Print the values you need to see.',
-        );
+        expect(output).toMatch(/^No output: the code ran without error but printed nothing\. Print the values/);
+        expect(output).toContain(`It ran ${SCORE_KEY}; what they did is done, so do not run them again.`);
         expect(yield* runEval('return null;')).toEqual('null');
-        expect(yield* runEval("print('hello');", EffectDialect)).toMatch(
-          /^No output: .* `print` is an effect: write `yield\* print\(\.\.\.\)`\.$/,
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'Database.load takes an object it is handed and Ref.make a reference, and either says what else it got',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* seedTasks();
+        // An operation's output holds objects and references; models load the one and wrap the other.
+        const handed = yield* runEval(
+          [
+            `const [task] = yield* Database.query(Filter.type('${TASK_TYPENAME}')).run;`,
+            'const ref = Ref.make(task);',
+            'yield* print((yield* Database.load(task)) === task, Ref.make(ref) === ref, (yield* Database.load(ref)) === task);',
+          ].join('\n'),
+          EffectDialect,
         );
+        expect(handed).toEqual('true true true');
+
+        const load = yield* runEvalResult('yield* Database.load(undefined);', EffectDialect);
+        expect(load.ok).toBe(false);
+        expect(load.output).toContain('`Database.load` takes a Ref, such as a `Ref<…>` field; this is undefined.');
+        // A helper that does not exist, as a model wrote it: it failed reading `.uri` of undefined.
+        const resolve = yield* runEvalResult('yield* Database.resolve(Obj.getDXN);', EffectDialect);
+        expect(resolve.ok).toBe(false);
+        expect(resolve.output).toContain('`Database.resolve` takes a DXN or URI string, or a Ref; this is undefined.');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

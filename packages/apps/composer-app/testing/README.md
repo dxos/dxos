@@ -77,7 +77,7 @@ Everything a run needs is in the repo, so a cloud session — a scheduled Routin
 run it without a display: the debug port is loopback (`127.0.0.1:9321`), which the sandbox's egress
 proxy does not touch; `DX_DEBUG_PORT_SESSION` fixes the session id up front, so the agent never
 reads it back from a sidecar or a log; and a headless page counts as visible, so boot is not gated.
-The Routine prompt is [`agents/routines/composer-qa.md`](../../../../agents/routines/composer-qa.md).
+The Routine prompt is [`.agents/routines/composer-qa.md`](../../../../.agents/routines/composer-qa.md).
 
 ## Reports
 

@@ -4,14 +4,11 @@
 
 import type * as Reducer from '@dxos/compute/Reducer';
 import { EntityId } from '@dxos/keys';
-import { type LaneCardData, type LaneLine, type ThreadLane, laneTag } from '@dxos/react-ui-assistant/types';
+import { type LaneLine, type ThreadLane, laneTag } from '@dxos/react-ui-assistant/types';
 import { Message } from '@dxos/types';
 
 /** Gutter colours, in the order lanes take them; distinct from one another at a glance. */
 export const LANE_HUES = ['sky', 'amber', 'emerald', 'fuchsia', 'rose', 'indigo', 'lime', 'orange'] as const;
-
-/** Lines a background lane's card keeps: its tail, which is what the reader glances at. */
-const CARD_LINES = 40;
 
 export type LaneArrangement = {
   readonly messages: Message.Message[];
@@ -67,12 +64,26 @@ const laneRow = (cache: LaneRowCache, key: string, created: string, text: string
 };
 
 /**
- * Arranges the thread's rows for a chat that ran several requests at once (light threads). Rows keep feed order:
- * moving a row the virtual list has already placed makes it re-anchor without end. A lane a newer lane of the same
- * owner sent to the background becomes a card at its first row, holding all of its work, so its rows
- * never interleave with the newer request's; once it has finished, its final answer shows full height where it
- * landed, at the time it completed. Every other lane that overlapped one shows in place with its gutter, which is
- * how agents talking to the reader at once stay side by side. A chat whose lanes never overlapped is returned as it is.
+ * Each lane's gutter colour, in the order the lanes opened. Turns on main take none (main is the thread itself, not a
+ * lane beside it), so a thread keeps its colour however many turns main runs; a host showing a thread elsewhere (its own
+ * column) colours it from here so the two match.
+ */
+export const laneHues = (lanes: readonly Reducer.Lane[]): ReadonlyMap<string, string> =>
+  new Map(
+    lanes
+      .filter((lane) => lane.kind !== 'turn')
+      .map((lane, index) => [lane.id, LANE_HUES[index % LANE_HUES.length]] as const),
+  );
+
+const isActive = (lane: Reducer.Lane): boolean => lane.status === 'running' || lane.status === 'waiting';
+
+/**
+ * Arranges the thread's rows for a chat that ran several requests at once (light threads). Main reads as one thread:
+ * its turns keep every row, in feed order, with no gutter. A lane in the background (a delegated thread, or a request
+ * a newer one of the same owner moved past) keeps its work out of the transcript: while it works it is one row, pinned
+ * after the transcript, and once it has finished its final answer shows where it landed, in the lane's colour. Every
+ * other lane that overlapped one shows in place with its gutter, which is how agents talking to the reader at once
+ * stay side by side. A chat whose lanes never overlapped is returned as it is.
  *
  * `tail` rows at the end (prompts not taken up yet) stay last.
  */
@@ -107,8 +118,11 @@ export const arrangeLanes = ({
     return { messages: [...messages], lanes: new Map() };
   }
 
-  const hues = new Map(overlapped.map((lane, index) => [lane.id, LANE_HUES[index % LANE_HUES.length]]));
-  const byId = new Map<string, Reducer.Lane>(overlapped.map((lane) => [lane.id, lane]));
+  const hues = laneHues(lanes);
+  // Turns on main are main itself, so they are never set apart from it.
+  const byId = new Map<string, Reducer.Lane>(
+    overlapped.filter((lane) => lane.kind !== 'turn').map((lane) => [lane.id, lane]),
+  );
 
   const body = messages.slice(0, messages.length - tail);
   const buckets = new Map<string, Message.Message[]>();
@@ -121,8 +135,8 @@ export const arrangeLanes = ({
 
   // A finished background lane's answer: its last message from the agent with prose in it.
   const finals = new Map(
-    overlapped.flatMap((lane) => {
-      const finished = lane.backgrounded && (lane.status === 'done' || lane.status === 'failed');
+    [...byId.values()].flatMap((lane) => {
+      const finished = lane.backgrounded && !isActive(lane);
       const final = finished
         ? (buckets.get(lane.id) ?? []).findLast(
             (message) =>
@@ -139,11 +153,16 @@ export const arrangeLanes = ({
       id: lane.id,
       hue: hues.get(lane.id) ?? LANE_HUES[0],
       title: lane.purpose ?? titleOf(buckets.get(lane.id) ?? []),
-      ...(lane.owner.name !== undefined ? { owner: lane.owner.name } : {}),
+      // A delegated lane is a thread of this chat, whoever runs it.
+      ...(lane.kind === 'fresh'
+        ? { owner: 'thread' }
+        : lane.owner.name !== undefined
+          ? { owner: lane.owner.name }
+          : {}),
       status: lane.status,
       ...(waitingOn ? { waitingOn: { hue: hues.get(waitingOn.id) ?? LANE_HUES[0], title: waitingOn.purpose } } : {}),
       started: lane.created,
-      // A background lane's header rides on its final answer; its card carries one of its own.
+      // A background lane's header rides on its final answer.
       first: finals.get(lane.id) ?? buckets.get(lane.id)?.[0]?.id,
     };
   };
@@ -151,50 +170,35 @@ export const arrangeLanes = ({
   const arranged: Message.Message[] = [];
   const chrome = new Map<string, ThreadLane>();
   const threadLanes = new Map<string, ThreadLane>();
-  const carded = new Set<string>();
-  // Adjacent cards share one row, so they wrap across the thread rather than stacking.
-  let flow: LaneCardData[] = [];
-  const flush = () => {
-    if (flow.length > 0) {
-      arranged.push(laneRow(cache, `lane:${flow[0].lane.id}`, flow[0].lane.started, laneTag(flow)));
-      flow = [];
-    }
-  };
-  const shown = (lane: Reducer.Lane, message: Message.Message) => {
-    flush();
-    const threadLane = threadLanes.get(lane.id) ?? toThreadLane(lane);
-    threadLanes.set(lane.id, threadLane);
-    chrome.set(message.id, threadLane);
-    arranged.push(message);
-  };
   for (const message of body) {
     const id = laneOf(message.id);
     const lane = id !== undefined ? byId.get(id) : undefined;
-    if (!lane) {
-      flush();
+    if (lane && (!lane.backgrounded || finals.get(lane.id) === message.id)) {
+      const threadLane = threadLanes.get(lane.id) ?? toThreadLane(lane);
+      threadLanes.set(lane.id, threadLane);
+      chrome.set(message.id, threadLane);
       arranged.push(message);
-    } else if (!lane.backgrounded) {
-      shown(lane, message);
-    } else {
-      if (!carded.has(lane.id)) {
-        carded.add(lane.id);
-        flow.push({
-          lane: { ...toThreadLane(lane), first: undefined },
-          lines: (buckets.get(lane.id) ?? []).flatMap(toLines).slice(-CARD_LINES),
-        });
-      }
-      if (finals.get(lane.id) === message.id) {
-        shown(lane, message);
-      }
+    } else if (!lane) {
+      arranged.push(message);
     }
   }
 
-  flush();
+  // The lanes still working out of view, one row each, after everything the transcript holds.
+  const pinned = [...byId.values()].filter((lane) => lane.backgrounded && isActive(lane));
+  if (pinned.length > 0) {
+    arranged.push(
+      laneRow(
+        cache,
+        'lane:pinned',
+        pinned[0].created,
+        laneTag(pinned.map((lane) => ({ lane: { ...toThreadLane(lane), first: undefined }, lines: [] }))),
+      ),
+    );
+  }
 
-  // Only the lanes in this chat keep rows, so the cache is bounded by the chat rather than growing with every lane.
-  const live = new Set(lanes.map((lane) => `lane:${lane.id}`));
+  // Only the rows still shown stay cached, so the cache is bounded by the chat rather than growing with every lane.
   for (const key of cache.rows.keys()) {
-    if (!live.has(key)) {
+    if (key !== 'lane:pinned' || pinned.length === 0) {
       cache.rows.delete(key);
       cache.ids.delete(key);
     }

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';

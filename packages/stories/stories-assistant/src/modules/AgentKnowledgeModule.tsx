@@ -6,7 +6,7 @@ import React from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import { Filter } from '@dxos/echo';
 import * as AgentKnowledge from '@dxos/plugin-agent/AgentKnowledge';
 import { useQuery } from '@dxos/react-client/echo';

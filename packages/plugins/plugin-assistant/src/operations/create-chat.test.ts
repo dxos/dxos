@@ -12,7 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -31,7 +31,7 @@ appManager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, im
 // Mirrors an EDGE host, which contributes no atom registry.
 const headlessManager = CapabilityManager.make({ registry: AtomRegistry.make() });
 
-const types = [Chat.Chat, Feed.Feed, Text.Text, ...TrajectoryStore.types];
+const types = [Agent.Session, Feed.Feed, Text.Text, ...TrajectoryStore.types];
 
 const AppTestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
@@ -52,7 +52,7 @@ describe('CreateChat', () => {
       function* (_) {
         const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { name: 'Headless' });
 
-        expect(Obj.instanceOf(Chat.Chat, chat)).toBe(true);
+        expect(Obj.instanceOf(Agent.Session, chat)).toBe(true);
         expect(chat.name).toBe('Headless');
         const feed = yield* Database.load(chat.feed);
         expect(Obj.instanceOf(Feed.Feed, feed)).toBe(true);

@@ -11,7 +11,7 @@ import { type FormFieldRendererProps } from '#types';
 
 import { type OptionsLookup, type OptionsLookupEntry } from '../../annotations.ts';
 import { lookupKey, pickValues, useAsyncFieldEffect, useFormValues } from '../../hooks/index.ts';
-import { FormStaticValue } from '../FormField.tsx';
+import { FormStaticValue } from '../FormFieldRow.tsx';
 import { presentationFor } from '../presentation.tsx';
 
 export type ComboboxFieldProps = FormFieldRendererProps<string | undefined> & {

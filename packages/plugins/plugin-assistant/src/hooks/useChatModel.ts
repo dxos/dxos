@@ -11,8 +11,7 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { AiSession } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as SqlService from '@dxos/compute/SqlService';
@@ -25,24 +24,24 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Assistant } from '#types';
 
-import { type AiServicePreset, ChatModel } from '../chat-model/index.ts';
+import { type AiServicePreset, LiveChatModel } from '../chat-model/index.ts';
 
 export type UseChatModelProps = {
   db?: Database.Database;
-  chat?: Chat.Chat;
+  chat?: Agent.Session;
   preset?: AiServicePreset;
   runtime?: Capabilities.ProcessManagerRuntime;
   registry?: Registry.Registry;
   settings?: Assistant.Settings;
   /** Attributes the prompts submitted through this chat model to a person (see `ChatModelOptions.sender`). */
-  sender?: AgentService.PromptSender;
+  sender?: Agent.PromptSender;
   /** The fork the chat model shows and sends into; main when absent. */
   thread?: Trajectory.ThreadId;
   readonly?: boolean;
 };
 
 /**
- * Configure and create ChatModel.
+ * Configure and create a {@link LiveChatModel}.
  */
 export const useChatModel = ({
   db,
@@ -54,7 +53,7 @@ export const useChatModel = ({
   sender,
   thread,
   readonly = false,
-}: UseChatModelProps): ChatModel | undefined => {
+}: UseChatModelProps): LiveChatModel | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
   // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
@@ -101,7 +100,7 @@ export const useChatModel = ({
       Database.Service,
       Credential.CredentialsService,
       AiService.AiService,
-      AgentService.AgentService,
+      Agent.Service,
       Registry.Service,
       OpaqueToolkit.OpaqueToolkitProvider,
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
@@ -110,7 +109,7 @@ export const useChatModel = ({
     );
 
     log('creating chat model', { preset, model: preset?.model, settings });
-    return new ChatModel(session, runtime, feed, spaceLayer, {
+    return new LiveChatModel(session, runtime, feed, spaceLayer, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       registry,

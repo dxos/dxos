@@ -16,7 +16,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { withDialects } from '@dxos/deus/dialect';
@@ -178,7 +178,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         Stream.runForEach((event) =>
           Effect.sync(() => {
             const chat: unknown = event.output?.chat;
-            if (Obj.instanceOf(Chat.Chat, chat) && Chat.peekProject(chat)?.id === subject.id) {
+            if (Obj.instanceOf(Agent.Session, chat) && Agent.peekProject(chat)?.id === subject.id) {
               updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: true }));
             }
           }),
@@ -253,7 +253,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   });
 
   const handleSelectChat = useCallback(
-    (chat: Chat.Chat) => {
+    (chat: Agent.Session) => {
       if (!db) {
         return;
       }
@@ -454,15 +454,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             </Form.Root>
           )}
 
-          {tab === 'spec' &&
-            spec && (
-              // A section rather than an article: the spec's own page is for opening it. Its other views are companions.
-              <div className='grid min-h-0 h-full' data-testid='projectsPlugin.spec.document'>
-                <SpecToolbarProvider value={specToolbarSlot}>
-                  <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
-                </SpecToolbarProvider>
-              </div>
-            )}
+          {tab === 'spec' && spec && (
+            // A section rather than an article: the spec's own page is for opening it. Its other views are companions.
+            <div className='grid min-h-0 h-full' data-testid='projectsPlugin.spec.document'>
+              <SpecToolbarProvider value={specToolbarSlot}>
+                <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
+              </SpecToolbarProvider>
+            </div>
+          )}
           {tab === 'spec' && !spec && <AddSpec onAdd={readonly ? undefined : () => void handleAddSpec()} />}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}

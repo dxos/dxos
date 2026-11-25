@@ -43,6 +43,8 @@ import { useChatContext } from '../Chat/index.ts';
 
 const COLUMN_SELECTOR = '[data-column-id]';
 const INTERACTIVE_SELECTOR = 'a, button, input, textarea, summary, [role="button"], [contenteditable="true"]';
+// Where the horizontal arrow keys move a caret, and so cannot step between columns.
+const CARET_SELECTOR = 'input, textarea, select, [contenteditable="true"]';
 // How far a press may travel and still be a click; further than this it was selecting text.
 const CLICK_SLOP = 4;
 // How quickly the strip closes on the column it is heading for: the distance left shrinks by 63% in this time.
@@ -50,8 +52,17 @@ const SCROLL_TIME_CONSTANT = 90;
 
 type ChatPlaneSide = 'start' | 'end';
 
-/** The center of the span every column covers, when that span fits in the viewport; otherwise undefined. */
-const groupCenter = (viewport: HTMLElement): number | undefined => {
+/** Where the strip rests the selected column: the viewport's center, or its start edge. */
+type ChatPlaneAlign = 'center' | 'start';
+
+type ChatPlaneSpan = Pick<DOMRect, 'left' | 'right'>;
+
+/**
+ * The span every column covers, and whether the strip rests it as a group: a start-aligned strip does while the span
+ * fits the viewport, so no column is cut off, and a centered one never does, so the selection is always at the center.
+ * Undefined without columns.
+ */
+const groupSpan = (viewport: HTMLElement, align: ChatPlaneAlign): (ChatPlaneSpan & { fits: boolean }) | undefined => {
   const rects = Array.from(viewport.querySelectorAll<HTMLElement>(COLUMN_SELECTOR), (column) =>
     column.getBoundingClientRect(),
   );
@@ -60,24 +71,45 @@ const groupCenter = (viewport: HTMLElement): number | undefined => {
   }
   const left = Math.min(...rects.map((rect) => rect.left));
   const right = Math.max(...rects.map((rect) => rect.right));
-  return right - left <= viewport.getBoundingClientRect().width ? (left + right) / 2 : undefined;
+  return { left, right, fits: align === 'start' && right - left <= viewport.getBoundingClientRect().width };
 };
+
+/** The scroll position that rests `span` where the strip aligns it, given the `group` every column covers. */
+const restPosition = (viewport: HTMLElement, align: ChatPlaneAlign, group: ChatPlaneSpan, span: ChatPlaneSpan) => {
+  if (align === 'start') {
+    // The first column rests at the start edge when the strip is not scrolled.
+    return span.left - group.left;
+  }
+  const frame = viewport.getBoundingClientRect();
+  return viewport.scrollLeft + (span.left + span.right) / 2 - (frame.left + frame.width / 2);
+};
+
+/** The column beside `value` in the strip, on the side an arrow key points to. */
+const adjacentColumn = (viewport: HTMLElement | null, value: string, key: string): HTMLElement | undefined => {
+  const columns = Array.from(viewport?.querySelectorAll<HTMLElement>(COLUMN_SELECTOR) ?? []);
+  const index = columns.findIndex((column) => column.dataset.columnId === value);
+  return index === -1 ? undefined : columns[index + (key === 'ArrowLeft' ? -1 : 1)];
+};
+
+/** A bare left or right arrow, which steps between columns wherever it does not move a caret. */
+const isColumnStep = ({ key, altKey, ctrlKey, metaKey, shiftKey, nativeEvent }: KeyboardEvent<HTMLElement>) =>
+  (key === 'ArrowLeft' || key === 'ArrowRight') &&
+  !(altKey || ctrlKey || metaKey || shiftKey || nativeEvent.isComposing);
 
 type ChatPlaneContextValue = {
   value?: string;
-  footer: HTMLElement | null;
-  setFooter: (footer: HTMLDivElement | null) => void;
   viewport: HTMLDivElement | null;
   setViewport: (viewport: HTMLDivElement | null) => void;
   navigation: UseListNavigationReturn;
   selection: UseListSelectionReturn;
   select: (id: string) => void;
   scrollToColumn: (column: HTMLElement) => void;
-  /** Re-centers on the selected column, e.g. once a column is added or removed. */
+  /** Returns the selected column to its resting place, e.g. once a column is added or removed. */
   recenter: () => void;
   scrolling: boolean;
-  /** Every column fits in the viewport, so the strip centers them as a group. */
+  /** Every column fits a start-aligned strip, which rests them as a group. */
   fits: boolean;
+  align: ChatPlaneAlign;
   dragging: boolean;
   onAdd?: (side: ChatPlaneSide) => void;
   onMove?: (id: string, index: number) => void;
@@ -89,6 +121,9 @@ type ChatPlaneColumnContextValue = {
   value: string;
   current: boolean;
   columnRef: RefObject<HTMLDivElement | null>;
+  /** The foot of the column's tile, which its prompt renders into. */
+  promptSlot: HTMLElement | null;
+  setPromptSlot: (slot: HTMLDivElement | null) => void;
 };
 
 const [ChatPlaneColumnProvider, useChatPlaneColumnContext] =
@@ -115,8 +150,10 @@ type ChatPlaneRootProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** The selected column. */
     value?: string;
-    /** Scrolling a column to the center selects it, as do the arrow keys and a click. */
+    /** Scrolling a column to its resting place selects it, as do the arrow keys and a click. */
     onValueChange?: (value: string) => void;
+    /** Rests the selection at the viewport's center (the default), or at its start edge, where columns that all fit rest as a group. */
+    align?: ChatPlaneAlign;
     onAdd?: (side: ChatPlaneSide) => void;
     /** A column was dragged to `index` in the list of columns. */
     onMove?: (id: string, index: number) => void;
@@ -124,11 +161,18 @@ type ChatPlaneRootProps = Util.ThemedClassName<
 >;
 
 /**
- * Columns of threads in a horizontal strip, with the selected column's prompt floating over the strip.
+ * Columns of threads in a horizontal strip, each full height, with the selected column's prompt at its foot.
  * Goes inside a `Dnd.Root`, which the deck provides in the app.
  */
-const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, children }: ChatPlaneRootProps) => {
-  const [footer, setFooter] = useState<HTMLDivElement | null>(null);
+const ChatPlaneRoot = ({
+  classNames,
+  value,
+  onValueChange,
+  align = 'center',
+  onAdd,
+  onMove,
+  children,
+}: ChatPlaneRootProps) => {
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
   // Where a move we started is headed: adding a column re-snaps the strip, and that scroll must not select anything.
@@ -170,7 +214,7 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
   // One animation that only ever changes its target: a browser smooth scroll restarts from rest when it is called again,
   // so each key press would stall the strip. Snapping would also pull every frame back to a column.
   const [scrolling, setScrolling] = useState(false);
-  // Snapping would pull a centered group back onto one column.
+  // Snapping would pull a group resting as one back onto a single column.
   const [fits, setFits] = useState(false);
   const scrollFrameRef = useRef<number | undefined>(undefined);
   const scrollColumnRef = useRef<HTMLElement | undefined>(undefined);
@@ -194,17 +238,19 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       let position = viewport.scrollLeft;
       const step = (now: number) => {
         const target = scrollColumnRef.current;
-        if (!target?.isConnected || draggingRef.current) {
+        const group = groupSpan(viewport, align);
+        if (!target?.isConnected || !group || draggingRef.current) {
           stopScroll();
           return;
         }
-        const frame = viewport.getBoundingClientRect();
-        const rect = target.getBoundingClientRect();
-        // While every column fits, the strip centers all of them rather than the selection, so none is cut off.
-        const group = groupCenter(viewport);
-        const destination =
-          viewport.scrollLeft + (group ?? rect.left + rect.width / 2) - (frame.left + frame.width / 2);
-        setFits(group !== undefined);
+        // A group rests as one rather than on the selection.
+        const destination = restPosition(viewport, align, group, group.fits ? group : target.getBoundingClientRect());
+        setFits(group.fits);
+        if (align === 'start') {
+          // The stack's leading gap sets where a column rests, and each snap must land there too.
+          const inset = group.left + viewport.scrollLeft - viewport.getBoundingClientRect().left;
+          viewport.parentElement?.style.setProperty('--chat-plane-inset', `${inset}px`);
+        }
         const elapsed = now - previous;
         previous = now;
         if (reduced || Math.abs(destination - position) < 1) {
@@ -220,7 +266,7 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       setScrolling(true);
       scrollFrameRef.current = requestAnimationFrame(step);
     },
-    [viewport, stopScroll],
+    [viewport, stopScroll, align],
   );
 
   // On `scrollend` rather than `scroll`: selecting mid-flight would re-center on every column a long scroll passes.
@@ -229,18 +275,15 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       return;
     }
     const handleScrollEnd = () => {
-      // A centered group puts no column at the center, so where the strip rests says nothing about the selection.
-      if (draggingRef.current || scrollFrameRef.current !== undefined || groupCenter(viewport) !== undefined) {
+      // A group resting as one puts the selection anywhere, so where the strip rests says nothing about it.
+      const group = groupSpan(viewport, align);
+      if (draggingRef.current || scrollFrameRef.current !== undefined || !group || group.fits) {
         return;
       }
-      const { left, width } = viewport.getBoundingClientRect();
-      const center = left + width / 2;
-      const distanceFromCenter = (column: HTMLElement) => {
-        const rect = column.getBoundingClientRect();
-        return Math.abs(rect.left + rect.width / 2 - center);
-      };
+      const distanceFromRest = (column: HTMLElement) =>
+        Math.abs(restPosition(viewport, align, group, column.getBoundingClientRect()) - viewport.scrollLeft);
       const columns = Array.from(viewport.querySelectorAll<HTMLElement>(COLUMN_SELECTOR));
-      const [nearest] = columns.toSorted((a, b) => distanceFromCenter(a) - distanceFromCenter(b));
+      const [nearest] = columns.toSorted((a, b) => distanceFromRest(a) - distanceFromRest(b));
       const id = nearest?.dataset.columnId;
       if (moveTargetRef.current) {
         if (id === moveTargetRef.current) {
@@ -268,7 +311,7 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       frame?.removeEventListener('wheel', handleTakeOver);
       frame?.removeEventListener('pointerdown', handleTakeOver);
     };
-  }, [viewport, report, stopScroll]);
+  }, [viewport, report, stopScroll, align]);
 
   const valueRef = useRef(value);
   useEffect(() => {
@@ -285,7 +328,7 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
     });
   }, [viewport, scrollToColumn]);
 
-  // Whether every column fits changes with the viewport's width as well as with the columns.
+  // Whether the columns rest as a group changes with the viewport's width as well as with the columns.
   useEffect(() => {
     if (!viewport) {
       return;
@@ -309,8 +352,6 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
   return (
     <ChatPlaneProvider
       value={value}
-      footer={footer}
-      setFooter={setFooter}
       viewport={viewport}
       setViewport={setViewport}
       navigation={navigation}
@@ -320,12 +361,14 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       recenter={recenter}
       scrolling={scrolling}
       fits={fits}
+      align={align}
       dragging={dragging}
       onAdd={onAdd}
       onMove={onMove}
     >
-      {/* The height of a one-line prompt and its margin: a taller prompt floats over the columns rather than resizing them. */}
-      <Panel.Root classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:8rem]', classNames]}>
+      {/* Sunken, as the deck is behind its planks, so each column's own panel surface reads against the strip. */}
+      {/* A third of the frame, up to a comfortable reading width on a wide one. */}
+      <Panel.Root level='sunken' classNames={['[--chat-plane-width:min(32vw,40rem)]', classNames]}>
         {children}
       </Panel.Root>
     </ChatPlaneProvider>
@@ -340,9 +383,9 @@ ChatPlaneRoot.displayName = 'ChatPlane.Root';
 
 type ChatPlaneViewportProps = PropsWithChildren;
 
-/** The scrolling strip, and the footer the selected column's prompt floats in. */
+/** The scrolling strip. */
 const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
-  const { setFooter, viewport, setViewport, selection, select, scrolling, fits, dragging, onMove } =
+  const { viewport, setViewport, selection, select, scrolling, fits, align, dragging, onMove } =
     useChatPlaneContext('ChatPlane.Viewport');
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -415,16 +458,20 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
         {/* The dragged column stops being a snap point, and the strip would jump to its neighbor under the pointer. */}
         <ScrollArea.Root orientation='horizontal' snap={!dragging && !scrolling && !fits} scrollbars={false}>
           <ScrollArea.Viewport ref={setViewport}>
-            {/* Half the frame less half a column each side, so even the first and last column can reach the center. */}
+            {/* The frame less a column, split across both sides or all after the last, so every column can reach its resting place. */}
             <div
-              className='relative flex w-max h-full px-[calc(50cqw-var(--chat-plane-width)/2)] pt-2 pb-(--chat-plane-prompt-height)'
+              className={[
+                'relative flex w-max h-full py-2',
+                align === 'start'
+                  ? 'pe-[calc(100cqw-var(--chat-plane-width))]'
+                  : 'px-[calc(50cqw-var(--chat-plane-width)/2)]',
+              ].join(' ')}
               ref={stripRef}
             >
               <ChatPlaneActiveLocation locationRef={activeLocationRef} />
               {children}
             </div>
           </ScrollArea.Viewport>
-          <div className='absolute inset-x-0 bottom-0 z-10 py-3 pointer-events-none' ref={setFooter} />
         </ScrollArea.Root>
       </Mosaic.Container>
     </Panel.Body>
@@ -541,8 +588,9 @@ const ChatPlaneColumn = ({ value, children }: ChatPlaneColumnProps) => {
   const { value: selected, dragging, scrollToColumn, recenter } = useChatPlaneContext('ChatPlane.Column');
   const current = value === selected;
   const columnRef = useRef<HTMLDivElement>(null);
+  const [promptSlot, setPromptSlot] = useState<HTMLDivElement | null>(null);
 
-  // A column arriving or leaving moves the others, and a centered group must be centered again.
+  // A column arriving or leaving moves the others, and the strip must come to rest again.
   useEffect(() => {
     recenter();
     return recenter;
@@ -566,7 +614,13 @@ const ChatPlaneColumn = ({ value, children }: ChatPlaneColumnProps) => {
   }, [event, current, dragging]);
 
   return (
-    <ChatPlaneColumnProvider value={value} current={current} columnRef={columnRef}>
+    <ChatPlaneColumnProvider
+      value={value}
+      current={current}
+      columnRef={columnRef}
+      promptSlot={promptSlot}
+      setPromptSlot={setPromptSlot}
+    >
       {children}
     </ChatPlaneColumnProvider>
   );
@@ -592,8 +646,8 @@ type ChatPlaneCellProps = PropsWithChildren<{
 const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { event } = useChatContext('ChatPlane.Cell');
-  const { navigation } = useChatPlaneContext('ChatPlane.Cell');
-  const { value, current, columnRef } = useChatPlaneColumnContext('ChatPlane.Cell');
+  const { navigation, align, viewport, select } = useChatPlaneContext('ChatPlane.Cell');
+  const { value, current, columnRef, setPromptSlot } = useChatPlaneColumnContext('ChatPlane.Cell');
   const { data, location, draggable, binding } = useChatPlaneTileContext('ChatPlane.Cell');
 
   const handleKeyDown = useCallback(
@@ -608,12 +662,24 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
       }
       // Inside the thread the arrow keys scroll it, so they must not reach the strip.
       keyEvent.stopPropagation();
-      // Containment rather than bubbling: a popup opened from here takes its own Escape.
-      if (key === 'Escape' && !keyEvent.defaultPrevented && target instanceof Node && currentTarget.contains(target)) {
+      // Containment rather than bubbling: a popup opened from here takes its own keys.
+      if (keyEvent.defaultPrevented || !(target instanceof Element) || !currentTarget.contains(target)) {
+        return;
+      }
+      if (key === 'Escape') {
         currentTarget.focus({ preventScroll: true });
+        return;
+      }
+      // A thread scrolls on the vertical arrows alone, so from inside it the horizontal ones step between columns, and
+      // land on the column itself, where they keep stepping.
+      const next = isColumnStep(keyEvent) && !target.closest(CARET_SELECTOR) && adjacentColumn(viewport, value, key);
+      if (next && next.dataset.columnId) {
+        keyEvent.preventDefault();
+        next.focus({ preventScroll: true });
+        select(next.dataset.columnId);
       }
     },
-    [event],
+    [event, viewport, value, select],
   );
 
   const pressRef = useRef({ x: 0, y: 0 });
@@ -648,12 +714,14 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
       {...navigation.itemProps()}
       asChild
       classNames={[
-        'w-(--chat-plane-width) snap-center dx-focus-group transition-opacity',
+        'w-(--chat-plane-width) dx-focus-group transition-opacity',
+        'rounded-sm border border-separator-subtle',
+        align === 'start' ? 'snap-start scroll-ms-(--chat-plane-inset)' : 'snap-center',
         !current && 'opacity-50',
         // Floats over the gap the stack reserves.
         'data-[mosaic-tile-state=dragging]:absolute data-[mosaic-tile-state=dragging]:z-10',
         'data-[mosaic-tile-state=dragging]:h-auto',
-        'data-[mosaic-tile-state=dragging]:top-2 data-[mosaic-tile-state=dragging]:bottom-(--chat-plane-prompt-height)',
+        'data-[mosaic-tile-state=dragging]:top-2 data-[mosaic-tile-state=dragging]:bottom-2',
         'data-[mosaic-tile-state=dragging]:left-(--chat-plane-drag-x) data-[mosaic-tile-state=dragging]:-translate-x-1/2',
         'data-[mosaic-tile-state=dragging]:pointer-events-none data-[mosaic-tile-state=dragging]:opacity-100',
         'data-[mosaic-tile-state=dragging]:bg-base-surface data-[mosaic-tile-state=dragging]:shadow-lg',
@@ -693,6 +761,9 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
             )}
           </Panel.Header>
           {children}
+          {/* The panel's last row, on the thread's own surface rather than a footer bar's; empty, and so no height,
+              until the column's prompt renders into it. */}
+          <div className='row-start-3 min-w-0' ref={setPromptSlot} />
         </div>
       </Panel.Root>
     </Mosaic.Tile>
@@ -708,13 +779,14 @@ ChatPlaneCell.displayName = 'ChatPlane.Cell';
 type ChatPlanePromptProps = PropsWithChildren;
 
 /**
- * Renders into the footer, and stays mounted but hidden unless its column is selected, so a draft survives moving away.
+ * Renders at the foot of its column's tile, so only that column gives up height to it, and stays mounted but hidden
+ * unless the column is selected, so a draft survives moving away.
  */
 const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
-  const { footer, viewport, select } = useChatPlaneContext('ChatPlane.Prompt');
-  const { value, current, columnRef } = useChatPlaneColumnContext('ChatPlane.Prompt');
+  const { viewport, select } = useChatPlaneContext('ChatPlane.Prompt');
+  const { value, current, columnRef, promptSlot } = useChatPlaneColumnContext('ChatPlane.Prompt');
 
-  // React bubbles through the portal, and the strip would take Tab and focus from the prompt as its own.
+  // React bubbles to the strip, not to the tile the prompt sits in, and the strip would take Tab and focus as its own.
   const handleKeyDown = useCallback(
     (keyEvent: KeyboardEvent<HTMLDivElement>) => {
       keyEvent.stopPropagation();
@@ -724,17 +796,12 @@ const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
         return;
       }
       // An empty prompt has no caret to move, so its arrow keys step between columns.
-      const { altKey, ctrlKey, metaKey, shiftKey, nativeEvent } = keyEvent;
       if (
-        (key === 'ArrowLeft' || key === 'ArrowRight') &&
-        !(altKey || ctrlKey || metaKey || shiftKey || nativeEvent.isComposing) &&
+        isColumnStep(keyEvent) &&
         target instanceof HTMLElement &&
         EditorView.findFromDOM(target)?.state.doc.length === 0
       ) {
-        const ids = Array.from(viewport?.querySelectorAll<HTMLElement>(COLUMN_SELECTOR) ?? []).map(
-          (column) => column.dataset.columnId,
-        );
-        const next = ids[ids.indexOf(value) + (key === 'ArrowLeft' ? -1 : 1)];
+        const next = adjacentColumn(viewport, value, key)?.dataset.columnId;
         if (next) {
           keyEvent.preventDefault();
           select(next);
@@ -745,16 +812,17 @@ const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
   );
   const handleFocus = useCallback((focusEvent: FocusEvent<HTMLDivElement>) => focusEvent.stopPropagation(), []);
 
-  return footer
+  return promptSlot
     ? createPortal(
         <div
-          className={current ? 'flex flex-col gap-1 w-(--chat-plane-width) mx-auto pointer-events-auto' : 'hidden'}
+          // Inset by the gap that surrounds the column, so the prompt sits in the column as the column sits in the strip.
+          className={current ? 'flex flex-col gap-1 p-2' : 'hidden'}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
         >
           {children}
         </div>,
-        footer,
+        promptSlot,
       )
     : null;
 };
@@ -777,6 +845,7 @@ export {
 
 export type {
   ChatPlaneAddProps as AddProps,
+  ChatPlaneAlign as Align,
   ChatPlaneCellProps as CellProps,
   ChatPlaneColumnProps as ColumnProps,
   ChatPlaneColumnsProps as ColumnsProps,

@@ -204,6 +204,24 @@ export const make = (conversations: readonly (Conversation | Generated)[], optio
 
 export const conversation = (name: string, turns: readonly Turn[]): Conversation => ({ name, turns });
 
+/**
+ * The scene with every assistant turn's delay removed, so a run plays to its end as fast as the runtime allows (a
+ * story that replays the finished feed, a test that only checks the outcome).
+ */
+export const withoutDelays = (scene: Scene): Scene => ({
+  ...scene,
+  conversations: scene.conversations.map((conversation) =>
+    'turns' in conversation
+      ? {
+          ...conversation,
+          turns: conversation.turns.map((turn) =>
+            turn.role === 'assistant' ? { role: turn.role, parts: turn.parts } : turn,
+          ),
+        }
+      : conversation,
+  ),
+});
+
 /** A thread played by `generate` rather than by written turns; see {@link Generated}. */
 export const generated = (
   name: string,

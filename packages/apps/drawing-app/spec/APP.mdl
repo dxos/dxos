@@ -151,12 +151,12 @@ feat F-12: Share API
   req F-12.2: `GET /api/share/<id>` answers the source as `text/plain` with `nosniff`, and the name in `X-Drawing-Name`; an id the bucket does not hold answers 404.
   req F-12.3: Only source text is stored, never SVG or HTML. A share lives until 30 days after it was last opened: a bucket lifecycle rule deletes an object 30 days after its last write, and a GET more than a day after the last write writes the object again.
   req F-12.4: CORS answers `https://drawing.sh`, `https://www.drawing.sh` and local origins only.
-  req F-12.5: Production keeps its shares in the `drawing-sh-shares` bucket that app.drawing.sh used before this app, so links made before keep opening. Every other environment has a bucket of its own.
+  req F-12.5: Production, and preview while it serves app.drawing.sh, keep shares in the `drawing-sh-shares` bucket that app.drawing.sh used before this app, so links made before keep opening. Every other environment has a bucket of its own.
 ```
 
 ```mdl
 feat F-13: Landing site and hosts
-  req F-13.1: Each environment serves the landing page at its own host and the app at `app.` of that host: production at drawing.sh (and www.drawing.sh) and app.drawing.sh, dev at dev.drawing.sh and app.dev.drawing.sh, preview at preview.drawing.sh and app.preview.drawing.sh. Staging serves only the app, on its `workers.dev` host.
+  req F-13.1: An environment with hosts serves the landing page at its own host and the app at `app.` of that host: preview at drawing.sh (and www.drawing.sh) and app.drawing.sh, dev at dev.drawing.sh and app.dev.drawing.sh. Production and staging serve only the app, on their `workers.dev` hosts.
   req F-13.2: The landing site is an Astro Starlight site: a home page at `/` and the docs under `/docs/` (F-13.9). The home page is built from Starlight's splash template and is the agent-diagram DSL page: what the `drawing` skill and CLI do, a live editor that draws `.dx` (and converts Mermaid) as you type, and the DSL's relations. Its diagrams are rendered at build time, so the page shows them without JavaScript. Its hero is one centred column of the heading, the lede and the agent skill's install command, with no buttons and no image column. On a phone the heading is two lines that fill the column's width. It is short enough that the top of the editor shows without scrolling on a 14-inch MacBook Pro. Every Starlight page's header shows the drawing.sh logotype; the home page's header has a Docs link where the docs pages have search.
   req F-13.3: On a landing host, `/api/*` is the Worker's API, and `/`, `/docs/` and the pages under it, the site's build files and any address with a file extension are served from the site's build. Any other address, and `/` with an app parameter (`spaceInvitationCode`, `d` or `src`), redirects to the same path and query on the app host.
   req F-13.4: The landing editor's "Open in app" button posts the source to its own host's share API and opens the link it returns, which names the app host.
@@ -2185,4 +2185,33 @@ decision D-178: The site no longer serves the hero drawing at `/arch.dx.svg`, wh
   for: user:wittjosiah
   affects: [F-13.2, QA-9]
   why: Nothing else links to the route. A render from the CLI carries the same `.dx` source the download did, so QA-9 still covers importing a drawing.sh render.
+```
+
+```mdl
+decision D-179: For now drawing.sh and app.drawing.sh point at the preview Worker, and no custom domain points at production. Preview no longer serves preview.drawing.sh or app.preview.drawing.sh. The hosts move back to production later.
+  date: 2026-11-24
+  by: user:wittjosiah
+  affects: [F-13.1]
+```
+
+```mdl
+decision D-180: www.drawing.sh moves to preview with drawing.sh. Fills in [D-179].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-13.1]
+  why: With no custom domains left on production, www.drawing.sh would otherwise stop resolving to any Worker. It is a landing host for drawing.sh, and the app link on it already strips `www.`.
+  rejected:
+    - Dropping www.drawing.sh: links to it would break while drawing.sh still works.
+```
+
+```mdl
+decision D-181: While preview serves app.drawing.sh it binds the `drawing-sh-shares` bucket in place of `drawing-sh-shares-preview`. Fills in [D-179].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-12.5]
+  why: [D-146] gives the bucket to whichever environment serves app.drawing.sh, so `?d=` links made on production and by `drawing open` keep opening.
+  rejected:
+    - Keeping preview's own bucket: every share link made before the switch would answer 404.
 ```

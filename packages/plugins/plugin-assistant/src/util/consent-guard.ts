@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Process from '@dxos/compute/Process';
 import { Database, Feed, Obj } from '@dxos/echo';
@@ -62,7 +62,7 @@ export const consentTitle = (op: Operation.Definition.Any): string =>
  * consentable is admitted once the person allows it in the chat, where the guard posts a request card
  * and waits; one that is not consentable is refused, since this guard holds no grants.
  */
-export const consentGuard = (chat: Chat.Chat): Effect.Effect<Process.Guard, never, Database.Service> =>
+export const consentGuard = (chat: Agent.Session): Effect.Effect<Process.Guard, never, Database.Service> =>
   Effect.gen(function* () {
     const { db } = yield* Database.Service;
     const existing = guards.get(chat.id);
@@ -113,7 +113,7 @@ export const consentGuard = (chat: Chat.Chat): Effect.Effect<Process.Guard, neve
   });
 
 /** Posts a request card to the chat and waits for the person's answer; an interrupted wait cancels it. */
-const ask = Effect.fnUntraced(function* (chat: Chat.Chat, title: string, preview: ContentBlock.Request['preview']) {
+const ask = Effect.fnUntraced(function* (chat: Agent.Session, title: string, preview: ContentBlock.Request['preview']) {
   // A chat always owns its feed, so a failed load is a defect rather than an answer.
   const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
   const requestId = PublicKey.random().toHex();
@@ -146,7 +146,7 @@ const resolve = (message: Message.Message, requestId: string, optionId: string |
   });
 
 export type RespondOptions = {
-  readonly chat: Chat.Chat;
+  readonly chat: Agent.Session;
   readonly message: Message.Message;
   readonly requestId: string;
   readonly optionId: string;

@@ -7,11 +7,12 @@ import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { TrajectoryStore } from '@dxos/assistant';
-import type * as AgentService from '@dxos/compute/AgentService';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { Message } from '@dxos/types';
+
+import type * as AgentService from '../agent-service/AgentService.ts';
 
 /**
  * Buffered view of a session's ephemeral block events — the headless equivalent of what the chat
@@ -25,12 +26,12 @@ export interface EphemeralCollector {
 }
 
 /**
- * Forks a collector over {@link AgentService.Session.subscribeEphemeral} so a test can assert the
+ * Forks a collector over {@link SessionHandle.subscribeEphemeral} so a test can assert the
  * streaming path (partial → complete blocks) without a UI. The fork is scoped: use with
  * `it.effect` (or an explicit scope) so the subscription is interrupted on test close.
  */
 export const collectEphemeral = (
-  session: AgentService.Session,
+  session: AgentService.SessionHandle,
 ): Effect.Effect<EphemeralCollector, never, Scope.Scope> =>
   Effect.gen(function* () {
     const partial: Trace.PayloadType<typeof Trace.PartialBlock>[] = [];

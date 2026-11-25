@@ -65,7 +65,7 @@ describe('Alarm skill', () => {
   });
 
   // The set-alarm operation reaches the live host through HarnessService Tier B. createSession spawns
-  // an AgentProcess stamped as the harness host, so invoking the operation against that conversation
+  // an SessionProcess stamped as the harness host, so invoking the operation against that conversation
   // dispatches over the process RPC loopback, appending an Alarm record to the feed (no LLM turn required).
   describe('set-alarm operation (Tier B)', () => {
     it.effect(

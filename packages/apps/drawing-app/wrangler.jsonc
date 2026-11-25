@@ -39,19 +39,23 @@
       ],
     },
     // Daily from `main`, against EDGE production, as Composer's `preview`.
+    // TODO(wittjosiah): Move drawing.sh, www.drawing.sh and app.drawing.sh back to production, and give preview back
+    //   preview.drawing.sh, app.preview.drawing.sh and the `drawing-sh-shares-preview` bucket (spec D-179).
+    // Until then preview serves the production hosts, so it binds production's bucket and existing `?d=` links keep opening.
     "preview": {
       "name": "drawing-app-preview",
       "vars": {
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
-        "APP_ORIGIN": "https://app.preview.drawing.sh",
-        "LANDING_HOSTS": "preview.drawing.sh",
+        "APP_ORIGIN": "https://app.drawing.sh",
+        "LANDING_HOSTS": "drawing.sh,www.drawing.sh",
       },
       "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
-      "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares-preview" }],
+      "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares" }],
       "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1032", "simple": { "limit": 30, "period": 60 } }],
       "routes": [
-        { "pattern": "preview.drawing.sh", "custom_domain": true },
-        { "pattern": "app.preview.drawing.sh", "custom_domain": true },
+        { "pattern": "drawing.sh", "custom_domain": true },
+        { "pattern": "www.drawing.sh", "custom_domain": true },
+        { "pattern": "app.drawing.sh", "custom_domain": true },
       ],
     },
     // App only, on its `workers.dev` host.
@@ -63,6 +67,8 @@
       "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1033", "simple": { "limit": 30, "period": 60 } }],
     },
     // The Worker that has served app.drawing.sh since drawing-app, so its domain, bucket and rate limiter carry over.
+    // TODO(wittjosiah): Restore the drawing.sh, www.drawing.sh and app.drawing.sh custom domains (spec D-179). Until
+    //   then production has only its `workers.dev` host.
     "production": {
       "name": "drawing-app",
       "vars": {
@@ -73,11 +79,6 @@
       "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [{ "binding": "SHARES", "bucket_name": "drawing-sh-shares" }],
       "ratelimits": [{ "name": "SHARE_RATE_LIMIT", "namespace_id": "1030", "simple": { "limit": 30, "period": 60 } }],
-      "routes": [
-        { "pattern": "drawing.sh", "custom_domain": true },
-        { "pattern": "www.drawing.sh", "custom_domain": true },
-        { "pattern": "app.drawing.sh", "custom_domain": true },
-      ],
     },
   },
 }

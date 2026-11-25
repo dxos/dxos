@@ -14,7 +14,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiModelNotAvailableError } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Feed } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -22,10 +22,10 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { AiUsageQuotaError, ChatModel, parseError } from './chat-model.ts';
+import { AiUsageQuotaError, LiveChatModel, parseError } from './chat-model.ts';
 import { type ThreadProjection } from './thread.ts';
 
-const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed, Message.Message] });
+const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Agent.Session, Feed.Feed, Message.Message] });
 
 describe('ChatModel', () => {
   it.effect(
@@ -38,7 +38,7 @@ describe('ChatModel', () => {
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as Capabilities.ProcessManagerRuntime;
         const registry = AtomRegistry.make();
-        const chatModel = new ChatModel(session, managedRuntime, feed, Layer.empty as any, {
+        const chatModel = new LiveChatModel(session, managedRuntime, feed, Layer.empty as any, {
           observableRegistry: registry,
         });
         expect(chatModel).toBeDefined();
@@ -102,7 +102,6 @@ describe('parseError', () => {
       method: 'streamText',
       reason: new AiError.QuotaExhaustedError({
         http: {
-          request: { method: 'POST', url: 'http://edge.internal/v1/messages', urlParams: [], headers: {} },
           response: { status: 429, headers: {} },
           body: JSON.stringify({ error: { message: 'You have exceeded your usage quota.' } }),
         },

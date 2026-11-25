@@ -27,7 +27,7 @@ import * as Readiness from '../../Readiness.ts';
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
-  'constructor'(
+  constructor(
     private readonly _identityManager: IdentityContract.Manager,
     private readonly _spaceManager: SpaceManager,
     private readonly _dataSpaceManagerProvider: () => Promise<SpacesContract.Manager>,

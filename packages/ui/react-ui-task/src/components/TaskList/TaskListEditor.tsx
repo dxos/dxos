@@ -412,6 +412,8 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             // A host may name the row ("Add a step"), but the default is the package's own string: an English literal
             // in the component is a string no translation can reach.
             placeholder: current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder')),
+            // A flush list is framed by its host, and a well inside that frame would read as a second field.
+            subdued: flush,
             canSave,
             onKeyDown: handleTitleKeyDown,
             onBlur: handleTitleBlur,

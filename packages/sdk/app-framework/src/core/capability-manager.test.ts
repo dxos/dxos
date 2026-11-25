@@ -101,17 +101,16 @@ describe('CapabilityManager', () => {
       count++;
     });
     onTestFinished(() => cancel());
-    expect(count).toEqual(0);
-
+    // `subscribe` computes the atom up front, so reading it is not a change.
     registry.get(capabilityManager.atom(interfaceDef));
-    expect(count).toEqual(1);
+    expect(count).toEqual(0);
 
     const implementation = { example: 'identifier' };
     capabilityManager.contribute({ interface: interfaceDef, implementation, module: 'test' });
-    expect(count).toEqual(2);
+    expect(count).toEqual(1);
 
     capabilityManager.remove(interfaceDef, implementation);
-    expect(count).toEqual(3);
+    expect(count).toEqual(2);
   });
 
   it('should not be reactive to changes within the implementation', () => {
@@ -124,22 +123,20 @@ describe('CapabilityManager', () => {
       count++;
     });
     onTestFinished(() => cancel());
-    expect(count).toEqual(0);
-
     registry.get(capabilityManager.atom(interfaceDef));
-    expect(count).toEqual(1);
+    expect(count).toEqual(0);
 
     const implementation = { example: 'identifier' };
     capabilityManager.contribute({ interface: interfaceDef, implementation, module: 'test' });
-    expect(count).toEqual(2);
+    expect(count).toEqual(1);
 
     implementation.example = 'updated';
-    expect(count).toEqual(2);
+    expect(count).toEqual(1);
 
     const capabilities = capabilityManager.getAll(interfaceDef);
     expect(capabilities).toEqual([implementation]);
     expect(capabilities[0].example).toEqual('updated');
-    expect(count).toEqual(2);
+    expect(count).toEqual(1);
   });
 
   it.effect('should be able to wait for a capability', () =>

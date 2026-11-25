@@ -25,7 +25,7 @@ import { PlainDialect } from './dialect-plain.ts';
 import { type Dialect, type SandboxOperation } from './Dialect.ts';
 import { formatPrinted } from './format.ts';
 import * as Wire from './Wire.ts';
-import { type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
+import { type SandboxInit, SandboxRpcs, type SandboxType } from './WorkerSandboxProtocol.ts';
 
 /**
  * The model's code, running on its own thread against its own ECHO client — whichever platform the
@@ -68,47 +68,63 @@ const connect = (port: MessagePort) =>
 /** The client both halves of the protocol are reached through. */
 type SandboxClient = Effect.Success<ReturnType<typeof connect>>;
 
+/** Runs the code with the bindings in scope; workerd, which has no `eval`, passes the program it compiled. */
+export type Execute = (bindings: Record<string, unknown>) => Promise<unknown>;
+
+/** Compiles the code as the body of an async function over the bindings' names. */
+const compile =
+  (code: string): Execute =>
+  (bindings) => {
+    const names = Object.keys(bindings);
+    return new AsyncFunction(...names, `'use strict';\n${code}`)(...names.map((name) => bindings[name]));
+  };
+
 /** Everything from connecting ECHO to running the model's code; its outcome is what the host waits on. */
-const evaluate = (client: SandboxClient, init: SandboxInit) =>
+const evaluate = (client: SandboxClient, init: SandboxInit, execute: Execute) =>
   Effect.gen(function* () {
     const echo = new EchoClient({});
     // The worker is simply another client of the host's services — the same connection the tab makes.
     echo.connectToService({ dataService: client, queryService: client });
     yield* Effect.promise(() => echo.open());
 
-    // A registered type is a class, which cannot cross a thread; its schema can, so the worker
-    // rebuilds each one and registers it. Queries and `make` then name types exactly as on the host.
-    //
-    // Rebuilt through the effect schema rather than by `makeObjectFromJsonSchema`, which returns a
-    // STORED schema entity — one the registry holds but `Type.isObject` rejects, so `make` would not
-    // find a type to construct from.
-    //
-    // One at a time: the JSON-schema round trip does not cover every schema (a record keyed by a
-    // pattern, for one), and a type the worker cannot rebuild must cost only that type — not every
-    // evaluation in a workspace that happens to register it.
-    const types = init.types.flatMap(({ typename, version, jsonSchema, skills }) => {
-      try {
-        const schema = JsonSchema.toEffectSchema(jsonSchema);
-        return [
-          Type.makeObject(DXN.make(typename, version))(
-            skills === undefined ? schema : schema.pipe(Skill.SkillsAnnotation.set([...skills])),
-          ),
-        ];
-      } catch (error) {
-        log.warn('code-mode worker cannot rebuild type; it is unavailable to the sandbox', { typename, error });
-        return [];
-      }
+    // The host's registered types, rebuilt and registered here, so queries and `make` name types exactly as on the host.
+    const types = init.types.flatMap((type) => {
+      const rebuilt = rebuildType(type);
+      return rebuilt === undefined ? [] : [rebuilt];
     });
     yield* Effect.promise(async () => {
       await echo.graph.registry.add(types);
+    });
+    // Types the host serves on demand (EDGE's published ones) are asked for when the code names one.
+    echo.graph.registerRegistrySource({
+      resolve: async (uri) => {
+        const type = await EffectEx.runPromise(client['Sandbox.resolveType']({ uri }));
+        return type === null ? undefined : rebuildType(type);
+      },
     });
 
     const db = echo.constructDatabase({
       spaceId: SpaceId.make(init.space.spaceId),
       spaceKey: PublicKey.from(init.space.spaceKey),
+      ...(init.workingSet && {
+        workingSet: {
+          get: () => EffectEx.runPromise(client['Sandbox.workingSetGet']()),
+          put: (report) => EffectEx.runPromise(client['Sandbox.workingSetPut']({ report })),
+        },
+      }),
     });
     yield* Effect.promise(() => db.setSpaceRoot(init.space.rootUrl));
     yield* Effect.promise(() => db.open());
+
+    // See `SandboxInit.handover`. Flushed writes also pass through the working set, as a host database's do.
+    const settle =
+      init.handover === 'heads'
+        ? () => Wire.settle(db)
+        : () => Wire.flush(db).pipe(Effect.tap(() => Effect.promise(() => db.saveWorkingSet())));
+    const catchUp =
+      init.handover === 'heads'
+        ? (heads: Wire.Heads) => Wire.catchUp(db, heads)
+        : () => Effect.promise(() => db.absorbWorkingSet());
 
     const invokeOperation = (key: string, input: unknown) =>
       client['Sandbox.invokeOperation']({ key, input }).pipe(
@@ -132,11 +148,11 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
 
     // Heads travel both ways so neither side reads the other's writes before they arrive.
     const invokeDefinition = (key: string, input: unknown) =>
-      Wire.settle(db).pipe(
+      settle().pipe(
         Effect.flatMap((heads) => client['Sandbox.invokeDefinition']({ key, input: Wire.encode(input, db), heads })),
         Effect.flatMap((outcome): Effect.Effect<unknown, OperationFailed | Wire.WireError> =>
           outcome._tag === 'Ok'
-            ? Wire.catchUp(db, outcome.heads).pipe(Effect.andThen(Wire.decode(outcome.value, db)))
+            ? catchUp(outcome.heads).pipe(Effect.andThen(Wire.decode(outcome.value, db)))
             : Effect.fail(new OperationFailed({ message: outcome.message })),
         ),
         Effect.orDie,
@@ -162,9 +178,8 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
       },
     });
 
-    const names = Object.keys(bindings);
     return yield* Effect.tryPromise({
-      try: () => new AsyncFunction(...names, `'use strict';\n${init.code}`)(...names.map((name) => bindings[name])),
+      try: () => execute(bindings),
       catch: (error: unknown) => new ModelCodeFailed({ message: describe(error) }),
     }).pipe(
       Effect.match({
@@ -176,7 +191,17 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
         onFailure: (error: ModelCodeFailed) => ({ value: undefined, failure: error.message }),
       }),
       // The turn carries on against the host's database, so it waits for what the code wrote.
-      Effect.flatMap((result) => Wire.settle(db).pipe(Effect.map((heads) => ({ ...result, heads })))),
+      Effect.flatMap((result) => settle().pipe(Effect.map((heads) => ({ ...result, heads })))),
+      // The host's final refresh would wait on this client, so it leaves first.
+      Effect.tap(() =>
+        init.handover === 'flush'
+          ? Effect.tryPromise(() => echo.close()).pipe(
+              Effect.catch((error) =>
+                Effect.sync(() => log.warn('code-mode worker did not close its client', { error })),
+              ),
+            )
+          : Effect.void,
+      ),
     );
   });
 
@@ -188,14 +213,34 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
  * timeout. A failure BEFORE the channel exists cannot be reported this way; the entry turns that
  * into whatever its platform's host watches for (an exit code, a message on the worker itself).
  */
-export const runSandboxWorker = (port: MessagePort, init: SandboxInit) =>
+export const runSandboxWorker = (port: MessagePort, init: SandboxInit, execute: Execute = compile(init.code)) =>
   Effect.gen(function* () {
     const client = yield* connect(port);
-    const exit = yield* Effect.exit(evaluate(client, init));
+    const exit = yield* Effect.exit(evaluate(client, init, execute));
     yield* client['Sandbox.complete'](
       Exit.isSuccess(exit) ? exit.value : { value: undefined, failure: Cause.pretty(exit.cause), heads: {} },
     );
   });
+
+/**
+ * A registered type as this worker's registry holds it: a class cannot cross a thread, but its schema can.
+ *
+ * Rebuilt through the effect schema rather than by `makeObjectFromJsonSchema`, which returns a STORED schema entity —
+ * one the registry holds but `Type.isObject` rejects, so `make` would not find a type to construct from. Undefined for
+ * a schema the JSON-schema round trip does not cover (a record keyed by a pattern, for one), so a type the worker
+ * cannot rebuild costs only that type, not every evaluation in a workspace that happens to register it.
+ */
+const rebuildType = ({ typename, version, jsonSchema, skills }: SandboxType) => {
+  try {
+    const schema = JsonSchema.toEffectSchema(jsonSchema);
+    return Type.makeObject(DXN.make(typename, version))(
+      skills === undefined ? schema : schema.pipe(Skill.SkillsAnnotation.set([...skills])),
+    );
+  } catch (error) {
+    log.warn('code-mode worker cannot rebuild type; it is unavailable to the sandbox', { typename, error });
+    return undefined;
+  }
+};
 
 /**
  * A definition naming an operation by key, for a dialect that binds definitions. Absent for a tool

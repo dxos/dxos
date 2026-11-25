@@ -50,7 +50,8 @@ const refEntityId = (ref: Ref.Ref<any>): string | undefined => {
   return eid ? EID.getEntityId(eid) : undefined;
 };
 
-const indexOf = (container: Container, object: Obj.Unknown): number =>
+/** Position of the object in the list, by entity id; -1 when it is not listed. */
+export const indexOf = (container: Container, object: Pick<Obj.Unknown, 'id'>): number =>
   refs(container).findIndex((ref) => refEntityId(ref) === object.id);
 
 export const includes = (container: Container, object: Obj.Unknown): boolean => indexOf(container, object) > -1;

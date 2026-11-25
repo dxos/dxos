@@ -25,8 +25,8 @@ import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { type NavTreeNode } from '#types';
 
+import { NAV_TREE_ITEM } from '../../constants.ts';
 import { NavTreeNamespace } from '../../namespace.ts';
-import { NAV_TREE_ITEM } from '../NavTree/index.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns.tsx';
 

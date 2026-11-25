@@ -41,6 +41,12 @@ export type Env = Partial<Pick<EdgeFunctionEnv.Env, 'DATA_SERVICE' | 'QUEUE_SERV
   /** EDGE's registry of the types every published plugin contributes; resolves a type the bundle does not hold. */
   readonly TYPE_REGISTRY?: TypeRegistry;
   /**
+   * EDGE's registry of what its enabled plugins publish — types, skills and operation records. The host makes it a
+   * source of each invocation's registry (the compute runtime's `registrySource`), so a registry query or a registry URI reaches whichever
+   * plugin contributes the entity. Supersedes {@link TYPE_REGISTRY}, which EDGE keeps for hosts published before it.
+   */
+  readonly REGISTRY?: Registry;
+  /**
    * EDGE's hosted blob store, the default file storage of every bundle: the host registers it as the `edge` blob
    * backend and offers it as a file backend, so no plugin contributes one on EDGE. Without it a bundle stores inline.
    */
@@ -63,6 +69,20 @@ export interface TypeRegistry {
    */
   resolveType(typename: string, version?: string): Promise<TypeRecord | undefined>;
 }
+
+/** EDGE's registry of what its enabled plugins publish. */
+export interface Registry extends TypeRegistry {
+  /** Every enabled plugin's types. */
+  listTypes(): Promise<TypeRecord[]>;
+  /** Every enabled plugin's skills, with the operation records their tools name. */
+  listSkills(): Promise<SkillCatalog>;
+}
+
+/** The skills of EDGE's enabled plugins and the operation records (`Obj.toJSON`) their tools resolve against. */
+export type SkillCatalog = {
+  readonly skills: readonly SkillRecord[];
+  readonly operations: readonly object[];
+};
 
 /** One invocation of an operation the bundle's primary plugin handles. */
 export type InvokeRequest = {
@@ -203,6 +223,8 @@ export type PluginRecord = {
 /** A skill as data: its instructions are resolved, since their `Text` lives in no database. */
 export type SkillRecord = {
   readonly key: string;
+  /** The skill's version (`Obj.getMeta(skill).version`), so a versioned `dxn:` reference can address it. */
+  readonly version?: string;
   readonly name: string;
   readonly description?: string;
   readonly instructions?: string;
@@ -213,6 +235,29 @@ export type SkillRecord = {
    * the skill manager refuses one without it.
    */
   readonly agentCanEnable?: boolean;
+};
+
+/**
+ * A lifecycle hook the bundle's plugin contributes (`AppCapabilities.HookDefinition`), as data: its operation is named
+ * by key and is one of the catalog's operations, so the hook runs in the bundle.
+ */
+export type HookRecord = {
+  /** Stable id the trace names the hook by. */
+  readonly key: string;
+  /** Id of the plugin that contributes the hook; settings turn hooks on and off by plugin. */
+  readonly plugin: string;
+  readonly event: 'end-request';
+  /** Key of the skill that must be bound for the hook to fire; absent fires for every conversation. */
+  readonly skill?: string;
+  /** Key of the operation the hook runs. */
+  readonly operation: string;
+  /**
+   * The operation's input, a JSON object. Typed `object`, as the catalog's operations are, since the catalog crosses
+   * Workers RPC, whose types reject `unknown` values.
+   */
+  readonly input?: object;
+  /** Runs in the background: the request settles without waiting for it. */
+  readonly async?: boolean;
 };
 
 /** An ECHO type the bundle contributes. */
@@ -239,6 +284,8 @@ export type Catalog = {
   readonly plugin: PluginRecord;
   readonly operations: readonly object[];
   readonly skills: readonly SkillRecord[];
+  /** Absent from a catalog written by a host published before hooks were listed. */
+  readonly hooks?: readonly HookRecord[];
   readonly types: readonly TypeRecord[];
   readonly failures: readonly FailureRecord[];
   /** The {@link PROTOCOL_VERSION} of the host that produced the catalog; absent before versioning. */

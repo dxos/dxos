@@ -37,8 +37,9 @@
     // These must reach the Worker even where an asset would match.
     "run_worker_first": ["/", "/api/*", "/.well-known/*"],
   },
-  // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
-  // others suffixed). Bindings are NOT inherited, so each env repeats them. Cloudflare-side: each Worker
+  // Per-env Workers (name = the deployed Worker; production = the bare name, others suffixed). Bindings and
+  // routes are NOT inherited, so each env repeats them. Each env serves its own host plus `view.<host>` (the
+  // published-space viewer, see `isViewerHost`). Cloudflare-side: each Worker
   // needs its R2 bucket + the POSTHOG_PROJECT_TOKEN secret (see ENV.md), which `secrets.required` makes
   // `wrangler deploy` and `versions upload` refuse to ship without.
   "env": {
@@ -54,6 +55,10 @@
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets" },
       ],
+      "routes": [
+        { "pattern": "composer.space", "custom_domain": true },
+        { "pattern": "view.composer.space", "custom_domain": true },
+      ],
     },
     "staging": {
       "name": "composer-staging",
@@ -66,6 +71,10 @@
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-staging" },
+      ],
+      "routes": [
+        { "pattern": "staging.composer.space", "custom_domain": true },
+        { "pattern": "view.staging.composer.space", "custom_domain": true },
       ],
     },
     // The daily dogfood build (preview.composer.space) — deployed from `main` on a schedule, talking to
@@ -82,6 +91,10 @@
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-preview" },
       ],
+      "routes": [
+        { "pattern": "preview.composer.space", "custom_domain": true },
+        { "pattern": "view.preview.composer.space", "custom_domain": true },
+      ],
     },
     // Deployed on demand, talking to EDGE preview; also the Worker PR previews upload versions to.
     "dev": {
@@ -95,6 +108,10 @@
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },
+      ],
+      "routes": [
+        { "pattern": "dev.composer.space", "custom_domain": true },
+        { "pattern": "view.dev.composer.space", "custom_domain": true },
       ],
     },
   },

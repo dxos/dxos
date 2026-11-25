@@ -81,17 +81,18 @@ describe('GraphBuilder', () => {
       });
       onTestFinished(() => cancel());
 
+      // `subscribe` computes the atom up front, so reading it is not a change.
       expect(count).to.equal(0);
       expect(registry.get(graph.connections(GraphNode.RootId, 'child'))).to.have.length(0);
-      expect(count).to.equal(1);
+      expect(count).to.equal(0);
 
       Graph.expandSync(graph, GraphNode.RootId, 'child');
       await GraphBuilder.flush(builder);
-      expect(count).to.equal(2);
+      expect(count).to.equal(1);
 
       registry.set(state, 1);
       await GraphBuilder.flush(builder);
-      expect(count).to.equal(3);
+      expect(count).to.equal(2);
     });
 
     test('flushBeforePaint flushes a connector an exhausted budget left dirty', async () => {
@@ -153,9 +154,9 @@ describe('GraphBuilder', () => {
 
       expect(nodes).has.length(0);
       expect(count).to.equal(0);
-      registry.get(graph.connections(GraphNode.RootId, 'child'));
+      nodes = registry.get(graph.connections(GraphNode.RootId, 'child'));
       expect(nodes).has.length(1);
-      expect(count).to.equal(1);
+      expect(count).to.equal(0);
 
       GraphBuilder.addExtension(
         builder,
@@ -166,7 +167,7 @@ describe('GraphBuilder', () => {
       );
       await GraphBuilder.flush(builder);
       expect(nodes).has.length(2);
-      expect(count).to.equal(2);
+      expect(count).to.equal(1);
     });
 
     test('nodes are updated when removed', async () => {

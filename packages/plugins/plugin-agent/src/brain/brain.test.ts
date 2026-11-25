@@ -6,12 +6,11 @@ import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -115,7 +114,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       types: [
         Agent.Agent,
-        Chat.Chat,
+        Agent.Session,
         Skill.Skill,
         Feed.Feed,
         Text.Text,
@@ -151,25 +150,25 @@ const setup = Effect.fnUntraced(function* () {
 });
 
 /** Submits a prompt as `name` and waits for the turn and its end-of-turn hooks. */
-const say = Effect.fnUntraced(function* (chat: Chat.Chat, name: string, prompt: string) {
-  const session = yield* AgentService.getSession(chat);
+const say = Effect.fnUntraced(function* (chat: Agent.Session, name: string, prompt: string) {
+  const session = yield* AgentService.bindSession(chat);
   yield* session.submitPrompt(prompt, { sender: { name } });
   yield* session.waitForCompletion();
 });
 
 /** Waits for the chat's current turn, e.g. one the brain woke. */
-const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
-  const session = yield* AgentService.getSession(chat);
+const settle = Effect.fnUntraced(function* (chat: Agent.Session) {
+  const session = yield* AgentService.bindSession(chat);
   yield* session.waitForCompletion();
 });
 
 /** The agent's replies in the chat. */
-const messages = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const messages = Effect.fnUntraced(function* (chat: Agent.Session) {
   const feed = yield* Database.load(chat.feed);
   return yield* TrajectoryStore.messages(feed);
 });
 
-const replies = (chat: Chat.Chat) =>
+const replies = (chat: Agent.Session) =>
   messages(chat).pipe(
     Effect.map((all) => all.filter((message) => message.sender.role === 'assistant').map(Message.extractText)),
   );
@@ -277,7 +276,7 @@ describe('agent brain (local)', () => {
               chats.filter((chat) => ChatParticipant.isVisibleTo(chat, did)).map((chat) => chat.id),
             ),
           );
-        const primary = yield* Agent.loadChat(agent);
+        const primary = yield* Agent.loadSession(agent);
         expect((yield* visible(SCENARIO.alice.did)).sort()).toEqual([primary?.id, alice.chat.id].sort());
         expect((yield* visible(SCENARIO.bob.did)).sort()).toEqual([primary?.id, bob.chat.id].sort());
 

@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as Chat from '@dxos/assistant/Chat';
-import * as Harness from '@dxos/assistant/Harness';
+import { TrajectoryStore } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type Message } from '@dxos/types';
@@ -28,13 +28,13 @@ export const REMINDER =
 const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> = ConversationSkill.EnsureReplySent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const chat = yield* Harness.getChat.pipe(Effect.orElseSucceed(() => undefined));
+      const chat = yield* Agent.currentSession.pipe(Effect.orElseSucceed(() => undefined));
       const conversation = chat && AgentChannels.conversationOf(chat);
       if (!chat || !conversation) {
         return {};
       }
 
-      const history = yield* Harness.history.pipe(Effect.orElseSucceed((): Message.Message[] => []));
+      const history = yield* TrajectoryStore.currentHistory.pipe(Effect.orElseSucceed((): Message.Message[] => []));
       const request = history.slice(history.findLastIndex(isPrompt) + 1);
       const wrote = request.some((message) => message.sender.role === 'assistant' && textOf(message).length > 0);
       const reminded = request.some((message) => textOf(message, true).includes(REMINDER));
@@ -101,7 +101,7 @@ const succeededCalls = (
 };
 
 /** Whether a send's destination is this conversation: its thread id, or an encoded reference to its chat. */
-const isConversation = (destination: unknown, chat: Chat.Chat, thread: string | undefined): boolean => {
+const isConversation = (destination: unknown, chat: Agent.Session, thread: string | undefined): boolean => {
   if (typeof destination === 'string') {
     return destination === thread;
   }

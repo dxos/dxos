@@ -144,7 +144,7 @@ parent's branch, never `main`). Review rounds and scope changes since the PR ope
 body stale; when it no longer summarizes the PR, rewrite the body from scratch (never append a
 sentence per fix), commit with `scope: description`, and push. A body that still describes the PR
 stays as it is. Rules for the body and bump level:
-[`agents/instructions/changesets.md`](../../../agents/instructions/changesets.md).
+[`.agents/instructions/changesets.md`](../../../.agents/instructions/changesets.md).
 
 ---
 

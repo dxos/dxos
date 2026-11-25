@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AiContext, Harness } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -121,10 +121,7 @@ const ConversationLayer = Layer.unwrap(
     const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     const scoring = yield* Skill.upsert('com.example.skill.score');
     yield* Effect.promise(() => binder.bind({ skills: [Ref.make(scoring)] }));
-    return Layer.mergeAll(
-      Layer.succeed(TestConversation, { conversation: Obj.getURI(feed) }),
-      Layer.succeed(Harness.HarnessService, Harness.fromBinder({ feed, runtime, binder })),
-    );
+    return Layer.succeed(TestConversation, { conversation: Obj.getURI(feed) });
   }),
 );
 

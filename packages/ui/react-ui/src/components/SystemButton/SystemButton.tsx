@@ -51,13 +51,7 @@ type PresetContent = Pick<SystemButtonProps, 'iconOnly' | 'showTooltip' | 'toolt
 };
 
 /** Button content for a preset: icon-only with its Tooltip unless `iconOnly` is false, when the label shows. */
-const presetContent = ({
-  icon,
-  label,
-  iconOnly = true,
-  showTooltip,
-  tooltipSide,
-}: PresetContent): ButtonContentProps =>
+const presetContent = ({ icon, label, iconOnly = true, showTooltip, tooltipSide }: PresetContent): ButtonContentProps =>
   iconOnly ? { iconOnly: true, icon, label, showTooltip, tooltipSide } : { icon, label };
 
 /** Star and Bookmark: a Toggle (`aria-pressed`) whose icon and label follow the pressed state. */

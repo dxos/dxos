@@ -18,7 +18,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
@@ -101,7 +101,7 @@ export default AgentOperation.RunInstructions.pipe(
         let feed: Feed.Feed;
         if (data.chat) {
           const chat = yield* Database.load(data.chat);
-          invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
+          invariant(Obj.instanceOf(Agent.Session, chat), 'Expected Chat object.');
           feed = yield* Database.load(chat.feed);
         } else {
           feed = yield* Database.add(TrajectoryStore.makeFeed());

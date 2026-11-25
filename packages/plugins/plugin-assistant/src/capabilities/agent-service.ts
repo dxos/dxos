@@ -9,7 +9,7 @@ import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
@@ -32,7 +32,7 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
       // Declared, not read optionally: a tag this spec does not require is never in its context. The
       // manager spans the local and remote runtimes; plugin-routine contributes it for every stack.
       requires: [Process.ManagerService, Capability.Service],
-      provides: [AgentService.AgentService],
+      provides: [Agent.Service],
     },
     () =>
       Layer.unwrap(
@@ -44,7 +44,7 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
           return AgentServiceRuntime.layer({
             delegationStrategy: strategies[0],
             makeTurnProducer: (options) => resolveTurnProducer(manager, codeMode)(options),
-            processes: () => manager.getAll(AssistantCapabilities.AgentProcess),
+            processes: () => manager.getAll(AssistantCapabilities.SessionProcess),
             // Read when a process spawns, so the setting applies to agents started after it changes.
             threading: () => {
               const [settings] = manager.getAll(AssistantCapabilities.Settings);

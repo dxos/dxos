@@ -497,3 +497,39 @@
   line-height: 1.4;
   color: var(--sd-card-footer-fg);
 }
+
+/*
+ * A slide whose frontmatter says `class: studio-code-compact` sets its code smaller than the deck's 40px, so a
+ * listing fits beside text in half a slide. The highlighter sizes its rows itself, hence the `!important`.
+ */
+.studio-code-compact pre,
+.studio-code-compact pre code,
+.studio-code-compact pre code * {
+  font-size: 28px !important;
+  line-height: 1.4 !important;
+}
+
+/*
+ * The cover's line under the name (`class: studio-cover`). The title box spaces what it holds 209px apart and sets
+ * a paragraph at 37px, which suits the links it was drawn for; a subtitle reads as one with the name only when it
+ * is larger and sits close under it.
+ */
+.studio-cover h1 + p {
+  margin-top: -140px;
+  font-size: 64px !important;
+  line-height: 1.2 !important;
+}
+
+.studio-bullets-compact li,
+.studio-bullets-compact li * {
+  font-size: 38px !important;
+  line-height: 1.35 !important;
+}
+
+/*
+ * A slide whose frontmatter says `class: studio-lines-tight` sets its bullets closer than the deck's relaxed 1.625,
+ * so a slide of two-line bullets clears the footer without shrinking its type.
+ */
+.studio-lines-tight :is(li, p) {
+  line-height: 1.35;
+}

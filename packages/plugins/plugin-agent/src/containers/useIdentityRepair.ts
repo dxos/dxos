@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 

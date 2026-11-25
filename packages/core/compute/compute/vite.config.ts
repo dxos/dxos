@@ -10,7 +10,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     'AgentIdentity': 'src/AgentIdentity.ts',
     'AiMetering': 'src/AiMetering.ts',
-    'AgentService': 'src/AgentService.ts',
+    'Agent': 'src/Agent.ts',
     'Cancellation': 'src/Cancellation.ts',
     'Credential': 'src/Credential.ts',
     'Header': 'src/Header.ts',

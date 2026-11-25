@@ -4,8 +4,7 @@
 
 import { useMemo } from 'react';
 
-import type * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 
@@ -21,9 +20,9 @@ export const useAgentChannelList = (agent: Agent.Agent): AgentChannels.AgentChan
 };
 
 /** The agent's channel conversations, in the order they started. */
-export const useAgentConversations = (agent: Agent.Agent): Chat.Chat[] => {
-  const filter = useMemo(() => Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)), [agent]);
-  const chats: Chat.Chat[] = useQuery(Obj.getDatabase(agent), filter);
+export const useAgentConversations = (agent: Agent.Agent): Agent.Session[] => {
+  const filter = useMemo(() => Filter.and(Filter.type(Agent.Session), Filter.childOf(agent)), [agent]);
+  const chats: Agent.Session[] = useQuery(Obj.getDatabase(agent), filter);
   // Channel chats carry their conversation key from creation, so membership alone decides the list; ULID ids sort by
   // creation, which is when the conversation's first message arrived, so they list in the order they started.
   return useMemo(

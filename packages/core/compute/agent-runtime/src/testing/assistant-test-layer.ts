@@ -10,11 +10,11 @@ import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
+import * as Stream from 'effect/Stream';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { type AiServicePreset, TestAiService } from '@dxos/ai/testing';
-import { Harness, TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import { TrajectoryStore } from '@dxos/assistant';
 import {
   FeedTraceSink,
   ProcessManager,
@@ -27,7 +27,7 @@ import {
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -85,16 +85,16 @@ interface TestLayerOptions {
 
   /**
    * Extra services to make available in the service resolver.
-   * Operations can depend on those services. They may themselves require the {@link AgentService.AgentService}
+   * Operations can depend on those services. They may themselves require the {@link Agent.Service}
    * (e.g. a service that wakes other conversations), which is served to them once it is built.
    */
-  extraServices?: Layer.Layer<never, never, AgentService.AgentService>;
+  extraServices?: Layer.Layer<never, never, Agent.Service>;
 }
 
 export type AssistantTestServices =
   | LanguageModel.LanguageModel
   | Credential.CredentialsService
-  | AgentService.AgentService
+  | Agent.Service
   | AiService.AiService
   | Database.Service
   | Registry.Service
@@ -130,7 +130,7 @@ export const AssistantTestLayer = (
   agentOptions.defaultModel ??= resolvedModel;
   agentOptions.provider ??= resolvedProvider;
 
-  // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but
+  // Resolved services may need `ProcessManager.Service`, but
   // `ProcessManager.layer` requires the `ServiceResolver` — a construction cycle. Resolve it by
   // sharing a late-bound holder: the resolver reads the manager lazily (only at resolution time,
   // when the manager exists), and a downstream layer fills the holder once it is built.
@@ -175,30 +175,46 @@ interface ProcessManagerHolder {
   current?: Context.Service.Shape<typeof ProcessManager.Service>;
 }
 
-/** Late-bound reference to the {@link AgentService.AgentService}, filled once the service is built. */
+/** Late-bound reference to the {@link Agent.Service}, filled once the service is built. */
 interface AgentServiceHolder {
-  current?: Context.Service.Shape<typeof AgentService.AgentService>;
+  current?: Context.Service.Shape<typeof Agent.Service>;
 }
 
-/** An {@link AgentService.AgentService} that forwards to the holder's, so it can be handed out before that exists. */
-const lateAgentService = (holder: AgentServiceHolder): Context.Service.Shape<typeof AgentService.AgentService> => ({
-  getSession: (chat, options) =>
-    Effect.suspend(() =>
-      holder.current
-        ? holder.current.getSession(chat, options)
-        : Effect.die(new Error('AgentService is not built yet.')),
-    ),
-  hydrate: () =>
-    Effect.suspend(() =>
-      holder.current ? holder.current.hydrate() : Effect.die(new Error('AgentService is not built yet.')),
-    ),
-});
+/** An {@link Agent.Service} that forwards to the holder's, so it can be handed out before that exists. */
+const lateAgentService = (holder: AgentServiceHolder): Context.Service.Shape<typeof Agent.Service> => {
+  const notBuilt = Effect.die(new Error('AgentService is not built yet.'));
+  const late = <A, E, R>(use: (service: Agent.ServiceApi) => Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+    Effect.suspend(() => (holder.current ? use(holder.current) : notBuilt));
+  return {
+    open: (chat, options) => late((service) => service.open(chat, options)),
+    hydrate: () => late((service) => service.hydrate()),
+    getContext: (chat) => late((service) => service.getContext(chat)),
+    addContext: (chat, context) => late((service) => service.addContext(chat, context)),
+    submitPrompt: (chat, prompt, options) => late((service) => service.submitPrompt(chat, prompt, options)),
+    running: (chat) => late((service) => service.running(chat)),
+    waitForCompletion: (chat) => late((service) => service.waitForCompletion(chat)),
+    terminate: (chat) => late((service) => service.terminate(chat)),
+    subscribeEphemeral: (chat, options) =>
+      Stream.unwrap(late((service) => Effect.succeed(service.subscribeEphemeral(chat, options)))),
+    currentSession: late((service) => service.currentSession),
+    currentFeed: late((service) => service.currentFeed),
+    currentAgent: late((service) => service.currentAgent),
+    currentThread: late((service) => service.currentThread),
+    enqueueMessage: (options) => late((service) => service.enqueueMessage(options)),
+    setAlarm: (options) => late((service) => service.setAlarm(options)),
+    listSessions: (options) => late((service) => service.listSessions(options)),
+    listAgents: () => late((service) => service.listAgents()),
+    spawn: (definition, options) => late((service) => service.spawn(definition, options)),
+    delegate: (request) => late((service) => service.delegate(request)),
+    waitForThread: (thread) => late((service) => service.waitForThread(thread)),
+  };
+};
 
 /** Fills the {@link AgentServiceHolder}, letting the resolver serve operations that relay into agent sessions. */
-const captureAgentService = (holder: AgentServiceHolder): Layer.Layer<never, never, AgentService.AgentService> =>
+const captureAgentService = (holder: AgentServiceHolder): Layer.Layer<never, never, Agent.Service> =>
   Layer.effectDiscard(
     Effect.gen(function* () {
-      holder.current = yield* AgentService.AgentService;
+      holder.current = yield* Agent.Service;
     }),
   );
 
@@ -231,36 +247,19 @@ export const AssistantTestServiceResolverLayer = (
       // v4 dropped `Layer.toRuntime`; a built layer is its service context. The agent service is built
       // after the resolver (it needs it), so extra services reach it through the same late-bound holder.
       const extraServicesContext = yield* Layer.build(
-        extraServices.pipe(
-          Layer.provide(Layer.succeed(AgentService.AgentService, lateAgentService(agentServiceHolder))),
-        ),
+        extraServices.pipe(Layer.provide(Layer.succeed(Agent.Service, lateAgentService(agentServiceHolder)))),
       );
 
       return ServiceResolver.compose(
-        ServiceResolver.succeed(Harness.HarnessService, (context) =>
-          Effect.gen(function* () {
-            if (!context.conversation) {
-              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(Harness.HarnessService.key));
-            }
-            // Read the manager lazily: the resolver is invoked at spawn time, by which point the
-            // holder has been filled (see the construction-cycle note in `AssistantTestLayer`).
-            const processManager = processManagerHolder.current;
-            if (!processManager) {
-              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(ProcessManager.Service.key));
-            }
-            const runtime = yield* Effect.context<Database.Service>();
-            return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
-          }).pipe(Effect.provide(services)),
-        ),
         // As the app's client contributes it: operations that look an object up across spaces need it.
         ServiceResolver.succeed(Hypergraph.Service, () => Effect.succeed(Hypergraph.makeService(db.graph))),
-        ServiceResolver.succeed(AgentService.AgentService, () =>
+        ServiceResolver.succeed(Agent.Service, () =>
           Effect.gen(function* () {
             // Read lazily (like the process manager): filled by `captureAgentService` before any
             // operation resolution runs.
             const agentService = agentServiceHolder.current;
             if (!agentService) {
-              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(AgentService.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(Agent.Service.key));
             }
             return agentService;
           }),
@@ -297,7 +296,7 @@ export const AssistantTestBaseLayer = ({
     Operation.PersistentOperation,
     Feed.Feed,
     // The agent process runs on a chat, so every session — bare ones included — persists one.
-    Chat.Chat,
+    Agent.Session,
     Trigger.Trigger,
     Tag.Tag,
     ...TrajectoryStore.types,

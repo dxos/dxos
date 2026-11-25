@@ -1,7 +1,7 @@
 # Triage step for issues filed from the Composer in-app feedback form
 # (see packages/plugins/plugin-support/src/containers/FeedbackPanel/). The
 # implementation step lives in `claude-composer-implement.yml`; see also
-# `agents/prompts/claude-triage-and-implement-workflows.md` for design notes.
+# `.agents/prompts/claude-triage-and-implement-workflows.md` for design notes.
 name: Claude Composer triage
 
 on:

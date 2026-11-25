@@ -22,5 +22,6 @@ export const corePlugins = (): Plugin.Plugin[] => [
   GraphPlugin.make(),
   ProcessManagerPlugin.make(),
   SettingsPlugin.make(),
-  ThemePlugin.make({ tx: Theme.defaultTx }),
+  // Storybook's theme switch owns the root `dark` class; following the OS instead would undo it on a light system.
+  ThemePlugin.make({ tx: Theme.defaultTx, followDocument: true }),
 ];

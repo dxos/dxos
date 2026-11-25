@@ -52,15 +52,20 @@ export const selectThread = (view: TrajectoryView, thread?: Trajectory.ThreadId)
   const forks = new Set(
     view.lanes.filter((lane) => lane.kind === 'fork' && lane.merged !== 'raw').map((lane) => lane.id),
   );
-  if (forks.size === 0 && thread === undefined) {
-    return view;
-  }
+  const subagents = new Set<string>(view.lanes.filter((lane) => lane.kind === 'fresh').map((lane) => lane.id));
+  // A subagent's task waits in its own lane until the subagent takes it up: it is the subagent's input, not a prompt
+  // the reader sent, so main never shows it as one.
+  const isSubagentTask = (message: Message.Message) =>
+    Legacy.isQueued(message) && subagents.has(view.laneOf.get(message.id) ?? '');
   const onMain = (message: Message.Message) => {
     const lane = view.laneOf.get(message.id);
-    return lane === undefined || !forks.has(Trajectory.ThreadId.make(lane));
+    return (lane === undefined || !forks.has(Trajectory.ThreadId.make(lane))) && !isSubagentTask(message);
   };
   const fork = thread === undefined ? undefined : view.lanes.find((lane) => lane.id === thread);
   if (fork === undefined) {
+    if (forks.size === 0 && !view.messages.some(isSubagentTask)) {
+      return view;
+    }
     return {
       ...view,
       messages: view.messages.filter(onMain),

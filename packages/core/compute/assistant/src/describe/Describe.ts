@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, Ref, Type } from '@dxos/echo';
+import { Annotation, type Entity, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -36,13 +36,12 @@ export type TypeDescription = {
 };
 
 /**
- * Every object and relation type the database's registry holds, with its fields: what the model is
- * told it may resolve. Read from the registry the code will run against, so a sandbox that could not
- * rebuild a type does not list it.
+ * The object and relation types among `entities`, with their fields: what the model is told it may resolve. Callers
+ * pass what the registry the code runs against holds (`registry.list()`), or what a registry query answered
+ * (`Registry.runQuery(Filter.type(Type.Type))`), which also asks the registry's sources.
  */
-export const describeTypes = (db: Database.Database, options: DescribeOptions = {}): TypeDescription[] =>
-  db.registry
-    .list()
+export const describeTypes = (entities: readonly Entity.Unknown[], options: DescribeOptions = {}): TypeDescription[] =>
+  entities
     .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
     .flatMap((type) => {
       const typename = Type.getTypename(type) ?? '';
@@ -182,6 +181,12 @@ export const labelOf = (ast: SchemaAST.AST, depth: number, abridge = false): str
     // A record or open struct (`Obj.Unknown`) has no closed field list to state.
     if (ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
       return 'object';
+    }
+    // An object of a registered type is named by its type, as a printed object is: its field list would read as a
+    // plain record, and code then goes looking for the object inside it.
+    const typename = Annotation.getTypeAnnotation(Schema.make(ast))?.typename;
+    if (typename !== undefined) {
+      return typename;
     }
     const fields = ast.propertySignatures.map(
       (property) =>
