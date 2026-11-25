@@ -6,7 +6,8 @@ import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 
-import { type AiRequest, AiSession, type Chat } from '@dxos/assistant';
+import { type AiRequest, AiSession } from '@dxos/assistant';
+import type * as Agent from '@dxos/compute/Agent';
 import type * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
 import type { Database, Feed } from '@dxos/echo';
@@ -55,7 +56,7 @@ export type TurnRequest = {
 
 export type MakeTurnProducerOptions = {
   /** The conversation the process serves; its session config says which engine runs it and how. */
-  chat: Chat.Chat;
+  chat: Agent.Session;
   feed: Feed.Feed;
   runtime: Context.Context<Database.Service>;
   instructions: Instructions.Instructions[];

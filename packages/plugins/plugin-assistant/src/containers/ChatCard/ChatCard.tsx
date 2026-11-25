@@ -5,7 +5,7 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
@@ -13,7 +13,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { AssistantNamespace } from '../../namespace.ts';
 
-export type ChatCardProps = AppSurface.ObjectCardProps<Chat.Chat>;
+export type ChatCardProps = AppSurface.ObjectCardProps<Agent.Session>;
 
 /** A chat as a card: its name. Lanes are not shown here, since deriving them means folding the chat's whole feed. */
 export const ChatCard = ({ subject }: ChatCardProps) => {

@@ -10,7 +10,7 @@ import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { composerAsides, threadPrompt } from '../testing/scripted.ts';
 
 /** One part of the launch: a task on the agent's checklist, handed to a subagent that writes one document. */
-type LaunchTask = {
+export type LaunchTask = {
   /** Names its captures; letters only, since a RegExp group name must be an identifier. */
   readonly key: string;
   readonly title: string;
@@ -106,27 +106,28 @@ const UPDATE_DOCUMENT = Operation.toolName(MarkdownOperation.Update);
 const CHECKPOINT_DOCUMENT = Operation.toolName(MarkdownOperation.CreateCheckpoint);
 
 /** The checklist update-tasks returns, with each task's URI captured under its key. */
-const CHECKLIST = new RegExp(
+export const LAUNCH_CHECKLIST = new RegExp(
   LAUNCH_TASKS.map(({ key, title }) => String.raw`\] ${title}\s+\(?ref: \[[^\]]*\]\((?<${key}>echo://[^)\s]+)\)`).join(
     String.raw`[\s\S]*?`,
   ),
 );
 
-/** The agent: plans the work, delegates one task per turn, then waits for each subagent and checks its task off. */
+/** The agent: reads the project's tasks, delegates one per turn, then waits for each subagent and checks its task off. */
 const agent = ScriptedScene.conversation('agent', [
   ScriptedScene.turn('user', LAUNCH_REQUEST),
   ScriptedScene.turn(
     'assistant',
     [
       ScriptedScene.reasoning(
-        'Four documents with no dependencies between them: each can go to a subagent of its own.',
+        'The project already lists four documents with no dependencies between them: each can go to a thread of its own.',
       ),
-      ScriptedScene.text('I will split this into four tasks and hand each one to a subagent.'),
-      ScriptedScene.toolCall(UPDATE_TASKS, { changes: LAUNCH_TASKS.map(({ title }) => ({ create: true, title })) }),
+      ScriptedScene.text("I will check the project's tasks and hand each one to a thread."),
+      // No changes: update-tasks answers with the checklist, which is where each task's URI comes from.
+      ScriptedScene.toolCall(UPDATE_TASKS, { changes: [] }),
     ],
     { delay: '1500 millis' },
   ),
-  ScriptedScene.turn('tool', CHECKLIST),
+  ScriptedScene.turn('tool', LAUNCH_CHECKLIST),
 
   ...LAUNCH_TASKS.flatMap(({ key, title, prompt }) => [
     ScriptedScene.turn(
@@ -155,7 +156,7 @@ const agent = ScriptedScene.conversation('agent', [
     ]),
   ),
   ScriptedScene.turn('assistant', [
-    ScriptedScene.text('Every subagent has reported.'),
+    ScriptedScene.text('Every thread has reported.'),
     ScriptedScene.toolCall(UPDATE_TASKS, {
       changes: [{ task: ScriptedScene.capture(LAUNCH_TASKS[LAUNCH_TASKS.length - 1].key), status: 'done' }],
     }),
@@ -220,7 +221,7 @@ const subagent = ({ title, prompt, document, brief, outline, body, review, pace 
   ]);
 
 /** A question the reader sends mid-run, answered at once in a light thread. */
-const sideQuestion = ScriptedScene.conversation('side question', [
+export const launchSideQuestion = ScriptedScene.conversation('side question', [
   ScriptedScene.turn('user', 'which day should we launch'),
   ScriptedScene.turn(
     'assistant',
@@ -234,7 +235,7 @@ const sideQuestion = ScriptedScene.conversation('side question', [
 ]);
 
 /** The launch kit: an agent splits a request into four tasks, each written by a subagent in a thread of its own. */
-export const launchKit = ScriptedScene.make([agent, ...LAUNCH_TASKS.map(subagent), sideQuestion], {
+export const launchKit = ScriptedScene.make([agent, ...LAUNCH_TASKS.map(subagent), launchSideQuestion], {
   asides: composerAsides,
   promptOf: threadPrompt,
 });

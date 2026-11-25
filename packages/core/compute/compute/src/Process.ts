@@ -16,6 +16,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { Annotation, type Database } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { type SpaceId, URI } from '@dxos/keys';
 import type { SerializedError } from '@dxos/protocols';
 
@@ -92,10 +93,37 @@ export const NotifyAnnotation = Annotation.make({
 
 /**
  * Marks a process as the harness host for its conversation (discovery substrate).
+ *
+ * @deprecated Find a session's process by {@link SessionAnnotation} instead.
  */
 export const HarnessHostAnnotation = Annotation.make({
   id: 'org.dxos.process.harnessHost',
   schema: Schema.Boolean,
+});
+
+/**
+ * The `Session` object (formerly `Chat`) the process works for, or the feed it runs on. A spawned child inherits it.
+ */
+export const SessionAnnotation = Annotation.make({
+  id: 'org.dxos.process.session',
+  schema: URI.Schema,
+});
+
+/**
+ * The `Agent` object the process works for; absent for a standalone session. A spawned child inherits it.
+ */
+export const AgentAnnotation = Annotation.make({
+  id: 'org.dxos.process.agent',
+  schema: URI.Schema,
+});
+
+/**
+ * The thread of its session the process works for (a tool call or code execution made from that thread); absent
+ * for work on the session's main thread. A spawned child inherits it.
+ */
+export const ThreadAnnotation = Annotation.make({
+  id: 'org.dxos.process.thread',
+  schema: Schema.String,
 });
 
 /** Whether `info` is a conversation's agent process (stamped {@link HarnessHostAnnotation} at spawn). */
@@ -466,6 +494,12 @@ export interface LocationOptions {
  * but no longer has to hold both managers to do so.
  */
 export interface Manager {
+  /**
+   * The process the caller runs in. Fails when this manager is not scoped to a process (e.g. the app-level
+   * aggregate manager).
+   */
+  readonly current: Effect.Effect<Process, NoCurrentProcessError>;
+
   /** Current state of the process tree. */
   readonly processTree: Effect.Effect<readonly Process[]>;
 
@@ -552,6 +586,17 @@ export const awaitOutput = <O>(handle: Process<any, O, any>): Effect.Effect<O> =
 export class ManagerService extends Context.Service<ManagerService, Manager>()(
   '@dxos/compute/Process.ManagerService',
 ) {}
+
+/** Raised by {@link current} when the ambient {@link ManagerService} is not scoped to a process. */
+export class NoCurrentProcessError extends BaseError.extend('NoCurrentProcessError', 'Not running inside a process') {}
+
+/**
+ * The process the calling code runs in, read from the ambient {@link ManagerService}.
+ */
+export const current: Effect.Effect<Process, NoCurrentProcessError, ManagerService> = Effect.flatMap(
+  ManagerService,
+  (manager) => manager.current,
+);
 
 /**
  * Spawns `definition` — a durable operation or a script operation — through the ambient

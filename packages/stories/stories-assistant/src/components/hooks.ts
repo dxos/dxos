@@ -3,7 +3,7 @@
 //
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as AssistantChat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import type * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -15,7 +15,7 @@ export type ChatModel = NonNullable<ReturnType<typeof AssistantHooks.useChatMode
 /** The chat model of a chat's own conversation, or of one of its subagent threads when `lane` is given. */
 export const useThreadModel = (
   db: Database.Database | undefined,
-  chat: AssistantChat.Chat | undefined,
+  chat: Agent.Session | undefined,
   lane?: Trajectory.ThreadId,
 ) => {
   const registry = useRegistry();

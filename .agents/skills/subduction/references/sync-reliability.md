@@ -229,15 +229,19 @@ whether a bundle you were handed had it suppressed.
 `ctx.collectionId`, `ctx.documentCount`, `ctx.identityDid`; a full-text search for a spaceId
 matches only the HTTP lines whose body embeds it, missing every `SubductionAutomergeReplicator`
 line. Filter on the `ctx.spaceId` log attribute instead. The edge has **no per-document heads
-logging**, so it can confirm delivery (`subduction: collection-state sent`, `deliveryResult`) but
-cannot tell you what diverged.
+logging**, and it cannot tell you what diverged. It logs `subduction: collection-state sent` at
+`debug` on success, which deployed environments do not record, and at `warn` with a `deliveryResult`
+only when delivery fails. So in deployed logs a `warn` line proves a failed delivery, and the
+absence of the line proves nothing.
 
 **A client-visible stall can be an edge-side dropped session.** Watch for `subduction: dropping
 frame for unknown connectionId` with `ctx.liveConnectionIds: "[]"`, alongside `subduction error
 sent` carrying `subduction: session lost` / `unknown connectionId`: the client keeps shipping frames
 into a connectionId the edge no longer holds and they are discarded, while the alarm-driven
-`collection-state sent` path keeps answering normally. Collection sync therefore looks healthy —
-responses arrive every round — while no document bytes land. Check timestamps before blaming it for
+collection-state path keeps answering normally. Collection sync therefore looks healthy —
+responses arrive every round — while no document bytes land. Confirm those responses on the client,
+or from the absence of `collection-state sent` `warn` lines: deployed edge logs do not show the
+successful sends. Check timestamps before blaming it for
 an older divergence: in the observed case the drops began ~22 min _after_ the divergence was already
 3 days old, making it a second, later fault rather than the cause.
 

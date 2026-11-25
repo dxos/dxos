@@ -13,7 +13,6 @@ import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService, Model, OpaqueToolkit, Provider } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import {
@@ -23,7 +22,7 @@ import {
   UnifiedProcessManager,
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
@@ -38,7 +37,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Message } from '@dxos/types';
 
-import { ChatModel } from './chat-model.ts';
+import { LiveChatModel } from './chat-model.ts';
 import { providerForModel } from './presets.ts';
 import { ChatModelRecorder } from './testing/chat-model-recorder.ts';
 import { makeSpaceLayer, makeTestRuntime } from './testing/harness.ts';
@@ -127,7 +126,7 @@ describe.each(ENVS)('ChatModel (edge-hosted agent, %s)', { tags: ['manual'], tim
   beforeAll(async () => {
     client = await new Client({
       config: configPreset({ edge: env }),
-      types: [Chat.Chat, Feed.Feed, Message.Message],
+      types: [Agent.Session, Feed.Feed, Message.Message],
     }).initialize();
     await client.halo.createIdentity();
     space = await client.spaces.create();
@@ -166,7 +165,7 @@ const runTurns = (client: Client, space: Space, calls: EdgeCall[]) =>
     // The model is the chat's own from the start: one stamped later reads as a reconfiguration, which
     // replaces the hosted process.
     const chat = yield* Database.add(
-      Chat.make({ name: 'Latency', feed: Ref.make(feed), remote: true, session: { model: MODEL } }),
+      Agent.makeSession({ name: 'Latency', feed: Ref.make(feed), remote: true, session: { model: MODEL } }),
     );
     yield* Database.flush();
     // The hosted process reads the chat from EDGE's copy of the space.
@@ -175,7 +174,7 @@ const runTurns = (client: Client, space: Space, calls: EdgeCall[]) =>
     const runtime = yield* Effect.context<Database.Service>();
     const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
     const registry = yield* AtomRegistry.AtomRegistry;
-    const chatModel = new ChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
+    const chatModel = new LiveChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
       chat: Ref.make(chat),
       model: MODEL,
       provider: Provider.edge.id,
@@ -186,7 +185,7 @@ const runTurns = (client: Client, space: Space, calls: EdgeCall[]) =>
     for (const prompt of PROMPTS) {
       // Resolved per turn, with the chat model's own options: a hosted process that finished its turn is
       // replaced, and the replacement's status is the one to watch.
-      const agent = yield* AgentService.getSession(chat, {
+      const agent = yield* AgentServiceRuntime.bindSession(chat, {
         provider: providerForModel(MODEL, Provider.edge.id),
         location: 'edge',
       });

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Chat } from '@dxos/assistant';
+import type * as Agent from '@dxos/compute/Agent';
 import { Database, Query } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -29,7 +29,7 @@ export default Capability.makeModule(
     const manager = yield* Capability.Service;
     // A chat's own choice, else the plugin's permission setting, which governs both coding agents; a chat keeps
     // the mode it was spawned with.
-    const mode = (chat: Chat.Chat): string => {
+    const mode = (chat: Agent.Session): string => {
       const [settings] = manager.getAll(ClaudeCapabilities.Settings);
       const [registry] = manager.getAll(Capabilities.AtomRegistry);
       return ClaudeChoices.permissionMode(chat.session, settings && registry ? registry.get(settings) : undefined);

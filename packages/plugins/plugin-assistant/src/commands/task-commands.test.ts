@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import * as Chat from '@dxos/assistant/Chat';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import * as Agent from '@dxos/compute/Agent';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Task } from '@dxos/types';
 
@@ -49,10 +50,23 @@ describe('task slash commands', () => {
   test('/task:delete takes ordinals and quoted titles, and sweeps sub-tasks', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 
-    const parent = Chat.addTask(db, chat, 'Ship the release');
-    nest(parent, Chat.addTask(db, chat, 'Write the changelog'));
-    Chat.addTask(db, chat, 'Unrelated');
-    Chat.addTask(db, chat, 'Also unrelated');
+    const parent = Effect.runSync(
+      Agent.addTask(chat, 'Ship the release').pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+    );
+    nest(
+      parent,
+      Effect.runSync(
+        Agent.addTask(chat, 'Write the changelog').pipe(
+          Effect.provideService(Database.Service, Database.makeService(db)),
+        ),
+      ),
+    );
+    Effect.runSync(
+      Agent.addTask(chat, 'Unrelated').pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+    );
+    Effect.runSync(
+      Agent.addTask(chat, 'Also unrelated').pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+    );
     await db.flush();
 
     // Ordinal 1 is the parent, so its sub-task goes with it even though nothing named the child.
@@ -66,8 +80,15 @@ describe('task slash commands', () => {
   test('/task:delete names a parent and its sub-task once each', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 
-    const parent = Chat.addTask(db, chat, 'Parent');
-    nest(parent, Chat.addTask(db, chat, 'Child'));
+    const parent = Effect.runSync(
+      Agent.addTask(chat, 'Parent').pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+    );
+    nest(
+      parent,
+      Effect.runSync(
+        Agent.addTask(chat, 'Child').pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+      ),
+    );
     await db.flush();
 
     // The child is swept with the parent, so naming both must not report it twice.
@@ -78,8 +99,14 @@ describe('task slash commands', () => {
   test('a dangling checklist entry does not fail the command', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 
-    Chat.addTask(db, chat, 'Still here');
-    const gone = Chat.addTask(db, chat, 'Removed behind the array');
+    Effect.runSync(
+      Agent.addTask(chat, 'Still here').pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+    );
+    const gone = Effect.runSync(
+      Agent.addTask(chat, 'Removed behind the array').pipe(
+        Effect.provideService(Database.Service, Database.makeService(db)),
+      ),
+    );
     await db.flush();
     // Removed without sweeping the array, so its entry can no longer resolve — `load` would throw
     // and take the whole command with it.
@@ -92,7 +119,9 @@ describe('task slash commands', () => {
   test('/task:delete reports an unmatched selector rather than deleting anything', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 
-    Chat.addTask(db, chat, 'Only task');
+    Effect.runSync(
+      Agent.addTask(chat, 'Only task').pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+    );
     await db.flush();
 
     expect(await run('/task:delete 7')).toBeInstanceOf(Error);
@@ -107,8 +136,8 @@ const unexpectedInvoke: SlashCommand.OperationInvoke = async () => {
 };
 
 const setup = async (builder: EchoTestBuilder) => {
-  const { db } = await builder.createDatabase({ types: [Chat.Chat, Feed.Feed, Task.Task] });
-  const chat = db.add(Chat.make({ name: 'Test', feed: Ref.make(db.add(Feed.make())) }));
+  const { db } = await builder.createDatabase({ types: [Agent.Session, Feed.Feed, Task.Task] });
+  const chat = db.add(Agent.makeSession({ name: 'Test', feed: Ref.make(db.add(Feed.make())) }));
   await db.flush();
 
   /** Routes through `resolveSlashCommand`, so the tests exercise the prompt's own dispatch. */
@@ -123,7 +152,7 @@ const setup = async (builder: EchoTestBuilder) => {
   return { db, chat, run };
 };
 
-const titles = (chat: Chat.Chat) => Chat.resolveTasks(chat).map((task) => task.title);
+const titles = (chat: Agent.Session) => Agent.resolveTasks(chat).map((task) => task.title);
 
 /**
  * Files `child`, already on the checklist, as a sub-task of `parent`. The edge is moved explicitly:

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type Fact } from '@dxos/echo-memory';
 import { Organization, Person } from '@dxos/types';

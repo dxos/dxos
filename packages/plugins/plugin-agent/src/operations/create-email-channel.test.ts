@@ -6,8 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -23,7 +22,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
   types: [
     Agent.Agent,
-    Chat.Chat,
+    Agent.Session,
     Skill.Skill,
     Feed.Feed,
     Text.Text,

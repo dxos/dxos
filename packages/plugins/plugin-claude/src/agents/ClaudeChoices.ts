@@ -4,13 +4,13 @@
 
 // @import-as-namespace
 
-import type { Chat } from '@dxos/assistant';
+import type * as Agent from '@dxos/compute/Agent';
 import type * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 
 import * as Settings from '../types/Settings.ts';
 
 /** The choices a chat made for its session. */
-type Session = Chat.Chat['session'];
+type Session = Agent.Session['session'];
 
 /** Aliases the Claude Code CLI resolves to its current models; a chat that picks none runs the CLI's default. */
 export const MODELS: readonly AssistantCapabilities.AgentChoice[] = [

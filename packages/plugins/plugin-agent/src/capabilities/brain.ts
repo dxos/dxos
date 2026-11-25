@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as MemoryService from '@dxos/echo-memory/MemoryService';
 
@@ -27,7 +27,7 @@ import { triggerRegistry } from '../triggers.ts';
 const BrainLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [AgentService.AgentService, MemoryService.MemoryService],
+    requires: [Agent.Service, MemoryService.MemoryService],
     provides: [BrainService.BrainService],
   },
   () => BrainMemory.layer({ triggers: triggerRegistry }),

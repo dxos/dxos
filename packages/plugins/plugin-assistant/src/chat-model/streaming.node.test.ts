@@ -9,20 +9,20 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Stream from 'effect/Stream';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { ChatModel } from './chat-model.ts';
+import { LiveChatModel } from './chat-model.ts';
 import { makeStubSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
-const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
+const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Agent.Session, Feed.Feed] });
 
 describe('ChatModel streaming', () => {
   it.effect(
@@ -31,7 +31,7 @@ describe('ChatModel streaming', () => {
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         // The chat model resolves its agent session from the chat it runs on.
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -47,15 +47,12 @@ describe('ChatModel streaming', () => {
           traceMessage([partialBlockEvent(m2, 'Working…', true)]),
         ];
         const stubSession = yield* makeStubSession(chat, feed, batches);
-        const stubAgentService: AgentService.Service = {
-          getSession: () => Effect.succeed(stubSession),
-          hydrate: () => Effect.void,
-        };
+        const stubAgentService: Agent.ServiceApi = AgentService.serviceFromHandles(() => Effect.succeed(stubSession));
         const spaceLayer = yield* makeStubSpaceLayer(stubAgentService);
 
         const observableRegistry = AtomRegistry.make();
         const chatModelRuntime = yield* makeTestRuntime;
-        const chatModel = new ChatModel(session, chatModelRuntime, feed, spaceLayer, {
+        const chatModel = new LiveChatModel(session, chatModelRuntime, feed, spaceLayer, {
           chat: Ref.make(chat),
           observableRegistry,
         });
@@ -94,7 +91,7 @@ describe('ChatModel streaming', () => {
         // The growing m1 partial was upserted in place (a single entry per snapshot), and the
         // stale partial that arrived after finalization never surfaced. Transient two-phase
         // artifacts (a brief [] on finalize, a brief duplicate on flush) are expected — the UI
-        // masks them via `Chat.Root`'s dedupe-by-id merge.
+        // masks them via `Agent.Root`'s dedupe-by-id merge.
         expect(snapshots).toContainEqual(['Hel']);
         expect(snapshots).toContainEqual(['Hello']);
         expect(snapshots.flat()).not.toContain('Hello world. (stale)');
@@ -114,7 +111,7 @@ describe('ChatModel streaming', () => {
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         // The chat model resolves its agent session from the chat it runs on.
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -126,14 +123,11 @@ describe('ChatModel streaming', () => {
 
         const idleSession = yield* makeStubSession(chat, feed, batches, { running: false });
         const idleRegistry = AtomRegistry.make();
-        const idleChatModel = new ChatModel(
+        const idleChatModel = new LiveChatModel(
           session,
           yield* makeTestRuntime,
           feed,
-          yield* makeStubSpaceLayer({
-            getSession: () => Effect.succeed(idleSession),
-            hydrate: () => Effect.void,
-          }),
+          yield* makeStubSpaceLayer(AgentService.serviceFromHandles(() => Effect.succeed(idleSession))),
           { chat: Ref.make(chat), observableRegistry: idleRegistry },
         );
         const idleUnsubscribers = [
@@ -148,14 +142,11 @@ describe('ChatModel streaming', () => {
 
         const runningSession = yield* makeStubSession(chat, feed, batches, { running: true });
         const observableRegistry = AtomRegistry.make();
-        const chatModel = new ChatModel(
+        const chatModel = new LiveChatModel(
           session,
           yield* makeTestRuntime,
           feed,
-          yield* makeStubSpaceLayer({
-            getSession: () => Effect.succeed(runningSession),
-            hydrate: () => Effect.void,
-          }),
+          yield* makeStubSpaceLayer(AgentService.serviceFromHandles(() => Effect.succeed(runningSession))),
           { chat: Ref.make(chat), observableRegistry },
         );
 
@@ -186,7 +177,7 @@ describe('ChatModel streaming', () => {
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         // The chat model resolves its agent session from the chat it runs on.
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -199,14 +190,11 @@ describe('ChatModel streaming', () => {
         );
 
         const observableRegistry = AtomRegistry.make();
-        const chatModel = new ChatModel(
+        const chatModel = new LiveChatModel(
           session,
           yield* makeTestRuntime,
           feed,
-          yield* makeStubSpaceLayer({
-            getSession: () => Effect.succeed(gated),
-            hydrate: () => Effect.void,
-          }),
+          yield* makeStubSpaceLayer(AgentService.serviceFromHandles(() => Effect.succeed(gated))),
           { chat: Ref.make(chat), observableRegistry },
         );
 
@@ -238,7 +226,7 @@ describe('ChatModel streaming', () => {
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         // The chat model resolves its agent session from the chat it runs on.
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -251,15 +239,12 @@ describe('ChatModel streaming', () => {
           traceMessage([partialBlockEvent(messageId, 'Hello', true)]),
         ];
         const stubSession = yield* makeStubSession(chat, feed, batches);
-        const stubAgentService: AgentService.Service = {
-          getSession: () => Effect.succeed(stubSession),
-          hydrate: () => Effect.void,
-        };
+        const stubAgentService: Agent.ServiceApi = AgentService.serviceFromHandles(() => Effect.succeed(stubSession));
         const spaceLayer = yield* makeStubSpaceLayer(stubAgentService);
 
         const observableRegistry = AtomRegistry.make();
         const chatModelRuntime = yield* makeTestRuntime;
-        const chatModel = new ChatModel(session, chatModelRuntime, feed, spaceLayer, {
+        const chatModel = new LiveChatModel(session, chatModelRuntime, feed, spaceLayer, {
           chat: Ref.make(chat),
           observableRegistry,
         });
@@ -308,7 +293,7 @@ describe('ChatModel streaming', () => {
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -326,11 +311,11 @@ describe('ChatModel streaming', () => {
         ];
         const stubSession = yield* makeStubSession(chat, feed, batches);
         const observableRegistry = AtomRegistry.make();
-        const chatModel = new ChatModel(
+        const chatModel = new LiveChatModel(
           session,
           yield* makeTestRuntime,
           feed,
-          yield* makeStubSpaceLayer({ getSession: () => Effect.succeed(stubSession), hydrate: () => Effect.void }),
+          yield* makeStubSpaceLayer(AgentService.serviceFromHandles(() => Effect.succeed(stubSession))),
           { chat: Ref.make(chat), observableRegistry },
         );
 
@@ -424,16 +409,16 @@ const quiesce = Effect.promise(
 );
 
 /**
- * Stub {@link AgentService.Session} whose ephemeral stream replays a scripted batch sequence.
+ * Stub {@link AgentService.SessionHandle} whose ephemeral stream replays a scripted batch sequence.
  * `waitForCompletion` resolves only after the stream has been fully delivered, mirroring the real
  * session's turn-settles-after-streaming ordering.
  */
 const makeStubSession = (
-  chat: Chat.Chat,
+  chat: Agent.Session,
   feed: Feed.Feed,
   batches: Trace.Message[],
   options: { running?: boolean } = {},
-): Effect.Effect<AgentService.Session, never, never> =>
+): Effect.Effect<AgentService.SessionHandle, never, never> =>
   Effect.gen(function* () {
     const done = yield* Deferred.make<void>();
     return {
@@ -453,15 +438,15 @@ const makeStubSession = (
 
 /** Stub session whose stream pauses between the two batches; `release` resumes delivery. */
 const makeGatedSession = (
-  chat: Chat.Chat,
+  chat: Agent.Session,
   feed: Feed.Feed,
   before: Trace.Message[],
   after: Trace.Message[],
-): Effect.Effect<{ session: AgentService.Session; release: Effect.Effect<void> }, never, never> =>
+): Effect.Effect<{ session: AgentService.SessionHandle; release: Effect.Effect<void> }, never, never> =>
   Effect.gen(function* () {
     const gate = yield* Deferred.make<void>();
     const done = yield* Deferred.make<void>();
-    const session: AgentService.Session = {
+    const session: AgentService.SessionHandle = {
       chat,
       feed,
       getContext: () => Effect.succeed([]),

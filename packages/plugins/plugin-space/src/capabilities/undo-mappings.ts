@@ -35,6 +35,7 @@ export default Capability.makeModule(
             objects: output.objects,
             parentCollection: output.parentCollection,
             indices: output.indices,
+            containerSlots: output.containerSlots,
             wasActive: output.wasActive,
           }),
           // Read off the output: the input names the entities either directly or by reference, and

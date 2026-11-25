@@ -6,13 +6,12 @@ import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
 import * as Evaluator from '@dxos/brain/Evaluator';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -318,7 +317,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
       operationHandlers: AgentOperationHandlerSet,
       types: [
         Agent.Agent,
-        Chat.Chat,
+        Agent.Session,
         Skill.Skill,
         Feed.Feed,
         Text.Text,
@@ -340,7 +339,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
 );
 
 /** The quotes of the facts the agent's brain holds from a chat, in the order their messages were said. */
-const recordedQuotes = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat) {
+const recordedQuotes = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Agent.Session) {
   const brainService = yield* BrainService.BrainService;
   const feed = yield* Database.load(chat.feed);
   const messages = yield* TrajectoryStore.messages(feed);
@@ -351,21 +350,21 @@ const recordedQuotes = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Ch
   return facts.flat().map(({ assertion }) => assertion.quote);
 });
 
-const texts = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const texts = Effect.fnUntraced(function* (chat: Agent.Session) {
   const feed = yield* Database.load(chat.feed);
   const messages = yield* TrajectoryStore.messages(feed);
   return messages.map((message) => Message.extractText(message));
 });
 
 /** Waits for the chat's current turn (e.g. one a relay woke) and its end-request hooks to finish. */
-const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
-  const session = yield* AgentService.getSession(chat);
+const settle = Effect.fnUntraced(function* (chat: Agent.Session) {
+  const session = yield* AgentService.bindSession(chat);
   yield* session.waitForCompletion();
 });
 
 /** Submits a prompt as `name` in the chat and waits for the turn, and its end-request hooks, to finish. */
-const say = Effect.fnUntraced(function* (chat: Chat.Chat, name: string, prompt: string) {
-  const session = yield* AgentService.getSession(chat);
+const say = Effect.fnUntraced(function* (chat: Agent.Session, name: string, prompt: string) {
+  const session = yield* AgentService.bindSession(chat);
   yield* session.submitPrompt(prompt, { sender: { name } });
   yield* session.waitForCompletion();
 });
@@ -409,7 +408,7 @@ describe('end-of-turn triggers', () => {
         );
         const { agent: agentRef } = yield* createLocalAgent('Kai');
         const agent = yield* Database.load(agentRef);
-        const richChat = yield* Agent.loadChat(agent);
+        const richChat = yield* Agent.loadSession(agent);
         if (!richChat) {
           expect.fail('The agent has no chat.');
           return;
@@ -664,7 +663,7 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
       operationHandlers: AgentOperationHandlerSet,
       types: [
         Agent.Agent,
-        Chat.Chat,
+        Agent.Session,
         Skill.Skill,
         Feed.Feed,
         Text.Text,

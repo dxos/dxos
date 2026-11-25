@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { type Obj, Ref } from '@dxos/echo';
 import { type Actor } from '@dxos/types';
 

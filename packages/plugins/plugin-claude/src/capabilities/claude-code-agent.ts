@@ -39,7 +39,7 @@ export default Capability.makeModule(
     return [
       Capability.contribute(AssistantCapabilities.Agent, { ...agent, ownModel: true }),
       Capability.contribute(
-        AssistantCapabilities.AgentProcess,
+        AssistantCapabilities.SessionProcess,
         ClaudeCodeProcess.make({
           ...options,
           mcpEndpoint: (connection) =>

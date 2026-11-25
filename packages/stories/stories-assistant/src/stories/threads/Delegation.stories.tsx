@@ -3,15 +3,26 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
+import { STORY_ARGS_UPDATED } from 'storybook/internal/core-events';
+import { addons } from 'storybook/preview-api';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { ScriptedScene } from '@dxos/ai/testing';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import type * as Chat from '@dxos/plugin-assistant/Chat';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 
-import { ThreadColumns } from '../../components/index.ts';
+import { ProjectPanel, RecordedReplay, type ReplayArgs, ThreadColumns } from '../../components/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, PLANS, SAVINGS_PROMPTS, Scripts, SIDE_QUESTION } from '../../scripts/index.ts';
-import { CalculatorSkill, createDecorators, storyParameters } from '../../testing/index.ts';
+import {
+  CalculatorSkill,
+  ReplayCache,
+  createDecorators,
+  launchProjectPlugins,
+  seedLaunchProject,
+  storyParameters,
+} from '../../testing/index.ts';
 
 type StoryArgs = {
   /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
@@ -35,7 +46,7 @@ type StoryArgs = {
  * write a document. See `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8, QA-4, QA-6).
  */
 const meta: Meta<StoryArgs> = {
-  title: 'stories/stories-assistant/threads/Subagents',
+  title: 'stories/stories-assistant/threads/Delegation',
   component: ThreadColumns,
   parameters: storyParameters,
   args: {
@@ -115,19 +126,25 @@ export const Scripted: Story = {
 //
 
 const launchKit: Story = {
+  // The project on the left, a column wide: its tasks, and the documents the subagents write.
+  render: (args) => (
+    <div className='flex dx-fill min-h-0'>
+      <ProjectPanel />
+      <div className='flex-1 min-w-0 h-full'>
+        <ThreadColumns {...args} />
+      </div>
+    </div>
+  ),
   decorators: createDecorators({
-    lazyPlugins: async () => {
-      const SpacePlugin = await import('@dxos/plugin-space/SpacePlugin');
-      // Files the documents the subagents create.
-      return { plugins: [SpacePlugin.make({})] };
-    },
+    onChatCreated: seedLaunchProject,
+    lazyPlugins: launchProjectPlugins,
     skills: [MarkdownSkill.key, PlanningSkill.key],
     scriptedModels: { scenes: { launchKit: Scripts.launchKit }, select: 'launchKit' },
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),
   args: {
     suggestions: [LAUNCH_REQUEST, SIDE_QUESTION],
-    // Open from the start, so the checklist is seen filling in as the agent plans and ticking off as subagents report.
+    // Open from the start, so the agent's checklist is seen ticking off as subagents report.
     defaultDrawer: 'tasks',
   },
 };
@@ -136,11 +153,13 @@ const launchKit: Story = {
  * Launch kit, scripted (offline), for a person or a recorded walkthrough to drive.
  *
  * Test:
- * 1. Click the chip that asks for the Composer 1.0 launch kit: the task list above the prompt fills with four tasks,
- *    a column opens beside the chat for each of the four documents, and the chat's own column stays where it was.
- * 2. Scroll the strip sideways to reach the columns past the edge.
- * 3. Click the chip that asks which day to launch: the chat answers while the subagents keep working.
- * 4. Wait: each column closes once its subagent reports, and the summary lands in the chat's column.
+ * 1. Look left: the project's task list holds the four launch tasks.
+ * 2. Click the chip that asks for the Composer 1.0 launch kit: a column opens beside the chat for each of the four
+ *    documents, and the chat's own column stays where it was.
+ * 3. Scroll the strip sideways to reach the columns past the edge.
+ * 4. Click the chip that asks which day to launch: the chat answers while the subagents keep working.
+ * 5. Wait: each column closes once its subagent reports, its document appears as a card under the project's tasks,
+ *    and the summary lands in the chat's column.
  */
 export const LaunchKit: Story = { ...launchKit };
 
@@ -165,4 +184,51 @@ export const LaunchKitScripted: Story = {
       await canvas.findAllByText(document, { exact: false });
     }
   },
+};
+
+/** What the recorded launch kit depends on; a change to any of it records the run again. */
+const launchKitReplay = {
+  scene: ScriptedScene.withoutDelays(Scripts.launchKit),
+  prompts: [LAUNCH_REQUEST, SIDE_QUESTION],
+  assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
+};
+
+const launchKitCache = new ReplayCache('threads/Delegation/LaunchKitReplay', launchKitReplay);
+
+/**
+ * The launch kit, scripted with no delays and run to its end, then stepped through one trajectory event at a time: the
+ * chat shows what the live chat showed when that event landed. The finished space is kept in IndexedDB, so a reload
+ * imports it rather than running again; the step and the bookmarks are story args, so they persist in the URL.
+ *
+ * Test:
+ * 1. Wait for the run to finish: the toolbar shows the last step and the chat shows the whole conversation.
+ * 2. Press ← and →, or the toolbar buttons: the thread grows and shrinks one event at a time.
+ * 3. Press Home: the thread empties; press End: it is whole again.
+ * 4. Bookmark a step, move away, and click its chip: the chat returns to it.
+ * 5. Reload the page: the replay opens at once, at the step and with the bookmarks from the URL.
+ * 6. Click Re-record: the recording is dropped and the run records again.
+ */
+export const LaunchKitReplay: StoryObj<ReplayArgs> = {
+  // Declared so Storybook reads them back from the URL, which only accepts args it has a control for.
+  argTypes: {
+    step: { control: { type: 'number', min: 0 } },
+    bookmarks: { control: 'object' },
+  },
+  // Tells the manager the new args, which it writes to the URL, without updating them in the preview: an arg update
+  // reboots the whole harness (a new space), which would start the run again.
+  render: (args, { id }) => (
+    <RecordedReplay
+      cache={launchKitCache}
+      prompts={launchKitReplay.prompts}
+      initial={args}
+      onChange={(next) => addons.getChannel().emit(STORY_ARGS_UPDATED, { storyId: id, args: { ...args, ...next } })}
+    />
+  ),
+  decorators: createDecorators({
+    onChatCreated: seedLaunchProject,
+    lazyPlugins: launchProjectPlugins,
+    skills: [MarkdownSkill.key, PlanningSkill.key],
+    scriptedModels: { scenes: { launchKit: launchKitReplay.scene }, select: 'launchKit' },
+    assistantSettings: launchKitReplay.assistantSettings,
+  }),
 };

@@ -1,0 +1,172 @@
+---
+id: org.dxos.session.2026-11-25-board-command
+name: Board command and Composer task sync
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Board command and Composer task sync
+
+The session board has a `/board` command and can copy Composer tasks into its goals.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: The `/board` command runs the status board skill.
+  status: review
+  notes:
+    - Verbs are start, sync and build.
+```
+
+```mdl
+goal G-2: Board goals copy the status of Composer tasks.
+  status: review
+  blockedBy: [Q-1]
+  notes:
+    - A goal links to a task with the task field.
+    - The recordSession operation fails on the production server.
+    - The fallback reads sessions and tasks in each bound space.
+```
+
+```mdl
+goal G-3: Session board - /board command and Composer task sync
+  status: started
+  task: echo://BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/01M89B396BC09BFRAGB2S52FSH
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: Add the board command and the Composer task sync.
+  ref: dxos/dxos#14683
+  status: landing
+  goals: [G-1, G-2]
+```
+
+## Changelog
+
+```mdl
+question Q-1: Do you want a real test of the sync?
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: This session has no Composer record, so no task is assigned to it.
+  options:
+    - Yes: record this session in the default space, then assign a task to it.
+    - No: keep the unit tests as the proof.
+```
+
+```mdl
+question Q-2: Do you want the PR ready for review?
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: The draft checks pass. Ready adds the browser, storybook and e2e suites.
+  options:
+    - Yes: mark it ready.
+    - No: keep it as a draft.
+```
+
+```mdl
+decision D-1: Yes. Make a task in Composer and assign it to this session.
+  date: 2026-11-25
+  by: user:dmaretskyi
+  answers: Q-1
+```
+
+```mdl
+decision D-2: Do not ask about process. The agent decides when the PR is ready.
+  date: 2026-11-25
+  by: user:dmaretskyi
+  answers: Q-2
+```
+
+## Timeline
+
+```mdl
+event T-1: The session started.
+  date: 2026-11-25T11:00Z
+```
+
+```mdl
+event T-2: Opened [PR-1] as a draft.
+  date: 2026-11-25T11:35Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-3: All draft checks on [PR-1] pass.
+  date: 2026-11-25T11:45Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-4: The sync found no Composer record for this session.
+  date: 2026-11-25T11:55Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-5: [G-3] is a Composer task in Claude Code Integration, assigned to this session.
+  date: 2026-11-25T12:33Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-6: The sync copied [G-3] from Composer through the fallback path.
+  date: 2026-11-25T12:35Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-7: The page shows Composer tasks in a section of their own.
+  date: 2026-11-25T12:45Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-8: Each task row has a button that opens the task in Composer.
+  date: 2026-11-25T13:05Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-9: The skill now forbids questions about process.
+  date: 2026-11-25T13:06Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-10: Task links open in preview.composer.space.
+  date: 2026-11-25T13:10Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-11: [PR-1] is ready for review, and auto-merge is on.
+  date: 2026-11-25T13:12Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-12: The sync skips tasks with no echo URI and merges many files in one pull.
+  date: 2026-11-25T13:45Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-13: The merge queue removed [PR-1] after two Subagents story tests failed.
+  date: 2026-11-25T13:52Z
+  by: agent:claude-code
+```

@@ -3,7 +3,7 @@
 //
 
 import { type AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database } from '@dxos/echo';
 
@@ -26,7 +26,7 @@ export type SlashCommand = {
 /** `invoke` is the caller's own invoker, so a command's effect goes through the verb itself. */
 export type SlashCommandContext = {
   db: Database.Database;
-  chat: Chat.Chat;
+  chat: Agent.Session;
   invoke: OperationInvoke;
   /** The conversation's bindings, for a command that changes what is in context (e.g. loading a skill). */
   binder?: AiContext.Binder;

@@ -11,9 +11,9 @@ import { type IncomingMessage, type ServerResponse, createServer } from 'node:ht
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { TrajectoryStore } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
-import type * as AgentService from '@dxos/compute/AgentService';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, type Feed, type Registry } from '@dxos/echo';
@@ -251,7 +251,7 @@ export const answerPermissions = ({
   sessions,
   decide,
 }: {
-  chat: Chat.Chat;
+  chat: Agent.Session;
   feed: Feed.Feed;
   sessions: AcpAgent.Sessions;
   decide: (title: string) => Decision;
@@ -298,7 +298,7 @@ export const TURN_TIMEOUT = 240_000;
 
 /** Sends `prompt` and waits for the turn it starts to end, returning everything the agent said in it. */
 export const turn = Effect.fnUntraced(function* (
-  session: AgentService.Session,
+  session: AgentService.SessionHandle,
   prompt: string,
   timeout: number = TURN_TIMEOUT,
 ) {

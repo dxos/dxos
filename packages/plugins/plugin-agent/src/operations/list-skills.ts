@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof AgentOperation.ListSkills> = AgentOp
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef, chat: chatRef }) {
       const agent = yield* Database.load(agentRef).pipe(Effect.orDie);
-      const chat = chatRef ? yield* Database.load(chatRef).pipe(Effect.orDie) : yield* Agent.loadChat(agent);
+      const chat = chatRef ? yield* Database.load(chatRef).pipe(Effect.orDie) : yield* Agent.loadSession(agent);
       if (!chat) {
         return { skills: [] };
       }

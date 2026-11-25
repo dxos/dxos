@@ -23,8 +23,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { type AiContext } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -68,7 +68,7 @@ export type ChatPromptProps = Merge<
     settings?: boolean;
     expandable?: boolean;
     db?: Database.Database;
-    chat?: Chat.Chat;
+    chat?: Agent.Session;
     /** Undefined while the chat model is still opening: the prompt takes text but holds it until then. */
     chatModel?: ChatModel;
     /**
@@ -329,7 +329,7 @@ export const ChatPrompt = ({
   );
 
   // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
-  // queued behind the running turn rather than dropped (`Chat.Root` sends it through the chat model's
+  // queued behind the running turn rather than dropped (`Agent.Root` sends it through the chat model's
   // outbox, which queues it while the agent is busy).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -443,4 +443,4 @@ export const ChatPrompt = ({
   );
 };
 
-ChatPrompt.displayName = 'Chat.Prompt';
+ChatPrompt.displayName = 'Agent.Prompt';

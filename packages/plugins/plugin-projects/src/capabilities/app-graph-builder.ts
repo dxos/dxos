@@ -15,7 +15,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
@@ -264,7 +264,7 @@ export const createProjectChatsChildrenExtension = Effect.fnUntraced(function* (
       const fixed = get(readOnly);
       return Effect.succeed(
         children
-          .filter(Obj.instanceOf(Chat.Chat))
+          .filter(Obj.instanceOf(Agent.Session))
           .map((chat) =>
             AppNode.makeObject({ get, db, object: chat, navigable: true, draggable: !fixed, droppable: !fixed }),
           )
@@ -331,7 +331,7 @@ export const createProjectActionExtension = Effect.fnUntraced(function* () {
               const spaceId = db.spaceId;
               const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {}, { spaceId });
               // Parent edge before the add: it files the chat under the project, not the space root.
-              Chat.linkCompanion({ chat, subject: project });
+              Agent.linkCompanion({ session: chat, subject: project });
               yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId });
               yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
             }),

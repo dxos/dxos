@@ -22,8 +22,8 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing/index.ts';
-import { AGENT_PROCESS_KEY } from './agent-process.ts';
 import * as AgentService from './AgentService.ts';
+import { SESSION_PROCESS_KEY } from './session-process.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -146,7 +146,7 @@ const TestLayer = AssistantTestLayer({
 /** The agent process serving the session's chat. */
 const agentProcess = Effect.fnUntraced(function* (session: { chat: Obj.Unknown }) {
   const processManager = yield* ProcessManager.ProcessManagerService;
-  const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: AGENT_PROCESS_KEY });
+  const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: SESSION_PROCESS_KEY });
   return handle;
 });
 

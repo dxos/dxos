@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -11,7 +12,7 @@ import { AiContext } from '@dxos/assistant';
 import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Trace from '@dxos/compute/Trace';
@@ -57,7 +58,7 @@ const captureSpace = async ({ space }: { space: Space }) => {
 };
 
 // Read directly rather than through the index, which lags objects seeded during activation.
-let storyChat: Chat.Chat | undefined;
+let storyChat: Agent.Session | undefined;
 
 /**
  * The URI of the checklist task titled `title`, resolved when the scripted turn is emitted:
@@ -66,7 +67,7 @@ let storyChat: Chat.Chat | undefined;
  * as the string the model is shown, and the envelope form fails its decoding.
  */
 const checklistRef = (title: string): string => {
-  const task = storyChat && Chat.resolveTasks(storyChat).find((task) => task.title === title);
+  const task = storyChat && Agent.resolveTasks(storyChat).find((task) => task.title === title);
   if (!task) {
     throw new Error(`No checklist task titled "${title}".`);
   }
@@ -74,7 +75,7 @@ const checklistRef = (title: string): string => {
 };
 
 /** Captures the chat the decorator created, so {@link checklistRef} can read its checklist. */
-const captureChat = async ({ chat }: { chat: Chat.Chat }) => {
+const captureChat = async ({ chat }: { chat: Agent.Session }) => {
   storyChat = chat;
 };
 
@@ -85,7 +86,7 @@ const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
     if (!storySpace) {
       return [];
     }
-    [chat] = await storySpace.db.query(Filter.type(Chat.Chat)).run();
+    [chat] = await storySpace.db.query(Filter.type(Agent.Session)).run();
   }
   if (!chat) {
     return [];
@@ -105,7 +106,7 @@ const seedProjectTask = async ({
   binder,
 }: {
   db: Database.Database;
-  chat: Chat.Chat;
+  chat: Agent.Session;
   binder: AiContext.Binder;
 }) => {
   storyChat = chat;
@@ -115,10 +116,12 @@ const seedProjectTask = async ({
     project.taskSet = Ref.make(taskSet);
   });
 
-  const task = Chat.addTask(db, chat, POEM_TASK_TITLE, {
-    status: 'todo',
-    assignee: { name: 'Rich', role: 'user' },
-  });
+  const task = Effect.runSync(
+    Agent.addTask(chat, POEM_TASK_TITLE, {
+      status: 'todo',
+      assignee: { name: 'Rich', role: 'user' },
+    }).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+  );
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task)];
   });
@@ -221,7 +224,7 @@ const EXECUTABLE_TASKS = [
   },
 ];
 
-const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: Chat.Chat }) => {
+const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: Agent.Session }) => {
   storyChat = chat;
   // `dependencies` are 1-based ordinals (the numbering the checklist and UI speak), so they can
   // only point at earlier entries.
@@ -231,7 +234,13 @@ const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: 
       .map((ordinal) => tasks[ordinal - 1])
       .filter((dep) => dep !== undefined)
       .map((dep) => Ref.make(dep));
-    tasks.push(Chat.addTask(db, chat, title, dependsOn.length > 0 ? { dependsOn } : {}));
+    tasks.push(
+      Effect.runSync(
+        Agent.addTask(chat, title, dependsOn.length > 0 ? { dependsOn } : {}).pipe(
+          Effect.provideService(Database.Service, Database.makeService(db)),
+        ),
+      ),
+    );
   }
 
   await db.flush();
@@ -325,7 +334,7 @@ export const WithWebSearch: Story = {
 };
 
 /**
- * Chat over a pre-seeded checklist: `Chat.TaskList` renders the durable tasks between the
+ * Chat over a pre-seeded checklist: `Agent.TaskList` renders the durable tasks between the
  * thread and the prompt from the first frame, status-grouped without headings.
  */
 export const WithTasks: Story = {
@@ -343,7 +352,11 @@ export const WithTasks: Story = {
         { title: 'Update the price list', status: 'todo' },
       ];
       for (const { title, status } of seed) {
-        Chat.addTask(db, chat, title, { status });
+        Effect.runSync(
+          Agent.addTask(chat, title, { status }).pipe(
+            Effect.provideService(Database.Service, Database.makeService(db)),
+          ),
+        );
       }
       await db.flush();
     },

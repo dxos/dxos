@@ -8,8 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import * as Agent from '@dxos/assistant/Agent';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import { Fact, MemoryQuery, MemoryService, Subscription } from '@dxos/echo-memory';
 
 import { BrainService } from '#types';
@@ -31,15 +30,13 @@ export type MakeOptions = {
 
 /** Wakes a chat by submitting the prompt to its session through `agents`, which runs the turn locally or on EDGE. */
 export const wakeVia =
-  (agents: AgentService.Service): BrainService.Service['wake'] =>
+  (agents: Agent.ServiceApi): BrainService.Service['wake'] =>
   ({ chat, prompt, sender }) =>
     agents
       // The chat's own location, else an agent chat on EDGE would wake a second, local session.
-      .getSession(chat, { location: Agent.chatLocation(chat) })
+      .open(chat, { location: Agent.sessionLocation(chat) })
       .pipe(
-        Effect.flatMap((session) =>
-          session.submitPrompt(BrainService.wakeBlocks(prompt), sender ? { sender } : undefined),
-        ),
+        Effect.andThen(agents.submitPrompt(chat, BrainService.wakeBlocks(prompt), sender ? { sender } : undefined)),
       );
 
 /**
@@ -161,11 +158,11 @@ export const make = (
 /** {@link make} as a layer over the host's `AgentService` and the space's `MemoryService`. */
 export const layer = (
   options?: Omit<MakeOptions, 'wake'>,
-): Layer.Layer<BrainService.BrainService, never, AgentService.AgentService | MemoryService.MemoryService> =>
+): Layer.Layer<BrainService.BrainService, never, Agent.Service | MemoryService.MemoryService> =>
   Layer.effect(
     BrainService.BrainService,
     Effect.gen(function* () {
-      const agents = yield* AgentService.AgentService;
+      const agents = yield* Agent.Service;
       const memory = yield* MemoryService.MemoryService;
       return make(memory, { ...options, wake: wakeVia(agents) }).service;
     }),

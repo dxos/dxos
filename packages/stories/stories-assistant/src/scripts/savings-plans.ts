@@ -44,8 +44,8 @@ const agent = ScriptedScene.conversation('agent', [
   ScriptedScene.turn(
     'assistant',
     [
-      ScriptedScene.reasoning('Each plan is independent, so each can be worked out by a subagent in parallel.'),
-      ScriptedScene.text('I will hand each plan to a subagent and compare their results.'),
+      ScriptedScene.reasoning('Each plan is independent, so each can be worked out by a thread in parallel.'),
+      ScriptedScene.text('I will hand each plan to a thread and compare their results.'),
       ...PLANS.map((plan) =>
         ScriptedScene.toolCall('thread_delegate', { task: taskOf(plan), purpose: purposeOf(plan) }),
       ),

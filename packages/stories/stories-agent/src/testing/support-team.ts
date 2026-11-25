@@ -3,7 +3,7 @@
 //
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';

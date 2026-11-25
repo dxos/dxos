@@ -9,8 +9,7 @@ import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -29,7 +28,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
   types: [
     Agent.Agent,
-    Chat.Chat,
+    Agent.Session,
     Skill.Skill,
     Feed.Feed,
     Text.Text,
@@ -57,7 +56,7 @@ describe('EnsureSessionChat', () => {
           instructions: 'Greet people.',
         });
         const agent = yield* Database.load(agentRef);
-        const primary = yield* Agent.loadChat(agent);
+        const primary = yield* Agent.loadSession(agent);
         yield* Database.flush();
 
         const first = yield* Operation.invoke(AgentOperation.EnsureSessionChat, {
@@ -101,7 +100,7 @@ describe('EnsureSessionChat', () => {
         expect(binds.flatMap(({ objects }) => objects.map(({ uri }) => uri))).toContain(first.chat.uri);
 
         // A session chat never shadows the agent's primary chat.
-        expect((yield* Agent.loadChat(agent))?.id).toBe(primary?.id);
+        expect((yield* Agent.loadSession(agent))?.id).toBe(primary?.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

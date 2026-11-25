@@ -6,11 +6,10 @@ import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -48,7 +47,7 @@ const LiveTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       types: [
         Agent.Agent,
-        Chat.Chat,
+        Agent.Session,
         Skill.Skill,
         Feed.Feed,
         Text.Text,
@@ -82,8 +81,8 @@ const setup = Effect.fnUntraced(function* () {
 });
 
 /** Submits a prompt as Bob and waits for the turn and its end-of-turn hooks. */
-const say = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string | ContentBlock.Any[]) {
-  const session = yield* AgentService.getSession(chat);
+const say = Effect.fnUntraced(function* (chat: Agent.Session, prompt: string | ContentBlock.Any[]) {
+  const session = yield* AgentService.bindSession(chat);
   yield* session.submitPrompt(prompt, { sender: { name: BOB.name } });
   yield* session.waitForCompletion();
 });
@@ -93,7 +92,7 @@ const statement = ({ assertion: { predicate, object } }: Fact.Fact): string =>
   `${predicate} ${object.kind === 'entity' ? (object.label ?? object.entity) : object.literal}`.toLowerCase();
 
 /** The names of the tools the agent called in the chat. */
-const toolCalls = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const toolCalls = Effect.fnUntraced(function* (chat: Agent.Session) {
   const feed = yield* Database.load(chat.feed);
   return (yield* TrajectoryStore.messages(feed)).flatMap(({ blocks }) =>
     blocks.flatMap((block) => (block._tag === 'toolCall' ? [block.name] : [])),

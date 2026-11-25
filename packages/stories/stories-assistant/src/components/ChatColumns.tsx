@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
@@ -22,22 +22,25 @@ import { useThreadModel } from './hooks.ts';
 
 type ChatColumnProps = {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   /** The chat's place in the strip, which decides what its menu offers. */
   index: number;
   count: number;
   onMove: (id: string, index: number) => void;
-  onDelete: (chat: AssistantChat.Chat) => void;
-};
+  onDelete: (chat: Agent.Session) => void;
+} & ChatColumnsProps;
 
 /** One chat with a chat model of its own, so a turn keeps running after the reader moves to another column. */
-const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProps) => {
+const ChatColumn = ({ db, chat, index, count, onMove, onDelete, suggestions, defaultDrawer }: ChatColumnProps) => {
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
   const chatModel = useThreadModel(db, chat);
   const [name] = useObject(chat, 'name');
   // Sending before a new chat reaches the database would leave the agent unable to resolve it.
   const handleSubmit = useCallback(() => db.flush(), [db]);
+  // One chip at a time, since a later prompt only makes sense once the earlier one is under way.
+  const [sent, setSent] = useState(0);
+  const handleSelect = useCallback(() => setSent((count) => count + 1), []);
   const menu = useMenuBuilder(
     () =>
       MenuBuilder.make()
@@ -75,9 +78,18 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
   }
 
   return (
-    <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit}>
+    <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit} defaultDrawer={defaultDrawer}>
       <ChatPlane.Column value={chat.id}>
-        <ChatPlane.Cell menu={menu} title={name ?? `Chat ${index + 1}`}>
+        <ChatPlane.Cell
+          menu={menu}
+          title={
+            // Named as the agent's thread rows name what they stand for, so a session reads as one at a glance.
+            <span className='flex min-w-0 items-center gap-2'>
+              <span className='truncate'>{name ?? `Chat ${index + 1}`}</span>
+              <span className='shrink-0 text-xs text-fg-muted'>session</span>
+            </span>
+          }
+        >
           <Panel.Body asChild>
             <Chat.Content>
               <Chat.Thread tailLines={4} />
@@ -86,6 +98,7 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
         </ChatPlane.Cell>
         <ChatPlane.Prompt>
           <Chat.Activity />
+          {suggestions && <Chat.Suggestions suggestions={suggestions.slice(sent, sent + 1)} onSelect={handleSelect} />}
           <Chat.Prompt {...chatProps} outline preset={preset?.id} />
         </ChatPlane.Prompt>
       </ChatPlane.Column>
@@ -93,21 +106,30 @@ const ChatColumn = ({ db, chat, index, count, onMove, onDelete }: ChatColumnProp
   );
 };
 
+export type ChatColumnsProps = {
+  /** Prompts offered as chips above the first chat's composer, one at a time, in the order they are meant to be sent. */
+  suggestions?: readonly string[];
+  /** The drawer open above the first chat's prompt at the start, e.g. its task list. */
+  defaultDrawer?: Chat.RootProps['defaultDrawer'];
+  /** Where the strip rests the selected column: centered (the default), or from the start edge. */
+  align?: ChatPlane.RootProps['align'];
+};
+
 /**
  * Every chat in the space as a column of its own: the selected chat rests at the center of the strip with its prompt
  * beneath it, a new chat is added at either end, and a column is dragged, or moved from its menu, to reorder.
  */
-export const ChatColumns = () => {
+export const ChatColumns = ({ suggestions, defaultDrawer, align }: ChatColumnsProps) => {
   const [space] = useSpaces();
   const db = space?.db;
-  const chats = useQuery(db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(db, Filter.type(Agent.Session));
   const { invokePromise } = Hooks.useOperationInvoker();
 
   // Ids are time-ordered, so a chat lands at the end of the strip unless it was added at the start or dragged.
   const [order, setOrder] = useState<readonly string[]>([]);
   const ordered = useMemo(() => {
     const sorted = chats.toSorted((a, b) => a.id.localeCompare(b.id));
-    const position = ({ id }: AssistantChat.Chat) => {
+    const position = ({ id }: Agent.Session) => {
       const index = order.indexOf(id);
       return index === -1 ? order.length : index;
     };
@@ -123,6 +145,8 @@ export const ChatColumns = () => {
     lastIndexRef.current = found;
   }
   const current = ordered.at(index);
+  // The oldest chat, wherever it has been moved, is the one the story's prompts and drawer belong to.
+  const firstId = useMemo(() => chats.map(({ id }) => id).toSorted()[0], [chats]);
 
   const handleAdd = useCallback(
     async (side: ChatPlane.Side) => {
@@ -163,7 +187,7 @@ export const ChatColumns = () => {
     [ordered],
   );
 
-  const handleDelete = useCallback((chat: AssistantChat.Chat) => db?.remove(chat), [db]);
+  const handleDelete = useCallback((chat: Agent.Session) => db?.remove(chat), [db]);
 
   if (!db || !current) {
     return null;
@@ -171,7 +195,13 @@ export const ChatColumns = () => {
 
   return (
     <Dnd.Root>
-      <ChatPlane.Root value={current.id} onValueChange={setCurrentId} onAdd={handleAdd} onMove={handleMove}>
+      <ChatPlane.Root
+        value={current.id}
+        align={align}
+        onValueChange={setCurrentId}
+        onAdd={handleAdd}
+        onMove={handleMove}
+      >
         <ChatPlane.Viewport>
           <ChatPlane.Add side='start' />
           <ChatPlane.Columns items={ordered}>
@@ -187,6 +217,7 @@ export const ChatColumns = () => {
                     count={ordered.length}
                     onMove={handleMove}
                     onDelete={handleDelete}
+                    {...(id === firstId ? { suggestions, defaultDrawer } : {})}
                   />
                 )
               );

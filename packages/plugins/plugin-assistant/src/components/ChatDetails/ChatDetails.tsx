@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useMemo } from 'react';
 
 import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { type AiContext } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import type * as Skill from '@dxos/compute/Skill';
 import { type Database, Obj } from '@dxos/echo';
 import { Listbox } from '@dxos/react-ui-list';
@@ -129,7 +129,7 @@ export const ChatContextSection = ({ db, context }: ChatContextSectionProps) => 
 };
 
 export type ChatContextPanelProps = {
-  chat: Chat.Chat;
+  chat: Agent.Session;
   db?: Database.Database;
   context?: AiContext.Binder;
 };

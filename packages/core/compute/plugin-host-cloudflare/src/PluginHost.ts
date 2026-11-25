@@ -154,19 +154,16 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
         pid,
         idSeed: scope.idSeed,
       });
-      const contextual = RequestContext.withConversation(
-        RequestContext.withCancellation(
-          withCapabilities(
-            HostServices.withHostServices(
-              withOperations,
-              scope.services,
-              activation.capabilities.getAll(Capabilities.HostServiceAdapter),
-            ),
-            activation.capabilities,
+      const contextual = RequestContext.withCancellation(
+        withCapabilities(
+          HostServices.withHostServices(
+            withOperations,
+            scope.services,
+            activation.capabilities.getAll(Capabilities.HostServiceAdapter),
           ),
-          cancellation.signal,
+          activation.capabilities,
         ),
-        scope.conversation,
+        cancellation.signal,
       );
       // Inside the try: it serializes the operation's schema, and a throw must still dispose the cancel listener.
       const func = wrapFunctionHandler(contextual, {

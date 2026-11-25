@@ -10,8 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
@@ -89,7 +88,7 @@ export default Capability.makeModule(() =>
         id: 'chat',
         filter: AppSurface.object(
           AppSurface.Article,
-          Chat.Chat,
+          Agent.Session,
           (data) => data.variant !== ASSISTANT_COMPANION_VARIANT,
         ),
         component: ChatArticle,
@@ -119,7 +118,7 @@ export default Capability.makeModule(() =>
           AppSurface.Article,
           (data) =>
             Obj.isObject(data.companionTo) &&
-            (Obj.instanceOf(Chat.Chat, data.subject) || isUnprovisionedAssistantCompanion(data)),
+            (Obj.instanceOf(Agent.Session, data.subject) || isUnprovisionedAssistantCompanion(data)),
         ),
         component: ToolkitHooks.unlessReadOnly(ChatCompanion),
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
@@ -194,7 +193,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'card.chat',
-        filter: AppSurface.object(AppSurface.CardContent, Chat.Chat),
+        filter: AppSurface.object(AppSurface.CardContent, Agent.Session),
         component: ChatCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),

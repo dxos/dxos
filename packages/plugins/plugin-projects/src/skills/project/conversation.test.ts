@@ -5,11 +5,11 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture, ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -43,7 +43,7 @@ const entityId = (uri: string): string => {
 const TYPES = [
   Project.Project,
   Instructions.Instructions,
-  Chat.Chat,
+  Agent.Session,
   AiContext.Binding,
   Feed.Feed,
   Message.Message,
@@ -62,13 +62,13 @@ const seedProjectChat = Effect.fnUntraced(function* () {
 
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
-    Chat.make({
+    Agent.makeSession({
       name: `${PROJECT_NAME} chat`,
       feed: Ref.make(feed),
       instructions: Ref.make(instructions),
     }),
   );
-  Chat.linkCompanion({ chat, subject: project });
+  Agent.linkCompanion({ session: chat, subject: project });
   Obj.setParent(feed, chat);
 
   const skill = yield* Database.add(ProjectSkill.make());
@@ -112,7 +112,7 @@ describe('Project conversation', () => {
             { parts: [text('Filed the document into the project.')] },
           );
 
-          const session = yield* AgentService.getSession(chat);
+          const session = yield* AgentService.bindSession(chat);
           yield* session.submitPrompt('File the trip notes into the project.');
           yield* session.waitForCompletion();
 
@@ -145,7 +145,7 @@ describe('Project conversation', () => {
           function* ({ expect }) {
             const { project, chat, feed, doc } = yield* seedProjectChat();
 
-            const session = yield* AgentService.getSession(chat);
+            const session = yield* AgentService.bindSession(chat);
             yield* session.submitPrompt(
               'A document with trip notes is bound into this chat, alongside the project. ' +
                 "File that document into the project's artifacts, then confirm in one sentence.",

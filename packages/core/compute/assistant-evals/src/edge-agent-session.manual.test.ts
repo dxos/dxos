@@ -10,7 +10,7 @@ import { assert, describe, expect, test } from 'vitest';
 import { AgentService as AgentSessions } from '@dxos/agent-runtime';
 import { TrajectoryStore } from '@dxos/assistant';
 import { Config } from '@dxos/client';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Filter, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -111,9 +111,7 @@ const runPrompt = async (harness: Awaited<ReturnType<typeof setup>>['harness'], 
         .filter((text) => text.length > 0)
         .join('\n\n');
     }).pipe(
-      Effect.provide(
-        ServiceResolver.provide({ space: spaceId }, Database.Service, AgentService.AgentService, Registry.Service),
-      ),
+      Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, Agent.Service, Registry.Service)),
     ),
   );
 

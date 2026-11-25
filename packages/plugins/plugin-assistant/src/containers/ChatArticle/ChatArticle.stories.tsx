@@ -26,7 +26,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { AiContext } from '@dxos/assistant';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Skill from '@dxos/compute/Skill';
 import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -143,7 +143,7 @@ type StoryTurn = { prompt: string; reply: string; delay?: Duration.Input };
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: StoryTurn[];
-  /** Seed the chat's checklist, so the article renders its `Chat.TaskList`. */
+  /** Seed the chat's checklist, so the article renders its `Agent.TaskList`. */
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
@@ -238,7 +238,7 @@ const PromptSettled = () => {
 
 const DefaultStory = ({ debug, onSubmit, promptHost }: StoryArgs) => {
   const [space] = useSpaces();
-  const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
+  const [chat] = useQuery(space?.db, Filter.type(Agent.Session));
   if (!chat) {
     return <Loading />;
   }
@@ -270,7 +270,7 @@ const meta = {
           ClientPlugin.make({
             types: [
               Blob.Blob,
-              Chat.Chat,
+              Agent.Session,
               Connection.Connection,
               Feed.Feed,
               File.File,
@@ -289,9 +289,11 @@ const meta = {
                 const [space] = client.spaces.get();
                 yield* Effect.promise(() => space.waitUntilReady());
                 const feed = space.db.add(Feed.make());
-                const chat = space.db.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+                const chat = space.db.add(Agent.makeSession({ name: 'Test', feed: Ref.make(feed) }));
                 for (const { title, status } of tasks) {
-                  Chat.addTask(space.db, chat, title, { status });
+                  yield* Agent.addTask(chat, title, { status }).pipe(
+                    Effect.provideService(Database.Service, Database.makeService(space.db)),
+                  );
                 }
                 // The task list reads the rows through resolve-once ref atoms; load them so the
                 // story renders without waiting on a lazy resolution nothing triggers.
@@ -303,7 +305,7 @@ const meta = {
                   // Bind the conversation the way `CreateChat` binds a new chat's defaults, because
                   // holding tasks is not the same as working them: the planning skill's update-tasks
                   // tool and its end-request reminder both reach the checklist through
-                  // `Harness.getChat`, so without the chat in context the model gets the tool and
+                  // `Agent.currentSession`, so without the chat in context the model gets the tool and
                   // no list to apply it to.
                   const registry = yield* Capability.get(Capabilities.AtomRegistry);
                   const runtime = yield* Effect.context<Database.Service>().pipe(
@@ -371,7 +373,7 @@ export const Default: Story = {
 /**
  * The article's working tasks, and the disclosure that shows them.
  *
- * The checklist is `Chat.Prompt`'s own collapsible region rather than a sibling the article places,
+ * The checklist is `Agent.Prompt`'s own collapsible region rather than a sibling the article places,
  * so the toggle in the composer's action bar is the only thing that opens and closes it — this is
  * what asserts that wiring, since the button is not the collapsible's own trigger.
  */

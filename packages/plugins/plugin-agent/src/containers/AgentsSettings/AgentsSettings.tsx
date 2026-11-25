@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import { type Database, Filter, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';

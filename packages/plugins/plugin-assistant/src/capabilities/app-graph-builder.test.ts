@@ -11,9 +11,8 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
 import { Client } from '@dxos/client';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -29,7 +28,10 @@ describe('prompt extension', () => {
     const companion = (variant: string) => AppNode.makeCompanion({ variant, label: variant, icon: '', data: null });
     const agent = Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(Instructions.make({ text: '' })) });
     const hosts: [AppGraphNode.NodeArg<unknown>, boolean][] = [
-      [{ id: 'chat', type: 'test.chat', data: Chat.make({ feed: Ref.make(Feed.make()) }), properties: {} }, true],
+      [
+        { id: 'chat', type: 'test.chat', data: Agent.makeSession({ feed: Ref.make(Feed.make()) }), properties: {} },
+        true,
+      ],
       [{ id: 'agent', type: 'test.agent', data: agent, properties: {} }, true],
       [companion(ASSISTANT_COMPANION_VARIANT), true],
       [{ id: 'home', type: SpaceSchema.SPACE_HOME_NODE_TYPE, data: null, properties: {} }, true],
@@ -56,12 +58,12 @@ describe('prompt extension', () => {
 
 describe('chat section', () => {
   const setup = async (readOnly: boolean) => {
-    const client = await new Client({ types: [Chat.Chat, Feed.Feed] }).initialize();
+    const client = await new Client({ types: [Agent.Session, Feed.Feed] }).initialize();
     onTestFinished(() => client.destroy());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     await space.waitUntilReady();
-    const chat = space.db.add(Chat.make({ name: 'Published', feed: Ref.make(space.db.add(Feed.make())) }));
+    const chat = space.db.add(Agent.makeSession({ name: 'Published', feed: Ref.make(space.db.add(Feed.make())) }));
     await space.db.flush({ indexes: true });
 
     const root = await EffectEx.runPromise(
@@ -74,7 +76,7 @@ describe('chat section', () => {
     const extensions = await EffectEx.runPromise(createChatSectionExtensions(Atom.make(readOnly)));
     const graph = setupGraphBuilder({ extensions: [...root, ...extensions] });
     const groupId = GraphNode.qualifyId(GraphNode.RootId, space.id, GraphPath.GroupSegments.ai);
-    const sectionId = GraphNode.qualifyId(groupId, Type.getTypename(Chat.Chat));
+    const sectionId = GraphNode.qualifyId(groupId, Type.getTypename(Agent.Session));
     await graph.expand(GraphNode.RootId);
     await graph.expand(GraphNode.qualifyId(GraphNode.RootId, space.id));
     await expect

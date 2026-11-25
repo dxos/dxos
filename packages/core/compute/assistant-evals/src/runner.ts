@@ -21,10 +21,9 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
-import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
 import { FeedTraceSink } from '@dxos/compute-runtime';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -184,16 +183,16 @@ const runInstructions = <I>(
   spaceId: SpaceId,
   input: I,
   sessionChat?: boolean,
-  seededChat?: Ref.Ref<Chat.Chat>,
+  seededChat?: Ref.Ref<Agent.Session>,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
 
-      let chatRef: Ref.Ref<Chat.Chat> | undefined = seededChat;
+      let chatRef: Ref.Ref<Agent.Session> | undefined = seededChat;
       if (!chatRef && sessionChat) {
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), name: 'Eval Chat' }));
+        const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed), name: 'Eval Chat' }));
         yield* Database.flush();
         chatRef = Ref.make(chat);
       }
@@ -225,7 +224,7 @@ const runAgentSession = <I>(
   model: DXN.DXN,
   spaceId: SpaceId,
   input: I,
-  seededChat?: Ref.Ref<Chat.Chat>,
+  seededChat?: Ref.Ref<Agent.Session>,
   conversation?: Conversation<I>,
   transcript: Scorer.Turn[] = [],
 ) =>
@@ -252,10 +251,8 @@ const runAgentSession = <I>(
       const turn = (text: string, said = text) =>
         Effect.gen(function* () {
           transcript.push({ role: 'user', text: said });
-          // Re-read per step: a session whose process finished its turn hands the prompt to a new
-          // process, and waiting on the old one would return at once.
-          yield* (yield* AgentService.getSession(agent.chat)).submitPrompt(text);
-          yield* (yield* AgentService.getSession(agent.chat)).waitForCompletion();
+          yield* Agent.submitPrompt(agent.chat, text);
+          yield* Agent.waitForCompletion(agent.chat);
           const messages = yield* TrajectoryStore.messages(agent.feed);
           const reply = messages
             .slice(seen)
@@ -280,9 +277,7 @@ const runAgentSession = <I>(
       return reply.length > 0 ? reply : undefined;
     }).pipe(
       Effect.scoped,
-      Effect.provide(
-        ServiceResolver.provide({ space: spaceId }, Database.Service, AgentService.AgentService, Registry.Service),
-      ),
+      Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, Agent.Service, Registry.Service)),
     ),
   );
 
@@ -291,7 +286,7 @@ const runAgentSession = <I>(
  * tools then see the seeded chat and its state rather than a new one.
  */
 const sessionOnChat = (
-  chat: Chat.Chat,
+  chat: Agent.Session,
   skills: readonly Ref.Ref<Skill.Skill>[],
   objects: Ref.Ref<Obj.Unknown>[],
   model: DXN.DXN,
@@ -306,7 +301,7 @@ const sessionOnChat = (
         chat.session = { ...chat.session, model };
       });
     }
-    return yield* AgentService.getSession(chat);
+    return yield* AgentSessions.bindSession(chat);
   });
 
 /**
@@ -354,7 +349,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   plugins?: Plugin.Plugin[];
   /**
    * Provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work
-   * (e.g. the planning skill's `update-tasks` resolves its plan via `Harness.getChat`).
+   * (e.g. the planning skill's `update-tasks` resolves its plan via `Agent.currentSession`).
    */
   sessionChat?: boolean;
   /**
@@ -411,7 +406,7 @@ export interface CreateEvalRunnerOptions<I, O> {
 /** Entities a {@link CreateEvalRunnerOptions.seed} hook contributes to the run. */
 export type SeedResult = {
   objects?: Ref.Ref<Obj.Unknown>[];
-  chat?: Ref.Ref<Chat.Chat>;
+  chat?: Ref.Ref<Agent.Session>;
 };
 
 export type VariantConfig =
