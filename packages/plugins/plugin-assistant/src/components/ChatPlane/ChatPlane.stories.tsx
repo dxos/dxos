@@ -480,16 +480,16 @@ export const FourThreads: Story = {
 /** The strip's `scrollLeft` at each animation frame until `run` resolves. */
 const sampleScroll = async (viewport: HTMLElement, run: () => Promise<void>): Promise<number[]> => {
   const samples: number[] = [];
-  let sampling = true;
   const sample = () => {
     samples.push(viewport.scrollLeft);
-    if (sampling) {
-      requestAnimationFrame(sample);
-    }
+    frame = requestAnimationFrame(sample);
   };
-  requestAnimationFrame(sample);
-  await run();
-  sampling = false;
+  let frame = requestAnimationFrame(sample);
+  try {
+    await run();
+  } finally {
+    cancelAnimationFrame(frame);
+  }
   return samples;
 };
 
