@@ -24,6 +24,9 @@
       "path": "../../packages/ui/react-ui-list"
     },
     {
+      "path": "../../packages/ui/react-ui-menu"
+    },
+    {
       "path": "../../packages/ui/react-ui-task"
     },
     {
