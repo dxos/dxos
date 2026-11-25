@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
@@ -16,11 +17,14 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as TestingHarness from '@dxos/plugin-testing/Harness';
 
 import * as ProjectsPlugin from '#meta';
 import { ProjectCapabilities, ProjectOperation } from '#types';
+
+import * as ProjectSkill from '../skills/project/ProjectSkill.ts';
 
 await TestingHarness.preload({
   plugins: [
@@ -104,6 +108,41 @@ describe('ProjectOperation.Create', () => {
     const space = defaultSpace(harness);
     const projects = await space.db.query(Filter.type(Project.Project)).run();
     expect(projects.map((project) => project.name)).toEqual(['Voyage']);
+  });
+});
+
+// "Make this plan a project, with a task for each thing to plan" (Kai on preview, 2026-11-25): the model found the
+// project type and built the project and its task set by hand, which failed on the task set's required `milestones`.
+describe('making a project with tasks', () => {
+  test('the type lookup names the project skill, whose operations make the project and file its tasks', async ({
+    expect,
+  }) => {
+    await using harness = await setup();
+
+    const [type] = await harness.runPromise(
+      Operation.invoke(
+        SkillManagerSkill.Operations.QueryTypes,
+        { typenames: ['org.dxos.type.project'] },
+        { spaceId: spaceId(harness) },
+      ),
+    );
+    expect(type?.skills).toEqual([ProjectSkill.key]);
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: '[TEST] Driftwood offsite' }, { spaceId: spaceId(harness) }),
+    );
+    invariant(project.taskSet, 'Expected projects-create to make the task set.');
+    for (const title of ['Book the venue', 'Plan day two']) {
+      await harness.runPromise(
+        Operation.invoke(TaskOperation.CreateTask, { taskSet: project.taskSet, title }, { spaceId: spaceId(harness) }),
+      );
+    }
+
+    const taskSet = await project.taskSet.tryLoad();
+    invariant(taskSet, 'Expected the task set to load.');
+    const tasks = await Promise.all(taskSet.tasks.map((task) => task.tryLoad()));
+    expect(tasks.map((task) => task?.title)).toEqual(['Book the venue', 'Plan day two']);
+    expect(taskSet.milestones).toEqual([]);
   });
 });
 

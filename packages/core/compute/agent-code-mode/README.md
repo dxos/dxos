@@ -30,7 +30,7 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
    with their operations, the conversation's MCP tools, and its objects and instructions. No other
    skill, operation or type is listed.
 4. Calls the model. A text answer ends the request; an `eval` call runs in the sandbox and the loop
-   repeats, up to `maxTurns`.
+   repeats, up to `maxTurns` (default 25). Past it the model gets one call without tools to write its answer.
 
 ## The `eval` tool
 

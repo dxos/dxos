@@ -293,6 +293,10 @@ have something new to report: the hook cannot write the summary.
 - **`/project new <name>`** — `projects-create { name, spaceId }`, then
   `space-update-object { object: {"/": "echo:///<id>"}, properties: { status: 'active', description: '<one-line summary>' },
 spaceId }`. Report the new project id.
+  To make a project **with tasks** (e.g. "make this plan a project"), take `taskSet` from `projects-create`'s
+  returned `project` and call `tasks-create { taskSet, title }` once per task. Never build a project or its task
+  set yourself (`space-add-object`, or `make`/`Obj.make` in code): `projects-create` also makes the task set
+  (with its required `tasks` and `milestones`), the outline, the instructions and the artifacts collection.
 - **`/project tasks`** — `tasks-list-milestone { project: {"/": "echo:///<id>"}, spaceId }` plus
   `tasks-list { project: {"/": "echo:///<id>"}, includeSubtasks: true, spaceId }` for the active
   project; render each milestone with its derived done/total and the tasks filed under it.
@@ -388,6 +392,7 @@ spaceId }`. Report the new project id.
 | Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                        |
 | Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object.  |
 | Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.    |
+| Building a project or task set by hand                             | `projects-create`, then `tasks-create` with the returned `taskSet` for each task.             |
 | Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.    |
 | Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.        |
 | Asking "should I mark this done?" / "want me to update the task?"  | Just update it: the ledger is yours to keep current; say what changed if it matters.          |

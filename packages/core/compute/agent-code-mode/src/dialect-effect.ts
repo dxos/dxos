@@ -339,7 +339,8 @@ const renderEffectOperations = (operations: readonly SandboxOperation[]): string
   where it takes an object or a \`Ref<typename>\`, never an id or a URI string. A skill that spells a
   reference as a \`{"/": "echo:..."}\` envelope or a URI string is describing the tool form; this
   reference wins. Most of what an operation does to one object is a line of \`Obj\`/\`Database\`
-  code; prefer that.
+  code; prefer that. The exception is creating an object whose type lists \`skills\` (Query types): create it with
+  that skill's operation, which also makes the objects it owns.
 
   ${renderOperationList(operations)}
 `;
