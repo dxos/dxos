@@ -27,7 +27,7 @@ export type SyncResult = {
   updated: string[];
   /** Goal ids linked to a task the input did not contain; the input of `recordSession` holds open tasks only. */
   missing: string[];
-  /** Tasks left out because the input gave no `echo:` URI for them; a bare id names no space to link to. */
+  /** Tasks left out because the input gave no space-qualified `echo:` URI for them, so they have no link. */
   skipped: string[];
 };
 
@@ -66,9 +66,12 @@ export const readTasks = (json: unknown): ComposerTask[] | undefined => {
 /** The trailing object id of an `echo:` URI, so `echo:///<id>` and `echo://<space>/<id>` compare equal. */
 export const objectId = (uri: string | undefined): string | undefined => uri?.split('/').filter(Boolean).at(-1);
 
-/** The task's `echo:` URI; a bare `id` is not one, since the goal's `task:` must name the object's space. */
+/** `echo://<space>/<id>`: the goal links to the task in Composer, which needs the space the task lives in. */
+const SPACE_QUALIFIED = /^echo:\/\/[^/]+\/[^/]+$/;
+
+/** The task's space-qualified URI; a bare `id` and the local `echo:///<id>` form name no space, so neither counts. */
 const taskUri = (task: ComposerTask): string | undefined =>
-  [task.dxn, task['@uri']].find((uri) => uri?.startsWith('echo:'));
+  [task.dxn, task['@uri']].find((uri) => uri !== undefined && SPACE_QUALIFIED.test(uri));
 
 const goalStatus = (status: string | undefined): GoalStatus =>
   GOAL_STATUSES.find((value): value is GoalStatus => value === status) ?? 'todo';

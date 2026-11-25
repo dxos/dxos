@@ -375,7 +375,7 @@ const tasks = (files: readonly string[], sessionObjects: readonly string[]) => {
   report('added', result.added);
   report('updated', result.updated);
   report('not in the input (closed, or another session took it)', result.missing);
-  report('skipped, no echo: URI in the input', result.skipped);
+  report('skipped, no echo://<space>/<id> URI in the input', result.skipped);
   if (result.added.length + result.updated.length === 0) {
     console.log(`${relative(ROOT, source)}: no change`);
   }

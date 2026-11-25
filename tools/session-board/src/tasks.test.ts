@@ -32,11 +32,10 @@ describe('syncTasks', () => {
       { dxn: `echo://${SPACE}/01TASKA`, title: 'A', status: 'todo' },
       { dxn: `echo://${SPACE}/01TASKB`, title: 'B', status: 'todo' },
     ]);
-    // The local URI form names the same object as the qualified one.
-    const second = syncTasks(first.text, [{ '@uri': 'echo:///01TASKA', 'status': 'review' }]);
+    const second = syncTasks(first.text, [{ '@uri': `echo://${SPACE}/01TASKA`, 'status': 'review' }]);
     expect(second).toMatchObject({ added: [], updated: ['G-5'], missing: ['G-6'] });
     expect(parseSession(second.text).board?.goals.find(({ id }) => id === 'G-5')?.status).toBe('review');
-    expect(syncTasks(second.text, [{ '@uri': 'echo:///01TASKA', 'status': 'review' }]).updated).toEqual([]);
+    expect(syncTasks(second.text, [{ '@uri': `echo://${SPACE}/01TASKA`, 'status': 'review' }]).updated).toEqual([]);
   });
 
   test('links a goal to its task in Composer', ({ expect }) => {
@@ -55,8 +54,11 @@ describe('syncTasks', () => {
   });
 
   test('skips a task with no echo URI rather than writing a bare id', ({ expect }) => {
-    const result = syncTasks(SAMPLE_SESSION, [{ id: '01BARE', title: 'Bare' }]);
-    expect(result).toMatchObject({ added: [], skipped: ['Bare'] });
+    const result = syncTasks(SAMPLE_SESSION, [
+      { id: '01BARE', title: 'Bare' },
+      { '@uri': 'echo:///01LOCAL', 'title': 'Local' },
+    ]);
+    expect(result).toMatchObject({ added: [], skipped: ['Bare', 'Local'] });
     expect(parseSession(result.text).errors).toEqual([]);
   });
 
