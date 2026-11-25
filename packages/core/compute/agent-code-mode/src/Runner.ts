@@ -16,7 +16,7 @@ import type { Database } from '@dxos/echo';
 
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation } from './Dialect.ts';
+import type { Dialect, LookupOperation, SandboxOperation } from './Dialect.ts';
 import { type EvalToolkitOptions, evaluate } from './eval-tool.ts';
 import type * as Sandbox from './Sandbox.ts';
 
@@ -42,6 +42,8 @@ export type Options = {
   readonly skills?: readonly string[];
   /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
   readonly skillDocs?: Readonly<Record<string, string>>;
+  /** Finds an operation bound after the evaluation began; see `BindingsContext.lookupOperation`. */
+  readonly lookupOperation?: LookupOperation;
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
   /** Told which operations an evaluation ran; see `EvalToolkitOptions.onEvaluated`. */
@@ -91,6 +93,7 @@ export const make = (options: Options): Operation.ScriptRunner => {
           operations: options.operations,
           ...(options.skills !== undefined ? { skills: options.skills } : {}),
           ...(options.skillDocs !== undefined ? { skillDocs: options.skillDocs } : {}),
+          ...(options.lookupOperation !== undefined ? { lookupOperation: options.lookupOperation } : {}),
           ...(options.onEvaluated !== undefined ? { onEvaluated: options.onEvaluated } : {}),
           ...(options.toolCallId !== undefined ? { toolCallId: options.toolCallId } : {}),
           ...(maxOutput !== undefined ? { maxOutput } : {}),

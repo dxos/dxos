@@ -36,6 +36,9 @@ export type SandboxField = FieldDescription;
 /** A type the workspace has registered, as the model is told about it. */
 export type SandboxType = TypeDescription;
 
+/** An operation's definition by key, or `undefined` when no skill the conversation has bound offers it. */
+export type LookupOperation = (key: string) => Effect.Effect<Operation.Definition.Any | undefined>;
+
 /** What a dialect is handed to build its bindings: the ECHO runtime, the skills' operations, and the turn's printer. */
 export type BindingsContext = {
   /**
@@ -54,6 +57,12 @@ export type BindingsContext = {
    * `Dialect.skillInstructions`) rather than in the system prompt.
    */
   readonly skillDocs?: Readonly<Record<string, string>>;
+  /**
+   * Finds an operation by key that was not bound when the evaluation began, such as one of a skill the program has
+   * just enabled, so the program can call it without waiting for the next evaluation. In-process only: a function
+   * does not cross to another thread.
+   */
+  readonly lookupOperation?: LookupOperation;
   /** Appends a line to this call's output — the only channel back to the model. */
   readonly print: (...values: unknown[]) => void;
 };

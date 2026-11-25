@@ -29,7 +29,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { EffectDialect } from './dialect-effect.ts';
-import type { Dialect, SandboxOperation } from './Dialect.ts';
+import type { Dialect, LookupOperation, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
@@ -173,9 +173,24 @@ const runCodeModeTurn = ({
               const enabled = skills.filter(
                 (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
               );
-              const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(
-                ({ definition }) => !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition),
-              );
+              const callable = ({ definition }: SandboxOperation) =>
+                !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition);
+              const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(callable);
+              // A skill the program enables is bound in the context at once, so its operations are callable in the same
+              // evaluation; they are read from the context only when `Database.resolve` cannot otherwise answer a key.
+              const iterationServices = yield* Effect.context<never>();
+              const lookupOperation: LookupOperation = (key) =>
+                Effect.gen(function* () {
+                  yield* Effect.promise(() => session.context.sync());
+                  const bound = yield* projectOperations([lookups, ...session.context.getSkills()]);
+                  const wanted = key.replace(/^dxn:/, '');
+                  return bound
+                    .filter(callable)
+                    .find(({ definition }) => definition?.meta.key.replace(/^dxn:/, '') === wanted)?.definition;
+                }).pipe(
+                  Effect.provide(iterationServices),
+                  Effect.orElseSucceed(() => undefined),
+                );
               labelCall = labelEvalCall(operations);
               // A dialect that serves skill instructions on demand gets them here, and the prompt names the skills only.
               const skillDocs = dialect.skillInstructions
@@ -194,6 +209,7 @@ const runCodeModeTurn = ({
                 operations,
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
                 ...(skillDocs ? { skillDocs } : {}),
+                lookupOperation,
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
                 onEvaluated: evaluations.add,

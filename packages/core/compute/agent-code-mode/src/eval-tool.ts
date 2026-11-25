@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
 
 import { camelCase } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation } from './Dialect.ts';
+import type { Dialect, LookupOperation, SandboxOperation } from './Dialect.ts';
 import { formatPrinted } from './format.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -76,6 +76,8 @@ export type EvalToolkitOptions = {
   readonly skills?: readonly string[];
   /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
   readonly skillDocs?: Readonly<Record<string, string>>;
+  /** Finds an operation bound after the evaluation began; see `BindingsContext.lookupOperation`. */
+  readonly lookupOperation?: LookupOperation;
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
   /**
@@ -117,6 +119,7 @@ export const evaluate = Effect.fnUntraced(function* ({
   operations,
   skills,
   skillDocs,
+  lookupOperation,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
   onEvaluated,
@@ -141,6 +144,7 @@ export const evaluate = Effect.fnUntraced(function* ({
         operations: recordInvocations(operations, recorder),
         skills,
         skillDocs,
+        ...(lookupOperation !== undefined ? { lookupOperation } : {}),
         print: printer.print,
       },
       timeout,
