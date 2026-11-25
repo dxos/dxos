@@ -74,6 +74,10 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
   scope?: readonly string[];
   /** Runs on each task the footer creates, before it is shown; a scoped host uses it to bring the task into scope. */
   onTaskCreated?: (task: Task.Task) => Promise<void>;
+  /** Shows the filter toolbar in the header; a host that shows the set as a glanceable list turns it off. */
+  filter?: boolean;
+  /** Shows the editor that adds a task in the footer; a host that only displays the set turns it off. */
+  editor?: boolean;
 };
 
 /**
@@ -90,6 +94,8 @@ export const TaskSetArticle = ({
   showDescription = false,
   scope,
   onTaskCreated,
+  filter: showFilter = true,
+  editor: showEditor = true,
 }: TaskSetArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const readonly = ToolkitHooks.useReadOnly();
@@ -358,9 +364,11 @@ export const TaskSetArticle = ({
       onTaskSelect={handleOpen}
     >
       <Panel.Root role={role}>
-        <Panel.Header>
-          <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
-        </Panel.Header>
+        {showFilter && (
+          <Panel.Header>
+            <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
+          </Panel.Header>
+        )}
         <Panel.Body>
           {/* Fills the body (no flex container, so growing alone would not bound it): rows scroll inside it. */}
           <TaskList.Viewport classNames='dx-expand'>
@@ -370,7 +378,7 @@ export const TaskSetArticle = ({
         {/* Framed as the chat prompt is, in a box of its own surface. Padded on the block axis only, and ringed
             rather than bordered, because either one on the inline axis would inset the pane's grid from the rows'
             and its fields would no longer sit under the columns they edit. */}
-        {!readonly && (
+        {!readonly && showEditor && (
           <Panel.Footer classNames='py-2 dx-grow bg-base-surface'>
             <TaskList.Editor
               createOnly

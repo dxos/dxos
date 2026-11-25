@@ -60,7 +60,7 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
@@ -238,6 +238,42 @@ const withoutStorySettings = ({
 // Stable, since the applier re-applies whenever its settings change identity.
 const NO_STORY_SETTINGS: StorySettings = {};
 
+/** The operation every chat's system prompt runs (the skill manager's), the last one to reach the registry as a story boots. */
+const QUERY_SKILLS_URI = 'dxn:org.dxos.operation.assistantToolkit.querySkills';
+
+/** Longest wait for {@link QUERY_SKILLS_URI}; past it the story renders anyway and shows whatever error follows. */
+const REGISTRY_TIMEOUT = 30_000;
+
+/**
+ * Renders its children once the operations an agent's first turn needs are registered: a prompt sent earlier (a play
+ * function's first click, a story that prompts on mount) fails its turn with `FunctionNotFound` building the system
+ * prompt.
+ */
+const OperationsReady = ({ children }: { children: ReactNode }) => {
+  const registry = useRegistry();
+  const [ready, setReady] = useState(() => registry.getByURI(QUERY_SKILLS_URI) !== undefined);
+  useEffect(() => {
+    if (ready) {
+      return;
+    }
+    const finish = () => setReady(true);
+    const timer = setTimeout(finish, REGISTRY_TIMEOUT);
+    const check = () => {
+      if (registry.getByURI(QUERY_SKILLS_URI) !== undefined) {
+        finish();
+      }
+    };
+    const unsubscribe = registry.changed.on(check);
+    // The operation can register between the first render's check and this subscription, which no event reports.
+    check();
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
+  }, [registry, ready]);
+  return ready ? <>{children}</> : null;
+};
+
 /**
  * Sets the story's assistant settings, over the defaults, before rendering its children, so an agent spawned by the
  * first prompt already reads them; and puts the defaults back when the story goes, for stories outside this harness.
@@ -306,7 +342,9 @@ const toStoryDecoratorsProps = ({
   ],
   Wrapper: ({ children }) => (
     <SettingsApplier settings={assistantSettings ?? NO_STORY_SETTINGS}>
-      {skills?.length ? <SkillBinder skills={skills}>{children}</SkillBinder> : children}
+      <OperationsReady>
+        {skills?.length ? <SkillBinder skills={skills}>{children}</SkillBinder> : children}
+      </OperationsReady>
     </SettingsApplier>
   ),
 });

@@ -276,7 +276,8 @@ const ChatRoot = ({
           prepare: async () => {
             await onSubmit?.(text);
             const currentDb = (chat && Obj.getDatabase(chat)) || db;
-            if (currentDb) {
+            // A model with no conversation behind it (a replay) has nothing to bind mentions to.
+            if (currentDb && chatModel.context) {
               await bindMentions(chatModel.context, currentDb, text);
             }
           },

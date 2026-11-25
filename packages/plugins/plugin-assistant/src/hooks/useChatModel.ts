@@ -24,7 +24,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Assistant } from '#types';
 
-import { type AiServicePreset, ChatModel } from '../chat-model/index.ts';
+import { type AiServicePreset, LiveChatModel } from '../chat-model/index.ts';
 
 export type UseChatModelProps = {
   db?: Database.Database;
@@ -41,7 +41,7 @@ export type UseChatModelProps = {
 };
 
 /**
- * Configure and create ChatModel.
+ * Configure and create a {@link LiveChatModel}.
  */
 export const useChatModel = ({
   db,
@@ -53,7 +53,7 @@ export const useChatModel = ({
   sender,
   thread,
   readonly = false,
-}: UseChatModelProps): ChatModel | undefined => {
+}: UseChatModelProps): LiveChatModel | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
   // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
@@ -109,7 +109,7 @@ export const useChatModel = ({
     );
 
     log('creating chat model', { preset, model: preset?.model, settings });
-    return new ChatModel(session, runtime, feed, spaceLayer, {
+    return new LiveChatModel(session, runtime, feed, spaceLayer, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       registry,

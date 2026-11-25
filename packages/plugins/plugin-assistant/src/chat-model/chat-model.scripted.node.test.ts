@@ -24,7 +24,7 @@ import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 import { consentGuard } from '../util/consent-guard.ts';
-import { ChatModel } from './chat-model.ts';
+import { LiveChatModel } from './chat-model.ts';
 import { ChatModelRecorder } from './testing/chat-model-recorder.ts';
 import { makeSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
@@ -115,7 +115,7 @@ const setup = Effect.fn(function* ({ skills = [] }: { skills?: Skill.Skill[] } =
 
   // The UI reads the app-wide registry, which is also where the agent process writes its status.
   const registry = yield* AtomRegistry.AtomRegistry;
-  const chatModel = new ChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
+  const chatModel = new LiveChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
     chat: Ref.make(chat),
     observableRegistry: registry,
   });
@@ -364,7 +364,7 @@ describe('ChatModel (scripted agent)', { timeout: 30_000 }, () => {
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const registry = yield* AtomRegistry.AtomRegistry;
-        const remounted = new ChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
+        const remounted = new LiveChatModel(session, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
           chat: Ref.make(chat),
           observableRegistry: registry,
         });
