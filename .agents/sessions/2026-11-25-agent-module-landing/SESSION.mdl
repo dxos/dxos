@@ -179,3 +179,9 @@ event T-13: A review comment on the next PR is answered. The current-process ref
   date: 2026-11-25T13:10Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-14: The delegation PR is merged. A merge of main into the next PR removes its conflict.
+  date: 2026-11-25T15:45Z
+  by: agent:claude-code
+```

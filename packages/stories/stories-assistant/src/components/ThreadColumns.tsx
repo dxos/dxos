@@ -63,11 +63,13 @@ type ThreadColumnProps = {
   db: Database.Database;
   chat: Agent.Session;
   lane: Reducer.Lane;
+  /** The lane's colour, as the agent's thread draws it, so the column and its row in the thread match. */
+  hue: string;
   events: readonly Trajectory.Event[];
 };
 
 /** One subagent thread: its reasoning and turns, the document it wrote as a card, and its slice of memory. */
-const ThreadColumn = ({ db, chat, lane, events }: ThreadColumnProps) => {
+const ThreadColumn = ({ db, chat, lane, hue, events }: ThreadColumnProps) => {
   const chatModel = useThreadModel(db, chat, lane.id);
   const memory = useMemo(() => laneEvents(events, lane.id), [events, lane.id]);
   if (!chatModel) {
@@ -77,7 +79,23 @@ const ThreadColumn = ({ db, chat, lane, events }: ThreadColumnProps) => {
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel}>
       <ChatPlane.Column value={lane.id}>
-        <ChatPlane.Cell title={`${lane.purpose ?? 'Subagent'} · ${lane.status}`}>
+        <ChatPlane.Cell
+          title={
+            // As the thread's row in the agent's chat names it, so the two read as one thing.
+            <Chat.LaneHeader
+              lane={{
+                id: lane.id,
+                hue,
+                title: lane.purpose,
+                owner: 'thread',
+                status: lane.status,
+                started: lane.created,
+              }}
+              classNames='text-sm'
+              statusEnd
+            />
+          }
+        >
           <Panel.Body asChild>
             <Chat.Content>
               <Chat.Thread viewType='thinking' tailLines={4} />
@@ -160,6 +178,7 @@ const CLOSE_DELAY = 6_000;
 const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer, trace = false }: AgentColumnProps) => {
   const view = useAtomValue(chatModel.trajectory);
   const lanes = useMemo(() => view.lanes.filter((lane) => lane.kind === 'fresh'), [view.lanes]);
+  const hues = useMemo(() => Chat.laneHues(view.lanes), [view.lanes]);
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
   const [current, setCurrent] = useState<string>();
 
@@ -232,7 +251,11 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer, trace = 
                 return <TraceColumn db={db} chat={chat} chatModel={chatModel} />;
               }
               const lane = open.find((candidate) => candidate.id === id);
-              return lane && <ThreadColumn db={db} chat={chat} lane={lane} events={events} />;
+              return (
+                lane && (
+                  <ThreadColumn db={db} chat={chat} lane={lane} hue={hues.get(lane.id) ?? 'neutral'} events={events} />
+                )
+              );
             }}
           </ChatPlane.Columns>
         </ChatPlane.Viewport>

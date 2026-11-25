@@ -22,7 +22,7 @@ const { text, reasoning, toolCall } = ScriptedLanguageModel;
  * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl`.
  */
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/threads/LightThreads',
+  title: 'stories/stories-assistant/threads/Threads',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };

@@ -51,6 +51,18 @@ const ID_PREFIXES: Record<string, string> = { question: 'Q', decision: 'D', goal
 
 const GITHUB_REF = /^([\w.-]+)\/([\w.-]+)#(\d+)$/;
 
+/** Where a goal's Composer task opens; `SESSION_BOARD_COMPOSER_ORIGIN` points the links at another deployment. */
+const COMPOSER_ORIGIN = process.env.SESSION_BOARD_COMPOSER_ORIGIN ?? 'https://preview.composer.space';
+
+/**
+ * The Composer URL that opens a task, in the shape `space.getObjectLink` returns (`/w/<space>/db/<type>+<id>`); none for
+ * the local `echo:///<id>` form, which names no space.
+ */
+export const composerTaskUrl = (uri: string, origin = COMPOSER_ORIGIN): string | undefined => {
+  const match = uri.match(/^echo:\/\/([A-Z0-9]+)\/([0-9A-Z]+)$/);
+  return match ? `${origin}/w/${match[1]}/db/org.dxos.type.task+${match[2]}` : undefined;
+};
+
 /** ISO 8601 to the minute, UTC: `2026-11-21T11:55Z`, seconds allowed. */
 // Milliseconds at most: `Date.parse` drops finer digits, which would let `.0001Z` follow `.0009Z`.
 const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?Z$/;
@@ -303,6 +315,11 @@ export const parseSession = (text: string, options: ParseOptions = {}): ParseRes
       case 'goal': {
         checkTitle(LIMITS.titleWords);
         const status = fields.scalars.get('status');
+        const task = fields.scalars.get('task');
+        const taskUrl = task === undefined ? undefined : composerTaskUrl(task);
+        if (task !== undefined && !task.startsWith('echo:')) {
+          error(line, `${block.id}: task must be an echo: URI, as Composer returns it`);
+        }
         if (!GOAL_STATUSES.some((value) => value === status)) {
           error(line, `${block.id}: status must be one of ${GOAL_STATUSES.join(', ')}`);
         }
@@ -313,6 +330,8 @@ export const parseSession = (text: string, options: ParseOptions = {}): ParseRes
           blockedBy: refList(fields.scalars.get('blockedBy')),
           blocked: false,
           notes: notes(),
+          ...(task ? { task } : {}),
+          ...(taskUrl ? { taskUrl } : {}),
         });
         break;
       }

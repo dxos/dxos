@@ -163,7 +163,7 @@ const agent = ScriptedScene.conversation('agent', [
       ScriptedScene.reasoning(
         'The diagram and the code both follow from the plan, and neither needs the other: plan first, then both at once.',
       ),
-      ScriptedScene.text('Three subagents: one plans, then one draws the architecture while another writes the code.'),
+      ScriptedScene.text('Three threads: one plans, then one draws the architecture while another writes the code.'),
       status({ parent: 'started', guide: 'started' }),
       delegate('plan'),
     ],
