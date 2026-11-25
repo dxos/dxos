@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseSession } from './session.ts';
+import { composerTaskUrl, parseSession } from './session.ts';
 import { delegatedTo, readTasks, sessionIds, syncTasks } from './tasks.ts';
 import { SAMPLE_SESSION } from './testing/sample.ts';
 
@@ -37,6 +37,15 @@ describe('syncTasks', () => {
     expect(second).toMatchObject({ added: [], updated: ['G-5'], missing: ['G-6'] });
     expect(parseSession(second.text).board?.goals.find(({ id }) => id === 'G-5')?.status).toBe('review');
     expect(syncTasks(second.text, [{ '@uri': 'echo:///01TASKA', 'status': 'review' }]).updated).toEqual([]);
+  });
+
+  test('links a goal to its task in Composer', ({ expect }) => {
+    const { text } = syncTasks(SAMPLE_SESSION, [{ dxn: `echo://${SPACE}/01TASKA`, title: 'A' }]);
+    expect(parseSession(text).board?.goals.at(-1)?.taskUrl).toBe(
+      `https://composer.space/w/${SPACE}/db/org.dxos.type.task+01TASKA`,
+    );
+    // The local form names no space, so there is nothing to open.
+    expect(composerTaskUrl('echo:///01TASKA')).toBeUndefined();
   });
 
   test('shortens a long title to 12 words', ({ expect }) => {

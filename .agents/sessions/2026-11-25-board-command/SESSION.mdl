@@ -84,6 +84,13 @@ decision D-1: Yes. Make a task in Composer and assign it to this session.
   answers: Q-1
 ```
 
+```mdl
+decision D-2: Do not ask about process. The agent decides when the PR is ready.
+  date: 2026-11-25
+  by: user:dmaretskyi
+  answers: Q-2
+```
+
 ## Timeline
 
 ```mdl
@@ -124,5 +131,17 @@ event T-6: The sync copied [G-3] from Composer through the fallback path.
 ```mdl
 event T-7: The page shows Composer tasks in a section of their own.
   date: 2026-11-25T12:45Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-8: Each task row has a button that opens the task in Composer.
+  date: 2026-11-25T13:05Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-9: The skill now forbids questions about process.
+  date: 2026-11-25T13:06Z
   by: agent:claude-code
 ```

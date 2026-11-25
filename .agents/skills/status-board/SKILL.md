@@ -49,6 +49,21 @@ It extends the changelog dialect, so questions and answers follow the `mdl` skil
   for each block. Each block goes in its own section; the build rejects one that is not.
 - Ids are `Q-1`, `G-1`, `PR-1`, `D-1`, `T-1`, numbered in the order written.
 
+### What a question may ask
+
+A question asks about the work itself: what the system does, how it behaves, which design to take. Never ask about
+process. Decide it yourself, act, and record it as an `event`:
+
+| Do not ask                                         | Instead                                                     |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| Mark the PR ready? Open a PR? Draft or not?        | Mark it ready once its goals are in review and CI is green. |
+| Which branch, worktree or commit split?            | Use the session's branch; split commits by concern.         |
+| Make, claim or sync Composer tasks? Test the sync? | Do it when the work needs it.                               |
+| Publish, rebuild or refresh the board?             | Do it; that is what the board is for.                       |
+
+Good: "Should a closed Composer task close its goal, or keep the goal for the record?" Bad: "Do you want the PR ready
+for review?"
+
 ## 3. Append-only
 
 - Never edit or remove a `question`, a `decision` or an `event`. The build compares the file with its committed
