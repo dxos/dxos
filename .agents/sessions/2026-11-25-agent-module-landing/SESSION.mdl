@@ -64,6 +64,7 @@ pr PR-1: One Agent module for agents, sessions and the service.
 ```mdl
 pr PR-2: The Agent verbs need no service requirements.
   ref: dxos/dxos#14684
+  status: landing
   goals: [G-4]
 ```
 
@@ -184,4 +185,10 @@ event T-13: A review comment on the next PR is answered. The current-process ref
 event T-14: The delegation PR is merged. A merge of main into the next PR removes its conflict.
   date: 2026-11-25T15:45Z
   by: agent:claude-code
+```
+
+```mdl
+event T-15: The user asks to land the next PR. It is ready for review, and auto-merge is on.
+  date: 2026-11-25T16:01Z
+  by: user:dmaretskyi
 ```
