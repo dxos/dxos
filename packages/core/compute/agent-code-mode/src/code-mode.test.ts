@@ -828,6 +828,21 @@ describe('code mode output', () => {
   );
 
   it.effect(
+    'a guessed module helper fails naming what does exist',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('yield* print(Obj.getDXN({}));', EffectDialect);
+        expect(ok).toBe(false);
+        expect(output).toContain(
+          "`Obj.getDXN` does not exist. An object's id is `obj.id` and its URI `Obj.getURI(obj)`.",
+        );
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'every result the model reads, failed or not, ends saying the program state is gone',
     Effect.fnUntraced(
       function* (_) {

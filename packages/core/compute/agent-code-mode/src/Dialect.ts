@@ -49,6 +49,11 @@ export type BindingsContext = {
    * type declares are missing. Absent where the host did not say, in which case none is called missing.
    */
   readonly skills?: readonly string[];
+  /**
+   * Each enabled skill's instructions by skill key, for a dialect that serves them on demand (see
+   * `Dialect.skillInstructions`) rather than in the system prompt.
+   */
+  readonly skillDocs?: Readonly<Record<string, string>>;
   /** Appends a line to this call's output — the only channel back to the model. */
   readonly print: (...values: unknown[]) => void;
 };
@@ -69,6 +74,13 @@ export interface Dialect {
 
   /** Announces operations bound after the system prompt was written. */
   readonly operations: (operations: readonly SandboxOperation[]) => string;
+
+  /**
+   * Where the model's code finds one skill's instructions (an expression, for a skill key). Given, the producer
+   * states each enabled skill by name and description and serves its instructions in `skillDocs`,
+   * keeping long skills out of the system prompt.
+   */
+  readonly skillInstructions?: (key: string) => string;
 
   /** Wraps the model's code into the body the sandbox evaluates. */
   readonly wrap: (code: string) => string;
@@ -95,14 +107,16 @@ export type InstructionsContext = {
 
 /**
  * The types section of the API reference, shared by the dialects. `name` renders the identifier a
- * dialect's code names a type by — its typename, or the DXN it resolves.
+ * dialect's code names a type by — its typename, or the DXN it resolves — and `lookup` how its code
+ * reaches the Skill Manager's type search.
  */
 export const renderTypes = (
   types: readonly SandboxType[] | undefined,
   name: (type: SandboxType) => string = ({ typename }) => typename,
+  lookup: string = `\`${Operation.toolName(SkillManagerSkill.Operations.QueryTypes)}\``,
 ): string =>
   types === undefined
-    ? `### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's \`${Operation.toolName(SkillManagerSkill.Operations.QueryTypes)}\`, which searches every registered type.`
+    ? `### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's ${lookup}, which searches every registered type.`
     : types.length === 0
       ? '### Types\n\nNo types are registered.'
       : trim`

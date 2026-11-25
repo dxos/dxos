@@ -74,6 +74,8 @@ export type EvalToolkitOptions = {
   readonly operations: readonly SandboxOperation[];
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];
+  /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
+  readonly skillDocs?: Readonly<Record<string, string>>;
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
   /**
@@ -114,6 +116,7 @@ export const evaluate = Effect.fnUntraced(function* ({
   runtime,
   operations,
   skills,
+  skillDocs,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
   onEvaluated,
@@ -137,6 +140,7 @@ export const evaluate = Effect.fnUntraced(function* ({
         ),
         operations: recordInvocations(operations, recorder),
         skills,
+        skillDocs,
         print: printer.print,
       },
       timeout,
@@ -404,6 +408,13 @@ const hintFor = (message: string): string => {
   const effect3Name = /Effect\.(catchAll|catchAllCause|either) is not a function/.exec(message)?.[1];
   if (effect3Name) {
     return `\nHint: this is Effect 4, where \`Effect.${EFFECT_4_NAMES[effect3Name]}\` replaces \`Effect.${effect3Name}\`.`;
+  }
+  const guessed = /\b((?:Obj|Filter|Query|Database|Ref|Relation|Type|Order)\.\w+) is not a function/.exec(message)?.[1];
+  if (guessed) {
+    const identity = /^Obj\.get(?:DXN|Dxn|Id|Uri)$/.test(guessed)
+      ? " An object's id is `obj.id` and its URI `Obj.getURI(obj)`."
+      : '';
+    return `\nHint: \`${guessed}\` does not exist.${identity} Look a helper up in \`DOCS\` before you use it.`;
   }
   const missing = /Entity not found: \{"uri":"(dxn:[^"]+)"\}/.exec(message)?.[1];
   if (missing) {

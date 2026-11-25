@@ -114,6 +114,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
         space,
         types: registrySnapshot(db),
         skills: context.skills,
+        skillDocs: context.skillDocs,
         operations: context.operations.map((operation) => ({
           key: String(operation.definition?.meta.key ?? operation.name),
           name: operation.name,

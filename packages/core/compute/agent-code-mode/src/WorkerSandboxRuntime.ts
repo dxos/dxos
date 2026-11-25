@@ -171,6 +171,7 @@ const evaluate = (client: SandboxClient, init: SandboxInit, execute: Execute) =>
       runtime,
       operations,
       skills: init.skills,
+      skillDocs: init.skillDocs,
       // Sent as it happens rather than batched with the result, so output survives a worker that is
       // killed for outrunning its budget; sent formatted, since a live object cannot cross the port.
       print: (...values: unknown[]) => {

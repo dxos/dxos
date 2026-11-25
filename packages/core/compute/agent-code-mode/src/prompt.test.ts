@@ -12,7 +12,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
-import { EffectDialect, renderCatalog } from './dialect-effect.ts';
+import { EffectDialect, renderCatalog, searchDocs } from './dialect-effect.ts';
 import { renderTypes } from './Dialect.ts';
 import { STATIC_DOCS, loadDocs } from './docs/index.ts';
 import { conciseError } from './eval-tool.ts';
@@ -161,5 +161,19 @@ describe('prompt', () => {
 
   test('a short failure is unchanged', () => {
     expect(conciseError('boom')).toEqual('boom');
+  });
+
+  test('search returns the passages that mention the most words, each headed by its file', ({ expect }) => {
+    const docs = {
+      'catalog/operations.md':
+        '# Operations\n\n- `addArtifact` — Files an artifact on a task.\n  input: { task }\n- `update` — Updates a task.',
+      'skills/project.md':
+        '# Projects\n\n## Artifacts\n\nFile a task artifact with addArtifact.\n\n## Setup\n\nBind a repo.',
+    };
+    const found = searchDocs(docs, 'task artifact');
+    expect(found.indexOf('[catalog/operations.md]\n- `addArtifact`')).toBeGreaterThanOrEqual(0);
+    expect(found).toContain('[skills/project.md]\n## Artifacts');
+    expect(found).not.toContain('Bind a repo');
+    expect(searchDocs(docs, 'zebra')).toContain('Nothing in DOCS mentions');
   });
 });

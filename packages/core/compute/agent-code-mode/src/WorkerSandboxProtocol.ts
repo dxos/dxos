@@ -123,6 +123,8 @@ export type SandboxInit = {
   }[];
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];
+  /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
+  readonly skillDocs?: Readonly<Record<string, string>>;
   /** The operations the conversation's skills bind, as the model is told about them. */
   readonly operations: readonly {
     readonly key: string;

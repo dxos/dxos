@@ -23,6 +23,7 @@ import {
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -176,12 +177,23 @@ const runCodeModeTurn = ({
                 ({ definition }) => !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition),
               );
               labelCall = labelEvalCall(operations);
+              // A dialect that serves skill instructions on demand gets them here, and the prompt names the skills only.
+              const skillDocs = dialect.skillInstructions
+                ? Object.fromEntries(
+                    yield* Effect.forEach(enabled, (skill) =>
+                      Template.processTemplate(skill.instructions).pipe(
+                        Effect.map((text) => [skillKey(skill), text] as const),
+                      ),
+                    ).pipe(Effect.orDie),
+                  )
+                : undefined;
               const evalOptions = {
                 dialect,
                 sandbox,
                 runtime,
                 operations,
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
+                ...(skillDocs ? { skillDocs } : {}),
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
                 onEvaluated: evaluations.add,
@@ -203,11 +215,17 @@ const runCodeModeTurn = ({
               const objects = session.context.getObjects();
               const operationNames = new Set(operations.map((operation) => operation.name));
               if (turnSystem === undefined) {
+                const read = dialect.skillInstructions;
                 const text = yield* formatSystemPrompt({
-                  system: [dialect.instructions({ operations }), options.system, params.system]
+                  system: [
+                    dialect.instructions({ operations }),
+                    read ? renderSkillIndex(enabled, read) : undefined,
+                    options.system,
+                    params.system,
+                  ]
                     .filter(isPresent)
                     .join('\n\n'),
-                  skills: [lookups, ...enabled],
+                  skills: read ? [lookups] : [lookups, ...enabled],
                   objects,
                   instructions,
                 }).pipe(Effect.orDie);
@@ -401,3 +419,25 @@ const tryParseJson = (text: string): unknown => {
 };
 
 const isPresent = (value: string | undefined): value is string => value !== undefined && value.length > 0;
+
+/** A skill's key, as `Dialect.skillInstructions` takes it. */
+const skillKey = (skill: Skill.Skill): string => (Obj.getMeta(skill).key ?? skill.id).replace(/^dxn:/, '');
+
+/**
+ * The enabled skills by name and purpose, with the code that reads each one's instructions: a skill's instructions run
+ * to thousands of tokens that a turn outside its area never reads.
+ */
+const renderSkillIndex = (skills: readonly Skill.Skill[], read: (key: string) => string): string | undefined =>
+  skills.length === 0
+    ? undefined
+    : [
+        '## Enabled skills',
+        '',
+        "Their instructions are not in this prompt. Before working in a skill's area, read the parts you need: " +
+          `\`search(words)\` finds them, or read the file in slices (output is cut at 8,000 characters):`,
+        '',
+        ...skills.map(
+          (skill) =>
+            `- **${skill.name}**${skill.description ? ` — ${skill.description}` : ''}: \`${read(skillKey(skill))}\``,
+        ),
+      ].join('\n');

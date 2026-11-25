@@ -6,6 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import { describeInput, describeTypes } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, URI } from '@dxos/echo';
@@ -43,6 +44,7 @@ import { toObjectURI } from './refs.ts';
 export const EffectDialect: Dialect = {
   name: 'effect',
   database: true,
+  skillInstructions: (key) => `DOCS[${JSON.stringify(skillDocName(key))}]`,
 
   // Named only: the model reads an operation's input in `DOCS['catalog/operations.md']`, which each evaluation rebuilds.
   operations: (operations) =>
@@ -51,9 +53,10 @@ export const EffectDialect: Dialect = {
   // `DOCS` is assembled ahead of the program so the model reads it as the plain object it is told it is.
   wrap: (code) =>
     `const DOCS = Object.freeze({ ...(await runEffect(loadDocs)), ...catalog });\n` +
+    `const search = (query) => searchDocs(DOCS, query);\n` +
     `return await runEffect(Effect.gen(function* () {\n${code}\n}));`,
 
-  bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
+  bindings: ({ runtime, operations, skills, skillDocs, print }: BindingsContext) => {
     const describe = makeDescriber({ syntax: EFFECT_HINTS, skills });
     // A print built without `yield*` runs when the program ends: told nothing printed, a model runs it all again.
     const unyielded = new Set<Effect.Effect<void>>();
@@ -107,10 +110,14 @@ export const EffectDialect: Dialect = {
       /** Supplied by `wrap`, not by the model: the static half of `DOCS`. */
       loadDocs,
 
+      /** Supplied by `wrap`, not by the model: what `search` runs over `DOCS`. */
+      searchDocs,
+
       /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
       catalog: renderCatalog({
         operations,
         types: describeTypes(Context.get(runtime, Database.Service).db.registry.list()),
+        skillDocs,
       }),
 
       /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
@@ -122,21 +129,15 @@ export const EffectDialect: Dialect = {
   instructions: ({ operations, types }: InstructionsContext) => trim`
     ## Code mode
 
-    You have exactly one tool, \`eval\`. Its \`code\` is the body of an \`Effect.gen\` generator run
-    against this workspace, so \`yield*\` is available and you must NOT write the wrapper yourself.
-    \`await\` is a syntax error there: \`yield*\` each Effect, including the ones \`Database\` returns.
-    It returns whatever the code printed: a value you do not \`print\` never reaches you. Do not use
-    \`import\` or \`require\` — the modules below are already in scope.
-
-    Prefer one \`eval\` call that does the whole job — resolve, query, change, print — over a call
-    per step. Each call is a fresh program: nothing defined in an earlier call exists in the next,
-    so load again what you need. Print the specific values you need to reason about, not long lists of whole objects.
-    Stay on the objects the request names or the conversation is attached to: reading or changing
-    others the request did not ask about spends calls and risks unasked-for writes.
+    Your one tool, \`eval\`, runs its \`code\` as the body of an \`Effect.gen\` generator against this
+    workspace: \`yield*\` each Effect (\`await\` does not compile), and write no wrapper, \`import\` or
+    \`require\`. Only what you \`print\` comes back. Each call is a fresh program, so do the whole job —
+    resolve, query, change, print — in as few calls as you can. Print the values you need, not whole lists,
+    and stay on the objects the request names.
 
     ${EFFECT_API}
 
-    ${renderTypes(types, ({ dxn }) => dxn)}
+    ${renderTypes(types, ({ dxn }) => dxn, `\`${QUERY_TYPES}\` (\`{ query }\`, words in the type or field names)`)}
 
     ${operations.some((operation) => operation.definition) ? EFFECT_OPERATIONS : NO_OPERATIONS}
 
@@ -152,6 +153,9 @@ const EFFECT_HINTS: HintSyntax = {
   referrers: (id, type, field) =>
     `yield* Database.query(Query.select(Filter.id('${id}')).referencedBy('${type}'${field === undefined ? '' : `, '${field}'`})).run`,
 };
+
+/** The `DOCS` file holding one enabled skill's instructions. */
+const skillDocName = (key: string): string => `skills/${key.replace(/^dxn:/, '')}.md`;
 
 /** The `DOCS` entries generated per evaluation from what the turn can resolve. */
 const CATALOG_DOCS: readonly DocEntry[] = [
@@ -169,47 +173,36 @@ export const EFFECT_API = trim`
     ### In scope
 
     - \`Database\`, \`Filter\`, \`Query\`, \`Order\`, \`Obj\`, \`Relation\`, \`Ref\`, \`Type\`, \`DXN\`,
-      \`Operation\`, \`Effect\` — the DXOS modules, as a source file would import them.
-    - \`print(...values)\` — an effect: \`yield* print('count', tasks.length)\`. Strings go through
-      verbatim. An object prints as a card: its type, id, label and fields, refs as \`→ type id "label"\`,
-      then counts of its relations, children and referrers with the exact code that fetches each —
-      the only way to see that those exist. Print the object itself, never \`JSON.stringify\` it.
-      Anything else prints as JSON, long strings and arrays cut with a \`…[+N chars]\` / \`… N more\`
-      marker.
-    - \`DOCS\` — the full reference for this API: a plain object mapping file names to markdown
-      strings. Read the file you need before writing anything this prompt does not show, a long one in
-      slices (\`yield* print(DOCS['queries.md'].slice(0, 1000))\`); \`README.md\` shows how to grep
-      them all. These are all of its entries:
+      \`Operation\`, \`Effect\` — the DXOS modules.
+    - \`yield* print(...values)\` — strings verbatim, an object as a card (its fields, refs, and the code
+      that fetches its relations, children and referrers), anything else as JSON. Print the object
+      itself, not \`JSON.stringify\` of it.
+    - \`search(words)\` — the passages of \`DOCS\` that mention those words: operations with their DXN
+      and input, types with their fields, skill instructions, the reference. Start here:
+      \`yield* print(search('task artifact'))\`.
+    - \`DOCS\` — the reference, a plain object of markdown files. Read what you need, a long file in slices
+      (\`yield* print(DOCS['queries.md'].slice(0, 1000))\`):
     ${DOC_ENTRIES.map(({ name, covers }) => `  - \`${name}\` — ${covers}`).join('\n')}
 
-    ### Types and operations are resolved by DXN
+    ### Example
 
     \`\`\`js
     const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');
     const tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;
     Obj.update(tasks[0], (task) => { task.status = 'done'; });
-    const created = yield* Database.add(Obj.make(Task, { title: 'New', status: 'open' }));
+    yield* Database.add(Obj.make(Task, { title: 'New', status: 'open' }));
     yield* Database.flush();
-    yield* print('created', created.id);
     \`\`\`
 
-    \`Obj.update\` is the only way to change a stored object. A \`Ref<typename>\` field takes
-    \`Ref.make(obj)\` of an object you hold — never an id or a URI string. An object you know only by
-    its URI (\`echo://…\`, as an operation's output or your context names it) is
-    \`yield* Database.resolve(uri)\`. A \`Ref\` field loads with \`yield* Database.load(task.owner)\`; its
-    URI is \`ref.uri\`. In an operation's listed \`output\`, a typename (\`object: org.dxos.type.document\`) is
-    that object, ready to use, and a \`Ref<typename>\` is a reference: pass it on as it is, or load it to read it.
-    A failed load or operation fails the whole program; \`DOCS['errors.md']\` shows how to contain one.
-
-    \`yield*\` works only directly in this body, not inside a callback such as \`.map((x) => …)\`: loop
-    with \`for … of\`. \`await\` does not compile here: \`yield*\` the Effect instead. This is Effect 4: \`Effect.catch\`, \`Effect.catchCause\` and \`Effect.result\`
-    replace \`catchAll\`, \`catchAllCause\` and \`either\`.
-
-    A skill may name tools for reading, querying or updating objects; in code those are hidden, so do
-    that with \`Database\` and \`Obj\` instead.
-
-    Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
-    a function\` and costs a call.
+    - \`Filter.type(T, props?)\` takes a type you resolved, never a typename string.
+    - Change a stored object only with \`Obj.update\`. A \`Ref<typename>\` field takes \`Ref.make(obj)\`,
+      never an id or a URI string; \`yield* Database.load(ref)\` loads one. An object's id is \`obj.id\`, its
+      URI \`Obj.getURI(obj)\`, and an object known by its URI (\`echo://…\`) is \`yield* Database.resolve(uri)\`.
+    - A failed load or operation fails the program; \`DOCS['errors.md']\` shows how to contain one.
+    - \`yield*\` works only directly in the body, not in a callback: loop with \`for … of\`. This is
+      Effect 4: \`Effect.catch\`, \`Effect.catchCause\`, \`Effect.result\` (not \`catchAll\`, \`either\`).
+    - Read, query and update objects with \`Database\` and \`Obj\`, not a skill's tools. Do not guess
+      at a helper this prompt or \`DOCS\` does not show: it fails as \`is not a function\`.
 `;
 
 /**
@@ -219,10 +212,13 @@ export const EFFECT_API = trim`
 export const renderCatalog = ({
   operations,
   types,
+  skillDocs = {},
 }: {
   operations: readonly SandboxOperation[];
   types: ReturnType<typeof describeTypes>;
+  skillDocs?: Readonly<Record<string, string>>;
 }): Record<string, string> => ({
+  ...Object.fromEntries(Object.entries(skillDocs).map(([key, text]) => [skillDocName(key), text])),
   'catalog/types.md': trim`
     # Types
 
@@ -328,33 +324,20 @@ const describeKind = (value: unknown): string =>
  * How the model finds the operations, in place of listing them: a skill's operations, with their inputs, run to
  * thousands of tokens that most turns never read, and `DOCS['catalog/operations.md']` holds the same list on demand.
  */
+/** The Skill Manager's lookups by DXN: the model guesses one it is told only by tool name. */
+const QUERY_TYPES = String(SkillManagerSkill.Operations.QueryTypes.meta.key);
+const QUERY_OPERATIONS = String(SkillManagerSkill.Operations.QueryOperations.meta.key);
+
 const EFFECT_OPERATIONS = trim`
   ### Operations
 
-  The skills' instructions describe their capabilities as tools; in code mode they are NOT tools. The
-  operations are not listed here: discover them before you use one. \`DOCS['catalog/operations.md']\` lists
-  every operation this conversation can run, with its DXN, the tool name the skills use for it, its input and
-  its output; search it rather than printing it whole:
-
-  \`\`\`js
-  const catalog = DOCS['catalog/operations.md'];
-  const at = catalog.indexOf('create');
-  yield* print(catalog.slice(Math.max(0, at - 200), at + 800));
-  \`\`\`
-
-  An operation of a skill that is not enabled yet is found with the Skill Manager's \`queryOperations\`.
-  Resolve an operation by its DXN and invoke it the way any other DXOS code does (\`DOCS['operations.md']\`
-  has the details):
-
-  \`\`\`js
-  const Example = yield* Database.resolve('dxn:com.example.operation.example');
-  const result = yield* Operation.invoke(Example, { ...input });
-  \`\`\`
-
-  Each listed \`input\` is the operation's own schema: pass objects you hold (or \`Ref.make(obj)\`) where it
-  takes an object or a \`Ref<typename>\`, never an id or a URI string. A skill that spells a reference as a
-  \`{"/": "echo:..."}\` envelope or a URI string is describing the tool form; the catalog wins. Most of what an
-  operation does to one object is a line of \`Obj\`/\`Database\` code; prefer that.
+  Skills describe their capabilities as tools; here they are operations, not listed in this prompt.
+  Find one with \`search(words)\`, which returns its DXN, the skills' tool name, input and output from
+  \`DOCS['catalog/operations.md']\`, or, for a skill not enabled yet, with the Skill Manager's
+  \`${QUERY_OPERATIONS}\` (\`{ query }\`), then run it: \`yield* Operation.invoke(yield* Database.resolve('<dxn>'), input)\`. Pass an object or
+  \`Ref.make(obj)\` where the input takes one, never an id or a URI string. In an output, a typename is
+  that object and a \`Ref<typename>\` a reference. Prefer plain \`Obj\`/\`Database\` code when it does
+  the job.
 `;
 
 /** Operations by tool name and DXN, for a notice that more became available: their inputs are in the catalog. */
@@ -400,3 +383,43 @@ const renderOperationList = (operations: readonly SandboxOperation[]): string =>
         : [];
     })
     .join('\n');
+
+/** Passages a search returns at most, and the characters of each. */
+const SEARCH_LIMIT = 8;
+const PASSAGE_LENGTH = 1_200;
+
+/**
+ * The `DOCS` passages that mention the most of `query`'s words, best first, each headed by its file. A passage is a
+ * section (up to the next heading) or, in a catalog, one entry, so a hit carries the DXN and input beside it.
+ */
+export const searchDocs = (docs: Readonly<Record<string, string>>, query: string): string => {
+  const words = query
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}.]+/u)
+    .filter((word) => word.length > 1);
+  if (words.length === 0) {
+    return "Search for some words, e.g. `search('task artifact')`.";
+  }
+  const passages = Object.entries(docs).flatMap(([file, text]) =>
+    text
+      .split(/\n(?=#{1,4} |- `)/)
+      .map((passage) => ({ file, passage: passage.trim() }))
+      .filter(({ passage }) => passage.length > 0),
+  );
+  const ranked = passages
+    .map((entry) => {
+      const lower = entry.passage.toLowerCase();
+      return { ...entry, score: words.filter((word) => lower.includes(word)).length };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, SEARCH_LIMIT);
+  return ranked.length === 0
+    ? `Nothing in DOCS mentions ${JSON.stringify(query)}; try other words.`
+    : ranked
+        .map(
+          ({ file, passage }) =>
+            `[${file}]\n${passage.length > PASSAGE_LENGTH ? `${passage.slice(0, PASSAGE_LENGTH)}…[+${passage.length - PASSAGE_LENGTH} chars]` : passage}`,
+        )
+        .join('\n\n');
+};

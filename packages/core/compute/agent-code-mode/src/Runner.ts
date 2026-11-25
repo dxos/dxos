@@ -40,6 +40,8 @@ export type Options = {
   readonly dialects?: Partial<Record<Operation.ScriptDialect, Dialect>>;
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];
+  /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
+  readonly skillDocs?: Readonly<Record<string, string>>;
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
   /** Told which operations an evaluation ran; see `EvalToolkitOptions.onEvaluated`. */
@@ -88,6 +90,7 @@ export const make = (options: Options): Operation.ScriptRunner => {
           runtime: runtime === undefined ? options.runtime : Context.merge(options.runtime, runtime.context),
           operations: options.operations,
           ...(options.skills !== undefined ? { skills: options.skills } : {}),
+          ...(options.skillDocs !== undefined ? { skillDocs: options.skillDocs } : {}),
           ...(options.onEvaluated !== undefined ? { onEvaluated: options.onEvaluated } : {}),
           ...(options.toolCallId !== undefined ? { toolCallId: options.toolCallId } : {}),
           ...(maxOutput !== undefined ? { maxOutput } : {}),

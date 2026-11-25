@@ -229,11 +229,13 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           expect(system.includes(querySkillsCall)).toBe(lists);
           expect(system.includes("DOCS['catalog/operations.md']")).toBe(!lists);
           // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
-          expect(system).toContain(
-            "find them, and their fields, with the Skill Manager's `assistant-toolkit-query-types`, which searches every registered type",
-          );
+          expect(system).toContain("find them, and their fields, with the Skill Manager's ");
+          // The Effect dialect names the lookup by the DXN its code resolves, which a model otherwise guesses.
+          expect(system).toContain(lists ? '`assistant-toolkit-query-types`' : 'assistantToolkit.queryTypes');
           // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
-          expect(system).toContain('Score titles before ranking them');
+          // The plain dialect states an enabled skill's instructions; the Effect dialect names the skill and serves them in DOCS.
+          expect(system.includes('Score titles before ranking them')).toBe(lists);
+          expect(system.includes('## Enabled skills')).toBe(!lists);
           expect(system.includes('Scores a title for urgency')).toBe(lists);
           // An operation the database API replaces is left out of the Effect dialect, though its skill is enabled; the
           // plain dialect has no database API to replace it with.
