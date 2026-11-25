@@ -205,10 +205,12 @@ describe('worker sandbox in a workerd isolate', () => {
     expect(rows.find(({ objectId }) => objectId === output)?.objectJson).toContain('Remember me');
   });
 
-  // As EDGE's published types reach a script: not registered, but resolved on demand by the host's type source.
+  // As EDGE's published types reach a script: not registered, but resolved on demand by the host's registry source.
   test('resolves a type the host serves from a type source rather than its registry', async () => {
     const { db, run } = await setup();
-    const unregister = db.graph.registerTypeSource(async (uri) => (String(uri) === NOTE_DXN ? Note : undefined));
+    const unregister = db.graph.registerRegistrySource({
+      resolve: async (uri) => (String(uri) === NOTE_DXN ? Note : undefined),
+    });
     onTestFinished(unregister);
     const output = await run(`
       const Note = yield* Database.resolve('${NOTE_DXN}');
