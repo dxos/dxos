@@ -225,7 +225,7 @@ export const makeDecisionModel = <R = never>(
       decide: ({ state, decisions, images }) =>
         Effect.gen(function* () {
           const key = yield* apiKey;
-          const dataUrls = images ? yield* Effect.forEach(images, toDataUrl) : undefined;
+          const dataUrls = images ? yield* Effect.forEach(images, ({ image }) => toDataUrl(image)) : undefined;
           const request = HttpClientRequest.post(endpoint()).pipe(
             (request) => (key ? HttpClientRequest.bearerToken(request, key) : request),
             HttpClientRequest.bodyJsonUnsafe({

@@ -15,7 +15,7 @@ import { evaluate } from './score.ts';
 const GRAPH = parse('flowchart TB\n  A --> B');
 
 /** A model that answers every question with 0.7, recording the encoded input and questions it was asked. */
-type Calls = { count: number; questions: string[]; state?: unknown; images?: readonly DecisionModel.Image[] };
+type Calls = { count: number; questions: string[]; state?: unknown; images?: readonly DecisionModel.ProviderImage[] };
 
 const stubModel = (calls: Calls, supportsImages = false) =>
   Layer.effect(
@@ -70,7 +70,7 @@ describe('aesthetics', () => {
       ),
     );
     expect(calls.count).toBe(1);
-    expect(calls.images).toEqual(images);
+    expect(calls.images?.map(({ image }) => image)).toEqual(images);
     expect(IMAGE_RULES.every(({ instructions }) => instructions.includes('the attached image is the page'))).toBe(true);
     expect(scores.every(({ score, error }) => !error && score === 0.7)).toBe(true);
   });

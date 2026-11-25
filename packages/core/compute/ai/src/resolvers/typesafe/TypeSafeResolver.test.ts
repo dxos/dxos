@@ -287,8 +287,12 @@ describe('TypeSafe resolver', () => {
       { mediaType: 'image/png', data: new Uint8Array([137, 80, 78, 71]) },
       { mediaType: 'image/webp', data: 'UklGRg==' },
     ];
+    const UrgencyWithImages = Decision.make({
+      input: Schema.Struct({ message: Schema.String, images: Schema.Array(Decision.Image) }),
+      decisions: Urgency.decisions,
+    });
     const ask = (model: Model.Model) =>
-      DecisionModel.decide(Urgency, { input: OUTAGE, images }).pipe(
+      DecisionModel.decide(UrgencyWithImages, { input: { message: OUTAGE, images } }).pipe(
         Effect.provide(AiService.decisionModel(model.id).pipe(Layer.provide(routed))),
       );
 

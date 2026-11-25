@@ -115,7 +115,11 @@ const importDatabase = (
 /** In-process OPFS SQLite client for dedicated worker contexts (no MessagePort). */
 export const makeOpfs = (
   options: OpfsConfig,
-): Effect.Effect<WasmSqliteClient.SqliteClient, SqlError.SqlError, Scope.Scope | Reactivity.Reactivity> =>
+): Effect.Effect<
+  WasmSqliteClient.SqliteClient & Client.SqlClient,
+  SqlError.SqlError,
+  Scope.Scope | Reactivity.Reactivity
+> =>
   Effect.gen(function* () {
     const reactivity = yield* Reactivity.Reactivity;
     const compiler = Statement.makeCompilerSqlite(options.transformQueryNames);
@@ -327,6 +331,7 @@ export const makeOpfs = (
 
     return Object.assign(
       (yield* Client.make({
+        driver: 'sqlite-opfs',
         acquirer,
         compiler,
         transactionAcquirer,
@@ -335,7 +340,7 @@ export const makeOpfs = (
           [ATTR_DB_SYSTEM_NAME, 'sqlite'],
         ],
         transformRows,
-      })) as Client.SqlClient,
+      })) as WasmSqliteClient.SqliteClient & Client.SqlClient,
       {
         // Object.assign widens unique symbol TypeId; same pattern as @effect/sql-sqlite-wasm makeMemory.
         [WasmSqliteClient.TypeId]: WasmSqliteClient.TypeId as WasmSqliteClient.TypeId,
@@ -343,8 +348,7 @@ export const makeOpfs = (
         export: semaphore.withPermit('connection')(connection.export),
         import: (data: Uint8Array) => semaphore.withPermit('connection')(connection.import(data)),
       },
-      // SqlClient.updateValues is incompatible with SqliteClient's `never`; Object.assign cannot narrow it.
-    ) as unknown as WasmSqliteClient.SqliteClient;
+    );
   });
 
 /** Layer providing in-process OPFS {@link WasmSqliteClient.SqliteClient}. */
