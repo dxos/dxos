@@ -322,12 +322,12 @@ export const useWindow = ({
     }
 
     const observer = new ResizeObserver((entries) => {
-      const resized = entries.some(({ target: row }) => {
-        if (!(row instanceof HTMLElement) || !row.isConnected) {
+      const resized = entries.some(({ target, borderBoxSize: [box] }) => {
+        if (!target.isConnected || !box) {
           return false;
         }
-        const actual = Math.round(axis === 'block' ? row.offsetHeight : row.offsetWidth);
-        return actual !== placement.extentOf(Number(row.dataset.index));
+        const actual = Math.round(axis === 'block' ? box.blockSize : box.inlineSize);
+        return actual !== placement.extentOf(Number(target.getAttribute('data-index')));
       });
       if (resized) {
         flushSync(invalidate);
