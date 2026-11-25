@@ -48,6 +48,7 @@ goal G-3: The PR merges through the merge queue.
 ```mdl
 goal G-4: The Agent verbs need no service requirements.
   status: review
+  blockedBy: [Q-2]
   notes:
     - A next PR adds a current-process context reference.
     - Session verbs get their database from the session.
@@ -99,6 +100,16 @@ decision D-3: The rename from chat to session covers the API of the Agent module
   date: 2026-11-25
   by: agent:claude-code
   for: user:dmaretskyi
+```
+
+```mdl
+question Q-2: Can you remove the next PR from the merge queue, so the fix for the delegation stories can be pushed?
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: The queue holds the PR but runs nothing. A queued branch cannot take a push, and this session cannot dequeue.
+  options:
+    - Remove it from the queue: the fix goes out and the PR goes back in the queue.
 ```
 
 ## Timeline
@@ -196,5 +207,11 @@ event T-15: The user asks to land the next PR. It is ready for review, and auto-
 ```mdl
 event T-16: The merge queue drops the next PR. Two delegation stories fail. A tool cannot find its session database.
   date: 2026-11-25T16:50Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-17: The fix is ready but cannot be pushed. The merge queue still holds the PR and runs nothing.
+  date: 2026-11-25T17:10Z
   by: agent:claude-code
 ```
