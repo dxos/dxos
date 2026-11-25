@@ -28,13 +28,13 @@ import { type Space } from '@dxos/react-client/echo';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
-import { StoryRole } from '../modules/index.ts';
-import { createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 
 const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
 
 const meta: Meta<typeof ModuleContainer.Root> = {
-  title: 'stories/stories-assistant/Studio',
+  title: 'stories/stories-assistant/chat/Studio',
   render: ModuleContainer.Root,
   parameters: storyParameters,
 };

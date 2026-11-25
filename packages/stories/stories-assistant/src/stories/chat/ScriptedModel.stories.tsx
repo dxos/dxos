@@ -7,9 +7,9 @@ import { type ComponentProps } from 'react';
 
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
-import { StoryRole } from '../modules/index.ts';
-import { type ScriptName, Scripts } from '../scripts/index.ts';
-import { CalculatorSkill, createDecorators, storyParameters } from '../testing/index.ts';
+import { StoryRole } from '../../modules/index.ts';
+import { type ScriptName, Scripts } from '../../scripts/index.ts';
+import { CalculatorSkill, createDecorators, storyParameters } from '../../testing/index.ts';
 
 type StoryArgs = ComponentProps<typeof ModuleContainer.Root> & { script: ScriptName };
 
@@ -18,7 +18,7 @@ type StoryArgs = ComponentProps<typeof ModuleContainer.Root> & { script: ScriptN
  * own and offered in the model picker, and the chat starts on the one the `script` arg names.
  */
 const meta: Meta<StoryArgs> = {
-  title: 'stories/stories-assistant/ScriptedModel',
+  title: 'stories/stories-assistant/chat/ScriptedModel',
   render: ModuleContainer.Root,
   parameters: storyParameters,
   decorators: createDecorators<StoryArgs>(({ args }) => ({
@@ -38,6 +38,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Try "Write me a haiku", or "What is 17 × 23?" for a tool call. */
-export const Hello: Story = {
+export const Default: Story = {
   args: { script: 'hello' },
 };

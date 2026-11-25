@@ -18,9 +18,9 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as Templates from '@dxos/plugin-projects/Templates';
 import { Task, TaskSet } from '@dxos/types';
 
-import { ThreadColumns } from '../components/index.ts';
-import { BUILD_PROMPT, PLUGIN_SIDE_QUESTION, Scripts, WORLD_CLOCK_KEY } from '../scripts/index.ts';
-import { createDecorators, storyParameters } from '../testing/index.ts';
+import { ThreadColumns } from '../../components/index.ts';
+import { BUILD_PROMPT, PLUGIN_SIDE_QUESTION, Scripts, WORLD_CLOCK_KEY } from '../../scripts/index.ts';
+import { createDecorators, storyParameters } from '../../testing/index.ts';
 
 /**
  * An agent builds a real Composer plugin on this machine through three subagents, each in a column of its own: one
@@ -34,7 +34,7 @@ import { createDecorators, storyParameters } from '../testing/index.ts';
  * from Plugins → Dev Server.
  */
 const meta: Meta = {
-  title: 'stories/stories-assistant/PluginBuild',
+  title: 'stories/stories-assistant/threads/PluginBuild',
   parameters: storyParameters,
 };
 
@@ -108,8 +108,16 @@ const waitForColumns = (canvasElement: HTMLElement, count: number, timeout: numb
     timeout,
   });
 
-/** Clicks "Build." itself and waits for the plugin to be offered: the end-to-end check. */
+/** Starts up and waits: the run begins when you click "Build.". */
 export const Default: StoryObj = {
+  render: () => <ThreadColumns suggestions={SUGGESTIONS} />,
+  decorators,
+  // Not a test: nothing happens until someone clicks.
+  tags: ['!test'],
+};
+
+/** {@link Default} driven by a play function: clicks "Build." itself and waits for the plugin to be offered. */
+export const Scripted: StoryObj = {
   render: () => <ThreadColumns suggestions={SUGGESTIONS} />,
   decorators,
   // Writes and runs on the machine serving storybook, so it runs only where that is asked for.
@@ -126,12 +134,4 @@ export const Default: StoryObj = {
     await canvas.findAllByText(/World Clock is ready/, {}, { timeout: 300_000 });
     await waitForColumns(canvasElement, 1, 60_000);
   },
-};
-
-/** {@link Default} without its play function: the run starts when you click "Build.". */
-export const Manual: StoryObj = {
-  render: () => <ThreadColumns suggestions={SUGGESTIONS} />,
-  decorators,
-  // Not a test: nothing happens until someone clicks.
-  tags: ['!test'],
 };
