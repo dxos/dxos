@@ -215,6 +215,11 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
         effect: Effect.Effect<A, E, Database.Service>,
       ): Effect.Effect<A, E | Agent.NoCurrentSessionError> =>
         Effect.gen(function* () {
+          // An operation that declares `Database.Service` already runs against its process's database.
+          const ambient = yield* Effect.serviceOption(Database.Service);
+          if (Option.isSome(ambient)) {
+            return yield* Effect.provideService(effect, Database.Service, ambient.value);
+          }
           const process = yield* Process.current.pipe(Effect.mapError(() => new Agent.NoCurrentSessionError()));
           const resolver = opts?.serviceResolver?.() ?? Option.getOrUndefined(ambientResolver);
           if (resolver === undefined) {

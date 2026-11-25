@@ -64,7 +64,7 @@ pr PR-1: One Agent module for agents, sessions and the service.
 ```mdl
 pr PR-2: The Agent verbs need no service requirements.
   ref: dxos/dxos#14684
-  status: landing
+  status: failing
   goals: [G-4]
 ```
 
@@ -191,4 +191,10 @@ event T-14: The delegation PR is merged. A merge of main into the next PR remove
 event T-15: The user asks to land the next PR. It is ready for review, and auto-merge is on.
   date: 2026-11-25T16:01Z
   by: user:dmaretskyi
+```
+
+```mdl
+event T-16: The merge queue drops the next PR. Two delegation stories fail. A tool cannot find its session database.
+  date: 2026-11-25T16:50Z
+  by: agent:claude-code
 ```
