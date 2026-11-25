@@ -10,6 +10,7 @@ import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { Database, Filter, Query, Scope } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
@@ -42,10 +43,12 @@ const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> =
         return {};
       }
 
-      // Every plugin's operations: on EDGE the hook runs in operation-service, which has no handler provider.
       const handlers = OperationHandlerSet.merge(...(yield* Capability.getAll(Capabilities.OperationHandler)));
       const replies = yield* Effect.forEach(succeededCalls(request), ({ operationKey, output, evaluated }) =>
         OperationHandlerSet.getHandlerByKey(handlers, operationKey).pipe(
+          // On EDGE the hook runs in this plugin's own bundle, which holds none of plugin-discord's handlers; the
+          // registry still describes the send, with the annotation that marks it.
+          Effect.catch(() => fromRegistry(operationKey)),
           Effect.map((op) => {
             const field = AgentChannels.channelSendField(op);
             // Code mode does not record where a send from an `eval` went, so any such send counts as the reply.
@@ -60,6 +63,12 @@ const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> =
 );
 
 export default handler;
+
+/** The operation `key` as the registry records it, for one whose handler lives in another plugin's bundle. */
+const fromRegistry = (key: string) =>
+  Database.query(
+    Query.select(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).from(Scope.registry()),
+  ).first.pipe(Effect.flatMap(Effect.fromOption), Effect.map(Operation.deserialize));
 
 /** A prompt someone wrote, which starts a request; synthetic prompts (a hook's follow-up) continue one. */
 const isPrompt = (message: Message.Message): boolean => message.sender.role === 'user' && textOf(message).length > 0;

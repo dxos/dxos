@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -15,7 +16,7 @@ import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
@@ -32,6 +33,13 @@ manager.contribute({
   interface: Capabilities.OperationHandler,
   implementation: AgentOperationHandlerSet,
 });
+
+/** A send another plugin owns (as plugin-discord owns its send): registered, but with no handler in this bundle. */
+const ForeignSend = Operation.make({
+  meta: { key: DXN.make('com.example.operation.channel.send'), name: 'Send' },
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.Struct({ thread: Schema.String }),
+}).pipe(AgentChannels.channelSend('thread'));
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
@@ -177,6 +185,28 @@ describe('EnsureReplySent', () => {
         );
 
         expect(output).toEqual({ followUp: REMINDER });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'is silent once a send that only the registry knows (another plugin owns it) posted in this conversation',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { db } = yield* Database.Service;
+        db.registry.add([Operation.serialize(ForeignSend)]);
+        for (const messages of [
+          () => [prompt('Hi'), ...call(ForeignSend, 'send', { thread: 'thread' }), reply('Sent.')],
+          () => [prompt('Hi'), ...evalCall('eval', [{ operation: ForeignSend }]), reply('Sent.')],
+        ]) {
+          const conversation = yield* setupChat({ channel: true, messages });
+          const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
+            Effect.provide(conversation),
+          );
+          expect(output).toEqual({});
+        }
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
