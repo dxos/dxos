@@ -138,8 +138,11 @@ export class AutomergeFeedSource implements IndexDataSource {
       }
 
       // Multi-row inserts: in the browser every statement is a round trip to the database worker.
-      for (const chunk of Array.chunksOf(changes, CHANGE_ROWS_PER_INSERT)) {
-        yield* sql`INSERT OR IGNORE INTO echo_sqlite_changes ${sql.insert(chunk)}`;
+      for (let start = 0; start < changes.length; start += CHANGE_ROWS_PER_INSERT) {
+        const chunk = changes.slice(start, start + CHANGE_ROWS_PER_INSERT);
+        if (Array.isArrayNonEmpty(chunk)) {
+          yield* sql`INSERT OR IGNORE INTO echo_sqlite_changes ${sql.insert(chunk)}`;
+        }
       }
 
       return {

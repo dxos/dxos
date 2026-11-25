@@ -74,7 +74,15 @@ export const chunkRows = <T extends Record<string, unknown>>(rows: readonly T[])
 export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE): Array.NonEmptyArray<T>[] => {
   // A non-positive or fractional size would fail to advance the loop and spin forever.
   invariant(Number.isInteger(size) && size > 0, 'chunk size must be a positive integer');
-  return Array.chunksOf(items, size);
+  // Sliced batch by batch: `Array.chunksOf` copies the remaining suffix per chunk, which is quadratic.
+  const chunks: Array.NonEmptyArray<T>[] = [];
+  for (let index = 0; index < items.length; index += size) {
+    const chunk = items.slice(index, index + size);
+    if (Array.isArrayNonEmpty(chunk)) {
+      chunks.push(chunk);
+    }
+  }
+  return chunks;
 };
 
 /**

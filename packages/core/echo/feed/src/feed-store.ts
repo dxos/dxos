@@ -2238,8 +2238,17 @@ const FEED_INSERT_CHUNK = 30;
 /** Block keys per lookup, at three variables each. */
 const BLOCK_KEY_CHUNK = 30;
 
-const chunked = <T>(items: readonly T[], size: number): EffectArray.NonEmptyArray<T>[] =>
-  EffectArray.chunksOf(items, size);
+// Sliced batch by batch: `Array.chunksOf` copies the remaining suffix per chunk, which is quadratic.
+const chunked = <T>(items: readonly T[], size: number): EffectArray.NonEmptyArray<T>[] => {
+  const chunks: EffectArray.NonEmptyArray<T>[] = [];
+  for (let start = 0; start < items.length; start += size) {
+    const chunk = items.slice(start, start + size);
+    if (EffectArray.isArrayNonEmpty(chunk)) {
+      chunks.push(chunk);
+    }
+  }
+  return chunks;
+};
 
 /** What the insert of a block reads of its predecessor. */
 type StoredPredecessor = { insertionId: number; branch: string | null };
