@@ -33,6 +33,7 @@ import { EDGE_URLS } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { type ChatRequestContext, createPromptContent } from '@dxos/plugin-assistant/ChatRequest';
@@ -50,6 +51,7 @@ import { trim } from '@dxos/util';
 import * as Observe from './Observe.ts';
 import * as Scorer from './Scorer.ts';
 import { getDefaultSkills } from './skills.ts';
+import * as Transcript from './Transcript.ts';
 import * as Usage from './Usage.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
@@ -73,6 +75,7 @@ const GRADE_GRACE_MILLIS = 5 * 60 * 1_000;
 
 /** Distinguishes the open sessions of concurrently running rows, variants and files. */
 let nextRunId = 0;
+let nextTranscript = 0;
 
 /**
  * Tags a failure as coming specifically from the agent's own `RunInstructions` invocation —
@@ -324,6 +327,8 @@ export type Conversation<I> = {
 };
 
 export interface CreateEvalRunnerOptions<I, O> {
+  /** The eval's title, which names each run's transcript (with the variant's name). */
+  name?: string;
   instructions: string;
   input: Schema.Schema<I>;
   output: Schema.Schema<O>;
@@ -424,6 +429,8 @@ export type VariantConfig =
   | {
       model?: DXN.DXN;
       makeTurnProducer?: MakeTurnProducer;
+      /** The variant's display name, which names its transcript. */
+      name?: string;
     };
 
 /**
@@ -661,11 +668,23 @@ export function createEvalRunner<I, O>(
       calls.push(call);
       run.generation(call);
     };
+    // The running test's name carries the eval's and the variant's, so it names the transcript.
+    // Named from the options, not the running test: evalite runs variants concurrently, and vitest's
+    // global `expect` state then names whichever test touched it last. The sequence keeps names apart.
+    const name = [options.name ?? 'eval', variant?.name, `#${nextTranscript++}`].filter(Boolean).join(' — ');
+    let outcome: Transcript.Outcome = { error: new Error('The run did not finish.') };
     try {
-      return await execute(input, variant, record, calls);
+      const output = await execute(input, variant, record, calls);
+      outcome = { output };
+      return output;
+    } catch (error) {
+      outcome = { error };
+      throw error;
     } finally {
       Usage.report(calls, { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name });
       await run.finish();
+      // A transcript that cannot be written must not fail a run that has already been graded.
+      await Transcript.write({ name, calls, outcome }).catch((error) => log.warn('transcript not written', { error }));
     }
   };
 }

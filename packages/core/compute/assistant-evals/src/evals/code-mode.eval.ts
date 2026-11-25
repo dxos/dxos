@@ -62,7 +62,11 @@ const modelSelected = filterFromEnv('DX_EVAL_MODELS');
 const VARIANTS = ENGINES.filter(({ name }) => engineSelected(name)).flatMap((engine) =>
   MODELS.filter(({ name }) => modelSelected(name)).map(({ name, model }) => ({
     name: `${engine.name} / ${name}`,
-    input: { model, ...(engine.makeTurnProducer ? { makeTurnProducer: engine.makeTurnProducer } : {}) },
+    input: {
+      model,
+      name: `${engine.name} / ${name}`,
+      ...(engine.makeTurnProducer ? { makeTurnProducer: engine.makeTurnProducer } : {}),
+    },
   })),
 );
 
@@ -137,6 +141,7 @@ const defineTask = ({
   turns?: { target: number; budget: number };
 }) => {
   const task = createEvalRunner({
+    name: `Code mode — ${title}`,
     instructions,
     input: Schema.Null,
     output: Schema.Unknown,
