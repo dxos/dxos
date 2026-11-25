@@ -100,7 +100,7 @@ export const steps = [
     narration: 'A planner opens in a column of its own: it reads the guide on this machine and writes the plan.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'A subagent plans', subtitle: 'its own column, its own memory' });
-      await waitForCount(page, 0, 60_000);
+      await waitForCount(page, 1, 60_000);
       await page.getByText('The plan is written').first().waitFor({ state: 'visible', timeout: 60_000 });
       await demo.sleep({ ms: 2_000 });
     },
