@@ -49,8 +49,6 @@ const ARTIFACTS = Filter.or(
   Filter.type(Markdown.Document),
 );
 
-const EMPTY_HINT = 'Artifacts the agent creates appear here.';
-
 /** The space's artifacts, newest first. */
 const useArtifacts = (space: Space) => {
   const all = useQuery(space.db, ARTIFACTS);
@@ -75,9 +73,7 @@ const ArtifactsPanel = ({ space }: { space: Space }) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          {artifacts.length === 0 ? (
-            <Toolbar.Text>{EMPTY_HINT}</Toolbar.Text>
-          ) : (
+          {artifacts.length > 0 && (
             <Toolbar.ToggleGroup
               type='single'
               value={selected?.id ?? ''}
@@ -110,7 +106,7 @@ const ArtifactCards = ({ space }: { space: Space }) => {
     <Panel.Root data-testid='artifacts-module.cards'>
       <Panel.Header asChild>
         <Toolbar.Root>
-          <Toolbar.Text>{artifacts.length === 0 ? EMPTY_HINT : 'Artifacts'}</Toolbar.Text>
+          <Toolbar.Text>Artifacts</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
