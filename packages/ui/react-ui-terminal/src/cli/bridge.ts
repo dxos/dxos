@@ -23,6 +23,8 @@ export interface TerminalBridge {
   write(text: string): void;
   clear(): void;
   subscribe(handler: InputHandler): () => void;
+  /** Calls `handler` after each change to `columns` or `rows`; returns the unsubscribe. */
+  onResize(handler: () => void): () => void;
 }
 
 /**
@@ -90,6 +92,11 @@ export class XtermBridge implements TerminalBridge {
         this.#subscribers.splice(index, 1);
       }
     };
+  }
+
+  onResize(handler: () => void): () => void {
+    const subscription = this.#terminal.onResize(() => handler());
+    return () => subscription.dispose();
   }
 
   dispose(): void {

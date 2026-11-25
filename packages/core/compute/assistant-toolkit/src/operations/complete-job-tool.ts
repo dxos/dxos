@@ -68,5 +68,7 @@ export const makeCompleteJobParameters = (output: JsonSchema.JsonSchema) =>
 export const makeCompleteJobTool = (output: JsonSchema.JsonSchema) =>
   Tool.dynamic('completeJob', {
     parameters: JsonSchema.toJsonSchema(makeCompleteJobParameters(output)),
+    // The handler hands the payload to the caller and answers the model with nothing.
+    success: Schema.Void,
     failure: Schema.String,
   }).annotate(Tool.Strict, false);

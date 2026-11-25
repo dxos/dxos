@@ -44,6 +44,10 @@ export class TestBridge implements TerminalBridge {
     };
   }
 
+  onResize(_handler: () => void): () => void {
+    return () => {};
+  }
+
   /**
    * Feeds raw terminal data through the real decoder, so tests exercise the same path as xterm.
    */
