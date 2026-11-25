@@ -65,7 +65,7 @@ pr PR-1: One Agent module for agents, sessions and the service.
 ```mdl
 pr PR-2: The Agent verbs need no service requirements.
   ref: dxos/dxos#14684
-  status: failing
+  status: landing
   goals: [G-4]
 ```
 
@@ -110,6 +110,14 @@ question Q-2: Can you remove the next PR from the merge queue, so the fix for th
   context: The queue holds the PR but runs nothing. A queued branch cannot take a push, and this session cannot dequeue.
   options:
     - Remove it from the queue: the fix goes out and the PR goes back in the queue.
+```
+
+```mdl
+decision D-4: The merge queue removed the PR itself after its checks failed, so the fix went out with no dequeue.
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  answers: Q-2
 ```
 
 ## Timeline
@@ -213,5 +221,11 @@ event T-16: The merge queue drops the next PR. Two delegation stories fail. A to
 ```mdl
 event T-17: The fix is ready but cannot be pushed. The merge queue still holds the PR and runs nothing.
   date: 2026-11-25T17:10Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-18: The fix for the delegation stories is on the PR. Auto-merge is on again.
+  date: 2026-11-25T17:20Z
   by: agent:claude-code
 ```
