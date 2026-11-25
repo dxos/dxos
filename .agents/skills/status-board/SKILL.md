@@ -125,8 +125,8 @@ the land request only, and only for a PR in this file.
 
 ## 8. Composer tasks
 
-A goal with `task: <echo URI>` mirrors a Composer task. `cli.ts tasks` keeps its status in step and adds a goal for
-each new task. It never changes a goal's title, because the board's words pass the STE check and the task's do not.
+A goal with `task: <echo URI>` mirrors a Composer task; the page lists it under **Composer tasks**, apart from the
+session's own goals. `cli.ts tasks` keeps its status in step and adds a goal for each new task. It never changes a goal's title, because the board's words pass the STE check and the task's do not.
 
 How Composer links a task to this session: the task's `delegate` is
 `{ role: 'assistant', subject: <ref to a RemoteSession> }`. The `RemoteSession` is filed under the harness session id

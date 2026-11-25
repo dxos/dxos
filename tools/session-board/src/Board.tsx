@@ -173,15 +173,23 @@ export type BoardProps = {
 };
 
 /**
- * The session board: open questions, goals as a task list, pull requests and the append-only timeline, each an
+ * The session board: open questions, Composer tasks and goals as task lists, pull requests and the append-only timeline, each an
  * accordion section, with when it was built in the footer.
  */
 export const Board = ({ board, landing, onLandChange }: BoardProps) => {
   const updated = Typography.useRelativeTime(board.updated);
-  const tasks = useMemo(() => board.goals.map((goal) => goalTask(goal, board.questions)), [board]);
+  // A goal linked to a Composer task (`task:`) is listed under Tasks, apart from the session's own goals.
+  const goals = useMemo(() => board.goals.filter((goal) => !goal.task), [board]);
+  const composerGoals = useMemo(() => board.goals.filter((goal) => goal.task), [board]);
+  const tasks = useMemo(() => goals.map((goal) => goalTask(goal, board.questions)), [goals, board]);
+  const composerTasks = useMemo(
+    () => composerGoals.map((goal) => goalTask(goal, board.questions)),
+    [composerGoals, board],
+  );
   const entries = useMemo(() => historyEntries(board.timeline), [board]);
   const open = board.questions.filter((question) => !question.answer);
-  const done = board.goals.filter((goal) => goal.status === 'done').length;
+  const done = goals.filter((goal) => goal.status === 'done').length;
+  const composerDone = composerGoals.filter((goal) => goal.status === 'done').length;
 
   return (
     <Panel.Root size='sm' gutter='rail'>
@@ -226,7 +234,27 @@ export const Board = ({ board, landing, onLandChange }: BoardProps) => {
                   </Layout.Container>
                 )}
               </Section>
-              <Section id='goals' icon='ph--target--regular' label='Goals' count={`${done}/${board.goals.length}`}>
+              {composerTasks.length > 0 && (
+                <Section
+                  id='tasks'
+                  icon='ph--check-circle--regular'
+                  label='Composer tasks'
+                  count={`${composerDone}/${composerGoals.length}`}
+                >
+                  <TaskList.Root
+                    tasks={composerTasks}
+                    columns={['status', 'title']}
+                    showMnemonics={false}
+                    showDescription
+                    flush
+                  >
+                    <TaskList.Viewport>
+                      <TaskList.Content />
+                    </TaskList.Viewport>
+                  </TaskList.Root>
+                </Section>
+              )}
+              <Section id='goals' icon='ph--target--regular' label='Goals' count={`${done}/${goals.length}`}>
                 <TaskList.Root tasks={tasks} columns={['status', 'title']} showMnemonics={false} showDescription flush>
                   <TaskList.Viewport>
                     <TaskList.Content />
