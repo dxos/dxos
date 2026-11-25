@@ -445,14 +445,15 @@ export const useWindow = ({
   });
 
   const announced = useRef<string>('');
-  // The viewport is part of the key so the report taken before the first measurement is re-announced once it lands.
-  const state = `${visible.first}:${visible.last}:${first}:${last}:${count}:${placement.viewport}`;
+  const extent = windowExtentOf(placement, first, last);
+  // The viewport and the geometry are part of the key, so a measurement that lands, or a row that resizes, with the
+  // same rows mounted is still announced.
+  const state = `${visible.first}:${visible.last}:${first}:${last}:${count}:${placement.viewport}:${sizerExtent}:${offset}:${extent}`;
   if (onChange && announced.current !== state) {
     announced.current = state;
     // In render rather than an effect, so a readout never lags the frame it describes by one. The viewport is the
     // ResizeObserver's last reading: a DOM read here would force a layout mid-commit.
     const viewport = placement.viewport;
-    const extent = windowExtentOf(placement, first, last);
     queueMicrotask(() =>
       onChange({
         index: visible.first,

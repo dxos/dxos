@@ -110,11 +110,12 @@ const decorators = createDecorators({
   assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
 });
 
+const columnCount = (canvasElement: HTMLElement) =>
+  canvasElement.querySelectorAll('[data-testid="chat-plane.column"]').length;
+
 /** Waits until exactly `count` subagent columns are open. */
 const waitForColumns = (canvasElement: HTMLElement, count: number, timeout: number) =>
-  waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="chat-plane.column"]').length).toBe(count), {
-    timeout,
-  });
+  waitFor(() => expect(columnCount(canvasElement)).toBe(count), { timeout });
 
 /** Starts up and waits: the run begins when you click "Build.". */
 export const Default: Story = {
@@ -132,8 +133,9 @@ export const Scripted: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole('button', { name: BUILD_PROMPT }, { timeout: 60_000 }));
 
-    // The planner's column opens first; the diagram's and the code's open together once it reports.
-    await waitForColumns(canvasElement, 1, 60_000);
+    // The planner's column opens first; the diagram's and the code's open together once it reports, which may
+    // already have happened by the time this looks.
+    await waitFor(() => expect(columnCount(canvasElement)).toBeGreaterThanOrEqual(1), { timeout: 60_000 });
     await waitForColumns(canvasElement, 2, 120_000);
 
     // Every column closes once its subagent reports, and the agent offers the plugin with the plan and the diagram.
