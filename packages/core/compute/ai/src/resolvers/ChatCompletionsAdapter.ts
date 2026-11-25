@@ -171,6 +171,30 @@ type OllamaChatRequest = {
   tools?: ChatTool[];
 };
 
+/** Token counts of an OpenAI-compatible response. */
+type OpenAiUsage = {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  /** DeepSeek: prompt tokens read from its prefix cache. */
+  prompt_cache_hit_tokens?: number;
+  /** OpenAI: prompt tokens read from its prompt cache. */
+  prompt_tokens_details?: { cached_tokens?: number };
+};
+
+/** Prompt tokens the provider read from its cache, under whichever field the provider reports them. */
+const cachedPromptTokens = (usage: OpenAiUsage | undefined): number | undefined => {
+  const cached = usage?.prompt_cache_hit_tokens ?? usage?.prompt_tokens_details?.cached_tokens;
+  return typeof cached === 'number' ? cached : undefined;
+};
+
+/** The finish part's input-token usage; the cached share is omitted when the provider reports none. */
+const inputUsage = (total: number | undefined, cacheRead: number | undefined) => ({
+  total,
+  ...(cacheRead !== undefined ? { cacheRead } : {}),
+  ...(cacheRead !== undefined && total !== undefined ? { uncached: total - cacheRead } : {}),
+});
+
 /**
  * OpenAI-compatible chat completion response (non-streaming).
  */
@@ -190,11 +214,7 @@ type OpenAiChatResponse = {
     };
     finish_reason: string;
   }>;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
+  usage?: OpenAiUsage;
 };
 
 /**
@@ -242,11 +262,7 @@ type OpenAiStreamChunk = {
     finish_reason: string | null;
   }>;
   /** Present only on the final chunk, and only when `stream_options.include_usage` was requested. */
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
+  usage?: OpenAiUsage;
 };
 
 /**
@@ -606,6 +622,7 @@ const extractResponse = (
   reasoning?: string;
   toolCalls: NormalizedToolCall[];
   inputTokens?: number;
+  cachedInputTokens?: number;
   outputTokens?: number;
   finishReason: Response.FinishReason;
 } => {
@@ -632,6 +649,7 @@ const extractResponse = (
         reasoning: choice?.message?.reasoning_content ?? undefined,
         toolCalls,
         inputTokens: r.usage?.prompt_tokens,
+        cachedInputTokens: cachedPromptTokens(r.usage),
         outputTokens: r.usage?.completion_tokens,
         finishReason: toolCalls.length > 0 ? 'tool-calls' : mappedReason,
       };
@@ -660,6 +678,7 @@ type ParsedStreamChunk = {
   reasoning?: string;
   done: boolean;
   inputTokens?: number;
+  cachedInputTokens?: number;
   outputTokens?: number;
   finishReason?: Response.FinishReason;
   /** Fully-assembled tool calls present in this chunk (Ollama). */
@@ -720,6 +739,7 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
           reasoning: choice?.delta?.reasoning_content ?? undefined,
           done: choice?.finish_reason !== null && choice?.finish_reason !== undefined,
           inputTokens: tokenCount(chunk.usage?.prompt_tokens),
+          cachedInputTokens: cachedPromptTokens(chunk.usage),
           outputTokens: tokenCount(chunk.usage?.completion_tokens),
           finishReason: choice?.finish_reason ? mapOpenAiFinishReason(choice.finish_reason) : undefined,
           toolCallDeltas: deltas,
@@ -809,10 +829,8 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
             }),
           );
 
-          const { text, reasoning, toolCalls, inputTokens, outputTokens, finishReason } = extractResponse(
-            response,
-            config.apiFormat,
-          );
+          const { text, reasoning, toolCalls, inputTokens, cachedInputTokens, outputTokens, finishReason } =
+            extractResponse(response, config.apiFormat);
           annotateResponse(options.span, { inputTokens, outputTokens, finishReason });
 
           const parts: Response.PartEncoded[] = [];
@@ -837,7 +855,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
             type: 'finish',
             reason: finishReason,
             usage: {
-              inputTokens: { total: inputTokens },
+              inputTokens: inputUsage(inputTokens, cachedInputTokens),
               outputTokens: { total: outputTokens },
             },
           });
@@ -922,6 +940,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
             let finishSeen = false;
             let finishReason: Response.FinishReason | undefined;
             let inputTokens: number | undefined;
+            let cachedInputTokens: number | undefined;
             let outputTokens: number | undefined;
 
             /**
@@ -995,6 +1014,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                     // Last reported value wins: a trailing usage-only chunk supersedes the counts on
                     // the chunk that carried `finish_reason`.
                     inputTokens = parsed.inputTokens ?? inputTokens;
+                    cachedInputTokens = parsed.cachedInputTokens ?? cachedInputTokens;
                     outputTokens = parsed.outputTokens ?? outputTokens;
 
                     if (parsed.reasoning && parsed.reasoning.length > 0) {
@@ -1124,7 +1144,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                       type: 'finish',
                       reason,
                       usage: {
-                        inputTokens: { total: inputTokens },
+                        inputTokens: inputUsage(inputTokens, cachedInputTokens),
                         outputTokens: { total: outputTokens },
                       },
                     });
