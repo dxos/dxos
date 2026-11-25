@@ -1187,7 +1187,9 @@ const ChatSuggestions = ({ classNames, suggestions, onSelect }: ChatSuggestionsP
           }}
         >
           {/* A prompt longer than the composer would otherwise spill out of both sides of its chip. */}
-          <span className='min-w-0 truncate'>{text}</span>
+          <span className='min-w-0 truncate' title={text}>
+            {text}
+          </span>
         </Button.Root>
       ))}
     </div>

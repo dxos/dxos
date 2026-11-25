@@ -113,6 +113,8 @@ export const ChatColumns = () => {
     };
     return sorted.toSorted((a, b) => position(a) - position(b));
   }, [chats, order]);
+  const orderedRef = useRef(ordered);
+  orderedRef.current = ordered;
 
   const [currentId, setCurrentId] = useState<string>();
   // A chat just created is not in the query yet, so an unknown id holds the position until it arrives.
@@ -147,7 +149,8 @@ export const ChatColumns = () => {
         });
       }
       if (side === 'start') {
-        setOrder([chat.id, ...ordered.map(({ id }) => id)]);
+        // Read after the await, so a reorder made while the chat was being created is kept.
+        setOrder([chat.id, ...orderedRef.current.map(({ id }) => id)]);
       }
       setCurrentId(chat.id);
     },
