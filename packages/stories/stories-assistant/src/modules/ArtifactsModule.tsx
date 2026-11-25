@@ -15,7 +15,6 @@ import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
-import { Masonry } from '@dxos/react-ui-masonry';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
@@ -112,12 +111,11 @@ const ArtifactCards = ({ space }: { space: Space }) => {
       <Panel.Body asChild>
         <ScrollArea.Root classNames='dx-grow'>
           <ScrollArea.Viewport>
-            {artifacts.length > 0 && (
-              // No `Masonry.Content`: its own scroll area would fight the panel's.
-              <Masonry.Root Tile={ArtifactCard} centered={false}>
-                <Masonry.Viewport items={artifacts} getId={(object) => object.id} scroll={false} />
-              </Masonry.Root>
-            )}
+            <div className='flex flex-col gap-2 p-2'>
+              {artifacts.map((object) => (
+                <ArtifactCard key={object.id} object={object} />
+              ))}
+            </div>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
@@ -126,17 +124,13 @@ const ArtifactCards = ({ space }: { space: Space }) => {
 };
 
 /** One artifact as a card: its icon and label, then whatever preview its type contributes. */
-const ArtifactCard = memo(({ data }: { data: Obj.Unknown | undefined; index: number }) => {
-  const [object] = useObject(data);
-  const cardData = useMemo<AppSurface.ObjectCardData | undefined>(() => (data ? { subject: data } : undefined), [data]);
-  if (!data || !object || !cardData) {
-    return null;
-  }
-
+const ArtifactCard = memo(({ object }: { object: Obj.Unknown }) => {
+  const [snapshot] = useObject(object);
+  const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: object }), [object]);
   return (
-    <ObjectCard.Root data-testid='artifacts-module.card' data-artifact={kindOf(data)}>
-      <ObjectCard.Header subject={object} lines={2}>
-        {Obj.getLabel(object)}
+    <ObjectCard.Root data-testid='artifacts-module.card' data-artifact={kindOf(object)}>
+      <ObjectCard.Header subject={snapshot} lines={2}>
+        {Obj.getLabel(snapshot)}
       </ObjectCard.Header>
       <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />
     </ObjectCard.Root>
