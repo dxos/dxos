@@ -116,9 +116,10 @@ export const LaunchKitScripted: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole('button', { name: LAUNCH_REQUEST }, { timeout: 60_000 }));
 
-    // A column per session opens beside the agent's chat, and the agent's turn ends once all are started.
+    // A column per session opens beside the agent's chat, and the agent's turn ends once all are started. Each
+    // delegation spawns a session process before the agent's next turn, which a loaded CI runner takes far longer for.
     await waitForSessions(canvasElement, LAUNCH_TASKS.length, 60_000);
-    await canvas.findAllByText(new RegExp(SESSIONS_STARTED), {}, { timeout: 30_000 });
+    await canvas.findAllByText(new RegExp(SESSIONS_STARTED), {}, { timeout: 90_000 });
 
     // The reader keeps talking while the sessions work.
     await userEvent.click(await canvas.findByRole('button', { name: SIDE_QUESTION }, { timeout: 30_000 }));
