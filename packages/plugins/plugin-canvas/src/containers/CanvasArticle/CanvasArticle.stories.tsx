@@ -437,6 +437,26 @@ export const NestedDeep2D: Story = {
 export const Nested3D: Story = { decorators: withScenes(EXEMPLARS.encapsulated) };
 
 /**
+ * A blank 3D canvas: one scene over a layout and a model that hold nothing, which deleting from another canvas cannot
+ * reach, as a canvas keeps its last scene and its model's objects.
+ * 1. Cube or Sphere places the first element where the pointer meets the ground.
+ * 2. The Views inspector shows the root view alone, and the Objects inspector nothing.
+ */
+export const Blank3D: Story = {
+  decorators: withScenes(trim`
+    scene blank dim=3d layout=blank name="Blank" {
+      camera target=0,0,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
+    }
+
+    layout blank dim=3d model=library {
+    }
+
+    model library dim=3d {
+    }
+  `),
+};
+
+/**
  * A 3D canvas, a single plain cube written in `.dx`, under the same floating panels as 2D.
  * 1. Click selects; Move, Rotate or Scale puts a gizmo on it; Undo and Redo step back and forth.
  * 2. Orbit (or the middle button) orbits; shift or the right button pans; the wheel zooms.

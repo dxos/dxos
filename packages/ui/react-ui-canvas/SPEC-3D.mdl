@@ -91,7 +91,8 @@ feat F-1: Camera
 feat F-2: Selection, gizmos and faces
   uses: [org.dxos.scene]
   req F-2.1: A click selects, Shift toggles and empty space clears; a selection is drawn in the theme's focus colour
-    as a silhouette outline and a world-aligned bounding box per element ([org.dxos.scene#D-58]).
+    as a silhouette outline and a world-aligned bounding box per element ([org.dxos.scene#D-58]). The box stays round
+    its element on every frame of a drag, before the document has the move.
   req F-2.2: Move, Rotate and Scale put a gizmo on the one selected element; it moves the mesh in memory and its
     release is one intent in the open layout's coordinates. A scale sets the scale it ends at ([org.dxos.scene#D-48]).
   req F-2.3: Snapping moves a gizmo by the grid unit, turns it by 15 degrees and scales by a tenth, and places a new
@@ -100,6 +101,8 @@ feat F-2: Selection, gizmos and faces
     selection colour over that side of its bounds; the Properties section names it. Double-clicking a composite drills
     into its parts instead ([org.dxos.scene#D-86], [org.dxos.scene#D-87]).
   req F-2.5: Escape cancels a shape being sized, then clears a selected face, then drills out of a composite.
+  req F-2.6: The select-all chord selects every element of the open layout, as in 2D. The editor takes the chord, so
+    the browser does not select the page's text.
 ```
 
 ```mdl
@@ -372,6 +375,20 @@ decision D-22: `Style3D` states what it shares with the 2D look in the 2D look's
   for: user:richburdon
   affects: [F-6.2, F-6.3]
   why: With the shared fields named alike, a style lifts to 3D and flattens to 2D field for field.
+```
+
+```mdl
+decision D-23: When a 3D object moves, its bounding box moves with it.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-24: The select-all chord on the main canvas selects all the objects on the canvas, in 3D as in 2D, and nothing in the inspectors.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-2.6]
 ```
 
 ---

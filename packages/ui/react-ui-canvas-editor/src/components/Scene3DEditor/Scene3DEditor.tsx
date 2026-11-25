@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { DETENT_PX, isHandDrag, useCommandHeld } from '@dxos/react-ui-canvas';
+import { DETENT_PX, isHandDrag, keyAction, useCommandHeld } from '@dxos/react-ui-canvas';
 import {
   type Box,
   DEFAULT_CAMERA,
@@ -1080,6 +1080,10 @@ export const Scene3DEditor = ({
         } else if ((event.key === 'Delete' || event.key === 'Backspace') && selection.length > 0) {
           onIntent(editing, { kind: 'delete', ids: selection });
           onSelect([]);
+        } else if (keyAction(event) === 'selectAll') {
+          // Left to the browser, the chord selects the page's text, the panels' labels included.
+          event.preventDefault();
+          onSelect([...keys.keys()]);
         }
       }}
     >

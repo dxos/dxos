@@ -822,6 +822,7 @@ feat F-10: The 2D viewport in the editor
   req F-10.8: A hidden element is left out of a render list, except in a composite's definition, where a hidden part
     is one an instance may show again. A solid's operands are left out of every list, hidden or not, because the solid
     names them.
+  req F-10.9: The inspector panel's titles and labels do not select as text; a field's own text does.
 ```
 
 ```mdl
@@ -1857,6 +1858,13 @@ decision D-80: Until the canvas draws them ([F-14.2]), a `sketchy` stroke draws 
   for: user:richburdon
   affects: [F-14.2]
   why: The fill and stroke words are shared with renderers that have a hatching, a material and a hand-drawn stroke; a renderer without one draws its plain form, so the drawing still reads.
+```
+
+```mdl
+decision D-81: Inspector headers and text labels do not select as text.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-10.9]
 ```
 
 ## Appendix: Extension Definitions

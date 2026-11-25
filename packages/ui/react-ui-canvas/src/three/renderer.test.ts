@@ -148,6 +148,25 @@ describe('SceneRenderer3D.pick', () => {
     view.dispose();
   });
 
+  test("a selected item's box follows its mesh on every frame of a gizmo drag, before the document has the move", () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    view.select(['a']);
+    view.attachGizmo('a', 'move', () => {});
+    const scene = view.gizmoLayer?.originalScene;
+    const mesh = scene?.getMeshByName('item-a');
+    expect(mesh).toBeTruthy();
+    // A gizmo moves, turns and scales the mesh itself; the document changes only on the release.
+    mesh?.position.set(3, 0, 0);
+    scene?.render();
+    expect(view.boxes.a?.min.x).toBeCloseTo(2.5);
+    expect(view.boxes.a?.max.x).toBeCloseTo(3.5);
+    mesh?.scaling.set(2, 1, 1);
+    scene?.render();
+    expect(view.boxes.a?.min.x).toBeCloseTo(2);
+    expect(view.boxes.a?.max.x).toBeCloseTo(4);
+    view.dispose();
+  });
+
   test('intersecting or coplanar items never cut into the outline: only selected items reach its mask', () => {
     const view = renderer(
       doc([

@@ -103,5 +103,7 @@ export const Test: Story = {
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
+    // 4. A title is chrome: a select-all on the page leaves it unselected.
+    await expect(getComputedStyle(within(dock).getByRole('button', { name: 'Properties' })).userSelect).toBe('none');
   },
 };

@@ -166,11 +166,20 @@ export type GizmoMode = 'move' | 'rotate' | 'scale';
 /** An item's transform in world space (rotation in Euler degrees), as a gizmo drag leaves it. */
 export type WorldTransform = { center: Model.Vec3; rotation: Model.Vec3; scale: Model.Vec3 };
 
-/** Whether the mesh's world-aligned bounds are still `min` to `max`. */
-const sameBounds = (surface: AbstractMesh, { min, max }: { min: Vector3; max: Vector3 }): boolean => {
+/** A selection box: a unit cube's edges, placed and sized to the bounds `min` to `max`. */
+type SelectionBox = { mesh: LinesMesh; min: Vector3; max: Vector3 };
+
+/** Puts a selection box on the mesh's world-aligned bounds as they now are; a box already there is left alone. */
+const fitBox = (box: SelectionBox, surface: AbstractMesh): void => {
   surface.computeWorldMatrix(true);
   const { minimumWorld, maximumWorld } = surface.getBoundingInfo().boundingBox;
-  return minimumWorld.equalsWithEpsilon(min) && maximumWorld.equalsWithEpsilon(max);
+  if (minimumWorld.equalsWithEpsilon(box.min) && maximumWorld.equalsWithEpsilon(box.max)) {
+    return;
+  }
+  box.min.copyFrom(minimumWorld);
+  box.max.copyFrom(maximumWorld);
+  box.mesh.position.copyFrom(minimumWorld);
+  box.mesh.scaling.copyFrom(maximumWorld.subtract(minimumWorld));
 };
 
 const degrees = (radians: number) => Math.round(((radians * 180) / Math.PI) * 1000) / 1000 + 0;
@@ -267,7 +276,7 @@ export class SceneRenderer3D {
   readonly #excluded = new Set<Mesh>();
   readonly #watched = new WeakSet<Mesh>();
   #selection: string;
-  readonly #boxes = new Map<string, { mesh: LinesMesh; min: Vector3; max: Vector3 }>();
+  readonly #boxes = new Map<string, SelectionBox>();
   /** The selected face: the item's key and the face's axis-aligned outward normal, drawn as a pane over that side. */
   #faceSelection?: { key: string; normal: Model.Vec3 };
   #faceMesh?: { mesh: Mesh; center: Vector3 };
@@ -353,6 +362,8 @@ export class SceneRenderer3D {
     this.#scene.onAfterCameraRenderObservable.add(() => this.#engine.setStencilOperationDepthFail(Constants.KEEP));
     // Selection boxes draw over the scene, as 2D's frame does, so a face that an edge lies on cannot z-fight with it.
     this.#scene.setRenderingAutoClearDepthStencil(OVERLAY_GROUP, true, true, false);
+    // A gizmo moves, turns and scales a mesh on every frame of a drag, and the document has none of it until the release.
+    this.#scene.onBeforeRenderObservable.add(() => this.#fitBoxes());
   }
 
   /** The colour the view clears to, as `#rrggbb`. */
@@ -1125,28 +1136,32 @@ export class SceneRenderer3D {
         this.#exclude(surface);
       }
     }
-    // A box is rebuilt only when its item's bounds or the colour change: a new box is not drawn until its material is
-    // ready, so one rebuilt on every frame of an orbit flickers.
+    // A box is moved and sized to bounds that change, never rebuilt: a new box is not drawn until its material is ready,
+    // so one rebuilt on every frame of a drag flickers.
     for (const [key, box] of this.#boxes) {
-      const surface = this.#items.get(key)?.surface;
-      if (!surface || !this.#selected.has(key) || !box.mesh.color.equals(color) || !sameBounds(surface, box)) {
+      if (!this.#items.has(key) || !this.#selected.has(key) || !box.mesh.color.equals(color)) {
         box.mesh.dispose();
         this.#boxes.delete(key);
       }
     }
-    for (const [key, { surface }] of this.#items) {
+    for (const key of this.#items.keys()) {
       if (this.#selected.has(key) && !this.#boxes.has(key)) {
-        this.#boxes.set(key, this.#createBox(key, surface, color));
+        this.#boxes.set(key, this.#createBox(key, color));
       }
+    }
+    this.#fitBoxes();
+  }
+
+  /** Puts each selection box on its item's bounds as they now are. */
+  #fitBoxes(): void {
+    for (const [key, box] of this.#boxes) {
+      const surface = this.#items.get(key)?.surface;
+      surface && fitBox(box, surface);
     }
   }
 
-  /** A thin wire box round an item's world-aligned bounds, drawn apart from the outline (which only meshes take). */
-  #createBox(key: string, surface: AbstractMesh, color: Color3): { mesh: LinesMesh; min: Vector3; max: Vector3 } {
-    surface.computeWorldMatrix(true);
-    const { minimumWorld: min, maximumWorld: max } = surface.getBoundingInfo().boundingBox;
-    const corner = (x: number, y: number, z: number) =>
-      new Vector3(x ? max.x : min.x, y ? max.y : min.y, z ? max.z : min.z);
+  /** A thin wire box for an item's world-aligned bounds, drawn apart from the outline (which only meshes take). */
+  #createBox(key: string, color: Color3): SelectionBox {
     const edges: [number, number, number, number, number, number][] = [
       [0, 0, 0, 1, 0, 0],
       [0, 1, 0, 1, 1, 0],
@@ -1163,14 +1178,15 @@ export class SceneRenderer3D {
     ];
     const mesh = CreateLineSystem(
       `box-${key}`,
-      { lines: edges.map(([x0, y0, z0, x1, y1, z1]) => [corner(x0, y0, z0), corner(x1, y1, z1)]) },
+      { lines: edges.map(([x0, y0, z0, x1, y1, z1]) => [new Vector3(x0, y0, z0), new Vector3(x1, y1, z1)]) },
       this.#scene,
     );
     mesh.color = color;
     mesh.alpha = 0.8;
     mesh.isPickable = false;
     mesh.renderingGroupId = OVERLAY_GROUP;
-    return { mesh, min: min.clone(), max: max.clone() };
+    // Fitted to its item before it is drawn; bounds no item has, so the first fit always places it.
+    return { mesh, min: new Vector3(Infinity, Infinity, Infinity), max: new Vector3(-Infinity, -Infinity, -Infinity) };
   }
 
   /**
