@@ -5,34 +5,29 @@
 // @import-as-namespace
 
 import type * as acp from '@agentclientprotocol/sdk';
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/reactivity/Atom';
 import type * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import * as Capability from '@dxos/app-framework/Capability';
 import { AiAssistantError, AiContext, type Chat, TrajectoryStore } from '@dxos/assistant';
-import { type Client } from '@dxos/client';
-import { type RemoteProcessManager, accessTokenResolverFromEdge } from '@dxos/compute-runtime';
+import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, Database, Feed, Obj, Query } from '@dxos/echo';
-import { EdgeProcessControl } from '@dxos/edge-compute';
-import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import type * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import { isManagedAccessToken } from '@dxos/protocols';
 import { type ContentBlock, Message, Repo } from '@dxos/types';
 
@@ -75,58 +70,6 @@ export type Definition = {
   credentials: Effect.Effect<Record<string, string>, never, Database.Service | Credential.AccessTokenResolver>;
 };
 
-/**
- * A coding agent EDGE runs in a sandbox container (compute-service's coding-agent process), as the
- * agent-registry entry a plugin contributes. The session lives on EDGE: it keeps working with no client
- * connected, and EDGE restarts the container and resumes the turn when the agent dies or stalls. A turn
- * here submits the prompt and folds the process's outputs into the chat as they arrive.
- */
-export const make = (
-  definition: Definition,
-): Effect.Effect<AssistantCapabilities.Agent, never, Scope.Scope | Capability.Service> =>
-  Effect.gen(function* () {
-    const manager = yield* Capability.Service;
-    let cached: { client: Client; control: ProcessControl } | undefined;
-    const control = (): ProcessControl | undefined => {
-      const client = manager.getAll(ClientCapabilities.Client).at(0);
-      if (!client) {
-        return undefined;
-      }
-      if (cached?.client !== client) {
-        cached = { client, control: fromRemoteControl(EdgeProcessControl.fromClient(client)) };
-      }
-      return cached.control;
-    };
-
-    // Resolves a token EDGE custodies (the GitHub App's) through the signed-in client.
-    const accessTokens = accessTokenResolverFromEdge(() => {
-      const client = manager.getAll(ClientCapabilities.Client).at(0);
-      invariant(client, 'no client to resolve the access token through');
-      return client.edge.http;
-    });
-
-    // Lent to every turn so the agent reaches the space through Composer's MCP server, as the signed-in identity.
-    const composerMcp = composerMcpCredentials(() => manager.getAll(ClientCapabilities.IdentityService).at(0));
-
-    const options: Options = { definition, control, accessTokens, composerMcp };
-    return {
-      id: definition.id,
-      label: definition.label,
-      icon: definition.icon,
-      availability: Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }),
-      makeTurnProducer: makeTurnProducer(options),
-      respond: (response) =>
-        respond(options, response).pipe(
-          Effect.catch((error) =>
-            Effect.sync(() => {
-              log.warn('request not answered', { chat: response.chat.id, error });
-              return false;
-            }),
-          ),
-        ),
-    } satisfies AssistantCapabilities.Agent;
-  });
-
 /** What a turn needs of EDGE's process routes: the verbs it calls, and the process's RPC group. */
 export type ProcessControl = Pick<RemoteProcessManager.Control, 'spawn' | 'submitInput' | 'readEvents'> & {
   readonly rpc: (
@@ -134,7 +77,9 @@ export type ProcessControl = Pick<RemoteProcessManager.Control, 'spawn' | 'submi
   ) => Effect.Effect<RpcClient.RpcClient<EdgeProtocol.ControlRpcs>, never, Scope.Scope>;
 };
 
-export const fromRemoteControl = (control: RemoteProcessManager.Control): ProcessControl => ({
+export const fromRemoteControl = (
+  control: Pick<RemoteProcessManager.Control, 'spawn' | 'submitInput' | 'readEvents' | 'makeRpcClient'>,
+): ProcessControl => ({
   spawn: (request) => control.spawn(request),
   submitInput: (request) => control.submitInput(request),
   readEvents: (request) => control.readEvents(request),
@@ -148,12 +93,17 @@ export type Options = {
   accessTokens?: Layer.Layer<Credential.AccessTokenResolver>;
   /** The variables that authorize the agent against Composer's MCP server; without it, the agent has no Composer tools. */
   composerMcp?: Effect.Effect<Record<string, string>>;
+  /**
+   * The caller is bounded (an operation an MCP client calls, which it may abandon), not a person watching: being
+   * interrupted then leaves the turn running on EDGE and recorded for the next call, rather than cancelling it.
+   */
+  detached?: boolean;
 };
 
 /** The chat's process, and where to reach it. */
 type Target = { control: ProcessControl; spaceId: SpaceId; pid: Process.ID };
 
-const makeTurnProducer =
+export const makeTurnProducer =
   (options: Options): MakeTurnProducer =>
   ({ chat, feed }) =>
     Effect.succeed({
@@ -168,9 +118,29 @@ const makeTurnProducer =
 /** One turn of the EDGE agent against a chat. */
 export const runTurn = (
   options: Options,
-  { chat, feed }: { chat: Chat.Chat; feed: Feed.Feed },
+  context: { chat: Chat.Chat; feed: Feed.Feed },
   request: TurnRequest,
 ): Effect.Effect<Message.Message[], AgentError, Database.Service | Trace.TraceService> =>
+  runTurnUntil(options, context, request).pipe(
+    Effect.flatMap((progress) =>
+      progress.done ? Effect.succeed(progress.messages) : Effect.die('a turn with no deadline stopped early'),
+    ),
+  );
+
+/** How far a bounded turn got: finished, or still running on EDGE and recorded for the next call to pick up. */
+export type TurnProgress = { done: true; messages: Message.Message[] } | { done: false };
+
+/**
+ * A turn that stops folding at `deadline` (epoch ms) while the agent works on, so a caller with a bounded run
+ * time, such as an operation on EDGE, folds it in steps. A stop leaves the turn open and recorded, and the next
+ * call with the same prompt picks it up where it is.
+ */
+export const runTurnUntil = (
+  options: Options,
+  { chat, feed }: { chat: Chat.Chat; feed: Feed.Feed },
+  request: TurnRequest,
+  deadline?: number,
+): Effect.Effect<TurnProgress, AgentError, Database.Service | Trace.TraceService> =>
   Effect.gen(function* () {
     const started = Date.now();
     const target = yield* ensureProcess(options, chat);
@@ -331,7 +301,7 @@ export const runTurn = (
         }
         const output = Schema.decodeUnknownOption(EdgeProtocol.Output)(event.data);
         if (Option.isSome(output) && (yield* handle(output.value))) {
-          return produced;
+          return { done: true, messages: produced } satisfies TurnProgress;
         }
       }
       if (ENDED.has(page.snapshot.state)) {
@@ -339,13 +309,19 @@ export const runTurn = (
           new AgentError({ message: `The agent's process ended (${page.snapshot.state.toLowerCase()}).` }),
         );
       }
+      if (deadline !== undefined && Date.now() >= deadline) {
+        return { done: false } satisfies TurnProgress;
+      }
       yield* Effect.sleep(POLL_INTERVAL);
     }
   }).pipe(
     Effect.scoped,
-    // However this client sees the turn end, it closes into the conversation.
+    // However this client sees the turn end, it closes into the conversation; a turn stopped at its deadline has not ended.
     Effect.onExit((exit) =>
       Effect.gen(function* () {
+        if (leftOpen(options, exit)) {
+          return;
+        }
         const turnId = pendingTurnOf(chat, options.definition.id)?.turnId;
         const feed = turnId !== undefined ? yield* Database.load(chat.feed).pipe(Effect.option) : Option.none();
         const thread =
@@ -359,12 +335,17 @@ export const runTurn = (
     ),
     // However this client sees the turn end, nothing is left to pick up; only a client that vanished
     // mid-turn, which runs no finalizer, leaves the record behind.
-    Effect.ensuring(
-      Effect.sync(() => Obj.update(chat, (chat) => Obj.deleteKeys(chat, turnKeySource(options.definition.id)))),
+    Effect.onExit((exit) =>
+      leftOpen(options, exit)
+        ? Effect.void
+        : Effect.sync(() => Obj.update(chat, (chat) => Obj.deleteKeys(chat, turnKeySource(options.definition.id)))),
     ),
     // Interrupting the turn cancels it on EDGE; the session stays.
     Effect.onInterrupt(() =>
       Effect.gen(function* () {
+        if (options.detached) {
+          return;
+        }
         const pid = processOf(chat, options.definition.id);
         const control = options.control();
         const spaceId = Obj.getDatabase(chat)?.spaceId;
@@ -375,8 +356,12 @@ export const runTurn = (
     ),
   );
 
+/** Whether a turn's exit leaves it running on EDGE for a later call: stopped at its deadline, or a detached caller abandoned. */
+const leftOpen = (options: Options, exit: Exit.Exit<TurnProgress, unknown>): boolean =>
+  Exit.isSuccess(exit) ? !exit.value.done : options.detached === true && Exit.hasInterrupts(exit);
+
 /** Answers a request block the agent parked: hands the choice to EDGE, then records it. */
-const respond = (
+export const respond = (
   options: Options,
   { chat, message, requestId, optionId }: AssistantCapabilities.AgentResponse,
 ): Effect.Effect<boolean, AgentError, Database.Service> =>
@@ -417,6 +402,7 @@ const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target,
     const mode = definition.mode?.(chat);
     const meta = definition.sessionMeta?.(chat);
     const repositories = yield* checkoutsOf(chat);
+    const setupScript = setupScriptOf(chat);
     const snapshot = yield* control.spawn({
       spaceId,
       key: EdgeProtocol.PROCESS_KEY,
@@ -426,6 +412,8 @@ const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target,
         ...(mode !== undefined && { [EdgeProtocol.Annotation.mode]: mode }),
         ...(meta !== undefined && { [EdgeProtocol.Annotation.meta]: meta }),
         ...(repositories.length > 0 && { [EdgeProtocol.Annotation.repositories]: repositories }),
+        ...(repositories.length > 0 &&
+          setupScript !== undefined && { [EdgeProtocol.Annotation.setupScript]: setupScript }),
       }),
       // A spawn redelivered after a lost answer reaches the same process.
       idempotencyKey: `${definition.id}:${chat.id}`,
@@ -478,6 +466,15 @@ export const checkoutsOf = (
     }
     return checkouts;
   });
+
+/**
+ * The setup script of the chat's project, for the sandbox to run after the checkouts. Sent only with
+ * repositories: it prepares those checkouts, and a chat outside a project has no script.
+ */
+export const setupScriptOf = (chat: Chat.Chat): string | undefined => {
+  const project = Workspace.projectOf(chat);
+  return project ? Repo.getSetupScript(project) : undefined;
+};
 
 const GITHUB_HOST = 'github.com';
 
@@ -558,33 +555,89 @@ export const composerMcpCredentials = (
 };
 
 /**
- * The space's GitHub connection as the environment the agent's `git` and `gh` read: a token EDGE custodies
- * (the GitHub App's) is resolved through it. None, or one that cannot be resolved, leaves the checkout to
- * public repositories.
+ * Set beside a GitHub token EDGE could not make work, to why. EDGE reserves `DX_` names and refuses whitespace in a
+ * lent value, so the reason is kept to one word-joined line.
  */
-export const githubCredentials: Effect.Effect<
-  Record<string, string>,
-  never,
-  Database.Service | Credential.AccessTokenResolver
-> = Effect.gen(function* () {
-  const tokens = yield* Database.query(Query.type(AccessToken.AccessToken)).run;
-  const accessToken = tokens.find((token) => token.source === GITHUB_HOST);
-  if (!accessToken) {
-    return NO_CREDENTIALS;
-  }
-  const token = isManagedAccessToken(accessToken.token)
-    ? yield* Credential.AccessTokenResolver.resolve({ spaceId: yield* Database.spaceId, accessTokenId: accessToken.id })
-    : accessToken.token;
-  const env: Record<string, string> = { GITHUB_TOKEN: token, GH_TOKEN: token };
-  return env;
-}).pipe(
-  Effect.catchCause((cause) =>
-    Effect.sync(() => {
-      log.warn('no GitHub credential', { cause });
-      return NO_CREDENTIALS;
+export const GITHUB_TOKEN_ERROR_ENV = 'GITHUB_TOKEN_ERROR';
+
+/** GitHub's verdict on a token: refused outright (401), accepted, or unknown with the reason it could not be asked. */
+export type GitHubTokenVerdict = { refused: boolean; unchecked?: string };
+
+export type GitHubTokenCheck = (token: string) => Effect.Effect<GitHubTokenVerdict>;
+
+const firstLine = (cause: Cause.Cause<unknown>): string => Cause.pretty(cause).split('\n')[0];
+
+/** Asks GitHub who the token belongs to; only a 401 is a refusal. */
+export const githubRefuses: GitHubTokenCheck = (token) =>
+  Effect.tryPromise(() =>
+    fetch('https://api.github.com/user', {
+      headers: { 'authorization': `Bearer ${token}`, 'user-agent': 'dxos-coding-agent' },
     }),
-  ),
-);
+  ).pipe(
+    Effect.map((response): GitHubTokenVerdict => ({ refused: response.status === 401 })),
+    Effect.catchCause((cause) => Effect.succeed({ refused: false, unchecked: firstLine(cause) })),
+  );
+
+/**
+ * The space's GitHub connection as the environment the agent's `git` and `gh` read. Every token is resolved through
+ * EDGE, since resolving refreshes a stale App user token; the stored value is the fallback for a token EDGE does not
+ * hold, such as a personal access token. A token GitHub refuses (one revoked before its expiry) is exchanged again
+ * by EDGE; when that does not yield a working one, {@link GITHUB_TOKEN_ERROR_ENV} says why. None, or a placeholder
+ * that cannot be resolved, leaves the checkout to public repositories.
+ */
+export const githubCredentialsWith = (
+  refuses: GitHubTokenCheck,
+): Effect.Effect<Record<string, string>, never, Database.Service | Credential.AccessTokenResolver> =>
+  Effect.gen(function* () {
+    const tokens = yield* Database.query(Query.type(AccessToken.AccessToken)).run;
+    const accessToken = tokens.find((token) => token.source === GITHUB_HOST);
+    if (!accessToken) {
+      return NO_CREDENTIALS;
+    }
+    const spaceId = yield* Database.spaceId;
+    const resolve = (refresh: boolean) =>
+      Credential.AccessTokenResolver.resolve({ spaceId, accessTokenId: accessToken.id, refresh }).pipe(Effect.exit);
+
+    const first = yield* resolve(false);
+    if (Exit.isFailure(first) && isManagedAccessToken(accessToken.token)) {
+      return yield* Effect.failCause(first.cause);
+    }
+    let token = Exit.isSuccess(first) ? first.value : accessToken.token;
+    let error = Exit.isFailure(first) ? firstLine(first.cause) : undefined;
+    // EDGE refreshed the grant without writing the new token back, so the stored copy other plugins lend is revoked;
+    // one more exchange writes it back.
+    if (Exit.isSuccess(first) && !isManagedAccessToken(accessToken.token) && first.value !== accessToken.token) {
+      const exchanged = yield* resolve(true);
+      token = Exit.isSuccess(exchanged) ? exchanged.value : token;
+    }
+    const verdict = yield* refuses(token);
+    if (verdict.unchecked !== undefined) {
+      error ??= `could not check the token with GitHub: ${verdict.unchecked}`;
+    }
+    if (verdict.refused) {
+      const again = yield* resolve(true);
+      if (Exit.isSuccess(again) && !(yield* refuses(again.value)).refused) {
+        token = again.value;
+        error = undefined;
+      } else {
+        error = Exit.isFailure(again)
+          ? firstLine(again.cause)
+          : 'GitHub refused the token, and the one EDGE exchanged it for too; reconnect GitHub in the space.';
+      }
+    }
+    const reason = error
+      ?.replace(/\s+/g, '_')
+      .replace(/[^\x21-\x7e]/g, '')
+      .slice(0, 512);
+    return { GITHUB_TOKEN: token, GH_TOKEN: token, ...(reason ? { [GITHUB_TOKEN_ERROR_ENV]: reason } : {}) };
+  }).pipe(
+    Effect.catchCause((cause) =>
+      Effect.sync(() => {
+        log.warn('no GitHub credential', { cause });
+        return NO_CREDENTIALS;
+      }),
+    ),
+  );
 
 /**
  * A repository's HTTPS clone URL: its own URL when it is hosted elsewhere, GitHub's otherwise; none for
@@ -603,6 +656,9 @@ type PendingTurn = { turnId: string; cursor: number; folded: number };
 const encodePendingTurn = ({ turnId, cursor, folded }: PendingTurn): string => `${turnId}:${cursor}:${folded}`;
 
 /** The turn the chat recorded as still running on EDGE, if a client closed before it ended. */
+/** Whether a turn some caller started is still open on the chat, for a later call to fold. */
+export const hasPendingTurn = (chat: Chat.Chat, agent: string): boolean => pendingTurnOf(chat, agent) !== undefined;
+
 const pendingTurnOf = (chat: Chat.Chat, agent: string): PendingTurn | undefined => {
   const id = Obj.getKeys(chat, turnKeySource(agent)).at(-1)?.id;
   const [turnId, cursor, folded] = id?.split(':') ?? [];

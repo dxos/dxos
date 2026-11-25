@@ -7,14 +7,13 @@
 import type * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
+import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { trim } from '@dxos/util';
-
-import { CodeOperation } from '#types';
 
 export const key = 'org.dxos.skill.code.repositories';
 
 /** Operation definitions behind the skill's tools, for hosts without a registry to resolve ToolIds. */
-export const operations: readonly Operation.Definition.Any[] = [CodeOperation.UpdateProjectRepositories];
+export const operations: readonly Operation.Definition.Any[] = [ProjectOperation.UpdateRepositories];
 
 export const make = (): Skill.Skill =>
   Skill.make({

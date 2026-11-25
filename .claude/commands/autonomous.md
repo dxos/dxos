@@ -10,10 +10,30 @@ Arguments: `$ARGUMENTS`
 run's state lives in the session's project dir, which can be a different
 checkout from your cwd; the relative paths below are shorthand for that path.
 
-**Never set the state yourself.** `.claude/hooks/autonomous.sh` runs on
-`UserPromptSubmit`, which carries the raw `/autonomous …` text and fires before
-this expansion reaches you, so the write is already done. The `AUTONOMOUS MODE`
-block in this turn's context is the source of truth for what is pinned.
+**Never set the state yourself when the hook ran.** `.claude/hooks/autonomous.sh`
+runs on `UserPromptSubmit`, which carries the raw `/autonomous …` text and fires
+before this expansion reaches you, so the write is already done. The
+`AUTONOMOUS MODE` block in this turn's context is the source of truth for what is
+pinned.
+
+**When the hook did not run, start the run yourself.** Claude Code loads hooks
+only from the session's project root, so a session opened above the checkout (a
+cloud session holding several repositories, say `/home/user` with `dxos/` and
+`edge/` inside) never runs them. That is the case when this turn has no
+`AUTONOMOUS MODE` block and `bash <checkout>/.claude/scripts/autonomous.sh get`
+prints nothing. Then do by hand what the hook would have done, from the
+checkout's root:
+
+```bash
+bash .claude/scripts/autonomous.sh set '<the task: $ARGUMENTS, or your previous instruction if empty>'
+bash .claude/scripts/autonomous.sh user add '<each user message so far, oldest first, verbatim>'
+```
+
+For `off`/`stop`/`end`, run `autonomous.sh stop '<reason>'` instead; for
+`status`, only read. Say in one line that the hook did not run. The `Stop` hook
+does not run either, so nothing holds the turn open: keep working until the
+definition of done is met, and log each later user message yourself with
+`user add`.
 
 **If `$ARGUMENTS` named a task** (or was empty, in which case the task was
 adopted from your previous instruction), the run is now ON. Before touching

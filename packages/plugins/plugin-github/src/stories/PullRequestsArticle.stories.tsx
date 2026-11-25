@@ -56,6 +56,7 @@ const handlers = OperationHandlerSet.make(
         runs: [],
         review,
         approvals: review === 'approved' ? 2 : 0,
+        labels: [],
       };
     }),
   ),

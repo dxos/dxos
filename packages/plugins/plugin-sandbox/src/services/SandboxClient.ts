@@ -11,8 +11,11 @@ import * as HttpClientError from 'effect/http/HttpClientError';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import type * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
-import { EXEC_STREAM_CONTENT_TYPE, foldExecStream } from './exec-stream.ts';
+import { BaseError } from '@dxos/errors';
+
+import { EXEC_STREAM_CONTENT_TYPE, type ExecStreamEvent, foldExecStream, parseExecStream } from './exec-stream.ts';
 
 /** A repository attached to a sandbox, and the git remote name commands in it address it by. */
 export const AttachedRepository = Schema.Struct({
@@ -84,6 +87,17 @@ export type ExecRequest = {
   background?: boolean;
 };
 
+/** A background process's state as the service reports it. */
+export const ProcessState = Schema.Struct({
+  processId: Schema.String,
+  status: Schema.Literals(['starting', 'running', 'completed', 'failed', 'killed', 'error']),
+  exitCode: Schema.optional(Schema.Number),
+});
+export type ProcessState = Schema.Schema.Type<typeof ProcessState>;
+
+/** The service takes at most this many characters of stdin per request. */
+export const STDIN_CHUNK_LENGTH = 60_000;
+
 export type ExposePortOptions = {
   /** The server behind the port, restarted with the container. */
   command?: string;
@@ -104,7 +118,11 @@ const CREATE_TIMEOUT = Duration.seconds(90);
 /** Metadata and file calls do no work in the container beyond the syscall. */
 const METADATA_TIMEOUT = Duration.seconds(30);
 
+/** The service answered, but not with what the request asked for. */
+export class SandboxResponseError extends BaseError.extend('SandboxResponseError', 'Unexpected sandbox response.') {}
+
 export type SandboxRequestError =
+  | SandboxResponseError
   | HttpClientError.HttpClientError
   | HttpBody.HttpBodyError
   | Schema.SchemaError
@@ -211,6 +229,115 @@ export class SandboxClient {
         (response.headers['content-type'] ?? '').includes(EXEC_STREAM_CONTENT_TYPE)
           ? Effect.map(response.text, foldExecStream)
           : Effect.flatMap(response.json, Schema.decodeUnknownEffect(ExecResult)),
+    );
+  }
+
+  /**
+   * Starts a command in the background with its stdin open, and answers its process id. The process
+   * keeps running after this request; {@link writeStdin}, {@link processOutput} and
+   * {@link killProcess} reach it by id.
+   */
+  startProcess(
+    spaceId: string,
+    sandboxId: string,
+    options: Pick<ExecRequest, 'command' | 'cwd' | 'env'>,
+  ): RequestEffect<string> {
+    return send(
+      HttpClientRequest.post(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/exec`)),
+      { ...options, background: true, stdin: true },
+      ExecResult,
+      DEFAULT_TIMEOUT,
+      this._authHeader,
+      { checkStatus: true },
+    ).pipe(
+      Effect.flatMap(({ processId, success, stderr }) =>
+        processId && success
+          ? Effect.succeed(processId)
+          : Effect.fail(new SandboxResponseError({ message: stderr || 'The service started no process.' })),
+      ),
+    );
+  }
+
+  /**
+   * Feeds `input` to a process's stdin, one request per chunk in the order the stream emits them; a chunk
+   * over the service's limit is split.
+   */
+  writeStdin<E>(
+    spaceId: string,
+    sandboxId: string,
+    processId: string,
+    input: Stream.Stream<string, E>,
+  ): Effect.Effect<void, SandboxRequestError | E, HttpClient.HttpClient> {
+    const url = this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/processes/${processId}/stdin`);
+    return input.pipe(
+      Stream.flatMap((data) =>
+        Stream.fromIterable(
+          Array.from({ length: Math.ceil(data.length / STDIN_CHUNK_LENGTH) }, (_, index) =>
+            data.slice(index * STDIN_CHUNK_LENGTH, (index + 1) * STDIN_CHUNK_LENGTH),
+          ),
+        ),
+      ),
+      Stream.runForEach((chunk) =>
+        send(HttpClientRequest.post(url), { data: chunk }, Schema.Unknown, DEFAULT_TIMEOUT, this._authHeader, {
+          checkStatus: true,
+        }),
+      ),
+    );
+  }
+
+  processState(spaceId: string, sandboxId: string, processId: string): RequestEffect<ProcessState> {
+    return send(
+      HttpClientRequest.get(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/processes/${processId}`)),
+      undefined,
+      ProcessState,
+      METADATA_TIMEOUT,
+      this._authHeader,
+      { checkStatus: true },
+    );
+  }
+
+  killProcess(spaceId: string, sandboxId: string, processId: string, signal?: string): RequestEffect<ProcessState> {
+    return send(
+      HttpClientRequest.delete(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/processes/${processId}`)).pipe(
+        HttpClientRequest.setUrlParams(signal ? { signal } : {}),
+      ),
+      undefined,
+      ProcessState,
+      METADATA_TIMEOUT,
+      this._authHeader,
+      { checkStatus: true },
+    );
+  }
+
+  /**
+   * Follows a process's output until it exits, skipping the characters of each stream already read.
+   * Unbounded in time: the stream's heartbeat keeps the request open, and the reader ends it.
+   */
+  processOutput(
+    spaceId: string,
+    sandboxId: string,
+    processId: string,
+    offsets: { stdout?: number; stderr?: number } = {},
+  ): Stream.Stream<ExecStreamEvent, SandboxRequestError, HttpClient.HttpClient> {
+    const request = HttpClientRequest.get(
+      this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/processes/${processId}/logs`),
+    ).pipe(
+      HttpClientRequest.setUrlParams({
+        ...(offsets.stdout ? { stdoutOffset: String(offsets.stdout) } : {}),
+        ...(offsets.stderr ? { stderrOffset: String(offsets.stderr) } : {}),
+      }),
+      HttpClientRequest.setHeader('Accept', EXEC_STREAM_CONTENT_TYPE),
+    );
+    const authHeader = this._authHeader;
+    return Stream.unwrap(
+      Effect.gen(function* () {
+        const client = HttpClient.filterStatusOk(yield* HttpClient.HttpClient);
+        const header = yield* Effect.promise(authHeader);
+        const response = yield* client.execute(
+          header ? HttpClientRequest.setHeader(request, 'Authorization', header) : request,
+        );
+        return parseExecStream(response.stream);
+      }),
     );
   }
 

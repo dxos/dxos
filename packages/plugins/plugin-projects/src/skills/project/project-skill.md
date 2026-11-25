@@ -161,6 +161,21 @@ a value that already starts with `echo:`; that produces `echo:///echo://…`, wh
 - **Design document** — the durable _why_: decisions, findings, spec. Create the text object,
   then a document whose `content` references it (`space-add-object` typenames `org.dxos.type.text`
   and `org.dxos.type.document`).
+- **Repositories** — the ordered list of `org.dxos.type.repo` objects a cloud coding agent started
+  for the project checks out; it works in the first. Read or edit the list with
+  `projects-update-repositories { project, add?, remove? }`. A repository must already be an object
+  in the space: find it with `space-query-objects { typename: 'org.dxos.type.repo' }`, or create it
+  with `space-add-object`, giving `owner`, `name` and `url` (e.g. `https://github.com/dxos/dxos`).
+- **Setup script** — a bash script the cloud coding agent's sandbox runs once per container, as root,
+  after the repositories are checked out and before the agent starts. It runs non-interactively with a
+  time limit, from the first repository's directory, so the sandbox needs nothing project-specific in
+  its image: use it to install the toolchain the repositories pin (e.g. `proto install` in each).
+  Whatever it appends as `NAME=value` lines to the file `$DX_ENV_FILE` (a `PATH` reaching what it
+  installed) is added to the agent's environment. A script that exits non-zero fails the session with
+  its last output lines. Set it with `projects-update-repositories { project, setupScript }` (it replaces the
+  whole script; a blank string clears it); the same call without `setupScript` returns it. It only applies
+  to agents started afterwards. It is a script that runs as root with the sandbox's network: write it as
+  you would a CI step, and never put secrets in it.
 
 ## Tasks are a tree
 

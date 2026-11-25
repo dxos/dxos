@@ -363,6 +363,60 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
+  it.live('stops a bounded turn at its deadline, leaves it open, and finishes it on the next call', () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup((turnId) => [text(turnId, 'working')]);
+      const first = yield* EdgeAgent.runTurnUntil(
+        options,
+        { chat, feed },
+        { prompt: 'work in steps' },
+        Date.now() + 300,
+      );
+      expect(first).toEqual({ done: false });
+      // Still recorded for pick-up, and not cancelled on EDGE.
+      const [recorded] = Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'));
+      expect(recorded).toBeDefined();
+      const turnId = recorded.id.split(':')[0];
+      expect(edge.inputs).not.toContainEqual({ _tag: 'cancel' });
+
+      edge.emit(text(turnId, 'done working'), { _tag: 'turn-end', turnId, stopReason: 'end_turn' });
+      const second = yield* EdgeAgent.runTurnUntil(
+        options,
+        { chat, feed },
+        { prompt: 'work in steps' },
+        Date.now() + 60_000,
+      );
+      expect(second.done).toBe(true);
+      expect(yield* transcript(feed)).toEqual([
+        ['user', 'text:work in steps'],
+        // Text streamed on either side of the stop is one message, neither lost nor repeated.
+        ['assistant', 'text:workingdone working'],
+        ['assistant', 'stats'],
+      ]);
+      expect(Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'))).toEqual([]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('a detached turn interrupted mid-way stays running on EDGE and recorded for the next call', () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup((turnId) => [text(turnId, 'working')]);
+      const fiber = yield* EdgeAgent.runTurnUntil(
+        { ...options, detached: true },
+        { chat, feed },
+        { prompt: 'keep going' },
+        Date.now() + 60_000,
+      ).pipe(Effect.forkChild);
+      yield* Effect.gen(function* () {
+        while (Obj.getKeys(chat, EdgeAgent.turnKeySource('edge')).length === 0) {
+          yield* Effect.sleep('20 millis');
+        }
+      });
+      yield* Fiber.interrupt(fiber);
+      expect(Obj.getKeys(chat, EdgeAgent.turnKeySource('edge'))).toHaveLength(1);
+      expect(edge.inputs).not.toContainEqual({ _tag: 'cancel' });
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
   it.live("checks out the project's repositories in their order, then the chat's, each once", () =>
     Effect.gen(function* () {
       const { feed, chat, edge, options } = yield* setup((turnId) => [
@@ -393,6 +447,43 @@ describe('EdgeAgent', () => {
           ],
         },
       });
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live("sends the project's setup script with the spawn, beside its repositories", () =>
+    Effect.gen(function* () {
+      const { chat, feed, edge, options } = yield* setup((turnId) => [
+        { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
+      ]);
+      const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos' }));
+      const project = yield* Database.add(Project.make());
+      Repo.setRepositories(project, [Ref.make(dxos)]);
+      Repo.setSetupScript(project, 'proto install\n');
+      Obj.setParent(chat, project);
+      yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'build it' });
+
+      expect(edge.spawned[0]).toMatchObject({
+        annotations: { [EdgeProtocol.Annotation.setupScript]: 'proto install\n' },
+      });
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('sends no setup script when the project has none, or the chat has no repositories', () =>
+    Effect.gen(function* () {
+      const first = yield* setup((turnId) => [{ _tag: 'turn-end', turnId, stopReason: 'end_turn' }]);
+      const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos' }));
+      const project = yield* Database.add(Project.make());
+      Repo.setRepositories(project, [Ref.make(dxos)]);
+      Obj.setParent(first.chat, project);
+      yield* EdgeAgent.runTurn(first.options, { chat: first.chat, feed: first.feed }, { prompt: 'build it' });
+      expect(first.edge.spawned[0].annotations).not.toHaveProperty(EdgeProtocol.Annotation.setupScript);
+
+      const second = yield* setup((turnId) => [{ _tag: 'turn-end', turnId, stopReason: 'end_turn' }]);
+      const scripted = yield* Database.add(Project.make());
+      Repo.setSetupScript(scripted, 'proto install\n');
+      Obj.setParent(second.chat, scripted);
+      yield* EdgeAgent.runTurn(second.options, { chat: second.chat, feed: second.feed }, { prompt: 'build it' });
+      expect(second.edge.spawned[0].annotations).not.toHaveProperty(EdgeProtocol.Annotation.setupScript);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
@@ -436,7 +527,9 @@ describe('EdgeAgent', () => {
           return 'ghs-live';
         },
       });
-      const credential = EdgeAgent.githubCredentials.pipe(Effect.provide(resolver));
+      const credential = EdgeAgent.githubCredentialsWith(() => Effect.succeed({ refused: false })).pipe(
+        Effect.provide(resolver),
+      );
       expect(yield* credential).toEqual({});
 
       yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'anthropic.com', token: 'sk-ant' }));
@@ -447,8 +540,62 @@ describe('EdgeAgent', () => {
       expect(resolved).toEqual([github.id]);
 
       // One EDGE cannot resolve leaves the checkout to public repositories rather than failing the turn.
-      const unresolved = EdgeAgent.githubCredentials.pipe(Effect.provide(Credential.AccessTokenResolver.notAvailable));
+      const unresolved = EdgeAgent.githubCredentialsWith(() => Effect.succeed({ refused: false })).pipe(
+        Effect.provide(Credential.AccessTokenResolver.notAvailable),
+      );
       expect(yield* unresolved).toEqual({});
+
+      // A stored token is resolved too, so EDGE refreshes a stale one; one EDGE does not hold is lent as stored.
+      Obj.update(github, (github) => {
+        github.token = 'ghu-stale';
+      });
+      expect(yield* credential).toEqual({ GITHUB_TOKEN: 'ghs-live', GH_TOKEN: 'ghs-live' });
+      expect(yield* unresolved).toMatchObject({ GITHUB_TOKEN: 'ghu-stale', GH_TOKEN: 'ghu-stale' });
+      expect((yield* unresolved)[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(
+        /^Error:_No_access_token_resolver_configured\S+$/,
+      );
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('asks EDGE to exchange a token GitHub refuses, and says why when that fails too', () =>
+    Effect.gen(function* () {
+      const requests: (boolean | undefined)[] = [];
+      const resolver = (exchanged: string) =>
+        Layer.succeed(Credential.AccessTokenResolver, {
+          resolve: async ({ refresh }) => {
+            requests.push(refresh);
+            return refresh ? exchanged : 'ghu-revoked';
+          },
+        });
+      yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'github.com', token: 'ghu-revoked' }));
+      const refuses = (token: string) => Effect.succeed({ refused: token === 'ghu-revoked' });
+
+      const healed = yield* EdgeAgent.githubCredentialsWith(refuses).pipe(Effect.provide(resolver('ghu-fresh')));
+      expect(healed).toEqual({ GITHUB_TOKEN: 'ghu-fresh', GH_TOKEN: 'ghu-fresh' });
+      expect(requests).toEqual([false, true]);
+      requests.length = 0;
+
+      const broken = yield* EdgeAgent.githubCredentialsWith(refuses).pipe(Effect.provide(resolver('ghu-revoked')));
+      expect(broken).toMatchObject({ GH_TOKEN: 'ghu-revoked' });
+      expect(broken[EdgeAgent.GITHUB_TOKEN_ERROR_ENV]).toMatch(/reconnect_GitHub/);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('exchanges once more when the stored token differs from the one EDGE holds, so the copy is rewritten', () =>
+    Effect.gen(function* () {
+      const requests: (boolean | undefined)[] = [];
+      const resolver = Layer.succeed(Credential.AccessTokenResolver, {
+        resolve: async ({ refresh }) => {
+          requests.push(refresh);
+          return refresh ? 'ghu-rewritten' : 'ghu-current';
+        },
+      });
+      yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'github.com', token: 'ghu-stale' }));
+      const lent = yield* EdgeAgent.githubCredentialsWith(() => Effect.succeed({ refused: false })).pipe(
+        Effect.provide(resolver),
+      );
+      expect(lent).toEqual({ GITHUB_TOKEN: 'ghu-rewritten', GH_TOKEN: 'ghu-rewritten' });
+      expect(requests).toEqual([false, true]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

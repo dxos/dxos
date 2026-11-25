@@ -20,7 +20,7 @@ import { AccessToken } from '@dxos/link';
 import { Message, Outline, Repo, TaskSet } from '@dxos/types';
 
 import * as EdgeAgent from '../agents/EdgeAgent.ts';
-import { credentials } from '../capabilities/claude-code-edge-agent.ts';
+import * as EdgeCredentials from '../agents/EdgeCredentials.ts';
 import { CLAUDE_CODE_EDGE_AGENT, CLAUDE_CODE_TOKEN_SOURCE } from '../constants.ts';
 import { OAUTH_TOKEN, TURN_TIMEOUT, turn } from './harness.ts';
 
@@ -48,7 +48,7 @@ const options: EdgeAgent.Options = {
     id: CLAUDE_CODE_EDGE_AGENT,
     label: 'Claude Code (cloud)',
     icon: 'px--anthropic--regular',
-    credentials,
+    credentials: EdgeCredentials.credentials,
   },
   control: () => control,
 };

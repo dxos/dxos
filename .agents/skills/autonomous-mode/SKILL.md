@@ -29,6 +29,11 @@ messages logged. Everything is driven through one script. Call it by the
 absolute path the `AUTONOMOUS MODE` block prints: the state can live in a
 different checkout from your cwd.
 
+The hooks load only from the session's project root. A session opened above the checkout (a cloud
+session holding several repositories) runs none of them, so `/autonomous` starts the run with
+`autonomous.sh set` and `user add` itself; see `.claude/commands/autonomous.md`. With no `Stop`
+hook, nothing hands the task back if you go quiet: the definition of done is the only check.
+
 ```bash
 bash .claude/scripts/autonomous.sh dod set '1. … 2. …'   # once, first
 bash .claude/scripts/autonomous.sh log add 'chose X over Y — Z'

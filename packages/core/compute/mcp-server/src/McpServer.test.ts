@@ -1338,3 +1338,58 @@ describe('McpServer.fromSkills', () => {
     expect(invocations).to.have.length(0);
   });
 });
+
+describe('McpServer.describeSpace', () => {
+  const space = (properties: () => unknown, members: () => readonly unknown[]): McpServer.DescribableSpace => ({
+    id: 'space-1',
+    get properties() {
+      return { name: properties() };
+    },
+    members: { get: members },
+  });
+
+  test('names a space and counts its members', ({ expect }) => {
+    expect(
+      McpServer.describeSpace(
+        'space-1',
+        space(
+          () => 'Coding',
+          () => ['alice', 'bob'],
+        ),
+      ),
+    ).toEqual({
+      spaceId: 'space-1',
+      name: 'Coding',
+      memberCount: 2,
+    });
+  });
+
+  test('lists a space it cannot find by id alone', ({ expect }) => {
+    expect(McpServer.describeSpace('space-1', undefined)).toEqual({ spaceId: 'space-1' });
+  });
+
+  test('keeps what resolved when a space is not open yet', ({ expect }) => {
+    const closed = space(
+      () => {
+        throw new Error('space not open');
+      },
+      () => ['alice'],
+    );
+    expect(McpServer.describeSpace('space-1', closed)).toEqual({ spaceId: 'space-1', memberCount: 1 });
+  });
+
+  test('leaves out a name that is not a string', ({ expect }) => {
+    expect(
+      McpServer.describeSpace(
+        'space-1',
+        space(
+          () => 7,
+          () => [],
+        ),
+      ),
+    ).toEqual({
+      spaceId: 'space-1',
+      memberCount: 0,
+    });
+  });
+});

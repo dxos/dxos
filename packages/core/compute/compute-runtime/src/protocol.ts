@@ -48,6 +48,7 @@ const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
  */
 export type EdgeFunctionServices =
   | AiService.AiService
+  | Credential.AccessTokenResolver
   | Credential.CredentialsService
   | Database.Service
   | Hypergraph.Service
@@ -416,6 +417,8 @@ export class FunctionContext extends Resource {
 
     return Layer.mergeAll(
       dbLayer,
+      // Provided on its own too, because an operation that lends a server-custodied token to a process needs the token.
+      accessTokenResolver,
       credentials,
       operationServiceLayer,
       aiLayer,
