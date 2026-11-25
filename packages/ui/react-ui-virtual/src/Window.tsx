@@ -359,7 +359,7 @@ export const useWindow = ({
       }
       for (const row of mounted) {
         if (!rows.has(row)) {
-          observer.observe(row);
+          observer.observe(row, { box: 'border-box' });
           rows.add(row);
         }
       }

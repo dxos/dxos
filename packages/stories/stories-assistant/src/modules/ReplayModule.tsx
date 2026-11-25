@@ -284,11 +284,16 @@ export const ReplayModule = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [chat, archive],
   );
-  const [events, setEvents] = useState<readonly Trajectory.Event[]>();
+  // Kept with the replay that produced them, so a newer replay never renders the previous one's events.
+  const [run, setRun] = useState<{ replay: Replay; events: readonly Trajectory.Event[] }>();
+  const events = run && run.replay === replay ? run.events : undefined;
   useEffect(() => {
+    if (!replay) {
+      return;
+    }
     let cancelled = false;
-    replay?.run.then(
-      (result) => !cancelled && setEvents(result),
+    replay.run.then(
+      (result) => !cancelled && setRun({ replay, events: result }),
       (err: unknown) => !cancelled && setError(err instanceof Error ? err : new Error(String(err))),
     );
     return () => {
