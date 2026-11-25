@@ -47,7 +47,7 @@ goal G-3: The PR merges through the merge queue.
 
 ```mdl
 goal G-4: The Agent verbs need no service requirements.
-  status: started
+  status: review
   notes:
     - A next PR adds a current-process context reference.
     - Session verbs get their database from the session.
@@ -59,6 +59,12 @@ goal G-4: The Agent verbs need no service requirements.
 pr PR-1: One Agent module for agents, sessions and the service.
   ref: dxos/dxos#14677
   goals: [G-1, G-2, G-3]
+```
+
+```mdl
+pr PR-2: The Agent verbs need no service requirements.
+  ref: dxos/dxos#14684
+  goals: [G-4]
 ```
 
 ## Changelog
@@ -159,5 +165,11 @@ event T-10: Work starts on the next PR, which removes the service requirements f
 ```mdl
 event T-11: The Agent verbs need no service requirements. The tests pass for the next PR.
   date: 2026-11-25T12:30Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-12: The next PR is open as a draft.
+  date: 2026-11-25T12:35Z
   by: agent:claude-code
 ```
