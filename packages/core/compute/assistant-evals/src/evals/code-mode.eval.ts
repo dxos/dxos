@@ -9,17 +9,27 @@ import { evalite } from 'evalite';
 import { PlainDialect, makeCodeModeTurnProducer } from '@dxos/agent-code-mode';
 import { type MakeTurnProducer } from '@dxos/agent-runtime';
 import { Model } from '@dxos/ai';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Agent from '@dxos/compute/Agent';
 import * as Project from '@dxos/compute/Project';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { getTextInAnchorRange, toCursorRange } from '@dxos/echo-client';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { getTextInAnchorRange, toCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { type DXN } from '@dxos/keys';
+import { type DXN, EntityId, URI } from '@dxos/keys';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as Presentation from '@dxos/plugin-presenter/Presentation';
+import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
+import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
+import { SheetSkill } from '@dxos/plugin-sheet/skills';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import { Selection } from '@dxos/react-ui-attention/types';
 import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -426,11 +436,20 @@ defineTask({
       // A real cursor range over the passage, checked by resolving it the way the app's anchor resolver
       // does, so the request carries exactly what a highlight in the editor would.
       const accessor = Doc.createAccessor(yield* Database.load(document.content), ['content']);
-      const anchor = toCursorRange(accessor, PREFIX.length, PREFIX.length + PASSAGE.length);
+      const from = toCursor(accessor, PREFIX.length);
+      const to = toCursor(accessor, PREFIX.length + PASSAGE.length);
+      const anchor = `${from}:${to}`;
       const selected = getTextInAnchorRange(accessor, anchor);
       if (selected !== PASSAGE) {
         return yield* Effect.die(new Error(`The selection resolved to the wrong text: ${selected}`));
       }
+      // The editor's selection too, which `markdown.getSelection` reads: the skill tells the agent to ask for it, and
+      // without one the call answers with no ranges, which no app session would.
+      const [viewState] = (yield* Capability.Service).getAll(AttentionCapabilities.ViewState);
+      if (viewState === undefined) {
+        return yield* Effect.die(new Error('The harness has no view state to hold the selection.'));
+      }
+      viewState.set(Selection.aspect, Obj.getURI(document), { mode: 'range', from, to });
       return { objects: [Ref.make(document)], context: { selection: { anchors: [anchor], text: selected } } };
     }),
   instructions: trim`
@@ -826,6 +845,262 @@ defineTask({
       description: 'The section was rewritten in place, not into a new document.',
       query: documents,
       score: (results) => results.length === 4,
+    }),
+  ],
+});
+
+//
+// 9. Repairing structure: a deck whose slide list holds a reference to nothing.
+//
+
+const DECK_NAME = 'Roadmap';
+const DECK_SLIDES = ['# Intro', '# Q1', '# Q3', '# Q4'];
+/** Where the broken slide sits in the deck, between Q1 and Q3. */
+const BROKEN_AT = 2;
+
+/** The deck's slides as the run left them: each one's markdown, or `undefined` for a slide that does not load. */
+const deckSlides = Scorer.shared(
+  Effect.gen(function* () {
+    const deck = yield* findObject(Presentation.Presentation, (candidate) => candidate.name === DECK_NAME);
+    if (!deck) {
+      return undefined;
+    }
+    return yield* Effect.forEach(deck.slides, (ref) =>
+      Effect.gen(function* () {
+        const slide = yield* Database.load(ref);
+        const content = yield* Database.load(slide.content);
+        return 'content' in content && typeof content.content === 'string' ? content.content : '';
+      }).pipe(Effect.orElseSucceed(() => undefined)),
+    );
+  }),
+);
+
+defineTask({
+  title: 'repairs a deck with a slide that does not load',
+  plugins: [PresenterPlugin.make()],
+  types: [Presentation.Presentation, Presentation.Slide],
+  turns: { target: 4, budget: 15 },
+  seed: () =>
+    Effect.gen(function* () {
+      const deck = yield* Database.add(Presentation.make({ name: DECK_NAME, slides: DECK_SLIDES }));
+      // A reference to an object that was never stored, as a slide deleted before its deck dropped it leaves behind.
+      const dangling = Ref.fromURI(URI.make(`echo:///${EntityId.random()}`));
+      Obj.update(deck, (deck) => {
+        deck.slides.splice(BROKEN_AT, 0, dangling);
+      });
+      yield* Database.flush();
+      return { objects: [Ref.make(deck)] };
+    }),
+  instructions: trim`
+    The "${DECK_NAME}" deck looks broken: one of its slides won't open. Find the broken slide and fix the
+    deck so every slide works. Don't change the other slides.
+  `,
+  scorers: [
+    Scorer.make({
+      name: 'every-slide-loads',
+      description: 'Every slide the deck lists loads, with its content.',
+      score: deckSlides.pipe(
+        Effect.map(
+          (slides) => slides !== undefined && slides.length > 0 && slides.every((slide) => slide !== undefined),
+        ),
+      ),
+    }),
+    Scorer.make({
+      name: 'other-slides-kept',
+      description: 'The working slides are all still there, unchanged and in their order.',
+      score: deckSlides.pipe(
+        Effect.map((slides) => {
+          const kept = (slides ?? []).filter((slide) => slide !== undefined && DECK_SLIDES.includes(slide));
+          return kept.length === DECK_SLIDES.length && kept.every((slide, index) => slide === DECK_SLIDES[index]);
+        }),
+      ),
+    }),
+    Scorer.database({
+      name: 'one-deck',
+      description: 'The deck was repaired, not rebuilt as a second one.',
+      query: Query.select(Filter.type(Presentation.Presentation)),
+      score: (decks) => decks.length === 1,
+    }),
+  ],
+});
+
+//
+// 10. Aggregating many objects into a new artifact: counts in a sheet, and a chart of them.
+//
+
+const PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
+const SHEET_NAME = 'Tasks by priority';
+
+/** Sixty tasks: every priority, some of them closed, which an aggregate of open tasks has to leave out. */
+const PRIORITY_TASKS = Array.from({ length: 60 }, (_, index) => ({
+  title: `Task ${index + 1}`,
+  priority: PRIORITIES[(index * 7) % 4],
+  status: index % 5 === 0 ? ('done' as const) : index % 11 === 0 ? ('cancelled' as const) : ('todo' as const),
+}));
+const OPEN_COUNTS: Record<string, number> = Object.fromEntries(
+  PRIORITIES.map((priority) => [
+    priority,
+    PRIORITY_TASKS.filter((task) => task.priority === priority && task.status === 'todo').length,
+  ]),
+);
+
+/** A sheet's cells by `row:column` position. */
+const sheetGrid = (sheet: Sheet.Sheet): Map<string, unknown> =>
+  new Map(
+    Object.entries(sheet.cells).map(([index, cell]) => {
+      const { row, col } = SheetUtil.addressFromIndex(sheet, index);
+      return [`${row}:${col}`, cell.value];
+    }),
+  );
+
+const prioritySheet = Scorer.shared(findObject(Sheet.Sheet, (candidate) => candidate.name === SHEET_NAME));
+
+defineTask({
+  title: 'counts open tasks into a sheet with a chart',
+  skills: () => [...getDefaultSkills(), Ref.make(SheetSkill.make())],
+  plugins: [SheetPlugin.make(), TasksPlugin.make()],
+  types: [Task.Task, Sheet.Sheet, Sheet.Chart],
+  turns: { target: 4, budget: 15 },
+  seed: () =>
+    Effect.gen(function* () {
+      yield* Effect.forEach(PRIORITY_TASKS, (task) => Database.add(Task.make(task)));
+      yield* Database.add(Sheet.make({ name: 'Old report', cells: { A1: { value: 'stale' } } }));
+      yield* Database.flush();
+      return {};
+    }),
+  instructions: trim`
+    Make a sheet called "${SHEET_NAME}" with one row per priority (low, medium, high, urgent) and the number
+    of open tasks of that priority beside it, then add a bar chart of it.
+  `,
+  scorers: [
+    Scorer.make({
+      name: 'counts-correct',
+      description: 'Share of the priorities whose row holds the exact count of open tasks beside the name.',
+      score: prioritySheet.pipe(
+        Effect.map((sheet) => {
+          if (!sheet) {
+            return 0;
+          }
+          const grid = sheetGrid(sheet);
+          const correct = PRIORITIES.filter((priority) =>
+            [...grid].some(([position, value]) => {
+              if (String(value).toLowerCase() !== priority) {
+                return false;
+              }
+              const [row, col] = position.split(':').map(Number);
+              return Number(grid.get(`${row}:${col + 1}`)) === OPEN_COUNTS[priority];
+            }),
+          );
+          return correct.length / PRIORITIES.length;
+        }),
+      ),
+    }),
+    Scorer.make({
+      name: 'chart-added',
+      description: 'A chart of the new sheet exists.',
+      score: Effect.gen(function* () {
+        const sheet = yield* prioritySheet;
+        const charts = yield* Database.query(Filter.type(Sheet.Chart)).run;
+        return sheet !== undefined && charts.some((chart) => refTarget(chart.sheet) === sheet.id);
+      }),
+    }),
+    Scorer.database({
+      name: 'one-new-sheet',
+      description: 'Exactly one sheet was added beside the old report, which is unchanged.',
+      query: Query.select(Filter.type(Sheet.Sheet)),
+      score: (sheets) =>
+        sheets.length === 2 &&
+        sheets.some((sheet) => sheet.name === 'Old report' && [...sheetGrid(sheet).values()].join() === 'stale'),
+    }),
+    Scorer.database({
+      name: 'tasks-untouched',
+      description: 'An aggregate only reads: every task keeps its status.',
+      query: tasks,
+      score: (results) =>
+        results.length === PRIORITY_TASKS.length &&
+        PRIORITY_TASKS.every(({ title, status }) =>
+          results.some((task) => task.title === title && task.status === status),
+        ),
+    }),
+  ],
+});
+
+//
+// 11. Finding context by structure: the project this chat belongs to, through the chat's parent.
+//
+
+const OWNER = 'Atlas';
+const ATLAS_TASKS = [
+  { title: 'Migrate the billing tables', status: 'todo' as const },
+  { title: 'Write the rollout plan', status: 'started' as const },
+  { title: 'Pick a vendor', status: 'done' as const },
+  { title: 'Draft the budget', status: 'done' as const },
+  { title: 'Hire a contractor', status: 'cancelled' as const },
+];
+const OPEN_TITLES = ['Migrate the billing tables', 'Write the rollout plan'];
+/** Another project with open tasks of its own, which an answer about "this chat" must not list. */
+const DECOY_PROJECT = { name: 'Beacon', tasks: ['Renew the domain', 'Fix the login page'] };
+
+/** A project with its own task set of `entries`. */
+const makeProject = (name: string, entries: readonly { title: string; status: Task.Task['status'] }[]) =>
+  Effect.gen(function* () {
+    const added = yield* Effect.forEach(entries, (entry) => Database.add(Task.make(entry)));
+    const taskSet = yield* Database.add(
+      TaskSet.make({ name: `${name} tasks`, tasks: added.map((task) => Ref.make(task)) }),
+    );
+    return yield* Database.add(Project.make({ name, taskSet: Ref.make(taskSet) }));
+  });
+
+defineTask({
+  title: 'answers from the project that owns the chat',
+  skills: projectSkills,
+  plugins: projectPlugins(),
+  types: PROJECT_TYPES,
+  turns: { target: 3, budget: 12 },
+  seed: () =>
+    Effect.gen(function* () {
+      const owner = yield* makeProject(OWNER, ATLAS_TASKS);
+      yield* makeProject(
+        DECOY_PROJECT.name,
+        DECOY_PROJECT.tasks.map((title) => ({ title, status: 'todo' as const })),
+      );
+      // The chat belongs to its project by the ECHO parent edge, as a chat opened in a project does.
+      const feed = yield* Database.add(Feed.make());
+      const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed), name: 'Planning chat' }));
+      Obj.setParent(chat, owner);
+      yield* Database.flush();
+      return { chat: Ref.make(chat) };
+    }),
+  instructions: trim`
+    What project is this chat in, and which of its tasks are still open? Don't change anything.
+  `,
+  scorers: [
+    Scorer.make({
+      name: 'project-named',
+      description: `The reply names the chat's project, ${OWNER}.`,
+      score: assistantText.pipe(Effect.map((text) => text.includes(OWNER))),
+    }),
+    Scorer.make({
+      name: 'open-tasks-listed',
+      description: "Share of the project's open tasks the reply lists.",
+      score: assistantText.pipe(
+        Effect.map((text) => OPEN_TITLES.filter((title) => text.includes(title)).length / OPEN_TITLES.length),
+      ),
+    }),
+    Scorer.make({
+      name: 'other-project-left-out',
+      description: "The reply lists none of the other project's tasks: it answered about this chat's project only.",
+      score: assistantText.pipe(Effect.map((text) => !DECOY_PROJECT.tasks.some((title) => text.includes(title)))),
+    }),
+    Scorer.database({
+      name: 'nothing-changed',
+      description: 'A question changes nothing: every task keeps its status, and none is added.',
+      query: tasks,
+      score: (results) =>
+        results.length === ATLAS_TASKS.length + DECOY_PROJECT.tasks.length &&
+        ATLAS_TASKS.every(({ title, status }) =>
+          results.some((task) => task.title === title && task.status === status),
+        ),
     }),
   ],
 });
