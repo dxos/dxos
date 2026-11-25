@@ -12,13 +12,13 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as ChatPlane from '@dxos/plugin-assistant/ChatPlane';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
-import { useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Panel from '@dxos/react-ui/Panel';
 import { arrayMove } from '@dxos/util';
 
-import { useThreadModel } from './hooks.ts';
+import { useThreadModel } from './thread-model.ts';
 
 type ChatColumnProps = {
   db: Database.Database;
@@ -119,9 +119,12 @@ export type ChatColumnsProps = {
  * Every chat in the space as a column of its own: the selected chat rests at the center of the strip with its prompt
  * beneath it, a new chat is added at either end, and a column is dragged, or moved from its menu, to reorder.
  */
-export const ChatColumns = ({ suggestions, defaultDrawer, align }: ChatColumnsProps) => {
-  const [space] = useSpaces();
-  const db = space?.db;
+export const ChatColumns = ({
+  db,
+  suggestions,
+  defaultDrawer,
+  align,
+}: ChatColumnsProps & { db: Database.Database }) => {
   const chats = useQuery(db, Filter.type(Agent.Session));
   const { invokePromise } = Hooks.useOperationInvoker();
 
@@ -150,9 +153,6 @@ export const ChatColumns = ({ suggestions, defaultDrawer, align }: ChatColumnsPr
 
   const handleAdd = useCallback(
     async (side: ChatPlane.Side) => {
-      if (!db) {
-        return;
-      }
       const created = await invokePromise(
         AssistantOperation.CreateChat,
         { name: `Chat ${ordered.length + 1}` },
@@ -187,9 +187,9 @@ export const ChatColumns = ({ suggestions, defaultDrawer, align }: ChatColumnsPr
     [ordered],
   );
 
-  const handleDelete = useCallback((chat: Agent.Session) => db?.remove(chat), [db]);
+  const handleDelete = useCallback((chat: Agent.Session) => db.remove(chat), [db]);
 
-  if (!db || !current) {
+  if (!current) {
     return null;
   }
 

@@ -4,7 +4,6 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
@@ -16,9 +15,10 @@ import * as ComposerPluginTemplate from '@dxos/plugin-dev-shell/ComposerPluginTe
 import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as Templates from '@dxos/plugin-projects/Templates';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Task, TaskSet } from '@dxos/types';
 
-import { ThreadColumns } from '../../components/index.ts';
+import { type ChatPlaneModuleData, StoryRole } from '../../modules/index.ts';
 import { BUILD_PROMPT, PLUGIN_SIDE_QUESTION, Scripts, WORLD_CLOCK_KEY } from '../../scripts/index.ts';
 import { createDecorators, storyParameters } from '../../testing/index.ts';
 
@@ -33,12 +33,26 @@ import { createDecorators, storyParameters } from '../../testing/index.ts';
  * `node_modules/.bin/vite temp/plugins/world-clock` from `packages/apps/composer-app`. Load the result in Composer
  * from Plugins → Dev Server.
  */
-const meta: Meta = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/threads/PluginBuild',
+  render: ModuleContainer.Root,
   parameters: storyParameters,
+  args: {
+    layout: [
+      [
+        {
+          type: StoryRole.ChatPlane,
+          data: { kind: 'threads', suggestions: [BUILD_PROMPT, PLUGIN_SIDE_QUESTION] } satisfies ChatPlaneModuleData,
+        },
+      ],
+    ],
+    tiling: 'flush',
+  },
 };
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 /** The template as Dev Shell contributes it, but with the plugin key the scripted source declares. */
 const template = Templates.makeComposerPlugin(ComposerPluginTemplate.variant, () => WORLD_CLOCK_KEY);
@@ -100,8 +114,6 @@ const decorators = createDecorators({
   assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
 });
 
-const SUGGESTIONS = [BUILD_PROMPT, PLUGIN_SIDE_QUESTION];
-
 /** Waits until exactly `count` subagent and agent columns are open. */
 const waitForColumns = (canvasElement: HTMLElement, count: number, timeout: number) =>
   waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="chat-plane.column"]').length).toBe(count), {
@@ -109,16 +121,14 @@ const waitForColumns = (canvasElement: HTMLElement, count: number, timeout: numb
   });
 
 /** Starts up and waits: the run begins when you click "Build.". */
-export const Default: StoryObj = {
-  render: () => <ThreadColumns suggestions={SUGGESTIONS} />,
+export const Default: Story = {
   decorators,
   // Not a test: nothing happens until someone clicks.
   tags: ['!test'],
 };
 
 /** {@link Default} driven by a play function: clicks "Build." itself and waits for the plugin to be offered. */
-export const Scripted: StoryObj = {
-  render: () => <ThreadColumns suggestions={SUGGESTIONS} />,
+export const Scripted: Story = {
   decorators,
   // Writes and runs on the machine serving storybook, so it runs only where that is asked for.
   tags: ['manual'],

@@ -66,7 +66,7 @@ export const steps = [
     narration: 'Each task goes to a subagent, and each subagent opens a column with its own stream of thought.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'A column per subagent', subtitle: 'each thinks out loud' });
-      await waitForCount(page, COLUMN, 6, 60_000);
+      await waitForCount(page, COLUMN, 5, 60_000);
       await demo.sleep({ ms: 1_500 });
     },
   },
@@ -97,7 +97,7 @@ export const steps = [
     narration: 'As each subagent finishes, its column closes and its task is checked off.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Finished threads close', subtitle: 'their tasks are checked off' });
-      await waitForCount(page, COLUMN, 2, 90_000);
+      await waitForCount(page, COLUMN, 1, 90_000);
     },
   },
   {

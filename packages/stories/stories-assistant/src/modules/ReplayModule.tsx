@@ -7,6 +7,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as Surface from '@dxos/app-framework/Surface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Space, importSpace } from '@dxos/client/echo';
 import * as Agent from '@dxos/compute/Agent';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -16,13 +18,14 @@ import { log } from '@dxos/log';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { SpacesService } from '@dxos/protocols/rpc';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 
-import { type ReplayCache, runToEnd } from '../testing/index.ts';
+import { type ReplayCache } from '../testing/replay-cache.ts';
+import { runToEnd } from '../testing/replay.ts';
 
 /** Where a replay stands: which event it shows, and the steps marked to come back to. */
 export type ReplayArgs = {
@@ -235,8 +238,8 @@ const ReplayPlayer = ({ chat, replay, events, initial, onChange, onRerecord }: R
   );
 };
 
-/** Props of {@link RecordedReplay}. */
-export type RecordedReplayProps = {
+/** Surface data of {@link ReplayModule}. */
+export type ReplayModuleData = {
   /** Where the recording is kept; the story's `importSnapshot` must load through the same cache. */
   cache: ReplayCache;
   /** Sent one after another, each to the end of its turn, when there is no recording. */
@@ -252,8 +255,10 @@ export type RecordedReplayProps = {
  * first and records the space in `cache`; a later boot that imported the recording reads the events straight from the
  * chat's feed.
  */
-export const RecordedReplay = ({ cache, prompts, initial, onChange }: RecordedReplayProps) => {
-  const [space] = useSpaces();
+export const ReplayModule = ({
+  data: { cache, prompts, initial, onChange },
+}: Surface.ComponentProps<ReplayModuleData>) => {
+  const space = ToolkitHooks.useActiveSpace();
   const chats = useQuery(space?.db, Filter.type(Agent.Session));
   const chat = chats.at(-1);
   const invoker = Hooks.useOperationInvoker();

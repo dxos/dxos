@@ -6,8 +6,6 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Surface from '@dxos/app-framework/Surface';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/compute/Agent';
 import type * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -16,14 +14,14 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as ChatPlane from '@dxos/plugin-assistant/ChatPlane';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
-import { useObject, useQuery, useResolveRef, useSpaces } from '@dxos/react-client/echo';
+import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Timeline } from '@dxos/react-ui-trace';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
-import { toCommits } from '../modules/trajectory-commits.ts';
-import { type ChatModel, useThreadModel } from './hooks.ts';
+import { type ChatModel, useThreadModel } from './thread-model.ts';
+import { toCommits } from './trajectory-commits.ts';
 
 /** The events written in `lane` and in every turn or thread nested in it, in feed order. */
 const laneEvents = (events: readonly Trajectory.Event[], lane: Trajectory.ThreadId): Trajectory.Event[] => {
@@ -116,8 +114,6 @@ type AgentColumnProps = {
   suggestions?: readonly string[];
   /** The drawer open above the agent's prompt at the start, e.g. its task list. */
   defaultDrawer?: Chat.RootProps['defaultDrawer'];
-  /** Adds a column beside the agent's with every process and thread of the run in one view. */
-  trace?: boolean;
 };
 
 /** The agent's own conversation, with the prompt and its checklist. */
@@ -147,26 +143,6 @@ const AgentColumn = ({ db, chat, chatModel, suggestions = [], defaultDrawer }: A
   );
 };
 
-const TRACE_COLUMN = 'trace';
-const TRACE_ROLE = AppSurface.deckCompanion('trace');
-
-/**
- * The whole run in one column: the space's processes, and every thread of the conversation as a lane of one graph,
- * where the subagent columns each show only their own.
- */
-const TraceColumn = ({ db, chat, chatModel }: Pick<AgentColumnProps, 'db' | 'chat' | 'chatModel'>) => (
-  // Read-only: the column needs the chat only for the plane's focus and selection wiring.
-  <Chat.Root chat={chat} db={db} chatModel={chatModel} readonly>
-    <ChatPlane.Column value={TRACE_COLUMN}>
-      <ChatPlane.Cell title='Processes and threads'>
-        <Panel.Body>
-          <Surface.Surface type={TRACE_ROLE} limit={1} />
-        </Panel.Body>
-      </ChatPlane.Cell>
-    </ChatPlane.Column>
-  </Chat.Root>
-);
-
 /** How long a finished subagent's column stays open, so its result can be read before it closes. */
 const CLOSE_DELAY = 6_000;
 
@@ -175,7 +151,7 @@ const CLOSE_DELAY = 6_000;
  * own beside it: a column opens as the agent delegates, and closes a few seconds after its subagent reports, leaving the
  * result in the agent's column. The columns keep their width, so the strip scrolls sideways once they outgrow it.
  */
-const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer, trace = false }: AgentColumnProps) => {
+const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer }: AgentColumnProps) => {
   const view = useAtomValue(chatModel.trajectory);
   const lanes = useMemo(() => view.lanes.filter((lane) => lane.kind === 'fresh'), [view.lanes]);
   const hues = useMemo(() => Chat.laneHues(view.lanes), [view.lanes]);
@@ -224,10 +200,7 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer, trace = 
   }, []);
 
   const open = useMemo(() => lanes.filter(({ id }) => !closed.has(id)), [lanes, closed]);
-  const items = useMemo(
-    () => [{ id: chat.id }, ...(trace ? [{ id: TRACE_COLUMN }] : []), ...open.map(({ id }) => ({ id }))],
-    [chat, trace, open],
-  );
+  const items = useMemo(() => [{ id: chat.id }, ...open.map(({ id }) => ({ id }))], [chat, open]);
   const selected = current !== undefined && items.some(({ id }) => id === current) ? current : chat.id;
 
   return (
@@ -247,9 +220,6 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer, trace = 
                   />
                 );
               }
-              if (id === TRACE_COLUMN) {
-                return <TraceColumn db={db} chat={chat} chatModel={chatModel} />;
-              }
               const lane = open.find((candidate) => candidate.id === id);
               return (
                 lane && (
@@ -266,27 +236,18 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions, defaultDrawer, trace = 
 
 /** The space's newest chat as columns: the agent's own, and one per subagent thread while it runs. */
 export const ThreadColumns = ({
+  db,
   suggestions,
   defaultDrawer,
-  trace,
-}: Pick<AgentColumnProps, 'suggestions' | 'defaultDrawer' | 'trace'>) => {
-  const [space] = useSpaces();
-  const db = space?.db;
+}: Pick<AgentColumnProps, 'db' | 'suggestions' | 'defaultDrawer'>) => {
   const chats = useQuery(db, Filter.type(Agent.Session));
   const chat = chats.at(-1);
   const chatModel = useThreadModel(db, chat);
-  if (!db || !chat || !chatModel) {
+  if (!chat || !chatModel) {
     return null;
   }
 
   return (
-    <ThreadPlane
-      db={db}
-      chat={chat}
-      chatModel={chatModel}
-      suggestions={suggestions}
-      defaultDrawer={defaultDrawer}
-      trace={trace}
-    />
+    <ThreadPlane db={db} chat={chat} chatModel={chatModel} suggestions={suggestions} defaultDrawer={defaultDrawer} />
   );
 };

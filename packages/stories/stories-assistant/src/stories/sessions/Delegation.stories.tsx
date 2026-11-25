@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ScriptedScene } from '@dxos/ai/testing';
@@ -12,9 +11,10 @@ import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Agent from '@dxos/compute/Agent';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Task } from '@dxos/types';
 
-import { ChatColumns, type ChatColumnsProps, ProjectPanel } from '../../components/index.ts';
+import { type ChatPlaneModuleData, type ProjectModuleData, StoryRole } from '../../modules/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, Scripts, SESSIONS_STARTED, SIDE_QUESTION } from '../../scripts/index.ts';
 import { createDecorators, launchProjectPlugins, seedLaunchProject, storyParameters } from '../../testing/index.ts';
 
@@ -27,23 +27,15 @@ import { createDecorators, launchProjectPlugins, seedLaunchProject, storyParamet
  *
  * Compare `threads/Delegation`, which plays the same launch kit on light threads.
  */
-const meta: Meta<ChatColumnsProps> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/sessions/Delegation',
-  component: ChatColumns,
-  render: (args) => (
-    <div className='flex dx-fill min-h-0'>
-      <ProjectPanel />
-      <div className='flex-1 min-w-0 h-full'>
-        <ChatColumns {...args} />
-      </div>
-    </div>
-  ),
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
 export default meta;
 
-type Story = StoryObj<ChatColumnsProps>;
+type Story = StoryObj<typeof meta>;
 
 /** Waits until the agent's chat and exactly `sessions` delegated sessions show as columns. */
 const waitForSessions = (canvasElement: HTMLElement, sessions: number, timeout: number) =>
@@ -87,11 +79,25 @@ const launchKit: Story = {
     assistantSettings: { parallelThreads: true },
   }),
   args: {
-    suggestions: [LAUNCH_REQUEST, SIDE_QUESTION],
-    // From the left, so the agent's chat sits beside the project panel and sessions open to its right.
-    align: 'start',
-    // Open from the start, so the agent's checklist is seen ticking off as sessions finish.
-    defaultDrawer: 'tasks',
+    layout: [
+      [{ type: StoryRole.Project, data: { view: 'board' } satisfies ProjectModuleData }],
+      [
+        {
+          type: StoryRole.ChatPlane,
+          data: {
+            kind: 'chats',
+            suggestions: [LAUNCH_REQUEST, SIDE_QUESTION],
+            // From the left, so the agent's chat sits beside the project and sessions open to its right.
+            align: 'start',
+            // Open from the start, so the agent's checklist is seen ticking off as sessions finish.
+            defaultDrawer: 'tasks',
+          } satisfies ChatPlaneModuleData,
+        },
+      ],
+    ],
+    // The project a chat column wide.
+    columns: 'min(32vw,40rem)_1fr',
+    tiling: 'flush',
   },
 };
 
@@ -149,10 +155,10 @@ export const LaunchKitScripted: Story = {
     // Each task was handed to a session of its own, which is now the task's delegate.
     await expectDelegatedToSessions();
 
-    // The project panel shows each document the sessions wrote as a card.
+    // The project shows each document the sessions wrote as a card.
     await waitFor(
       () =>
-        expect(canvasElement.querySelectorAll('[data-testid="project-panel.artifact"]').length).toBe(
+        expect(canvasElement.querySelectorAll('[data-testid="project-module.document"]').length).toBe(
           LAUNCH_TASKS.length,
         ),
       { timeout: 30_000 },
