@@ -13,6 +13,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -312,12 +313,56 @@ export const useWindow = ({
     };
   }, [placement, axis, invalidate]);
 
+  // A row can resize with no commit of the list's own (a surface filling in late); the observer runs
+  // before paint, so re-measuring there lands the correction in the frame the row changed.
+  const rowObserver = useRef<{ observer: ResizeObserver; rows: Set<Element> }>(null);
+  useLayoutEffect(() => {
+    if (extents.exact) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const resized = entries.some(({ target: row }) => {
+        if (!(row instanceof HTMLElement) || !row.isConnected) {
+          return false;
+        }
+        const actual = Math.round(axis === 'block' ? row.offsetHeight : row.offsetWidth);
+        return actual !== placement.extentOf(Number(row.dataset.index));
+      });
+      if (resized) {
+        flushSync(invalidate);
+      }
+    });
+    rowObserver.current = { observer, rows: new Set() };
+    return () => {
+      observer.disconnect();
+      rowObserver.current = null;
+    };
+  }, [placement, axis, invalidate, extents.exact]);
+
   // Measured after every commit, so a row that grows later — a font, a portaled widget, an image —
   // is not a special case but the same case arriving again (§8).
   useLayoutEffect(() => {
     const parent = windowRef.current;
     if (!parent) {
       return;
+    }
+
+    if (rowObserver.current) {
+      const { observer, rows } = rowObserver.current;
+      const mounted = new Set<Element>(parent.children);
+      for (const row of rows) {
+        if (!mounted.has(row)) {
+          observer.unobserve(row);
+          rows.delete(row);
+        }
+      }
+      for (const row of mounted) {
+        if (!rows.has(row)) {
+          observer.observe(row);
+          rows.add(row);
+        }
+      }
     }
 
     let changed = false;
