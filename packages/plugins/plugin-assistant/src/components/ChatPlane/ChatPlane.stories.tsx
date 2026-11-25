@@ -206,7 +206,7 @@ const ThreadColumn = ({
         </ChatPlane.Cell>
         <ChatPlane.Prompt>
           <Chat.Activity />
-          <Chat.Prompt {...chatProps} autoFocus={current} preset={preset?.id} />
+          <Chat.Prompt {...chatProps} outline autoFocus={current} preset={preset?.id} />
         </ChatPlane.Prompt>
       </ChatPlane.Column>
     </Chat.Root>

@@ -760,8 +760,9 @@ const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
             )}
           </Panel.Header>
           {children}
-          {/* Empty, and so no height, until the column's prompt renders into it. */}
-          <Panel.Footer ref={setPromptSlot} />
+          {/* The panel's last row, on the thread's own surface rather than a footer bar's; empty, and so no height,
+              until the column's prompt renders into it. */}
+          <div className='row-start-3 min-w-0' ref={setPromptSlot} />
         </div>
       </Panel.Root>
     </Mosaic.Tile>
@@ -813,8 +814,8 @@ const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
   return promptSlot
     ? createPortal(
         <div
-          // The tile frames the prompt, so it needs only the edge that parts it from the thread.
-          className={current ? 'flex flex-col gap-1 border-t border-separator-subtle' : 'hidden'}
+          // Inset by the gap that surrounds the column, so the prompt sits in the column as the column sits in the strip.
+          className={current ? 'flex flex-col gap-1 p-2' : 'hidden'}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
         >
