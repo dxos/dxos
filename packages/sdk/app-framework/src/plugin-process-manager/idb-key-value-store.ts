@@ -51,6 +51,11 @@ export const layerIdb: Layer.Layer<KeyValueStore.KeyValueStore> =
             try: () => idb.keys(store).then((ks) => ks.length),
             catch: (err) => idbError('size', '', err),
           }),
+
+          keys: Effect.tryPromise({
+            try: () => idb.keys<string>(store),
+            catch: (err) => idbError('keys', '', err),
+          }),
         });
       })
     : KeyValueStore.layerMemory;

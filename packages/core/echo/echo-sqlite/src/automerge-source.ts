@@ -3,6 +3,7 @@
 //
 
 import * as A from '@automerge/automerge';
+import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
@@ -137,8 +138,8 @@ export class AutomergeFeedSource implements IndexDataSource {
       }
 
       // Multi-row inserts: in the browser every statement is a round trip to the database worker.
-      for (let start = 0; start < changes.length; start += CHANGE_ROWS_PER_INSERT) {
-        yield* sql`INSERT OR IGNORE INTO echo_sqlite_changes ${sql.insert(changes.slice(start, start + CHANGE_ROWS_PER_INSERT))}`;
+      for (const chunk of Array.chunksOf(changes, CHANGE_ROWS_PER_INSERT)) {
+        yield* sql`INSERT OR IGNORE INTO echo_sqlite_changes ${sql.insert(chunk)}`;
       }
 
       return {
