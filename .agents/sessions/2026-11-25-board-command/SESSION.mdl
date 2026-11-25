@@ -120,3 +120,9 @@ event T-6: The sync copied [G-3] from Composer through the fallback path.
   date: 2026-11-25T12:35Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-7: The page shows Composer tasks in a section of their own.
+  date: 2026-11-25T12:45Z
+  by: agent:claude-code
+```
