@@ -28,6 +28,11 @@ const meta: Meta<typeof ModuleContainer.Root> = {
     assistantSettings: { parallelThreads: true },
   }),
   parameters: storyParameters,
+  args: {
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
+    // The chat keeps a reading width and the trace takes what is left.
+    columns: 'minmax(0,40rem)_minmax(0,1fr)',
+  },
 };
 
 export default meta;
@@ -43,17 +48,10 @@ type Story = StoryObj<typeof meta>;
  * 2. Send "Meanwhile, what is 17 × 23?" while they work: the agent answers 391 at once.
  * 3. Wait: once every subagent has reported, the agent compares the three plans.
  */
-export const Default: Story = {
-  args: {
-    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
-  },
-};
+export const Default: Story = {};
 
-/** {@link Default} driven by a play function, without the trace: three plans are delegated and a side question answered. */
+/** {@link Default} driven by a play function: three plans are delegated and a side question answered. */
 export const Scripted: Story = {
-  args: {
-    layout: [[StoryRole.Chat]],
-  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await submitPrompt(canvasElement, SAVINGS_PROMPTS.compare);

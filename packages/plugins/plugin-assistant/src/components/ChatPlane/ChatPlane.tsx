@@ -367,7 +367,8 @@ const ChatPlaneRoot = ({
       onMove={onMove}
     >
       {/* Sunken, as the deck is behind its planks, so each column's own panel surface reads against the strip. */}
-      <Panel.Root level='sunken' classNames={['[--chat-plane-width:32vw]', classNames]}>
+      {/* A third of the frame, up to a comfortable reading width on a wide one. */}
+      <Panel.Root level='sunken' classNames={['[--chat-plane-width:min(32vw,40rem)]', classNames]}>
         {children}
       </Panel.Root>
     </ChatPlaneProvider>
