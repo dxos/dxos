@@ -828,6 +828,20 @@ describe('code mode output', () => {
   );
 
   it.effect(
+    'search is an effect that finds a bound operation, and a lookup it cannot reach adds nothing',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult("yield* print(yield* search('score urgency'));", EffectDialect);
+        expect(ok).toBe(true);
+        expect(output).toContain('[catalog/operations.md]');
+        expect(output).toContain(SCORE_KEY);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'a guessed module helper fails naming what does exist',
     Effect.fnUntraced(
       function* (_) {

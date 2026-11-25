@@ -53,7 +53,7 @@ export const EffectDialect: Dialect = {
   // `DOCS` is assembled ahead of the program so the model reads it as the plain object it is told it is.
   wrap: (code) =>
     `const DOCS = Object.freeze({ ...(await runEffect(loadDocs)), ...catalog });\n` +
-    `const search = (query) => searchDocs(DOCS, query);\n` +
+    `const search = (query) => searchAll(DOCS, query);\n` +
     `return await runEffect(Effect.gen(function* () {\n${code}\n}));`,
 
   bindings: ({ runtime, operations, skills, skillDocs, print }: BindingsContext) => {
@@ -110,8 +110,8 @@ export const EffectDialect: Dialect = {
       /** Supplied by `wrap`, not by the model: the static half of `DOCS`. */
       loadDocs,
 
-      /** Supplied by `wrap`, not by the model: what `search` runs over `DOCS`. */
-      searchDocs,
+      /** Supplied by `wrap`, not by the model: what `search` runs, over `DOCS` and the registries. */
+      searchAll,
 
       /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
       catalog: renderCatalog({
@@ -177,9 +177,9 @@ export const EFFECT_API = trim`
     - \`yield* print(...values)\` — strings verbatim, an object as a card (its fields, refs, and the code
       that fetches its relations, children and referrers), anything else as JSON. Print the object
       itself, not \`JSON.stringify\` of it.
-    - \`search(words)\` — the passages of \`DOCS\` that mention those words: operations with their DXN
-      and input, types with their fields, skill instructions, the reference. Start here:
-      \`yield* print(search('task artifact'))\`.
+    - \`search(words)\` — an effect: the passages of \`DOCS\` that mention those words (operations with
+      their DXN and input, types with their fields, skill instructions, the reference), and the skills,
+      operations and types registered beyond them. Start here: \`yield* print(yield* search('task artifact'))\`.
     - \`DOCS\` — the reference, a plain object of markdown files. Read what you need, a long file in slices
       (\`yield* print(DOCS['queries.md'].slice(0, 1000))\`):
     ${DOC_ENTRIES.map(({ name, covers }) => `  - \`${name}\` — ${covers}`).join('\n')}
@@ -326,15 +326,15 @@ const describeKind = (value: unknown): string =>
  */
 /** The Skill Manager's lookups by DXN: the model guesses one it is told only by tool name. */
 const QUERY_TYPES = String(SkillManagerSkill.Operations.QueryTypes.meta.key);
-const QUERY_OPERATIONS = String(SkillManagerSkill.Operations.QueryOperations.meta.key);
+const ENABLE_SKILLS = String(SkillManagerSkill.Operations.EnableSkills.meta.key);
 
 const EFFECT_OPERATIONS = trim`
   ### Operations
 
   Skills describe their capabilities as tools; here they are operations, not listed in this prompt.
-  Find one with \`search(words)\`, which returns its DXN, the skills' tool name, input and output from
-  \`DOCS['catalog/operations.md']\`, or, for a skill not enabled yet, with the Skill Manager's
-  \`${QUERY_OPERATIONS}\` (\`{ query }\`), then run it: \`yield* Operation.invoke(yield* Database.resolve('<dxn>'), input)\`. Pass an object or
+  Find one with \`yield* search(words)\`: an operation this conversation can run comes with its DXN, the
+  skills' tool name, input and output; one of a skill not enabled yet comes with that skill, which the
+  Skill Manager's \`${ENABLE_SKILLS}\` (\`{ keys }\`) enables. Then run it: \`yield* Operation.invoke(yield* Database.resolve('<dxn>'), input)\`. Pass an object or
   \`Ref.make(obj)\` where the input takes one, never an id or a URI string. In an output, a typename is
   that object and a \`Ref<typename>\` a reference. Prefer plain \`Obj\`/\`Database\` code when it does
   the job.
@@ -423,3 +423,60 @@ export const searchDocs = (docs: Readonly<Record<string, string>>, query: string
         )
         .join('\n\n');
 };
+
+/**
+ * What `search` runs: the loaded `DOCS`, and the Skill Manager's lookups, which ask the skill, operation and type
+ * registries rather than assume everything is loaded here. A lookup that is not bound, or fails, adds nothing; each
+ * answer leaves out what the docs already showed.
+ */
+export const searchAll = (
+  docs: Readonly<Record<string, string>>,
+  query: string,
+): Effect.Effect<string, never, Operation.Service> =>
+  Effect.gen(function* () {
+    const local = searchDocs(docs, query);
+    const lookup = <I, O>(operation: Operation.Definition<I, O>, input: I) =>
+      Operation.invoke(operation, input).pipe(
+        Effect.map((output): O | undefined => output),
+        Effect.catchCause(() => Effect.succeed(undefined)),
+      );
+    const { Operations } = SkillManagerSkill;
+    const [skills, operations, types] = yield* Effect.all(
+      [
+        lookup(Operations.QuerySkills, { query }),
+        lookup(Operations.QueryOperations, { query }),
+        lookup(Operations.QueryTypes, { query }),
+      ],
+      { concurrency: 'unbounded' },
+    );
+    const shown = (key: string) => local.includes(key);
+    const sections = [
+      section(
+        'Skills',
+        (skills ?? []).map(
+          (skill) =>
+            `- \`${skill.key}\` — ${skill.name}${skill.description ? `: ${skill.description}` : ''} ` +
+            `(${skill.enabled ? 'enabled' : skill.agentCanEnable ? 'not enabled; you may enable it' : 'not enabled'})`,
+        ),
+      ),
+      section(
+        'Operations',
+        (operations ?? [])
+          .filter((operation) => !shown(operation.key))
+          .map(
+            (operation) =>
+              `- \`${operation.key}\` (\`${operation.tool}\`) — ${operation.description ?? operation.name ?? ''} ` +
+              `[skill \`${operation.skill}\`${operation.enabled ? '' : ', not enabled'}]`,
+          ),
+      ),
+      section(
+        'Types',
+        (types ?? []).filter((type) => !shown(type.dxn)).map((type) => `- \`${type.dxn}\` (${type.kind})`),
+      ),
+    ].filter((text) => text !== undefined);
+    return [local, ...sections].join('\n\n');
+  });
+
+/** A titled list of registry hits, or nothing when there are none. */
+const section = (title: string, lines: readonly string[]): string | undefined =>
+  lines.length === 0 ? undefined : [`[registry: ${title.toLowerCase()}]`, ...lines.slice(0, SEARCH_LIMIT)].join('\n');

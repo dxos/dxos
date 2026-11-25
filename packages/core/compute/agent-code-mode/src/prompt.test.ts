@@ -125,7 +125,7 @@ describe('prompt', () => {
     const instructions = EffectDialect.instructions({ types: [], operations: [close] });
     // The prompt has the model discover operations; the catalog it reads documents each one.
     expect(instructions).not.toContain('Closes a task.');
-    expect(instructions).toContain("DOCS['catalog/operations.md']");
+    expect(instructions).toContain('yield* search(words)');
     const catalog = renderCatalog({ operations: [close], types: [] })['catalog/operations.md'];
     expect(catalog).toContain('input: { task: Ref<com.example.type.task> }');
     expect(catalog).not.toContain('"type":"string"');

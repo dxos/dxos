@@ -227,7 +227,7 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           // The plain dialect lists its operations; the Effect dialect has the model discover them in its catalog.
           const lists = dialect !== EffectDialect;
           expect(system.includes(querySkillsCall)).toBe(lists);
-          expect(system.includes("DOCS['catalog/operations.md']")).toBe(!lists);
+          expect(system.includes('yield* search(words)')).toBe(!lists);
           // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
           expect(system).toContain("find them, and their fields, with the Skill Manager's ");
           // The Effect dialect names the lookup by the DXN its code resolves, which a model otherwise guesses.
