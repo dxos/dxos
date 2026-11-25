@@ -50,6 +50,7 @@ goal G-3: Session board - /board command and Composer task sync
 ```mdl
 pr PR-1: Add the board command and the Composer task sync.
   ref: dxos/dxos#14683
+  status: landing
   goals: [G-1, G-2]
 ```
 
@@ -149,5 +150,11 @@ event T-9: The skill now forbids questions about process.
 ```mdl
 event T-10: Task links open in preview.composer.space.
   date: 2026-11-25T13:10Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-11: [PR-1] is ready for review, and auto-merge is on.
+  date: 2026-11-25T13:12Z
   by: agent:claude-code
 ```
