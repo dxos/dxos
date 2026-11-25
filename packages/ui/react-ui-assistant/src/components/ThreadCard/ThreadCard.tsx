@@ -6,6 +6,7 @@ import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -98,9 +99,9 @@ export const ThreadCard = ({ lane, onResize }: ThreadCardProps) => {
   }, [onResize, lane.status]);
 
   return (
-    <div className='flex min-w-0 items-center px-2 py-1' data-testid='chat.lane-card'>
+    <Layout.Flex align='center' classNames='min-w-0 px-2 py-1' data-testid='chat.lane-card'>
       <LaneHeader lane={lane} classNames='flex-1' statusEnd />
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -108,7 +109,9 @@ ThreadCard.displayName = 'ThreadCard';
 
 /** Stacks lane rows in the thread, one under another. */
 export const ThreadCardFlow = ({ children }: PropsWithChildren) => (
-  <div className='flex flex-col gap-1'>{children}</div>
+  <Layout.Flex column gap='xs'>
+    {children}
+  </Layout.Flex>
 );
 
 ThreadCardFlow.displayName = 'ThreadCardFlow';
