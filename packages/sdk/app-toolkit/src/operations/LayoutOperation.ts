@@ -98,7 +98,12 @@ export const UpdateDialog = Operation.make({
   executionMode: 'sync',
   services: [Capability.Service],
   input: Schema.Struct({
-    subject: Schema.optional(Schema.String.annotate({ description: 'URI of the component to display in the dialog.' })),
+    subject: Schema.optional(
+      Schema.String.annotate({
+        description:
+          'URI of the component to display in the dialog. With `state: false`, closes the dialog only while it shows this component.',
+      }),
+    ),
     state: Schema.optional(Schema.Boolean.annotate({ description: 'Whether the dialog is open or closed.' })),
     type: Schema.optional(Schema.Literals(['default', 'alert']).annotate({ description: 'The type of dialog.' })),
     blockAlign: Schema.optional(

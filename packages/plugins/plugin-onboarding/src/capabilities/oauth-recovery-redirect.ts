@@ -155,6 +155,9 @@ const finalize = Effect.fnUntraced(function* (params: RedirectParams) {
  *   stashed invitation code with the provider-verified email to mint the hub Account.
  * - recovery: redeem the one-time recovery proof via `IdentityService.recoverIdentity` to admit
  *   this device into HALO.
+ *
+ * Neither closes the dialog: the onboarding manager dismisses the welcome screen when the identity
+ * appears, then opens the join dialog when a space invitation was waiting behind the gate.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -190,8 +193,6 @@ const finalizeRedirect = Effect.fnUntraced(function* (
   invoker: Capabilities.OperationInvoker,
   params: RedirectParams,
 ) {
-  const closeDialog = invoker.invoke(LayoutOperation.UpdateDialog, { state: false }).pipe(Effect.ignore);
-
   // Pre-identity failure from kms-service (e.g. duplicate OAuth registration). Surface a toast and
   // bail BEFORE attempting identity creation, so a re-registration doesn't leave a dangling local
   // identity behind.
@@ -258,7 +259,6 @@ const finalizeRedirect = Effect.fnUntraced(function* (
       code: snapshot.code,
     });
     yield* invoker.schedule(ClientOperation.CreateAgent);
-    yield* closeDialog;
     return;
   }
 
@@ -273,6 +273,5 @@ const finalizeRedirect = Effect.fnUntraced(function* (
       ),
     );
     yield* invoker.schedule(ClientOperation.CreateAgent);
-    yield* closeDialog;
   }
 });

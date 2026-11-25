@@ -13,6 +13,8 @@ import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 
 import { ClientOperation } from '#operations';
 
+import { JOIN_DIALOG } from '../../constants.ts';
+
 export const JoinDialog = (props: JoinPanelProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
 
@@ -22,7 +24,8 @@ export const JoinDialog = (props: JoinPanelProps) => {
     async (result: InvitationResult | null) => {
       if (result?.identityKey) {
         await Promise.all([
-          invokePromise(LayoutOperation.UpdateDialog, { state: false }),
+          // Named, so a dialog that replaced this one when the identity appeared stays open.
+          invokePromise(LayoutOperation.UpdateDialog, { subject: JOIN_DIALOG, state: false }),
           // A device join is reported by the client when its invitation succeeds; recovery uses no invitation.
           props.initialDisposition === 'recover-identity' &&
             invokePromise(ObservabilityOperation.SendEvent, { name: 'identity.recover' }),

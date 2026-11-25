@@ -6,14 +6,21 @@ import { describe, onTestFinished, test, vi } from 'vitest';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import type * as Operation from '@dxos/compute/Operation';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
 
 import { WELCOME_SCREEN } from './constants.ts';
 import { OnboardingManager } from './onboarding-manager.ts';
+import {
+  PENDING_SPACE_INVITATION_KEY,
+  PendingSpaceInvitation,
+  type PendingSpaceInvitationStorage,
+} from './pending-space-invitation.ts';
 
 /** The HALO adapter's wrapper shape: the cause travels under `context.error` rather than `cause`. */
 class WrappedIdentityError extends Error {
@@ -121,6 +128,130 @@ describe('OnboardingManager', () => {
     expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
   });
 
+  test('a space invitation opened behind the gate is redeemed once the user is through it', async ({ expect }) => {
+    const { manager, client, calls, getCalls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      spaceInvitationCode: 'space-code',
+    });
+    await manager.initialize();
+    expect(dialogSubjects(calls)).toEqual([WELCOME_SCREEN]);
+    expect(getCalls(SpaceOperation.Join)).toHaveLength(0);
+
+    await client.halo.createIdentity();
+
+    await expect
+      .poll(() => getCalls(SpaceOperation.Join))
+      .toEqual([expect.objectContaining({ input: { invitationCode: 'space-code' } })]);
+  });
+
+  test('a tab that boots signed in redeems the invitation held behind the gate', async ({ expect }) => {
+    // A magic-link or OAuth tab can create the identity before this manager exists.
+    const storage = createMemoryStorage();
+    new PendingSpaceInvitation(storage).stash('space-code');
+    const { manager, getCalls } = await createManager({ identity: true, hubUrl: 'https://hub.example.com', storage });
+    await manager.initialize();
+
+    await expect
+      .poll(() => getCalls(SpaceOperation.Join))
+      .toEqual([expect.objectContaining({ input: { invitationCode: 'space-code' } })]);
+  });
+
+  test('the welcome closes when the identity appears, without waiting on the held invitation', async ({ expect }) => {
+    const claim = new Trigger();
+    class SlowPendingSpaceInvitation extends PendingSpaceInvitation {
+      override async take() {
+        await claim.wait();
+        return super.take();
+      }
+    }
+    const { manager, client, calls, getCalls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      spaceInvitationCode: 'space-code',
+      pendingSpaceInvitation: new SlowPendingSpaceInvitation(createMemoryStorage()),
+    });
+    onTestFinished(() => {
+      claim.wake();
+    });
+    await manager.initialize();
+    await client.halo.createIdentity();
+
+    await expect.poll(() => closes(calls)).toBe(1);
+    expect(getCalls(SpaceOperation.Join)).toHaveLength(0);
+    claim.wake();
+    await expect.poll(() => getCalls(SpaceOperation.Join)).toHaveLength(1);
+    expect(closes(calls)).toBe(1);
+  });
+
+  test('a hidden tab leaves the held invitation until the user comes back to it', async ({ expect }) => {
+    const page = stubHiddenPage();
+    const { manager, client, calls, getCalls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      spaceInvitationCode: 'space-code',
+    });
+    await manager.initialize();
+    await client.halo.createIdentity();
+
+    await expect.poll(() => closes(calls)).toBe(1);
+    expect(getCalls(SpaceOperation.Join)).toHaveLength(0);
+    page.show();
+    await expect.poll(() => getCalls(SpaceOperation.Join)).toHaveLength(1);
+  });
+
+  test('a hidden tab that boots signed in leaves the held invitation until it is visible', async ({ expect }) => {
+    const page = stubHiddenPage();
+    const storage = createMemoryStorage();
+    new PendingSpaceInvitation(storage).stash('space-code');
+    const { manager, getCalls } = await createManager({ identity: true, hubUrl: 'https://hub.example.com', storage });
+    await manager.initialize();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(getCalls(SpaceOperation.Join)).toHaveLength(0);
+    expect(storage.getItem(PENDING_SPACE_INVITATION_KEY)).not.toBeNull();
+    page.show();
+    await expect.poll(() => getCalls(SpaceOperation.Join)).toHaveLength(1);
+  });
+
+  test('a tab hidden again by the time the lock is granted claims once it is visible again', async ({ expect }) => {
+    const page = stubHiddenPage();
+    const locks = stubHeldLocks();
+    const storage = createMemoryStorage();
+    new PendingSpaceInvitation(storage).stash('space-code');
+    const { manager, getCalls } = await createManager({ identity: true, hubUrl: 'https://hub.example.com', storage });
+    await manager.initialize();
+
+    page.show();
+    await expect.poll(() => locks.waiting).toBe(1);
+    page.hide();
+    locks.grant();
+    await expect.poll(() => locks.waiting).toBe(0);
+    expect(getCalls(SpaceOperation.Join)).toHaveLength(0);
+    expect(storage.getItem(PENDING_SPACE_INVITATION_KEY)).not.toBeNull();
+
+    page.show();
+    await expect.poll(() => locks.waiting).toBe(1);
+    locks.grant();
+    await expect.poll(() => getCalls(SpaceOperation.Join)).toHaveLength(1);
+  });
+
+  test('a tab signed out while hidden leaves the invitation held for the next sign-in', async ({ expect }) => {
+    const page = stubHiddenPage();
+    const storage = createMemoryStorage();
+    const { manager, client, getCalls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      spaceInvitationCode: 'space-code',
+      storage,
+    });
+    await manager.initialize();
+    await client.halo.createIdentity();
+    await client.halo.deleteIdentity();
+    await expect.poll(() => client.halo.identity.get()).toBeNull();
+    page.show();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(getCalls(SpaceOperation.Join)).toHaveLength(0);
+    expect(await new PendingSpaceInvitation(storage).take()).toBe('space-code');
+  });
+
   test('a refused token reports the link as expired', async ({ expect }) => {
     const { manager, toastIds } = await createManager({
       hubUrl: 'https://hub.example.com',
@@ -203,15 +334,71 @@ const dialogSubjects = (calls: readonly { key: string; input: unknown }[]) =>
     .filter((call) => call.key === String(LayoutOperation.UpdateDialog.meta.key))
     .map((call) => (call.input as { subject?: string }).subject);
 
+/** A hidden page; `show` brings it to the front. */
+const stubHiddenPage = () => {
+  const page = Object.assign(new EventTarget(), { visibilityState: 'hidden' });
+  vi.stubGlobal('document', page);
+  onTestFinished(() => {
+    vi.unstubAllGlobals();
+  });
+  const setVisibility = (state: 'visible' | 'hidden') => {
+    page.visibilityState = state;
+    page.dispatchEvent(new Event('visibilitychange'));
+  };
+  return {
+    show: () => setVisibility('visible'),
+    hide: () => setVisibility('hidden'),
+  };
+};
+
+/** Web Locks that hold each request until `grant` runs the oldest. */
+const stubHeldLocks = () => {
+  const requests: (() => void)[] = [];
+  vi.stubGlobal('navigator', {
+    locks: {
+      request: (_name: string, callback: () => unknown) =>
+        new Promise((resolve) => requests.push(() => resolve(callback()))),
+    },
+  });
+  onTestFinished(() => {
+    vi.unstubAllGlobals();
+  });
+  return {
+    get waiting() {
+      return requests.length;
+    },
+    grant: () => requests.shift()?.(),
+  };
+};
+
+/** How many times the manager closed the dialog. */
+const closes = (calls: readonly { key: string; input: unknown }[]) =>
+  calls.filter(
+    (call) =>
+      call.key === String(LayoutOperation.UpdateDialog.meta.key) && (call.input as { state?: boolean }).state === false,
+  ).length;
+
+const createMemoryStorage = (): PendingSpaceInvitationStorage => {
+  const items = new Map<string, string>();
+  return {
+    getItem: (key) => items.get(key) ?? null,
+    setItem: (key, value) => void items.set(key, value),
+    removeItem: (key) => void items.delete(key),
+  };
+};
+
 const createManager = async (options: {
   identity?: boolean;
   deviceInvitationCode?: string;
+  spaceInvitationCode?: string;
   hubUrl?: string;
   token?: string;
   email?: string;
   accountInvitationCode?: string;
   emailProbe?: 'exists' | 'available' | 'unavailable';
   redeemTokenError?: Error;
+  storage?: PendingSpaceInvitationStorage;
+  pendingSpaceInvitation?: PendingSpaceInvitation;
 }) => {
   const client = await createClient();
   if (options.identity) {
@@ -229,11 +416,14 @@ const createManager = async (options: {
     invokePromise,
     client,
     deviceInvitationCode: options.deviceInvitationCode,
+    spaceInvitationCode: options.spaceInvitationCode,
+    pendingSpaceInvitation:
+      options.pendingSpaceInvitation ?? new PendingSpaceInvitation(options.storage ?? createMemoryStorage()),
     hubUrl: options.hubUrl,
     token: options.token,
     email: options.email,
     accountInvitationCode: options.accountInvitationCode,
   });
   onTestFinished(() => manager.destroy());
-  return { manager, getCalls, calls, toastIds };
+  return { manager, client, getCalls, calls, toastIds };
 };

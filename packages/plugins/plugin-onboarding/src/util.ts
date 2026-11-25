@@ -4,6 +4,7 @@
 
 import { type Client } from '@dxos/client';
 import { type Credential } from '@dxos/client/halo';
+import { type Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
@@ -82,3 +83,23 @@ export const queryAllCredentials = (client: Client) => {
     );
   });
 };
+
+export const isPageVisible = (): boolean => typeof document === 'undefined' || document.visibilityState === 'visible';
+
+/** Resolves once the page is visible, or when `ctx` is disposed. */
+export const whenPageVisible = (ctx: Context): Promise<void> =>
+  new Promise((resolve) => {
+    // `onDispose` on a disposed context runs `done` before `removeDispose` is assigned.
+    if (ctx.disposed || isPageVisible()) {
+      resolve();
+      return;
+    }
+    const done = () => {
+      document.removeEventListener('visibilitychange', onChange);
+      removeDispose();
+      resolve();
+    };
+    const onChange = () => isPageVisible() && done();
+    document.addEventListener('visibilitychange', onChange);
+    const removeDispose = ctx.onDispose(done);
+  });
