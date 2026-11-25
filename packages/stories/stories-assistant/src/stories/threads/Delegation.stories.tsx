@@ -141,12 +141,12 @@ const launchKit: Story = {
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),
   args: {
-    // A chat column wide on the left: the project's tasks, the documents the subagents write, and the trace.
+    // A chat column wide on the left: the project's tasks, the trace, and the documents the subagents write.
     layout: [
       [
         { type: StoryRole.Tasks, data: { source: 'project' } satisfies TasksModuleData },
-        { type: StoryRole.Artifacts, data: { view: 'cards' } satisfies ArtifactsModuleData },
         TRACE,
+        { type: StoryRole.Artifacts, data: { view: 'cards' } satisfies ArtifactsModuleData },
       ],
       [
         threadPlane({
@@ -170,8 +170,8 @@ const launchKit: Story = {
  *    documents, and the chat's own column stays where it was.
  * 3. Scroll the strip sideways to reach the columns past the edge.
  * 4. Click the chip that asks which day to launch: the chat answers while the subagents keep working.
- * 5. Wait: each column closes once its subagent reports, its document appears as a card under the project's tasks,
- *    and the summary lands in the chat's column.
+ * 5. Wait: each column closes once its subagent reports, its document appears as a card at the bottom of the left
+ *    column, and the summary lands in the chat's column.
  */
 export const LaunchKit: Story = { ...launchKit };
 
