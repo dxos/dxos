@@ -7,7 +7,7 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
@@ -49,11 +49,11 @@ export const CurrentModeAnnotation = Annotation.make({
 });
 
 /** The chat's current mode name; {@link DEFAULT} when none was set. */
-export const getCurrent = (chat: Chat.Chat): string =>
+export const getCurrent = (chat: Agent.Session): string =>
   Annotation.get(chat, CurrentModeAnnotation).pipe(Option.getOrElse(() => DEFAULT));
 
 /** Sets the chat's current mode; call inside the caller's `Obj.update`, so it batches with the chat's other writes. */
-export const setCurrent = (chat: Obj.Mutable<Chat.Chat>, name: string): void => {
+export const setCurrent = (chat: Obj.Mutable<Agent.Session>, name: string): void => {
   Annotation.set(chat, CurrentModeAnnotation, name);
 };
 
@@ -67,10 +67,10 @@ export const ModeSkillsAnnotation = Annotation.make({
 });
 
 /** The keys of the skills mode switches bound to the chat; `undefined` for a chat no switch has recorded. */
-export const getModeSkills = (chat: Chat.Chat): readonly string[] | undefined =>
+export const getModeSkills = (chat: Agent.Session): readonly string[] | undefined =>
   Annotation.get(chat, ModeSkillsAnnotation).pipe(Option.getOrUndefined);
 
 /** Records the skills mode switches bound to the chat; call inside the caller's `Obj.update`. */
-export const setModeSkills = (chat: Obj.Mutable<Chat.Chat>, keys: readonly string[]): void => {
+export const setModeSkills = (chat: Obj.Mutable<Agent.Session>, keys: readonly string[]): void => {
   Annotation.set(chat, ModeSkillsAnnotation, [...keys]);
 };

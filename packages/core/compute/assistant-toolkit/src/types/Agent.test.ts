@@ -6,8 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
@@ -19,7 +19,7 @@ import { Outline } from '@dxos/types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Agent.Agent, Outline.Outline, Chat.Chat, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions],
+  types: [Agent.Agent, Outline.Outline, Agent.Session, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions],
   disableLlmMemoization: true,
 });
 
@@ -28,7 +28,7 @@ describe('Agent (0.2.0)', () => {
     'makeInitialized creates the identity/preset shape',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           { name: 'Test', instructions: 'Do the thing.' },
           Skill.make({ key: 'org.dxos.test.skill', name: 'Test' }),
         );
@@ -40,12 +40,12 @@ describe('Agent (0.2.0)', () => {
         expect(Obj.getParent(instructions)).toBe(agent);
 
         // The parent edge carries the linkage in both directions; the agent owns no conversation state.
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         expect(chat).toBeDefined();
         expect(chat?.instructions?.uri).toBe(agent.instructions.uri);
 
         // Compare by id: the two query paths may resolve distinct proxy instances.
-        const linkedAgent = chat ? yield* Agent.loadForChat(chat) : undefined;
+        const linkedAgent = chat ? yield* Agent.loadForSession(chat) : undefined;
         expect(linkedAgent?.id).toBe(agent.id);
       },
       Effect.provide(TestLayer),
@@ -57,15 +57,15 @@ describe('Agent (0.2.0)', () => {
     'loadChat skips chats bridged from an external conversation',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           { name: 'Test', instructions: 'Do the thing.' },
           Skill.make({ key: 'org.dxos.test.skill', name: 'Test' }),
         );
-        const primary = yield* Agent.loadChat(agent);
+        const primary = yield* Agent.loadSession(agent);
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.add(
-          Chat.make({
+          Agent.makeSession({
             [Obj.Meta]: { keys: [{ source: 'discord.com', id: 'thread-1' }] },
             [Obj.Parent]: agent,
             feed: Ref.make(feed),
@@ -73,7 +73,7 @@ describe('Agent (0.2.0)', () => {
         );
         yield* Database.flush();
 
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         expect(chat?.id).toBe(primary?.id);
       },
       Effect.provide(TestLayer),

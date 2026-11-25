@@ -9,11 +9,11 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import type { AgentProcessDefinition, MakeTurnProducer } from '@dxos/agent-runtime';
+import type { MakeTurnProducer, SessionProcessDefinition } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
 import type { AiContext } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as ComputeAgent from '@dxos/compute/Agent';
 import type * as Instructions from '@dxos/compute/Instructions';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
 import type { DXN } from '@dxos/keys';
@@ -106,7 +106,7 @@ export type AgentLocation = 'local' | 'edge';
 
 /** A person's answer to a request block an agent added to a chat. */
 export type AgentResponse = {
-  chat: Chat.Chat;
+  chat: ComputeAgent.Session;
   /** The message holding the request block. */
   message: Message.Message;
   requestId: string;
@@ -157,7 +157,7 @@ export const Agent = Capability.make<Agent>()(`${AssistantNamespace.key}.capabil
  * key in `chat.session.process`. The agent service spawns it for such a chat; a chat that names
  * none runs on the assistant's.
  */
-export const AgentProcess = Capability.make<AgentProcessDefinition>()(
+export const SessionProcess = Capability.make<SessionProcessDefinition>()(
   `${AssistantNamespace.key}.capability.agentProcess`,
 );
 
@@ -189,7 +189,7 @@ export type SubjectContext = {
   appliesTo?: (subject: Obj.Unknown) => boolean;
   getBindings: (params: {
     subject: Obj.Unknown;
-    chat: Chat.Chat;
+    chat: ComputeAgent.Session;
   }) => Effect.Effect<SubjectBindings, Error, Database.Service | Registry.Service>;
 };
 

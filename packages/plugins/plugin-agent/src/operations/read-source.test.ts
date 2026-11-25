@@ -9,8 +9,7 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -99,7 +98,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
       operationHandlers: AgentOperationHandlerSet,
       types: [
         Agent.Agent,
-        Chat.Chat,
+        Agent.Session,
         Skill.Skill,
         Feed.Feed,
         Text.Text,
@@ -140,7 +139,7 @@ describe('ReadSource', () => {
         const document = yield* Database.add(Markdown.make({ name: 'CI triage', content: TRANSCRIPT }));
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
-        const chatsBefore = (yield* Database.query(Filter.type(Chat.Chat)).run).length;
+        const chatsBefore = (yield* Database.query(Filter.type(Agent.Session)).run).length;
         const feedsBefore = yield* feedCount;
 
         const result = yield* Operation.invoke(AgentOperation.ReadSource, {
@@ -149,7 +148,7 @@ describe('ReadSource', () => {
         });
         expect(result).toEqual({ facts: 3, fired: [], undelivered: [] });
         // A direct model call: reading creates no conversation, and the facts stay out of the space.
-        expect((yield* Database.query(Filter.type(Chat.Chat)).run).length).toBe(chatsBefore);
+        expect((yield* Database.query(Filter.type(Agent.Session)).run).length).toBe(chatsBefore);
         expect(yield* feedCount).toBe(feedsBefore);
 
         const facts = yield* brainFacts(agent);
@@ -210,7 +209,7 @@ describe('ReadSource', () => {
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         if (!chat) {
           return expect.unreachable('The agent has a chat.');
         }
@@ -302,7 +301,7 @@ describe('ReadSource', () => {
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         if (!chat) {
           return expect.unreachable('The agent has a chat.');
         }
@@ -333,7 +332,7 @@ describe('ReadSource', () => {
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         if (!chat) {
           return expect.unreachable('The agent has a chat.');
         }
@@ -377,7 +376,7 @@ describe('ReadSource', () => {
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const agent = yield* Database.load(agentRef);
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         if (!chat) {
           return expect.unreachable('The agent has a chat.');
         }

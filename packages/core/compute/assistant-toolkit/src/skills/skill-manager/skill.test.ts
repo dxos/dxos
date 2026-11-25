@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AiContext, Harness } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
@@ -47,12 +47,7 @@ const ConversationHarnessLayer = Layer.unwrap(
   Effect.gen(function* () {
     const feed = yield* Database.add(Feed.make());
     const conversation = Obj.getURI(feed);
-    const runtime = yield* Effect.context<Database.Service>();
-    const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-    return Layer.mergeAll(
-      Layer.succeed(TestConversation, { conversation }),
-      Layer.succeed(Harness.HarnessService, Harness.fromBinder({ feed, runtime, binder })),
-    );
+    return Layer.succeed(TestConversation, { conversation });
   }),
 );
 
@@ -63,11 +58,15 @@ const getConversationDXN = Effect.gen(function* () {
   return conversation;
 });
 
+/** The test runs outside the conversation's process, so it opens the conversation's binder itself. */
 const getBoundSkills = Effect.gen(function* () {
-  const binder = yield* Harness.binder;
+  const { conversation } = yield* TestConversation;
+  const feed = yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie);
+  const runtime = yield* Effect.context<Database.Service>();
+  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
   yield* Effect.promise(() => binder.sync());
   return binder.getSkills();
-});
+}).pipe(Effect.scoped);
 
 describe('Skill Manager', () => {
   it.effect(

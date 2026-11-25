@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Filter } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as Chat from '@dxos/plugin-assistant/Chat';
@@ -37,7 +37,7 @@ export const ChatModule = () => {
 
 const ChatModuleContainer = ({ space }: { space: Space }) => {
   // The chat `BrainChatPlugin` keyed, since another chat in the space would lack the Brain skill.
-  const [chat] = useQuery(space.db, Filter.foreignKeys(AssistantChat.Chat, [BRAIN_CHAT_KEY]));
+  const [chat] = useQuery(space.db, Filter.foreignKeys(Agent.Session, [BRAIN_CHAT_KEY]));
   const { setScope, setPredicate, setSelected } = useFactsStory();
 
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);

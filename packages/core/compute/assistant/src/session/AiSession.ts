@@ -40,7 +40,6 @@ import {
 } from '../request/index.ts';
 import { ToolExecutionServices } from '../tool-runtime/index.ts';
 import * as AiContext from './AiContext.ts';
-import * as Harness from './Harness.ts';
 import * as Legacy from './Legacy.ts';
 import * as ThreadToolkit from './thread-toolkit.ts';
 import { createToolkit } from './toolkit.ts';
@@ -441,18 +440,7 @@ export class Session extends Resource {
         return turn !== undefined ? TrajectoryStore.endTurn(this._feed, turn, exit, { source }) : Effect.void;
       }),
       Effect.provideService(Database.Service, Context.get(this._runtime, Database.Service)),
-      Effect.provide(
-        Layer.mergeAll(
-          // Tier A only: the agent's own turn fiber has no `ProcessManager.Service` in scope, so
-          // Tier B (setAlarm/enqueueMessage) is reachable only by child operations through the
-          // process-affinity HarnessService LayerSpec — not from here.
-          Layer.succeed(
-            Harness.HarnessService,
-            Harness.fromBinder({ feed: this._feed, runtime: this._runtime, binder: this.context }),
-          ),
-          Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) }),
-        ),
-      ),
+      Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) })),
       Effect.withSpan('AiSession.createRequest'),
       Effect.annotateSpans(sessionAnnotations(this._feed)),
     );

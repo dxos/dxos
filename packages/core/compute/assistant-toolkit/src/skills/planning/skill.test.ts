@@ -9,8 +9,7 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { AiContext, TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Hook from '@dxos/compute/Hook';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -34,7 +33,7 @@ const TestLayer = AssistantTestLayer({
     Outline.Outline,
     Task.Task,
     Text.Text,
-    Chat.Chat,
+    Agent.Session,
     Skill.Skill,
     Feed.Feed,
     Message.Message,
@@ -74,9 +73,9 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         expect(messages.some((message) => Message.extractText(message).includes(REMINDER))).toBe(true);
 
         // The reminder is only worth firing if it actually drives the plan to completion.
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Agent.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual(TASKS);
-        expect(tasks.filter(Chat.isOpenTask)).toEqual([]);
+        expect(tasks.filter(Task.isOpen)).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -101,8 +100,8 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         const messages = yield* TrajectoryStore.messages(agent.feed);
         expect(messages.some((message) => Message.extractText(message).includes(REMINDER))).toBe(false);
 
-        const tasks = yield* Chat.loadTasks(chat);
-        expect(tasks.filter(Chat.isOpenTask).map((task) => task.title)).toEqual(TASKS.slice(1));
+        const tasks = yield* Agent.loadTasks(chat);
+        expect(tasks.filter(Task.isOpen).map((task) => task.title)).toEqual(TASKS.slice(1));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -113,17 +112,17 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
 
 /**
  * A session whose chat holds a seeded checklist — the chat the process runs on, which both the hook
- * and update-tasks reach through `Harness.getChat`. Seeding the items rather than having the model
+ * and update-tasks reach through `Agent.currentSession`. Seeding the items rather than having the model
  * author them keeps the two cases differing only in the prompt.
  */
 const setupChatWithChecklist = Effect.fnUntraced(function* () {
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
   // The checklist goes on the session's own chat — the one the harness resolves for the
   // conversation. A second chat on the same feed would be invisible to the planning tools.
-  const chat = yield* Database.resolve(Obj.getURI(agent.chat), Chat.Chat);
+  const chat = yield* Database.resolve(Obj.getURI(agent.chat), Agent.Session);
   const { db } = yield* Database.Service;
   for (const title of TASKS) {
-    Chat.addTask(db, chat, title, { status: 'todo' });
+    yield* Agent.addTask(chat, title, { status: 'todo' });
   }
   yield* Database.flush();
   yield* agent.addContext([Ref.make(chat)]);

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AiContext, Harness } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 
@@ -20,9 +20,12 @@ export default SetMcpConnection.pipe(
       if (!connection) {
         return yield* Effect.die(new Error(`No connection or built-in MCP server ${id}.`));
       }
-      const binder = yield* Harness.binder.pipe(Effect.orDie);
-      yield* Effect.promise(() => binder.setConnection(AiContext.connectionRef(connection), enabled));
-      return describe(connection, binder.getConnections());
+      const states = yield* AiContext.useCurrentBinder((binder) =>
+        Effect.promise(() => binder.setConnection(AiContext.connectionRef(connection), enabled)).pipe(
+          Effect.map(() => binder.getConnections()),
+        ),
+      ).pipe(Effect.orDie);
+      return describe(connection, states);
     }),
   ),
 );

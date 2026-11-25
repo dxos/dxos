@@ -9,8 +9,7 @@ import * as Result from 'effect/Result';
 
 import type * as Capability from '@dxos/app-framework/Capability';
 import { TrajectoryStore } from '@dxos/assistant';
-import type * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import * as ChannelBackend from '@dxos/plugin-thread/ChannelBackend';
@@ -143,7 +142,7 @@ const roleIn = (relay: Relay.Relay, party: Obj.Unknown): 'recipient' | 'requeste
       : undefined;
 
 /** Records the message in a Composer chat, where whoever has the chat open reads it. */
-const appendToChat = (agent: Agent.Agent, chat: Chat.Chat, text: string, properties?: Record<string, unknown>) =>
+const appendToChat = (agent: Agent.Agent, chat: Agent.Session, text: string, properties?: Record<string, unknown>) =>
   Effect.gen(function* () {
     const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
     yield* TrajectoryStore.appendMessages(feed, [
@@ -155,7 +154,7 @@ const appendToChat = (agent: Agent.Agent, chat: Chat.Chat, text: string, propert
     ]);
   });
 
-type Posted = { delivered: true; chat: Chat.Chat } | { delivered: false; reason?: string };
+type Posted = { delivered: true; chat: Agent.Session } | { delivered: false; reason?: string };
 
 /**
  * Delivers into a channel conversation and records it in the agent's chat for that conversation. On a mirrored

@@ -13,8 +13,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Feed, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
@@ -48,7 +48,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       return undefined;
     }
     const feed = TrajectoryStore.makeFeed();
-    return { feed, chat: Chat.make({ feed: Ref.make(feed) }) };
+    return { feed, chat: Agent.makeSession({ feed: Ref.make(feed) }) };
   }, [space, draftGeneration]);
   const chat = draft?.chat;
   const context = useDraftContext({ db: space?.db, draft, registry: atomRegistry, pluginManager });
@@ -85,7 +85,7 @@ SpaceHomePrompt.displayName = 'SpaceHomePrompt';
 
 type UseDraftSendProps = {
   space?: Space;
-  draft?: { feed: Feed.Feed; chat: Chat.Chat };
+  draft?: { feed: Feed.Feed; chat: Agent.Session };
   context?: AiContext.Binder;
   slashCommands: readonly SlashCommand.SlashCommand[];
   onSent: () => void;
@@ -139,7 +139,7 @@ const useDraftSend = ({ space, draft, context, slashCommands, onSent }: UseDraft
 
 type UseDraftContextProps = {
   db?: Database.Database;
-  draft?: { feed: Feed.Feed; chat: Chat.Chat };
+  draft?: { feed: Feed.Feed; chat: Agent.Session };
   registry: AtomRegistry.AtomRegistry;
   pluginManager: boolean;
 };

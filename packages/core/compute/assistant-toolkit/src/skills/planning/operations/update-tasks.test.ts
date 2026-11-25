@@ -10,9 +10,9 @@ import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
@@ -31,7 +31,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const layerOptions = {
   operationHandlers: PlanningHandlers,
-  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
+  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Agent.Session, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
   disableLlmMemoization: true,
 };
@@ -52,9 +52,12 @@ describe('UpdateTasks', () => {
     'creates tasks assigned to the agent, and edits them by ref',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
+        const agent = yield* AgentSetup.makeInitialized(
+          { name: 'Planner', instructions: 'Test.' },
+          PlanningSkill.make(),
+        );
         yield* Database.flush();
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         const feed = chat?.feed?.target;
         invariant(chat && feed, 'Agent chat feed not found.');
         const invoke = invokeOn(feed);
@@ -63,7 +66,7 @@ describe('UpdateTasks', () => {
           { create: true, title: 'Hello', status: 'started' },
           { create: true, title: 'World' },
         ]);
-        const [hello, world] = yield* Chat.loadTasks(chat);
+        const [hello, world] = yield* Agent.loadTasks(chat);
         expect(hello?.status).toEqual('started');
         expect(world?.status).toEqual('todo');
         // What the conversation creates is its own work, whatever the status.
@@ -75,7 +78,7 @@ describe('UpdateTasks', () => {
           { task: Ref.make(hello), status: 'done' },
           { task: Ref.make(world), title: 'World, renamed' },
         ]);
-        expect((yield* Chat.loadTasks(chat)).map(({ title, status }) => ({ title, status }))).toEqual([
+        expect((yield* Agent.loadTasks(chat)).map(({ title, status }) => ({ title, status }))).toEqual([
           { title: 'Hello', status: 'done' },
           { title: 'World, renamed', status: 'todo' },
         ]);
@@ -96,7 +99,7 @@ describe('UpdateTasks', () => {
 
         yield* invoke([{ task: Ref.make(subTask), status: 'started' }]);
 
-        expect((yield* Chat.loadTasks(chat)).map((task) => task.id)).toEqual([subTask.id]);
+        expect((yield* Agent.loadTasks(chat)).map((task) => task.id)).toEqual([subTask.id]);
         expect(subTask.status).toEqual('started');
         expect(subTask.delegate?.role).toEqual('assistant');
         // A plain chat is its own session object.
@@ -218,7 +221,7 @@ describe('UpdateTasks', () => {
             delegate: { role: 'assistant' },
           }),
         );
-        Chat.assignTasks(chat, [Ref.make(queued)]);
+        Agent.assignTasks(chat, [Ref.make(queued)]);
         yield* invoke([{ task: Ref.make(queued), unassign: true }]);
         expect(chat.tasks).toEqual([]);
         expect(queued.delegate).toBeUndefined();
@@ -231,7 +234,7 @@ describe('UpdateTasks', () => {
             delegate: { role: 'assistant', name: 'Claude', identityDid: 'did:key:claude' },
           }),
         );
-        Chat.assignTasks(chat, [Ref.make(elsewhere)]);
+        Agent.assignTasks(chat, [Ref.make(elsewhere)]);
         yield* invoke([{ task: Ref.make(elsewhere), unassign: true }]);
         expect(chat.tasks).toEqual([]);
         expect(elsewhere.delegate?.name).toEqual('Claude');
@@ -282,7 +285,7 @@ describe('UpdateTasks', () => {
         const { chat, invoke } = yield* setupChat();
 
         yield* invoke([{ create: true, title: 'Hello' }]);
-        const [task] = yield* Chat.loadTasks(chat);
+        const [task] = yield* Agent.loadTasks(chat);
         invariant(task);
         yield* invoke([{ task: Ref.make(task), status: 'started' }]);
         // Same status twice: nothing changed, so nothing is traced.
@@ -337,7 +340,7 @@ describe('UpdateTasks', () => {
   });
 });
 
-/** Invokes the tool as the conversation on `feed`, which is how `Harness.getChat` reaches its chat. */
+/** Invokes the tool as the conversation on `feed`, which is how `Agent.currentSession` reaches its chat. */
 const invokeOn = (feed: Feed.Feed) => (changes: readonly TaskChange[]) =>
   Operation.invoke(UpdateTasks, { changes }).pipe(
     Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })),
@@ -346,7 +349,7 @@ const invokeOn = (feed: Feed.Feed) => (changes: readonly TaskChange[]) =>
 /** A chat with no agent above it, bound to its own feed. */
 const setupChat = Effect.fnUntraced(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
   const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
   yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));

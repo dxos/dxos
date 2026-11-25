@@ -21,7 +21,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
-import { Database } from '@dxos/echo';
+import { Annotation, Database } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { log } from '@dxos/log';
@@ -106,6 +106,7 @@ export const make = ({
         yield* OperationProcess.admitOperation(op, input);
       }
       const definition = Operation.isScript(op) ? op : OperationProcess.make(op);
+      const conversation = options?.conversation;
       const handle = yield* Process.spawn(definition, input, {
         ...(detached ? { parentProcessId: undefined } : {}),
         // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
@@ -117,6 +118,14 @@ export const make = ({
           ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
           ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
         },
+        // The conversation an invocation names is the session it works for (`Agent.currentSession` reads it).
+        ...(conversation !== undefined
+          ? {
+              annotations: Annotation.buildDictionary((dictionary) => {
+                Annotation.setDictionary(dictionary, Process.SessionAnnotation, conversation);
+              }),
+            }
+          : {}),
         ...(options?.on === 'edge' && options.spaceId !== undefined
           ? { location: { kind: 'edge', space: options.spaceId } as const }
           : {}),

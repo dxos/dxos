@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database, Feed, Filter, Order, Query, Scope } from '@dxos/echo';
@@ -61,7 +61,7 @@ const LaneMemory = ({ events }: { events: readonly Trajectory.Event[] }) => {
 
 type ThreadColumnProps = {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   lane: Reducer.Lane;
   events: readonly Trajectory.Event[];
 };
@@ -92,7 +92,7 @@ const ThreadColumn = ({ db, chat, lane, events }: ThreadColumnProps) => {
 
 type AgentColumnProps = {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Agent.Session;
   chatModel: ChatModel;
   /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
   suggestions?: readonly string[];
@@ -249,7 +249,7 @@ export const ThreadColumns = ({
 }: Pick<AgentColumnProps, 'suggestions' | 'defaultDrawer' | 'trace'>) => {
   const [space] = useSpaces();
   const db = space?.db;
-  const chats = useQuery(db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(db, Filter.type(Agent.Session));
   const chat = chats.at(-1);
   const chatModel = useThreadModel(db, chat);
   if (!db || !chat || !chatModel) {

@@ -21,7 +21,6 @@ import React, {
 } from 'react';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
-import type * as AgentService from '@dxos/compute/AgentService';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { raise } from '@dxos/debug';
@@ -56,7 +55,7 @@ export type PermissionAgent = {
   /** The principal the grant names as its audience and the guard checks as. */
   principal: Principal.Principal;
   grant?: Grant.Grant;
-  session?: AgentService.Session;
+  session?: AgentServiceRuntime.SessionHandle;
   error?: string;
 };
 

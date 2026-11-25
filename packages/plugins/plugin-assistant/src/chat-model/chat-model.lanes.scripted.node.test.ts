@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -120,7 +120,7 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
 
 const testLayer = () =>
   AssistantTestLayer({
-    types: [Chat.Chat, Feed.Feed, Message.Message],
+    types: [Agent.Session, Feed.Feed, Message.Message],
     operationHandlers: [GateHandlers],
     skills: [GateSkill],
     agent: { threading: () => ({ limit: 3 }) },
@@ -130,7 +130,7 @@ const testLayer = () =>
 /** A chat model over the test layer's agent service with the gate bound, and a recorder attached before anything runs. */
 const setup = Effect.fn(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Agent.makeSession({ name: 'Test', feed: Ref.make(feed) }));
   const runtime = yield* Effect.context<Database.Service>();
   const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
   yield* Effect.promise(() => session.context.bind({ skills: [Skill.makeRef(GateSkill)], objects: [] }));
@@ -139,7 +139,7 @@ const setup = Effect.fn(function* () {
     chat: Ref.make(chat),
     observableRegistry: registry,
   });
-  const agent = yield* AgentService.getSession(chat, { location: 'local' });
+  const agent = yield* AgentService.bindSession(chat, { location: 'local' });
   const recorder = new ChatModelRecorder(registry, chatModel, { agentRunning: agent.running });
   yield* Effect.addFinalizer(() => Effect.sync(() => recorder.dispose()));
   return { chatModel, recorder };

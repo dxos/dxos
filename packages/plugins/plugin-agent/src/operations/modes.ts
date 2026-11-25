@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import type * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 
@@ -126,7 +125,7 @@ export const findMode = (modes: readonly Mode.Mode[], name: string): Mode.Mode |
  * Puts the chat in `mode`: unbinds the skills earlier switches bound that the mode does not want, binds the mode's
  * skills the chat lacks (the agent's customized copies where they exist), and records the mode and what it bound.
  */
-export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat, name: string) {
+export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Agent.Session, name: string) {
   const modes = yield* ensureModes(agent);
   const mode = findMode(modes, name);
   if (!mode) {

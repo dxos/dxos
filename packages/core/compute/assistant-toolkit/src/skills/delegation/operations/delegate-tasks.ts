@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { type Task } from '@dxos/types';
@@ -21,8 +20,8 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
         return yield* Effect.fail(new ToolkitError({ message: 'Select at least one task (ordinal or title).' }));
       }
 
-      const chat = yield* Harness.getChat;
-      const all = yield* Chat.loadTasks(chat);
+      const chat = yield* Agent.currentSession;
+      const all = yield* Agent.loadTasks(chat);
       if (all.length === 0) {
         return yield* Effect.fail(new ToolkitError({ message: 'The conversation has no tasks to delegate.' }));
       }
@@ -69,7 +68,7 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
         ${skipped.length > 0 ? `skipped: ${skipped.join(', ')}.` : ''}
 
         <checklist>
-          ${yield* Chat.formatChecklist(chat)}
+          ${yield* Agent.formatChecklist(chat)}
         </checklist>
       `;
     }),

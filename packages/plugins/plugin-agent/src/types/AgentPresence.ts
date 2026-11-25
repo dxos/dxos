@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { Obj } from '@dxos/echo';
 import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 

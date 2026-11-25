@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as ReadOnly from '@dxos/app-toolkit/ReadOnly';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -56,7 +56,7 @@ export default Capability.makeModule(
             const thread = Task.getQuestions(task.history).find(({ question }) => question.id === questionId);
             const chat = yield* Effect.promise(async () => thread?.question.conversation?.load());
             const spaceId = chat && Obj.getDatabase(chat)?.spaceId;
-            if (!chat || !Obj.instanceOf(Chat.Chat, chat) || !spaceId) {
+            if (!chat || !Obj.instanceOf(Agent.Session, chat) || !spaceId) {
               return;
             }
             yield* invoker.invoke(

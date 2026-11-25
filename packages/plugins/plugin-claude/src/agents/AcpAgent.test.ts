@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 
-import { AiSession, Chat, TrajectoryStore } from '@dxos/assistant';
+import { AiSession, TrajectoryStore } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -47,7 +48,7 @@ const streamedText = (payload: unknown): string | undefined =>
 
 const setup = Effect.fn(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: 'fake' } }));
+  const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed), session: { harness: 'fake' } }));
   const app = makeFakeAgent();
   const sessions = yield* AcpAgent.Sessions.make();
   const options: AcpAgent.AgentOptions = {
@@ -141,7 +142,7 @@ const findRequest = (feed: Feed.Feed) =>
 describe('AcpAgent', () => {
   const written: Written[] = [];
   const TestLayer = Layer.mergeAll(
-    TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
+    TestDatabaseLayer({ types: [Feed.Feed, Agent.Session, ...TrajectoryStore.types] }),
     Layer.succeed(Trace.TraceService, { write: (event, payload) => void written.push({ key: event.key, payload }) }),
   );
 

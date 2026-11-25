@@ -13,7 +13,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -78,7 +78,7 @@ export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
 
     // A process only knows the feed it serves, so the chat's name is joined in here rather than
     // carried on the process itself.
-    const chats = useQuery(space.db, Filter.type(Chat.Chat));
+    const chats = useQuery(space.db, Filter.type(Agent.Session));
     const chatNamesByFeed = useMemo(() => {
       const names = new Map<string, string>();
       for (const chat of chats) {

@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 

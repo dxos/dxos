@@ -10,7 +10,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, test, vi } from 'vitest';
 
-import { Chat, TrajectoryStore } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -37,7 +38,7 @@ const MODEL = process.env.DX_E2E_CLAUDE_MODEL ?? 'claude-haiku-4-5-20251001';
 const TURN_TIMEOUT = 4 * 60_000;
 
 const TestLayer = Layer.mergeAll(
-  TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
+  TestDatabaseLayer({ types: [Feed.Feed, Agent.Session, ...TrajectoryStore.types] }),
   Layer.succeed(Trace.TraceService, { write: () => {} }),
 );
 
@@ -80,7 +81,9 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY))('dev shell agent host with C
       const replied = await EffectEx.runPromise(
         Effect.gen(function* () {
           const feed = yield* Database.add(Feed.make());
-          const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: 'claude-code' } }));
+          const chat = yield* Database.add(
+            Agent.makeSession({ feed: Ref.make(feed), session: { harness: 'claude-code' } }),
+          );
           const sessions = yield* AcpAgent.Sessions.make();
           yield* AcpAgent.runTurn(
             {

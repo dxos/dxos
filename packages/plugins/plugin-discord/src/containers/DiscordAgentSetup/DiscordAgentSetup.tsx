@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';

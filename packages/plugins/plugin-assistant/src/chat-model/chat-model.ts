@@ -18,15 +18,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import {
   AiContext,
   AiSession,
-  Harness,
   ToolExecutionServices,
   TrajectoryStore,
   createSystemPrompt,
   formatSystemPrompt,
 } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Credential from '@dxos/compute/Credential';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -71,7 +68,7 @@ export type SpaceServices =
   | Database.Service
   | Credential.CredentialsService
   | AiService.AiService
-  | AgentService.AgentService
+  | Agent.Service
   | Registry.Service
   | OpaqueToolkit.OpaqueToolkitProvider;
 
@@ -91,10 +88,10 @@ export type ChatModelOptions = {
   /**
    * For tracing.
    */
-  chat?: Ref.Ref<Chat.Chat>;
+  chat?: Ref.Ref<Agent.Session>;
   system?: string;
   /** Who this chat model's prompts come from, when the chat is one of several people's with one agent. */
-  sender?: AgentService.PromptSender;
+  sender?: Agent.PromptSender;
   /** Binds {@link TurnReviewSkill} so each turn is reviewed for struggles (opt-in setting). */
   reportStruggles?: boolean;
   /**
@@ -461,15 +458,7 @@ export class ChatModel {
         const skills = this.context.getSkills();
         const objects = this.context.getObjects();
         const instructions = yield* this.#getInstructions();
-        // Tier A only: system-prompt formatting runs operations that read the conversation context;
-        // the live-host Tier B control surface is not reachable from this fiber.
-        const runtime = yield* Effect.context<Database.Service>();
-        return yield* formatSystemPrompt({ system: this._options.system, skills, objects, instructions }).pipe(
-          Effect.provideService(
-            Harness.HarnessService,
-            Harness.fromBinder({ feed: this._feed, runtime, binder: this.context }),
-          ),
-        );
+        return yield* formatSystemPrompt({ system: this._options.system, skills, objects, instructions });
       }).pipe(Effect.provide(this._spaceLayer), Effect.orDie),
     );
   }
@@ -567,7 +556,7 @@ export class ChatModel {
         yield* this.#forkEphemeralCollector(session, { replay: false });
 
         log('chat model submitting prompt', { length: requestProp.message.length });
-        yield* session.submitPrompt(createPromptContent(requestProp), this.#submitOptions);
+        yield* Agent.submitPrompt(session, createPromptContent(requestProp), this.#submitOptions);
         markWork('chat.prompt-submitted');
         submission?.resolve();
         log('chat model submitPrompt returned, waiting for agent', {});
@@ -575,7 +564,7 @@ export class ChatModel {
         // Scheduled now rather than after the turn, so the name lands while the agent works.
         yield* this.#nameAfter(requestProp);
 
-        yield* session.waitForCompletion();
+        yield* Agent.waitForCompletion(session);
         log.info('session complete');
 
         this.#flushStreaming();
@@ -637,7 +626,7 @@ export class ChatModel {
     await this._runtime.runPromise(
       Effect.gen({ self: this }, function* () {
         const session = yield* this.#getSession();
-        yield* session.submitPrompt(createPromptContent(requestProp), this.#submitOptions);
+        yield* Agent.submitPrompt(session, createPromptContent(requestProp), this.#submitOptions);
         markWork('chat.prompt-submitted');
         // A chat whose first turn started elsewhere (a delegated agent) is first typed into here.
         yield* this.#nameAfter(requestProp);
@@ -656,14 +645,19 @@ export class ChatModel {
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
     void this._runtime
-      .runPromise(this.#getSession().pipe(Effect.provide(this._spaceLayer)))
-      .then((session) => {
+      .runPromise(
+        this.#getSession().pipe(
+          Effect.flatMap((session) => Effect.map(Agent.running(session), (running) => ({ session, running }))),
+          Effect.provide(this._spaceLayer),
+        ),
+      )
+      .then(({ session, running }) => {
         if (disposed) {
           return;
         }
 
         unsubscribe = this.#registry.subscribe(
-          session.running,
+          running,
           (running) => {
             if (running) {
               void this.#observe(session);
@@ -692,7 +686,7 @@ export class ChatModel {
    * Follows a turn started elsewhere to completion, surfacing its streamed blocks here.
    * A turn this chat model issued is owned by {@link request}, which reports its own errors.
    */
-  async #observe(session: AgentService.Session): Promise<void> {
+  async #observe(session: Agent.Session): Promise<void> {
     if (this.#requestFiber || this.#observeFiber || this.#registry.get(this.active)) {
       return;
     }
@@ -705,7 +699,7 @@ export class ChatModel {
       const effect = Effect.gen({ self: this }, function* () {
         // Replayed: the turn being adopted is already under way.
         yield* this.#forkEphemeralCollector(session, { replay: true });
-        yield* session.waitForCompletion();
+        yield* Agent.waitForCompletion(session);
         this.#flushStreaming();
       });
 
@@ -731,14 +725,14 @@ export class ChatModel {
    * spawning one only when there is none.
    */
   /** Who a prompt is from, and the fork it goes into when this model shows one. */
-  get #submitOptions(): AgentService.SubmitPromptOptions {
+  get #submitOptions(): Agent.SubmitPromptOptions {
     return {
       ...(this._options.sender ? { sender: this._options.sender } : {}),
       ...(this._options.thread ? { thread: this._options.thread } : {}),
     };
   }
 
-  #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService | Database.Service> {
+  #getSession(): Effect.Effect<Agent.Session, never, Agent.Service | Database.Service> {
     return Effect.gen({ self: this }, function* () {
       const chat = this._options.chat?.target;
       if (!chat) {
@@ -755,13 +749,14 @@ export class ChatModel {
       // The model is the chat's, so the provider has to be the one that serves THAT model: the
       // configured provider can have moved on since the chat made its selection.
       const model = chat.session?.model ?? selected;
-      const location = Agent.chatLocation(chat);
-      return yield* AgentService.getSession(chat, {
+      const location = Agent.sessionLocation(chat);
+      yield* Agent.open(chat, {
         provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
         location,
         // A guard is a closure, so only a local agent can ask the person for consent.
         ...(location === 'local' ? { guard: yield* consentGuard(chat) } : {}),
       });
+      return chat;
     });
   }
 
@@ -770,10 +765,10 @@ export class ChatModel {
    * failures) as a child of the calling fiber.
    */
   #forkEphemeralCollector(
-    session: AgentService.Session,
+    session: Agent.Session,
     options: Process.SubscribeEphemeralOptions,
-  ): Effect.Effect<void> {
-    return session.subscribeEphemeral(options).pipe(
+  ): Effect.Effect<void, never, Agent.Service | Database.Service> {
+    return Agent.subscribeEphemeral(session, options).pipe(
       Stream.runForEach((message) =>
         Effect.sync(() => {
           for (const event of message.events) {
@@ -817,7 +812,7 @@ export class ChatModel {
         // a reconfiguration, which tears down the running process and spawns a replacement purely to
         // terminate it again.
         const session = yield* this.#getSession();
-        yield* session.terminate();
+        yield* Agent.terminate(session);
       }).pipe(Effect.provide(this._spaceLayer)),
     );
 
@@ -845,7 +840,7 @@ export class ChatModel {
   /**
    * Update the current chat's name.
    */
-  async updateName(chat: Chat.Chat): Promise<void> {
+  async updateName(chat: Agent.Session): Promise<void> {
     const spaceId = Obj.getDatabase(chat)?.spaceId;
     if (!spaceId) {
       return;

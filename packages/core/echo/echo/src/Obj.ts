@@ -945,7 +945,7 @@ const parentRefsChild = (parent: Any, childId: EntityId): boolean => {
  * Only objects are allowed to have a parent.
  *
  * The parent must hold a ref to the child (in its data, or in an object annotation — e.g.
- * `Chat.CompanionChatAnnotation`); a ref-less edge currently only warns while call sites are swept.
+ * `Agent.CompanionSessionAnnotation`); a ref-less edge currently only warns while call sites are swept.
  *
  * @performance O(n) in parent size: scans the parent data and annotations for a ref to the child before the O(1) write.
  */

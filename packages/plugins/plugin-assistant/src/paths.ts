@@ -3,9 +3,9 @@
 //
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 
-const { getSectionPath: getChatsPath, getObjectPath: getChatPath } = GraphPath.createTypeSectionPaths(Chat.Chat, {
+const { getSectionPath: getChatsPath, getObjectPath: getChatPath } = GraphPath.createTypeSectionPaths(Agent.Session, {
   groupId: GraphPath.GroupSegments.ai,
 });
 

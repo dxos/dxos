@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 
 import { BrainStore as BrainStoreComponent } from '#components';
 

@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Ref } from '@dxos/echo';
@@ -31,9 +30,9 @@ import { selfActor } from './update-tasks.ts';
 export default AskQuestion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: title, question: text, context, options }) {
-      const chat = yield* Harness.getChat;
+      const chat = yield* Agent.currentSession;
 
-      const tasks = yield* Chat.loadTasks(chat);
+      const tasks = yield* Agent.loadTasks(chat);
       const matches = tasks.filter((candidate) => candidate.title === title.trim());
       if (matches.length > 1) {
         return trim`
@@ -42,7 +41,7 @@ export default AskQuestion.pipe(
           tasks distinct titles with update-tasks, then ask again.
 
           <checklist>
-          ${yield* Chat.formatChecklist(chat)}
+          ${yield* Agent.formatChecklist(chat)}
           </checklist>
         `;
       }
@@ -54,7 +53,7 @@ export default AskQuestion.pipe(
           Ask again naming one of these exactly, or add the task first with update-tasks.
 
           <checklist>
-          ${yield* Chat.formatChecklist(chat)}
+          ${yield* Agent.formatChecklist(chat)}
           </checklist>
         `;
       }
@@ -68,7 +67,7 @@ export default AskQuestion.pipe(
           answered rather than asking again.
 
           <checklist>
-          ${yield* Chat.formatChecklist(chat)}
+          ${yield* Agent.formatChecklist(chat)}
           </checklist>
         `;
       }
@@ -114,7 +113,7 @@ export default AskQuestion.pipe(
         <surface role="question">{"task":"${task.id}","question":"${question.id}"}</surface>
 
         <checklist>
-        ${yield* Chat.formatChecklist(chat)}
+        ${yield* Agent.formatChecklist(chat)}
         </checklist>
       `;
     }),

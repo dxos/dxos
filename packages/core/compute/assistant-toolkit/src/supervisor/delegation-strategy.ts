@@ -8,9 +8,8 @@ import * as Exit from 'effect/Exit';
 
 import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext, TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
 import { OperationProcess } from '@dxos/compute-runtime';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -67,11 +66,11 @@ const extractArtifactIds = (value: unknown): string[] => {
 export const isSubAgentTask = (task: Task.Task): boolean => Task.isSubAgentRequest(Task.worker(task));
 
 const findPendingTasks = (
-  chat: Chat.Chat,
+  chat: Agent.Session,
   activeIds: ReadonlySet<string>,
 ): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
-    const tasks = yield* Chat.loadTasks(chat);
+    const tasks = yield* Agent.loadTasks(chat);
     // The chat's `tasks` array is flat, so a delegated sub-task is found without descending.
     return tasks.filter(
       (task) =>
@@ -87,11 +86,11 @@ const findPendingTasks = (
  * sub-agent (e.g. the host reloaded mid-run) must not wedge the task or the delegation loop.
  */
 const sweepOrphanedTasks = (
-  chat: Chat.Chat,
+  chat: Agent.Session,
   activeIds: ReadonlySet<string>,
 ): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
-    const tasks = yield* Chat.loadTasks(chat);
+    const tasks = yield* Agent.loadTasks(chat);
     const orphans = tasks.filter(
       (task) => isSubAgentTask(task) && task.status === 'started' && !activeIds.has(task.id),
     );
@@ -107,11 +106,14 @@ const sweepOrphanedTasks = (
     yield* Database.flush();
   });
 
-const failHeldTasks = (chat: Chat.Chat, cause: Cause.Cause<unknown>): Effect.Effect<void, never, Database.Service> =>
+const failHeldTasks = (
+  chat: Agent.Session,
+  cause: Cause.Cause<unknown>,
+): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
-    const agent = yield* Agent.loadForChat(chat);
+    const agent = yield* Agent.loadForSession(chat);
     const selves = new Set(agent ? [chat.id, agent.id] : [chat.id]);
-    const held = (yield* Chat.loadTasks(chat)).filter((task) => {
+    const held = (yield* Agent.loadTasks(chat)).filter((task) => {
       const worker = Task.refEntityId(Task.worker(task)?.subject);
       return Task.isAgentWorking(task) && worker !== undefined && selves.has(worker);
     });
@@ -208,7 +210,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
   onComplete: (chat, id, exit) =>
     Effect.gen(function* () {
-      const agent = yield* Agent.loadForChat(chat);
+      const agent = yield* Agent.loadForSession(chat);
 
       // Resolve the durable task by its id and record the outcome directly on it — the task set
       // is the working surface, so there is no separate mirror to reconcile.

@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as TestClock from 'effect/testing/TestClock';
 import { expect } from 'vitest';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Trace from '@dxos/compute/Trace';
 import { Feed, Ref } from '@dxos/echo';
 
@@ -34,7 +34,7 @@ describe('withTurnStatus', () => {
     const { updates, layer } = collect();
     const chat = makeChat();
     const subject = makeChat();
-    Chat.linkCompanion({ chat, subject });
+    Agent.linkCompanion({ session: chat, subject });
     return Effect.gen(function* () {
       yield* Effect.void.pipe(withTurnStatus(chat));
       expect(updates.slice(0, 2)).toEqual([
@@ -94,4 +94,4 @@ const collect = () => {
   return { updates, layer };
 };
 
-const makeChat = () => Chat.make({ feed: Ref.make(Feed.make()) });
+const makeChat = () => Agent.makeSession({ feed: Ref.make(Feed.make()) });

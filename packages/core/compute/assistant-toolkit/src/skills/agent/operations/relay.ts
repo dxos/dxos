@@ -8,9 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -54,9 +52,9 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
 
         // The durable session is bound to the chat, so it recovers its steering (and its queue)
         // from the chat itself on every rehydration.
-        const session = yield* AgentService.getSession(chat, { location: Agent.chatLocation(chat) });
+        yield* Agent.open(chat, { location: Agent.sessionLocation(chat) });
         const content = prompt ?? JSON.stringify(event);
-        yield* session.submitPrompt([{ _tag: 'text', text: content, disposition: 'synthetic' }]);
+        yield* Agent.submitPrompt(chat, [{ _tag: 'text', text: content, disposition: 'synthetic' }]);
       },
       Effect.provide(AiService.languageModel('com.anthropic.model.claude-sonnet-5.default')),
     ),
@@ -65,9 +63,9 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
 );
 
 /** Cheap-model relevance check, ported from the retired Qualifier's prompt (chat-centric per phase B). */
-const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
+const qualifyEvent = (chat: Agent.Session, event: unknown) =>
   Effect.gen(function* () {
-    const agent = yield* Agent.loadForChat(chat);
+    const agent = yield* Agent.loadForSession(chat);
     const instructions = chat.instructions
       ? yield* Database.load(chat.instructions).pipe(Effect.orElseSucceed(() => undefined))
       : undefined;
@@ -77,7 +75,7 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
         )
       : '';
-    const checklistText = yield* Chat.formatChecklist(chat);
+    const checklistText = yield* Agent.formatChecklist(chat);
 
     const { value } = yield* Effect.scoped(
       LanguageModel.generateObject({

@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Schedule from 'effect/Schedule';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 
@@ -25,10 +25,10 @@ const HEARTBEAT = Duration.seconds(30);
  * shows wherever it runs.
  */
 export const withTurnStatus =
-  (chat: Chat.Chat) =>
+  (chat: Agent.Session) =>
   <A, E, R>(turn: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Trace.TraceService> =>
     Effect.gen(function* () {
-      const subject = Chat.getCompanionSubject(chat);
+      const subject = Agent.getCompanionSubject(chat);
       const targets = [
         { key: agentProgressKey(chat), label: 'Assistant is working' },
         ...(subject ? [{ key: agentProgressKey(subject), label: 'Assistant is working on this' }] : []),

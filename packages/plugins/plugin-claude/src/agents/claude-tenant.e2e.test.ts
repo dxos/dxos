@@ -13,7 +13,8 @@ import { dirname, join } from 'node:path';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer, makeScriptedTenant } from '@dxos/agent-runtime/testing';
-import { Alarm, Chat, TrajectoryStore } from '@dxos/assistant';
+import { Alarm, TrajectoryStore } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Reducer from '@dxos/compute/Reducer';
 import { type Database, type Feed, Obj } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
@@ -96,7 +97,7 @@ const read = (feed: Feed.Feed) => Effect.map(TrajectoryStore.load(feed, Reducer.
  * Answers Claude Code's permission requests as a person would in the chat: allows each one once. Whether the turn
  * asks at all is the model's choice (a shell command asks, a file listing does not), and nobody else answers here.
  */
-const approveRequests = (sessions: AcpAgent.Sessions, chat: Chat.Chat, feed: Feed.Feed) =>
+const approveRequests = (sessions: AcpAgent.Sessions, chat: Agent.Session, feed: Feed.Feed) =>
   Effect.gen(function* () {
     const answered = new Set<string>();
     for (;;) {
@@ -182,7 +183,7 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code share
 
         const session = yield* AgentService.createSession();
         const chat = session.chat;
-        if (!Obj.instanceOf(Chat.Chat, chat) || sessions === undefined) {
+        if (!Obj.instanceOf(Agent.Session, chat) || sessions === undefined) {
           return yield* Effect.die(new Error('the session has no chat, or the Claude tenant was never made'));
         }
         const approver = yield* approveRequests(sessions, chat, session.feed).pipe(Effect.forkChild);

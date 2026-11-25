@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import type * as Agent from '@dxos/assistant/Agent';
+import type * as Agent from '@dxos/compute/Agent';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { Fact } from '@dxos/echo-memory';
 import { Space } from '@dxos/halo';

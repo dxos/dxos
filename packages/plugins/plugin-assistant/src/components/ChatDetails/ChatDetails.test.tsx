@@ -10,7 +10,7 @@ import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import * as AtomEx from '@dxos/effect/AtomEx';
@@ -19,7 +19,7 @@ import { Text } from '@dxos/schema';
 import { ChatContextPanel } from './ChatDetails.tsx';
 
 describe('context drawer', () => {
-  const TestLayer = TestDatabaseLayer({ types: [Chat.Chat, Feed.Feed, Text.Text] });
+  const TestLayer = TestDatabaseLayer({ types: [Agent.Session, Feed.Feed, Text.Text] });
 
   const setup = Effect.fnUntraced(function* () {
     const db = yield* Database.Service;
@@ -37,7 +37,7 @@ describe('context drawer', () => {
   test('shows the context of a chat that is not stored yet', async () => {
     await Effect.gen(function* () {
       const { db, feed, context, wrapper } = yield* setup();
-      const chat = Chat.make({ feed: Ref.make(feed) });
+      const chat = Agent.makeSession({ feed: Ref.make(feed) });
       render(<ChatContextPanel chat={chat} db={db} context={context} />, { wrapper });
       expect(screen.queryByTestId('assistant.details.context')).not.toBeNull();
       yield* Effect.promise(() => context.close());

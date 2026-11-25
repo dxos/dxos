@@ -8,9 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Harness from '@dxos/assistant/Harness';
+import * as Agent from '@dxos/compute/Agent';
 import type * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN } from '@dxos/echo';
 
@@ -26,7 +27,7 @@ export const AnalyzeTurn = Operation.make({
     name: 'Analyze Agent Turn',
     icon: 'ph--magnifying-glass--regular',
   },
-  services: [Harness.HarnessService, Database.Service, AiService.AiService, Capability.Service],
+  services: [Agent.Service, Process.ManagerService, Database.Service, AiService.AiService, Capability.Service],
   input: Schema.Struct({}),
   output: Schema.Void,
 });

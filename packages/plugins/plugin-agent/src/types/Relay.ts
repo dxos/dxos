@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { Channel, Person, Task } from '@dxos/types';
 

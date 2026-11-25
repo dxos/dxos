@@ -12,7 +12,6 @@ import { expect } from 'vitest';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { Alarm, SessionStore, TrajectoryStore } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
-import * as ComputeAgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
@@ -25,8 +24,8 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing/index.ts';
-import { AGENT_PROCESS_KEY } from './agent-process.ts';
 import * as AgentService from './AgentService.ts';
+import { SESSION_PROCESS_KEY } from './session-process.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 
@@ -34,7 +33,7 @@ EntityId.dangerouslyDisableRandomness();
 
 /**
  * The agent's input queue and its alarms are feed state, so these exercise the whole loop —
- * enqueue, one-at-a-time dequeue, ack, cancel — through the real `AgentProcess` against a scripted
+ * enqueue, one-at-a-time dequeue, ack, cancel — through the real `SessionProcess` against a scripted
  * model (no fixtures, no recorded conversations).
  */
 
@@ -157,7 +156,7 @@ const promptText = (event: Trajectory.Event) =>
     ? event.payload.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n')
     : '';
 
-describe('AgentProcess residency (scripted)', () => {
+describe('SessionProcess residency (scripted)', () => {
   it.effect(
     'a resident process stays idle after its turn and takes the next prompt itself',
     Effect.fnUntraced(
@@ -168,14 +167,14 @@ describe('AgentProcess residency (scripted)', () => {
 
         yield* session.submitPrompt('first');
         yield* session.waitForCompletion();
-        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        const [handle] = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
         expect(handle.status.state).toBe(Process.State.IDLE);
 
         // The same session, the same process: no respawn (and no history replay) for a follow-up.
-        const followUp = yield* ComputeAgentService.getSession(session.chat);
+        const followUp = yield* AgentService.bindSession(session.chat);
         yield* followUp.submitPrompt('second');
         yield* followUp.waitForCompletion();
-        const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        const processes = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
         expect(processes.map((process) => String(process.pid))).toEqual([String(handle.pid)]);
         expect(new Set(promptTexts((yield* readFeed(session.feed)).messages))).toEqual(new Set(['first', 'second']));
       },
@@ -192,7 +191,7 @@ describe('AgentProcess residency (scripted)', () => {
   );
 });
 
-describe('AgentProcess input queue (scripted)', () => {
+describe('SessionProcess input queue (scripted)', () => {
   it.effect(
     'a submitted prompt is queued on the feed, then consumed by its turn',
     Effect.fnUntraced(
@@ -357,7 +356,7 @@ describe('AgentProcess input queue (scripted)', () => {
   );
 });
 
-describe('AgentProcess alarms (scripted)', () => {
+describe('SessionProcess alarms (scripted)', () => {
   it.effect(
     'a due alarm wakes the agent, is fired, and leaves nothing pending',
     Effect.fnUntraced(

@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -85,7 +84,7 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureSessionChat> = 
         const modelId = model === undefined ? undefined : yield* parseModel(model);
         const foreignKey = AgentSession.chatKey(kind, key);
         // The same session may have been opened with more than one agent.
-        const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [foreignKey]))).run;
+        const existing = yield* Database.query(Query.select(Filter.foreignKeys(Agent.Session, [foreignKey]))).run;
         const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
         if (match) {
           if (modelId !== undefined && match.session?.model !== modelId) {
@@ -103,11 +102,11 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureSessionChat> = 
           };
         }
 
-        // Read before the new chat exists: `Agent.loadChat` resolves the agent's latest chat.
+        // Read before the new chat exists: `Agent.loadSession` resolves the agent's latest chat.
         const bindings = yield* sessionBindings(agent);
         const feed = yield* Database.add(Feed.make());
         const chat = yield* Database.add(
-          Chat.make({
+          Agent.makeSession({
             [Obj.Meta]: { keys: [foreignKey] },
             [Obj.Parent]: agent,
             name: title,
