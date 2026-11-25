@@ -159,14 +159,16 @@ which the `dxos` plugin's `recordSession` hook sends. `cli.ts session-id` prints
 3. Fallback, when that call fails or the session is not recorded: for each space in `.agents/projects/space.yml`,
    call `tasks.listSessions { sessionId }`. A row gives the session object's `@uri`. Then, for each project
    (`space.queryObjects { typename: 'org.dxos.type.project' }`), call
-   `tasks.list { project, includeSubtasks: true }` and save the result. Pass the session object so that only its
-   tasks count:
+   `tasks.list { project, includeSubtasks: true }` and save each result to its own file. Pass every file in one
+   call, so a goal counts as missing only when no project returned its task, and pass each space's session object so
+   that only this session's tasks count:
 
    ```bash
-   node --conditions=source tools/session-board/src/cli.ts tasks <file> --session-object <session @uri>
+   node --conditions=source tools/session-board/src/cli.ts tasks <file>... --session-object <session @uri>...
    ```
 
-4. The command prints the goals it added and updated. It also prints the linked goals that the input did not hold:
+4. The command prints the goals it added and updated, and the tasks it skipped because the input gave no `echo:` URI
+   for them. It also prints the linked goals that the input did not hold:
    `recordSession` returns open tasks only, so such a task closed or went to another session. Look at the task, set
    the goal's status by hand, and add an `event`.
 5. No session record in any space means nothing is delegated to this session yet. Say so, and do not make one:

@@ -27,6 +27,8 @@ export type SyncResult = {
   updated: string[];
   /** Goal ids linked to a task the input did not contain; the input of `recordSession` holds open tasks only. */
   missing: string[];
+  /** Tasks left out because the input gave no `echo:` URI for them; a bare id names no space to link to. */
+  skipped: string[];
 };
 
 const TITLE_WORDS = 12;
@@ -64,25 +66,29 @@ export const readTasks = (json: unknown): ComposerTask[] | undefined => {
 /** The trailing object id of an `echo:` URI, so `echo:///<id>` and `echo://<space>/<id>` compare equal. */
 export const objectId = (uri: string | undefined): string | undefined => uri?.split('/').filter(Boolean).at(-1);
 
-const taskUri = (task: ComposerTask): string | undefined => task.dxn ?? task['@uri'] ?? task.id;
+/** The task's `echo:` URI; a bare `id` is not one, since the goal's `task:` must name the object's space. */
+const taskUri = (task: ComposerTask): string | undefined =>
+  [task.dxn, task['@uri']].find((uri) => uri?.startsWith('echo:'));
 
 const goalStatus = (status: string | undefined): GoalStatus =>
   GOAL_STATUSES.find((value): value is GoalStatus => value === status) ?? 'todo';
 
 /** A goal title is one line of 12 words at most (`lang/session.mdl` rule 1), and a colon would end the header. */
 const goalTitle = (title: string | undefined): string => {
-  const words = (title ?? 'Untitled task').replaceAll(':', ' -').replace(/\s+/g, ' ').trim().split(' ');
+  const normalized = (title ?? '').replaceAll(':', ' -').replace(/\s+/g, ' ').trim();
+  const words = (normalized || 'Untitled task').split(' ');
   return words.length > TITLE_WORDS ? `${words.slice(0, TITLE_WORDS).join(' ')}…` : words.join(' ');
 };
 
 /**
- * Keeps the tasks a session works: those whose `delegate.subject` is the session object. Without a session object
- * every task is kept, which is right for `recordSession` output because the server already filtered it.
+ * Keeps the tasks a session works: those whose `delegate.subject` is one of the session's objects (one per space it is
+ * recorded in). With none given every task is kept, which is right for `recordSession` output because the server
+ * already filtered it.
  */
-export const delegatedTo = (tasks: readonly ComposerTask[], sessionObject: string | undefined): ComposerTask[] =>
-  sessionObject === undefined
-    ? [...tasks]
-    : tasks.filter((task) => objectId(task.delegate?.subject?.['/']) === objectId(sessionObject));
+export const delegatedTo = (tasks: readonly ComposerTask[], sessionObjects: readonly string[]): ComposerTask[] => {
+  const ids = new Set(sessionObjects.map(objectId));
+  return ids.size === 0 ? [...tasks] : tasks.filter((task) => ids.has(objectId(task.delegate?.subject?.['/'])));
+};
 
 /**
  * Merges Composer tasks into a `SESSION.mdl` as goals linked by `task: <echo URI>`. A linked goal takes the task's
@@ -101,8 +107,15 @@ export const syncTasks = (text: string, tasks: readonly ComposerTask[]): SyncRes
       return { id: block.id, task: objectId(task), fence: lineOf(block.from) };
     });
 
-  const byTask = new Map(goals.filter((goal) => goal.task).map((goal) => [goal.task, goal]));
+  // Several goals may mirror one task, and each of them follows its status.
+  const byTask = new Map<string, typeof goals>();
+  for (const goal of goals) {
+    if (goal.task) {
+      byTask.set(goal.task, [...(byTask.get(goal.task) ?? []), goal]);
+    }
+  }
   const seen = new Set<string>();
+  const skipped: string[] = [];
   const updated: string[] = [];
   const added: string[] = [];
   const appended: string[][] = [];
@@ -111,22 +124,28 @@ export const syncTasks = (text: string, tasks: readonly ComposerTask[]): SyncRes
   for (const task of tasks) {
     const uri = taskUri(task);
     const id = objectId(uri);
-    if (!uri || !id || seen.has(id)) {
+    if (!uri || !id) {
+      skipped.push(task.title ?? task.id ?? '(untitled)');
+      continue;
+    }
+    if (seen.has(id)) {
       continue;
     }
     seen.add(id);
     const status = goalStatus(task.status);
-    const goal = byTask.get(id);
-    if (goal) {
-      // The block's lines run from the fence to the closing fence; only its `status:` line changes.
-      for (let index = goal.fence + 1; index < lines.length && !lines[index].startsWith('```'); index++) {
-        const match = lines[index].match(/^ {2}status:\s*(\S+)\s*$/);
-        if (match) {
-          if (match[1] !== status) {
-            lines[index] = `  status: ${status}`;
-            updated.push(goal.id);
+    const linked = byTask.get(id);
+    if (linked) {
+      for (const goal of linked) {
+        // The block's lines run from the fence to the closing fence; only its `status:` line changes.
+        for (let index = goal.fence + 1; index < lines.length && !lines[index].startsWith('```'); index++) {
+          const match = lines[index].match(/^ {2}status:\s*(\S+)\s*$/);
+          if (match) {
+            if (match[1] !== status) {
+              lines[index] = `  status: ${status}`;
+              updated.push(goal.id);
+            }
+            break;
           }
-          break;
         }
       }
       continue;
@@ -147,7 +166,7 @@ export const syncTasks = (text: string, tasks: readonly ComposerTask[]): SyncRes
   }
 
   const missing = goals.filter((goal) => goal.task && !seen.has(goal.task)).map((goal) => goal.id);
-  return { text: lines.join('\n'), added, updated, missing };
+  return { text: lines.join('\n'), added, updated, missing, skipped };
 };
 
 /** Puts new goal blocks after the last line of `## Goals`, before the next `##` heading, one blank line apart. */

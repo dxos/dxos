@@ -158,3 +158,9 @@ event T-11: [PR-1] is ready for review, and auto-merge is on.
   date: 2026-11-25T13:12Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-12: The sync skips tasks with no echo URI and merges many files in one pull.
+  date: 2026-11-25T13:45Z
+  by: agent:claude-code
+```

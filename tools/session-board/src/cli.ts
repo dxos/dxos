@@ -8,7 +8,7 @@
 //   cli.ts start <session dir>              # make <dir>/SESSION.mdl the session's board (a skeleton if absent)
 //   cli.ts build [<SESSION.mdl>] [--strict] [--offline] # parse, check, add PR state from GitHub, write the page
 //   cli.ts session-id                    # the ids Composer may file this session under, most likely first
-//   cli.ts tasks <tasks.json> [--session-object <echo URI>]  # merge Composer tasks into the board as goals
+//   cli.ts tasks <tasks.json>... [--session-object <echo URI>]...  # merge Composer tasks into the board as goals
 //   cli.ts hook                          # the Stop hook: build the current board; block once per change
 //   cli.ts template build | push | pull  # the prebuilt page: build it with Vite, or move it through R2
 //
@@ -363,24 +363,22 @@ const hook = async () => {
  * Merges the tasks of a Composer MCP result into the current board. The file is the JSON the agent saved from
  * `tasks.recordSession` or `tasks.list`: an object with a `tasks` array, or the array itself.
  */
-const tasks = (file: string, sessionObject: string | undefined) => {
+const tasks = (files: readonly string[], sessionObjects: readonly string[]) => {
   const source = currentSource() ?? fail('no session; run `cli.ts start .agents/sessions/<date>-<slug>`');
-  const list =
-    readTasks(JSON.parse(readFileSync(resolve(file), 'utf8'))) ?? fail(`${file}: expected a \`tasks\` array`);
-  const result = syncTasks(readFileSync(source, 'utf8'), delegatedTo(list, sessionObject));
+  // Every file of one pull is merged first: a goal is missing only when no project or space returned its task.
+  const list = files.flatMap(
+    (file) => readTasks(JSON.parse(readFileSync(resolve(file), 'utf8'))) ?? fail(`${file}: expected a \`tasks\` array`),
+  );
+  const result = syncTasks(readFileSync(source, 'utf8'), delegatedTo(list, sessionObjects));
   writeFileSync(source, result.text);
   const report = (label: string, ids: string[]) => ids.length > 0 && console.log(`${label}: ${ids.join(', ')}`);
   report('added', result.added);
   report('updated', result.updated);
   report('not in the input (closed, or another session took it)', result.missing);
+  report('skipped, no echo: URI in the input', result.skipped);
   if (result.added.length + result.updated.length === 0) {
     console.log(`${relative(ROOT, source)}: no change`);
   }
-};
-
-const flag = (args: readonly string[], name: string): string | undefined => {
-  const index = args.indexOf(name);
-  return index >= 0 ? args[index + 1] : undefined;
 };
 
 const main = async () => {
@@ -402,11 +400,12 @@ const main = async () => {
       break;
     }
     case 'tasks': {
+      // `--session-object` repeats: a session recorded in several spaces has one object in each.
+      const sessionObjects = rest.flatMap((arg, index) => (rest[index - 1] === '--session-object' ? [arg] : []));
+      const files = rest.filter((arg, index) => !arg.startsWith('--') && rest[index - 1] !== '--session-object');
       tasks(
-        rest[0] && !rest[0].startsWith('--')
-          ? rest[0]
-          : fail('usage: cli.ts tasks <tasks.json> [--session-object <echo URI>]'),
-        flag(rest, '--session-object'),
+        files.length > 0 ? files : fail('usage: cli.ts tasks <tasks.json>... [--session-object <echo URI>]...'),
+        sessionObjects,
       );
       break;
     }

@@ -54,6 +54,35 @@ describe('syncTasks', () => {
     expect(parseSession(text).errors).toEqual([]);
   });
 
+  test('skips a task with no echo URI rather than writing a bare id', ({ expect }) => {
+    const result = syncTasks(SAMPLE_SESSION, [{ id: '01BARE', title: 'Bare' }]);
+    expect(result).toMatchObject({ added: [], skipped: ['Bare'] });
+    expect(parseSession(result.text).errors).toEqual([]);
+  });
+
+  test('updates every goal linked to one task', ({ expect }) => {
+    const uri = `echo://${SPACE}/01TASKA`;
+    const twice = syncTasks(SAMPLE_SESSION, [{ dxn: uri, title: 'A', status: 'todo' }]).text.replace(
+      '## Pull requests',
+      [
+        '```mdl',
+        'goal G-9: The same task again.',
+        '  status: todo',
+        `  task: ${uri}`,
+        '```',
+        '',
+        '## Pull requests',
+      ].join('\n'),
+    );
+    const result = syncTasks(twice, [{ dxn: uri, status: 'done' }]);
+    expect(result).toMatchObject({ updated: ['G-5', 'G-9'], missing: [] });
+  });
+
+  test('titles a task whose title is blank', ({ expect }) => {
+    const { text } = syncTasks(SAMPLE_SESSION, [{ dxn: `echo://${SPACE}/01TASKD`, title: '   ' }]);
+    expect(parseSession(text).board?.goals.at(-1)?.title).toBe('Untitled task');
+  });
+
   test('rejects a task that is not an echo URI', ({ expect }) => {
     const text = syncTasks(SAMPLE_SESSION, [{ dxn: `echo://${SPACE}/01TASKA`, title: 'A' }]).text.replace(
       `task: echo://${SPACE}/01TASKA`,
@@ -74,7 +103,10 @@ describe('delegatedTo', () => {
         { '@uri': 'echo:///01C' },
       ],
     });
-    expect(delegatedTo(tasks ?? [], `echo://${SPACE}/${SESSION}`).map((task) => task['@uri'])).toEqual(['echo:///01A']);
+    expect(delegatedTo(tasks ?? [], [`echo://${SPACE}/${SESSION}`]).map((task) => task['@uri'])).toEqual([
+      'echo:///01A',
+    ]);
+    expect(delegatedTo(tasks ?? [], [])).toHaveLength(3);
     expect(readTasks({ nothing: true })).toBeUndefined();
   });
 });
