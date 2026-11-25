@@ -95,6 +95,8 @@ feat F-2: Selection, gizmos and faces
     its element on every frame of a drag, before the document has the move.
   req F-2.2: Move, Rotate and Scale put a gizmo on the one selected element; it moves the mesh in memory and its
     release is one intent in the open layout's coordinates. A scale sets the scale it ends at ([org.dxos.scene#D-48]).
+    A scale handle sizes the element in step with its travel: the side it pulls follows the handle, and the even
+    handle keeps the element's proportions.
   req F-2.3: Snapping moves a gizmo by the grid unit, turns it by 15 degrees and scales by a tenth, and places a new
     element on a grid point ([org.dxos.scene#D-64]).
   req F-2.4: Double-clicking a plain element selects the face it lands on, drawn as a translucent pane in the
@@ -389,6 +391,22 @@ decision D-24: The select-all chord on the main canvas selects all the objects o
   date: 2026-11-24
   by: user:richburdon
   affects: [F-2.6]
+```
+
+```mdl
+decision D-25: The 3D scale tool scales linearly as its handle is dragged.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-2.2]
+```
+
+```mdl
+decision D-26: A scale handle's travel along its axis is added to the element's half-length on that axis, so the side it pulls follows the handle. The even handle's travel is added to the height, and the other axes keep their proportion to it. Fills in [D-25].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.2]
+  why: The gizmo's own step multiplies the size on every pointer move, so the growth compounds and depends on how often the pointer reports.
 ```
 
 ---
