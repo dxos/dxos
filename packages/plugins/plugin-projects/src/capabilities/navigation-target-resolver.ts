@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Database, Entity, Obj } from '@dxos/echo';
@@ -51,7 +51,7 @@ export const resolveNavigationTarget: AppCapabilities.NavigationTargetResolver =
       return [];
     }
 
-    const target = Obj.instanceOf(Chat.Chat, object)
+    const target = Obj.instanceOf(Agent.Session, object)
       ? { path: getProjectChatPath(db.spaceId, project.id, object.id) }
       : Obj.instanceOf(Spec.Spec, object)
         ? {

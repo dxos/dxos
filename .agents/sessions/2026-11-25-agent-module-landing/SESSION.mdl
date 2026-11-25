@@ -1,0 +1,140 @@
+---
+id: org.dxos.session.2026-11-25-agent-module-landing
+name: Land the Agent module
+version: 1.0
+extends:
+  - org.dxos.spec.session
+---
+
+# Land the Agent module
+
+This session makes CI pass on the Agent module PR, answers its review, and lands it.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `question` | `org.dxos.mdl.question@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `goal`     | `org.dxos.mdl.goal@1.0`     |
+| `pr`       | `org.dxos.mdl.pr@1.0`       |
+| `event`    | `org.dxos.mdl.event@1.0`    |
+
+## Goals
+
+```mdl
+goal G-1: The Check workflow passes on the PR.
+  status: started
+  notes:
+    - Session verbs keep the live process. The storybook tests pass.
+    - The second commit for the review runs Check now.
+```
+
+```mdl
+goal G-2: Each review comment has an answer.
+  status: done
+  notes:
+    - Five threads are resolved in the PR.
+    - Two threads about service requirements stay open for the next PR.
+```
+
+```mdl
+goal G-3: The PR merges through the merge queue.
+  status: started
+  notes:
+    - Auto-merge is on, with squash.
+```
+
+```mdl
+goal G-4: The Agent verbs need no service requirements.
+  status: todo
+  notes:
+    - A next PR adds a current-process context reference.
+    - Session verbs get their database from the session.
+```
+
+## Pull requests
+
+```mdl
+pr PR-1: One Agent module for agents, sessions and the service.
+  ref: dxos/dxos#14677
+  status: landing
+  goals: [G-1, G-2, G-3]
+```
+
+## Changelog
+
+```mdl
+question Q-1: How do the current-process Agent verbs drop their service requirements?
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: These verbs find the calling process and its database through services of the caller.
+  options:
+    - Keep the requirements: smallest change, lands today.
+    - Add a current-process context reference: a bigger change to the process manager.
+```
+
+```mdl
+decision D-1: Keep the requirements for now.
+  date: 2026-11-25
+  by: user:dmaretskyi
+  answers: Q-1
+```
+
+```mdl
+decision D-2: After the PR lands, do a next PR that adds a current-process context reference and drops the requirements.
+  date: 2026-11-25
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-3: The rename from chat to session covers the API of the Agent module and its call sites.
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+```
+
+## Timeline
+
+```mdl
+event T-1: Five storybook tests failed in Check on the PR.
+  date: 2026-11-24T20:09Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-2: A fix keeps the session process alive across the session verbs.
+  date: 2026-11-24T20:33Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-3: Check passed on the PR after one rerun of a flaky inbox test.
+  date: 2026-11-24T21:02Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-4: The user asked to answer the review comments and land the PR.
+  date: 2026-11-25T10:20Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-5: A commit answers the review comments. The replies are on the PR.
+  date: 2026-11-25T10:55Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-6: Auto-merge is on for the PR.
+  date: 2026-11-25T10:57Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-7: The PR had a merge conflict with main. A merge of main removes the conflict.
+  date: 2026-11-25T11:10Z
+  by: agent:claude-code
+```

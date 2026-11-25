@@ -10,8 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Type } from '@dxos/echo';
 import { SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -59,7 +58,9 @@ describe('agent plugin bundle on EDGE', { timeout: 180_000 }, () => {
     expect(result).toMatchObject({ ok: true, output: { agent: { '/': expect.stringMatching(/^echo:/) } } });
 
     expect(dataPlane.typenames()).toEqual(
-      expect.arrayContaining([Instructions.Instructions, Agent.Agent, Chat.Chat].map((type) => Type.getTypename(type))),
+      expect.arrayContaining(
+        [Instructions.Instructions, Agent.Agent, Agent.Session].map((type) => Type.getTypename(type)),
+      ),
     );
     // Declared types never reach the type registry, which here publishes nothing.
     expect(typeRegistry.requests).toEqual([]);

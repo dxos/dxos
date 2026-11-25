@@ -9,7 +9,7 @@ import { evalite } from 'evalite';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -279,11 +279,11 @@ const task = createEvalRunner({
 
       // What delegation does to the chat and the tasks, minus opening the deck.
       const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(Chat.make({ name: PROJECT_NAME, feed: Ref.make(feed) }));
+      const chat = yield* Database.add(Agent.makeSession({ name: PROJECT_NAME, feed: Ref.make(feed) }));
       Obj.update(chat, (chat) => {
         chat.tasks.push(...tasks.map((task) => Ref.make(task)));
       });
-      Chat.linkCompanion({ chat, subject: project });
+      Agent.linkCompanion({ session: chat, subject: project });
       for (const task of tasks) {
         Task.setStatus(task, 'started', { actor: REVIEWER });
         Obj.update(task, (task) => {

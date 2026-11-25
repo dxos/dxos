@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
@@ -19,7 +19,7 @@ import { type AgentOption } from '../../util/agent-options.ts';
 import { choosePlacement, usePlacement } from './ChatAgentPicker.tsx';
 
 describe('usePlacement', () => {
-  const TestLayer = TestDatabaseLayer({ types: [Chat.Chat, Feed.Feed, Text.Text] });
+  const TestLayer = TestDatabaseLayer({ types: [Agent.Session, Feed.Feed, Text.Text] });
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
     <PluginManagerProvider.Root value={pluginManager}>{children}</PluginManagerProvider.Root>
@@ -28,7 +28,7 @@ describe('usePlacement', () => {
   test('picking an agent that runs only on this device keeps the chat local', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+      const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
       const local: AgentOption = {
         value: 'local-agent',
         label: 'Local agent',
@@ -49,7 +49,7 @@ describe('usePlacement', () => {
   test('picking an agent that runs only on EDGE keeps the chat local', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+      const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
       const edge: AgentOption = {
         value: 'edge-agent',
         label: 'EDGE agent',
@@ -70,7 +70,7 @@ describe('usePlacement', () => {
   test('switching to an agent that runs in several places keeps EDGE', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+      const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
       const coder: AgentOption = {
         value: 'coder',
         label: 'Coder',

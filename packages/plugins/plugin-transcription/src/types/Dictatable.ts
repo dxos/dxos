@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-export const types = [Markdown.Document, Chat.Chat];
+export const types = [Markdown.Document, Agent.Session];

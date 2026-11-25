@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
+import { SESSION_PROCESS_KEY } from '@dxos/agent-runtime';
 import * as Process from '@dxos/compute/Process';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -51,8 +51,8 @@ const useConversationProcesses = ({ processTreeAtom, conversation }: ProcessesPr
   const tree = useAtomValue(processTreeAtom ?? EMPTY_TREE);
   return useMemo(() => {
     const processes = conversation ? tree.filter((process) => process.environment.conversation === conversation) : [];
-    const agent = processes.find((process) => process.key === AGENT_PROCESS_KEY);
-    const tools = processes.filter((process) => process.key !== AGENT_PROCESS_KEY);
+    const agent = processes.find((process) => process.key === SESSION_PROCESS_KEY);
+    const tools = processes.filter((process) => process.key !== SESSION_PROCESS_KEY);
     return { agent, tools };
   }, [tree, conversation]);
 };

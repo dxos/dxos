@@ -7,14 +7,14 @@ import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
 
-import { Harness } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 
 import { SetAlarm } from './definitions.ts';
 import { resolveWakeAt } from './resolve-wake-at.ts';
 
 /**
- * Schedules a self-wake on the owning host via {@link Harness.setAlarm}. The host delivers the
+ * Schedules a self-wake on the owning host via {@link Agent.setAlarm}. The host delivers the
  * (optional) reminder message when the alarm fires.
  */
 export default SetAlarm.pipe(
@@ -26,7 +26,7 @@ export default SetAlarm.pipe(
         return resolved.failure;
       }
       const wakeAt = DateTime.makeUnsafe(resolved.success);
-      yield* Harness.setAlarm({ at: wakeAt, message: message ?? null });
+      yield* Agent.setAlarm({ at: wakeAt, message: message ?? null });
       return `Alarm scheduled to wake you at ${new Date(resolved.success).toISOString()}.`;
     }),
   ),

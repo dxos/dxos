@@ -19,8 +19,8 @@ export const useDebug = ({ chatModel }: { chatModel?: ChatModel }) => {
       return;
     }
 
-    const objects = chatModel.context.getObjects();
-    const skills = chatModel.context.getSkills();
+    const objects = chatModel.context?.getObjects();
+    const skills = chatModel.context?.getSkills();
     const system = await chatModel.getSystemPrompt();
     const tools = (await chatModel.getTools()) ?? {};
     console.group('Chat', { objects, skills });

@@ -23460,6 +23460,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -28679,6 +28682,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-menu
       '@dxos/react-ui-task':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-task

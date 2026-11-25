@@ -4,9 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -22,8 +20,8 @@ import { type TaskChange, UpdateTasks } from './definitions.ts';
  * `subject` ref is what tells a self-assignment apart from a delegation (`{ role: 'assistant' }`
  * with no subject), which the supervisor would otherwise treat as a sub-agent task.
  */
-export const selfActor = (chat: Chat.Chat): Effect.Effect<Actor.Actor> =>
-  Effect.map(Agent.loadForChat(chat), (agent) => ({ role: 'assistant', subject: Ref.make(agent ?? chat) }));
+export const selfActor = (chat: Agent.Session): Effect.Effect<Actor.Actor> =>
+  Effect.map(Agent.loadForSession(chat), (agent) => ({ role: 'assistant', subject: Ref.make(agent ?? chat) }));
 
 /** Why a change cannot be applied as written, or undefined when its fields combine. */
 const shapeError = ({ task, create, assign, unassign, title, status }: TaskChange): string | undefined => {
@@ -76,7 +74,7 @@ const claim = (
 export default UpdateTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ changes }) {
-      const chat = yield* Harness.getChat;
+      const chat = yield* Agent.currentSession;
       const { db } = yield* Database.Service;
       const self = yield* selfActor(chat);
 
@@ -109,7 +107,7 @@ export default UpdateTasks.pipe(
             ${errors.join('\n')}
 
             <checklist>
-            ${yield* Chat.formatChecklist(chat)}
+            ${yield* Agent.formatChecklist(chat)}
             </checklist>
           `),
         );
@@ -119,7 +117,7 @@ export default UpdateTasks.pipe(
         const { title, status, assign, unassign } = change;
         if (!task) {
           // A task the conversation creates is its own work, so it starts out assigned.
-          const created = Chat.addTask(db, chat, title ?? '', { status: status ?? 'todo', assignee: self });
+          const created = yield* Agent.addTask(chat, title ?? '', { status: status ?? 'todo', assignee: self });
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: created.id,
             title: created.title,
@@ -132,9 +130,9 @@ export default UpdateTasks.pipe(
         const previousStatus = task.status;
         Task.update(task, { title: title?.trim(), status, ...claim(task, self, { assigning, unassign }) });
         if (assigning) {
-          Chat.assignTasks(chat, [Ref.make(task)]);
+          Agent.assignTasks(chat, [Ref.make(task)]);
         } else if (unassign) {
-          Chat.unassignTasks(chat, [Ref.make(task)]);
+          Agent.unassignTasks(chat, [Ref.make(task)]);
         }
 
         if (task.status !== undefined && task.status !== previousStatus) {
@@ -152,7 +150,7 @@ export default UpdateTasks.pipe(
         You must update a task to 'done' when complete, and keep exactly one task in progress.
 
         <checklist>
-        ${yield* Chat.formatChecklist(chat)}
+        ${yield* Agent.formatChecklist(chat)}
         </checklist>
       `;
     }),

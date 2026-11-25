@@ -9,12 +9,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { test } from 'vitest';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as AgentSetup from '@dxos/assistant/AgentSetup';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -67,7 +67,7 @@ const TestLayer = AssistantTestLayer({
     Agent.Agent,
     Outline.Outline,
     Task.Task,
-    Chat.Chat,
+    Agent.Session,
     AiContext.Binding,
     Text.Text,
     Message.Message,
@@ -110,7 +110,7 @@ const FailingTestLayer = AssistantTestLayer({
     Agent.Agent,
     Outline.Outline,
     Task.Task,
-    Chat.Chat,
+    Agent.Session,
     AiContext.Binding,
     Text.Text,
     Message.Message,
@@ -134,11 +134,11 @@ const TurnFailingTestLayer = AssistantTestLayer({
   ]),
   operationHandlers: [DelegationSkill.Handlers, AgentHandlers],
   skills: [DelegationSkill.make()],
-  types: [Agent.Agent, Task.Task, Chat.Chat, AiContext.Binding, Message.Message, Project.Project],
+  types: [Agent.Agent, Task.Task, Agent.Session, AiContext.Binding, Message.Message, Project.Project],
 });
 
 /** A chat's checklist as the three kinds of task it can hold, for the failure paths below. */
-const addChecklist = (chat: Chat.Chat) =>
+const addChecklist = (chat: Agent.Session) =>
   Effect.gen(function* () {
     // Delegated to the chat itself: its own agent is working it.
     const held = yield* Database.add(
@@ -173,7 +173,7 @@ describe('makeDelegationStrategy', () => {
     'replies immediately, delegates to a sub-agent, and folds the result back',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           {
             name: 'Supervisor',
             instructions: 'You delegate units of work to sub-agents using the available tools.',
@@ -182,7 +182,7 @@ describe('makeDelegationStrategy', () => {
         );
         yield* Database.flush();
 
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
         // Parented like the app runs it — the agent, not its chat — even though the delegated task
         // is recorded on the chat's own checklist.
@@ -191,7 +191,7 @@ describe('makeDelegationStrategy', () => {
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         const ephemeral = yield* collectEphemeral(session);
 
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
@@ -206,7 +206,7 @@ describe('makeDelegationStrategy', () => {
         expect(streamedText).toContain('On it');
 
         // DelegateTask promoted the work to a durable agent task on the chat's checklist.
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Agent.loadTasks(chat);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({ title: TASK_TITLE, delegate: { role: 'assistant' } });
 
@@ -229,7 +229,7 @@ describe('makeDelegationStrategy', () => {
     'posts a concise failure message without a stack trace when the sub-agent fails',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
+        const agent = yield* AgentSetup.makeInitialized(
           {
             name: 'Supervisor',
             instructions: 'You delegate units of work to sub-agents using the available tools.',
@@ -238,14 +238,14 @@ describe('makeDelegationStrategy', () => {
         );
         yield* Database.flush();
 
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
         const project = yield* Database.add(Project.make({ name: 'Test project' }));
         Obj.setParent(agent, project);
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
         yield* session.waitForCompletion();
 
@@ -256,7 +256,7 @@ describe('makeDelegationStrategy', () => {
         // The full cause (with stack frames) belongs to the log, not the conversation.
         expect(messageText).not.toMatch(/\bat .*[/(]/);
 
-        expect((yield* Chat.loadTasks(chat))[0]?.status).toEqual('failed');
+        expect((yield* Agent.loadTasks(chat))[0]?.status).toEqual('failed');
       },
       Effect.provide(FailingTestLayer),
       TestHelpers.provideTestContext,
@@ -270,9 +270,12 @@ describe('makeDelegationStrategy.onComplete', () => {
     "a sub-agent's finish on a task a person answers for waits on their review",
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: '' }, DelegationSkill.make());
+        const agent = yield* AgentSetup.makeInitialized(
+          { name: 'Supervisor', instructions: '' },
+          DelegationSkill.make(),
+        );
         yield* Database.flush();
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
         const task = yield* Database.add(
           Task.make({
@@ -299,9 +302,12 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
     'fails the tasks the conversation holds, and leaves sub-agent and queued tasks alone',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: '' }, DelegationSkill.make());
+        const agent = yield* AgentSetup.makeInitialized(
+          { name: 'Supervisor', instructions: '' },
+          DelegationSkill.make(),
+        );
         yield* Database.flush();
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
         const { held, delegated, queued, elsewhere } = yield* addChecklist(chat);
 
@@ -319,7 +325,7 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
         expect(queued.status).toBe('todo');
         expect(elsewhere.status).toBe('started');
 
-        const plain = yield* Database.add(Chat.make({ feed: Ref.make(Feed.make()) }));
+        const plain = yield* Database.add(Agent.makeSession({ feed: Ref.make(Feed.make()) }));
         yield* Database.flush();
         const checklist = yield* addChecklist(plain);
         yield* strategy.onTurnFailed(plain, Cause.fail(new Error(USAGE_LIMIT)));
@@ -336,13 +342,16 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
     'the task a chat holds fails when the model request fails',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: '' }, DelegationSkill.make());
+        const agent = yield* AgentSetup.makeInitialized(
+          { name: 'Supervisor', instructions: '' },
+          DelegationSkill.make(),
+        );
         yield* Database.flush();
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
         const { held, queued } = yield* addChecklist(chat);
 
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         yield* session.submitPrompt('Work on the tasks.');
         yield* session.waitForCompletion().pipe(Effect.exit);
 
@@ -360,9 +369,12 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
     'the sweep after a turn leaves a task the chat itself holds alone',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: '' }, DelegationSkill.make());
+        const agent = yield* AgentSetup.makeInitialized(
+          { name: 'Supervisor', instructions: '' },
+          DelegationSkill.make(),
+        );
         yield* Database.flush();
-        const chat = yield* Agent.loadChat(agent);
+        const chat = yield* Agent.loadSession(agent);
         invariant(chat, 'Agent chat not found.');
         const { held } = yield* addChecklist(chat);
 
@@ -378,7 +390,7 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
 
 describe('isSubAgentTask', () => {
   test('is only a bare assistant assignee: a subject names a session that already owns the task', ({ expect }) => {
-    const chat = Chat.make({ feed: Ref.make(Feed.make()) });
+    const chat = Agent.makeSession({ feed: Ref.make(Feed.make()) });
     expect(isSubAgentTask(Task.make({ title: 'unassigned' }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'person', assignee: { name: 'Alice' } }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'delegated', assignee: { role: 'assistant' } }))).toBe(true);

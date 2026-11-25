@@ -4,8 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Harness } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -72,7 +73,7 @@ export const QuerySkills = Operation.make({
     keys: Schema.optional(Schema.Array(Schema.String)).annotate({ description: 'Skills to return in full.' }),
   }),
   output: Schema.Array(ListedSkill),
-  services: [Registry.Service, Harness.HarnessService],
+  services: [Registry.Service, Agent.Service, Process.ManagerService, Database.Service],
 });
 
 export const QueryOperations = Operation.make({
@@ -90,7 +91,7 @@ export const QueryOperations = Operation.make({
     keys: Schema.optional(Schema.Array(Schema.String)).annotate({ description: 'Operations to return in full.' }),
   }),
   output: Schema.Array(ListedOperation),
-  services: [Registry.Service, Harness.HarnessService],
+  services: [Registry.Service, Agent.Service, Process.ManagerService, Database.Service],
 });
 
 export const QueryTypes = Operation.make({
@@ -134,7 +135,7 @@ export const EnableSkills = Operation.make({
       }),
     ),
   }),
-  services: [Registry.Service, Database.Service, Harness.HarnessService],
+  services: [Registry.Service, Database.Service, Agent.Service, Process.ManagerService],
 });
 
 const McpConnection = Schema.Struct({
@@ -157,7 +158,7 @@ export const QueryMcpConnections = Operation.make({
   },
   input: Schema.Struct({}),
   output: Schema.Array(McpConnection),
-  services: [Database.Service, Registry.Service, Harness.HarnessService],
+  services: [Database.Service, Registry.Service, Agent.Service, Process.ManagerService],
 });
 
 export const SetMcpConnection = Operation.make({
@@ -175,7 +176,7 @@ export const SetMcpConnection = Operation.make({
     enabled: Schema.Boolean,
   }),
   output: McpConnection,
-  services: [Database.Service, Registry.Service, Harness.HarnessService],
+  services: [Database.Service, Registry.Service, Agent.Service, Process.ManagerService],
 });
 
 export const AddMcpConnection = Operation.make({
@@ -207,5 +208,5 @@ export const AddMcpConnection = Operation.make({
       description: 'Why the server could not be reached just now; the connection is still added.',
     }),
   }),
-  services: [Database.Service, Harness.HarnessService],
+  services: [Database.Service, Agent.Service, Process.ManagerService],
 });

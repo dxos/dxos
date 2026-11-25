@@ -136,6 +136,7 @@ export const fromStack = (
   });
 
   return {
+    current: Effect.flatMap(manager, (stackManager) => stackManager.current),
     processTree: Effect.flatMap(manager, (stackManager) => stackManager.processTree),
     processTreeAtom: Atom.make((get) => {
       const stackManager = get(resolvedAtom);

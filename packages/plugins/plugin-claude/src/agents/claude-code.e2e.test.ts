@@ -12,7 +12,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { Chat, TrajectoryStore } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
+import * as Agent from '@dxos/compute/Agent';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -98,7 +99,7 @@ const findRequest = (feed: Feed.Feed) =>
 
 describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code on this computer, end to end', () => {
   const TestLayer = Layer.mergeAll(
-    TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
+    TestDatabaseLayer({ types: [Feed.Feed, Agent.Session, ...TrajectoryStore.types] }),
     Layer.succeed(Trace.TraceService, { write: () => {} }),
   );
 
@@ -138,7 +139,7 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code on th
     );
 
     const feed = yield* Database.add(Feed.make());
-    const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: 'claude-code' } }));
+    const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed), session: { harness: 'claude-code' } }));
     const options = (sessions: AcpAgent.Sessions): AcpAgent.AgentOptions => ({
       id: 'claude-code',
       sessions,

@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as AssistantChat from '@dxos/assistant/Chat';
+import type * as Agent from '@dxos/compute/Agent';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useRegistry } from '@dxos/react-client/echo';
@@ -20,7 +20,7 @@ import { AssistantCapabilities } from '#types';
 import { AssistantNamespace } from '../../namespace.ts';
 
 export type ChatDialogProps = {
-  chat?: AssistantChat.Chat;
+  chat?: Agent.Session;
 };
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {

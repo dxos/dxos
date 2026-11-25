@@ -14,8 +14,8 @@ import type * as Scope from 'effect/Scope';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Chat } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
+import * as Agent from '@dxos/compute/Agent';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -57,7 +57,7 @@ export type Definition = {
   /** What a chat can choose for the agent; the model and effort reach `sessionMeta`, the mode the session. */
   choices?: AssistantCapabilities.AgentChoices;
   /** The permission mode a chat that chose none runs in. */
-  mode?: (chat: Chat.Chat) => string | undefined;
+  mode?: (chat: Agent.Session) => string | undefined;
 };
 
 /** The MCP server a session gets Composer's tools from. */
@@ -66,7 +66,7 @@ export type ComposerTools = {
   /** Tools that only read, which an agent may be let call without asking. */
   readOnlyTools: readonly string[];
   /** The chat whose session is opening, for the choices it made (`chat.session`). */
-  chat: Chat.Chat;
+  chat: Agent.Session;
 };
 
 /** A coding agent, as a plugin contributes it. */
@@ -134,7 +134,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
       }).pipe(Effect.andThen(proxies.close())),
     );
     const composerTools = (
-      chat: Chat.Chat,
+      chat: Agent.Session,
     ): Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined, AgentError> =>
       Effect.gen(function* () {
         const agentHelper = helper();
@@ -336,7 +336,7 @@ const sweepOne = ({
     const chat = yield* Effect.tryPromise(() =>
       space.db.query(Query.select(Filter.id(parsed.chatId))).firstOrUndefined(),
     );
-    if (!chat || !Obj.instanceOf(Chat.Chat, chat) || chat.session?.harness !== agent) {
+    if (!chat || !Obj.instanceOf(Agent.Session, chat) || chat.session?.harness !== agent) {
       return;
     }
     const tasks = yield* Effect.forEach(chat.tasks, (ref) => Effect.tryPromise(() => ref.tryLoad()));

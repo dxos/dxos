@@ -91,7 +91,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: [handlers],
 });
 
-describe('AgentProcess delegation lifecycle (scripted)', () => {
+describe('SessionProcess delegation lifecycle (scripted)', () => {
   it.effect(
     'delegates work to a sub-agent and folds the result back on completion',
     Effect.fnUntraced(

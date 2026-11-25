@@ -6,12 +6,11 @@ import { afterEach, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -239,7 +238,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       types: [
         Agent.Agent,
-        Chat.Chat,
+        Agent.Session,
         Skill.Skill,
         Feed.Feed,
         Text.Text,
@@ -275,20 +274,20 @@ const setup = Effect.fnUntraced(function* () {
 });
 
 /** Submits a prompt the way Composer does (no sender name: the private chat says who), then waits for its hooks. */
-const say = Effect.fnUntraced(function* (chat: Chat.Chat, prompt: string) {
-  const session = yield* AgentService.getSession(chat);
+const say = Effect.fnUntraced(function* (chat: Agent.Session, prompt: string) {
+  const session = yield* AgentService.bindSession(chat);
   yield* session.submitPrompt(prompt);
   yield* session.waitForCompletion();
 });
 
 /** Waits for the chat's current turn, e.g. one the brain woke. */
-const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
-  const session = yield* AgentService.getSession(chat);
+const settle = Effect.fnUntraced(function* (chat: Agent.Session) {
+  const session = yield* AgentService.bindSession(chat);
   yield* session.waitForCompletion();
 });
 
 /** The updates the agent wrote in the chat. */
-const updates = (chat: Chat.Chat) =>
+const updates = (chat: Agent.Session) =>
   Database.load(chat.feed).pipe(
     Effect.flatMap((feed) => TrajectoryStore.messages(feed)),
     Effect.map((messages) =>

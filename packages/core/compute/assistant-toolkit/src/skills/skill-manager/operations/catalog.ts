@@ -4,20 +4,24 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { describeInput } from '@dxos/assistant/Describe';
+import type * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
+import type * as Process from '@dxos/compute/Process';
 import type * as Skill from '@dxos/compute/Skill';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 
 import type { ListedOperation, ListedSkill } from './definitions.ts';
 
 /** The skills enabled in this conversation, or none where it has no binder. */
-export const enabledSkills: Effect.Effect<Skill.Skill[], never, Harness.HarnessService> = Harness.binder.pipe(
-  Effect.tap((binder) => Effect.promise(() => binder.sync())),
-  Effect.map((binder) => binder.getSkills()),
-  Effect.orElseSucceed((): Skill.Skill[] => []),
-);
+export const enabledSkills: Effect.Effect<
+  Skill.Skill[],
+  never,
+  Agent.Service | Process.ManagerService | Database.Service
+> = AiContext.useCurrentBinder((binder) =>
+  Effect.promise(() => binder.sync()).pipe(Effect.map(() => binder.getSkills())),
+).pipe(Effect.orElseSucceed((): Skill.Skill[] => []));
 
 /** A skill's key, or for a space-authored skill with none its URI. */
 export const skillKey = (skill: Skill.Skill): string => Obj.getMeta(skill).key ?? String(Obj.getURI(skill));

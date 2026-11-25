@@ -7,6 +7,8 @@
 //
 //   cli.ts start <session dir>              # make <dir>/SESSION.mdl the session's board (a skeleton if absent)
 //   cli.ts build [<SESSION.mdl>] [--strict] [--offline] # parse, check, add PR state from GitHub, write the page
+//   cli.ts session-id                    # the ids Composer may file this session under, most likely first
+//   cli.ts tasks <tasks.json>... [--session-object <echo URI>]...  # merge Composer tasks into the board as goals
 //   cli.ts hook                          # the Stop hook: build the current board; block once per change
 //   cli.ts template build | push | pull  # the prebuilt page: build it with Vite, or move it through R2
 //
@@ -22,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 
 import { githubState, mergeState } from './github.ts';
 import { type Problem, type Sentence, parseSession } from './session.ts';
+import { delegatedTo, readTasks, sessionIds, syncTasks } from './tasks.ts';
 import { type BoardData } from './types.ts';
 
 const PACKAGE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -356,6 +359,28 @@ const hook = async () => {
   }
 };
 
+/**
+ * Merges the tasks of a Composer MCP result into the current board. The file is the JSON the agent saved from
+ * `tasks.recordSession` or `tasks.list`: an object with a `tasks` array, or the array itself.
+ */
+const tasks = (files: readonly string[], sessionObjects: readonly string[]) => {
+  const source = currentSource() ?? fail('no session; run `cli.ts start .agents/sessions/<date>-<slug>`');
+  // Every file of one pull is merged first: a goal is missing only when no project or space returned its task.
+  const list = files.flatMap(
+    (file) => readTasks(JSON.parse(readFileSync(resolve(file), 'utf8'))) ?? fail(`${file}: expected a \`tasks\` array`),
+  );
+  const result = syncTasks(readFileSync(source, 'utf8'), delegatedTo(list, sessionObjects));
+  writeFileSync(source, result.text);
+  const report = (label: string, ids: string[]) => ids.length > 0 && console.log(`${label}: ${ids.join(', ')}`);
+  report('added', result.added);
+  report('updated', result.updated);
+  report('not in the input (closed, or another session took it)', result.missing);
+  report('skipped, no echo://<space>/<id> URI in the input', result.skipped);
+  if (result.added.length + result.updated.length === 0) {
+    console.log(`${relative(ROOT, source)}: no change`);
+  }
+};
+
 const main = async () => {
   const [command, ...rest] = process.argv.slice(2);
   const args = rest.filter((arg) => !arg.startsWith('--'));
@@ -364,6 +389,39 @@ const main = async () => {
   switch (command) {
     case 'start': {
       start(args[0] ?? fail('usage: cli.ts start <session dir>'));
+      break;
+    }
+    case 'session-id': {
+      const ids = sessionIds();
+      if (ids.length === 0) {
+        fail('no session id in the environment (CLAUDE_CODE_REMOTE_SESSION_ID, CLAUDE_CODE_SESSION_ID)');
+      }
+      console.log(ids.join('\n'));
+      break;
+    }
+    case 'tasks': {
+      // `--session-object` repeats, one per space the session is recorded in; a flag with no URI after it is an
+      // error, since dropping it would sync every task in the project instead of this session's.
+      const sessionObjects: string[] = [];
+      const files: string[] = [];
+      for (let index = 0; index < rest.length; index++) {
+        if (rest[index] === '--session-object') {
+          const uri = rest[++index];
+          if (!uri?.startsWith('echo:')) {
+            fail(`--session-object needs an echo: URI, got ${uri ?? 'nothing'}`);
+          }
+          sessionObjects.push(uri);
+        } else if (rest[index].startsWith('--')) {
+          // Silently dropping an unknown option (e.g. `--session-object=<uri>`) would disable the filter.
+          fail(`unknown option ${rest[index]}; use --session-object <echo URI>`);
+        } else {
+          files.push(rest[index]);
+        }
+      }
+      tasks(
+        files.length > 0 ? files : fail('usage: cli.ts tasks <tasks.json>... [--session-object <echo URI>]...'),
+        sessionObjects,
+      );
       break;
     }
     case 'build': {
@@ -398,7 +456,9 @@ const main = async () => {
       break;
     }
     default:
-      fail('usage: cli.ts start <session dir> | build [<SESSION.mdl>] [--strict] | hook | template build|push|pull');
+      fail(
+        'usage: cli.ts start <session dir> | build [<SESSION.mdl>] [--strict] | session-id | tasks <tasks.json> | hook | template build|push|pull',
+      );
   }
 };
 

@@ -8,7 +8,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { DelegateTask, DelegateTasks } from './operations/definitions.ts';
+import { DelegateTask, DelegateTasks, SessionDelegate } from './operations/definitions.ts';
 
 export const key = 'org.dxos.skill.delegation';
 
@@ -17,7 +17,7 @@ export const make = () =>
     key,
     name: 'Delegation',
     description: 'Delegates work to sub-agents and tracks it as plan tasks.',
-    tools: Skill.toolDefinitions({ operations: [DelegateTask, DelegateTasks] }),
+    tools: Skill.toolDefinitions({ operations: [DelegateTask, DelegateTasks, SessionDelegate] }),
     instructions: Template.make({
       source: trim`
         {{! Delegation }}

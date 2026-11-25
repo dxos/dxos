@@ -10,12 +10,11 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect } from 'vitest';
 
-import { type AgentProcessDefinition } from '@dxos/agent-runtime';
+import { AgentService, type SessionProcessDefinition } from '@dxos/agent-runtime';
 import { AssistantTestLayer, waitForMessage } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
 import * as NodeShell from '@dxos/compute-runtime/node-shell';
-import * as AgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AccessToken, Connection } from '@dxos/link';
@@ -28,7 +27,7 @@ import * as ClaudeCodeProcess from './ClaudeCodeProcess.ts';
 const FAKE_AGENT = fileURLToPath(new URL('./testing/fake-claude-code-subprocess.ts', import.meta.url));
 
 /** Set per test: the definition needs sessions made in the test's own scope. */
-let definition: AgentProcessDefinition | undefined;
+let definition: SessionProcessDefinition | undefined;
 
 const TestLayer = AssistantTestLayer({
   types: [Feed.Feed, AccessToken.AccessToken, AiContext.Binding, Connection.Connection],
@@ -53,7 +52,9 @@ const setup = Effect.fnUntraced(function* (
     command: { ...command, env: { ...command.env, ...env } },
   });
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.KEY } }));
+  const chat = yield* Database.add(
+    Agent.makeSession({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.KEY } }),
+  );
   return { chat, workspace };
 });
 
@@ -80,7 +81,7 @@ describe('ClaudeCodeProcess', () => {
     Effect.fnUntraced(
       function* (_) {
         const { chat, workspace } = yield* setup({ command: process.execPath, args: [FAKE_AGENT] });
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         yield* session.submitPrompt('first');
         const [first] = yield* replies(session.feed, 1);
         yield* session.submitPrompt('second');
@@ -112,7 +113,7 @@ describe('ClaudeCodeProcess', () => {
           Obj.make(AccessToken.AccessToken, { source: CLAUDE_CODE_TOKEN_SOURCE, token: 'sk-ant-oat01-test' }),
         );
         const { chat } = yield* setup({ command: process.execPath, args: [FAKE_AGENT] });
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         yield* session.submitPrompt('hello');
         const [reply] = yield* replies(session.feed, 1);
         expect(reply).toContain(' oauth=sk-ant-oat01-test ');
@@ -138,7 +139,7 @@ describe('ClaudeCodeProcess', () => {
             ? { url: 'https://native.example.com/mcp', protocol: 'http' }
             : connection.mcp,
         );
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         yield* session.submitPrompt('hello');
         const [reply] = yield* replies(session.feed, 1);
         expect(reply).toContain(' mcp=mcp.example.com,native.example.com ');
@@ -158,7 +159,7 @@ describe('ClaudeCodeProcess', () => {
           { command: process.execPath, args: [FAKE_AGENT] },
           { FAKE_AGENT_HOLD_STDOUT: '1' },
         );
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         yield* session.submitPrompt('first');
         const [first] = yield* replies(session.feed, 1);
         const pid = Number(first.match(/ pid=(\d+)/)?.[1]);
@@ -183,7 +184,7 @@ describe('ClaudeCodeProcess', () => {
     Effect.fnUntraced(
       function* (_) {
         const { chat } = yield* setup({ command: 'no-such-claude-code-anywhere' });
-        const session = yield* AgentService.getSession(chat);
+        const session = yield* AgentService.bindSession(chat);
         yield* session.submitPrompt('hello');
         const exit = yield* session.waitForCompletion().pipe(Effect.exit);
         expect(exit._tag).toBe('Failure');

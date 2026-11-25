@@ -369,15 +369,13 @@ const isLaneRow = (message: Message.Message): boolean =>
 const promptReveal = mx('justify-end', reveal);
 
 /**
- * Whether an answer row carries the toolbar: only when it has prose to copy or stats to show. A row
- * of machinery alone (a synthetic prompt, a tool run) would otherwise reserve a blank toolbar line.
+ * Whether an answer row carries the toolbar: only when it has prose to copy, whose toolbar then shows the turn's stats
+ * too. A row of machinery alone (a synthetic prompt, a tool run) reserves no toolbar line, even once its stats land:
+ * they arrive after the call, so reserving one for them would push the thread down a beat after the row appeared.
  */
 const hasToolbar = (message: Message.Message): boolean =>
   !isLaneRow(message) &&
-  message.blocks.some(
-    (block) =>
-      block._tag === 'stats' || (block._tag === 'text' && block.disposition !== 'synthetic' && !!block.text.trim()),
-  );
+  message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic' && !!block.text.trim());
 
 /**
  * The assistant feed's per-message frame: the reader's prompts and the model's answers are framed

@@ -9,7 +9,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -42,7 +42,7 @@ export const BrainChatPlugin = Plugin.define(
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
 
       const [existing] = yield* Effect.promise(() =>
-        space.db.query(Filter.foreignKeys(Chat.Chat, [BRAIN_CHAT_KEY])).run(),
+        space.db.query(Filter.foreignKeys(Agent.Session, [BRAIN_CHAT_KEY])).run(),
       );
       const chat =
         existing ??

@@ -28,10 +28,10 @@
       "types": "./dist/types/src/AgentIdentity.d.ts",
       "import": "./dist/lib/AgentIdentity.mjs"
     },
-    "./AgentService": {
-      "source": "./src/AgentService.ts",
-      "types": "./dist/types/src/AgentService.d.ts",
-      "import": "./dist/lib/AgentService.mjs"
+    "./Agent": {
+      "source": "./src/Agent.ts",
+      "types": "./dist/types/src/Agent.d.ts",
+      "import": "./dist/lib/Agent.mjs"
     },
     "./Cancellation": {
       "source": "./src/Cancellation.ts",

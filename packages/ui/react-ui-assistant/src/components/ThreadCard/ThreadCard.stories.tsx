@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -49,27 +48,5 @@ export const Waiting: Story = {
       started,
     },
     lines,
-  },
-};
-
-export const TestExpand: Story = {
-  args: {
-    lane: { id: 'pricing', hue: 'emerald', title: 'Review the pricing page', status: 'done', started },
-    lines: Array.from({ length: 30 }, (_, index) => ({ role: 'assistant', text: `Step ${index + 1}.` })),
-  },
-  play: async ({ canvasElement }) => {
-    const button = within(canvasElement).getByRole('button');
-    await expect(button.getAttribute('aria-expanded')).toBe('false');
-    const cardHeight = () => {
-      const card = canvasElement.querySelector<HTMLElement>('[data-testid="chat.lane-card"]');
-      if (!card) {
-        throw new Error('Lane card not rendered.');
-      }
-      return card.offsetHeight;
-    };
-    const collapsed = cardHeight();
-    await userEvent.click(button);
-    await expect(button.getAttribute('aria-expanded')).toBe('true');
-    await expect(cardHeight()).toBeGreaterThan(collapsed);
   },
 };

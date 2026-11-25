@@ -18,12 +18,11 @@ import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
 import { expect } from 'vitest';
 
-import { LanguageModelFixture } from '@dxos/ai/testing';
-import { type HarnessControlRpcs, TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import { LanguageModelFixture, ScriptedLanguageModel } from '@dxos/ai/testing';
+import { AiContext, type HarnessControlRpcs, TrajectoryStore } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { OperationProcess } from '@dxos/compute-runtime';
-import * as ComputeAgentService from '@dxos/compute/AgentService';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -33,20 +32,23 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trajectory from '@dxos/compute/Trajectory';
-import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { makeRecordingTracer } from '@dxos/effect/testing';
-import { DXN, EntityId } from '@dxos/keys';
+import { DXN, EntityId, URI } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { ContentBlock, Message, Organization } from '@dxos/types';
+import { ContentBlock, Message, Organization, Task } from '@dxos/types';
 
 import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
 import * as ResearchService from '../testing/ResearchService.ts';
-import { AGENT_PROCESS_KEY } from './agent-process.ts';
 import * as AgentService from './AgentService.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { SESSION_PROCESS_KEY } from './session-process.ts';
 
 EntityId.dangerouslyDisableRandomness();
+
+const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 
 const Research = Operation.make({
   meta: {
@@ -235,782 +237,1462 @@ const DelegationTestLayer = AssistantTestLayer({
 
 const turnSpans: Tracer.Span[] = [];
 
-describe('Agent Service', { tags: ['model-fixture'] }, () => {
-  it.effect(
-    'can answer a question',
-    Effect.fnUntraced(
-      function* (_) {
-        const session = yield* AgentService.createSession();
-        yield* session.submitPrompt('What is the capital of France?');
-        yield* session.waitForCompletion();
+//
+// Scripted model.
+//
 
-        const messages = yield* TrajectoryStore.messages(session.feed);
-        const text = messages.map(Message.extractText).join('\n');
-        expect(text.toLocaleLowerCase()).toContain('paris');
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
+/**
+ * Hands work to another session through {@link Agent.delegate}: a new one unless `session` names one, with `task` (its
+ * `echo://` URI) on the receiver's checklist or `message` as its prompt.
+ */
+const Delegate = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.delegate'),
+    name: 'Delegate',
+    description: 'Hands a task or a message to another session.',
+  },
+  input: Schema.Struct({
+    purpose: Schema.String,
+    task: Schema.optional(Ref.Ref(Task.Task)),
+    session: Schema.optional(Schema.String),
+    message: Schema.optional(Schema.String),
+  }),
+  output: Schema.String,
+  services: [Agent.Service, Process.ManagerService, Database.Service],
+});
+
+const delegateHandlers = OperationHandlerSet.make(
+  Delegate.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ purpose, task, session, message }) {
+        const result = yield* Agent.delegate({
+          target: { kind: 'session', ...(session !== undefined ? { session: URI.make(session) } : {}) },
+          purpose,
+          ...(task !== undefined ? { task } : {}),
+          ...(message !== undefined ? { message: [{ _tag: 'text', text: message }] } : {}),
+        }).pipe(Effect.orDie);
+        return `Started session ${result.session}`;
+      }),
     ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+  ),
+);
+
+const DelegateSkill = Skill.make({
+  key: 'org.dxos.skill.delegate',
+  name: 'Delegate',
+  tools: Skill.toolDefinitions({ operations: [Delegate] }),
+});
+
+/** One reply of a {@link ScriptedModel}, given to the first call `when` accepts. */
+type Reply = {
+  readonly when: (request: ScriptedLanguageModel.ScriptedRequest) => boolean;
+  /** The turn, or how to build it from the call (to repeat back an id the prompt names). */
+  readonly turn:
+    | ScriptedLanguageModel.ScriptedTurn
+    | ((request: ScriptedLanguageModel.ScriptedRequest) => ScriptedLanguageModel.ScriptedTurn);
+};
+
+/** The call's newest message, which is what the model answers: a prompt or a tool result. */
+const latest = (request: ScriptedLanguageModel.ScriptedRequest): string =>
+  JSON.stringify(request.prompt.content.at(-1)?.content ?? '');
+
+const answersTool = (request: ScriptedLanguageModel.ScriptedRequest): boolean =>
+  request.prompt.content.at(-1)?.role === 'tool';
+
+/** Accepts a call whose newest message contains `needle`. */
+const saying =
+  (needle: string) =>
+  (request: ScriptedLanguageModel.ScriptedRequest): boolean =>
+    latest(request).includes(needle);
+
+/**
+ * A model that answers each call with the first matching reply, whatever order the runtime calls it in, and records
+ * every call so a test can assert what the model was shown. A call no reply accepts fails the turn by name.
+ */
+const makeScriptedModel = (replies: readonly Reply[]) => {
+  const calls: ScriptedLanguageModel.ScriptedRequest[] = [];
+  const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
+    calls.push(request);
+    const reply = replies.find(({ when }) => when(request));
+    if (reply === undefined) {
+      throw new Error(`No scripted reply for: ${latest(request)}`);
+    }
+    return typeof reply.turn === 'function' ? reply.turn(request) : reply.turn;
+  };
+  return { calls, script };
+};
+
+const ScriptedTestLayer = (
+  script: ScriptedLanguageModel.Script,
+  { enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {},
+) =>
+  AssistantTestLayer({
+    ...assistantTestLayerOptions,
+    types: [...assistantTestLayerOptions.types, Task.Task, Agent.Agent],
+    operationHandlers: [handlers, delegateHandlers],
+    skills: [...assistantTestLayerOptions.skills, StallSkill, DelegateSkill],
+    aiService: scriptedAiService(script),
+    agent: { enableToolBackgrounding },
+  });
+
+const RESEARCH_PROMPT = `Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`;
+
+/** The research model: calls the tool for the prompt, then answers from the result (which alone names `CYBR`). */
+const researchReplies: readonly Reply[] = [
+  {
+    when: (request) => answersTool(request) || latest(request).includes('CYBR'),
+    turn: { parts: [text('Cyberdyne trades on the NASDAQ as CYBR.')] },
+  },
+  {
+    when: saying('Research'),
+    turn: { parts: [toolCall(Operation.toolName(Research), { website: 'https://cyberdyne.com' })] },
+  },
+];
+
+const FRANCE_PROMPT = 'What is the capital of France?';
+const FOLLOW_UP_PROMPT = 'What country did I just ask you about?';
+
+const franceReplies: readonly Reply[] = [
+  { when: saying(FRANCE_PROMPT), turn: { parts: [text('Paris.')] } },
+  { when: saying(FOLLOW_UP_PROMPT), turn: { parts: [text('France.')] } },
+];
+
+/** Every session in the space other than `caller`: what a delegation created. */
+const otherSessions = (caller: Agent.Session) =>
+  Effect.map(Database.query(Filter.type(Agent.Session)).run, (sessions) =>
+    sessions.filter((session) => session.id !== caller.id),
   );
 
-  it.effect(
-    'tool call',
-    Effect.fnUntraced(
-      function* (_) {
-        const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
-        yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
+/** The names of the skills bound to `session`'s conversation. */
+const boundSkills = (session: Agent.Session) =>
+  Effect.gen(function* () {
+    const feed = yield* Database.load(session.feed).pipe(Effect.orDie);
+    const runtime = yield* Effect.context<Database.Service>();
+    const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    return binder.getSkills().map((skill) => skill.name);
+  }).pipe(Effect.scoped);
 
-        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
-        yield* researchService.waitForTaskToAppear();
-        yield* researchService.completeOneTask();
-        yield* session.waitForCompletion();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+/** What the agent said, leaving out its turns that only called a tool. */
+const replyTexts = (feed: Feed.Feed) =>
+  Effect.map(TrajectoryStore.messages(feed), (messages) =>
+    messages
+      .filter((message) => message.sender.role === 'assistant')
+      .map(Message.extractText)
+      .filter((value) => value.length > 0),
   );
 
-  it.effect(
-    'can be stopped while waiting for a tool call',
-    Effect.fnUntraced(
-      function* (_) {
-        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
-        yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
-        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
-        yield* researchService.waitForTaskToAppear();
-
-        yield* session.terminate();
-        expect(researchService.getTasks().map((task) => task.state)).toEqual(['interrupted']);
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'restart during tool call',
-    Effect.fnUntraced(
-      function* (_) {
-        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
-        yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
-
-        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
-        yield* researchService.waitForTaskToAppear();
-
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        yield* processManager.shutdown();
-        yield* processManager.startup();
-        yield* ComputeAgentService.hydrate();
-
-        // Hydrate returns immediately; redelivery re-issues the research tool on a fresh child.
-        // Drain all queued tasks (orphaned pre-restart + live child).
-        yield* researchService.waitForTaskToAppear();
-        yield* researchService.completeAllTasks();
-
-        session = yield* ComputeAgentService.getSession(session.chat);
-        yield* session.waitForCompletion();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
-  );
-
-  it.effect(
-    'recovers queued tool results after reload',
-    Effect.fnUntraced(
-      function* (_) {
-        let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
-        yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
-
-        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
-        yield* researchService.waitForTaskToAppear();
-        yield* researchService.completeOneTask();
-        // Settle the turn before tearing down, so what survives the reload is the queued tool result
-        // alone. Without this the prompt's queue entry may also still be unacked, and recovery
-        // delivers the result AND redelivers the prompt — which re-issues the tool this test is
-        // asserting does not run twice.
-        yield* session.waitForCompletion();
-
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        yield* processManager.shutdown();
-        yield* processManager.startup();
-        yield* ComputeAgentService.hydrate();
-
-        session = yield* ComputeAgentService.getSession(session.chat);
-        yield* session.waitForCompletion();
-
-        // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
-        // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
-        // the side effects of an operation that had already completed.
-        expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
-        session = yield* ComputeAgentService.getSession(session.chat);
-
-        // The recovery turn begins when the rehydrated process fires its alarm, which is after
-        // `waitForCompletion` settles (that only covers the turn in flight), so poll the feed for the
-        // reply instead. Asserting on the ASSISTANT's text and on a fact only the tool result carries:
-        // the prompt itself says "Cyberdyne", so matching that over every message would pass even when
-        // the recovered result never reached the model.
-        const recovered = yield* waitForMessage(
-          session.feed,
-          (message) =>
-            message.sender.role === 'assistant' && Message.extractText(message).toLocaleLowerCase().includes('nasdaq'),
-          { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 15_000 },
-        );
-        expect(Message.extractText(recovered).toLocaleLowerCase()).toContain('nasdaq');
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
-  );
-
-  it.effect(
-    'rehydrates an idle session and replays conversation history',
-    Effect.fnUntraced(
-      function* (_) {
-        let session = yield* AgentService.createSession();
-        yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
-        yield* session.waitForCompletion();
-
-        // Simulate app teardown + reboot while the session sits idle (nothing in-flight).
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        yield* processManager.shutdown();
-        yield* processManager.startup();
-        yield* ComputeAgentService.hydrate();
-
-        // The rehydrated agent is bound to the same feed, so a follow-up that only makes sense
-        // with prior context resolves against the pre-restart turn.
-        session = yield* ComputeAgentService.getSession(session.chat);
-        yield* session.submitPrompt('What country did I just ask you about? Reply with just the country name.');
-        yield* session.waitForCompletion();
-
-        const messages = yield* TrajectoryStore.messages(session.feed);
-        const text = messages.map(Message.extractText).join('\n');
-        expect(text.toLocaleLowerCase()).toContain('paris');
-        expect(text.toLocaleLowerCase()).toContain('france');
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
-  );
-
-  it.effect(
-    'hydrate is a no-op when there are no persisted agents',
-    Effect.fnUntraced(
-      function* (_) {
-        // Reboot over an empty store: hydrate must neither throw nor block, and is idempotent.
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        yield* processManager.shutdown();
-        yield* processManager.startup();
-        yield* ComputeAgentService.hydrate();
-        yield* ComputeAgentService.hydrate();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'runs AI agent with background tools via process manager',
-    Effect.fnUntraced(
-      function* (_) {
-        const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
-
-        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
-        const taskDrainer = yield* Effect.gen(function* () {
-          yield* researchService.waitForTaskToAppear();
-          yield* researchService.completeOneTask();
-        }).pipe(Effect.forever, Effect.forkChild);
-
-        let ephemeralEventCount = 0;
-        const ephemeralFiber = yield* session.subscribeEphemeral().pipe(
-          Stream.runForEach((msg) =>
-            Effect.gen(function* () {
-              for (const event of msg.events) {
-                if (Trace.isOfType(Trace.PartialBlock, event)) {
-                  ephemeralEventCount++;
-                }
-              }
-            }),
-          ),
-          Effect.forkChild,
-        );
-
-        for (const org of ResearchService.getTestData().organizations) {
-          yield* session.submitPrompt(JSON.stringify(org));
-        }
-        yield* session.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
-        // TODO(dmaretskyi): wait until settles and only now start draining
-        yield* session.waitForCompletion();
-
-        yield* Fiber.interrupt(taskDrainer);
-        yield* Fiber.interrupt(ephemeralFiber);
-
-        expect(ephemeralEventCount).toBeGreaterThan(0);
-      },
-      Effect.provide(TestLayer({ enableToolBackgrounding: true })),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : undefined },
-  );
-
-  // Superseded by the ungated scripted-model port in `delegation-scripted.test.ts` (and the
-  // real-strategy test in `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`); kept
-  // in place until this file's memoized fixtures are next regenerated, since removing it would
-  // shift the shared deterministic ID stream the later fixtures depend on.
-  describe('delegation (stub)', () => {
+describe('Agent Service', () => {
+  // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
+  describe('control plane', () => {
     it.effect(
-      'delegates work to a sub-agent and folds the result back on completion',
+      'concurrent cold-cache resolution spawns a single process',
       Effect.fnUntraced(
-        function* (_) {
-          delegationHarness.pending = [{ id: 'task-1', input: 'forty-two' }];
-          delegationHarness.completed = [];
+        function* ({ expect }) {
+          const processManager = yield* Process.ManagerService;
+          const feed = yield* Database.add(Feed.make());
+          const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+          yield* Database.flush();
 
-          const session = yield* AgentService.createSession();
-          yield* session.submitPrompt('What is the capital of France?');
-          // Settles on the turn's reply; the delegated child runs in the background (not awaited here).
-          yield* session.waitForCompletion();
-
-          // The post-turn reconcile spawned a linked child; its exit drives onChildEvent → onComplete.
-          yield* Effect.promise(async () => {
-            await expect.poll(() => delegationHarness.completed.length, { timeout: 5_000 }).toBe(1);
+          // Both callers start before either writes the session cache, which is what serializing the
+          // cache-miss path exists for: unserialized, each would spawn its own process for the chat.
+          const [first] = yield* Effect.all([AgentService.bindSession(chat), AgentService.bindSession(chat)], {
+            concurrency: 'unbounded',
           });
 
-          const [completion] = delegationHarness.completed;
-          expect(completion.id).toBe('task-1');
-          expect(Exit.isSuccess(completion.exit)).toBe(true);
-          if (Exit.isSuccess(completion.exit)) {
-            expect(completion.exit.value).toBe('done: forty-two');
-          }
+          const processes = yield* processManager.list({ target: Obj.getURI(chat), key: SESSION_PROCESS_KEY });
+          expect(processes).toHaveLength(1);
+
+          yield* first.terminate();
         },
-        Effect.provide(DelegationTestLayer),
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.effect(
+      'reports whether the session is working on a turn',
+      Effect.fnUntraced(
+        function* (_) {
+          const registry = yield* Registry.AtomRegistry;
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          const feed = yield* Database.add(Feed.make());
+          const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+          yield* Database.flush();
+          const target = Obj.getURI(chat);
+
+          const session = yield* AgentService.bindSession(chat);
+          const [handle] = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+
+          // Spawned but not prompted: live, awaiting input, so not working on a turn.
+          expect(handle.status.state).toBe(Process.State.IDLE);
+          expect(registry.get(session.running)).toBe(false);
+
+          // Derived from the process's status atom, not fixed at the time the session was resolved.
+          const observed: boolean[] = [];
+          const unsubscribe = registry.subscribe(session.running, (running) => observed.push(running), {
+            immediate: true,
+          });
+          yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+          yield* handle.terminate();
+          expect(registry.get(session.running)).toBe(false);
+          expect(observed).toEqual([false]);
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.effect(
+      'rediscovers a persisted agent whose hydration was skipped',
+      Effect.fnUntraced(
+        function* (_) {
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          const feed = yield* Database.add(Feed.make());
+          const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+          yield* Database.flush();
+          const target = Obj.getURI(chat);
+
+          const spawned = yield* AgentService.bindSession(chat);
+          const [before] = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+
+          // Reboot without hydrating: the record survives but no live handle does, so `list` yields
+          // a read-only dormant view. A service whose session cache does not carry over (boot-time
+          // hydration cleared it, or skipped this agent) rediscovers the process through that view
+          // and must adopt what `hydrate` returns — adopting the dormant view itself leaves every
+          // call on the session dying with "Process not hydrated".
+          yield* processManager.shutdown();
+          yield* processManager.startup();
+
+          const session = yield* AgentService.bindSession(chat).pipe(Effect.provide(AgentService.layer()));
+          expect(session).not.toBe(spawned);
+          const [after] = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+          expect(String(after.pid)).toBe(String(before.pid));
+
+          // Exercises the live surface the dormant handle lacks, without needing a model turn.
+          yield* session.waitForCompletion();
+          yield* after.terminate();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    // Exercises the instruction-aware reuse identity on both paths — the session cache and the
+    // remount (rediscovered process) path. The steering ref lives on the chat, so repointing the
+    // chat is what makes the running process stale.
+    it.effect(
+      'session reuse tracks the chat steering-instructions ref',
+      Effect.fnUntraced(
+        function* (_) {
+          const processManager = yield* ProcessManager.ProcessManagerService;
+
+          const instructionsA = yield* Database.add(Instructions.make({ text: 'Steering A.' }));
+          const instructionsB = yield* Database.add(Instructions.make({ text: 'Steering B.' }));
+          const feed = yield* Database.add(Feed.make());
+          const chat = yield* Database.add(
+            Agent.makeSession({ feed: Ref.make(feed), instructions: Ref.make(instructionsA) }),
+          );
+          yield* Database.flush();
+          const target = Obj.getURI(chat);
+
+          const isActive = (state: Process.State) =>
+            state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
+          const activePids = Effect.gen(function* () {
+            const processes = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+            return processes.filter((process) => isActive(process.status.state));
+          });
+
+          // Spawned against the chat, so the process's target is the chat itself.
+          yield* AgentService.bindSession(chat);
+          const [handleA] = yield* activePids;
+          const pidA = String(handleA.pid);
+
+          // Unchanged ref: the cached session (and process) is reused.
+          yield* AgentService.bindSession(chat);
+          expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([pidA]);
+
+          // Repointed ref: the process is torn down and respawned so it reads the new steering.
+          Obj.update(chat, (chat) => {
+            chat.instructions = Ref.make(instructionsB);
+          });
+          yield* Database.flush();
+          yield* AgentService.bindSession(chat);
+          const [handleB] = yield* activePids;
+          expect(String(handleB.pid)).not.toBe(pidA);
+
+          // Remount path (cache cleared by hydrate): the rediscovered process is reused, since it is
+          // bound to the same chat.
+          yield* Agent.hydrate();
+          const resumed = yield* AgentService.bindSession(chat);
+          expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([String(handleB.pid)]);
+
+          yield* resumed.terminate();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.effect(
+      'a verb that names only the session keeps the process it was opened with',
+      Effect.fnUntraced(
+        function* (_) {
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          const feed = yield* Database.add(Feed.make());
+          const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+          yield* Database.flush();
+          const target = Obj.getURI(chat);
+          const activePids = Effect.map(processManager.list({ target, key: SESSION_PROCESS_KEY }), (processes) =>
+            processes.filter((process) => !Process.isTerminal(process.status.state)).map(({ pid }) => String(pid)),
+          );
+
+          yield* Agent.open(chat, { provider: DXN.make('com.example.provider.opened') });
+          const opened = yield* activePids;
+          expect(opened).toHaveLength(1);
+
+          // The verbs carry no open options; the session's own must not read as a reconfiguration.
+          yield* Agent.running(chat);
+          yield* Agent.waitForCompletion(chat);
+          expect(yield* activePids).toEqual(opened);
+
+          yield* Agent.terminate(chat);
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.effect(
+      'a session spawned under a guard is reused by a caller that names no guard, not by one that names another',
+      Effect.fnUntraced(
+        function* (_) {
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          const feed = yield* Database.add(Feed.make());
+          const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+          yield* Database.flush();
+          const target = Obj.getURI(chat);
+          const activePids = Effect.gen(function* () {
+            const processes = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+            return processes
+              .filter((process) => !Process.isTerminal(process.status.state))
+              .map(({ pid }) => String(pid));
+          });
+
+          const guard: Process.Guard = { check: () => Effect.void };
+          yield* AgentService.bindSession(chat, { guard });
+          const [pid] = yield* activePids;
+
+          // A caller that does not care which guard the chat runs under must not tear the guarded one down.
+          yield* AgentService.bindSession(chat);
+          expect(yield* activePids).toEqual([pid]);
+
+          const other: Process.Guard = { check: () => Effect.void };
+          const regarded = yield* AgentService.bindSession(chat, { guard: other });
+          expect(yield* activePids).not.toEqual([pid]);
+
+          yield* regarded.terminate();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
+
+    it.effect(
+      'session reuse tracks the model selected on the chat',
+      Effect.fnUntraced(
+        function* (_) {
+          const processManager = yield* ProcessManager.ProcessManagerService;
+
+          const feed = yield* Database.add(Feed.make());
+          const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+          yield* Database.flush();
+          const target = Obj.getURI(chat);
+
+          const isActive = (state: Process.State) =>
+            state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
+          const activePids = Effect.gen(function* () {
+            const processes = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+            return processes.filter((process) => isActive(process.status.state)).map((process) => String(process.pid));
+          });
+
+          // The model is read off the chat, not passed in: a chat without one runs the default.
+          yield* AgentService.bindSession(chat);
+          const [pidA] = yield* activePids;
+          yield* AgentService.bindSession(chat);
+          expect(yield* activePids).toEqual([pidA]);
+
+          // Selecting a model on the chat tears the process down and respawns it bound to the selection.
+          Obj.update(chat, (chat) => {
+            chat.session = { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') };
+          });
+          yield* Database.flush();
+          const sessionB = yield* AgentService.bindSession(chat);
+          const [pidB] = yield* activePids;
+          expect(pidB).not.toBe(pidA);
+          expect(yield* activePids).toEqual([pidB]);
+
+          // The same selection again is a cache hit.
+          yield* AgentService.bindSession(chat);
+          expect(yield* activePids).toEqual([pidB]);
+
+          yield* sessionB.terminate();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
+    it.effect(
+      'session reuse tracks the harness selected on the chat',
+      Effect.fnUntraced(
+        function* (_) {
+          const processManager = yield* ProcessManager.ProcessManagerService;
+
+          const feed = yield* Database.add(Feed.make());
+          const chat = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+          yield* Database.flush();
+          const target = Obj.getURI(chat);
+
+          const isActive = (state: Process.State) =>
+            state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
+          const activePids = Effect.gen(function* () {
+            const processes = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+            return processes.filter((process) => isActive(process.status.state)).map((process) => String(process.pid));
+          });
+
+          // Opening a chat spawns its process on the default harness before the user picks one.
+          yield* AgentService.bindSession(chat);
+          const [pidA] = yield* activePids;
+
+          // The turn producer is chosen when the process starts, so picking a harness must respawn it.
+          Obj.update(chat, (chat) => {
+            chat.session = { harness: 'claude-code-edge' };
+          });
+          yield* Database.flush();
+          const sessionB = yield* AgentService.bindSession(chat);
+          const [pidB] = yield* activePids;
+          expect(pidB).not.toBe(pidA);
+          expect(yield* activePids).toEqual([pidB]);
+
+          yield* AgentService.bindSession(chat);
+          expect(yield* activePids).toEqual([pidB]);
+
+          yield* sessionB.terminate();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
+    it.effect(
+      'traces a turn run through the agent process',
+      Effect.fnUntraced(
+        function* (_) {
+          const session = yield* AgentService.createSession();
+          yield* session.submitPrompt('What is the capital of France?');
+          yield* session.waitForCompletion();
+
+          expect(turnSpans.map(({ name }) => name)).toContain('AiSession.createRequest');
+
+          const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
+          expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
+          expect(String(turn?.attributes.get('dxos.ai.input'))).toContain('capital of France');
+          expect(JSON.parse(String(turn?.attributes.get('dxos.ai.output')))).toEqual(
+            expect.arrayContaining([expect.objectContaining({ role: 'assistant' })]),
+          );
+        },
+        Effect.provide(Layer.provideMerge(TestLayer(), Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans)))),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    );
+    // Appended last on purpose: the module PRNG is shared file-wide, so a test inserted earlier would
+    // shift every later fixture's object ids and invalidate their recorded conversations.
+    it.effect(
+      'binds a space-authored skill, which carries no registry key',
+      Effect.fnUntraced(
+        function* (_) {
+          // Authored in the space rather than provided by the registry, so it has no meta key at all —
+          // the case that used to be dropped on the way into the context binder (DX-1248).
+          const skill = yield* Database.add(
+            Obj.make(Skill.Skill, {
+              name: 'Codename',
+              instructions: Template.make({ source: 'The codename of the project is Kingfisher.' }),
+              tools: [],
+            }),
+          );
+          expect(Obj.getMeta(skill).key).toBeUndefined();
+
+          const session = yield* AgentService.createSession({ skills: [skill] });
+          yield* session.submitPrompt('What is the codename of the project?');
+          yield* session.waitForCompletion();
+
+          const messages = yield* TrajectoryStore.history(session.feed);
+          const text = messages.map(Message.extractText).join('\n');
+          expect(text.toLocaleLowerCase()).toContain('kingfisher');
+        },
+        Effect.provide(TestLayer()),
         TestHelpers.provideTestContext,
       ),
       { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
     );
   });
 
-  // The agent's self-wake (set-alarm/get-current-date) flow lives with the alarm blueprint that now
-  // provides those tools: `assistant-toolkit/src/skills/alarm/blueprint.test.ts`.
+  describe('model-fixture', { tags: ['model-fixture'] }, () => {
+    it.effect(
+      'can answer a question',
+      Effect.fnUntraced(
+        function* (_) {
+          const session = yield* AgentService.createSession();
+          yield* session.submitPrompt('What is the capital of France?');
+          yield* session.waitForCompletion();
 
-  // Placed last so it does not perturb the shared deterministic ID stream of the tests above
-  // (memoized conversations are keyed per file and depend on prior execution order).
-  it.effect(
-    'forks a conversation into a new feed and replays source history via a fork event',
-    Effect.fnUntraced(
-      function* (_) {
-        // Original conversation.
-        const source = yield* AgentService.createSession();
-        yield* source.submitPrompt('What is the capital of France? Reply with just the city name.');
-        yield* source.waitForCompletion();
+          const messages = yield* TrajectoryStore.messages(session.feed);
+          const text = messages.map(Message.extractText).join('\n');
+          expect(text.toLocaleLowerCase()).toContain('paris');
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    );
 
-        // Branch point: the last message of the source conversation.
-        const lastMessage = (yield* TrajectoryStore.messages(source.feed)).at(-1);
-        if (!lastMessage) {
-          return yield* Effect.die(new Error('source conversation produced no messages'));
-        }
+    it.effect(
+      'tool call',
+      Effect.fnUntraced(
+        function* (_) {
+          const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+          yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
-        // Fork: a fresh session whose feed starts with a `fork` event naming the source (mirrors the
-        // ForkChat operation). The forked agent has no messages of its own, so a context-dependent
-        // follow-up only resolves if the source history is replayed through the link.
-        const fork = yield* AgentService.createSession();
-        yield* TrajectoryStore.append(fork.feed, [
-          Trajectory.make({
-            payload: { _tag: 'fork', from: { feed: Ref.make(source.feed), event: lastMessage.id } },
-            sender: { role: 'event', name: 'fork' },
-          }),
-        ]);
+          const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+          yield* researchService.waitForTaskToAppear();
+          yield* researchService.completeOneTask();
+          yield* session.waitForCompletion();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    );
 
-        yield* fork.submitPrompt('What country did I just ask you about? Reply with just the country name.');
-        yield* fork.waitForCompletion();
+    it.effect(
+      'can be stopped while waiting for a tool call',
+      Effect.fnUntraced(
+        function* (_) {
+          let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+          yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
+          const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+          yield* researchService.waitForTaskToAppear();
 
-        const forkText = (yield* TrajectoryStore.messages(fork.feed)).map(Message.extractText).join('\n');
-        expect(forkText.toLocaleLowerCase()).toContain('france');
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
-  );
+          yield* session.terminate();
+          expect(researchService.getTasks().map((task) => task.state)).toEqual(['interrupted']);
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
 
-  // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
-  // the memoized tests above.
-  it.effect(
-    'agent process succeeds when idle and respawns for a follow-up turn',
-    Effect.fnUntraced(
-      function* (_) {
-        const processManager = yield* ProcessManager.ProcessManagerService;
+    it.effect(
+      'restart during tool call',
+      Effect.fnUntraced(
+        function* (_) {
+          let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+          yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
-        const session = yield* AgentService.createSession();
-        const target = Obj.getURI(session.chat);
+          const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+          yield* researchService.waitForTaskToAppear();
 
-        yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
-        yield* session.waitForCompletion();
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          yield* processManager.shutdown();
+          yield* processManager.startup();
+          yield* Agent.hydrate();
 
-        // With no queued work, alarms, delegations, or undelivered tool results, the process calls
-        // `ctx.succeed()` (see `maybeComplete` / `isAgentWorkPending`) and reaches a terminal state
-        // instead of idling.
-        const [firstHandle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
-        const firstPid = String(firstHandle.pid);
-        yield* Effect.promise(async () => {
-          await expect.poll(() => firstHandle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
-        });
+          // Hydrate returns immediately; redelivery re-issues the research tool on a fresh child.
+          // Drain all queued tasks (orphaned pre-restart + live child).
+          yield* researchService.waitForTaskToAppear();
+          yield* researchService.completeAllTasks();
 
-        // A follow-up turn does not reuse the succeeded process: `getSession` skips terminal handles
-        // and spawns a fresh one, which replays conversation history from the feed.
-        const followUp = yield* ComputeAgentService.getSession(session.chat);
-        yield* followUp.submitPrompt('What country did I just ask you about? Reply with just the country name.');
-        yield* followUp.waitForCompletion();
+          session = yield* AgentService.bindSession(session.chat);
+          yield* session.waitForCompletion();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    );
 
-        const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
-        expect(processes.some((process) => String(process.pid) !== firstPid)).toBe(true);
+    it.effect(
+      'recovers queued tool results after reload',
+      Effect.fnUntraced(
+        function* (_) {
+          let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+          yield* session.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
-        const messages = yield* TrajectoryStore.messages(session.feed);
-        const text = messages.map(Message.extractText).join('\n');
-        expect(text.toLocaleLowerCase()).toContain('france');
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
-  );
+          const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+          yield* researchService.waitForTaskToAppear();
+          yield* researchService.completeOneTask();
+          // Settle the turn before tearing down, so what survives the reload is the queued tool result
+          // alone. Without this the prompt's queue entry may also still be unacked, and recovery
+          // delivers the result AND redelivers the prompt — which re-issues the tool this test is
+          // asserting does not run twice.
+          yield* session.waitForCompletion();
 
-  // Drives the process control plane directly (no LLM turn), so it is placed after the memoized
-  // tests above to avoid perturbing their shared deterministic ID stream.
-  it.effect(
-    'setAlarm over the process control surface reaches the live agent and arms a self-wake',
-    Effect.fnUntraced(
-      function* (_) {
-        const processManager = yield* ProcessManager.ProcessManagerService;
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          yield* processManager.shutdown();
+          yield* processManager.startup();
+          yield* Agent.hydrate();
 
-        // Spawns the agent process (no LLM turn yet) bound to a stamped host marker.
-        const session = yield* AgentService.createSession();
-        const target = Obj.getURI(session.chat);
-        // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
-        // on every call; naming the group restores it.
-        const handles: readonly Process.Process<string | readonly ContentBlock.Any[], void, HarnessControlRpcs>[] =
-          yield* processManager.list({
-            target,
-            key: AGENT_PROCESS_KEY,
-          });
-        const [handle] = handles;
+          session = yield* AgentService.bindSession(session.chat);
+          yield* session.waitForCompletion();
 
-        // The spawn stamped the harness-host annotation so the process is discoverable as the owner.
-        expect(
-          Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
-        ).toBe(true);
+          // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
+          // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
+          // the side effects of an operation that had already completed.
+          expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
+          session = yield* AgentService.bindSession(session.chat);
 
-        // A Tier-B caller reaches the live host over the process RPC loopback. The handler runs on
-        // the host's server fiber and appends an Alarm record to the feed; a successful void result
-        // proves the control-plane wiring end-to-end (persistence semantics are covered by the
-        // SessionStore tests).
-        const now = yield* Clock.currentTimeMillis;
-        const at = DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1)));
-        yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
+          // The recovery turn begins when the rehydrated process fires its alarm, which is after
+          // `waitForCompletion` settles (that only covers the turn in flight), so poll the feed for the
+          // reply instead. Asserting on the ASSISTANT's text and on a fact only the tool result carries:
+          // the prompt itself says "Cyberdyne", so matching that over every message would pass even when
+          // the recovered result never reached the model.
+          const recovered = yield* waitForMessage(
+            session.feed,
+            (message) =>
+              message.sender.role === 'assistant' &&
+              Message.extractText(message).toLocaleLowerCase().includes('nasdaq'),
+            { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 15_000 },
+          );
+          expect(Message.extractText(recovered).toLocaleLowerCase()).toContain('nasdaq');
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
+    );
 
-        // The RPC did not fail the process; it remains live and ready for the conversation to resume.
-        expect(handle.status.state).not.toBe(Process.State.FAILED);
-        expect(handle.status.state).not.toBe(Process.State.TERMINATED);
+    it.effect(
+      'rehydrates an idle session and replays conversation history',
+      Effect.fnUntraced(
+        function* (_) {
+          let session = yield* AgentService.createSession();
+          yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
+          yield* session.waitForCompletion();
 
-        yield* handle.terminate();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
+          // Simulate app teardown + reboot while the session sits idle (nothing in-flight).
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          yield* processManager.shutdown();
+          yield* processManager.startup();
+          yield* Agent.hydrate();
 
-  it.effect(
-    'calls a tool whose operation takes no input',
-    Effect.fnUntraced(
-      function* (_) {
-        pingCount = 0;
-        const session = yield* AgentService.createSession({ skills: [PingSkill] });
-        yield* session.submitPrompt('Ping the service and tell me what it returned.');
-        yield* session.waitForCompletion();
+          // The rehydrated agent is bound to the same feed, so a follow-up that only makes sense
+          // with prior context resolves against the pre-restart turn.
+          session = yield* AgentService.bindSession(session.chat);
+          yield* session.submitPrompt('What country did I just ask you about? Reply with just the country name.');
+          yield* session.waitForCompletion();
 
-        expect(pingCount).toBe(1);
-        const messages = yield* TrajectoryStore.messages(session.feed);
-        expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('pong');
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
-  );
+          const messages = yield* TrajectoryStore.messages(session.feed);
+          const text = messages.map(Message.extractText).join('\n');
+          expect(text.toLocaleLowerCase()).toContain('paris');
+          expect(text.toLocaleLowerCase()).toContain('france');
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    );
 
-  // Stopping mid-tool-call finishes the handle while its teardown is still blocked on the in-flight
-  // turn. A handle left readable as live is adopted by the next session, whose prompt is then dropped
-  // by the `#finished` guard — the conversation wedges with no error until the page reloads. Uses a
-  // tool that ignores interruption, since a tool that unwinds lets teardown complete and never
-  // produces the stranded handle. The runtime seam is covered in ProcessManager.test.ts.
-  it.effect(
-    'accepts a new prompt after being stopped mid-tool-call',
-    Effect.fnUntraced(
-      function* (_) {
-        stallStarted = yield* Deferred.make<void>();
-        stallRelease = yield* Deferred.make<void>();
+    it.effect(
+      'hydrate is a no-op when there are no persisted agents',
+      Effect.fnUntraced(
+        function* (_) {
+          // Reboot over an empty store: hydrate must neither throw nor block, and is idempotent.
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          yield* processManager.shutdown();
+          yield* processManager.startup();
+          yield* Agent.hydrate();
+          yield* Agent.hydrate();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
 
-        const session = yield* AgentService.createSession({ skills: [StallSkill] });
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: AGENT_PROCESS_KEY });
+    it.effect(
+      'runs AI agent with background tools via process manager',
+      Effect.fnUntraced(
+        function* (_) {
+          const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
 
-        yield* session.submitPrompt('Run the stall tool.');
-        yield* Deferred.await(stallStarted);
+          const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+          const taskDrainer = yield* Effect.gen(function* () {
+            yield* researchService.waitForTaskToAppear();
+            yield* researchService.completeOneTask();
+          }).pipe(Effect.forever, Effect.forkChild);
 
-        // The stop button returns at once; `terminate` does not, because the tool holds the scope
-        // open. Forking is what the UI effectively does — and what leaves the handle observable
-        // mid-teardown. `terminate` publishes the state before its first yield, so one turn is enough.
-        const stopping = yield* Effect.forkChild(session.terminate());
-        yield* Effect.yieldNow;
-        expect(handle.status.state).not.toBe(Process.State.RUNNING);
+          let ephemeralEventCount = 0;
+          const ephemeralFiber = yield* session.subscribeEphemeral().pipe(
+            Stream.runForEach((msg) =>
+              Effect.gen(function* () {
+                for (const event of msg.events) {
+                  if (Trace.isOfType(Trace.PartialBlock, event)) {
+                    ephemeralEventCount++;
+                  }
+                }
+              }),
+            ),
+            Effect.forkChild,
+          );
 
-        // Same feed: the user typing again after hitting stop. The stopped handle must not be
-        // adopted — neither from the session cache nor by the remount lookup that follows it.
-        const resumed = yield* ComputeAgentService.getSession(session.chat);
-        expect(resumed).not.toBe(session);
+          for (const org of ResearchService.getTestData().organizations) {
+            yield* session.submitPrompt(JSON.stringify(org));
+          }
+          yield* session.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
+          // TODO(dmaretskyi): wait until settles and only now start draining
+          yield* session.waitForCompletion();
 
-        yield* resumed.submitPrompt('What is the capital of France? Reply with just the city name.');
-        yield* resumed.waitForCompletion();
-        const messages = yield* TrajectoryStore.messages(resumed.feed);
-        expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('paris');
+          yield* Fiber.interrupt(taskDrainer);
+          yield* Fiber.interrupt(ephemeralFiber);
 
-        // Let the stalled tool finish so the blocked teardown can complete with the test.
-        yield* Deferred.succeed(stallRelease, undefined);
-        yield* Fiber.join(stopping);
-      },
-      Effect.provide(StallTestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 30_000 },
-  );
-});
+          expect(ephemeralEventCount).toBeGreaterThan(0);
+        },
+        Effect.provide(TestLayer({ enableToolBackgrounding: true })),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : undefined },
+    );
 
-// Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
-describe('Agent Service (control plane)', () => {
-  it.effect(
-    'concurrent cold-cache resolution spawns a single process',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-        yield* Database.flush();
+    // Superseded by the ungated scripted-model port in `delegation-scripted.test.ts` (and the
+    // real-strategy test in `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`); kept
+    // in place until this file's memoized fixtures are next regenerated, since removing it would
+    // shift the shared deterministic ID stream the later fixtures depend on.
+    describe('delegation (stub)', () => {
+      it.effect(
+        'delegates work to a sub-agent and folds the result back on completion',
+        Effect.fnUntraced(
+          function* (_) {
+            delegationHarness.pending = [{ id: 'task-1', input: 'forty-two' }];
+            delegationHarness.completed = [];
 
-        // Both callers start before either writes the session cache, which is what serializing the
-        // cache-miss path exists for: unserialized, each would spawn its own process for the chat.
-        const [first, second] = yield* Effect.all(
-          [ComputeAgentService.getSession(chat), ComputeAgentService.getSession(chat)],
-          {
-            concurrency: 'unbounded',
+            const session = yield* AgentService.createSession();
+            yield* session.submitPrompt('What is the capital of France?');
+            // Settles on the turn's reply; the delegated child runs in the background (not awaited here).
+            yield* session.waitForCompletion();
+
+            // The post-turn reconcile spawned a linked child; its exit drives onChildEvent → onComplete.
+            yield* Effect.promise(async () => {
+              await expect.poll(() => delegationHarness.completed.length, { timeout: 5_000 }).toBe(1);
+            });
+
+            const [completion] = delegationHarness.completed;
+            expect(completion.id).toBe('task-1');
+            expect(Exit.isSuccess(completion.exit)).toBe(true);
+            if (Exit.isSuccess(completion.exit)) {
+              expect(completion.exit.value).toBe('done: forty-two');
+            }
           },
-        );
-        expect(second).toBe(first);
+          Effect.provide(DelegationTestLayer),
+          TestHelpers.provideTestContext,
+        ),
+        { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+      );
+    });
 
-        const processes = yield* processManager.list({ target: Obj.getURI(chat), key: AGENT_PROCESS_KEY });
-        expect(processes).toHaveLength(1);
+    // The agent's self-wake (set-alarm/get-current-date) flow lives with the alarm blueprint that now
+    // provides those tools: `assistant-toolkit/src/skills/alarm/blueprint.test.ts`.
 
-        yield* first.terminate();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
+    // Placed last so it does not perturb the shared deterministic ID stream of the tests above
+    // (memoized conversations are keyed per file and depend on prior execution order).
+    it.effect(
+      'forks a conversation into a new feed and replays source history via a fork event',
+      Effect.fnUntraced(
+        function* (_) {
+          // Original conversation.
+          const source = yield* AgentService.createSession();
+          yield* source.submitPrompt('What is the capital of France? Reply with just the city name.');
+          yield* source.waitForCompletion();
 
-  it.effect(
-    'reports whether the session is working on a turn',
-    Effect.fnUntraced(
-      function* (_) {
-        const registry = yield* Registry.AtomRegistry;
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-        yield* Database.flush();
-        const target = Obj.getURI(chat);
+          // Branch point: the last message of the source conversation.
+          const lastMessage = (yield* TrajectoryStore.messages(source.feed)).at(-1);
+          if (!lastMessage) {
+            return yield* Effect.die(new Error('source conversation produced no messages'));
+          }
 
-        const session = yield* ComputeAgentService.getSession(chat);
-        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+          // Fork: a fresh session whose feed starts with a `fork` event naming the source (mirrors the
+          // ForkChat operation). The forked agent has no messages of its own, so a context-dependent
+          // follow-up only resolves if the source history is replayed through the link.
+          const fork = yield* AgentService.createSession();
+          yield* TrajectoryStore.append(fork.feed, [
+            Trajectory.make({
+              payload: { _tag: 'fork', from: { feed: Ref.make(source.feed), event: lastMessage.id } },
+              sender: { role: 'event', name: 'fork' },
+            }),
+          ]);
 
-        // Spawned but not prompted: live, awaiting input, so not working on a turn.
-        expect(handle.status.state).toBe(Process.State.IDLE);
-        expect(registry.get(session.running)).toBe(false);
+          yield* fork.submitPrompt('What country did I just ask you about? Reply with just the country name.');
+          yield* fork.waitForCompletion();
 
-        // Derived from the process's status atom, not fixed at the time the session was resolved.
-        const observed: boolean[] = [];
-        const unsubscribe = registry.subscribe(session.running, (running) => observed.push(running), {
-          immediate: true,
-        });
-        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
-        yield* handle.terminate();
-        expect(registry.get(session.running)).toBe(false);
-        expect(observed).toEqual([false]);
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
+          const forkText = (yield* TrajectoryStore.messages(fork.feed)).map(Message.extractText).join('\n');
+          expect(forkText.toLocaleLowerCase()).toContain('france');
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    );
 
-  it.effect(
-    'rediscovers a persisted agent whose hydration was skipped',
-    Effect.fnUntraced(
-      function* (_) {
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-        yield* Database.flush();
-        const target = Obj.getURI(chat);
+    // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
+    // the memoized tests above.
+    it.effect(
+      'agent process succeeds when idle and respawns for a follow-up turn',
+      Effect.fnUntraced(
+        function* (_) {
+          const processManager = yield* ProcessManager.ProcessManagerService;
 
-        const spawned = yield* ComputeAgentService.getSession(chat);
-        const [before] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+          const session = yield* AgentService.createSession();
+          const target = Obj.getURI(session.chat);
 
-        // Reboot without hydrating: the record survives but no live handle does, so `list` yields
-        // a read-only dormant view. A service whose session cache does not carry over (boot-time
-        // hydration cleared it, or skipped this agent) rediscovers the process through that view
-        // and must adopt what `hydrate` returns — adopting the dormant view itself leaves every
-        // call on the session dying with "Process not hydrated".
-        yield* processManager.shutdown();
-        yield* processManager.startup();
+          yield* session.submitPrompt('What is the capital of France? Reply with just the city name.');
+          yield* session.waitForCompletion();
 
-        const session = yield* ComputeAgentService.getSession(chat).pipe(Effect.provide(AgentService.layer()));
-        expect(session).not.toBe(spawned);
-        const [after] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
-        expect(String(after.pid)).toBe(String(before.pid));
+          // With no queued work, alarms, delegations, or undelivered tool results, the process calls
+          // `ctx.succeed()` (see `maybeComplete` / `isAgentWorkPending`) and reaches a terminal state
+          // instead of idling.
+          const [firstHandle] = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+          const firstPid = String(firstHandle.pid);
+          yield* Effect.promise(async () => {
+            await expect.poll(() => firstHandle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
+          });
 
-        // Exercises the live surface the dormant handle lacks, without needing a model turn.
-        yield* session.waitForCompletion();
-        yield* after.terminate();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
+          // A follow-up turn does not reuse the succeeded process: `getSession` skips terminal handles
+          // and spawns a fresh one, which replays conversation history from the feed.
+          const followUp = yield* AgentService.bindSession(session.chat);
+          yield* followUp.submitPrompt('What country did I just ask you about? Reply with just the country name.');
+          yield* followUp.waitForCompletion();
 
-  // Exercises the instruction-aware reuse identity on both paths — the session cache and the
-  // remount (rediscovered process) path. The steering ref lives on the chat, so repointing the
-  // chat is what makes the running process stale.
-  it.effect(
-    'session reuse tracks the chat steering-instructions ref',
-    Effect.fnUntraced(
-      function* (_) {
-        const processManager = yield* ProcessManager.ProcessManagerService;
+          const processes = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+          expect(processes.some((process) => String(process.pid) !== firstPid)).toBe(true);
 
-        const instructionsA = yield* Database.add(Instructions.make({ text: 'Steering A.' }));
-        const instructionsB = yield* Database.add(Instructions.make({ text: 'Steering B.' }));
-        const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), instructions: Ref.make(instructionsA) }));
-        yield* Database.flush();
-        const target = Obj.getURI(chat);
+          const messages = yield* TrajectoryStore.messages(session.feed);
+          const text = messages.map(Message.extractText).join('\n');
+          expect(text.toLocaleLowerCase()).toContain('france');
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    );
 
-        const isActive = (state: Process.State) =>
-          state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
-        const activePids = Effect.gen(function* () {
-          const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
-          return processes.filter((process) => isActive(process.status.state));
-        });
+    // Drives the process control plane directly (no LLM turn), so it is placed after the memoized
+    // tests above to avoid perturbing their shared deterministic ID stream.
+    it.effect(
+      'setAlarm over the process control surface reaches the live agent and arms a self-wake',
+      Effect.fnUntraced(
+        function* (_) {
+          const processManager = yield* ProcessManager.ProcessManagerService;
 
-        // Spawned against the chat, so the process's target is the chat itself.
-        const sessionA = yield* ComputeAgentService.getSession(chat);
-        const [handleA] = yield* activePids;
-        const pidA = String(handleA.pid);
+          // Spawns the agent process (no LLM turn yet) bound to a stamped host marker.
+          const session = yield* AgentService.createSession();
+          const target = Obj.getURI(session.chat);
+          // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
+          // on every call; naming the group restores it.
+          const handles: readonly Process.Process<string | readonly ContentBlock.Any[], void, HarnessControlRpcs>[] =
+            yield* processManager.list({
+              target,
+              key: SESSION_PROCESS_KEY,
+            });
+          const [handle] = handles;
 
-        // Unchanged ref: the cached session (and process) is reused.
-        const sessionAgain = yield* ComputeAgentService.getSession(chat);
-        expect(sessionAgain).toBe(sessionA);
-        expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([pidA]);
+          // The spawn stamped the harness-host annotation so the process is discoverable as the owner.
+          expect(
+            Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
+          ).toBe(true);
 
-        // Repointed ref: the process is torn down and respawned so it reads the new steering.
-        Obj.update(chat, (chat) => {
-          chat.instructions = Ref.make(instructionsB);
-        });
-        yield* Database.flush();
-        yield* ComputeAgentService.getSession(chat);
-        const [handleB] = yield* activePids;
-        expect(String(handleB.pid)).not.toBe(pidA);
+          // A Tier-B caller reaches the live host over the process RPC loopback. The handler runs on
+          // the host's server fiber and appends an Alarm record to the feed; a successful void result
+          // proves the control-plane wiring end-to-end (persistence semantics are covered by the
+          // SessionStore tests).
+          const now = yield* Clock.currentTimeMillis;
+          const at = DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1)));
+          yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
 
-        // Remount path (cache cleared by hydrate): the rediscovered process is reused, since it is
-        // bound to the same chat.
-        yield* ComputeAgentService.hydrate();
-        const resumed = yield* ComputeAgentService.getSession(chat);
-        expect((yield* activePids).map((handle) => String(handle.pid))).toEqual([String(handleB.pid)]);
+          // The RPC did not fail the process; it remains live and ready for the conversation to resume.
+          expect(handle.status.state).not.toBe(Process.State.FAILED);
+          expect(handle.status.state).not.toBe(Process.State.TERMINATED);
 
-        yield* resumed.terminate();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
-  it.effect(
-    'a session spawned under a guard is reused by a caller that names no guard, not by one that names another',
-    Effect.fnUntraced(
-      function* (_) {
-        const processManager = yield* ProcessManager.ProcessManagerService;
-        const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-        yield* Database.flush();
-        const target = Obj.getURI(chat);
-        const activePids = Effect.gen(function* () {
-          const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
-          return processes.filter((process) => !Process.isTerminal(process.status.state)).map(({ pid }) => String(pid));
-        });
+          yield* handle.terminate();
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+    );
 
-        const guard: Process.Guard = { check: () => Effect.void };
-        const guarded = yield* ComputeAgentService.getSession(chat, { guard });
-        const [pid] = yield* activePids;
+    it.effect(
+      'calls a tool whose operation takes no input',
+      Effect.fnUntraced(
+        function* (_) {
+          pingCount = 0;
+          const session = yield* AgentService.createSession({ skills: [PingSkill] });
+          yield* session.submitPrompt('Ping the service and tell me what it returned.');
+          yield* session.waitForCompletion();
 
-        // A caller that does not care which guard the chat runs under must not tear the guarded one down.
-        expect(yield* ComputeAgentService.getSession(chat)).toBe(guarded);
-        expect(yield* activePids).toEqual([pid]);
+          expect(pingCount).toBe(1);
+          const messages = yield* TrajectoryStore.messages(session.feed);
+          expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('pong');
+        },
+        Effect.provide(TestLayer()),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+    );
 
-        const other: Process.Guard = { check: () => Effect.void };
-        const regarded = yield* ComputeAgentService.getSession(chat, { guard: other });
-        expect(regarded).not.toBe(guarded);
-        expect(yield* activePids).not.toEqual([pid]);
+    // Stopping mid-tool-call finishes the handle while its teardown is still blocked on the in-flight
+    // turn. A handle left readable as live is adopted by the next session, whose prompt is then dropped
+    // by the `#finished` guard — the conversation wedges with no error until the page reloads. Uses a
+    // tool that ignores interruption, since a tool that unwinds lets teardown complete and never
+    // produces the stranded handle. The runtime seam is covered in ProcessManager.test.ts.
+    it.effect(
+      'accepts a new prompt after being stopped mid-tool-call',
+      Effect.fnUntraced(
+        function* (_) {
+          stallStarted = yield* Deferred.make<void>();
+          stallRelease = yield* Deferred.make<void>();
 
-        yield* regarded.terminate();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
+          const session = yield* AgentService.createSession({ skills: [StallSkill] });
+          const processManager = yield* ProcessManager.ProcessManagerService;
+          const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: SESSION_PROCESS_KEY });
 
-  it.effect(
-    'session reuse tracks the model selected on the chat',
-    Effect.fnUntraced(
-      function* (_) {
-        const processManager = yield* ProcessManager.ProcessManagerService;
+          yield* session.submitPrompt('Run the stall tool.');
+          yield* Deferred.await(stallStarted);
 
-        const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-        yield* Database.flush();
-        const target = Obj.getURI(chat);
+          // The stop button returns at once; `terminate` does not, because the tool holds the scope
+          // open. Forking is what the UI effectively does — and what leaves the handle observable
+          // mid-teardown. `terminate` publishes the state before its first yield, so one turn is enough.
+          const stopping = yield* Effect.forkChild(session.terminate());
+          yield* Effect.yieldNow;
+          expect(handle.status.state).not.toBe(Process.State.RUNNING);
 
-        const isActive = (state: Process.State) =>
-          state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
-        const activePids = Effect.gen(function* () {
-          const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
-          return processes.filter((process) => isActive(process.status.state)).map((process) => String(process.pid));
-        });
+          // Same feed: the user typing again after hitting stop. The stopped handle must not be
+          // adopted — neither from the session cache nor by the remount lookup that follows it.
+          const resumed = yield* AgentService.bindSession(session.chat);
+          expect(resumed).not.toBe(session);
 
-        // The model is read off the chat, not passed in: a chat without one runs the default.
-        const sessionA = yield* ComputeAgentService.getSession(chat);
-        const [pidA] = yield* activePids;
-        expect(yield* ComputeAgentService.getSession(chat)).toBe(sessionA);
-        expect(yield* activePids).toEqual([pidA]);
+          yield* resumed.submitPrompt('What is the capital of France? Reply with just the city name.');
+          yield* resumed.waitForCompletion();
+          const messages = yield* TrajectoryStore.messages(resumed.feed);
+          expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('paris');
 
-        // Selecting a model on the chat tears the process down and respawns it bound to the selection.
-        Obj.update(chat, (chat) => {
-          chat.session = { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') };
-        });
-        yield* Database.flush();
-        const sessionB = yield* ComputeAgentService.getSession(chat);
-        const [pidB] = yield* activePids;
-        expect(sessionB).not.toBe(sessionA);
-        expect(pidB).not.toBe(pidA);
-        expect(yield* activePids).toEqual([pidB]);
+          // Let the stalled tool finish so the blocked teardown can complete with the test.
+          yield* Deferred.succeed(stallRelease, undefined);
+          yield* Fiber.join(stopping);
+        },
+        Effect.provide(StallTestLayer),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 30_000 },
+    );
+  });
 
-        // The same selection again is a cache hit.
-        expect(yield* ComputeAgentService.getSession(chat)).toBe(sessionB);
+  // The model-fixture suite's cases on a scripted model, so they run ungated in CI, plus session delegation. Its
+  // supervisor delegation case is covered by `delegation-scripted.test.ts`. Placed last: the module PRNG is shared
+  // file-wide, and the memoized fixtures above depend on the ids generated before them.
+  describe('scripted', () => {
+    describe('turns and tools', () => {
+      const france = makeScriptedModel(franceReplies);
+      it.effect(
+        'answers a question',
+        Effect.fnUntraced(
+          function* (_) {
+            const session = yield* AgentService.createSession();
+            yield* session.submitPrompt(FRANCE_PROMPT);
+            yield* session.waitForCompletion();
+            expect(yield* replyTexts(session.feed)).toEqual(['Paris.']);
+          },
+          Effect.provide(ScriptedTestLayer(france.script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
 
-        yield* sessionB.terminate();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
-  it.effect(
-    'session reuse tracks the harness selected on the chat',
-    Effect.fnUntraced(
-      function* (_) {
-        const processManager = yield* ProcessManager.ProcessManagerService;
+      const research = makeScriptedModel(researchReplies);
+      it.effect(
+        'calls a tool and answers from its result',
+        Effect.fnUntraced(
+          function* (_) {
+            const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+            yield* session.submitPrompt(RESEARCH_PROMPT);
 
-        const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-        yield* Database.flush();
-        const target = Obj.getURI(chat);
+            const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+            yield* researchService.waitForTaskToAppear();
+            yield* researchService.completeOneTask();
+            yield* session.waitForCompletion();
 
-        const isActive = (state: Process.State) =>
-          state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
-        const activePids = Effect.gen(function* () {
-          const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
-          return processes.filter((process) => isActive(process.status.state)).map((process) => String(process.pid));
-        });
+            expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
+            // The answer turn was shown the tool's result, which alone carries the ticker.
+            expect(research.calls.some((call) => JSON.stringify(call.prompt.content).includes('CYBR'))).toBe(true);
+            expect(yield* replyTexts(session.feed)).toContain('Cyberdyne trades on the NASDAQ as CYBR.');
+          },
+          Effect.provide(ScriptedTestLayer(research.script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
 
-        // Opening a chat spawns its process on the default harness before the user picks one.
-        const sessionA = yield* ComputeAgentService.getSession(chat);
-        const [pidA] = yield* activePids;
+      it.effect(
+        'is stopped while waiting for a tool call, which interrupts the tool',
+        Effect.fnUntraced(
+          function* (_) {
+            const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+            yield* session.submitPrompt(RESEARCH_PROMPT);
+            const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+            yield* researchService.waitForTaskToAppear();
 
-        // The turn producer is chosen when the process starts, so picking a harness must respawn it.
-        Obj.update(chat, (chat) => {
-          chat.session = { harness: 'claude-code-edge' };
-        });
-        yield* Database.flush();
-        const sessionB = yield* ComputeAgentService.getSession(chat);
-        const [pidB] = yield* activePids;
-        expect(sessionB).not.toBe(sessionA);
-        expect(pidB).not.toBe(pidA);
-        expect(yield* activePids).toEqual([pidB]);
+            yield* session.terminate();
+            expect(researchService.getTasks().map((task) => task.state)).toEqual(['interrupted']);
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel(researchReplies).script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
 
-        expect(yield* ComputeAgentService.getSession(chat)).toBe(sessionB);
+      it.effect(
+        'calls a tool whose operation takes no input',
+        Effect.fnUntraced(
+          function* (_) {
+            pingCount = 0;
+            const session = yield* AgentService.createSession({ skills: [PingSkill] });
+            yield* session.submitPrompt('Ping the service.');
+            yield* session.waitForCompletion();
 
-        yield* sessionB.terminate();
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-  );
-  it.effect(
-    'traces a turn run through the agent process',
-    Effect.fnUntraced(
-      function* (_) {
-        const session = yield* AgentService.createSession();
-        yield* session.submitPrompt('What is the capital of France?');
-        yield* session.waitForCompletion();
+            expect(pingCount).toBe(1);
+            expect(yield* replyTexts(session.feed)).toContain('The service answered pong.');
+          },
+          Effect.provide(
+            ScriptedTestLayer(
+              makeScriptedModel([
+                {
+                  when: (request) => answersTool(request) && latest(request).includes('pong'),
+                  turn: { parts: [text('The service answered pong.')] },
+                },
+                { when: saying('Ping the service.'), turn: { parts: [toolCall(Operation.toolName(Ping), {})] } },
+              ]).script,
+            ),
+          ),
+          TestHelpers.provideTestContext,
+        ),
+      );
 
-        expect(turnSpans.map(({ name }) => name)).toContain('AiSession.createRequest');
+      it.effect(
+        'streams partial blocks while tools run in the background',
+        Effect.fnUntraced(
+          function* (_) {
+            const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+            const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+            const drainer = yield* Effect.gen(function* () {
+              yield* researchService.waitForTaskToAppear();
+              yield* researchService.completeOneTask();
+            }).pipe(Effect.forever, Effect.forkChild);
 
-        const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
-        expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
-        expect(String(turn?.attributes.get('dxos.ai.input'))).toContain('capital of France');
-        expect(JSON.parse(String(turn?.attributes.get('dxos.ai.output')))).toEqual(
-          expect.arrayContaining([expect.objectContaining({ role: 'assistant' })]),
-        );
-      },
-      Effect.provide(Layer.provideMerge(TestLayer(), Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans)))),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
-  );
-  // Appended last on purpose: the module PRNG is shared file-wide, so a test inserted earlier would
-  // shift every later fixture's object ids and invalidate their recorded conversations.
-  it.effect(
-    'binds a space-authored skill, which carries no registry key',
-    Effect.fnUntraced(
-      function* (_) {
-        // Authored in the space rather than provided by the registry, so it has no meta key at all —
-        // the case that used to be dropped on the way into the context binder (DX-1248).
-        const skill = yield* Database.add(
-          Obj.make(Skill.Skill, {
-            name: 'Codename',
-            instructions: Template.make({ source: 'The codename of the project is Kingfisher.' }),
-            tools: [],
+            let partials = 0;
+            const subscriber = yield* session.subscribeEphemeral().pipe(
+              Stream.runForEach((message) =>
+                Effect.sync(() => {
+                  partials += message.events.filter((event) => Trace.isOfType(Trace.PartialBlock, event)).length;
+                }),
+              ),
+              Effect.forkChild,
+            );
+
+            yield* session.submitPrompt(RESEARCH_PROMPT);
+            yield* session.waitForCompletion();
+            yield* Fiber.interrupt(drainer);
+            yield* Fiber.interrupt(subscriber);
+
+            expect(partials).toBeGreaterThan(0);
+            expect(researchService.getTasks().map((task) => task.state)).toContain('completed');
+          },
+          Effect.provide(
+            ScriptedTestLayer(
+              makeScriptedModel([...researchReplies, { when: () => true, turn: { parts: [text('Noted.')] } }]).script,
+              { enableToolBackgrounding: true },
+            ),
+          ),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
+      it.effect(
+        'accepts a new prompt after being stopped mid-tool-call',
+        Effect.fnUntraced(
+          function* (_) {
+            stallStarted = yield* Deferred.make<void>();
+            stallRelease = yield* Deferred.make<void>();
+
+            const session = yield* AgentService.createSession({ skills: [StallSkill] });
+            const processManager = yield* ProcessManager.ProcessManagerService;
+            const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: SESSION_PROCESS_KEY });
+
+            yield* session.submitPrompt('Run the stall tool.');
+            yield* Deferred.await(stallStarted);
+
+            const stopping = yield* Effect.forkChild(session.terminate());
+            yield* Effect.yieldNow;
+            expect(handle.status.state).not.toBe(Process.State.RUNNING);
+
+            const resumed = yield* AgentService.bindSession(session.chat);
+            expect(resumed).not.toBe(session);
+            yield* resumed.submitPrompt(FRANCE_PROMPT);
+            yield* resumed.waitForCompletion();
+            expect(yield* replyTexts(resumed.feed)).toContain('Paris.');
+
+            yield* Deferred.succeed(stallRelease, undefined);
+            yield* Fiber.join(stopping);
+          },
+          Effect.provide(
+            ScriptedTestLayer(
+              makeScriptedModel([
+                ...franceReplies,
+                { when: saying('Run the stall tool.'), turn: { parts: [toolCall(Operation.toolName(Stall), {})] } },
+              ]).script,
+            ),
+          ),
+          TestHelpers.provideTestContext,
+        ),
+      );
+    });
+
+    describe('lifecycle', () => {
+      it.effect(
+        'restarts during a tool call: redelivery runs the tool again and the turn completes',
+        Effect.fnUntraced(
+          function* (_) {
+            let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+            yield* session.submitPrompt(RESEARCH_PROMPT);
+            const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+            yield* researchService.waitForTaskToAppear();
+
+            const processManager = yield* ProcessManager.ProcessManagerService;
+            yield* processManager.shutdown();
+            yield* processManager.startup();
+            yield* Agent.hydrate();
+
+            yield* researchService.waitForTaskToAppear();
+            yield* researchService.completeAllTasks();
+            session = yield* AgentService.bindSession(session.chat);
+            yield* session.waitForCompletion();
+
+            yield* waitForMessage(session.feed, (message) => Message.extractText(message).includes('CYBR'));
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel(researchReplies).script)),
+          TestHelpers.provideTestContext,
+        ),
+        { timeout: 30_000 },
+      );
+
+      it.effect(
+        'recovers a queued tool result after a reload without running the tool again',
+        Effect.fnUntraced(
+          function* (_) {
+            let session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+            yield* session.submitPrompt(RESEARCH_PROMPT);
+            const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
+            yield* researchService.waitForTaskToAppear();
+            yield* researchService.completeOneTask();
+            yield* session.waitForCompletion();
+
+            const processManager = yield* ProcessManager.ProcessManagerService;
+            yield* processManager.shutdown();
+            yield* processManager.startup();
+            yield* Agent.hydrate();
+            session = yield* AgentService.bindSession(session.chat);
+            yield* session.waitForCompletion();
+
+            expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
+            yield* waitForMessage(
+              session.feed,
+              (message) => message.sender.role === 'assistant' && Message.extractText(message).includes('NASDAQ'),
+              { timeout: 15_000 },
+            );
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel(researchReplies).script)),
+          TestHelpers.provideTestContext,
+        ),
+        { timeout: 30_000 },
+      );
+
+      const rehydrated = makeScriptedModel(franceReplies);
+      it.effect(
+        'rehydrates an idle session, whose next turn sees the conversation so far',
+        Effect.fnUntraced(
+          function* (_) {
+            let session = yield* AgentService.createSession();
+            yield* session.submitPrompt(FRANCE_PROMPT);
+            yield* session.waitForCompletion();
+
+            const processManager = yield* ProcessManager.ProcessManagerService;
+            yield* processManager.shutdown();
+            yield* processManager.startup();
+            yield* Agent.hydrate();
+
+            session = yield* AgentService.bindSession(session.chat);
+            yield* session.submitPrompt(FOLLOW_UP_PROMPT);
+            yield* session.waitForCompletion();
+
+            const followUp = rehydrated.calls.findLast(saying(FOLLOW_UP_PROMPT));
+            expect(followUp?.text).toContain(FRANCE_PROMPT);
+            expect(followUp?.text).toContain('Paris.');
+            expect(yield* replyTexts(session.feed)).toEqual(['Paris.', 'France.']);
+          },
+          Effect.provide(ScriptedTestLayer(rehydrated.script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
+      it.effect(
+        'hydrate is a no-op when there are no persisted agents',
+        Effect.fnUntraced(
+          function* (_) {
+            const processManager = yield* ProcessManager.ProcessManagerService;
+            yield* processManager.shutdown();
+            yield* processManager.startup();
+            yield* Agent.hydrate();
+            yield* Agent.hydrate();
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel([]).script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
+      const respawned = makeScriptedModel(franceReplies);
+      it.effect(
+        'the process succeeds when idle and a follow-up respawns it with the history',
+        Effect.fnUntraced(
+          function* (_) {
+            const processManager = yield* ProcessManager.ProcessManagerService;
+            const session = yield* AgentService.createSession();
+            const target = Obj.getURI(session.chat);
+            yield* session.submitPrompt(FRANCE_PROMPT);
+            yield* session.waitForCompletion();
+
+            const [first] = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+            yield* Effect.promise(async () => {
+              await expect.poll(() => first.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
+            });
+
+            const followUp = yield* AgentService.bindSession(session.chat);
+            yield* followUp.submitPrompt(FOLLOW_UP_PROMPT);
+            yield* followUp.waitForCompletion();
+
+            const processes = yield* processManager.list({ target, key: SESSION_PROCESS_KEY });
+            expect(processes.some((process) => String(process.pid) !== String(first.pid))).toBe(true);
+            expect(respawned.calls.findLast(saying(FOLLOW_UP_PROMPT))?.text).toContain('Paris.');
+          },
+          Effect.provide(ScriptedTestLayer(respawned.script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
+      const forked = makeScriptedModel(franceReplies);
+      it.effect(
+        'a fork replays the source conversation through its fork event',
+        Effect.fnUntraced(
+          function* (_) {
+            const source = yield* AgentService.createSession();
+            yield* source.submitPrompt(FRANCE_PROMPT);
+            yield* source.waitForCompletion();
+            const last = (yield* TrajectoryStore.messages(source.feed)).at(-1);
+            if (!last) {
+              return yield* Effect.die(new Error('the source conversation has no messages'));
+            }
+
+            const fork = yield* AgentService.createSession();
+            yield* TrajectoryStore.append(fork.feed, [
+              Trajectory.make({
+                payload: { _tag: 'fork', from: { feed: Ref.make(source.feed), event: last.id } },
+                sender: { role: 'event', name: 'fork' },
+              }),
+            ]);
+            yield* fork.submitPrompt(FOLLOW_UP_PROMPT);
+            yield* fork.waitForCompletion();
+
+            expect(forked.calls.findLast(saying(FOLLOW_UP_PROMPT))?.text).toContain('Paris.');
+            expect(yield* replyTexts(fork.feed)).toContain('France.');
+          },
+          Effect.provide(ScriptedTestLayer(forked.script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
+      it.effect(
+        'setAlarm over the process control surface reaches the live agent',
+        Effect.fnUntraced(
+          function* (_) {
+            const processManager = yield* ProcessManager.ProcessManagerService;
+            const session = yield* AgentService.createSession();
+            const handles: readonly Process.Process<string | readonly ContentBlock.Any[], void, HarnessControlRpcs>[] =
+              yield* processManager.list({ target: Obj.getURI(session.chat), key: SESSION_PROCESS_KEY });
+            const [handle] = handles;
+
+            const now = yield* Clock.currentTimeMillis;
+            yield* handle.rpc.setAlarm({
+              at: DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1))),
+              message: 'finish the report',
+            });
+            expect(handle.status.state).not.toBe(Process.State.FAILED);
+            expect(handle.status.state).not.toBe(Process.State.TERMINATED);
+            yield* handle.terminate();
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel([]).script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+    });
+
+    describe('session delegation', () => {
+      const OPENING = 'You have been assigned the task below.';
+
+      /** The `echo://` URI the caller's prompt names after `marker`. */
+      const named = (request: ScriptedLanguageModel.ScriptedRequest, marker: string): string | undefined =>
+        new RegExp(`${marker} (echo://[^\\s"\\\\]+)`).exec(latest(request))?.[1];
+
+      /**
+       * The caller delegates what its prompt names, then confirms; a receiver answers the prompt it was opened with.
+       * "Hand off <task>" delegates a task to a new session; "Ask <session>" sends a message to an existing one.
+       */
+      const handOffReplies: readonly Reply[] = [
+        {
+          when: (request) => answersTool(request) && latest(request).includes('Started session'),
+          turn: { parts: [text('Handed off.')] },
+        },
+        { when: saying(OPENING), turn: { parts: [text('Roses are red.')] } },
+        { when: saying('Summarize the plan.'), turn: { parts: [text('The plan is summarized.')] } },
+        {
+          when: saying('Hand off'),
+          turn: (request) => ({
+            parts: [toolCall(Operation.toolName(Delegate), { purpose: 'Poem', task: named(request, 'Hand off') })],
           }),
-        );
-        expect(Obj.getMeta(skill).key).toBeUndefined();
+        },
+        {
+          when: saying('Ask'),
+          turn: (request) => ({
+            parts: [
+              toolCall(Operation.toolName(Delegate), {
+                purpose: 'Summary',
+                session: named(request, 'Ask'),
+                message: 'Summarize the plan.',
+              }),
+            ],
+          }),
+        },
+      ];
 
-        const session = yield* AgentService.createSession({ skills: [skill] });
-        yield* session.submitPrompt('What is the codename of the project?');
-        yield* session.waitForCompletion();
+      it.effect(
+        'delegates a task to a new session, which becomes its delegate and works it',
+        Effect.fnUntraced(
+          function* (_) {
+            const organization = yield* Database.add(Organization.make({ name: 'Cyberdyne Systems' }));
+            const task = yield* Database.add(Task.make({ title: 'Write a poem', status: 'todo' }));
+            const caller = yield* AgentService.createSession({
+              skills: [DelegateSkill, PingSkill],
+              context: [Ref.make(organization)],
+            });
+            Obj.update(caller.chat, (chat) => {
+              chat.session = { model: DXN.make('com.example.model.poet') };
+            });
+            yield* Database.flush();
 
-        const messages = yield* TrajectoryStore.history(session.feed);
-        const text = messages.map(Message.extractText).join('\n');
-        expect(text.toLocaleLowerCase()).toContain('kingfisher');
-      },
-      Effect.provide(TestLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
-  );
+            yield* caller.submitPrompt(`Hand off ${Obj.getURI(task)}`);
+            yield* caller.waitForCompletion();
+            expect(yield* replyTexts(caller.feed)).toContain('Handed off.');
+
+            // A new session, named for the work, runs on the caller's model with the caller's skills and context.
+            const [receiver] = yield* otherSessions(caller.chat);
+            expect(receiver).toBeDefined();
+            expect(receiver.name).toBe('Poem');
+            expect(receiver.session?.model).toBe(caller.chat.session?.model);
+            expect(yield* boundSkills(receiver)).toEqual(expect.arrayContaining(['Delegate', 'Ping']));
+            expect((yield* Agent.getContext(receiver)).map((ref) => Task.refEntityId(ref))).toContain(organization.id);
+
+            // The task is the receiver's: on its checklist, started, with the receiver as its delegate.
+            expect(receiver.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
+            expect(task.status).toBe('started');
+            expect(task.delegate?.role).toBe('assistant');
+            expect(Task.refEntityId(task.delegate?.subject)).toBe(receiver.id);
+
+            // The receiver's own process took the task up.
+            const feed = yield* Database.load(receiver.feed).pipe(Effect.orDie);
+            yield* waitForMessage(feed, (message) => Message.extractText(message) === 'Roses are red.');
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel(handOffReplies).script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
+      it.effect(
+        'delegates a message to an existing session without creating one',
+        Effect.fnUntraced(
+          function* (_) {
+            const caller = yield* AgentService.createSession({ skills: [DelegateSkill] });
+            const existing = yield* AgentService.createSession();
+            yield* caller.submitPrompt(`Ask ${Obj.getURI(existing.chat)}`);
+            yield* caller.waitForCompletion();
+
+            expect((yield* otherSessions(caller.chat)).map((session) => session.id)).toEqual([existing.chat.id]);
+            yield* waitForMessage(
+              existing.feed,
+              (message) => Message.extractText(message) === 'The plan is summarized.',
+            );
+            // The message is the receiver's prompt as given, not a task brief.
+            const prompts = (yield* TrajectoryStore.messages(existing.feed))
+              .filter((message) => message.sender.role === 'user')
+              .map(Message.extractText);
+            expect(prompts).toEqual(['Summarize the plan.']);
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel(handOffReplies).script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
+      it.effect(
+        "files a new session under the caller's agent",
+        Effect.fnUntraced(
+          function* (_) {
+            const instructions = yield* Database.add(Instructions.make({ text: 'Write verse.' }));
+            const agent = yield* Database.add(
+              Obj.make(Agent.Agent, { name: 'Poet', instructions: Ref.make(instructions) }),
+            );
+            const feed = yield* Database.add(Feed.make());
+            const chat = yield* Database.add(
+              Agent.makeSession({ feed: Ref.make(feed), remote: false, [Obj.Parent]: agent }),
+            );
+            const runtime = yield* Effect.context<Database.Service>();
+            const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+            yield* Effect.promise(() => binder.bind({ skills: [Skill.makeRef(DelegateSkill)] }));
+            const task = yield* Database.add(Task.make({ title: 'Write a poem', status: 'todo' }));
+            yield* Database.flush();
+
+            const caller = yield* AgentService.bindSession(chat);
+            yield* caller.submitPrompt(`Hand off ${Obj.getURI(task)}`);
+            yield* caller.waitForCompletion();
+
+            const [receiver] = yield* otherSessions(chat);
+            expect(Obj.getParent(receiver)?.id).toBe(agent.id);
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel(handOffReplies).script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
+      it.effect(
+        'fails outside a session',
+        Effect.fnUntraced(
+          function* (_) {
+            const exit = yield* Agent.delegate({ target: { kind: 'session' }, purpose: 'Nobody' }).pipe(Effect.exit);
+            expect(Exit.isFailure(exit)).toBe(true);
+            if (Exit.isFailure(exit)) {
+              expect(String(exit.cause)).toContain('NoCurrentSessionError');
+            }
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel([]).script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+    });
+  });
 });

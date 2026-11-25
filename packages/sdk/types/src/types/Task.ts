@@ -1176,3 +1176,35 @@ export const checkArtifact = Effect.fnUntraced(function* (task: Task, artifact: 
     }
   }
 });
+
+/** A task is open until it reaches a terminal status. */
+export const isOpen = (task: Task): boolean => (task.status ?? 'todo') === 'todo' || task.status === 'started';
+
+/**
+ * Renders tasks as `1. [ ] Title` lines, ordinals in list order, each followed by an indented note line carrying
+ * the task's ref and any status/dependency notes — appended to the title, models paste the notes back into it.
+ * The ref renders as `[MNEMONIC](uri)` so the mnemonic the user reads and the handle tools take travel together.
+ */
+export const formatChecklist = (tasks: readonly Task[]): string => {
+  const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
+  return tasks
+    .map((task, index) => {
+      const line = `${index + 1}. [${task.status === 'done' ? 'x' : ' '}] ${task.title}`;
+      // The ref is the handle task tools take, so every line carries one the model can pass back.
+      const notes: string[] = [`ref: [${Obj.getMnemonic(task)}](${Obj.getURI(task)})`];
+      if (task.status && task.status !== 'todo' && task.status !== 'done') {
+        notes.push(task.status);
+      }
+
+      const deps = (task.dependsOn ?? [])
+        .map((ref) => ref.target)
+        .filter((target) => target !== undefined)
+        .map((target) => ordinals.get(target.id) ?? target.title);
+      if (deps.length > 0) {
+        notes.push(`depends on ${deps.join(', ')}`);
+      }
+
+      return `${line}\n   (${notes.join('; ')})`;
+    })
+    .join('\n');
+};

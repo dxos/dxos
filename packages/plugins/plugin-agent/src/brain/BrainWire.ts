@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Agent from '@dxos/assistant/Agent';
+import * as Agent from '@dxos/compute/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { Fact } from '@dxos/echo-memory';
 

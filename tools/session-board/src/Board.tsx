@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useMemo, useRef } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useRef } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskHistory, TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import * as Accordion from '@dxos/react-ui/Accordion';
 import * as Input from '@dxos/react-ui/Input';
@@ -173,15 +174,43 @@ export type BoardProps = {
 };
 
 /**
- * The session board: open questions, goals as a task list, pull requests and the append-only timeline, each an
+ * The session board: open questions, Composer tasks and goals as task lists, pull requests and the append-only timeline, each an
  * accordion section, with when it was built in the footer.
  */
 export const Board = ({ board, landing, onLandChange }: BoardProps) => {
   const updated = Typography.useRelativeTime(board.updated);
-  const tasks = useMemo(() => board.goals.map((goal) => goalTask(goal, board.questions)), [board]);
+  // A goal linked to a Composer task (`task:`) is listed under Tasks, apart from the session's own goals.
+  const goals = useMemo(() => board.goals.filter((goal) => !goal.task), [board]);
+  const composerGoals = useMemo(() => board.goals.filter((goal) => goal.task), [board]);
+  const tasks = useMemo(() => goals.map((goal) => goalTask(goal, board.questions)), [goals, board]);
+  const composerTasks = useMemo(
+    () => composerGoals.map((goal) => goalTask(goal, board.questions)),
+    [composerGoals, board],
+  );
+  // Rows are rebuilt tasks with fresh ids, so the link is looked up by row rather than read off the goal.
+  const taskUrls = useMemo(
+    () => new Map(composerTasks.map((task, index) => [task.id, composerGoals[index].taskUrl])),
+    [composerTasks, composerGoals],
+  );
+  const getTaskActions = useCallback(
+    (task: Task.Task) => {
+      const url = taskUrls.get(task.id);
+      return url
+        ? [
+            createMenuAction(`open-${task.id}`, () => window.open(url, '_blank', 'noopener'), {
+              label: 'Open in Composer',
+              icon: 'ph--arrow-square-out--regular',
+              testId: 'board.task.open',
+            }),
+          ]
+        : [];
+    },
+    [taskUrls],
+  );
   const entries = useMemo(() => historyEntries(board.timeline), [board]);
   const open = board.questions.filter((question) => !question.answer);
-  const done = board.goals.filter((goal) => goal.status === 'done').length;
+  const done = goals.filter((goal) => goal.status === 'done').length;
+  const composerDone = composerGoals.filter((goal) => goal.status === 'done').length;
 
   return (
     <Panel.Root size='sm' gutter='rail'>
@@ -226,7 +255,31 @@ export const Board = ({ board, landing, onLandChange }: BoardProps) => {
                   </Layout.Container>
                 )}
               </Section>
-              <Section id='goals' icon='ph--target--regular' label='Goals' count={`${done}/${board.goals.length}`}>
+              {composerTasks.length > 0 && (
+                <Section
+                  id='tasks'
+                  icon='ph--check-circle--regular'
+                  label='Tasks'
+                  count={`${composerDone}/${composerGoals.length}`}
+                >
+                  {/* The theme shows row buttons only on hover; here the one button is the way into Composer, so it stays visible. */}
+                  <div className='contents [&_.dx-tree-item-actions>*]:opacity-100!'>
+                    <TaskList.Root
+                      tasks={composerTasks}
+                      columns={['status', 'title', 'actions']}
+                      getTaskActions={getTaskActions}
+                      showMnemonics={false}
+                      showDescription
+                      flush
+                    >
+                      <TaskList.Viewport>
+                        <TaskList.Content />
+                      </TaskList.Viewport>
+                    </TaskList.Root>
+                  </div>
+                </Section>
+              )}
+              <Section id='goals' icon='ph--target--regular' label='Goals' count={`${done}/${goals.length}`}>
                 <TaskList.Root tasks={tasks} columns={['status', 'title']} showMnemonics={false} showDescription flush>
                   <TaskList.Viewport>
                     <TaskList.Content />

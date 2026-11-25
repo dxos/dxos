@@ -3,8 +3,8 @@
 //
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import * as Chat from '@dxos/assistant/Chat';
 import { addressFromA1Notation, addressToA1Notation } from '@dxos/compute-hyperformula';
+import * as Agent from '@dxos/compute/Agent';
 import { Collection, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -155,7 +155,7 @@ const seed: ActorFlow<EchoTarget>['seed'] = async ({ space }) => {
     }
   });
 
-  space.db.add(Chat.make({ name: WORDING_CHAT, feed: Ref.make(space.db.add(Feed.make())) }));
+  space.db.add(Agent.makeSession({ name: WORDING_CHAT, feed: Ref.make(space.db.add(Feed.make())) }));
   await space.db.flush({ indexes: true });
   return { blocks, records, cells };
 };
@@ -351,7 +351,7 @@ export const echoFlow: ActorFlow<EchoTarget> = {
     Sheet.Sheet,
     Sheet.Chart,
     Collection.Collection,
-    Chat.Chat,
+    Agent.Session,
     Feed.Feed,
     Message.Message,
   ],

@@ -3,8 +3,7 @@
 //
 
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
@@ -16,7 +15,7 @@ import { HasSubject } from '@dxos/types';
 // variant's schema module: these types ride heavy barrels (@dxos/assistant → @effect/ai →
 // fast-check/zod) that must stay out of the definition's static closure.
 const types: ReadonlyArray<Type.AnyEntity> = [
-  Chat.Chat,
+  Agent.Session,
   Skill.Skill,
   ...TrajectoryStore.types,
   Feed.Feed,

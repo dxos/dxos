@@ -8,8 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -26,10 +25,10 @@ import * as BrainService from './BrainService.ts';
  * The types a new agent is made of that this plugin does not register. On EDGE a bundle registers only its own plugin's
  * types (EDGE-PLUGINS D-41), so an operation declares, in `types`, every other type it writes.
  */
-const AGENT_TYPES = [Agent.Agent, Chat.Chat, Instructions.Instructions, Text.Text, Feed.Feed];
+const AGENT_TYPES = [Agent.Agent, Agent.Session, Instructions.Instructions, Text.Text, Feed.Feed];
 
 /** The types a new chat is made of that this plugin does not register. */
-const CHAT_TYPES = [Chat.Chat, Feed.Feed];
+const CHAT_TYPES = [Agent.Session, Feed.Feed];
 
 /** Creates an agent (instructions, feed and companion chat) in the space. */
 export const CreateAgent = Operation.make({
@@ -101,7 +100,7 @@ export const EnsureChannelChat = Operation.make({
     title: Schema.optional(Schema.String.annotate({ description: 'The conversation title; names a new chat.' })),
   }),
   output: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat),
+    chat: Ref.Ref(Agent.Session),
     feed: Ref.Ref(Feed.Feed).annotate({ description: "The chat's message feed." }),
   }),
 });
@@ -142,7 +141,7 @@ export const EnsureSessionChat = Operation.make({
   output: Schema.Struct({
     agent: Ref.Ref(Agent.Agent),
     agentName: Schema.optional(Schema.String),
-    chat: Ref.Ref(Chat.Chat),
+    chat: Ref.Ref(Agent.Session),
     feed: Ref.Ref(Feed.Feed),
     created: Schema.Boolean,
   }),
@@ -192,7 +191,7 @@ export const ListSkills = Operation.make({
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     chat: Schema.optional(
-      Ref.Ref(Chat.Chat).annotate({ description: "One of the agent's chats; the primary chat if omitted." }),
+      Ref.Ref(Agent.Session).annotate({ description: "One of the agent's chats; the primary chat if omitted." }),
     ),
   }),
   output: Schema.Struct({
@@ -263,7 +262,7 @@ export const EnsureParticipantChat = Operation.make({
     remote: Schema.optional(Schema.Boolean.annotate({ description: 'Run a chat created here on EDGE.' })),
   }),
   output: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat),
+    chat: Ref.Ref(Agent.Session),
   }),
 });
 
@@ -293,7 +292,7 @@ export const OpenPrivateChat = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat),
+    chat: Ref.Ref(Agent.Session),
     person: Ref.Ref(Obj.Unknown),
   }),
 });
