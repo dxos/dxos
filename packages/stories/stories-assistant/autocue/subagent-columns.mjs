@@ -6,7 +6,7 @@
  * Subagent columns: the reader asks for a launch kit; the agent puts four tasks on its checklist and delegates each to a
  * subagent, whose thread opens as a column showing its reasoning, the document it writes and its slice of memory. The
  * reader keeps talking meanwhile; each column closes once its subagent reports, and the result lands in the agent's
- * column.
+ * chat.
  *
  * @title Subagent columns
  * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-6
@@ -16,7 +16,7 @@
 
 const PROMPT = '[data-testid="assistant.prompt"] .cm-content';
 const COLUMN = '[data-testid="chat-plane.column"]';
-const AGENT = `${COLUMN} >> nth=0`;
+const AGENT = '[data-testid="chat-module"]';
 
 /** Waits until exactly `count` elements match `selector`. */
 const waitForCount = async (page, selector, count, timeout) =>
@@ -66,7 +66,7 @@ export const steps = [
     narration: 'Each task goes to a subagent, and each subagent opens a column with its own stream of thought.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'A column per subagent', subtitle: 'each thinks out loud' });
-      await waitForCount(page, COLUMN, 6, 60_000);
+      await waitForCount(page, COLUMN, 4, 60_000);
       await demo.sleep({ ms: 1_500 });
     },
   },
@@ -97,7 +97,7 @@ export const steps = [
     narration: 'As each subagent finishes, its column closes and its task is checked off.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Finished threads close', subtitle: 'their tasks are checked off' });
-      await waitForCount(page, COLUMN, 2, 90_000);
+      await waitForCount(page, COLUMN, 0, 90_000);
     },
   },
   {
@@ -109,7 +109,7 @@ export const steps = [
       await demo.sleep({ ms: 2_000 });
       // The checklist drawer sits over the end of the thread; closing it shows the summary in full.
       await demo.click({ selector: '[data-testid="assistant.toggle-tasks"]', label: 'Tasks' });
-      // The agent's column does not follow a reply that lands while another column is selected, so scroll to its end.
+      // The chat does not follow a reply that lands while the drawer covers its end, so scroll to its end.
       await page.evaluate((selector) => {
         const column = document.querySelector(selector);
         const scroller = [...(column?.querySelectorAll('*') ?? [])].find(
@@ -117,7 +117,7 @@ export const steps = [
             element.scrollHeight > element.clientHeight + 40 && getComputedStyle(element).overflowY !== 'visible',
         );
         scroller?.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
-      }, '[data-testid="chat-plane.column"]');
+      }, AGENT);
       await demo.sleep({ ms: 1_000 });
       await page.getByText('Ready for review').last().waitFor({ state: 'visible', timeout: 10_000 });
       await demo.sleep({ ms: 9_000 });

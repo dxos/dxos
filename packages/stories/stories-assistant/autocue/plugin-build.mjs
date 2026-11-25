@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
  * one click on "Build." and the agent reads the Composer Plugin project's tasks, has a planner write the plan, then has
  * one subagent draw the architecture while another writes the code with Dev Shell's real harness. The reader keeps
  * talking meanwhile; each column closes once its subagent reports, and the agent typechecks the plugin, checks its dev
- * server and offers it, with the plan and the diagram, in its own column.
+ * server and offers it, with the plan and the diagram, in its chat.
  *
  * @title Build a plugin with subagents
  * @mdl packages/plugins/plugin-dev-shell/PLUGIN.mdl test QA-3
@@ -69,11 +69,17 @@ const ensureDevServer = async () => {
 };
 
 const COLUMN = '[data-testid="chat-plane.column"]';
-const AGENT = `${COLUMN} >> nth=0`;
+const AGENT = '[data-testid="chat-module"]';
 
 /** Waits until exactly `count` columns are open. */
 const waitForCount = async (page, count, timeout) =>
   page.waitForFunction(([selector, count]) => document.querySelectorAll(selector).length === count, [COLUMN, count], {
+    timeout,
+  });
+
+/** Waits until at least `count` columns are open, so a phase that already moved on still passes. */
+const waitForAtLeast = async (page, count, timeout) =>
+  page.waitForFunction(([selector, count]) => document.querySelectorAll(selector).length >= count, [COLUMN, count], {
     timeout,
   });
 
@@ -100,7 +106,7 @@ export const steps = [
     narration: 'A planner opens in a column of its own: it reads the guide on this machine and writes the plan.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'A subagent plans', subtitle: 'its own column, its own memory' });
-      await waitForCount(page, 2, 60_000);
+      await waitForAtLeast(page, 1, 60_000);
       await page.getByText('The plan is written').first().waitFor({ state: 'visible', timeout: 60_000 });
       await demo.sleep({ ms: 2_000 });
     },
@@ -120,7 +126,6 @@ export const steps = [
     narration: 'The reader keeps talking while they work, and the checklist shows where the build stands.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Keep talking', subtitle: 'the agent answers while they work' });
-      // The agent's composer, with its checklist and chips, shows while its column is the selected one.
       await demo.click({ selector: AGENT, label: 'Agent' });
       await demo.click({ selector: TASKS_TOGGLE, label: 'Tasks' });
       await page.getByText('Write the plugin in TypeScript', { exact: true }).first().waitFor({ timeout: 15_000 });
@@ -139,12 +144,12 @@ export const steps = [
     narration:
       'Each column closes as its subagent reports; the agent checks the plugin and offers it with the plan and the diagram.',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Back in the main column', subtitle: 'typechecked, served, ready to load' });
+      await demo.caption({ value: 'Back in the main chat', subtitle: 'typechecked, served, ready to load' });
       await page
         .getByText(/World Clock is ready/)
         .first()
         .waitFor({ state: 'visible', timeout: 180_000 });
-      await waitForCount(page, 1, 60_000);
+      await waitForCount(page, 0, 60_000);
       await page
         .getByText(/World Clock is ready/)
         .last()

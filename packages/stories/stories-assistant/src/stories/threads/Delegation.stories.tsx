@@ -9,11 +9,20 @@ import { addons } from 'storybook/preview-api';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ScriptedScene } from '@dxos/ai/testing';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
-import type * as Chat from '@dxos/plugin-assistant/Chat';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
-import { ProjectPanel, RecordedReplay, type ReplayArgs, ThreadColumns } from '../../components/index.ts';
+import {
+  type ArtifactsModuleData,
+  type ChatModuleData,
+  type ChatPlaneModuleData,
+  type ReplayArgs,
+  type ReplayModuleData,
+  StoryRole,
+  type TasksModuleData,
+} from '../../modules/index.ts';
 import { LAUNCH_REQUEST, LAUNCH_TASKS, PLANS, SAVINGS_PROMPTS, Scripts, SIDE_QUESTION } from '../../scripts/index.ts';
 import {
   CalculatorSkill,
@@ -24,52 +33,45 @@ import {
   storyParameters,
 } from '../../testing/index.ts';
 
-type StoryArgs = {
-  /** Prompts offered as chips above the composer, one at a time, in the order they are meant to be sent. */
-  suggestions?: readonly string[];
-  /** The drawer open above the agent's prompt at the start. */
-  defaultDrawer?: Chat.RootProps['defaultDrawer'];
-  /** Shows the column with every process and thread of the run. */
-  trace?: boolean;
-};
-
 /**
  * Subagents on light threads: the agent delegates self-contained tasks with `thread_delegate`; each runs in a
  * background thread of its own that starts with nothing but its task, and only its final answer joins the
- * conversation. The agent's chat stays in the first column, at the start of the strip, where each subagent also
- * shows as a card; the second column shows the processes and every thread of the whole run as one graph; and every
- * active subagent has a column of its own beside them, showing its reasoning and its slice of memory. A subagent's
- * column closes once it reports, and the strip scrolls sideways when the columns outgrow it. The agent waits for the
- * subagents with `thread_wait` while the reader keeps chatting.
+ * conversation. The agent's chat is a module of its own, where each subagent also shows as a card, and beside it a
+ * strip gives every active subagent a column of its own, showing its reasoning and its slice of memory. A trace module
+ * shows the processes and every thread of the whole run as one graph. A subagent's column closes once it reports, and
+ * the strip scrolls sideways when the columns outgrow it. The agent waits for the subagents with `thread_wait` while
+ * the reader keeps chatting.
  *
  * Two scenarios: savings plans, where three subagents each work a calculation, and the launch kit, where four each
  * write a document. See `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8, QA-4, QA-6).
  */
-const meta: Meta<StoryArgs> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/threads/Delegation',
-  component: ThreadColumns,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
-  args: {
-    trace: true,
-  },
 };
 
 export default meta;
 
-type Story = StoryObj<StoryArgs>;
+type Story = StoryObj<typeof meta>;
 
-/** The columns that are always open: the agent's chat, and the processes and threads of the whole run. */
-const FIXED_COLUMNS = 2;
+/** The processes and every thread of the run as one graph. */
+const TRACE = AppSurface.deckCompanion('trace');
 
-/** Waits until exactly `subagents` subagent columns are open beside the fixed ones. */
+/** The agent's chat, with `suggestions` offered one at a time above its prompt. */
+const agentChat = (data: Pick<ChatModuleData, 'suggestions' | 'defaultDrawer'>) => ({
+  type: StoryRole.Chat,
+  data: data satisfies ChatModuleData,
+});
+
+/** The newest chat's subagent threads, one column each while it runs. */
+const THREADS = { type: StoryRole.ChatPlane, data: { kind: 'threads' } satisfies ChatPlaneModuleData };
+
+/** Waits until exactly `subagents` subagent columns are open. */
 const waitForSubagents = (canvasElement: HTMLElement, subagents: number, timeout: number) =>
-  waitFor(
-    () =>
-      expect(canvasElement.querySelectorAll('[data-testid="chat-plane.column"]').length).toBe(
-        FIXED_COLUMNS + subagents,
-      ),
-    { timeout },
-  );
+  waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="chat-plane.column"]').length).toBe(subagents), {
+    timeout,
+  });
 
 //
 // Savings plans: three subagents each compute one plan with the calculator.
@@ -82,7 +84,8 @@ const savingsPlans: Story = {
     assistantSettings: { parallelThreads: true },
   }),
   args: {
-    suggestions: [SAVINGS_PROMPTS.compare, SAVINGS_PROMPTS.quick],
+    layout: [[agentChat({ suggestions: [SAVINGS_PROMPTS.compare, SAVINGS_PROMPTS.quick] })], [THREADS], [TRACE]],
+    columns: 'min(32vw,40rem)_1fr_min(32vw,40rem)',
   },
 };
 
@@ -90,10 +93,10 @@ const savingsPlans: Story = {
  * Savings plans, scripted (offline), for a person or a recorded walkthrough to drive.
  *
  * Test:
- * 1. Click the chip that asks to compare three savings plans: a column opens beside the chat for each plan, showing
+ * 1. Click the chip that asks to compare three savings plans: a column opens in the strip for each plan, showing
  *    its subagent working, and a card for each shows in the chat.
  * 2. Click the chip that asks what 17 × 23 is while they work: the agent answers 391 at once.
- * 3. Watch the processes and threads column: each subagent is a lane of the one graph, and joins it when it reports.
+ * 3. Watch the trace beside the strip: each subagent is a lane of the one graph, and joins it when it reports.
  * 4. Wait: each subagent's column closes once it reports, and the agent compares the three plans.
  */
 export const Default: Story = { ...savingsPlans };
@@ -126,15 +129,6 @@ export const Scripted: Story = {
 //
 
 const launchKit: Story = {
-  // The project on the left, a column wide: its tasks, and the documents the subagents write.
-  render: (args) => (
-    <div className='flex dx-fill min-h-0'>
-      <ProjectPanel />
-      <div className='flex-1 min-w-0 h-full'>
-        <ThreadColumns {...args} />
-      </div>
-    </div>
-  ),
   decorators: createDecorators({
     onChatCreated: seedLaunchProject,
     lazyPlugins: launchProjectPlugins,
@@ -143,9 +137,23 @@ const launchKit: Story = {
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),
   args: {
-    suggestions: [LAUNCH_REQUEST, SIDE_QUESTION],
-    // Open from the start, so the agent's checklist is seen ticking off as subagents report.
-    defaultDrawer: 'tasks',
+    // The project's tasks, the trace and the documents the subagents write; the agent's chat; its subagent threads.
+    layout: [
+      [
+        { type: StoryRole.Tasks, data: { source: 'project' } satisfies TasksModuleData },
+        TRACE,
+        { type: StoryRole.Artifacts, data: { view: 'cards' } satisfies ArtifactsModuleData },
+      ],
+      [
+        agentChat({
+          suggestions: [LAUNCH_REQUEST, SIDE_QUESTION],
+          // Open from the start, so the agent's checklist is seen ticking off as subagents report.
+          defaultDrawer: 'tasks',
+        }),
+      ],
+      [THREADS],
+    ],
+    columns: 'min(28vw,32rem)_min(32vw,40rem)_1fr',
   },
 };
 
@@ -154,12 +162,12 @@ const launchKit: Story = {
  *
  * Test:
  * 1. Look left: the project's task list holds the four launch tasks.
- * 2. Click the chip that asks for the Composer 1.0 launch kit: a column opens beside the chat for each of the four
- *    documents, and the chat's own column stays where it was.
+ * 2. Click the chip that asks for the Composer 1.0 launch kit: a column opens in the strip for each of the four
+ *    documents.
  * 3. Scroll the strip sideways to reach the columns past the edge.
  * 4. Click the chip that asks which day to launch: the chat answers while the subagents keep working.
- * 5. Wait: each column closes once its subagent reports, its document appears as a card under the project's tasks,
- *    and the summary lands in the chat's column.
+ * 5. Wait: each column closes once its subagent reports, its document appears as a card at the bottom of the left
+ *    column, and the summary lands in the chat.
  */
 export const LaunchKit: Story = { ...launchKit };
 
@@ -170,14 +178,14 @@ export const LaunchKitScripted: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole('button', { name: LAUNCH_REQUEST }, { timeout: 60_000 }));
 
-    // A column per subagent opens beside the chat's.
+    // A column per subagent opens in the strip.
     await waitForSubagents(canvasElement, LAUNCH_TASKS.length, 60_000);
 
     // The reader keeps talking while they work; the reply comes once the agent's current wait returns.
     await userEvent.click(await canvas.findByRole('button', { name: SIDE_QUESTION }, { timeout: 30_000 }));
     await canvas.findAllByText(/Tuesday the 18th/, {}, { timeout: 90_000 });
 
-    // Every subagent's column closes once it reports, and the summary lands in the chat's column with each document.
+    // Every subagent's column closes once it reports, and the summary lands in the chat with each document.
     await waitForSubagents(canvasElement, 0, 120_000);
     await canvas.findAllByText(/The launch kit is ready/, {}, { timeout: 60_000 });
     for (const { document } of LAUNCH_TASKS) {
@@ -217,11 +225,21 @@ export const LaunchKitReplay: StoryObj<ReplayArgs> = {
   // Tells the manager the new args, which it writes to the URL, without updating them in the preview: an arg update
   // reboots the whole harness (a new space), which would start the run again.
   render: (args, { id }) => (
-    <RecordedReplay
-      cache={launchKitCache}
-      prompts={launchKitReplay.prompts}
-      initial={args}
-      onChange={(next) => addons.getChannel().emit(STORY_ARGS_UPDATED, { storyId: id, args: { ...args, ...next } })}
+    <ModuleContainer.Root
+      layout={[
+        [
+          {
+            type: StoryRole.Replay,
+            data: {
+              cache: launchKitCache,
+              prompts: launchKitReplay.prompts,
+              initial: args,
+              onChange: (next) =>
+                addons.getChannel().emit(STORY_ARGS_UPDATED, { storyId: id, args: { ...args, ...next } }),
+            } satisfies ReplayModuleData,
+          },
+        ],
+      ]}
     />
   ),
   decorators: createDecorators({

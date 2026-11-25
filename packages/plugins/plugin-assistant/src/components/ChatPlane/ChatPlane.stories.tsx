@@ -7,6 +7,7 @@ import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -473,5 +474,72 @@ export const FourThreads: Story = {
     fake: true,
     selected: 1,
     seed: FOUR_THREADS,
+  },
+};
+
+/** The strip's `scrollLeft` at each animation frame until `run` resolves. */
+const sampleScroll = async (viewport: HTMLElement, run: () => Promise<void>): Promise<number[]> => {
+  const samples: number[] = [];
+  const sample = () => {
+    samples.push(viewport.scrollLeft);
+    frame = requestAnimationFrame(sample);
+  };
+  let frame = requestAnimationFrame(sample);
+  try {
+    await run();
+  } finally {
+    cancelAnimationFrame(frame);
+  }
+  return samples;
+};
+
+/**
+ * {@link FourThreads}, stepping to the next thread: the strip eases toward it without first moving the other way.
+ *
+ * Test:
+ * 1. Click the third column: the strip scrolls right to center it, in one direction.
+ */
+export const Navigate: Story = {
+  args: {
+    fake: true,
+    selected: 1,
+    seed: FOUR_THREADS,
+  },
+  play: async ({ canvasElement }) => {
+    const columns = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="chat-plane.column"]'));
+    await waitFor(() => expect(columns()).toHaveLength(4), { timeout: 30_000 });
+    const viewport = columns()[0].closest<HTMLElement>('.dx-scroll-viewport');
+    await expect(viewport).not.toBeNull();
+    if (!viewport) {
+      return;
+    }
+
+    // Settled on the second thread before the step starts.
+    await waitFor(
+      () => {
+        const start = viewport.scrollLeft;
+        return new Promise<void>((resolve, reject) =>
+          requestAnimationFrame(() => (viewport.scrollLeft === start ? resolve() : reject(new Error('scrolling')))),
+        );
+      },
+      { timeout: 10_000 },
+    );
+
+    const target = columns()[2];
+    const samples = await sampleScroll(viewport, async () => {
+      await userEvent.click(target);
+      await waitFor(
+        () => {
+          const frame = viewport.getBoundingClientRect();
+          const column = target.getBoundingClientRect();
+          return expect(Math.abs(column.left + column.width / 2 - (frame.left + frame.width / 2))).toBeLessThan(2);
+        },
+        { timeout: 5_000 },
+      );
+    });
+
+    const steps = samples.slice(1).map((value, index) => value - samples[index]);
+    await expect(steps.some((step) => step > 0)).toBe(true);
+    await expect(steps.filter((step) => step < 0)).toEqual([]);
   },
 };

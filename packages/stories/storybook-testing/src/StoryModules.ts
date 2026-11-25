@@ -13,7 +13,7 @@ export {
   JsonModule,
   LoggingModule,
   ObjectsModule,
-  ModuleRole as Role,
   RoutineModule,
-  moduleSurfaces as surfaces,
 } from './internal/modules/index.ts';
+
+export { ModuleRole as Role, moduleSurfaces as surfaces } from './internal/modules/index.ts';
