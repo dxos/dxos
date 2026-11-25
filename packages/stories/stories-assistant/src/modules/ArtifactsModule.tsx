@@ -70,7 +70,7 @@ const ArtifactsPanel = ({ space }: { space: Space }) => {
   const selected = artifacts.find((object) => object.id === (picked ?? newest));
 
   return (
-    <Panel.Root>
+    <Panel.Root data-testid='artifacts-module.tabs'>
       <Panel.Header>
         <Toolbar.Root>
           {artifacts.length > 0 && (
