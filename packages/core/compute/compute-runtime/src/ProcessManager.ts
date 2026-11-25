@@ -340,19 +340,9 @@ export class Impl implements Manager {
    * default to the process as their parent and inherit its origin, and an `Operation.Service` running
    * each invocation as such a child.
    */
-  #childServices(
-    pid: Process.ID,
-    origin: Database.Origin | undefined,
-    tracer: Tracer.Tracer,
-    current: {
-      params: Process.Params;
-      environment: Process.Environment;
-      resolutionContext: LayerSpec.LayerContext;
-      scope: Scope.Scope;
-    },
-  ): Context.Context<never> {
+  #childServices(pid: Process.ID, origin: Database.Origin | undefined, tracer: Tracer.Tracer): Context.Context<never> {
     const manager: Process.Manager = {
-      current: this.attach(pid),
+      current: Process.current,
       processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
       processTreeAtom: this.#processTreeAtom,
       list: (filter) => Process.listFromTree(Effect.sync(() => this.#registry.get(this.#processTreeAtom)))(filter),
@@ -379,20 +369,8 @@ export class Impl implements Manager {
           ? Effect.die(new Error('A process cannot attach to a remote process.'))
           : this.attach(childPid),
     };
-    const info: Process.CurrentInfo = {
-      pid,
-      params: current.params,
-      environment: current.environment,
-      manager,
-      resolve: (tag) =>
-        ServiceResolver.resolve(tag, current.resolutionContext).pipe(
-          Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
-          Effect.provideService(Scope.Scope, current.scope),
-        ),
-    };
     // The handler set is always present, so an operation process can look its handler up.
     let services = Context.make(Process.ManagerService, manager).pipe(
-      Context.add(Process.CurrentProcess, Option.some(info)),
       Context.add(OperationHandlerSet.OperationHandlerProvider, this.operationHandlerSet),
     );
     if (this.#handlerSet) {
@@ -667,10 +645,7 @@ export class Impl implements Manager {
       if (guard !== undefined) {
         builtinCtx = builtinCtx.pipe(Context.add(Process.GuardService, guard));
       }
-      builtinCtx = Context.merge(
-        builtinCtx,
-        this.#childServices(id, origin, tracer, { params, environment, resolutionContext, scope }),
-      );
+      builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
         Process.EnvironmentService.key,
@@ -903,10 +878,7 @@ export class Impl implements Manager {
         ),
       );
 
-      builtinCtx = Context.merge(
-        builtinCtx,
-        this.#childServices(id, origin, tracer, { params, environment, resolutionContext, scope }),
-      );
+      builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
         Process.EnvironmentService.key,

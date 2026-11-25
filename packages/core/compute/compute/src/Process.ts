@@ -20,7 +20,6 @@ import { BaseError } from '@dxos/errors';
 import { type SpaceId, URI } from '@dxos/keys';
 import type { SerializedError } from '@dxos/protocols';
 
-import { type ServiceNotAvailableError } from './errors.ts';
 import * as Operation from './Operation.ts';
 import * as Trace from './Trace.ts';
 
@@ -496,8 +495,7 @@ export interface LocationOptions {
  */
 export interface Manager {
   /**
-   * The process the caller runs in. Fails when this manager is not scoped to a process (e.g. the app-level
-   * aggregate manager).
+   * The process the caller runs in, read from {@link CurrentProcess}. Fails outside a process.
    */
   readonly current: Effect.Effect<Process, NoCurrentProcessError>;
 
@@ -588,37 +586,27 @@ export class ManagerService extends Context.Service<ManagerService, Manager>()(
   '@dxos/compute/Process.ManagerService',
 ) {}
 
-/** Raised by {@link current} when the ambient {@link ManagerService} is not scoped to a process. */
+/** Raised by {@link current} outside a process. */
 export class NoCurrentProcessError extends BaseError.extend('NoCurrentProcessError', 'Not running inside a process') {}
 
 /**
- * The process the calling code runs in, read from the ambient {@link ManagerService}.
+ * The process the calling fiber runs in; none outside a process. Each process handle sets it on the context its
+ * handlers run with, so code finds its process without asking its caller for a process-scoped service.
  */
-export const current: Effect.Effect<Process, NoCurrentProcessError, ManagerService> = Effect.flatMap(
-  ManagerService,
-  (manager) => manager.current,
+export const CurrentProcess: Context.Reference<Option.Option<Process>> = Context.Reference<Option.Option<Process>>(
+  '@dxos/compute/Process/CurrentProcess',
+  { defaultValue: () => Option.none() },
 );
 
 /**
- * What the runtime knows about the process the calling fiber runs in, readable without any service in scope.
+ * The process the calling code runs in, read from {@link CurrentProcess}.
  */
-export interface CurrentInfo {
-  readonly pid: ID;
-  readonly params: Params;
-  readonly environment: Environment;
-  /** The manager scoped to this process: its spawns default to the process as their parent. */
-  readonly manager: Manager;
-  /** Resolves a service for this process (its space, its conversation) as the runtime would provide it. */
-  readonly resolve: <Id, S>(tag: Context.Key<Id, S>) => Effect.Effect<S, ServiceNotAvailableError>;
-}
-
-/**
- * The process the calling fiber runs in; none outside a process. The process manager sets it on each process it
- * runs, so a global service can find its caller's process without asking the caller for a process-scoped service.
- */
-export const CurrentProcess: Context.Reference<Option.Option<CurrentInfo>> = Context.Reference<
-  Option.Option<CurrentInfo>
->('@dxos/compute/Process/CurrentProcess', { defaultValue: () => Option.none() });
+export const current: Effect.Effect<Process, NoCurrentProcessError> = Effect.flatMap(CurrentProcess, (process) =>
+  Option.match(process, {
+    onNone: () => Effect.fail(new NoCurrentProcessError()),
+    onSome: Effect.succeed,
+  }),
+);
 
 /**
  * Spawns `definition` — a durable operation or a script operation — through the ambient

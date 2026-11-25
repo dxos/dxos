@@ -20,6 +20,7 @@ import * as Agent from '@dxos/compute/Agent';
 import type * as Hook from '@dxos/compute/Hook';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -143,6 +144,12 @@ export interface Options {
   systemPrompt?: string;
 
   /**
+   * Resolves a calling process's services (its database) for the current-process verbs. Read at call time, since the
+   * resolver can be contributed after the service is built; the one in the layer's context when absent.
+   */
+  serviceResolver?: () => ServiceResolver.ServiceResolver | undefined;
+
+  /**
    * Produces each turn. Defaults to DXOS's own `AiSession`; substituting it swaps the engine while
    * the process keeps ownership of the queue, alarms, redelivery, delegation and hydration.
    */
@@ -201,6 +208,28 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
     Agent.Service,
     Effect.gen(function* () {
       const processManager = yield* Process.ManagerService;
+      const ambientResolver = yield* Effect.serviceOption(ServiceResolver.ServiceResolver);
+
+      /** Runs `effect` against the calling process's database, resolved as the runtime resolves it for that process. */
+      const withCurrentDatabase = <A, E>(
+        effect: Effect.Effect<A, E, Database.Service>,
+      ): Effect.Effect<A, E | Agent.NoCurrentSessionError> =>
+        Effect.gen(function* () {
+          const process = yield* Process.current.pipe(Effect.mapError(() => new Agent.NoCurrentSessionError()));
+          const resolver = opts?.serviceResolver?.() ?? Option.getOrUndefined(ambientResolver);
+          if (resolver === undefined) {
+            return yield* Effect.fail(new Agent.NoCurrentSessionError());
+          }
+          const database = yield* ServiceResolver.resolve(Database.Service, {
+            space: process.environment.space,
+            conversation: process.environment.conversation,
+            process: process.pid,
+          }).pipe(
+            Effect.provideService(ServiceResolver.ServiceResolver, resolver),
+            Effect.mapError(() => new Agent.NoCurrentSessionError()),
+          );
+          return yield* Effect.provideService(effect, Database.Service, database);
+        }).pipe(Effect.scoped);
 
       // Spaces an edge session has been opened on this run. One remote runtime spans them all and
       // cannot enumerate them, so this is what `hydrate` has to walk.
@@ -577,12 +606,12 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           Effect.map(processManager.list(), (processes) => uniqueAnnotations(processes, Process.AgentAnnotation)),
         // TODO(dmaretskyi): Stamp the caller's session, agent and thread annotations (F-12.2).
         spawn: (definition, spawnOptions) =>
-          Effect.flatMap(Process.CurrentProcess, (current) =>
-            // The caller's own manager makes the caller the parent; outside a process the spawn has none.
-            Option.getOrElse(
-              Option.map(current, ({ manager }) => manager),
-              () => processManager,
-            ).spawn(definition, spawnOptions),
+          Effect.flatMap(Effect.option(Process.current), (caller) =>
+            // The caller is the parent unless the spawn names its own.
+            processManager.spawn(definition, {
+              ...(Option.isSome(caller) ? { parentProcessId: caller.value.pid } : {}),
+              ...spawnOptions,
+            }),
           ),
         delegate: () => Effect.die(new Error('Agent.delegate is not implemented.')),
       };
@@ -655,23 +684,9 @@ export const serviceFromHandles = (
 
 /** The value of `annotation` on the calling process; none outside a process. */
 const currentAnnotation = <T>(annotation: Annotation.Annotation<T>): Effect.Effect<Option.Option<T>> =>
-  Effect.map(Process.CurrentProcess, (current) =>
-    Option.flatMap(current, ({ params }) => Annotation.getDictionary(params.annotations, annotation)),
-  );
-
-/** Runs `effect` against the calling process's database, as the runtime resolves it for that process. */
-const withCurrentDatabase = <A, E>(
-  effect: Effect.Effect<A, E, Database.Service>,
-): Effect.Effect<A, E | Agent.NoCurrentSessionError> =>
-  Effect.flatMap(Process.CurrentProcess, (current) =>
-    Option.match(current, {
-      onNone: () => Effect.fail(new Agent.NoCurrentSessionError()),
-      onSome: ({ resolve }) =>
-        resolve(Database.Service).pipe(
-          Effect.mapError(() => new Agent.NoCurrentSessionError()),
-          Effect.flatMap((database) => Effect.provideService(effect, Database.Service, database)),
-        ),
-    }),
+  Process.current.pipe(
+    Effect.map((process) => Annotation.getDictionary(process.params.annotations, annotation)),
+    Effect.orElseSucceed(() => Option.none<T>()),
   );
 
 /** Runs `effect` against the database the session lives in. */
