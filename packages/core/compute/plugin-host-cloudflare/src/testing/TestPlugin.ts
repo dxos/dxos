@@ -13,6 +13,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Cancellation from '@dxos/compute/Cancellation';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -37,6 +38,12 @@ export const TestSkill: Skill.Definition = {
       tools: Skill.toolDefinitions({ operations: [Reply] }),
     }),
 };
+
+/** The plugin's hooks: one on an operation the bundle serves, and one on an operation it does not, which it cannot run. */
+export const TestHooks: Hook.Definition[] = Hook.forPlugin(TEST_PLUGIN_KEY, [
+  { key: 'org.dxos.hook.hostTest.reply', event: 'end-request', skill: TestSkill.key, operation: Reply, async: true },
+  { key: 'org.dxos.hook.hostTest.unserved', event: 'end-request', operation: Fibonacci },
+]);
 
 /** A skill another plugin contributes, which a bundle that imports its definition must still not resolve. */
 export const OtherSkill: Skill.Definition = {
@@ -317,6 +324,11 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
   Plugin.addModule(
     Capability.inlineModule('TestSkill', { provides: [AppCapabilities.SkillDefinition] }, () =>
       Effect.succeed(Capability.contribute(AppCapabilities.SkillDefinition, TestSkill)),
+    ),
+  ),
+  Plugin.addModule(
+    Capability.inlineModule('TestHooks', { provides: [AppCapabilities.HookDefinition] }, () =>
+      Effect.succeed(Capability.contributeAll(AppCapabilities.HookDefinition, TestHooks)),
     ),
   ),
   Plugin.make,
