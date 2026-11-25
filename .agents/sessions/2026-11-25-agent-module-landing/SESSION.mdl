@@ -173,3 +173,9 @@ event T-12: The next PR is open as a draft.
   date: 2026-11-25T12:35Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-13: A review comment on the next PR is answered. The current-process reference holds the process.
+  date: 2026-11-25T13:10Z
+  by: agent:claude-code
+```
