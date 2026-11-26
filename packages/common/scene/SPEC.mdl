@@ -307,6 +307,7 @@ feat F-1: One model for 2D and 3D
   req F-1.5: A group is a composite placed by an instance: its members live in an anonymous composite layout placed with fit `none`, so they keep their places; a layout's arrangement places its unplaced elements and can be re-run, and a pinned element is not moved.
   req F-1.6: A solid is an operation tree (union, difference, extrude) over operand elements, recomputed when drawn.
   req F-1.7: A layout (its elements and its own fields) changes only through `LayoutIntent`s, applied by one pure reducer, and a model only through `ModelIntent`s, which refuse an intent with its problems and leave the document unchanged. A `layout` intent writes a 2D layout's `lattice` and `constraints` in the same batch as the elements they place.
+  req F-1.8: An element that places an object with parts is one of four containers, which the object's kind names: `group`, `hull` and `view`, and any other kind is a reusable Object. One reader answers it (`containerOf`); Ungroup takes a group or a hull apart, leaving its members where and as large as it drew them.
 ```
 
 ```mdl
@@ -1337,4 +1338,31 @@ decision D-124: Ungroup gives a member that is itself a group with no centre the
   for: user:richburdon
   affects: [F-1.5]
   why: Ungrouping a moved group moved its plain members and left a group inside it where it was before the move.
+```
+
+```mdl
+decision D-125: The kind of the object an element places names the container: `group`, `hull` and `view` are reserved, and any other object with parts is an Object. Every reader asks `containerOf`, which also reads what a drawing stored before said on the element (`view`, `hull`) and on the parts layout (`anonymous`). `retypeContainers`, run by `upgradeDocument`, sets the kind on such an object. Fills in [D-96].
+  date: 2026-11-26
+  by: user:richburdon
+  affects: [F-1.8]
+  why: What a container is was spread over five fields of three records and read a different way by each reader; every group fault of that day came from a reader that assumed one writer's shape and met another's.
+  rejected: A new field on the placing element, which would say on each placement what is a fact of the definition.
+```
+
+```mdl
+decision D-126: A drawing stored before [D-125] is not rewritten when it loads: its objects are retyped when their nodes are next written, and by `retypeContainers` where a whole document is upgraded. Fills in [D-125].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.8]
+  why: A stored layout and model migrate one object at a time, and what an object is was said on the records round it, which such a migration cannot see.
+```
+
+```mdl
+decision D-127: Ungroup applies the group's scale to its members' positions and sizes, and `extract` frames its members by the size each draws at, its object's where it states none. Its parts layout is `kind: composite`. Fills in [D-96].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.8]
+  why: The members of a resized group snapped back to their old size, and Make object gave a frame of no height to members that take their size from a model object, so it drew nothing.
 ```

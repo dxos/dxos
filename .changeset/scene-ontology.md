@@ -8,3 +8,5 @@ Breaking: a stored drawing uses one set of names. `kind` tells an element, a nod
 In the 3D editor the select-all chord selects every element of the open layout, a selection's box stays round its element while it is dragged, the scale tool sizes an element in step with its handle's travel, and the inspector panel's titles and labels no longer select as text.
 
 In the 2D editor a group made through the scene model draws its members where they were (they disappeared before), and it can still be ungrouped after it is moved. A group of a group draws all of its members, and ungrouping a moved group takes a group inside it along.
+
+A model object's kind now names the container it is: `group`, `hull` and `view`, and any other object with parts is a reusable Object (`containerOf`). The 2D editor no longer stores `view:` and `instance:` objects: a node keeps the object that places its layout. Make object draws as an Object where it drew as a View, a hull can be ungrouped, ungrouping a resized group keeps its members' size, the Objects panel lists reusable Objects only, and a selected group has a selection box in 3D. A `.dx` object drawn as a View says `view` as its kind.

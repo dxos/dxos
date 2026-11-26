@@ -105,6 +105,8 @@ feat F-2: Selection, gizmos and faces
   req F-2.5: Escape cancels a shape being sized, then clears a selected face, then drills out of a composite.
   req F-2.6: The select-all chord selects every element of the open layout, as in 2D. The editor takes the chord, so
     the browser does not select the page's text.
+  req F-2.7: A selected group, which draws no mesh of its own, is drawn selected through its members: each is
+    outlined, and one box goes round them all.
 ```
 
 ```mdl
@@ -407,6 +409,13 @@ decision D-26: A scale handle's travel along its axis is added to the element's 
   for: user:richburdon
   affects: [F-2.2]
   why: The gizmo's own step multiplies the size on every pointer move, so the growth compounds and depends on how often the pointer reports.
+```
+
+```mdl
+decision D-27: A selected group is outlined through its members, with one box round them all.
+  date: 2026-11-26
+  by: user:richburdon
+  affects: [F-2.7]
 ```
 
 ---

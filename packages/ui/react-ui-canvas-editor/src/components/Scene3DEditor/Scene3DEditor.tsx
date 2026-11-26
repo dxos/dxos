@@ -345,8 +345,9 @@ export const Scene3DEditor = ({
     [selection, draft],
   );
   useLayoutEffect(() => {
-    renderer?.select(drawnSelection.flatMap((id) => keys.get(id)?.key ?? []));
-  }, [renderer, drawnSelection, keys, shown]);
+    // A group draws no item of its own: its key is the one its members are drawn under, which the renderer boxes.
+    renderer?.select(drawnSelection.map((id) => keys.get(id)?.key ?? (prefix ? `${prefix}/${id}` : id)));
+  }, [renderer, drawnSelection, keys, prefix, shown]);
 
   useLayoutEffect(() => {
     const key = face === undefined ? undefined : keys.get(face.element)?.key;

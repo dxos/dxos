@@ -75,9 +75,9 @@ Each engine concept is a part of the scene model, which is what is stored:
 | Engine         | Scene model (`org.dxos.scene`)                                                                                   |
 | -------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Root View      | The open `Scene`'s `Layout2D`.                                                                                    |
-| `view` node    | An `Element2D` placing the composite object `view:<layout>`, whose parts are that View's layout.                 |
+| `view` node    | An `Element2D` placing an object of kind `view`, whose parts are that View's layout.                             |
 | Object         | A `Layout2D` with `kind: composite` (`anonymous` when Group made it), the parts of a model object.               |
-| Instance       | An `Element2D` placing the object `instance:<composite>`, with the composite transform (`scale`, `fit`).         |
+| Instance       | An `Element2D` placing an Object, or an object of kind `group` or `hull`, with its transform (`scale`, `fit`).   |
 | Node, Link     | An `Element2D`: the stored element is the node or the link itself, a link being one of kind `link` with `source` and `target` endpoints. |
 | Layer          | An entry of `Layout2D.layers`; `node.layer` is the element's `layer`.                                            |
 | Style class    | A named style of the root model (`NamedStyle2D`); a node or a link names one in `style` and keeps its own look in `overrides`, as its element does. |
@@ -798,6 +798,9 @@ feat F-9: Views, Objects and Tags
     draws as an Instance of its composite at true size: its members where they are, its box round them. Moved,
     it stores the origin its members are placed from, and it keeps placing the group's own object, so it can
     be ungrouped. A group of a group draws its box round the inner group's members too.
+  req F-9.11: A node places the object that already places its layout, else a new one named for the layout:
+    one definition has one object. The Objects panel lists reusable Objects only, and Group is offered for one
+    element or more.
 ```
 
 ```mdl
@@ -878,7 +881,7 @@ feat F-14: 2D styles and composites
     `follows`; a link's `path`, `points`, `tail`, `head`, `connector`), a built-in kind's own fields beside them and a
     plugin kind's under `data`; a node's and a link's `style` and `overrides` are the element's. `props` holds only
     what other writers keep there (a solid's `op` and `operands`, a `.dx` link's `end`). A placed composite is stored
-    with the object it places (`view:<scene>`, `instance:<composite>`) and its own `kind`.
+    with the object it places, whose kind says which container it is (org.dxos.scene#F-1.8), and its own `kind`.
   req F-14.5: A colour is resolved through the look's theme slots: a name is one of the theme's named colours, else
     one of its hues, drawn at the tone it states (0 an outline, 1 strong, 2 medium, 3 light; a text's 1 to 3), and
     `default` is the look's own colour. A CSS literal is drawn as written in every theme. A `font` names a font slot
@@ -1888,6 +1891,14 @@ decision D-83: A placed composite's box counts a part that has no frame of its o
   for: user:richburdon
   affects: [F-9.10]
   why: A group holding a group that was never moved drew a box round its other members only and clipped the inner group away, and an inner group released from a moved one drew at a default size.
+```
+
+```mdl
+decision D-84: The 2D reader draws an element by its container (org.dxos.scene#D-125): a View as a `view` node, a group, a hull or an Object as an instance. The writers stop making `view:` and `instance:` objects: a node keeps the object that places its layout, a new object takes the layout's id and the container's kind, and an object whose container changed is retyped. Fills in [D-77].
+  date: 2026-11-26
+  by: user:richburdon
+  affects: [F-9.11]
+  why: The writer made a second object for a definition the model had already named, which Ungroup then refused, and Make object drew as a View because nothing but the element's own kind said what it was.
 ```
 
 ## Appendix: Extension Definitions
