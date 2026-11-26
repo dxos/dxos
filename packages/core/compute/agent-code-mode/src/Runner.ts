@@ -36,7 +36,7 @@ export type Options = {
   /** Services the code runs against: the database it reads and writes, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
-  /** See `BindingsContext.lookupOperation`; in-process only, since a function does not cross to a worker. */
+  /** See `BindingsContext.lookupOperation`; a worker sandbox asks it over `Sandbox.lookupOperation`. */
   readonly lookupOperation?: LookupOperation;
   /** Dialects this runner serves; defaults to {@link DIALECTS}. */
   readonly dialects?: Partial<Record<Operation.ScriptDialect, Dialect>>;

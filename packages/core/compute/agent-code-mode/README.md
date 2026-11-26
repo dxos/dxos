@@ -120,12 +120,14 @@ enabled, then the call.
 
 - The model can call the Skill Manager's lookups, the enabled skills' operations and the
   conversation's MCP tools, and no other operation: `ops` and `Database.resolve` resolve no other.
-- In the Effect dialect, an operation of a skill the program has just enabled resolves in that same
-  program: `Database.resolve` misses it, re-reads the conversation's skills and finds it there. The
-  plain dialect's `ops` is fixed when the call begins, so its operations arrive with the next call.
-  Either way the skill's instructions are stated from the next model call.
   That limits which operations code can run, not what it can reach: it reads and writes the
   workspace's database directly.
+- In the Effect dialect, an operation of a skill the program has just enabled resolves in that same
+  program: `Database.resolve` misses it (or finds only its stored record), re-reads the
+  conversation's skills and finds it there. A worker sandbox asks the host over
+  `Sandbox.lookupOperation`. The plain dialect's `ops` is fixed when the call begins, so its
+  operations arrive with the next call. Either way the skill's instructions are stated from the next
+  model call.
 - The conversation's MCP tools are stated in the prompt, since no skill names them.
 - These are ordinary operations answered by the host's handlers, the same ones tool calling uses,
   so every host that runs code mode must register the Skill Manager's handlers.
