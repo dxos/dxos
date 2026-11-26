@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { containerIn, isGrouping, resolveLayout2D } from './document.ts';
+import { containerIn, isGrouping, resolveLayout, resolveLayout2D } from './document.ts';
 import { type ElementEndpoint, endpointNode, rebindEndpoint } from './element.ts';
 import {
   type Arrangement,
@@ -305,21 +305,53 @@ const group = (
   };
 };
 
+/** How a group places its members: from `center`, at `scale` (each unset where the group states none). */
+type Placement = {
+  readonly center?: { readonly x: number; readonly y: number; readonly z?: number };
+  readonly scale?: { readonly x: number; readonly y: number; readonly z?: number };
+};
+
+const AXES = ['x', 'y', 'z'] as const;
+
 /**
- * An element moved out of a group placed at `center`: its position in the group's layout, offset by the group's. One
- * with no centre is left unplaced, unless it is `atOrigin`: a group in the group, which places its members from the
- * origin and so takes the offset whole.
+ * An element moved out of a group: where and as large as the group drew it, which is its position in the group's
+ * layout scaled and offset by the group's placement. `drawn` is the element with its object applied, whose size and
+ * scale it takes where it states none. One with no centre is left unplaced, unless it is `atOrigin`: a group in the
+ * group, which places its members from the origin and so takes the placement whole.
  */
-const shifted = <E extends Element2D | Element3D>(element: E, center: E['center'], atOrigin = false): E => {
-  if (!center || (!element.center && !atOrigin)) {
+const released = <E extends Element2D | Element3D>(
+  element: E,
+  drawn: Element2D | Element3D | undefined,
+  { center, scale }: Placement,
+  atOrigin: boolean,
+): E => {
+  const scaled = scale !== undefined && AXES.some((axis) => (scale[axis] ?? 1) !== 1);
+  if ((!center && !scaled) || (!element.center && !atOrigin)) {
     return element;
   }
-  const add = (axis: 'x' | 'y' | 'z') =>
-    round((Reflect.get(element.center ?? {}, axis) ?? 0) + Reflect.get(center, axis));
-  return {
-    ...element,
-    center: 'z' in center ? { x: add('x'), y: add('y'), z: add('z') } : { x: add('x'), y: add('y') },
-  };
+  const factor = (axis: (typeof AXES)[number]) => scale?.[axis] ?? 1;
+  const at = (axis: (typeof AXES)[number]) =>
+    round((center?.[axis] ?? 0) + factor(axis) * (Reflect.get(element.center ?? {}, axis) ?? 0));
+  const spatial = [center, element.center].some((point) => point !== undefined && 'z' in point);
+  const placed = { center: spatial ? { x: at('x'), y: at('y'), z: at('z') } : { x: at('x'), y: at('y') } };
+  if (!scaled) {
+    return { ...element, ...placed };
+  }
+  // A member that places parts by a scale of its own (a group, an Object at a scale) is scaled through it; any other
+  // 2D member through its size, and a 3D one through its scale, which is its size.
+  const own: Placement['scale'] = drawn?.scale;
+  const size = drawn && 'size' in drawn ? drawn.size : undefined;
+  if (spatial || atOrigin || own !== undefined) {
+    const next = { x: (own?.x ?? 1) * factor('x'), y: (own?.y ?? 1) * factor('y') };
+    return { ...element, ...placed, scale: spatial ? { ...next, z: (own?.z ?? 1) * factor('z') } : next };
+  }
+  return size
+    ? {
+        ...element,
+        ...placed,
+        size: { width: round(size.width * factor('x')), height: round(size.height * factor('y')) },
+      }
+    : { ...element, ...placed };
 };
 
 /** Undoes `group`: the group's elements return to the layout where they are drawn, and links to its ports rebind. */
@@ -347,10 +379,11 @@ const ungroup = (
   const placedElsewhere = doc.layouts.some((record) =>
     Object.values(record.elements).some((other) => other.object === object.id && other !== element),
   );
+  const drawn = resolveLayout(doc, parts);
   const merged = <E extends Element2D | Element3D>(
     own: Readonly<Record<string, E>>,
     inner: Readonly<Record<string, E>>,
-    center: E['center'],
+    placement: Placement,
   ): Record<string, E> =>
     Object.fromEntries([
       ...Object.entries(own)
@@ -358,14 +391,14 @@ const ungroup = (
         .map(([key, each]): [string, E] => [key, rebound(each)]),
       ...Object.entries(inner).map(([key, each]): [string, E] => [
         key,
-        shifted(each, center, isGrouping(containerIn(doc, model, parts, key))),
+        released(each, drawn[key], placement, isGrouping(containerIn(doc, model, parts, key))),
       ]),
     ]);
   const host: LayoutRecord =
     layout.dim === '3d' && parts.dim === '3d'
-      ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id]?.center) }
+      ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id] ?? {}) }
       : layout.dim === '2d' && parts.dim === '2d'
-        ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id]?.center) }
+        ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id] ?? {}) }
         : layout;
   return {
     doc: {

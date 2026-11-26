@@ -268,4 +268,51 @@ describe('applyModelIntent', () => {
       size: { width: 288, height: 96 },
     });
   });
+
+  test('ungrouping a resized group leaves its members where and as large as the group drew them', () => {
+    const size = { width: 100, height: 50 };
+    const flat: Scene.SceneDocument = {
+      scenes: [],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm2',
+          elements: {
+            a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size },
+            b: { id: 'b', object: 'box', center: { x: 200, y: 0 } },
+          },
+        },
+      ],
+      models: [{ id: 'm2', dim: '2d', objects: { box: { id: 'box', kind: 'rect', size } } }],
+    };
+    const grouped = applyModelIntent(flat, {
+      kind: 'group',
+      model: 'm2',
+      layout: 'root',
+      id: 'g',
+      members: ['a', 'b'],
+    });
+    // Resized on the canvas, the group is stored as the origin and scale its members are placed by.
+    const resized: Scene.SceneDocument = {
+      ...grouped.doc,
+      layouts: grouped.doc.layouts.map((layout) =>
+        layout.id === 'root' && layout.dim === '2d'
+          ? {
+              ...layout,
+              elements: {
+                ...layout.elements,
+                g: { ...layout.elements.g, center: { x: 10, y: 20 }, scale: { x: 2, y: 3 } },
+              },
+            }
+          : layout,
+      ),
+    };
+    const ungrouped = applyModelIntent(resized, { kind: 'ungroup', model: 'm2', layout: 'root', id: 'g' });
+    expect(ungrouped.problems).toEqual([]);
+    const root = ungrouped.doc.layouts.find((layout) => layout.id === 'root');
+    expect(root?.elements.a).toMatchObject({ center: { x: 10, y: 20 }, size: { width: 200, height: 150 } });
+    // B stated no size of its own: it takes the one its object gave it, at the group's scale.
+    expect(root?.elements.b).toMatchObject({ center: { x: 410, y: 20 }, size: { width: 200, height: 150 } });
+  });
 });
