@@ -325,6 +325,11 @@ describe('operation permissions', () => {
         { authority: yield* authorityFor() },
       );
       yield* manager.grant(process.pid, [yield* grantTo(SandboxExec)]);
+      // The process tree shows the process holding the added grant.
+      const listed = (yield* manager.processTree).find((candidate) => candidate.pid === process.pid);
+      expect(listed?.authorities?.at(-1)?.grants.map((grant) => grant.permissions[0]?.command)).toEqual([
+        SandboxExec.command,
+      ]);
       yield* Deferred.succeed(gate, undefined);
       expect(yield* Process.awaitOutput(process).pipe(Effect.exit)).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),

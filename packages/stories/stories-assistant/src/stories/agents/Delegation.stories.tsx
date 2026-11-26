@@ -61,7 +61,7 @@ const expectStatus = (record: HTMLElement, status: string) =>
 const permissionsOf = (agent: string): readonly string[] =>
   (CRM_AGENTS.find(({ name }) => name === agent)?.permissions ?? []).map(({ name }) => name);
 
-/** Each agent's chat as a plank headed by its name (its permissions on hover), then the space's object tree. */
+/** Each agent's chat as a plank headed by its name (its permissions on hover), then the object and process trees. */
 const LAYOUT = [
   [
     {
@@ -88,6 +88,7 @@ const LAYOUT = [
       id: 'objects',
       data: { view: 'object-tree' } satisfies StoryModules.DatabaseModuleData,
     },
+    { type: StoryRole.Processes, id: 'processes' },
   ],
 ];
 
@@ -152,6 +153,11 @@ export const CrmAgentsScripted: Story = {
     const ledger = within(await canvas.findByTestId(`chat-panel-${LEDGER}`));
     await ledger.findAllByText(LEDGER_DONE, {}, { timeout: 60_000 });
     await expectStatus(record, 'active');
+
+    // The process tree lists each agent's session with what it may do.
+    const processes = within(await canvas.findByTestId('processes-module'));
+    await processes.findByText(new RegExp(`${LEDGER}: ${CrmWrite.command}`), {}, { timeout: 10_000 });
+    await processes.findByText(new RegExp(`${SCOUT}: no permissions`), {}, { timeout: 10_000 });
   },
 };
 

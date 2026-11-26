@@ -475,7 +475,10 @@ export class Impl implements Manager {
   }
 
   #buildProcessTreeSnapshot(): readonly Process.Process[] {
-    return [...this.#finished, ...[...this.#handles.values()].map((handle) => handle.snapshotProcessInfo())];
+    return [
+      ...this.#finished,
+      ...[...this.#handles.values()].map((handle) => handle.snapshotProcessInfo(this.#authoritiesOf(handle.pid))),
+    ];
   }
 
   #release(pid: Process.ID): void {
@@ -483,6 +486,8 @@ export class Impl implements Manager {
     if (!handle) {
       return;
     }
+    // Read before the entry goes, so the finished snapshot still lists what the process was held to.
+    const authorities = this.#authoritiesOf(pid);
     this.#handles.delete(pid);
     this.#authorities.delete(pid);
     const clearStorage = this.#inMemory.get(pid);
@@ -490,7 +495,7 @@ export class Impl implements Manager {
     if (clearStorage) {
       Effect.runSync(clearStorage);
     }
-    this.#finished.push(handle.snapshotProcessInfo());
+    this.#finished.push(handle.snapshotProcessInfo(authorities));
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
       this.#finished.shift();
     }
@@ -545,9 +550,15 @@ export class Impl implements Manager {
       }
       const own: Process.Authority = { ...held.own, grants: [...held.own.grants, ...grants] };
       this.#authorities.set(pid, { ...held, own });
+      this.#refreshProcessTree();
       // A no-op for a process kept in memory, which has no record.
       yield* this.#store.setAuthority(pid, own);
     });
+  }
+
+  /** The authorities the process is held to, as they stand now. */
+  #authoritiesOf(pid: Process.ID): readonly Process.Authority[] {
+    return this.#heldAuthorities(pid).map(({ authority }) => authority);
   }
 
   /** Every authority the process is held to, each read through its owner while that is live: inherited, then its own. */

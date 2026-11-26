@@ -275,6 +275,12 @@ export interface Data {
    */
   readonly completedAt: Option.Option<number>;
 
+  /**
+   * Every authority the process is held to, those it inherited first and its own last; each must admit a call that
+   * declares requirements. Absent when it holds none.
+   */
+  readonly authorities?: readonly Authority[];
+
   readonly metrics: {
     /**
      * Total wall time of all handler invocations of the process in milliseconds.
