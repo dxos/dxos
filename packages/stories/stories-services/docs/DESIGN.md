@@ -1,7 +1,7 @@
 # Plugin services: one mechanism for capabilities, layer specs and remote plugins
 
-Status: proposal. Rich approved building the spike on 2026-11-25; the spike is this package
-(`packages/stories/stories-services`). Nothing else here is built.
+Status: proposal, with a working spike. The spike is this package (`packages/stories/stories-services`);
+its answers are in [Spike results](#spike-results). Nothing else here is built.
 
 ## Overview
 
@@ -512,7 +512,7 @@ a set of features.
 | --------------- | -------------------------------------- | --------------------------------------------------------------- |
 | App host        | Browser or Tauri main thread           | `dom`, `localStorage`, `opfs`, `microphone`                     |
 | Worker host     | Web Worker at the app's origin         | `opfs`; no `dom`, no `localStorage`                             |
-| Frame host      | Sandboxed iframe, opaque origin        | None of its own; see "Isolation on the client"                  |
+| Frame host      | Sandboxed iframe on its own origin     | None of its own; see "Isolation on the client"                  |
 | CLI host        | Node (`dx`)                            | `filesystem`, `shell`                                           |
 | EDGE host       | `workerd` isolate (PluginHost)         | `aiGateway`, `email`, `alwaysOn`; later `durableStorage`        |
 
@@ -571,16 +571,21 @@ edge FrameHost owns FrameWorker
 | Host        | Boundary                                    | Protects against                                               | For                                                |
 | ----------- | ------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
 | Worker host | A thread at the app's origin                | A hang, a crash, work that blocks the main thread              | Trusted plugins with heavy or background services  |
-| Frame host  | A sandboxed iframe with an opaque origin    | Code that reads the app's memory, storage or identity, or that sends data out | Plugins the person does not trust     |
+| Frame host  | A sandboxed iframe on its own origin        | Code that reads the app's memory, storage or identity, or that sends data out | Plugins the person does not trust     |
 | EDGE host   | A `workerd` isolate with no outbound access | The same, on EDGE                                              | Providers that need EDGE's features                |
 
 - **A worker alone is not a trust boundary.** A worker the app creates runs at the app's origin, so
   it can open the app's IndexedDB and OPFS, where ECHO and the identity's keys live. It isolates
   faults and CPU time. The host can terminate it, which nothing can do to code on the main thread.
-- **A sandboxed frame is the trust boundary.** A frame without `allow-same-origin` has an opaque
-  origin and cannot reach the app's storage. A `connect-src` policy on its document removes the
-  network, as `globalOutbound: null` does for an EDGE isolate. A frame host is hidden, and it may
-  start a worker of its own, which inherits the opaque origin and gives both boundaries.
+- **A frame on its own origin is the trust boundary.** A frame served from an origin other than
+  the app's has its own storage and cannot reach the app's. A `connect-src` policy on its document
+  removes the network, as `globalOutbound: null` does for an EDGE isolate. A frame host is hidden,
+  and it may start a worker of its own, which shares the frame's origin and gives both boundaries.
+- **An opaque origin does not work.** The first draft used `sandbox` without `allow-same-origin`,
+  which gives the frame an opaque origin. The spike showed that such a frame cannot load module
+  scripts: they are fetched with `Origin: null`, and a server answers that only if it allows every
+  origin. A frame host therefore needs a real second origin, such as one per plugin under a
+  dedicated domain, and the plugin's bundle has to be served to that origin.
 - **An isolated host is given contracts, not features.** A frame host has no storage and no
   network. It reaches the outside only through contracts the app host serves on its port: ECHO
   through the client service groups, limited to the spaces it was granted, and a key-value
@@ -736,6 +741,85 @@ operations on top of services.
 The vitest file runs the same plugins with two in-process hosts joined by a `MessageChannel`, so
 steps 1 to 4 are checked without a browser. Step 5 needs a browser test. Size: one session and one
 draft PR that is not merged.
+
+## Spike results
+
+The spike is built and runs. `src/services/hosts.test.ts` has 8 passing tests with hosts joined by a
+`MessageChannel` in Node, and the story `stories/stories-services/Services` was walked through all
+five steps in a browser.
+
+### What was observed
+
+| Step | Observed in the browser                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------- |
+| 1    | `NoteStore: memory → app`; a note is added and the count property updates.                                          |
+| 2    | Summarize fails with `ServiceNotAvailableError` naming the contract.                                                |
+| 3    | A worker starts as the mock EDGE host. Installing the summarizer there is a call on the worker's own contract. The binding becomes `port → edge` and the output begins `[edge]`. |
+| 4    | With a gateway and the plugin in the app, the binding becomes `memory → app` and the output begins `[app]`. The panel's client was not rebuilt. |
+| 5    | A frame on a second origin starts. The summarizer installs there, the binding becomes `port → frame` and the output begins `[frame]`. |
+
+The probe, run in each child host:
+
+| Host   | App's local storage | App's IndexedDB     | Network | App's notes, not granted |
+| ------ | ------------------- | ------------------- | ------- | ------------------------ |
+| Worker | Absent in a worker  | Sees the app's data | Allowed | Allowed                  |
+| Frame  | Isolated            | Isolated            | Refused | Refused                  |
+
+This is the claim of "Isolation on the client" measured: the worker reads the app's IndexedDB, and
+the frame reaches none of the four.
+
+### Answers
+
+1. **One client type for both bindings: yes for consumers, with casts inside the library.** A
+   provider is written as a `Client<S>` and a consumer holds a `Client<S>`; the plugins, the
+   modules and the test compile with no cast. The library has ten, all in `Service.ts` and
+   `ServiceHost.ts`: it builds a client member by member from a contract's shape, and reads a
+   provider the same way, so each member is narrowed by hand. Rpc tags are known only at run time,
+   which is why the types cannot carry it. The in-memory binding does not use the rpc machinery at
+   all: the consumer calls the provider's own object.
+2. **In-memory cost: about 7 µs a call, against 75 µs over a port.** One timing of 5,000 calls in
+   Node, not a benchmark: a bare Effect took 0.08 µs, a property read through the in-memory client
+   7 µs, and the same read over a `MessageChannel` 75 µs. Most of the 7 µs is the spike's own
+   per-call log and snapshot, not the binding.
+3. **Properties and events as stream rpcs: yes.** A property's `changes` stream drives a React
+   `useState` through one hook, and a test shows the stream following the provider across a
+   rebind: it restarts from the new provider's value, as the design says.
+4. **The space in the resolution context: not tested.** The spike carries no context in its calls.
+5. **Install at run time, seen by connected hosts: yes.** `install` is a method of the contract
+   every host provides. A host's catalog is a property of the same contract, so a peer's resolver
+   learns of a new provider through the property stream it already watches.
+6. **Contract types across packages: not tested.** The spike is one package.
+7. **Loading in a worker without an import map: not answered.** Storybook's dev server rewrites
+   bare imports, so the worker and the frame loaded plugins by URL with no import map and no
+   `vendor/` rewrite. The built form, where the import map matters, was not run.
+8. **A sandboxed frame serving a contract, out of reach of the app's storage and the network:
+   yes, on a second origin.** See the probe table. The frame is served from the same dev server
+   under the other loopback name.
+9. **Cost of one more host: about 0.2 s to start, memory not measured.** One warm run: 205 ms
+   from starting the worker to its catalog arriving, 233 ms for the frame, and about 30 ms to
+   install a plugin in either. Each host loaded its own copy of Effect and app-framework.
+
+### What the spike changed in the design
+
+- **A frame host needs a real origin**, not an opaque one. The section above is corrected.
+- **A plugin is loaded from the host's own origin.** Installing by an absolute URL of the app's
+  origin failed in the frame, which may import only from where it was served. The failure reached
+  the app as a typed error over the control contract.
+- **A granted peer still sees the whole catalog.** The frame was served no contract it was not
+  granted, but it could read that the app provides notes. The catalog has to be filtered by the
+  grant as well.
+- **A hidden frame's timers may be throttled.** One run of the summarizer in the frame took 8.6 s
+  for a stream that takes 0.3 s; a second run took 0.3 s. The cause was not found. If it is the
+  browser throttling a hidden frame, a frame host has to run its providers in a worker.
+
+### Where the spike differs from the design
+
+- Each host has its own plugin manager, including the app host. In the design the app host is the
+  app's plugin manager, and the consumer plugin and the provider plugins share it.
+- There is no layer stack, no affinity and no space: a provider is built once per host.
+- There is no `RpcRouter` in-process client and no strict mode. Each peer gets its own router,
+  which is how a grant is enforced.
+- Versions are compared, but no test runs two versions of a contract.
 
 ## Workplan
 

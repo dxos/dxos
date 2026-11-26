@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -24,16 +24,16 @@ export const NotesModule = () => {
 
   // The property is the signal to read the list again, whichever host it came from.
   useEffect(() => {
-    void Effect.runPromise(notes.list({})).then(setItems, () => setItems([]));
+    void EffectEx.runPromise(notes.list({})).then(setItems, () => setItems([]));
   }, [notes, count]);
 
   const handleAdd = useCallback(() => {
     setError(undefined);
-    void Effect.runPromise(notes.put({ text })).catch((err) => setError(String(err)));
+    void EffectEx.runPromise(notes.put({ text })).catch((err) => setError(String(err)));
   }, [notes, text]);
 
   const handleClear = useCallback(() => {
-    void Effect.runPromise(notes.clear({})).catch((err) => setError(String(err)));
+    void EffectEx.runPromise(notes.clear({})).catch((err) => setError(String(err)));
   }, [notes]);
 
   return (
@@ -49,9 +49,7 @@ export const NotesModule = () => {
         <p className='text-sm text-description' data-testid='notes-binding'>
           NoteStore: {bindingLabel(snapshot.bindings[NoteStore.Contract.key])}
         </p>
-        <Input.Root>
-          <Input.Textarea rows={2} value={text} onChange={(event) => setText(event.target.value)} />
-        </Input.Root>
+        <Input.Textarea rows={2} value={text} onChange={(event) => setText(event.target.value)} />
         {error && <p className='text-sm text-error-text'>{error}</p>}
         <ul className='text-sm space-y-1' data-testid='notes-list'>
           {items.map((note) => (

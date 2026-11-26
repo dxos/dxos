@@ -4,12 +4,11 @@
 
 // @import-as-namespace
 
-import * as Effect from 'effect/Effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { NoteStore, Summarizer } from '../contracts/index.ts';
 import { type HostControl, ServiceHost } from '../services/index.ts';
-import { type Init, importPlugin, isReady } from './child-host.ts';
-import frameEntryUrl from './frame-entry.ts?module-url';
+import { type Init, MARKER, importPlugin, isReady } from './child-host.ts';
 import { fakeGateway } from './gateway.ts';
 
 export const APP_HOST = 'app';
@@ -19,15 +18,24 @@ type Child = {
   readonly dispose: () => void;
 };
 
-/** The document a frame host runs in: no storage, no network, and scripts only from the app's origin. */
-const frameDocument = (origin: string, entryUrl: string): string =>
-  [
-    '<!doctype html><html><head>',
-    `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src ${origin} 'unsafe-inline'; connect-src 'none'">`,
-    '</head><body>',
-    `<script type="module" src="${entryUrl}"></script>`,
-    '</body></html>',
-  ].join('');
+/**
+ * The origin a frame host is served from: the same dev server under the other loopback name, which
+ * the browser treats as a different origin with its own storage. Production would use a dedicated
+ * origin; a sandboxed frame with an opaque origin cannot load module scripts from the app's server,
+ * which answers no cross-origin request from a null origin.
+ */
+const frameOrigin = (): string | undefined => {
+  const { protocol, hostname, port } = window.location;
+  const other = hostname === 'localhost' ? '127.0.0.1' : hostname === '127.0.0.1' ? 'localhost' : undefined;
+  return other === undefined ? undefined : `${protocol}//${other}${port ? `:${port}` : ''}`;
+};
+
+/** Writes the marker an isolated host must not see, in the app's local storage and IndexedDB. */
+const writeMarker = (): void => {
+  window.localStorage.setItem(MARKER, APP_HOST);
+  const request = indexedDB.open(MARKER);
+  request.onsuccess = () => request.result.close();
+};
 
 /**
  * The app's side of the story: the app host, and the worker and frame hosts it starts. The app
@@ -44,6 +52,7 @@ export class HostController {
       features: { [NoteStore.STORAGE_FEATURE]: window.localStorage },
       loadPlugin: importPlugin,
     });
+    writeMarker();
   }
 
   has(id: string): boolean {
@@ -66,10 +75,16 @@ export class HostController {
 
   /** Starts a host in a hidden sandboxed iframe, and serves it only the contracts in `grant`. */
   async startFrame(id: string, features: readonly string[], grant: readonly string[]): Promise<void> {
+    const origin = frameOrigin();
+    if (origin === undefined) {
+      throw new Error('a frame host needs a second origin; open the story on localhost or 127.0.0.1');
+    }
+    const page = new URL('./frame.html', import.meta.url);
     const frame = document.createElement('iframe');
-    frame.setAttribute('sandbox', 'allow-scripts');
+    // Scripts run, and the frame keeps the origin it was served from, which is not the app's.
+    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
     frame.style.display = 'none';
-    frame.srcdoc = frameDocument(window.location.origin, frameEntryUrl);
+    frame.src = `${origin}${page.pathname}`;
     const ready = new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('frame host did not start')), 15_000);
       const listener = (event: MessageEvent) => {
@@ -89,8 +104,15 @@ export class HostController {
       throw err;
     }
     const channel = new MessageChannel();
-    const init: Init = { type: 'init', id, kind: 'frame', features, origin: window.location.origin, port: channel.port2 };
-    frame.contentWindow?.postMessage(init, '*', [channel.port2]);
+    const init: Init = {
+      type: 'init',
+      id,
+      kind: 'frame',
+      features,
+      origin: window.location.origin,
+      port: channel.port2,
+    };
+    frame.contentWindow?.postMessage(init, origin, [channel.port2]);
     await this.app.connect(channel.port1, { grant });
     this.#children.set(id, { id, dispose: () => frame.remove() });
   }
@@ -112,7 +134,7 @@ export class HostController {
     }
     const control = this.app.control(hostId);
     if (control) {
-      await Effect.runPromise(control.install({ plugin: pluginUrl }));
+      await EffectEx.runPromise(control.install({ plugin: pluginUrl }));
     }
   }
 
@@ -123,7 +145,7 @@ export class HostController {
     }
     const control = this.app.control(hostId);
     if (control) {
-      await Effect.runPromise(control.uninstall({ plugin: pluginUrl }));
+      await EffectEx.runPromise(control.uninstall({ plugin: pluginUrl }));
     }
   }
 
@@ -134,7 +156,7 @@ export class HostController {
 
   async probe(hostId: string): Promise<HostControl.Probe | undefined> {
     const control = this.app.control(hostId);
-    return control ? Effect.runPromise(control.probe({ ungranted: NoteStore.Contract.key })) : undefined;
+    return control ? EffectEx.runPromise(control.probe({ ungranted: NoteStore.Contract.key })) : undefined;
   }
 
   async dispose(): Promise<void> {

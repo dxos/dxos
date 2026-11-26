@@ -9,15 +9,14 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Summarizer } from '../contracts/index.ts';
-import { APP_HOST } from '../hosts/HostController.ts';
+import * as HostController from '../hosts/HostController.ts';
 import { type HostControl } from '../services/index.ts';
 import { PLUGIN_URLS, bindingLabel, useServices, useSnapshot } from './ServicesContext.tsx';
 
 const EDGE_HOST = 'edge';
 const FRAME_HOST = 'frame';
 
-const pluginName = (url: string): string =>
-  Object.entries(PLUGIN_URLS).find(([, value]) => value === url)?.[0] ?? url;
+const pluginName = (url: string): string => Object.entries(PLUGIN_URLS).find(([, value]) => value === url)?.[0] ?? url;
 
 type HostCardProps = {
   host: HostControl.Description;
@@ -158,7 +157,7 @@ export const HostsModule = () => {
           />
         ))}
         <div className='text-sm space-y-1' data-testid='bindings'>
-          <div className='font-medium'>Bindings in {APP_HOST}</div>
+          <div className='font-medium'>Bindings in {HostController.APP_HOST}</div>
           {Object.entries(snapshot.bindings).map(([key, binding]) => (
             <div key={key}>
               {key.split('.').pop()}: {bindingLabel(binding)}

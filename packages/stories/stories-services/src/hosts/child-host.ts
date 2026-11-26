@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { NoteStore, Summarizer } from '../contracts/index.ts';
 import { type HostControl, ServiceHost } from '../services/index.ts';
@@ -33,14 +34,22 @@ export const isReady = (data: unknown): boolean =>
 const isPluginModule = (module: unknown): module is { default: () => Plugin.Plugin } =>
   typeof module === 'object' && module !== null && 'default' in module && typeof module.default === 'function';
 
-/** Loads a plugin from a module URL; the same loader runs in the app, a worker and a frame. */
-export const importPlugin = async (url: string): Promise<Plugin.Plugin> => {
+/**
+ * Loads a plugin from a module path; the same loader runs in the app, a worker and a frame. The
+ * path is resolved against the host's own origin, since a frame may import only from where it was
+ * served.
+ */
+export const importPlugin = async (path: string): Promise<Plugin.Plugin> => {
+  const url = new URL(path, globalThis.location.href).href;
   const module: unknown = await import(/* @vite-ignore */ url);
   if (!isPluginModule(module)) {
     throw new Error(`not a plugin module: ${url}`);
   }
   return module.default();
 };
+
+/** A key and a database the app writes at its own origin, which an isolated host must not be able to see. */
+export const MARKER = 'org.dxos.stories.services.marker';
 
 const attempt = async (action: () => unknown): Promise<string> => {
   try {
@@ -51,27 +60,26 @@ const attempt = async (action: () => unknown): Promise<string> => {
   }
 };
 
-const openDatabase = (): Promise<void> =>
-  new Promise((resolve, reject) => {
-    const request = indexedDB.open('org.dxos.stories.services.probe');
-    request.onsuccess = () => {
-      request.result.close();
-      resolve();
-    };
-    request.onerror = () => reject(request.error ?? new Error('indexedDB refused'));
-  });
+/** Whether this realm can read what the app stored: `sees the app's data`, `isolated`, or why it could not look. */
+const visibility = async (look: () => boolean | Promise<boolean>): Promise<string> => {
+  try {
+    return (await look()) ? "sees the app's data" : 'isolated';
+  } catch (err) {
+    return `refused (${err instanceof Error ? err.name : 'error'})`;
+  }
+};
 
 /** Tries each thing an isolated host should not reach, and reports what happened. */
 const probe = async (host: ServiceHost.ServiceHost, origin: string): Promise<HostControl.Probe> => ({
   localStorage:
     'localStorage' in globalThis
-      ? await attempt(() => globalThis.localStorage.setItem('org.dxos.stories.services.probe', '1'))
+      ? await visibility(() => globalThis.localStorage.getItem(MARKER) !== null)
       : 'absent in a worker',
-  indexedDb: await attempt(openDatabase),
+  indexedDb: await visibility(async () => (await indexedDB.databases()).some((database) => database.name === MARKER)),
   network: await attempt(() => fetch(new URL('/index.json', origin), { cache: 'no-store' })),
   // The app's notes, which a frame is not granted.
   ungranted: await attempt(() =>
-    Effect.runPromise(host.client(NoteStore.Contract).list({}).pipe(Effect.timeout('1 second'))),
+    EffectEx.runPromise(host.client(NoteStore.Contract).list({}).pipe(Effect.timeout('1 second'))),
   ),
 });
 

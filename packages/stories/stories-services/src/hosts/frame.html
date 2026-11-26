@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!-- A frame host reaches nothing but its own scripts: no fetch, no socket, no storage of the app's origin. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' 'unsafe-inline'; connect-src 'none'"
+    />
+  </head>
+  <body>
+    <script type="module" src="./frame-entry.ts"></script>
+  </body>
+</html>

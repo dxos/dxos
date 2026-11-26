@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import React, { useCallback, useState } from 'react';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -26,7 +27,7 @@ export const SummarizerModule = () => {
   const handleSummarize = useCallback(() => {
     setTokens([]);
     setError(undefined);
-    void Effect.runPromise(
+    void EffectEx.runPromise(
       Stream.runForEach(summarizer.summarize({ text }), (token) =>
         Effect.sync(() => setTokens((current) => [...current, token])),
       ),
@@ -50,9 +51,7 @@ export const SummarizerModule = () => {
         <p className='text-sm text-description' data-testid='summarizer-binding'>
           Summarizer: {bindingLabel(snapshot.bindings[Summarizer.Contract.key])}
         </p>
-        <Input.Root>
-          <Input.Textarea rows={3} value={text} onChange={(event) => setText(event.target.value)} />
-        </Input.Root>
+        <Input.Textarea rows={3} value={text} onChange={(event) => setText(event.target.value)} />
         {error && (
           <p className='text-sm text-error-text' data-testid='summarizer-error'>
             {error}

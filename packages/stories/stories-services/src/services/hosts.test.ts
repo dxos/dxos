@@ -8,6 +8,7 @@ import * as Stream from 'effect/Stream';
 import { afterEach, assert, describe, test } from 'vitest';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { NoteStore, Summarizer } from '../contracts/index.ts';
 import { fakeGateway } from '../hosts/gateway.ts';
@@ -86,10 +87,10 @@ describe('plugin services', () => {
     const notes = app.client(NoteStore.Contract);
     expect(app.binding(NoteStore.Contract)).toEqual({ kind: 'memory', hostId: 'app', hostKind: 'app' });
 
-    const note = await Effect.runPromise(notes.put({ text: 'first' }));
+    const note = await EffectEx.runPromise(notes.put({ text: 'first' }));
     expect(note.text).toBe('first');
-    expect(await Effect.runPromise(notes.list({}))).toHaveLength(1);
-    expect(await Effect.runPromise(notes.count.get)).toBe(1);
+    expect(await EffectEx.runPromise(notes.list({}))).toHaveLength(1);
+    expect(await EffectEx.runPromise(notes.count.get)).toBe(1);
   });
 
   test('a contract nobody provides fails with ServiceNotAvailableError', async ({ expect }) => {
@@ -120,13 +121,13 @@ describe('plugin services', () => {
     // Installing is a service call on the remote host's own contract.
     const control = app.control('edge');
     assert(control, 'the app holds the control client of a connected host');
-    await Effect.runPromise(control.install({ plugin: 'summarizer' }));
+    await EffectEx.runPromise(control.install({ plugin: 'summarizer' }));
     await until(app, (snapshot) => snapshot.bindings[Summarizer.Contract.key]?.kind === 'port');
     expect(app.binding(Summarizer.Contract)).toEqual({ kind: 'port', hostId: 'edge', hostKind: 'edge' });
 
-    const tokens = await Effect.runPromise(Stream.runCollect(summarizer.summarize({ text: 'one two three' })));
+    const tokens = await EffectEx.runPromise(Stream.runCollect(summarizer.summarize({ text: 'one two three' })));
     expect(tokens).toEqual(['[edge]', '3 words:', 'one', 'two', 'three']);
-    expect(await Effect.runPromise(summarizer.status.get)).toBe('idle');
+    expect(await EffectEx.runPromise(summarizer.status.get)).toBe('idle');
   });
 
   test('the same client rebinds in memory when the provider arrives locally', async ({ expect }) => {
@@ -137,19 +138,19 @@ describe('plugin services', () => {
     await until(app, (snapshot) => snapshot.bindings[Summarizer.Contract.key]?.kind === 'port');
 
     const summarizer = app.client(Summarizer.Contract);
-    const first = await Effect.runPromise(Stream.runCollect(summarizer.summarize({ text: 'a b' })));
+    const first = await EffectEx.runPromise(Stream.runCollect(summarizer.summarize({ text: 'a b' })));
     expect(first[0]).toBe('[edge]');
 
     await app.install('summarizer');
     await app.setFeature(Summarizer.GATEWAY_FEATURE, fakeGateway('app', 1));
     expect(app.binding(Summarizer.Contract)).toEqual({ kind: 'memory', hostId: 'app', hostKind: 'app' });
 
-    const second = await Effect.runPromise(Stream.runCollect(summarizer.summarize({ text: 'a b' })));
+    const second = await EffectEx.runPromise(Stream.runCollect(summarizer.summarize({ text: 'a b' })));
     expect(second[0]).toBe('[app]');
 
     // Taking the feature away sends the same handle back to the remote provider.
     await app.setFeature(Summarizer.GATEWAY_FEATURE, undefined);
-    const third = await Effect.runPromise(Stream.runCollect(summarizer.summarize({ text: 'a b' })));
+    const third = await EffectEx.runPromise(Stream.runCollect(summarizer.summarize({ text: 'a b' })));
     expect(third[0]).toBe('[edge]');
   });
 
@@ -162,20 +163,22 @@ describe('plugin services', () => {
 
     const notes = app.client(NoteStore.Contract);
     const seen: number[] = [];
-    const fiber = Effect.runFork(Stream.runForEach(notes.count.changes, (count) => Effect.sync(() => seen.push(count))));
+    const fiber = Effect.runFork(
+      Stream.runForEach(notes.count.changes, (count) => Effect.sync(() => seen.push(count))),
+    );
 
     await expect.poll(() => seen).toEqual([0]);
-    await Effect.runPromise(notes.put({ text: 'remote' }));
+    await EffectEx.runPromise(notes.put({ text: 'remote' }));
     await expect.poll(() => seen).toEqual([0, 1]);
 
     // A local provider with its own, empty storage takes over: the stream restarts from its value.
     await app.setFeature(NoteStore.STORAGE_FEATURE, memoryStorage());
     await app.install('notes');
     await expect.poll(() => seen).toEqual([0, 1, 0]);
-    await Effect.runPromise(notes.put({ text: 'local' }));
+    await EffectEx.runPromise(notes.put({ text: 'local' }));
     await expect.poll(() => seen).toEqual([0, 1, 0, 1]);
 
-    await Effect.runPromise(Fiber.interrupt(fiber));
+    await EffectEx.runPromise(Fiber.interrupt(fiber));
   });
 
   test('a peer is served only the contracts it was granted', async ({ expect }) => {
@@ -188,7 +191,7 @@ describe('plugin services', () => {
 
     // The trusted worker reaches the app's notes.
     const fromWorker = worker.client(NoteStore.Contract);
-    expect(await Effect.runPromise(fromWorker.list({}))).toEqual([]);
+    expect(await EffectEx.runPromise(fromWorker.list({}))).toEqual([]);
 
     // The frame sees the contract in the app's catalog, but the app does not serve it there.
     const fromFrame = frame.client(NoteStore.Contract);

@@ -13,7 +13,10 @@ import { type Summarizer } from '../contracts/index.ts';
  */
 export const fakeGateway = (hostId: string, delayMs = 40): Summarizer.Gateway => ({
   complete: (prompt) => {
-    const words = prompt.replace(/^Summarize:\s*/, '').split(/\s+/).filter(Boolean);
+    const words = prompt
+      .replace(/^Summarize:\s*/, '')
+      .split(/\s+/)
+      .filter(Boolean);
     const tokens = [`[${hostId}]`, `${words.length} words:`, ...words.slice(0, 6), words.length > 6 ? '...' : ''];
     return Stream.fromIterable(tokens.filter(Boolean)).pipe(
       Stream.mapEffect((token) => Effect.as(Effect.sleep(`${delayMs} millis`), token)),

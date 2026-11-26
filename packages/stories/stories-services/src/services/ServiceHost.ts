@@ -13,6 +13,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { RpcRouter } from '@dxos/rpc';
@@ -179,7 +180,7 @@ export class ServiceHost {
 
   /** Loads a plugin by reference and enables it. */
   async install(reference: string): Promise<void> {
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       Effect.gen({ self: this }, function* () {
         const plugin = yield* this.#manager.add(reference);
         const key = plugin.meta.profile.key;
@@ -197,7 +198,7 @@ export class ServiceHost {
     if (key === undefined) {
       return;
     }
-    await Effect.runPromise(this.#manager.remove(key));
+    await EffectEx.runPromise(this.#manager.remove(key));
     this.#plugins.delete(reference);
     this.#pluginOf.delete(key);
     await this.settled();
@@ -214,12 +215,12 @@ export class ServiceHost {
    */
   async connect(port: MessagePort, options: { readonly grant?: readonly string[] } = {}): Promise<void> {
     const link = Link.make(port);
-    const scope = await Effect.runPromise(Scope.make());
-    const router = await Effect.runPromise(RpcRouter.make);
+    const scope = await EffectEx.runPromise(Scope.make());
+    const router = await EffectEx.runPromise(RpcRouter.make);
     link.onServe((served) => {
       Effect.runFork(Link.serve(router, served).pipe(Scope.provide(scope)));
     });
-    const call = await Effect.runPromise(
+    const call = await EffectEx.runPromise(
       Link.call(HostControl.Contract.group, link.open()).pipe(Scope.provide(scope)),
     );
     const peer: Peer = {
@@ -256,7 +257,7 @@ export class ServiceHost {
       return;
     }
     this.#peers.delete(peer);
-    await Effect.runPromise(Scope.close(peer.scope, Exit.void));
+    await EffectEx.runPromise(Scope.close(peer.scope, Exit.void));
     peer.link.close();
     this.#changed();
   }
@@ -269,17 +270,17 @@ export class ServiceHost {
   async dispose(): Promise<void> {
     await Promise.all([...this.#peers].map((peer) => this.disconnect(peer.description?.id ?? '')));
     for (const peer of this.#peers) {
-      await Effect.runPromise(Scope.close(peer.scope, Exit.void));
+      await EffectEx.runPromise(Scope.close(peer.scope, Exit.void));
       peer.link.close();
     }
     this.#peers.clear();
-    await Effect.runPromise(this.#manager.shutdown().pipe(Effect.ignore));
+    await EffectEx.runPromise(this.#manager.shutdown().pipe(Effect.ignore));
     await this.#enqueue(async () => {
       for (const key of [...this.#registrations.keys()]) {
         await this.#deactivate(key);
       }
     });
-    await Effect.runPromise(Scope.close(this.#scope, Exit.void));
+    await EffectEx.runPromise(Scope.close(this.#scope, Exit.void));
   }
 
   //
@@ -336,7 +337,9 @@ export class ServiceHost {
           : Stream.unwrap(
               Effect.map(bound(member), (target) => {
                 const stream = select(target);
-                return Stream.isStream(stream) ? (stream as Stream.Stream<unknown, Service.ServiceError>) : Stream.empty;
+                return Stream.isStream(stream)
+                  ? (stream as Stream.Stream<unknown, Service.ServiceError>)
+                  : Stream.empty;
               }),
             ),
       );
@@ -359,9 +362,7 @@ export class ServiceHost {
               Effect.flatMap(bound(name), (target) => {
                 const member = target[name];
                 const result = typeof member === 'function' ? member(payload) : undefined;
-                return Effect.isEffect(result)
-                  ? (result as Effect.Effect<unknown, Service.ServiceError>)
-                  : Effect.void;
+                return Effect.isEffect(result) ? (result as Effect.Effect<unknown, Service.ServiceError>) : Effect.void;
               });
     }
     for (const name of Object.keys(contract.shape.properties)) {
@@ -443,8 +444,8 @@ export class ServiceHost {
   }
 
   async #activate(registration: Registration): Promise<void> {
-    const scope = await Effect.runPromise(Scope.make());
-    const implementation = await Effect.runPromise(
+    const scope = await EffectEx.runPromise(Scope.make());
+    const implementation = await EffectEx.runPromise(
       registration.provider
         .make({
           hostId: this.id,
@@ -467,13 +468,13 @@ export class ServiceHost {
     const scope = registration.scope;
     registration.scope = undefined;
     registration.implementation = undefined;
-    await Effect.runPromise(Scope.close(scope, Exit.void));
+    await EffectEx.runPromise(Scope.close(scope, Exit.void));
   }
 
   async #serve(peer: Peer, contract: Service.AnyContract, implementation: Record<string, unknown>): Promise<void> {
-    const scope = await Effect.runPromise(Scope.make());
+    const scope = await EffectEx.runPromise(Scope.make());
     const handlers = Service.toHandlers(contract, implementation);
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       peer.router.serve(Service.prefix(contract.key), contract.group, { disableTracing: true }).pipe(
         // The group's handler types are keyed by rpc tag, which a contract only knows at run time.
         Effect.provide(contract.group.toLayer(Effect.succeed(handlers as never))),
@@ -487,7 +488,7 @@ export class ServiceHost {
     const scope = peer.served.get(key);
     if (scope) {
       peer.served.delete(key);
-      await Effect.runPromise(Scope.close(scope, Exit.void));
+      await EffectEx.runPromise(Scope.close(scope, Exit.void));
     }
   }
 
@@ -528,7 +529,7 @@ export class ServiceHost {
     }
     let stub = peer.stubs.get(contract.key);
     if (!stub) {
-      stub = Effect.runPromise(
+      stub = EffectEx.runPromise(
         Link.call(contract.group, peer.link.open()).pipe(
           Effect.map((call) => Service.toStub(contract, call)),
           Scope.provide(peer.scope),
@@ -556,7 +557,12 @@ export class ServiceHost {
 
   #record(call: Call): void {
     this.#calls = [call, ...this.#calls].slice(0, MAX_CALLS);
-    log.info('service call', { key: call.key, member: call.member, binding: call.binding.kind, host: call.binding.hostId });
+    log.info('service call', {
+      key: call.key,
+      member: call.member,
+      binding: call.binding.kind,
+      host: call.binding.hostId,
+    });
     this.#publish();
   }
 
