@@ -28,6 +28,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@dxos/vite-plugin-module-url": "workspace:*",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
