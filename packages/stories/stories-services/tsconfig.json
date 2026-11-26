@@ -1,0 +1,40 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../storybook-testing"
+    }
+  ]
+}

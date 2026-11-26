@@ -1,6 +1,7 @@
 # Plugin services: one mechanism for capabilities, layer specs and remote plugins
 
-Status: proposal, awaiting approval. Nothing here is built.
+Status: proposal. Rich approved building the spike on 2026-11-25; the spike is this package
+(`packages/stories/stories-services`). Nothing else here is built.
 
 ## Overview
 
