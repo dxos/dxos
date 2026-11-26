@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { DiscordAdminOperation, DiscordAgentOperation, DiscordOperation } from '#types';
+import { DiscordAdminOperation, DiscordAgentOperation, DiscordChannel, DiscordOperation } from '#types';
 
 export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
   DiscordOperation.GetDiscordChannels.pipe(Operation.lazyHandler(() => import('./get-discord-channels.ts'))),
@@ -24,4 +24,6 @@ export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
   DiscordAgentOperation.Reply.pipe(Operation.lazyHandler(() => import('./agent/reply.ts'))),
   DiscordAgentOperation.DirectMessage.pipe(Operation.lazyHandler(() => import('./agent/direct-message.ts'))),
   DiscordAgentOperation.React.pipe(Operation.lazyHandler(() => import('./agent/react.ts'))),
+  DiscordChannel.BackendOperation.Send.pipe(Operation.lazyHandler(() => import('./channel/send.ts'))),
+  DiscordChannel.BackendOperation.OpenDirect.pipe(Operation.lazyHandler(() => import('./channel/open-direct.ts'))),
 ]);

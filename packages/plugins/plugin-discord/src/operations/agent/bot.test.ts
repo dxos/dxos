@@ -20,7 +20,7 @@ import { Channel, Person } from '@dxos/types';
 
 import { DiscordBot, DiscordChannel } from '#types';
 
-import { makeEdgeDiscordBot } from '../../capabilities/discord-bot.ts';
+import { makeEdgeDiscordBot } from '../../services/edge-discord-bot.ts';
 import { agentBot, resolveUser } from './bot.ts';
 
 const addAgent = () =>

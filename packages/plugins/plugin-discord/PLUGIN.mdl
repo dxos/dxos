@@ -10,6 +10,12 @@ from every guild the bot belongs to are synced into ECHO as `@dxos/types`
 `Message` objects inside `Channel` feeds — fully local-first and replicated
 to all peers.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.thread: Its channel operations reach Discord through this plugin's channel backend and backend operations.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -24,6 +30,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `op@1.1`    | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -158,15 +165,18 @@ service DiscordChannelBackend
     plugin-thread `ChannelBackendProvider` for Discord channels, so agents and other callers reach
     Discord through plugin-thread's generic channel operations rather than Discord-specific ones.
   ops:
-    send(channel, message)              # REST post into the first configured Discord channel
-    threads.send(channel, thread, msg)  # REST post into a thread or DM channel id
-    openDirect(channel, person)         # DM channel from the person's `discord` identity
+    send(channel, message)              # bot `act` post into the first configured Discord channel
+    threads.send(channel, thread, msg)  # bot `act` post into a thread, or `dm` for a pending DM
+    openDirect(channel, person)         # pending DM thread from the person's `discord` identity
     connection.start/stop/status        # PUT/DELETE/GET /discord/bots/:applicationId on EDGE
+    op org.dxos.operation.discord.sendToChannel  # send/threads.send, for plugin-thread on EDGE
+    op org.dxos.operation.discord.openDirect     # openDirect, for plugin-thread on EDGE
   note: >
-    Posts use plain fetch (no proxy) so they also run on EDGE; text past 2000 characters is split,
-    and mentions are never echoed. The receipt carries `properties.discord.messageId`, which EDGE's
-    reply mirror reads to skip posts the agent already made. The Channel's ObjectProperties surface
-    renders the config form, the bot status and Start/Stop.
+    Every send goes through `DiscordBotService.act`, so EDGE's bot posts with the token it holds,
+    Kai's included. On EDGE, where plugin-thread's bundle cannot see this capability, plugin-thread
+    invokes the two backend operations, which plugin-discord's bundle handles with the same code. A pending DM opens on its first send, and the receipt's
+    `thread` names the DM channel, so the caller keys the conversation by the channel replies arrive
+    in. The Channel's ObjectProperties surface renders the config form, the bot status and Start/Stop.
 ```
 
 ## Features
@@ -427,6 +437,36 @@ test QA-2: Re-sync is idempotent
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: The Discord channel backend is not mirrored. Its sends post through the bot's `act` (a post, or a DM for a pending DM thread), because EDGE's bot no longer posts what an agent appends to its chats or opens the DMs pending in a space.
+  date: 2026-11-26
+  by: user:mykola-vrmchk
+  affects: [DiscordChannelBackend]
+  source: https://github.com/dxos/edge/pull/1590
+```
+
+```mdl
+decision D-2: A send's receipt names the Discord channel the post landed in as its `thread`, so a DM opened by its first post is keyed by the DM channel. Fills in [D-1].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [DiscordChannelBackend]
+  why: A recipient's replies arrive in the DM channel; a chat keyed by the pending `dm:<user>` thread would split the conversation from its replies.
+  rejected:
+    - Opening the DM in `openDirect`: the bot has no open-only action, and opening one would cost a Discord call for a DM that may never be sent.
+```
+
+```mdl
+decision D-3: plugin-discord handles the backend's own `send` and `openDirect` operations (`DiscordChannel.BackendOperation`), so plugin-thread reaches Discord on EDGE, where its bundle cannot see this capability. Fills in [D-1].
+  date: 2026-11-26
+  by: user:mykola-vrmchk
+  affects: [DiscordChannelBackend]
+  why: Mirrored delivery is removed (org.dxos.plugin.thread#D-1), so an agent on EDGE can reach Discord only by posting through the backend, and only plugin-discord's bundle holds it.
+  source: https://github.com/dxos/dxos/pull/14701
+```
 
 ## Appendix: Extension Definitions
 
