@@ -17,7 +17,7 @@ const KIND_LABELS: Record<HostControl.Kind, string> = {
   app: 'this page',
   worker: 'Web Worker',
   frame: 'sandboxed iframe',
-  edge: 'Web Worker standing in for EDGE',
+  edge: 'mock EDGE worker',
 };
 
 /** What a runtime module does to its hosts, and the last failure of any of those actions. */
@@ -86,7 +86,7 @@ export const HostCard = ({ host, probe, onInstall, onUninstall, onProbe, onSetGa
   return (
     <div className='border border-separator rounded p-2 space-y-1 text-sm' data-testid={`host-${host.id}`}>
       <div className='flex items-center gap-2'>
-        <span className='font-medium'>Host: {host.id}</span>
+        <span className='font-medium whitespace-nowrap'>Host: {host.id}</span>
         <span className='text-fg-muted'>{KIND_LABELS[host.kind]}</span>
         <span className='grow' />
         {onSetGateway && (
