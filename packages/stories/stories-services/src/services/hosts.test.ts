@@ -71,19 +71,21 @@ const faultyNotesPlugin = (key: string, changes: NoteStore.Client['count']['chan
     Plugin.make,
   );
 
-/** Resolves when the failing provider's stream has been subscribed to, which is when it fails. */
-let noteFailure: () => void = () => {};
-const failed = new Promise<void>((resolve) => {
-  noteFailure = resolve;
-});
-
-const FailingNotesPlugin = faultyNotesPlugin(
-  'org.dxos.stories.services.plugin.failingNotes',
-  Stream.suspend(() => {
-    noteFailure();
-    return Stream.fail(new Service.CallError({ context: { key: NoteStore.Contract.key, member: 'count' } }));
-  }),
-);
+/**
+ * A plugin whose count stream fails with a call error, and a promise that resolves when a consumer
+ * has subscribed to it, which is when it fails.
+ */
+const failingNotes = () => {
+  const { promise: failed, resolve } = Promise.withResolvers<void>();
+  const plugin = faultyNotesPlugin(
+    'org.dxos.stories.services.plugin.failingNotes',
+    Stream.suspend(() => {
+      resolve();
+      return Stream.fail(new Service.CallError({ context: { key: NoteStore.Contract.key, member: 'count' } }));
+    }),
+  );
+  return { plugin, failed };
+};
 
 const DyingNotesPlugin = faultyNotesPlugin(
   'org.dxos.stories.services.plugin.dyingNotes',
@@ -127,17 +129,21 @@ const PLUGINS: Record<string, () => Plugin.Plugin> = {
   summarizer: SummarizerPlugin,
   broken: BrokenPlugin,
   otherNotes: OtherNotesPlugin,
-  failingNotes: FailingNotesPlugin,
   dyingNotes: DyingNotesPlugin,
 };
 
-const loadPlugin = async (reference: string): Promise<Plugin.Plugin> => {
-  const plugin = PLUGINS[reference];
-  if (!plugin) {
-    throw new Error(`unknown plugin: ${reference}`);
-  }
-  return plugin();
-};
+/** Loads from `PLUGINS`, and from `extra` for a plugin one test builds for itself. */
+const loader =
+  (extra: Record<string, () => Plugin.Plugin> = {}) =>
+  async (reference: string): Promise<Plugin.Plugin> => {
+    const plugin = extra[reference] ?? PLUGINS[reference];
+    if (!plugin) {
+      throw new Error(`unknown plugin: ${reference}`);
+    }
+    return plugin();
+  };
+
+const loadPlugin = loader();
 
 const memoryStorage = (): NoteStore.Storage => {
   const items = new Map<string, string>();
@@ -170,8 +176,13 @@ const until = (
 
 describe('plugin services', () => {
   const hosts: ServiceHost.ServiceHost[] = [];
-  const make = (id: string, kind: HostControl.Kind, features: Record<string, unknown> = {}) => {
-    const host = new ServiceHost.ServiceHost({ id, kind, features, loadPlugin });
+  const make = (
+    id: string,
+    kind: HostControl.Kind,
+    features: Record<string, unknown> = {},
+    plugins: Record<string, () => Plugin.Plugin> = {},
+  ) => {
+    const host = new ServiceHost.ServiceHost({ id, kind, features, loadPlugin: loader(plugins) });
     hosts.push(host);
     return host;
   };
@@ -401,7 +412,8 @@ describe('plugin services', () => {
   });
 
   test('a subscription outlives a failed call and picks up the replacement provider', async ({ expect }) => {
-    const app = make('app', 'app');
+    const { plugin, failed } = failingNotes();
+    const app = make('app', 'app', {}, { failingNotes: plugin });
     await app.install('failingNotes');
     const seen: number[] = [];
     const fiber = Effect.runFork(
