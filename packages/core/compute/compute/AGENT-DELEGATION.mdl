@@ -73,6 +73,7 @@ The eventual goal is that every agent has its own identity and its own personal 
 | `feat`     | `org.dxos.mdl.feat@1.0`     |
 | `decision` | `org.dxos.mdl.decision@1.0` |
 | `question` | `org.dxos.mdl.question@1.0` |
+| `test`     | `org.dxos.mdl.test@1.0`     |
 
 ## Features
 
@@ -379,6 +380,37 @@ feat F-15: Choosing the receiver
   req F-15.4:
     when: the model delegates to another agent
     then: it does so only because that agent's permissions or specialization are needed
+```
+
+## QA
+
+```mdl
+test QA-1: An agent hands a change it may not make to an agent that may
+  desc: The scripted story `stories-assistant/agents/Delegation` (CrmAgents) walked by a person. Scout and Ledger share
+    one CRM tool that requires `/crm/write`; only Ledger is granted it. Scout is refused, hands the request to Ledger,
+    and Ledger makes the change on its own permissions.
+  actors: human
+  covers: [F-3.2, F-3.3, F-15.4]
+  status: draft
+  given:
+    - the story `stories/stories-assistant/agents/Delegation` CrmAgents, with the `crmAgents` scripted model
+  steps:
+    - name: See who holds what
+      do: Hover Scout's name above its chat, then Ledger's.
+      expect: Scout holds no permissions; Ledger holds Change CRM records
+    - name: Read the process tree
+      do: Look at the process tree under the object tree.
+      expect: Ledger's session lists /crm/write and Scout's lists no permissions
+    - name: Ask Scout for the change
+      do: Click the chip "Bramble Coffee Roasters signed the contract. Mark them active in the CRM." in Scout's chat.
+      expect: Scout's call to set the status is denied, and the run reads "1 denied"
+    - name: Watch the hand-over
+      do: Wait.
+      expect: Scout hands the request to Ledger, whose chat shows it as context rather than as a user message, and
+        Ledger reports the account active
+    - name: Check the account
+      do: Click Bramble Coffee Roasters in the object tree.
+      expect: its record shows status active
 ```
 
 ## Changelog
@@ -777,4 +809,12 @@ decision D-45: The first cut of cross-agent delegation finds the receiver by nam
   by: agent:claude-opus-5-5
   for: user:dmaretskyi
   affects: [F-3.1, F-3.2, F-3.3]
+```
+
+```mdl
+decision D-46: QA-1 walks cross-agent delegation in the `agents/Delegation` story: two agents with different permissions, one refused and handing the change to the other, with each agent's and each process's permissions shown along the way.
+  date: 2026-11-26
+  by: agent:claude-opus-5-5
+  for: user:dmaretskyi
+  affects: [F-3.2, F-3.3, F-15.4]
 ```
