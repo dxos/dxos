@@ -14,6 +14,9 @@ import { Service, ServiceHost, State } from '../services/index.ts';
 
 const STORAGE_KEY = 'org.dxos.stories.services.notes';
 
+/** The most notes the store keeps, so the list in local storage cannot grow without bound. */
+export const MAX_NOTES = 100;
+
 const meta = Plugin.makeMeta({ key: DXN.make('org.dxos.stories.services.plugin.notes'), name: 'Notes' });
 
 const read = (storage: NoteStore.Storage): NoteStore.Note[] => {
@@ -35,12 +38,19 @@ const provider = Service.provide(NoteStore.Contract, {
       };
       const store: NoteStore.Client = {
         put: ({ text }) =>
-          Effect.sync(() => {
+          Effect.suspend(() => {
             const notes = read(storage);
+            if (notes.length >= MAX_NOTES) {
+              return Effect.fail(
+                new Service.CallError({
+                  context: { key: NoteStore.Contract.key, member: 'put', reason: 'note limit reached', max: MAX_NOTES },
+                }),
+              );
+            }
             const note = { id: `note-${notes.length + 1}`, text };
             write([...notes, note]);
             added.emit(note);
-            return note;
+            return Effect.succeed(note);
           }),
         list: () => Effect.sync(() => read(storage)),
         clear: () => Effect.sync(() => write([])),

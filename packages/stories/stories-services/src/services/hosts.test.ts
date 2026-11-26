@@ -15,7 +15,7 @@ import { DXN } from '@dxos/keys';
 
 import { NoteStore, Summarizer } from '../contracts/index.ts';
 import { fakeGateway } from '../hosts/gateway.ts';
-import NotesPlugin from '../plugins/notes-plugin.ts';
+import NotesPlugin, { MAX_NOTES } from '../plugins/notes-plugin.ts';
 import SummarizerPlugin from '../plugins/summarizer-plugin.ts';
 import { type HostControl, Service, ServiceHost, State } from './index.ts';
 
@@ -71,9 +71,18 @@ const faultyNotesPlugin = (key: string, changes: NoteStore.Client['count']['chan
     Plugin.make,
   );
 
+/** Resolves when the failing provider's stream has been subscribed to, which is when it fails. */
+let noteFailure: () => void = () => {};
+const failed = new Promise<void>((resolve) => {
+  noteFailure = resolve;
+});
+
 const FailingNotesPlugin = faultyNotesPlugin(
   'org.dxos.stories.services.plugin.failingNotes',
-  Stream.fail(new Service.ServiceCallError({ context: { key: NoteStore.Contract.key, member: 'count' } })),
+  Stream.suspend(() => {
+    noteFailure();
+    return Stream.fail(new Service.CallError({ context: { key: NoteStore.Contract.key, member: 'count' } }));
+  }),
 );
 
 const DyingNotesPlugin = faultyNotesPlugin(
@@ -192,6 +201,18 @@ describe('plugin services', () => {
     expect(note.text).toBe('first');
     expect(await EffectEx.runPromise(notes.list({}))).toHaveLength(1);
     expect(await EffectEx.runPromise(notes.count.get)).toBe(1);
+  });
+
+  test('the note store refuses a note past its limit', async ({ expect }) => {
+    const app = make('app', 'app', { [NoteStore.STORAGE_FEATURE]: memoryStorage() });
+    await app.install('notes');
+    const notes = app.client(NoteStore.Contract);
+    await EffectEx.runPromise(
+      Effect.forEach(Array.from({ length: MAX_NOTES }), (_, index) => notes.put({ text: `note ${index}` })),
+    );
+    const exit = await Effect.runPromiseExit(notes.put({ text: 'one too many' }));
+    expect(String(exit)).toContain('note limit reached');
+    expect(await EffectEx.runPromise(notes.count.get)).toBe(MAX_NOTES);
   });
 
   test('a contract nobody provides fails with ServiceNotAvailableError', async ({ expect }) => {
@@ -323,11 +344,16 @@ describe('plugin services', () => {
     const app = make('app', 'app');
     const worker = make('worker', 'worker');
     await join(app, worker);
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const control = app.control('worker');
+    assert(control, 'the app holds the control client of the worker');
+    // Each round trip gives a catalog in flight time to land, as an echoed catalog would need.
+    const roundTrips = (count: number) =>
+      EffectEx.runPromise(Effect.forEach(Array.from({ length: count }), () => control.probe({ ungranted: '' })));
+    await roundTrips(3);
 
     let changes = 0;
     const unsubscribe = app.subscribe(() => changes++);
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await roundTrips(5);
     unsubscribe();
     expect(changes).toBe(0);
   });
@@ -371,8 +397,8 @@ describe('plugin services', () => {
     const fiber = Effect.runFork(
       Stream.runForEach(app.client(NoteStore.Contract).count.changes, (count) => Effect.sync(() => seen.push(count))),
     );
-    // The provider's stream has failed by now; the subscription must still be listening.
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Once the provider's stream has failed, the subscription must still be listening.
+    await failed;
     expect(seen).toEqual([]);
 
     await app.install('otherNotes');

@@ -32,7 +32,7 @@ const HostCard = ({ host, probe, onInstall, onUninstall, onProbe }: HostCardProp
     <div className='border border-separator rounded p-2 space-y-1 text-sm' data-testid={`host-${host.id}`}>
       <div className='flex items-center gap-2'>
         <span className='font-medium'>{host.id}</span>
-        <span className='text-description'>{host.kind}</span>
+        <span className='text-fg-muted'>{host.kind}</span>
         <span className='grow' />
         {installed ? (
           <Button.Root
@@ -50,21 +50,21 @@ const HostCard = ({ host, probe, onInstall, onUninstall, onProbe }: HostCardProp
         {onProbe && <Button.Root label='Probe' onClick={() => onProbe(host.id)} data-testid={`probe-${host.id}`} />}
       </div>
       <div>
-        <span className='text-description'>features</span> {host.features.join(', ') || 'none'}
+        <span className='text-fg-muted'>features</span> {host.features.join(', ') || 'none'}
       </div>
       <div>
-        <span className='text-description'>plugins</span> {host.plugins.map(pluginName).join(', ') || 'none'}
+        <span className='text-fg-muted'>plugins</span> {host.plugins.map(pluginName).join(', ') || 'none'}
       </div>
       {host.services.map((service) => (
         <div key={service.key}>
-          <span className='text-description'>provides</span> {service.key.split('.').pop()}{' '}
+          <span className='text-fg-muted'>provides</span> {service.key.split('.').pop()}{' '}
           {service.active ? 'active' : `inactive, needs ${service.unmet.join(', ')}`}
         </div>
       ))}
       {probe && (
         <div data-testid={`probe-result-${host.id}`}>
-          <span className='text-description'>probe</span> localStorage: {probe.localStorage}; indexedDB:{' '}
-          {probe.indexedDb}; network: {probe.network}; app notes: {probe.ungranted}
+          <span className='text-fg-muted'>probe</span> localStorage: {probe.localStorage}; indexedDB: {probe.indexedDb};
+          network: {probe.network}; app notes: {probe.ungranted}
         </div>
       )}
     </div>
@@ -165,7 +165,7 @@ export const HostsModule = () => {
         <div className='text-sm space-y-1' data-testid='calls'>
           <div className='font-medium'>Calls</div>
           {snapshot.calls.slice(0, 12).map((call, index) => (
-            <div key={`${call.at}-${index}`} className='text-description'>
+            <div key={`${call.at}-${index}`} className='text-fg-muted'>
               {call.key.split('.').pop()}.{call.member} via {call.binding.kind} → {call.binding.hostId}
             </div>
           ))}

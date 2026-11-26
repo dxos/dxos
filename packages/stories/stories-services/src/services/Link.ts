@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import type * as Rpc from 'effect/rpc/Rpc';
 import * as RpcClient from 'effect/rpc/RpcClient';
 import type * as RpcGroup from 'effect/rpc/RpcGroup';
-import type * as Scope from 'effect/Scope';
 
 import { type RpcPort, type RpcRouter, makeProtocolRpcPortClient, makeProtocolRpcPortServer } from '@dxos/rpc';
 
@@ -85,22 +84,17 @@ export const make = (port: MessagePort): Link => {
 };
 
 /** Serves every group registered with `router` on `port`, until the scope closes. */
-export const serve = (router: RpcRouter.Service, port: MessagePort): Effect.Effect<void, never, Scope.Scope> =>
-  Effect.gen(function* () {
-    const protocol = yield* makeProtocolRpcPortServer(toRpcPort(port));
-    yield* router.attach(protocol);
-  });
+export const serve = Effect.fnUntraced(function* (router: RpcRouter.Service, port: MessagePort) {
+  const protocol = yield* makeProtocolRpcPortServer(toRpcPort(port));
+  yield* router.attach(protocol);
+});
 
 /** The flattened rpc client of `group` over `port`, alive until the scope closes. */
-export const call = (
-  group: RpcGroup.RpcGroup<Rpc.Any>,
-  port: MessagePort,
-): Effect.Effect<Service.WireCall, never, Scope.Scope> =>
-  Effect.gen(function* () {
-    const protocol = yield* makeProtocolRpcPortClient(toRpcPort(port));
-    const client = yield* RpcClient.make(group, { flatten: true, disableTracing: true }).pipe(
-      Effect.provideService(RpcClient.Protocol, protocol),
-    );
-    // The client's parameter types are keyed by rpc tag, which a contract only knows at run time.
-    return (tag, payload) => Reflect.apply(client, undefined, [tag, payload]);
-  });
+export const call = Effect.fnUntraced(function* (group: RpcGroup.RpcGroup<Rpc.Any>, port: MessagePort) {
+  const protocol = yield* makeProtocolRpcPortClient(toRpcPort(port));
+  const client = yield* RpcClient.make(group, { flatten: true, disableTracing: true }).pipe(
+    Effect.provideService(RpcClient.Protocol, protocol),
+  );
+  const invoke: Service.WireCall = (tag, payload) => Reflect.apply(client, undefined, [tag, payload]);
+  return invoke;
+});

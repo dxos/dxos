@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import type * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
@@ -24,8 +25,8 @@ export const cell = <A>(initial: A): Cell<A> => {
   return {
     property: {
       get: Effect.sync(() => value),
-      changes: Stream.callback<A>((queue) =>
-        Effect.gen(function* () {
+      changes: Stream.callback<A>(
+        Effect.fnUntraced(function* (queue: Queue.Queue<A, Cause.Done>) {
           const listener = (next: A) => {
             Queue.offerUnsafe(queue, next);
           };
@@ -52,8 +53,8 @@ export interface Emitter<A> {
 export const emitter = <A>(): Emitter<A> => {
   const listeners = new Set<(value: A) => void>();
   return {
-    stream: Stream.callback<A>((queue) =>
-      Effect.gen(function* () {
+    stream: Stream.callback<A>(
+      Effect.fnUntraced(function* (queue: Queue.Queue<A, Cause.Done>) {
         const listener = (value: A) => {
           Queue.offerUnsafe(queue, value);
         };

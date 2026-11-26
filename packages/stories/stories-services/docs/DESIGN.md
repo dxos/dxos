@@ -754,7 +754,7 @@ draft PR that is not merged.
 
 ## Spike results
 
-The spike is built and runs. `src/services/hosts.test.ts` has 15 passing tests with hosts joined by a
+The spike is built and runs. `src/services/hosts.test.ts` has 16 passing tests with hosts joined by a
 `MessageChannel` in Node, and the story `stories/stories-services/Services` was walked through all
 five steps in a browser. Its `Calls` variant drives steps 1 to 4 with a play function, which the
 Storybook test runner passes.

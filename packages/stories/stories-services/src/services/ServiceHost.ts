@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
@@ -287,19 +288,14 @@ export class ServiceHost {
       ),
     );
 
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const expired = new Promise<undefined>((resolve) => {
-      timer = setTimeout(() => resolve(undefined), CONNECT_TIMEOUT);
-    });
-    const id = await Promise.race([first, expired]);
-    clearTimeout(timer);
-    if (id === undefined) {
+    const id = await EffectEx.runPromise(Effect.promise(() => first).pipe(Effect.timeoutOption(CONNECT_TIMEOUT)));
+    if (Option.isNone(id)) {
       this.#peers.delete(peer);
       await EffectEx.runPromise(Scope.close(scope, Exit.void));
       link.close();
       throw new HostConnectError({ context: { host: this.id } });
     }
-    return id;
+    return id.value;
   }
 
   /** Disconnects the peer with the given id. */
@@ -361,12 +357,12 @@ export class ServiceHost {
    * contract at that moment, so a consumer never rebuilds it when a provider moves.
    */
   client<Key extends string, S extends Service.Shape>(contract: Service.Contract<Key, S>): Service.Client<S> {
-    const bound = (member: string): Effect.Effect<Record<string, unknown>, Service.ServiceError> =>
-      Effect.suspend((): Effect.Effect<Record<string, unknown>, Service.ServiceError> => {
+    const bound = (member: string): Effect.Effect<Record<string, unknown>, Service.Failure> =>
+      Effect.suspend((): Effect.Effect<Record<string, unknown>, Service.Failure> => {
         const binding = this.binding(contract);
         if (!binding) {
           return Effect.fail(
-            new Service.ServiceNotAvailableError({
+            new Service.NotAvailableError({
               context: { key: contract.key, unmet: this.#registrations.get(contract.key)?.unmet ?? [] },
             }),
           );
@@ -378,7 +374,7 @@ export class ServiceHost {
         }
         return Effect.tryPromise({
           try: () => this.#stub(contract),
-          catch: (cause) => new Service.ServiceCallError({ cause, context: { key: contract.key, member } }),
+          catch: (cause) => new Service.CallError({ cause, context: { key: contract.key, member } }),
         });
       });
 
@@ -395,9 +391,7 @@ export class ServiceHost {
           : Stream.unwrap(
               Effect.map(bound(member), (target) => {
                 const stream = select(target);
-                return Stream.isStream(stream)
-                  ? (stream as Stream.Stream<unknown, Service.ServiceError>)
-                  : Stream.empty;
+                return Stream.isStream(stream) ? (stream as Stream.Stream<unknown, Service.Failure>) : Stream.empty;
               }),
             ).pipe(
               // A provider's failed call ends that provider's values only, so the next provider's can still
@@ -418,16 +412,14 @@ export class ServiceHost {
                 Effect.map(bound(name), (target) => {
                   const member = target[name];
                   const result = typeof member === 'function' ? member(payload) : undefined;
-                  return Stream.isStream(result)
-                    ? (result as Stream.Stream<unknown, Service.ServiceError>)
-                    : Stream.empty;
+                  return Stream.isStream(result) ? (result as Stream.Stream<unknown, Service.Failure>) : Stream.empty;
                 }),
               )
           : (payload: unknown) =>
               Effect.flatMap(bound(name), (target) => {
                 const member = target[name];
                 const result = typeof member === 'function' ? member(payload) : undefined;
-                return Effect.isEffect(result) ? (result as Effect.Effect<unknown, Service.ServiceError>) : Effect.void;
+                return Effect.isEffect(result) ? (result as Effect.Effect<unknown, Service.Failure>) : Effect.void;
               });
     }
     for (const name of Object.keys(contract.shape.properties)) {
@@ -593,9 +585,7 @@ export class ServiceHost {
   #control(peer: Peer): Record<string, unknown> {
     const grant = peer.grant;
     const refuse = (member: string) =>
-      Effect.fail(
-        new Service.ServiceCallError({ context: { key: HostControl.Contract.key, member, reason: 'not granted' } }),
-      );
+      Effect.fail(new Service.CallError({ context: { key: HostControl.Contract.key, member, reason: 'not granted' } }));
     const visible = (description: HostControl.Description): HostControl.Description =>
       grant === undefined
         ? description

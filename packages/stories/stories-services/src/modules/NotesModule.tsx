@@ -46,7 +46,7 @@ export const NotesModule = () => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='p-2 space-y-2 overflow-y-auto'>
-        <p className='text-sm text-description' data-testid='notes-binding'>
+        <p className='text-sm text-fg-muted' data-testid='notes-binding'>
           NoteStore: {bindingLabel(snapshot.bindings[NoteStore.Contract.key])}
         </p>
         <Input.Textarea rows={2} value={text} onChange={(event) => setText(event.target.value)} />
@@ -54,7 +54,7 @@ export const NotesModule = () => {
         <ul className='text-sm space-y-1' data-testid='notes-list'>
           {items.map((note) => (
             <li key={note.id}>
-              <span className='text-description'>{note.id}</span> {note.text}
+              <span className='text-fg-muted'>{note.id}</span> {note.text}
             </li>
           ))}
         </ul>

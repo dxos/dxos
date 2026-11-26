@@ -14,15 +14,12 @@ import * as Stream from 'effect/Stream';
 import { BaseError } from '@dxos/errors';
 
 /** No host this consumer can reach provides the contract; `context` names the key and the unmet features. */
-export class ServiceNotAvailableError extends BaseError.extend(
-  'ServiceNotAvailableError',
-  'No provider for the service.',
-) {}
+export class NotAvailableError extends BaseError.extend('ServiceNotAvailableError', 'No provider for the service.') {}
 
 /** The provider failed, or the call did not survive the wire; `context` names the key and the member. */
-export class ServiceCallError extends BaseError.extend('ServiceCallError', 'The service call failed.') {}
+export class CallError extends BaseError.extend('ServiceCallError', 'The service call failed.') {}
 
-export type ServiceError = ServiceNotAvailableError | ServiceCallError;
+export type Failure = NotAvailableError | CallError;
 
 /** One method of a contract: a payload schema, a result schema, and whether the result is a stream. */
 export type MethodSpec = {
@@ -41,14 +38,14 @@ export type Shape = {
 type TypeOf<S> = S extends Schema.Top ? Schema.Schema.Type<S> : never;
 
 export type Method<M extends MethodSpec> = M extends { readonly stream: true }
-  ? (payload: TypeOf<M['payload']>) => Stream.Stream<TypeOf<M['success']>, ServiceError>
-  : (payload: TypeOf<M['payload']>) => Effect.Effect<TypeOf<M['success']>, ServiceError>;
+  ? (payload: TypeOf<M['payload']>) => Stream.Stream<TypeOf<M['success']>, Failure>
+  : (payload: TypeOf<M['payload']>) => Effect.Effect<TypeOf<M['success']>, Failure>;
 
 /** A reactive value of a service: its current value and every later one. */
 export interface Property<A> {
-  readonly get: Effect.Effect<A, ServiceError>;
+  readonly get: Effect.Effect<A, Failure>;
   /** Emits the current value first. */
-  readonly changes: Stream.Stream<A, ServiceError>;
+  readonly changes: Stream.Stream<A, Failure>;
 }
 
 /**
@@ -60,7 +57,7 @@ export type Client<S extends Shape> = {
 } & {
   readonly [K in keyof S['properties']]: Property<TypeOf<S['properties'][K]>>;
 } & {
-  readonly [K in keyof S['events']]: Stream.Stream<TypeOf<S['events'][K]>, ServiceError>;
+  readonly [K in keyof S['events']]: Stream.Stream<TypeOf<S['events'][K]>, Failure>;
 };
 
 /** A contract with its shape erased, for registries that hold every contract behind one type. */
@@ -218,14 +215,14 @@ export type WireCall = (tag: string, payload: unknown) => unknown;
  */
 export const toStub = <Key extends string, S extends Shape>(contract: Contract<Key, S>, call: WireCall): Client<S> => {
   const failure = (member: string) => (cause: unknown) =>
-    new ServiceCallError({ cause, context: { key: contract.key, member } });
-  const effect = (member: Member, name: string, payload: unknown): Effect.Effect<unknown, ServiceError> => {
+    new CallError({ cause, context: { key: contract.key, member } });
+  const effect = (member: Member, name: string, payload: unknown): Effect.Effect<unknown, Failure> => {
     const result = call(tag(contract.key, member, name), payload);
     return Effect.isEffect(result)
       ? Effect.mapError(result as Effect.Effect<unknown, unknown>, failure(name))
       : Effect.fail(failure(name)('not an effect'));
   };
-  const stream = (member: Member, name: string, payload: unknown): Stream.Stream<unknown, ServiceError> => {
+  const stream = (member: Member, name: string, payload: unknown): Stream.Stream<unknown, Failure> => {
     const result = call(tag(contract.key, member, name), payload);
     return Stream.isStream(result)
       ? Stream.mapError(result as Stream.Stream<unknown, unknown>, failure(name))

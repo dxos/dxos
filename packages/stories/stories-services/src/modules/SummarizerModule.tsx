@@ -48,7 +48,7 @@ export const SummarizerModule = () => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='p-2 space-y-2 overflow-y-auto'>
-        <p className='text-sm text-description' data-testid='summarizer-binding'>
+        <p className='text-sm text-fg-muted' data-testid='summarizer-binding'>
           Summarizer: {bindingLabel(snapshot.bindings[Summarizer.Contract.key])}
         </p>
         <Input.Textarea rows={3} value={text} onChange={(event) => setText(event.target.value)} />

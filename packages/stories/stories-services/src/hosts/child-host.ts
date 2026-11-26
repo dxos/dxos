@@ -81,9 +81,11 @@ const requestImage = (origin: string): Promise<string> =>
       return;
     }
     let settled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const finish = (result: string) => {
       if (!settled) {
         settled = true;
+        clearTimeout(timer);
         document.removeEventListener('securitypolicyviolation', onViolation);
         resolve(result);
       }
@@ -97,7 +99,10 @@ const requestImage = (origin: string): Promise<string> =>
     const image = new Image();
     // The request left the frame whether or not the response is an image.
     image.onload = () => finish('allowed');
-    image.onerror = () => setTimeout(() => finish('allowed'), 100);
+    // The violation report can arrive after the error event, so the verdict waits a moment for it.
+    image.onerror = () => {
+      timer = setTimeout(() => finish('allowed'), 100);
+    };
     image.src = new URL('/index.json?probe', origin).href;
   });
 
