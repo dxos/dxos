@@ -15,7 +15,7 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 
 import { SessionConfig } from '@dxos/ai';
-import { AiContext, type HarnessControlRpcs, TrajectoryStore } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/compute/Agent';
 import type * as Hook from '@dxos/compute/Hook';
 import type * as Instructions from '@dxos/compute/Instructions';
@@ -32,6 +32,7 @@ import { type ContentBlock, Task } from '@dxos/types';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type McpEndpointOf } from './mcp-servers.ts';
+import { type SessionControlRpc } from './session-control.ts';
 import {
   type AgentInput,
   SESSION_PROCESS_KEY,
@@ -41,8 +42,8 @@ import {
 import { type ThreadingOptions } from './thread-scheduler.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
-/** Live handle to a spawned agent process, carrying its `HarnessControl` RPC surface. */
-type AgentHandle = Process.Process<AgentInput, void, HarnessControlRpcs>;
+/** Live handle to a spawned agent process, carrying its `SessionControlRpcs`. */
+type AgentHandle = Process.Process<AgentInput, void, SessionControlRpc>;
 
 /**
  * A session with the `Agent` verbs bound to it, for callers (mostly tests) that drive one session at a time.

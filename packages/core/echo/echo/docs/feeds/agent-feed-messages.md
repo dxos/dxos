@@ -18,7 +18,7 @@ isError }`, `alarm { firedAt, message }`.
 
 - Enqueue: `onInput` (from `AgentService.Session.submitPrompt` →
   `ProcessHandle.submitInput`), the `enqueueMessage` Tier-B RPC
-  (`HarnessControl`), tool-child exits, and fired self-wake alarms.
+  (`SessionControlRpcs`), tool-child exits, and fired self-wake alarms.
 - Dequeue: `onAlarm` does `inputQueue.shift()`, runs the turn, then re-persists
   the shifted array — the "ack" is the post-turn persist, so a crash mid-turn
   replays the event. Tool-result idempotency is patched over with
