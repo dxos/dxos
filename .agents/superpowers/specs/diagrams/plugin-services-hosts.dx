@@ -1,0 +1,20 @@
+diagram flow=down
+group app "Device, app origin" {
+  node ClientServices "Client services" ref="packages/sdk/client-protocol/src/service-rpc.ts"
+  node AppHost "App host"
+  node WorkerHost "Worker host" ref="packages/sdk/worker-framework/src/Worker.ts"
+}
+group sandbox "Device, opaque origin" {
+  node FrameHost "Frame host" ref="packages/plugins/plugin-cloudflare-os/src/api/Sandbox.ts"
+  node FrameWorker "Worker in frame"
+}
+group remote "EDGE" {
+  node EdgeHost "EDGE host" ref="packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts"
+}
+edge AppHost -> WorkerHost "port"
+edge AppHost -> FrameHost "port with grants"
+edge AppHost -> EdgeHost "HTTP"
+edge AppHost -> ClientServices "all spaces"
+edge WorkerHost -> ClientServices "same origin"
+edge FrameHost -> ClientServices "granted spaces"
+edge FrameHost owns FrameWorker

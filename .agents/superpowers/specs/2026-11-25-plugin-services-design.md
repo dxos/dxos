@@ -37,6 +37,7 @@ Rich accepted these defaults on 2026-11-25. Everything else in this document is 
 | U-6 | EDGE-PLUGINS decisions D-41 and D-88 are reversed: plugins on EDGE call each other's services. Each plugin keeps its own isolate.                                         |
 | U-7 | Install stays two lists: the space's plugin map and the device's enabled set. The local host also reads the space's map.                                                  |
 | U-8 | The work is a registered project, `plugin-services`.                                                                                                                      |
+| U-9 | The design must allow plugin services to be isolated in the client too, possibly through workers or iframes.                                                              |
 
 ## Review: what exists
 
@@ -130,6 +131,22 @@ The client's own services are the one place where the target pattern is already 
 - **Durable processes are a closed set.** compute-service compiles its process registry in; a
   plugin cannot contribute one (D-80).
 
+### Isolation in the client
+
+Every plugin runs in the app's main thread today, with the app's memory and storage. Three pieces
+of an isolated client host exist, none of them connected to plugins.
+
+- **A worker with dynamic modules.** `@dxos/worker-framework` elects a leader tab that hosts one
+  dedicated worker, connects other tabs to it by exchanging `MessagePort`s, and carries Effect RPC
+  over them. Its `ModuleHost` story imports modules by URL into the worker and calls them through
+  an untyped `invoke(module, method)`.
+- **A sandboxed frame.** plugin-cloudflare-os runs a gadget's UI in a null-origin iframe
+  (`sandbox="allow-scripts ..."`) with `connect-src 'none'`; `postMessage` is its only way out
+  (`GadgetFrame.tsx`, `api/Sandbox.ts`).
+- **A sandbox interface with three placements.** agent-code-mode's `Sandbox` runs code in process,
+  on a worker thread or in a `workerd` isolate. Its own comment says the in-process form is not a
+  security boundary and that only a worker can be terminated.
+
 ### Findings
 
 1. **There are four registries of "a thing provided under a key".** Capability tags, layer-spec
@@ -143,7 +160,8 @@ The client's own services are the one place where the target pattern is already 
 4. **Placement is declared in three ways.** A module's `environments`, a call's `on`, and
    compute-service's routing variables each decide where code runs.
 5. **Isolation on the client is undecided.** `.agents/projects/mcp/DESIGN.md` §2.6 leaves
-   third-party plugin isolation in the browser open. A wire contract is the precondition.
+   third-party plugin isolation in the browser open. A wire contract is the precondition, and the
+   worker, the sandboxed frame and the port transport it needs are already in the repo.
 6. **Cross-plugin behaviour on EDGE has no path.** D-88 defers it because capabilities are
    in-memory objects.
 
@@ -184,6 +202,43 @@ Four ways to get one mechanism. The third is the proposal.
 | Kind         | `remote` (has schemas, may cross a wire) or `local` (in-memory only).                    | Remote and local interfaces                  |
 
 ![Architecture: a consumer plugin imports a contract and asks the resolver for it; the resolver binds a provider plugin in the same host in memory, or a stub that calls a provider plugin in a remote host. Each provider plugin needs its own host's features.](diagrams/plugin-services-architecture.dx.svg)
+
+<details>
+<summary>Diagram source</summary>
+
+```diagram
+diagram flow=down
+group local "Local host" {
+  node Consumer "Consumer plugin"
+  node Resolver "Service resolver" ref="packages/core/compute/compute/src/ServiceResolver.ts"
+  node LocalPlugin "Provider plugin"
+  node Stub "Remote stub"
+  node LocalFeatures "Host features"
+}
+group shared "Shared by every host" {
+  node Contract "Service contract"
+  node Catalog "Service catalog" ref="packages/core/protocols/src/PluginProtocol.ts"
+}
+group remote "Remote host" {
+  node Server "Service server" ref="packages/core/mesh/rpc/src/RpcRouter.ts"
+  node RemotePlugin "Provider plugin"
+  node RemoteFeatures "Host features"
+}
+edge Consumer -> Resolver "get(contract)"
+edge Consumer depends-on Contract "imports"
+edge Resolver -> LocalPlugin "in-memory call"
+edge Resolver -> Stub "no local provider"
+edge Stub -> Server "RPC"
+edge Server -> RemotePlugin "calls handler"
+edge LocalPlugin depends-on LocalFeatures "needs"
+edge RemotePlugin depends-on RemoteFeatures "needs"
+edge LocalPlugin implements Contract
+edge RemotePlugin implements Contract
+edge Resolver depends-on Catalog "who provides?"
+edge Server -> Catalog "advertises"
+```
+
+</details>
 
 The consumer plugin and both provider plugins import the same contract and nothing else from each
 other. A provider plugin is the same bundle in either host; its host's features decide where its
@@ -341,6 +396,27 @@ own, as it is for `ServiceResolver` today.
 
 ![Resolution: the local host lacks the feature, so the resolver binds a stub to the remote host.](diagrams/plugin-services-resolve.dx.svg)
 
+<details>
+<summary>Diagram source</summary>
+
+```diagram
+diagram kind=sequence
+node Consumer "Consumer plugin"
+node Resolver "Service resolver"
+node Local "Local host"
+node Remote "Remote host"
+edge Consumer calls Resolver "get(Summarizer)"
+edge Resolver calls Local "provider here?"
+edge Local returns Resolver "needs aiGateway"
+edge Resolver calls Remote "describe()"
+edge Remote returns Resolver "provides Summarizer"
+edge Resolver returns Consumer "client (remote stub)"
+edge Consumer calls Remote "summarize(text)"
+edge Remote returns Consumer "stream of tokens"
+```
+
+</details>
+
 ### Hosts, features and placement
 
 A host is the container for one runtime. It holds a plugin manager, a layer stack, an RPC router and
@@ -359,25 +435,104 @@ a set of features.
   process-scoped providers per invocation, from the invocation's scope, and closes them when the
   call returns.
 
-| Host            | Runtime                         | Features (initial vocabulary)                                   |
-| --------------- | ------------------------------- | --------------------------------------------------------------- |
-| App host        | Browser or Tauri main thread    | `dom`, `localStorage`, `opfs`, `microphone`                     |
-| Worker host     | Web Worker or iframe            | `opfs`; isolated from the app's memory                          |
-| CLI host        | Node (`dx`)                     | `filesystem`, `shell`                                           |
-| EDGE host       | `workerd` isolate (PluginHost)  | `aiGateway`, `email`, `alwaysOn`; later `durableStorage`        |
+| Host            | Runtime                                | Features (initial vocabulary)                                   |
+| --------------- | -------------------------------------- | --------------------------------------------------------------- |
+| App host        | Browser or Tauri main thread           | `dom`, `localStorage`, `opfs`, `microphone`                     |
+| Worker host     | Web Worker at the app's origin         | `opfs`; no `dom`, no `localStorage`                             |
+| Frame host      | Sandboxed iframe, opaque origin        | None of its own; see "Isolation on the client"                  |
+| CLI host        | Node (`dx`)                            | `filesystem`, `shell`                                           |
+| EDGE host       | `workerd` isolate (PluginHost)         | `aiGateway`, `email`, `alwaysOn`; later `durableStorage`        |
 
 Resolution of a contract in a context:
 
 1. Collect the providers of the contract's key from plugins installed for the context: the device's
    enabled set, and the space's `properties.plugins` map.
 2. Drop a provider whose `needs` its host does not have.
-3. Order the rest: this host, then other hosts on this device, then EDGE.
-4. Bind the first. Its location decides the binding.
-5. If none remain, fail with `ServiceNotAvailableError`.
+3. Drop a host the plugin's isolation policy does not allow.
+4. Order the rest: this host, then other hosts on this device, then EDGE.
+5. Bind the first. Its location decides the binding.
+6. If none remain, fail with `ServiceNotAvailableError`.
+
+`needs` says where a provider can run. The isolation policy says where it may run, and the person
+installing the plugin sets it, never the plugin.
 
 `Service.get(contract, { on: 'edge' })` pins a host, which keeps today's manual override. A
 module's `environments` stays for modules that provide no service. For a provider module it is
 derived from `needs`.
+
+### Isolation on the client
+
+A plugin's services can run outside the app's main thread, in a worker or a frame, with the same
+contract and the port binding (U-9). The two give different boundaries, so they are two hosts.
+
+![Hosts: the app host reaches a worker host and a frame host over a port, and EDGE over HTTP. Only the frame host is outside the app's origin, so it is given a grant.](diagrams/plugin-services-hosts.dx.svg)
+
+<details>
+<summary>Diagram source</summary>
+
+```diagram
+diagram flow=down
+group app "Device, app origin" {
+  node ClientServices "Client services" ref="packages/sdk/client-protocol/src/service-rpc.ts"
+  node AppHost "App host"
+  node WorkerHost "Worker host" ref="packages/sdk/worker-framework/src/Worker.ts"
+}
+group sandbox "Device, opaque origin" {
+  node FrameHost "Frame host" ref="packages/plugins/plugin-cloudflare-os/src/api/Sandbox.ts"
+  node FrameWorker "Worker in frame"
+}
+group remote "EDGE" {
+  node EdgeHost "EDGE host" ref="packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts"
+}
+edge AppHost -> WorkerHost "port"
+edge AppHost -> FrameHost "port with grants"
+edge AppHost -> EdgeHost "HTTP"
+edge AppHost -> ClientServices "all spaces"
+edge WorkerHost -> ClientServices "same origin"
+edge FrameHost -> ClientServices "granted spaces"
+edge FrameHost owns FrameWorker
+```
+
+</details>
+
+| Host        | Boundary                                    | Protects against                                               | For                                                |
+| ----------- | ------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| Worker host | A thread at the app's origin                | A hang, a crash, work that blocks the main thread              | Trusted plugins with heavy or background services  |
+| Frame host  | A sandboxed iframe with an opaque origin    | Code that reads the app's memory, storage or identity, or that sends data out | Plugins the person does not trust     |
+| EDGE host   | A `workerd` isolate with no outbound access | The same, on EDGE                                              | Providers that need EDGE's features                |
+
+- **A worker alone is not a trust boundary.** A worker the app creates runs at the app's origin, so
+  it can open the app's IndexedDB and OPFS, where ECHO and the identity's keys live. It isolates
+  faults and CPU time. The host can terminate it, which nothing can do to code on the main thread.
+- **A sandboxed frame is the trust boundary.** A frame without `allow-same-origin` has an opaque
+  origin and cannot reach the app's storage. A `connect-src` policy on its document removes the
+  network, as `globalOutbound: null` does for an EDGE isolate. A frame host is hidden, and it may
+  start a worker of its own, which inherits the opaque origin and gives both boundaries.
+- **An isolated host is given contracts, not features.** A frame host has no storage and no
+  network. It reaches the outside only through contracts the app host serves on its port: ECHO
+  through the client service groups, limited to the spaces it was granted, and a key-value
+  contract scoped to the plugin. This is the EDGE arrangement, where a bundle reaches everything
+  through `env` bindings.
+- **A grant says what an isolated plugin may use.** A plugin's manifest lists the contracts it
+  uses and the network hosts it calls. The person approves the list at install. The app host's
+  router enforces it per port with RPC middleware, and writes the hosts into the frame's
+  `connect-src`. compute-service can check the same list on EDGE.
+- **A worker or frame loads the bundle the way EDGE does.** Composer's import map supplies a
+  plugin's external packages on the main thread. A worker does not read the page's import map, so
+  a worker or frame host loads the plugin from its `vendor/` directory with the imports rewritten
+  by `PluginLoader.rewriteImports` in `@dxos/edge-compute`. "One bundle for every runtime"
+  (EDGE-PLUGINS D-23) then covers the client's hosts. The spike confirms this.
+- **The app host supervises its child hosts.** It starts one when a contract first resolves
+  there, restarts it after a crash, terminates it when a ping goes unanswered, and closes it when
+  idle. `@dxos/worker-framework` already keeps one worker for all tabs, so an application-scoped
+  provider in a worker host is one instance per browser profile, not one per tab.
+- **Hosts are per trust domain, not per service.** Each isolated host loads its own copy of
+  Effect, the ECHO client and the plugin host. One worker host serves every trusted background
+  provider; each untrusted plugin gets one frame host.
+- **A surface cannot cross the boundary.** A surface is a React component in the app's document.
+  An isolated plugin's UI has to render in a visible sandboxed frame that a host-owned surface
+  embeds, as `GadgetFrame` does. That is not part of this design. Until it exists, a plugin is
+  isolated only when none of its modules runs in the app host.
 
 ### Catalog and install
 
@@ -452,7 +607,7 @@ A private package `packages/stories/stories-services` with one Storybook story a
 | `summarizer`        | Provides `Summarizer` (streamed `summarize`, property `status`); needs `aiGateway`.               | Mock remote host: a Web Worker          |
 | `panel`             | A surface that lists notes, summarizes one and shows where each contract resolved.                | App host                                |
 
-The story walks through four steps:
+The story walks through five steps:
 
 1. The panel lists notes through `NoteStore`. The binding label reads "in-memory".
 2. Summarize fails with `ServiceNotAvailableError`, because nothing provides `Summarizer`.
@@ -461,15 +616,21 @@ The story walks through four steps:
    label reads "port".
 4. "Install locally with a fake gateway" enables the same plugin in the app host. The resolver
    rebinds in memory with no change to the panel.
+5. "Install in a frame" loads the same plugin in a hidden sandboxed iframe with `connect-src
+   'none'`. The summarizer still streams over a port. A probe method in the plugin then tries to
+   read the app's `localStorage` and IndexedDB and to `fetch` a URL, and the panel shows all three
+   refused.
 
 An operation `notes.summarize`, whose handler requires both contracts, runs in step 3 to show
 operations on top of services.
 
 ### What is mocked
 
-- The remote host is a Web Worker running the same host code, reached over a `MessagePort`.
+- The remote host is a Web Worker running the same host code, reached over a `MessagePort`. It
+  stands in for EDGE, and it is also the real worker host of "Isolation on the client".
 - `aiGateway` is a canned token stream.
-- There is no EDGE, no auth and no registry: the manifest is a local URL.
+- There is no EDGE, no auth, no registry and no grant prompt: the manifest is a local URL and the
+  frame is granted the one contract it provides.
 
 ### Questions it answers
 
@@ -480,9 +641,14 @@ operations on top of services.
 4. Does the space in the resolution context reach a provider in another host?
 5. Can a host install a plugin from a manifest at run time and tell connected hosts?
 6. Do contract types survive declaration emit across packages?
+7. Does a worker load a plugin bundle through the `vendor/` rewrite alone, with no import map?
+8. Does a sandboxed frame serve a contract over a port while the app's storage and the network
+   stay out of its reach?
+9. What does one more host cost in memory and in time to first call?
 
 The vitest file runs the same plugins with two in-process hosts joined by a `MessageChannel`, so
-steps 1 to 4 are checked without a browser. Size: one session and one draft PR that is not merged.
+steps 1 to 4 are checked without a browser. Step 5 needs a browser test. Size: one session and one
+draft PR that is not merged.
 
 ## Workplan
 
@@ -494,26 +660,29 @@ Phases run in order. Each ends with a test that proves its exit criterion. The t
 | 0     | The spike above.                                                                                                                                            | dxos       | The six questions have written answers; this document is revised.                                        |
 | 1     | `@dxos/compute/Service`: contract, provider, client, in-memory binding, strict mode. The layer stack and router move into app-framework's core. `Capabilities.Service`, `AppCapability.service`, `useService`, manifest `services`. | dxos       | A layer spec and a provider resolve side by side in one `LayerStack`, with no process-manager plugin loaded. |
 | 2     | Providers register on `RpcRouter`; HTTP and Workers RPC transports for it; `Catalog.services`; protocol version 3.                                           | dxos       | One contract passes the same test suite on all four bindings.                                            |
-| 3     | EDGE's nine host services as contracts in `@dxos/protocols`. Version 3 bundles use them; `HostServiceAdapter` and the bundle's proxy are removed.            | dxos, edge | The agent and MCP suites pass on version 3 bundles with typed contracts; version 2 bundles still run.     |
-| 4     | A layer stack in PluginHost. Cross-plugin calls on EDGE: a contract index in registry-service, router resolution, EDGE-PLUGINS decisions.                    | dxos, edge | Sample plugin A calls a contract of sample plugin B on EDGE (T-20's counterpart for services).            |
-| 5     | Host features and derived placement; the plugins service; the app host reads the space's plugin map.                                                        | dxos, edge | An operation with no `on` runs where its services resolve, in a test with a local and a remote host.      |
-| 6     | Migration: layer specs to providers, then singleton capabilities to contracts, one package group per PR. `Capabilities.LayerSpec` deleted.                   | dxos       | No `LayerSpec.make` call remains; the capability census shows only multi capabilities and local keys.     |
-| 7     | Isolation and state: third-party plugins in a Worker host; a Durable Object facet for stateful services; plugin-contributed durable processes.               | dxos, edge | A plugin not owned by DXOS runs in a Worker host in Composer; a stateful service survives an isolate.     |
+| 3     | Client isolation: a worker host and a frame host, supervised by the app host; loading from `vendor/`; grants enforced on the port. | dxos       | A plugin with no app-host modules runs in a frame host in Composer and cannot reach the app's storage or the network. |
+| 4     | EDGE's nine host services as contracts in `@dxos/protocols`. Version 3 bundles use them; `HostServiceAdapter` and the bundle's proxy are removed.            | dxos, edge | The agent and MCP suites pass on version 3 bundles with typed contracts; version 2 bundles still run.     |
+| 5     | A layer stack in PluginHost. Cross-plugin calls on EDGE: a contract index in registry-service, router resolution, EDGE-PLUGINS decisions.                    | dxos, edge | Sample plugin A calls a contract of sample plugin B on EDGE (T-20's counterpart for services).            |
+| 6     | Host features and derived placement; the plugins service; the app host reads the space's plugin map.                                                        | dxos, edge | An operation with no `on` runs where its services resolve, in a test with a local and a remote host.      |
+| 7     | Migration: layer specs to providers, then singleton capabilities to contracts, one package group per PR. `Capabilities.LayerSpec` deleted.                   | dxos       | No `LayerSpec.make` call remains; the capability census shows only multi capabilities and local keys.     |
+| 8     | Durable state on EDGE: a Durable Object facet for stateful services; plugin-contributed durable processes. | dxos, edge | A stateful service survives an isolate; a plugin contributes a durable process. |
 
 - **Phases 1 and 2 keep every call site working.** `LayerSpec.make` keeps working because a layer
   spec is admitted to the stack as a provider of local contracts. Phase 1 does move the stack out of
   the process-manager plugin, which is a refactor of that one module.
-- **Phase 3 is the first that removes code**, and the first that needs both repositories. It uses
+- **Phase 3 needs only this repository** and nothing from EDGE, so it can run while the EDGE
+  phases wait.
+- **Phase 4 is the first that removes code**, and the first that needs both repositories. It uses
   `pnpm link-packages` from the edge checkout, never a published build.
-- **Phase 3 waits for operation-service to go.** The Plugin Runtime project is removing
+- **Phase 4 waits for operation-service to go.** The Plugin Runtime project is removing
   operation-service (EDGE-PLUGINS D-86). Until it is gone, each host service is served twice, once
-  by operation-service's bindings and once through the invocation scope, and phase 3 would have to
-  convert both. Phases 0 to 2 do not depend on it.
+  by operation-service's bindings and once through the invocation scope, and phase 4 would have to
+  convert both. Phases 0 to 3 do not depend on it.
 - **Removing the version 2 path on EDGE is a separate task**, done when no channel points at a
   version 2 bundle.
-- **Phase 6 has no compatibility shims.** Each PR moves one group of packages and updates every
+- **Phase 7 has no compatibility shims.** Each PR moves one group of packages and updates every
   call site in the same change.
-- **Before phase 6**, audit the operations that `Operation.serializable()` drops, since a remote
+- **Before phase 7**, audit the operations that `Operation.serializable()` drops, since a remote
   contract's schemas have the same constraint.
 
 ## Risks and open questions
@@ -521,17 +690,24 @@ Phases run in order. Each ends with a test that proves its exit criterion. The t
 1. **In-memory cost.** If a direct handler call cannot be typed as `Client<C>` without the RPC
    machinery, every local call pays for message framing. The spike measures it (question 2).
 2. **Reactive properties on EDGE.** An isolate lives for one invocation, so a property stream from
-   a stateless EDGE provider ends with the call. Properties are useful on EDGE only after phase 7.
+   a stateless EDGE provider ends with the call. Properties are useful on EDGE only after phase 8.
 3. **Isolate fan-out.** A Durable Object may have 10 Dynamic Workers in flight and a Worker request
    4 (EDGE-PLUGINS open question). Cross-plugin service calls multiply isolates per request.
 4. **Version skew.** A space may run a provider older than the consumer's contract. The catalog
    carries versions, but the policy (refuse, or negotiate the common methods) is not decided.
 5. **Offline.** A contract with only a remote provider fails when the device is offline. Each
    consumer has to handle `ServiceNotAvailableError`; a queued call is out of scope.
-6. **Permissions.** A call carries the caller's plugin key and identity, but nothing yet decides
-   which plugin may call which contract. Operations have `RequiresAnnotation`; services need an
-   equivalent before phase 7.
-7. **Naming.** `Service` collides in conversation with Effect's `Context.Service` and with EDGE's
+6. **Permissions.** A grant lists the contracts and network hosts an isolated plugin may use, and
+   phase 3 enforces it on a frame host's port. A plugin in the app host or a worker host is not
+   bound by it, since it shares the app's origin. Whether a grant is per plugin, per space or per
+   person is not decided.
+7. **Cost of a host.** Each isolated host carries its own copy of Effect, the ECHO client and the
+   plugin host. The spike measures it (question 9); if it is tens of megabytes, a frame per
+   untrusted plugin may have to become a frame per publisher.
+8. **Isolated UI.** A plugin with a surface cannot be fully isolated until surfaces can render in
+   a frame. Most third-party plugins have a surface, so trust isolation covers few plugins until
+   that work is done.
+9. **Naming.** `Service` collides in conversation with Effect's `Context.Service` and with EDGE's
    workers ("compute-service"). The term is kept because the code already calls these things
    services.
 
@@ -551,6 +727,14 @@ These are the author's, not Rich's. An independent reader asked for each; all ar
 8. **EDGE's contracts live in `@dxos/protocols`.**
 9. **Client services are wrapped, not migrated**, and `RpcRouter` is the host's RPC server.
 10. **PluginHost builds space-scoped providers per invocation.**
+11. **Client isolation is two hosts.** A worker host for faults, a frame host for trust, because a
+    worker at the app's origin can read the app's storage.
+12. **The person installing a plugin sets its isolation policy.** The proposed default: a plugin
+    bundled with the app runs in the app host; a plugin installed from the registry runs in a
+    frame host when none of its modules needs the app host. The rule is keyed on how the plugin
+    arrived, not on who published it, which keeps to EDGE-PLUGINS D-17.
+13. **Client isolation is phase 3**, ahead of the EDGE phases, because it needs nothing from EDGE.
+14. **Isolated UI is out of scope.** Surfaces in a frame are a separate piece of work.
 
 ## Left to the builder
 
