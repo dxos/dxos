@@ -10,6 +10,12 @@ from every guild the bot belongs to are synced into ECHO as `@dxos/types`
 `Message` objects inside `Channel` feeds — fully local-first and replicated
 to all peers.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.thread: Its channel operations reach Discord through this plugin's channel backend and backend operations.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -458,7 +464,7 @@ decision D-3: plugin-discord handles the backend's own `send` and `openDirect` o
   date: 2026-11-26
   by: user:mykola-vrmchk
   affects: [DiscordChannelBackend]
-  why: Mirrored delivery is removed (plugin-thread D-1), so an agent on EDGE can reach Discord only by posting through the backend, and only plugin-discord's bundle holds it.
+  why: Mirrored delivery is removed (org.dxos.plugin.thread#D-1), so an agent on EDGE can reach Discord only by posting through the backend, and only plugin-discord's bundle holds it.
   source: https://github.com/dxos/dxos/pull/14701
 ```
 
