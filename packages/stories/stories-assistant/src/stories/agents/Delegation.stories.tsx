@@ -141,6 +141,8 @@ export const CrmAgentsScripted: Story = {
     const objects = within(await canvas.findByTestId('database-module'));
     await waitFor(() => expect(objects.getAllByText(LEDGER)).toHaveLength(1), { timeout: 10_000 });
     await expect(objects.getAllByText(SCOUT)).toHaveLength(1);
+    // A session's feed sits under its session, so none is listed at the top level.
+    await expect(objects.queryAllByText('org.dxos.type.feed')).toHaveLength(0);
     // Visible, not only present: a highlighter that collapses to no width keeps its text in the DOM.
     await expect(record.firstElementChild?.getBoundingClientRect().width ?? 0).toBeGreaterThan(0);
 

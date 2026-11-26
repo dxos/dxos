@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { ObjectsTree } from '@dxos/devtools';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Json, Obj, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { type EntityId } from '@dxos/keys';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
@@ -15,7 +15,7 @@ import { type Space, useFlush, useObject, useQuery } from '@dxos/react-client/ec
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-query';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -100,11 +100,12 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
       <Panel.Header>
         <DatabaseSearchBar space={space} view={view} onSubmit={handleSubmit} onViewChange={handleViewChange} />
       </Panel.Header>
-      <Panel.Body classNames='relative min-h-0'>
-        {view === 'graph' && <ForceGraph.Root classNames='min-h-[50vh]' model={model} />}
+      {/* A column, so the selected record docks below the view instead of floating over it. */}
+      <Panel.Body classNames='relative min-h-0 flex flex-col'>
+        {view === 'graph' && <ForceGraph.Root classNames='flex-1 min-h-[50vh]' model={model} />}
 
         {view === 'object-tree' && (
-          <ScrollArea.Root classNames='h-full'>
+          <ScrollArea.Root classNames='flex-1 min-h-0'>
             <ScrollArea.Viewport>
               <ObjectsTree
                 db={space.db}
@@ -116,19 +117,21 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
         )}
 
         {view === 'cards' && (
-          <DatabaseCardsView
-            space={space}
-            filter={filter}
-            selectedId={selectedId}
-            onSelect={(id) => setSelectedId(id)}
-          />
+          <div className='relative flex-1 min-h-0'>
+            <DatabaseCardsView
+              space={space}
+              filter={filter}
+              selectedId={selectedId}
+              onSelect={(id) => setSelectedId(id)}
+            />
+          </div>
         )}
 
         {open ? (
           <div
             className={mx(
               'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-              'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
+              'overflow-hidden dx-base-surface border border-separator-subtle',
             )}
           >
             <JsonHighlighter classNames='flex-1 min-w-0 text-sm' data={filter} />
@@ -138,12 +141,27 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
           selectedSnapshot && (
             <div
               data-testid='database-module.selected'
-              className={mx(
-                'flex absolute left-2 right-2 bottom-2 h-1/2',
-                'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
-              )}
+              className='flex flex-col shrink-0 h-1/2 min-h-0 dx-base-surface border-t border-separator'
             >
-              <JsonHighlighter classNames='flex-1 min-w-0 text-sm' data={selectedSnapshot} />
+              {/* The debug panel's record view: filter, depth, and refs resolved against the space. */}
+              <Syntax.Root
+                data={selectedSnapshot}
+                getReplacer={(depth) => Json.createRefReplacer({ db: space.db, depth })}
+              >
+                <Panel.Root>
+                  <Panel.Header>
+                    <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
+                      <Syntax.Filter />
+                      <Syntax.Depth />
+                    </Toolbar.Root>
+                  </Panel.Header>
+                  <Panel.Body asChild>
+                    <Syntax.Viewport>
+                      <Syntax.Code />
+                    </Syntax.Viewport>
+                  </Panel.Body>
+                </Panel.Root>
+              </Syntax.Root>
             </div>
           )
         )}
