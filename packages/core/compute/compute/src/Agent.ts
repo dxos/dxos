@@ -504,6 +504,8 @@ export interface OpenSessionOptions {
   /**
    * Who the session acts as and the grants it holds (`Process.SpawnOptions.authority`); its tool calls are held to it.
    * Read when the session's process is spawned; a running process keeps the authority it was spawned with.
+   *
+   * @experimental
    */
   readonly authority?: Process.Authority;
 }

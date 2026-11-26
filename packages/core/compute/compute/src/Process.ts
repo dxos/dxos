@@ -278,6 +278,8 @@ export interface Data {
   /**
    * Every authority the process is held to, those it inherited first and its own last; each must admit a call that
    * declares requirements. Absent when it holds none.
+   *
+   * @experimental
    */
   readonly authorities?: readonly Authority[];
 
@@ -389,6 +391,8 @@ export type Any = Process<any, any, any>;
 /**
  * Who a process acts as and the grants it holds. Data: it is persisted with the process, so a rehydrated process keeps
  * its limits, and it can be sent with a remote spawn.
+ *
+ * @experimental
  */
 export const Authority = Schema.Struct({
   /** The principal the process acts as: the audience its grants name. */
@@ -433,6 +437,8 @@ export interface SpawnOptions {
    * admitted by this authority and by each ancestor's (and, for a detached spawn, the spawner's), so a child never
    * widens what it inherits. A process that holds none is refused every such call. Persisted with the process; grants
    * are added later through the host manager's `grant`, or by consent.
+   *
+   * @experimental
    */
   readonly authority?: Authority;
 
@@ -560,6 +566,8 @@ export interface Manager {
    * TODO(dmaretskyi): Not secure as a grant path: anything that holds this manager, a running process included, can add
    *  any grant to any process, itself too. Limit it later, e.g. by keeping it off the manager a process sees, by
    *  verifying that the issuer may grant what it grants, or by moving grants into a store keyed by principal.
+   *
+   * @experimental
    */
   grant(pid: ID, grants: readonly Grant.Grant[]): Effect.Effect<void>;
 }
