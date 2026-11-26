@@ -76,12 +76,6 @@ export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel
   });
 
 /**
- * `Message.properties` flag on a message queued for a mirrored channel's host to post. The host
- * posts only these: the agent's own text in a channel conversation is not sent, it speaks through its channel skills.
- */
-export const OUTBOUND_PROPERTY = 'outbound';
-
-/**
  * Marks an operation that answers in a channel conversation (posts, mails, relays or reacts). Its value names the
  * output field that says where the message went: a conversation's thread id, or a reference to the chat it was
  * recorded in.
@@ -111,15 +105,6 @@ export const chatKey = (channelId: string, thread?: string) => ({
   source: CHAT_SOURCE,
   id: thread === undefined ? channelId : `${channelId}/${thread}`,
 });
-
-/**
- * `Obj.Meta` key source of a chat for a direct conversation the agent opened on a mirrored channel; the id is the
- * channel's entity id, so the channel's host can find the conversations it still has to open.
- */
-export const DIRECT_SOURCE = 'org.dxos.agent/direct';
-
-/** Second foreign key of a direct conversation's chat on a mirrored channel; see {@link DIRECT_SOURCE}. */
-export const directKey = (channelId: string) => ({ source: DIRECT_SOURCE, id: channelId });
 
 /** The channel (and thread) a chat mirrors, read back from its {@link chatKey}. */
 export const conversationOf = (chat: Agent.Session): { channelId: string; thread?: string } | undefined => {

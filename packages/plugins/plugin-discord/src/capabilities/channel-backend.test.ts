@@ -14,11 +14,14 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EdgeHttpClient, type EdgeRequestArgs } from '@dxos/edge-client';
 import { AccessToken } from '@dxos/link';
+import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
 import { Channel, Message, Person } from '@dxos/types';
 
 import { DiscordBot, DiscordChannel } from '#types';
 
+import openDirect from '../operations/channel/open-direct.ts';
+import sendHandler from '../operations/channel/send.ts';
 import { makeDiscordChannelBackend } from './channel-backend.ts';
 
 type RecordedRequest = { path: string } & EdgeRequestArgs;
@@ -96,7 +99,6 @@ describe('Discord channel backend', () => {
       const bot = fakeBot();
       const backend = makeDiscordChannelBackend({ bot: Effect.succeed(bot.service) });
       const { channel } = yield* makeChannel(MANAGED_ACCESS_TOKEN);
-      expect(backend.mirrored).toBeUndefined();
       const josiah = Person.make({
         fullName: 'Josiah',
         identities: [{ label: 'discord', value: '700000000000000007' }],
@@ -277,6 +279,33 @@ describe('Discord channel connection', () => {
         Effect.exit,
       );
       expect(Exit.isFailure(exit)).toBe(true);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it('declares its own operations under the keys plugin-thread derives from its kind', () => {
+    const derived = ThreadOperation.backendOperations(DiscordChannel.BACKEND_KIND);
+    expect(DiscordChannel.BackendOperation.Send.meta.key).toBe(derived.Send.meta.key);
+    expect(DiscordChannel.BackendOperation.OpenDirect.meta.key).toBe(derived.OpenDirect.meta.key);
+  });
+
+  it.effect('its own operations post through the bot EDGE serves, where plugin-thread cannot see the backend', () =>
+    Effect.gen(function* () {
+      const bot = fakeBot();
+      const { channel } = yield* makeChannel(MANAGED_ACCESS_TOKEN);
+      const josiah = yield* Database.add(
+        Person.make({ fullName: 'Josiah', identities: [{ label: 'discord', value: '700000000000000007' }] }),
+      );
+      const services = <A, E>(
+        effect: Effect.Effect<A, E, DiscordBot.DiscordBotService | Capability.Service | Database.Service>,
+      ) => effect.pipe(Effect.provideService(DiscordBot.DiscordBotService, bot.service), withCapabilities);
+
+      const direct = yield* services(openDirect.handler({ channel: Ref.make(channel), person: Ref.make(josiah) }));
+      expect(direct).toEqual({ thread: DiscordChannel.pendingDmThread('700000000000000007') });
+      const sent = yield* services(
+        sendHandler.handler({ channel: Ref.make(channel), thread: direct.thread, text: 'Hi.' }),
+      );
+      expect(sent).toMatchObject({ delivered: true, thread: 'dm-700000000000000007' });
+      expect(bot.acts.map(({ action }) => action)).toEqual([{ kind: 'dm', userId: '700000000000000007', text: 'Hi.' }]);
     }).pipe(Effect.provide(testLayer())),
   );
 });

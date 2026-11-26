@@ -185,10 +185,12 @@ The bot host never posts what the agent writes into its chats. Every message rea
 newest conversation on a channel; a new DM through the agent's channels; and only then a Composer chat with them,
 which it wakes, since they may never have it open. `ChatParticipant` ties the chat to the person, so later relays to
 them reuse it. A refused send (closed DMs, a deleted thread) is a reason, and delivery falls through to the next route.
-A backend whose host posts what the agent appends declares `ChannelBackendProvider.mirrored`; Discord's does not.
+No backend has a host that posts what the agent appends to a chat: the agent posts every message itself.
 
-**On EDGE, a bundle activates alone**, so plugin-agent's bundle has no Discord channel backend and `SendMessage` cannot
-post to Discord there. Until it can, the relay skill falls back to plugin-discord's `DirectMessage` operation.
+**On EDGE, a bundle activates alone**, so plugin-thread's bundle cannot see Discord's channel backend. Where no backend
+is visible, `SendToChannel` and `OpenDirect` invoke the backend's own operations instead
+(`org.dxos.operation.discord.sendToChannel` and `.openDirect`, keyed by `ThreadOperation.backendOperations`), which
+plugin-discord's bundle handles with the same backend code and the `DiscordBotService` EDGE serves it.
 
 **Disconnect** (`UnbindChannel`) deletes the binding and removes the id from the config; a `Channel` left with no Discord
 channel leaves the agent's list, and its conversations stay in the space. Deleting a thread conversation in the Activity panel deletes the Discord thread through EDGE

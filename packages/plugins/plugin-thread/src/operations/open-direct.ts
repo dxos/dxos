@@ -13,18 +13,13 @@ const handler: Operation.WithHandler<typeof ThreadOperation.OpenDirect> = Thread
   Operation.withHandler(
     Effect.fnUntraced(function* ({ channel: channelRef, person: personRef }) {
       const channel = yield* Database.load(channelRef);
-      const person = yield* Database.load(personRef);
-      const provider = yield* ChannelBackend.getProvider(channel);
-      const openDirect = yield* ChannelBackend.requireMember(provider, 'openDirect');
-      // As with sending, a backend refusal is an outcome the caller relays.
-      return yield* openDirect(channel, person).pipe(
-        Effect.map((thread) =>
-          thread === undefined
-            ? { reason: `The person has no ${provider.label} handle the channel can reach.` }
-            : { thread },
-        ),
-        Effect.catch((error) => Effect.succeed({ reason: error.message })),
-      );
+      const provider = yield* ChannelBackend.findProvider(channel);
+      if (provider) {
+        return yield* ChannelBackend.openDirectThrough(provider, channel, yield* Database.load(personRef));
+      }
+      // As with sending: the backend's plugin runs apart from this one, so it opens the conversation itself.
+      const { OpenDirect } = ThreadOperation.backendOperations(channel.backend.kind);
+      return yield* ChannelBackend.invokeBackend(channel, OpenDirect, { channel: channelRef, person: personRef });
     }),
   ),
 );

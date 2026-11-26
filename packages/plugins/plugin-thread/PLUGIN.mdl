@@ -20,6 +20,7 @@ The following extension dialects are used in this document.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -64,14 +65,17 @@ op SendToChannel
   key: org.dxos.operation.thread.sendToChannel
   desc: |
     Send text to a channel, or to a backend thread inside it, through the provider resolved by
-    `channel.backend.kind`. A backend refusal returns `delivered: false` with a reason; a missing
-    provider or a backend without threads fails with a typed error.
+    `channel.backend.kind`. Where no provider is visible (another plugin's bundle on EDGE) it invokes
+    the backend's own `sendToChannel` operation instead. A backend refusal returns `delivered: false`
+    with a reason; no provider and no such operation, or a backend without threads, fails with a
+    typed error.
   in:
     channel: Ref<Channel>
     thread?: String
     text: String
   out:
     delivered: Boolean
+    thread?: String
     messageIds?: String[]
     properties?: Record
     reason?: String
@@ -82,7 +86,8 @@ op OpenDirect
   key: org.dxos.operation.thread.openDirect
   desc: |
     Open a direct conversation (a DM) with a Person through the channel's account, via the
-    backend's optional `openDirect`; returns a thread id for SendToChannel.
+    backend's optional `openDirect`, or its own `openDirect` operation where no provider is
+    visible; returns a thread id for SendToChannel.
   in:
     channel: Ref<Channel>
     person: Ref<Person>
@@ -194,4 +199,26 @@ test QA-2: Default "General" channel on space creation
       do: Right-click the new space in the navtree and choose Delete space.
       invoke: org.dxos.operation.space.delete { space: $created.space }
       expect: the space leaves the navtree
+```
+
+## Changelog
+
+```mdl
+decision D-1: A channel backend no longer declares itself mirrored: `ChannelBackendProvider.mirrored` and `ChannelBackend.isMirrored` are removed, so an agent always posts through SendToChannel and never leaves text in a chat for a host to post.
+  date: 2026-11-26
+  by: user:mykola-vrmchk
+  affects: [SendToChannel]
+  source: https://github.com/dxos/dxos/pull/14701
+```
+
+```mdl
+decision D-2: SendToChannel and OpenDirect invoke the backend's own operations, keyed `<root>.operation.<name>.sendToChannel` and `.openDirect` for a kind `<root>.channel.backend.<name>` (`ThreadOperation.backendOperations`), where the backend's capability is not visible. Fills in [D-1].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [SendToChannel, OpenDirect]
+  why: On EDGE each plugin bundle activates alone and shares definitions, not capabilities, so plugin-thread cannot see plugin-discord's backend; an operation keyed by the channel's kind reaches the backend's own bundle, and the browser keeps the capability path.
+  rejected:
+    - One generic backend operation for every kind: one key has one handler, so the host could not route it to the backend's plugin.
+    - Moving every backend to operations: the feed, Slack and other backends run where plugin-thread sees them, so only a backend that runs apart needs its operations.
 ```

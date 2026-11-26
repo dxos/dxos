@@ -6,15 +6,48 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
+import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
+
+import * as DiscordBot from './DiscordBot.ts';
 
 /** Key of the skill an agent acts in Discord with; a plain key, so the config type need not import the skill. */
 export const SKILL_KEY = 'org.dxos.skill.discord';
 
 /** `Channel.backend.kind` of a channel that talks through a Discord bot. */
 export const BACKEND_KIND = 'org.dxos.channel.backend.discord';
+
+/**
+ * The backend's own send and open-direct operations (`ThreadOperation.backendOperations`), which plugin-thread invokes
+ * where it cannot see the backend's capability (plugin-discord's own bundle on EDGE); they act through the bot EDGE
+ * serves as `DiscordBotService`.
+ */
+export const BackendOperation: ThreadOperation.BackendOperations<DiscordBot.DiscordBotService> = {
+  Send: Operation.make({
+    meta: {
+      key: DXN.make('org.dxos.operation.discord.sendToChannel'),
+      name: 'Send through Discord',
+      description: 'Posts to a Discord channel, thread or DM through the bot.',
+    },
+    services: [Database.Service, Capability.Service, DiscordBot.DiscordBotService],
+    input: ThreadOperation.SendToChannel.input,
+    output: ThreadOperation.SendToChannel.output,
+  }),
+  OpenDirect: Operation.make({
+    meta: {
+      key: DXN.make('org.dxos.operation.discord.openDirect'),
+      name: 'Open a Discord DM',
+      description: 'Names the DM the bot opens with a person on the first message, from their Discord user id.',
+    },
+    services: [Database.Service, Capability.Service, DiscordBot.DiscordBotService],
+    input: ThreadOperation.OpenDirect.input,
+    output: ThreadOperation.OpenDirect.output,
+  }),
+};
 
 /**
  * Prefix of the thread id of a DM the agent asked for but EDGE's bot has not opened yet (`dm:<Discord user id>`):

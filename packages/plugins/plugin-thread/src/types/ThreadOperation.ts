@@ -139,6 +139,58 @@ export const OpenDirect = Operation.make({
   }),
 });
 
+/** A channel backend's own operations (see {@link backendOperations}); `S` names the extra services its handlers use. */
+export type BackendOperations<S = never> = {
+  Send: Operation.Definition<
+    Operation.Definition.Input<typeof SendToChannel>,
+    Operation.Definition.Output<typeof SendToChannel>,
+    Database.Service | Capability.Service | S
+  >;
+  OpenDirect: Operation.Definition<
+    Operation.Definition.Input<typeof OpenDirect>,
+    Operation.Definition.Output<typeof OpenDirect>,
+    Database.Service | Capability.Service | S
+  >;
+};
+
+/**
+ * The key a channel backend's plugin declares one of its {@link backendOperations} under: a kind
+ * `<root>.channel.backend.<name>` gives `<root>.operation.<name>.<verb>`.
+ */
+const backendOperationKey = (kind: string, verb: 'sendToChannel' | 'openDirect') =>
+  DXN.make(`${kind.replace('.channel.backend.', '.operation.')}.${verb}`);
+
+/**
+ * Stand-ins for the operations a channel backend's own plugin declares and handles for its `kind` (keyed by
+ * {@link backendOperationKey}), with SendToChannel's and OpenDirect's input and output. SendToChannel and
+ * OpenDirect invoke them where the backend's capability is not visible, as on EDGE, where each plugin bundle runs
+ * alone and shares definitions but not capabilities; the host routes the call to the plugin that handles the key.
+ */
+export const backendOperations = (kind: string): BackendOperations => ({
+  Send: Operation.make({
+    meta: {
+      // The literal lives where the backend's plugin declares the operation, which is what the rule protects.
+      // eslint-disable-next-line @dxos/rules/operation-key-shape
+      key: backendOperationKey(kind, 'sendToChannel'),
+      name: 'Send through the channel backend',
+    },
+    services: [Database.Service, Capability.Service],
+    input: SendToChannel.input,
+    output: SendToChannel.output,
+  }),
+  OpenDirect: Operation.make({
+    meta: {
+      // As for Send: the literal lives with the backend's own declaration.
+      // eslint-disable-next-line @dxos/rules/operation-key-shape
+      key: backendOperationKey(kind, 'openDirect'),
+      name: 'Open a direct conversation through the channel backend',
+    },
+    services: [Database.Service, Capability.Service],
+    input: OpenDirect.input,
+    output: OpenDirect.output,
+  }),
+});
+
 /** Starts the channel's connection (or reconfigures a running one). */
 export const ConnectChannel = Operation.make({
   meta: {

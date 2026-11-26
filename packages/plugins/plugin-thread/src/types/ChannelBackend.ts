@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Feed, Filter, Query } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { BaseError } from '@dxos/errors';
-import { type Channel, Message } from '@dxos/types';
+import { type Channel, Message, type Person } from '@dxos/types';
 
 import * as ThreadCapabilities from './ThreadCapabilities.ts';
 import type * as ThreadOperation from './ThreadOperation.ts';
@@ -32,13 +33,20 @@ export const resolveProvider = (
   kind: string,
 ): ThreadCapabilities.ChannelBackendProvider | undefined => providers.find((provider) => provider.kind === kind);
 
+/** The contributed provider for a channel, or undefined when none is visible here. */
+export const findProvider = (
+  channel: Channel.Channel,
+): Effect.Effect<ThreadCapabilities.ChannelBackendProvider | undefined, never, Capability.Service> =>
+  Capability.getAll(ThreadCapabilities.ChannelBackend).pipe(
+    Effect.map((providers) => resolveProvider(providers, channel.backend.kind)),
+  );
+
 /** The contributed provider for a channel, or a typed failure naming the missing kind. */
 export const getProvider: (
   channel: Channel.Channel,
 ) => Effect.Effect<ThreadCapabilities.ChannelBackendProvider, ChannelBackendNotFoundError, Capability.Service> =
   Effect.fnUntraced(function* (channel) {
-    const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
-    const provider = resolveProvider(providers, channel.backend.kind);
+    const provider = yield* findProvider(channel);
     if (!provider) {
       return yield* Effect.fail(new ChannelBackendNotFoundError({ context: { kind: channel.backend.kind } }));
     }
@@ -46,14 +54,19 @@ export const getProvider: (
   });
 
 /**
- * Whether a host posts what an agent writes into its conversation chats on this channel
- * ({@link ThreadCapabilities.ChannelBackendProvider.mirrored}); a channel with no provider is not.
+ * Invokes one of the channel backend's own {@link ThreadOperation.backendOperations}, for a backend whose capability
+ * is not visible here; no handler for it means no backend handles the channel.
  */
-export const isMirrored: (channel: Channel.Channel) => Effect.Effect<boolean, never, Capability.Service> =
-  Effect.fnUntraced(function* (channel) {
-    const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
-    return resolveProvider(providers, channel.backend.kind)?.mirrored === true;
-  });
+export const invokeBackend = <I, O>(
+  channel: Channel.Channel,
+  operation: Operation.Definition<I, O>,
+  input: I,
+): Effect.Effect<O, ChannelBackendNotFoundError, Operation.Service> =>
+  Operation.invoke(operation, input).pipe(
+    Effect.catchTag('NoHandlerError', () =>
+      Effect.fail(new ChannelBackendNotFoundError({ context: { kind: channel.backend.kind } })),
+    ),
+  );
 
 /** Narrows a provider to one that has the optional member `name`, or fails naming what is missing. */
 export const requireMember = <K extends 'openDirect' | 'threads' | 'connection'>(
@@ -74,6 +87,42 @@ export const requireMember = <K extends 'openDirect' | 'threads' | 'connection'>
 /** A provider's send result as a receipt; a backend with nothing to report yields an empty one. */
 export const toReceipt = (result: ThreadCapabilities.SendResult): ThreadOperation.SendReceipt =>
   typeof result === 'object' ? result : {};
+
+/** Posts text through a provider, to the channel or a thread inside it; a backend refusal is an outcome, not a failure. */
+export const sendThrough = Effect.fnUntraced(function* (
+  provider: ThreadCapabilities.ChannelBackendProvider,
+  channel: Channel.Channel,
+  thread: string | undefined,
+  text: string,
+) {
+  const message = Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text }] });
+  const send =
+    thread === undefined
+      ? provider.send(channel, message)
+      : (yield* requireMember(provider, 'threads')).send(channel, thread, message);
+  // The caller relays a refusal (closed DMs, missing permission) to whoever asked.
+  return yield* send.pipe(
+    Effect.map((result) => ({ delivered: true, ...toReceipt(result) })),
+    Effect.catch((error) => Effect.succeed({ delivered: false, reason: error.message })),
+  );
+});
+
+/** Opens a direct conversation through a provider; a person it cannot reach is an outcome, not a failure. */
+export const openDirectThrough = Effect.fnUntraced(function* (
+  provider: ThreadCapabilities.ChannelBackendProvider,
+  channel: Channel.Channel,
+  person: Person.Person,
+) {
+  const openDirect = yield* requireMember(provider, 'openDirect');
+  return yield* openDirect(channel, person).pipe(
+    Effect.map((thread): { thread?: string; reason?: string } =>
+      thread === undefined
+        ? { reason: `The person has no ${provider.label} handle the channel can reach.` }
+        : { thread },
+    ),
+    Effect.catch((error) => Effect.succeed({ reason: error.message })),
+  );
+});
 
 /**
  * Subscribes to the messages appended to a feed, firing immediately; returns the unsubscribe.
