@@ -575,7 +575,7 @@ edge FrameHost owns FrameWorker
 | Host        | Boundary                                    | Protects against                                               | For                                                |
 | ----------- | ------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
 | Worker host | A thread at the app's origin                | A hang, a crash, work that blocks the main thread              | Trusted plugins with heavy or background services  |
-| Frame host  | A sandboxed iframe on its own origin        | Code that reads the app's memory, storage or identity, or that sends data out | Plugins the person does not trust     |
+| Frame host  | A sandboxed iframe on its own origin        | Code that reads the app's memory, storage or identity, or that sends data out by a request (not by navigating itself; see below) | Plugins the person does not trust     |
 | EDGE host   | A `workerd` isolate with no outbound access | The same, on EDGE                                              | Providers that need EDGE's features                |
 
 - **A worker alone is not a trust boundary.** A worker the app creates runs at the app's origin, so
@@ -754,7 +754,7 @@ draft PR that is not merged.
 
 ## Spike results
 
-The spike is built and runs. `src/services/hosts.test.ts` has 11 passing tests with hosts joined by a
+The spike is built and runs. `src/services/hosts.test.ts` has 13 passing tests with hosts joined by a
 `MessageChannel` in Node, and the story `stories/stories-services/Services` was walked through all
 five steps in a browser. Its `Calls` variant drives steps 1 to 4 with a play function, which the
 Storybook test runner passes.

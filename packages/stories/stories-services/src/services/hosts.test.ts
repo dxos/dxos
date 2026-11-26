@@ -17,7 +17,7 @@ import { NoteStore, Summarizer } from '../contracts/index.ts';
 import { fakeGateway } from '../hosts/gateway.ts';
 import NotesPlugin from '../plugins/notes-plugin.ts';
 import SummarizerPlugin from '../plugins/summarizer-plugin.ts';
-import { type HostControl, Service, ServiceHost } from './index.ts';
+import { type HostControl, Service, ServiceHost, State } from './index.ts';
 
 /** A plugin whose provider fails as it starts, as the notes provider would on unreadable storage. */
 const BrokenPlugin = Plugin.define(
@@ -41,10 +41,43 @@ const BrokenPlugin = Plugin.define(
   Plugin.make,
 );
 
+/** A second plugin that provides `NoteStore`, with a count no storage would give. */
+const OtherNotesPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.stories.services.plugin.otherNotes'), name: 'OtherNotes' }),
+).pipe(
+  Plugin.addModule({
+    id: 'provider',
+    provides: [ServiceHost.Provider],
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          ServiceHost.Provider,
+          Service.provide(NoteStore.Contract, {
+            make: () =>
+              Effect.sync(() => {
+                const count = State.cell(42);
+                const store: NoteStore.Client = {
+                  put: ({ text }) => Effect.succeed({ id: 'other', text }),
+                  list: () => Effect.succeed([]),
+                  clear: () => Effect.void,
+                  count: count.property,
+                  added: State.emitter<NoteStore.Note>().stream,
+                };
+                return store;
+              }),
+          }),
+        ),
+      ]),
+  }),
+  Plugin.make,
+);
+
 const PLUGINS: Record<string, () => Plugin.Plugin> = {
   notes: NotesPlugin,
   summarizer: SummarizerPlugin,
   broken: BrokenPlugin,
+  otherNotes: OtherNotesPlugin,
 };
 
 const loadPlugin = async (reference: string): Promise<Plugin.Plugin> => {
@@ -111,7 +144,7 @@ describe('plugin services', () => {
     await app.install('notes');
 
     const notes = app.client(NoteStore.Contract);
-    expect(app.binding(NoteStore.Contract)).toEqual({ kind: 'memory', hostId: 'app', hostKind: 'app' });
+    expect(app.binding(NoteStore.Contract)).toMatchObject({ kind: 'memory', hostId: 'app', hostKind: 'app' });
 
     const note = await EffectEx.runPromise(notes.put({ text: 'first' }));
     expect(note.text).toBe('first');
@@ -132,7 +165,13 @@ describe('plugin services', () => {
     await app.install('summarizer');
     expect(app.binding(Summarizer.Contract)).toBeUndefined();
     expect(app.getSnapshot().self.services).toEqual([
-      { key: Summarizer.Contract.key, version: '0.1.0', active: false, unmet: [Summarizer.GATEWAY_FEATURE] },
+      {
+        key: Summarizer.Contract.key,
+        version: '0.1.0',
+        active: false,
+        instance: '',
+        unmet: [Summarizer.GATEWAY_FEATURE],
+      },
     ]);
   });
 
@@ -149,7 +188,7 @@ describe('plugin services', () => {
     assert(control, 'the app holds the control client of a connected host');
     await EffectEx.runPromise(control.install({ plugin: 'summarizer' }));
     await until(app, (snapshot) => snapshot.bindings[Summarizer.Contract.key]?.kind === 'port');
-    expect(app.binding(Summarizer.Contract)).toEqual({ kind: 'port', hostId: 'edge', hostKind: 'edge' });
+    expect(app.binding(Summarizer.Contract)).toMatchObject({ kind: 'port', hostId: 'edge', hostKind: 'edge' });
 
     const tokens = await EffectEx.runPromise(Stream.runCollect(summarizer.summarize({ text: 'one two three' })));
     expect(tokens).toEqual(['[edge]', '3 words:', 'one', 'two', 'three']);
@@ -169,7 +208,7 @@ describe('plugin services', () => {
 
     await app.install('summarizer');
     await app.setFeature(Summarizer.GATEWAY_FEATURE, fakeGateway('app', 1));
-    expect(app.binding(Summarizer.Contract)).toEqual({ kind: 'memory', hostId: 'app', hostKind: 'app' });
+    expect(app.binding(Summarizer.Contract)).toMatchObject({ kind: 'memory', hostId: 'app', hostKind: 'app' });
 
     const second = await EffectEx.runPromise(Stream.runCollect(summarizer.summarize({ text: 'a b' })));
     expect(second[0]).toBe('[app]');
@@ -259,6 +298,38 @@ describe('plugin services', () => {
     // The failure does not stop the host: a later change still goes through.
     await app.setFeature(Summarizer.GATEWAY_FEATURE, fakeGateway('app', 1));
     await app.install('summarizer');
+    expect(app.binding(Summarizer.Contract)?.kind).toBe('memory');
+  });
+
+  test('a subscription follows a provider replaced in the same host', async ({ expect }) => {
+    const app = make('app', 'app', { [NoteStore.STORAGE_FEATURE]: memoryStorage() });
+    await app.install('notes');
+    const notes = app.client(NoteStore.Contract);
+    const seen: number[] = [];
+    const fiber = Effect.runFork(
+      Stream.runForEach(notes.count.changes, (count) => Effect.sync(() => seen.push(count))),
+    );
+    await expect.poll(() => seen).toEqual([0]);
+
+    // A second plugin takes the contract over in the same host: the binding is still `memory → app`.
+    await app.install('otherNotes');
+    await expect.poll(() => seen).toEqual([0, 42]);
+
+    // Removing it gives the contract back to the first plugin's provider.
+    await app.uninstall('otherNotes');
+    await expect.poll(() => seen).toEqual([0, 42, 0]);
+
+    await EffectEx.runPromise(Fiber.interrupt(fiber));
+  });
+
+  test('an install reports only its own provider failing', async ({ expect }) => {
+    const app = make('app', 'app', {
+      [NoteStore.STORAGE_FEATURE]: memoryStorage(),
+      [Summarizer.GATEWAY_FEATURE]: fakeGateway('app', 1),
+    });
+    const [summarizer, broken] = await Promise.allSettled([app.install('summarizer'), app.install('broken')]);
+    expect(summarizer.status).toBe('fulfilled');
+    expect(broken.status).toBe('rejected');
     expect(app.binding(Summarizer.Contract)?.kind).toBe('memory');
   });
 

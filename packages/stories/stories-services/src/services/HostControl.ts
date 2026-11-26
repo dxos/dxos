@@ -18,6 +18,8 @@ export const ServiceRecord = Schema.Struct({
   version: Schema.String,
   /** False while the host lacks a feature the provider needs; `unmet` names them. */
   active: Schema.Boolean,
+  /** Names the provider's current activation, and is empty while it is inactive. */
+  instance: Schema.String,
   unmet: Schema.Array(Schema.String),
 });
 export type ServiceRecord = Schema.Schema.Type<typeof ServiceRecord>;
