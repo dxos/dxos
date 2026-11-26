@@ -621,6 +621,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /** Takes the working set again, after a call this database made let another database of its owner change it. */
   async absorbWorkingSet(): Promise<void> {
+    // The re-read the call's documents came in by is integrated in slices; routing reads the space root they update.
+    await this._entityManager.integrated();
     const workingSet = this.#workingSet;
     const fetched = workingSet && (await bestEffort('get', () => workingSet.get()));
     if (fetched && this._lifecycleState === LifecycleState.OPEN) {

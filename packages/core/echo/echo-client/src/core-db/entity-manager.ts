@@ -1585,6 +1585,11 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Document-handle public surface ───────────────────────────────────────
 
+  /** Resolves once every document update the host has sent so far is integrated (see {@link RepoProxy.integrated}). */
+  integrated(): Promise<void> {
+    return this._repoProxy.integrated();
+  }
+
   getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     return this._spaceRootDocHandle;

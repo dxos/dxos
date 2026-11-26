@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EdgeFunctionEnv, type SerializedError } from './edge/index.ts';
+import { type EdgeFunctionEnv, ErrorCodec, type SerializedError } from './edge/index.ts';
+import type * as ProcessProtocol from './ProcessProtocol.ts';
 import { type WorkingSetService } from './working-set.ts';
 
 //
@@ -124,6 +125,146 @@ export type InvocationScope = {
   readonly operations?: OperationHost;
   /** The caller's working set, which the invocation's database opens from; a host built before it ignores it. */
   readonly workingSet?: WorkingSetService;
+  /**
+   * `Agent.Service` for the conversation the invocation works for, served by the EDGE process that hosts the session.
+   * The bundle's operations get it as their `Agent.Service`; a bundle with none provides no `Agent.Service`. A host
+   * built before it ignores it.
+   */
+  readonly agent?: AgentSession;
+};
+
+/**
+ * `Agent.Service` across the bundle boundary (EDGE spec `org.dxos.edge.agent-service-bridge`). Each verb crosses as one
+ * {@link AgentSession.call} with its arguments and result in JSON form (see {@link AgentVerbs}); the processes a verb
+ * names (`spawn`, a session's live process) are driven through {@link AgentSession.process} and
+ * {@link AgentSession.processRpc}, the `RemoteProcessManager.Control` surface in {@link ProcessProtocol} shapes.
+ */
+export interface AgentSession {
+  call<Verb extends AgentVerb>(
+    verb: Verb,
+    args: AgentVerbs[Verb]['args'],
+  ): Promise<AgentResult<AgentVerbs[Verb]['result']>>;
+  process<Op extends AgentProcessOp>(
+    request: AgentProcessRequests[Op]['request'] & { readonly op: Op },
+  ): Promise<AgentResult<AgentProcessRequests[Op]['result']>>;
+  /** The process's RPC group, as effect-rpc over HTTP: the request is served by the process's own endpoint. */
+  processRpc(spaceId: string, pid: string, request: Request): Promise<Response>;
+}
+
+/** A verb's outcome; a failure is data, since Workers RPC drops an error's class (`NoCurrentSessionError` by name). */
+export type AgentResult<Value> =
+  | { readonly ok: true; readonly value: Value }
+  | { readonly ok: false; readonly error: Failure };
+
+/** An `Agent.Service` URI (a session, feed, agent or object) as a string. */
+type Uri = string;
+
+/** `ContentBlock`s in their JSON form. */
+type ContentJson = readonly unknown[];
+
+/**
+ * Every `Agent.ServiceApi` member but `hydrate` (a no-op in a bundle), with its JSON arguments and result. A session or
+ * object travels as its URI; the bundle resolves the URIs it receives in its own space database.
+ */
+export type AgentVerbs = {
+  /** Opens the session's process with the options it was created with; EDGE takes no per-open options. */
+  open: { args: [session: Uri]; result: null };
+  getContext: { args: [session: Uri]; result: Uri[] };
+  addContext: { args: [session: Uri, context: Uri[]]; result: null };
+  submitPrompt: {
+    args: [
+      session: Uri,
+      prompt: string | ContentJson,
+      options?: { sender?: { name?: string; identityDid?: string; email?: string }; thread?: string },
+    ];
+    result: null;
+  };
+  /** Whether the session is working on a turn, now: a live atom would hold an RPC open past the invocation. */
+  running: { args: [session: Uri]; result: boolean };
+  waitForCompletion: { args: [session: Uri]; result: null };
+  terminate: { args: [session: Uri]; result: null };
+  /** The session's live process, whose ephemeral trace the bundle reads through {@link AgentSession.process}. */
+  sessionProcess: { args: [session: Uri]; result: ProcessProtocol.ProcessInfo | null };
+  currentSession: { args: []; result: Uri };
+  currentFeed: { args: []; result: Uri };
+  currentAgent: { args: []; result: Uri | null };
+  currentThread: { args: []; result: string | null };
+  enqueueMessage: { args: [content: ContentJson]; result: null };
+  /** `at` is an ISO-8601 instant. */
+  setAlarm: { args: [at: string, message: string | null]; result: null };
+  listSessions: { args: [options?: { agent?: Uri }]; result: Uri[] };
+  listAgents: { args: []; result: Uri[] };
+  /** Spawns one of the host's processes by key, stamped with the caller's session, agent and thread. */
+  spawn: {
+    args: [request: ProcessProtocol.SpawnProcessRequest, options?: { session?: Uri; thread?: string }];
+    result: ProcessProtocol.ProcessInfo;
+  };
+  delegate: {
+    args: [
+      request: {
+        target: { kind: 'thread' } | { kind: 'session'; session?: Uri } | { kind: 'agent'; agent: Uri };
+        message?: ContentJson;
+        task?: Uri;
+        purpose?: string;
+      },
+    ];
+    result: { thread?: string; session?: Uri };
+  };
+  waitForThread: { args: [thread: string]; result: string };
+};
+
+export type AgentVerb = keyof AgentVerbs;
+
+/** `RemoteProcessManager.Control` verbs on a process a verb named, in {@link ProcessProtocol} shapes. */
+export type AgentProcessRequests = {
+  status: { request: ProcessTarget; result: ProcessProtocol.ProcessInfo };
+  submitInput: { request: ProcessTarget & { readonly input: unknown; readonly idempotencyKey?: string }; result: null };
+  terminate: { request: ProcessTarget & { readonly idempotencyKey?: string }; result: null };
+  readEvents: { request: ProcessTarget & { readonly cursor: number }; result: ProcessProtocol.ProcessEventsResponse };
+};
+
+export type AgentProcessOp = keyof AgentProcessRequests;
+
+type ProcessTarget = { readonly spaceId: string; readonly pid: string };
+
+/** What serves each verb, one function per verb; a throw becomes the verb's failure. */
+export type AgentVerbHandlers = {
+  readonly [Verb in AgentVerb]: (...args: AgentVerbs[Verb]['args']) => Promise<AgentVerbs[Verb]['result']>;
+};
+
+/** What serves each process verb; a throw becomes its failure. */
+export type AgentProcessHandlers = {
+  readonly [Op in AgentProcessOp]: (
+    request: AgentProcessRequests[Op]['request'],
+  ) => Promise<AgentProcessRequests[Op]['result']>;
+};
+
+/** Runs `verb` on its handler, returning a throw as a {@link Failure}, which keeps the error's name across RPC. */
+export const callAgentVerb = <Verb extends AgentVerb>(
+  handlers: AgentVerbHandlers,
+  verb: Verb,
+  args: AgentVerbs[Verb]['args'],
+): Promise<AgentResult<AgentVerbs[Verb]['result']>> => settle(() => handlers[verb](...args));
+
+/** Runs a process verb on its handler; see {@link callAgentVerb}. */
+export const callAgentProcess = <Op extends AgentProcessOp>(
+  handlers: AgentProcessHandlers,
+  request: AgentProcessRequests[Op]['request'] & { readonly op: Op },
+): Promise<AgentResult<AgentProcessRequests[Op]['result']>> => settle(() => handlers[request.op](request));
+
+const settle = async <Value>(run: () => Promise<Value>): Promise<AgentResult<Value>> => {
+  try {
+    return { ok: true, value: await run() };
+  } catch (error) {
+    return {
+      ok: false,
+      error: {
+        code: 'failed',
+        message: error instanceof Error ? error.message : String(error),
+        ...(error instanceof Error ? { name: error.name, stack: error.stack, encoded: ErrorCodec.encode(error) } : {}),
+      },
+    };
+  }
 };
 
 /** An identity EDGE verified. */

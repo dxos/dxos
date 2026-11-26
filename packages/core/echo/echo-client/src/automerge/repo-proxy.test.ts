@@ -107,6 +107,33 @@ describe('RepoProxy', () => {
     expect(clientHandle.doc()?.text).to.equal(text);
   });
 
+  test('integrated resolves once every document of a delivered batch shows its change', async () => {
+    const { host, dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handles = await Promise.all(
+      Array.from({ length: 10 }, async (_, index) => {
+        const hostHandle = await host.createDoc<{ text: string }>({ text: `before ${index}` });
+        const handle = clientRepo.find<{ text: string }>(hostHandle.url);
+        await asyncTimeout(handle.whenReady(), 1000);
+        return handle;
+      }),
+    );
+    const updates = handles.map((handle, index) => {
+      invariant(handle.documentId);
+      const before = handle.doc();
+      const after = A.change(A.clone(before), (doc) => {
+        doc.text = `after ${index}`;
+      });
+      return { documentId: handle.documentId, mutation: A.saveSince(after, A.getHeads(before)) };
+    });
+
+    clientRepo._receiveUpdate({ updates });
+    await clientRepo.integrated();
+    expect(handles.map((handle) => handle.doc().text)).to.deep.equal(handles.map((_, index) => `after ${index}`));
+  });
+
   test('a passive handle loads the bytes it holds on first use and catches up from their heads', async () => {
     const { host, dataService } = await setup();
     const [clientRepo] = createProxyRepos(dataService);

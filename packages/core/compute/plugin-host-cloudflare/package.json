@@ -54,6 +54,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/types": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
