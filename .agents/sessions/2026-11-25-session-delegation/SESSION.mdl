@@ -119,6 +119,13 @@ decision D-1: Deploy storybook to preview and production when the PR lands.
   answers: Q-1
 ```
 
+```mdl
+decision D-2: Add G-7. Two agents with different permissions show why an agent hands work to another.
+  date: 2026-11-26
+  by: user:dmaretskyi
+  affects: [G-7]
+```
+
 ## Timeline
 
 ```mdl
