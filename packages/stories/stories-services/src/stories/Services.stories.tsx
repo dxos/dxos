@@ -22,7 +22,10 @@ const meta: Meta<typeof ModuleContainer.Root> = {
     controls: { disable: true },
   },
   args: {
-    layout: [[StoryRole.Notes, StoryRole.Summarizer], [StoryRole.Hosts]],
+    layout: [
+      [StoryRole.Notes, StoryRole.Summarizer],
+      [StoryRole.LocalRuntime, StoryRole.RemoteRuntime],
+    ],
     columns: '28rem_1fr',
   },
 };
@@ -32,7 +35,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * One consumer, three places a provider can run.
+ * One consumer, three places a provider can run. The left column is the consumer; the right column
+ * is the runtimes: the hosts on this device above, and the remote host below.
  *
  * 1. Notes are provided in the app host and bound in memory.
  * 2. Summarize fails: no host provides the contract.
