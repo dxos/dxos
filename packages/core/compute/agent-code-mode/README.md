@@ -26,9 +26,11 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
    description and input schema, the `Operation` definition behind it (none for an MCP tool), and a
    function that runs it through the same handlers as a tool call. The Skill Manager's lookups
    join them.
-3. Builds the system prompt: the dialect's API, the Skill Manager's lookups and the enabled skills
-   with their operations, the conversation's MCP tools, and its objects and instructions. No other
-   skill, operation or type is listed.
+3. Builds the system prompt: the dialect's API, the Skill Manager's lookups, the enabled skills, the
+   conversation's MCP tools, and its objects and instructions. The plain dialect states each enabled
+   skill with its instructions and operations; the Effect dialect names each one and serves its
+   instructions as `DOCS['skills/<key>.md']` and its operations through `search`. No other skill,
+   operation or type is listed.
 4. Calls the model. A text answer ends the request; an `eval` call runs in the sandbox and the loop
    repeats, up to `maxTurns`.
 
@@ -90,11 +92,12 @@ demand ([`src/docs`](./src/docs)), including the generated `catalog/types.md` an
 
 ## What the model is told: the enabled skills and the Skill Manager
 
-Code mode states the skills enabled in the conversation, each with its instructions and its
-operations' inputs, and the Skill Manager's lookups (`@dxos/assistant-toolkit`'s
-`SkillManagerSkill.makeForCodeMode()`). Nothing else that is available is stated: no other skill,
-no other operation, no types. An enabled skill's rules apply to every request it touches, so they
-are in the prompt rather than looked up; a channel agent that had to look up how to reply did not.
+Code mode states the skills enabled in the conversation and the Skill Manager's lookups
+(`@dxos/assistant-toolkit`'s `SkillManagerSkill.makeForCodeMode()`). The plain dialect states each
+enabled skill with its instructions and its operations' inputs. The Effect dialect names each one
+and points at its instructions in `DOCS['skills/<key>.md']`, which the model reads on demand, so its
+prompt does not carry them. Nothing else that is available is stated: no other skill, no other
+operation, no types.
 Listing every skill, operation and type, each operation as a tool, is what tool calling does, which
 runs when code mode is off (the default; `Settings.codeMode` turns it on); there the Skill
 Manager lists every skill in its instructions.

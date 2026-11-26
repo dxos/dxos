@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 
@@ -219,12 +220,16 @@ export const render = ({
   return `${sections.join('\n\n')}\n`;
 };
 
+/** Characters of a file name kept readable; a longer name ends in a digest of the whole, so two runs never share a file. */
+const MAX_SLUG = 160;
+
 /** A file name from a test name: readable, and safe on every file system. */
-const slug = (name: string): string =>
-  name
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 160) || 'run';
+const slug = (name: string): string => {
+  const readable = name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'run';
+  return readable.length <= MAX_SLUG
+    ? readable
+    : `${readable.slice(0, MAX_SLUG - 9)}-${createHash('sha256').update(name).digest('hex').slice(0, 8)}`;
+};
 
 /** Writes the run's transcript under {@link DIRECTORY} and returns its path. */
 export const write = async (options: Parameters<typeof render>[0]): Promise<string> => {

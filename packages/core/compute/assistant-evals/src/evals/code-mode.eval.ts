@@ -998,11 +998,13 @@ defineTask({
     }),
     Scorer.make({
       name: 'chart-added',
-      description: 'A chart of the new sheet exists.',
+      description: 'A bar chart of the new sheet exists, as the prompt asks.',
       score: Effect.gen(function* () {
         const sheet = yield* prioritySheet;
         const charts = yield* Database.query(Filter.type(Sheet.Chart)).run;
-        return sheet !== undefined && charts.some((chart) => refTarget(chart.sheet) === sheet.id);
+        return (
+          sheet !== undefined && charts.some((chart) => refTarget(chart.sheet) === sheet.id && chart.type === 'bar')
+        );
       }),
     }),
     Scorer.database({
@@ -1095,12 +1097,12 @@ defineTask({
     }),
     Scorer.database({
       name: 'nothing-changed',
-      description: 'A question changes nothing: every task keeps its status, and none is added.',
+      description: 'A question changes nothing: every task of both projects keeps its status, and none is added.',
       query: tasks,
       score: (results) =>
         results.length === ATLAS_TASKS.length + DECOY_PROJECT.tasks.length &&
-        ATLAS_TASKS.every(({ title, status }) =>
-          results.some((task) => task.title === title && task.status === status),
+        [...ATLAS_TASKS, ...DECOY_PROJECT.tasks.map((title) => ({ title, status: 'todo' }))].every(
+          ({ title, status }) => results.some((task) => task.title === title && task.status === status),
         ),
     }),
   ],

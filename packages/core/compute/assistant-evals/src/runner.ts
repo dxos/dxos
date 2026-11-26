@@ -553,6 +553,12 @@ export function createEvalRunner<I, O>(
           options.agentSession === true || makeTurnProducer !== undefined || options.conversation !== undefined;
         // Filled as the session runs, so a timed-out conversation is still graded on what was said.
         const transcript: Scorer.Turn[] = [];
+        // A misconfigured eval, not an agent that failed: raised outside the step, so `expect: 'failure'` cannot pass it.
+        if (seeded.context !== undefined && !asSession) {
+          return yield* Effect.die(
+            new Error('A seeded request context needs an agent session (`agentSession: true`).'),
+          );
+        }
         const agentStep = Effect.tryPromise({
           try: (): Promise<O> =>
             asSession
@@ -573,17 +579,7 @@ export function createEvalRunner<I, O>(
                   }
                   return reply;
                 })
-              : seeded.context
-                ? Promise.reject(new Error('A seeded request context needs an agent session (`agentSession: true`).'))
-                : runInstructions(
-                    harness,
-                    instructions,
-                    model,
-                    defaultSpace.id,
-                    input,
-                    options.sessionChat,
-                    seeded.chat,
-                  ),
+              : runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
         if (!options.scored) {
