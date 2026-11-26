@@ -25,7 +25,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { BaseError } from '@dxos/errors';
-import { DXN, EntityId } from '@dxos/keys';
+import { DXN, EntityId, URI } from '@dxos/keys';
 
 export const TEST_PLUGIN_KEY = 'org.dxos.plugin.hostTest';
 
@@ -321,6 +321,9 @@ const CurrentSessionOrNoneHandler = CurrentSessionOrNone.pipe(
   ),
 );
 
+/** What {@link SpawnWork} assigns the process it starts to, which the spawn carries as its target annotation. */
+export const SPAWN_TARGET = URI.make('echo:///01KSPAWNTARGET000000000000');
+
 /** A process the host runs, which {@link SpawnWork} starts. */
 export const WorkProcess = Operation.makeDurable({
   key: 'com.example.process.hostTest.work',
@@ -340,7 +343,7 @@ export const SpawnWork = Operation.make({
 const SpawnWorkHandler = SpawnWork.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const handle = yield* Agent.spawn(WorkProcess);
+      const handle = yield* Agent.spawn(WorkProcess, { target: SPAWN_TARGET });
       yield* handle.terminate();
       return { pid: handle.pid, state: handle.status.state };
     }),

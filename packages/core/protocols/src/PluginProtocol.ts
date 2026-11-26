@@ -324,6 +324,8 @@ export type OperationOptions = {
   readonly conversation?: string;
   readonly parentPid?: string;
   readonly idSeed?: IdSeed;
+  /** The session the caller works for, which EDGE passes on as the callee's {@link InvocationScope.agent}. */
+  readonly agent?: AgentSession;
 };
 
 /** EDGE's router, for operations of other plugins. */

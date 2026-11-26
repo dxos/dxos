@@ -26,9 +26,9 @@ import { ProcessNotFoundError, type RemoteProcessManager } from '@dxos/compute-r
 import { ProcessProtocolCodec, RemoteProcessHandle } from '@dxos/compute-runtime/remote-process';
 import * as Agent from '@dxos/compute/Agent';
 import type * as Operation from '@dxos/compute/Operation';
-import type * as Process from '@dxos/compute/Process';
+import * as Process from '@dxos/compute/Process';
 import * as Trajectory from '@dxos/compute/Trajectory';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { type SpaceId, URI } from '@dxos/keys';
 import { ErrorCodec, type PluginProtocol } from '@dxos/protocols';
@@ -192,8 +192,9 @@ export const make = ({
         ProcessProtocolCodec.toSpawnRequest({
           key: definition.key,
           ...(options?.name !== undefined ? { name: options.name } : {}),
+          ...(options?.parentProcessId !== undefined ? { parentPid: options.parentProcessId } : {}),
           ...(options?.environment !== undefined ? { environment: options.environment } : {}),
-          ...(options?.annotations !== undefined ? { annotations: options.annotations } : {}),
+          annotations: spawnAnnotations(options),
         }),
         {
           ...(options?.session !== undefined ? { session: String(options.session) } : {}),
@@ -236,6 +237,23 @@ export const make = ({
     waitForThread: (thread) => call('waitForThread', [thread]),
   };
 };
+
+/**
+ * The annotations a spawn stamps, folded as the local process manager folds them: `target` and `notify` are shorthand
+ * for their annotations, and explicit annotations override both.
+ */
+const spawnAnnotations = (options: Agent.SpawnOptions | undefined): Annotation.Dictionary =>
+  Annotation.buildDictionary((dictionary) => {
+    if (options?.target != null) {
+      Annotation.setDictionary(dictionary, Process.TargetAnnotation, options.target);
+    }
+    if (options?.notify != null) {
+      Annotation.setDictionary(dictionary, Process.NotifyAnnotation, options.notify);
+    }
+    if (options?.annotations) {
+      Object.assign(dictionary, options.annotations);
+    }
+  });
 
 /** A failure the target reports: the session's own error by its name, anything else as EDGE raised it. */
 const toError = (failure: PluginProtocol.Failure): Agent.NoCurrentSessionError | AgentSessionError =>

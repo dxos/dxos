@@ -151,6 +151,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
         host: scope.operations,
         spaceId,
         conversation: scope.conversation,
+        agent: scope.agent,
         pid,
         idSeed: scope.idSeed,
       });

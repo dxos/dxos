@@ -161,6 +161,8 @@ export type OperationsOptions = {
   readonly host: PluginProtocol.OperationHost | undefined;
   readonly spaceId: SpaceId | undefined;
   readonly conversation: string | undefined;
+  /** The session the invocation works for, which a nested call to another plugin's operation works for too. */
+  readonly agent: PluginProtocol.AgentSession | undefined;
   /** The invocation's pid, every nested invocation's parent. */
   readonly pid: string;
   readonly idSeed: PluginProtocol.IdSeed | undefined;
@@ -182,6 +184,7 @@ export const makeOperations = ({
   host,
   spaceId,
   conversation,
+  agent,
   pid,
   idSeed,
   refreshWorkingSet,
@@ -202,6 +205,7 @@ export const makeOperations = ({
       ...((options?.conversation ?? conversation) === undefined
         ? {}
         : { conversation: options?.conversation ?? conversation }),
+      ...(agent === undefined ? {} : { agent }),
       parentPid: pid,
       // TEST-ONLY: a child seed drawn from the seeded stream keeps the whole call tree reproducible.
       ...(idSeed === undefined ? {} : { idSeed: { time: idSeed.time, seed: childSeed(EntityId.random()) } }),

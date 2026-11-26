@@ -49,6 +49,7 @@ import {
   OtherSkill,
   RecordThenDelegate,
   ResolveRegistry,
+  SPAWN_TARGET,
   SpawnWork,
   TEST_PLUGIN_KEY,
   TestFailure,
@@ -309,7 +310,10 @@ describe('PluginHost', () => {
         agent: fake.session,
       });
       expect(result).toEqual({ ok: true, output: { pid: info.pid, state: 'TERMINATED' } });
-      expect(fake.calls[0]).toEqual(['spawn', [{ key: WorkProcess.key }, {}]]);
+      expect(fake.calls[0]).toEqual([
+        'spawn',
+        [{ key: WorkProcess.key, annotations: { 'org.dxos.process.target': SPAWN_TARGET } }, {}],
+      ]);
       expect(fake.calls.slice(1).map(([op]) => op)).toEqual(['terminate', 'status']);
     });
 
@@ -553,6 +557,26 @@ describe('PluginHost', () => {
           options: { spaceId, parentPid: 'outer' },
         },
       ]);
+    });
+
+    // A callee that declares `Agent.Service` works for the caller's session, so EDGE needs the caller's target to pass on.
+    test("a call to another plugin's operation carries the caller's session", async ({ expect }) => {
+      const spaceId = SpaceId.random();
+      const invoked: PluginProtocol.OperationOptions[] = [];
+      const operations: PluginProtocol.OperationHost = {
+        invoke: async (_operationKey, _input, options) => {
+          invoked.push(options);
+          return { ok: true, output: { result: '55' } };
+        },
+      };
+      const { session } = makeAgentSession({});
+      const result = await makeHost().invoke(
+        { operationKey: String(Delegate.meta.key), spaceId, input: { n: 10 } },
+        makeSpaceEnv(spaceId),
+        { operations, agent: session },
+      );
+      expect(result).toMatchObject({ ok: true });
+      expect(invoked[0]?.agent).toBe(session);
     });
 
     test("a nested call starts after the caller's writes reach its working set, and the caller takes the callee's", async ({
