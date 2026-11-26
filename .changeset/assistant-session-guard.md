@@ -1,5 +1,6 @@
 ---
+'@dxos/compute': minor
 '@dxos/plugin-assistant': minor
 ---
 
-Add the `AssistantCapabilities.SessionGuard` capability: a plugin can give a local chat's agent standing grants, so the operations they cover run without a consent prompt and everything else still asks or is refused.
+Agents can delegate work to another agent: `Agent.delegate({ target: { kind: 'agent' } })` and the delegation skill's delegate-to-agent hand a request to that agent's session, which runs on its own permissions. Plugins can give a local chat's agent standing grants with `AssistantCapabilities.SessionGuard`, and the chat shows a call refused for want of a permission as denied rather than failed.

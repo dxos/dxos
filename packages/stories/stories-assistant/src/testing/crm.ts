@@ -159,8 +159,11 @@ export const CrmPermissionsPlugin = Plugin.define(
   Plugin.make,
 );
 
-/** Seeds the account and creates both agents, each with a local chat bound to the CRM skill. */
-export const seedCrmAgents = async ({ db }: { db: Database.Database }): Promise<void> => {
+/**
+ * Seeds the account and creates both agents, each with a local chat bound to the CRM skill; `model`, when given,
+ * is the one both chats run on (a live story), the scripted model otherwise.
+ */
+export const seedCrmAgents = async ({ db, model }: { db: Database.Database; model?: DXN.DXN }): Promise<void> => {
   db.add(Organization.make({ name: CRM_ACCOUNT, status: 'prospect' }));
   const crm = db.add(makeCrmSkill());
   const delegation = db.add(DelegationSkill.make());
@@ -179,6 +182,9 @@ export const seedCrmAgents = async ({ db }: { db: Database.Database }): Promise<
     Obj.update(chat, (chat) => {
       chat.name = name;
       chat.remote = false;
+      if (model) {
+        chat.session = { ...chat.session, model };
+      }
     });
     const feed = await chat.feed.load();
     const binder = new AiContext.Binder({ feed, runtime });

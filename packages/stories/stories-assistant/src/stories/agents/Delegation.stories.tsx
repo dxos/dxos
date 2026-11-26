@@ -18,6 +18,7 @@ import {
   CRM_ACCOUNT,
   CrmPermissionsPlugin,
   LEDGER,
+  PLAYGROUND_MODEL,
   SCOUT,
   createDecorators,
   seedCrmAgents,
@@ -51,6 +52,31 @@ const accountStatus = async () => {
   return organizations.find(({ name }) => name === CRM_ACCOUNT)?.status;
 };
 
+/** Each agent's chat as a plank headed by its name, then the space's object tree. */
+const LAYOUT = [
+  [
+    {
+      type: StoryRole.Chat,
+      id: `chat-${SCOUT}`,
+      data: { agent: SCOUT, hue: 'amber', suggestions: [SCOUT_REQUEST] } satisfies ChatModuleData,
+    },
+  ],
+  [
+    {
+      type: StoryRole.Chat,
+      id: `chat-${LEDGER}`,
+      data: { agent: LEDGER, hue: 'emerald' } satisfies ChatModuleData,
+    },
+  ],
+  [
+    {
+      type: StoryRole.Database,
+      id: 'objects',
+      data: { view: 'object-tree' } satisfies StoryModules.DatabaseModuleData,
+    },
+  ],
+];
+
 const crmAgents: Story = {
   decorators: createDecorators({
     types: [Agent.Agent, Organization.Organization],
@@ -61,31 +87,7 @@ const crmAgents: Story = {
     },
     scripted: ScriptedScene.play(Scripts.crmAgents),
   }),
-  args: {
-    layout: [
-      [
-        {
-          type: StoryRole.Chat,
-          id: `chat-${SCOUT}`,
-          data: { agent: SCOUT, hue: 'amber', suggestions: [SCOUT_REQUEST] } satisfies ChatModuleData,
-        },
-      ],
-      [
-        {
-          type: StoryRole.Chat,
-          id: `chat-${LEDGER}`,
-          data: { agent: LEDGER, hue: 'emerald' } satisfies ChatModuleData,
-        },
-      ],
-      [
-        {
-          type: StoryRole.Database,
-          id: 'objects',
-          data: { view: 'object-tree' } satisfies StoryModules.DatabaseModuleData,
-        },
-      ],
-    ],
-  },
+  args: { layout: LAYOUT },
 };
 
 /**
@@ -121,4 +123,21 @@ export const CrmAgentsScripted: Story = {
     await ledger.findAllByText(LEDGER_DONE, {}, { timeout: 60_000 });
     await waitFor(async () => expect(await accountStatus()).toBe('active'), { timeout: 10_000 });
   },
+};
+
+/**
+ * {@link CrmAgents} on a real model (DeepSeek V4 Pro through EDGE) rather than the script: Scout decides for itself
+ * to hand the refused change to Ledger. Live AI, so excluded from CI.
+ */
+export const CrmAgentsLive: Story = {
+  decorators: createDecorators({
+    types: [Agent.Agent, Organization.Organization],
+    plugins: [CrmPermissionsPlugin()],
+    onReady: async ({ db }) => {
+      storyDb = db;
+      await seedCrmAgents({ db, model: PLAYGROUND_MODEL });
+    },
+  }),
+  args: { layout: LAYOUT },
+  tags: ['!test'],
 };
