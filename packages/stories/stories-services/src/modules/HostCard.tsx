@@ -5,20 +5,24 @@
 import React, { useCallback, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
 
-import { Summarizer } from '../contracts/index.ts';
+import { NoteStore, Summarizer } from '../contracts/index.ts';
 import { type HostControl } from '../services/index.ts';
 import { PLUGIN_URLS, useServices } from './ServicesContext.tsx';
 
-const pluginName = (url: string): string => Object.entries(PLUGIN_URLS).find(([, value]) => value === url)?.[0] ?? url;
-
-/** Where a host of each kind runs, since a host's id often repeats its kind. */
-const KIND_LABELS: Record<HostControl.Kind, string> = {
-  app: 'this page',
+/** Where a host runs, for the kinds whose id does not already say it. */
+const KIND_LABELS: Partial<Record<HostControl.Kind, string>> = {
   worker: 'Web Worker',
-  frame: 'sandboxed iframe',
-  edge: 'mock EDGE worker',
+  frame: 'Sandboxed iframe',
+  edge: 'Mock EDGE worker',
 };
+
+/** The story's provider plugins, and the contract each one provides. */
+const PLUGINS = [
+  { name: 'notes', url: PLUGIN_URLS.notes, contract: NoteStore.Contract.key },
+  { name: 'summarizer', url: PLUGIN_URLS.summarizer, contract: Summarizer.Contract.key },
+] as const;
 
 /** What a runtime module does to its hosts, and the last failure of any of those actions. */
 export type HostActions = {
@@ -26,14 +30,12 @@ export type HostActions = {
   readonly probes: Readonly<Record<string, HostControl.Probe>>;
   /** Runs an action and records its failure in `error`. */
   readonly run: (action: () => Promise<unknown>) => void;
-  readonly install: (hostId: string) => void;
-  readonly uninstall: (hostId: string) => void;
+  readonly install: (hostId: string, pluginUrl: string) => void;
+  readonly uninstall: (hostId: string, pluginUrl: string) => void;
   readonly probe: (hostId: string) => void;
-  /** Gives the app host an AI gateway of its own, or takes it away. */
-  readonly setAppGateway: (enabled: boolean) => void;
 };
 
-/** The summarizer install, uninstall and probe actions of one runtime module. */
+/** The install, uninstall and probe actions of one runtime module. */
 export const useHostActions = (): HostActions => {
   const { controller } = useServices();
   const [probes, setProbes] = useState<Record<string, HostControl.Probe>>({});
@@ -45,11 +47,11 @@ export const useHostActions = (): HostActions => {
   }, []);
 
   const install = useCallback(
-    (hostId: string) => run(() => controller.install(hostId, PLUGIN_URLS.summarizer)),
+    (hostId: string, pluginUrl: string) => run(() => controller.install(hostId, pluginUrl)),
     [controller, run],
   );
   const uninstall = useCallback(
-    (hostId: string) => run(() => controller.uninstall(hostId, PLUGIN_URLS.summarizer)),
+    (hostId: string, pluginUrl: string) => run(() => controller.uninstall(hostId, pluginUrl)),
     [controller, run],
   );
   const probe = useCallback(
@@ -61,74 +63,79 @@ export const useHostActions = (): HostActions => {
     [controller, run],
   );
 
-  const setAppGateway = useCallback(
-    (enabled: boolean) => run(() => controller.setAppGateway(enabled)),
-    [controller, run],
-  );
+  return { error, probes, run, install, uninstall, probe };
+};
 
-  return { error, probes, run, install, uninstall, probe, setAppGateway };
+/** Whether a plugin is installed in a host, and whether the host can run what it provides. */
+const pluginStatus = (host: HostControl.Description, plugin: (typeof PLUGINS)[number]): string => {
+  if (!host.plugins.includes(plugin.url)) {
+    return 'not installed';
+  }
+  const service = host.services.find((candidate) => candidate.key === plugin.contract);
+  if (!service) {
+    return 'installed';
+  }
+  return service.active ? 'active' : `inactive, host has no ${service.unmet.join(', ')}`;
 };
 
 export type HostCardProps = {
   host: HostControl.Description;
   probe?: HostControl.Probe;
-  onInstall: (hostId: string) => void;
-  onUninstall: (hostId: string) => void;
+  onInstall: (hostId: string, pluginUrl: string) => void;
+  onUninstall: (hostId: string, pluginUrl: string) => void;
   onProbe?: (hostId: string) => void;
-  /** Set for a host whose AI gateway the story can add and remove. */
-  onSetGateway?: (enabled: boolean) => void;
 };
 
-/** One host: what it has, what is installed in it, and what it provides. */
-export const HostCard = ({ host, probe, onInstall, onUninstall, onProbe, onSetGateway }: HostCardProps) => {
-  const installed = host.plugins.includes(PLUGIN_URLS.summarizer);
-  const hasGateway = host.features.includes(Summarizer.GATEWAY_FEATURE);
+/** One host: where it runs, what it has, and whether it can run each plugin installed in it. */
+export const HostCard = ({ host, probe, onInstall, onUninstall, onProbe }: HostCardProps) => {
+  const features = `Features: ${host.features.join(', ') || 'none'}`;
+  const kind = KIND_LABELS[host.kind];
   return (
-    <div className='border border-separator rounded p-2 space-y-1 text-sm' data-testid={`host-${host.id}`}>
-      <div className='flex items-center gap-2'>
-        <span className='font-medium whitespace-nowrap'>Host: {host.id}</span>
-        <span className='text-fg-muted'>{KIND_LABELS[host.kind]}</span>
-        <span className='grow' />
-        {onSetGateway && (
-          <Button.Root
-            label={hasGateway ? 'Remove AI gateway' : 'Add AI gateway'}
-            onClick={() => onSetGateway(!hasGateway)}
-            data-testid={`toggle-${host.id}-gateway`}
-          />
-        )}
-        {installed ? (
-          <Button.Root
-            label='Uninstall summarizer'
-            onClick={() => onUninstall(host.id)}
-            data-testid={`uninstall-${host.id}`}
-          />
-        ) : (
-          <Button.Root
-            label='Install summarizer'
-            onClick={() => onInstall(host.id)}
-            data-testid={`install-${host.id}`}
-          />
-        )}
+    <Card.Root data-testid={`host-${host.id}`}>
+      <Card.Header>
+        <Card.Title>Host: {host.id}</Card.Title>
         {onProbe && <Button.Root label='Probe' onClick={() => onProbe(host.id)} data-testid={`probe-${host.id}`} />}
-      </div>
-      <div>
-        <span className='text-fg-muted'>features</span> {host.features.join(', ') || 'none'}
-      </div>
-      <div>
-        <span className='text-fg-muted'>plugins</span> {host.plugins.map(pluginName).join(', ') || 'none'}
-      </div>
-      {host.services.map((service) => (
-        <div key={service.key}>
-          <span className='text-fg-muted'>provides</span> {service.key.split('.').pop()}{' '}
-          {service.active ? 'active' : `inactive, needs ${service.unmet.join(', ')}`}
-        </div>
-      ))}
+      </Card.Header>
+      <Card.Body>
+        <Card.Description>{kind ? `${kind}. ${features}` : features}</Card.Description>
+      </Card.Body>
+      <Card.Section title='Plugins'>
+        {PLUGINS.map((plugin) => {
+          const installed = host.plugins.includes(plugin.url);
+          return (
+            <Card.Row
+              key={plugin.name}
+              icon='ph--plug--regular'
+              trailing={
+                installed ? (
+                  <Button.Root
+                    label='Uninstall'
+                    onClick={() => onUninstall(host.id, plugin.url)}
+                    data-testid={`uninstall-${plugin.name}-${host.id}`}
+                  />
+                ) : (
+                  <Button.Root
+                    label='Install'
+                    onClick={() => onInstall(host.id, plugin.url)}
+                    data-testid={`install-${plugin.name}-${host.id}`}
+                  />
+                )
+              }
+              data-testid={`plugin-${plugin.name}-${host.id}`}
+            >
+              {plugin.name}: {pluginStatus(host, plugin)}
+            </Card.Row>
+          );
+        })}
+      </Card.Section>
       {probe && (
-        <div data-testid={`probe-result-${host.id}`}>
-          <span className='text-fg-muted'>probe</span> localStorage: {probe.localStorage}; indexedDB: {probe.indexedDb};
-          network: {probe.network}; app notes: {probe.ungranted}
-        </div>
+        <Card.Section title='Probe'>
+          <Card.Text variant='muted' data-testid={`probe-result-${host.id}`}>
+            localStorage: {probe.localStorage}; indexedDB: {probe.indexedDb}; network: {probe.network}; app notes:{' '}
+            {probe.ungranted}
+          </Card.Text>
+        </Card.Section>
       )}
-    </div>
+    </Card.Root>
   );
 };

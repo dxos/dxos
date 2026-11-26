@@ -42,8 +42,12 @@ type Story = StoryObj<typeof meta>;
  * 1. Notes are provided in the app host and bound in memory.
  * 2. Summarize fails: no host provides the contract.
  * 3. Start the EDGE host (mock) and install the summarizer there: the call streams over a port.
- * 4. Add an AI gateway to the app and install the summarizer in the app: the same client rebinds in memory.
- * 5. Start the frame host and install the summarizer there; Probe shows what the sandbox refuses.
+ * 4. Install the summarizer in the app as well: it stays inactive, since only EDGE has an AI gateway,
+ *    and calls still go to EDGE.
+ * 5. Install notes in the EDGE host: inactive there, since a worker has no local storage.
+ * 6. Start the frame host and install notes there, then uninstall notes from the app: the same
+ *    client rebinds over a port, to notes kept in the frame's own storage. Probe shows what the
+ *    sandbox refuses.
  */
 export const Default: Story = {
   decorators: StoryHarness.decorators({ plugins: [consumerPlugin()], Wrapper: ServicesProvider }),
@@ -52,9 +56,9 @@ export const Default: Story = {
 const TIMEOUT = { timeout: 30_000 };
 
 /**
- * The same story, driven: one consumer calls `NoteStore` and `Summarizer` while the summarizer's
- * provider moves from nowhere, to the mock EDGE host, to the app. The frame step is left to
- * `Default`, since it needs the dev server under a second loopback name.
+ * The same story, driven: one consumer calls `NoteStore`, which only a local host can provide, and
+ * `Summarizer`, which only the remote host can. The frame step is left to `Default`, since it needs
+ * the dev server under a second loopback name.
  */
 export const Calls: Story = {
   decorators: StoryHarness.decorators({ plugins: [consumerPlugin()], Wrapper: ServicesProvider }),
@@ -90,18 +94,28 @@ export const Calls: Story = {
       );
     });
 
-    await step('Install the provider in the mock EDGE host: the call crosses a port', async () => {
+    const status = (id: string, expected: string) =>
+      waitFor(async () => expect((await canvas.findByTestId(id)).textContent).toContain(expected), TIMEOUT);
+
+    await step('Install the summarizer in the mock EDGE host: the call crosses a port', async () => {
       await userEvent.click(await canvas.findByTestId('toggle-edge'));
-      await userEvent.click(await canvas.findByTestId('install-edge', {}, TIMEOUT));
+      await userEvent.click(await canvas.findByTestId('install-summarizer-edge', {}, TIMEOUT));
+      await status('plugin-summarizer-edge', 'active');
       await binding('summarizer-binding', 'port → edge');
       await summarize('edge');
     });
 
-    await step('Install the provider in the app: the same client rebinds in memory', async () => {
-      await userEvent.click(await canvas.findByTestId('toggle-app-gateway'));
-      await userEvent.click(await canvas.findByTestId('install-app'));
-      await binding('summarizer-binding', 'memory → app');
-      await summarize('app');
+    await step('Install it in the app too: no AI gateway there, so calls still go to EDGE', async () => {
+      await userEvent.click(await canvas.findByTestId('install-summarizer-app'));
+      await status('plugin-summarizer-app', 'host has no aiGateway');
+      await binding('summarizer-binding', 'port → edge');
+      await summarize('edge');
+    });
+
+    await step('Install notes in the EDGE host: no local storage there, so the app still provides them', async () => {
+      await userEvent.click(await canvas.findByTestId('install-notes-edge'));
+      await status('plugin-notes-edge', 'host has no localStorage');
+      await binding('notes-binding', 'memory → app');
     });
   },
 };

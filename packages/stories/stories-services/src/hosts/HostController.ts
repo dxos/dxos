@@ -6,10 +6,9 @@
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { NoteStore, Summarizer } from '../contracts/index.ts';
+import { NoteStore } from '../contracts/index.ts';
 import { type HostControl, ServiceHost } from '../services/index.ts';
 import { type Init, importPlugin, isReady, marker } from './child-host.ts';
-import { fakeGateway } from './gateway.ts';
 
 export const APP_HOST = 'app';
 
@@ -176,11 +175,6 @@ export class HostController {
       return;
     }
     await EffectEx.runPromise(this.#control(hostId).uninstall({ plugin: pluginUrl }));
-  }
-
-  /** Gives the app host a gateway of its own, or takes it away. */
-  async setAppGateway(enabled: boolean): Promise<void> {
-    await this.app.setFeature(Summarizer.GATEWAY_FEATURE, enabled ? fakeGateway(APP_HOST) : undefined);
   }
 
   async probe(hostId: string): Promise<HostControl.Probe> {

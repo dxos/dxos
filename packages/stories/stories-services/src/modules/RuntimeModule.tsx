@@ -8,7 +8,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Summarizer } from '../contracts/index.ts';
+import { NoteStore, Summarizer } from '../contracts/index.ts';
 import * as HostController from '../hosts/HostController.ts';
 import { type HostControl } from '../services/index.ts';
 import { HostCard, useHostActions } from './HostCard.tsx';
@@ -79,7 +79,6 @@ export const RuntimeModule = ({ id, title, hint, hosts, startable }: RuntimeModu
               onInstall={actions.install}
               onUninstall={actions.uninstall}
               onProbe={isApp ? undefined : actions.probe}
-              onSetGateway={isApp ? actions.setAppGateway : undefined}
             />
           );
         })}
@@ -92,7 +91,7 @@ const LOCAL_STARTABLE: readonly Startable[] = [
   {
     id: FRAME_HOST,
     label: 'frame host',
-    start: (controller) => controller.startFrame(FRAME_HOST, [Summarizer.GATEWAY_FEATURE], []),
+    start: (controller) => controller.startFrame(FRAME_HOST, [NoteStore.STORAGE_FEATURE], []),
   },
 ];
 
@@ -111,7 +110,7 @@ export const LocalRuntimeModule = () => {
     <RuntimeModule
       id='local'
       title='Local runtime'
-      hint='Hosts on this device: the app, and a sandboxed iframe for untrusted plugins. Neither has an AI gateway until the app is given one or the frame host is started.'
+      hint='Hosts on this device: the app, and a sandboxed iframe for untrusted plugins. Each has local storage of its own, which notes need, and no AI gateway.'
       hosts={[snapshot.self, ...snapshot.peers.filter((peer) => peer.kind !== 'edge')]}
       startable={LOCAL_STARTABLE}
     />
@@ -125,7 +124,7 @@ export const RemoteRuntimeModule = () => {
     <RuntimeModule
       id='remote'
       title='Remote runtime'
-      hint='Hosts off this device: a Web Worker standing in for EDGE, which the app reaches only over a port. It has an AI gateway.'
+      hint='Hosts off this device: a Web Worker standing in for EDGE, reached only over a port. It has an AI gateway, which the summarizer needs, and no local storage.'
       hosts={snapshot.peers.filter((peer) => peer.kind === 'edge')}
       startable={REMOTE_STARTABLE}
     />

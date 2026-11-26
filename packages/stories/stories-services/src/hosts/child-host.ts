@@ -120,10 +120,14 @@ const probe = async (host: ServiceHost.ServiceHost, origin: string): Promise<Hos
     (await indexedDB.databases()).some((database) => database.name === marker(origin)),
   ),
   network: `fetch ${await attempt(() => fetch(new URL('/index.json', origin), { cache: 'no-store' }))}, image ${await requestImage(origin)}`,
-  // The app's notes, which a frame is not granted.
-  ungranted: await attempt(() =>
-    EffectEx.runPromise(host.client(NoteStore.Contract).list({}).pipe(Effect.timeout('1 second'))),
-  ),
+  // The app's notes, which a frame is not granted; a host that provides notes itself would only reach its own.
+  ungranted: host
+    .getSnapshot()
+    .self.services.some((service) => service.key === NoteStore.Contract.key && service.active)
+    ? 'not tried, this host provides its own'
+    : await attempt(() =>
+        EffectEx.runPromise(host.client(NoteStore.Contract).list({}).pipe(Effect.timeout('1 second'))),
+      ),
 });
 
 /** Starts a host in this realm and connects it to the app over the port it was sent. */
@@ -131,6 +135,10 @@ export const startChildHost = (init: Init): ServiceHost.ServiceHost => {
   const features: Record<string, unknown> = {};
   if (init.features.includes(Summarizer.GATEWAY_FEATURE)) {
     features[Summarizer.GATEWAY_FEATURE] = fakeGateway(init.id);
+  }
+  // A worker has no local storage to give, so a host in one cannot run a provider that needs it.
+  if (init.features.includes(NoteStore.STORAGE_FEATURE) && 'localStorage' in globalThis) {
+    features[NoteStore.STORAGE_FEATURE] = globalThis.localStorage;
   }
   const host: ServiceHost.ServiceHost = new ServiceHost.ServiceHost({
     id: init.id,
