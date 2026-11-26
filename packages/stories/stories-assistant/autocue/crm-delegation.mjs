@@ -95,7 +95,6 @@ export const steps = [
       await demo.caption({
         value: 'The account is active',
         subtitle: 'changed by the agent allowed to',
-        position: 'top',
       });
       await demo.click({ selector: `${OBJECTS} >> text=Bramble Coffee Roasters`, label: 'Bramble Coffee Roasters' });
       await waitForText(page, `${OBJECTS} [data-testid="database-module.selected"]`, '"active"', 10_000);
