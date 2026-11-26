@@ -30,23 +30,29 @@ type CacheEntry = { accessToken: string; expiresAtMillis: number };
 export const accessTokenResolverFromService = (service: EdgeFunctionEnv.AccessTokenService) =>
   Layer.sync(Credential.AccessTokenResolver, () => {
     const cache = new Map<string, CacheEntry>();
+    // Bumped by each refresh, so a request that started before it cannot cache the token it replaced.
+    const generations = new Map<string, number>();
 
     return {
       resolve: async ({ accessTokenId, refresh }) => {
         if (refresh) {
           cache.delete(accessTokenId);
+          generations.set(accessTokenId, (generations.get(accessTokenId) ?? 0) + 1);
         }
+        const generation = generations.get(accessTokenId) ?? 0;
 
         const cached = cache.get(accessTokenId);
         if (cached && cached.expiresAtMillis - Date.now() > EXPIRY_SKEW_MS) {
           return cached.accessToken;
         }
 
-        const result = await service.getAccessToken({}, { accessTokenId });
+        const result = await service.getAccessToken({}, refresh ? { accessTokenId, refresh } : { accessTokenId });
         if (!result.success) {
           throw new Error(`Could not resolve managed access token ${accessTokenId}: ${result.reason}`);
         }
-        cache.set(accessTokenId, { accessToken: result.accessToken, expiresAtMillis: result.expiresAtMillis });
+        if ((generations.get(accessTokenId) ?? 0) === generation) {
+          cache.set(accessTokenId, { accessToken: result.accessToken, expiresAtMillis: result.expiresAtMillis });
+        }
         log('resolved managed access token via service binding', {
           accessTokenId,
           expiresAtMillis: result.expiresAtMillis,
