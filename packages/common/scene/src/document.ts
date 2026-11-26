@@ -96,7 +96,8 @@ export type ContainerKind = (typeof CONTAINER_KINDS)[number];
 /** What an element placing an object with parts is: a group, a hull, a View, or a reusable Object. */
 export type Container = ContainerKind | 'object';
 
-const isContainerKind = (kind: string): kind is ContainerKind => CONTAINER_KINDS.some((known) => known === kind);
+/** Whether an object's kind names a container, and so is not a kind it draws as. */
+export const isContainerKind = (kind: string): kind is ContainerKind => CONTAINER_KINDS.some((known) => known === kind);
 
 /**
  * Which container the element `id` of a layout is, by the object `model` holds for it; nothing where it places no

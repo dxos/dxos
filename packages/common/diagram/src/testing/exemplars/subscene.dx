@@ -17,5 +17,5 @@ layout b-detail dim=2d name="B detail" {
 }
 
 model parts dim=2d {
-  object detail rect parts=b-detail
+  object detail view parts=b-detail
 }

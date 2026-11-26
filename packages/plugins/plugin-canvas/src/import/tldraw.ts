@@ -197,9 +197,6 @@ type Transform = { x: number; y: number; rotation: number };
 
 const IDENTITY: Transform = { x: 0, y: 0, rotation: 0 };
 
-/** The object a placing element names for the composite `parts`, as the canvas names a placed composite's. */
-const objectId = (parts: string) => `instance:${parts}`;
-
 /**
  * Maps a tldraw document to 2D layouts: its first page becomes the layout `root`. tldraw has no nested scenes, so a
  * frame becomes a labelled rectangle on a frames layer under the content, with its shapes beside it in the same layout,
@@ -498,7 +495,8 @@ export const tldrawToLayout = (
     kind: 'composite' as const,
     anonymous: true,
   }));
-  const objects = composites.map(({ id }): Scene.Object2D => ({ id: objectId(id), kind: 'rect', parts: id }));
+  // A tldraw group is the canvas's group: an object named for its parts, whose kind says so.
+  const objects = composites.map(({ id }): Scene.Object2D => ({ id, kind: 'group', parts: id }));
   const ordered = Object.values(layout.elements);
   return {
     layout,
@@ -707,7 +705,7 @@ const elementEndpoint = (end: Endpoint): ElementEndpoint =>
 /** The element the canvas writes for a node: the node itself, a group's placing element naming its composite's object. */
 const nodeElement = (node: Node): Scene.ElementRecord2D => ({
   ...node,
-  ...(isInstanceNode(node) ? { object: objectId(node.composite) } : {}),
+  ...(isInstanceNode(node) ? { object: node.composite } : {}),
 });
 
 const linkElement = ({ source, target, ...link }: Link): Scene.ElementRecord2D => ({

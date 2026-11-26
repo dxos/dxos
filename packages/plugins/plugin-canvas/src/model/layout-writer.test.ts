@@ -94,11 +94,11 @@ describe('makeLayoutWriter', () => {
     writer.write(withPortal, views);
     expect(layoutKeys(canvas)).toContain('g');
     const model = canvas.model?.target;
-    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['view:g']).toBeTruthy();
+    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects.g).toBeTruthy();
     expect(layout.model?.target).toBe(model);
 
     writer.write({ [root]: rootView }, withPortal);
     expect(layoutKeys(canvas)).not.toContain('g');
-    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['view:g']).toBeUndefined();
+    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects.g).toBeUndefined();
   });
 });

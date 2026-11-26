@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { DSL } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
-import { type Scene, applyIntent, findLayout } from '@dxos/scene';
+import { type Scene, applyIntent, applyModelIntent, findLayout } from '@dxos/scene';
 
 import {
   duplicateObject,
@@ -62,6 +62,33 @@ describe('scene rows', () => {
     expect(entries.length).toBeGreaterThan(0);
     expect(entries.every((entry) => entry.instances >= 0 && entry.name === entry.id)).toBe(true);
     expect(entries.some((entry) => entry.instances > 0)).toBe(true);
+  });
+
+  test("the library leaves out a group's object, and lists the Object that Make object defines", () => {
+    const doc = DSL.readScenes(EXEMPLARS.links).document;
+    const layout = doc.layouts[0];
+    const model = doc.models[0];
+    const first = 'a';
+    const grouped = applyModelIntent(doc, {
+      kind: 'group',
+      model: model.id,
+      layout: layout.id,
+      id: 'g',
+      members: [first],
+    });
+    expect(grouped.problems).toEqual([]);
+    const before = objectEntries(doc).map((entry) => entry.id);
+    expect(objectEntries(grouped.doc).map((entry) => entry.id)).toEqual(before);
+
+    const extracted = applyModelIntent(doc, {
+      kind: 'extract',
+      model: model.id,
+      layout: layout.id,
+      ids: [first],
+      object: { id: 'made', kind: 'rect' },
+    });
+    expect(extracted.problems).toEqual([]);
+    expect(objectEntries(extracted.doc).map((entry) => entry.id)).toEqual([...before, 'made']);
   });
 
   test('a hidden layer hides the elements on it', () => {

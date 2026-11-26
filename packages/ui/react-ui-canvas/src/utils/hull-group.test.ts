@@ -4,7 +4,15 @@
 
 import { describe, test } from 'vitest';
 
-import { type HullNode, type Link, type Node, isHullNode, isInstanceNode } from '@dxos/scene';
+import {
+  type HullNode,
+  type Link,
+  type Node,
+  applyModelIntent,
+  containerOf,
+  isHullNode,
+  isInstanceNode,
+} from '@dxos/scene';
 
 import { type RenderList2D, type RenderLists2D } from '../model/index.ts';
 import { fromRenderLists2D, toRenderLists2D } from '../viewport2d/index.ts';
@@ -138,6 +146,28 @@ describe('expandHulls', () => {
     ]);
     expect(board.links.xa.target).toEqual({ node: 'a' });
     expect(board.links.ab.source).toEqual({ node: 'a' });
+  });
+
+  test('a hull is a group with a border: its object says so, and Ungroup puts its nodes back where they stood', ({
+    expect,
+  }) => {
+    const document = fromRenderLists2D(Object.values(collapseHulls(FLAT)), { root: 'board' });
+    const board = document.layouts[0];
+    const model = document.models[0];
+    expect(containerOf(document, board, 'h')).toBe('hull');
+    expect(model.objects[board.elements.h.object ?? '']).toMatchObject({ kind: 'hull' });
+
+    const ungrouped = applyModelIntent(document, { kind: 'ungroup', model: model.id, layout: 'board', id: 'h' });
+    expect(ungrouped.problems).toEqual([]);
+    const { lists } = toRenderLists2D(ungrouped.doc);
+    expect(lists.map((list) => list.id)).toEqual(['board']);
+    const [after] = lists;
+    expect(Object.keys(after.nodes).sort()).toEqual(['a', 'b', 'x']);
+    expect(after.nodes.a.center).toEqual(FLAT.board.nodes.a.center);
+    expect(after.nodes.b.center).toEqual(FLAT.board.nodes.b.center);
+    // The link that crossed the border ends on the node again.
+    expect(after.links.xa.target).toEqual({ node: 'a' });
+    expect(expandHulls({ board: after }).board).toBe(after);
   });
 
   test('a group is left closed where opening it would not be the same drawing', ({ expect }) => {

@@ -10,7 +10,9 @@ import {
   LINK_KIND,
   type ModelIntent,
   type Scene,
+  containerOf,
   findLayout,
+  isContainerKind,
   linkPath,
   resolveLayout,
   rootScene,
@@ -45,22 +47,35 @@ export const hiddenElements = (layout: LayoutLike): ReadonlySet<string> => {
   );
 };
 
-/** Every model object, with how many elements across the document place it. */
+/**
+ * The library: the model's objects with how many elements across the document place each. A group's, a hull's and a
+ * View's object is left out, since none is a definition to place again.
+ */
 export const objectEntries = (doc: Scene.SceneDocument): ObjectEntry[] => {
   const counts = new Map<string, number>();
+  const contained = new Set<string>();
   for (const layout of doc.layouts) {
     for (const element of Object.values(layout.elements)) {
       if (element.object !== undefined) {
         counts.set(element.object, (counts.get(element.object) ?? 0) + 1);
+        const container = containerOf(doc, layout, element.id);
+        container !== undefined && container !== 'object' && contained.add(element.object);
       }
     }
   }
+  // An object no element places is still not the library's where its kind or its parts say what it is.
+  const listed = (object: Scene.ModelObject) =>
+    !contained.has(object.id) &&
+    !isContainerKind(object.kind) &&
+    !(object.parts !== undefined && findLayout(doc, object.parts)?.anonymous);
   return doc.models.flatMap((model) =>
-    Object.values(model.objects).map((object) => ({
-      id: object.id,
-      name: object.id,
-      instances: counts.get(object.id) ?? 0,
-    })),
+    Object.values(model.objects)
+      .filter(listed)
+      .map((object) => ({
+        id: object.id,
+        name: object.id,
+        instances: counts.get(object.id) ?? 0,
+      })),
   );
 };
 

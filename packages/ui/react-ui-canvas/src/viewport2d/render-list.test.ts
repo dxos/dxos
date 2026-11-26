@@ -13,6 +13,7 @@ import {
   NODE_KINDS,
   type Scene,
   applyModelIntent,
+  containerOf,
   linkPath,
   readDocument,
   sidePort,
@@ -32,7 +33,15 @@ import {
   createViewTree,
 } from '../testing/index.ts';
 import { DEFAULT_LAYER, between } from '../utils/index.ts';
-import { fromRenderList2D, namedStyles, styleClasses, toRenderList2D, toRenderLists2D } from './render-list.ts';
+import {
+  fromRenderList2D,
+  fromRenderLists2D,
+  namedStyles,
+  objectPlacing,
+  styleClasses,
+  toRenderList2D,
+  toRenderLists2D,
+} from './render-list.ts';
 
 /** A board whose layout declares two layers and names a style on two elements. */
 const DOCUMENT_2D: Scene.SceneDocument = (() => {
@@ -117,7 +126,7 @@ describe('toRenderLists2D', () => {
           elements: { r: { id: 'r', kind: 'rect', center: { x: 10, y: 0 }, size: { width: 20, height: 20 } } },
         },
       ],
-      models: [{ id: 'm', dim: '2d', objects: { box: { id: 'box', kind: 'rect', parts: 'inside' } } }],
+      models: [{ id: 'm', dim: '2d', objects: { box: { id: 'box', kind: 'view', parts: 'inside' } } }],
     };
     const root = toRenderLists2D(document).lists.find((view) => view.id === 'root');
     // The parts span x 0..20, y -10..10; at scale 2 about the origin (100, 0) that is x 100..140, y -20..20.
@@ -193,7 +202,7 @@ describe('toRenderLists2D', () => {
       scale: { x: 1, y: 1 },
     });
     // It still places the group's own object, so no other is made for it and it can be ungrouped.
-    expect(written?.objects.map((object) => object.id)).not.toContain(`instance:${layout.id}/g`);
+    expect(written?.objects.map((object) => object.id)).toEqual([`${layout.id}/g`]);
     const stored = written && {
       ...grouped.doc,
       layouts: grouped.doc.layouts.map((record) => (record.id === layout.id ? written.layout : record)),
@@ -530,15 +539,85 @@ describe('fromRenderList2D', () => {
     expect(portal).toBeDefined();
     const { layout, objects } = fromRenderList2D(view);
     const scene = portal && 'scene' in portal ? String(portal.scene) : '';
-    expect(objects).toContainEqual({ id: `view:${scene}`, kind: 'rect', parts: scene });
-    expect(portal && layout.elements[portal.id].object).toBe(`view:${scene}`);
+    // The object is named for the layout it opens, and its kind says it is a View.
+    expect(objects).toContainEqual({ id: scene, kind: 'view', parts: scene });
+    expect(portal && layout.elements[portal.id].object).toBe(scene);
   });
 
   test('two instance nodes of one composite place the same object', () => {
     const root = createObjectsTree().views.find((view) => view.id === 'scene:root');
     const { layout, objects } = fromRenderList2D(root ?? EVERY_KIND);
-    expect(layout.elements['logo-1'].object).toBe('instance:logo');
-    expect(objects.filter((object) => object.id === 'instance:logo')).toHaveLength(1);
+    expect(layout.elements['logo-1'].object).toBe('logo');
+    expect(objects.filter((object) => object.id === 'logo')).toEqual([{ id: 'logo', kind: 'rect', parts: 'logo' }]);
+  });
+
+  test('an instance places a group where its composite is anonymous, a hull where it draws a border, else an Object', () => {
+    const instance = (id: string, composite: string, extra: Record<string, unknown> = {}): Node => ({
+      kind: 'instance',
+      id,
+      z: 'a0',
+      center: { x: 0, y: 0 },
+      size: { width: 64, height: 64 },
+      composite,
+      ...extra,
+    });
+    const lists: RenderList2D[] = [
+      {
+        id: 'root',
+        nodes: {
+          g: instance('g', 'grouped'),
+          h: instance('h', 'bordered', { hull: 'box', fit: 'none' }),
+          o: instance('o', 'card'),
+        },
+        links: {},
+      },
+      { id: 'grouped', kind: 'composite', anonymous: true, nodes: {}, links: {} },
+      { id: 'bordered', kind: 'composite', anonymous: true, nodes: {}, links: {} },
+      { id: 'card', kind: 'composite', nodes: {}, links: {} },
+    ];
+    const document = fromRenderLists2D(lists, { root: 'root' });
+    expect(document.models[0].objects).toEqual({
+      grouped: { id: 'grouped', kind: 'group', parts: 'grouped' },
+      bordered: { id: 'bordered', kind: 'hull', parts: 'bordered' },
+      card: { id: 'card', kind: 'rect', parts: 'card' },
+    });
+    const root = document.layouts[0];
+    expect(['g', 'h', 'o'].map((id) => containerOf(document, root, id))).toEqual(['group', 'hull', 'object']);
+    // Read back, each is the instance it was.
+    expect(toRenderLists2D(document).lists.find((list) => list.id === 'root')?.nodes).toMatchObject({
+      g: { kind: 'instance', composite: 'grouped' },
+      h: { kind: 'instance', composite: 'bordered', hull: 'box' },
+      o: { kind: 'instance', composite: 'card' },
+    });
+  });
+
+  test('an element keeps the object it places when another writer named it, and no second one is made', () => {
+    const view: RenderList2D = {
+      id: 'root',
+      nodes: {
+        o: {
+          kind: 'instance',
+          id: 'o',
+          z: 'a0',
+          center: { x: 0, y: 0 },
+          size: { width: 64, height: 64 },
+          composite: 'object-1-parts',
+        },
+      },
+      links: {},
+    };
+    const objects: Record<string, Scene.Object2D> = {
+      'object-1': { id: 'object-1', kind: 'rect', parts: 'object-1-parts' },
+    };
+    const written = fromRenderList2D(view, {
+      objectFor: (parts, element) =>
+        objectPlacing(objects, (object) => object.parts, parts, element === 'o' ? 'object-1' : undefined),
+    });
+    expect(written.layout.elements.o.object).toBe('object-1');
+    expect(written.objects.map((object) => object.id)).toEqual(['object-1']);
+    // With no object for a layout, the new one is named for it, clear of an id already taken.
+    expect(objectPlacing(objects, (object) => object.parts, 'other')).toBe('other');
+    expect(objectPlacing(objects, (object) => object.parts, 'object-1')).toBe('object-1-2');
   });
 
   test('a portal to a layout outside the drawing stays a portal, with its scene and link, through ECHO', () => {

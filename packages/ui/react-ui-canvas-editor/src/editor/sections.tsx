@@ -7,7 +7,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ThemeMode, between, gridPitch, moveWrites } from '@dxos/react-ui-canvas';
+import { type ThemeMode, between, gridPitch, modelIntentOf, moveWrites } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import {
   DEFAULT_GRID,
@@ -191,7 +191,7 @@ export const ViewsSection = () => {
                       if (write.kind === 'layout') {
                         commands.intent(write.layout, write.intent);
                       } else if (model !== undefined) {
-                        commands.modelIntent({ kind: 'define', model, object: write.object });
+                        commands.modelIntent(modelIntentOf(write, model));
                       }
                     }
                   });

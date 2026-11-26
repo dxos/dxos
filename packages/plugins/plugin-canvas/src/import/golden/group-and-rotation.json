@@ -57,7 +57,7 @@
             "side": "top"
           }
         ],
-        "object": "instance:group-object"
+        "object": "group-object"
       },
       "polyline": {
         "kind": "link",
@@ -190,8 +190,8 @@
   ],
   "objects": [
     {
-      "id": "instance:group-object",
-      "kind": "rect",
+      "id": "group-object",
+      "kind": "group",
       "parts": "group-object"
     }
   ],
@@ -258,7 +258,7 @@
             "side": "top"
           }
         ],
-        "object": "instance:group-object"
+        "object": "group-object"
       }
     },
     {

@@ -128,12 +128,12 @@ describe('tldrawToLayout shapes', () => {
     // The group is replaced by an element placing the composite over the members' bounds: turned a quarter about
     // (1000, 0), the members' centres land at (975, 50) and (975, 250).
     expect(elements.group).toMatchObject({
-      object: 'instance:group-object',
+      object: 'group-object',
       center: { x: 975, y: 150 },
       kind: 'instance',
       composite: 'group-object',
     });
-    expect(objects).toEqual([{ id: 'instance:group-object', kind: 'rect', parts: 'group-object' }]);
+    expect(objects).toEqual([{ id: 'group-object', kind: 'group', parts: 'group-object' }]);
     expect(elements).not.toHaveProperty('member');
     expect(elements).not.toHaveProperty('partner');
     // The link wholly inside the group moved with it.

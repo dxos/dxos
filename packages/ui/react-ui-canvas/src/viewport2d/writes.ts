@@ -2,7 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LayoutIntent, Scene, type ViewId, applyIntent, findLayout, layoutChanges } from '@dxos/scene';
+import {
+  type LayoutIntent,
+  type ModelIntent,
+  Scene,
+  type ViewId,
+  applyIntent,
+  findLayout,
+  isContainerKind,
+  layoutChanges,
+} from '@dxos/scene';
 
 import {
   type ConstrainContext,
@@ -22,15 +31,23 @@ import {
   moveToHull,
   reseat,
 } from '../utils/index.ts';
-import { fromRenderList2D, toRenderList2D, toRenderLists2D } from './render-list.ts';
+import { type WriteContext, fromRenderList2D, objectPlacing, toRenderList2D, toRenderLists2D } from './render-list.ts';
 
 /**
  * One write a 2D engine change makes: an intent on a layout (`created` when the engine opened a layout the document has
- * none for yet, such as a new portal's scene), or an object a new composite places, defined in the root's model.
+ * none for yet, such as a new portal's scene), an object a new composite places, defined in the root's model, or the
+ * kind of an object that is now another container (`retype`).
  */
 export type LayoutWrite =
   | { kind: 'layout'; layout: string; intent: LayoutIntent; created: boolean }
-  | { kind: 'define'; object: Scene.Object2D };
+  | { kind: 'define'; object: Scene.Object2D }
+  | { kind: 'retype'; object: string; value: string };
+
+/** The intent a write to the model makes on `model`. */
+export const modelIntentOf = (write: Exclude<LayoutWrite, { kind: 'layout' }>, model: string): ModelIntent =>
+  write.kind === 'define'
+    ? { kind: 'define', model, object: write.object }
+    : { kind: 'update', model, id: write.object, path: ['kind'], value: write.value };
 
 type Element = Scene.Element2D;
 
@@ -78,6 +95,31 @@ const mergeElement = (
   return dsl === undefined ? value : { ...value, dsl };
 };
 
+/** The objects of a document's 2D models, by id. */
+const objects2D = (document: Scene.SceneDocument): Record<string, Scene.Object2D> =>
+  Object.assign({}, ...document.models.map((model) => (model.dim === '2d' ? model.objects : {})));
+
+/**
+ * What a list is written against: the objects the document holds, so an element keeps the object it places and one
+ * layout has one object, and the lists beside it, which say whether a composite is a group's.
+ */
+const writeContext = (
+  document: Scene.SceneDocument,
+  layout: Scene.LayoutRecord2D | undefined,
+  lists: RenderLists2D,
+): WriteContext => {
+  const objects = objects2D(document);
+  return {
+    objectFor: (parts, element) =>
+      objectPlacing(objects, (object) => object.parts, parts, layout?.elements[element]?.object),
+    anonymous: (parts) => (lists[parts] ?? findLayout(document, parts))?.anonymous === true,
+  };
+};
+
+/** Whether a stored object's kind has to follow what its node now is: a container's kind is what readers go by. */
+const kindChanged = (stored: Scene.Object2D, written: Scene.Object2D): boolean =>
+  stored.kind !== written.kind && [stored.kind, written.kind].some((kind) => isContainerKind(kind));
+
 const isEmpty = (intent: LayoutIntent): boolean => intent.kind === 'batch' && intent.intents.every(isEmpty);
 
 /**
@@ -92,7 +134,7 @@ export const layoutWrites = (
   next: RenderLists2D,
 ): LayoutWrite[] => {
   const models = new Map(document.models.flatMap((model) => (model.dim === '2d' ? [[model.id, model] as const] : [])));
-  const known = new Set(document.models.flatMap((model) => (model.dim === '2d' ? Object.keys(model.objects) : [])));
+  const known = objects2D(document);
   const created: LayoutWrite[] = [];
   const defines = new Map<string, LayoutWrite>();
   const updated: LayoutWrite[] = [];
@@ -103,8 +145,9 @@ export const layoutWrites = (
     }
     const stored = findLayout(document, view.id);
     const layout = stored?.dim === '2d' ? stored : undefined;
-    const { layout: record, objects } = fromRenderList2D(view);
-    const shown = before ? fromRenderList2D(before).layout.elements : undefined;
+    const context = writeContext(document, layout, next);
+    const { layout: record, objects } = fromRenderList2D(view, context);
+    const shown = before ? fromRenderList2D(before, context).layout.elements : undefined;
     const current: Record<string, Element> = { ...layout?.elements };
     const model = layout?.model === undefined ? undefined : models.get(layout.model);
     const objectOf = (id: string) => model?.objects[id];
@@ -118,7 +161,17 @@ export const layoutWrites = (
       record.elements[id] === undefined && delete after[id];
     }
     for (const object of objects) {
-      !known.has(object.id) && !defines.has(object.id) && defines.set(object.id, { kind: 'define', object });
+      const stored = known[object.id];
+      if (defines.has(object.id)) {
+        continue;
+      }
+      if (stored === undefined) {
+        defines.set(object.id, { kind: 'define', object });
+      } else if (kindChanged(stored, object)) {
+        // A group that was named is an Object from then on, and an object stored before its kind said what it is
+        // says so once its node is written.
+        defines.set(object.id, { kind: 'retype', object: object.id, value: object.kind });
+      }
     }
     const intent = layoutChanges(current, after);
     if (!layout) {
@@ -236,7 +289,9 @@ export const drawnDocument = (
         ...document,
         layouts: document.layouts.map((layout) => {
           const list = layout.dim === '2d' && opened.has(layout.id) ? lists[layout.id] : undefined;
-          return list && layout.dim === '2d' ? { ...layout, elements: fromRenderList2D(list).layout.elements } : layout;
+          return list && layout.dim === '2d'
+            ? { ...layout, elements: fromRenderList2D(list, writeContext(document, layout, lists)).layout.elements }
+            : layout;
         }),
       };
 
@@ -293,7 +348,7 @@ export const applyLayoutWrites = (
       if (next.kind === 'layout') {
         onIntent(next.layout, next.intent);
       } else if (model !== undefined) {
-        onModelIntent?.({ kind: 'define', model, object: next.object });
+        onModelIntent?.(modelIntentOf(next, model));
       }
     }
   };

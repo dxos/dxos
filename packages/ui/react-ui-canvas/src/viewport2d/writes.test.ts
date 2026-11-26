@@ -4,11 +4,11 @@
 
 import { describe, expect, test, vi } from 'vitest';
 
-import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
+import { type LayoutIntent, type ModelIntent, type Scene, applyIntent, applyModelIntent } from '@dxos/scene';
 
 import { type RenderList2D } from '../model/index.ts';
 import { createNode } from '../utils/index.ts';
-import { toRenderList2D } from './render-list.ts';
+import { toRenderList2D, toRenderLists2D } from './render-list.ts';
 import { type LayoutWrite, applyLayoutWrites, layoutWrites } from './writes.ts';
 
 const rects = (count: number): Record<string, Scene.Element2D> =>
@@ -211,8 +211,69 @@ describe('layoutWrites', () => {
     const writes = layoutWrites(doc, { main: view }, next);
     expect(writes.map((write) => write.kind)).toEqual(['layout', 'define', 'layout']);
     expect(writes[0]).toMatchObject({ kind: 'layout', layout: 'inner', created: true });
-    expect(writes[1]).toMatchObject({ kind: 'define', object: { id: 'view:inner', parts: 'inner' } });
+    expect(writes[1]).toMatchObject({ kind: 'define', object: { id: 'inner', kind: 'view', parts: 'inner' } });
     expect(writes[2]).toMatchObject({ kind: 'layout', layout: 'main', created: false });
+  });
+
+  test('an Object made by the model keeps its object when its instance moves, and no second one is defined', () => {
+    const made = applyModelIntent(document(rects(3)), {
+      kind: 'extract',
+      model: 'm',
+      layout: 'main',
+      ids: ['r0', 'r1'],
+      object: { id: 'object-1', kind: 'rect' },
+    });
+    expect(made.problems).toEqual([]);
+    const { lists } = toRenderLists2D(made.doc);
+    const views = Object.fromEntries(lists.map((list) => [list.id, list]));
+    // The model's Object is drawn as an instance, not as a View to drill into.
+    expect(views.main.nodes['object-1']).toMatchObject({ kind: 'instance', composite: 'object-1-parts' });
+    const writes = layoutWrites(made.doc, views, { ...views, main: moved(views.main, 32) });
+    expect(writes.map((write) => write.kind)).toEqual(['layout']);
+    const [write] = writes;
+    const layout = layoutOf(made.doc);
+    expect(write.kind === 'layout' && applyIntent(layout, write.intent).elements['object-1'].object).toBe('object-1');
+  });
+
+  test('an object stored before its kind said what it is says so once its node is written', () => {
+    const size = { width: 16, height: 16 };
+    const doc: Scene.SceneDocument = {
+      scenes: [{ id: 's', dim: '2d', layout: 'main', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+      layouts: [
+        {
+          id: 'main',
+          dim: '2d',
+          model: 'm',
+          elements: {
+            g: { id: 'g', kind: 'instance', object: 'instance:parts', center: { x: 0, y: 0 }, size, fit: 'none' },
+          },
+        },
+        {
+          id: 'parts',
+          dim: '2d',
+          kind: 'composite',
+          anonymous: true,
+          elements: { r: { id: 'r', kind: 'rect', center: { x: 0, y: 0 }, size } },
+        },
+      ],
+      models: [
+        { id: 'm', dim: '2d', objects: { 'instance:parts': { id: 'instance:parts', kind: 'rect', parts: 'parts' } } },
+      ],
+    };
+    const { lists } = toRenderLists2D(doc);
+    const views = Object.fromEntries(lists.map((list) => [list.id, list]));
+    const writes = layoutWrites(doc, views, { ...views, main: moved(views.main, 32) });
+    // The element keeps its object, whose kind is set to `group`: Ungroup then takes it apart.
+    expect(writes).toContainEqual({ kind: 'retype', object: 'instance:parts', value: 'group' });
+    const intents: ModelIntent[] = [];
+    applyLayoutWrites(writes, {
+      model: 'm',
+      onIntent: () => {},
+      onModelIntent: (intent) => (intents.push(intent), []),
+    });
+    const retyped = intents.reduce((current, intent) => applyModelIntent(current, intent).doc, doc);
+    expect(retyped.models[0].objects['instance:parts'].kind).toBe('group');
+    expect(applyModelIntent(retyped, { kind: 'ungroup', model: 'm', layout: 'main', id: 'g' }).problems).toEqual([]);
   });
 
   test('a new composite is written as one: the layout the host creates bare takes its kind and anonymity', () => {

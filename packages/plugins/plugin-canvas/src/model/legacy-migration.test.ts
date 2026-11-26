@@ -446,9 +446,9 @@ describe('migrateSceneDrawing', () => {
         .map((ref) => ref.target)
         .find((target) => Obj.instanceOf(Scene.Layout2D, target) && target.key === 'peer-view');
       expect(layout).toBeDefined();
-      expect(rootLayout(winner).elements.p).toMatchObject({ object: 'view:peer-view' });
+      expect(rootLayout(winner).elements.p).toMatchObject({ object: 'peer-view' });
       const model = winner.model?.target;
-      expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['view:peer-view']?.parts?.target).toBe(layout);
+      expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['peer-view']?.parts?.target).toBe(layout);
       expect(await db.query(Filter.type(Canvas.Canvas)).run()).toEqual([winner]);
     });
 
@@ -481,7 +481,7 @@ describe('migrateSceneDrawing', () => {
       const adopted = winner.scenes.map((ref) => ref.target).find((target) => target === extra);
       expect(Obj.instanceOf(Scene.Scene2D, adopted) && adopted.layout.target).toBe(winnerRoot);
       const model = winnerRoot.model?.target;
-      const object = Obj.instanceOf(Scene.Model2D, model) ? model.objects[`view:${root}`] : undefined;
+      const object = Obj.instanceOf(Scene.Model2D, model) ? model.objects[root] : undefined;
       expect(object?.parts?.target).toBe(winnerRoot);
     });
 

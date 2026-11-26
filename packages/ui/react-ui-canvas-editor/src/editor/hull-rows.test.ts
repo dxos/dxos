@@ -17,10 +17,20 @@ import {
   drawnWrites,
   enclose,
   fromRenderLists2D,
+  modelIntentOf,
   moveWrites,
   viewMove,
 } from '@dxos/react-ui-canvas';
-import { type HullNode, type Link, type Node, type RectNode, type Scene, applyIntent, findLayout } from '@dxos/scene';
+import {
+  type HullNode,
+  type Link,
+  type Node,
+  type RectNode,
+  type Scene,
+  applyIntent,
+  applyModelIntent,
+  findLayout,
+} from '@dxos/scene';
 
 import { DEFAULT_LATTICE, type DrawingValues, drawingSaves, latticeValues } from './drawing-form.ts';
 import { layoutTree, selectedElement } from './scene-rows.ts';
@@ -67,13 +77,9 @@ const DOCUMENT: Scene.SceneDocument = fromRenderLists2D(Object.values(collapseHu
 /** The document after a host has taken `writes`, as a story's or the app's does. */
 const written = (document: Scene.SceneDocument, writes: readonly LayoutWrite[]): Scene.SceneDocument =>
   writes.reduce((current, write): Scene.SceneDocument => {
-    if (write.kind === 'define') {
-      return {
-        ...current,
-        models: current.models.map((model) =>
-          model.dim === '2d' ? { ...model, objects: { ...model.objects, [write.object.id]: write.object } } : model,
-        ),
-      };
+    if (write.kind !== 'layout') {
+      const model = current.models.find((candidate) => candidate.dim === '2d');
+      return model ? applyModelIntent(current, modelIntentOf(write, model.id)).doc : current;
     }
     const stored = current.layouts.find((layout) => layout.id === write.layout);
     const next = applyIntent(stored ?? { id: write.layout, dim: '2d', model: 'model', elements: {} }, write.intent);

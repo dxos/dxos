@@ -174,8 +174,8 @@ describe('CanvasLayoutBuilder', () => {
       expect.arrayContaining(['member', 'partner', 'pair']),
     );
     const model = layoutOf(canvas).model?.target;
-    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['instance:group-object']?.parts?.target).toBe(parts);
-    expect(layoutOf(canvas).elements.group).toMatchObject({ object: 'instance:group-object' });
+    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['group-object']?.parts?.target).toBe(parts);
+    expect(layoutOf(canvas).elements.group).toMatchObject({ object: 'group-object' });
     expect(layoutOf(canvas).elements.tie).toMatchObject({ target: { node: 'group' } });
   });
 
