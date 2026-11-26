@@ -238,4 +238,34 @@ describe('applyModelIntent', () => {
       undefined,
     ]);
   });
+
+  test("a 2D extract frames its members by the size each draws at, its object's where it states none", () => {
+    const sized: Scene.SceneDocument = {
+      scenes: [],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm2',
+          elements: {
+            a: { id: 'a', object: 'box', center: { x: 0, y: 0 } },
+            b: { id: 'b', object: 'box', center: { x: 192, y: 0 } },
+          },
+        },
+      ],
+      models: [{ id: 'm2', dim: '2d', objects: { box: { id: 'box', kind: 'rect', size: { width: 96, height: 96 } } } }],
+    };
+    const extracted = applyModelIntent(sized, {
+      kind: 'extract',
+      model: 'm2',
+      layout: 'root',
+      ids: ['a', 'b'],
+      object: { id: 'pair', kind: 'rect' },
+    });
+    expect(extracted.problems).toEqual([]);
+    expect(extracted.doc.layouts[0].elements.pair).toMatchObject({
+      center: { x: 96, y: 0 },
+      size: { width: 288, height: 96 },
+    });
+  });
 });

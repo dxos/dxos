@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { containerIn, isGrouping } from './document.ts';
+import { containerIn, isGrouping, resolveLayout2D } from './document.ts';
 import { type ElementEndpoint, endpointNode, rebindEndpoint } from './element.ts';
 import {
   type Arrangement,
@@ -202,10 +202,13 @@ const extract = (
     } satisfies LayoutRecord3D;
     host = { ...layout, model: layout.model ?? model.id, elements: result.outside };
   } else {
+    // The size an element draws at is its object's where it states none, which is what the frame has to hold.
+    const drawn = resolveLayout2D(doc, layout);
     const result = split<Element2D>(layout.elements, ids, elementId, (inside) => {
-      const boxes = inside.flatMap((element) =>
-        element.center ? [{ center: element.center, size: element.size ?? { width: 0, height: 0 } }] : [],
-      );
+      const boxes = inside.flatMap((element) => {
+        const size = drawn[element.id]?.size ?? element.size ?? { width: 0, height: 0 };
+        return element.center ? [{ center: element.center, size }] : [];
+      });
       const left = Math.min(...boxes.map(({ center, size }) => center.x - size.width / 2));
       const right = Math.max(...boxes.map(({ center, size }) => center.x + size.width / 2));
       const top = Math.min(...boxes.map(({ center, size }) => center.y - size.height / 2));
