@@ -25,7 +25,7 @@ import {
   callBotRoute,
   toConnectionStatus,
 } from '../services/bot-gateway.ts';
-import { makeEdgeDiscordBot } from './discord-bot.ts';
+import { makeEdgeDiscordBot } from '../services/edge-discord-bot.ts';
 
 /** Resolves the service that acts through the channel's bot. */
 export type DiscordBotResolver = Effect.Effect<DiscordBot.Service, DiscordChannelError, Capability.Service>;
