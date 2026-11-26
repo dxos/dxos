@@ -30,6 +30,15 @@ import * as UnifiedProcessManager from './UnifiedProcessManager.ts';
 const user = Principal.identity('did:halo:ALICE');
 const agent = Principal.process('process://local/agent');
 
+/** Running a command in the sandbox. */
+const SandboxExec = Permission.define({ command: '/sandbox/exec', name: 'Run sandbox commands' });
+
+/** Everything in the sandbox: the parent of {@link SandboxExec}, so a grant for it covers exec too. */
+const Sandbox = Permission.define({ command: '/sandbox', name: 'Use the sandbox' });
+
+/** Sending email. */
+const EmailSend = Permission.define({ command: '/email/send', name: 'Send email' });
+
 /** Declares nothing, so it runs in any process. */
 const Echo = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.echo'), name: 'Echo' },
@@ -42,14 +51,14 @@ const Exec = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.exec'), name: 'Exec' },
   input: Schema.Struct({ command: Schema.String }),
   output: Schema.String,
-}).pipe(Guard.requires(Requirement.make('/sandbox/exec')));
+}).pipe(Guard.requires(Requirement.make(SandboxExec)));
 
-/** Requires `/email/send`, and only to dxos.org addresses whatever the grant says. */
+/** Requires {@link EmailSend}, and only to dxos.org addresses whatever the grant says. */
 const SendEmail = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.sendEmail'), name: 'Send email' },
   input: Schema.Struct({ to: Schema.String }),
   output: Schema.String,
-}).pipe(Guard.requires(Requirement.make('/email/send', { policy: [Policy.like('.args.to', '*@dxos.org')] })));
+}).pipe(Guard.requires(Requirement.make(EmailSend, { policy: [Policy.like('.args.to', '*@dxos.org')] })));
 
 /** Declares nothing itself and invokes `Exec`, so the nested call is checked against this process's guard. */
 const RunScript = Operation.make({
@@ -58,7 +67,7 @@ const RunScript = Operation.make({
   output: Schema.String,
 });
 
-const execEverything = Guard.make({ principal: agent, source: Guard.attested([]) });
+const noGrants = Guard.make({ principal: agent, source: Guard.attested([]) });
 
 /** Spawns `Exec` as a child with a guard that would admit it, to show a child cannot widen its parent. */
 const Escalate = Operation.make({
@@ -84,7 +93,7 @@ const handlers = OperationHandlerSet.make(
   Escalate.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ command }) {
-        const allowExec = Guard.make({ principal: agent, source: Guard.attested([yield* grantTo('/sandbox/exec')]) });
+        const allowExec = Guard.make({ principal: agent, source: Guard.attested([yield* grantTo(SandboxExec)]) });
         const child = yield* Process.spawn(OperationProcess.make(Exec), { command }, { guard: allowExec });
         return yield* Process.awaitOutput(child);
       }),
@@ -93,7 +102,7 @@ const handlers = OperationHandlerSet.make(
   EscapeDetached.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ command }) {
-        const allowExec = Guard.make({ principal: agent, source: Guard.attested([yield* grantTo('/sandbox/exec')]) });
+        const allowExec = Guard.make({ principal: agent, source: Guard.attested([yield* grantTo(SandboxExec)]) });
         const child = yield* Process.spawn(
           OperationProcess.make(Exec),
           { command },
@@ -119,8 +128,8 @@ const TestLayer = ProcessOperationInvoker.layer
     Layer.provide(Trace.layerNoop),
   );
 
-/** A grant from the user to the agent process for one command on every subject. */
-function grantTo(command: string) {
+/** A grant from the user to the agent process for one permission on every subject. */
+function grantTo({ command }: Permission.Definition) {
   return Grant.make({
     issuer: user,
     audience: agent,
@@ -128,9 +137,9 @@ function grantTo(command: string) {
   });
 }
 
-/** A guard for the agent process holding exactly these commands. */
-const guardFor = Effect.fnUntraced(function* (...commands: string[]) {
-  const grants = yield* Effect.forEach(commands, grantTo);
+/** A guard for the agent process holding exactly these permissions. */
+const guardFor = Effect.fnUntraced(function* (...permissions: Permission.Definition[]) {
+  const grants = yield* Effect.forEach(permissions, grantTo);
   return Guard.make({ principal: agent, source: Guard.attested(grants) });
 });
 
@@ -175,7 +184,7 @@ describe('operation permissions', () => {
   it.effect(
     'a process spawned with a covering grant runs it',
     Effect.fn(function* ({ expect }) {
-      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor(SandboxExec) });
       expect(exit).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
@@ -183,7 +192,7 @@ describe('operation permissions', () => {
   it.effect(
     'a grant for a parent command covers its descendants',
     Effect.fn(function* ({ expect }) {
-      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor('/sandbox') });
+      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor(Sandbox) });
       expect(exit).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
@@ -191,7 +200,7 @@ describe('operation permissions', () => {
   it.effect(
     'a process whose grants do not cover the command is refused',
     Effect.fn(function* ({ expect }) {
-      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor('/email/send') });
+      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor(EmailSend) });
       expect(denial(exit)).toContain('no grant covers the subject and command');
     }, Effect.provide(TestLayer)),
   );
@@ -199,7 +208,7 @@ describe('operation permissions', () => {
   it.effect(
     "the operation's policy is checked against its input",
     Effect.fn(function* ({ expect }) {
-      const guard = yield* guardFor('/email/send');
+      const guard = yield* guardFor(EmailSend);
       expect(yield* run(SendEmail, { to: 'rich@dxos.org' }, { guard })).toEqual(Exit.succeed('sent to rich@dxos.org'));
       const refused = yield* run(SendEmail, { to: 'someone@example.com' }, { guard });
       expect(denial(refused)).toContain('.args.to matches *@dxos.org');
@@ -209,9 +218,9 @@ describe('operation permissions', () => {
   it.effect(
     "a nested invocation is checked against the parent process's guard",
     Effect.fn(function* ({ expect }) {
-      const allowed = yield* run(RunScript, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      const allowed = yield* run(RunScript, { command: 'ls' }, { guard: yield* guardFor(SandboxExec) });
       expect(allowed).toEqual(Exit.succeed('ran ls'));
-      const refused = yield* run(RunScript, { command: 'ls' }, { guard: yield* guardFor('/email/send') });
+      const refused = yield* run(RunScript, { command: 'ls' }, { guard: yield* guardFor(EmailSend) });
       expect(denial(refused)).toContain('no grant covers');
       const unguarded = yield* run(RunScript, { command: 'ls' });
       expect(denial(unguarded)).toContain('holds none');
@@ -221,9 +230,9 @@ describe('operation permissions', () => {
   it.effect(
     "a child spawned with its own guard cannot widen its parent's",
     Effect.fn(function* ({ expect }) {
-      const refused = yield* run(Escalate, { command: 'rm' }, { guard: yield* guardFor('/email/send') });
+      const refused = yield* run(Escalate, { command: 'rm' }, { guard: yield* guardFor(EmailSend) });
       expect(denial(refused)).toContain('no grant covers');
-      const allowed = yield* run(Escalate, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      const allowed = yield* run(Escalate, { command: 'ls' }, { guard: yield* guardFor(SandboxExec) });
       expect(allowed).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
@@ -231,9 +240,9 @@ describe('operation permissions', () => {
   it.effect(
     'a detached child is still held to the guard of the process that spawned it',
     Effect.fn(function* ({ expect }) {
-      const refused = yield* run(EscapeDetached, { command: 'rm' }, { guard: yield* guardFor('/email/send') });
+      const refused = yield* run(EscapeDetached, { command: 'rm' }, { guard: yield* guardFor(EmailSend) });
       expect(denial(refused)).toContain('no grant covers');
-      const allowed = yield* run(EscapeDetached, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      const allowed = yield* run(EscapeDetached, { command: 'ls' }, { guard: yield* guardFor(SandboxExec) });
       expect(allowed).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
@@ -241,8 +250,8 @@ describe('operation permissions', () => {
   it.effect(
     'a guard with no grants refuses every operation that declares requirements and none that does not',
     Effect.fn(function* ({ expect }) {
-      expect(yield* run(Echo, { text: 'hi' }, { guard: execEverything })).toEqual(Exit.succeed('hi'));
-      expect(denial(yield* run(Exec, { command: 'ls' }, { guard: execEverything }))).toContain('no grant covers');
+      expect(yield* run(Echo, { text: 'hi' }, { guard: noGrants })).toEqual(Exit.succeed('hi'));
+      expect(denial(yield* run(Exec, { command: 'ls' }, { guard: noGrants }))).toContain('no grant covers');
     }, Effect.provide(TestLayer)),
   );
 });
