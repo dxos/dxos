@@ -29,7 +29,7 @@ import { Person } from '@dxos/types';
 export type ChatModuleData = {
   /** Name of the agent whose chat the panel shows, when the space holds several agents. */
   agent?: string;
-  /** The commands the agent holds grants for, shown on hovering its name. */
+  /** The names of the permissions the agent holds grants for, shown on hovering its name. */
   permissions?: readonly string[];
   /**
    * Name (preferred or full) of the person this panel speaks as: the panel shows the agent's chat with

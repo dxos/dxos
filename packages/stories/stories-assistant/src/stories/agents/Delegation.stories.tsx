@@ -17,8 +17,8 @@ import { LEDGER_DONE, SCOUT_DELEGATED, SCOUT_REQUEST, Scripts } from '../../scri
 import {
   CRM_ACCOUNT,
   CRM_AGENTS,
-  CRM_WRITE,
   CrmPermissionsPlugin,
+  CrmWrite,
   LEDGER,
   SCOUT,
   createDecorators,
@@ -59,7 +59,7 @@ const expectStatus = (record: HTMLElement, status: string) =>
   waitFor(() => expect(record.textContent).toMatch(new RegExp(`"status":\\s*"${status}"`)), { timeout: 10_000 });
 
 const permissionsOf = (agent: string): readonly string[] =>
-  CRM_AGENTS.find(({ name }) => name === agent)?.commands ?? [];
+  (CRM_AGENTS.find(({ name }) => name === agent)?.permissions ?? []).map(({ name }) => name);
 
 /** Each agent's chat as a plank headed by its name (its permissions on hover), then the space's object tree. */
 const LAYOUT = [
@@ -132,7 +132,7 @@ export const CrmAgentsScripted: Story = {
       'chat-module.agent-header',
     );
     await userEvent.hover(ledgerHeader);
-    await within(document.body).findByText(`Permissions: ${CRM_WRITE}`, {}, { timeout: 10_000 });
+    await within(document.body).findByText(`Permissions: ${CrmWrite.name}`, {}, { timeout: 10_000 });
     await userEvent.unhover(ledgerHeader);
 
     const record = await accountRecord(canvasElement);

@@ -33,30 +33,35 @@ import { trim } from '@dxos/util';
 // cannot do it itself and hands it to Ledger.
 //
 
-/** The command that changing an organization's CRM record requires. */
-export const CRM_WRITE = '/crm/write';
+/** Changing an organization's CRM record: the permission the CRM tool requires and only Ledger is granted. */
+export const CrmWrite = Permission.define({
+  command: '/crm/write',
+  name: 'Change CRM records',
+  description: 'Set the status of organizations in the CRM.',
+  icon: 'ph--buildings--regular',
+});
 
 export const SCOUT = 'Scout';
 export const LEDGER = 'Ledger';
 
-/** Each agent, what it does, and the commands it holds grants for. */
+/** Each agent, what it does, and the permissions it holds grants for. */
 export const CRM_AGENTS: readonly {
   name: string;
   instructions: string;
-  commands: readonly string[];
+  permissions: readonly Permission.Definition[];
   /** Whether the agent can hand work to another agent (the delegation skill). */
   delegates: boolean;
 }[] = [
   {
     name: SCOUT,
     instructions: 'You research accounts. You cannot change the CRM yourself; Ledger can.',
-    commands: [],
+    permissions: [],
     delegates: true,
   },
   {
     name: LEDGER,
     instructions: 'You keep the CRM: you change the status of organizations when asked.',
-    commands: [CRM_WRITE],
+    permissions: [CrmWrite],
     delegates: false,
   },
 ];
@@ -66,7 +71,7 @@ export const CRM_ACCOUNT = 'Bramble Coffee Roasters';
 /** The statuses an organization's CRM record takes, as `Organization.status` does. */
 const CrmStatus = Schema.Literals(['prospect', 'qualified', 'active', 'commit', 'reject']);
 
-/** Sets an organization's CRM status, which only an agent granted {@link CRM_WRITE} may do. */
+/** Sets an organization's CRM status, which only an agent granted {@link CrmWrite} may do. */
 export const SetOrganizationStatus = Operation.make({
   meta: {
     key: DXN.make('com.example.operation.crm.setOrganizationStatus'),
@@ -80,7 +85,7 @@ export const SetOrganizationStatus = Operation.make({
   }),
   output: Schema.Struct({ name: Schema.String, status: Schema.String }),
   services: [Database.Service],
-}).pipe(Guard.requires(Requirement.make(CRM_WRITE)));
+}).pipe(Guard.requires(Requirement.make(CrmWrite)));
 
 export const CrmHandlers = OperationHandlerSet.make(
   SetOrganizationStatus.pipe(
@@ -123,12 +128,12 @@ const ISSUER = Principal.process('story://crm/owner');
 /** The principal an agent's processes act as. */
 const principalOf = (agent: string) => Principal.process(`agent://crm/${agent}`);
 
-const makeAgentGuard = Effect.fnUntraced(function* (agent: string, commands: readonly string[]) {
+const makeAgentGuard = Effect.fnUntraced(function* (agent: string, permissions: readonly Permission.Definition[]) {
   const audience = principalOf(agent);
   const grant = yield* Grant.make({
     issuer: ISSUER,
     audience,
-    permissions: commands.map((command) => Permission.make({ subject: Subject.any(), command })),
+    permissions: permissions.map(({ command }) => Permission.make({ subject: Subject.any(), command })),
   });
   return Guard.make({ principal: audience, source: Guard.attested([grant]) });
 });
@@ -143,8 +148,8 @@ export const CrmPermissionsPlugin = Plugin.define(
     provides: [AssistantCapabilities.SessionGuard, Capabilities.OperationHandler],
     activate: Effect.fnUntraced(function* () {
       const guards = new Map<string, Process.Guard>();
-      for (const { name, commands } of CRM_AGENTS) {
-        guards.set(name, yield* makeAgentGuard(name, commands));
+      for (const { name, permissions } of CRM_AGENTS) {
+        guards.set(name, yield* makeAgentGuard(name, permissions));
       }
       const sessionGuard: AssistantCapabilities.SessionGuard = (session) => {
         const parent = Obj.getParent(session);

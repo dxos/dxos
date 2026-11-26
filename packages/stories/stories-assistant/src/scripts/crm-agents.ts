@@ -6,7 +6,7 @@ import { ScriptedScene } from '@dxos/ai/testing';
 import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as Operation from '@dxos/compute/Operation';
 
-import { CRM_ACCOUNT, CRM_WRITE, LEDGER, SCOUT, SetOrganizationStatus } from '../testing/crm.ts';
+import { CRM_ACCOUNT, CrmWrite, LEDGER, SCOUT, SetOrganizationStatus } from '../testing/crm.ts';
 import { composerAsides, threadPrompt } from '../testing/scripted.ts';
 
 const SET_STATUS = Operation.toolName(SetOrganizationStatus);
@@ -16,7 +16,7 @@ const AGENT_DELEGATE = Operation.toolName(DelegationSkill.Operations.AgentDelega
 export const SCOUT_REQUEST = `${CRM_ACCOUNT} signed the contract. Mark them active in the CRM.`;
 
 /** What Scout says once it has handed the request on; the story waits for it. */
-export const SCOUT_DELEGATED = `I do not hold ${CRM_WRITE}, so I handed the change to ${LEDGER}`;
+export const SCOUT_DELEGATED = `I do not hold ${CrmWrite.command}, so I handed the change to ${LEDGER}`;
 
 /** What Scout asks Ledger, which holds the grant. */
 export const LEDGER_REQUEST = `Mark ${CRM_ACCOUNT} active in the CRM: they signed the contract.`;
@@ -35,7 +35,7 @@ const scout = ScriptedScene.conversation(SCOUT, [
     { delay: '1200 millis' },
   ),
   // The guard refuses the call, and the refusal names the command that needs a grant.
-  ScriptedScene.turn('tool', new RegExp(CRM_WRITE.replace(/\//g, '\\/'))),
+  ScriptedScene.turn('tool', new RegExp(CrmWrite.command.replace(/\//g, '\\/'))),
   ScriptedScene.turn(
     'assistant',
     [
