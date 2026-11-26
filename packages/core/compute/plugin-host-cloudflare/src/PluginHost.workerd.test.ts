@@ -6,6 +6,11 @@ import { next as A } from '@automerge/automerge';
 import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as HttpServerRequest from 'effect/http/HttpServerRequest';
+import * as HttpServerResponse from 'effect/http/HttpServerResponse';
+import * as Layer from 'effect/Layer';
+import * as RpcSerialization from 'effect/rpc/RpcSerialization';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
@@ -19,6 +24,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import {
@@ -34,8 +40,11 @@ import * as PluginHost from './PluginHost.ts';
 import {
   Adopt,
   ALARM_AT,
+  CallEcho,
   CurrentSessionOrNone,
   Delegate,
+  EchoProcess,
+  EchoRpcs,
   Fails,
   Followup,
   Greet,
@@ -317,6 +326,41 @@ describe('PluginHost', () => {
       expect(fake.calls.slice(1).map(([op]) => op)).toEqual(['terminate', 'status']);
     });
 
+    test("a spawned process's RPC goes to its host through the session", { timeout: 20_000 }, async ({ expect }) => {
+      const { host, env, spaceId, uri } = await sessionInSpace();
+      const info: ProcessProtocol.ProcessInfo = {
+        pid: '01KECHOPROCESS0000000000000',
+        parentPid: null,
+        key: EchoProcess.key,
+        params: { name: null, annotations: {} },
+        environment: { space: spaceId },
+        state: 'RUNNING',
+        alarmDueAt: null,
+        error: null,
+        startedAt: 1,
+        metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
+      };
+      const served: string[] = [];
+      const fake = makeAgentSession({ spawn: async () => info });
+      const session: PluginProtocol.AgentSession = {
+        ...fake.session,
+        processRpc: (rpcSpaceId, pid, request) => {
+          served.push(`${rpcSpaceId}/${pid}`);
+          return serveEcho(request);
+        },
+      };
+      const result = await host.invoke(
+        { operationKey: String(CallEcho.meta.key), spaceId, input: { text: 'hi' } },
+        env,
+        {
+          conversation: uri,
+          agent: session,
+        },
+      );
+      expect(result).toEqual({ ok: true, output: { echoed: 'HI' } });
+      expect(served).toEqual([`${spaceId}/${info.pid}`]);
+    });
+
     test(
       'without a session from EDGE, an operation that needs Agent.Service is refused',
       { timeout: 20_000 },
@@ -560,25 +604,6 @@ describe('PluginHost', () => {
     });
 
     // A callee that declares `Agent.Service` works for the caller's session, so EDGE needs the caller's target to pass on.
-    test("a call to another plugin's operation carries the caller's session", async ({ expect }) => {
-      const spaceId = SpaceId.random();
-      const invoked: PluginProtocol.OperationOptions[] = [];
-      const operations: PluginProtocol.OperationHost = {
-        invoke: async (_operationKey, _input, options) => {
-          invoked.push(options);
-          return { ok: true, output: { result: '55' } };
-        },
-      };
-      const { session } = makeAgentSession({});
-      const result = await makeHost().invoke(
-        { operationKey: String(Delegate.meta.key), spaceId, input: { n: 10 } },
-        makeSpaceEnv(spaceId),
-        { operations, agent: session },
-      );
-      expect(result).toMatchObject({ ok: true });
-      expect(invoked[0]?.agent).toBe(session);
-    });
-
     test("a nested call starts after the caller's writes reach its working set, and the caller takes the callee's", async ({
       expect,
     }) => {
@@ -782,6 +807,26 @@ const sessionInSpace = async () => {
   const { uri } = Schema.decodeUnknownSync(Schema.Struct({ uri: Schema.String }))(made.output);
   return { host, env, spaceId, uri };
 };
+
+/** Serves {@link EchoRpcs} as a process host does: effect-rpc over HTTP. */
+const serveEcho = (request: Request): Promise<Response> =>
+  EffectEx.runPromise(
+    Effect.gen(function* () {
+      const app = yield* RpcServer.toHttpEffect(EchoRpcs);
+      const web = HttpServerResponse.toWeb(yield* app);
+      const body = yield* Effect.promise(() => web.arrayBuffer());
+      return new Response(body, { status: web.status, headers: web.headers });
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          EchoRpcs.toLayer({ echo: ({ text }) => Effect.succeed(text.toUpperCase()) }),
+          RpcSerialization.layerNdjson,
+        ),
+      ),
+      Effect.provideService(HttpServerRequest.HttpServerRequest, HttpServerRequest.fromWeb(request)),
+      Effect.scoped,
+    ),
+  );
 
 /** The session EDGE passes, answering the verbs given and failing the rest; it records every call. */
 const makeAgentSession = (

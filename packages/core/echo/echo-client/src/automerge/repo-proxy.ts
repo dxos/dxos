@@ -910,8 +910,10 @@ export class RepoProxy extends Resource {
   }
 
   /**
-   * Resolves once every update the host has sent so far is integrated. A batch is integrated in slices that yield
-   * between them, so its documents can still be pending after the batch was delivered.
+   * Resolves once every update the host has sent so far has been taken off the inbox. A batch is integrated in slices
+   * that yield between them, so its documents can still be pending after the batch was delivered. Best effort, as
+   * integration always was: an update that fails to integrate is logged and skipped, and a proxy that closes drops
+   * what is left; neither rejects.
    */
   integrated(): Promise<void> {
     return this.#drained;

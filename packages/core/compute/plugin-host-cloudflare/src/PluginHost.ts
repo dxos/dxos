@@ -110,7 +110,9 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       throw new InvalidRequestError({ message: `Invalid spaceId: ${spaceId}` });
     }
     if ((scope.conversation !== undefined || scope.agent !== undefined) && spaceId === undefined) {
-      throw new InvalidRequestError({ message: 'A conversation is read from a space, and the request names none.' });
+      throw new InvalidRequestError({
+        message: 'An agent session or a conversation is served in a space, and the request names none.',
+      });
     }
 
     // Built before the seed and the cancel listener: these ids are not the handler's, and a throw here holds nothing.
@@ -151,7 +153,6 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
         host: scope.operations,
         spaceId,
         conversation: scope.conversation,
-        agent: scope.agent,
         pid,
         idSeed: scope.idSeed,
       });
@@ -200,8 +201,10 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       }
       throw error;
     } finally {
-      // First, before anything awaited: a pending `waitForCancel` pins the invocation until the isolate is killed.
+      // First, before anything awaited: a pending `waitForCancel` pins the invocation until the isolate is killed, and
+      // so does a verb still in flight on the session target (a forked `waitForCompletion`, a detached stream).
       cancellation.dispose();
+      disposeStub(scope.agent);
       try {
         await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
       } finally {
@@ -368,3 +371,11 @@ const withTimeout = <T>(promise: Promise<T>, timeout: number): Promise<T> =>
       },
     );
   });
+
+/** Releases a Workers RPC stub the invocation was passed; a plain object (a test's fake) has nothing to release. */
+const disposeStub = (stub: object | undefined): void => {
+  const dispose = stub !== undefined && Symbol.dispose in stub ? stub[Symbol.dispose] : undefined;
+  if (typeof dispose === 'function') {
+    dispose.call(stub);
+  }
+};

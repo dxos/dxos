@@ -29,7 +29,7 @@ import * as Agent from '@dxos/compute/Agent';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trajectory from '@dxos/compute/Trajectory';
-import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { type SpaceId, URI } from '@dxos/keys';
 import { ErrorCodec, type PluginProtocol } from '@dxos/protocols';
@@ -72,9 +72,10 @@ export const make = ({
     args: PluginProtocol.AgentVerbs[Verb]['args'],
   ): Effect.Effect<PluginProtocol.AgentVerbs[Verb]['result'], Agent.NoCurrentSessionError> =>
     Effect.tryPromise({
-      // The host reads what this invocation wrote (a task it delegates) and writes what it reads next (the session it
-      // delegates to), so each verb hands the working set over as a nested call does.
-      try: () => handOffWorkingSet(db, refreshWorkingSet, () => session.call(verb, args)),
+      try: () =>
+        HANDOFF_VERBS.has(verb)
+          ? handOffWorkingSet(db, refreshWorkingSet, () => session.call(verb, args))
+          : session.call(verb, args),
       catch: (cause) => new AgentSessionError({ cause, context: { verb } }),
     }).pipe(
       Effect.orDie,
@@ -89,8 +90,21 @@ export const make = ({
   const run = <Verb extends PluginProtocol.AgentVerb>(verb: Verb, args: PluginProtocol.AgentVerbs[Verb]['args']) =>
     call(verb, args).pipe(Effect.orDie);
 
-  const resolve = <S extends Parameters<typeof Database.resolve>[1]>(uri: string, schema: S) =>
-    Database.resolve(URI.make(uri), schema).pipe(Effect.provide(database));
+  /**
+   * Loads what a verb named. An object that is missing dies: the host just named it. One of another type is not the
+   * session the verb asked for, as when a brain wake names its feed rather than a session.
+   */
+  const resolveAs = <S extends Type.AnyObj>(
+    uri: string,
+    schema: S,
+  ): Effect.Effect<Type.InstanceType<S>, Agent.NoCurrentSessionError> =>
+    Database.resolve(URI.make(uri)).pipe(
+      Effect.provide(database),
+      Effect.orDie,
+      Effect.flatMap((object) =>
+        Obj.instanceOf(schema, object) ? Effect.succeed(object) : Effect.fail(new Agent.NoCurrentSessionError()),
+      ),
+    );
 
   const sessionUri = (target: Agent.Session): string => Obj.getURI(target);
 
@@ -100,14 +114,10 @@ export const make = ({
 
   return {
     open: (target, options) =>
-      run('open', [
-        sessionUri(target),
-        {
-          ...(options?.provider !== undefined ? { provider: String(options.provider) } : {}),
-          ...(options?.systemPrompt !== undefined ? { systemPrompt: options.systemPrompt } : {}),
-          ...(options?.location !== undefined ? { location: options.location } : {}),
-        },
-      ]),
+      // EDGE opens a session's process as the session was created; it would drop these silently.
+      options?.provider !== undefined || options?.systemPrompt !== undefined || options?.location !== undefined
+        ? Effect.die(new Error('Agent.open with provider, systemPrompt or location is not supported on EDGE.'))
+        : run('open', [sessionUri(target)]),
 
     // The session's processes are EDGE's: there is nothing a bundle hydrates.
     hydrate: () => Effect.void,
@@ -154,19 +164,13 @@ export const make = ({
         ),
       ),
 
-    currentSession: call('currentSession', []).pipe(
-      Effect.flatMap((uri) =>
-        resolve(uri, Agent.Session).pipe(Effect.mapError(() => new Agent.NoCurrentSessionError())),
-      ),
-    ),
+    currentSession: call('currentSession', []).pipe(Effect.flatMap((uri) => resolveAs(uri, Agent.Session))),
 
-    currentFeed: call('currentFeed', []).pipe(
-      Effect.flatMap((uri) => resolve(uri, Feed.Feed).pipe(Effect.mapError(() => new Agent.NoCurrentSessionError()))),
-    ),
+    currentFeed: call('currentFeed', []).pipe(Effect.flatMap((uri) => resolveAs(uri, Feed.Feed))),
 
     currentAgent: run('currentAgent', []).pipe(
       Effect.flatMap((uri) =>
-        uri === null ? Effect.succeed(Option.none()) : resolve(uri, Agent.Agent).pipe(Effect.option),
+        uri === null ? Effect.succeed(Option.none()) : resolveAs(uri, Agent.Agent).pipe(Effect.option),
       ),
     ),
 
@@ -333,19 +337,38 @@ const makeControl = (session: PluginProtocol.AgentSession): RemoteProcessManager
       Effect.gen(function* () {
         const httpClient = (yield* HttpClient.HttpClient).pipe(
           HttpClient.mapRequest(HttpClientRequest.setUrl(PROCESS_RPC_URL)),
+          // The fetch client reads `Fetch` as each request runs, in the caller's fiber, so it is provided per request.
+          HttpClient.transform((response) =>
+            Effect.provideService(response, FetchHttpClient.Fetch, (input, init) =>
+              session.processRpc(spaceId, pid, new Request(input, init)),
+            ),
+          ),
         );
         return yield* RpcClient.make(group).pipe(
           Effect.provideServiceEffect(RpcClient.Protocol, RpcClient.makeProtocolHttp(httpClient)),
         );
-      }).pipe(
-        Effect.provide(RpcHttpLayer),
-        Effect.provideService(FetchHttpClient.Fetch, (input, init) =>
-          session.processRpc(spaceId, pid, new Request(input, init)),
-        ),
-        Effect.orDie,
-      ),
+      }).pipe(Effect.provide(RpcHttpLayer), Effect.orDie),
   };
 };
+
+/**
+ * The verbs that exchange ECHO state with the host: they send refs or content it reads, or answer URIs the bundle
+ * resolves. Each hands the working set over around the call, as a nested call does; the rest skip that round trip.
+ */
+const HANDOFF_VERBS: ReadonlySet<PluginProtocol.AgentVerb> = new Set<PluginProtocol.AgentVerb>([
+  'open',
+  'getContext',
+  'addContext',
+  'submitPrompt',
+  'currentSession',
+  'currentFeed',
+  'currentAgent',
+  'enqueueMessage',
+  'listSessions',
+  'listAgents',
+  'spawn',
+  'delegate',
+]);
 
 /** Where a process RPC request is addressed; the session target, not the URL, routes it. */
 const PROCESS_RPC_URL = 'https://process.invalid/rpc';

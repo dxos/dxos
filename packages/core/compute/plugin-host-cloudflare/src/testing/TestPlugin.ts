@@ -6,6 +6,8 @@ import * as Context from 'effect/Context';
 import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Rpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
@@ -350,6 +352,37 @@ const SpawnWorkHandler = SpawnWork.pipe(
   ),
 );
 
+/** The RPC group {@link EchoProcess} serves. */
+export const EchoRpcs = RpcGroup.make(
+  Rpc.make('echo', { payload: Schema.Struct({ text: Schema.String }), success: Schema.String }),
+);
+
+/** A process with an RPC group; the bundle only names it, EDGE hosts it. */
+export const EchoProcess = Operation.makeDurable({
+  key: 'com.example.process.hostTest.echo',
+  input: Schema.Void,
+  output: Schema.Void,
+  services: [],
+  rpcs: EchoRpcs,
+}).pipe(Operation.withDurableHandler(() => Effect.succeed({})));
+
+/** Starts {@link EchoProcess} through `Agent.spawn` and calls its `echo` RPC. */
+export const CallEcho = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.callEcho'), name: 'Call echo' },
+  services: [Agent.Service],
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.Struct({ echoed: Schema.String }),
+});
+
+const CallEchoHandler = CallEcho.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ text }) {
+      const handle = yield* Agent.spawn(EchoProcess);
+      return { echoed: yield* handle.rpc.echo({ text }).pipe(Effect.orDie) };
+    }),
+  ),
+);
+
 /** Makes a person, as an operation that returns an ECHO object does. */
 export const MakePerson = Operation.make({
   meta: { key: DXN.make('com.example.operation.hostTest.makePerson'), name: 'Make person' },
@@ -417,6 +450,7 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             UseAgentHandler,
             CurrentSessionOrNoneHandler,
             SpawnWorkHandler,
+            CallEchoHandler,
           ),
         ),
       ),

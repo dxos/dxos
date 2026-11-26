@@ -167,10 +167,8 @@ type ContentJson = readonly unknown[];
  * object travels as its URI; the bundle resolves the URIs it receives in its own space database.
  */
 export type AgentVerbs = {
-  open: {
-    args: [session: Uri, options?: { provider?: string; systemPrompt?: string; location?: 'local' | 'edge' }];
-    result: null;
-  };
+  /** Opens the session's process with the options it was created with; EDGE takes no per-open options. */
+  open: { args: [session: Uri]; result: null };
   getContext: { args: [session: Uri]; result: Uri[] };
   addContext: { args: [session: Uri, context: Uri[]]; result: null };
   submitPrompt: {
@@ -324,8 +322,6 @@ export type OperationOptions = {
   readonly conversation?: string;
   readonly parentPid?: string;
   readonly idSeed?: IdSeed;
-  /** The session the caller works for, which EDGE passes on as the callee's {@link InvocationScope.agent}. */
-  readonly agent?: AgentSession;
 };
 
 /** EDGE's router, for operations of other plugins. */
