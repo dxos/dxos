@@ -14,6 +14,7 @@ import { ChatModule } from './ChatModule.tsx';
 import { ChatPlaneModule } from './ChatPlaneModule.tsx';
 import { ContextModule } from './ContextModule.tsx';
 import { GraphModule } from './GraphModule.tsx';
+import { ProcessesModule } from './ProcessesModule.tsx';
 import { ProfileModule } from './ProfileModule.tsx';
 import { ProjectModule } from './ProjectModule.tsx';
 import { ReplayModule } from './ReplayModule.tsx';
@@ -40,6 +41,7 @@ export const StoryRole = {
   ChatPlane: Role.make<Record<string, unknown>>('org.dxos.storybook.role.chatPlane'),
   Context: Role.make<Record<string, unknown>>('org.dxos.storybook.role.context'),
   Graph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.graph'),
+  Processes: Role.make<Record<string, unknown>>('org.dxos.storybook.role.processes'),
   Profile: Role.make<Record<string, unknown>>('org.dxos.storybook.role.profile'),
   Project: Role.make<Record<string, unknown>>('org.dxos.storybook.role.project'),
   Replay: Role.make<Record<string, unknown>>('org.dxos.storybook.role.replay'),
@@ -126,6 +128,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.tasks',
     filter: Surface.makeFilter(StoryRole.Tasks),
     component: TasksModule,
+  }),
+  Surface.create({
+    id: 'role.processes',
+    filter: Surface.makeFilter(StoryRole.Processes),
+    component: ProcessesModule,
   }),
   Surface.create({
     id: 'role.trajectoryGraph',

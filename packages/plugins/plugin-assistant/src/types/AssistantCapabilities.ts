@@ -15,6 +15,7 @@ import type { AiContext } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as ComputeAgent from '@dxos/compute/Agent';
 import type * as Instructions from '@dxos/compute/Instructions';
+import type * as Process from '@dxos/compute/Process';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
 import type { DXN } from '@dxos/keys';
 import { type Message } from '@dxos/types';
@@ -160,6 +161,24 @@ export const Agent = Capability.make<Agent>()(`${AssistantNamespace.key}.capabil
 export const SessionProcess = Capability.make<SessionProcessDefinition>()(
   `${AssistantNamespace.key}.capability.agentProcess`,
 );
+
+/**
+ * The authority a local chat's agent process acts with: its principal and the grants it holds. The first contribution
+ * that returns one for the session applies; a session none covers acts as itself with no grants. A call its grants do
+ * not cover is put to the person in the chat when the requirement is consentable, and refused otherwise.
+ */
+export type SessionAuthority = (session: ComputeAgent.Session) => Process.Authority | undefined;
+
+export const SessionAuthority = Capability.make<SessionAuthority>()(
+  `${AssistantNamespace.key}.capability.sessionAuthority`,
+);
+
+/** The authority the contributed {@link SessionAuthority}s give the session, if any. */
+export const findSessionAuthority = (
+  authorities: readonly SessionAuthority[],
+  session: ComputeAgent.Session,
+): Process.Authority | undefined =>
+  authorities.reduce<Process.Authority | undefined>((found, authority) => found ?? authority(session), undefined);
 
 /**
  * Slash commands the chat prompt completes and runs without the model. Each plugin contributes the

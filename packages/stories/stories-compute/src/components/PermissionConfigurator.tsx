@@ -113,7 +113,7 @@ export const PermissionConfigurator = ({ edge = false, ready = true, onSpawn }: 
         </section>
         <section className='space-y-1' data-testid='permission-grants'>
           <h2 className='text-sm text-fg-muted'>Grant the agent's process</h2>
-          {PERMISSION_OPTIONS.map(({ id, label, command, description }) => (
+          {PERMISSION_OPTIONS.map(({ id, permission: { name: label, command, description } }) => (
             <div key={id} className='flex items-center gap-2'>
               <Input.Checkbox
                 label={label}

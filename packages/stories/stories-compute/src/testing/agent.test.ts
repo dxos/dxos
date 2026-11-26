@@ -10,7 +10,7 @@ import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Stream from 'effect/Stream';
 
-import { ProcessManager } from '@dxos/compute-runtime';
+import { ProcessManager, Verifier } from '@dxos/compute-runtime';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -18,13 +18,15 @@ import * as Trace from '@dxos/compute/Trace';
 
 import { AGENT_DEMO_PROCESS_KEY, AgentDemoProcess, makeScript } from './agent.ts';
 
-const TestLayer = ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(
-  Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty)),
-  Layer.provide(KeyValueStore.layerMemory),
-  Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.empty)),
-  Layer.provide(Trace.layerNoop),
-  Layer.provideMerge(Registry.layer),
-);
+const TestLayer = ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })
+  .pipe(Layer.provide(Verifier.layer()))
+  .pipe(
+    Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty)),
+    Layer.provide(KeyValueStore.layerMemory),
+    Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.empty)),
+    Layer.provide(Trace.layerNoop),
+    Layer.provideMerge(Registry.layer),
+  );
 
 const PROMPT = 'Fix the flaky timeout in the sync engine tests';
 

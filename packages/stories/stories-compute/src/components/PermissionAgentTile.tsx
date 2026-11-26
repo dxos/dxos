@@ -197,7 +197,7 @@ export const PermissionAgentCard = ({
       </Card.Header>
       <Card.Row icon='ph--key--regular' data-testid='permission-agent-grants'>
         <Layout.Flex wrap gap='xs'>
-          {PERMISSION_OPTIONS.map(({ id, label }) =>
+          {PERMISSION_OPTIONS.map(({ id, permission: { name: label } }) =>
             granted.includes(id) ? (
               <Tag.Tag key={id} hue='success'>
                 {label}

@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { beforeEach, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -17,8 +18,9 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN } from '@dxos/echo';
-import { Grant, Guard, Permission, Policy, Principal, Requirement, Subject } from '@dxos/permission';
+import { Grant, Permission, Policy, Principal, Requirement, Subject } from '@dxos/permission';
 
+import * as Consent from './Consent.ts';
 import * as OperationProcess from './OperationProcess.ts';
 import * as ProcessManager from './ProcessManager.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
@@ -26,9 +28,22 @@ import * as RemoteProcessManager from './RemoteProcessManager.ts';
 import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 import { TestDatabaseLayer } from './testing/index.ts';
 import * as UnifiedProcessManager from './UnifiedProcessManager.ts';
+import * as Verifier from './Verifier.ts';
 
 const user = Principal.identity('did:halo:ALICE');
 const agent = Principal.process('process://local/agent');
+
+/** Running a command in the sandbox. */
+const SandboxExec = Permission.define({ command: '/sandbox/exec', name: 'Run sandbox commands' });
+
+/** Everything in the sandbox: the parent of {@link SandboxExec}, so a grant for it covers exec too. */
+const Sandbox = Permission.define({ command: '/sandbox', name: 'Use the sandbox' });
+
+/** Sending email. */
+const EmailSend = Permission.define({ command: '/email/send', name: 'Send email' });
+
+/** Posting to a channel: consentable, so a process that lacks it is asked rather than refused outright. */
+const ChannelPost = Permission.define({ command: '/channel/post', name: 'Post to a channel', consentable: true });
 
 /** Declares nothing, so it runs in any process. */
 const Echo = Operation.make({
@@ -42,25 +57,94 @@ const Exec = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.exec'), name: 'Exec' },
   input: Schema.Struct({ command: Schema.String }),
   output: Schema.String,
-}).pipe(Guard.requires(Requirement.make('/sandbox/exec')));
+}).pipe(Operation.requires(Requirement.make(SandboxExec)));
 
-/** Requires `/email/send`, and only to dxos.org addresses whatever the grant says. */
+/** Requires {@link EmailSend}, and only to dxos.org addresses whatever the grant says. */
 const SendEmail = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.sendEmail'), name: 'Send email' },
   input: Schema.Struct({ to: Schema.String }),
   output: Schema.String,
-}).pipe(Guard.requires(Requirement.make('/email/send', { policy: [Policy.like('.args.to', '*@dxos.org')] })));
+}).pipe(Operation.requires(Requirement.make(EmailSend, { policy: [Policy.like('.args.to', '*@dxos.org')] })));
 
-/** Declares nothing itself and invokes `Exec`, so the nested call is checked against this process's guard. */
+/** Requires {@link ChannelPost}, which a person can approve. */
+const Post = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.post'), name: 'Post' },
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.String,
+}).pipe(Operation.requires(Requirement.make(ChannelPost)));
+
+/** Invokes `Post` twice, so a test can see whether the second call is asked about again. */
+const PostTwice = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.postTwice'), name: 'Post twice' },
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.String,
+});
+
+/** How the test's consent answers, and the requests put to it; reset before each test so no answer leaks into the next. */
+const consent: { answer: () => Effect.Effect<Consent.Answer>; asked: string[] } = {
+  answer: () => Effect.succeed({ _tag: 'Declined' }),
+  asked: [],
+};
+
+beforeEach(() => {
+  consent.answer = () => Effect.succeed({ _tag: 'Declined' });
+  consent.asked = [];
+});
+
+const consentLayer = Layer.succeed(Consent.Service, {
+  ask: ({ requirement }) =>
+    Effect.suspend(() => {
+      consent.asked.push(requirement.command);
+      return consent.answer();
+    }),
+});
+
+/** Declares nothing itself and invokes `Exec`, so the nested call is checked against this process's authority. */
 const RunScript = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.runScript'), name: 'Run script' },
   input: Schema.Struct({ command: Schema.String }),
   output: Schema.String,
 });
 
-const execEverything = Guard.make({ principal: agent, source: Guard.attested([]) });
+/** Opened by a test once it has changed the waiting process's grants. */
+let gate = Deferred.makeUnsafe<void>();
 
-/** Spawns `Exec` as a child with a guard that would admit it, to show a child cannot widen its parent. */
+/** Waits for {@link gate}, then invokes `Exec`, so a test can add grants to it while it runs. */
+const WaitThenExec = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.waitThenExec'), name: 'Wait then exec' },
+  input: Schema.Struct({ command: Schema.String }),
+  output: Schema.String,
+});
+
+const noGrants: Process.Authority = { principal: agent, grants: [] };
+
+/** Requires a consentable {@link ChannelPost} and a {@link SandboxExec} no one can consent to. */
+const PostAndExec = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.postAndExec'), name: 'Post and exec' },
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.String,
+}).pipe(Operation.requires(Requirement.make(ChannelPost), Requirement.make(SandboxExec)));
+
+/** Grants itself exec through the manager it sees, then invokes `Exec`. */
+const SelfGrant = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.selfGrant'), name: 'Self grant' },
+  input: Schema.Struct({ command: Schema.String }),
+  output: Schema.String,
+  services: [Process.ManagerService],
+});
+
+/** Opened by a test once it has granted the process that spawns a detached child. */
+let spawnerGate = Deferred.makeUnsafe<void>();
+
+/** Spawns `WaitThenExec` detached with its own exec grant, waits for {@link spawnerGate}, and returns the child's pid. */
+const SpawnDetachedThenWait = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.spawnDetachedThenWait'), name: 'Spawn detached' },
+  input: Schema.Struct({ command: Schema.String }),
+  output: Schema.String,
+  services: [Process.ManagerService],
+});
+
+/** Spawns `Exec` as a child with an authority that would admit it, to show a child cannot widen its parent. */
 const Escalate = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.escalate'), name: 'Escalate' },
   input: Schema.Struct({ command: Schema.String }),
@@ -68,7 +152,7 @@ const Escalate = Operation.make({
   services: [Process.ManagerService],
 });
 
-/** Spawns `Exec` detached (no parent) with a guard that would admit it, to show detaching does not shed the guard. */
+/** Spawns `Exec` detached (no parent) with an authority that would admit it, to show detaching does not shed limits. */
 const EscapeDetached = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.escapeDetached'), name: 'Escape detached' },
   input: Schema.Struct({ command: Schema.String }),
@@ -78,14 +162,50 @@ const EscapeDetached = Operation.make({
 
 const handlers = OperationHandlerSet.make(
   Echo.pipe(Operation.withHandler(({ text }) => Effect.succeed(text))),
+  PostAndExec.pipe(Operation.withHandler(({ text }) => Effect.succeed(`posted and ran ${text}`))),
+  SelfGrant.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ command }) {
+        const self = yield* Process.current.pipe(Effect.orDie);
+        const manager = yield* Process.ManagerService;
+        yield* manager.grant(self.pid, [yield* grantTo(SandboxExec)]).pipe(Effect.exit);
+        return yield* Operation.invoke(Exec, { command });
+      }),
+    ),
+  ),
+  SpawnDetachedThenWait.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ command }) {
+        const allowExec: Process.Authority = { principal: agent, grants: [yield* grantTo(SandboxExec)] };
+        const child = yield* Process.spawn(
+          OperationProcess.make(WaitThenExec),
+          { command },
+          { parentProcessId: undefined, authority: allowExec },
+        );
+        yield* Deferred.await(spawnerGate);
+        return child.pid;
+      }),
+    ),
+  ),
   Exec.pipe(Operation.withHandler(({ command }) => Effect.succeed(`ran ${command}`))),
   SendEmail.pipe(Operation.withHandler(({ to }) => Effect.succeed(`sent to ${to}`))),
   RunScript.pipe(Operation.withHandler(({ command }) => Operation.invoke(Exec, { command }))),
+  Post.pipe(Operation.withHandler(({ text }) => Effect.succeed(`posted ${text}`))),
+  PostTwice.pipe(
+    Operation.withHandler(({ text }) =>
+      Operation.invoke(Post, { text }).pipe(Effect.andThen(Operation.invoke(Post, { text }))),
+    ),
+  ),
+  WaitThenExec.pipe(
+    Operation.withHandler(({ command }) =>
+      Deferred.await(gate).pipe(Effect.andThen(Operation.invoke(Exec, { command }))),
+    ),
+  ),
   Escalate.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ command }) {
-        const allowExec = Guard.make({ principal: agent, source: Guard.attested([yield* grantTo('/sandbox/exec')]) });
-        const child = yield* Process.spawn(OperationProcess.make(Exec), { command }, { guard: allowExec });
+        const allowExec: Process.Authority = { principal: agent, grants: [yield* grantTo(SandboxExec)] };
+        const child = yield* Process.spawn(OperationProcess.make(Exec), { command }, { authority: allowExec });
         return yield* Process.awaitOutput(child);
       }),
     ),
@@ -93,11 +213,11 @@ const handlers = OperationHandlerSet.make(
   EscapeDetached.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ command }) {
-        const allowExec = Guard.make({ principal: agent, source: Guard.attested([yield* grantTo('/sandbox/exec')]) });
+        const allowExec: Process.Authority = { principal: agent, grants: [yield* grantTo(SandboxExec)] };
         const child = yield* Process.spawn(
           OperationProcess.make(Exec),
           { command },
-          { parentProcessId: undefined, guard: allowExec },
+          { parentProcessId: undefined, authority: allowExec },
         );
         return yield* Process.awaitOutput(child);
       }),
@@ -108,10 +228,13 @@ const handlers = OperationHandlerSet.make(
 const TestLayer = ProcessOperationInvoker.layer
   .pipe(Layer.provideMerge(UnifiedProcessManager.layer))
   .pipe(
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(
+      ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(Layer.provide(Verifier.layer())),
+    ),
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
-    Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
+    Layer.provide(ServiceResolver.layerRequirements(Database.Service, Consent.Service)),
+    Layer.provide(consentLayer),
     Layer.provide(TestDatabaseLayer({ types: [] })),
     Layer.provide(KeyValueStore.layerMemory),
     Layer.provideMerge(OperationHandlerSet.provide(handlers)),
@@ -119,8 +242,8 @@ const TestLayer = ProcessOperationInvoker.layer
     Layer.provide(Trace.layerNoop),
   );
 
-/** A grant from the user to the agent process for one command on every subject. */
-function grantTo(command: string) {
+/** A grant from the user to the agent process for one permission on every subject. */
+function grantTo({ command }: Permission.Definition) {
   return Grant.make({
     issuer: user,
     audience: agent,
@@ -128,10 +251,9 @@ function grantTo(command: string) {
   });
 }
 
-/** A guard for the agent process holding exactly these commands. */
-const guardFor = Effect.fnUntraced(function* (...commands: string[]) {
-  const grants = yield* Effect.forEach(commands, grantTo);
-  return Guard.make({ principal: agent, source: Guard.attested(grants) });
+/** The agent process's authority, holding exactly these permissions. */
+const authorityFor = Effect.fnUntraced(function* (...permissions: Permission.Definition[]) {
+  return { principal: agent, grants: yield* Effect.forEach(permissions, grantTo) } satisfies Process.Authority;
 });
 
 const run = <I, O>(op: Operation.Definition<I, O>, input: I, options?: Process.SpawnOptions) =>
@@ -148,7 +270,7 @@ const denial = <A, E>(exit: Exit.Exit<A, E>): string | undefined => {
 
 describe('operation permissions', () => {
   it.effect(
-    'an operation that declares no requirements runs in a process with no guard',
+    'an operation that declares no requirements runs in a process with no authority',
     Effect.fn(function* ({ expect }) {
       const exit = yield* run(Echo, { text: 'hello' });
       expect(exit).toEqual(Exit.succeed('hello'));
@@ -156,7 +278,7 @@ describe('operation permissions', () => {
   );
 
   it.effect(
-    'an operation that declares requirements is refused in a process with no guard',
+    'an operation that declares requirements is refused in a process with no authority',
     Effect.fn(function* ({ expect }) {
       const exit = yield* run(Exec, { command: 'ls' });
       expect(denial(exit)).toContain('requires permissions and the invoking process holds none');
@@ -173,9 +295,9 @@ describe('operation permissions', () => {
   );
 
   it.effect(
-    'a process spawned with a covering grant runs it',
+    'a process spawned with an authority holding a covering grant runs it',
     Effect.fn(function* ({ expect }) {
-      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      const exit = yield* run(Exec, { command: 'ls' }, { authority: yield* authorityFor(SandboxExec) });
       expect(exit).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
@@ -183,7 +305,7 @@ describe('operation permissions', () => {
   it.effect(
     'a grant for a parent command covers its descendants',
     Effect.fn(function* ({ expect }) {
-      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor('/sandbox') });
+      const exit = yield* run(Exec, { command: 'ls' }, { authority: yield* authorityFor(Sandbox) });
       expect(exit).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
@@ -191,7 +313,7 @@ describe('operation permissions', () => {
   it.effect(
     'a process whose grants do not cover the command is refused',
     Effect.fn(function* ({ expect }) {
-      const exit = yield* run(Exec, { command: 'ls' }, { guard: yield* guardFor('/email/send') });
+      const exit = yield* run(Exec, { command: 'ls' }, { authority: yield* authorityFor(EmailSend) });
       expect(denial(exit)).toContain('no grant covers the subject and command');
     }, Effect.provide(TestLayer)),
   );
@@ -199,19 +321,21 @@ describe('operation permissions', () => {
   it.effect(
     "the operation's policy is checked against its input",
     Effect.fn(function* ({ expect }) {
-      const guard = yield* guardFor('/email/send');
-      expect(yield* run(SendEmail, { to: 'rich@dxos.org' }, { guard })).toEqual(Exit.succeed('sent to rich@dxos.org'));
-      const refused = yield* run(SendEmail, { to: 'someone@example.com' }, { guard });
+      const authority = yield* authorityFor(EmailSend);
+      expect(yield* run(SendEmail, { to: 'rich@dxos.org' }, { authority })).toEqual(
+        Exit.succeed('sent to rich@dxos.org'),
+      );
+      const refused = yield* run(SendEmail, { to: 'someone@example.com' }, { authority });
       expect(denial(refused)).toContain('.args.to matches *@dxos.org');
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
-    "a nested invocation is checked against the parent process's guard",
+    "a nested invocation is checked against the parent process's authority",
     Effect.fn(function* ({ expect }) {
-      const allowed = yield* run(RunScript, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      const allowed = yield* run(RunScript, { command: 'ls' }, { authority: yield* authorityFor(SandboxExec) });
       expect(allowed).toEqual(Exit.succeed('ran ls'));
-      const refused = yield* run(RunScript, { command: 'ls' }, { guard: yield* guardFor('/email/send') });
+      const refused = yield* run(RunScript, { command: 'ls' }, { authority: yield* authorityFor(EmailSend) });
       expect(denial(refused)).toContain('no grant covers');
       const unguarded = yield* run(RunScript, { command: 'ls' });
       expect(denial(unguarded)).toContain('holds none');
@@ -219,30 +343,174 @@ describe('operation permissions', () => {
   );
 
   it.effect(
-    "a child spawned with its own guard cannot widen its parent's",
+    "a child spawned with its own authority cannot widen its parent's",
     Effect.fn(function* ({ expect }) {
-      const refused = yield* run(Escalate, { command: 'rm' }, { guard: yield* guardFor('/email/send') });
+      const refused = yield* run(Escalate, { command: 'rm' }, { authority: yield* authorityFor(EmailSend) });
       expect(denial(refused)).toContain('no grant covers');
-      const allowed = yield* run(Escalate, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      const allowed = yield* run(Escalate, { command: 'ls' }, { authority: yield* authorityFor(SandboxExec) });
       expect(allowed).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
-    'a detached child is still held to the guard of the process that spawned it',
+    'a detached child is still held to the authority of the process that spawned it',
     Effect.fn(function* ({ expect }) {
-      const refused = yield* run(EscapeDetached, { command: 'rm' }, { guard: yield* guardFor('/email/send') });
+      const refused = yield* run(EscapeDetached, { command: 'rm' }, { authority: yield* authorityFor(EmailSend) });
       expect(denial(refused)).toContain('no grant covers');
-      const allowed = yield* run(EscapeDetached, { command: 'ls' }, { guard: yield* guardFor('/sandbox/exec') });
+      const allowed = yield* run(EscapeDetached, { command: 'ls' }, { authority: yield* authorityFor(SandboxExec) });
       expect(allowed).toEqual(Exit.succeed('ran ls'));
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
-    'a guard with no grants refuses every operation that declares requirements and none that does not',
+    'an authority with no grants refuses every operation that declares requirements and none that does not',
     Effect.fn(function* ({ expect }) {
-      expect(yield* run(Echo, { text: 'hi' }, { guard: execEverything })).toEqual(Exit.succeed('hi'));
-      expect(denial(yield* run(Exec, { command: 'ls' }, { guard: execEverything }))).toContain('no grant covers');
+      expect(yield* run(Echo, { text: 'hi' }, { authority: noGrants })).toEqual(Exit.succeed('hi'));
+      expect(denial(yield* run(Exec, { command: 'ls' }, { authority: noGrants }))).toContain('no grant covers');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'grants added to a live process apply to the calls it makes afterwards',
+    Effect.fn(function* ({ expect }) {
+      gate = yield* Deferred.make<void>();
+      const manager = yield* Process.ManagerService;
+      const process = yield* Process.spawn(
+        OperationProcess.make(WaitThenExec),
+        { command: 'ls' },
+        { authority: yield* authorityFor() },
+      );
+      yield* manager.grant(process.pid, [yield* grantTo(SandboxExec)]);
+      // The process tree shows the process holding the added grant.
+      const listed = (yield* manager.processTree).find((candidate) => candidate.pid === process.pid);
+      expect(listed?.authorities?.at(-1)?.grants.map((grant) => grant.permissions[0]?.command)).toEqual([
+        SandboxExec.command,
+      ]);
+      yield* Deferred.succeed(gate, undefined);
+      expect(yield* Process.awaitOutput(process).pipe(Effect.exit)).toEqual(Exit.succeed('ran ls'));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'without the grant the same call is refused',
+    Effect.fn(function* ({ expect }) {
+      gate = yield* Deferred.make<void>();
+      const process = yield* Process.spawn(
+        OperationProcess.make(WaitThenExec),
+        { command: 'ls' },
+        { authority: yield* authorityFor() },
+      );
+      yield* Deferred.succeed(gate, undefined);
+      expect(denial(yield* Process.awaitOutput(process).pipe(Effect.exit))).toContain('no grant covers');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a grant cannot reach past the authority a child inherited',
+    Effect.fn(function* ({ expect }) {
+      gate = yield* Deferred.make<void>();
+      const manager = yield* ProcessManager.Service;
+      const parent = yield* Process.spawn(
+        OperationProcess.make(Escalate),
+        { command: 'rm' },
+        { authority: yield* authorityFor(EmailSend) },
+      );
+      // The child Escalate spawns holds exec itself, so only the parent's authority refuses it.
+      expect(denial(yield* Process.awaitOutput(parent).pipe(Effect.exit))).toContain('no grant covers');
+      // Granting the parent afterwards does not reach the finished child, and a process with no authority of its own
+      // has nothing to extend.
+      const bare = yield* Process.spawn(OperationProcess.make(WaitThenExec), { command: 'ls' });
+      const refused = yield* manager.grant(bare.pid, [yield* grantTo(SandboxExec)]).pipe(Effect.exit);
+      expect(Exit.isFailure(refused)).toBe(true);
+      yield* Deferred.succeed(gate, undefined);
+      expect(denial(yield* Process.awaitOutput(bare).pipe(Effect.exit))).toContain('holds none');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a child that a process with no authority spawns is refused what its own grants would admit',
+    Effect.fn(function* ({ expect }) {
+      // Escalate spawns `Exec` with an authority that admits it; the spawner holds none.
+      const exit = yield* run(Escalate, { command: 'rm' });
+      expect(denial(exit)).toContain('holds none');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a process cannot grant itself what it was refused',
+    Effect.fn(function* ({ expect }) {
+      const exit = yield* run(SelfGrant, { command: 'ls' }, { authority: yield* authorityFor() });
+      expect(denial(exit)).toContain('no grant covers');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a grant reaches the copy a detached child inherited, after its spawner has exited',
+    Effect.fn(function* ({ expect }) {
+      gate = yield* Deferred.make<void>();
+      spawnerGate = yield* Deferred.make<void>();
+      const manager = yield* Process.ManagerService;
+      const spawner = yield* Process.spawn(
+        OperationProcess.make(SpawnDetachedThenWait),
+        { command: 'ls' },
+        { authority: yield* authorityFor(EmailSend) },
+      );
+      yield* manager.grant(spawner.pid, [yield* grantTo(SandboxExec)]);
+      yield* Deferred.succeed(spawnerGate, undefined);
+      const childPid = yield* Process.awaitOutput(spawner);
+      const child = yield* manager.attach(Process.ID.make(childPid));
+      yield* Deferred.succeed(gate, undefined);
+      expect(yield* Process.awaitOutput(child).pipe(Effect.exit)).toEqual(Exit.succeed('ran ls'));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a one-time consent covers only the requirement it was asked for',
+    Effect.fn(function* ({ expect }) {
+      consent.answer = () => Effect.succeed({ _tag: 'Once' });
+      const exit = yield* run(PostAndExec, { text: 'hi' }, { authority: yield* authorityFor() });
+      expect(consent.asked).toEqual([ChannelPost.command]);
+      expect(denial(exit)).toContain('no grant covers');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a consentable call the authority refuses runs once the person allows it',
+    Effect.fn(function* ({ expect }) {
+      consent.answer = () => Effect.succeed({ _tag: 'Once' });
+      const exit = yield* run(Post, { text: 'hi' }, { authority: yield* authorityFor() });
+      expect(exit).toEqual(Exit.succeed('posted hi'));
+      expect(consent.asked).toEqual([ChannelPost.command]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a permission the person grants holds for the calls that follow, which are not asked about again',
+    Effect.fn(function* ({ expect }) {
+      consent.answer = () =>
+        Effect.map(grantTo(ChannelPost), (grant): Consent.Answer => ({ _tag: 'Grant', grants: [grant] }));
+      const exit = yield* run(PostTwice, { text: 'hi' }, { authority: yield* authorityFor() });
+      expect(exit).toEqual(Exit.succeed('posted hi'));
+      expect(consent.asked).toEqual([ChannelPost.command]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a consentable call the person declines is refused',
+    Effect.fn(function* ({ expect }) {
+      consent.answer = () => Effect.succeed({ _tag: 'Declined' });
+      const exit = yield* run(Post, { text: 'hi' }, { authority: yield* authorityFor() });
+      expect(denial(exit)).toContain('was declined');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a call whose requirement is not consentable is refused without asking',
+    Effect.fn(function* ({ expect }) {
+      consent.answer = () => Effect.succeed({ _tag: 'Once' });
+      const exit = yield* run(Exec, { command: 'ls' }, { authority: yield* authorityFor() });
+      expect(denial(exit)).toContain('no grant covers');
+      expect(consent.asked).toEqual([]);
     }, Effect.provide(TestLayer)),
   );
 });

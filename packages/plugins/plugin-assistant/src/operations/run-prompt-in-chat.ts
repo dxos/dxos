@@ -18,7 +18,6 @@ import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#typ
 
 import { defaultPreset, providerForModel } from '../chat-model/index.ts';
 import { ChatNotSpecifiedError } from '../errors.ts';
-import { consentGuard } from '../util/consent-guard.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
@@ -64,8 +63,6 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         yield* Agent.open(chat, {
           provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
           location,
-          // The same guard the chat's own UI asks with, so the session is shared rather than respawned.
-          ...(location === 'local' ? { guard: yield* consentGuard(chat) } : {}),
         });
         // A plain string is submitted as-is so the default path keeps its existing shape; a stated
         // disposition needs the block form, which is the only place it can be carried.

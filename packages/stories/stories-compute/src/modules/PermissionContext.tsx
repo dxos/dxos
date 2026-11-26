@@ -35,7 +35,7 @@ import {
   PERMISSION_DEMO_SKILL_KEY,
   type PermissionId,
   makeAgentLayer,
-  makeGuard,
+  makeAuthority,
 } from '../testing/index.ts';
 
 /** What the configurator spawns: a prompt, the permissions to grant, and where the agent runs. */
@@ -45,14 +45,14 @@ export type AgentConfig = {
   location: LocationKind;
 };
 
-/** A spawned agent: its configuration, the grant its guard holds, and its session once it exists. */
+/** A spawned agent: its configuration, the grant its authority holds, and its session once it exists. */
 export type PermissionAgent = {
   id: string;
   /** 1-based, for the card title. */
   index: number;
   config: AgentConfig;
   location: Process.Location;
-  /** The principal the grant names as its audience and the guard checks as. */
+  /** The principal the grant names as its audience and the process acts as. */
   principal: Principal.Principal;
   grant?: Grant.Grant;
   session?: AgentServiceRuntime.SessionHandle;
@@ -82,7 +82,7 @@ export type PermissionProviderProps = PropsWithChildren<{ edge?: boolean }>;
 
 /**
  * Shares one agent runtime between the story's modules. Each spawn grants the new agent's process
- * exactly the checked permissions, from the story's identity, through the guard it is spawned with.
+ * exactly the checked permissions, from the story's identity, through the authority it is spawned with.
  */
 export const PermissionProvider = ({ edge = false, children }: PermissionProviderProps) => {
   const client = useClient();
@@ -135,7 +135,7 @@ export const PermissionProvider = ({ edge = false, children }: PermissionProvide
       void runtime
         .runPromiseExit(
           Effect.gen(function* () {
-            const { grant, guard } = yield* makeGuard({
+            const { grant, authority } = yield* makeAuthority({
               issuer: did,
               audience: principal,
               permissions: config.permissions,
@@ -146,7 +146,7 @@ export const PermissionProvider = ({ edge = false, children }: PermissionProvide
               skills: [skill],
               model: AGENT_MODEL,
               location: config.location,
-              guard,
+              authority,
             });
             update(id, { session });
             yield* session.submitPrompt(config.prompt);
