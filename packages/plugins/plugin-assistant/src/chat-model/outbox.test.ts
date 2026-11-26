@@ -75,6 +75,32 @@ describe('Outbox', () => {
     expect(outbox.get(first.id)?.error?.message).toBe('offline');
   });
 
+  test('a failed prompt is resent in its own row', async ({ expect }) => {
+    const registry = AtomRegistry.make();
+    const { started, pending, dispatch, reached } = createDispatch();
+    const outbox = new Outbox(registry, dispatch);
+
+    const reachedFirst = reached('first');
+    const first = outbox.add('first', { blocks: blocks('first'), known: new Set() });
+    await reachedFirst;
+    pending.get('first')?.reject(new Error('offline'));
+    await outbox.idle;
+    expect(outbox.get(first.id)?.state).toBe('failed');
+
+    expect(outbox.resend((payload) => payload === 'missing')).toBe(false);
+    const reachedAgain = reached('first');
+    expect(outbox.resend((payload) => payload === 'first')).toBe(true);
+    expect(outbox.get(first.id)?.state).toBe('sending');
+    await reachedAgain;
+    pending.get('first')?.resolve();
+    await outbox.idle;
+
+    expect(started).toEqual(['first', 'first']);
+    expect(registry.get(outbox.entries).map(({ id, state }) => ({ id, state }))).toEqual([
+      { id: first.id, state: 'submitted' },
+    ]);
+  });
+
   test('a prompt cancelled before it was sent is dropped rather than failed', async ({ expect }) => {
     const registry = AtomRegistry.make();
     const { pending, dispatch, reached } = createDispatch();

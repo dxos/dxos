@@ -136,6 +136,9 @@ type OutboxPayload = { request: ChatRequest; prepare?: () => Promise<void> | voi
 /** What the chat view reads off its feed: trajectory events and the legacy records an older feed holds. */
 const trajectoryItems = Filter.or(...TrajectoryStore.types.map((type) => Filter.type(type)));
 
+/** Wakes the agent to answer a turn that failed after its prompt was already delivered. */
+const RETRY_PROMPT = 'The previous request failed before you finished answering. Continue from where you left off.';
+
 /** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
 const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
 
@@ -278,6 +281,8 @@ export interface ChatModel {
   /** Messages of the current turn not yet in the feed. */
   readonly messages: Atom.Atom<Message.Message[]>;
   readonly error: Atom.Atom<Option.Option<Error>>;
+  /** Whether the last request failed in a way {@link retry} can recover from. */
+  readonly retryable: Atom.Atom<boolean>;
   /** Prompts sent from this chat that the agent has not taken up yet, in submit order. */
   readonly outbox: Atom.Atom<readonly OutboxEntry[]>;
   /** The feed folded into what the chat renders. */
@@ -300,6 +305,7 @@ export interface ChatModel {
   /** Follows the agent's work while mounted; returns the unsubscribe. */
   adopt(): () => void;
   cancel(): Promise<void>;
+  /** Runs the failed request again; one the agent already holds is resumed rather than sent twice. */
   retry(): Promise<void>;
   dismissMcpErrors(): void;
   updateName(session: Agent.Session): Promise<void>;
@@ -337,6 +343,9 @@ export class LiveChatModel implements ChatModel {
   /** Last request (for retries). */
   #lastRequest: ChatRequest | undefined;
 
+  /** Whether {@link #lastRequest} reached the agent, which then already holds it in its trajectory. */
+  #lastRequestSubmitted = false;
+
   /** Set once a rename is scheduled, so a prompt sent before the name lands does not schedule another. */
   #nameScheduled = false;
 
@@ -351,6 +360,8 @@ export class LiveChatModel implements ChatModel {
 
   /** Last error. */
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
+
+  public readonly retryable = Atom.make<boolean>(false);
 
   readonly #outbox: Outbox<OutboxPayload>;
 
@@ -575,7 +586,9 @@ export class LiveChatModel implements ChatModel {
 
     try {
       this.#lastRequest = requestProp;
+      this.#lastRequestSubmitted = false;
       this.#registry.set(this.error, Option.none());
+      this.#registry.set(this.retryable, false);
       this.#registry.set(this.mcpErrors, []);
       // Set locally: spawning or attaching the agent process happens before it can emit anything, and
       // that resolve is itself part of the wait the reader is watching.
@@ -599,6 +612,7 @@ export class LiveChatModel implements ChatModel {
         log('chat model submitting prompt', { length: requestProp.message.length });
         yield* Agent.submitPrompt(session, createPromptContent(requestProp), this.#submitOptions);
         markWork('chat.prompt-submitted');
+        this.#lastRequestSubmitted = true;
         submission?.resolve();
         log('chat model submitPrompt returned, waiting for agent', {});
 
@@ -636,7 +650,10 @@ export class LiveChatModel implements ChatModel {
       log.error('request failed', { error: err });
       // A no-op once submitted: a turn that fails after its prompt reached the agent did deliver it.
       submission?.reject(err);
-      this.#registry.set(this.error, Option.some(parseError(err)));
+      const error = parseError(err);
+      this.#registry.set(this.error, Option.some(error));
+      // Running an over-quota request again only meets the same limit.
+      this.#registry.set(this.retryable, this.#lastRequest !== undefined && !(error instanceof AiUsageQuotaError));
     } finally {
       log.info('setting active to false');
       this.#registry.set(this.active, false);
@@ -869,8 +886,22 @@ export class LiveChatModel implements ChatModel {
    * Retry last failed request.
    */
   async retry(): Promise<void> {
-    if (this.#lastRequest) {
-      return this.request(this.#lastRequest);
+    const request = this.#lastRequest;
+    if (!request) {
+      return;
+    }
+
+    // A prompt the agent already took up is in its trajectory, so sending it again would show it twice;
+    // a hidden prompt wakes the agent to answer it instead.
+    if (this.#lastRequestSubmitted) {
+      return this.request({ message: RETRY_PROMPT, disposition: 'synthetic' });
+    }
+
+    // One sent from the prompt box failed in its outbox row, which is dispatched again in place.
+    this.#registry.set(this.error, Option.none());
+    this.#registry.set(this.retryable, false);
+    if (!this.#outbox.resend((payload) => payload.request === request)) {
+      return this.request(request);
     }
   }
 
@@ -1043,7 +1074,7 @@ export class LiveChatModel implements ChatModel {
 
 export type ChatModelState = Pick<
   ChatModel,
-  'streaming' | 'active' | 'thread' | 'trajectory' | 'error' | 'mcpErrors' | 'activity'
+  'streaming' | 'active' | 'thread' | 'trajectory' | 'error' | 'retryable' | 'mcpErrors' | 'activity'
 >;
 
 const idleChatModelState: ChatModelState = {
@@ -1052,6 +1083,7 @@ const idleChatModelState: ChatModelState = {
   thread: Atom.make<ThreadProjection>(EMPTY_THREAD),
   trajectory: Atom.make<TrajectoryView>(EMPTY_VIEW),
   error: Atom.make<Option.Option<Error>>(Option.none()),
+  retryable: Atom.make(false),
   mcpErrors: Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]),
   activity: Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined),
 };
